@@ -20,7 +20,11 @@
     "declaredExecutableScriptEntrypoints": 4368,
     "configuredGraphExecutableComputations": 2512,
     "additionalScriptOnlyEntrypoints": 1856,
-    "queryCatalogueNodes": 6524
+    "queryCatalogueNodes": 6524,
+    "currentReviewedWholeTaskDispositions": 196,
+    "remainingCurrentSemanticReviews": 2316,
+    "currentReviewedScriptOnlyEntrypoints": 196,
+    "remainingScriptOnlySemanticReviews": 1660
   },
   "provenance": {
     "censusSha256": "45ffe4a5b57d2333650a5ceee2fcace7099b11107b1514ca67ebc4f71c1776a6",
@@ -8413,8 +8417,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/acp#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -8759,8 +8769,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/agents-client#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -9079,8 +9095,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/agents-domain#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -9383,8 +9405,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/agents-server#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -9704,8 +9732,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/agents-tables#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -9992,8 +10026,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/agents-use-cases#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -10279,8 +10319,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/ai-provider-cli#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -10577,8 +10623,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/ai-sync#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -10863,8 +10915,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/alchemy-postgres#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -11116,8 +11174,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/anthropic#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -11399,8 +11463,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/api-docs#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -11656,8 +11726,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/api-transport#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -11945,8 +12021,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/architecture-lab-client#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -12206,8 +12288,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/architecture-lab-config#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -12499,8 +12587,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/architecture-lab-domain#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -12808,8 +12902,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/architecture-lab-proof#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -13137,8 +13237,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/architecture-lab-server#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -13488,8 +13594,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/architecture-lab-tables#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -13797,8 +13909,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/architecture-lab-ui#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -14106,8 +14224,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/architecture-lab-use-cases#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -14371,8 +14495,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/beep-effect-web#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -14623,8 +14753,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/box#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -14944,8 +15080,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/box-provisioning#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -15215,8 +15357,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/brand#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -15513,8 +15661,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/chalk#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -15780,8 +15934,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/ciops#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -16007,8 +16167,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/cli-kit#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -16276,8 +16442,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/codegen-kit#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -16571,8 +16743,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/colors#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -16824,8 +17002,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/commands#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -17080,8 +17264,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/config-file#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -17350,8 +17540,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/cosmos#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -17604,8 +17800,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/data#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -17887,8 +18089,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/db-admin#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -18255,8 +18463,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/discord#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -18548,8 +18762,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/doc-text#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -18875,8 +19095,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/dock#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -19142,8 +19368,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/dock-react#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -19397,8 +19629,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/docket-intake#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -19657,8 +19895,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/documents-domain#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -19978,8 +20222,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/documents-server#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -20318,8 +20568,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/documents-tables#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -20627,8 +20883,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/documents-use-cases#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -20904,8 +21166,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/drizzle#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -21221,8 +21489,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/duckdb#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -21524,8 +21798,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/ecfr#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -21864,8 +22144,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/editor#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -22444,8 +22730,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/epistemic-client#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -22754,8 +23046,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/epistemic-domain#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -23082,8 +23380,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/epistemic-server#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -23438,8 +23742,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/epistemic-tables#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -23771,8 +24081,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/epistemic-ui#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -24109,8 +24425,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/epistemic-use-cases#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -24381,8 +24703,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/epistemics#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -24620,8 +24948,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/execution-authority-config#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -24868,8 +25202,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/execution-authority-domain#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -25145,8 +25485,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/execution-authority-server#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -25405,8 +25751,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/execution-authority-tables#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -25641,8 +25993,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/execution-authority-use-cases#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -25904,8 +26262,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/exiftool#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -26191,8 +26555,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/fc-runs#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -26446,8 +26816,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/ffmpeg#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -26798,8 +27174,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/file-processing#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -27068,8 +27450,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/firecrawl#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -27313,8 +27701,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/freshbooks#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -27581,8 +27975,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/git#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -27821,8 +28221,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/github#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -28092,8 +28498,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/github-actions#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -28344,8 +28756,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/github-commands#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -28570,8 +28988,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/github-references#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -28819,8 +29243,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/github-reporting#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -29067,8 +29497,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/glob#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -29356,8 +29792,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/gov-legal-mcp#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -29664,8 +30106,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/govinfo#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -29961,8 +30409,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/graph-3d#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -30233,8 +30687,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/html#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -30530,8 +30990,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/hubspot#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -30883,8 +31349,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/identity#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -31151,8 +31623,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/infra#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -31381,8 +31859,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/jsonc#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -31644,8 +32128,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/jsonl#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -31937,8 +32427,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/langextract#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -32223,8 +32719,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/law-practice-domain#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -32656,8 +33158,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/law-practice-server#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -33052,8 +33560,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/law-practice-tables#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -33363,8 +33877,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/law-practice-use-cases#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -33720,8 +34240,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/lejeune-bolt-workbench#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -33996,8 +34522,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/lexical-schema#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -34297,8 +34829,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/libpff#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -34622,8 +35160,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/lint-rules#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -34891,8 +35435,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/lockfiles#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -35158,8 +35708,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/m365#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -35495,8 +36051,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/m365-mcp#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -35793,8 +36355,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/managed-section#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -36074,8 +36642,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/markdown#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -36361,8 +36935,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/mcp-kit#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -36631,8 +37211,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/mcpb-kit#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -36921,8 +37507,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/md#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -37177,8 +37769,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/memfs#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -37432,8 +38030,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/n3#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -37701,8 +38305,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/nlp#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -37986,8 +38596,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/nlp-mcp#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -38358,8 +38974,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/nlp-processing#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -38618,8 +39240,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/npm-spec#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -38876,8 +39504,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/obs#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -39208,8 +39842,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/observability#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -39471,8 +40111,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/occt#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -39756,8 +40402,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/oip-web#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -40044,8 +40696,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/onepassword-cli#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -40376,8 +41034,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/ontology#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -40705,8 +41369,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/ontology-client#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -40982,8 +41652,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/ontology-config#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -41241,8 +41917,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/ontology-domain#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -41553,8 +42235,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/ontology-server#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -41898,8 +42586,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/ontology-ui#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -42192,8 +42886,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/ontology-use-cases#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -42497,8 +43197,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/openai#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -42759,8 +43465,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/openai-compat#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -43052,8 +43764,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/openclaw#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -43348,8 +44066,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/oxigraph#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -43594,8 +44318,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/pacer#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -43884,8 +44614,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/package-json#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -44136,8 +44872,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/palantiri#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -44424,8 +45166,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/pandoc-ast#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -44731,8 +45479,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/party-domain#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -44982,8 +45736,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/party-server#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -45223,8 +45983,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/party-use-cases#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -45464,8 +46230,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/pdf-tools#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -45748,8 +46520,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/pglite#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -46065,8 +46843,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/phoenix#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -46343,8 +47127,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/poppler#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -46605,8 +47395,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/postgres#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -46889,8 +47685,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/practice-claude-mod#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -47156,8 +47958,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/practice-gateway#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -47386,8 +48194,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/practice-identify#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -47655,8 +48469,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/practice-kg-mcp#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -47913,8 +48733,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/practice-m365-contacts#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -48143,8 +48969,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/practice-mail-tagging#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -48399,8 +49231,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/practice-review-hub#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -48609,8 +49447,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/practice-setup#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -48841,8 +49685,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/pretext#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -49442,8 +50292,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/professional-desktop#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -50019,8 +50875,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/provenance#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -50278,8 +51140,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/public-site#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -50531,8 +51399,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/qa-capture#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -50857,8 +51731,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/rdf#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -51133,8 +52013,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/rdf-canonize#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -51453,8 +52339,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/repo-ai-metrics#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -52113,8 +53005,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/repo-cli#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -52609,8 +53507,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/repo-cli-kit#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -52935,8 +53839,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/repo-configs#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -53246,8 +54156,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/repo-docgen#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -53535,8 +54451,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/repo-tsconfig#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -53819,8 +54741,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/repo-utils#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -54124,8 +55052,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/repo-workspaces#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -54433,8 +55367,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/runpod#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -54727,8 +55667,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/runtime-env#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -54979,8 +55925,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/sanity#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -55261,8 +56213,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/sbom#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -55547,8 +56505,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/schema#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -55814,8 +56778,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/schema-org#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -56122,8 +57092,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/semantic-web#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -56467,8 +57443,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/semantica#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -56696,8 +57678,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/semver#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -56952,8 +57940,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/shacl#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -57202,8 +58196,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/shared-domain#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -57470,8 +58470,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/shared-tables#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -57704,8 +58710,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/shared-use-cases#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -58018,8 +59030,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/skill-contract#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -58262,8 +59280,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/spdx#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -58464,8 +59488,14 @@
         "shell-expression"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/storybook#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -58790,8 +59820,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/tailscale#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -59043,8 +60079,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/technical-drawing#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -59286,8 +60328,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/tesseract#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -59538,8 +60586,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/test-runner#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -59794,8 +60848,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/test-utils#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -60115,8 +61175,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/tika#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -60424,8 +61490,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/todox#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -60643,8 +61715,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/toml#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -60888,8 +61966,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/trustgraph-workbench#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -61093,8 +62177,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/tsconfig#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -61358,8 +62448,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/types#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -61615,8 +62711,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/ui#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -61907,8 +63009,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/uspto#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -62204,8 +63312,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/uspto-mcp#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -62521,8 +63635,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/utils#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -62772,8 +63892,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/walker#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -63003,8 +64129,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/windows-secrets#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -63264,8 +64396,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/wink#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -63576,8 +64714,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/workspace-domain#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -63891,8 +65035,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/workspace-server#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -64258,8 +65408,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/workspace-tables#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -64555,8 +65711,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/workspace-use-cases#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -64845,8 +66007,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/xdg#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -65101,8 +66269,14 @@
         "source-fix"
       ],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/xstate#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -65344,8 +66518,14 @@
       "priorCommandTextUnchanged": false,
       "priorSemanticProfileIdsForReview": [],
       "retainedQualificationRecords": [],
-      "currentSemanticReview": "pending",
-      "finalDisposition": null,
+      "currentSemanticReview": "reviewed-current-source",
+      "finalDisposition": {
+        "category": "keep-fresh",
+        "reason": "source-mutating-fixer",
+        "scope": "whole-task",
+        "review": "research/current-mutating-fixer-review-2026-11-08.json",
+        "pureCounterpart": "@beep/yaml#lint"
+      },
       "owner": "turborepo-quality-cache-adoption"
     },
     {
@@ -65463,7 +66643,14 @@
     "scriptOnlyEntrypoints": 1856,
     "withLiteralConfiguredCaller": 1352,
     "withoutLiteralConfiguredCaller": 504,
-    "reviewState": "pending",
-    "countsDoNotMeanDistinctSemanticComputations": true
+    "reviewState": "partially-reviewed",
+    "countsDoNotMeanDistinctSemanticComputations": true,
+    "sourceReviewReports": [
+      {
+        "path": "research/current-mutating-fixer-review-2026-11-08.json",
+        "reviewedScriptOnlyEntrypoints": 196,
+        "authority": "Whole-command keep-fresh exclusion only; named implementation entrypoints remain distinct from configured computations."
+      }
+    ]
   }
 }

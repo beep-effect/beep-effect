@@ -42,9 +42,26 @@ presence grant qualification.
 The [previous reviewed population](prior-reviewed-population-2026-11-08.json)
 is retained byte-identically, with its prior history chain intact. The chain
 contains 205 historical reviewed computation identities; 203 still occur in
-the new configured executable set. All 2,512 current rows remain pending
-source/profile revalidation, with no final disposition inferred from history.
-The five retained exclusion records apply only to their original tuples.
+the new configured executable set. The initial refresh leaves all 2,512 rows
+pending source/profile revalidation, with no disposition inferred from history.
+The five retained qualification-ledger exclusion records apply only to their
+original tuples.
+
+The subsequent [current fixer review](current-mutating-fixer-review-2026-11-08.json)
+reads the current manifests and effective configurations again. It gives
+whole-command keep-fresh dispositions to 196 configured `lint:fix` wrappers
+and separately identifies their 196 script-only `beep:lint:fix` implementations.
+All explicitly invoke `biome check` with `--write`; all configured cache flags
+are already false and output archives empty. The nonwriting `lint` counterparts
+exist but remain unqualified. The Storybook command's Git-root path discovery
+does not make its requested source mutation reusable.
+
+This leaves 2,316 configured computations and 1,660 script-only entrypoints
+without current final dispositions. The two populations are names in different
+inventory projections, not disjoint counts of semantic computations or actual
+executions. The linked native catalogue's pending-state statement describes
+the capture before this separate source review; it is not a qualification
+grant or an automatic carry-forward of historical decisions.
 
 The old refresh writer silently omitted the linked script-only supplement.
 The replacement requires a current supplement when one already exists and
@@ -55,7 +72,7 @@ writing; the corrected invocation produced the full projection. These were
 metadata operations, not local quality suites. The unpublished graph-only
 intermediate was retained privately rather than promoted or discarded.
 
-Remaining work includes every current semantic review, dynamic/non-Turbo
+Remaining work includes the remaining current semantic reviews, dynamic/non-Turbo
 execution reconciliation, feature decisions, tuple qualification, adoption,
 value measurement, representative observation and rollback proof. Both goals
 remain active and all whole-goal acceptance criteria remain unproven.
