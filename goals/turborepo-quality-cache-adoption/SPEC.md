@@ -1,8 +1,25 @@
 # Turborepo quality cache adoption spec
 
+## Operative amendment: paused operational scope (2026-11-08)
+
+The operator adopted the [shared operational finish line](OPERATIONAL-SCOPE.md) and then
+requested preservation of in-flight work, mergeable PRs, goal amendments and
+worktree cleanup before resuming later. Both packets remain **paused**.
+The six unchecked gates in that amendment are the operative completion scope.
+The original design and acceptance criteria below are retained as **deferred,
+unfinished assurance requirements**. Their exhaustive certification and staged
+7/7/14-day observations no longer gate operational completion. None is marked
+passed by this amendment. Existing safety controls and hosted proof remain
+binding; no deployment or qualification is authorized by the scope edit.
+
+Resume through the linked handoff and an acceptance audit of existing evidence,
+not by automatically executing this document's historical first actions.
+
 ## Objective
 
-Adopt every eligible quality computation in its proven profiles and optimize the full Turbo/CI/Yeet workflow with measured benefits and fresh hosted statuses.
+Operate the shared R2 cache across the approved development and CI surfaces with baseline safety and measured cost/time benefits.
+
+Original assurance objective (deferred): Adopt every eligible quality computation in its proven profiles and optimize the full Turbo/CI/Yeet workflow with measured benefits and fresh hosted statuses.
 
 Graduated 2026-09-08 after the user approved the complete
 [brief](../../explorations/turborepo-quality-cache/BRIEF.md) and [goal map](../../explorations/turborepo-quality-cache/MAP.md).
@@ -160,7 +177,7 @@ receipts and retention-controlled raw references. Resolve op from PATH and
 follow the approved agent lane. Never reveal secret values or repair an agent
 secret failure through desktop sign-in.
 
-## Acceptance criteria
+## Retained assurance acceptance criteria (deferred, unfinished)
 
 - [ ] Current executable/lane population and applicable stable/canary feature matrix are complete, source-backed and assigned to owners.
 - [ ] Every adopted computation has valid tuple-specific qualification, semantic invalidation, output/log safety and supported portability/concurrency evidence.
@@ -1234,5 +1251,13 @@ The original-resolution hosted Check passed on dependency-refreshed base d8f335c
 PR #2827
 
 Reverse: Restore the two schema aliases from 63f21c77 only after a matched current-profile reproduction establishes their need; retain all historical evidence.
+
+### Adopt operational scope and pause after preserving in-flight work, 2026-11-08
+
+Operator adopted the six-gate operational R2 finish line and requested mergeable PR preservation, goal amendments and worktree cleanup before a later resume. SPEC operative amendment governs; exhaustive assurance remains unchecked and deferred. No deployment, signing activation, qualification or completion is claimed.
+
+PR #2956
+
+Reverse: On explicit resume, audit the six operational gates; expand assurance only with a new recorded decision and effort budget.
 
 <!-- beep:decisions:end -->

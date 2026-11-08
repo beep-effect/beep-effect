@@ -42,6 +42,7 @@ import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { dual, flow, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
 import * as Num from "effect/Number";
@@ -51,21 +52,34 @@ import * as Ref from "effect/Ref";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ghOutput } from "../../../internal/github/index.ts";
-import { patientGit } from "../../../internal/repo-run/index.ts";
+import { GithubRest, ghOutput } from "../../../internal/github/index.ts";
+import {
+  COMPUTE_PROFILE_WORKER_SKIP_REASON,
+  gateHostedContextFor,
+  patientGit,
+} from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import { finalCheckRefusal, readFinalCheckReceipt } from "./FinalCheck.ts";
+import { FinalCheckGate } from "./FinalCheck.schemas.ts";
+import { finalCheckRefusal, readFinalCheckReceipt, YEET_FINAL_CHECK_COMMAND } from "./FinalCheck.ts";
 import { FinalCheckRefreshVerdict } from "./FinalCheckRefresh.schemas.ts";
 import { checkFinalCheckRefresh } from "./FinalCheckRefresh.ts";
 import {
   flipPullRequestReady,
+  provideYeetGhLogin,
   recordInheritedRedsInPullRequestBody,
   recordMonitoredPrSessionAsGhLogin,
   withYeetGh,
+  yeetGithubFailure,
 } from "./GhOps.ts";
 import { currentCommitSha, yeetGitKitError } from "./GitExec.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
-import { decodeAttributedCheckFlags, parseAttributedCheck } from "./MergeGate.ts";
+import {
+  decodeAttributedCheckFlags,
+  MergeGateCheckRun,
+  mergeGateGoodConclusion,
+  mergeGateLatestRunPerName,
+  parseAttributedCheck,
+} from "./MergeGate.ts";
 import { YEET_READY_COMMAND } from "./MonitorPolicy.ts";
 import { findLiveReadyMonitorJob } from "./ProofJob.ts";
 import { ProofJobLauncher } from "./ProofJobLauncher.ts";
@@ -600,6 +614,14 @@ interface YeetReadyGateDependencies {
     headSha: string
   ) => Effect.Effect<O.Option<FinalCheckReceipt>, never, FileSystem.FileSystem | Path.Path>;
   readonly findMonitor?: typeof findLiveMonitorForReady;
+  readonly hostedChecks?: (
+    context: RepoRunContext,
+    headSha: string
+  ) => Effect.Effect<
+    ReadonlyArray<MergeGateCheckRun>,
+    YeetCommandError,
+    SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  >;
   readonly markReady?: (
     prNumber: number,
     confirmedHead: string
@@ -1040,17 +1062,194 @@ const refuseFinalCheck = (detail: string) =>
     message: `yeet ready refused: blocked on final-check: ${detail}. Re-run \`${YEET_READY_COMMAND}\` once it passes.`,
   });
 
+/**
+ * How `yeet ready` judged the gates a worker-profile final-check deferred to
+ * hosted CI.
+ *
+ * **Details**
+ *
+ * `accepted` lists the gates whose hosted check run is green on the head;
+ * `refusal` is set when any deferred gate's run is pending, missing or red,
+ * naming the first such gate.
+ *
+ * **Example** (Build an all-green judgement)
+ *
+ * ```ts
+ * import { YeetReadyHostedDeferral } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const judged = YeetReadyHostedDeferral.make({ accepted: ["check"], refusal: O.none() })
+ * console.log(judged.accepted) // [ "check" ]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetReadyHostedDeferral extends S.Opaque<YeetReadyHostedDeferral, { readonly brand: unique symbol }>()(
+  S.Struct({ accepted: S.Array(FinalCheckGate), refusal: S.Option(S.String) }).pipe(
+    $I.annoteSchema("YeetReadyHostedDeferral", {
+      description: "The gates a worker-profile final-check deferred that hosted CI proved, and the refusal if any.",
+    })
+  )
+) {}
+
+const profileSkippedGates = (receipt: FinalCheckReceipt): ReadonlyArray<FinalCheckGate> =>
+  pipe(
+    receipt.steps,
+    A.filter((step) => step.status === "skipped" && step.reason === COMPUTE_PROFILE_WORKER_SKIP_REASON),
+    A.map((step) => step.gate),
+    A.dedupe
+  );
+
+type HostedGateJudgement =
+  | { readonly _tag: "accepted"; readonly gate: FinalCheckGate }
+  | { readonly _tag: "refused"; readonly detail: string };
+
+const judgeHostedGate =
+  (latest: HashMap.HashMap<string, MergeGateCheckRun>) =>
+  (gate: FinalCheckGate): HostedGateJudgement =>
+    O.match(gateHostedContextFor(gate), {
+      onNone: () => ({
+        _tag: "refused",
+        detail: `${gate} was deferred to hosted CI (${COMPUTE_PROFILE_WORKER_SKIP_REASON}) but has no hosted context; run \`${YEET_FINAL_CHECK_COMMAND} --force-local\``,
+      }),
+      onSome: (context): HostedGateJudgement =>
+        O.match(HashMap.get(latest, context), {
+          onNone: () => ({ _tag: "refused", detail: `wait for hosted ${context} (worker profile defers ${gate})` }),
+          onSome: (run): HostedGateJudgement =>
+            run.conclusion === null
+              ? { _tag: "refused", detail: `wait for hosted ${context} (worker profile defers ${gate})` }
+              : mergeGateGoodConclusion(run.conclusion)
+                ? { _tag: "accepted", gate }
+                : {
+                    _tag: "refused",
+                    detail: `hosted ${context} is red (${run.conclusion}) on this head; the worker profile deferred ${gate} to it, fix the red before the flip`,
+                  },
+        }),
+    });
+
+/**
+ * Judge the gates a receipt deferred with `compute-profile=worker` against
+ * the head's hosted check runs.
+ *
+ * **Details**
+ *
+ * Each deferred gate maps to its hosted check run through
+ * `gateHostedContextFor`; the newest run of that name decides. Success (or
+ * skipped/neutral, as the merge gate counts them) accepts the gate; a pending
+ * or missing run refuses with "wait for hosted <context>"; any other
+ * conclusion refuses naming the red. Operator skips are not judged here.
+ *
+ * **Example** (Accept a green hosted Check)
+ *
+ * ```ts
+ * import { FinalCheckReceipt, FinalCheckStepResult, judgeHostedDeferrals, MergeGateCheckRun } from "@beep/repo-cli/test/Yeet"
+ *
+ * const receipt = FinalCheckReceipt.make({
+ *   schemaVersion: "yeet-final-check/v1",
+ *   headSha: "a".repeat(40),
+ *   mergeBase: "b".repeat(40),
+ *   base: "origin/main",
+ *   complete: true,
+ *   verdict: "pass",
+ *   startedAt: "2026-11-08T00:00:00.000Z",
+ *   finishedAt: "2026-11-08T00:01:00.000Z",
+ *   steps: [
+ *     FinalCheckStepResult.make({
+ *       gate: "check",
+ *       label: "final-check:check",
+ *       hostedContext: "Heavy / Check",
+ *       command: "(skipped)",
+ *       status: "skipped",
+ *       durationMs: 0,
+ *       reason: "compute-profile=worker",
+ *     }),
+ *   ],
+ *   expectationRewrites: [],
+ * })
+ * const runs = [MergeGateCheckRun.make({ id: 1, name: "Heavy / Check", status: "completed", conclusion: "success" })]
+ * console.log(judgeHostedDeferrals(receipt, runs).accepted) // [ "check" ]
+ * ```
+ *
+ * @param receipt - The passing receipt the flip rests on.
+ * @param runs - Every check run on the pull request head.
+ * @returns The accepted gates and the refusal, if any.
+ * @category policies
+ * @since 0.0.0
+ */
+export const judgeHostedDeferrals: {
+  (receipt: FinalCheckReceipt, runs: ReadonlyArray<MergeGateCheckRun>): YeetReadyHostedDeferral;
+  (runs: ReadonlyArray<MergeGateCheckRun>): (receipt: FinalCheckReceipt) => YeetReadyHostedDeferral;
+} = dual(2, (receipt: FinalCheckReceipt, runs: ReadonlyArray<MergeGateCheckRun>): YeetReadyHostedDeferral => {
+  const judgements = A.map(profileSkippedGates(receipt), judgeHostedGate(mergeGateLatestRunPerName(runs)));
+  return YeetReadyHostedDeferral.make({
+    accepted: A.flatMap(judgements, (judgement) => (judgement._tag === "accepted" ? [judgement.gate] : [])),
+    refusal: A.head(A.flatMap(judgements, (judgement) => (judgement._tag === "refused" ? [judgement.detail] : []))),
+  });
+});
+
+const readHostedChecksForReady = (context: RepoRunContext, headSha: string) =>
+  provideYeetGhLogin(context.repoRoot)(
+    GithubRest.use((rest) => rest.checkRuns(headSha)).pipe(
+      Effect.mapBoth({
+        onFailure: yeetGithubFailure(`gh api check-runs ${Str.slice(0, 12)(headSha)}`),
+        onSuccess: A.map((run) =>
+          MergeGateCheckRun.make({
+            id: run.id,
+            name: run.name,
+            status: run.status,
+            conclusion: O.getOrNull(run.conclusion),
+          })
+        ),
+      })
+    )
+  );
+
+// Operator skips are named for the PR body and never checked; skips the
+// worker profile recorded are judged against the head's hosted check runs
+// and refuse the flip until each mapped run is green.
 const logReceiptSkips = (receipt: FinalCheckReceipt, label: string) => {
-  const skipped = A.filter(receipt.steps, (step) => step.status === "skipped");
+  const skipped = A.filter(
+    receipt.steps,
+    (step) => step.status === "skipped" && step.reason !== COMPUTE_PROFILE_WORKER_SKIP_REASON
+  );
+  const deferred = profileSkippedGates(receipt);
   return Console.log(
     A.isReadonlyArrayEmpty(skipped)
-      ? `[yeet] final-check receipt for ${label}: pass, every gate ran`
+      ? A.isReadonlyArrayEmpty(deferred)
+        ? `[yeet] final-check receipt for ${label}: pass, every gate ran`
+        : `[yeet] final-check receipt for ${label}: pass, every gate ran or was deferred to hosted CI (${COMPUTE_PROFILE_WORKER_SKIP_REASON})`
       : `[yeet] final-check receipt for ${label}: pass with ${A.length(skipped)} skipped gate(s): ${A.join(
           A.map(skipped, (step) => `${step.gate} (${step.reason ?? "no reason"})`),
           "; "
         )}; name them in the PR body as checks hosted CI proves`
   );
 };
+
+const acceptHostedDeferrals = Effect.fn("Yeet.acceptHostedDeferrals")(function* (
+  context: RepoRunContext,
+  dependencies: YeetReadyGateDependencies,
+  receipt: FinalCheckReceipt,
+  headSha: string
+) {
+  if (A.isReadonlyArrayEmpty(profileSkippedGates(receipt))) return A.empty<FinalCheckGate>();
+  const runs = yield* (dependencies.hostedChecks ?? readHostedChecksForReady)(context, headSha).pipe(
+    Effect.mapError((cause) =>
+      refuseFinalCheck(
+        `the worker profile deferred gates to hosted CI and their check runs could not be read: ${cause.message}`
+      )
+    )
+  );
+  const judged = judgeHostedDeferrals(receipt, runs);
+  if (O.isSome(judged.refusal)) return yield* refuseFinalCheck(judged.refusal.value);
+  yield* Effect.forEach(judged.accepted, (gate) => Console.log(`[yeet] hosted green stands in for ${gate}`), {
+    discard: true,
+  });
+  return judged.accepted;
+});
+
+const renderHostedGreen = (accepted: ReadonlyArray<FinalCheckGate>): string =>
+  A.isReadonlyArrayEmpty(accepted) ? "" : ` hosted-green ${A.join(accepted, ",")}`;
 
 const renderOwnChange = (change: FinalCheckRefreshOwnChange): string =>
   `${change.path} (${O.getOrElse(change.allowance, () => "not allowed")})`;
@@ -1072,7 +1271,15 @@ const requireFinalCheck = Effect.fn("Yeet.requireFinalCheck")(function* (
   if (O.isNone(refusal)) {
     // A passing finalCheckRefusal requires a present receipt; an empty receipt
     // always has a refusal. Do not keep an unreachable success branch here.
-    return yield* logReceiptSkips(O.getOrThrow(receipt), Str.slice(0, 12)(headSha));
+    const passing = O.getOrThrow(receipt);
+    yield* logReceiptSkips(passing, Str.slice(0, 12)(headSha));
+    const accepted = yield* acceptHostedDeferrals(context, dependencies, passing, headSha);
+    if (A.isReadonlyArrayNonEmpty(accepted)) {
+      yield* Console.log(
+        `[yeet] report this final as: final <sha40> #${prNumber} receipt ${passing.headSha}${renderHostedGreen(accepted)} (the sha is the head after the flip)`
+      );
+    }
+    return;
   }
   if (O.isSome(receipt)) return yield* refuseFinalCheck(refusal.value);
   const refresh = yield* (dependencies.refresh ?? refreshForReady)(context, headSha);
@@ -1094,8 +1301,9 @@ const requireFinalCheck = Effect.fn("Yeet.requireFinalCheck")(function* (
         }`
       );
       yield* logReceiptSkips(passed.receipt, `ancestor ${Str.slice(0, 12)(receiptHead)}`);
+      const accepted = yield* acceptHostedDeferrals(context, dependencies, passed.receipt, headSha);
       yield* Console.log(
-        `[yeet] report this final as: final <sha40> #${prNumber} receipt ${receiptHead} (the sha is the head after the flip)`
+        `[yeet] report this final as: final <sha40> #${prNumber} receipt ${receiptHead}${renderHostedGreen(accepted)} (the sha is the head after the flip)`
       );
     }),
   });

@@ -1,8 +1,9 @@
-import { GateRouteId, gateRouteFor, gateRouteTable } from "@beep/repo-cli/test/RepoRun";
+import { GateRouteId, gateHostedContextFor, gateRouteFor, gateRouteTable } from "@beep/repo-cli/test/RepoRun";
 import { FinalCheckGate } from "@beep/repo-cli/test/Yeet";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as HashMap from "effect/HashMap";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const isGateRouteId = S.is(GateRouteId);
@@ -40,5 +41,10 @@ describe("gate route table (D6)", () => {
 
   it("covers every final-check gate", () => {
     expect(A.filter(FinalCheckGate.literals, (gate) => !isGateRouteId(gate))).toStrictEqual([]);
+  });
+
+  it("maps every gate that is hosted-only on worker to a hosted check-run name", () => {
+    const hostedOnly = A.filter(GateRouteId.literals, (gate) => gateRouteFor(gate, "worker") === "hosted-only");
+    expect(A.filter(hostedOnly, (gate) => O.isNone(gateHostedContextFor(gate)))).toStrictEqual([]);
   });
 });

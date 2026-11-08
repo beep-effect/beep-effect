@@ -216,8 +216,11 @@ const nextInheritedFrame = (
   child: number,
   depth: number,
   charge: (amount: number) => boolean
-): O.Option<ClaimSourceFrame> =>
-  depth <= 128 && charge(2) ? O.filter(A.get(plan.frames, ordinal - 1), (f) => f.ordinal < child) : O.none();
+): O.Option<ClaimSourceFrame> | false => {
+  if (depth > 128) return O.none();
+  if (!charge(2)) return false;
+  return O.filter(A.get(plan.frames, ordinal - 1), (f) => f.ordinal < child);
+};
 const inheritedFrameStep = (
   plan: ClaimSourceElementPlan,
   frame: ClaimSourceFrame,
@@ -226,12 +229,12 @@ const inheritedFrameStep = (
   parent: number,
   depth: number,
   charge: (amount: number) => boolean
-): O.Option<readonly [ClaimSourceFrame, boolean]> => {
+): O.Option<readonly [ClaimSourceFrame, boolean]> | false => {
   const candidate = nextInheritedFrame(plan, parent, frame.ordinal, depth, charge);
+  if (candidate === false) return false;
   if (O.isNone(candidate)) return O.none();
   const ancestor = candidate.value;
-  if (!charge((predicate ? ancestor.predicates.length : ancestor.nominals.length) + anchor.quote.length))
-    return O.none();
+  if (!charge((predicate ? ancestor.predicates.length : ancestor.nominals.length) + anchor.quote.length)) return false;
   return O.some([ancestor, frameContains(ancestor, anchor, predicate)]);
 };
 const inheritedFrameReference = (
@@ -240,17 +243,18 @@ const inheritedFrameReference = (
   anchor: TextAnchor,
   predicate: boolean,
   charge: (amount: number) => boolean
-): boolean => {
+): O.Option<boolean> => {
   let parent = frame.parent;
   let depth = 0;
   while (O.isSome(parent)) {
     const step = inheritedFrameStep(plan, frame, anchor, predicate, parent.value, ++depth, charge);
-    if (O.isNone(step)) return false;
+    if (step === false) return O.none();
+    if (O.isNone(step)) return O.some(false);
     const [ancestor, matches] = step.value;
-    if (matches) return true;
+    if (matches) return O.some(true);
     parent = ancestor.parent;
   }
-  return false;
+  return O.some(false);
 };
 const declaredCoreReference = (
   plan: ClaimSourceElementPlan,
@@ -282,9 +286,8 @@ const frameCore = (
   const owner = O.getOrElse(A.get(owners, index.value), () => 0);
   if (!charge(frame.nominals.length + 1)) return false;
   if (owner === frame.publicOwner && frameContains(frame, anchor, false)) return true;
-  return (
-    inheritedFrameReference(plan, frame, anchor, false, charge) || declaredCoreReference(plan, frame, owner, charge)
-  );
+  const inherited = inheritedFrameReference(plan, frame, anchor, false, charge);
+  return O.isSome(inherited) && (inherited.value || declaredCoreReference(plan, frame, owner, charge));
 };
 const validFrameParent = (plan: ClaimSourceElementPlan, frame: ClaimSourceFrame): boolean =>
   O.match(frame.parent, {
@@ -323,7 +326,7 @@ const validFrameArgument = (
   if (
     O.exists(
       argument.predicate,
-      (p) => !frameContains(frame, p, true) && !inheritedFrameReference(plan, frame, p, true, charge)
+      (p) => !frameContains(frame, p, true) && !O.contains(inheritedFrameReference(plan, frame, p, true, charge), true)
     )
   )
     return false;
@@ -607,12 +610,16 @@ const privateSelectionAncestors = (
   owner: O.Option<ClaimFiniteSourceProof>,
   charge: (amount: number) => boolean
 ): boolean => {
-  for (const other of plan.frames)
-    if (
-      privateSelectionMember(plan, other, core, owner, charge) &&
-      !sourceFrameAncestor(plan, other.ordinal, frame, charge)
-    )
-      return false;
+  let available = true;
+  const reserve = (amount: number): boolean => {
+    const accepted = charge(amount);
+    if (!accepted) available = false;
+    return accepted;
+  };
+  for (const other of plan.frames) {
+    const member = privateSelectionMember(plan, other, core, owner, reserve);
+    if (!available || (member && !sourceFrameAncestor(plan, other.ordinal, frame, charge))) return false;
+  }
   return true;
 };
 const validatePrivateSelection = (
@@ -622,7 +629,7 @@ const validatePrivateSelection = (
   certificate: Extract<ClaimFiniteSourceProof, { readonly kind: "selection" }>,
   charge: (amount: number) => boolean
 ): boolean => {
-  if (!charge(plan.roles.opaqueSelections.length + plan.frames.length + 6)) return false;
+  if (!charge(plan.roles.opaqueSelections.length + plan.frames.length + 9)) return false;
   const selection = A.findFirst(plan.roles.opaqueSelections, (s) => s.proof.ordinal === argument.certificate.ordinal);
   const owner = O.flatMap(certificate.owner, (ref) => proofAt(plan, ref));
   if (

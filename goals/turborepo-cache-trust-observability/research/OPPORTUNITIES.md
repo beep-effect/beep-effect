@@ -1,5 +1,22 @@
 # Friction and opportunities
 
+## 2026-11-08: sandbox library discovery refused the prepared pilot
+
+Accepted-source observation run 42452673520 at `0ba15ffc57a3` prepared
+inputs successfully, then refused with `Sandbox bun library discovery failed.`
+Its summary projection also refused, no artifact was produced and cleanup
+passed. The local pilot, signed supervisor and protocol sandbox all mapped
+`/lib64` to `usr/lib`, hiding libraries kept separately in `/usr/lib64`.
+Use the existing read-only `/usr/lib64` path in all three mappings; it also
+preserves a host where `/usr/lib64` aliases `/usr/lib`. Keep the exact ldd
+exit, stderr, truncation, path and digest checks. Report only the role,
+exit code, truncation and stderr-emptiness on refusal, never worker streams.
+The original failure does not establish that this mapping was its sole
+cause. Hosted checks and a fresh accepted-source observation must establish
+the outcome; no local quality suite or repeated dispatch ran. Reverse the
+mapping through a PR if the new observation contradicts the profile, and
+keep qualification closed while the failure remains unresolved.
+
 Record friction as it occurs: work, minimum command/error/file evidence,
 impact, prevention and owner/disposition.
 Record friction as it occurs: work, minimum
@@ -2744,3 +2761,15 @@ remove that field, refresh a stale receipt, or bypass exact preview equivalence.
 No public summary was produced and owned cleanup passed. The workflow repair
 and real-shell mask regression belong to PR #2926; hosted proof and a new
 accepted-source observation remain pending.
+
+## 2026-11-08: codec regressions crossed the property-coverage threshold
+
+Hosted Lint Policy job 128642129299 at PR #2937 reported
+`SchemaUtils.test.ts :: schema-codec-tests`: four codec assertions without
+schema-derived property coverage. The fixed examples passed, but did not
+meet the schema-first property requirement. Add a property derived from
+the owning optional-defect schema that round-trips diagnostic identity
+and cause presence, with absent causes omitted from encoding. Preserve
+the existing regression examples and leave the inventory unchanged.
+Consider the file-level property obligation whenever adding codec tests.
+No local test or quality suite ran; hosted execution must prove the repair.

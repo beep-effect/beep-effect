@@ -3,14 +3,14 @@
   "initiative": {
     "id": "turborepo-cache-trust-observability",
     "title": "Turborepo cache trust and observability",
-    "status": "active",
+    "status": "paused",
     "created": "2026-09-08",
-    "updated": "2026-11-03",
+    "updated": "2026-11-08",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/turborepo-cache-trust-observability",
-  "lifecycle": "active",
-  "mission": "Enforce signed artifact reuse, independent upload authorization, tenant isolation and attributable cache outcomes with bounded safe telemetry.",
+  "lifecycle": "paused",
+  "mission": "Operate the shared R2 cache across approved development and CI surfaces with baseline safety and measured cost/time benefits.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -22,7 +22,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Enforce signed artifact reuse, independent upload authorization, tenant isolation and attributable cache outcomes with bounded safe telemetry. Complete only after SPEC acceptance, representative evidence and a final Yeet merge-ready: yes verdict. Land final evidence, reflection and proposedCloseout in the final implementation PR while the goal stays active or paused. After that PR merges, completion refresh verifies the proposal and a separate packet-state PR adopts completed-retained. That PR must merge, and origin/main must show matching closeout and initiative statuses.",
+    "statement": "Complete only after the six operational gates in turborepo-quality-cache-adoption/OPERATIONAL-SCOPE.md pass with source-bound evidence. Original exhaustive assurance requirements remain deferred and unfinished. Land final evidence, reflection and proposedCloseout with implementation while active or paused; after merge, completion refresh and a separate merged packet-state adoption PR must establish matching closeout and initiative statuses on origin/main.",
     "grandfathered": false
   },
   "currentSourceOfTruth": [
@@ -48,7 +48,9 @@
     "goals/turborepo-cache-trust-observability/research/producer-object-coverage-identity-review-2026-11-02.md",
     "goals/turborepo-cache-trust-observability/research/producer-object-coverage-identity-checkpoint-2026-11-02.json",
     ".github/workflows/cache-producer-prepare.yml",
-    ".github/workflows/heavy.yml"
+    ".github/workflows/heavy.yml",
+    "goals/turborepo-quality-cache-adoption/OPERATIONAL-SCOPE.md",
+    "goals/turborepo-quality-cache-adoption/PAUSED-HANDOFF.md"
   ],
   "researchReports": [
     "research/OPPORTUNITIES.md",
@@ -250,5 +252,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "Active. Ordinary stable and current-canary signed matrices pass for frozen task source68834a997e under supervisor/worker976ca2a943, without instrumentation or weaker execution gates. These local private-loopback observations do not prove protected producer provenance, current-main adoption or production readiness. All nine whole-goal acceptance criteria, current protected publication, rollout/rollback evidence and representative observation remain incomplete."
+  "statusNote": "Paused by operator 2026-11-08 after preserving in-flight PRs. Operational six-gate scope adopted; exhaustive assurance remains unfinished. Resume with OPERATIONAL-SCOPE.md and PAUSED-HANDOFF.md evidence audit; no pilot or rollout automatically restarts."
 }

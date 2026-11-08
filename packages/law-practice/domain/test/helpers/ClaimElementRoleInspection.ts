@@ -67,6 +67,10 @@ const evidenceOf = (sourceKey: string, texts: ReadonlyArray<string>): ReadonlyAr
   );
 
 const sourceKey = "role-inspection-control";
+
+/** Reuses the source-only lexical fixture paired with this helper's prepared inputs. */
+export const roleEvidenceOf = (texts: ReadonlyArray<string>): ReadonlyArray<ClaimLexicalEvidence> =>
+  evidenceOf(sourceKey, texts);
 const inputOf = (texts: A.NonEmptyReadonlyArray<string>): ClaimInputCollection =>
   ClaimInputCollection.make({
     sourceKey,

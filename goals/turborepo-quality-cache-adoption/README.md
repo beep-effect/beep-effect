@@ -2,15 +2,22 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `paused`
 
 Source: [ops/manifest.json](./ops/manifest.json).
 Launched 2026-10-28. See [PLAN.md](./PLAN.md) for the current audit and milestone
 dependencies.
 
+## Paused operational scope
+
+The operator adopted the [operational finish line](OPERATIONAL-SCOPE.md) on 2026-11-08 and
+requested the in-flight PRs be retained and worktrees cleaned up before a later
+resume. Existing assurance work remains unfinished. Start with the amendment's
+handoff and six-gate evidence audit; do not launch the historical program.
+
 ## Mission
 
-Adopt every eligible quality computation in its proven profiles and optimize the full Turbo/CI/Yeet workflow with measured benefits and fresh hosted statuses.
+Operate the shared R2 cache across approved development and CI surfaces with baseline safety and measured cost/time benefits.
 
 ## Launch
 
@@ -28,7 +35,7 @@ Adopt every eligible quality computation in its proven profiles and optimize the
 4. [Manifest](./ops/manifest.json), [friction ledger](./research/OPPORTUNITIES.md)
    and [history](./history/).
 
-## Current phase
+## Historical phase (suspended)
 
 P0 Population, feature and value audit, in progress.
 
