@@ -11,7 +11,11 @@ import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
-import { claimCitationIntroducers, validateClaimCitationWitness } from "./ClaimClauseRole.behavior.ts";
+import {
+  claimCitationIntroducers,
+  readSourceRightParenthesisList,
+  validateClaimCitationWitness,
+} from "./ClaimClauseRole.behavior.ts";
 import {
   ClaimAttachedNominal,
   ClaimCitationWitness,
@@ -106,6 +110,9 @@ class SourcePlanner {
   private frameByElement = HashMap.empty<number, number>();
   private declarationFrames = HashMap.empty<number, number>();
   private protected = HashSet.empty<number>();
+  private rightList: ReturnType<typeof readSourceRightParenthesisList> = O.none();
+  private rightMarkers = HashMap.empty<number, readonly [string, number]>();
+  private rightClosers = HashSet.empty<number>();
   private tokenIndex = HashMap.empty<number, number>();
   private tokenEnds = HashSet.empty<number>();
   private spans = HashMap.empty<string, TextAnchor>();
@@ -670,6 +677,8 @@ class SourcePlanner {
     return true;
   };
   private label = (index: number): O.Option<readonly [string, number]> => {
+    const right = HashMap.get(this.rightMarkers, index);
+    if (O.isSome(right)) return right;
     const label = this.word(index + 1);
     if (
       this.word(index) === "(" &&
@@ -790,7 +799,7 @@ class SourcePlanner {
     let depth = 0;
     for (let i = start; i < end; i++) {
       if (HashSet.has(this.protected, i)) continue;
-      depth += this.bracketStep(this.word(i));
+      depth += HashSet.has(this.rightClosers, i) ? 0 : this.bracketStep(this.word(i));
       if (depth === 0) result.push(i);
     }
     return O.some(result);
@@ -833,7 +842,13 @@ class SourcePlanner {
     }
     return O.some(markers);
   };
+  private rightListOwner = (governor: number, end: number, colon: number, parent: number): O.Option<number> =>
+    parent === 1 && this.rootDeclaration(governor, end, colon + 1, parent) ? O.some(parent) : O.none();
   private listOwner = (start: number, end: number, colon: number, parent: number): O.Option<number> => {
+    if (O.exists(this.rightList, (l) => l.colon === colon)) {
+      const list = O.getOrThrow(this.rightList);
+      return this.rightListOwner(list.governor, end, colon, parent);
+    }
     if (colon === start && parent === 1 && HashSet.has(compositions, this.claim.transition)) {
       return this.rootDeclaration(start - 1, end, colon + 1, parent) ? O.some(parent) : O.none();
     }
@@ -918,6 +933,12 @@ class SourcePlanner {
       );
     return true;
   };
+  private labelChildEnd = (next: number): number =>
+    HashMap.has(this.rightMarkers, next) &&
+    HashSet.has(HashSet.make("and", "or"), this.word(next - 1)) &&
+    this.word(next - 2) === ";"
+      ? next - 2
+      : next;
   private listItems = (
     markers: ReadonlyArray<readonly [number, number]>,
     end: number,
@@ -928,7 +949,7 @@ class SourcePlanner {
     const items: Array<ClaimListDeclaration["items"][number]> = [];
     for (let i = 0; i < markers.length; i++) {
       const marker = O.getOrThrow(A.get(markers, i));
-      const next = O.match(A.get(markers, i + 1), { onNone: () => end, onSome: (m) => m[0] });
+      const next = this.labelChildEnd(O.match(A.get(markers, i + 1), { onNone: () => end, onSome: (m) => m[0] }));
       const child = this.elements.length + 1;
       const label = this.span(marker[0], marker[1]);
       if (!this.parse(marker[1], this.trimEnd(marker[1], next), owner, "enumeration-child", depth + 1)) return O.none();
@@ -2834,20 +2855,39 @@ class SourcePlanner {
     if (!this.charge(1)) return false;
     if (this.certificateBindingsReady) return true;
     if (!this.charge(this.roles.certificates.length * 8 + 2)) return false;
+    let right = false;
     for (const proof of this.roles.certificates) {
-      if (proof.kind === "token")
-        this.rawCertificateIndex = HashMap.set(
-          this.rawCertificateIndex,
-          proof.tokenOrdinal,
-          ClaimSourceProofRef.make({ ordinal: proof.ordinal, slot: "token" })
-        );
-      if (proof.kind === "operator")
-        this.operatorCertificateIndex.push([
-          proof,
-          ClaimSourceProofRef.make({ ordinal: proof.ordinal, slot: "operator" }),
-        ]);
+      if (proof.kind === "label-boundary") right = true;
+      this.indexSourceCertificate(proof);
     }
+    if (right && !this.prepareRightMarkers()) return false;
     this.certificateBindingsReady = true;
+    return true;
+  };
+  private indexSourceCertificate = (proof: ClaimFiniteSourceProof): void => {
+    if (proof.kind === "token")
+      this.rawCertificateIndex = HashMap.set(
+        this.rawCertificateIndex,
+        proof.tokenOrdinal,
+        ClaimSourceProofRef.make({ ordinal: proof.ordinal, slot: "token" })
+      );
+    if (proof.kind === "operator")
+      this.operatorCertificateIndex.push([
+        proof,
+        ClaimSourceProofRef.make({ ordinal: proof.ordinal, slot: "operator" }),
+      ]);
+  };
+  private prepareRightMarkers = (): boolean => {
+    const list = readSourceRightParenthesisList(this.claim, this.tokens, this.charge);
+    if (O.isNone(list) || !this.charge(list.value.markers.length * 4 + 4)) return false;
+    for (const [start, end] of list.value.markers) {
+      this.rightMarkers = HashMap.set(this.rightMarkers, start, [
+        Str.slice(0, 1)(O.getOrThrow(this.token(start)).anchor.quote),
+        end,
+      ]);
+      this.rightClosers = HashSet.add(this.rightClosers, end - 1);
+    }
+    this.rightList = list;
     return true;
   };
   private operatorSlotCertificate(
