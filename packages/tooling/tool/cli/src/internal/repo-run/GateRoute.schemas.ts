@@ -126,6 +126,9 @@ const gateRouteRecord: Record<GateRouteId, GateRouteModes> = {
   "cheap-gates": hostedOnlyOnWorker,
   "lint-policy": hostedOnlyOnWorker,
   lint: everywhereLocal,
+  // Local on worker only as its changeset status check; the rest of the lane,
+  // the schema catalog scan included, is left to hosted Repo Sanity by
+  // routeFinalCheckStepsForProfile.
   "repo-sanity": everywhereLocal,
   check: hostedOnlyOnWorker,
   docgen: hostedOnlyOnWorker,

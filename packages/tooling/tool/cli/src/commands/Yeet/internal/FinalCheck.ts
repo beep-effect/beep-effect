@@ -500,6 +500,65 @@ export const computeProfileFinalCheckSkips = ({
       );
 
 /**
+ * Narrow the planned steps to what the compute profile may run locally.
+ *
+ * **Details**
+ *
+ * The `repo-sanity` lane opens with the whole-repo schema catalog scan, which
+ * holds about 5 GB on a host whose worker slice is capped at 7 GiB. On `worker`
+ * the gate therefore runs only its changeset status check (D6) and hosted Repo
+ * Sanity proves the rest. The decision lives here rather than in `beep ci lane`
+ * because hosted runners execute that same lane and must keep the full scan.
+ * `workstation` and `--force-local` keep the full lane.
+ *
+ * **Example** (Narrow repo-sanity on a worker)
+ *
+ * ```ts
+ * import { planFinalCheckSteps, routeFinalCheckStepsForProfile } from "@beep/repo-cli/test/Yeet"
+ * import * as A from "effect/Array"
+ * import * as O from "effect/Option"
+ *
+ * const planned = routeFinalCheckStepsForProfile({
+ *   planned: planFinalCheckSteps("/repo", "abc123", []),
+ *   profile: "worker",
+ *   forceLocal: false,
+ * })
+ * const step = A.findFirst(planned, (entry) => entry.gate === "repo-sanity")
+ * console.log(O.map(step, (entry) => entry.step.args.join(" "))) // Some("run beep quality changeset-status --since origin/main")
+ * ```
+ *
+ * @param input - The planned steps, the resolved profile and whether
+ *   `--force-local` keeps every gate local.
+ * @returns The steps to run on this host, in plan order.
+ * @category policies
+ * @since 0.0.0
+ */
+export const routeFinalCheckStepsForProfile = ({
+  planned,
+  profile,
+  forceLocal,
+}: {
+  readonly planned: ReadonlyArray<FinalCheckPlannedStep>;
+  readonly profile: ComputeProfile;
+  readonly forceLocal: boolean;
+}): ReadonlyArray<FinalCheckPlannedStep> =>
+  forceLocal || profile !== "worker"
+    ? planned
+    : A.map(planned, (entry) =>
+        entry.gate === "repo-sanity"
+          ? FinalCheckPlannedStep.make({
+              ...entry,
+              step: QualityTaskStep.make({
+                label: entry.step.label,
+                command: "bun",
+                args: ["run", "beep", "quality", "changeset-status", "--since", "origin/main"],
+                cwd: entry.step.cwd,
+              }),
+            })
+          : entry
+      );
+
+/**
  * The line `yeet final-check` prints when the profile deferred gates to hosted CI.
  *
  * **Example** (Print the route line)
@@ -1119,7 +1178,11 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
   const run: FinalCheckRun = {
     repoRoot,
     mergeBase,
-    planned: planFinalCheckSteps(repoRoot, mergeBase, changedFiles, O.getOrUndefined(fullPolicySweeps)),
+    planned: routeFinalCheckStepsForProfile({
+      planned: planFinalCheckSteps(repoRoot, mergeBase, changedFiles, O.getOrUndefined(fullPolicySweeps)),
+      profile: computeProfile,
+      forceLocal: options.forceLocal,
+    }),
     skips,
     resume: options.resume,
     route,
