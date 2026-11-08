@@ -663,6 +663,9 @@ class SourcePlanner {
     if (this.word(index - 1) === ";") return true;
     return HashSet.has(HashSet.make("and", "or"), this.word(index - 1)) && this.word(index - 2) === ";";
   }
+  private reserveDottedGaps(gap: number, afterGap: number): boolean {
+    return gap >= 0 && afterGap > 0 && this.charge((gap + afterGap) * 2 + 8);
+  }
   private dottedBoundary = (colon: number, index: number, markerEnd: number): boolean => {
     const first = this.token(index);
     const after = this.token(markerEnd);
@@ -671,7 +674,7 @@ class SourcePlanner {
     const gap = first.value.anchor.startChar - before;
     const labelEnd = O.getOrThrow(this.token(markerEnd - 1)).anchor.endChar;
     const afterGap = after.value.anchor.startChar - labelEnd;
-    if (gap < 0 || afterGap <= 0 || !this.charge((gap + afterGap) * 2 + 8)) return false;
+    if (!this.reserveDottedGaps(gap, afterGap)) return false;
     if (
       Str.trim(Str.slice(before, first.value.anchor.startChar)(this.claim.claimText)) !== "" ||
       Str.trim(Str.slice(labelEnd, after.value.anchor.startChar)(this.claim.claimText)) !== ""
@@ -923,21 +926,24 @@ class SourcePlanner {
     if (O.isNone(first)) return false;
     const roman = first.value[0] === "i";
     if (this.labelRank(first.value[0], roman) !== 0) return false;
-    const markers = this.listMarkers(colon, end, roman);
+    return this.labelledItems(this.listMarkers(colon, end, roman), start, end, colon, parent, depth);
+  };
+  private labelledItems = (
+    markers: O.Option<ReadonlyArray<readonly [number, number]>>,
+    start: number,
+    end: number,
+    colon: number,
+    parent: number,
+    depth: number
+  ): boolean => {
     if (O.isNone(markers) || markers.value.length < 2) return false;
     const owner = this.listOwner(start, end, colon, parent);
     if (O.isNone(owner)) return false;
     const items = this.listItems(markers.value, end, owner.value, depth);
     return O.exists(items, (values) => this.recordDeclaration(owner.value, values));
   };
-  private dottedLabelled = (start: number, end: number, colon: number, parent: number, depth: number): boolean => {
-    const markers = this.dottedListMarkers(colon, end);
-    if (O.isNone(markers) || markers.value.length < 2) return false;
-    const owner = this.listOwner(start, end, colon, parent);
-    if (O.isNone(owner)) return false;
-    const items = this.listItems(markers.value, end, owner.value, depth);
-    return O.exists(items, (values) => this.recordDeclaration(owner.value, values));
-  };
+  private dottedLabelled = (start: number, end: number, colon: number, parent: number, depth: number): boolean =>
+    this.labelledItems(this.dottedListMarkers(colon, end), start, end, colon, parent, depth);
   private independent = (start: number, end: number): boolean => {
     if (!this.charge(this.roles.nominals.length + this.roles.predicates.length + 1)) return false;
     const skip = HashSet.has(HashSet.make("where", "wherein"), this.word(start)) ? start + 1 : start;
@@ -2204,6 +2210,9 @@ class SourcePlanner {
     if (!this.charge(1)) return false;
     if (this.word(start) === ":") start++;
     if (start >= end) return false;
+    return this.projectBodyContent(start, end, root);
+  };
+  private projectBodyContent(start: number, end: number, root: number): boolean {
     const declaration =
       O.isSome(this.label(start)) && this.word(start - 1) === ":" && HashSet.has(compositions, this.claim.transition);
     if (declaration) return this.labelled(start - 1, end, start - 1, root, 1);
@@ -2213,7 +2222,7 @@ class SourcePlanner {
       onNone: () => false,
       onSome: (composed) => composed || this.parse(start, end, root, "single-restriction", 1),
     });
-  };
+  }
   private sameCore = (a: TextAnchor, b: TextAnchor): boolean =>
     a.startChar === b.startChar && a.endChar === b.endChar && a.quote === b.quote;
   private exclusionOverlap = (a: TextAnchor, b: TextAnchor): boolean =>

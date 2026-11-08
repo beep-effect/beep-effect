@@ -2595,6 +2595,14 @@ const sourceLabelListHeaderMatches = (declaration: SourceLabelDeclaration, list:
   list.owner === declaration.owner &&
   sameAnchor(list.anchor, declaration.anchor) &&
   list.items.length === declaration.items.length;
+const sourceLabelListItemMatches = (
+  item: ClaimListDeclaration["items"][number],
+  original: SourceLabelItem,
+  charge: (amount: number) => boolean
+): boolean =>
+  charge(item.label.quote.length + original.label.quote.length + 2) &&
+  item.child === original.child &&
+  sameAnchor(item.label, original.label);
 const sourceLabelListMatches = (
   declaration: SourceLabelDeclaration,
   list: ClaimListDeclaration,
@@ -2606,8 +2614,7 @@ const sourceLabelListMatches = (
     if (!charge(4)) return false;
     const item = O.getOrThrow(A.get(list.items, i));
     const original = O.getOrThrow(A.get(declaration.items, i));
-    if (!charge(item.label.quote.length + original.label.quote.length + 2)) return false;
-    if (item.child !== original.child || !sameAnchor(item.label, original.label)) return false;
+    if (!sourceLabelListItemMatches(item, original, charge)) return false;
   }
   return true;
 };
