@@ -7,6 +7,18 @@ command/error/file evidence, impact, prevention and owner/disposition.
 Redact secrets, use portable paths, omit machine/session IDs and keep raw logs
 in bounded artifacts.
 
+## 2026-11-08: concurrent proof publishers race on inbox creation
+
+Hosted Property Laws on PR #2951 failed in the existing proof-job finalizer
+test: two publishers observed a missing inbox parent, and its second creation
+returned `AlreadyExists`. This is a shared filesystem guard defect on the
+accepted base, outside the sandbox library-path repair. Accept only that
+creation collision, then retain the existing no-follow directory validation.
+Deterministic hosted regressions cover a directory, file and symlink winning
+the race, plus unrelated creation failure. No local suite was run under the
+operator's hosted-first instruction. Keep failures attributable; do not retry
+the same run or pre-create the fixture directory to hide the race.
+
 ## 2026-11-03: hosted policy must cover the new mask tests
 
 PR #2691's current hosted policy log found one introduced Effect Vitest
