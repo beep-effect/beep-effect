@@ -53,3 +53,21 @@ fallow matrix's `acceptanceCommands`, which named `bun goals/.../ops/*.ts`
 scripts this batch archives; they surfaced only when each reference was
 checked for a live target. Listing references whose target no longer exists,
 after the archive write, would catch this kind of entry in every batch.
+
+## 2026-11-08: Worker final-check passes with a stale schema catalog
+
+Adding a schema to the archive tool left `standards/schema-catalog/@beep/repo-cli.generated.jsonc`
+stale. The worker profile skips the catalog hook and final-check's `repo-sanity` runs only changeset
+status there, so `final-check` passed and hosted Repo Sanity failed with `[schema-catalog] stale`. The
+file-scoped `lint schema-catalog --write --stage <paths>` fixed it at a 1.6 GB peak. Running that
+writer on worker hosts for the staged schema files, or having final-check warn when a changed file
+declares a schema, would catch this before the push.
+
+## 2026-11-08: Deferred gates hid introduced reds until a heavy runner arrived
+
+Batch 2 waited hours for `Heavy / Lint Policy` and `Heavy / Coverage Regression`, then both showed
+introduced reds: 37 unlabelled Markdown fences in a relocated prompt, 54 semantic-delta findings, and
+a coverage drop on `ArchiveExecution.service.ts`. A worker `final-check` defers all of them. Before each
+tombstone PR, running the Markdown fence and knowledge doctor checks scoped to the batch's touched
+files would surface the first two locally. `gh pr checks` also reports a cancelled job as `fail`, so
+read each job's conclusion before attributing it.
