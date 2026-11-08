@@ -1813,6 +1813,12 @@ All eight Bun/Node groups pass for the remaining 22 original annotation workflow
 
 Reverse: Reopen any exact binding on contrary source or runtime evidence; preserve every unfinished capability, fidelity law and accounting row.
 
+### Qualify original style-tag predicates and integrate main replay repairs, 2026-11-08
+
+Replay the original four style prefix truth predicates and two counterexample equalities through the existing captured style balancer and native Unicode budget. Recompute original caller coordinates by literal search. Integrate main #2915 unit/integration repairs and test-policy change; refresh canonical fixture proof only after affected entry/range tests pass. Pure utility proof does not imply XML or worker-runtime qualification.
+
+Reverse: Reopen exact bindings on contrary original-source or runtime evidence; retain XML, general protocol and safety/fidelity obligations.
+
 ### Recompute original annotation workflows from raw input, 2026-11-08
 
 Schedule the remaining 22 original annotation workflows on Bun and Node using exact original cleaner modes, actual verified mention-derived positions, independent expected output and the existing captured annotation callback service. Initial twelve selected tests pass. Final proof accounting advances only exact workflows with matching runtime evidence; full integration, general host protocols, representation/fidelity laws and exhaustive qualification remain open.

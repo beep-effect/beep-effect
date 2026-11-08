@@ -15,12 +15,12 @@
       ],
       "rationale": "Complete local replay of these six original ordered type/count assertions through raw input and production cleaning/extraction on Bun and Node. Parallel attribute assertions, parent capabilities and other source operations remain separate.",
       "proof": {
-        "command": "bunx --bun vitest run packages/law-practice/server/test/CitationCanonicalExtraction.test.ts packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
+        "command": "bunx --bun vitest run test/CitationCanonicalStyle.test.ts test/CitationAnnotationStyle.test.ts test/CitationCanonicalExtraction.test.ts test/CitationCanonicalRanges.test.ts --reporter=json --outputFile=../../../.beep/canonical-style-merged-results.json",
         "result": "passed",
         "scope": "complete-case",
         "operation": "extract",
-        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-count-case-proof.md",
-        "evidenceSha256": "d975303ddb17f4f20f7430bca0775e806db6ffc3f7e78384d9c19eccbf657ea2",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-original-style-tag-predicates.md",
+        "evidenceSha256": "7ead94fd2bbae26510863b2688023fab2f4581c944a3c8c6302c312deff200cc",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
@@ -31,7 +31,7 @@
         "references": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
-            "sha256": "109dd5923ea0e9dd55409a32f39aebd0ab10dd4b47e87e13a339f353c74e3013"
+            "sha256": "2e9c5e119ae9f407e5f43e5f2a63737f8a0a3348a501ee81b02b97f0353e21e1"
           },
           {
             "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
@@ -78,12 +78,12 @@
       ],
       "rationale": "Complete local replay of these six original ordered type/count assertions through raw input and production cleaning/extraction on Bun and Node. Parallel attribute assertions, parent capabilities and other source operations remain separate.",
       "proof": {
-        "command": "bunx --bun vitest run packages/law-practice/server/test/CitationCanonicalExtraction.test.ts packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
+        "command": "bunx --bun vitest run test/CitationCanonicalStyle.test.ts test/CitationAnnotationStyle.test.ts test/CitationCanonicalExtraction.test.ts test/CitationCanonicalRanges.test.ts --reporter=json --outputFile=../../../.beep/canonical-style-merged-results.json",
         "result": "passed",
         "scope": "complete-case",
         "operation": "extract",
-        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-count-case-proof.md",
-        "evidenceSha256": "d975303ddb17f4f20f7430bca0775e806db6ffc3f7e78384d9c19eccbf657ea2",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-original-style-tag-predicates.md",
+        "evidenceSha256": "7ead94fd2bbae26510863b2688023fab2f4581c944a3c8c6302c312deff200cc",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
@@ -94,7 +94,7 @@
         "references": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
-            "sha256": "109dd5923ea0e9dd55409a32f39aebd0ab10dd4b47e87e13a339f353c74e3013"
+            "sha256": "2e9c5e119ae9f407e5f43e5f2a63737f8a0a3348a501ee81b02b97f0353e21e1"
           },
           {
             "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
@@ -133,12 +133,12 @@
       ],
       "rationale": "Complete local replay of these six original ordered type/count assertions through raw input and production cleaning/extraction on Bun and Node. Parallel attribute assertions, parent capabilities and other source operations remain separate.",
       "proof": {
-        "command": "bunx --bun vitest run packages/law-practice/server/test/CitationCanonicalExtraction.test.ts packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
+        "command": "bunx --bun vitest run test/CitationCanonicalStyle.test.ts test/CitationAnnotationStyle.test.ts test/CitationCanonicalExtraction.test.ts test/CitationCanonicalRanges.test.ts --reporter=json --outputFile=../../../.beep/canonical-style-merged-results.json",
         "result": "passed",
         "scope": "complete-case",
         "operation": "extract",
-        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-count-case-proof.md",
-        "evidenceSha256": "d975303ddb17f4f20f7430bca0775e806db6ffc3f7e78384d9c19eccbf657ea2",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-original-style-tag-predicates.md",
+        "evidenceSha256": "7ead94fd2bbae26510863b2688023fab2f4581c944a3c8c6302c312deff200cc",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
@@ -149,7 +149,7 @@
         "references": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
-            "sha256": "109dd5923ea0e9dd55409a32f39aebd0ab10dd4b47e87e13a339f353c74e3013"
+            "sha256": "2e9c5e119ae9f407e5f43e5f2a63737f8a0a3348a501ee81b02b97f0353e21e1"
           },
           {
             "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
@@ -192,12 +192,12 @@
       ],
       "rationale": "Complete local comparison of these exact original attribute operands using actual public extraction data and the existing source-derived correction/year operations. General model protocols and parent capabilities remain separate.",
       "proof": {
-        "command": "bunx --bun vitest run packages/law-practice/server/test/CitationCanonicalExtraction.test.ts packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
+        "command": "bunx --bun vitest run test/CitationCanonicalStyle.test.ts test/CitationAnnotationStyle.test.ts test/CitationCanonicalExtraction.test.ts test/CitationCanonicalRanges.test.ts --reporter=json --outputFile=../../../.beep/canonical-style-merged-results.json",
         "result": "passed",
         "scope": "complete-case",
         "operation": "extract",
-        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-attribute-proof.md",
-        "evidenceSha256": "628ec10afa642bcab830dc2e0bcee0da1a53a58d076344c83c6717c76a228357",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-original-style-tag-predicates.md",
+        "evidenceSha256": "7ead94fd2bbae26510863b2688023fab2f4581c944a3c8c6302c312deff200cc",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
@@ -208,7 +208,7 @@
         "references": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
-            "sha256": "109dd5923ea0e9dd55409a32f39aebd0ab10dd4b47e87e13a339f353c74e3013"
+            "sha256": "2e9c5e119ae9f407e5f43e5f2a63737f8a0a3348a501ee81b02b97f0353e21e1"
           },
           {
             "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
@@ -255,12 +255,12 @@
       ],
       "rationale": "Complete local comparison of these exact original attribute operands using actual public extraction data and the existing source-derived correction/year operations. General model protocols and parent capabilities remain separate.",
       "proof": {
-        "command": "bunx --bun vitest run packages/law-practice/server/test/CitationCanonicalExtraction.test.ts packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
+        "command": "bunx --bun vitest run test/CitationCanonicalStyle.test.ts test/CitationAnnotationStyle.test.ts test/CitationCanonicalExtraction.test.ts test/CitationCanonicalRanges.test.ts --reporter=json --outputFile=../../../.beep/canonical-style-merged-results.json",
         "result": "passed",
         "scope": "complete-case",
         "operation": "extract",
-        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-attribute-proof.md",
-        "evidenceSha256": "628ec10afa642bcab830dc2e0bcee0da1a53a58d076344c83c6717c76a228357",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-original-style-tag-predicates.md",
+        "evidenceSha256": "7ead94fd2bbae26510863b2688023fab2f4581c944a3c8c6302c312deff200cc",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
@@ -271,7 +271,7 @@
         "references": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
-            "sha256": "109dd5923ea0e9dd55409a32f39aebd0ab10dd4b47e87e13a339f353c74e3013"
+            "sha256": "2e9c5e119ae9f407e5f43e5f2a63737f8a0a3348a501ee81b02b97f0353e21e1"
           },
           {
             "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
@@ -310,12 +310,12 @@
       ],
       "rationale": "Complete local comparison of these exact original attribute operands using actual public extraction data and the existing source-derived correction/year operations. General model protocols and parent capabilities remain separate.",
       "proof": {
-        "command": "bunx --bun vitest run packages/law-practice/server/test/CitationCanonicalExtraction.test.ts packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
+        "command": "bunx --bun vitest run test/CitationCanonicalStyle.test.ts test/CitationAnnotationStyle.test.ts test/CitationCanonicalExtraction.test.ts test/CitationCanonicalRanges.test.ts --reporter=json --outputFile=../../../.beep/canonical-style-merged-results.json",
         "result": "passed",
         "scope": "complete-case",
         "operation": "extract",
-        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-attribute-proof.md",
-        "evidenceSha256": "628ec10afa642bcab830dc2e0bcee0da1a53a58d076344c83c6717c76a228357",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-original-style-tag-predicates.md",
+        "evidenceSha256": "7ead94fd2bbae26510863b2688023fab2f4581c944a3c8c6302c312deff200cc",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
@@ -326,7 +326,7 @@
         "references": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
-            "sha256": "109dd5923ea0e9dd55409a32f39aebd0ab10dd4b47e87e13a339f353c74e3013"
+            "sha256": "2e9c5e119ae9f407e5f43e5f2a63737f8a0a3348a501ee81b02b97f0353e21e1"
           },
           {
             "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
@@ -377,12 +377,12 @@
       ],
       "rationale": "Complete local replay of these exact original default-tokenizer assertions, preserving original ambiguity and HTML cleaning arguments. All parent/general obligations remain separate.",
       "proof": {
-        "command": "bunx --bun vitest run packages/law-practice/server/test/CitationCanonicalExtraction.test.ts packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
+        "command": "bunx --bun vitest run test/CitationCanonicalStyle.test.ts test/CitationAnnotationStyle.test.ts test/CitationCanonicalExtraction.test.ts test/CitationCanonicalRanges.test.ts --reporter=json --outputFile=../../../.beep/canonical-style-merged-results.json",
         "result": "passed",
         "scope": "complete-case",
         "operation": "extract",
-        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-markup-ambiguity.md",
-        "evidenceSha256": "822d38abbd4b15a958621d2f6ff095690d5880ecdaebc1dd45ba42923cf3a7c1",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-original-style-tag-predicates.md",
+        "evidenceSha256": "7ead94fd2bbae26510863b2688023fab2f4581c944a3c8c6302c312deff200cc",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
@@ -393,7 +393,7 @@
         "references": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
-            "sha256": "109dd5923ea0e9dd55409a32f39aebd0ab10dd4b47e87e13a339f353c74e3013"
+            "sha256": "2e9c5e119ae9f407e5f43e5f2a63737f8a0a3348a501ee81b02b97f0353e21e1"
           },
           {
             "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
@@ -432,12 +432,12 @@
       ],
       "rationale": "Complete local replay of these exact original default-tokenizer assertions, preserving original ambiguity and HTML cleaning arguments. All parent/general obligations remain separate.",
       "proof": {
-        "command": "bunx --bun vitest run packages/law-practice/server/test/CitationCanonicalExtraction.test.ts packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
+        "command": "bunx --bun vitest run test/CitationCanonicalStyle.test.ts test/CitationAnnotationStyle.test.ts test/CitationCanonicalExtraction.test.ts test/CitationCanonicalRanges.test.ts --reporter=json --outputFile=../../../.beep/canonical-style-merged-results.json",
         "result": "passed",
         "scope": "complete-case",
         "operation": "extract",
-        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-markup-ambiguity.md",
-        "evidenceSha256": "822d38abbd4b15a958621d2f6ff095690d5880ecdaebc1dd45ba42923cf3a7c1",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-original-style-tag-predicates.md",
+        "evidenceSha256": "7ead94fd2bbae26510863b2688023fab2f4581c944a3c8c6302c312deff200cc",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
@@ -448,7 +448,7 @@
         "references": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.fixtures.ts",
-            "sha256": "109dd5923ea0e9dd55409a32f39aebd0ab10dd4b47e87e13a339f353c74e3013"
+            "sha256": "2e9c5e119ae9f407e5f43e5f2a63737f8a0a3348a501ee81b02b97f0353e21e1"
           },
           {
             "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
@@ -1352,6 +1352,81 @@
           {
             "path": "packages/law-practice/server/src/internal/Citation/CleanerPipeline.ts",
             "sha256": "b6d7d153f95882ac947e4194f72634d14fc4c4a2faf4b59e121a60a001b3df33"
+          }
+        ]
+      }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_tag_balancing::tests/test_AnnotateTest.py:280:12:caseDeclaration::1",
+          "observationSha256": "3f90545e3f3c219b6b0cffb1dfd9c167fda076ad9939310b8f0eb1b66e51a492"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_tag_balancing::tests/test_AnnotateTest.py:280:12:caseDeclaration::2",
+          "observationSha256": "aaf7bdefbb2a9d5dee952040a5dd5005cb175bfa2fd24832b945625707a3e1c7"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_tag_balancing::tests/test_AnnotateTest.py:280:12:caseDeclaration::3",
+          "observationSha256": "3cb75082333ecb7fb54e94ae1bcf33db426cc0982129ced68a6616998fe9bcca"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_tag_balancing::tests/test_AnnotateTest.py:280:12:caseDeclaration::4",
+          "observationSha256": "46725a7705c1aa8cf1f7d25d699f2747c299adfe508dabe51f3e2e1df16e30a8"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_tag_balancing::tests/test_AnnotateTest.py:294:12:caseDeclaration::1",
+          "observationSha256": "40d479c323b62a66b6c980dda1644f6bc0768373ca569e5d47fadfc3e5cd24f7"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_tag_balancing::tests/test_AnnotateTest.py:294:12:caseDeclaration::2",
+          "observationSha256": "9eb5324c874a64a7d24e7c465b94d9b3755e7596297254119c4e2c3c22a70417"
+        }
+      ],
+      "rationale": "All six original style-tag proximity assertions recomputed from original caller source and literal-search-derived coordinates through the existing captured-budget utility. Actual native output satisfies the four original anchored prefix predicates and two independent exact equalities. This pure core utility proof does not imply XML well-formedness or runtime-specific worker qualification.",
+      "proof": {
+        "command": "bunx --bun vitest run test/CitationCanonicalStyle.test.ts test/CitationAnnotationStyle.test.ts test/CitationCanonicalExtraction.test.ts test/CitationCanonicalRanges.test.ts --reporter=json --outputFile=../../../.beep/canonical-style-merged-results.json",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "annotate",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-original-style-tag-predicates.md",
+        "evidenceSha256": "7ead94fd2bbae26510863b2688023fab2f4581c944a3c8c6302c312deff200cc",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalStyle.test.ts",
+            "name": "recomputes all six original style proximity predicates and equalities",
+            "sha256": "7ba1b598d158125335bddb5b660478f691ab0cf8c09895d81bb0e63d3a8a3b38"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalStyle.fixtures.ts",
+            "sha256": "5514699b178ab5d1518c31e825e62ace7443f3457dff5243c02f92a0f6c9df1b"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalCaptures.fixtures.ts",
+            "sha256": "1ac4ab7ebd6c3751b5706d93b562c6625d6c5d3062ddbe4284a6ef274a89c4a8"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/AnnotationStyle.ts",
+            "sha256": "a7686355143a50a45cda3e6f6713934564af9cc45c0e49fd99ab45c202d011f8"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/AnnotationBudget.ts",
+            "sha256": "0ef4e9ea8ae883e3715afd06d7e69a5ee28481700e196bc939707832c0d6195c"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/PythonUnicode.ts",
+            "sha256": "891782d0c121914ac1704211716e128297713476e752ff2060f1eb8bfd2ba813"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/TextBudget.ts",
+            "sha256": "102b028376f4c3063c390507835aa6708ca9365f1479ea846a8ba0a63fb66c4e"
+          },
+          {
+            "path": "packages/law-practice/use-cases/src/internal/citationEnginePolicyFixture.ts",
+            "sha256": "ff0e4af8151baf2e37d2a94af18b2acb7bb4dac4e74ca933abe4f2ebc41780a6"
           }
         ]
       }
