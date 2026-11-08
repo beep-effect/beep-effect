@@ -332,10 +332,20 @@
       "matchedElements": 866,
       "matchedEdges": 2331,
       "decision": "adopted"
+    },
+    {
+      "id": "c5",
+      "change": "a part-of-speech fact applies only when both source offsets match",
+      "strict": 47,
+      "lost": 0,
+      "gained": 0,
+      "matchedElements": 867,
+      "matchedEdges": 2330,
+      "decision": "adopted: contract fix from review; roughly neutral, matched terms 7286 to 7285 and predicted terms 8604 to 8614"
     }
   ],
   "adoptedReplay": {
-    "sourceCommit": "04233248374",
+    "sourceCommit": "348d3d6e181",
     "kind": "development replay without a runtime-closure freeze; not a gate measurement",
     "strict": 47,
     "parsed": 537,
@@ -374,7 +384,7 @@
         "term-owner": 3
       },
       "singleDefectFailures": {
-        "edge:antecedent": 23,
+        "edge:antecedent": 24,
         "edge:depends-on-element": 11
       },
       "edgeTotals": {
@@ -390,19 +400,19 @@
         },
         "antecedent": {
           "gold": 3545,
-          "pred": 2975,
-          "matched": 915
+          "pred": 2973,
+          "matched": 913
         },
         "functional": {
           "gold": 1230,
           "pred": 1086,
-          "matched": 397
+          "matched": 398
         }
       },
       "termTotals": {
         "gold": 8161,
-        "pred": 8604,
-        "matched": 7286
+        "pred": 8614,
+        "matched": 7285
       },
       "elementTotals": {
         "gold": 1976,
@@ -464,7 +474,7 @@
         "note": "its enumeration rule has no effect here"
       },
       {
-        "change": "#2980 with its grammar guard widened to any non-strict grammar, plus c4",
+        "change": "#2980 with its grammar guard widened to any non-strict grammar, on 348d3d6e181",
         "strict": 49,
         "lostFrom46": 0,
         "gained": [
