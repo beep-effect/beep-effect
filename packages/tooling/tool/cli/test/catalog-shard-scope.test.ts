@@ -44,6 +44,7 @@ const sourceA = "packages/a/src/A.ts";
 const sourceB = "packages/b/src/B.ts";
 const sourceInfra = "infra/src/Stack.ts";
 const sourceInfraLambda = "infra/lambda/Handler.ts";
+const sourceA2Instrumented = "packages/a/src/Extra.ts";
 
 const schemaModule = (name: string) =>
   A.join(
@@ -209,9 +210,8 @@ layer(testLayer, { timeout: "60 seconds" })("catalog shard scope", (it) => {
             const fullInfra = yield* readProjectFile(schemaShard("@beep/infra"));
             expect(fullInfra).toContain(sourceInfra);
             expect(fullInfra).not.toContain(sourceInfraLambda);
-            yield* removeProjectFile(schemaShard("@beep/infra"));
 
-            // Staging the out-of-glob file still regenerates the owner, from in-glob files only.
+            // A staged file the full scan never reads contributes nothing to its owner's shard.
             yield* runLint(["schema-catalog", "--write", sourceInfraLambda]);
             const readProjectFile6 = yield* readProjectFile(schemaShard("@beep/infra"));
             expect(readProjectFile6).toBe(fullInfra);
@@ -244,7 +244,174 @@ layer(testLayer, { timeout: "60 seconds" })("catalog shard scope", (it) => {
     );
   });
 
+  describe("schema catalog incremental splice", () => {
+    const sourceA2 = "packages/a/src/A2.ts";
+    const sourceMoved = "packages/a/src/Moved.ts";
+    const sourceSibling = "packages/a/src/Sibling.ts";
+
+    // The scoped shard text must be what a full regeneration of the same tree writes.
+    const expectFullParity = Effect.fn("CatalogShardScopeTest.expectFullParity")(function* (owner: string) {
+      const scoped = yield* readProjectFile(schemaShard(owner));
+      yield* runLint(["schema-catalog", "--write"]);
+      const full = yield* readProjectFile(schemaShard(owner));
+      expect(scoped).toBe(full);
+      return full;
+    });
+
+    it.effect(
+      "adds a new file's entries to an owner's existing shard",
+      Effect.fn("CatalogShardScopeTest.incrementalAdd")(function* () {
+        yield* withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeFixture();
+            yield* runLint(["schema-catalog", "--write"]);
+            yield* writeProjectFile(sourceA2, schemaModule("A2"));
+
+            yield* runLint(["schema-catalog", "--write", sourceA2]);
+            const shard = yield* readProjectFile(schemaShard("@beep/a"));
+            expect(shard).toContain(`"file":"${sourceA2}","symbol":"A2Model"`);
+            expect(shard).toContain(`"file":"${sourceA}","symbol":"AModel"`);
+            yield* expectFullParity("@beep/a");
+          })
+        );
+      })
+    );
+
+    it.effect(
+      "replaces a modified file's entries",
+      Effect.fn("CatalogShardScopeTest.incrementalModify")(function* () {
+        yield* withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeFixture();
+            yield* writeProjectFile(sourceA2, schemaModule("A2"));
+            yield* runLint(["schema-catalog", "--write"]);
+            yield* writeProjectFile(sourceA, schemaModule("Renamed"));
+
+            yield* runLint(["schema-catalog", "--write", sourceA]);
+            const shard = yield* readProjectFile(schemaShard("@beep/a"));
+            expect(shard).toContain(`"symbol":"RenamedModel"`);
+            expect(shard).not.toContain(`"symbol":"AModel"`);
+            expect(shard).toContain(`"symbol":"A2Model"`);
+            yield* expectFullParity("@beep/a");
+          })
+        );
+      })
+    );
+
+    it.effect(
+      "drops a deleted file's entries and keeps the rest of the shard",
+      Effect.fn("CatalogShardScopeTest.incrementalDelete")(function* () {
+        yield* withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeFixture();
+            yield* writeProjectFile(sourceA2, schemaModule("A2"));
+            yield* runLint(["schema-catalog", "--write"]);
+            yield* removeProjectFile(sourceA2);
+
+            yield* runLint(["schema-catalog", "--write", sourceA2]);
+            const shard = yield* readProjectFile(schemaShard("@beep/a"));
+            expect(shard).not.toContain(sourceA2);
+            expect(shard).toContain(`"symbol":"AModel"`);
+            yield* expectFullParity("@beep/a");
+
+            // The owner's last file going away retires its shard.
+            yield* removeProjectFile(sourceA);
+            yield* runLint(["schema-catalog", "--write", sourceA]);
+            const exists = yield* projectFileExists(schemaShard("@beep/a"));
+            expect(exists).toBe(false);
+          })
+        );
+      })
+    );
+
+    it.effect(
+      "moves entries to the new path when both sides of a --no-renames move are staged",
+      Effect.fn("CatalogShardScopeTest.incrementalMove")(function* () {
+        yield* withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeFixture();
+            yield* runLint(["schema-catalog", "--write"]);
+            const moved = yield* readProjectFile(sourceA);
+            yield* writeProjectFile(sourceMoved, moved);
+            yield* removeProjectFile(sourceA);
+
+            yield* runLint(["schema-catalog", "--write", sourceA, sourceMoved]);
+            const shard = yield* readProjectFile(schemaShard("@beep/a"));
+            expect(shard).toContain(`"file":"${sourceMoved}","symbol":"AModel"`);
+            expect(shard).not.toContain(`"file":"${sourceA}"`);
+            yield* expectFullParity("@beep/a");
+          })
+        );
+      })
+    );
+
+    it.effect(
+      "never parses owning-package files that are not staged",
+      Effect.fn("CatalogShardScopeTest.incrementalUnstagedSibling")(function* () {
+        yield* withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeFixture();
+            yield* runLint(["schema-catalog", "--write"]);
+            // An unstaged sibling whose entries would change the shard if it were read.
+            yield* writeProjectFile(sourceSibling, schemaModule("Sibling"));
+            yield* writeProjectFile(sourceA, schemaModule("Renamed"));
+
+            yield* runLint(["schema-catalog", "--write", sourceA]);
+            const scoped = yield* readProjectFile(schemaShard("@beep/a"));
+            expect(scoped).toContain(`"symbol":"RenamedModel"`);
+            expect(scoped).not.toContain(sourceSibling);
+
+            yield* runLint(["schema-catalog", "--write"]);
+            const full = yield* readProjectFile(schemaShard("@beep/a"));
+            expect(full).toContain(`"file":"${sourceSibling}","symbol":"SiblingModel"`);
+          })
+        );
+      })
+    );
+
+    it.effect(
+      "rebuilds a malformed shard from the staged files",
+      Effect.fn("CatalogShardScopeTest.incrementalMalformedShard")(function* () {
+        yield* withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeFixture();
+            yield* runLint(["schema-catalog", "--write"]);
+            const fullA = yield* readProjectFile(schemaShard("@beep/a"));
+            yield* writeProjectFile(schemaShard("@beep/a"), "{ not json");
+
+            yield* runLint(["schema-catalog", "--write", sourceA]);
+            const rebuilt = yield* readProjectFile(schemaShard("@beep/a"));
+            expect(rebuilt).toBe(fullA);
+          })
+        );
+      })
+    );
+  });
+
   describe("instrumentation catalog", () => {
+    it.effect(
+      "regenerates the owner's shard when both sides of a --no-renames move are staged",
+      Effect.fn("CatalogShardScopeTest.instrumentationMove")(function* () {
+        yield* withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeFixture();
+            yield* runObservability(["catalog", "--write"]);
+            const moved = yield* readProjectFile(sourceA);
+            yield* writeProjectFile("packages/a/src/Moved.ts", moved);
+            yield* removeProjectFile(sourceA);
+            yield* writeProjectFile(sourceA2Instrumented, schemaModule("Extra"));
+
+            yield* runObservability(["catalog", "--write", sourceA, "packages/a/src/Moved.ts", sourceA2Instrumented]);
+            const scoped = yield* readProjectFile(spanShard("@beep/a"));
+            expect(scoped).toContain("Extra.run");
+            yield* runObservability(["catalog", "--write"]);
+            const full = yield* readProjectFile(spanShard("@beep/a"));
+            expect(scoped).toBe(full);
+          })
+        );
+      })
+    );
+
     it.effect(
       "writes only the owning package's shard, skips the standard section, and stages the change",
       Effect.fn("CatalogShardScopeTest.scopedInstrumentationCatalog")(function* () {
