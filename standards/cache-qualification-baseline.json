@@ -9,10 +9,10 @@
   "reviews": {
     "//": {
       "reviewer": "Codex GPT-6.1-Sol medium, citation-extraction-engine",
-      "reason": "Refresh the recorded recognizer dependency review after Syncpack workspace specifier normalization and the main-owned two MemoryStats inputs on repo-cli policy fingerprinting. Existing commands, cache flags, outputs, environment, epoch and qualification scope are unchanged. No qualification or exception is granted.",
+      "reason": "Record the canonical generated root policy-seal input addition for the new recognizer workspace manifest. Preserve commands, cache flags, outputs, environment, epoch and qualification scope; no qualification or exception. Retain the earlier reviewed dependency/main-input changes and restamp their shared amended basis.",
       "basis": {
         "path": "goals/citation-extraction-engine/research/2026-11-08-recognizer-cache-review.md",
-        "sha256": "da0afcc4823529e1e27638637aaab704f1012d377244a8cdde9af50180ceb7d4"
+        "sha256": "e82d0beede4a7425815c0c9718d3359eaa0de1568f9fc26411c3d6fe64e37da7"
       }
     },
     "@beep/acp": {
@@ -505,10 +505,10 @@
     },
     "@beep/eyecite": {
       "reviewer": "Codex GPT-6.1-Sol medium, citation-extraction-engine",
-      "reason": "Refresh the recorded recognizer dependency review after Syncpack workspace specifier normalization and the main-owned two MemoryStats inputs on repo-cli policy fingerprinting. Existing commands, cache flags, outputs, environment, epoch and qualification scope are unchanged. No qualification or exception is granted.",
+      "reason": "Record the canonical generated root policy-seal input addition for the new recognizer workspace manifest. Preserve commands, cache flags, outputs, environment, epoch and qualification scope; no qualification or exception. Retain the earlier reviewed dependency/main-input changes and restamp their shared amended basis.",
       "basis": {
         "path": "goals/citation-extraction-engine/research/2026-11-08-recognizer-cache-review.md",
-        "sha256": "da0afcc4823529e1e27638637aaab704f1012d377244a8cdde9af50180ceb7d4"
+        "sha256": "e82d0beede4a7425815c0c9718d3359eaa0de1568f9fc26411c3d6fe64e37da7"
       }
     },
     "@beep/fc-runs": {
@@ -697,10 +697,10 @@
     },
     "@beep/law-practice-server": {
       "reviewer": "Codex GPT-6.1-Sol medium, citation-extraction-engine",
-      "reason": "Refresh the recorded recognizer dependency review after Syncpack workspace specifier normalization and the main-owned two MemoryStats inputs on repo-cli policy fingerprinting. Existing commands, cache flags, outputs, environment, epoch and qualification scope are unchanged. No qualification or exception is granted.",
+      "reason": "Record the canonical generated root policy-seal input addition for the new recognizer workspace manifest. Preserve commands, cache flags, outputs, environment, epoch and qualification scope; no qualification or exception. Retain the earlier reviewed dependency/main-input changes and restamp their shared amended basis.",
       "basis": {
         "path": "goals/citation-extraction-engine/research/2026-11-08-recognizer-cache-review.md",
-        "sha256": "da0afcc4823529e1e27638637aaab704f1012d377244a8cdde9af50180ceb7d4"
+        "sha256": "e82d0beede4a7425815c0c9718d3359eaa0de1568f9fc26411c3d6fe64e37da7"
       }
     },
     "@beep/law-practice-tables": {
@@ -1217,10 +1217,10 @@
     },
     "@beep/repo-cli": {
       "reviewer": "Codex GPT-6.1-Sol medium, citation-extraction-engine",
-      "reason": "Refresh the recorded recognizer dependency review after Syncpack workspace specifier normalization and the main-owned two MemoryStats inputs on repo-cli policy fingerprinting. Existing commands, cache flags, outputs, environment, epoch and qualification scope are unchanged. No qualification or exception is granted.",
+      "reason": "Record the canonical generated root policy-seal input addition for the new recognizer workspace manifest. Preserve commands, cache flags, outputs, environment, epoch and qualification scope; no qualification or exception. Retain the earlier reviewed dependency/main-input changes and restamp their shared amended basis.",
       "basis": {
         "path": "goals/citation-extraction-engine/research/2026-11-08-recognizer-cache-review.md",
-        "sha256": "da0afcc4823529e1e27638637aaab704f1012d377244a8cdde9af50180ceb7d4"
+        "sha256": "e82d0beede4a7425815c0c9718d3359eaa0de1568f9fc26411c3d6fe64e37da7"
       }
     },
     "@beep/repo-cli-kit": {
@@ -3410,6 +3410,7 @@
             "packages/drivers/duckdb/package.json",
             "packages/drivers/ecfr/package.json",
             "packages/drivers/exiftool/package.json",
+            "packages/drivers/eyecite/package.json",
             "packages/drivers/ffmpeg/package.json",
             "packages/drivers/ffmpeg/src/**",
             "packages/drivers/firecrawl/package.json",
@@ -128729,7 +128730,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "166b31fcbc0338bbfd3084701e5927a84efc103ac9f41e7b2c0027c027926b0f"
+        "sha256": "ff579a8e966185c3bc2250706630db19381a8ab5283968140ae9a989a37bf319"
       }
     ]
   }

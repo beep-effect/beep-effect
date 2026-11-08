@@ -90,3 +90,26 @@ Refreshed exact input bytes (SHA-256):
   `41fd20481e22937291b8469f054d7b4ad633f4e1e58d882a0afa8c6f222724b9`
 - `turbo.json`:
   `166b31fcbc0338bbfd3084701e5927a84efc103ac9f41e7b2c0027c027926b0f`
+
+## Owned root policy-seal input repair
+
+Hosted repo-CLI job 128737902411 fails the live policy-fingerprint test because
+the new recognizer workspace manifest was absent from generated policy inputs.
+The canonical `beep lint policy-fingerprint --write` adds exactly
+`packages/drivers/eyecite/package.json` to the root policy task's inputs and the
+policy-tools fingerprint declaration. The targeted failing test now passes;
+none of its assertions changed.
+
+Cache audit identifies one blocking configuration drift:
+`//#lint:policy-fingerprint`. Its command, cache flag, outputs, environment and
+qualification status are unchanged. The new manifest is a legitimate required
+input, not an exception. This refresh changes no qualification scope or epoch.
+The other three subject reviews retain the earlier dependency/main-input basis
+and are restamped only to bind this amended shared review document.
+
+Current repaired input bytes (SHA-256):
+
+- `turbo.json`:
+  `ff579a8e966185c3bc2250706630db19381a8ab5283968140ae9a989a37bf319`
+- `standards/policy-tools.fingerprint.json`:
+  `2329487ed041c6a06e3b9ccbc48ccc3b48184aba5b48b20bf782af7e921e7007`

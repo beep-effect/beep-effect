@@ -1,11 +1,11 @@
 {
-  "previous": "342e0a2ae8cea0cd120d89e7ddc0a63074b8a6fb4d4a1088ebe91dd887bbcd37",
+  "previous": "672c15f284dce84ae2c1e4029b8d26de1f73175218a91fef6932f67addebd8af",
   "review": {
     "reviewer": "Codex GPT-6.1-Sol medium, citation-extraction-engine",
-    "reason": "Refresh the recorded recognizer dependency review after Syncpack workspace specifier normalization and the main-owned two MemoryStats inputs on repo-cli policy fingerprinting. Existing commands, cache flags, outputs, environment, epoch and qualification scope are unchanged. No qualification or exception is granted.",
+    "reason": "Record the canonical generated root policy-seal input addition for the new recognizer workspace manifest. Preserve commands, cache flags, outputs, environment, epoch and qualification scope; no qualification or exception. Retain the earlier reviewed dependency/main-input changes and restamp their shared amended basis.",
     "basis": {
       "path": "goals/citation-extraction-engine/research/2026-11-08-recognizer-cache-review.md",
-      "sha256": "da0afcc4823529e1e27638637aaab704f1012d377244a8cdde9af50180ceb7d4"
+      "sha256": "e82d0beede4a7425815c0c9718d3359eaa0de1568f9fc26411c3d6fe64e37da7"
     }
   },
   "subjects": [
