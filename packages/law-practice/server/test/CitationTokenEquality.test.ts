@@ -2,6 +2,7 @@ import { makeCitationTokenObjects } from "@beep/law-practice-server/internal/Cit
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
+import { deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -55,7 +56,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("builtin ret
           expect(error).toMatchObject({ reason: "host-failed" });
         } else {
           const merged = yield* objects.merge(left, right);
-          expect(merged).toEqual(row.outcome === "left" ? O.some(left) : O.none());
+          deepStrictEqual(merged, row.outcome === "left" ? O.some(left) : O.none());
         }
         const after = yield* objects.equal(left, right);
         expect(after).toBe(row.after);

@@ -119,6 +119,14 @@ lefthook skip: - run: on both catalog commands (LEFTHOOK_EXCLUDE interim in the 
 
 Reverse: Remove the lefthook skip conditions and the check.yml regeneration job
 
+### a plain yeet publish on worker takes the yeet open posture and labels the PR compute-profile-worker, 2026-11-08
+
+yeetPublishPostureFor decides: mode publish on the worker profile without --force-local takes open. Publishes that reuse or amend a commit (--prove-first, --push-only, --reuse-verified, --amend, --no-edit, --staged-only) or run detached keep the publish route, because yeet open rejects those flags. Like yeet open, the redirect pushes the committed HEAD and refuses staged changes: commit first. With --message and no --body-file the body is synthesized from the message plus the deferral sentence, in a scoped temp file. On worker, yeet open adds the compute-profile-worker label through the REST issues endpoint, which creates a missing label. A failed add is one warning. The attempt fact gains an optional forceLocal, set only when --force-local was passed.
+
+Lane `goals/compute-profile-gate-routing-p1`
+
+Reverse: Route yeetPublishCommand and yeetCommand back to runYeetMode publish and drop applyComputeProfileLabel; --force-local becomes a no-op.
+
 ### availableGib under a cgroup ceiling is min(MemAvailable, ceiling minus own RSS), 2026-11-08
 
 Bun and Node expose no cgroup memory.current, and the packet forbids parsing /sys/fs/cgroup by hand. Under a ceiling tighter than MemTotal, MemoryStats.availableGib is min(MemAvailable, ceilingGib - process RSS). Other members of the slice are invisible, so the value is an upper bound; documented on MemoryStatsShape. Uncapped processes are unchanged.
@@ -130,6 +138,14 @@ Reverse: Drop the clamp so availableGib is MemAvailable again
 ProofInputDigest, ProofLedgerShadowRow and ProofShadowAttemptFacts record computeProfile as evidence beside envProfile, but proofInputKey still hashes only laneId, commandDigest, envProfile, inputDigest and epochDigest, and ProofLedger key equivalence is unchanged. Existing digests and reuse decisions are untouched; documented on ProofInputKeyComponents.
 
 Reverse: Add computeProfile to proofInputKey components and accept that every existing proof key changes
+
+### final-check records computeProfile and forceLocal as optional receipt keys and fails on an unreadable override, 2026-11-08
+
+The receipt keys are optionalKey so receipts written before P1 decode unchanged. An unreadable BEEP_COMPUTE_PROFILE override fails final-check with exit 2 instead of silently running the hosted-only gates. An operator --skip for a gate wins over the profile skip and keeps its own reason.
+
+Lane `goals/compute-profile-gate-routing-p1`
+
+Reverse: Remove the two optional keys from FinalCheckReceipt and the resolveFinalCheckProfileSkips call; old and new receipts both still decode.
 
 ### P0 records forceLocal on requests, tickets and leases; the receipt row lands in P1, 2026-11-08
 
@@ -154,6 +170,14 @@ Reverse: Rename the compute command group and update the dispatch manifest and R
 withQualityAdmission resolves the profile with resolveComputeProfileForCeiling(min(MemTotal, ceilingGib), envelope), the same override rule as the probe, instead of calling the live probe. The refusal and the capacity view therefore never disagree, and scheduler tests stay deterministic on 16 GiB hosted runners where the live probe would say worker. Requests whose envProfile is hosted are never refused (D5).
 
 Reverse: Resolve the profile in withQualityAdmission through ComputeProfileProbe instead of resolveComputeProfileForCeiling
+
+### yeet ready maps worker-deferred gates to real hosted check-run names and refuses on pending or red, 2026-11-08
+
+The GateRouteId to hosted-context table sits next to GateRoute in GateRoute.schemas.ts. Names were verified with gh api against origin/main 0c1b780e564 and merged PR heads: cheap-gates and both catalog hooks map to Repo Sanity; lint-policy, check, docgen and coverage map to Heavy / Lint Policy, Heavy / Check, Heavy / Docgen and Heavy / Coverage Regression (the gates-and-proof table omits the Heavy prefix); fallow maps to Fallow Advisory Envelopes. The newest run per name decides, reusing mergeGateLatestRunPerName. A conclusion the merge gate counts green (success, skipped, neutral) accepts the gate. A missing or pending run refuses with wait for hosted <context>, and any other conclusion refuses naming the red. A failed check-run read refuses too, because an unread run is unknown, never green. Operator skips with any other reason keep today's behaviour.
+
+Lane `goals/compute-profile-gate-routing-p1`
+
+Reverse: Drop gateHostedContextTable and the hostedChecks read in ReadyGate.ts; profile skips then behave like operator skips (named, never checked).
 
 <!-- beep:decisions:end -->
 

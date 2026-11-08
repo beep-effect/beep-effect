@@ -143,6 +143,7 @@ const faultDomain = LiteralKit([
   "source-directory-overflow",
   "missing-selected",
   "library-mismatch",
+  "library-process-failure",
   "version-mismatch",
   "private-storage-alias",
   "owned-upload-failure",
@@ -750,6 +751,11 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
               }
             });
             const observeLinker = () => {
+              if (fault === "library-process-failure") {
+                exitCode = 126;
+                stderr = "synthetic-private-loader-detail";
+                return;
+              }
               const resolution = A.contains(invocation, "/tools/turbo")
                 ? requestedLinker.executables.turbo
                 : linker.executables.bun;
@@ -1387,6 +1393,7 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
     "source-directory-overflow",
     "missing-selected",
     "library-mismatch",
+    "library-process-failure",
     "version-mismatch",
   ]).literals) {
     it.effect(
@@ -1398,6 +1405,13 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
           expect(failure.message).toBe("Read-only pilot package source changed during execution.");
         if (fault === "source-directory-overflow")
           expect(failure.message).toBe("Pilot source tree exceeded its traversal bound.");
+        if (fault === "library-process-failure") {
+          expect(failure.message).toContain("exit=126");
+          expect(failure.message).toContain("truncated=false");
+          expect(failure.message).toContain("stderrEmpty=false");
+          expect(failure.message).not.toContain("synthetic-private-loader-detail");
+          expect(failure.message).not.toContain(root);
+        }
         if (fault === "initial-divergence") {
           expect(failure.message).toContain("absolute-root-equivalence");
           expect(failure.message).toContain("alternate-absolute-root");

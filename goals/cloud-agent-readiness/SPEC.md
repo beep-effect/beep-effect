@@ -318,4 +318,20 @@ The existing Linux development/parity baseline is this packet named workflow. Op
 
 Reverse: Revert the documentation clarification; no operational state changed.
 
+### Fleet toolset bootstrap runs from a fresh origin/main worktree, 2026-11-08
+
+The 2026-11-08 fleet developer toolset ran scripts/cloud/bootstrap.sh from a detached origin/main worktree on each host (removed afterwards), not the primary clone. beep-worker's primary clone is stale and dirty and must not be touched, grok-bot's clone is stale, and T3 threads may be using the others. The persisted toolchain (bun, pinned Node, typos, gitleaks, portless) is the same. Receipt: history/2026-11-08-fleet-dev-toolset.md.
+
+Lane `goals/cloud-agent-readiness-fleet-toolset`
+
+Reverse: Run scripts/cloud/bootstrap.sh in each host's primary checkout instead; the persisted toolchain is unaffected.
+
+### Fleet Docker is rootless; grok-bot keeps no Docker daemon, 2026-11-08
+
+tom-pc-1-wsl got rootless Docker in the tbk-worker layout: Docker apt repository with rootless extras, root units masked, linger for agent, no docker group membership, so the brief's ask-before-docker-group condition never arose. grok-bot has no systemd and no newuidmap, and its egress proxy blocks the Debian mirror, so it gets no Docker until a decision extends its own service script. Receipt: history/2026-11-08-fleet-dev-toolset.md.
+
+Lane `goals/cloud-agent-readiness-fleet-toolset`
+
+Reverse: Unmask the root docker units or remove docker-ce on tom-pc-1-wsl; on grok-bot, a later decision can add a daemon to its service script.
+
 <!-- beep:decisions:end -->

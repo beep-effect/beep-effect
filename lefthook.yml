@@ -39,6 +39,9 @@ pre-commit:
     # The instrumentation hook still regenerates each owning package whole. `files` replaces
     # lefthook's {staged_files} (ACMR) so a deleted or moved module drops its entries too;
     # `--no-renames` lists both sides of a move.
+    # Worker-profile hosts (`beep compute profile --is worker` exits 0) skip both writers; the hosted
+    # regeneration job (keyed on the `compute-profile-worker` label) or the owner's workstation
+    # regenerates the shards.
     schema-catalog:
       files: git diff --name-only --cached --no-renames --diff-filter=ACMD
       glob: "{apps,packages,infra}/**/*.{ts,tsx}"
@@ -46,6 +49,8 @@ pre-commit:
         - "**/docs/**"
         - "**/*.d.ts"
         - "**/node_modules/**"
+      skip:
+        - run: bun run beep compute profile --is worker
       run: bun run beep lint schema-catalog --write --stage {files}
     instrumentation-catalog:
       files: git diff --name-only --cached --no-renames --diff-filter=ACMD
@@ -54,6 +59,8 @@ pre-commit:
         - "**/test/**"
         - "**/*.d.ts"
         - "**/node_modules/**"
+      skip:
+        - run: bun run beep compute profile --is worker
       run: bun run beep observability catalog --write --stage {files}
 
 commit-msg:
