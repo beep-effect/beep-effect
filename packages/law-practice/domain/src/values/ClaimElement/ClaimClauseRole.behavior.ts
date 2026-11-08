@@ -838,6 +838,11 @@ const citationWitnessCompleteReferences = (
   return references;
 };
 
+const sourceExtentMatches = (qualifiedText: string, extent: TextAnchor, charge: (amount: number) => boolean): boolean =>
+  charge(extent.quote.length + 4) &&
+  extent.endChar <= qualifiedText.length &&
+  extent.quote === Str.slice(extent.startChar, extent.endChar)(qualifiedText);
+
 const completeClaimCitationWitness = (
   qualifiedText: string,
   certificates: ReadonlyArray<ClaimFiniteSourceProof>,
@@ -904,7 +909,19 @@ export const validateClaimCitationWitness: {
     witness: ClaimCitationWitness,
     charge: (amount: number) => boolean
   ): boolean;
-} = dual(6, completeClaimCitationWitness);
+} = dual(
+  6,
+  (
+    qualifiedText: string,
+    certificates: ReadonlyArray<ClaimFiniteSourceProof>,
+    extent: TextAnchor,
+    claimReferences: ReadonlyArray<number>,
+    witness: ClaimCitationWitness,
+    charge: (amount: number) => boolean
+  ) =>
+    sourceExtentMatches(qualifiedText, extent, charge) &&
+    completeClaimCitationWitness(qualifiedText, certificates, extent, claimReferences, witness, charge)
+);
 
 type FiniteProofValidationContext = {
   scopes: HashSet.HashSet<"preamble" | "body" | "transition">;
@@ -1919,16 +1936,12 @@ const finiteArgumentExtentMatches = (
     proof.extent.startChar !== operator.extent.startChar ||
     proof.extent.endChar !== direct.core.endChar
   );
-const finiteDerivedExtentMatches = (context: FiniteProofValidationContext, extent: TextAnchor): boolean =>
-  context.charge(extent.quote.length + 4) &&
-  extent.endChar <= context.claim.claimText.length &&
-  extent.quote === Str.slice(extent.startChar, extent.endChar)(context.claim.claimText);
 
 const validateFiniteOrderedArgumentsProof = (
   context: FiniteProofValidationContext,
   proof: FiniteOrderedArgumentsProof
 ): boolean => {
-  if (!finiteDerivedExtentMatches(context, proof.extent)) return false;
+  if (!sourceExtentMatches(context.claim.claimText, proof.extent, context.charge)) return false;
   const pp = context.resolve(proof.pp);
   const direct = context.resolve(proof.direct);
   const adposition = context.resolve(proof.adposition);
@@ -1951,7 +1964,7 @@ const validateFiniteDescriptionProof = (
   context: FiniteProofValidationContext,
   proof: Extract<ClaimFiniteSourceProof, { readonly kind: "description" }>
 ): boolean => {
-  if (!finiteDerivedExtentMatches(context, proof.extent)) return false;
+  if (!sourceExtentMatches(context.claim.claimText, proof.extent, context.charge)) return false;
   const { resolve } = context;
   const seed = resolve(proof.candidate);
   const operator = resolve(proof.operator);
