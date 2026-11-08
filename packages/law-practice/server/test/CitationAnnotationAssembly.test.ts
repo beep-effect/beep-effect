@@ -121,134 +121,142 @@ const install = Effect.fn("AnnotationAssemblyTest.install")(function* (
   const unicode = yield* makeCitationPythonUnicode(base);
   return { assembly, unicode, budget, limits };
 });
-it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("native annotation assembly", (it) => {
-  it.effect(
-    "matches all original sorted primitive tuples, overlaps, reversed/outside slices and literal surrogate points",
-    () =>
+it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: false })(
+  "native annotation assembly",
+  (it) => {
+    it.effect(
+      "matches all original sorted primitive tuples, overlaps, reversed/outside slices and literal surrogate points",
+      () =>
+        Effect.gen(function* () {
+          const corpus = yield* readCitationOracleFixture(
+            "annotation-assembly",
+            "75a32d0456d6ff8e1237a5413f0a007eeb5cb29e6ce6fd7d6e54e0bb67722ecb"
+          ).pipe(Effect.flatMap(S.decodeEffect(Corpus)));
+          const { assembly, unicode, limits } = yield* install();
+          for (const row of corpus.cases) {
+            const source = yield* unicode.fromStorage(row.source);
+            const ordered = nativeReplacements(row.ordered);
+            const input = nativeReplacements(row.input);
+            const prepared = yield* prepareCitationAnnotations(limits, input);
+            expect(prepared).toEqual(ordered);
+            const result = yield* assembly.assemble(source, prepared);
+            expect(result).toEqual(row.result);
+          }
+        })
+    );
+    it.effect("sorts before mapping starts right and ends left through the existing original diff index", () =>
       Effect.gen(function* () {
         const corpus = yield* readCitationOracleFixture(
-          "annotation-assembly",
-          "75a32d0456d6ff8e1237a5413f0a007eeb5cb29e6ce6fd7d6e54e0bb67722ecb"
-        ).pipe(Effect.flatMap(S.decodeEffect(Corpus)));
+          "annotation-mapping",
+          "15562e5666859ab936a10c3f0f48e8d6cf665b60b3d11a5b244d915392353d30"
+        ).pipe(Effect.flatMap(S.decodeEffect(MappingCorpus)));
         const { assembly, unicode, limits } = yield* install();
+        const input = yield* makeCitationRegexInput(limits);
         for (const row of corpus.cases) {
+          const before = yield* input.prepareUnicode(row.plain, () => Effect.void);
+          const after = yield* input.prepareUnicode(row.placeholder, () => Effect.void);
+          const updater = yield* makeCitationSpanOffsets(limits, {
+            before: before.layout,
+            after: after.layout,
+            steps: row.steps,
+          });
+          const prepared = yield* prepareCitationAnnotations(limits, nativeReplacements(row.input), O.some(updater));
+          expect(prepared).toEqual(nativeReplacements(row.mapped));
           const source = yield* unicode.fromStorage(row.source);
-          const ordered = nativeReplacements(row.ordered);
-          const input = nativeReplacements(row.input);
-          const prepared = yield* prepareCitationAnnotations(limits, input);
-          expect(prepared).toEqual(ordered);
-          const result = yield* assembly.assemble(source, prepared);
-          expect(result).toEqual(row.result);
+          const output = yield* assembly.assemble(source, prepared);
+          expect(output).toEqual(row.result);
         }
       })
-  );
-  it.effect("sorts before mapping starts right and ends left through the existing original diff index", () =>
-    Effect.gen(function* () {
-      const corpus = yield* readCitationOracleFixture(
-        "annotation-mapping",
-        "15562e5666859ab936a10c3f0f48e8d6cf665b60b3d11a5b244d915392353d30"
-      ).pipe(Effect.flatMap(S.decodeEffect(MappingCorpus)));
-      const { assembly, unicode, limits } = yield* install();
-      const input = yield* makeCitationRegexInput(limits);
-      for (const row of corpus.cases) {
-        const before = yield* input.prepareUnicode(row.plain, () => Effect.void);
-        const after = yield* input.prepareUnicode(row.placeholder, () => Effect.void);
-        const updater = yield* makeCitationSpanOffsets(limits, {
-          before: before.layout,
-          after: after.layout,
-          steps: row.steps,
-        });
-        const prepared = yield* prepareCitationAnnotations(limits, nativeReplacements(row.input), O.some(updater));
-        expect(prepared).toEqual(nativeReplacements(row.mapped));
-        const source = yield* unicode.fromStorage(row.source);
-        const output = yield* assembly.assemble(source, prepared);
-        expect(output).toEqual(row.result);
-      }
-    })
-  );
-  it.effect(
-    "creates implicit source maps with actual placeholder and diff workers on Bun and Node",
-    () =>
-      Effect.gen(function* () {
-        const corpus = yield* loadMapping;
-        const discovery = yield* readCitationHtmlDiscoveryCorpus();
-        const fs = yield* FileSystem.FileSystem;
-        const captured = yield* Effect.context<Scope.Scope | Digest.Digest | Path.Path>();
-        for (const kind of ["bun", "node"] as const) {
-          const setup = yield* setupCitationMetadataRuntime(kind, undefined, true);
-          const directory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-annotation-diff-" });
-          const diffRuntime = yield* makeCitationDiffTestRuntime(kind, directory);
-          const assembly = yield* makeCitationAnnotationAssembly(setup.limits).pipe(
-            Effect.provideService(CitationTextBudget, setup.budget)
-          );
-          for (const row of A.filter(corpus.cases, (_, index) => index % 6 === 0)) {
-            const output = yield* setup.operation.run(
-              "annotate",
-              Effect.gen(function* () {
-                const mapped = yield* prepareCitationAnnotationSourceMap(
-                  setup.limits,
-                  setup.runtime,
-                  CitationHtmlGeometryPreparationConfiguration.make({
-                    discovery: CitationHtmlDiscoveryConfiguration.make(discovery.configuration),
-                    diffRuntime,
-                  }),
-                  CitationPythonUnicodeStorage.make(row.plain),
-                  CitationPythonUnicodeStorage.make(row.source)
-                );
-                const prepared = yield* prepareCitationAnnotations(
-                  setup.limits,
-                  nativeReplacements(row.input),
-                  O.some(mapped.updater)
-                );
-                expect(prepared).toEqual(nativeReplacements(row.mapped));
-                return yield* assembly.assemble(mapped.source, prepared);
-              }).pipe(
-                Effect.provideContext(setup.provided),
-                Effect.provideContext(captured),
-                Effect.provideService(CitationTextBudget, setup.budget)
-              )
+    );
+    it.effect(
+      "creates implicit source maps with actual placeholder and diff workers on Bun and Node",
+      () =>
+        Effect.gen(function* () {
+          const corpus = yield* loadMapping;
+          const discovery = yield* readCitationHtmlDiscoveryCorpus();
+          const fs = yield* FileSystem.FileSystem;
+          const captured = yield* Effect.context<Scope.Scope | Digest.Digest | Path.Path>();
+          for (const kind of ["bun", "node"] as const) {
+            const setup = yield* setupCitationMetadataRuntime(kind, undefined, true);
+            const directory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-annotation-diff-" });
+            const diffRuntime = yield* makeCitationDiffTestRuntime(kind, directory);
+            const assembly = yield* makeCitationAnnotationAssembly(setup.limits).pipe(
+              Effect.provideService(CitationTextBudget, setup.budget)
             );
-            expect(output).toEqual(row.result);
+            for (const row of A.filter(corpus.cases, (_, index) => index % 6 === 0)) {
+              const output = yield* setup.operation.run(
+                "annotate",
+                Effect.gen(function* () {
+                  const mapped = yield* prepareCitationAnnotationSourceMap(
+                    setup.limits,
+                    setup.runtime,
+                    CitationHtmlGeometryPreparationConfiguration.make({
+                      discovery: CitationHtmlDiscoveryConfiguration.make(discovery.configuration),
+                      diffRuntime,
+                    }),
+                    CitationPythonUnicodeStorage.make(row.plain),
+                    CitationPythonUnicodeStorage.make(row.source)
+                  );
+                  const prepared = yield* prepareCitationAnnotations(
+                    setup.limits,
+                    nativeReplacements(row.input),
+                    O.some(mapped.updater)
+                  );
+                  expect(prepared).toEqual(nativeReplacements(row.mapped));
+                  return yield* assembly.assemble(mapped.source, prepared);
+                }).pipe(
+                  Effect.provideContext(setup.provided),
+                  Effect.provideContext(captured),
+                  Effect.provideService(CitationTextBudget, setup.budget)
+                )
+              );
+              expect(output).toEqual(row.result);
+            }
+            yield* assertCitationWorkerCompositionReleased(
+              setup.operation,
+              setup.admission,
+              setup.observed.snapshot,
+              12
+            );
           }
-          yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, 12);
+        }),
+      { timeout: 120000 }
+    );
+    it.effect("checks exact output, growth and cumulative allocation before materializing annotation output", () =>
+      Effect.gen(function* () {
+        for (const [output, growth, produced, limit] of [
+          [4, 10, 10, "annotationOutputUtf16"],
+          [10, 2, 10, "annotationGrowthUtf16"],
+          [10, 10, 4, "producedTextUtf16"],
+        ] as const) {
+          const { assembly, unicode, budget } = yield* install(output, growth, produced);
+          const source = yield* unicode.fromText("X");
+          const before = yield* unicode.fromText("[a");
+          const after = yield* unicode.fromText("b]");
+          const failure = yield* assembly
+            .assemble(source, [
+              CitationAnnotationReplacement.make({ start: 0, end: 1, before: before.storage, after: after.storage }),
+            ])
+            .pipe(Effect.flip);
+          expect(failure).toMatchObject({ _tag: "CitationSafetyLimitExceeded", operation: "annotate", limit });
+          const used = yield* budget.snapshot;
+          expect(used).toBe(0);
         }
-      }),
-    { timeout: 120000 }
-  );
-  it.effect("checks exact output, growth and cumulative allocation before materializing annotation output", () =>
-    Effect.gen(function* () {
-      for (const [output, growth, produced, limit] of [
-        [4, 10, 10, "annotationOutputUtf16"],
-        [10, 2, 10, "annotationGrowthUtf16"],
-        [10, 10, 4, "producedTextUtf16"],
-      ] as const) {
-        const { assembly, unicode, budget } = yield* install(output, growth, produced);
+        const { assembly, unicode, budget } = yield* install(5, 4, 5);
         const source = yield* unicode.fromText("X");
         const before = yield* unicode.fromText("[a");
         const after = yield* unicode.fromText("b]");
-        const failure = yield* assembly
-          .assemble(source, [
-            CitationAnnotationReplacement.make({ start: 0, end: 1, before: before.storage, after: after.storage }),
-          ])
-          .pipe(Effect.flip);
-        expect(failure).toMatchObject({ _tag: "CitationSafetyLimitExceeded", operation: "annotate", limit });
+        const result = yield* assembly.assemble(source, [
+          CitationAnnotationReplacement.make({ start: 0, end: 1, before: before.storage, after: after.storage }),
+        ]);
+        const text = yield* unicode.fromStorage(result);
+        expect(text.text).toBe("[aXb]");
         const used = yield* budget.snapshot;
-        expect(used).toBe(0);
-      }
-      const { assembly, unicode, budget } = yield* install(5, 4, 5);
-      const source = yield* unicode.fromText("X");
-      const before = yield* unicode.fromText("[a");
-      const after = yield* unicode.fromText("b]");
-      const result = yield* assembly.assemble(source, [
-        CitationAnnotationReplacement.make({ start: 0, end: 1, before: before.storage, after: after.storage }),
-      ]);
-      const text = yield* unicode.fromStorage(result);
-      expect(text.text).toBe("[aXb]");
-      const used = yield* budget.snapshot;
-      expect(used).toBe(5);
-    })
-  );
-});
+        expect(used).toBe(5);
+      })
+    );
+  }
+);
 
 const PropertyType = S.toType(CitationAnnotationReplacement);
 const PropertyJson = CitationAnnotationReplacement.pipe(S.toCodecJson, S.fromJsonString);

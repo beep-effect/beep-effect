@@ -19,10 +19,12 @@ import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import { constant, flow, pipe } from "effect/Function";
 import * as N from "effect/Number";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { runRepoCommandCapture } from "./RepoRun.executor.ts";
 import {
   isProofJobUnitName,
+  RunScopeCgroupPath,
   RunScopeRecord,
   RunScopeStopOutcome,
   RunScopeSupport,
@@ -172,6 +174,46 @@ export const detectRunScopeSupport = Effect.fn("RunScope.detectRunScopeSupport")
 });
 
 /**
+ * Resolve the prospective shared execution cgroup without moving a queued CLI.
+ *
+ * **Details**
+ *
+ * Only the cgroup identity is returned. Admission reads its memory controllers
+ * afresh on every attempt. Disabled scopes, detached proof jobs and unavailable
+ * managers keep the current caller domain.
+ *
+ * **Example** (Reference the destination probe)
+ *
+ * ```ts
+ * import { readPlannedRunScopeCgroup } from "@beep/repo-cli/test/RepoRun"
+ * import * as Effect from "effect/Effect"
+ * console.log(Effect.isEffect(readPlannedRunScopeCgroup)) // true
+ * ```
+ *
+ * @category admission
+ * @since 0.0.0
+ */
+export const readPlannedRunScopeCgroup = Effect.gen(function* () {
+  const jobUnit = yield* configStringOption("BEEP_YEET_JOB_UNIT");
+  if (O.exists(jobUnit, isProofJobUnitName)) return O.none<string>();
+  const support = yield* detectRunScopeSupport();
+  if (!RunScopeSupport.is.active(support)) return O.none<string>();
+  const shown = yield* runScopeCommand("systemctl", [
+    "--user",
+    "show",
+    "agent-runs.slice",
+    "--property=ControlGroup",
+    "--value",
+  ]);
+  return pipe(
+    shown,
+    O.filter((capture) => capture.exitCode === 0),
+    O.map((capture) => Str.trim(capture.output)),
+    O.filter(S.is(RunScopeCgroupPath))
+  );
+}).pipe(Effect.withSpan("RunScope.readPlannedRunScopeCgroup"));
+
+/**
  * Adopt this CLI process into a transient systemd scope for one admitted run.
  *
  * A missing installed `agent-runs.slice` is acceptable. The user manager then
@@ -212,6 +254,10 @@ export const enterRunScope = Effect.fn("RunScope.enterRunScope")(function* (
   if (!RunScopeSupport.is.active(support)) {
     return yield* makeRunScopeRecord(unitName, support);
   }
+  // A capacity rollback may retry in the already-adopted scope. Reuse it;
+  // recreating the same live unit fails and loses verified ownership metadata.
+  const existing = yield* verifyRunScopeAdoption(unitName);
+  if (RunScopeSupport.is.active(existing.support)) return existing;
   const started = yield* runScopeCommand("busctl", [
     "--user",
     "call",

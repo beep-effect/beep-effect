@@ -59,5 +59,24 @@ export {
   projectClaimRoleTerms,
   validateClaimSourceOwnership,
 } from "./values/ClaimElement/ClaimClauseRole.projection.ts";
+/**
+ * Bounded source-query controls for the domain's ownership tests.
+ *
+ * **Example** (Find a source boundary)
+ *
+ * ```ts
+ * import { sourceLowerBound } from "@beep/law-practice-domain/test"
+ * import { constTrue, identity } from "effect/Function"
+ *
+ * console.log(sourceLowerBound([1, 1, 3], 2, identity, constTrue)) // 2
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export {
+  sourceLowerBound,
+  sourceSelectionFrameMember,
+} from "./values/ClaimElement/ClaimClauseRole.sourceQuery.ts";
 /** Source-only transition scope controls through the canonical test entrypoint. */
 export { rawClaimTransitionScope } from "./values/PatentDocument/PatentDocument.transition.ts";

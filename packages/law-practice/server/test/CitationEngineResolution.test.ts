@@ -21,7 +21,7 @@ import { loadResolutionOperationContexts } from "./CitationResolve.operations.ts
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 import type { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 
-it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true })(
+it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true, concurrent: false })(
   "public engine original resolution groups",
   (it) => {
     for (const kind of ["bun", "node"] as const) {
