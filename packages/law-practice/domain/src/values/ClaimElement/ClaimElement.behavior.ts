@@ -2948,6 +2948,8 @@ const decomposePreparedClaimRolesWith = (projector: ReturnType<typeof projectedC
 /**
  * Decompose prepared records into detailed source topology, preserving unavailable records.
  *
+ * **Details**
+ *
  * Inspection selects a separate canonical public view before graph construction;
  * this decomposition API retains every validated source element.
  *
@@ -2977,6 +2979,8 @@ export const decomposePreparedClaimRoles = decomposePreparedClaimRolesWith(
 
 /**
  * Select the canonical inspection view before caching and resolving public trees.
+ *
+ * **Details**
  *
  * Internal adapter for the inspection policy; source certificates remain unchanged.
  *
