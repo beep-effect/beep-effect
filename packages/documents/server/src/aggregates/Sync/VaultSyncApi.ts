@@ -10,7 +10,7 @@ import * as V from "@beep/documents-domain/aggregates/VaultSync";
 import { VaultSyncApi } from "@beep/documents-use-cases/aggregates/VaultSync";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { dual, pipe } from "effect/Function";
+import { dual } from "effect/Function";
 import * as Headers from "effect/http/Headers";
 import * as HttpRouter from "effect/http/HttpRouter";
 import * as OpenApi from "effect/http-api/OpenApi";
@@ -62,8 +62,38 @@ const traceApiCall = <A, E, R>(self: Effect.Effect<A, E, R>, tag: string, payloa
       });
 };
 
+// The Session middleware. With `boundary` it also opens the call's boundary span; the gated RPC
+// endpoint's outer server runs it without, because its handlers forward every call to the in-process
+// client, whose own Session opens the one boundary span around the kernel send.
+const makeSession = Effect.fnUntraced(function* (boundary: boolean) {
+  const resolver = yield* V.SessionResolver;
+  return V.Session.of(
+    Effect.fnUntraced(
+      function* (effect, { rpc, payload, headers }) {
+        const request = yield* resolver.resolve(headers);
+        // Only the boundary span takes the resolved transport and correlation id.
+        yield* boundary
+          ? Effect.annotateCurrentSpan({
+              [VaultSyncAttribute.transport]: request.sourceKind,
+              [VaultSyncAttribute.requestCorrelationId]: request.correlationId,
+            })
+          : Effect.void;
+        return yield* V.authorizeVaultSync(rpc._tag, payload).pipe(
+          Effect.andThen(effect),
+          Effect.raceFirst(resolver.revoked(request)),
+          Effect.provideService(V.VaultSyncRequestContext, request),
+          Effect.provideService(V.SessionResolver, resolver),
+          Effect.provideService(Correlation, { id: request.correlationId })
+        );
+      },
+      (self, _effect, { rpc, payload }) => (boundary ? traceApiCall(self, rpc._tag, payload) : self)
+    )
+  );
+});
+
 /**
- * Resolve verified identity and preflight live scope before any RPC handler runs.
+ * Resolve verified identity and preflight live scope before any RPC handler runs, inside the
+ * call's `VaultSyncApi.command` or `VaultSyncApi.read` boundary span.
  *
  * **Example** (Inspect adapter)
  * ```ts
@@ -73,31 +103,7 @@ const traceApiCall = <A, E, R>(self: Effect.Effect<A, E, R>, tag: string, payloa
  * @category aggregates
  * @since 0.0.0
  */
-export const VaultSyncSessionLive = Layer.effect(
-  V.Session,
-  Effect.gen(function* () {
-    const resolver = yield* V.SessionResolver;
-    return V.Session.of(
-      Effect.fnUntraced(
-        function* (effect, { rpc, payload, headers }) {
-          const request = yield* resolver.resolve(headers);
-          yield* Effect.annotateCurrentSpan({
-            [VaultSyncAttribute.transport]: request.sourceKind,
-            [VaultSyncAttribute.requestCorrelationId]: request.correlationId,
-          });
-          return yield* V.authorizeVaultSync(rpc._tag, payload).pipe(
-            Effect.andThen(effect),
-            Effect.raceFirst(resolver.revoked(request)),
-            Effect.provideService(V.VaultSyncRequestContext, request),
-            Effect.provideService(V.SessionResolver, resolver),
-            Effect.provideService(Correlation, { id: request.correlationId })
-          );
-        },
-        (self, _effect, { rpc, payload }) => traceApiCall(self, rpc._tag, payload)
-      )
-    );
-  })
-);
+export const VaultSyncSessionLive = Layer.effect(V.Session, makeSession(true));
 
 /**
  * Path of the gated remote CLI RPC endpoint on the sidecar.
@@ -349,6 +355,8 @@ const gatedHandlers = (client: DeliveryClient): Record<string, Forward> => {
  * **Details**
  *
  * Each RPC is served through {@link VaultSyncDeliveryClient}, never through the unwrapped Api fetch.
+ * The outer server runs the Session without a boundary span; the delivery client's own Session
+ * opens the single `VaultSyncApi.command` or `VaultSyncApi.read` span, so a remote CLI call has one.
  *
  * **Example** (Inspect RPC hosting)
  * ```ts
@@ -359,11 +367,12 @@ const gatedHandlers = (client: DeliveryClient): Record<string, Forward> => {
  * @since 0.0.0
  */
 export const VaultSyncRpcHttp = Layer.unwrap(
-  pipe(
-    VaultSyncApi.group,
-    RpcServer.toHttpEffect,
-    Effect.map((serve) => HttpRouter.add("POST", VAULT_SYNC_RPC_PATH, serve))
-  )
+  Effect.gen(function* () {
+    // The outer server authenticates each call; the in-process client it forwards to opens the boundary span.
+    const outer = yield* makeSession(false);
+    const serve = yield* RpcServer.toHttpEffect(VaultSyncApi.group).pipe(Effect.provideService(V.Session, outer));
+    return HttpRouter.add("POST", VAULT_SYNC_RPC_PATH, serve);
+  })
 ).pipe(
   Layer.provide([
     Layer.unwrap(

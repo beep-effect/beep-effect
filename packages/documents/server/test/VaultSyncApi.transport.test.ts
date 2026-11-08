@@ -46,6 +46,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
@@ -169,7 +170,11 @@ const register = Effect.gen(function* () {
   return { stream: own1.stream, version: own1.version };
 });
 
-const webApp = Effect.fn("webApp")(function* (kind: V.TransportKind, pause?: Effect.Effect<void>) {
+const webApp = Effect.fn("webApp")(function* (
+  kind: V.TransportKind,
+  pause?: Effect.Effect<void>,
+  tracer?: Tracer.Tracer
+) {
   const base = hosted(kind, pause);
   const context = yield* Layer.build(base);
   yield* register.pipe(Effect.provideContext(context));
@@ -180,7 +185,8 @@ const webApp = Effect.fn("webApp")(function* (kind: V.TransportKind, pause?: Eff
     Layer.provide(Layer.succeedContext(context)),
     Layer.provide(BunHttpPlatform.layer),
     Layer.provide(Etag.layer),
-    Layer.provide(cliPlatform)
+    Layer.provide(cliPlatform),
+    Layer.provide(P.isUndefined(tracer) ? Layer.empty : Layer.succeed(Tracer.Tracer, tracer))
   );
   const app = yield* Effect.acquireRelease(
     Effect.sync(() => HttpRouter.toWebHandler(routes, { disableLogger: true })),
@@ -564,6 +570,37 @@ describe("vault-sync boundary spans (D17)", () => {
       const resolve = yield* Effect.fromOption(A.findFirst(spans, (span) => span.name === "VaultSyncSession.resolve"));
       expect(ancestorIds(spans, resolve)).toContain(command.spanId);
       expect(resolve.attributes.get("documents.vault_sync.transport")).toBe("http");
+    }).pipe(TestClock.withLive)
+  );
+
+  it.effect("a remote CLI command over the gated RPC endpoint opens exactly one VaultSyncApi.command span", () =>
+    Effect.gen(function* () {
+      const { spans, tracer } = recordingTracer();
+      const { context, fetch } = yield* webApp("cli", undefined, tracer);
+      yield* grant("member").pipe(Effect.provideContext(context));
+      const http = yield* Layer.build(
+        FetchHttpClient.layer.pipe(Layer.provide(Layer.succeed(FetchHttpClient.Fetch, fetch)))
+      );
+      // The generated remote CLI's protocol: the RPC client over the sidecar's gated endpoint.
+      const client = yield* VaultSyncApi.clientHttp(`http://test${VAULT_SYNC_RPC_PATH}`).pipe(
+        Effect.provideContext(http)
+      );
+      yield* client.PauseDestination(own, {}, { headers: { ...bearer, "x-correlation-id": "corr-remote-1" } });
+      const commands = A.filter(spans, (span) => span.name === "VaultSyncApi.command");
+      expect(A.map(commands, (span) => R.fromEntries(A.fromIterable(span.attributes)))).toEqual([
+        {
+          "documents.vault_sync.command": "PauseDestination",
+          "documents.vault_sync.destination_id": own,
+          "documents.vault_sync.transport": "cli",
+          "documents.vault_sync.request_correlation_id": "corr-remote-1",
+          "documents.vault_sync.outcome": "accepted",
+        },
+      ]);
+      const command = yield* Effect.fromOption(A.head(commands));
+      const decide = yield* Effect.fromOption(
+        A.findFirst(spans, (span) => Str.startsWith("Domain.decide SyncDestination.PauseDestination")(span.name))
+      );
+      expect(ancestorIds(spans, decide)).toContain(command.spanId);
     }).pipe(TestClock.withLive)
   );
 

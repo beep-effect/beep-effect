@@ -22,7 +22,7 @@
  * @since 0.0.0
  */
 import * as V from "@beep/documents-domain/aggregates/VaultSync";
-import { MirrorFailureStage } from "@beep/documents-use-cases/aggregates/VaultSync";
+import { MirrorFailureStage, VaultSyncDestinationIdAttribute } from "@beep/documents-use-cases/aggregates/VaultSync";
 import { $DocumentsServerId } from "@beep/identity/packages";
 import {
   AttributeKey,
@@ -273,7 +273,9 @@ export const VaultSyncOutcome = LiteralKit(["accepted", "ScopeDenied", "failed",
 export type VaultSyncOutcome = typeof VaultSyncOutcome.Type;
 
 /**
- * The `documents.vault_sync.*` attribute keys, by field.
+ * The `documents.vault_sync.*` attribute keys, by field. `destinationId` is
+ * declared by `@beep/documents-use-cases`, whose `VaultSyncRequests.start`
+ * span carries it; the rest are declared here.
  *
  * **Example** (Read an attribute key)
  *
@@ -292,7 +294,7 @@ export const VaultSyncAttribute = {
   view: AttributeKeyName.make("documents.vault_sync.view"),
   readMode: AttributeKeyName.make("documents.vault_sync.read_mode"),
   outcome: AttributeKeyName.make("documents.vault_sync.outcome"),
-  destinationId: AttributeKeyName.make("documents.vault_sync.destination_id"),
+  destinationId: VaultSyncDestinationIdAttribute,
   operationId: AttributeKeyName.make("documents.vault_sync.operation_id"),
   requestCorrelationId: AttributeKeyName.make("documents.vault_sync.request_correlation_id"),
   probeOnly: AttributeKeyName.make("documents.vault_sync.probe_only"),
@@ -466,7 +468,6 @@ export const VaultSyncInstruments = InstrumentDeclarations.make({
       "Terminal outcome of a vault-sync span: accepted, a failure tag or a named rule violation.",
       "bounded"
     ),
-    identifierKey(K.destinationId, "Opaque minted DestinationId a vault-sync call targets; never a name."),
     identifierKey(K.operationId, "Hashed OperationId a vault-sync pump step pushes."),
     identifierKey(K.requestCorrelationId, "Validated request correlation token of a vault-sync Api call."),
     AttributeKey.make({

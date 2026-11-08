@@ -1047,6 +1047,7 @@
         "@alchemy.run/domain": "catalog:",
         "@beep/documents-domain": "workspace:^",
         "@beep/identity": "workspace:^",
+        "@beep/observability": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/shared-domain": "workspace:^",
         "effect": "catalog:",
