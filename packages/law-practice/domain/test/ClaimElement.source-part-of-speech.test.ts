@@ -41,7 +41,10 @@ const lexicon = HashMap.fromIterable<string, string>([
   ["removing", "VERB"],
   ["drilling", "VERB"],
   ["downwardly", "ADV"],
+  ["upwardly", "ADV"],
   ["left", "ADJ"],
+  ["capable", "ADJ"],
+  ["presents", "VERB"],
   ["right", "ADJ"],
 ]);
 
@@ -132,6 +135,37 @@ describe("part-of-speech bounded fallback terms", () => {
       const tree = yield* treeOf(refused("the left and right posts on a downwardly extending left post"), true);
       assert.isTrue(A.contains(quotesOf(tree), "the left and right posts"));
       assert.isTrue(A.contains(quotesOf(tree), "a downwardly extending left post"));
+    })
+  );
+});
+
+describe("part-of-speech boundary rules", () => {
+  it.effect("ends a mention at a trailing adjective but keeps one that modifies a following noun", () =>
+    Effect.gen(function* () {
+      const trailing = yield* treeOf(refused("a tab capable on a shaft"), true);
+      const modifying = yield* treeOf(refused("a tab left post on a shaft"), true);
+      assert.isTrue(A.contains(quotesOf(trailing), "a tab"));
+      assert.isFalse(A.contains(quotesOf(trailing), "a tab capable"));
+      assert.isTrue(A.contains(quotesOf(modifying), "a tab left post"));
+    })
+  );
+
+  it.effect("cuts an inflected verb before a modifier unless it is a participial modifier", () =>
+    Effect.gen(function* () {
+      const finite = yield* treeOf(refused("the cabinet presents left bends"), true);
+      const participial = yield* treeOf(refused("the image erasing left apparatus"), true);
+      assert.isTrue(A.contains(quotesOf(finite), "the cabinet"));
+      assert.isFalse(A.contains(quotesOf(finite), "the cabinet presents left bends"));
+      assert.isTrue(A.contains(quotesOf(participial), "the image erasing left apparatus"));
+    })
+  );
+
+  it.effect("joins coordinated adverbs and a coordinator directly before the head", () =>
+    Effect.gen(function* () {
+      const adverbs = yield* treeOf(refused("the upwardly and downwardly extending posts"), true);
+      const headAfterCoordinator = yield* treeOf(refused("the left and posts"), true);
+      assert.isTrue(A.contains(quotesOf(adverbs), "the upwardly and downwardly extending posts"));
+      assert.isTrue(A.contains(quotesOf(headAfterCoordinator), "the left and posts"));
     })
   );
 });
