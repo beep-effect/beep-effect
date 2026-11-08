@@ -1983,12 +1983,83 @@ const scopedElementOf =
         }
       : element;
   };
+const compositionVerbPattern =
+  /\b(?:further\s+)?(?:comprises|comprise|comprising|includes|include|including|has|have|having)\s+(?=(?:an?|at least one|one or more)\s)/iu;
+const enumerationItemPattern = /^(?:and\s+)?(?:an?|at least one|one or more)\s/iu;
+// An item boundary is a top-level comma, or "and", directly before a determiner-led item.
+const enumerationItems = (list: Span): ReadonlyArray<Span> => {
+  const items = A.empty<Span>();
+  let depth = 0;
+  let from = 0;
+  for (let at = 0; at < list.text.length; at++) {
+    const mark = list.text.charAt(at);
+    if (mark === "(" || mark === "[") depth++;
+    if (mark === ")" || mark === "]") depth--;
+    if (depth > 0) continue;
+    const tail = Str.slice(at)(list.text);
+    const separator = O.getOrElse(
+      O.map(Str.match(/^(?:,\s+and\s+|,\s+|\s+and\s+)(?=(?:an?|at least one|one or more)\s)/iu)(tail), (match) =>
+        Str.length(match[0])
+      ),
+      () => 0
+    );
+    if (separator === 0) continue;
+    items.push(sliceSpan(list, from, at));
+    from = at + separator;
+    at += separator - 1;
+  }
+  items.push(sliceSpan(list, from));
+  return items;
+};
+// A subject that composes three or more determiner-led items is a container of those items.
+const expandEnumeration = (node: ColonScopeNode): ReadonlyArray<ColonScopeNode> => {
+  const text = node.header.text;
+  if (node.group || O.isSome(node.label)) return [node];
+  return O.getOrElse(
+    O.flatMap(Str.match(compositionVerbPattern)(text), (match) => {
+      const at = O.getOrElse(O.fromUndefinedOr(match.index), () => 0);
+      const listStart = at + Str.length(match[0]);
+      if (Str.includes(",")(Str.slice(0, at)(text))) return O.none();
+      const items = enumerationItems(sliceSpan(node.header, listStart));
+      if (
+        items.length < 3 ||
+        !A.every(items, ({ text: item }) => O.isSome(Str.match(enumerationItemPattern)(`${item} `)))
+      )
+        return O.none();
+      const parent = ColonScopeNode.make({
+        ...node,
+        group: true,
+        header: ColonHeaderSpan.make(sliceSpan(node.header, 0, listStart)),
+      });
+      return O.some(
+        A.prepend(
+          A.map(items, (item, index) =>
+            ColonScopeNode.make({
+              path: `${node.path}.${romanSegment(index + 1)}`,
+              parent: node.path,
+              header: ColonHeaderSpan.make(trimSpan(item)),
+              endChar: item.start + Str.length(item.text),
+              group: false,
+              label: O.none(),
+            })
+          ),
+          parent
+        )
+      );
+    }),
+    () => [node]
+  );
+};
 const inspectionTreeInputFor =
-  (grammar: LexicalGrammar, split: (body: Span) => ReadonlyArray<Span> = splitInspectionBody): typeof treeInput =>
+  (
+    grammar: LexicalGrammar,
+    split: (body: Span) => ReadonlyArray<Span> = splitInspectionBody,
+    expand: (node: ColonScopeNode) => ReadonlyArray<ColonScopeNode> = A.of
+  ): typeof treeInput =>
   (claim, parts) => {
     const root = `${claim.claimNumber}`;
     const segments = A.filter(bodySegments(claim, parts.body, split), (span) => !transparentColonFrame(span));
-    const nodes = colonNodesOf(root, segments);
+    const nodes = A.flatMap(colonNodesOf(root, segments), expand);
     const elements = A.prepend(
       A.map(nodes, scopedElementOf(claim.claimText, root, grammar)),
       elementOf(
@@ -2598,7 +2669,11 @@ const sourceFallbackTree =
     O.match(HashMap.get(aligned, claim.claimNumber), {
       onNone: () => inspectionTreeInput(claim, parts),
       onSome: (facts) =>
-        inspectionTreeInputFor(sourcePartOfSpeechGrammar(facts), splitParallelInspectionBody)(claim, parts),
+        inspectionTreeInputFor(
+          sourcePartOfSpeechGrammar(facts),
+          splitParallelInspectionBody,
+          expandEnumeration
+        )(claim, parts),
     });
 const boundedSourceEvidence = (
   prepared: PreparedClaimInspection,
