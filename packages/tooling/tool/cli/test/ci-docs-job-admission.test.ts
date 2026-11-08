@@ -59,7 +59,7 @@ const verificationLaneContracts = [
   },
 ];
 
-const aggregateCases = A.flatMap(["success", "failure", "skipped", "cancelled"], (classification) =>
+const aggregateCases = A.flatMap(["success", "failure", "skipped", "cancelled", ""], (classification) =>
   A.flatMap(["true", "false", "", "invalid"], (docs) =>
     A.map(["success", "failure", "skipped", "cancelled"], (result) => ({ classification, docs, result }))
   )

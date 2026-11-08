@@ -54,8 +54,9 @@ It emitted `docs_only=true`, `goals_only=false`, and
 Classifier regressions cover the original change, mixed source/documentation,
 workflow and configuration changes, source deletion, source-to-Markdown rename,
 unavailable diffs, empty diffs, and invalid classifier configuration. Aggregate
-regressions execute the real workflow shell for successful, failed, cancelled,
-and missing classification and shard outcomes.
+regressions execute 160 cases against the real workflow shell, including failed
+and missing profiles, missing or invalid classification outputs, non-docs
+changes with skipped shards, and classified documentation with skipped shards.
 
 A small PR workflow exercises a local reusable workflow with literal names,
 job-local environment parameters, and anchored steps. A second caller skips
@@ -86,15 +87,21 @@ The direct commands verified here were:
 bun run beep quality package-verify @beep/repo-cli --quick
 bun run lint:oxlint
 bun run beep lint schema-first
+bun run beep lint effect-vitest
 bun run beep ci workflow-lint
 bun run beep quality fallow audit --base origin/main --check --out .beep/fallow/authoring.json --quiet
-bunx --bun vitest run packages/tooling/tool/cli/test/ci-docs-job-admission.test.ts
+bunx --bun vitest run \
+  packages/tooling/tool/cli/test/ci-lane.test.ts \
+  packages/tooling/tool/cli/test/ci-docs-job-admission.test.ts \
+  packages/tooling/tool/cli/test/ci-runner-security.test.ts \
+  packages/tooling/tool/cli/test/ci-heavy-admission.test.ts \
+  packages/tooling/tool/cli/test/ci-bootstrap-parity.test.ts
 ```
 
-The focused Effect Vitest check invoked the public
-`detectEffectVitestFindings` detector on the changed test using a `ts-morph`
-project and `NodeCrypto.layer`; it returned no findings. The full
-`bun run beep lint effect-vitest` scan remains part of canonical publication.
+The full Effect Vitest policy check passed with zero introduced findings.
+A focused detector result does not replace that ratchet check. The workflow
+suite includes the existing CI lane contracts as well as the new admission
+regressions; package lint and typecheck alone do not execute those contracts.
 Do not update inventory baselines to clear an introduced authoring issue.
 
 Workflow scalar metadata is checked with named schema-derived guards and test
