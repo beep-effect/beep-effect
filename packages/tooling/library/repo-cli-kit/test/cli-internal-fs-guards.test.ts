@@ -81,6 +81,86 @@ describe("cli/FsGuards contained writes", () => {
       })
     );
 
+    it.effect("accepts a regular parent created by another writer after inspection", () =>
+      Effect.gen(function* () {
+        const { fs, path, root } = yield* makeRoot;
+        const original = fs.makeDirectory;
+        const mkdir = vi
+          .spyOn(fs, "makeDirectory")
+          .mockImplementationOnce((entry, options) =>
+            original(entry, options).pipe(
+              Effect.andThen(Effect.fail(systemError("makeDirectory", entry, "AlreadyExists")))
+            )
+          );
+        yield* restoreOnExit(mkdir);
+
+        const written = yield* appendContainedFileString(root, "inbox/failures.ndjson", "row\n");
+
+        expect(written).toBe(path.join(root, "inbox", "failures.ndjson"));
+        const contents = yield* fs.readFileString(written);
+        expect(contents).toBe("row\n");
+        expect(mkdir).toHaveBeenCalledTimes(1);
+      })
+    );
+
+    for (const symlink of [false, true]) {
+      it.effect(`rejects a ${symlink ? "symlink" : "file"} winning the parent creation race`, () =>
+        Effect.gen(function* () {
+          const { fs, path, root } = yield* makeRoot;
+          const destination = path.join(root, "outside");
+          yield* fs.makeDirectory(destination);
+          const mkdir = vi
+            .spyOn(fs, "makeDirectory")
+            .mockImplementationOnce((entry) =>
+              (symlink ? fs.symlink(destination, entry) : fs.writeFileString(entry, "file")).pipe(
+                Effect.andThen(Effect.fail(systemError("makeDirectory", entry, "AlreadyExists")))
+              )
+            );
+          yield* restoreOnExit(mkdir);
+
+          const error = yield* appendContainedFileString(root, "inbox/failures.ndjson", "row\n").pipe(Effect.flip);
+
+          expect(error.reason).toBe(symlink ? "symlink" : "parent-not-directory");
+          expect(error.path).toBe(path.join(root, "inbox"));
+          const escaped = yield* fs.exists(path.join(destination, "failures.ndjson"));
+          expect(escaped).toBe(false);
+        })
+      );
+    }
+
+    it.effect("refuses an AlreadyExists collision when the parent is absent on reinspection", () =>
+      Effect.gen(function* () {
+        const { fs, path, root } = yield* makeRoot;
+        const mkdir = vi
+          .spyOn(fs, "makeDirectory")
+          .mockImplementationOnce((entry) => Effect.fail(systemError("makeDirectory", entry, "AlreadyExists")));
+        yield* restoreOnExit(mkdir);
+
+        const error = yield* appendContainedFileString(root, "inbox/failures.ndjson", "row\n").pipe(Effect.flip);
+
+        expect(error.reason).toBe("parent-not-directory");
+        expect(error.path).toBe(path.join(root, "inbox"));
+        const written = yield* fs.exists(path.join(root, "inbox", "failures.ndjson"));
+        expect(written).toBe(false);
+      })
+    );
+
+    it.effect("preserves a parent creation failure other than AlreadyExists", () =>
+      Effect.gen(function* () {
+        const { fs, path, root } = yield* makeRoot;
+        const mkdir = vi
+          .spyOn(fs, "makeDirectory")
+          .mockImplementationOnce((entry) => Effect.fail(systemError("makeDirectory", entry)));
+        yield* restoreOnExit(mkdir);
+
+        const error = yield* appendContainedFileString(root, "inbox/failures.ndjson", "row\n").pipe(Effect.flip);
+
+        expect(error.reason).toBe("filesystem-failure");
+        expect(error.path).toBe(path.join(root, "inbox"));
+        error.cause.pipe(O.isSome, assertTrue);
+      })
+    );
+
     it.effect("refuses targets outside the root or equal to it", () =>
       Effect.gen(function* () {
         const { root } = yield* makeRoot;
