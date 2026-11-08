@@ -2691,3 +2691,28 @@ logging repair and no local quality suite was run.
 - Prevention: accompany schema boundary changes with schema-derived property
   coverage, not only fixed examples. Hosted CI is authoritative; no local suite,
   baseline rewrite or suppression is used.
+
+## 2026-11-08: bind observation preflight to accepted adapter ownership
+
+The first accepted-source dispatch preflight refused because the former
+`ci-cache-pilot-inputs.sh` path was retired by #2921. Main now routes the same
+observation through the Effect CLI input, sandbox, summary and cleanup commands.
+Refresh the explicit source digest set to those accepted owners before dispatch;
+do not retain obsolete script paths or silently skip their verification. The
+prepared request stayed undispatched until that review completed. The resulting
+run is 42440013986, with its original resource and authority bounds unchanged.
+Owner: the current observation evidence lane. A future preflight should derive
+its required source roles from the accepted workflow command map, then refuse
+unknown roles, instead of keeping a parallel list of retired adapter filenames.
+
+## 2026-11-08: local pilot execution drifted from its creation-mask preview
+
+Run 42440013986 prepared inputs successfully but the pilot refused with
+`The pilot activation preview is stale.` Preparation's CLI brackets its process
+and children with mask `077`, while the local execution shell omitted that mask;
+the signed execution shell already sets it. Creation mask is intentionally a
+toolchain identity input. Align local execution with preparation rather than
+remove that field, refresh a stale receipt, or bypass exact preview equivalence.
+No public summary was produced and owned cleanup passed. The workflow repair
+and real-shell mask regression belong to PR #2926; hosted proof and a new
+accepted-source observation remain pending.

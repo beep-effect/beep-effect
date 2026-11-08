@@ -3,7 +3,7 @@
   "goal": "turborepo-quality-cache-adoption",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "365bd154b05b4d425cecaf6ce5cb966cf00b9cb3",
-  "specSha256": "f870b7e03d102642368b7b278ae5665a25ff758d029e69a058958b989a35e1b4",
+  "specSha256": "d82c5f5a0f9546d9f9223c34d78cddc53851c143b0978716ba571b6296996f56",
   "acceptance": [
     {
       "id": "AC-01",
@@ -64,9 +64,9 @@
     {
       "id": "AC-09",
       "source": "SPEC.md:175",
-      "requirement": "Final evidence, reflection and lifecycle closeout land in that same PR.",
+      "requirement": "Final evidence, reflection and proposedCloseout land in the final implementation PR; after merge, completion refresh verifies the proposal and a separate merged packet-state PR adopts completed-retained, with matching closeout and initiative statuses on origin/main.",
       "status": "unproven",
-      "nextProof": "Land final evidence, reflection and completed-retained lifecycle in the final implementation PR."
+      "nextProof": "Merge the final evidence, reflection and proposedCloseout while the packet stays active or paused. Then run goals completion refresh, adopt completed-retained in a separate packet-state PR, merge it and inspect matching statuses on origin/main."
     }
   ],
   "implementationContract": [
@@ -395,5 +395,11 @@
     "sha256": "7d93b61b50e5cd64750d73df31a967d4ba59d18157753ed7cfece85a2b6b491e",
     "authority": "Synthetic Linux regular-file hash invariants only; aliases are observations. No Windows, output restoration, real computation qualification, activation or performance proof."
   },
-  "priorSpecSha256AtSourceCaptureRepair": "dfc0b76b82359d3e9ed5fc4892fd78128ef91b82b50d64f31a21d4a88bb1e248"
+  "priorSpecSha256AtSourceCaptureRepair": "dfc0b76b82359d3e9ed5fc4892fd78128ef91b82b50d64f31a21d4a88bb1e248",
+  "lifecycleRequirementRefresh": {
+    "sourceRevision": "6b49badf353221e332f6c99cdbeaf9500de0e400",
+    "reviewedRequirement": "AC-09",
+    "previousSpecSha256": "f870b7e03d102642368b7b278ae5665a25ff758d029e69a058958b989a35e1b4",
+    "scope": "Refresh the current specification digest and two-PR lifecycle requirement only. Preserve every unproven acceptance status and the historical evidence source revision; no whole-audit runtime refresh or completion is claimed."
+  }
 }

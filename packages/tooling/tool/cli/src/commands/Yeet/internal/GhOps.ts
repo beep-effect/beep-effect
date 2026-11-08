@@ -664,17 +664,18 @@ export const YeetGithubLayer: Context.Reference<O.Option<Layer.Layer<YeetGithubS
 );
 
 /**
- * Build the GitHub services as the operator's gh login
- * ({@link YEET_GH_LOGIN_IDENTITY}), the identity the `gh` CLI calls they replace
- * spoke as, with the repository read from `cwd`'s `origin` (or `GH_REPO`).
+ * Build the GitHub services for the identity Yeet selects, with the repository
+ * read from `cwd`'s `origin` (or `GH_REPO`).
  *
  * **Details**
  *
- * The edge every gh-login Yeet surface takes its GitHub services from. Building
- * the client spawns `gh auth token`, so it is built per command surface rather
- * than for every CLI command; {@link YeetGithubLayer} replaces it in suites. An
- * identity or repository that does not resolve fails as
- * `GitHub access failed (<why>).`, exit 1.
+ * The edge every gh-login Yeet surface takes its GitHub services from. The
+ * identity follows `layerYeetGh`'s precedence: `BEEP_GH_TOKEN_REF` (a 1Password
+ * reference), then a configured GitHub App, then the operator's gh login
+ * ({@link YEET_GH_LOGIN_IDENTITY}, whose client spawns `gh auth token`). It is
+ * built per command surface rather than for every CLI command;
+ * {@link YeetGithubLayer} replaces it in suites. An identity or repository that
+ * does not resolve fails as `GitHub access failed (<why>).`, exit 1.
  *
  * **Example** (Build the services in a scope)
  *
@@ -698,16 +699,27 @@ export const buildYeetGhLogin = (
   Scope.Scope | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > =>
   Effect.flatMap(Effect.service(YeetGithubLayer), (override) =>
-    Layer.build(
-      O.getOrElse(
-        override,
-        (): Layer.Layer<
-          YeetGithubServices,
-          GithubIdentityError,
-          SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-        > => layerYeetGhFor(GithubClientRequest.make({ identity: YEET_GH_LOGIN_IDENTITY, cwd }))
-      )
-    ).pipe(Effect.mapError((error) => yeetGithubFailure("GitHub access")(error)))
+    O.match<
+      Layer.Layer<YeetGithubServices>,
+      Effect.Effect<
+        Context.Context<YeetGithubServices>,
+        GithubIdentityError,
+        Scope.Scope | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+      >,
+      Effect.Effect<
+        Context.Context<YeetGithubServices>,
+        GithubIdentityError,
+        Scope.Scope | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+      >
+    >(override, {
+      onSome: Layer.build,
+      // The same precedence as `layerYeetGh`: `BEEP_GH_TOKEN_REF`, then the GitHub App, then the gh login.
+      // A host whose `gh` refuses `gh auth token` reaches GitHub through the 1Password reference.
+      onNone: () =>
+        Effect.flatMap(selectGithubIdentity(O.none()), (identity) =>
+          Layer.build(layerYeetGhFor(GithubClientRequest.make({ identity, cwd })))
+        ),
+    }).pipe(Effect.mapError((error) => yeetGithubFailure("GitHub access")(error)))
   );
 
 /**
