@@ -1,5 +1,18 @@
 # Friction and opportunities
 
+## 2026-11-08: actual shared GitHub API quota exhaustion
+
+After PR #2956 became ready, its canonical reviewer request and provenance
+refresh returned an API rate-limit refusal. An authenticated quota read at
+07:25 UTC reported zero of 5,000 core requests remaining, resetting at
+07:38:08 UTC. A direct GraphQL read also refused, despite the quota response
+reporting remaining GraphQL capacity. This differs from the earlier cached
+CLI-error episode: current REST exhaustion is confirmed. Stop manual retries,
+retain the existing monitor handles and exact-head receipts, and resume
+missing log/review reads after recovery without changing credentials. Unknown
+review or CI state remains unknown. Shared request budgeting and reset-aware
+backoff would prevent unrelated lanes from spending the same quota blindly.
+
 ## 2026-11-08: population refresh dropped script-only coverage
 
 The metadata refresh writer reconstructed configured graph rows but omitted
