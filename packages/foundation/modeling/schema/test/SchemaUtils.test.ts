@@ -48,6 +48,9 @@ describe("BoolKeyDefaultFalse and BoolKeyDefaultTrue", () => {
       expect(decodedEnabled).toEqual(expectedEnabled);
     })
   );
+  it("round-trips schema-derived arbitraries through decode and encode", () => {
+    assertSchemaArbitraryDecodesToSelf(BoolKeySettings);
+  });
 
   it("default omitted constructor input", () => {
     expect(BoolKeySettings.make({})).toEqual({ visible: false, enabled: true });
