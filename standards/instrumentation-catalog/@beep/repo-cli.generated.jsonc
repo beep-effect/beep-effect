@@ -3115,6 +3115,7 @@
     {"name":"RouteGit.missingCommits","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"RunScope.detectRunScopeSupport","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"RunScope.enterRunScope","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"RunScope.readPlannedRunScopeCgroup","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"RunScope.readRunScopeOwnerRoot","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"RunScope.readRunScopeTelemetry","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"RunScope.stopRunScopeForReap","owner":"@beep/repo-cli","family":"tooling","conforms":true},
