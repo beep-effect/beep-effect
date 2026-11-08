@@ -207,6 +207,40 @@ describe("part-of-speech boundary rules", () => {
   );
 });
 
+describe("restated preamble subjects", () => {
+  const preambleOf = (tree: ClaimElementTree) => O.getOrThrow(A.head(tree.elements)).anchor.quote;
+
+  it.effect("runs the preamble through a restated head noun before the real transition", () =>
+    Effect.gen(function* () {
+      const tree = yield* treeOf(
+        "A method for coating a plate comprising a shaft, the method comprising: removing a cover; and stores the signal.",
+        true
+      );
+      assert.strictEqual(preambleOf(tree), "A method for coating a plate comprising a shaft, the method");
+    })
+  );
+
+  it.effect("keeps the first transition for another noun, a finite verb or no evidence", () =>
+    Effect.gen(function* () {
+      const otherNoun = yield* treeOf(
+        "A method comprising a shaft, the plate comprising a tab; and stores the signal.",
+        true
+      );
+      const finiteVerb = yield* treeOf(
+        "A knee joint comprising a shaft, the knee joint includes a tab; and stores the signal.",
+        true
+      );
+      const evidenceFree = yield* treeOf(
+        "A method comprising a shaft, the method comprising a tab; and stores the signal.",
+        false
+      );
+      assert.strictEqual(preambleOf(otherNoun), "A method");
+      assert.strictEqual(preambleOf(finiteVerb), "A knee joint");
+      assert.strictEqual(preambleOf(evidenceFree), "A method");
+    })
+  );
+});
+
 describe("part-of-speech element kinds", () => {
   const kindOf = (tree: ClaimElementTree, quote: string) =>
     O.map(

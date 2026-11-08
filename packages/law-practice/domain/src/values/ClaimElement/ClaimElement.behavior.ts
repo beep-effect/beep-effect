@@ -2669,6 +2669,46 @@ const alignedFactsOf = (
         : [];
     })
   );
+// "A method ... comprising a shaft, the method comprising:" restates the preamble's own head
+// noun before its real transition, so the preamble runs through that restated subject.
+const preambleHeadPattern =
+  /^(?:an?|the|one or more)\s+([^,;:()]*?)\s*(?:\b(?:for|of|to|in|on|with|that|which|using|by|having|comprising|including)\b|[,;:(]|$)/iu;
+const restatedSubjectPattern =
+  /,\s*(?:the|said)\s+(?:[\p{L}\p{N}-]+\s+){0,6}?[\p{L}\p{N}-]+(?=\s+(?:further\s+)?(?:comprising|including|having|consisting of)\b)/giu;
+const restatedTransitionPattern = /^\s+(?:further\s+)?(?:comprising|including|having|consisting of)\b\s*:?\s*/iu;
+const lastWordOf = (text: string): O.Option<string> =>
+  O.map(A.last(Str.split(Str.trim(text), /\s+/u)), Str.toLowerCase);
+const preambleHeadOf = (preamble: string): O.Option<string> =>
+  O.flatMap(Str.match(preambleHeadPattern)(Str.trim(preamble)), (match) => O.flatMap(A.get(match, 1), lastWordOf));
+const restatedTransitionParts = (claimText: string, parts: { readonly preamble: Span; readonly body: Span }) => {
+  const bodyEnd = parts.body.start + Str.length(parts.body.text);
+  return O.getOrElse(
+    O.flatMap(preambleHeadOf(parts.preamble.text), (head) =>
+      O.flatMap(
+        A.findFirst(matchesIn(restatedSubjectPattern)(parts.body), ({ text }) => O.contains(lastWordOf(text), head)),
+        (subject) => {
+          const preambleEnd = subject.start + Str.length(subject.text);
+          return O.flatMap(
+            Str.match(restatedTransitionPattern)(Str.slice(preambleEnd, bodyEnd)(claimText)),
+            (transition) => {
+              const bodyStart = preambleEnd + Str.length(transition[0]);
+              return bodyStart < bodyEnd
+                ? O.some({
+                    preamble: {
+                      start: parts.preamble.start,
+                      text: Str.slice(parts.preamble.start, preambleEnd)(claimText),
+                    },
+                    body: { start: bodyStart, text: Str.slice(bodyStart, bodyEnd)(claimText) },
+                  })
+                : O.none();
+            }
+          );
+        }
+      )
+    ),
+    () => parts
+  );
+};
 const sourceFallbackTree =
   (aligned: HashMap.HashMap<number, ReadonlyArray<ClaimLexicalToken>>): typeof inspectionTreeInput =>
   (claim, parts) =>
@@ -2679,7 +2719,7 @@ const sourceFallbackTree =
           sourcePartOfSpeechGrammar(facts),
           splitParallelInspectionBody,
           expandEnumeration
-        )(claim, parts),
+        )(claim, referencesOf(claim).length === 0 ? restatedTransitionParts(claim.claimText, parts) : parts),
     });
 const boundedSourceEvidence = (
   prepared: PreparedClaimInspection,
