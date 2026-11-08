@@ -100,9 +100,9 @@ for the clock-only percentage above.
 
 ## Full-corpus and functional proof
 
-The original complete Bun integration test passes locally in a 79.58-second
-Vitest run under a two-CPU/12-GiB cap. It retains all 1,005 maps, exact expected
-steps, 1,005 spawned/independently confirmed exits, and zero active, queued,
+The initial original complete Bun integration test passes locally in a
+79.58-second Vitest run under a two-CPU/12-GiB cap. It retains all 1,005 maps,
+exact expected steps, 1,005 spawned/independently confirmed exits, and zero active, queued,
 quarantined or physical owners. Its existing 600,000 ms test deadline is
 unchanged. An outer 640-second command bound is only a cleanup guard. The Node
 case is explicitly unselected in this Bun-only qualification; the original test
@@ -115,12 +115,26 @@ flag. These are runtime/test results, not coverage reports. Existing success,
 limits, deadlines, cancellation, quarantine, malformed-runtime and Unicode
 controls remain enabled alongside the two new scope/runtime controls.
 
+After normal merge `9055854c5af` incorporates landed main `de54b37982b`, the
+current graph includes upstream safety-refusal reconstruction and sequential
+replay scheduling. The original full corpus cases pass again, sequentially:
+Bun in 117.90 seconds and Node in 84.76 seconds, each retaining all 1,005 maps,
+independent acknowledgments and zero remaining owners. Each invocation explicitly
+selects one original runtime case and leaves the other unselected; both cases
+remain in the source file. The Node run uses the cached CI-version Node 22.23.4
+host with its PATH prepended and the existing Float16Array flag. The same 15
+runtime/input-admission controls also pass on this graph in 6.83 seconds.
+
+These current-graph timings preserve the earlier 79.58-second result as a
+historical observation rather than treating it as the latest-head result.
+Changing shared-host load and source snapshots prevent interpreting these
+single full-corpus observations as a controlled percentage comparison.
+
 Affected SourceDocument, DocumentExtraction and HtmlGeometryPreparation tests
 pass three files/nine tests in 92.38 seconds, covering both native worker kinds,
 real downstream document maps/queries, source extraction, quota refusal and
-retirement. The whole Node 1,005-map corpus, full server audit and hosted checks
-are not established by these local runs. Hosted same-scope integration remains
-required before declaring the historical watchdog or entire CI lane fixed.
+retirement. The full server audit and hosted checks are not established by these
+local runs. Hosted same-scope integration remains required before declaring the historical watchdog or entire CI lane fixed.
 
 Private receipts retain exact probes, all warmup/paired outputs, source hashes,
 actual spawn/runtime identities, process times, restoration copies and full logs
@@ -128,4 +142,6 @@ under `.beep/diff-runtime-perf/`. Package-scoped quick verification passes lint 
 8.8 seconds, including upstream build closure and package test TypeScript checks.
 `docgen:local` passes as a no-op because no package source docgen inputs changed;
 this is not full docgen proof. The full package audit remains deferred to the
-coordinated quality/publication sequence.
+coordinated quality/publication sequence. On the merged graph, quick verification
+passes again with lint in 10.1 seconds and check in 19.9 seconds; docgen local
+again succeeds with no selected package source inputs.
