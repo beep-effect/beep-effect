@@ -461,6 +461,11 @@ describe("proof job schemas", () => {
         CLAUDE_CODE_ENTRYPOINT: "cli",
       })
     ).toEqual({ CLAUDE_CODE_SESSION_ID: "claude-session", CODEX_THREAD_ID: "codex-thread" });
+    // The GitHub token reference is a 1Password pointer: forwarded as `op://`, denied as anything else.
+    expect(Job.forwardedProofJobEnvironment({ BEEP_GH_TOKEN_REF: "op://vault/item/token" })).toEqual({
+      BEEP_GH_TOKEN_REF: "op://vault/item/token",
+    });
+    expect(Job.forwardedProofJobEnvironment({ BEEP_GH_TOKEN_REF: "ghp_raw_token" })).toEqual({});
   });
 });
 

@@ -22,6 +22,7 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { GITHUB_TOKEN_REF_ENV } from "../../../internal/github/index.ts";
 import { YeetRunMode } from "./Planner.schemas.ts";
 import { YeetOutcome } from "./Verdict.ts";
 
@@ -259,6 +260,11 @@ const DeniedEnvName = S.String.check(S.isPattern(/^(?:OP_)|TOKEN|SECRET|KEY|PASS
  * @since 0.0.0
  */
 export const isDeniedProofJobEnvName: (name: string) => boolean = S.is(DeniedEnvName);
+
+// The one credential-shaped name a job may carry: the GitHub token reference. Its value is a
+// 1Password `op://` pointer the job resolves itself, never the token; any other value stays denied.
+const isForwardableSecretReference = (name: string, value: string): boolean =>
+  name === GITHUB_TOKEN_REF_ENV && Str.startsWith("op://")(value);
 
 /**
  * Lifecycle phase of one job record (ruling 36).
@@ -1553,7 +1559,7 @@ export const forwardedProofJobEnvironment = (
     env,
     (value, name): value is string =>
       value !== undefined &&
-      !isDeniedProofJobEnvName(name) &&
+      (!isDeniedProofJobEnvName(name) || isForwardableSecretReference(name, value)) &&
       (A.contains(PROOF_JOB_FORWARDED_ENV_NAMES, name) ||
         A.some(PROOF_JOB_FORWARDED_ENV_PREFIXES, (prefix) => Str.startsWith(prefix)(name)))
   );

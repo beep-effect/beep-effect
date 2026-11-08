@@ -30,6 +30,7 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { GITHUB_TOKEN_REF_ENV } from "../../../internal/github/index.ts";
 import { acquireJournalFileLock, releaseJournalFileLock } from "../../../internal/repo-run/AdmissionJournal.ts";
 import {
   appendProofJobAttemptTerminated,
@@ -310,7 +311,8 @@ const proofJobEnvironment = Effect.fn("ProofJob.environment")(function* () {
     segments: ReadonlyArray<string>
   ): Effect.fn.Return<ReadonlyArray<readonly [string, string]>, YeetCommandError> {
     const name = A.join(segments, "_");
-    if (isDeniedProofJobEnvName(name)) return [];
+    // The GitHub token reference is loaded so `forwardedProofJobEnvironment` can admit an `op://` value.
+    if (isDeniedProofJobEnvName(name) && name !== GITHUB_TOKEN_REF_ENV) return [];
     const node = yield* provider
       .load(segments)
       .pipe(Effect.mapError(YeetCommandError.new("Failed to read job environment.")));
