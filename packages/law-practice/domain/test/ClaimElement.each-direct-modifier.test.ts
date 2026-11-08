@@ -24,6 +24,7 @@ import {
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
@@ -216,7 +217,7 @@ describe("distributive source witness and consumers", () => {
         A.map(refs, (ref) => O.getOrThrow(A.get(plan.roles.certificates, ref.ordinal - 1)).rank),
         [-3, -3, 0, -3, -3, -2, -3, 0]
       );
-      assert.isTrue(O.isSome(plan.roles.originalLexicalInput));
+      plan.roles.originalLexicalInput.pipe(O.isSome, assertTrue);
       assert.deepStrictEqual(
         O.getOrThrow(A.findFirst(plan.roles.predicates, (p) => p.anchor.quote === "located")),
         ClaimPredicateSpan.make({
@@ -431,7 +432,7 @@ describe("distributive source witness and consumers", () => {
           ...original,
           lexicalWorkConsumed: 262_144 - available,
         });
-        assert.isTrue(O.isNone(compileClaimClauseRoles(claim, input)));
+        assertNone(compileClaimClauseRoles(claim, input));
       }
       const exact = ClaimLexicalEvidence.cases.aligned.make({ ...original, lexicalWorkConsumed: 262_144 - required });
       const atBoundary = O.getOrThrow(compileClaimClauseRoles(claim, exact));

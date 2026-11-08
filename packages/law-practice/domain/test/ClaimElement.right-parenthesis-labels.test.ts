@@ -23,11 +23,11 @@ import {
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 // Explicit source-only controls; this map is not production lexical evidence.
@@ -319,12 +319,10 @@ describe("source-proved right-parenthesis list labels", () => {
         if (original.status !== "aligned") throw new Error("expected aligned evidence");
         const compiled = O.getOrThrow(compileClaimClauseRoles(claim, original));
         const required = 262_144 - compiled.remainingWork;
-        assert.isTrue(
-          O.isNone(
-            compileClaimClauseRoles(
-              claim,
-              ClaimLexicalEvidence.cases.aligned.make({ ...original, lexicalWorkConsumed: 262_144 - required + 1 })
-            )
+        assertNone(
+          compileClaimClauseRoles(
+            claim,
+            ClaimLexicalEvidence.cases.aligned.make({ ...original, lexicalWorkConsumed: 262_144 - required + 1 })
           )
         );
         const exact = O.getOrThrow(
@@ -391,9 +389,9 @@ describe("source-proved right-parenthesis list labels", () => {
         const startChar = O.getOrThrow(Str.indexOf(quote)(text));
         return TextAnchor.make({ startChar, endChar: startChar + quote.length, quote });
       };
-      const root = yield* S.decodeEffect(ClaimElementPath)("1");
-      const left = yield* S.decodeEffect(ClaimElementPath)("1.a");
-      const right = yield* S.decodeEffect(ClaimElementPath)("1.b");
+      const root = ClaimElementPath.make("1");
+      const left = ClaimElementPath.make("1.a");
+      const right = ClaimElementPath.make("1.b");
       const tree = ClaimElementTree.make({
         claimNumber: 1,
         producer: "rule",
