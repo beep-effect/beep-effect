@@ -35,8 +35,8 @@ import { alwaysEquivalent } from "./toEquivalence.ts";
  * @since 0.0.0
  */
 export const optionalDefect = (description: string) =>
-  S.OptionFromOptionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(alwaysEquivalent)))
-    .pipe(S.withConstructorDefault(Effect.succeedNone))
+  S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
+    .pipe(S.overrideToEquivalence(alwaysEquivalent), S.withConstructorDefault(Effect.succeedNone))
     .annotateKey({
       description,
     });
