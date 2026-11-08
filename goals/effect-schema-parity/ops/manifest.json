@@ -39,18 +39,7 @@
     "explorations/effect-schema-parity/BRIEF.md",
     "explorations/effect-schema-parity/MAP.md"
   ],
-  "researchReports": [
-    "research/2026-09-29-p3-gates.md",
-    "research/2026-09-29-p4-gate-cut.md",
-    "research/2026-09-29-p5a-check-census.md",
-    "research/2026-10-01-p5-cache-review.md",
-    "research/2026-10-01-p5-check-census.md",
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md",
-    "research/tools/boundary-probe.ts",
-    "research/tools/facet-census.ts",
-    "research/tools/facet-probe.ts"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -90,5 +79,13 @@
     "A retirement PR would change a persisted or externally served encoding; that is a migration goal, not this one.",
     "A facet census flips a RETIRE row to ADAPT and no decision-log entry records the flip.",
     "P5 would open before goals/schema-utils-selective-codec-statics has merged its Yeet PR (satisfied: PR #927 merged 2026-08-31 as 2731847346)."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/effect-schema-parity",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "88403d3f4257e43f9d8f4ae4477ac0a0170e3899",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }

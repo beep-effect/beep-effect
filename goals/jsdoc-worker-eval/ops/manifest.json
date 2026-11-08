@@ -123,11 +123,12 @@
   "statusNote": "legacy status: p0-p6-implemented-runpod-10-packet-evidence-complete",
   "lifecycle": "completed-retained",
   "packetPath": "goals/jsdoc-worker-eval",
-  "researchReports": [
-    "research/2026-05-12-codex-gpt-5.4-mini-low-worker-eval.md",
-    "research/2026-05-12-ollama-qwen3-coder-30b-host-eval.md",
-    "research/2026-05-16-runpod-ollama-qwen3-coder-30b-worker-eval-10-packet.md",
-    "research/2026-05-16-runpod-ollama-qwen3-coder-30b-worker-eval.md",
-    "research/README.md"
-  ]
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/jsdoc-worker-eval",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "f48021964bf9a586186db7ef2a0c70e99092a4f6",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }

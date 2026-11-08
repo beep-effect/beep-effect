@@ -31,7 +31,7 @@ the bridge above `@beep/md`") this goal takes as a rule.
 2. `AGENTS.md`, `CLAUDE.md`, required skills (`effect-first-development`,
    `schema-first-development`, `yeet`, `closeout`, `reflect`).
 3. `standards/ARCHITECTURE.md`, `standards/architecture/07-non-slice-families.md`,
-   `goals/effected-promotion/SPEC.md` (D-02, D-38..D-52).
+   [goals/effected-promotion/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/effected-promotion/SPEC.md) (D-02, D-38..D-52).
 4. This `SPEC.md`.
 5. `PLAN.md`.
 6. `GOAL.md`.
@@ -51,7 +51,7 @@ the bridge above `@beep/md`") this goal takes as a rule.
   projection from `Doc`.
 - `@beep/doc`: `Md.render.ts` deleted; `SafeDocument` trimmed to hub-native rules (D-10);
   the import-boundary test flips to assert the hub imports no spoke.
-- `goals/effected-promotion/SPEC.md`: one Decision Log row amending D-02 and D-50 (written
+- [goals/effected-promotion/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/effected-promotion/SPEC.md): one Decision Log row amending D-02 and D-50 (written
   against `@beep/doc`), and the D-50 churn threshold retired as moot.
 - `scratchpad/temp/index.ts`: imports rewired as the demonstration.
 - Changesets: a major changeset for the public rename.
@@ -62,7 +62,7 @@ the bridge above `@beep/md`") this goal takes as a rule.
   and the POC lane churn imports once.
 - **One Markdown writer.** The `Doc.Document -> Root` projection is validated against
   `data/conformance/bridge-corpus.json` and the 2d-3 writer differential
-  (`goals/effected-promotion/research/writer-differential-w2d3.md`) before `Md.render` is
+  ([goals/effected-promotion/research/writer-differential-w2d3.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/effected-promotion/research/writer-differential-w2d3.md)) before `Md.render` is
   deleted; the ledger's writer column must not gain a newly divergent row, and the 79
   attributed divergences keep their attributions.
 - **Direction of dependency**: after this goal, `@beep/doc` imports no spoke; every spoke

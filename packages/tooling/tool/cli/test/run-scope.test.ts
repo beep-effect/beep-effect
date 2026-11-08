@@ -1,6 +1,7 @@
 import {
   detectRunScopeSupport,
   enterRunScope,
+  readPlannedRunScopeCgroup,
   readRunScopeOwnerRoot,
   readRunScopeTelemetry,
   runScopeCleanupHint,
@@ -64,6 +65,13 @@ describe("run scope", () => {
             expect(runScopeCleanupHint(record.unitName)).toContain("collected by systemd");
           })
         )
+      )
+    );
+
+    it.effect("keeps the caller domain for admission without probing busctl", () =>
+      readPlannedRunScopeCgroup.pipe(
+        configured({ BEEP_YEET_JOB_UNIT: "beep-proof-job.service", PATH: "/not-present" }),
+        Effect.tap((destination) => Effect.sync(() => assertNone(destination)))
       )
     );
   });

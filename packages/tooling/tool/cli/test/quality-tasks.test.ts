@@ -5036,9 +5036,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const repoRoot = yield* findRepoRoot();
-        const matrixText = yield* fs.readFileString(
-          path.join(repoRoot, "goals/fallow-quality-enforcement/research/feature-matrix.jsonc")
-        );
+        const matrixText = yield* fs.readFileString(path.join(repoRoot, "standards/fallow.feature-matrix.jsonc"));
         const matrix = yield* decodeGithubChecksFallowFeatureMatrixJsoncForTesting(matrixText);
         const promotedLaneIds = promotedFallowGithubCheckLaneIdsForTesting(matrix);
         const wiredFallowLaneIds = pipe(
@@ -7272,9 +7270,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           owner("docs-tool", { dependsOn: ["repo-cli"] }),
         ];
 
-        expect(
-          planCoverageAffectedScope(owners, ["goals/fallow-quality-enforcement/research/feature-matrix.jsonc"])
-        ).toEqual({ _tag: "selected", packageNames: ["@beep/repo-cli"], dependentPackageNames: [] });
+        expect(planCoverageAffectedScope(owners, ["standards/fallow.feature-matrix.jsonc"])).toEqual({
+          _tag: "selected",
+          packageNames: ["@beep/repo-cli"],
+          dependentPackageNames: [],
+        });
       });
 
       it("routes generated governance metadata to tooling consumers and fails closed on unknown inputs", () => {
@@ -7358,7 +7358,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               dependentPackageNames: ["@beep/a"],
             });
             yield* writePackage("packages/editor", { name: "@beep/editor", scripts: { coverage: "vitest" } });
-            const atlasPath = "goals/lexical-playground-capability-atlas/research/capability-atlas.json";
+            const atlasPath = "packages/foundation/ui-system/editor/test/fixtures/capability-atlas.json";
             const atlasOwners = yield* workspaceCoverageScopeOwners(repoRoot);
             expect(planCoverageSelfJudgeScope(atlasOwners, [atlasPath]).packageExclusions["@beep/editor"]).toEqual({
               _tag: "owns-changed-file",
@@ -7419,12 +7419,10 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           }),
         ];
 
-        expect(
-          planCoverageAffectedScope(owners, ["goals/fallow-quality-enforcement/research/feature-matrix.jsonc"])
-        ).toEqual({
+        expect(planCoverageAffectedScope(owners, ["standards/fallow.feature-matrix.jsonc"])).toEqual({
           _tag: "full",
           reasons: [
-            "goals/fallow-quality-enforcement/research/feature-matrix.jsonc: configured repository fixture coverage owner is unavailable",
+            "standards/fallow.feature-matrix.jsonc: configured repository fixture coverage owner is unavailable",
           ],
         });
       });
@@ -7452,7 +7450,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             hasCoverage: true,
           }),
         ];
-        const files = ["goals/fallow-quality-enforcement/research/feature-matrix.jsonc"];
+        const files = ["standards/fallow.feature-matrix.jsonc"];
         expect(planCoverageAffectedScope(owners, files)).toEqual({
           _tag: "selected",
           packageNames: ["@beep/repo-cli"],
@@ -8743,7 +8741,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
       expect(
         planCoverageAffectedScope(owners, [
-          "goals/fallow-quality-enforcement/research/feature-matrix.jsonc",
+          "standards/fallow.feature-matrix.jsonc",
           "goals/speed-loop/ops/runner-burst/main.tf",
         ])
       ).toEqual({ _tag: "selected", packageNames: ["@beep/repo-cli"], dependentPackageNames: [] });

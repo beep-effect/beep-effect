@@ -34,19 +34,6 @@
     "goals/graph-3d-view/GOAL.md",
     "goals/graph-3d-view/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/DESIGN-REVIEW.md",
-    "research/DESIGN.md",
-    "research/SEED-INVENTORY.md",
-    "research/SOURCES.md",
-    "research/VERIFICATION.md",
-    "research/bundle-static-analysis.md",
-    "research/demo-behavior-matrix.md",
-    "research/infranodus-method-corpus.md",
-    "research/integration-constraints.md",
-    "research/label-anti-overlap.md",
-    "research/library-landscape-3d.md"
-  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -104,5 +91,13 @@
     "2,500-node interactive rendering proves infeasible on every candidate stack on the target hardware; record the proven ceiling and report before expanding the appetite.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/graph-3d-view",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "95f5bf340cd8858bb3e059e9da49048300eaf29f",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }
