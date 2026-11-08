@@ -44,6 +44,8 @@ const lexicon = HashMap.fromIterable<string, string>([
   ["upwardly", "ADV"],
   ["left", "ADJ"],
   ["capable", "ADJ"],
+  ["joint", "ADJ"],
+  ["subassembly", "ADV"],
   ["presents", "VERB"],
   ["right", "ADJ"],
 ]);
@@ -147,6 +149,23 @@ describe("part-of-speech boundary rules", () => {
       assert.isTrue(A.contains(quotesOf(trailing), "a tab"));
       assert.isFalse(A.contains(quotesOf(trailing), "a tab capable"));
       assert.isTrue(A.contains(quotesOf(modifying), "a tab left post"));
+    })
+  );
+
+  it.effect("keeps a compound whose final word the provider mistags as an adjective", () =>
+    Effect.gen(function* () {
+      const tree = yield* treeOf(refused("the knee joint includes a plate"), true);
+      assert.isTrue(A.contains(quotesOf(tree), "the knee joint"));
+      assert.isFalse(A.contains(quotesOf(tree), "the knee"));
+    })
+  );
+
+  it.effect("treats a word before a parenthetical reference numeral as nominal", () =>
+    Effect.gen(function* () {
+      const numbered = yield* treeOf(refused("said elastic subassembly (6) on a plate"), true);
+      const unnumbered = yield* treeOf(refused("said elastic subassembly on a plate"), true);
+      assert.isTrue(A.contains(quotesOf(numbered), "said elastic subassembly"));
+      assert.isTrue(A.contains(quotesOf(unnumbered), "said elastic"));
     })
   );
 

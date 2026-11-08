@@ -2047,10 +2047,14 @@ const sourcePartOfSpeechGrammar = (facts: ReadonlyArray<ClaimLexicalToken>): Lex
     while (nominalAt(tokens, at)) at++;
     return O.some(at);
   };
+  // A parenthetical reference numeral attaches to the noun before it, whatever tag that noun received.
+  const referenceNumeralAt = (tokens: ReadonlyArray<Span>, at: number): boolean =>
+    tokenWordAt(tokens, at) === "(" && O.isSome(Str.match(/^[0-9]/u)(tokenWordAt(tokens, at + 1)));
   // A tagged non-nominal word directly after a nominal ends the mention. Compounds the
   // provider mistags as verbs stay whole because a nominal continues immediately after them.
   const overrunAt = (tokens: ReadonlyArray<Span>, at: number): boolean => {
-    if (!nominalAt(tokens, at - 1) || tokenWordAt(tokens, at) === "of") return false;
+    if (!nominalAt(tokens, at - 1) || tokenWordAt(tokens, at) === "of" || referenceNumeralAt(tokens, at + 1))
+      return false;
     const next = nominalAt(tokens, at + 1);
     const nextModifier = modifierAt(tokens, at + 1);
     return O.exists(tagAt(tokens, at), (tag) => {
@@ -2064,7 +2068,7 @@ const sourcePartOfSpeechGrammar = (facts: ReadonlyArray<ClaimLexicalToken>): Lex
           !(nextModifier && O.isSome(Str.match(participialModifierPattern)(word)))
         );
       }
-      if (tag === "ADJ") return !next && !nextModifier;
+      if (tag === "ADJ") return !next && !nextModifier && tagged(tokens, at + 1, HashSet.make("ADP", "PART"));
       return HashSet.has(HashSet.make("AUX", "ADV", "ADP", "PRON", "SCONJ", "PART", "DET"), tag);
     });
   };
