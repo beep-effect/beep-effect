@@ -1,0 +1,1269 @@
+{
+  "schemaVersion": "right-parenthesis-synthetic-source-activation/v1",
+  "status": "locally reviewed source feature; not accepted-main or measured strict gain",
+  "historicalCase": "bare-label-deferred",
+  "historicalFixtureSha256": "30c157e028651b63ac6074be1d8bfbca01887a6c215b6a077e79446f57648e07",
+  "historicalParsedJsonSha256": "6ec062ef85647030d7bf117f37ffc114c6326d1269ee7e2c8d4cb57ad6c56104",
+  "historicalCaseSha256": "4091aa97d3c8bfe3c03d6b1ddf2862e4c391d7029f7cfdfad964e425202679f6",
+  "historicalCaseCanonicalJson": "{\"case\":\"bare-label-deferred\",\"qualifiedText\":\"A system comprising: a) a plate; b) a cover.\",\"qualifiedParts\":{\"preamble\":\"A system\",\"transition\":\"comprising\",\"body\":\": a) a plate; b) a cover.\"},\"claimNumber\":1,\"claimReferences\":[],\"outcome\":\"declined\",\"reason\":\"Bare a)/b) declaration support remains unadmitted; no blanket label skipping.\",\"lexicalEvidence\":{\"origin\":\"explicit injected source-control facts; not a runtime dictionary, asset output or countability resource\",\"tokens\":[{\"anchor\":{\"startChar\":0,\"endChar\":1,\"quote\":\"A\"},\"pos\":\"DET\",\"lemma\":\"a\"},{\"anchor\":{\"startChar\":2,\"endChar\":8,\"quote\":\"system\"},\"pos\":\"NOUN\",\"lemma\":\"system\"},{\"anchor\":{\"startChar\":9,\"endChar\":19,\"quote\":\"comprising\"},\"pos\":\"VERB\",\"lemma\":\"comprise\"},{\"anchor\":{\"startChar\":19,\"endChar\":20,\"quote\":\":\"},\"pos\":\"PUNCT\",\"lemma\":\":\"},{\"anchor\":{\"startChar\":21,\"endChar\":22,\"quote\":\"a\"},\"pos\":\"DET\",\"lemma\":\"a\"},{\"anchor\":{\"startChar\":22,\"endChar\":23,\"quote\":\")\"},\"pos\":\"PUNCT\",\"lemma\":\")\"},{\"anchor\":{\"startChar\":24,\"endChar\":25,\"quote\":\"a\"},\"pos\":\"DET\",\"lemma\":\"a\"},{\"anchor\":{\"startChar\":26,\"endChar\":31,\"quote\":\"plate\"},\"pos\":\"NOUN\",\"lemma\":\"plate\"},{\"anchor\":{\"startChar\":31,\"endChar\":32,\"quote\":\";\"},\"pos\":\"PUNCT\",\"lemma\":\";\"},{\"anchor\":{\"startChar\":33,\"endChar\":34,\"quote\":\"b\"},\"pos\":\"NOUN\",\"lemma\":\"b\"},{\"anchor\":{\"startChar\":34,\"endChar\":35,\"quote\":\")\"},\"pos\":\"PUNCT\",\"lemma\":\")\"},{\"anchor\":{\"startChar\":36,\"endChar\":37,\"quote\":\"a\"},\"pos\":\"DET\",\"lemma\":\"a\"},{\"anchor\":{\"startChar\":38,\"endChar\":43,\"quote\":\"cover\"},\"pos\":\"NOUN\",\"lemma\":\"cover\"},{\"anchor\":{\"startChar\":43,\"endChar\":44,\"quote\":\".\"},\"pos\":\"PUNCT\",\"lemma\":\".\"}]},\"expected\":{\"elements\":[],\"nominals\":[],\"frames\":[],\"declarationPlans\":[],\"proofCertificates\":[],\"referenceExpectations\":[],\"coverage\":\"partial-required; existing legacy fallback unchanged; no enhanced role/owner donation\",\"deferred\":[]},\"benchmarkLabel\":false,\"runtimeExecuted\":false}",
+  "historicalRows": 54,
+  "otherHistoricalRows": 53,
+  "featureCommits": [
+    "500bf31833a78b501a3b2d9eddd43b5e5f174ad4",
+    "3b62e4725843ffcee0fdc63b9968e625a3942d0d"
+  ],
+  "historicalDeclineEvidence": "Historical row DECLARES declined/unadmitted and runtimeExecuted=false. Actual preactivation runtime decline is unknown; no replay or measured preactivation behavior is asserted.",
+  "derivation": {
+    "sourceCase": "explicit-balanced-labels",
+    "sourceCaseSha256": "47bc4cef5edea89fee8fba868003c445d6bc59e3f6ccfb9c36c64a5862a916a0",
+    "sourceEdits": [
+      {
+        "offset": 21,
+        "delete": "("
+      },
+      {
+        "offset": 34,
+        "delete": "("
+      }
+    ],
+    "rule": "Exactly delete the two original opening parentheses; preserve all other source characters and balanced-control ownership/frame semantics. New raw proof DAG independently enumerated before activation.",
+    "offsetConvention": "UTF-16 character offsets in the ORIGINAL balanced source; delete original offset34 first, then original offset21 (descending order), so earlier deletions cannot shift later edits."
+  },
+  "source": "A system comprising: a) a plate; b) a cover.",
+  "expected": {
+    "elements": [
+      {
+        "id": "root",
+        "ordinal": 1,
+        "parent": null,
+        "kind": "preamble-subject",
+        "grouping": "preamble",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 8,
+          "quote": "A system"
+        },
+        "lexicalHeader": {
+          "startChar": 0,
+          "endChar": 8,
+          "quote": "A system"
+        },
+        "terms": [
+          {
+            "nominal": "r",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "head": "system",
+            "determiner": "a",
+            "sourceRole": "unknown"
+          }
+        ],
+        "functionalParts": []
+      },
+      {
+        "id": "e0",
+        "ordinal": 2,
+        "parent": "root",
+        "kind": "limitation",
+        "grouping": "enumeration-child",
+        "anchor": {
+          "startChar": 24,
+          "endChar": 31,
+          "quote": "a plate"
+        },
+        "lexicalHeader": {
+          "startChar": 24,
+          "endChar": 31,
+          "quote": "a plate"
+        },
+        "terms": [
+          {
+            "nominal": "n0",
+            "anchor": {
+              "startChar": 24,
+              "endChar": 31,
+              "quote": "a plate"
+            },
+            "head": "plate",
+            "determiner": "a",
+            "sourceRole": "unknown"
+          }
+        ],
+        "functionalParts": []
+      },
+      {
+        "id": "e1",
+        "ordinal": 3,
+        "parent": "root",
+        "kind": "limitation",
+        "grouping": "enumeration-child",
+        "anchor": {
+          "startChar": 36,
+          "endChar": 43,
+          "quote": "a cover"
+        },
+        "lexicalHeader": {
+          "startChar": 36,
+          "endChar": 43,
+          "quote": "a cover"
+        },
+        "terms": [
+          {
+            "nominal": "n1",
+            "anchor": {
+              "startChar": 36,
+              "endChar": 43,
+              "quote": "a cover"
+            },
+            "head": "cover",
+            "determiner": "a",
+            "sourceRole": "unknown"
+          }
+        ],
+        "functionalParts": []
+      }
+    ],
+    "nominals": [
+      {
+        "id": "r",
+        "elementOwner": "root",
+        "core": {
+          "startChar": 0,
+          "endChar": 8,
+          "quote": "A system"
+        },
+        "head": {
+          "startChar": 2,
+          "endChar": 8,
+          "quote": "system"
+        },
+        "outer": {
+          "startChar": 0,
+          "endChar": 8,
+          "quote": "A system"
+        },
+        "publicHead": "system",
+        "determiner": "a",
+        "sourceRole": "unknown",
+        "policyMechanism": "supported-introduction",
+        "canonicalReferenceHead": "system",
+        "proof": "supported determiner only; no countability fact"
+      },
+      {
+        "id": "n0",
+        "elementOwner": "e0",
+        "core": {
+          "startChar": 24,
+          "endChar": 31,
+          "quote": "a plate"
+        },
+        "head": {
+          "startChar": 26,
+          "endChar": 31,
+          "quote": "plate"
+        },
+        "outer": {
+          "startChar": 24,
+          "endChar": 31,
+          "quote": "a plate"
+        },
+        "publicHead": "plate",
+        "determiner": "a",
+        "sourceRole": "unknown",
+        "policyMechanism": "supported-introduction",
+        "canonicalReferenceHead": "plate",
+        "proof": "supported determiner only; no countability fact"
+      },
+      {
+        "id": "n1",
+        "elementOwner": "e1",
+        "core": {
+          "startChar": 36,
+          "endChar": 43,
+          "quote": "a cover"
+        },
+        "head": {
+          "startChar": 38,
+          "endChar": 43,
+          "quote": "cover"
+        },
+        "outer": {
+          "startChar": 36,
+          "endChar": 43,
+          "quote": "a cover"
+        },
+        "publicHead": "cover",
+        "determiner": "a",
+        "sourceRole": "unknown",
+        "policyMechanism": "supported-introduction",
+        "canonicalReferenceHead": "cover",
+        "proof": "supported determiner only; no countability fact"
+      }
+    ],
+    "frames": [
+      {
+        "id": "fr",
+        "ordinal": 1,
+        "parent": null,
+        "attachment": "main",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 8,
+          "quote": "A system"
+        },
+        "lexicalHeader": {
+          "startChar": 0,
+          "endChar": 8,
+          "quote": "A system"
+        },
+        "introducer": null,
+        "predicates": [],
+        "nominals": ["r"],
+        "subject": null,
+        "sharedSubject": null,
+        "coordination": null,
+        "arguments": [
+          {
+            "nominal": "r",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "role": "unknown",
+            "predicate": null,
+            "predicateOwnerFrame": null,
+            "ownerNominal": null,
+            "ownerCore": null
+          }
+        ],
+        "outerOwnerNominal": null
+      },
+      {
+        "id": "fd",
+        "ordinal": 2,
+        "parent": null,
+        "attachment": "main",
+        "anchor": {
+          "startChar": 9,
+          "endChar": 43,
+          "quote": "comprising: a) a plate; b) a cover"
+        },
+        "lexicalHeader": {
+          "startChar": 9,
+          "endChar": 19,
+          "quote": "comprising"
+        },
+        "introducer": {
+          "startChar": 9,
+          "endChar": 20,
+          "quote": "comprising:"
+        },
+        "predicates": [
+          {
+            "startChar": 9,
+            "endChar": 19,
+            "quote": "comprising"
+          }
+        ],
+        "nominals": [],
+        "subject": null,
+        "sharedSubject": null,
+        "coordination": null,
+        "arguments": [],
+        "outerOwnerNominal": null
+      },
+      {
+        "id": "fe0",
+        "ordinal": 3,
+        "parent": "fd",
+        "attachment": "composition-child",
+        "anchor": {
+          "startChar": 24,
+          "endChar": 31,
+          "quote": "a plate"
+        },
+        "lexicalHeader": {
+          "startChar": 24,
+          "endChar": 31,
+          "quote": "a plate"
+        },
+        "introducer": null,
+        "predicates": [],
+        "nominals": ["n0"],
+        "subject": null,
+        "sharedSubject": null,
+        "coordination": null,
+        "arguments": [
+          {
+            "nominal": "n0",
+            "anchor": {
+              "startChar": 24,
+              "endChar": 31,
+              "quote": "a plate"
+            },
+            "role": "object",
+            "predicate": {
+              "startChar": 9,
+              "endChar": 19,
+              "quote": "comprising"
+            },
+            "predicateOwnerFrame": "fd",
+            "ownerNominal": null,
+            "ownerCore": null
+          }
+        ],
+        "outerOwnerNominal": null
+      },
+      {
+        "id": "fe1",
+        "ordinal": 4,
+        "parent": "fd",
+        "attachment": "composition-child",
+        "anchor": {
+          "startChar": 36,
+          "endChar": 43,
+          "quote": "a cover"
+        },
+        "lexicalHeader": {
+          "startChar": 36,
+          "endChar": 43,
+          "quote": "a cover"
+        },
+        "introducer": null,
+        "predicates": [],
+        "nominals": ["n1"],
+        "subject": null,
+        "sharedSubject": null,
+        "coordination": null,
+        "arguments": [
+          {
+            "nominal": "n1",
+            "anchor": {
+              "startChar": 36,
+              "endChar": 43,
+              "quote": "a cover"
+            },
+            "role": "object",
+            "predicate": {
+              "startChar": 9,
+              "endChar": 19,
+              "quote": "comprising"
+            },
+            "predicateOwnerFrame": "fd",
+            "ownerNominal": null,
+            "ownerCore": null
+          }
+        ],
+        "outerOwnerNominal": null
+      }
+    ],
+    "declarationPlans": [
+      {
+        "kind": "labelled",
+        "ownerElement": "root",
+        "frame": "fd",
+        "anchor": {
+          "startChar": 9,
+          "endChar": 20,
+          "quote": "comprising:"
+        },
+        "items": [
+          {
+            "element": "e0",
+            "anchor": {
+              "startChar": 24,
+              "endChar": 31,
+              "quote": "a plate"
+            },
+            "label": {
+              "startChar": 21,
+              "endChar": 23,
+              "quote": "a)"
+            }
+          },
+          {
+            "element": "e1",
+            "anchor": {
+              "startChar": 36,
+              "endChar": 43,
+              "quote": "a cover"
+            },
+            "label": {
+              "startChar": 33,
+              "endChar": 35,
+              "quote": "b)"
+            }
+          }
+        ]
+      }
+    ],
+    "proofCertificates": [],
+    "referenceExpectations": [],
+    "coverage": "not-fixed-by-grammar-plan",
+    "deferred": []
+  },
+  "finiteCertificates": [
+    {
+      "kind": "scope",
+      "rank": -3,
+      "ordinal": 1,
+      "role": "preamble",
+      "extent": {
+        "startChar": 0,
+        "endChar": 8,
+        "quote": "A system"
+      }
+    },
+    {
+      "kind": "scope",
+      "rank": -3,
+      "ordinal": 2,
+      "role": "transition",
+      "extent": {
+        "startChar": 9,
+        "endChar": 19,
+        "quote": "comprising"
+      }
+    },
+    {
+      "kind": "scope",
+      "rank": -3,
+      "ordinal": 3,
+      "role": "body",
+      "extent": {
+        "startChar": 19,
+        "endChar": 44,
+        "quote": ": a) a plate; b) a cover."
+      }
+    },
+    {
+      "kind": "token",
+      "rank": -3,
+      "ordinal": 4,
+      "tokenOrdinal": 1,
+      "token": {
+        "anchor": {
+          "startChar": 0,
+          "endChar": 1,
+          "quote": "A"
+        },
+        "pos": "DET",
+        "lemma": "a"
+      }
+    },
+    {
+      "kind": "token",
+      "rank": -3,
+      "ordinal": 5,
+      "tokenOrdinal": 2,
+      "token": {
+        "anchor": {
+          "startChar": 2,
+          "endChar": 8,
+          "quote": "system"
+        },
+        "pos": "NOUN",
+        "lemma": "system"
+      }
+    },
+    {
+      "kind": "token",
+      "rank": -3,
+      "ordinal": 6,
+      "tokenOrdinal": 3,
+      "token": {
+        "anchor": {
+          "startChar": 9,
+          "endChar": 19,
+          "quote": "comprising"
+        },
+        "pos": "VERB",
+        "lemma": "comprise"
+      }
+    },
+    {
+      "kind": "token",
+      "rank": -3,
+      "ordinal": 7,
+      "tokenOrdinal": 4,
+      "token": {
+        "anchor": {
+          "startChar": 19,
+          "endChar": 20,
+          "quote": ":"
+        },
+        "pos": "PUNCT",
+        "lemma": ":"
+      }
+    },
+    {
+      "kind": "token",
+      "rank": -3,
+      "ordinal": 8,
+      "tokenOrdinal": 5,
+      "token": {
+        "anchor": {
+          "startChar": 21,
+          "endChar": 22,
+          "quote": "a"
+        },
+        "pos": "DET",
+        "lemma": "a"
+      }
+    },
+    {
+      "kind": "token",
+      "rank": -3,
+      "ordinal": 9,
+      "tokenOrdinal": 6,
+      "token": {
+        "anchor": {
+          "startChar": 22,
+          "endChar": 23,
+          "quote": ")"
+        },
+        "pos": "PUNCT",
+        "lemma": ")"
+      }
+    },
+    {
+      "kind": "token",
+      "rank": -3,
+      "ordinal": 10,
+      "tokenOrdinal": 7,
+      "token": {
+        "anchor": {
+          "startChar": 24,
+          "endChar": 25,
+          "quote": "a"
+        },
+        "pos": "DET",
+        "lemma": "a"
+      }
+    },
+    {
+      "kind": "token",
+      "rank": -3,
+      "ordinal": 11,
+      "tokenOrdinal": 8,
+      "token": {
+        "anchor": {
+          "startChar": 26,
+          "endChar": 31,
+          "quote": "plate"
+        },
+        "pos": "NOUN",
+        "lemma": "plate"
+      }
+    },
+    {
+      "kind": "token",
+      "rank": -3,
+      "ordinal": 12,
+      "tokenOrdinal": 9,
+      "token": {
+        "anchor": {
+          "startChar": 31,
+          "endChar": 32,
+          "quote": ";"
+        },
+        "pos": "PUNCT",
+        "lemma": ";"
+      }
+    },
+    {
+      "kind": "token",
+      "rank": -3,
+      "ordinal": 13,
+      "tokenOrdinal": 10,
+      "token": {
+        "anchor": {
+          "startChar": 33,
+          "endChar": 34,
+          "quote": "b"
+        },
+        "pos": "NOUN",
+        "lemma": "b"
+      }
+    },
+    {
+      "kind": "token",
+      "rank": -3,
+      "ordinal": 14,
+      "tokenOrdinal": 11,
+      "token": {
+        "anchor": {
+          "startChar": 34,
+          "endChar": 35,
+          "quote": ")"
+        },
+        "pos": "PUNCT",
+        "lemma": ")"
+      }
+    },
+    {
+      "kind": "token",
+      "rank": -3,
+      "ordinal": 15,
+      "tokenOrdinal": 12,
+      "token": {
+        "anchor": {
+          "startChar": 36,
+          "endChar": 37,
+          "quote": "a"
+        },
+        "pos": "DET",
+        "lemma": "a"
+      }
+    },
+    {
+      "kind": "token",
+      "rank": -3,
+      "ordinal": 16,
+      "tokenOrdinal": 13,
+      "token": {
+        "anchor": {
+          "startChar": 38,
+          "endChar": 43,
+          "quote": "cover"
+        },
+        "pos": "NOUN",
+        "lemma": "cover"
+      }
+    },
+    {
+      "kind": "token",
+      "rank": -3,
+      "ordinal": 17,
+      "tokenOrdinal": 14,
+      "token": {
+        "anchor": {
+          "startChar": 43,
+          "endChar": 44,
+          "quote": "."
+        },
+        "pos": "PUNCT",
+        "lemma": "."
+      }
+    },
+    {
+      "kind": "label-boundary",
+      "rank": -2,
+      "ordinal": 18,
+      "token": {
+        "ordinal": 9,
+        "slot": "token"
+      },
+      "scope": {
+        "ordinal": 3,
+        "slot": "scope"
+      },
+      "governor": {
+        "ordinal": 6,
+        "slot": "token"
+      },
+      "colon": {
+        "ordinal": 7,
+        "slot": "token"
+      },
+      "markers": [
+        {
+          "start": {
+            "ordinal": 8,
+            "slot": "token"
+          },
+          "close": {
+            "ordinal": 9,
+            "slot": "token"
+          }
+        },
+        {
+          "start": {
+            "ordinal": 13,
+            "slot": "token"
+          },
+          "close": {
+            "ordinal": 14,
+            "slot": "token"
+          }
+        }
+      ],
+      "item": 0
+    },
+    {
+      "kind": "label-boundary",
+      "rank": -2,
+      "ordinal": 19,
+      "token": {
+        "ordinal": 14,
+        "slot": "token"
+      },
+      "scope": {
+        "ordinal": 3,
+        "slot": "scope"
+      },
+      "governor": {
+        "ordinal": 6,
+        "slot": "token"
+      },
+      "colon": {
+        "ordinal": 7,
+        "slot": "token"
+      },
+      "markers": [
+        {
+          "start": {
+            "ordinal": 8,
+            "slot": "token"
+          },
+          "close": {
+            "ordinal": 9,
+            "slot": "token"
+          }
+        },
+        {
+          "start": {
+            "ordinal": 13,
+            "slot": "token"
+          },
+          "close": {
+            "ordinal": 14,
+            "slot": "token"
+          }
+        }
+      ],
+      "item": 1
+    },
+    {
+      "kind": "opening",
+      "rank": -1,
+      "ordinal": 20,
+      "mode": "determiner",
+      "coreStart": 0,
+      "scope": {
+        "ordinal": 1,
+        "slot": "scope"
+      },
+      "evidence": [
+        {
+          "ordinal": 4,
+          "slot": "token"
+        }
+      ]
+    },
+    {
+      "kind": "closure",
+      "rank": -1,
+      "ordinal": 21,
+      "coreEnd": 8,
+      "scope": {
+        "ordinal": 1,
+        "slot": "scope"
+      },
+      "boundary": null,
+      "gap": null
+    },
+    {
+      "kind": "head",
+      "rank": 0,
+      "ordinal": 22,
+      "core": {
+        "startChar": 0,
+        "endChar": 8,
+        "quote": "A system"
+      },
+      "head": {
+        "startChar": 2,
+        "endChar": 8,
+        "quote": "system"
+      },
+      "terminal": {
+        "ordinal": 5,
+        "slot": "token"
+      },
+      "opening": {
+        "ordinal": 20,
+        "slot": "opening"
+      },
+      "closure": {
+        "ordinal": 21,
+        "slot": "closure"
+      },
+      "tokens": [
+        {
+          "ordinal": 4,
+          "slot": "token"
+        },
+        {
+          "ordinal": 5,
+          "slot": "token"
+        }
+      ],
+      "terminalEvidence": {
+        "kind": "lexical-terminal"
+      }
+    },
+    {
+      "kind": "opening",
+      "rank": -1,
+      "ordinal": 23,
+      "mode": "determiner",
+      "coreStart": 24,
+      "scope": {
+        "ordinal": 3,
+        "slot": "scope"
+      },
+      "evidence": [
+        {
+          "ordinal": 10,
+          "slot": "token"
+        }
+      ]
+    },
+    {
+      "kind": "boundary",
+      "rank": -2,
+      "ordinal": 24,
+      "mode": "separator",
+      "token": {
+        "ordinal": 12,
+        "slot": "token"
+      },
+      "scope": {
+        "ordinal": 3,
+        "slot": "scope"
+      },
+      "successor": null
+    },
+    {
+      "kind": "closure",
+      "rank": -1,
+      "ordinal": 25,
+      "coreEnd": 31,
+      "scope": {
+        "ordinal": 3,
+        "slot": "scope"
+      },
+      "boundary": {
+        "ordinal": 24,
+        "slot": "boundary"
+      },
+      "gap": null
+    },
+    {
+      "kind": "head",
+      "rank": 0,
+      "ordinal": 26,
+      "core": {
+        "startChar": 24,
+        "endChar": 31,
+        "quote": "a plate"
+      },
+      "head": {
+        "startChar": 26,
+        "endChar": 31,
+        "quote": "plate"
+      },
+      "terminal": {
+        "ordinal": 11,
+        "slot": "token"
+      },
+      "opening": {
+        "ordinal": 23,
+        "slot": "opening"
+      },
+      "closure": {
+        "ordinal": 25,
+        "slot": "closure"
+      },
+      "tokens": [
+        {
+          "ordinal": 10,
+          "slot": "token"
+        },
+        {
+          "ordinal": 11,
+          "slot": "token"
+        }
+      ],
+      "terminalEvidence": {
+        "kind": "lexical-terminal"
+      }
+    },
+    {
+      "kind": "opening",
+      "rank": -1,
+      "ordinal": 27,
+      "mode": "determiner",
+      "coreStart": 36,
+      "scope": {
+        "ordinal": 3,
+        "slot": "scope"
+      },
+      "evidence": [
+        {
+          "ordinal": 15,
+          "slot": "token"
+        }
+      ]
+    },
+    {
+      "kind": "boundary",
+      "rank": -2,
+      "ordinal": 28,
+      "mode": "terminal",
+      "token": {
+        "ordinal": 17,
+        "slot": "token"
+      },
+      "scope": {
+        "ordinal": 3,
+        "slot": "scope"
+      },
+      "successor": null
+    },
+    {
+      "kind": "closure",
+      "rank": -1,
+      "ordinal": 29,
+      "coreEnd": 43,
+      "scope": {
+        "ordinal": 3,
+        "slot": "scope"
+      },
+      "boundary": {
+        "ordinal": 28,
+        "slot": "boundary"
+      },
+      "gap": null
+    },
+    {
+      "kind": "head",
+      "rank": 0,
+      "ordinal": 30,
+      "core": {
+        "startChar": 36,
+        "endChar": 43,
+        "quote": "a cover"
+      },
+      "head": {
+        "startChar": 38,
+        "endChar": 43,
+        "quote": "cover"
+      },
+      "terminal": {
+        "ordinal": 16,
+        "slot": "token"
+      },
+      "opening": {
+        "ordinal": 27,
+        "slot": "opening"
+      },
+      "closure": {
+        "ordinal": 29,
+        "slot": "closure"
+      },
+      "tokens": [
+        {
+          "ordinal": 15,
+          "slot": "token"
+        },
+        {
+          "ordinal": 16,
+          "slot": "token"
+        }
+      ],
+      "terminalEvidence": {
+        "kind": "lexical-terminal"
+      }
+    },
+    {
+      "kind": "operator",
+      "rank": 1,
+      "ordinal": 31,
+      "mode": "qualified-transition",
+      "extent": {
+        "startChar": 9,
+        "endChar": 19,
+        "quote": "comprising"
+      },
+      "head": {
+        "kind": "singleton",
+        "token": {
+          "ordinal": 6,
+          "slot": "token"
+        }
+      },
+      "headRole": "auxiliary",
+      "lexical": [
+        {
+          "ordinal": 6,
+          "slot": "token"
+        }
+      ],
+      "subject": {
+        "ordinal": 22,
+        "slot": "core"
+      },
+      "position": {
+        "ordinal": 5,
+        "slot": "token"
+      }
+    }
+  ],
+  "sourceProofs": [],
+  "publicTree": {
+    "claimNumber": 1,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "1",
+        "kind": "preamble-subject",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 8,
+          "quote": "A system"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "determiner": "a",
+            "head": "system"
+          }
+        ]
+      },
+      {
+        "path": "1.a",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 24,
+          "endChar": 31,
+          "quote": "a plate"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 24,
+              "endChar": 31,
+              "quote": "a plate"
+            },
+            "determiner": "a",
+            "head": "plate"
+          }
+        ]
+      },
+      {
+        "path": "1.b",
+        "kind": "limitation",
+        "anchor": {
+          "startChar": 36,
+          "endChar": 43,
+          "quote": "a cover"
+        },
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 36,
+              "endChar": 43,
+              "quote": "a cover"
+            },
+            "determiner": "a",
+            "head": "cover"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "1.a",
+        "parent": "1"
+      },
+      {
+        "kind": "part-of",
+        "child": "1.b",
+        "parent": "1"
+      }
+    ]
+  },
+  "completeFrames": [
+    {
+      "ordinal": 1,
+      "publicOwner": 1,
+      "extent": {
+        "startChar": 0,
+        "endChar": 8,
+        "quote": "A system"
+      },
+      "lexicalHeader": {
+        "startChar": 0,
+        "endChar": 8,
+        "quote": "A system"
+      },
+      "parent": null,
+      "attachment": "main",
+      "introducer": null,
+      "predicates": [],
+      "nominals": [
+        {
+          "startChar": 0,
+          "endChar": 8,
+          "quote": "A system"
+        }
+      ],
+      "coordination": null,
+      "sharedSubject": null,
+      "inheritedSubject": null,
+      "subject": null,
+      "arguments": [
+        {
+          "nominal": {
+            "startChar": 0,
+            "endChar": 8,
+            "quote": "A system"
+          },
+          "role": "unknown",
+          "predicate": null,
+          "ownerNominal": null
+        }
+      ],
+      "privateArguments": []
+    },
+    {
+      "ordinal": 2,
+      "publicOwner": 1,
+      "extent": {
+        "startChar": 9,
+        "endChar": 43,
+        "quote": "comprising: a) a plate; b) a cover"
+      },
+      "lexicalHeader": {
+        "startChar": 9,
+        "endChar": 19,
+        "quote": "comprising"
+      },
+      "parent": null,
+      "attachment": "main",
+      "introducer": {
+        "startChar": 9,
+        "endChar": 20,
+        "quote": "comprising:"
+      },
+      "predicates": [
+        {
+          "startChar": 9,
+          "endChar": 19,
+          "quote": "comprising"
+        }
+      ],
+      "nominals": [],
+      "coordination": null,
+      "sharedSubject": null,
+      "inheritedSubject": null,
+      "subject": null,
+      "arguments": [],
+      "privateArguments": []
+    },
+    {
+      "ordinal": 3,
+      "publicOwner": 2,
+      "extent": {
+        "startChar": 24,
+        "endChar": 31,
+        "quote": "a plate"
+      },
+      "lexicalHeader": {
+        "startChar": 24,
+        "endChar": 31,
+        "quote": "a plate"
+      },
+      "parent": 2,
+      "attachment": "composition-child",
+      "introducer": null,
+      "predicates": [],
+      "nominals": [
+        {
+          "startChar": 24,
+          "endChar": 31,
+          "quote": "a plate"
+        }
+      ],
+      "coordination": null,
+      "sharedSubject": null,
+      "inheritedSubject": null,
+      "subject": null,
+      "arguments": [
+        {
+          "nominal": {
+            "startChar": 24,
+            "endChar": 31,
+            "quote": "a plate"
+          },
+          "role": "object",
+          "predicate": {
+            "startChar": 9,
+            "endChar": 19,
+            "quote": "comprising"
+          },
+          "ownerNominal": null
+        }
+      ],
+      "privateArguments": []
+    },
+    {
+      "ordinal": 4,
+      "publicOwner": 3,
+      "extent": {
+        "startChar": 36,
+        "endChar": 43,
+        "quote": "a cover"
+      },
+      "lexicalHeader": {
+        "startChar": 36,
+        "endChar": 43,
+        "quote": "a cover"
+      },
+      "parent": 2,
+      "attachment": "composition-child",
+      "introducer": null,
+      "predicates": [],
+      "nominals": [
+        {
+          "startChar": 36,
+          "endChar": 43,
+          "quote": "a cover"
+        }
+      ],
+      "coordination": null,
+      "sharedSubject": null,
+      "inheritedSubject": null,
+      "subject": null,
+      "arguments": [
+        {
+          "nominal": {
+            "startChar": 36,
+            "endChar": 43,
+            "quote": "a cover"
+          },
+          "role": "object",
+          "predicate": {
+            "startChar": 9,
+            "endChar": 19,
+            "quote": "comprising"
+          },
+          "ownerNominal": null
+        }
+      ],
+      "privateArguments": []
+    }
+  ],
+  "historicalFixturePinVerification": "Unit checks declared raw-file pin plus parsed-object hash; actual original raw UTF-8 file preservation is verified separately in the private/root source-hash receipt."
+}
