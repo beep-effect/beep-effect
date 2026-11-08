@@ -1,0 +1,224 @@
+// Development census scripts retained verbatim for reproducibility. Run with bun: <replay dir> <fixtures dir> <out dir>.
+// Prototype of the panel's matched-anchor component census. Read-only over one replay + frozen references.
+// Observational only: never a strict score, oracle ceiling or causal attribution.
+const [replay, fixtures, out] = process.argv.slice(2);
+const fs = require("node:fs");
+const read = (p: string) => JSON.parse(fs.readFileSync(p, "utf8"));
+const results = read(`${replay}/results.json`);
+type A = { startChar: number; endChar: number; quote: string };
+const ak = (a: A) => `${a.startChar}:${a.endChar}:${a.quote}`;
+const sk = (a: A) => `${a.startChar}:${a.endChar}`;
+const sameSet = (l: string[], r: string[]) => [...l].sort().join("\u0001") === [...r].sort().join("\u0001");
+const inter = (l: string[], r: string[]) => {
+  const c = new Map<string, number>();
+  for (const x of r) c.set(x, (c.get(x) ?? 0) + 1);
+  let n = 0;
+  for (const x of l) if ((c.get(x) ?? 0) > 0) { n++; c.set(x, c.get(x)! - 1); }
+  return n;
+};
+const bump = (m: Record<string, number>, k: string, n = 1) => { m[k] = (m[k] ?? 0) + n; };
+
+const edgeKey = (e: any, idx: Map<string, string>, termKey = true) => {
+  const n = (p: string) => idx.get(p) ?? `unmapped`;
+  switch (e.kind) {
+    case "part-of": return JSON.stringify([e.kind, n(e.child), n(e.parent)]);
+    case "depends-on-element": return JSON.stringify([e.kind, n(e.dependent), n(e.ancestor)]);
+    case "antecedent": return JSON.stringify([e.kind, n(e.referring.path), ak(e.referring.anchor), n(e.introducing.path), ak(e.introducing.anchor)]);
+    case "functional": return JSON.stringify([e.kind, n(e.element), e.parts.map((p: any) => p.kind === "term" ? ["term", n(p.term.path), ak(p.term.anchor)] : ["text", ak(p.anchor)])]);
+  }
+  throw new Error(`edge ${e.kind}`);
+};
+const antecedentAnchorKey = (e: any) => JSON.stringify([ak(e.referring.anchor), ak(e.introducing.anchor)]);
+
+const rows: any[] = [];
+const agg = { spanMiss: {} as Record<string, number>, headDiff: {} as Record<string, number>, covKinds: {} as Record<string, number>, covSets: {} as Record<string, number>, findingRules: {} as Record<string, number>, kindConfusion: {} as Record<string, number>, spanSuffix: {} as Record<string, number> };
+
+for (const fam of results.families) {
+  const gold: any[] = read(`${fixtures}/${fam.familyId}/expected.json`);
+  const predDoc = fs.existsSync(`${replay}/${fam.familyId}.prediction.json`) ? read(`${replay}/${fam.familyId}.prediction.json`) : null;
+  const records: any[] = predDoc?.report?.records ?? [];
+  const pred: any[] = records.filter((r) => r.decomposition?.status === "decomposed").map((r) => r.decomposition.tree);
+  const keyOf = (claim: number, el: any) => JSON.stringify([claim, el.kind, ak(el.anchor)]);
+  const gIdx = new Map<string, string>(); for (const t of gold) for (const e of t.elements) gIdx.set(e.path, keyOf(t.claimNumber, e));
+  const pIdx = new Map<string, string>(); for (const t of pred) for (const e of t.elements) pIdx.set(e.path, keyOf(t.claimNumber, e));
+  for (const claim of fam.claims) {
+    const g = gold.find((t) => t.claimNumber === claim.claimNumber)!;
+    const p = pred.find((t) => t.claimNumber === claim.claimNumber);
+    const rec = records.find((r) => Number(r.decomposition?.qualification?.record?.numberText) === claim.claimNumber);
+    const cov = (rec?.coverage ?? []).map((c: any) => c.kind ?? c._tag ?? "unknown");
+    for (const c of new Set<string>(cov)) bump(agg.covKinds, c);
+    bump(agg.covSets, [...new Set<string>(cov)].sort().join("+") || "(none)");
+    for (const f of rec?.findings ?? []) bump(agg.findingRules, `${f.kind}/${f.rule}`);
+    const row: any = { familyId: fam.familyId, claimNumber: claim.claimNumber, strict: claim.strict, cpc: fam.cpcSection, status: rec?.status ?? "none", coverage: [...new Set(cov)], predMissing: !p, dep: g.edges.some((e: any) => e.kind === "depends-on-element"), nested: claim.nested, functional: claim.functional, goldElements: g.elements.length };
+    if (!p) { rows.push(row); continue; }
+    const gS = g.elements.map((e: any) => ak(e.anchor)); const pS = p.elements.map((e: any) => ak(e.anchor));
+    row.spansExact = sameSet(gS, pS);
+    row.spanMatched = inter(gS, pS); row.predElements = pS.length;
+    row.kindsExact = sameSet(g.elements.map((e: any) => keyOf(g.claimNumber, e)), p.elements.map((e: any) => keyOf(p.claimNumber, e)));
+    // kind confusion on exact spans
+    for (const ge of g.elements) { const pe = p.elements.find((e: any) => ak(e.anchor) === ak(ge.anchor)); if (pe && pe.kind !== ge.kind) bump(agg.kindConfusion, `${ge.kind}->${pe.kind}`); }
+    // span miss shape
+    const pOnly = p.elements.filter((e: any) => !gS.includes(ak(e.anchor)));
+    for (const ge of g.elements) {
+      if (pS.includes(ak(ge.anchor))) continue;
+      const a = ge.anchor;
+      const sameStart = pOnly.find((e: any) => e.anchor.startChar === a.startChar);
+      const sameEnd = pOnly.find((e: any) => e.anchor.endChar === a.endChar);
+      const overlap = pOnly.find((e: any) => e.anchor.startChar < a.endChar && a.startChar < e.anchor.endChar);
+      const shape = sameStart ? (sameStart.anchor.endChar > a.endChar ? "same-start-pred-longer" : "same-start-pred-shorter") : sameEnd ? (sameEnd.anchor.startChar < a.startChar ? "same-end-pred-longer" : "same-end-pred-shorter") : overlap ? "overlap-other" : "gold-no-overlap";
+      bump(agg.spanMiss, `${ge.kind}:${shape}`);
+      if (sameStart && Math.abs(sameStart.anchor.endChar - a.endChar) <= 12) {
+        const longer = sameStart.anchor.quote.length > a.quote.length ? sameStart.anchor.quote : a.quote;
+        const shorter = sameStart.anchor.quote.length > a.quote.length ? a.quote : sameStart.anchor.quote;
+        bump(agg.spanSuffix, `${sameStart.anchor.endChar > a.endChar ? "pred+" : "gold+"}${JSON.stringify(longer.slice(shorter.length))}`);
+      }
+    }
+    // terms
+    const tk = (el: any) => el.terms.map((t: any) => ak(t.anchor));
+    const gT: string[] = g.elements.flatMap(tk), pT: string[] = p.elements.flatMap(tk);
+    row.termAnchorsExact = sameSet(gT, pT); row.goldTerms = gT.length; row.predTerms = pT.length; row.termMatched = inter(gT, pT);
+    row.termOwnershipExact = true; row.termOrderExact = true; row.termPayloadExact = true;
+    for (const ge of g.elements) {
+      const pe = p.elements.find((e: any) => ak(e.anchor) === ak(ge.anchor)); if (!pe) continue;
+      if (!sameSet(tk(ge), tk(pe))) row.termOwnershipExact = false;
+      else if (tk(ge).join("|") !== tk(pe).join("|")) row.termOrderExact = false;
+    }
+    const pTermBy = new Map<string, any>(); for (const e of p.elements) for (const t of e.terms) pTermBy.set(ak(t.anchor), t);
+    let hd = 0, dd = 0;
+    for (const e of g.elements) for (const t of e.terms) {
+      const q = pTermBy.get(ak(t.anchor)); if (!q) continue;
+      if (q.head !== t.head) { hd++; bump(agg.headDiff, q.head.toLowerCase().replace(/s\b/g, "") === t.head.toLowerCase().replace(/s\b/g, "") ? "plural-only" : (t.anchor.quote.toLowerCase().includes(q.head.toLowerCase()) ? "pred-head-substring-of-quote" : "other")); }
+      if (q.determiner !== t.determiner) { dd++; bump(agg.headDiff, `det:${t.determiner}->${q.determiner}`); }
+    }
+    row.headDiffs = hd; row.detDiffs = dd; if (hd || dd) row.termPayloadExact = false;
+    // edges by kind
+    const kinds = ["part-of", "depends-on-element", "antecedent", "functional"];
+    for (const k of kinds) {
+      const ge: string[] = g.edges.filter((e: any) => e.kind === k).map((e: any) => edgeKey(e, gIdx));
+      const pe: string[] = p.edges.filter((e: any) => e.kind === k).map((e: any) => edgeKey(e, pIdx));
+      row[`${k}:gold`] = ge.length; row[`${k}:pred`] = pe.length; row[`${k}:matched`] = inter(ge, pe);
+      row[`${k}:exact`] = sameSet(ge, pe);
+    }
+    // antecedent attachment independent of element ownership
+    const ga = g.edges.filter((e: any) => e.kind === "antecedent").map(antecedentAnchorKey), pa = p.edges.filter((e: any) => e.kind === "antecedent").map(antecedentAnchorKey);
+    row.antecedentAnchorsExact = sameSet(ga, pa);
+    // defect signature
+    const sig: string[] = [];
+    if (!row.spansExact) sig.push("span"); else if (!row.kindsExact) sig.push("kind");
+    if (!row.termAnchorsExact) sig.push("term-anchor"); else { if (!row.termOwnershipExact) sig.push("term-owner"); if (!row.termOrderExact) sig.push("term-order"); }
+    if (!row.termPayloadExact) { if (hd) sig.push("head"); if (dd) sig.push("det"); }
+    for (const k of kinds) if (!row[`${k}:exact`]) sig.push(`edge:${k}`);
+    row.signature = sig;
+    rows.push(row);
+  }
+}
+
+const failed = rows.filter((r) => !r.strict);
+const present = failed.filter((r) => !r.predMissing);
+const count = (f: (r: any) => boolean, rs = failed) => rs.filter(f).length;
+const sigs: Record<string, number> = {}; const single: Record<string, number> = {}; const anySig: Record<string, number> = {};
+for (const r of present) { bump(sigs, r.signature.join("+") || "(no-diff!)"); if (r.signature.length === 1) bump(single, r.signature[0]); for (const s of r.signature) bump(anySig, s); }
+const top = (m: Record<string, number>, n = 25) => Object.fromEntries(Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, n));
+const nodeExact = present.filter((r) => r.spansExact && r.kindsExact);
+const anchorExact = nodeExact.filter((r) => r.termAnchorsExact && r.termOwnershipExact && r.termOrderExact);
+const summary = {
+  diagnosticOnly: true, roleGoldAvailable: false, policyGoldAvailable: false,
+  selected: rows.length, strict: count((r) => r.strict, rows), failed: failed.length, predMissing: count((r) => r.predMissing),
+  sanity: { noDiffFailures: count((r) => r.signature?.length === 0, present), strictWithDiff: rows.filter((r) => r.strict && r.signature?.length > 0).length },
+  segmentation: { failedSpansNonExact: count((r) => r.spansExact === false), failedSpansExact: count((r) => r.spansExact === true), failedNodeExact: nodeExact.length },
+  attachmentHypothesis: { failedExactNodesAndTerms: anchorExact.length },
+  termIdentityHypothesis: { failedExactNodeAnchorsWithHeadOrDet: anchorExact.filter((r) => !r.termPayloadExact).length, anyFailedHeadOrDet: count((r) => r.termPayloadExact === false) },
+  anySignature: top(anySig), singleDefectFailures: top(single), signatures: top(sigs, 30),
+  edgeTotals: Object.fromEntries(["part-of", "depends-on-element", "antecedent", "functional"].map((k) => [k, { gold: rows.reduce((s, r) => s + (r[`${k}:gold`] ?? 0), 0), pred: rows.reduce((s, r) => s + (r[`${k}:pred`] ?? 0), 0), matched: rows.reduce((s, r) => s + (r[`${k}:matched`] ?? 0), 0) }])),
+  termTotals: { gold: rows.reduce((s, r) => s + (r.goldTerms ?? 0), 0), pred: rows.reduce((s, r) => s + (r.predTerms ?? 0), 0), matched: rows.reduce((s, r) => s + (r.termMatched ?? 0), 0) },
+  elementTotals: { gold: rows.reduce((s, r) => s + r.goldElements, 0), pred: rows.reduce((s, r) => s + (r.predElements ?? 0), 0), spanMatched: rows.reduce((s, r) => s + (r.spanMatched ?? 0), 0) },
+  bySubgroup: { dependent: { n: count((r) => r.dep, rows), strict: count((r) => r.dep && r.strict, rows) }, independent: { n: count((r) => !r.dep, rows), strict: count((r) => !r.dep && r.strict, rows) } },
+  abstention: { status: top(rows.reduce((m, r) => (bump(m, r.status), m), {} as Record<string, number>)), coverageKindsAnyClaim: top(agg.covKinds), coverageSets: top(agg.covSets), findingRules: top(agg.findingRules, 20) },
+  spanMiss: top(agg.spanMiss, 30), spanSuffix: top(agg.spanSuffix, 30), kindConfusion: top(agg.kindConfusion), headDiff: top(agg.headDiff),
+};
+fs.mkdirSync(out, { recursive: true });
+fs.writeFileSync(`${out}/rows.json`, JSON.stringify(rows));
+fs.writeFileSync(`${out}/summary.json`, JSON.stringify(summary, null, 1));
+console.log(JSON.stringify(summary, null, 1));
+
+// ---- second pass: term shape and ancestor propagation ----
+// Second census pass: term over/under-generation shape and ancestor propagation. Observational only.
+const [replay, fixtures, out] = process.argv.slice(2);
+const fs = require("node:fs");
+const read = (p: string) => JSON.parse(fs.readFileSync(p, "utf8"));
+const results = read(`${replay}/results.json`);
+const ak = (a: any) => `${a.startChar}:${a.endChar}:${a.quote}`;
+const bump = (m: Record<string, number>, k: string, n = 1) => { m[k] = (m[k] ?? 0) + n; };
+const top = (m: Record<string, number>, n = 30) => Object.fromEntries(Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, n));
+const predOnlyDet: any = {}, goldOnlyDet: any = {}, predOnlyWords: any = {}, goldOnlyWords: any = {}, predOnlyShape: any = {}, goldOnlyShape: any = {};
+const samples: any = { predOnly: {}, goldOnly: {} };
+let depRows: any[] = [];
+const claimTermCause: any = {};
+for (const fam of results.families) {
+  const gold: any[] = read(`${fixtures}/${fam.familyId}/expected.json`);
+  const doc = read(`${replay}/${fam.familyId}.prediction.json`);
+  const pred: any[] = doc.report.records.filter((r: any) => r.decomposition?.status === "decomposed").map((r: any) => r.decomposition.tree);
+  const key = (c: number, e: any) => JSON.stringify([c, e.kind, ak(e.anchor)]);
+  const gIdx = new Map<string, any>(); for (const t of gold) for (const e of t.elements) gIdx.set(e.path, { key: key(t.claimNumber, e), claim: t.claimNumber, el: e });
+  const pIdx = new Map<string, any>(); for (const t of pred) for (const e of t.elements) pIdx.set(e.path, { key: key(t.claimNumber, e), claim: t.claimNumber, el: e });
+  for (const claim of fam.claims) {
+    const g = gold.find((t) => t.claimNumber === claim.claimNumber)!; const p = pred.find((t) => t.claimNumber === claim.claimNumber);
+    if (!p || claim.strict) continue;
+    const gT = g.elements.flatMap((e: any) => e.terms); const pT = p.elements.flatMap((e: any) => e.terms);
+    const gK = new Set(gT.map((t: any) => ak(t.anchor))), pK = new Set(pT.map((t: any) => ak(t.anchor)));
+    const po = pT.filter((t: any) => !gK.has(ak(t.anchor))), go = gT.filter((t: any) => !pK.has(ak(t.anchor)));
+    const shape = (t: any, others: any[]) => { const a = t.anchor; const s = others.find((o) => o.anchor.startChar === a.startChar); const e = others.find((o) => o.anchor.endChar === a.endChar); const ov = others.find((o) => o.anchor.startChar < a.endChar && a.startChar < o.anchor.endChar); return s ? (s.anchor.endChar > a.endChar ? "sameStart-otherLonger" : "sameStart-otherShorter") : e ? (e.anchor.startChar < a.startChar ? "sameEnd-otherLonger" : "sameEnd-otherShorter") : ov ? "overlap" : "isolated"; };
+    for (const t of po) { bump(predOnlyDet, t.determiner); const sh = shape(t, go); bump(predOnlyShape, `${t.determiner}:${sh}`); bump(predOnlyWords, String(t.anchor.quote.split(/\s+/).length > 3 ? "4+w" : t.anchor.quote.split(/\s+/).length + "w")); (samples.predOnly[`${t.determiner}:${sh}`] ??= []).length < 12 && samples.predOnly[`${t.determiner}:${sh}`].push(t.anchor.quote.slice(0, 60)); }
+    for (const t of go) { bump(goldOnlyDet, t.determiner); const sh = shape(t, po); bump(goldOnlyShape, `${t.determiner}:${sh}`); bump(goldOnlyWords, String(t.anchor.quote.split(/\s+/).length > 3 ? "4+w" : t.anchor.quote.split(/\s+/).length + "w")); (samples.goldOnly[`${t.determiner}:${sh}`] ??= []).length < 12 && samples.goldOnly[`${t.determiner}:${sh}`].push(t.anchor.quote.slice(0, 60)); }
+    const bareOnly = po.length > 0 && po.every((t: any) => t.determiner === "none" || t.determiner === "bare") && go.length === 0;
+    bump(claimTermCause, po.length === 0 && go.length === 0 ? "terms-exact" : go.length === 0 ? (bareOnly ? "only-extra-bare" : "only-extra-mixed") : po.length === 0 ? "only-missing" : "both");
+    // Propagation for dependents: unmatched gold cross-claim edges, is the ancestor endpoint itself a labelled-but-missing node?
+    const isDep = g.edges.some((e: any) => e.kind === "depends-on-element");
+    if (isDep) {
+      const pKeys = new Set(pred.flatMap((t: any) => t.elements.map((e: any) => key(t.claimNumber, e))));
+      const dep = g.edges.filter((e: any) => e.kind === "depends-on-element");
+      const depMissingAncestor = dep.filter((e: any) => !pKeys.has(gIdx.get(e.ancestor)?.key)).length;
+      const anteCross = g.edges.filter((e: any) => e.kind === "antecedent" && gIdx.get(e.introducing.path)?.claim !== claim.claimNumber);
+      const anteMissing = anteCross.filter((e: any) => !pKeys.has(gIdx.get(e.introducing.path)?.key)).length;
+      const localG = g.elements.map((e: any) => key(g.claimNumber, e)).sort().join("|"); const localP = p.elements.map((e: any) => key(p.claimNumber, e)).sort().join("|");
+      const localTerms = po.length === 0 && go.length === 0;
+      // local edge exactness: part-of + functional + same-claim antecedents
+      const ek = (e: any, idx: Map<string, any>) => e.kind === "part-of" ? JSON.stringify([e.kind, idx.get(e.child)?.key, idx.get(e.parent)?.key]) : e.kind === "functional" ? JSON.stringify([e.kind, idx.get(e.element)?.key, e.parts.map((x: any) => x.kind === "term" ? ak(x.term.anchor) : ak(x.anchor))]) : JSON.stringify([e.kind, ak(e.referring.anchor), ak(e.introducing.anchor)]);
+      const loc = (t: any, idx: Map<string, any>) => t.edges.filter((e: any) => e.kind === "part-of" || e.kind === "functional" || (e.kind === "antecedent" && idx.get(e.introducing.path)?.claim === t.claimNumber)).map((e: any) => ek(e, idx)).sort().join("|");
+      depRows.push({ f: fam.familyId, c: claim.claimNumber, localNodes: localG === localP, localTerms, localEdges: loc(g, gIdx) === loc(p, pIdx), depEdges: dep.length, depMissingAncestor, anteCross: anteCross.length, anteMissing, goldEls: g.elements.length });
+    }
+  }
+}
+const n = (f: (r: any) => boolean) => depRows.filter(f).length;
+const localOk = (r: any) => r.localNodes && r.localTerms && r.localEdges;
+const hit = (r: any) => r.depMissingAncestor > 0 || r.anteMissing > 0;
+// Root accounting: how many dependents hang under each root and how close is each root?
+const rootRows: any[] = [];
+for (const fam of results.families) {
+  const gold: any[] = read(`${fixtures}/${fam.familyId}/expected.json`);
+  const doc = read(`${replay}/${fam.familyId}.prediction.json`);
+  const pred: any[] = doc.report.records.filter((r: any) => r.decomposition?.status === "decomposed").map((r: any) => r.decomposition.tree);
+  const roots = fam.claims.filter((c: any) => !gold.find((t) => t.claimNumber === c.claimNumber).edges.some((e: any) => e.kind === "depends-on-element"));
+  for (const c of roots) {
+    const g = gold.find((t) => t.claimNumber === c.claimNumber); const p = pred.find((t) => t.claimNumber === c.claimNumber);
+    const gs = new Set(g.elements.map((e: any) => `${e.kind}|${ak(e.anchor)}`)); const ps = new Set((p?.elements ?? []).map((e: any) => `${e.kind}|${ak(e.anchor)}`));
+    rootRows.push({ f: fam.familyId, c: c.claimNumber, strict: c.strict, cpc: fam.cpcSection, goldEls: g.elements.length, predEls: p?.elements.length ?? 0, matched: [...gs].filter((x) => ps.has(x)).length, chars: g.elements.reduce((m: number, e: any) => Math.max(m, e.anchor.endChar), 0), familyClaims: fam.claims.length });
+  }
+}
+const summary = {
+  terms: { predOnlyDet: top(predOnlyDet), goldOnlyDet: top(goldOnlyDet), predOnlyWords, goldOnlyWords, predOnlyShape: top(predOnlyShape, 16), goldOnlyShape: top(goldOnlyShape, 16), claimTermCause },
+  propagation: {
+    failedDependents: depRows.length,
+    localNodesExact: n((r) => r.localNodes), localNodesAndTermsExact: n((r) => r.localNodes && r.localTerms), allLocalExact: n(localOk),
+    allLocalExactAndGoldAncestorNodeMissing: n((r) => localOk(r) && hit(r)), allLocalExactNoMissingAncestor: n((r) => localOk(r) && !hit(r)),
+    anyGoldAncestorNodeMissing: n(hit), noGoldAncestorNodeMissing: n((r) => !hit(r)),
+  },
+  roots: { n: rootRows.length, strict: rootRows.filter((r) => r.strict).length, allElementsMatched: rootRows.filter((r) => r.matched === r.goldEls && r.predEls === r.goldEls).length, medianElementRecall: rootRows.map((r) => r.matched / r.goldEls).sort((a, b) => a - b)[Math.floor(rootRows.length / 2)], medianGoldEls: rootRows.map((r) => r.goldEls).sort((a, b) => a - b)[Math.floor(rootRows.length / 2)] },
+};
+fs.mkdirSync(out, { recursive: true });
+fs.writeFileSync(`${out}/summary2.json`, JSON.stringify(summary, null, 1));
+fs.writeFileSync(`${out}/samples.json`, JSON.stringify(samples, null, 1));
+fs.writeFileSync(`${out}/depRows.json`, JSON.stringify(depRows));
+fs.writeFileSync(`${out}/rootRows.json`, JSON.stringify(rootRows));
+console.log(JSON.stringify(summary, null, 1));
+for (const side of ["predOnly", "goldOnly"]) { console.log("--", side); for (const [k, v] of Object.entries(samples[side]).sort((a: any, b: any) => (summary.terms as any)[`${side}Shape`][b[0]] - (summary.terms as any)[`${side}Shape`][a[0]]).slice(0, 7)) console.log(k, JSON.stringify(v)); }

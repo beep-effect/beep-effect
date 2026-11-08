@@ -34,6 +34,7 @@ import { assertRightParenthesisActivation } from "./helpers/ClaimElementRightPar
 import type {
   AntecedentFinding,
   ClaimElementTree,
+  ClaimInputDecomposition,
   ClaimInputInspectionReport,
   ClaimRoleDecomposition,
   ClaimSourceElementPlan,
@@ -469,12 +470,23 @@ const assertAdmittedProjection = (record: Control, result: ClaimRoleDecompositio
     );
   }
 };
+const fallbackTopology = (decomposition: ClaimInputDecomposition) =>
+  decomposition.status === "decomposed"
+    ? {
+        elements: A.map(decomposition.tree.elements, ({ path, anchor }) => ({ path, anchor })),
+        containment: A.filter(decomposition.tree.edges, ({ kind }) => kind === "part-of"),
+      }
+    : O.none();
 const runControl = Effect.fn("recurrence.runControl")(function* (record: Control) {
   const { prepared, evidence, result } = yield* planOf(record);
   assert.strictEqual(result.plans.length, record.outcome === "admitted" ? 1 : 0);
   if (record.outcome !== "admitted") {
+    // A declined plan donates no role facts: same record outcome, and never complete coverage.
     const legacy = yield* decomposePreparedClaimRoles(prepared, []);
-    assert.deepStrictEqual(result.decompositions, legacy.decompositions);
+    assert.deepStrictEqual(
+      A.map(result.decompositions, ({ status }) => status),
+      A.map(legacy.decompositions, ({ status }) => status)
+    );
   } else {
     assertAdmittedProjection(record, result);
   }
@@ -566,7 +578,32 @@ describe("reviewed recurrence source frames and actual enhanced topology", () =>
         const { prepared, evidence, result } = yield* planOf(expanded);
         assert.deepStrictEqual(result.plans, []);
         const legacy = yield* decomposePreparedClaimRoles(prepared, []);
-        assert.deepStrictEqual(result.decompositions, legacy.decompositions);
+        assert.deepStrictEqual(
+          A.map(result.decompositions, ({ status }) => status),
+          A.map(legacy.decompositions, ({ status }) => status)
+        );
+        // Terms may differ by design; the fallback keeps every body group at its historical place.
+        assert.deepStrictEqual(
+          A.map(result.decompositions, fallbackTopology),
+          A.map(legacy.decompositions, fallbackTopology)
+        );
+        // The comparison above cannot see a defect both trees share, so pin the shape itself.
+        const decomposition = O.getOrThrow(A.head(result.decompositions));
+        assert.strictEqual(decomposition.status, "decomposed");
+        if (decomposition.status === "decomposed") {
+          const [root, body, ...rest] = decomposition.tree.elements;
+          const rootElement = O.getOrThrow(O.fromUndefinedOr(root));
+          const bodyElement = O.getOrThrow(O.fromUndefinedOr(body));
+          assert.deepStrictEqual(rest, []);
+          assert.strictEqual(
+            expanded.qualifiedText,
+            `${rootElement.anchor.quote} comprising ${bodyElement.anchor.quote}.`
+          );
+          assert.deepStrictEqual(
+            A.filter(decomposition.tree.edges, ({ kind }) => kind === "part-of"),
+            [{ kind: "part-of", child: bodyElement.path, parent: rootElement.path }]
+          );
+        }
         const report = yield* inspectPreparedClaimRoles(prepared, evidence);
         assert.strictEqual(O.getOrThrow(A.head(report.records)).status, "partial");
       }
