@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
 import { resolveShardScope, shardScopeIncludes, stageGeneratedFiles } from "@beep/repo-cli-kit/cli/ShardScope";
@@ -21,6 +22,7 @@ import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
@@ -656,6 +658,34 @@ const makeCatalogEntry = (
   });
 };
 
+// Syntactic equivalent of ts-morph's `isExported()` for a class: the export
+// keyword, a local `export { Name }` / `export { Name as Alias }`, or
+// `export default Name`. The checker-backed original loads every imported
+// module into the program, which dominates a scoped run's memory.
+const isClassExported = (declaration: ClassDeclaration): boolean => {
+  if (declaration.hasExportKeyword()) {
+    return true;
+  }
+  const name = declaration.getName();
+  if (name === undefined) {
+    return false;
+  }
+  const sourceFile = declaration.getSourceFile();
+  const namedLocally = A.some(
+    A.filter(sourceFile.getExportDeclarations(), (exportDeclaration) => !exportDeclaration.hasModuleSpecifier()),
+    (exportDeclaration) =>
+      A.some(exportDeclaration.getNamedExports(), (specifier) =>
+        Str.Equivalence(specifier.getNameNode().getText(), name)
+      )
+  );
+  return (
+    namedLocally ||
+    A.some(sourceFile.getExportAssignments(), (assignment) =>
+      Str.Equivalence(assignment.getExpression().getText(), name)
+    )
+  );
+};
+
 const catalogEntryFromClassDeclaration = (
   declaration: ClassDeclaration,
   file: string,
@@ -663,7 +693,7 @@ const catalogEntryFromClassDeclaration = (
 ): O.Option<SchemaCatalogEntry> => {
   // The catalog is the exported crispened surface; private helper schemas
   // (module-local bases, internal codecs) stay out of it.
-  if (!declaration.isExported()) {
+  if (!isClassExported(declaration)) {
     return O.none();
   }
   const symbol = declaration.getName();
@@ -709,7 +739,9 @@ const collectCatalogEntriesFromSourceFile = (
   }
 
   for (const variableStatement of sourceFile.getVariableStatements()) {
-    if (!variableStatement.isExported()) {
+    // ts-morph's `isExported()` on a statement reduces to the export keyword
+    // (a statement has no symbol) but still builds the type checker first.
+    if (!variableStatement.hasExportKeyword()) {
       continue;
     }
     for (const declaration of variableStatement.getDeclarations()) {
@@ -722,6 +754,50 @@ const collectCatalogEntriesFromSourceFile = (
 
   return entries;
 };
+
+// Every absolute source path the schema-first scan reads. Enumerate through
+// FsUtils so the scan is anchored at the repo root even when the command runs
+// from a workspace subdirectory (ts-morph resolves relative globs against the
+// process cwd).
+const schemaCatalogSourcePaths = Effect.fn("SchemaCatalog.sourcePaths")(function* (repoRoot: string) {
+  const fsUtils = yield* FsUtils;
+  return yield* fsUtils.globFiles(
+    SchemaFirstIncludedGlobs,
+    GlobOptions.make({
+      absolute: true,
+      cwd: repoRoot,
+      ignore: "**/docs/**",
+    })
+  );
+});
+
+// Parse exactly `sourcePaths` in one fresh ts-morph project and collect their
+// entries; shared by the full scan and the scoped per-file splice.
+const collectCatalogEntriesFromPaths = (
+  path: Path.Path,
+  repoRoot: string,
+  ownerResolver: (absolutePath: string) => string,
+  sourcePaths: ReadonlyArray<string>
+): ReadonlyArray<SchemaCatalogEntry> => {
+  const project = new Project({
+    skipAddingFilesFromTsConfig: true,
+    tsConfigFilePath: path.join(repoRoot, "tsconfig.json"),
+  });
+  const sourceFiles = A.map(sourcePaths, (sourcePath) => project.addSourceFileAtPath(sourcePath));
+  const entries = A.empty<SchemaCatalogEntry>();
+  for (const sourceFile of sourceFiles) {
+    const filePath = toPosixPath(path.relative(repoRoot, sourceFile.getFilePath()));
+    if (isExcludedFile(filePath)) {
+      continue;
+    }
+    const owner = ownerResolver(sourceFile.getFilePath());
+    A.appendAllInPlace(entries, collectCatalogEntriesFromSourceFile(sourceFile, filePath, owner));
+  }
+  return entries;
+};
+
+const dedupeAndSortCatalogEntries = (entries: ReadonlyArray<SchemaCatalogEntry>): ReadonlyArray<SchemaCatalogEntry> =>
+  sortCatalogEntries(A.dedupeWith(entries, (left, right) => makeEntryKey(left) === makeEntryKey(right)));
 
 /**
  * Generate the static schema catalog document from the schema-first scan scope.
@@ -750,43 +826,16 @@ export const generateSchemaCatalogDocument = Effect.fn("SchemaCatalog.generateDo
 ) {
   return yield* Effect.gen(function* () {
     const path = yield* Path.Path;
-    const fsUtils = yield* FsUtils;
     const repoRoot = yield* findRepoRoot();
     const ownerResolver = yield* makeSchemaFirstOwnerResolver(repoRoot);
-    // Enumerate through FsUtils so the scan is anchored at the repo root even
-    // when the command runs from a workspace subdirectory (ts-morph resolves
-    // relative globs against the process cwd).
-    const globFiles1 = yield* fsUtils.globFiles(
-      SchemaFirstIncludedGlobs,
-      GlobOptions.make({
-        absolute: true,
-        cwd: repoRoot,
-        ignore: "**/docs/**",
-      })
-    );
-    const sourcePaths = A.filter(globFiles1, includes);
-    const project = new Project({
-      skipAddingFilesFromTsConfig: true,
-      tsConfigFilePath: path.join(repoRoot, "tsconfig.json"),
-    });
-    for (const sourcePath of sourcePaths) {
-      project.addSourceFileAtPath(sourcePath);
-    }
-    const entries = A.empty<SchemaCatalogEntry>();
-
-    for (const sourceFile of project.getSourceFiles()) {
-      const filePath = toPosixPath(path.relative(repoRoot, sourceFile.getFilePath()));
-      if (isExcludedFile(filePath)) {
-        continue;
-      }
-      const owner = ownerResolver(sourceFile.getFilePath());
-      A.appendAllInPlace(entries, collectCatalogEntriesFromSourceFile(sourceFile, filePath, owner));
-    }
+    const matched = yield* schemaCatalogSourcePaths(repoRoot);
+    const sourcePaths = A.filter(matched, includes);
+    const entries = collectCatalogEntriesFromPaths(path, repoRoot, ownerResolver, sourcePaths);
 
     return SchemaCatalogDocument.make({
       schemaVersion: "schema-catalog/v1",
       generatedBy: SCHEMA_CATALOG_GENERATED_BY,
-      entries: sortCatalogEntries(A.dedupeWith(entries, (left, right) => makeEntryKey(left) === makeEntryKey(right))),
+      entries: dedupeAndSortCatalogEntries(entries),
     });
   }).pipe(Effect.withSpan("SchemaCatalog.generateDocument"));
 });
@@ -1007,17 +1056,32 @@ const finishSchemaCatalogRun = Effect.fn("SchemaCatalog.finishRun")(function* (
   return summary;
 });
 
+// Entries of one owner's committed shard; a missing, unparsable or
+// undecodable shard holds none, so the splice rebuilds it from the staged files.
+const readShardEntries = Effect.fn("SchemaCatalog.readShardEntries")(function* (repoRoot: string, owner: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const absolute = path.join(repoRoot, schemaCatalogShardPath(owner));
+  return yield* fs.readFileString(absolute).pipe(
+    Effect.flatMap((text) => Jsonc.parse(text)),
+    Effect.flatMap(decodeSchemaCatalogShard),
+    Effect.map((shard) => shard.entries),
+    Effect.orElseSucceed(A.empty<SchemaCatalogEntry>)
+  );
+});
+
 /**
- * Regenerate only the shards owned by the packages that own `paths`.
+ * Splice the entries of `paths` into the shards of the packages that own them.
  *
  * **Details**
  *
- * The scan reads just those packages' sources, so the run costs seconds, not
- * the half minute of a repository-wide scan, and the resulting shard text is
- * the same the full scan would write because entries never cross packages.
- * Orphan retirement outside the scope and the retired single-file catalog are
- * left to the full run; an in-scope owner that lost its last schema has its
- * shard removed.
+ * Only the given paths are parsed: each in-scope owner's committed entries
+ * for those files are dropped (a deleted file, or the old side of a
+ * `--no-renames` move, so loses its entries) and replaced by the entries the
+ * files that still exist yield now. Entries never cross files, so the result
+ * is the shard text a full scan would write. Orphan retirement outside the
+ * scope and the retired single-file catalog are left to the full run; an
+ * in-scope owner that lost its last schema has its shard removed.
  */
 const runScopedSchemaCatalog = Effect.fn("SchemaCatalog.runScoped")(function* (
   options: SchemaCatalogOptions,
@@ -1030,13 +1094,30 @@ const runScopedSchemaCatalog = Effect.fn("SchemaCatalog.runScoped")(function* (
     yield* Console.log(`[schema-catalog] no owning package for the given paths; nothing to regenerate`);
     return SchemaCatalogSummary.make({ entries: 0, shards: 0, wroteCatalog: options.write, changed: [] });
   }
-  const document = yield* generateSchemaCatalogDocument(shardScopeIncludes(scope, ownerResolver));
-  const generateSchemaCatalogShards2 = yield* generateSchemaCatalogShards(document);
-  const shards = A.filter(generateSchemaCatalogShards2, (shard) =>
-    A.some(owners, (owner) => shard.path === schemaCatalogShardPath(owner))
-  );
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const inScope = shardScopeIncludes(scope, ownerResolver);
+  const stagedAbsolute = HashSet.fromIterable(
+    A.filter(
+      A.map(options.paths, (candidate) => path.resolve(repoRoot, candidate)),
+      inScope
+    )
+  );
+  const stagedFiles = HashSet.map(stagedAbsolute, (absolute) => toPosixPath(path.relative(repoRoot, absolute)));
+  const committed = yield* Effect.forEach(owners, (owner) => readShardEntries(repoRoot, owner));
+  const kept = A.filter(A.flatten(committed), (entry) => !HashSet.has(stagedFiles, entry.file));
+  const matched = yield* schemaCatalogSourcePaths(repoRoot);
+  const sourcePaths = A.filter(matched, (absolute) => HashSet.has(stagedAbsolute, absolute));
+  const fresh = collectCatalogEntriesFromPaths(path, repoRoot, ownerResolver, sourcePaths);
+  const document = SchemaCatalogDocument.make({
+    schemaVersion: "schema-catalog/v1",
+    generatedBy: SCHEMA_CATALOG_GENERATED_BY,
+    entries: dedupeAndSortCatalogEntries(A.appendAll(kept, fresh)),
+  });
+  const generated = yield* generateSchemaCatalogShards(document);
+  const shards = A.filter(generated, (shard) =>
+    A.some(owners, (owner) => shard.path === schemaCatalogShardPath(owner))
+  );
   const emptied = yield* Effect.filter(
     A.filter(A.map(owners, schemaCatalogShardPath), (file) => !A.some(shards, (shard) => shard.path === file)),
     (file) => fs.exists(path.join(repoRoot, file))
