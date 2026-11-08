@@ -83,6 +83,8 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
         const input = yield* makeCitationRegexInput(citationResult4.limits);
         const source = yield* input.prepareText("abc", allow);
         const denied = CitationSafetyLimitExceeded.make({ operation: "extract", limit: "producedTextUtf16" });
+        const callerCause = new Error("synthetic caller diagnostic");
+        expect(Reflect.defineProperty(denied, "cause", { value: callerCause })).toBe(true);
         let calls = 0;
         const refuse = Effect.fn("SliceTest.refuse")(() =>
           Effect.sync(() => {
@@ -99,7 +101,13 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
         }
         expect(calls).toBe(0);
         const citationResult6 = yield* source.slice({ start: 0, end: 3 }, refuse).pipe(Effect.flip);
-        expect(citationResult6).toBe(denied);
+        expect(S.is(CitationSafetyLimitExceeded)(citationResult6)).toBe(true);
+        expect(citationResult6).toMatchObject({
+          _tag: denied._tag,
+          operation: denied.operation,
+          limit: denied.limit,
+        });
+        expect(Reflect.getOwnPropertyDescriptor(citationResult6, "cause")).toBeUndefined();
         expect(calls).toBe(1);
         const citationResult7 = yield* source.slice({ start: 1, end: 2 }, allow);
         expect(citationResult7.bytes).toEqual(new Uint8Array([98]));
