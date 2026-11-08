@@ -4,6 +4,7 @@
 import { makeCitationBuiltinDump } from "@beep/law-practice-server/internal/Citation/BuiltinDump";
 import { copyCitationCleanerUnicode } from "@beep/law-practice-server/internal/Citation/CleanerValues";
 import { CitationDumpFailure, makeCitationDump } from "@beep/law-practice-server/internal/Citation/Dump";
+import { CitationGeneratedReference } from "@beep/law-practice-server/internal/Citation/GeneratedReferences";
 import { makeCitationOccurrenceProjection } from "@beep/law-practice-server/internal/Citation/OccurrenceProjection";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import { makeCitationSemanticExtraction } from "@beep/law-practice-server/internal/Citation/SemanticExtraction";
@@ -93,6 +94,49 @@ export const replayCitationCanonicalDump = Effect.fn("CanonicalDumpTest.replay")
     Effect.provideService(CitationTextBudget, utilityBudget)
   );
   const rows = yield* Effect.forEach(models, adapter.project);
+  // References carry no year field, a generated reference has no constructor outcome, and a citation
+  // with no parsed year still reports the field as None.
+  const references = yield* stage.extract({
+    plain: "See Roe v. Wade, 410 U.S. 113 (1973). Id. at 114. Roe, at 115. See supra.",
+    markup: null,
+    cleanSteps: [],
+    removeAmbiguous: false,
+  });
+  if (references.raw.outcome._tag !== "Document") return yield* Effect.die("Expected real original Document branch");
+  const referenceModels = A.map(references.raw.outcome.result.extraction.extraction.citations, (entry) => entry.model);
+  const referenceRows = yield* Effect.forEach(referenceModels, adapter.project);
+  expect(A.map(referenceRows, (row) => row.kind)).toContain("IdCitation");
+  const dated = A.findFirst(referenceModels, (model) => "outcome" in model && "year" in model.outcome);
+  if (dated._tag === "None" || !("outcome" in dated.value)) return yield* Effect.die("Expected a dated citation");
+  const generated = yield* adapter.project(
+    CitationGeneratedReference.make({
+      _tag: "ReferenceCitation",
+      index: 0,
+      documentAttached: false,
+      token: dated.value.token,
+      spanStart: 0,
+      spanEnd: 1,
+      fullSpanStart: 0,
+      fullSpanEnd: 1,
+      metadata: {
+        pinCite: null,
+        parenthetical: null,
+        pinCiteSpanStart: null,
+        pinCiteSpanEnd: null,
+        plaintiff: null,
+        defendant: null,
+        resolvedCaseNameShort: null,
+        resolvedCaseName: null,
+      },
+    })
+  );
+  expect(generated.kind).toBe("ReferenceCitation");
+  expect(A.map(generated.fields, (field) => field.name)).toEqual(["groups", "metadata"]);
+  const undated = yield* adapter.project({ ...dated.value, outcome: { ...dated.value.outcome, year: null } });
+  expect(A.last(undated.fields)).toMatchObject({
+    _tag: "Some",
+    value: { _tag: "Scalar", name: "year", value: { _tag: "None" } },
+  });
   yield* Effect.forEach(
     rows,
     Effect.fnUntraced(function* (row, i) {
