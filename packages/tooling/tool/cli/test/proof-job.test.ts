@@ -478,7 +478,7 @@ describe("proof job schemas", () => {
       BEEP_GH_APP_INSTALLATION_ID: "2",
       BEEP_GH_APP_KEY_REF: "op://vault/item/private-key",
     });
-    expect(Job.forwardedProofJobEnvironment({ BEEP_GH_APP_KEY_REF: "-----BEGIN PRIVATE KEY-----" })).toEqual({});
+    expect(Job.forwardedProofJobEnvironment({ BEEP_GH_APP_KEY_REF: "inline-key-value" })).toEqual({});
   });
 });
 
