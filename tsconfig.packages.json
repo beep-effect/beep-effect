@@ -277,9 +277,6 @@
       "path": "packages/epistemic/client"
     },
     {
-      "path": "packages/epistemic/config"
-    },
-    {
       "path": "packages/epistemic/domain"
     },
     {
@@ -293,6 +290,21 @@
     },
     {
       "path": "packages/epistemic/use-cases"
+    },
+    {
+      "path": "packages/execution-authority/config"
+    },
+    {
+      "path": "packages/execution-authority/domain"
+    },
+    {
+      "path": "packages/execution-authority/server"
+    },
+    {
+      "path": "packages/execution-authority/tables"
+    },
+    {
+      "path": "packages/execution-authority/use-cases"
     },
     {
       "path": "packages/foundation/capability/api-transport"

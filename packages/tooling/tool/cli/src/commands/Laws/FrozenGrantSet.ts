@@ -30,7 +30,7 @@ import type { CallExpression, NewExpression, ObjectBindingPattern, SourceFile, V
 const $I = $RepoCliId.create("commands/Laws/FrozenGrantSet");
 
 const FROZEN_GRANT_SET_RULE_ID = "effect-governance-frozen-grant-set";
-const FROZEN_GRANT_SET_DEFINING_MODULE = "packages/epistemic/domain/src/values/GrantSet/GrantSet.model.ts";
+const FROZEN_GRANT_SET_DEFINING_MODULE = "packages/execution-authority/domain/src/values/GrantSet/GrantSet.model.ts";
 const FROZEN_GRANT_SET_NAME = "FrozenGrantSet";
 const MAKE_NAME = "make";
 

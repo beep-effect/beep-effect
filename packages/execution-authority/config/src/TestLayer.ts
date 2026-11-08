@@ -1,0 +1,171 @@
+/**
+ * Execution-authority configuration test layers and grant fixtures.
+ *
+ * **Details**
+ *
+ * The fixture grant set is a deliverable, not a convenience: the acceptance
+ * test asserts a chained ledger, so the grant-set digest it is evaluated
+ * against has to be byte-stable across runs. Everything here is therefore
+ * pinned — the frozen instant, the expiry, and the destinations — and nothing
+ * reads the clock.
+ *
+ * @packageDocumentation
+ * @category testing
+ * @since 0.0.0
+ */
+
+import {
+  ExecutionGrant,
+  ExecutionSink,
+  GrantBudget,
+  GrantOperation,
+  GrantPurpose,
+  GrantResource,
+  SinkDestination,
+} from "@beep/execution-authority-domain/values/ExecutionGrant";
+import { addGrant, emptyDraftGrantSet, freezeGrantSet } from "@beep/execution-authority-domain/values/GrantSet";
+import * as DateTime from "effect/DateTime";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import { defaultPolicyRevision, ExecutionAuthorityConfig, ExecutionAuthorityServerConfig } from "./ServerConfig.ts";
+import type { FrozenGrantSet } from "@beep/execution-authority-domain/values/GrantSet";
+
+/**
+ * Destination the fixture grant authorizes for external network egress.
+ *
+ * **Example** (Log allowed destination URL)
+ *
+ * ```ts
+ * import { fixtureAllowedDestination } from "@beep/execution-authority-config/test"
+ *
+ * console.log(fixtureAllowedDestination) // "https://registry.example"
+ * ```
+ *
+ * @category fixtures
+ * @since 0.0.0
+ */
+export const fixtureAllowedDestination = SinkDestination.make("https://registry.example");
+
+/**
+ * Destination the fixture grant deliberately omits, so a denial has something
+ * concrete to be a denial *of*.
+ *
+ * **Example** (Log denied destination URL)
+ *
+ * ```ts
+ * import { fixtureDeniedDestination } from "@beep/execution-authority-config/test"
+ *
+ * console.log(fixtureDeniedDestination) // "https://attacker.example"
+ * ```
+ *
+ * @category fixtures
+ * @since 0.0.0
+ */
+export const fixtureDeniedDestination = SinkDestination.make("https://attacker.example");
+
+/**
+ * Instant the fixture grant set is sealed at. Pinned so the digest is stable.
+ *
+ * **Example** (Convert freeze time to epoch)
+ *
+ * ```ts
+ * import { fixtureFrozenAt } from "@beep/execution-authority-config/test"
+ * import * as DateTime from "effect/DateTime";
+ * console.log(DateTime.toEpochMillis(fixtureFrozenAt)) // 0
+ * ```
+ *
+ * @category fixtures
+ * @since 0.0.0
+ */
+export const fixtureFrozenAt = DateTime.makeUnsafe(0);
+
+const fixtureGrant = ExecutionGrant.make({
+  budget: GrantBudget.make({ maxToolCalls: O.none() }),
+  expiresAt: DateTime.makeUnsafe(86_400_000),
+  operation: GrantOperation.make("ontology_publish_provenance"),
+  policyRevision: defaultPolicyRevision,
+  principal: { component: "Runtime", kind: "System" },
+  purpose: GrantPurpose.make("provenance-publication"),
+  resource: GrantResource.make("ontology-workspace"),
+  sink: ExecutionSink.make({
+    audience: "external-network",
+    destination: fixtureAllowedDestination,
+    sinkClass: "network-egress",
+  }),
+});
+
+const draftGrantSet = addGrant(emptyDraftGrantSet(defaultPolicyRevision), fixtureGrant).pipe(Result.getOrThrow);
+
+/**
+ * Deterministic frozen grant set: one grant, for one operation, against one
+ * external destination, under the default policy revision.
+ *
+ * **Example** (Verify frozen grant digest)
+ *
+ * ```ts
+ * import { fixtureFrozenGrantSet } from "@beep/execution-authority-config/test"
+ * import { verifyFrozenGrantSetDigest } from "@beep/execution-authority-domain/values/GrantSet"
+ *
+ * console.log(verifyFrozenGrantSetDigest(fixtureFrozenGrantSet)) // true
+ * ```
+ *
+ * @category fixtures
+ * @since 0.0.0
+ */
+export const fixtureFrozenGrantSet: FrozenGrantSet = freezeGrantSet(draftGrantSet, fixtureFrozenAt).pipe(
+  Result.getOrThrow
+);
+
+/**
+ * Configuration value matching {@link fixtureFrozenGrantSet}: the fixture
+ * grant's destination is allowlisted, the attacker destination is not.
+ *
+ * **Example** (Check allowlist length)
+ *
+ * ```ts
+ * import { testExecutionAuthorityConfig } from "@beep/execution-authority-config/test"
+ *
+ * console.log(testExecutionAuthorityConfig.destinationAllowlist.length) // 1
+ * ```
+ *
+ * @category fixtures
+ * @since 0.0.0
+ */
+export const testExecutionAuthorityConfig = ExecutionAuthorityServerConfig.make({
+  destinationAllowlist: [fixtureAllowedDestination],
+  policyRevision: defaultPolicyRevision,
+});
+
+/**
+ * Static execution-authority configuration layer built from an explicit value.
+ *
+ * **Example** (Build layer from config)
+ *
+ * ```ts
+ * import { makeExecutionAuthorityConfigTest, testExecutionAuthorityConfig } from "@beep/execution-authority-config/test"
+ * import * as Layer from "effect/Layer";
+ * console.log(Layer.isLayer(makeExecutionAuthorityConfigTest(testExecutionAuthorityConfig))) // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const makeExecutionAuthorityConfigTest = (config: ExecutionAuthorityServerConfig) =>
+  Layer.succeed(ExecutionAuthorityConfig, config);
+
+/**
+ * Static execution-authority configuration layer carrying {@link testExecutionAuthorityConfig}.
+ *
+ * **Example** (Confirm static config layer)
+ *
+ * ```ts
+ * import { ExecutionAuthorityConfigTest } from "@beep/execution-authority-config/test"
+ * import * as Layer from "effect/Layer";
+ * console.log(Layer.isLayer(ExecutionAuthorityConfigTest)) // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const ExecutionAuthorityConfigTest = makeExecutionAuthorityConfigTest(testExecutionAuthorityConfig);

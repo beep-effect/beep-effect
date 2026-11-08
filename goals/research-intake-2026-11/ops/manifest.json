@@ -27,7 +27,7 @@
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/docs_research-intake-2026-11-refinal-7e21c1f2dbcc/verdict.json",
+        "ref": ".beep/yeet/runs/docs_research-intake-2026-11-refinal2-35cf657c8701/verdict.json",
         "gating": true
       }
     ],
@@ -38,6 +38,10 @@
       },
       {
         "number": 2904,
+        "role": "supporting"
+      },
+      {
+        "number": 2912,
         "role": "final"
       }
     ]
@@ -119,6 +123,6 @@
   ],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2904
+    "finalPullRequest": 2912
   }
 }

@@ -29,8 +29,8 @@
 import "./IpcStdoutGuard.prelude.ts";
 
 import { ChatRpcs } from "@beep/agents-use-cases/public";
-import { EpistemicConfigLive } from "@beep/epistemic-config/layer";
-import { ExecutionLedgerDrizzle } from "@beep/epistemic-server/ExecutionLedger";
+import { ExecutionAuthorityConfigLive } from "@beep/execution-authority-config/layer";
+import { ExecutionLedgerDrizzle } from "@beep/execution-authority-server/ExecutionLedger";
 import { OntologyMcpConfigLive } from "@beep/ontology-config/layer";
 import { OntologyMcpMutationsEnabledConfig } from "@beep/ontology-config/server";
 import { Workspace } from "@beep/workspace-server";
@@ -106,7 +106,7 @@ const httpMain = (): Layer.Layer<never, DesktopStartupError | ServeError> => {
       makeOntologyMcpTransportLayer(OntologyMcpTransportOptions.make({ token })).pipe(
         Layer.provide(OntologyMcpConfigLive),
         Layer.provide(ExecutionLedgerDrizzle),
-        Layer.provide(EpistemicConfigLive),
+        Layer.provide(ExecutionAuthorityConfigLive),
         // The same module-level const RuntimeLive provides: layer memoization
         // builds one PGlite instance shared by the rpc handlers and the
         // governed MCP gate's execution ledger.

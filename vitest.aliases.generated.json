@@ -1217,42 +1217,6 @@
   "@beep/ontology-use-cases/worker": [
     "./packages/ontology/use-cases/src/worker.ts"
   ],
-  "@beep/epistemic-domain/values/ExecutionGrant": [
-    "./packages/epistemic/domain/src/values/ExecutionGrant/index.ts"
-  ],
-  "@beep/epistemic-domain/values/ExecutionRecord": [
-    "./packages/epistemic/domain/src/values/ExecutionRecord/index.ts"
-  ],
-  "@beep/epistemic-domain/values/ExecutionVerdict": [
-    "./packages/epistemic/domain/src/values/ExecutionVerdict/index.ts"
-  ],
-  "@beep/epistemic-domain/values/GrantSet": [
-    "./packages/epistemic/domain/src/values/GrantSet/index.ts"
-  ],
-  "@beep/epistemic-config": ["./packages/epistemic/config/src/index.ts"],
-  "@beep/epistemic-config/layer": ["./packages/epistemic/config/src/layer.ts"],
-  "@beep/epistemic-config/public": [
-    "./packages/epistemic/config/src/public.ts"
-  ],
-  "@beep/epistemic-config/secrets": [
-    "./packages/epistemic/config/src/secrets.ts"
-  ],
-  "@beep/epistemic-config/server": [
-    "./packages/epistemic/config/src/server.ts"
-  ],
-  "@beep/epistemic-config/test": ["./packages/epistemic/config/src/test.ts"],
-  "@beep/epistemic-server/ExecutionLedger": [
-    "./packages/epistemic/server/src/ExecutionLedger/index.ts"
-  ],
-  "@beep/epistemic-tables/values": [
-    "./packages/epistemic/tables/src/values/index.ts"
-  ],
-  "@beep/epistemic-tables/values/ExecutionRecord": [
-    "./packages/epistemic/tables/src/values/ExecutionRecord/index.ts"
-  ],
-  "@beep/epistemic-use-cases/ExecutionLedger": [
-    "./packages/epistemic/use-cases/src/ExecutionLedger/index.ts"
-  ],
   "@beep/chalk/internal/*": [
     "./packages/foundation/capability/chalk/src/internal/*"
   ],
@@ -1301,12 +1265,6 @@
   "@beep/ui/hooks/*": ["./packages/foundation/ui-system/ui/src/hooks/*"],
   "@beep/ui/lib/*": ["./packages/foundation/ui-system/ui/src/lib/*"],
   "@beep/ui/themes/*": ["./packages/foundation/ui-system/ui/src/themes/*"],
-  "@beep/epistemic-server/GovernedTierGate": [
-    "./packages/epistemic/server/src/GovernedTierGate/index.ts"
-  ],
-  "@beep/epistemic-server/GovernedEgress": [
-    "./packages/epistemic/server/src/GovernedEgress/index.ts"
-  ],
   "@beep/law-practice-tables": ["./packages/law-practice/tables/src/index.ts"],
   "@beep/law-practice-tables/tables": [
     "./packages/law-practice/tables/src/Tables.ts"
@@ -2294,5 +2252,74 @@
   ],
   "@beep/repo-cli/commands/Toolchain": [
     "./packages/tooling/tool/cli/src/commands/Toolchain/index.ts"
+  ],
+  "@beep/execution-authority-config": [
+    "./packages/execution-authority/config/src/index.ts"
+  ],
+  "@beep/execution-authority-config/layer": [
+    "./packages/execution-authority/config/src/layer.ts"
+  ],
+  "@beep/execution-authority-config/public": [
+    "./packages/execution-authority/config/src/public.ts"
+  ],
+  "@beep/execution-authority-config/secrets": [
+    "./packages/execution-authority/config/src/secrets.ts"
+  ],
+  "@beep/execution-authority-config/server": [
+    "./packages/execution-authority/config/src/server.ts"
+  ],
+  "@beep/execution-authority-config/test": [
+    "./packages/execution-authority/config/src/test.ts"
+  ],
+  "@beep/execution-authority-domain": [
+    "./packages/execution-authority/domain/src/index.ts"
+  ],
+  "@beep/execution-authority-domain/entities": [
+    "./packages/execution-authority/domain/src/entities/index.ts"
+  ],
+  "@beep/execution-authority-domain/entities/ExecutionRecord": [
+    "./packages/execution-authority/domain/src/entities/ExecutionRecord/index.ts"
+  ],
+  "@beep/execution-authority-domain/values": [
+    "./packages/execution-authority/domain/src/values/index.ts"
+  ],
+  "@beep/execution-authority-domain/values/ExecutionGrant": [
+    "./packages/execution-authority/domain/src/values/ExecutionGrant/index.ts"
+  ],
+  "@beep/execution-authority-domain/values/ExecutionVerdict": [
+    "./packages/execution-authority/domain/src/values/ExecutionVerdict/index.ts"
+  ],
+  "@beep/execution-authority-domain/values/GrantSet": [
+    "./packages/execution-authority/domain/src/values/GrantSet/index.ts"
+  ],
+  "@beep/execution-authority-server": [
+    "./packages/execution-authority/server/src/index.ts"
+  ],
+  "@beep/execution-authority-server/ExecutionLedger": [
+    "./packages/execution-authority/server/src/ExecutionLedger/index.ts"
+  ],
+  "@beep/execution-authority-server/GovernedEgress": [
+    "./packages/execution-authority/server/src/GovernedEgress/index.ts"
+  ],
+  "@beep/execution-authority-server/GovernedTierGate": [
+    "./packages/execution-authority/server/src/GovernedTierGate/index.ts"
+  ],
+  "@beep/execution-authority-tables": [
+    "./packages/execution-authority/tables/src/index.ts"
+  ],
+  "@beep/execution-authority-tables/entities": [
+    "./packages/execution-authority/tables/src/entities/index.ts"
+  ],
+  "@beep/execution-authority-tables/entities/ExecutionRecord": [
+    "./packages/execution-authority/tables/src/entities/ExecutionRecord/index.ts"
+  ],
+  "@beep/execution-authority-use-cases": [
+    "./packages/execution-authority/use-cases/src/index.ts"
+  ],
+  "@beep/execution-authority-use-cases/ExecutionLedger": [
+    "./packages/execution-authority/use-cases/src/ExecutionLedger/index.ts"
+  ],
+  "@beep/execution-authority-use-cases/server": [
+    "./packages/execution-authority/use-cases/src/server.ts"
   ]
 }

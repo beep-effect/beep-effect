@@ -59,6 +59,16 @@ Before marking the packet closed:
   desktop-app pairings for dankserver and tom-pc-1-wsl were handed to the
   operator as app links; the runbook now has that step.
 
+- 2026-11-07 (lane `t3code-tbk-worker-link`): the operator released the
+  tbk-worker latch and loosened its guard, so the guest joined the fleet:
+  fork build installed from a loopback copy of the mirror (the tagged node
+  could not reach the hub until its grants existed), service on loopback under
+  `agent-runs.slice` with the worker-boundary drop-in, Serve on the guest's own
+  node, two tailnet grants plus matching test updates, hub link with auto
+  access, desktop pairing handed to the operator
+  (`history/2026-11-07-tbk-worker-link.md`). One delegated turn through the
+  link is still open.
+
 - Preserve unrelated worktree changes.
 - Keep `SPEC.md` normative and update it only when the contract changes.
 - Keep this plan current; archive old run outputs under `history/`.
