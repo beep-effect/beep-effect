@@ -15,6 +15,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -257,6 +258,36 @@ export const ArchivePlanId = S.String.check(
 export type ArchivePlanId = typeof ArchivePlanId.Type;
 
 /**
+ * How an inbound reference is written: a Markdown link destination, or an
+ * inline code span citing the path.
+ *
+ * **Example** (Validate a form)
+ *
+ * ```ts
+ * import { InboundLinkForm } from "@beep/repo-cli/commands/Goals/Archive.schemas"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(InboundLinkForm)("code-span")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const InboundLinkForm = LiteralKit(["link", "code-span"]).pipe(
+  $I.annoteSchema("InboundLinkForm", {
+    description: "Whether an inbound reference is a Markdown link destination or an inline code span.",
+  })
+);
+
+/**
+ * Runtime type of {@link InboundLinkForm}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type InboundLinkForm = typeof InboundLinkForm.Type;
+
+/**
  * One link into a file the archive will remove from `main`, and the archive
  * URL it is rewritten to.
  *
@@ -269,6 +300,7 @@ export type ArchivePlanId = typeof ArchivePlanId.Type;
  *   file: "docs/README.md",
  *   line: 3,
  *   destination: "../goals/demo/PLAN.md",
+ *   form: "link",
  *   rewrittenTo: "https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/demo/PLAN.md",
  * })
  * console.log(link.line) // 3
@@ -282,10 +314,12 @@ export class InboundLink extends S.Opaque<InboundLink, { readonly brand: unique 
     file: S.String,
     line: S.Int.check(S.isGreaterThanOrEqualTo(1)),
     destination: S.String,
+    form: InboundLinkForm,
     rewrittenTo: S.String,
   }).pipe(
     $I.annoteSchema("InboundLink", {
-      description: "A link from a file outside the packet into a removed packet file, with its archive blob URL.",
+      description:
+        "A link or code-span citation from a file outside the packet into a removed packet file, with its archive blob URL.",
     })
   )
 ) {}

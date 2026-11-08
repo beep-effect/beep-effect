@@ -1,13 +1,19 @@
 import { Git } from "@beep/git/Git";
 import { ExplorationManifest } from "@beep/repo-cli/commands/Explore";
 import { runGoalsArchive } from "@beep/repo-cli/commands/Goals/Archive";
-import { ArchivePlanEntry, ArchiveRecord, tombstoneKeeps } from "@beep/repo-cli/commands/Goals/Archive.schemas";
+import {
+  ArchivePlanEntry,
+  ArchiveRecord,
+  InboundLink,
+  tombstoneKeeps,
+} from "@beep/repo-cli/commands/Goals/Archive.schemas";
 import {
   ArchivePlanner,
   ArchivePlannerLive,
   ArchivePlanOptions,
   archivePlanId,
 } from "@beep/repo-cli/commands/Goals/Archive.service";
+import { rewriteLinksInText } from "@beep/repo-cli/commands/Goals/ArchiveExecution.service";
 import {
   explorationArchiveFindings,
   GoalExplorationPathState,
@@ -157,6 +163,24 @@ const FIXTURE: ReadonlyArray<readonly [string, string]> = [
   ["explorations/gone/RESEARCH.md", "# Research\n"],
   ["explorations/open/ops/manifest.json", explorationManifest("open", "active")],
   ["docs/guide.md", GUIDE],
+  ["goals/done/assets/figure.md", "# Figure\n"],
+  ["docs/directories.md", "Figures in `goals/done/assets`.\nFriction stays in `goals/done/research`.\n"],
+  ["packages/demo/src/prompt.ts", "export const prompt = 'Read `goals/done/PLAN.md` first.';\n"],
+  ["packages/demo/data.json", '{ "note": "Read `goals/done/PLAN.md` first." }\n'],
+  [
+    "docs/citations.md",
+    A.join(
+      [
+        "Bare `goals/done/PLAN.md#p1` and `bun run beep goals/done/PLAN.md` and `goals/done/README.md`.",
+        "Wrapped [`goals/done/SPEC.md`](../goals/done/SPEC.md) and [see `goals/done/SPEC.md` here](https://e/s).",
+        "```md",
+        "`goals/done/SPEC.md`",
+        "```",
+        "",
+      ],
+      "\n"
+    ),
+  ],
 ];
 
 const git = Effect.fn("ArchiveTest.git")(function* (root: string, args: ReadonlyArray<string>) {
@@ -387,6 +411,18 @@ describe("goals archive", () => {
   });
 
   it.layer(TestLayer, { timeout: "60 seconds" })((it) => {
+    it("rewrites code-span citations as plain link text", () => {
+      const span = (destination: string) =>
+        InboundLink.make({ file: "a.md", line: 1, destination, form: "code-span", rewrittenTo: "https://e/x.md" });
+      const rewrite = (text: string) => Result.getOrThrow(rewriteLinksInText(text, [span("x.md")]));
+      assert.strictEqual(rewrite("see `x.md` now"), "see [x.md](https://e/x.md) now");
+      assert.strictEqual(rewrite("see ``x.md`` now"), "see [x.md](https://e/x.md) now");
+      assert.strictEqual(rewrite("[`x.md`](https://old/x.md)"), "[x.md](https://old/x.md)");
+      assert.strictEqual(rewrite("[see `x.md` here](https://old/x.md)"), "[see x.md here](https://old/x.md)");
+      assert.strictEqual(rewrite("[a](b) `x.md` [c](d)"), "[a](b) [x.md](https://e/x.md) [c](d)");
+      assertTrue(rewriteLinksInText("no citation", [span("x.md")]).pipe(Result.isFailure));
+    });
+
     it.effect("plans terminal packets in index order with keep/remove partitions and inbound links", () =>
       Effect.gen(function* () {
         const root = yield* makeFixtureRepo();
@@ -422,10 +458,41 @@ describe("goals archive", () => {
               remove: [
                 "goals/done/PLAN.md",
                 "goals/done/SPEC.md",
+                "goals/done/assets/figure.md",
                 "goals/done/ops/check.ts",
                 "goals/done/research/notes.md",
               ],
               links: [
+                [
+                  "docs/citations.md",
+                  2,
+                  "../goals/done/SPEC.md",
+                  `https://github.com/${REPO}/blob/main/goals/done/SPEC.md`,
+                ],
+                [
+                  "docs/citations.md",
+                  1,
+                  "goals/done/PLAN.md#p1",
+                  `https://github.com/${REPO}/blob/main/goals/done/PLAN.md#p1`,
+                ],
+                [
+                  "docs/citations.md",
+                  2,
+                  "goals/done/SPEC.md",
+                  `https://github.com/${REPO}/blob/main/goals/done/SPEC.md`,
+                ],
+                [
+                  "docs/citations.md",
+                  2,
+                  "goals/done/SPEC.md",
+                  `https://github.com/${REPO}/blob/main/goals/done/SPEC.md`,
+                ],
+                [
+                  "docs/directories.md",
+                  1,
+                  "goals/done/assets",
+                  `https://github.com/${REPO}/tree/main/goals/done/assets`,
+                ],
                 [
                   "docs/guide.md",
                   3,
@@ -648,7 +715,7 @@ describe("goals archive", () => {
           "# done",
           "Lifecycle: `completed-retained`",
           "Ship the done packet.",
-          "- `archive/done`",
+          "- archive/done",
           "Cache the slow scan.",
           `https://github.com/${REPO}/tree/main/goals/done`,
         ];
@@ -695,6 +762,18 @@ describe("goals archive", () => {
           )(guide)
         );
         assertTrue(Str.includes("[fenced](../goals/done/SPEC.md)")(guide));
+
+        // Citations leave as plain link text; commands, kept files and fenced text stay.
+        const citations = yield* readText(root, "docs/citations.md");
+        const blob = `https://github.com/${REPO}/blob/main/goals/done`;
+        assert.deepStrictEqual(Str.split(citations, "\n"), [
+          `Bare [goals/done/PLAN.md#p1](${blob}/PLAN.md#p1) and \`bun run beep goals/done/PLAN.md\` and \`goals/done/README.md\`.`,
+          `Wrapped [goals/done/SPEC.md](${blob}/SPEC.md) and [see goals/done/SPEC.md here](https://e/s).`,
+          "```md",
+          "`goals/done/SPEC.md`",
+          "```",
+          "",
+        ]);
 
         // Receipt, and archived packets leave the next plan.
         const receiptWritten = yield* existsAll(root, [`.beep/archive/receipts/${plan.planId}.json`]);
