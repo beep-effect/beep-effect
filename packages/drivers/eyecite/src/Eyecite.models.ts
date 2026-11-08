@@ -168,11 +168,25 @@ export class EyeciteRecognizeInput extends S.Opaque<EyeciteRecognizeInput, { rea
  * @since 0.0.0
  */
 export class EyeciteRecognizeOutput extends S.Opaque<EyeciteRecognizeOutput, { readonly brand: unique symbol }>()(
-  S.Struct({ tokens: S.Array(EyeciteRecognition).check(S.isMaxLength(100_000)), outsideProfile: S.Natural }).pipe(
-    $I.annoteSchema("EyeciteRecognizeOutput", {
-      description: "Validated raw token projection; an empty profile result is not whole-document citation absence.",
-    })
-  )
+  S.Struct({
+    tokens: S.Array(EyeciteRecognition).check(S.isMaxLength(100_000)),
+    outsideProfile: S.Natural.check(S.isLessThanOrEqualTo(100_000)),
+    excludedRanges: S.Array(EyeciteRawRange).check(S.isMaxLength(100_000)),
+  })
+    .check(
+      S.makeFilter(
+        ({ tokens, outsideProfile, excludedRanges }) =>
+          outsideProfile === excludedRanges.length && tokens.length + outsideProfile <= 100_000,
+        $I.annote("ObservationCounts", {
+          description: "Every excluded observation retains its range within the absolute candidate ceiling.",
+        })
+      )
+    )
+    .pipe(
+      $I.annoteSchema("EyeciteRecognizeOutput", {
+        description: "Validated raw token projection; an empty profile result is not whole-document citation absence.",
+      })
+    )
 ) {}
 /** Source-free driver failure, without parser messages, paths or nested causes.
  * **Example** (Inspect the recognition contract)

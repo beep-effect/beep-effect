@@ -151,12 +151,21 @@ const referenceRanges = (text: string, token: EyeciteRecognition) =>
 const Input = S.Struct({ output: outputType }).pipe(
   $I.annoteSchema("Input", { description: "Decoded bounded raw observations without source-verification authority." })
 );
+interface CitationSixFormProjectionResult {
+  readonly excludedAnchors: ReadonlyArray<VerifiedTextAnchor>;
+  readonly mentions: ReadonlyArray<CitationMention>;
+}
+const advanceSupportedToken = (tokens: ReadonlyArray<EyeciteRecognition>, from: number, start: number) => {
+  let index = from;
+  while (index < A.length(tokens) && A.getUnsafe(tokens, index).range.end <= start) index++;
+  return index;
+};
 interface CitationSixFormProjection {
   readonly project: (
     source: VerifiedSourceText,
     engineArtifact: Sha256Hex,
     raw: unknown
-  ) => Effect.Effect<ReadonlyArray<CitationMention>, CitationInputError | CitationSafetyLimitExceeded>;
+  ) => Effect.Effect<CitationSixFormProjectionResult, CitationInputError | CitationSafetyLimitExceeded>;
   readonly vocabularyVersion: CourtReporterArtifactVersion;
 }
 /** Capture the policy and canonical vocabulary identity. Each original range is
@@ -177,7 +186,8 @@ export const makeCitationSixFormProjection = Effect.fn("Citation.makeSixFormProj
   const project = Effect.fn("Citation.projectSixForms")(
     function* (source: VerifiedSourceText, engineArtifact: Sha256Hex, raw: unknown) {
       const { output } = yield* S.decodeUnknownEffect(Input)({ output: raw }).pipe(Effect.mapError(invalid));
-      if (A.length(output.tokens) > limits.candidates) return yield* timing.failSafety(safety("candidates"));
+      if (A.length(output.tokens) + A.length(output.excludedRanges) > limits.candidates)
+        return yield* timing.failSafety(safety("candidates"));
       if (A.length(output.tokens) > limits.mentions) return yield* timing.failSafety(safety("mentions"));
       const text = source.sourceText;
       let quotedUtf16 = 0;
@@ -225,7 +235,24 @@ export const makeCitationSixFormProjection = Effect.fn("Citation.makeSixFormProj
         const mention = yield* projectOne(token);
         mentions.push(mention);
       }
-      return mentions;
+      const projectExcluded = Effect.fnUntraced(function* () {
+        const anchors: Array<VerifiedTextAnchor> = [];
+        let previousEnd = 0;
+        let supportedIndex = 0;
+        for (const range of output.excludedRanges) {
+          yield* Effect.yieldNow;
+          if (range.start < previousEnd) return yield* invalid();
+          previousEnd = range.end;
+          supportedIndex = advanceSupportedToken(output.tokens, supportedIndex, range.start);
+          if (O.exists(A.get(output.tokens, supportedIndex), (token) => token.range.start < range.end))
+            return yield* invalid();
+          const anchor = yield* verify(range);
+          anchors.push(anchor);
+        }
+        return anchors;
+      });
+      const excludedAnchors = yield* projectExcluded();
+      return { mentions, excludedAnchors };
     },
     Effect.provideService(Digest.Digest, digest),
     timing.timed

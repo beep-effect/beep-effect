@@ -1,5 +1,5 @@
 import * as NodeURL from "node:url";
-import { EyeciteRecognizeInput } from "@beep/eyecite";
+import { EyeciteRecognizeInput, EyeciteRecognizeOutput } from "@beep/eyecite";
 import { recognizeEyecite } from "@beep/eyecite/recognize";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import { expect, layer } from "@effect/vitest";
@@ -8,6 +8,7 @@ import * as Effect from "effect/Effect";
 import * as SchemaBinary from "effect/encoding/SchemaBinary";
 import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const Profile = S.fromJsonString(
   S.Struct({
@@ -89,6 +90,18 @@ layer(NodeFileSystem.layer)("pinned raw recognition", (it) => {
       expect(first.type).toBe("case");
       if (first.type === "case") expect(first.page).toBeNull();
       expect(A.getUnsafe(output.tokens, 1).type).toBe("statute");
+    })
+  );
+  it.effect("retains excluded original ranges and refuses contradictory count metadata", () =>
+    Effect.gen(function* () {
+      const source = "35 U.S.C. 101; 42 U.S.C. 1983; Id.";
+      const output = yield* recognizeEyecite({ source, sourceUtf16: 100, candidates: 10 });
+      expect(output.tokens).toHaveLength(2);
+      expect(output.excludedRanges).toHaveLength(1);
+      const range = A.getUnsafe(output.excludedRanges, 0);
+      expect(Str.slice(range.start, range.end)(source)).toBe("42 U.S.C. 1983");
+      expect(output.outsideProfile).toBe(1);
+      expect(S.is(EyeciteRecognizeOutput)({ ...output, outsideProfile: 0 })).toBe(false);
     })
   );
   it.effect("uses provided codecs to preserve isolated UTF-16 surrogates on the wire", () =>

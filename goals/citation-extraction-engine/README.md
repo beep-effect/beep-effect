@@ -25,7 +25,7 @@ runtime change or API retirement is part of this delivery.
 
 The [public Layer receipt](history/evidence/2026-11-08-six-form-public-layer.md)
 records all 29 frozen inputs / 33 expected occurrences passing on Bun and Node,
-and 11 public resource/capture/regression controls. These are finite-profile
+and 16 public resource/capture/regression controls. These are finite-profile
 results, not general accuracy or deployment attestation. The implementation and
 review fixes are published in final [PR #2966](https://github.com/beep-effect/beep-effect/pull/2966).
 Required exact-head hosted checks, review, merge and retention remain pending.

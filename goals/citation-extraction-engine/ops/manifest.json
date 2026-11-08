@@ -11,7 +11,7 @@
   "packetPath": "goals/citation-extraction-engine",
   "lifecycle": "active",
   "mission": "Deliver bounded six-form citation extraction and document-local linking on supplied plain text, with schema-first semantic values, exact verified source anchors, explicit ambiguity and Effect-native resource boundaries.",
-  "statusNote": "PR #2966 is the prospective final delivery of the approved six-form contract. The actual public Layer passes the frozen 29-input/33-occurrence profile on Bun and Node and 11 public controls/regressions; its source, identity, ambiguity and isolated resource contracts are implemented. Hosted Repo Sanity, Fallow, lint, Codegen Drift and JSDoc pass on the implementation head. Required heavy checks, review interval, merge and verified retention remain pending. The closeout proposal is not completion evidence; operative lifecycle stays active until canonical completion receipts verify. Historical exhaustive rows remain superseded.",
+  "statusNote": "PR #2966 is the prospective final six-form delivery. The actual public Layer passes the frozen 29-input/33-occurrence profile on Bun and Node and 16 public controls/regressions. A controlled mixed-profile Id counterexample is repaired through source-verified excluded-observation barriers; supported mentions and authority history remain distinct. Six focused server suites pass 61 tests and the driver passes five; types/emitting builds, blocking laws/JSDoc and zero-finding Fallow audit pass. Exact-head hosted checks, review, merge and retention remain pending. The closeout proposal leaves the operative lifecycle active; no historical exhaustive row is promoted.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -62,7 +62,8 @@
     "goals/court-reporter-vocabulary/README.md",
     "goals/citation-extraction-engine/decisions/2026-11-08-select-typescript-recognizer.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-08-typescript-artifact.json",
-    "goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-public-layer.md"
+    "goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-public-layer.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-predecessor-barriers.md"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",

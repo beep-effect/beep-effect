@@ -17,7 +17,7 @@ inputs and local authority relationships. Every quote is produced through the
 published genuine source/anchor verifier, not decoded from a receipt. This is a
 finite reviewed-profile result, not a general accuracy claim.
 
-`CitationExtractorControls.test.ts` has eleven passing controls. Caller/source
+`CitationExtractorControls.test.ts` has sixteen passing controls. Caller/source
 mismatch and source prerequisite failure refuse before parser spawn. Real parser
 candidate, mention, authority and aggregate quoted-text exhaustion refuse the
 whole result after independently observed physical retirement. A diagnostic
@@ -32,15 +32,12 @@ fixtures. The block runs after a real direct recognizer call; it demonstrates
 supervisor responsiveness and retirement, not a measured pathological donor
 regex. All discovery/profile calls use the real pinned recognizer.
 
-The final two-file public suite passes 13 tests. A combined six-file run also
-passes 34 tests across public extraction, controls, legacy/new artifact identity,
-legacy public engine composition and native admission. The quoted-text,
-aggregate-only budget and blank-page regression
-controls were added after that combined run and are covered by the final
-13-test public run. The separate worker/socket/process run passes 21 tests;
-report/error contracts pass four tests. The driver has four passing tests,
-including absent-page preservation without refusing other citations. No combined
-coverage percentage is claimed.
+The current six-suite server run passes 61 tests, including both runtime profile
+checks, 16 public controls, actual worker/strict/retained resolver and callback
+session regressions. The driver passes five tests. Earlier artifact and
+report/error qualification is retained; no broad coverage percentage is claimed.
+The [predecessor repair](2026-11-08-six-form-predecessor-barriers.md) records the
+controlled mixed-profile counterexample and source-verified ordering repair.
 
 ## Identity, prerequisites and installation
 

@@ -113,12 +113,17 @@ export const recognizeEyecite = Effect.fn("Eyecite.recognize")(function* (input:
     catch: () => EyeciteFailure.make({ reason: "parser-failed" }),
   });
   if (A.length(extracted) > request.candidates) return yield* EyeciteFailure.make({ reason: "candidate-limit" });
-  const tokens = yield* Effect.try({
-    try: () => A.getSomes(A.map(extracted, project)),
+  const observations = yield* Effect.try({
+    try: () => A.map(extracted, (value) => ({ token: project(value), range: range(value.span) })),
     catch: () => EyeciteFailure.make({ reason: "invalid-result" }),
   });
+  const tokens = A.getSomes(A.map(observations, (value) => value.token));
+  const excludedRanges = A.getSomes(
+    A.map(observations, (value) => (O.isNone(value.token) ? O.some(value.range) : O.none()))
+  );
   return yield* S.decodeUnknownEffect(S.toType(EyeciteRecognizeOutput))({
     tokens,
-    outsideProfile: A.length(extracted) - A.length(tokens),
+    outsideProfile: A.length(excludedRanges),
+    excludedRanges,
   }).pipe(Effect.mapError(() => EyeciteFailure.make({ reason: "invalid-result" })));
 });

@@ -93,7 +93,7 @@ const make = Effect.fn("Citation.makeExtractor")(function* (raw: unknown) {
               })
         )
       );
-      const mentions = yield* projection
+      const { mentions, excludedAnchors } = yield* projection
         .project(source, engineArtifact, output)
         .pipe(
           Effect.mapError((error) =>
@@ -106,6 +106,7 @@ const make = Effect.fn("Citation.makeExtractor")(function* (raw: unknown) {
         verifiedSource: source,
         engineArtifact,
         mentions,
+        excludedAnchors,
         editions: [],
         limits,
       }).pipe(

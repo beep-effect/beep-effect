@@ -316,13 +316,27 @@ const resolveMentions = Effect.fn("Citation.resolveMentions")(function* (
     if (citation.type === "supra") return yield* resolveSupra(mention, citation);
     return yield* resolveReference(mention, citation);
   });
+  let excludedIndex = 0;
+  const excluded = profile === "six-form" ? snapshot.excludedAnchors : [];
+  const consumeExcluded = Effect.suspend(() => {
+    excludedIndex += 1;
+    last = O.none();
+    previous = O.none();
+    return step;
+  });
   for (const mention of mentions) {
+    while (
+      excludedIndex < A.length(excluded) &&
+      A.getUnsafe(excluded, excludedIndex).anchor.startChar < mention.anchor.anchor.startChar
+    )
+      yield* consumeExcluded;
     yield* step;
     const resolution = yield* resolveOne(mention);
     last = resolution.status === "Resolved" ? O.some(resolution.authorityId) : O.none();
     previous = O.some(resolution);
     resolutions = Chunk.append(resolutions, resolution);
   }
+  while (excludedIndex < A.length(excluded)) yield* consumeExcluded;
   return yield* S.decodeUnknownEffect(CitationDocumentType)({
     source: snapshot.source,
     engineArtifact: snapshot.engineArtifact,

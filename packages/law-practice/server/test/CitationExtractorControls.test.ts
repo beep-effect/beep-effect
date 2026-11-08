@@ -13,6 +13,7 @@ import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { expect } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
@@ -164,6 +165,32 @@ it.layer(testLayer, { excludeTestServices: true })("public extractor refusal con
       yield* expectPhysical(control.snapshot, 1);
     })
   );
+  it.effect("does not link Id past an intervening outside-profile citation", () =>
+    Effect.gen(function* () {
+      const control = yield* fixture("35 U.S.C. 101; 42 U.S.C. 1983; Id.");
+      const result = yield* control.extractor.extract(control.input);
+      expect(result.document.mentions).toHaveLength(2);
+      expect(result.report.outsideProfile).toBe(1);
+      expect(result.document.resolutions[1]?.status).toBe("Unresolved");
+      yield* expectPhysical(control.snapshot, 1);
+    })
+  );
+  for (const [text, expected] of [
+    ["42 U.S.C. 1983; 35 U.S.C. 101; Id.", ["Resolved", "Resolved"]],
+    ["35 U.S.C. 101; Id.; 42 U.S.C. 1983", ["Resolved", "Resolved"]],
+    ["35 U.S.C. 101; 42 U.S.C. 1983; Id.; Id.", ["Resolved", "Unresolved", "Unresolved"]],
+    ["35 U.S.C. 101; 42 U.S.C. 1983; 35 U.S.C. 102; Id.", ["Resolved", "Resolved", "Resolved"]],
+  ] as const) {
+    it.effect(`retains source-order predecessor semantics: ${text}`, () =>
+      Effect.gen(function* () {
+        const control = yield* fixture(text);
+        const result = yield* control.extractor.extract(control.input);
+        expect(A.map(result.document.resolutions, (value) => value.status)).toEqual(expected);
+        expect(result.report.outsideProfile).toBe(1);
+        yield* expectPhysical(control.snapshot, 1);
+      })
+    );
+  }
   it.effect("maps a real late worker diagnostic to a source-free public refusal after retirement", () =>
     Effect.gen(function* () {
       const control = yield* fixture("35 U.S.C. 101", {

@@ -32,6 +32,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
+import * as Struct from "effect/Struct";
 import * as Tuple from "effect/Tuple";
 import { prepareCitationCallbackInput } from "./CallbackInput.ts";
 import {
@@ -253,7 +254,9 @@ export class CitationResolutionCallbacks extends Context.Service<
   }
 >()($I`CitationResolutionCallbacks`) {}
 const SessionState = S.Struct({
-  ...PreparedCitationResolution.fields,
+  // Excluded observations belong to strict six-form linking; retained callback
+  // sessions preserve their existing fields and serialization.
+  ...Struct.omit(PreparedCitationResolution.fields, ["excludedAnchors"]),
   fulls: S.Array(CitationCallbackFull),
   groups: S.Array(CitationCallbackEntry),
   decisions: S.Array(CitationCallbackDecision),
