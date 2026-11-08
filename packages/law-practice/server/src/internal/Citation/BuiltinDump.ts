@@ -9,6 +9,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -33,7 +34,7 @@ const Metadata = S.toType(S.Record(S.String, S.Union([S.Null, CitationPythonUnic
 const scalar = (value: CitationTokenSeed["groups"][string] | number): CitationDumpScalar =>
   value === null
     ? CitationDumpScalar.cases.None.make({})
-    : typeof value === "number"
+    : P.isNumber(value)
       ? CitationDumpScalar.cases.Integer.make({ value })
       : CitationDumpScalar.cases.Text.make({ value: CitationPythonUnicodeStorage.make(value) });
 /** Capture original dataclass field order, then project actual native parser models.

@@ -85,6 +85,16 @@ roughly 11 minutes after termination. This exceeded the former
 decision subsequently returned the pool to Spot; the interruption evidence
 remains relevant to cost per successful completion.
 
+## GitHub release-download outages
+
+`github.com/<repo>/releases/download` can return 504 for minutes while the
+status page stays green and the REST API keeps working, as it did on 2026-11-08.
+Jobs survive it through two fallbacks, each of which logs a `::warning::`:
+`.github/actions/fetch-beep-ci` retries the pinned binary through the REST asset
+route and still checks the pinned sha256, and `.github/actions/setup-bun` installs
+the npm registry build and checks the registry's integrity value. Use the local
+`setup-bun` action rather than `oven-sh/setup-bun` directly.
+
 ## Automatic runner-loss rerun
 
 `.github/workflows/rerun-runner-loss.yml` re-runs jobs that failed because

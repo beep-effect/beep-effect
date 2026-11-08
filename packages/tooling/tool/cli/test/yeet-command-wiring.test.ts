@@ -147,7 +147,8 @@ describe("yeet final-check command", () => {
     });
     const finalCheck = (args: ReadonlyArray<string>) =>
       runYeetCommand(["final-check", ...args]).pipe(
-        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({}))
+        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})),
+        Effect.provideService(ComputeProfileProbe, workstationProfileProbe)
       );
 
     it.effect(

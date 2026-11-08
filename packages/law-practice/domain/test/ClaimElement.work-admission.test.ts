@@ -33,7 +33,9 @@ const inputOf = (text: string) =>
     ],
   });
 
-describe("source compilation finite-work admission", () => {
+// Run exhaustive sweeps sequentially so concurrent tests do not share one worker
+// while each test's watchdog runs. Every insufficient allowance remains covered.
+describe("source compilation finite-work admission", { concurrent: false }, () => {
   for (const text of texts)
     it.effect(
       `declines every insufficient structural allowance without publishing a partial plan: ${text}`,

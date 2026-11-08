@@ -911,10 +911,7 @@ jobs:
       # test runtime.
       - name: Setup Bun for coverage comparison
         if: steps.lane-gate.outputs.should_run == 'true'
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version-file: .bun-version
-          no-cache: "true"
+        uses: ./.github/actions/setup-bun
 
       - name: Setup Node.js for coverage comparison
         if: steps.lane-gate.outputs.should_run == 'true'
@@ -1718,10 +1715,7 @@ jobs:
 
       # The hosted settings policy step below runs `bun run beep ci ...`.
       - name: Setup Bun for hosted settings policy
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version-file: .bun-version
-          no-cache: "true"
+        uses: ./.github/actions/setup-bun
 
       - name: Install dependencies for hosted settings policy
         run: bun install --frozen-lockfile --ignore-scripts
@@ -1847,10 +1841,7 @@ jobs:
       # The repo CLI only dispatches Docker Semgrep, so it needs Bun and a
       # script-free install: no Node, lifecycle scripts, Turbo or secrets.
       - name: Setup Bun for SAST dispatch
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
-        with:
-          bun-version-file: .bun-version
-          no-cache: "true"
+        uses: ./.github/actions/setup-bun
 
       - name: Install dependencies for SAST dispatch
         run: bun install --frozen-lockfile --ignore-scripts

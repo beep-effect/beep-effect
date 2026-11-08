@@ -1,13 +1,11 @@
+import { sourceLowerBound, sourceSelectionFrameMember } from "@beep/law-practice-domain/test";
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
-import {
-  sourceLowerBound,
-  sourceSelectionFrameMember,
-} from "../src/values/ClaimElement/ClaimClauseRole.sourceQuery.ts";
 import controls from "./fixtures/claim-element/finite-clause-source-plans.json" with { type: "json" };
 import { decomposeFiniteSourceFixture } from "./helpers/ClaimElementFiniteSource.ts";
 
@@ -71,7 +69,7 @@ describe("bounded source queries", () => {
         ).pipe(O.getOrThrow);
         const owner = O.flatMap(argument.owner, (ref) => A.get(plan.roles.certificates, ref.ordinal - 1));
         const element = A.get(plan.elements, frame.publicOwner - 1);
-        assert.isTrue(O.isSome(owner));
+        owner.pipe(O.isSome, assertTrue);
         const member = pipe(
           frame,
           sourceSelectionFrameMember(element, selection.core, owner, () => true)
