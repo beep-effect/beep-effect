@@ -1986,30 +1986,26 @@ const scopedElementOf =
 const compositionVerbPattern =
   /\b(?:further\s+)?(?:comprises|comprise|comprising|includes|include|including|has|have|having)\s+(?=(?:an?|at least one|one or more)\s)/iu;
 const enumerationItemPattern = /^(?:and\s+)?(?:an?|at least one|one or more)\s/iu;
+const enumerationMarkPattern =
+  /[()[\]]|,\s+and\s+(?=(?:an?|at least one|one or more)\s)|,\s+(?=(?:an?|at least one|one or more)\s)|\s+and\s+(?=(?:an?|at least one|one or more)\s)/giu;
 // An item boundary is a top-level comma, or "and", directly before a determiner-led item.
 const enumerationItems = (list: Span): ReadonlyArray<Span> => {
-  const items = A.empty<Span>();
-  let depth = 0;
-  let from = 0;
-  for (let at = 0; at < list.text.length; at++) {
-    const mark = list.text.charAt(at);
-    if (mark === "(" || mark === "[") depth++;
-    if (mark === ")" || mark === "]") depth--;
-    if (depth > 0) continue;
-    const tail = Str.slice(at)(list.text);
-    const separator = O.getOrElse(
-      O.map(Str.match(/^(?:,\s+and\s+|,\s+|\s+and\s+)(?=(?:an?|at least one|one or more)\s)/iu)(tail), (match) =>
-        Str.length(match[0])
-      ),
-      () => 0
-    );
-    if (separator === 0) continue;
-    items.push(sliceSpan(list, from, at));
-    from = at + separator;
-    at += separator - 1;
-  }
-  items.push(sliceSpan(list, from));
-  return items;
+  const split = A.reduce(
+    matchesIn(enumerationMarkPattern)(list),
+    { depth: 0, from: 0, items: A.empty<Span>() },
+    (state, mark) => {
+      if (mark.text === "(" || mark.text === "[") return { ...state, depth: state.depth + 1 };
+      if (mark.text === ")" || mark.text === "]") return { ...state, depth: state.depth - 1 };
+      if (state.depth > 0) return state;
+      const at = mark.start - list.start;
+      return {
+        ...state,
+        from: at + Str.length(mark.text),
+        items: A.append(state.items, sliceSpan(list, state.from, at)),
+      };
+    }
+  );
+  return A.append(split.items, sliceSpan(list, split.from));
 };
 // A subject that composes three or more determiner-led items is a container of those items.
 const expandEnumeration = (node: ColonScopeNode): ReadonlyArray<ColonScopeNode> => {

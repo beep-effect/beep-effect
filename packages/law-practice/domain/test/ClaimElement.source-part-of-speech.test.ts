@@ -226,6 +226,54 @@ describe("parallel coordinate fallback elements", () => {
     })
   );
 
+  it.effect("nests a composed list of three or more items under its subject", () =>
+    Effect.gen(function* () {
+      const text = refused("the rod comprises a plate, a cover (2), and a base");
+      const tree = yield* treeOf(text, true);
+      const kindOf = (quote: string) =>
+        O.map(
+          A.findFirst(tree.elements, ({ anchor }) => anchor.quote === quote),
+          ({ kind }) => kind
+        );
+      assert.deepStrictEqual(spansOf(tree), [
+        "the rod comprises a plate, a cover (2), and a base",
+        "a plate",
+        "a cover (2)",
+        "a base",
+        "stores the signal",
+      ]);
+      assert.deepStrictEqual(kindOf("the rod comprises a plate, a cover (2), and a base"), O.some("limitation"));
+      const edges = A.filter(tree.edges, ({ kind }) => kind === "part-of");
+      assert.deepStrictEqual(
+        A.map(edges, (edge) => (edge.kind === "part-of" ? edge.parent : "")),
+        ["1", "1.a", "1.a", "1.a", "1"]
+      );
+    })
+  );
+
+  it.effect("keeps a two-object composition flat and does not nest without evidence", () =>
+    Effect.gen(function* () {
+      const twoObjects = refused("the rod comprises a plate and a cover");
+      const threeObjects = refused("the rod comprises a plate, a cover, and a base");
+      const flat = yield* treeOf(twoObjects, true);
+      const evidenceFree = yield* treeOf(threeObjects, false);
+      assert.deepStrictEqual(spansOf(flat), ["the rod comprises a plate and a cover", "stores the signal"]);
+      assert.deepStrictEqual(spansOf(evidenceFree), [
+        "the rod comprises a plate, a cover, and a base",
+        "stores the signal",
+      ]);
+    })
+  );
+
+  it.effect("does not nest when the subject holds a comma or an item lacks a determiner", () =>
+    Effect.gen(function* () {
+      const commaSubject = yield* treeOf(refused("the rod, as built, comprises a plate, a cover, and a base"), true);
+      const bareItem = yield* treeOf(refused("the rod comprises a plate, covers, and a base"), true);
+      assert.isFalse(A.contains(spansOf(commaSubject), "a cover"));
+      assert.isFalse(A.contains(spansOf(bareItem), "a plate"));
+    })
+  );
+
   it.effect("leaves the evidence-free segmentation unchanged", () =>
     Effect.gen(function* () {
       const tree = yield* treeOf(refused("a seat bottom, a seat back"), false);
