@@ -20,6 +20,8 @@ runs:
         BEEP_CI_RELEASE_TAG: beep-ci-d15ecf4ca610
         BEEP_CI_SHA256: 91f0bb418966262151d62c8f34c64b3f5982cac9f0b4a4e8d98291f932f46ff0
         BEEP_CI_REPOSITORY: ${{ github.repository }}
+        BEEP_CI_API_URL: ${{ github.api_url }}
+        BEEP_CI_TOKEN: ${{ github.token }}
       run: |
         set -euo pipefail
         if [[ "$BEEP_CI_RELEASE_TAG" == *PENDING* || ! "$BEEP_CI_SHA256" =~ ^[0-9a-f]{64}$ ]]; then
@@ -37,9 +39,27 @@ runs:
         if [[ ! -f "$binary" ]] || ! verify; then
           mkdir -p "$bin_dir"
           rm -f "$binary"
-          curl --fail --silent --show-error --location --retry 3 --retry-all-errors --max-time 120 \
+          # github.com/.../releases/download can 504 for minutes while the REST
+          # asset route stays up (2026-11-08). The sha256 pin below judges the
+          # bytes, so the route they arrived on does not matter.
+          if ! curl --fail --silent --show-error --location --retry 3 --retry-all-errors --max-time 120 \
             --output "$binary" \
-            "https://github.com/${BEEP_CI_REPOSITORY}/releases/download/${BEEP_CI_RELEASE_TAG}/beep-linux-x64"
+            "https://github.com/${BEEP_CI_REPOSITORY}/releases/download/${BEEP_CI_RELEASE_TAG}/beep-linux-x64"; then
+            echo "::warning::fetch-beep-ci: the release download failed; retrying through the REST asset route."
+            release_api="${BEEP_CI_API_URL}/repos/${BEEP_CI_REPOSITORY}/releases"
+            asset_id="$(
+              curl --fail --silent --show-error --location --retry 3 --retry-all-errors --max-time 60 \
+                --header "Authorization: Bearer ${BEEP_CI_TOKEN}" \
+                --header "Accept: application/vnd.github+json" \
+                "${release_api}/tags/${BEEP_CI_RELEASE_TAG}" |
+                jq --exit-status --raw-output '.assets[] | select(.name == "beep-linux-x64") | .id'
+            )"
+            curl --fail --silent --show-error --location --retry 3 --retry-all-errors --max-time 120 \
+              --header "Authorization: Bearer ${BEEP_CI_TOKEN}" \
+              --header "Accept: application/octet-stream" \
+              --output "$binary" \
+              "${release_api}/assets/${asset_id}"
+          fi
           if ! verify; then
             rm -f "$binary"
             echo "::error::fetch-beep-ci: ${BEEP_CI_RELEASE_TAG}/beep-linux-x64 does not match the pinned sha256."

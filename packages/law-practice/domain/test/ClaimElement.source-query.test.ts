@@ -72,7 +72,7 @@ describe("bounded source queries", () => {
         ).pipe(O.getOrThrow);
         const owner = O.flatMap(argument.owner, (ref) => A.get(plan.roles.certificates, ref.ordinal - 1));
         const element = A.get(plan.elements, frame.publicOwner - 1);
-        assertTrue(owner.pipe(O.isSome));
+        owner.pipe(O.isSome, assertTrue);
         const member = pipe(
           frame,
           sourceSelectionFrameMember(element, selection.core, owner, () => true)

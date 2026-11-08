@@ -66,9 +66,9 @@ describe("patent content metadata", () => {
     assert.strictEqual(extractPatentAbstract(content), abstract);
     const all = parsePatentSections({ content, requestedSections: ["all"] });
     assertSome(all.abstract, abstract);
-    assertTrue(all.description.pipe(O.isSome));
-    assertTrue(all.drawings.pipe(O.isSome));
-    assertTrue(all.citations.pipe(O.isSome));
+    all.description.pipe(O.isSome, assertTrue);
+    all.drawings.pipe(O.isSome, assertTrue);
+    all.citations.pipe(O.isSome, assertTrue);
     const claims = parsePatentSections({ content, requestedSections: ["claims"], maxCharsPerSection: 20 });
     assertNone(claims.abstract);
     assertNone(claims.description);
