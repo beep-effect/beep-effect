@@ -8,6 +8,7 @@ import * as Http from "@alchemy.run/domain/Http";
 import { Correlation } from "@alchemy.run/domain/Telemetry";
 import * as V from "@beep/documents-domain/aggregates/VaultSync";
 import { VaultSyncApi } from "@beep/documents-use-cases/aggregates/VaultSync";
+import { getSomesStruct } from "@beep/utils/Option";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
@@ -41,20 +42,20 @@ const destinationOf = (payload: unknown) =>
 // The boundary span of one Api call: commands are `<Command>`, reads are `<View>.<mode>`. Only
 // known literals become attributes; the Session adds the transport and correlation id once resolved.
 const traceApiCall = <A, E, R>(self: Effect.Effect<A, E, R>, tag: string, payload: unknown) => {
-  const destination = R.getSomes({ [VaultSyncAttribute.destinationId]: destinationOf(payload) });
+  const destination = getSomesStruct({ [VaultSyncAttribute.destinationId]: destinationOf(payload) });
   const [view, mode] = Str.split(".")(tag);
   const traced = annotateVaultSyncOutcome(self);
   return P.isUndefined(mode)
     ? Effect.withSpan(traced, "VaultSyncApi.command", {
         attributes: {
           ...destination,
-          ...R.getSomes({ [VaultSyncAttribute.command]: O.liftPredicate(tag, S.is(VaultSyncApiCommand)) }),
+          ...getSomesStruct({ [VaultSyncAttribute.command]: O.liftPredicate(tag, S.is(VaultSyncApiCommand)) }),
         },
       })
     : Effect.withSpan(traced, "VaultSyncApi.read", {
         attributes: {
           ...destination,
-          ...R.getSomes({
+          ...getSomesStruct({
             [VaultSyncAttribute.view]: O.liftPredicate(view, S.is(VaultSyncApiView)),
             [VaultSyncAttribute.readMode]: O.liftPredicate(mode, S.is(VaultSyncReadMode)),
           }),

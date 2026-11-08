@@ -144,3 +144,13 @@ Measure startup, frame transfer and validation separately; preserve native exit
 and cleanup evidence. Any repair must keep the original failed pass, its unknown
 outcomes and all resource charges intact. Synthetic transport success would
 establish transport behavior only, with no source-fidelity or reference admission.
+
+## Decision lane flag: a `goals/` branch name reads as a broken path
+
+Recording a decision with the lane flag set to this branch rendered the branch
+name as inline code in the SPEC decision block. Hosted Lint Policy then failed
+`knowledge:semantic-delta` with one introduced `broken-tracked-path` finding,
+because a `goals/` prefix looks like a tracked repo path. Local package checks and
+cheap gates do not run that scan. Dropping the optional lane field and regenerating
+the block cleared it. The decisions tool could reject or differently render a lane
+value that resembles a repo path.

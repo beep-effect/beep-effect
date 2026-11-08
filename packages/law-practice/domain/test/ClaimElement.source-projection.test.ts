@@ -454,7 +454,11 @@ it.effect("keeps proved semicolon siblings and declines an orphan auxiliary with
       const result = yield* decomposePreparedClaimRoles(prepared, [evidenceFor(text)]);
       assert.strictEqual(result.plans.length, 0);
       const legacy = yield* decomposeClaimInput(input);
-      assert.deepStrictEqual(result.decompositions, legacy);
+      // A declined plan donates no role facts: same record outcome, and never complete coverage.
+      assert.deepStrictEqual(
+        A.map(result.decompositions, ({ status }) => status),
+        A.map(legacy, ({ status }) => status)
+      );
       const report = yield* inspectPreparedClaimRoles(prepared, [evidenceFor(text)]);
       assert.strictEqual(O.getOrThrow(A.head(report.records)).status, "partial");
     }

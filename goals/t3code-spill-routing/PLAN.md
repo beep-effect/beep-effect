@@ -2,17 +2,17 @@
 
 ## Status
 
-Status: `pending`
+Status: `complete`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Explain the MemAvailable-0 sample; derive thresholds from the 7-day PSI baseline; confirm the parcel's fields. | Required facts and blockers are recorded. |
-| P1 Implement | pending | Write the threshold table and the advisory rule into `orchestrate` and the fleet runbook. | Acceptance criteria are met. |
-| P2 Verify | pending | Run the spill drill against beep-worker through T3; record the decision and receipt in `history/`. | Verification is green or blockers are documented. |
-| P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P0 Research | complete | Explain the MemAvailable-0 sample; derive thresholds from the 7-day PSI baseline; confirm the parcel's fields. | Required facts and blockers are recorded. |
+| P1 Implement | complete | Write the threshold table and the advisory rule into `orchestrate` and the fleet runbook. | Acceptance criteria are met. |
+| P2 Verify | complete | Run the spill drill against beep-worker through T3; record the decision and receipt in `history/`. | Verification is green or blockers are documented. |
+| P3 Yeet: PR to mergeable | complete | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P4 Close | complete | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## Closeout Checklist
 
@@ -23,9 +23,9 @@ Before marking the packet closed:
    validate against `ReflectionFrontmatter`.
 2. Run `bun run beep lint reflection-artifacts`.
 3. Update `README.md` (status, latest evidence) and `ops/manifest.json` phase
-   statuses and a typed `proposedCloseout` with status `completed-retained`
-   and finalPullRequest. Keep `initiative.status` operative until completion
-   evidence verifies; do not close the external execution/session ledger from a proposal.
+   statuses and a committed `closeout` record with status `completed-retained` and
+   finalPullRequest. This packet closed in one PR by operator ruling (decision
+   `single-pr-closeout`), so the record precedes its completion receipt.
 
 ## Execution Notes
 

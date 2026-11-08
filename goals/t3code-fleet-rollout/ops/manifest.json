@@ -4,13 +4,13 @@
     "id": "t3code-fleet-rollout",
     "packetId": "goal-packet/v1:7b932a2f77c9b572d615b630ff07f25b6cdb18339a75497a0984496d07dde1b2",
     "title": "T3 Code Fleet Rollout",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-01",
-    "updated": "2026-11-07",
+    "updated": "2026-11-08",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/t3code-fleet-rollout",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Run the fork build of T3 Code as a tailnet-only systemd service on every live worker host, distributed by a DankStation publish and a hash-verified host pull, linked hub-and-spoke to DankStation.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -23,7 +23,14 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/goals_t3code-goals-closeout-e4eb8a5e9991/verdict.json",
+        "gating": true
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -65,12 +72,12 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -84,5 +91,9 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2985
+  }
 }

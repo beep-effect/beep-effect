@@ -27,6 +27,7 @@ import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { PatentClaim } from "../PatentDocument/PatentDocument.model.ts";
 import { qualifyClaimInput } from "../PatentDocument/PatentDocument.normalizer.ts";
 import { compileClaimClauseRoles } from "./ClaimClauseRole.behavior.ts";
@@ -310,7 +311,11 @@ const separatorPattern = /[,;()[\]]|:(?=\s|$)/gu;
 const clauseStartPattern =
   /^(?:and\s+|or\s+)?(?:wherein\b|(?:the|said|an?|at least one|one or more)\s+[^,;]*?\b(?:is|are|has|have|comprises|includes|forms|acts|passes|describes|generates)\b|(?:creating|encoding|generating|transmitting|receiving|flushing|placing|threading|stretching|turning)\b)/iu;
 
-const splitAtSeparators = (body: Span, separators: ReadonlyArray<Span>): ReadonlyArray<Span> => {
+const splitAtSeparators = (
+  body: Span,
+  separators: ReadonlyArray<Span>,
+  parallelComma: (head: string, tail: string) => boolean = () => false
+): ReadonlyArray<Span> => {
   const split = A.reduce(separators, { depth: 0, from: 0, segments: A.empty<Span>() }, (state, mark) =>
     Match.value(mark.text).pipe(
       Match.whenOr("(", "[", () => ({ ...state, depth: state.depth + 1 })),
@@ -319,7 +324,9 @@ const splitAtSeparators = (body: Span, separators: ReadonlyArray<Span>): Readonl
         const at = mark.start - body.start;
         const end = separator === ":" ? at + 1 : at;
         const isClauseComma =
-          separator !== "," || O.isSome(Str.match(clauseStartPattern)(Str.trimStart(Str.slice(at + 1)(body.text))));
+          separator !== "," ||
+          O.isSome(Str.match(clauseStartPattern)(Str.trimStart(Str.slice(at + 1)(body.text)))) ||
+          parallelComma(Str.slice(state.from, at)(body.text), Str.trimStart(Str.slice(at + 1)(body.text)));
         return state.depth > 0 || !isClauseComma
           ? state
           : { depth: 0, from: at + 1, segments: A.append(state.segments, sliceSpan(body, state.from, end)) };
@@ -335,16 +342,41 @@ const isStepLabelSeparator = (body: Span, mark: Span): boolean =>
   O.isSome(
     Str.match(/(?:^|[;:])\s*(?:(?:and|or)\s+)?step\s+[0-9]+$/iu)(Str.slice(0, mark.start - body.start)(body.text))
   );
-const splitInspectionBody = (body: Span): ReadonlyArray<Span> => {
-  const quotations = matchesIn(quotedPhrasePattern)(body);
-  const separators = A.filter(
-    matchesIn(separatorPattern)(body),
-    (mark) =>
-      !isStepLabelSeparator(body, mark) &&
-      !A.some(quotations, (quote) => mark.start >= quote.start && mark.start < quote.start + Str.length(quote.text))
+const nominalOpeningPattern = /^(?:and\s+)?(?:an?|the|said|each|at least one|one or more)\s/iu;
+const gerundOpeningPattern = /^\p{L}+ing\s/iu;
+const openListPattern = /\b(?:including|comprising|having|consisting|that|which|wherein|when|if|between|from|of)\b/iu;
+const predicatePattern = /\b(?:is|are|was|were|has|have|comprises|includes)\b/iu;
+const absoluteClausePattern = /^(?:said|the)\s[^,;]*?\b(?:being|having|comprising)\b/iu;
+// A comma opens a new coordinate when the following text starts the same way as the current one.
+const parallelCoordinate = (head: string, tail: string): boolean => {
+  const opening = Str.trimStart(head);
+  // A comma left inside the current coordinate means its internal structure is unresolved.
+  if (Str.includes(",")(opening) || O.isSome(Str.match(absoluteClausePattern)(tail))) return false;
+  return (
+    (O.isSome(Str.match(nominalOpeningPattern)(opening)) &&
+      O.isSome(Str.match(nominalOpeningPattern)(tail)) &&
+      O.isNone(Str.match(openListPattern)(opening)) &&
+      O.isNone(Str.match(predicatePattern)(opening))) ||
+    (O.isSome(Str.match(gerundOpeningPattern)(opening)) && O.isSome(Str.match(gerundOpeningPattern)(tail)))
   );
-  return splitAtSeparators(body, separators);
 };
+const splitInspectionBodyWith =
+  (parallelComma?: (head: string, tail: string) => boolean) =>
+  (body: Span): ReadonlyArray<Span> => {
+    const quotations = matchesIn(quotedPhrasePattern)(body);
+    const separators = A.filter(
+      matchesIn(separatorPattern)(body),
+      (mark) =>
+        !isStepLabelSeparator(body, mark) &&
+        !A.some(quotations, (quote) => mark.start >= quote.start && mark.start < quote.start + Str.length(quote.text))
+    );
+    return splitAtSeparators(body, separators, parallelComma);
+  };
+const splitInspectionBody = splitInspectionBodyWith();
+const splitParallelInspectionBody = (body: Span): ReadonlyArray<Span> =>
+  A.filter(splitInspectionBodyWith(parallelCoordinate)(body), (span) =>
+    O.isNone(Str.match(/^\s*(?:and|or)\s*$/iu)(span.text))
+  );
 
 const cleanSegment = flow(
   trimSpan,
@@ -650,6 +682,7 @@ class NominalBoundaryPlan extends S.Opaque<NominalBoundaryPlan, { readonly brand
       "possessive-plural-quantity",
       "possessive-regular-singular",
       "possessive-known-plural",
+      "source-part-of-speech",
     ]),
   }).pipe(
     $I.annoteSchema("NominalBoundaryPlan", {
@@ -877,7 +910,7 @@ class InspectionSourceRole extends S.Opaque<InspectionSourceRole, { readonly bra
   S.Struct({
     consumedStart: S.Int,
     resumeAt: S.Int,
-    reason: S.Literals(["reciprocal-argument", "relational-link", "licensed-infinitive"]),
+    reason: S.Literals(["reciprocal-argument", "relational-link", "licensed-infinitive", "source-part-of-speech"]),
   }).pipe(
     $I.annoteSchema("InspectionSourceRole", {
       description:
@@ -1047,6 +1080,7 @@ const relationalNominalPlan = (
 };
 type LexicalGrammar = {
   readonly coordinatedPredicates: boolean;
+  readonly boundBareHead: (tokens: ReadonlyArray<Span>, index: number, end: number) => number;
   readonly plan: NominalPlanner;
   readonly functionalAt: (span: Span) => boolean;
   readonly refineTerms: (span: Span, terms: ReadonlyArray<EncodedTerm>) => ReadonlyArray<EncodedTerm>;
@@ -1058,6 +1092,7 @@ type LexicalGrammar = {
 };
 const strictLexicalGrammar: LexicalGrammar = {
   coordinatedPredicates: false,
+  boundBareHead: (_tokens, _index, end) => end,
   plan: legacyNominalPlan,
   functionalAt: () => false,
   ignoreAt: () => O.none(),
@@ -1065,6 +1100,7 @@ const strictLexicalGrammar: LexicalGrammar = {
 };
 const inspectionLexicalGrammar: LexicalGrammar = {
   coordinatedPredicates: true,
+  boundBareHead: (_tokens, _index, end) => end,
   functionalAt: () => false,
   refineTerms: (_span, terms) => terms,
   plan: (tokens, index, headStart, quotations) =>
@@ -1134,8 +1170,9 @@ const scanStep =
       determinerAt(tokens, index),
       O.match({
         onNone: () => {
-          const head = headAt(tokens, index, quotations, grammar.coordinatedPredicates);
-          const end = index + head.length;
+          const scanned = headAt(tokens, index, quotations, grammar.coordinatedPredicates);
+          const end = grammar.boundBareHead(tokens, index, index + scanned.length);
+          const head = A.take(scanned, end - index);
           const resumeAt = headResumeAt(tokens, index, end, grammar.coordinatedPredicates);
           const previous = O.map(A.get(tokens, index - 1), ({ text }) => text);
           const isReferenceNumber =
@@ -1947,13 +1984,10 @@ const scopedElementOf =
       : element;
   };
 const inspectionTreeInputFor =
-  (grammar: LexicalGrammar): typeof treeInput =>
+  (grammar: LexicalGrammar, split: (body: Span) => ReadonlyArray<Span> = splitInspectionBody): typeof treeInput =>
   (claim, parts) => {
     const root = `${claim.claimNumber}`;
-    const segments = A.filter(
-      bodySegments(claim, parts.body, splitInspectionBody),
-      (span) => !transparentColonFrame(span)
-    );
+    const segments = A.filter(bodySegments(claim, parts.body, split), (span) => !transparentColonFrame(span));
     const nodes = colonNodesOf(root, segments);
     const elements = A.prepend(
       A.map(nodes, scopedElementOf(claim.claimText, root, grammar)),
@@ -1971,6 +2005,110 @@ const inspectionTreeInputFor =
   };
 
 const inspectionTreeInput = inspectionTreeInputFor(inspectionLexicalGrammar);
+
+const sourceNominalTags = HashSet.make("NOUN", "PROPN");
+const sourceModifierTags = HashSet.make("ADJ", "NUM");
+const sourceCoordinators = HashSet.make("and", "or", "and/or");
+const participialModifierPattern = /(?:ing|ed)$/u;
+
+// Bound nominal candidates with the claim's aligned part-of-speech facts. A fact applies only
+// when both source offsets match, so a token the provider split differently keeps its
+// historical boundary instead of receiving a guessed tag.
+const sourcePartOfSpeechGrammar = (facts: ReadonlyArray<ClaimLexicalToken>): LexicalGrammar => {
+  const tagBySpan = HashMap.fromIterable(
+    A.map(facts, (fact) => Tuple.make(`${fact.anchor.startChar}:${fact.anchor.endChar}`, fact.pos))
+  );
+  const tagAt = (tokens: ReadonlyArray<Span>, index: number): O.Option<string> =>
+    O.flatMap(A.get(tokens, index), ({ start, text }) =>
+      HashMap.get(tagBySpan, `${start}:${start + Str.length(text)}`)
+    );
+  const tagged = (tokens: ReadonlyArray<Span>, index: number, tags: HashSet.HashSet<string>): boolean =>
+    O.exists(tagAt(tokens, index), (tag) => HashSet.has(tags, tag));
+  const nominalAt = (tokens: ReadonlyArray<Span>, index: number): boolean => tagged(tokens, index, sourceNominalTags);
+  const modifierAt = (tokens: ReadonlyArray<Span>, index: number): boolean => tagged(tokens, index, sourceModifierTags);
+  const participleAt = (tokens: ReadonlyArray<Span>, index: number): boolean =>
+    tagged(tokens, index, HashSet.make("VERB")) &&
+    O.isSome(Str.match(participialModifierPattern)(tokenWordAt(tokens, index))) &&
+    (nominalAt(tokens, index + 1) || modifierAt(tokens, index + 1));
+  const adverbAt = (tokens: ReadonlyArray<Span>, index: number): boolean =>
+    tagged(tokens, index, HashSet.make("ADV")) &&
+    (modifierAt(tokens, index + 1) ||
+      tagged(tokens, index + 1, HashSet.make("VERB")) ||
+      HashSet.has(sourceCoordinators, tokenWordAt(tokens, index + 1)));
+  const premodifierAt = (tokens: ReadonlyArray<Span>, index: number): boolean =>
+    modifierAt(tokens, index) || participleAt(tokens, index) || adverbAt(tokens, index);
+  // Walk determiner-introduced premodifiers and the nominal run; a coordinator continues only
+  // between premodifiers, so "the left and right posts" stays one mention.
+  const coordinatedPremodifierAt = (tokens: ReadonlyArray<Span>, at: number, start: number): boolean =>
+    at > start &&
+    HashSet.has(sourceCoordinators, tokenWordAt(tokens, at)) &&
+    premodifierAt(tokens, at - 1) &&
+    (premodifierAt(tokens, at + 1) || nominalAt(tokens, at + 1));
+  const nominalEnd = (tokens: ReadonlyArray<Span>, start: number): O.Option<number> => {
+    let at = start;
+    while (premodifierAt(tokens, at) || coordinatedPremodifierAt(tokens, at, start)) at++;
+    if (!nominalAt(tokens, at)) return O.none();
+    while (nominalAt(tokens, at)) at++;
+    return O.some(at);
+  };
+  // A parenthetical reference numeral attaches to the noun before it, whatever tag that noun received.
+  const referenceNumeralAt = (tokens: ReadonlyArray<Span>, at: number): boolean =>
+    tokenWordAt(tokens, at) === "(" && O.isSome(Str.match(/^[0-9]/u)(tokenWordAt(tokens, at + 1)));
+  // A tagged non-nominal word directly after a nominal ends the mention. Compounds the
+  // provider mistags as verbs stay whole because a nominal continues immediately after them.
+  const overrunAt = (tokens: ReadonlyArray<Span>, at: number): boolean => {
+    if (!nominalAt(tokens, at - 1) || tokenWordAt(tokens, at) === "of" || referenceNumeralAt(tokens, at + 1))
+      return false;
+    const next = nominalAt(tokens, at + 1);
+    const nextModifier = modifierAt(tokens, at + 1);
+    return O.exists(tagAt(tokens, at), (tag) => {
+      if (tag === "VERB") {
+        const word = tokenWordAt(tokens, at);
+        const inflected = O.isSome(Str.match(/(?:s|ed|ing)$/u)(word));
+        const pluralSubject = Str.endsWith("s")(tokenWordAt(tokens, at - 1));
+        return (
+          !next &&
+          (inflected || pluralSubject) &&
+          !(nextModifier && O.isSome(Str.match(participialModifierPattern)(word)))
+        );
+      }
+      if (tag === "ADJ") return !next && !nextModifier && tagged(tokens, at + 1, HashSet.make("ADP", "PART"));
+      return HashSet.has(HashSet.make("AUX", "ADV", "ADP", "PRON", "SCONJ", "PART", "DET"), tag);
+    });
+  };
+  const boundedEnd = (tokens: ReadonlyArray<Span>, start: number, end: number): number => {
+    for (let at = start + 1; at < end; at++) if (overrunAt(tokens, at)) return at;
+    return end;
+  };
+  return {
+    ...inspectionLexicalGrammar,
+    functionalAt: (span) => {
+      const tokens = tokensIn(span);
+      return tagged(tokens, 0, HashSet.make("VERB")) && Str.endsWith("ing")(tokenWordAt(tokens, 0));
+    },
+    boundBareHead: (tokens, index, end) => {
+      const bounded = boundedEnd(tokens, index, end);
+      for (let at = index; at < bounded; at++) if (nominalAt(tokens, at)) return bounded;
+      return O.isSome(tagAt(tokens, index)) ? index : bounded;
+    },
+    plan: (tokens, index, headStart, quotations) => {
+      const base = inspectionLexicalGrammar.plan(tokens, index, headStart, quotations);
+      if (base.reason !== "legacy") return base;
+      const extended =
+        base.headEnd === headStart || !nominalAt(tokens, base.headEnd - 1) ? nominalEnd(tokens, headStart) : O.none();
+      if (O.isSome(extended) && extended.value > base.headEnd)
+        return NominalBoundaryPlan.make({
+          headEnd: extended.value,
+          resumeAt: extended.value,
+          reason: "source-part-of-speech",
+        });
+      const bounded = boundedEnd(tokens, headStart, base.headEnd);
+      return bounded === base.headEnd
+        ? base
+        : NominalBoundaryPlan.make({ headEnd: bounded, resumeAt: bounded, reason: "source-part-of-speech" });
+    },
+  };
+};
 
 const decodeTree = S.decodeEffect(ClaimElementTree);
 
@@ -2421,6 +2559,47 @@ const projectedClaimInput = (
     ? O.some({ input: assembleTree(claim, elements, containment), opaqueNonDonors })
     : O.none();
 };
+// Evidence rows bound to one record; only a single aligned row supplies fallback facts.
+const sourceFactsFor = (
+  prepared: PreparedClaimInspection,
+  sourceOrdinal: number,
+  claimText: string,
+  evidence: ReadonlyArray<ClaimLexicalEvidence>
+): ReadonlyArray<ClaimLexicalEvidence> =>
+  A.filter(
+    evidence,
+    (fact) =>
+      fact.sourceKey === prepared.input.sourceKey &&
+      fact.sourceOrdinal === sourceOrdinal &&
+      fact.qualifiedText === claimText
+  );
+const alignedFactsOf = (
+  prepared: PreparedClaimInspection,
+  evidence: ReadonlyArray<ClaimLexicalEvidence>
+): HashMap.HashMap<number, ReadonlyArray<ClaimLexicalToken>> =>
+  HashMap.fromIterable(
+    A.flatMap(prepared.qualifications, (qualification) => {
+      if (!ClaimInputQualification.guards["context-ready"](qualification)) return [];
+      const facts = sourceFactsFor(
+        prepared,
+        qualification.record.sourceOrdinal,
+        qualification.claim.claimText,
+        evidence
+      );
+      const [fact] = facts;
+      return facts.length === 1 && fact?.status === "aligned"
+        ? [Tuple.make(qualification.claim.claimNumber, fact.tokens)]
+        : [];
+    })
+  );
+const sourceFallbackTree =
+  (aligned: HashMap.HashMap<number, ReadonlyArray<ClaimLexicalToken>>): typeof inspectionTreeInput =>
+  (claim, parts) =>
+    O.match(HashMap.get(aligned, claim.claimNumber), {
+      onNone: () => inspectionTreeInput(claim, parts),
+      onSome: (facts) =>
+        inspectionTreeInputFor(sourcePartOfSpeechGrammar(facts), splitParallelInspectionBody)(claim, parts),
+    });
 const boundedSourceEvidence = (
   prepared: PreparedClaimInspection,
   evidence: ReadonlyArray<ClaimLexicalEvidence>
@@ -2463,16 +2642,11 @@ export const decomposePreparedClaimRoles = Effect.fn("ClaimElement.decomposePrep
   >();
   const plans = A.empty<ClaimBoundRolePlan>();
   const boundedEvidence = boundedSourceEvidence(prepared, evidence);
+  const fallbackTree = sourceFallbackTree(alignedFactsOf(prepared, boundedEvidence));
   for (const qualification of prepared.qualifications) {
     if (!ClaimInputQualification.guards["context-ready"](qualification)) continue;
     const claim = qualification.claim;
-    const facts = A.filter(
-      boundedEvidence,
-      (fact) =>
-        fact.sourceKey === prepared.input.sourceKey &&
-        fact.sourceOrdinal === qualification.record.sourceOrdinal &&
-        fact.qualifiedText === claim.claimText
-    );
+    const facts = sourceFactsFor(prepared, qualification.record.sourceOrdinal, claim.claimText, boundedEvidence);
     const plan = O.flatMap(facts.length === 1 ? A.head(facts) : O.none(), (fact) =>
       compileClaimClauseRoles(claim, fact)
     );
@@ -2495,7 +2669,7 @@ export const decomposePreparedClaimRoles = Effect.fn("ClaimElement.decomposePrep
   const construct: typeof inspectionTreeInput = (claim, parts) =>
     O.getOrElse(
       O.map(HashMap.get(inputs, claim.claimNumber), (projected) => projected.input),
-      () => inspectionTreeInput(claim, parts)
+      () => fallbackTree(claim, parts)
     );
   const enhancedRoots = HashSet.fromIterable(A.map(plans, ({ claimNumber }) => `${claimNumber}`));
   const sourceAbbreviation: typeof isExplicitAbbreviatedHead = (head) => (candidate) =>
