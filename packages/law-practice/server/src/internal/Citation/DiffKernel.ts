@@ -112,6 +112,8 @@ const validate = Effect.fn("Citation.validateDiffKernelInput")(function* (reques
     overflow
   );
 });
+const decodeDiffStep = S.decodeUnknownEffect(CitationSpanDiffStep);
+const decodeKernelRequest = S.decodeUnknownEffect(KernelRequestValue);
 const decodeSteps = Effect.fn("Citation.decodeDiffKernelSteps")(function* (view: DataView, count: number) {
   const steps = A.empty<CitationSpanDiffStep>();
   for (let index = 0; index < count; index++) {
@@ -121,9 +123,7 @@ const decodeSteps = Effect.fn("Citation.decodeDiffKernelSteps")(function* (view:
       Effect.mapError(() => fail("kernel-failed"))
     );
     const amount = view.getUint32(index * 8 + 4, true);
-    const step = yield* S.decodeUnknownEffect(CitationSpanDiffStep)({ operation, amount }).pipe(
-      Effect.mapError(() => fail("kernel-failed"))
-    );
+    const step = yield* decodeDiffStep({ operation, amount }).pipe(Effect.mapError(() => fail("kernel-failed")));
     steps.push(step);
   }
   return steps;
@@ -163,9 +163,7 @@ export const makeCitationDiffKernel = Effect.fn("Citation.makeDiffKernel")(funct
   const compiled = yield* compileCitationNativeWasm(input, citationDiffKernelAsset, () => fail("invalid-asset"));
   return {
     run: Effect.fn("Citation.runDiffKernel")(function* (raw: unknown) {
-      const request = yield* S.decodeUnknownEffect(KernelRequestValue)(raw).pipe(
-        Effect.mapError(() => fail("invalid-input"))
-      );
+      const request = yield* decodeKernelRequest(raw).pipe(Effect.mapError(() => fail("invalid-input")));
       yield* validate(request);
       const abi = yield* compiled.initialize(Exports, () => fail("kernel-failed"));
       if (abi.citation_diff_version() !== 20001) return yield* fail("invalid-asset");

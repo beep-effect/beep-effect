@@ -69,6 +69,8 @@ import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
+import * as Stream from "effect/Stream";
+import * as SubscriptionRef from "effect/SubscriptionRef";
 import type { BoxError, Item as BoxItem, BoxShape } from "@beep/box";
 import type {
   EnsureFolderInput,
@@ -861,12 +863,13 @@ const probeDisconnectReason = (error: MirrorProbeFailure): DmsMirrorDisconnectRe
     : DmsMirrorDisconnectReason.Enum["probe-failed"];
 
 /**
- * BoxError fields are sanitized at the driver boundary, so the mirror failure
- * diagnostic (reason literal, status, code) is safe to log verbatim; a schema
- * failure here can only be a malformed folder id.
+ * Whether a probe failure may clear on retry. The failure's `reason` text is
+ * never logged: it is built from vendor error text, which can name folders and
+ * accounts. The tag, the status classification (`disconnect_reason`) and this
+ * flag are the whole diagnostic; a schema failure is a malformed folder id.
  */
-const probeFailureDetail = (error: MirrorProbeFailure): string =>
-  P.isTagged(error, "DmsMirrorUnavailable") ? error.reason : "mirror root id decoding failed";
+const probeFailureRetryable = (error: MirrorProbeFailure): boolean =>
+  P.isTagged(error, "DmsMirrorUnavailable") && error.retryable;
 
 /**
  * Availability layer probing the Box mirror adapter.
@@ -879,8 +882,10 @@ const probeFailureDetail = (error: MirrorProbeFailure): string =>
  * failing the probe, carrying the {@link DmsMirrorDisconnectReason}
  * classification captured from the Box failure (auth rejection, missing root,
  * transient outage) plus the `probedAt` timestamp of the resolution, and logs
- * the classified failure at warning level. Applications supply their own
- * disconnected variant when no Box credentials are configured.
+ * the classified failure at warning level. `changes` publishes every
+ * resolution the cache stores, so a refresh that flips the connection state
+ * reaches status subscriptions without a View change. Applications supply
+ * their own disconnected variant when no Box credentials are configured.
  *
  * **Example** (Log availability layer)
  *
@@ -899,7 +904,9 @@ export const DmsMirrorAvailabilityBoxLayer = Layer.effect(
     const box = yield* Box;
     const config = yield* BoxMirrorConfig;
     const { resolveMirrorRootId } = makeMirrorRootResolver(box, config);
-    const cache = yield* Ref.make<O.Option<MirrorProbeCacheEntry>>(O.none());
+    // The cache doubles as the change feed: every resolution a probe or refresh
+    // stores is published to status subscriptions.
+    const cache = yield* SubscriptionRef.make<O.Option<MirrorProbeCacheEntry>>(O.none());
 
     const resolve = (probedAt: DateTime.Utc) =>
       resolveMirrorRootId.pipe(
@@ -910,7 +917,8 @@ export const DmsMirrorAvailabilityBoxLayer = Layer.effect(
             return Effect.logWarning("Box mirror availability probe failed").pipe(
               Effect.annotateLogs({
                 "documents.sync.disconnect_reason": disconnectReason,
-                "documents.sync.failure": probeFailureDetail(error),
+                "documents.sync.failure": error._tag,
+                "documents.sync.retryable": probeFailureRetryable(error),
                 "documents.sync.provider": "box",
               }),
               Effect.as(
@@ -940,19 +948,31 @@ export const DmsMirrorAvailabilityBoxLayer = Layer.effect(
       const now = yield* Clock.currentTimeMillis;
       const probe = yield* resolve(DateTime.makeUnsafe(now));
       const ttl = probe.connected ? MIRROR_ROOT_CACHE_TTL : MIRROR_ROOT_FAILURE_CACHE_TTL;
-      yield* Ref.set(cache, O.some({ probe, expiresAt: now + Duration.toMillis(ttl) }));
+      yield* SubscriptionRef.set(cache, O.some({ probe, expiresAt: now + Duration.toMillis(ttl) }));
       return probe;
     });
 
+    const probe = Effect.gen(function* () {
+      const now = yield* Clock.currentTimeMillis;
+      const cached = yield* SubscriptionRef.get(cache);
+      if (O.isSome(cached) && cached.value.expiresAt > now) {
+        return cached.value.probe;
+      }
+      return yield* probeNow;
+    }).pipe(Effect.withSpan($I`DmsMirrorAvailabilityBoxProbe`));
+
     return DmsMirrorAvailability.of({
-      probe: Effect.gen(function* () {
-        const now = yield* Clock.currentTimeMillis;
-        const cached = yield* Ref.get(cache);
-        if (O.isSome(cached) && cached.value.expiresAt > now) {
-          return cached.value.probe;
-        }
-        return yield* probeNow;
-      }).pipe(Effect.withSpan($I`DmsMirrorAvailabilityBoxProbe`)),
+      // Resolving first guarantees the replayed current value is a real probe.
+      changes: Stream.unwrap(
+        Effect.as(
+          probe,
+          SubscriptionRef.changes(cache).pipe(
+            Stream.filter(O.isSome),
+            Stream.map((entry) => entry.value.probe)
+          )
+        )
+      ),
+      probe,
       // An operator's explicit retry must re-ask Box, not replay the cached
       // failure for the rest of its TTL; the fresh answer replaces the cache
       // so passive reads immediately agree with what the retry saw.

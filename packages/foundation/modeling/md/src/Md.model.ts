@@ -1419,6 +1419,14 @@ export declare namespace BlockChildren {
  * block children preserve nested document structure such as paragraphs, code
  * blocks, and nested lists.
  *
+ * **Gotchas**
+ *
+ * The declared type is load-bearing. `ListItemChild` sits on the recursive
+ * `TaskList -> TaskItem -> ListItemChildren -> ListItemChild -> Block -> TaskList`
+ * cycle; without the annotation its inferred type depends on which declaration a
+ * type checker reaches first, and parallel checkers (tsrs fast mode) then
+ * intermittently collapse `TaskList` and `TaskItem` to `any`.
+ *
  * **Example** (Decode and project list item child)
  *
  * ```ts import.meta.vitest name="Decode and project list item child"
@@ -1434,40 +1442,39 @@ export declare namespace BlockChildren {
  * @category models
  * @since 0.0.0
  */
-export const ListItemChild = S.suspend(
-  (): S.Codec<Inline.Type | Block.Type, Inline.Encoded | Block.Encoded> => S.Union([Inline, Block])
-).pipe(
-  $I.annoteSchema("ListItemChild", {
-    description: "Inline or block Markdown AST node rendered inside a list item.",
-  }),
-  SchemaUtils.withStatics(() => {
-    const toHtml = (child: ListItemChild.Type): HtmlChildNode =>
-      S.is(Inline)(child) ? Inline.toHtml(child) : Block.toHtml(child);
-    const toPlainText = (child: ListItemChild.Type): string =>
-      S.is(Inline)(child) ? Inline.toPlainText(child) : Block.toPlainText(child);
-    const toPlainTextSegments = (children: ReadonlyArray<ListItemChild.Type>): ReadonlyArray<string> =>
-      Arr.match(children, {
-        onEmpty: Arr.empty<string>,
-        onNonEmpty: (items) =>
-          Arr.flatMap(
-            Arr.groupWith(items, (left, right) => S.is(Inline)(left) === S.is(Inline)(right)),
-            (run) =>
-              S.is(Inline)(Arr.headNonEmpty(run))
-                ? [Inline.toPlainTextAll(Arr.filter(run, S.is(Inline)))]
-                : Arr.map(Arr.filter(run, S.is(Block)), Block.toPlainText)
-          ),
-      });
+export const ListItemChild: S.suspend<S.Codec<ListItemChild.Type, ListItemChild.Encoded>> & ListItemChild.Statics =
+  S.suspend((): S.Codec<Inline.Type | Block.Type, Inline.Encoded | Block.Encoded> => S.Union([Inline, Block])).pipe(
+    $I.annoteSchema("ListItemChild", {
+      description: "Inline or block Markdown AST node rendered inside a list item.",
+    }),
+    SchemaUtils.withStatics(() => {
+      const toHtml = (child: ListItemChild.Type): HtmlChildNode =>
+        S.is(Inline)(child) ? Inline.toHtml(child) : Block.toHtml(child);
+      const toPlainText = (child: ListItemChild.Type): string =>
+        S.is(Inline)(child) ? Inline.toPlainText(child) : Block.toPlainText(child);
+      const toPlainTextSegments = (children: ReadonlyArray<ListItemChild.Type>): ReadonlyArray<string> =>
+        Arr.match(children, {
+          onEmpty: Arr.empty<string>,
+          onNonEmpty: (items) =>
+            Arr.flatMap(
+              Arr.groupWith(items, (left, right) => S.is(Inline)(left) === S.is(Inline)(right)),
+              (run) =>
+                S.is(Inline)(Arr.headNonEmpty(run))
+                  ? [Inline.toPlainTextAll(Arr.filter(run, S.is(Inline)))]
+                  : Arr.map(Arr.filter(run, S.is(Block)), Block.toPlainText)
+            ),
+        });
 
-    return {
-      toHtml,
-      toHtmlAll: (children: ReadonlyArray<ListItemChild.Type>): ReadonlyArray<HtmlChildNode> =>
-        Arr.map(children, toHtml),
-      toPlainText,
-      toPlainTextAll: (children: ReadonlyArray<ListItemChild.Type>): string =>
-        Arr.join(toPlainTextSegments(children), "\n"),
-    };
-  })
-);
+      return {
+        toHtml,
+        toHtmlAll: (children: ReadonlyArray<ListItemChild.Type>): ReadonlyArray<HtmlChildNode> =>
+          Arr.map(children, toHtml),
+        toPlainText,
+        toPlainTextAll: (children: ReadonlyArray<ListItemChild.Type>): string =>
+          Arr.join(toPlainTextSegments(children), "\n"),
+      };
+    })
+  );
 
 /**
  * Runtime type for {@link ListItemChild}.
@@ -1513,6 +1520,18 @@ export declare namespace ListItemChild {
    * @since 0.0.0
    */
   export type Encoded = Inline.Encoded | Block.Encoded;
+
+  /**
+   * Projection statics attached to {@link ListItemChild}.
+   *
+   * @since 0.0.0
+   */
+  export interface Statics {
+    readonly toHtml: (child: Type) => HtmlChildNode;
+    readonly toHtmlAll: (children: ReadonlyArray<Type>) => ReadonlyArray<HtmlChildNode>;
+    readonly toPlainText: (child: Type) => string;
+    readonly toPlainTextAll: (children: ReadonlyArray<Type>) => string;
+  }
 }
 
 /**

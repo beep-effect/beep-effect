@@ -73,7 +73,7 @@ paths of their own — the corrected scope is in
 - **TierGate already ships the runtime clamp half**
   (`packages/foundation/capability/mcp-kit/src/TierGate.ts`, implemented
   write-ahead and fail-closed by
-  `packages/epistemic/server/src/GovernedTierGate/GovernedTierGate.gate.ts`).
+  `packages/execution-authority/server/src/GovernedTierGate/GovernedTierGate.gate.ts`).
   This packet adds the declaration half and must not weaken the gate.
 - **`cap-reached` is a normal outcome, not an error.** The adherence
   instrument that consumes these stop-reason records is Q8's *second* step and

@@ -221,9 +221,15 @@ describe("@beep/professional-desktop schema parity", () => {
   );
 
   it("registers the vault sync RPC group requests", () => {
-    const names = ["GetVaultSyncStatus", "ListVaultSyncConflicts", "MarkVaultSyncConflictReviewed", "TriggerVaultSync"];
+    const names = [
+      "GetVaultSyncStatus",
+      "ListVaultSyncConflicts",
+      "MarkVaultSyncConflictReviewed",
+      "TriggerVaultSync",
+      "WatchVaultSyncStatus",
+    ];
 
-    expect(VaultSyncRpcs.requests.size).toBe(4);
+    expect(VaultSyncRpcs.requests.size).toBe(5);
     expect(A.every(names, (name) => VaultSyncRpcs.requests.has(name))).toBe(true);
   });
 

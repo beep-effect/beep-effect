@@ -153,25 +153,25 @@ Retire `scripts/cloud-session-setup.sh`, whose implementation is superseded. Upd
 
 | Existing path | Execution disposition |
 |---|---|
-| `scripts/changeset-changelog.cjs` | Retain required small CJS publication callback while dormant machinery needs it. |
-| `scripts/ci-change-profile.sh` | Port operational diff classification to Ci; preserve workflow evaluation and output contract. |
+| `packages/tooling/tool/cli/src/ChangesetChangelog.ts` | Retain required small CJS publication callback while dormant machinery needs it. |
+| `ci-change-profile.sh` (retired; now `beep ci change-profile`) | Port operational diff classification to Ci; preserve workflow evaluation and output contract. |
 | `scripts/ci-job-env.mjs` | Port to Ci after runtime exists; preserve credential/event policy and safe `GITHUB_ENV` behavior. |
-| `scripts/ci-prune-apt-sources.sh` | Retain minimal pre-runtime adapter; test with synthetic filesystem fixtures. |
-| `scripts/ci-runner-resources.sh` | Port to Ci; preserve resource sampling, signal propagation, and nonzero exit status. |
+| `ci-prune-apt-sources.sh` (retired; now `beep ci prune-apt`) | Retain minimal pre-runtime adapter; test with synthetic filesystem fixtures. |
+| `ci-runner-resources.sh` (retired; now `beep ci runner-resources`) | Port to Ci; preserve resource sampling, signal propagation, and nonzero exit status. |
 | `scripts/cloud-session-setup.sh` | Retire superseded implementation and live wiring. |
 | `scripts/cloud/bootstrap.sh` | Retain pre-toolchain bootstrap; delegate post-runtime behavior where appropriate. |
 | `scripts/enable-turbo-remote-reads.sh` | Port to Cache; preserve dotenv references, duplicate handling, and idempotence. |
-| `scripts/knowledge-refs-rewrite.rules.json` | Retain reviewed declarative rule data and reproducible semantics. |
+| `packages/tooling/policy-pack/repo-configs/data/knowledge-refs-rewrite.rules.json` | Retain reviewed declarative rule data and reproducible semantics. |
 | `scripts/knowledge-refs-rewrite.ts` | Move into Knowledge ownership; exact-count dry-run, idempotence, drift refusal. |
 | `scripts/onepassword/beep-secrets-layout.jq` | Port transform to typed tooling with synthetic field/reference fixtures. |
 | `scripts/onepassword/beep-secrets-layout.sh` | Move administrative behavior to existing ownership; preserve its existing apply boundary and sanitized output. |
-| `scripts/prune-tsgo-backups.mjs` | Keep lightweight install-safe entry; preserve intentional `.original` and remove only unwanted rotations. |
-| `scripts/references.json` | Retain declarative manifest under existing Refs ownership. |
-| `scripts/regenerate-merge-driver.sh` | Retain small fail-closed adapter for incomplete Git merge trees. |
+| `packages/tooling/tool/cli/src/commands/Toolchain/Toolchain.prune.ts` | Keep lightweight install-safe entry; preserve intentional `.original` and remove only unwanted rotations. |
+| `packages/tooling/policy-pack/repo-configs/data/references.json` | Retain declarative manifest under existing Refs ownership. |
+| `packages/tooling/tool/cli/src/commands/Git/Git.command.ts` | Retain small fail-closed adapter for incomplete Git merge trees. |
 | `scripts/setup-effect-ref.sh` | Port provisioning to Refs; preserve existing reference checkouts. |
 | `scripts/setup-regenerate-merge-driver.sh` | Port local Git installation to Worktree/Yeet preparation. |
-| `scripts/systemd/agent-runs.slice` | Retain declarative unit source. |
-| `scripts/systemd/agent-runs.slice.d/50-oomd.conf` | Retain declarative drop-in source. |
+| `packages/tooling/tool/cli/src/internal/repo-run/AgentRunsSlice.ts` | Retain declarative unit source. |
+| `packages/tooling/tool/cli/src/internal/repo-run/AgentRunsSlice.ts` | Retain declarative drop-in source. |
 | `scripts/test-onnxruntime-installer-patch.mjs` | Move security regression to the owning package's tests. |
 | `scripts/yeet-inbox-grok-tail.sh` | Move any live functionality to Yeet inbox ownership; remove dead adapter. |
 

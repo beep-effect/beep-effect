@@ -33,6 +33,9 @@
       "path": "../../../foundation/capability/mcp-kit/tsconfig.json"
     },
     {
+      "path": "../../../foundation/capability/nlp-processing/tsconfig.json"
+    },
+    {
       "path": "../../../foundation/modeling/epistemics/tsconfig.json"
     },
     {

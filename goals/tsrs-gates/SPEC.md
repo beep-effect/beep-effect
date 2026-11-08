@@ -32,7 +32,7 @@ Higher sources outrank lower sources when they conflict.
 - Root `package.json` (catalog `@effect/tsgo` 0.59.0 and `tsrs`
   0.20.0-ts7.1.0-beta replacing `tsc-rs`, the devDependency, `prepare --tsrs`,
   `check:configs`), `bun.lock`, `syncpack.config.ts` (both pins held together),
-  `scripts/prune-tsgo-backups.mjs`.
+  `packages/tooling/tool/cli/src/commands/Toolchain/Toolchain.prune.ts`.
 - Every workspace manifest whose `beep:build`, `beep:check` or `beep:check:*`
   named `tsc-rs`, plus infra's `-b` build and the scratchpad manifest.
 - `packages/tooling/tool/cli` scaffold defaults, the `TypeScriptChecker`

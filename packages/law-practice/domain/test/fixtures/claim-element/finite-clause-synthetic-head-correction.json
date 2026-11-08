@@ -1,0 +1,1159 @@
+{
+  "schemaVersion": "finite-ac-synthetic-head-correction/v1",
+  "reviewedPrivateOverlaySha256": "b3f813947df71063ebe89c53520c6c255581567bd5ba38fe19bf158e1a2195a8",
+  "entries": [
+    {
+      "case": "positive-prenominal-action-word-not-predicate",
+      "source": "A system comprising a receiving assembly.",
+      "sourceSha256": "e1ebc1bccd753cbefd76dadf11697ecc495b8370520206cda03b00524c4ff521",
+      "originalExpectedCanonicalJson": "{\"certificateGraph\":[{\"anchors\":[{\"endChar\":19,\"quote\":\"comprising\",\"startChar\":9}],\"dependencies\":[],\"id\":\"source\",\"kind\":\"qualified-source/transition\",\"rank\":0},{\"anchors\":[{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},{\"endChar\":8,\"quote\":\"system\",\"startChar\":2}],\"dependencies\":[],\"endpointEvidence\":{\"kind\":\"positive maximal nominal head chain in independently opened source slot\",\"noFailedPredicatePremise\":true,\"notCandidateReservation\":true,\"outerAttachmentNotEstablishedBySeed\":true},\"id\":\"head-r\",\"kind\":\"existing-independent-head/name/quantity-seed\",\"rank\":0,\"schema\":\"ClaimHeadSeedCertificate\",\"seedKind\":\"existing-nominal-head\",\"terminalHeadWitness\":{\"anchor\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2},\"countability\":\"not inferred\",\"origin\":\"explicit source-only witness\",\"pos\":\"NOUN\"}},{\"anchors\":[{\"endChar\":40,\"quote\":\"a receiving assembly\",\"startChar\":20},{\"endChar\":40,\"quote\":\"assembly\",\"startChar\":32}],\"dependencies\":[],\"endpointEvidence\":{\"kind\":\"positive maximal nominal head chain in independently opened source slot\",\"noFailedPredicatePremise\":true,\"notCandidateReservation\":true,\"outerAttachmentNotEstablishedBySeed\":true},\"id\":\"head-n\",\"kind\":\"existing-independent-head/name/quantity-seed\",\"rank\":0,\"schema\":\"ClaimHeadSeedCertificate\",\"seedKind\":\"existing-prenominal-modifier\",\"terminalHeadWitness\":{\"anchor\":{\"endChar\":40,\"quote\":\"assembly\",\"startChar\":32},\"countability\":\"not inferred\",\"origin\":\"explicit source-only witness\",\"pos\":\"NOUN\"}},{\"anchors\":[{\"endChar\":19,\"quote\":\"comprising\",\"startChar\":9}],\"dependencies\":[],\"id\":\"lex-0\",\"kind\":\"explicit-POS/lemma-witness\",\"rank\":0},{\"anchors\":[{\"endChar\":31,\"quote\":\"receiving\",\"startChar\":22}],\"dependencies\":[],\"id\":\"lex-1\",\"kind\":\"explicit-POS/lemma-witness\",\"rank\":0},{\"anchors\":[],\"dependencies\":[\"source\",\"head-r\",\"head-n\",\"lex-0\",\"lex-1\"],\"id\":\"projection\",\"kind\":\"atomic-topology/owner/partition/token-ledger\",\"rank\":4}],\"coverageObligations\":[],\"declarations\":[],\"descriptionProofs\":[],\"elements\":[{\"extent\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"functionalParts\":[],\"grouping\":\"preamble\",\"id\":\"root\",\"kind\":\"preamble-subject\",\"lexicalHeader\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"nominals\":[\"r\"],\"ordinal\":1,\"ownedTermRegions\":[{\"core\":\"r\",\"extent\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"positiveCertificate\":\"existing-closed-nominal/source-frame-owned-region\"}],\"parent\":null},{\"extent\":{\"endChar\":40,\"quote\":\"a receiving assembly\",\"startChar\":20},\"functionalParts\":[],\"grouping\":\"single-restriction\",\"id\":\"body\",\"kind\":\"limitation\",\"lexicalHeader\":{\"endChar\":40,\"quote\":\"a receiving assembly\",\"startChar\":20},\"nominals\":[\"n\"],\"ordinal\":2,\"ownedTermRegions\":[{\"core\":\"n\",\"extent\":{\"endChar\":40,\"quote\":\"a receiving assembly\",\"startChar\":20},\"positiveCertificate\":\"existing-closed-nominal/source-frame-owned-region\"}],\"parent\":\"root\"}],\"frames\":[{\"arguments\":[],\"attachment\":\"main\",\"coordination\":null,\"extent\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"id\":\"fr\",\"inheritedSubject\":null,\"introducer\":null,\"lexicalHeader\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"nominals\":[\"r\"],\"parent\":null,\"predicates\":[],\"publicOwner\":\"root\",\"subject\":null},{\"arguments\":[{\"nominal\":\"n\",\"ownerNominal\":null,\"predicate\":null,\"role\":\"unknown\"}],\"attachment\":\"main\",\"coordination\":null,\"extent\":{\"endChar\":40,\"quote\":\"a receiving assembly\",\"startChar\":20},\"id\":\"fb\",\"inheritedSubject\":null,\"introducer\":null,\"lexicalHeader\":{\"endChar\":40,\"quote\":\"a receiving assembly\",\"startChar\":20},\"nominals\":[\"n\"],\"parent\":null,\"predicates\":[],\"publicOwner\":\"body\",\"subject\":null}],\"nominals\":[{\"aliasEligible\":\"only independently existing explicit alias certificate; not map membership\",\"canonicalReferenceHead\":\"system\",\"core\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"head\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2},\"id\":\"r\",\"outer\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"proofClass\":\"independent existing NP/name/quantity certificate\",\"publicHead\":\"system\",\"publicOwner\":\"root\",\"role\":\"unknown\"},{\"aliasEligible\":\"only independently existing explicit alias certificate; not map membership\",\"canonicalReferenceHead\":\"assembly\",\"core\":{\"endChar\":40,\"quote\":\"a receiving assembly\",\"startChar\":20},\"determiner\":\"a\",\"head\":{\"endChar\":40,\"quote\":\"assembly\",\"startChar\":32},\"id\":\"n\",\"outer\":{\"endChar\":40,\"quote\":\"a receiving assembly\",\"startChar\":20},\"proofClass\":\"independent existing NP/name/quantity certificate\",\"publicHead\":\"assembly\",\"publicOwner\":\"body\",\"role\":\"unknown\"}],\"privateCandidates\":[],\"publicTree\":{\"claimNumber\":1,\"edges\":[{\"child\":\"1.a\",\"kind\":\"part-of\",\"parent\":\"1\"}],\"elements\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"kind\":\"preamble-subject\",\"path\":\"1\",\"terms\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"head\":\"system\"}]},{\"anchor\":{\"endChar\":40,\"quote\":\"a receiving assembly\",\"startChar\":20},\"kind\":\"limitation\",\"path\":\"1.a\",\"terms\":[{\"anchor\":{\"endChar\":40,\"quote\":\"a receiving assembly\",\"startChar\":20},\"determiner\":\"a\",\"head\":\"assembly\"}]}],\"producer\":\"rule\"},\"selectorProofs\":[],\"sourceTokenOwnership\":[{\"owner\":{\"id\":\"r\",\"kind\":\"public-core\"},\"token\":{\"endChar\":1,\"quote\":\"A\",\"startChar\":0}},{\"owner\":{\"id\":\"r\",\"kind\":\"public-core\"},\"token\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2}},{\"owner\":{\"certificate\":\"specific declared construction/transition/selector/attachment boundary\",\"kind\":\"certified-structural-control\",\"sourceWord\":\"comprising\"},\"token\":{\"endChar\":19,\"quote\":\"comprising\",\"startChar\":9}},{\"owner\":{\"id\":\"n\",\"kind\":\"public-core\"},\"token\":{\"endChar\":21,\"quote\":\"a\",\"startChar\":20}},{\"owner\":{\"id\":\"n\",\"kind\":\"public-core\"},\"token\":{\"endChar\":31,\"quote\":\"receiving\",\"startChar\":22}},{\"owner\":{\"id\":\"n\",\"kind\":\"public-core\"},\"token\":{\"endChar\":40,\"quote\":\"assembly\",\"startChar\":32}},{\"owner\":{\"certificate\":\"specific declared construction/transition/selector/attachment boundary\",\"kind\":\"certified-structural-control\",\"sourceWord\":\".\"},\"token\":{\"endChar\":41,\"quote\":\".\",\"startChar\":40}}]}",
+      "originalExpectedSha256": "92f86deb613e6407459fd694acb20a1721420b01e4e2d38824d001fb9e74966f",
+      "correctedExpectedCanonicalJson": "{\"certificateGraph\":[{\"anchors\":[{\"endChar\":19,\"quote\":\"comprising\",\"startChar\":9}],\"dependencies\":[],\"id\":\"source\",\"kind\":\"qualified-source/transition\",\"rank\":0},{\"anchors\":[{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},{\"endChar\":8,\"quote\":\"system\",\"startChar\":2}],\"dependencies\":[],\"endpointEvidence\":{\"kind\":\"positive maximal nominal head chain in independently opened source slot\",\"noFailedPredicatePremise\":true,\"notCandidateReservation\":true,\"outerAttachmentNotEstablishedBySeed\":true},\"id\":\"head-r\",\"kind\":\"existing-independent-head/name/quantity-seed\",\"rank\":0,\"schema\":\"ClaimHeadSeedCertificate\",\"seedKind\":\"existing-nominal-head\",\"terminalHeadWitness\":{\"anchor\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2},\"countability\":\"not inferred\",\"origin\":\"explicit source-only witness\",\"pos\":\"NOUN\"}},{\"anchors\":[{\"endChar\":40,\"quote\":\"a receiving assembly\",\"startChar\":20},{\"endChar\":40,\"quote\":\"receiving assembly\",\"startChar\":22}],\"dependencies\":[],\"endpointEvidence\":{\"kind\":\"positive maximal nominal head chain in independently opened source slot\",\"noFailedPredicatePremise\":true,\"notCandidateReservation\":true,\"outerAttachmentNotEstablishedBySeed\":true},\"id\":\"head-n\",\"kind\":\"existing-independent-head/name/quantity-seed\",\"rank\":0,\"schema\":\"ClaimHeadSeedCertificate\",\"seedKind\":\"existing-prenominal-modifier\",\"terminalHeadWitness\":{\"anchor\":{\"endChar\":40,\"quote\":\"assembly\",\"startChar\":32},\"countability\":\"not inferred\",\"origin\":\"explicit source-only witness\",\"pos\":\"NOUN\"}},{\"anchors\":[{\"endChar\":19,\"quote\":\"comprising\",\"startChar\":9}],\"dependencies\":[],\"id\":\"lex-0\",\"kind\":\"explicit-POS/lemma-witness\",\"rank\":0},{\"anchors\":[{\"endChar\":31,\"quote\":\"receiving\",\"startChar\":22}],\"dependencies\":[],\"id\":\"lex-1\",\"kind\":\"explicit-POS/lemma-witness\",\"rank\":0},{\"anchors\":[],\"dependencies\":[\"source\",\"head-r\",\"head-n\",\"lex-0\",\"lex-1\"],\"id\":\"projection\",\"kind\":\"atomic-topology/owner/partition/token-ledger\",\"rank\":4}],\"coverageObligations\":[],\"declarations\":[],\"descriptionProofs\":[],\"elements\":[{\"extent\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"functionalParts\":[],\"grouping\":\"preamble\",\"id\":\"root\",\"kind\":\"preamble-subject\",\"lexicalHeader\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"nominals\":[\"r\"],\"ordinal\":1,\"ownedTermRegions\":[{\"core\":\"r\",\"extent\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"positiveCertificate\":\"existing-closed-nominal/source-frame-owned-region\"}],\"parent\":null},{\"extent\":{\"endChar\":40,\"quote\":\"a receiving assembly\",\"startChar\":20},\"functionalParts\":[],\"grouping\":\"single-restriction\",\"id\":\"body\",\"kind\":\"limitation\",\"lexicalHeader\":{\"endChar\":40,\"quote\":\"a receiving assembly\",\"startChar\":20},\"nominals\":[\"n\"],\"ordinal\":2,\"ownedTermRegions\":[{\"core\":\"n\",\"extent\":{\"endChar\":40,\"quote\":\"a receiving assembly\",\"startChar\":20},\"positiveCertificate\":\"existing-closed-nominal/source-frame-owned-region\"}],\"parent\":\"root\"}],\"frames\":[{\"arguments\":[],\"attachment\":\"main\",\"coordination\":null,\"extent\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"id\":\"fr\",\"inheritedSubject\":null,\"introducer\":null,\"lexicalHeader\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"nominals\":[\"r\"],\"parent\":null,\"predicates\":[],\"publicOwner\":\"root\",\"subject\":null},{\"arguments\":[{\"nominal\":\"n\",\"ownerNominal\":null,\"predicate\":null,\"role\":\"unknown\"}],\"attachment\":\"main\",\"coordination\":null,\"extent\":{\"endChar\":40,\"quote\":\"a receiving assembly\",\"startChar\":20},\"id\":\"fb\",\"inheritedSubject\":null,\"introducer\":null,\"lexicalHeader\":{\"endChar\":40,\"quote\":\"a receiving assembly\",\"startChar\":20},\"nominals\":[\"n\"],\"parent\":null,\"predicates\":[],\"publicOwner\":\"body\",\"subject\":null}],\"nominals\":[{\"aliasEligible\":\"only independently existing explicit alias certificate; not map membership\",\"canonicalReferenceHead\":\"system\",\"core\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"head\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2},\"id\":\"r\",\"outer\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"proofClass\":\"independent existing NP/name/quantity certificate\",\"publicHead\":\"system\",\"publicOwner\":\"root\",\"role\":\"unknown\"},{\"aliasEligible\":\"only independently existing explicit alias certificate; not map membership\",\"canonicalReferenceHead\":\"receiving assembly\",\"core\":{\"endChar\":40,\"quote\":\"a receiving assembly\",\"startChar\":20},\"determiner\":\"a\",\"head\":{\"endChar\":40,\"quote\":\"receiving assembly\",\"startChar\":22},\"id\":\"n\",\"outer\":{\"endChar\":40,\"quote\":\"a receiving assembly\",\"startChar\":20},\"proofClass\":\"independent existing NP/name/quantity certificate\",\"publicHead\":\"receiving assembly\",\"publicOwner\":\"body\",\"role\":\"unknown\"}],\"privateCandidates\":[],\"publicTree\":{\"claimNumber\":1,\"edges\":[{\"child\":\"1.a\",\"kind\":\"part-of\",\"parent\":\"1\"}],\"elements\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"kind\":\"preamble-subject\",\"path\":\"1\",\"terms\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"head\":\"system\"}]},{\"anchor\":{\"endChar\":40,\"quote\":\"a receiving assembly\",\"startChar\":20},\"kind\":\"limitation\",\"path\":\"1.a\",\"terms\":[{\"anchor\":{\"endChar\":40,\"quote\":\"a receiving assembly\",\"startChar\":20},\"determiner\":\"a\",\"head\":\"receiving assembly\"}]}],\"producer\":\"rule\"},\"selectorProofs\":[],\"sourceTokenOwnership\":[{\"owner\":{\"id\":\"r\",\"kind\":\"public-core\"},\"token\":{\"endChar\":1,\"quote\":\"A\",\"startChar\":0}},{\"owner\":{\"id\":\"r\",\"kind\":\"public-core\"},\"token\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2}},{\"owner\":{\"certificate\":\"specific declared construction/transition/selector/attachment boundary\",\"kind\":\"certified-structural-control\",\"sourceWord\":\"comprising\"},\"token\":{\"endChar\":19,\"quote\":\"comprising\",\"startChar\":9}},{\"owner\":{\"id\":\"n\",\"kind\":\"public-core\"},\"token\":{\"endChar\":21,\"quote\":\"a\",\"startChar\":20}},{\"owner\":{\"id\":\"n\",\"kind\":\"public-core\"},\"token\":{\"endChar\":31,\"quote\":\"receiving\",\"startChar\":22}},{\"owner\":{\"id\":\"n\",\"kind\":\"public-core\"},\"token\":{\"endChar\":40,\"quote\":\"assembly\",\"startChar\":32}},{\"owner\":{\"certificate\":\"specific declared construction/transition/selector/attachment boundary\",\"kind\":\"certified-structural-control\",\"sourceWord\":\".\"},\"token\":{\"endChar\":41,\"quote\":\".\",\"startChar\":40}}]}",
+      "correctedExpectedSha256": "4c1d3762066f6106361adaa4f40ddba5c72d9b67e5b777f96c375268063cb609",
+      "exactAllowedLeafDeltas": [
+        {
+          "path": "/nominals/1/head/startChar",
+          "old": 32,
+          "new": 22
+        },
+        {
+          "path": "/nominals/1/head/quote",
+          "old": "assembly",
+          "new": "receiving assembly"
+        },
+        {
+          "path": "/nominals/1/publicHead",
+          "old": "assembly",
+          "new": "receiving assembly"
+        },
+        {
+          "path": "/nominals/1/canonicalReferenceHead",
+          "old": "assembly",
+          "new": "receiving assembly"
+        },
+        {
+          "path": "/certificateGraph/2/anchors/1/startChar",
+          "old": 32,
+          "new": 22
+        },
+        {
+          "path": "/certificateGraph/2/anchors/1/quote",
+          "old": "assembly",
+          "new": "receiving assembly"
+        },
+        {
+          "path": "/publicTree/elements/1/terms/0/head",
+          "old": "assembly",
+          "new": "receiving assembly"
+        }
+      ],
+      "correctedExpected": {
+        "nominals": [
+          {
+            "id": "r",
+            "core": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "head": {
+              "startChar": 2,
+              "endChar": 8,
+              "quote": "system"
+            },
+            "outer": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "publicHead": "system",
+            "canonicalReferenceHead": "system",
+            "determiner": "a",
+            "role": "unknown",
+            "publicOwner": "root",
+            "proofClass": "independent existing NP/name/quantity certificate",
+            "aliasEligible": "only independently existing explicit alias certificate; not map membership"
+          },
+          {
+            "id": "n",
+            "core": {
+              "startChar": 20,
+              "endChar": 40,
+              "quote": "a receiving assembly"
+            },
+            "head": {
+              "startChar": 22,
+              "endChar": 40,
+              "quote": "receiving assembly"
+            },
+            "outer": {
+              "startChar": 20,
+              "endChar": 40,
+              "quote": "a receiving assembly"
+            },
+            "publicHead": "receiving assembly",
+            "canonicalReferenceHead": "receiving assembly",
+            "determiner": "a",
+            "role": "unknown",
+            "publicOwner": "body",
+            "proofClass": "independent existing NP/name/quantity certificate",
+            "aliasEligible": "only independently existing explicit alias certificate; not map membership"
+          }
+        ],
+        "privateCandidates": [],
+        "frames": [
+          {
+            "id": "fr",
+            "extent": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "lexicalHeader": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "publicOwner": "root",
+            "parent": null,
+            "attachment": "main",
+            "introducer": null,
+            "predicates": [],
+            "subject": null,
+            "arguments": [],
+            "nominals": ["r"],
+            "inheritedSubject": null,
+            "coordination": null
+          },
+          {
+            "id": "fb",
+            "extent": {
+              "startChar": 20,
+              "endChar": 40,
+              "quote": "a receiving assembly"
+            },
+            "lexicalHeader": {
+              "startChar": 20,
+              "endChar": 40,
+              "quote": "a receiving assembly"
+            },
+            "publicOwner": "body",
+            "parent": null,
+            "attachment": "main",
+            "introducer": null,
+            "predicates": [],
+            "subject": null,
+            "arguments": [
+              {
+                "nominal": "n",
+                "role": "unknown",
+                "predicate": null,
+                "ownerNominal": null
+              }
+            ],
+            "nominals": ["n"],
+            "inheritedSubject": null,
+            "coordination": null
+          }
+        ],
+        "elements": [
+          {
+            "id": "root",
+            "parent": null,
+            "kind": "preamble-subject",
+            "grouping": "preamble",
+            "extent": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "lexicalHeader": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "ordinal": 1,
+            "nominals": ["r"],
+            "ownedTermRegions": [
+              {
+                "core": "r",
+                "extent": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A system"
+                },
+                "positiveCertificate": "existing-closed-nominal/source-frame-owned-region"
+              }
+            ],
+            "functionalParts": []
+          },
+          {
+            "id": "body",
+            "parent": "root",
+            "kind": "limitation",
+            "grouping": "single-restriction",
+            "extent": {
+              "startChar": 20,
+              "endChar": 40,
+              "quote": "a receiving assembly"
+            },
+            "lexicalHeader": {
+              "startChar": 20,
+              "endChar": 40,
+              "quote": "a receiving assembly"
+            },
+            "ordinal": 2,
+            "nominals": ["n"],
+            "ownedTermRegions": [
+              {
+                "core": "n",
+                "extent": {
+                  "startChar": 20,
+                  "endChar": 40,
+                  "quote": "a receiving assembly"
+                },
+                "positiveCertificate": "existing-closed-nominal/source-frame-owned-region"
+              }
+            ],
+            "functionalParts": []
+          }
+        ],
+        "descriptionProofs": [],
+        "selectorProofs": [],
+        "coverageObligations": [],
+        "sourceTokenOwnership": [
+          {
+            "token": {
+              "startChar": 0,
+              "endChar": 1,
+              "quote": "A"
+            },
+            "owner": {
+              "kind": "public-core",
+              "id": "r"
+            }
+          },
+          {
+            "token": {
+              "startChar": 2,
+              "endChar": 8,
+              "quote": "system"
+            },
+            "owner": {
+              "kind": "public-core",
+              "id": "r"
+            }
+          },
+          {
+            "token": {
+              "startChar": 9,
+              "endChar": 19,
+              "quote": "comprising"
+            },
+            "owner": {
+              "kind": "certified-structural-control",
+              "certificate": "specific declared construction/transition/selector/attachment boundary",
+              "sourceWord": "comprising"
+            }
+          },
+          {
+            "token": {
+              "startChar": 20,
+              "endChar": 21,
+              "quote": "a"
+            },
+            "owner": {
+              "kind": "public-core",
+              "id": "n"
+            }
+          },
+          {
+            "token": {
+              "startChar": 22,
+              "endChar": 31,
+              "quote": "receiving"
+            },
+            "owner": {
+              "kind": "public-core",
+              "id": "n"
+            }
+          },
+          {
+            "token": {
+              "startChar": 32,
+              "endChar": 40,
+              "quote": "assembly"
+            },
+            "owner": {
+              "kind": "public-core",
+              "id": "n"
+            }
+          },
+          {
+            "token": {
+              "startChar": 40,
+              "endChar": 41,
+              "quote": "."
+            },
+            "owner": {
+              "kind": "certified-structural-control",
+              "certificate": "specific declared construction/transition/selector/attachment boundary",
+              "sourceWord": "."
+            }
+          }
+        ],
+        "declarations": [],
+        "certificateGraph": [
+          {
+            "id": "source",
+            "rank": 0,
+            "kind": "qualified-source/transition",
+            "anchors": [
+              {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              }
+            ],
+            "dependencies": []
+          },
+          {
+            "id": "head-r",
+            "rank": 0,
+            "kind": "existing-independent-head/name/quantity-seed",
+            "anchors": [
+              {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              }
+            ],
+            "dependencies": [],
+            "schema": "ClaimHeadSeedCertificate",
+            "seedKind": "existing-nominal-head",
+            "terminalHeadWitness": {
+              "anchor": {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              },
+              "pos": "NOUN",
+              "countability": "not inferred",
+              "origin": "explicit source-only witness"
+            },
+            "endpointEvidence": {
+              "kind": "positive maximal nominal head chain in independently opened source slot",
+              "notCandidateReservation": true,
+              "noFailedPredicatePremise": true,
+              "outerAttachmentNotEstablishedBySeed": true
+            }
+          },
+          {
+            "id": "head-n",
+            "rank": 0,
+            "kind": "existing-independent-head/name/quantity-seed",
+            "anchors": [
+              {
+                "startChar": 20,
+                "endChar": 40,
+                "quote": "a receiving assembly"
+              },
+              {
+                "startChar": 22,
+                "endChar": 40,
+                "quote": "receiving assembly"
+              }
+            ],
+            "dependencies": [],
+            "schema": "ClaimHeadSeedCertificate",
+            "seedKind": "existing-prenominal-modifier",
+            "terminalHeadWitness": {
+              "anchor": {
+                "startChar": 32,
+                "endChar": 40,
+                "quote": "assembly"
+              },
+              "pos": "NOUN",
+              "countability": "not inferred",
+              "origin": "explicit source-only witness"
+            },
+            "endpointEvidence": {
+              "kind": "positive maximal nominal head chain in independently opened source slot",
+              "notCandidateReservation": true,
+              "noFailedPredicatePremise": true,
+              "outerAttachmentNotEstablishedBySeed": true
+            }
+          },
+          {
+            "id": "lex-0",
+            "rank": 0,
+            "kind": "explicit-POS/lemma-witness",
+            "anchors": [
+              {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              }
+            ],
+            "dependencies": []
+          },
+          {
+            "id": "lex-1",
+            "rank": 0,
+            "kind": "explicit-POS/lemma-witness",
+            "anchors": [
+              {
+                "startChar": 22,
+                "endChar": 31,
+                "quote": "receiving"
+              }
+            ],
+            "dependencies": []
+          },
+          {
+            "id": "projection",
+            "rank": 4,
+            "kind": "atomic-topology/owner/partition/token-ledger",
+            "anchors": [],
+            "dependencies": ["source", "head-r", "head-n", "lex-0", "lex-1"]
+          }
+        ],
+        "publicTree": {
+          "claimNumber": 1,
+          "producer": "rule",
+          "elements": [
+            {
+              "path": "1",
+              "anchor": {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              "kind": "preamble-subject",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 0,
+                    "endChar": 8,
+                    "quote": "A system"
+                  },
+                  "head": "system",
+                  "determiner": "a"
+                }
+              ]
+            },
+            {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 20,
+                "endChar": 40,
+                "quote": "a receiving assembly"
+              },
+              "kind": "limitation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 20,
+                    "endChar": 40,
+                    "quote": "a receiving assembly"
+                  },
+                  "head": "receiving assembly",
+                  "determiner": "a"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "kind": "part-of",
+              "child": "1.a",
+              "parent": "1"
+            }
+          ]
+        }
+      },
+      "correctedPublicTree": {
+        "claimNumber": 1,
+        "producer": "rule",
+        "elements": [
+          {
+            "path": "1",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "kind": "preamble-subject",
+            "terms": [
+              {
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A system"
+                },
+                "head": "system",
+                "determiner": "a"
+              }
+            ]
+          },
+          {
+            "path": "1.a",
+            "anchor": {
+              "startChar": 20,
+              "endChar": 40,
+              "quote": "a receiving assembly"
+            },
+            "kind": "limitation",
+            "terms": [
+              {
+                "anchor": {
+                  "startChar": 20,
+                  "endChar": 40,
+                  "quote": "a receiving assembly"
+                },
+                "head": "receiving assembly",
+                "determiner": "a"
+              }
+            ]
+          }
+        ],
+        "edges": [
+          {
+            "kind": "part-of",
+            "child": "1.a",
+            "parent": "1"
+          }
+        ]
+      },
+      "originalPublicTreeCanonicalJson": "{\"claimNumber\":1,\"edges\":[{\"child\":\"1.a\",\"kind\":\"part-of\",\"parent\":\"1\"}],\"elements\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"kind\":\"preamble-subject\",\"path\":\"1\",\"terms\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"head\":\"system\"}]},{\"anchor\":{\"endChar\":40,\"quote\":\"a receiving assembly\",\"startChar\":20},\"kind\":\"limitation\",\"path\":\"1.a\",\"terms\":[{\"anchor\":{\"endChar\":40,\"quote\":\"a receiving assembly\",\"startChar\":20},\"determiner\":\"a\",\"head\":\"assembly\"}]}],\"producer\":\"rule\"}",
+      "originalPublicTreeSha256": "8f9bb7ee15a0ac7616bc2b56d40f9f76306ad631a6e86ea7567f7c6254f16808",
+      "correctedPublicTreeCanonicalJson": "{\"claimNumber\":1,\"edges\":[{\"child\":\"1.a\",\"kind\":\"part-of\",\"parent\":\"1\"}],\"elements\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"kind\":\"preamble-subject\",\"path\":\"1\",\"terms\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"head\":\"system\"}]},{\"anchor\":{\"endChar\":40,\"quote\":\"a receiving assembly\",\"startChar\":20},\"kind\":\"limitation\",\"path\":\"1.a\",\"terms\":[{\"anchor\":{\"endChar\":40,\"quote\":\"a receiving assembly\",\"startChar\":20},\"determiner\":\"a\",\"head\":\"receiving assembly\"}]}],\"producer\":\"rule\"}",
+      "correctedPublicTreeSha256": "f75d08c13aea5dbb2753d1b98b0e199f4e62cc34786ad871047a605cd746fba3"
+    },
+    {
+      "case": "protected-action-text-whole-technical-core",
+      "source": "A system comprising a \"receiving on a channel a packet\" assembly.",
+      "sourceSha256": "1ff7f4c92c23c3643a407e6a375a8db0207586ff805ffdea1cdd09d57d3c584d",
+      "originalExpectedCanonicalJson": "{\"certificateGraph\":[{\"anchors\":[{\"endChar\":19,\"quote\":\"comprising\",\"startChar\":9}],\"dependencies\":[],\"id\":\"source\",\"kind\":\"qualified-source/transition\",\"rank\":0},{\"anchors\":[{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},{\"endChar\":8,\"quote\":\"system\",\"startChar\":2}],\"dependencies\":[],\"endpointEvidence\":{\"kind\":\"positive maximal nominal head chain in independently opened source slot\",\"noFailedPredicatePremise\":true,\"notCandidateReservation\":true,\"outerAttachmentNotEstablishedBySeed\":true},\"id\":\"head-r\",\"kind\":\"existing-independent-head/name/quantity-seed\",\"rank\":0,\"schema\":\"ClaimHeadSeedCertificate\",\"seedKind\":\"existing-nominal-head\",\"terminalHeadWitness\":{\"anchor\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2},\"countability\":\"not inferred\",\"origin\":\"explicit source-only witness\",\"pos\":\"NOUN\"}},{\"anchors\":[{\"endChar\":64,\"quote\":\"a \\\"receiving on a channel a packet\\\" assembly\",\"startChar\":20},{\"endChar\":64,\"quote\":\"assembly\",\"startChar\":56}],\"dependencies\":[],\"endpointEvidence\":{\"kind\":\"positive maximal nominal head chain in independently opened source slot\",\"noFailedPredicatePremise\":true,\"notCandidateReservation\":true,\"outerAttachmentNotEstablishedBySeed\":true},\"id\":\"head-n\",\"kind\":\"existing-independent-head/name/quantity-seed\",\"rank\":0,\"schema\":\"ClaimHeadSeedCertificate\",\"seedKind\":\"existing-whole-name\",\"terminalHeadWitness\":{\"anchor\":{\"endChar\":64,\"quote\":\"assembly\",\"startChar\":56},\"countability\":\"not inferred\",\"origin\":\"explicit source-only witness\",\"pos\":\"NOUN\"}},{\"anchors\":[{\"endChar\":19,\"quote\":\"comprising\",\"startChar\":9}],\"dependencies\":[],\"id\":\"lex-0\",\"kind\":\"explicit-POS/lemma-witness\",\"rank\":0},{\"anchors\":[{\"endChar\":32,\"quote\":\"receiving\",\"startChar\":23}],\"dependencies\":[],\"id\":\"lex-1\",\"kind\":\"explicit-POS/lemma-witness\",\"rank\":0},{\"anchors\":[],\"dependencies\":[\"source\",\"head-r\",\"head-n\",\"lex-0\",\"lex-1\"],\"id\":\"projection\",\"kind\":\"atomic-topology/owner/partition/token-ledger\",\"rank\":4}],\"coverageObligations\":[],\"declarations\":[],\"descriptionProofs\":[],\"elements\":[{\"extent\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"functionalParts\":[],\"grouping\":\"preamble\",\"id\":\"root\",\"kind\":\"preamble-subject\",\"lexicalHeader\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"nominals\":[\"r\"],\"ordinal\":1,\"ownedTermRegions\":[{\"core\":\"r\",\"extent\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"positiveCertificate\":\"existing-closed-nominal/source-frame-owned-region\"}],\"parent\":null},{\"extent\":{\"endChar\":64,\"quote\":\"a \\\"receiving on a channel a packet\\\" assembly\",\"startChar\":20},\"functionalParts\":[],\"grouping\":\"single-restriction\",\"id\":\"body\",\"kind\":\"limitation\",\"lexicalHeader\":{\"endChar\":64,\"quote\":\"a \\\"receiving on a channel a packet\\\" assembly\",\"startChar\":20},\"nominals\":[\"n\"],\"ordinal\":2,\"ownedTermRegions\":[{\"core\":\"n\",\"extent\":{\"endChar\":64,\"quote\":\"a \\\"receiving on a channel a packet\\\" assembly\",\"startChar\":20},\"positiveCertificate\":\"existing-closed-nominal/source-frame-owned-region\"}],\"parent\":\"root\"}],\"frames\":[{\"arguments\":[],\"attachment\":\"main\",\"coordination\":null,\"extent\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"id\":\"fr\",\"inheritedSubject\":null,\"introducer\":null,\"lexicalHeader\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"nominals\":[\"r\"],\"parent\":null,\"predicates\":[],\"publicOwner\":\"root\",\"subject\":null},{\"arguments\":[{\"nominal\":\"n\",\"ownerNominal\":null,\"predicate\":null,\"role\":\"unknown\"}],\"attachment\":\"main\",\"coordination\":null,\"extent\":{\"endChar\":64,\"quote\":\"a \\\"receiving on a channel a packet\\\" assembly\",\"startChar\":20},\"id\":\"fb\",\"inheritedSubject\":null,\"introducer\":null,\"lexicalHeader\":{\"endChar\":64,\"quote\":\"a \\\"receiving on a channel a packet\\\" assembly\",\"startChar\":20},\"nominals\":[\"n\"],\"parent\":null,\"predicates\":[],\"publicOwner\":\"body\",\"subject\":null}],\"nominals\":[{\"aliasEligible\":\"only independently existing explicit alias certificate; not map membership\",\"canonicalReferenceHead\":\"system\",\"core\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"head\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2},\"id\":\"r\",\"outer\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"proofClass\":\"independent existing NP/name/quantity certificate\",\"publicHead\":\"system\",\"publicOwner\":\"root\",\"role\":\"unknown\"},{\"aliasEligible\":\"only independently existing explicit alias certificate; not map membership\",\"canonicalReferenceHead\":\"assembly\",\"core\":{\"endChar\":64,\"quote\":\"a \\\"receiving on a channel a packet\\\" assembly\",\"startChar\":20},\"determiner\":\"a\",\"head\":{\"endChar\":64,\"quote\":\"assembly\",\"startChar\":56},\"id\":\"n\",\"outer\":{\"endChar\":64,\"quote\":\"a \\\"receiving on a channel a packet\\\" assembly\",\"startChar\":20},\"proofClass\":\"independent existing NP/name/quantity certificate\",\"publicHead\":\"assembly\",\"publicOwner\":\"body\",\"role\":\"explicit-name\"}],\"privateCandidates\":[],\"publicTree\":{\"claimNumber\":1,\"edges\":[{\"child\":\"1.a\",\"kind\":\"part-of\",\"parent\":\"1\"}],\"elements\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"kind\":\"preamble-subject\",\"path\":\"1\",\"terms\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"head\":\"system\"}]},{\"anchor\":{\"endChar\":64,\"quote\":\"a \\\"receiving on a channel a packet\\\" assembly\",\"startChar\":20},\"kind\":\"limitation\",\"path\":\"1.a\",\"terms\":[{\"anchor\":{\"endChar\":64,\"quote\":\"a \\\"receiving on a channel a packet\\\" assembly\",\"startChar\":20},\"determiner\":\"a\",\"head\":\"assembly\"}]}],\"producer\":\"rule\"},\"selectorProofs\":[],\"sourceTokenOwnership\":[{\"owner\":{\"id\":\"r\",\"kind\":\"public-core\"},\"token\":{\"endChar\":1,\"quote\":\"A\",\"startChar\":0}},{\"owner\":{\"id\":\"r\",\"kind\":\"public-core\"},\"token\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2}},{\"owner\":{\"certificate\":\"specific declared construction/transition/selector/attachment boundary\",\"kind\":\"certified-structural-control\",\"sourceWord\":\"comprising\"},\"token\":{\"endChar\":19,\"quote\":\"comprising\",\"startChar\":9}},{\"owner\":{\"id\":\"n\",\"kind\":\"public-core\"},\"token\":{\"endChar\":21,\"quote\":\"a\",\"startChar\":20}},{\"owner\":{\"id\":\"n\",\"kind\":\"public-core\"},\"token\":{\"endChar\":23,\"quote\":\"\\\"\",\"startChar\":22}},{\"owner\":{\"id\":\"n\",\"kind\":\"public-core\"},\"token\":{\"endChar\":32,\"quote\":\"receiving\",\"startChar\":23}},{\"owner\":{\"id\":\"n\",\"kind\":\"public-core\"},\"token\":{\"endChar\":35,\"quote\":\"on\",\"startChar\":33}},{\"owner\":{\"id\":\"n\",\"kind\":\"public-core\"},\"token\":{\"endChar\":37,\"quote\":\"a\",\"startChar\":36}},{\"owner\":{\"id\":\"n\",\"kind\":\"public-core\"},\"token\":{\"endChar\":45,\"quote\":\"channel\",\"startChar\":38}},{\"owner\":{\"id\":\"n\",\"kind\":\"public-core\"},\"token\":{\"endChar\":47,\"quote\":\"a\",\"startChar\":46}},{\"owner\":{\"id\":\"n\",\"kind\":\"public-core\"},\"token\":{\"endChar\":54,\"quote\":\"packet\",\"startChar\":48}},{\"owner\":{\"id\":\"n\",\"kind\":\"public-core\"},\"token\":{\"endChar\":55,\"quote\":\"\\\"\",\"startChar\":54}},{\"owner\":{\"id\":\"n\",\"kind\":\"public-core\"},\"token\":{\"endChar\":64,\"quote\":\"assembly\",\"startChar\":56}},{\"owner\":{\"certificate\":\"specific declared construction/transition/selector/attachment boundary\",\"kind\":\"certified-structural-control\",\"sourceWord\":\".\"},\"token\":{\"endChar\":65,\"quote\":\".\",\"startChar\":64}}]}",
+      "originalExpectedSha256": "0740ed9d08b904c2def5a035edef90c15e3a9f23b66dfd58d6cd1de3d4c1527d",
+      "correctedExpectedCanonicalJson": "{\"certificateGraph\":[{\"anchors\":[{\"endChar\":19,\"quote\":\"comprising\",\"startChar\":9}],\"dependencies\":[],\"id\":\"source\",\"kind\":\"qualified-source/transition\",\"rank\":0},{\"anchors\":[{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},{\"endChar\":8,\"quote\":\"system\",\"startChar\":2}],\"dependencies\":[],\"endpointEvidence\":{\"kind\":\"positive maximal nominal head chain in independently opened source slot\",\"noFailedPredicatePremise\":true,\"notCandidateReservation\":true,\"outerAttachmentNotEstablishedBySeed\":true},\"id\":\"head-r\",\"kind\":\"existing-independent-head/name/quantity-seed\",\"rank\":0,\"schema\":\"ClaimHeadSeedCertificate\",\"seedKind\":\"existing-nominal-head\",\"terminalHeadWitness\":{\"anchor\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2},\"countability\":\"not inferred\",\"origin\":\"explicit source-only witness\",\"pos\":\"NOUN\"}},{\"anchors\":[{\"endChar\":64,\"quote\":\"a \\\"receiving on a channel a packet\\\" assembly\",\"startChar\":20},{\"endChar\":64,\"quote\":\"\\\"receiving on a channel a packet\\\" assembly\",\"startChar\":22}],\"dependencies\":[],\"endpointEvidence\":{\"kind\":\"positive maximal nominal head chain in independently opened source slot\",\"noFailedPredicatePremise\":true,\"notCandidateReservation\":true,\"outerAttachmentNotEstablishedBySeed\":true},\"id\":\"head-n\",\"kind\":\"existing-independent-head/name/quantity-seed\",\"rank\":0,\"schema\":\"ClaimHeadSeedCertificate\",\"seedKind\":\"existing-nominal-head\",\"terminalHeadWitness\":{\"anchor\":{\"endChar\":64,\"quote\":\"assembly\",\"startChar\":56},\"countability\":\"not inferred\",\"origin\":\"explicit source-only witness\",\"pos\":\"NOUN\"}},{\"anchors\":[{\"endChar\":19,\"quote\":\"comprising\",\"startChar\":9}],\"dependencies\":[],\"id\":\"lex-0\",\"kind\":\"explicit-POS/lemma-witness\",\"rank\":0},{\"anchors\":[{\"endChar\":32,\"quote\":\"receiving\",\"startChar\":23}],\"dependencies\":[],\"id\":\"lex-1\",\"kind\":\"explicit-POS/lemma-witness\",\"rank\":0},{\"anchors\":[],\"dependencies\":[\"source\",\"head-r\",\"head-n\",\"lex-0\",\"lex-1\"],\"id\":\"projection\",\"kind\":\"atomic-topology/owner/partition/token-ledger\",\"rank\":4}],\"coverageObligations\":[],\"declarations\":[],\"descriptionProofs\":[],\"elements\":[{\"extent\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"functionalParts\":[],\"grouping\":\"preamble\",\"id\":\"root\",\"kind\":\"preamble-subject\",\"lexicalHeader\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"nominals\":[\"r\"],\"ordinal\":1,\"ownedTermRegions\":[{\"core\":\"r\",\"extent\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"positiveCertificate\":\"existing-closed-nominal/source-frame-owned-region\"}],\"parent\":null},{\"extent\":{\"endChar\":64,\"quote\":\"a \\\"receiving on a channel a packet\\\" assembly\",\"startChar\":20},\"functionalParts\":[],\"grouping\":\"single-restriction\",\"id\":\"body\",\"kind\":\"limitation\",\"lexicalHeader\":{\"endChar\":64,\"quote\":\"a \\\"receiving on a channel a packet\\\" assembly\",\"startChar\":20},\"nominals\":[\"n\"],\"ordinal\":2,\"ownedTermRegions\":[{\"core\":\"n\",\"extent\":{\"endChar\":64,\"quote\":\"a \\\"receiving on a channel a packet\\\" assembly\",\"startChar\":20},\"positiveCertificate\":\"existing-closed-nominal/source-frame-owned-region\"}],\"parent\":\"root\"}],\"frames\":[{\"arguments\":[],\"attachment\":\"main\",\"coordination\":null,\"extent\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"id\":\"fr\",\"inheritedSubject\":null,\"introducer\":null,\"lexicalHeader\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"nominals\":[\"r\"],\"parent\":null,\"predicates\":[],\"publicOwner\":\"root\",\"subject\":null},{\"arguments\":[{\"nominal\":\"n\",\"ownerNominal\":null,\"predicate\":null,\"role\":\"unknown\"}],\"attachment\":\"main\",\"coordination\":null,\"extent\":{\"endChar\":64,\"quote\":\"a \\\"receiving on a channel a packet\\\" assembly\",\"startChar\":20},\"id\":\"fb\",\"inheritedSubject\":null,\"introducer\":null,\"lexicalHeader\":{\"endChar\":64,\"quote\":\"a \\\"receiving on a channel a packet\\\" assembly\",\"startChar\":20},\"nominals\":[\"n\"],\"parent\":null,\"predicates\":[],\"publicOwner\":\"body\",\"subject\":null}],\"nominals\":[{\"aliasEligible\":\"only independently existing explicit alias certificate; not map membership\",\"canonicalReferenceHead\":\"system\",\"core\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"head\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2},\"id\":\"r\",\"outer\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"proofClass\":\"independent existing NP/name/quantity certificate\",\"publicHead\":\"system\",\"publicOwner\":\"root\",\"role\":\"unknown\"},{\"aliasEligible\":\"only independently existing explicit alias certificate; not map membership\",\"canonicalReferenceHead\":\"\\\"receiving on a channel a packet\\\" assembly\",\"core\":{\"endChar\":64,\"quote\":\"a \\\"receiving on a channel a packet\\\" assembly\",\"startChar\":20},\"determiner\":\"a\",\"head\":{\"endChar\":64,\"quote\":\"\\\"receiving on a channel a packet\\\" assembly\",\"startChar\":22},\"id\":\"n\",\"outer\":{\"endChar\":64,\"quote\":\"a \\\"receiving on a channel a packet\\\" assembly\",\"startChar\":20},\"proofClass\":\"independent existing NP/name/quantity certificate\",\"publicHead\":\"\\\"receiving on a channel a packet\\\" assembly\",\"publicOwner\":\"body\",\"role\":\"unknown\"}],\"privateCandidates\":[],\"publicTree\":{\"claimNumber\":1,\"edges\":[{\"child\":\"1.a\",\"kind\":\"part-of\",\"parent\":\"1\"}],\"elements\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"kind\":\"preamble-subject\",\"path\":\"1\",\"terms\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"head\":\"system\"}]},{\"anchor\":{\"endChar\":64,\"quote\":\"a \\\"receiving on a channel a packet\\\" assembly\",\"startChar\":20},\"kind\":\"limitation\",\"path\":\"1.a\",\"terms\":[{\"anchor\":{\"endChar\":64,\"quote\":\"a \\\"receiving on a channel a packet\\\" assembly\",\"startChar\":20},\"determiner\":\"a\",\"head\":\"\\\"receiving on a channel a packet\\\" assembly\"}]}],\"producer\":\"rule\"},\"selectorProofs\":[],\"sourceTokenOwnership\":[{\"owner\":{\"id\":\"r\",\"kind\":\"public-core\"},\"token\":{\"endChar\":1,\"quote\":\"A\",\"startChar\":0}},{\"owner\":{\"id\":\"r\",\"kind\":\"public-core\"},\"token\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2}},{\"owner\":{\"certificate\":\"specific declared construction/transition/selector/attachment boundary\",\"kind\":\"certified-structural-control\",\"sourceWord\":\"comprising\"},\"token\":{\"endChar\":19,\"quote\":\"comprising\",\"startChar\":9}},{\"owner\":{\"id\":\"n\",\"kind\":\"public-core\"},\"token\":{\"endChar\":21,\"quote\":\"a\",\"startChar\":20}},{\"owner\":{\"id\":\"n\",\"kind\":\"public-core\"},\"token\":{\"endChar\":23,\"quote\":\"\\\"\",\"startChar\":22}},{\"owner\":{\"id\":\"n\",\"kind\":\"public-core\"},\"token\":{\"endChar\":32,\"quote\":\"receiving\",\"startChar\":23}},{\"owner\":{\"id\":\"n\",\"kind\":\"public-core\"},\"token\":{\"endChar\":35,\"quote\":\"on\",\"startChar\":33}},{\"owner\":{\"id\":\"n\",\"kind\":\"public-core\"},\"token\":{\"endChar\":37,\"quote\":\"a\",\"startChar\":36}},{\"owner\":{\"id\":\"n\",\"kind\":\"public-core\"},\"token\":{\"endChar\":45,\"quote\":\"channel\",\"startChar\":38}},{\"owner\":{\"id\":\"n\",\"kind\":\"public-core\"},\"token\":{\"endChar\":47,\"quote\":\"a\",\"startChar\":46}},{\"owner\":{\"id\":\"n\",\"kind\":\"public-core\"},\"token\":{\"endChar\":54,\"quote\":\"packet\",\"startChar\":48}},{\"owner\":{\"id\":\"n\",\"kind\":\"public-core\"},\"token\":{\"endChar\":55,\"quote\":\"\\\"\",\"startChar\":54}},{\"owner\":{\"id\":\"n\",\"kind\":\"public-core\"},\"token\":{\"endChar\":64,\"quote\":\"assembly\",\"startChar\":56}},{\"owner\":{\"certificate\":\"specific declared construction/transition/selector/attachment boundary\",\"kind\":\"certified-structural-control\",\"sourceWord\":\".\"},\"token\":{\"endChar\":65,\"quote\":\".\",\"startChar\":64}}]}",
+      "correctedExpectedSha256": "cdcf2082ce68a49858cc552487bb5046b792bcdcf4892189d4a5ff68161db07c",
+      "exactAllowedLeafDeltas": [
+        {
+          "path": "/nominals/1/head/startChar",
+          "old": 56,
+          "new": 22
+        },
+        {
+          "path": "/nominals/1/head/quote",
+          "old": "assembly",
+          "new": "\"receiving on a channel a packet\" assembly"
+        },
+        {
+          "path": "/nominals/1/publicHead",
+          "old": "assembly",
+          "new": "\"receiving on a channel a packet\" assembly"
+        },
+        {
+          "path": "/nominals/1/canonicalReferenceHead",
+          "old": "assembly",
+          "new": "\"receiving on a channel a packet\" assembly"
+        },
+        {
+          "path": "/nominals/1/role",
+          "old": "explicit-name",
+          "new": "unknown"
+        },
+        {
+          "path": "/certificateGraph/2/anchors/1/startChar",
+          "old": 56,
+          "new": 22
+        },
+        {
+          "path": "/certificateGraph/2/anchors/1/quote",
+          "old": "assembly",
+          "new": "\"receiving on a channel a packet\" assembly"
+        },
+        {
+          "path": "/certificateGraph/2/seedKind",
+          "old": "existing-whole-name",
+          "new": "existing-nominal-head"
+        },
+        {
+          "path": "/publicTree/elements/1/terms/0/head",
+          "old": "assembly",
+          "new": "\"receiving on a channel a packet\" assembly"
+        }
+      ],
+      "correctedExpected": {
+        "nominals": [
+          {
+            "id": "r",
+            "core": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "head": {
+              "startChar": 2,
+              "endChar": 8,
+              "quote": "system"
+            },
+            "outer": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "publicHead": "system",
+            "canonicalReferenceHead": "system",
+            "determiner": "a",
+            "role": "unknown",
+            "publicOwner": "root",
+            "proofClass": "independent existing NP/name/quantity certificate",
+            "aliasEligible": "only independently existing explicit alias certificate; not map membership"
+          },
+          {
+            "id": "n",
+            "core": {
+              "startChar": 20,
+              "endChar": 64,
+              "quote": "a \"receiving on a channel a packet\" assembly"
+            },
+            "head": {
+              "startChar": 22,
+              "endChar": 64,
+              "quote": "\"receiving on a channel a packet\" assembly"
+            },
+            "outer": {
+              "startChar": 20,
+              "endChar": 64,
+              "quote": "a \"receiving on a channel a packet\" assembly"
+            },
+            "publicHead": "\"receiving on a channel a packet\" assembly",
+            "canonicalReferenceHead": "\"receiving on a channel a packet\" assembly",
+            "determiner": "a",
+            "role": "unknown",
+            "publicOwner": "body",
+            "proofClass": "independent existing NP/name/quantity certificate",
+            "aliasEligible": "only independently existing explicit alias certificate; not map membership"
+          }
+        ],
+        "privateCandidates": [],
+        "frames": [
+          {
+            "id": "fr",
+            "extent": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "lexicalHeader": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "publicOwner": "root",
+            "parent": null,
+            "attachment": "main",
+            "introducer": null,
+            "predicates": [],
+            "subject": null,
+            "arguments": [],
+            "nominals": ["r"],
+            "inheritedSubject": null,
+            "coordination": null
+          },
+          {
+            "id": "fb",
+            "extent": {
+              "startChar": 20,
+              "endChar": 64,
+              "quote": "a \"receiving on a channel a packet\" assembly"
+            },
+            "lexicalHeader": {
+              "startChar": 20,
+              "endChar": 64,
+              "quote": "a \"receiving on a channel a packet\" assembly"
+            },
+            "publicOwner": "body",
+            "parent": null,
+            "attachment": "main",
+            "introducer": null,
+            "predicates": [],
+            "subject": null,
+            "arguments": [
+              {
+                "nominal": "n",
+                "role": "unknown",
+                "predicate": null,
+                "ownerNominal": null
+              }
+            ],
+            "nominals": ["n"],
+            "inheritedSubject": null,
+            "coordination": null
+          }
+        ],
+        "elements": [
+          {
+            "id": "root",
+            "parent": null,
+            "kind": "preamble-subject",
+            "grouping": "preamble",
+            "extent": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "lexicalHeader": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "ordinal": 1,
+            "nominals": ["r"],
+            "ownedTermRegions": [
+              {
+                "core": "r",
+                "extent": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A system"
+                },
+                "positiveCertificate": "existing-closed-nominal/source-frame-owned-region"
+              }
+            ],
+            "functionalParts": []
+          },
+          {
+            "id": "body",
+            "parent": "root",
+            "kind": "limitation",
+            "grouping": "single-restriction",
+            "extent": {
+              "startChar": 20,
+              "endChar": 64,
+              "quote": "a \"receiving on a channel a packet\" assembly"
+            },
+            "lexicalHeader": {
+              "startChar": 20,
+              "endChar": 64,
+              "quote": "a \"receiving on a channel a packet\" assembly"
+            },
+            "ordinal": 2,
+            "nominals": ["n"],
+            "ownedTermRegions": [
+              {
+                "core": "n",
+                "extent": {
+                  "startChar": 20,
+                  "endChar": 64,
+                  "quote": "a \"receiving on a channel a packet\" assembly"
+                },
+                "positiveCertificate": "existing-closed-nominal/source-frame-owned-region"
+              }
+            ],
+            "functionalParts": []
+          }
+        ],
+        "descriptionProofs": [],
+        "selectorProofs": [],
+        "coverageObligations": [],
+        "sourceTokenOwnership": [
+          {
+            "token": {
+              "startChar": 0,
+              "endChar": 1,
+              "quote": "A"
+            },
+            "owner": {
+              "kind": "public-core",
+              "id": "r"
+            }
+          },
+          {
+            "token": {
+              "startChar": 2,
+              "endChar": 8,
+              "quote": "system"
+            },
+            "owner": {
+              "kind": "public-core",
+              "id": "r"
+            }
+          },
+          {
+            "token": {
+              "startChar": 9,
+              "endChar": 19,
+              "quote": "comprising"
+            },
+            "owner": {
+              "kind": "certified-structural-control",
+              "certificate": "specific declared construction/transition/selector/attachment boundary",
+              "sourceWord": "comprising"
+            }
+          },
+          {
+            "token": {
+              "startChar": 20,
+              "endChar": 21,
+              "quote": "a"
+            },
+            "owner": {
+              "kind": "public-core",
+              "id": "n"
+            }
+          },
+          {
+            "token": {
+              "startChar": 22,
+              "endChar": 23,
+              "quote": "\""
+            },
+            "owner": {
+              "kind": "public-core",
+              "id": "n"
+            }
+          },
+          {
+            "token": {
+              "startChar": 23,
+              "endChar": 32,
+              "quote": "receiving"
+            },
+            "owner": {
+              "kind": "public-core",
+              "id": "n"
+            }
+          },
+          {
+            "token": {
+              "startChar": 33,
+              "endChar": 35,
+              "quote": "on"
+            },
+            "owner": {
+              "kind": "public-core",
+              "id": "n"
+            }
+          },
+          {
+            "token": {
+              "startChar": 36,
+              "endChar": 37,
+              "quote": "a"
+            },
+            "owner": {
+              "kind": "public-core",
+              "id": "n"
+            }
+          },
+          {
+            "token": {
+              "startChar": 38,
+              "endChar": 45,
+              "quote": "channel"
+            },
+            "owner": {
+              "kind": "public-core",
+              "id": "n"
+            }
+          },
+          {
+            "token": {
+              "startChar": 46,
+              "endChar": 47,
+              "quote": "a"
+            },
+            "owner": {
+              "kind": "public-core",
+              "id": "n"
+            }
+          },
+          {
+            "token": {
+              "startChar": 48,
+              "endChar": 54,
+              "quote": "packet"
+            },
+            "owner": {
+              "kind": "public-core",
+              "id": "n"
+            }
+          },
+          {
+            "token": {
+              "startChar": 54,
+              "endChar": 55,
+              "quote": "\""
+            },
+            "owner": {
+              "kind": "public-core",
+              "id": "n"
+            }
+          },
+          {
+            "token": {
+              "startChar": 56,
+              "endChar": 64,
+              "quote": "assembly"
+            },
+            "owner": {
+              "kind": "public-core",
+              "id": "n"
+            }
+          },
+          {
+            "token": {
+              "startChar": 64,
+              "endChar": 65,
+              "quote": "."
+            },
+            "owner": {
+              "kind": "certified-structural-control",
+              "certificate": "specific declared construction/transition/selector/attachment boundary",
+              "sourceWord": "."
+            }
+          }
+        ],
+        "declarations": [],
+        "certificateGraph": [
+          {
+            "id": "source",
+            "rank": 0,
+            "kind": "qualified-source/transition",
+            "anchors": [
+              {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              }
+            ],
+            "dependencies": []
+          },
+          {
+            "id": "head-r",
+            "rank": 0,
+            "kind": "existing-independent-head/name/quantity-seed",
+            "anchors": [
+              {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              }
+            ],
+            "dependencies": [],
+            "schema": "ClaimHeadSeedCertificate",
+            "seedKind": "existing-nominal-head",
+            "terminalHeadWitness": {
+              "anchor": {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              },
+              "pos": "NOUN",
+              "countability": "not inferred",
+              "origin": "explicit source-only witness"
+            },
+            "endpointEvidence": {
+              "kind": "positive maximal nominal head chain in independently opened source slot",
+              "notCandidateReservation": true,
+              "noFailedPredicatePremise": true,
+              "outerAttachmentNotEstablishedBySeed": true
+            }
+          },
+          {
+            "id": "head-n",
+            "rank": 0,
+            "kind": "existing-independent-head/name/quantity-seed",
+            "anchors": [
+              {
+                "startChar": 20,
+                "endChar": 64,
+                "quote": "a \"receiving on a channel a packet\" assembly"
+              },
+              {
+                "startChar": 22,
+                "endChar": 64,
+                "quote": "\"receiving on a channel a packet\" assembly"
+              }
+            ],
+            "dependencies": [],
+            "schema": "ClaimHeadSeedCertificate",
+            "seedKind": "existing-nominal-head",
+            "terminalHeadWitness": {
+              "anchor": {
+                "startChar": 56,
+                "endChar": 64,
+                "quote": "assembly"
+              },
+              "pos": "NOUN",
+              "countability": "not inferred",
+              "origin": "explicit source-only witness"
+            },
+            "endpointEvidence": {
+              "kind": "positive maximal nominal head chain in independently opened source slot",
+              "notCandidateReservation": true,
+              "noFailedPredicatePremise": true,
+              "outerAttachmentNotEstablishedBySeed": true
+            }
+          },
+          {
+            "id": "lex-0",
+            "rank": 0,
+            "kind": "explicit-POS/lemma-witness",
+            "anchors": [
+              {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              }
+            ],
+            "dependencies": []
+          },
+          {
+            "id": "lex-1",
+            "rank": 0,
+            "kind": "explicit-POS/lemma-witness",
+            "anchors": [
+              {
+                "startChar": 23,
+                "endChar": 32,
+                "quote": "receiving"
+              }
+            ],
+            "dependencies": []
+          },
+          {
+            "id": "projection",
+            "rank": 4,
+            "kind": "atomic-topology/owner/partition/token-ledger",
+            "anchors": [],
+            "dependencies": ["source", "head-r", "head-n", "lex-0", "lex-1"]
+          }
+        ],
+        "publicTree": {
+          "claimNumber": 1,
+          "producer": "rule",
+          "elements": [
+            {
+              "path": "1",
+              "anchor": {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              "kind": "preamble-subject",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 0,
+                    "endChar": 8,
+                    "quote": "A system"
+                  },
+                  "head": "system",
+                  "determiner": "a"
+                }
+              ]
+            },
+            {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 20,
+                "endChar": 64,
+                "quote": "a \"receiving on a channel a packet\" assembly"
+              },
+              "kind": "limitation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 20,
+                    "endChar": 64,
+                    "quote": "a \"receiving on a channel a packet\" assembly"
+                  },
+                  "head": "\"receiving on a channel a packet\" assembly",
+                  "determiner": "a"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "kind": "part-of",
+              "child": "1.a",
+              "parent": "1"
+            }
+          ]
+        }
+      },
+      "correctedPublicTree": {
+        "claimNumber": 1,
+        "producer": "rule",
+        "elements": [
+          {
+            "path": "1",
+            "anchor": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "kind": "preamble-subject",
+            "terms": [
+              {
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A system"
+                },
+                "head": "system",
+                "determiner": "a"
+              }
+            ]
+          },
+          {
+            "path": "1.a",
+            "anchor": {
+              "startChar": 20,
+              "endChar": 64,
+              "quote": "a \"receiving on a channel a packet\" assembly"
+            },
+            "kind": "limitation",
+            "terms": [
+              {
+                "anchor": {
+                  "startChar": 20,
+                  "endChar": 64,
+                  "quote": "a \"receiving on a channel a packet\" assembly"
+                },
+                "head": "\"receiving on a channel a packet\" assembly",
+                "determiner": "a"
+              }
+            ]
+          }
+        ],
+        "edges": [
+          {
+            "kind": "part-of",
+            "child": "1.a",
+            "parent": "1"
+          }
+        ]
+      },
+      "originalPublicTreeCanonicalJson": "{\"claimNumber\":1,\"edges\":[{\"child\":\"1.a\",\"kind\":\"part-of\",\"parent\":\"1\"}],\"elements\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"kind\":\"preamble-subject\",\"path\":\"1\",\"terms\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"head\":\"system\"}]},{\"anchor\":{\"endChar\":64,\"quote\":\"a \\\"receiving on a channel a packet\\\" assembly\",\"startChar\":20},\"kind\":\"limitation\",\"path\":\"1.a\",\"terms\":[{\"anchor\":{\"endChar\":64,\"quote\":\"a \\\"receiving on a channel a packet\\\" assembly\",\"startChar\":20},\"determiner\":\"a\",\"head\":\"assembly\"}]}],\"producer\":\"rule\"}",
+      "originalPublicTreeSha256": "6a1c97228b6d4295067c6e0158f362d2b09ac54cf278226012a584b4e04af1ef",
+      "correctedPublicTreeCanonicalJson": "{\"claimNumber\":1,\"edges\":[{\"child\":\"1.a\",\"kind\":\"part-of\",\"parent\":\"1\"}],\"elements\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"kind\":\"preamble-subject\",\"path\":\"1\",\"terms\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"head\":\"system\"}]},{\"anchor\":{\"endChar\":64,\"quote\":\"a \\\"receiving on a channel a packet\\\" assembly\",\"startChar\":20},\"kind\":\"limitation\",\"path\":\"1.a\",\"terms\":[{\"anchor\":{\"endChar\":64,\"quote\":\"a \\\"receiving on a channel a packet\\\" assembly\",\"startChar\":20},\"determiner\":\"a\",\"head\":\"\\\"receiving on a channel a packet\\\" assembly\"}]}],\"producer\":\"rule\"}",
+      "correctedPublicTreeSha256": "69200579b30d1250ce0f2484f2f7af2be866e3726df14b83d6eea1be8c84b450"
+    }
+  ]
+}

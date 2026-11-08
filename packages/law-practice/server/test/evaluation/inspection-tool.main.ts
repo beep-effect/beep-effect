@@ -8,7 +8,6 @@ import { PatentNumber } from "@beep/law-practice-domain/values/PatentNumber";
 import { UsptoClaimInputsLive } from "@beep/law-practice-server/UsptoClaims";
 import {
   ClaimInspection,
-  ClaimInspectionLive,
   ClaimInspectionPage,
   ClaimInspectionPageRequest,
   PublishedClaimInspectionReport,
@@ -33,6 +32,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { makeEvaluationInspectionRuntime } from "./inspection-tool.lexical.ts";
 import { compareStructuralFamily, StructuralEvaluationError } from "./Structural.ts";
 import type { ClaimInspectionCursor } from "@beep/law-practice-use-cases/ClaimSelfCheck";
 import type * as Result from "effect/Result";
@@ -348,6 +348,10 @@ const program = Effect.gen(function* () {
     });
   }
   yield* fs.makeDirectory(output, { recursive: true });
+  // The evaluation Scope owns one fixed provider, independently of family
+  // acquisition scopes. A typed failed attempt is reused as the same failure;
+  // the shared enhancement factory retains honest unavailable coverage.
+  const inspectionRuntime = yield* makeEvaluationInspectionRuntime();
   const rows = yield* Effect.forEach(
     inputs,
     ({ family, source, gold, canonical, xml }, index) =>
@@ -368,12 +372,12 @@ const program = Effect.gen(function* () {
           ],
         });
         const transport = replayTransport(metadata, alias, xml);
-        const live = ClaimInspectionLive.pipe(
-          Layer.provide(UsptoClaimInputsLive),
+        const replayInputs = UsptoClaimInputsLive.pipe(
           Layer.provide(BunCrypto.layer),
           Layer.provide(Uspto.makeLayer(UsptoConfigInput.make({}))),
           Layer.provide(transport)
         );
+        const live = inspectionRuntime.pipe(Layer.provide(replayInputs));
         const bundle = yield* Effect.gen(function* () {
           const context = yield* Layer.build(live);
           const acquired = yield* ClaimInspection.use((service) =>

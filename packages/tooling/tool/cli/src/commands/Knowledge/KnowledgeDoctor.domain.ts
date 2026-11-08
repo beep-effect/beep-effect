@@ -35,7 +35,8 @@ import {
 } from "../Goals/Inventory.ts";
 import { SkillLockFile } from "../Skills/Skills.command.ts";
 import { KnowledgeOperationalError } from "./Knowledge.errors.ts";
-import { decodeKnowledgeUtf8, knowledgeLineMatches } from "./Knowledge.refs.ts";
+import { deriveKnowledgePackages, knowledgeTreeFacts } from "./Knowledge.packages.ts";
+import { knowledgeLineMatches } from "./Knowledge.refs.ts";
 import {
   KnowledgeFileExports,
   KnowledgePackageEntrypoint,
@@ -104,7 +105,6 @@ export const KNOWLEDGE_SKILLS_DIR = ".claude/skills";
 export const KNOWLEDGE_TSCONFIG_PATH = "tsconfig.json";
 
 const SKILL_FILE = "SKILL.md";
-const PACKAGE_MANIFEST = "package.json";
 const WORKSPACE_SCOPE = "@beep/";
 
 /**
@@ -138,37 +138,6 @@ export interface KnowledgeDoctorDomain {
 
 const trackedPaths = (oracle: KnowledgeTreeOracle): HashSet.HashSet<string> =>
   HashSet.fromIterable(A.map(oracle.trackedEntries, (entry) => entry.path));
-
-const isRegularBlob = (mode: string): boolean => mode === "100644" || mode === "100755";
-
-const readText = (oracle: KnowledgeTreeOracle, repoPath: string) =>
-  Effect.flatMap(oracle.readBytes(repoPath), (bytes) =>
-    decodeKnowledgeUtf8(bytes, `Malformed UTF-8 in tracked file "${repoPath}".`)
-  );
-
-const readTextIfTracked = (oracle: KnowledgeTreeOracle, paths: HashSet.HashSet<string>, repoPath: string) =>
-  HashSet.has(paths, repoPath) ? Effect.asSome(readText(oracle, repoPath)) : Effect.succeed(O.none<string>());
-
-const dirname = (repoPath: string): string => A.join(A.dropRight(Str.split("/")(repoPath), 1), "/");
-
-// Joins a relative spelling onto a repository directory, resolving `.` and `..` segments. A path
-// that climbs above the repository root is not a repository path.
-const joinRepoPath = (base: string, relative: string): O.Option<string> =>
-  pipe(
-    A.appendAll(Str.isEmpty(base) ? A.empty<string>() : Str.split("/")(base), Str.split("/")(relative)),
-    A.reduce(O.some(A.empty<string>()), (state, segment) =>
-      O.flatMap(state, (segments) =>
-        segment === "" || segment === "."
-          ? O.some(segments)
-          : segment === ".."
-            ? A.isReadonlyArrayNonEmpty(segments)
-              ? O.some(A.dropRight(segments, 1))
-              : O.none()
-            : O.some(A.append(segments, segment))
-      )
-    ),
-    O.map(A.join("/"))
-  );
 
 /* -------------------------------------------------------------------------------------------------
  * Goal packets
@@ -226,9 +195,9 @@ export const readKnowledgeGoalPacketRecords = Effect.fn("KnowledgeDoctorDomain.g
     const readmePath = `${packetPath}/README.md`;
     return Effect.map(
       Effect.all({
-        manifestText: readTextIfTracked(oracle, paths, manifestPath),
-        readmeText: readTextIfTracked(oracle, paths, readmePath),
-        goalMd: readTextIfTracked(oracle, paths, `${packetPath}/GOAL.md`),
+        manifestText: knowledgeTreeFacts.readTextIfTracked(oracle, paths, manifestPath),
+        readmeText: knowledgeTreeFacts.readTextIfTracked(oracle, paths, readmePath),
+        goalMd: knowledgeTreeFacts.readTextIfTracked(oracle, paths, `${packetPath}/GOAL.md`),
       }),
       ({ manifestText, readmeText, goalMd }) =>
         GoalPacketRecord.make({
@@ -377,17 +346,19 @@ export const makeKnowledgeGoalPacketReader = (
     );
   return {
     decisionFiles: (packetPath) => Effect.succeed(directFiles(`${packetPath}/${DECISIONS_DIR}/`)),
-    readDecision: (packetPath, file) => readText(oracle, `${packetPath}/${DECISIONS_DIR}/${file}`),
-    readDocument: (packetPath, document) => readTextIfTracked(oracle, paths, `${packetPath}/${document}`),
+    readDecision: (packetPath, file) => knowledgeTreeFacts.readText(oracle, `${packetPath}/${DECISIONS_DIR}/${file}`),
+    readDocument: (packetPath, document) =>
+      knowledgeTreeFacts.readTextIfTracked(oracle, paths, `${packetPath}/${document}`),
     reflectionFiles: (packetPath) => Effect.succeed(directFiles(`${packetPath}/${REFLECTIONS_DIR}/`)),
     opsFiles: (packetPath) => Effect.succeed(sortedPacketFiles(opsFilesByPacket, packetPath)),
     researchFiles: (packetPath) => Effect.succeed(sortedPacketFiles(researchFilesByPacket, packetPath)),
-    readReflection: (packetPath, file) => readText(oracle, `${packetPath}/${REFLECTIONS_DIR}/${file}`),
+    readReflection: (packetPath, file) =>
+      knowledgeTreeFacts.readText(oracle, `${packetPath}/${REFLECTIONS_DIR}/${file}`),
     explorationPath: (exploration) =>
       Effect.succeed(
         pipe(
           O.liftPredicate(exploration, (value) => !isEscapingSpelling(value)),
-          O.flatMap((value) => joinRepoPath("", value)),
+          O.flatMap((value) => knowledgeTreeFacts.joinRepoPath("", value)),
           O.match({
             onNone: () => GoalExplorationPathState.Enum.escapes,
             onSome: (repoPath) =>
@@ -450,18 +421,6 @@ export const readKnowledgeGoalsDoctorFindings = Effect.fn("KnowledgeDoctorDomain
  * Workspace packages and exports
  * ---------------------------------------------------------------------------------------------- */
 
-class PackageManifestJson extends S.Opaque<PackageManifestJson, { readonly brand: unique symbol }>()(
-  S.Struct({
-    name: S.optionalKey(S.String),
-    exports: S.optionalKey(S.Unknown),
-    workspaces: S.optionalKey(S.Unknown),
-  }).pipe(
-    $I.annoteSchema("PackageManifestJson", {
-      description: "The package.json fields the symbols evaluator reads: name, exports map, and workspace globs.",
-    })
-  )
-) {}
-
 class TsconfigPathsJson extends S.Opaque<TsconfigPathsJson, { readonly brand: unique symbol }>()(
   S.Struct({
     compilerOptions: S.optionalKey(
@@ -476,134 +435,10 @@ class TsconfigPathsJson extends S.Opaque<TsconfigPathsJson, { readonly brand: un
   )
 ) {}
 
-const decodePackageManifest = Jsonc.bind(PackageManifestJson).decode;
 const decodeTsconfigPaths = Jsonc.bind(TsconfigPathsJson).decode;
 
-const CONDITION_ORDER = ["bun", "import", "default", "types", "require", "node"] as const;
-
-// Resolves one exports-map value to its target spelling: a string is the target, `null` blocks the
-// key, an array falls through to its first resolvable member, and a condition object prefers the
-// runtime conditions in `CONDITION_ORDER` before any other key.
-const exportTarget = (value: unknown): O.Option<string> => {
-  if (P.isString(value)) {
-    return O.some(value);
-  }
-  if (A.isArray(value)) {
-    return A.findFirst(value, exportTarget);
-  }
-  if (P.isObject(value)) {
-    const record: Readonly<Record<string, unknown>> = value;
-    const keys = A.appendAll(
-      A.filter(CONDITION_ORDER, (key) => R.has(record, key)),
-      A.filter(R.keys(record), (key) => !A.contains(CONDITION_ORDER, key))
-    );
-    return A.findFirst(keys, (key) => O.flatMap(R.get(record, key), exportTarget));
-  }
-  return O.none();
-};
-
-const entrypoint = (root: string, key: string, value: unknown): KnowledgePackageEntrypoint =>
-  KnowledgePackageEntrypoint.make({
-    key,
-    target: O.flatMap(exportTarget(value), (target) => joinRepoPath(root, target)),
-  });
-
-const packageEntrypoints = (root: string, exportsValue: unknown): ReadonlyArray<KnowledgePackageEntrypoint> => {
-  if (P.isUndefined(exportsValue)) {
-    return A.empty();
-  }
-  if (P.isObject(exportsValue) && !A.isArray(exportsValue)) {
-    const record: Readonly<Record<string, unknown>> = exportsValue;
-    const subpathKeys = A.filter(R.keys(record), Str.startsWith("."));
-    return A.isReadonlyArrayNonEmpty(subpathKeys)
-      ? A.map(subpathKeys, (key) => entrypoint(root, key, record[key]))
-      : [entrypoint(root, ".", exportsValue)];
-  }
-  return [entrypoint(root, ".", exportsValue)];
-};
-
-const isPackageManifestEntry = (repoPath: string): boolean =>
-  repoPath === PACKAGE_MANIFEST || Str.endsWith(`/${PACKAGE_MANIFEST}`)(repoPath);
-
-const readWorkspacePackage = (oracle: KnowledgeTreeOracle, manifestPath: string) =>
-  readText(oracle, manifestPath).pipe(
-    Effect.flatMap((text) => decodePackageManifest(text).pipe(Effect.option)),
-    Effect.map((manifest) =>
-      pipe(
-        O.flatMap(manifest, (value) => O.fromUndefinedOr(value.name)),
-        O.filter(Str.startsWith(WORKSPACE_SCOPE)),
-        O.map((name) => {
-          const root = dirname(manifestPath);
-          return KnowledgeWorkspacePackage.make({
-            name,
-            manifestPath,
-            root,
-            entrypoints: packageEntrypoints(
-              root,
-              O.getOrUndefined(O.flatMap(manifest, (value) => O.fromUndefinedOr(value.exports)))
-            ),
-          });
-        })
-      )
-    )
-  );
-
-// The root manifest's workspace globs, in either the array or the `{ packages }` spelling.
-const workspaceGlobs = (value: unknown): ReadonlyArray<string> => {
-  const list = P.isObject(value) && !A.isArray(value) ? O.getOrUndefined(R.get(value, "packages")) : value;
-  return A.isArray(list) ? A.filter(list, P.isString) : A.empty();
-};
-
-const matchesWorkspaceGlob = (directory: string, glob: string): boolean => {
-  const segments = Str.split("/")(directory);
-  const pattern = Str.split("/")(Str.replace(/^\.\//u, "")(glob));
-  return (
-    A.length(segments) === A.length(pattern) &&
-    A.every(A.zip(segments, pattern), ([segment, part]) => part === "*" || part === segment)
-  );
-};
-
-const readWorkspaceGlobs = (oracle: KnowledgeTreeOracle, paths: HashSet.HashSet<string>) =>
-  readTextIfTracked(oracle, paths, PACKAGE_MANIFEST).pipe(
-    Effect.flatMap((text) =>
-      O.match(text, {
-        onNone: () => Effect.succeedNone,
-        onSome: (value) => decodePackageManifest(value).pipe(Effect.option),
-      })
-    ),
-    Effect.map((manifest) =>
-      O.filter(
-        O.map(
-          O.flatMap(manifest, (value) => O.fromUndefinedOr(value.workspaces)),
-          workspaceGlobs
-        ),
-        A.isReadonlyArrayNonEmpty
-      )
-    )
-  );
-
-const isWorkspaceManifest = (globs: O.Option<ReadonlyArray<string>>, manifestPath: string): boolean =>
-  manifestPath === PACKAGE_MANIFEST ||
-  O.match(globs, {
-    onNone: () => true,
-    onSome: A.some((glob) => matchesWorkspaceGlob(dirname(manifestPath), glob)),
-  });
-
-const derivePackages = Effect.fn("KnowledgeDoctorDomain.packages")(function* (
-  oracle: KnowledgeTreeOracle,
-  paths: HashSet.HashSet<string>
-) {
-  const globs = yield* readWorkspaceGlobs(oracle, paths);
-  const manifests = A.filter(
-    oracle.trackedEntries,
-    (entry) => isRegularBlob(entry.mode) && isPackageManifestEntry(entry.path) && isWorkspaceManifest(globs, entry.path)
-  );
-  const forEach1 = yield* Effect.forEach(manifests, (entry) => readWorkspacePackage(oracle, entry.path));
-  return A.getSomes(forEach1);
-});
-
 const derivePathAliases = (oracle: KnowledgeTreeOracle, paths: HashSet.HashSet<string>) =>
-  readTextIfTracked(oracle, paths, KNOWLEDGE_TSCONFIG_PATH).pipe(
+  knowledgeTreeFacts.readTextIfTracked(oracle, paths, KNOWLEDGE_TSCONFIG_PATH).pipe(
     Effect.flatMap((text) =>
       O.match(text, {
         onNone: () => Effect.succeed(O.none<TsconfigPathsJson>()),
@@ -619,7 +454,7 @@ const derivePathAliases = (oracle: KnowledgeTreeOracle, paths: HashSet.HashSet<s
             ([key, targets]) =>
               KnowledgePackageEntrypoint.make({
                 key,
-                target: O.flatMap(A.head(targets), (target) => joinRepoPath("", target)),
+                target: O.flatMap(A.head(targets), (target) => knowledgeTreeFacts.joinRepoPath("", target)),
               })
           )
         ),
@@ -651,7 +486,7 @@ const STAR_CANDIDATE_SUFFIXES = ["", ".ts", ".tsx", "/index.ts", "/index.tsx"] a
 const resolveStar = (paths: HashSet.HashSet<string>, file: string, specifier: string): O.Option<string> =>
   Str.startsWith(".")(specifier)
     ? pipe(
-        joinRepoPath(dirname(file), Str.replace(/\.js$/u, ".ts")(specifier)),
+        knowledgeTreeFacts.joinRepoPath(knowledgeTreeFacts.dirname(file), Str.replace(/\.js$/u, ".ts")(specifier)),
         O.flatMap((base) =>
           A.findFirst(STAR_CANDIDATE_SUFFIXES, (suffix) =>
             HashSet.has(paths, `${base}${suffix}`) ? O.some(`${base}${suffix}`) : O.none()
@@ -767,7 +602,7 @@ export const scanKnowledgeFileExports: {
 });
 
 const deriveFileExports = (oracle: KnowledgeTreeOracle, paths: HashSet.HashSet<string>, file: string) =>
-  Effect.map(readTextIfTracked(oracle, paths, file), (text) =>
+  Effect.map(knowledgeTreeFacts.readTextIfTracked(oracle, paths, file), (text) =>
     O.match(text, {
       onNone: () => KnowledgeFileExports.make({ file, names: [], stars: [], opaqueStars: [] }),
       onSome: (value) => scanKnowledgeFileExports(file, value, paths),
@@ -858,7 +693,7 @@ const deriveSkills = Effect.fn("KnowledgeDoctorDomain.skills")(function* (
     A.dedupe(A.getSomes(A.map(oracle.trackedEntries, (entry) => installedSkill(entry.path)))),
     Order.String
   );
-  const lockText = yield* readTextIfTracked(oracle, paths, KNOWLEDGE_SKILLS_LOCK_PATH);
+  const lockText = yield* knowledgeTreeFacts.readTextIfTracked(oracle, paths, KNOWLEDGE_SKILLS_LOCK_PATH);
   if (O.isNone(lockText)) {
     return KnowledgeSkillsFacts.make({ lockVersion: O.none(), entries: [], installed });
   }
@@ -903,7 +738,7 @@ export const deriveKnowledgeDoctorDomain = (oracle: KnowledgeTreeOracle): Knowle
   const paths = trackedPaths(oracle);
   return {
     packets: derivePackets(oracle),
-    packages: derivePackages(oracle, paths),
+    packages: deriveKnowledgePackages(oracle, paths),
     pathAliases: derivePathAliases(oracle, paths),
     fileExports: (file) => deriveFileExports(oracle, paths, file),
     goalsDoctorFindings: readKnowledgeGoalsDoctorFindings(oracle),

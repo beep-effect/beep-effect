@@ -1,0 +1,84 @@
+name: Beep CI Binary
+
+# Compile the pre-toolchain `beep ci` commands (packages/tooling/tool/cli/src/bin-ci.ts)
+# into a standalone linux-x64 executable and publish it as the release asset
+# `beep-ci-<12-char sha>` with its sha256 checksum. Hosted jobs fetch a pinned
+# tag and verify the pinned checksum before `bun install`; a pin bump is its
+# own pull request (goals/scripts-to-beep-cli decision
+# 2026-11-07-ci-binary-release-asset). Only main commits publish: the binary
+# that gates a pull request is never built from that pull request's head.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - packages/tooling/tool/cli/**
+      - packages/tooling/library/**
+      - packages/foundation/**
+      - packages/drivers/**
+      - bun.lock
+      - .bun-version
+      - .github/workflows/beep-ci-binary.yml
+  workflow_dispatch:
+
+# One publish per commit; a newer main push never cancels an upload in flight.
+concurrency:
+  group: beep-ci-binary-${{ github.sha }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Publish Beep CI Binary
+    # Publish only default-branch commits; a dispatch from another ref is a no-op.
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          use-node: "false"
+
+      - name: Compile the CI binary
+        shell: bash
+        run: bun run beep ci compile-binary --outfile dist/beep-linux-x64
+
+      - name: Smoke-run the CI binary
+        shell: bash
+        run: |
+          (cd dist && sha256sum --check beep-linux-x64.sha256)
+          GITHUB_EVENT_NAME=push GITHUB_OUTPUT="" dist/beep-linux-x64 ci change-profile
+          dist/beep-linux-x64 ci patterns
+          smoke_apt="$(mktemp -d)"
+          touch "$smoke_apt/third-party.list" "$smoke_apt/ubuntu.sources"
+          dist/beep-linux-x64 ci prune-apt "$smoke_apt"
+          test ! -e "$smoke_apt/third-party.list" && test -e "$smoke_apt/ubuntu.sources"
+          RUNNER_TEMP="$(mktemp -d)" dist/beep-linux-x64 ci runner-resources smoke -- true
+
+      - name: Publish the release asset
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TARGET_SHA: ${{ github.sha }}
+        run: |
+          tag="beep-ci-${TARGET_SHA:0:12}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag already exists; nothing to publish."
+            exit 0
+          fi
+          gh release create "$tag" dist/beep-linux-x64 dist/beep-linux-x64.sha256 \
+            --target "$TARGET_SHA" \
+            --title "$tag" \
+            --notes "Pre-toolchain beep CI binary (linux-x64) compiled from ${TARGET_SHA}." \
+            --latest=false

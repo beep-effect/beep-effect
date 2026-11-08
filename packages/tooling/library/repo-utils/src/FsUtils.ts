@@ -12,6 +12,7 @@ import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { $RepoUtilsId } from "@beep/identity/packages";
 import { A, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
+import { DescendOptions } from "@beep/walker/Descend";
 import { compileAndExpand } from "@beep/walker/Expand";
 import { Walker } from "@beep/walker/Walker";
 import * as Context from "effect/Context";
@@ -59,6 +60,9 @@ export class GlobOptions extends S.Opaque<GlobOptions, { readonly brand: unique 
     }),
     followSymlinks: S.optionalKey(S.Boolean).annotateKey({
       description: "Descend into symlinked directories, with a per-branch cycle guard, when true.",
+    }),
+    onStatError: DescendOptions.fields.onStatError.annotateKey({
+      description: "Skip stat errors by default; fail preserves non-NotFound failures with their cause.",
     }),
     ignore: S.optionalKey(S.Union([S.String, S.Array(S.String)])).annotateKey({
       description: "One or more glob patterns excluded from the search.",
@@ -328,6 +332,7 @@ export const FsUtilsLive: Layer.Layer<FsUtils, never, FileSystem.FileSystem | Pa
           prune: pruneFromIgnores(A.filter(ignores, (ignore) => !path.isAbsolute(ignore))),
           followSymlinks: options.followSymlinks ?? false,
           onUnreadable: "fail" as const,
+          onStatError: options.onStatError ?? "skip",
         };
         if (A.some(includes, (include) => !path.isAbsolute(include))) yield* requireDirectory(fs, cwd);
 

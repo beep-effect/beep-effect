@@ -24,6 +24,7 @@
     {"name":"PracticeKgSmoke.runCompiledHandshake","owner":"@beep/practice-kg-mcp","family":"app","conforms":true},
     {"name":"PracticeKgSmoke.runCompiledHost","owner":"@beep/practice-kg-mcp","family":"app","conforms":true},
     {"name":"PracticeKgSmoke.runCompiledSelfCheck","owner":"@beep/practice-kg-mcp","family":"app","conforms":true},
+    {"name":"PracticeKgSmoke.verifyCompiledClaimInspection","owner":"@beep/practice-kg-mcp","family":"app","conforms":true},
     {"name":"PracticeKgTelemetryCheck.print","owner":"@beep/practice-kg-mcp","family":"app","conforms":true},
     {"name":"PracticeKgTelemetryCheck.run","owner":"@beep/practice-kg-mcp","family":"app","conforms":true},
     {"name":"PracticeKgTelemetryKey.read","owner":"@beep/practice-kg-mcp","family":"app","conforms":true},

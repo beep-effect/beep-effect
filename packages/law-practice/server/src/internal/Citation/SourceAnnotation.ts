@@ -4,6 +4,7 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationAnnotationMode,
+  CitationEngineAnnotationInput,
   CitationEngineAnnotationResult,
   CitationEngineReport,
   CitationInputError,
@@ -43,6 +44,7 @@ const Slot = S.Struct({ source: SourceTextIdentity, sourceText: S.String }).pipe
 const SourceJson = SourceTextIdentity.pipe(S.toCodecJson, S.fromJsonString);
 const Mode = S.Struct({
   mode: CitationAnnotationMode.pipe(S.withDecodingDefaultKey(Effect.succeed("unchecked"))),
+  useDmp: CitationEngineAnnotationInput.fields.useDmp,
 }).pipe($I.annoteSchema("Mode", { description: "Annotation policy inspected before source and replacement fields." }));
 const Markup = S.Struct({ markup: S.NullOr(Slot).pipe(S.withDecodingDefaultKey(Effect.succeed(null))) }).pipe(
   $I.annoteSchema("Markup", {
@@ -113,7 +115,7 @@ const captureRequest = Effect.fn("Citation.captureAnnotationRequest")(function* 
       );
   if (plain === null && markup === null) return yield* invalid();
   const replacements = yield* ownCitationAnnotationReplacements(limits, raw);
-  return { mode: mode.mode, plain, markup, replacements };
+  return { mode: mode.mode, useDmp: mode.useDmp, plain, markup, replacements };
 });
 const resolveSources = Effect.fn("Citation.resolveAnnotationSources")(function* (
   owned: Effect.Success<ReturnType<typeof own>>,
@@ -159,6 +161,7 @@ const prepare = Effect.fn("Citation.annotateResolvedSource")(function* (
       const native = yield* nativeSources(limits, sources);
       const text = yield* prepareCitationAnnotationEntry(limits, runtime, owned.annotation, {
         mode: request.mode,
+        useDmp: request.useDmp,
         ...native,
         replacements: request.replacements,
       });

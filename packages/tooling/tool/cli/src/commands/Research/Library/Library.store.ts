@@ -5,13 +5,17 @@
  * @since 0.0.0
  */
 
+import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { LibraryError } from "./Library.errors.ts";
@@ -44,6 +48,25 @@ export const hashBytes = Effect.fn("ResearchLibrary.hashBytes")(function* (bytes
   return Hex.encode(pipe1);
 });
 
+// The writer lock admits one writer at a time, so a process may reuse the catalog it last wrote while the
+// canonical file still holds exactly the bytes it wrote. Any other writer changes them.
+interface WrittenCatalog {
+  readonly catalog: LibraryCatalog;
+  readonly fingerprint: string;
+  readonly root: string;
+}
+let lastWrittenCatalog: O.Option<WrittenCatalog> = O.none();
+
+const catalogFingerprint = Effect.fnUntraced(function* (root: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  // Content identity, not mtime and size: rewrites within one clock tick at equal length must still invalidate.
+  const bytes = yield* fs.readFile(path.join(root, "catalog/library.json")).pipe(Effect.option);
+  if (O.isNone(bytes)) return O.none<string>();
+  const digest = yield* hashBytes(bytes.value);
+  return O.some(digest);
+});
+
 /**
  * Read a schema-validated catalog, or an empty catalog for a new library.
  * **Example** (Read a catalog)
@@ -72,6 +95,15 @@ export const loadCatalog = Effect.fn("ResearchLibrary.loadCatalog")(function* (r
       captures: [],
       qualifications: [],
     });
+  }
+  if (target === canonicalTarget) {
+    // A catalog this process wrote is still current while the canonical file keeps its fingerprint.
+    const fingerprint = yield* catalogFingerprint(root);
+    const written = O.filter(
+      lastWrittenCatalog,
+      (entry) => entry.root === root && O.isSome(fingerprint) && entry.fingerprint === fingerprint.value
+    );
+    if (O.isSome(written)) return written.value.catalog;
   }
   const text = yield* fs.readFileString(target).pipe(mapFailure("Cannot read library catalog."));
   return yield* S.decodeEffect(codec)(text).pipe(mapFailure("Invalid library catalog."));
@@ -349,23 +381,26 @@ const migratedSource = Effect.fn("ResearchLibrary.migratedSource")(function* (so
   });
 });
 
-const mergeMigratedSource = (sources: ReadonlyArray<LibrarySource>, migrated: LibrarySource) => {
-  const existing = A.findFirst(sources, (item) => item.id === migrated.id);
-  if (O.isNone(existing)) return A.append(sources, migrated);
-  return A.map(sources, (item) =>
-    item.id === migrated.id
-      ? LibrarySource.make({
-          ...item,
-          locators: A.dedupe([...item.locators, ...migrated.locators]),
-          aliasIds: A.dedupe([...item.aliasIds, ...migrated.aliasIds]),
-          versions: mergeLibraryVersions([...item.versions, ...migrated.versions]),
-        })
-      : item
-  );
+const mergeMigratedSource = (item: LibrarySource, migrated: LibrarySource) =>
+  LibrarySource.make({
+    ...item,
+    locators: A.dedupe([...item.locators, ...migrated.locators]),
+    aliasIds: A.dedupe([...item.aliasIds, ...migrated.aliasIds]),
+    versions: mergeLibraryVersions([...item.versions, ...migrated.versions]),
+  });
+
+// First match wins, as with a linear scan in source order: ids and aliases share one lookup.
+const firstByKey = (sources: ReadonlyArray<LibrarySource>, keys: (source: LibrarySource) => ReadonlyArray<string>) => {
+  let index = HashMap.empty<string, LibrarySource>();
+  for (const source of sources)
+    for (const key of keys(source)) if (!HashMap.has(index, key)) index = HashMap.set(index, key, source);
+  return index;
 };
 
-const reboundSource = (sources: ReadonlyArray<LibrarySource>, oldId: string) =>
-  A.findFirst(sources, (source) => source.id === oldId || A.contains(source.aliasIds, oldId));
+interface SourceLookups {
+  readonly byIdOrAlias: HashMap.HashMap<string, LibrarySource>;
+  readonly oldById: HashMap.HashMap<string, LibrarySource>;
+}
 
 const migrationUsesSourceRevision = (oldSource: O.Option<LibrarySource>, source: LibrarySource) =>
   source.kind === "youtube" ||
@@ -389,13 +424,9 @@ const reboundOccurrenceRevision = (
     : occurrence.revision;
 };
 
-const reboundOccurrence = (
-  oldSources: ReadonlyArray<LibrarySource>,
-  sources: ReadonlyArray<LibrarySource>,
-  occurrence: LibraryOccurrence
-) => {
-  const oldSource = A.findFirst(oldSources, (source) => source.id === occurrence.sourceId);
-  const source = reboundSource(sources, occurrence.sourceId);
+const reboundOccurrence = (lookups: SourceLookups, occurrence: LibraryOccurrence) => {
+  const oldSource = HashMap.get(lookups.oldById, occurrence.sourceId);
+  const source = HashMap.get(lookups.byIdOrAlias, occurrence.sourceId);
   return O.isSome(source)
     ? LibraryOccurrence.make({
         ...occurrence,
@@ -405,13 +436,9 @@ const reboundOccurrence = (
     : occurrence;
 };
 
-const reboundCapture = (
-  oldSources: ReadonlyArray<LibrarySource>,
-  sources: ReadonlyArray<LibrarySource>,
-  capture: LibraryCapture
-) => {
-  const oldSource = A.findFirst(oldSources, (source) => source.id === capture.sourceId);
-  const source = reboundSource(sources, capture.sourceId);
+const reboundCapture = (lookups: SourceLookups, capture: LibraryCapture) => {
+  const oldSource = HashMap.get(lookups.oldById, capture.sourceId);
+  const source = HashMap.get(lookups.byIdOrAlias, capture.sourceId);
   return O.isSome(source)
     ? LibraryCapture.make({
         ...capture,
@@ -427,18 +454,51 @@ const reboundCapture = (
 const migrateCatalogIdentities = Effect.fn("ResearchLibrary.migrateCatalogIdentities")(function* (
   catalog: LibraryCatalog
 ) {
-  let sources: ReadonlyArray<LibrarySource> = [];
+  // Indexed merge: identities that migrate to the same id fold into the first one, in source order.
+  const order: Array<string> = [];
+  let merged = HashMap.empty<string, LibrarySource>();
   for (const source of catalog.sources) {
-    const migratedSource1 = yield* migratedSource(source);
-    sources = mergeMigratedSource(sources, migratedSource1);
+    const next = yield* migratedSource(source);
+    const existing = HashMap.get(merged, next.id);
+    if (O.isNone(existing)) order.push(next.id);
+    merged = HashMap.set(merged, next.id, O.isNone(existing) ? next : mergeMigratedSource(existing.value, next));
   }
+  const sources = A.flatMap(order, (id) => A.fromOption(HashMap.get(merged, id)));
+  const lookups: SourceLookups = {
+    oldById: firstByKey(catalog.sources, (source) => [source.id]),
+    byIdOrAlias: firstByKey(sources, (source) => [source.id, ...source.aliasIds]),
+  };
   return LibraryCatalog.make({
     ...catalog,
     sources,
-    occurrences: A.map(catalog.occurrences, (occurrence) => reboundOccurrence(catalog.sources, sources, occurrence)),
-    captures: A.map(catalog.captures, (capture) => reboundCapture(catalog.sources, sources, capture)),
+    occurrences: A.map(catalog.occurrences, (occurrence) => reboundOccurrence(lookups, occurrence)),
+    captures: A.map(catalog.captures, (capture) => reboundCapture(lookups, capture)),
   });
 });
+
+const $I = $RepoCliId.create("commands/Research/Library/Library.store");
+
+/**
+ * How many one-second retries a library writer waits on `.writer-lock` before it reports an interrupted holder.
+ *
+ * **Details**
+ *
+ * Concurrent library commands serialize on the writer lock. The default of 300 waits about five minutes;
+ * tests provide a small value so they can run against the live clock.
+ *
+ * **Example** (Read the default patience)
+ * ```ts
+ * import { LibraryWriterLockRetries } from "@beep/repo-cli/commands/Research/Library/Library.store"
+ * console.log(LibraryWriterLockRetries.key)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const LibraryWriterLockRetries: Context.Reference<number> = Context.Reference<number>(
+  $I`LibraryWriterLockRetries`,
+  { defaultValue: () => 300 }
+);
 
 /**
  * Serialize catalog mutations under an exclusive directory lock.
@@ -465,17 +525,44 @@ export const withCatalog = Effect.fn("ResearchLibrary.withCatalog")(function* <E
   const path = yield* Path.Path;
   yield* fs.makeDirectory(root, { recursive: true }).pipe(mapFailure("Cannot create library root."));
   const lock = path.join(root, ".writer-lock");
+  const retries = yield* LibraryWriterLockRetries;
+  const writeCatalog = Effect.fnUntraced(function* (catalog: LibraryCatalog) {
+    const encoded = yield* S.encodeEffect(codec)(catalog).pipe(mapFailure("Cannot encode library catalog."));
+    const bytes = new TextEncoder().encode(encoded);
+    const hash = yield* hashBytes(bytes);
+    yield* saveImmutable(root, `catalog/history/${hash}.json`, bytes);
+    const temporary = path.join(lock, "catalog.next.json");
+    yield* fs.writeFile(temporary, bytes, { flag: "wx" }).pipe(mapFailure("Cannot stage library catalog."));
+    yield* fs
+      .makeDirectory(path.join(root, "catalog"), { recursive: true })
+      .pipe(mapFailure("Cannot create canonical catalog directory."));
+    yield* fs
+      .rename(temporary, path.join(root, "catalog/library.json"))
+      .pipe(mapFailure("Cannot replace library catalog atomically."));
+    // The written bytes' digest is the canonical file's fingerprint; no reread is needed.
+    lastWrittenCatalog = migrateLegacyIdentities ? O.some({ root, fingerprint: hash, catalog }) : O.none();
+    return catalog;
+  });
   return yield* Effect.acquireUseRelease(
-    fs
-      .makeDirectory(lock)
-      .pipe(
-        mapFailure(
-          "Library writer already active, or an interrupted writer left .writer-lock; inspect before removing it."
-        )
-      ),
+    fs.makeDirectory(lock).pipe(
+      // Concurrent library commands serialize on the lock instead of failing; a lock still held after
+      // five minutes is an interrupted writer and fails with the inspection message.
+      Effect.retry({ schedule: Schedule.spaced("1 second"), times: retries }),
+      mapFailure(
+        "Library writer already active, or an interrupted writer left .writer-lock; inspect before removing it."
+      )
+    ),
     Effect.fnUntraced(function* () {
-      const loadedCatalog = yield* loadCatalog(root);
-      const migrated = migrateLegacyIdentities ? yield* migrateCatalogIdentities(loadedCatalog) : loadedCatalog;
+      const before = yield* catalogFingerprint(root);
+      const reusable = O.filter(
+        lastWrittenCatalog,
+        (written) =>
+          migrateLegacyIdentities && written.root === root && O.isSome(before) && written.fingerprint === before.value
+      );
+      // A reused catalog skips only the decode. Identity migration and the object-store check still run:
+      // updates can add records that need migration, and objects can change on disk without the catalog.
+      const current = O.isSome(reusable) ? reusable.value.catalog : yield* loadCatalog(root);
+      const migrated = migrateLegacyIdentities ? yield* migrateCatalogIdentities(current) : current;
       const artifacts = migrateLegacyIdentities
         ? [
             ...migrated.artifacts,
@@ -500,19 +587,7 @@ export const withCatalog = Effect.fn("ResearchLibrary.withCatalog")(function* <E
       yield* Effect.forEach(artifacts, migrateArtifact);
       const catalog = yield* update(migrated);
       if (migrateLegacyIdentities === false && catalog === migrated) return catalog;
-      const encoded = yield* S.encodeEffect(codec)(catalog).pipe(mapFailure("Cannot encode library catalog."));
-      const bytes = new TextEncoder().encode(encoded);
-      const hash = yield* hashBytes(bytes);
-      yield* saveImmutable(root, `catalog/history/${hash}.json`, bytes);
-      const temporary = path.join(lock, "catalog.next.json");
-      yield* fs.writeFile(temporary, bytes, { flag: "wx" }).pipe(mapFailure("Cannot stage library catalog."));
-      yield* fs
-        .makeDirectory(path.join(root, "catalog"), { recursive: true })
-        .pipe(mapFailure("Cannot create canonical catalog directory."));
-      yield* fs
-        .rename(temporary, path.join(root, "catalog/library.json"))
-        .pipe(mapFailure("Cannot replace library catalog atomically."));
-      return catalog;
+      return yield* writeCatalog(catalog);
     }),
     () => fs.remove(lock, { recursive: true }).pipe(Effect.orDie)
   );

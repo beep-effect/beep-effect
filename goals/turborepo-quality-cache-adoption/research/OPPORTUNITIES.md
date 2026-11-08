@@ -1383,3 +1383,66 @@ consumer beyond these paths; historical citations remain historical. A
 consumer-edge inventory before archive would have prevented this inherited red.
 No local tests, quality suites, compiler or evidence generator ran. Hosted CI
 will prove the consolidated repair.
+
+## 2026-11-07: observe local recipes without waiting for protected issuer material
+
+The existing local pilot needs neither the signed issuer nor backend capabilities,
+but the only real hosted execution entrypoint required all protected-producer
+records. Keep those trust gates intact and add a separate exact-main, credential-free
+observation leaf to the existing Heavy workflow. Share the existing preparation and
+cleanup adapters; the signed caller retains identity-only selection. Bound one job
+to twenty minutes and native execution to fifteen minutes. Keep full receipts private
+and publish only the schema-backed, bounded digest/count projection with no
+qualification authority. Hosted fixture controls cover redaction, exclusive output,
+invalid records, request framing, mode refusal and foreign cleanup paths. No local
+quality suite or real pilot has run for this change; its runtime observations remain
+pending accepted source and the bounded hosted dispatch. This prevents credential
+provisioning from serializing independent local observation work.
+
+### Hosted local-observation contract repair, 2026-11-07
+
+PR #2850 hosted Check run 42338553545 exposed a fixture passing JSON text to a
+byte-oriented receipt hash; Heavy run 42338556627 exposed a missing SecureRandom
+layer, an untyped decoder and nested yield arguments. JSDoc Ratchet also found
+Details after Example. Fix the actual fixture bytes, provide the existing crypto
+layer, retain typed decoding, separate file reads and restore documentation order.
+Retain the failing logs privately. No baseline, test expectation, safety bound or
+production setting is relaxed; hosted CI remains the proof authority, and no local
+quality command was run. Match fixtures to the operational byte boundary and
+existing layer patterns when authoring adapters to prevent this repair wave.
+
+### Protected caller condition ordering, 2026-11-07
+
+PR #2850 Property Laws job 128302958851 found that the workflow placed the local
+observation exclusion after the channel condition while its exact security
+assertion required it before. Both conjunctions were present. Align the workflow
+ordering with the existing assertion; retain every guard and the unchanged test.
+No local quality command was run. Review exact workflow-expression assertions
+alongside the corresponding YAML edits to avoid another hosted repair wave.
+
+### Hosted schema and layer policy repair, 2026-11-07
+
+PR #2850 Heavy Lint Policy job 128307512992 found literal fields that require
+Schema.tag and an inline JSON schema compilation; the new layer-backed test retained an opaque native-platform provenance finding. Use constructor-default tags, preserving
+required decoding, hoist the JSON codec/decoder and retain a bounded layer acquisition timeout.
+Existing CitationBluebook findings belong to the consolidated main unblocker;
+do not duplicate its repair or refresh a baseline to conceal either finding.
+No local suite or generator was run.
+
+GitHub review/census reads were rate limited, ending the existing monitor after
+its bounded read-error budget while CI continued. The canonical one-point quota
+probe confirmed exhausted budgets, and reads resumed only after reset. Reuse
+the existing five-minute monitor interval on recovery to reduce polling demand;
+failed reads remain unknown, never zero threads or a passing check.
+
+### Exact native-platform diagnostic, 2026-11-07
+
+The next hosted Lint Policy job 128317235263 cleared schema-tag and inline-codec
+errors but retained the test finding. A read-only, single-file syntax diagnostic
+identified EV010 platform-resource-provenance-review, rather than a timeout
+finding. Preserve the real Python/filesystem integration: resolve the scoped
+temporary directory through the native filesystem before passing its path to the
+external process. This makes the physical path boundary explicit and supports
+aliased temporary roots without replacing the real subject with memory services.
+No assertion, baseline or detector policy changes. The syntax inspection does
+not execute test bodies or grant a quality receipt; hosted CI remains authoritative.

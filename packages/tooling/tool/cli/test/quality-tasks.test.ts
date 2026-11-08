@@ -9,6 +9,7 @@ import {
   ciLaneStepsForTesting,
   ciLocalStepsForTesting,
 } from "@beep/repo-cli/commands/Ci";
+import { discoverEffectImportSourceFiles, EffectImportRulesOptions } from "@beep/repo-cli/commands/Laws/EffectImports";
 import {
   LintPolicySweeps,
   QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
@@ -16,6 +17,7 @@ import {
   QualityAdmissionLoad,
   QualityConcurrencyPlan,
   QualityProfileDetectionInput,
+  ReportOnlyInertLaneId,
 } from "@beep/repo-cli/commands/Quality";
 import {
   collectAuditDiffInputForTesting,
@@ -38,6 +40,7 @@ import {
   runQualityTaskGithubCheckLaneWaves,
   runQualityTaskStreamingLaneGroup,
 } from "@beep/repo-cli/commands/Quality/Tasks";
+import { detectEffectVitestFindings } from "@beep/repo-cli/test/Lint";
 import { runCapturedStreams } from "@beep/repo-cli/test/Process";
 import {
   baselineEntriesLostByReplacement,
@@ -104,6 +107,7 @@ import {
   githubCheckWaveSegments,
   LaneProofSession,
   lintFixChangedStepForTesting,
+  listSourceFiles,
   localQualityConcurrencyPlan,
   missingTestTsgoTaskMessageForTesting,
   parseQualityTaskInvocation,
@@ -208,6 +212,7 @@ import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as R from "effect/Record";
@@ -215,6 +220,7 @@ import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
+import { Project } from "ts-morph";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { CiLaneId } from "@beep/repo-cli/commands/Ci";
 import type { PolicySweepProgram } from "@beep/repo-cli/commands/Quality";
@@ -1777,6 +1783,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:retired-effect-paths",
         "lint:entity-kit-freeze",
         "lint:retired-iri-authorities",
+        "lint:tracked-shell-allowlist",
         "lint:schema-tag-idioms",
         "lint:holds",
         "lint:schema-first",
@@ -1824,6 +1831,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       );
       expect(qualityLaneArgs(lanes, "lint:retired-iri-authorities")).toEqual(
         expectedTurboArgs("lint:retired-iri-authorities", ["--summarize"])
+      );
+      expect(qualityLaneArgs(lanes, "lint:tracked-shell-allowlist")).toEqual(
+        expectedTurboArgs("lint:tracked-shell-allowlist", ["--summarize"])
       );
       expect(qualityLaneArgs(lanes, "lint:schema-tag-idioms")).toEqual(
         expectedTurboArgs("lint:schema-tag-idioms", ["--summarize"])
@@ -2963,6 +2973,523 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         Effect.provideServiceEffect(Console.Console, TestConsole.make)
       )
     );
+
+    describe("report-only cheap gate selection", () => {
+      const initializeReportOnlyRepository = Effect.fn("initializeReportOnlyRepository")(function* (root: string) {
+        yield* initializeLaneProofRepository(root);
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* fs.makeDirectory(path.join(root, "packages/example"), { recursive: true });
+        yield* fs.writeFileString(
+          path.join(root, "package.json"),
+          '{"name":"report-fixture","workspaces":["packages/*"]}'
+        );
+        yield* fs.writeFileString(
+          path.join(root, "packages/example/package.json"),
+          '{"name":"@beep/example","version":"0.0.0"}'
+        );
+        yield* runGit(root, ["add", "."]);
+        yield* runGit(root, ["commit", "-m", "report workspace base"]);
+        yield* runGit(root, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
+      });
+
+      const reportLane = (
+        root: string,
+        id: string,
+        source = "mkdir -p .beep; echo invoked >> .beep/invoked; exit 91"
+      ) => GithubCheckLaneSpec.make({ ...laneProofTestLane(root, id, "preflight", source), tier: "cheap-gates" });
+
+      for (const [name, changedPath, accepted] of [
+        ["ordinary report", "docs/reports/probe.md", true],
+        ["Unicode and newline report", "docs/reports/日本語\nreport.md", true],
+        ["executable docs source", "docs/run.ts", false],
+        ["package source", "packages/probe.ts", false],
+        ["root config", "turbo.json", false],
+        ["standard", "standards/policy.md", false],
+        ["root Markdown", "README.md", false],
+        ["policy docs", "docs/runbooks/policy.md", false],
+        ["hidden report tooling", "docs/reports/.tool/probe.md", false],
+        ["hidden tooling after newline directory", "docs/reports/new\nline/.tool/probe.md", false],
+        ["terminal newline after Markdown suffix", "docs/reports/probe.md\n", false],
+        ["agent instructions", "docs/reports/AGENTS.md", false],
+        ["MDX", "docs/reports/probe.mdx", false],
+      ] as const) {
+        it.effect(`classifies ${name} without inventing proof evidence`, () =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const root = yield* fs.makeTempDirectoryScoped({ prefix: "report-only-gates-" });
+            yield* initializeReportOnlyRepository(root);
+            yield* fs.makeDirectory(path.dirname(path.join(root, changedPath)), { recursive: true });
+            yield* fs.writeFileString(path.join(root, changedPath), "report\n");
+            yield* runGit(root, ["add", "."]);
+            yield* runGit(root, ["commit", "-m", "report fixture"]);
+            const lanes = [
+              reportLane(root, "lint:effect-imports"),
+              reportLane(root, "quality:cache-policy", "exit 23"),
+              reportLane(root, "lint:effect-imports-markdown", "exit 24"),
+              reportLane(root, "lint:effect-vitest", "exit 25"),
+              reportLane(root, "lint:schema-first", "exit 26"),
+            ];
+            const run = collectGithubCheckLaneWavesForTesting(
+              "reports",
+              [GithubCheckLaneWaveSpec.make({ wave: "preflight", lanes })],
+              "collect-all",
+              undefined
+            );
+            const result = yield* withEnvVarEffect(
+              "BEEP_YEET_PROOF_BASE",
+              undefined,
+              withEnvVarEffect(
+                "BEEP_YEET_LANE_PROOF_MODE",
+                "off",
+                withEnvVarEffect("BEEP_QUALITY_REPORT_ONLY_SKIP", "1", run)
+              )
+            );
+            expect(A.map(result.report.lanes, (lane) => lane.status)).toEqual([
+              accepted ? "skipped" : "failed",
+              "failed",
+              "failed",
+              "failed",
+              "failed",
+            ]);
+            assertSome(result.report.firstRed, accepted ? "quality:cache-policy" : "lint:effect-imports");
+            expect(result.report.skippedAfterRed).toBe(0);
+            const invoked = yield* fs.exists(path.join(root, ".beep/invoked"));
+            expect(invoked).toBe(!accepted);
+            if (accepted) {
+              const skipped = O.getOrThrow(A.head(result.laneReport.lanes));
+              assertSome(skipped.reason, "clean report-only diff; source-only lane inputs unchanged");
+              assertNone(skipped.startedAt);
+              assertNone(skipped.endedAt);
+              assertNone(skipped.durationMs);
+              assertNone(skipped.exitCode);
+              assertNone(skipped.inputDigest);
+              expect(skipped.inputPackages).toEqual([]);
+              expect(skipped.inputsCacheable).toBe(false);
+            }
+          }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+        );
+      }
+
+      for (const control of [
+        "empty",
+        "dirty source",
+        "staged source",
+        "untracked source",
+        "dirty report",
+        "deletion",
+        "source rename",
+        "symlink",
+        "executable",
+        "missing base",
+        "disabled",
+        "pinned base mismatch",
+        "assume-unchanged hidden source",
+        "skip-worktree hidden source",
+      ] as const) {
+        it.effect(`runs full lanes for ${control}`, () =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const root = yield* fs.makeTempDirectoryScoped({ prefix: "report-only-control-" });
+            yield* initializeReportOnlyRepository(root);
+            yield* fs.makeDirectory(path.join(root, "docs/reports"), { recursive: true });
+            yield* fs.writeFileString(path.join(root, "source.ts"), "baseline\n");
+            yield* fs.writeFileString(path.join(root, "docs/reports/existing.md"), "baseline\n");
+            yield* runGit(root, ["add", "."]);
+            yield* runGit(root, ["commit", "-m", "control base"]);
+            yield* runGit(root, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
+            if (control !== "empty") {
+              yield* fs.writeFileString(path.join(root, "docs/reports/probe.md"), "report\n");
+              yield* Match.value(control).pipe(
+                Match.when("deletion", () => fs.remove(path.join(root, "docs/reports/existing.md"))),
+                Match.when("source rename", () => runGit(root, ["mv", "source.ts", "docs/reports/renamed.md"])),
+                Match.when("symlink", () =>
+                  fs
+                    .remove(path.join(root, "docs/reports/probe.md"))
+                    .pipe(Effect.andThen(fs.symlink("../../source.ts", path.join(root, "docs/reports/probe.md"))))
+                ),
+                Match.when("executable", () => fs.chmod(path.join(root, "docs/reports/probe.md"), 0o755)),
+                Match.orElse(() => Effect.void)
+              );
+              yield* runGit(root, ["add", "."]);
+              yield* runGit(root, ["commit", "-m", "control report"]);
+            }
+            const dirtySource = fs.writeFileString(path.join(root, "source.ts"), "changed\n");
+            yield* Match.value(control).pipe(
+              Match.when("dirty source", () => dirtySource),
+              Match.when("assume-unchanged hidden source", () =>
+                runGit(root, ["update-index", "--assume-unchanged", "source.ts"]).pipe(Effect.andThen(dirtySource))
+              ),
+              Match.when("skip-worktree hidden source", () =>
+                runGit(root, ["update-index", "--skip-worktree", "source.ts"]).pipe(Effect.andThen(dirtySource))
+              ),
+              Match.when("staged source", () => dirtySource.pipe(Effect.andThen(runGit(root, ["add", "source.ts"])))),
+              Match.when("untracked source", () => fs.writeFileString(path.join(root, "unknown.ts"), "changed\n")),
+              Match.when("dirty report", () => fs.writeFileString(path.join(root, "docs/reports/probe.md"), "dirty\n")),
+              Match.when("missing base", () => runGit(root, ["update-ref", "-d", "refs/remotes/origin/main"])),
+              Match.orElse(() => Effect.void)
+            );
+            const indexBefore = yield* fs.readFile(path.join(root, ".git/index"));
+            const lanes = [
+              reportLane(root, "lint:effect-imports"),
+              reportLane(root, "quality:jsdoc-ratchet:regenerated"),
+            ];
+            const run = collectGithubCheckLaneWavesForTesting(
+              "reports",
+              [GithubCheckLaneWaveSpec.make({ wave: "preflight", lanes })],
+              "fail-fast",
+              undefined
+            );
+            const result = yield* withEnvVarEffect(
+              "BEEP_QUALITY_REPORT_ONLY_SKIP",
+              control === "disabled" ? "0" : "1",
+              withEnvVarEffect(
+                "BEEP_YEET_PROOF_BASE",
+                control === "pinned base mismatch" ? "0000000000000000000000000000000000000000" : undefined,
+                withEnvVarEffect("BEEP_YEET_LANE_PROOF_MODE", "off", run)
+              )
+            );
+            expect(A.map(result.report.lanes, (lane) => lane.status)).toEqual(["failed", "not-run-early-stop"]);
+            assertSome(result.report.firstRed, "lint:effect-imports");
+            expect(result.report.skippedAfterRed).toBe(1);
+            const indexAfter = yield* fs.readFile(path.join(root, ".git/index"));
+            expect(indexAfter).toEqual(indexBefore);
+          }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+        );
+      }
+      const prepareScannerLinkFixture = Effect.fn("prepareScannerLinkFixture")(function* (
+        root: string,
+        control: string
+      ) {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        if (control === "tracked source link") {
+          yield* fs.makeDirectory(path.join(root, "packages/example/src"), { recursive: true });
+          yield* fs.symlink("../../../.beep/targets/target.test.ts", path.join(root, "packages/example/src/linked.ts"));
+          yield* runGit(root, ["add", "-f", "packages/example/src"]);
+        }
+        if (control === "tracked directory link" || control === "benign directory link") {
+          if (control === "benign directory link") {
+            yield* fs.remove(path.join(root, ".beep/targets/target.test.ts"));
+            yield* fs.writeFileString(path.join(root, ".beep/targets/data.yaml"), "fixture: true\n");
+          }
+          const link =
+            control === "benign directory link" ? "packages/example/fixtures/linked" : "packages/example/src";
+          const absoluteLink = path.join(root, link);
+          yield* fs.makeDirectory(path.dirname(absoluteLink), { recursive: true });
+          yield* fs.symlink(path.relative(path.dirname(absoluteLink), path.join(root, ".beep/targets")), absoluteLink);
+          yield* runGit(root, ["add", "-f", link]);
+        }
+      });
+
+      const writeScannerInputFixture = Effect.fn("writeScannerInputFixture")(function* (
+        root: string,
+        control: string,
+        badSource: string
+      ) {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const write = (file: string, text: string) => fs.writeFileString(path.join(root, file), text);
+        const sourceIn = (directory: string, file: string) =>
+          fs
+            .makeDirectory(path.join(root, directory), { recursive: true })
+            .pipe(Effect.andThen(write(`${directory}/${file}`, badSource)));
+        return yield* Match.value(control).pipe(
+          Match.when("ignored test", () => write("packages/example/test/ignored.test.ts", badSource)),
+          Match.when("ignored build test", () => sourceIn("packages/example/build/test", "probe.ts")),
+          Match.when("ignored hidden source", () => sourceIn("packages/example/src/.internal", "probe.ts")),
+          Match.when("ignored root tsdoc", () => write("tsdoc.json", "{}")),
+          Match.when("ignored workspace config", () => write("packages/example/tsconfig.json", "{}")),
+          Match.when("ignored pnpm config", () => write("pnpm-workspace.yaml", "packages: []\n")),
+          Match.when("ignored config", () => write("packages/example/docgen.json", "{}")),
+          Match.when("ordinary generated artifacts", () =>
+            Effect.gen(function* () {
+              yield* write(".oxlintrc.docs.prebuilt.json", "{}");
+              yield* fs.makeDirectory(path.join(root, "packages/example/.next"), { recursive: true });
+              yield* write("packages/example/.next/package.json", "{}");
+            })
+          ),
+          Match.when("ignored directory link", () =>
+            fs
+              .makeDirectory(path.join(root, "packages/example/src"), { recursive: true })
+              .pipe(Effect.andThen(fs.symlink("../../../.beep/targets", path.join(root, "packages/example/src/test"))))
+          ),
+          Match.orElse(() => Effect.void)
+        );
+      });
+
+      for (const control of [
+        "ignored test",
+        "ignored build test",
+        "ignored config",
+        "ignored root tsdoc",
+        "ignored workspace config",
+        "ignored pnpm config",
+        "ordinary generated artifacts",
+        "ignored hidden source",
+        "tracked source link",
+        "tracked directory link",
+        "ignored directory link",
+        "benign directory link",
+      ] as const) {
+        it.effect(`checks filesystem scanner inputs for ${control}`, () =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const root = yield* fs.makeTempDirectoryScoped({ prefix: "report-scanner-inputs-" });
+            yield* initializeReportOnlyRepository(root);
+            yield* fs.makeDirectory(path.join(root, "packages/example/test"), { recursive: true });
+            yield* fs.makeDirectory(path.join(root, ".beep/targets"), { recursive: true });
+            const badSource =
+              'import * as Effect from "effect/Effect"; import { it } from "vitest"; it("probe", () => Effect.runSync(Effect.void));';
+            const project = new Project({ skipAddingFilesFromTsConfig: true });
+            const source = project.createSourceFile("packages/example/test/probe.test.ts", badSource);
+            const findings = yield* detectEffectVitestFindings(
+              source,
+              "packages/example/test/probe.test.ts",
+              "@beep/example"
+            );
+            expect(A.some(findings, (finding) => finding.ruleId === "EV001")).toBe(true);
+            yield* fs.writeFileString(
+              path.join(root, ".git/info/exclude"),
+              ".beep/\n.oxlintrc.docs.prebuilt.json\ntsdoc.json\npnpm-workspace.yaml\npackages/example/tsconfig.json\npackages/example/.next/\npackages/example/src/\npackages/example/build/\npackages/example/test/ignored.test.ts\npackages/example/docgen.json\n"
+            );
+            yield* fs.writeFileString(path.join(root, ".beep/targets/target.test.ts"), badSource);
+            yield* prepareScannerLinkFixture(root, control);
+            yield* runGit(root, ["add", "."]);
+            yield* runGit(root, ["commit", "--allow-empty", "-m", "scanner base"]);
+            yield* runGit(root, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
+            yield* fs.makeDirectory(path.join(root, "docs/reports"), { recursive: true });
+            yield* fs.writeFileString(path.join(root, "docs/reports/probe.md"), "report\n");
+            yield* runGit(root, ["add", "."]);
+            yield* runGit(root, ["commit", "-m", "scanner report"]);
+            yield* writeScannerInputFixture(root, control, badSource);
+            const run = collectGithubCheckLaneWavesForTesting(
+              "scanner-inputs",
+              [
+                GithubCheckLaneWaveSpec.make({
+                  wave: "preflight",
+                  lanes: [
+                    reportLane(root, "quality:jsdoc-ratchet:regenerated"),
+                    reportLane(root, "lint:effect-imports"),
+                  ],
+                }),
+              ],
+              "collect-all",
+              undefined
+            );
+            const result = yield* withEnvVarEffect(
+              "BEEP_YEET_PROOF_BASE",
+              undefined,
+              withEnvVarEffect(
+                "BEEP_YEET_LANE_PROOF_MODE",
+                "off",
+                withEnvVarEffect("BEEP_QUALITY_REPORT_ONLY_SKIP", "1", run)
+              )
+            );
+            expect(A.map(result.report.lanes, (lane) => lane.status)).toEqual(
+              A.replicate(
+                control === "benign directory link" ||
+                  control === "ignored build test" ||
+                  control === "ordinary generated artifacts"
+                  ? "skipped"
+                  : "failed",
+                2
+              )
+            );
+          }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+        );
+      }
+
+      for (const [name, srcDir, kind] of [
+        ["literal metachar root", "src[one]", "tracked"],
+        ["ignored metachar source", "src[one]", "ignored"],
+        ["linked metachar root", "src[one]", "linked"],
+        ["explicit node_modules root", "node_modules/custom", "ignored"],
+        ["known missing custom root", "missing[one]", "missing"],
+        ["entry stat refusal", "src", "denied"],
+      ] as const) {
+        it.effect(`preserves actual JSDoc discovery for ${name}`, () =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const root = yield* fs.makeTempDirectoryScoped({ prefix: "report-custom-source-" });
+            yield* initializeReportOnlyRepository(root);
+            const source = path.join(root, "packages/example", srcDir);
+            const file = path.join(source, "ordinary.ts");
+            const config = yield* encodeJson({ srcDir });
+            yield* fs.writeFileString(path.join(root, "packages/example/docgen.json"), config);
+            yield* fs.writeFileString(path.join(root, ".git/info/exclude"), ".beep/\nordinary.ts\n");
+            if (kind === "tracked" || kind === "denied") {
+              yield* fs.makeDirectory(source, { recursive: true });
+              yield* fs.writeFileString(file, "export const value = 1;\n");
+              yield* runGit(root, ["add", "-f", path.relative(root, file)]);
+            }
+            if (kind === "linked") {
+              yield* fs.makeDirectory(path.join(root, ".beep/custom"), { recursive: true });
+              yield* fs.writeFileString(path.join(root, ".beep/custom/ordinary.ts"), "export const value = 1;\n");
+              yield* fs.symlink("../../.beep/custom", source);
+              yield* runGit(root, ["add", "-f", path.relative(root, source)]);
+            }
+            yield* runGit(root, ["add", "."]);
+            yield* runGit(root, ["commit", "-m", "custom source base"]);
+            yield* runGit(root, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
+            yield* fs.makeDirectory(path.join(root, "docs/reports"), { recursive: true });
+            yield* fs.writeFileString(path.join(root, "docs/reports/probe.md"), "report\n");
+            yield* runGit(root, ["add", "."]);
+            yield* runGit(root, ["commit", "-m", "custom source report"]);
+            if (kind === "ignored") {
+              yield* fs.makeDirectory(source, { recursive: true });
+              yield* fs.writeFileString(file, "export const value = 1;\n");
+            }
+            const run = Effect.gen(function* () {
+              if (kind === "denied") {
+                const error = yield* listSourceFiles(source, path).pipe(Effect.flip);
+                expect(error.message).toContain("Failed to stat");
+              } else {
+                const actual = yield* listSourceFiles(source, path);
+                expect(A.length(actual)).toBe(kind === "missing" ? 0 : 1);
+              }
+              return yield* collectGithubCheckLaneWavesForTesting(
+                "custom-source",
+                [
+                  GithubCheckLaneWaveSpec.make({
+                    wave: "preflight",
+                    lanes: [
+                      reportLane(root, "quality:jsdoc-ratchet:regenerated"),
+                      reportLane(root, "lint:effect-imports"),
+                    ],
+                  }),
+                ],
+                "collect-all",
+                undefined
+              );
+            });
+            const checked =
+              kind === "denied"
+                ? run.pipe(
+                    Effect.provideService(FileSystem.FileSystem, {
+                      ...fs,
+                      stat: (target) =>
+                        target === file
+                          ? Effect.fail(
+                              PlatformError.systemError({
+                                _tag: "PermissionDenied",
+                                module: "FileSystem",
+                                method: "stat",
+                                pathOrDescriptor: file,
+                              })
+                            )
+                          : fs.stat(target),
+                    })
+                  )
+                : run;
+            const result = yield* withEnvVarEffect(
+              "BEEP_YEET_PROOF_BASE",
+              undefined,
+              withEnvVarEffect(
+                "BEEP_YEET_LANE_PROOF_MODE",
+                "off",
+                withEnvVarEffect("BEEP_QUALITY_REPORT_ONLY_SKIP", "1", checked)
+              )
+            );
+            expect(A.map(result.report.lanes, (lane) => lane.status)).toEqual(
+              A.replicate(kind === "tracked" || kind === "missing" ? "skipped" : "failed", 2)
+            );
+          }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+        );
+      }
+
+      it.effect("preserves default import discovery with an explicit current root", () =>
+        Effect.gen(function* () {
+          const options = EffectImportRulesOptions.make({
+            includePaths: ["src/commands/Quality/Tasks.ts"],
+            excludePaths: [],
+          });
+          const explicit = yield* discoverEffectImportSourceFiles(options, process.cwd());
+          const implicit = yield* discoverEffectImportSourceFiles(options);
+          expect(explicit).toEqual(implicit);
+        })
+      );
+
+      for (const control of [
+        "all selected",
+        "restored generator",
+        "retained generator",
+        "between selected",
+        "mixed checkouts",
+        "opt-out",
+        "default disabled",
+        "unknown opt-in",
+        "missing base",
+      ] as const) {
+        it.effect(`revalidates report-only selection for ${control}`, () =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const root = yield* fs.makeTempDirectoryScoped({ prefix: "report-only-revalidation-" });
+            yield* initializeReportOnlyRepository(root);
+            yield* fs.writeFileString(path.join(root, "source.ts"), "export const baseline = true;\n");
+            yield* runGit(root, ["add", "source.ts"]);
+            yield* runGit(root, ["commit", "-m", "tracked source base"]);
+            yield* runGit(root, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
+            yield* fs.makeDirectory(path.join(root, "docs/reports"), { recursive: true });
+            yield* fs.writeFileString(path.join(root, "docs/reports/probe.md"), "report\n");
+            yield* runGit(root, ["add", "."]);
+            yield* runGit(root, ["commit", "-m", "clean report"]);
+            if (control === "restored generator") {
+              yield* fs.writeFileString(path.join(root, "source.ts"), "initially dirty\n");
+            }
+            const other = yield* fs.makeTempDirectoryScoped({ prefix: "report-only-other-" });
+            const command = Match.value(control).pipe(
+              Match.when("restored generator", () => "git restore --worktree -- source.ts"),
+              Match.whenOr("retained generator", "between selected", () => "echo changed > source.ts"),
+              Match.when("missing base", () => "git update-ref -d refs/remotes/origin/main"),
+              Match.orElse(() => "exit 0")
+            );
+            const generator = reportLane(control === "mixed checkouts" ? other : root, "retained:generator", command);
+            const selected = A.map(ReportOnlyInertLaneId.literals, (id) => reportLane(root, id));
+            const ordered = Match.value(control).pipe(
+              Match.when("mixed checkouts", () => [...selected, generator]),
+              Match.when("between selected", () => [O.getOrThrow(A.head(selected)), generator, ...A.drop(selected, 1)]),
+              Match.orElse(() => [generator, ...selected])
+            );
+            const run = collectGithubCheckLaneWavesForTesting(
+              "reports",
+              [GithubCheckLaneWaveSpec.make({ wave: "preflight", lanes: ordered })],
+              "collect-all"
+            );
+            const result = yield* withEnvVarEffect(
+              "BEEP_YEET_PROOF_BASE",
+              undefined,
+              withEnvVarEffect(
+                "BEEP_YEET_LANE_PROOF_MODE",
+                "off",
+                withEnvVarEffect(
+                  "BEEP_QUALITY_REPORT_ONLY_SKIP",
+                  Match.value(control).pipe(
+                    Match.when("opt-out", () => "0"),
+                    Match.when("default disabled", () => undefined),
+                    Match.when("unknown opt-in", () => "true"),
+                    Match.orElse(() => "1")
+                  ),
+                  run
+                )
+              )
+            );
+            const opted = A.filter(result.laneReport.lanes, (lane) => S.is(ReportOnlyInertLaneId)(lane.id));
+            const statuses = Match.value(control).pipe(
+              Match.whenOr("all selected", "restored generator", () => ["skipped", "skipped"]),
+              Match.when("between selected", () => ["skipped", "failed"]),
+              Match.orElse(() => ["failed", "failed"])
+            );
+            expect(A.map(opted, (lane) => lane.status)).toEqual(statuses);
+          }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+        );
+      }
+    });
 
     it.effect("stops after a precise red and marks the unlaunched tail", () =>
       collectGithubCheckLaneWavesForTesting(
@@ -5126,6 +5653,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:retired-effect-paths",
         "lint:entity-kit-freeze",
         "lint:retired-iri-authorities",
+        "lint:tracked-shell-allowlist",
         "lint:opaque-roundtrips",
       ]);
       for (const index of [0, 1, 4]) {
@@ -5188,6 +5716,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:retired-effect-paths",
         "lint:entity-kit-freeze",
         "lint:retired-iri-authorities",
+        "lint:tracked-shell-allowlist",
         "lint:opaque-roundtrips",
       ]);
       // A local full-scope plan (no review base) leaves the two git-delta knowledge checks and the
@@ -5287,6 +5816,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           "lint:retired-effect-paths",
           "lint:entity-kit-freeze",
           "lint:retired-iri-authorities",
+          "lint:tracked-shell-allowlist",
           "lint:schema-tag-idioms",
           "lint:holds",
           "quality:test-tsgo",

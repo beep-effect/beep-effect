@@ -9,7 +9,6 @@ import { DuckDb } from "@beep/duckdb";
 import { PracticeKgEpistemicStatus } from "@beep/law-practice-domain/values";
 import {
   ClaimInspection,
-  ClaimInspectionLive,
   ClaimInspectionPageRequest,
   ClaimSelfCheck,
   ClaimSelfCheckLive,
@@ -50,6 +49,7 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { SqlClient as SqlClientService } from "effect/sql/SqlClient";
+import { ClaimInspectionWithLexicalEvidenceLive } from "./ClaimInspection/ClaimInspection.layer.ts";
 import { lookupPracticeKgCorrespondents } from "./PracticeKg.correspondents.ts";
 import { PracticeKgBundle } from "./PracticeKg.host.ts";
 import { lookupPracticeKgMatters } from "./PracticeKg.matters.ts";
@@ -70,6 +70,7 @@ import type {
   PracticeKgToolFailureReason,
 } from "@beep/law-practice-use-cases/server";
 import type { FieldTierSet } from "@beep/mcp-kit";
+import type { WinkIntrinsicNounActivationError } from "@beep/wink";
 import type * as Tool from "effect/ai/Tool";
 import type * as SqlClient from "effect/sql/SqlClient";
 
@@ -325,7 +326,10 @@ const queryPglite = <A>(
  * @category layers
  * @since 0.0.0
  */
-export const PracticeKgLocalClaimChecksLive: Layer.Layer<ClaimSelfCheck | ClaimInspection> = Layer.merge(
+export const PracticeKgLocalClaimChecksLive: Layer.Layer<
+  ClaimSelfCheck | ClaimInspection,
+  WinkIntrinsicNounActivationError
+> = Layer.merge(
   ClaimSelfCheckLive.pipe(
     Layer.provide(
       Layer.succeed(UsptoClaims, {
@@ -340,7 +344,7 @@ export const PracticeKgLocalClaimChecksLive: Layer.Layer<ClaimSelfCheck | ClaimI
       })
     )
   ),
-  ClaimInspectionLive.pipe(
+  ClaimInspectionWithLexicalEvidenceLive.pipe(
     Layer.provide(
       Layer.succeed(UsptoClaimInputs, {
         inputs: Effect.fn("ClaimInspectionLocal.publicInputsUnavailable")(() =>
@@ -376,7 +380,7 @@ export const PracticeKgLocalClaimChecksLive: Layer.Layer<ClaimSelfCheck | ClaimI
  */
 export const PracticeKgToolkitHandlersLive: Layer.Layer<
   Tool.HandlersFor<typeof PracticeKgToolkit.tools>,
-  never,
+  WinkIntrinsicNounActivationError,
   DuckDb | Path.Path | PracticeKgBundle | SqlClientService
 > = PracticeKgToolkit.toLayer(
   Effect.gen(function* () {

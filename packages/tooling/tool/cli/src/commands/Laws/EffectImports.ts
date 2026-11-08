@@ -1682,11 +1682,11 @@ const discoverFilesWithGlob = Effect.fn("EffectImports.discoverFilesWithGlob")(f
   patterns: ReadonlyArray<string>,
   exclusions: ReadonlyArray<string>,
   dot: boolean,
-  failure: string
+  failure: string,
+  cwd = process.cwd()
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const cwd = process.cwd();
   const globOptions = GlobPatternOptions.make({ dot });
   const excluded = yield* Effect.forEach(exclusions, GlobPattern.compile(globOptions)).pipe(
     Effect.mapError(() => EffectImportRulesConfigurationError.new(failure))
@@ -1778,18 +1778,21 @@ const listGitVisiblePaths = Effect.fn("EffectImports.listGitVisiblePaths")(funct
  * ```
  *
  * @param options - The run options whose mode, include paths and prefixes bound the corpus.
- * @returns Sorted working-directory-relative POSIX paths of the sources the run reads.
+ * @param root - Explicit discovery root; defaults to the process working directory.
+ * @returns Sorted discovery-root-relative POSIX paths of the sources the run reads.
  * @category queries
  * @since 0.0.0
  */
 export const discoverEffectImportSourceFiles = Effect.fn("EffectImports.discoverEffectImportSourceFiles")(function* (
-  options: EffectImportRulesOptions
+  options: EffectImportRulesOptions,
+  root = process.cwd()
 ) {
   return yield* discoverFilesWithGlob(
     A.append(options.mode === "markdown" ? A.empty<string>() : codeGlobsFor(options), FOUNDATION_SOURCE_GLOB),
     CODE_EXCLUSION_GLOBS,
     false,
-    "Could not discover source files."
+    "Could not discover source files.",
+    root
   );
 });
 

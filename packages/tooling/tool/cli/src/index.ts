@@ -207,6 +207,13 @@ export {
   filesCommand,
 } from "./commands/Files/index.ts";
 /**
+ * Repository Git integration command group (projection merge driver).
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export { gitCommand } from "./commands/Git/index.ts";
+/**
  * Image and video curation command group.
  *
  * @category cli-commands
@@ -398,6 +405,13 @@ export {
    */
   syncDataToTsCommand,
 } from "./commands/SyncDataToTs/index.ts";
+/**
+ * Patched TypeScript toolchain maintenance command group.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export { toolchainCommand } from "./commands/Toolchain/index.ts";
 /**
  * Dependency topological sort command.
  *

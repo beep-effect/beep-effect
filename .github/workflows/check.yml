@@ -67,6 +67,8 @@ jobs:
       verdict: ${{ steps.decide.outputs.verdict }}
       admitted: ${{ steps.decide.outputs.admitted }}
       docs_only: ${{ steps.decide.outputs.docs_only }}
+      route_skips: ${{ steps.decide.outputs.route_skips }}
+      route_receipt: ${{ steps.decide.outputs.route_receipt }}
       legacy_coverage: ${{ steps.coverage-rollout.outputs.legacy_coverage }}
     steps:
       - name: Checkout repository
@@ -157,6 +159,10 @@ jobs:
     secrets: inherit
     with:
       admitted: ${{ needs.admission.outputs.verdict == 'run' }}
+      # Verification route (goals/verification-route slice 3): heavy lanes the enforced route
+      # excludes start, then complete skip-satisfied with this receipt in their job summary.
+      route_skips: ${{ needs.admission.outputs.route_skips }}
+      route_receipt: ${{ needs.admission.outputs.route_receipt }}
   verify:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.runner }}
@@ -200,13 +206,16 @@ jobs:
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
+      - name: Fetch beep CI binary
+        uses: ./.github/actions/fetch-beep-ci
+
       - name: Determine lane execution
         id: lane-gate
         shell: bash
         run: |
           set -euo pipefail
           should_run=true
-          eval "$(scripts/ci-change-profile.sh)"
+          eval "$(beep ci change-profile)"
           # Docs-only diffs (Heavy admission's path rule) give these lanes
           # nothing to prove. Repo Sanity validates `.changeset/*.md`, which that
           # rule counts as documentation, so only packet prose suppresses it.
@@ -267,7 +276,7 @@ jobs:
           set -euo pipefail
           bun run beep worktree prepare
           configured="$(git config --local --get merge.regenerate.driver)"
-          [[ "$configured" == *"scripts/regenerate-merge-driver.sh"* ]]
+          [[ "$configured" == *"beep git merge-driver regenerate"* ]]
           [[ "$(git check-attr merge -- tsconfig.json)" == "tsconfig.json: merge: regenerate" ]]
 
       - name: Run verification lane
@@ -362,13 +371,16 @@ jobs:
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
+      - name: Fetch beep CI binary
+        uses: ./.github/actions/fetch-beep-ci
+
       - name: Determine lane execution
         id: lane-gate
         shell: bash
         run: |
           set -euo pipefail
           should_run=true
-          eval "$(scripts/ci-change-profile.sh)"
+          eval "$(beep ci change-profile)"
           if [[ "$docs_only" == "true" ]]; then
             should_run=false
           fi
@@ -503,13 +515,16 @@ jobs:
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
+      - name: Fetch beep CI binary
+        uses: ./.github/actions/fetch-beep-ci
+
       - name: Determine lane execution
         id: lane-gate
         shell: bash
         run: |
           set -euo pipefail
           should_run=true
-          eval "$(scripts/ci-change-profile.sh)"
+          eval "$(beep ci change-profile)"
           if [[ "$docs_only" == "true" ]]; then
             should_run=false
           fi
@@ -628,13 +643,16 @@ jobs:
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
+      - name: Fetch beep CI binary
+        uses: ./.github/actions/fetch-beep-ci
+
       - name: Determine lane execution
         id: lane-gate
         shell: bash
         run: |
           set -euo pipefail
           should_run=true
-          eval "$(scripts/ci-change-profile.sh)"
+          eval "$(beep ci change-profile)"
           if [[ "$docs_only" == "true" ]]; then
             should_run=false
           fi
@@ -679,6 +697,7 @@ jobs:
           node --js-float16array -p "'Node ' + process.versions.node + ', ' + Float16Array.name"
 
       - name: Run Test Unit shard
+        id: unit-tests
         if: steps.lane-gate.outputs.should_run == 'true'
         run: |
           set -euo pipefail
@@ -699,6 +718,23 @@ jobs:
           fi
           shape_args+=(--summarize)
           run_lane ci lane test-unit --partition "${{ matrix.partition }}" --coverage-output ".beep/ci-coverage/${{ matrix.partition }}" "${shape_args[@]}"
+
+      # A failed producer never seals coverage evidence. Preserve its raw test
+      # reports separately so bounded console output cannot hide later failures.
+      - name: Upload failed Unit test reports
+        if: failure() && steps.unit-tests.outcome == 'failure'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: unit-failures-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.partition }}
+          path: |
+            packages/**/coverage/**/unit-results.json
+            apps/**/coverage/**/unit-results.json
+            infra/coverage/**/unit-results.json
+            scratchpad/coverage/**/unit-results.json
+            tools/**/coverage/**/unit-results.json
+            !**/node_modules/**
+          retention-days: 7
+          if-no-files-found: warn
 
       - name: Upload Unit coverage evidence
         if: steps.lane-gate.outputs.should_run == 'true' && always()
@@ -776,6 +812,9 @@ jobs:
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
+      - name: Fetch beep CI binary
+        uses: ./.github/actions/fetch-beep-ci
+
       - name: Determine comparison execution
         id: lane-gate
         shell: bash
@@ -788,7 +827,7 @@ jobs:
           [[ "$ADMISSION_RESULT" == "success" ]]
           [[ "$LEGACY_COVERAGE" == "true" || "$LEGACY_COVERAGE" == "false" ]]
           [[ "$UNIT_RESULT" == "success" ]]
-          eval "$(scripts/ci-change-profile.sh)"
+          eval "$(beep ci change-profile)"
           echo "should_run=$([[ "$docs_only" == "true" ]] && echo false || echo true)" >> "$GITHUB_OUTPUT"
 
       # The comparison only reads artifacts through the repo CLI: no Turbo,
@@ -911,18 +950,21 @@ jobs:
         run: |
           git fetch --quiet --no-tags --depth=100 origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
+      - name: Fetch beep CI binary
+        uses: ./.github/actions/fetch-beep-ci
+
       - name: Determine lane execution
         id: lane-gate
         shell: bash
         run: |
           set -euo pipefail
           should_run=true
-          # desktop_rust_relevant (scripts/ci-change-profile.sh) gates the
+          # desktop_rust_relevant (beep ci change-profile) gates the
           # Tauri system packages and the cargo steps: only src-tauri or this
           # workflow's changes compile the crate on pull requests; pushes
           # always compile. The toolchain itself is provisioned whenever the
           # lane runs (see "Setup Rust toolchain" below).
-          eval "$(scripts/ci-change-profile.sh)"
+          eval "$(beep ci change-profile)"
           rust_should_run="$desktop_rust_relevant"
 
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
@@ -950,7 +992,7 @@ jobs:
           # The image's third-party apt sources (Google Chrome, Microsoft) fail apt-get
           # update with "Hash Sum mismatch" / "403 Forbidden" for minutes at a time;
           # keep only the Ubuntu archive, which is where these packages come from.
-          scripts/ci-prune-apt-sources.sh
+          beep ci prune-apt
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             libwebkit2gtk-4.1-dev \
@@ -1029,13 +1071,16 @@ jobs:
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
+      - name: Fetch beep CI binary
+        uses: ./.github/actions/fetch-beep-ci
+
       - name: Determine lane execution
         id: lane-gate
         shell: bash
         run: |
           set -euo pipefail
           should_run=true
-          eval "$(scripts/ci-change-profile.sh)"
+          eval "$(beep ci change-profile)"
           if [[ "$docs_only" == "true" ]]; then
             should_run=false
           fi
@@ -1145,6 +1190,9 @@ jobs:
       # Fallow reads code only, so a docs-only diff skips the envelopes. A
       # diff this depth-100 checkout cannot classify (failed base fetch, no
       # merge base) keeps the full run.
+      - name: Fetch beep CI binary
+        uses: ./.github/actions/fetch-beep-ci
+
       - name: Determine lane execution
         id: lane-gate
         shell: bash
@@ -1154,7 +1202,7 @@ jobs:
           set -euo pipefail
           should_run=true
           if [[ "$BASE_FETCH_STATUS" == "0" ]]; then
-            eval "$(scripts/ci-change-profile.sh || true)"
+            eval "$(beep ci change-profile || true)"
             if [[ "${docs_only:-false}" == "true" ]]; then
               should_run=false
             fi
@@ -1274,13 +1322,16 @@ jobs:
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
+      - name: Fetch beep CI binary
+        uses: ./.github/actions/fetch-beep-ci
+
       - name: Determine lane execution
         id: lane-gate
         shell: bash
         run: |
           set -euo pipefail
           should_run=true
-          eval "$(scripts/ci-change-profile.sh)"
+          eval "$(beep ci change-profile)"
           if [[ "$docs_only" == "true" ]]; then
             should_run=false
           fi

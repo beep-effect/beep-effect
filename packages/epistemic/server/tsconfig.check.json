@@ -9,9 +9,6 @@
       "path": "../../drivers/postgres/tsconfig.json"
     },
     {
-      "path": "../config/tsconfig.json"
-    },
-    {
       "path": "../domain/tsconfig.json"
     },
     {
@@ -21,13 +18,7 @@
       "path": "../use-cases/tsconfig.json"
     },
     {
-      "path": "../../foundation/capability/api-transport/tsconfig.json"
-    },
-    {
       "path": "../../foundation/capability/file-processing/tsconfig.json"
-    },
-    {
-      "path": "../../foundation/capability/mcp-kit/tsconfig.json"
     },
     {
       "path": "../../foundation/capability/observability/tsconfig.json"

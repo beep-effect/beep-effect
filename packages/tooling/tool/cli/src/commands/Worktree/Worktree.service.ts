@@ -2427,12 +2427,18 @@ const makeWorktreeRemovalService = Effect.fn("WorktreeRemovalService.make")(func
   });
 });
 
+// Git runs merge drivers at the checkout root, so the root `beep` script resolves in every lane.
+// `--silent` keeps Bun's script echo off stderr, leaving only the driver's own diagnostic.
+const REGENERATE_MERGE_DRIVER = "bun run --silent beep git merge-driver regenerate %O %A %B %P";
+const REGENERATE_MERGE_DRIVER_SOURCE = "packages/tooling/tool/cli/src/commands/Git/Git.command.ts";
+
 /**
  * Installs the fail-closed projection driver in this clone's local Git config.
  *
  * **Details**
- * The driver path is relative to each merge checkout, so retiring a lane cannot
- * strand the common config on an absolute path into that lane.
+ * The driver runs the checkout's own `beep git merge-driver regenerate`, so
+ * retiring a lane cannot strand the common config on an absolute path into
+ * that lane. A checkout without that command source refuses the install.
  *
  * **Example** (Prepare local Git configuration)
  * ```ts
@@ -2448,7 +2454,7 @@ export const installRegenerateMergeDriver = Effect.fn("Worktree.installRegenerat
   function* (checkout: string) {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    if (!(yield* fs.exists(path.join(checkout, "scripts", "regenerate-merge-driver.sh")))) {
+    if (!(yield* fs.exists(path.join(checkout, REGENERATE_MERGE_DRIVER_SOURCE)))) {
       return yield* WorktreeCommandError.make({
         message: "Projection merge-driver adapter is missing.",
         cause: undefined,
@@ -2458,7 +2464,7 @@ export const installRegenerateMergeDriver = Effect.fn("Worktree.installRegenerat
     // A plain `git config <key> <value>` writes the repository's local config, as `--local` did.
     for (const [key, value] of R.toEntries({
       name: "Regenerate pure repository projections",
-      driver: "bash scripts/regenerate-merge-driver.sh %O %A %B %P",
+      driver: REGENERATE_MERGE_DRIVER,
       recursive: "binary",
     })) {
       yield* git

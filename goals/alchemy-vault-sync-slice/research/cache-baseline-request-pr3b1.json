@@ -1,0 +1,14 @@
+{
+  "previous": "f826f5bee62879bd33cd721c9efb19940e6e6db10324852f83dc961c31e42612",
+  "review": {
+    "reviewer": "GPT-6.1 Sol medium (PR 3b1 implementation self-review)",
+    "reason": "Review documents-server alchemy/Postgres dependency edges and PGlite test edge only; no cache policy or qualification change.",
+    "basis": {
+      "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3b1.md",
+      "sha256": "93cf81e23bcb2b8b422bf447a043aefe85c4e96dc1823081cc2b5f2741befa66"
+    }
+  },
+  "scope": ["@beep/documents-server#build"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

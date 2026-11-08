@@ -105,6 +105,18 @@ export class CursorLifecycleError extends S.TaggedError<CursorLifecycleError, { 
 ) {}
 export const isLifecycleError = S.is(CursorLifecycleError);
 export const failure = (reason: CursorLifecycleError["reason"]) => CursorLifecycleError.make({ reason });
+/**
+ * Preserve a finite lifecycle failure and redact every other boundary error.
+ * **Example** (Normalize an unknown transport failure)
+ * ```ts
+ * import { normalizeLifecycleFailure } from "./cursor-lifecycle-schemas.ts"
+ * console.log(normalizeLifecycleFailure(new Error("synthetic")).reason)
+ * ```
+ * @category utilities
+ * @since 0.0.0
+ */
+export const normalizeLifecycleFailure = (error: unknown): CursorLifecycleError =>
+  isLifecycleError(error) ? error : failure("transport");
 
 /** Closed public-file identity contract supplied by installed code. */
 export class CursorLifecycleSourceContract extends S.Opaque<

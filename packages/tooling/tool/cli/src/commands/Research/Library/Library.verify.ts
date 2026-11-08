@@ -12,6 +12,7 @@ import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
@@ -28,6 +29,7 @@ import { LibraryDispositionImportPayload, libraryDispositionValid } from "./Libr
 import { libraryArtifactIntegrity } from "./Library.integrity.ts";
 import { extractLibraryReferences } from "./Library.inventory.ts";
 import { assembleLibraryOntology, libraryShapes, libraryShapesDataset } from "./Library.ontology.ts";
+import { libraryPdfSnapshot } from "./Library.paths.ts";
 import { catalogDataset, libraryTopics } from "./Library.projection.ts";
 import { decodeProviderEvents, validateProviderQualification } from "./Library.provenance.ts";
 import { LibraryProbeEvidence } from "./Library.qualify.ts";
@@ -209,6 +211,13 @@ type VerificationContext = Effect.Success<ReturnType<typeof makeVerificationCont
 const verifyIntakeCensus = Effect.fn("Library.verifyIntakeCensus")(function* (context: VerificationContext) {
   const { root, fs, path, catalog, issue, artifactValid } = context;
   const verifyIntakeFile = Effect.fn("Library.verifyIntakeFile")(function* (file: LibraryIntakeFile) {
+    if (file.retention === "referenced") {
+      // Referenced media is never snapshotted; an original still on disk must keep its recorded size.
+      const stat = yield* fs.stat(file.originalPath).pipe(Effect.option);
+      if (O.isSome(stat) && Number(stat.value.size) !== file.bytes)
+        issue(`${file.originalPath}: referenced media size changed since the intake census`);
+      return;
+    }
     yield* artifactValid(
       LibraryArtifact.make({
         path: file.snapshotPath,
@@ -256,6 +265,13 @@ const verifyIntakeCensus = Effect.fn("Library.verifyIntakeCensus")(function* (co
 const verifyDocumentCitations = Effect.fn("Library.verifyDocumentCitations")(function* (context: VerificationContext) {
   const { root, fs, path, catalog, issue, artifactValid } = context;
   yield* Effect.forEach(catalog.artifacts, artifactValid, { concurrency: 1 });
+  // The census replays inventory, which knows only identities cited from hop-0 text. Identities that
+  // hop derivation catalogued from capture text never shaped a census, so they must not reshape it here.
+  const cited = HashSet.fromIterable(A.map(catalog.occurrences, (occurrence) => occurrence.sourceId));
+  const knownReferences = A.flatMap(
+    A.filter(catalog.sources, (source: LibrarySource) => HashSet.has(cited, source.id)),
+    (source: LibrarySource) => [source.repository, source.identity]
+  );
   yield* Effect.forEach(
     catalog.documents,
     Effect.fnUntraced(function* (document) {
@@ -269,13 +285,19 @@ const verifyDocumentCitations = Effect.fn("Library.verifyDocumentCitations")(fun
         })
       );
       if (!valid) return;
+      // A PDF report is registered by `mine` from an unparsed intake file: it has no citation census.
+      if (libraryPdfSnapshot(document.snapshotPath)) {
+        if (
+          document.expectedOccurrences !== 0 ||
+          A.some(catalog.occurrences, (item) => item.documentId === document.id)
+        )
+          issue(`${document.id}: PDF report carries a citation census`);
+        return;
+      }
       const text = yield* fs
         .readFileString(path.resolve(root, document.snapshotPath))
         .pipe(Effect.mapError((cause) => LibraryError.make({ message: "Cannot read verified report", cause })));
-      const expected = extractLibraryReferences(
-        text,
-        A.flatMap(catalog.sources, (source) => [source.repository, source.identity])
-      );
+      const expected = extractLibraryReferences(text, knownReferences);
       const actual = A.filter(catalog.occurrences, (item) => item.documentId === document.id);
       if (expected.length !== document.expectedOccurrences || actual.length !== expected.length)
         issue(`${document.id}: citation census mismatch`);

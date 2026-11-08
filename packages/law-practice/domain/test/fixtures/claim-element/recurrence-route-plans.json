@@ -1,0 +1,2960 @@
+{
+  "schemaVersion": "source-route-normative-controls/v1",
+  "status": "authored source-policy laws, no runtime output or benchmark relabeling",
+  "fixtures": [
+    {
+      "case": "collective-number-mismatch",
+      "sourceKey": "synthetic-collective-number-mismatch",
+      "records": [
+        {
+          "case": "route-record-1",
+          "qualifiedText": "A system comprising a pin.",
+          "qualifiedParts": {
+            "preamble": "A system",
+            "transition": "comprising",
+            "body": "a pin."
+          },
+          "claimNumber": 1,
+          "claimReferences": [],
+          "outcome": "admitted",
+          "reason": "",
+          "lexicalEvidence": {
+            "origin": "explicit injected source-control facts; not a runtime dictionary, asset output or countability resource",
+            "tokens": [
+              {
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 1,
+                  "quote": "A"
+                },
+                "pos": "DET",
+                "lemma": "a"
+              },
+              {
+                "anchor": {
+                  "startChar": 2,
+                  "endChar": 8,
+                  "quote": "system"
+                },
+                "pos": "NOUN",
+                "lemma": "system"
+              },
+              {
+                "anchor": {
+                  "startChar": 9,
+                  "endChar": 19,
+                  "quote": "comprising"
+                },
+                "pos": "VERB",
+                "lemma": "comprise"
+              },
+              {
+                "anchor": {
+                  "startChar": 20,
+                  "endChar": 21,
+                  "quote": "a"
+                },
+                "pos": "DET",
+                "lemma": "a"
+              },
+              {
+                "anchor": {
+                  "startChar": 22,
+                  "endChar": 25,
+                  "quote": "pin"
+                },
+                "pos": "NOUN",
+                "lemma": "pin"
+              },
+              {
+                "anchor": {
+                  "startChar": 25,
+                  "endChar": 26,
+                  "quote": "."
+                },
+                "pos": "PUNCT",
+                "lemma": "."
+              }
+            ]
+          },
+          "expected": {
+            "elements": [
+              {
+                "id": "root",
+                "ordinal": 1,
+                "parent": null,
+                "kind": "preamble-subject",
+                "grouping": "preamble",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A system"
+                },
+                "lexicalHeader": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A system"
+                },
+                "terms": [
+                  {
+                    "nominal": "r",
+                    "anchor": {
+                      "startChar": 0,
+                      "endChar": 8,
+                      "quote": "A system"
+                    },
+                    "head": "system",
+                    "determiner": "a",
+                    "sourceRole": "unknown"
+                  }
+                ],
+                "functionalParts": []
+              },
+              {
+                "id": "body",
+                "ordinal": 2,
+                "parent": "root",
+                "kind": "limitation",
+                "grouping": "single-restriction",
+                "anchor": {
+                  "startChar": 20,
+                  "endChar": 25,
+                  "quote": "a pin"
+                },
+                "lexicalHeader": {
+                  "startChar": 20,
+                  "endChar": 25,
+                  "quote": "a pin"
+                },
+                "terms": [
+                  {
+                    "nominal": "n0",
+                    "anchor": {
+                      "startChar": 20,
+                      "endChar": 25,
+                      "quote": "a pin"
+                    },
+                    "head": "pin",
+                    "determiner": "a",
+                    "sourceRole": "unknown"
+                  }
+                ],
+                "functionalParts": []
+              }
+            ],
+            "nominals": [
+              {
+                "id": "r",
+                "elementOwner": "root",
+                "core": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A system"
+                },
+                "head": {
+                  "startChar": 2,
+                  "endChar": 8,
+                  "quote": "system"
+                },
+                "outer": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A system"
+                },
+                "publicHead": "system",
+                "determiner": "a",
+                "sourceRole": "unknown",
+                "policyMechanism": "supported-introduction",
+                "canonicalReferenceHead": "system",
+                "proof": "supported determiner only; no countability fact"
+              },
+              {
+                "id": "n0",
+                "elementOwner": "body",
+                "core": {
+                  "startChar": 20,
+                  "endChar": 25,
+                  "quote": "a pin"
+                },
+                "head": {
+                  "startChar": 22,
+                  "endChar": 25,
+                  "quote": "pin"
+                },
+                "outer": {
+                  "startChar": 20,
+                  "endChar": 25,
+                  "quote": "a pin"
+                },
+                "publicHead": "pin",
+                "determiner": "a",
+                "sourceRole": "unknown",
+                "policyMechanism": "supported-introduction",
+                "canonicalReferenceHead": "pin",
+                "proof": "supported determiner only; no countability fact"
+              }
+            ],
+            "frames": [
+              {
+                "id": "fr",
+                "ordinal": 1,
+                "parent": null,
+                "attachment": "main",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A system"
+                },
+                "lexicalHeader": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A system"
+                },
+                "introducer": null,
+                "predicates": [],
+                "nominals": ["r"],
+                "subject": null,
+                "sharedSubject": null,
+                "coordination": null,
+                "arguments": [
+                  {
+                    "nominal": "r",
+                    "anchor": {
+                      "startChar": 0,
+                      "endChar": 8,
+                      "quote": "A system"
+                    },
+                    "role": "unknown",
+                    "predicate": null,
+                    "predicateOwnerFrame": null,
+                    "ownerNominal": null,
+                    "ownerCore": null
+                  }
+                ],
+                "outerOwnerNominal": null
+              },
+              {
+                "id": "fb",
+                "ordinal": 2,
+                "parent": null,
+                "attachment": "main",
+                "anchor": {
+                  "startChar": 20,
+                  "endChar": 25,
+                  "quote": "a pin"
+                },
+                "lexicalHeader": {
+                  "startChar": 20,
+                  "endChar": 25,
+                  "quote": "a pin"
+                },
+                "introducer": null,
+                "predicates": [],
+                "nominals": ["n0"],
+                "subject": null,
+                "sharedSubject": null,
+                "coordination": null,
+                "arguments": [
+                  {
+                    "nominal": "n0",
+                    "anchor": {
+                      "startChar": 20,
+                      "endChar": 25,
+                      "quote": "a pin"
+                    },
+                    "role": "unknown",
+                    "predicate": null,
+                    "predicateOwnerFrame": null,
+                    "ownerNominal": null,
+                    "ownerCore": null
+                  }
+                ],
+                "outerOwnerNominal": null
+              }
+            ],
+            "declarationPlans": [],
+            "proofCertificates": [],
+            "referenceExpectations": [],
+            "coverage": "not-fixed-by-grammar-plan",
+            "deferred": []
+          },
+          "benchmarkLabel": false,
+          "runtimeExecuted": false,
+          "sourceOrdinal": 1
+        },
+        {
+          "case": "route-record-2",
+          "qualifiedText": "A second system comprising a plurality of pins.",
+          "qualifiedParts": {
+            "preamble": "A second system",
+            "transition": "comprising",
+            "body": "a plurality of pins."
+          },
+          "claimNumber": 2,
+          "claimReferences": [],
+          "outcome": "admitted",
+          "reason": "",
+          "lexicalEvidence": {
+            "origin": "explicit injected source-control facts; not a runtime dictionary, asset output or countability resource",
+            "tokens": [
+              {
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 1,
+                  "quote": "A"
+                },
+                "pos": "DET",
+                "lemma": "a"
+              },
+              {
+                "anchor": {
+                  "startChar": 2,
+                  "endChar": 8,
+                  "quote": "second"
+                },
+                "pos": "ADJ",
+                "lemma": "second"
+              },
+              {
+                "anchor": {
+                  "startChar": 9,
+                  "endChar": 15,
+                  "quote": "system"
+                },
+                "pos": "NOUN",
+                "lemma": "system"
+              },
+              {
+                "anchor": {
+                  "startChar": 16,
+                  "endChar": 26,
+                  "quote": "comprising"
+                },
+                "pos": "VERB",
+                "lemma": "comprise"
+              },
+              {
+                "anchor": {
+                  "startChar": 27,
+                  "endChar": 28,
+                  "quote": "a"
+                },
+                "pos": "DET",
+                "lemma": "a"
+              },
+              {
+                "anchor": {
+                  "startChar": 29,
+                  "endChar": 38,
+                  "quote": "plurality"
+                },
+                "pos": "NOUN",
+                "lemma": "plurality"
+              },
+              {
+                "anchor": {
+                  "startChar": 39,
+                  "endChar": 41,
+                  "quote": "of"
+                },
+                "pos": "ADP",
+                "lemma": "of"
+              },
+              {
+                "anchor": {
+                  "startChar": 42,
+                  "endChar": 46,
+                  "quote": "pins"
+                },
+                "pos": "NOUN",
+                "lemma": "pin"
+              },
+              {
+                "anchor": {
+                  "startChar": 46,
+                  "endChar": 47,
+                  "quote": "."
+                },
+                "pos": "PUNCT",
+                "lemma": "."
+              }
+            ]
+          },
+          "expected": {
+            "elements": [
+              {
+                "id": "root",
+                "ordinal": 1,
+                "parent": null,
+                "kind": "preamble-subject",
+                "grouping": "preamble",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 15,
+                  "quote": "A second system"
+                },
+                "lexicalHeader": {
+                  "startChar": 0,
+                  "endChar": 15,
+                  "quote": "A second system"
+                },
+                "terms": [
+                  {
+                    "nominal": "r",
+                    "anchor": {
+                      "startChar": 0,
+                      "endChar": 15,
+                      "quote": "A second system"
+                    },
+                    "head": "second system",
+                    "determiner": "a",
+                    "sourceRole": "unknown"
+                  }
+                ],
+                "functionalParts": []
+              },
+              {
+                "id": "body",
+                "ordinal": 2,
+                "parent": "root",
+                "kind": "limitation",
+                "grouping": "single-restriction",
+                "anchor": {
+                  "startChar": 27,
+                  "endChar": 46,
+                  "quote": "a plurality of pins"
+                },
+                "lexicalHeader": {
+                  "startChar": 27,
+                  "endChar": 46,
+                  "quote": "a plurality of pins"
+                },
+                "terms": [
+                  {
+                    "nominal": "n0",
+                    "anchor": {
+                      "startChar": 27,
+                      "endChar": 46,
+                      "quote": "a plurality of pins"
+                    },
+                    "head": "pins",
+                    "determiner": "plurality-of",
+                    "sourceRole": "unknown"
+                  }
+                ],
+                "functionalParts": []
+              }
+            ],
+            "nominals": [
+              {
+                "id": "r",
+                "elementOwner": "root",
+                "core": {
+                  "startChar": 0,
+                  "endChar": 15,
+                  "quote": "A second system"
+                },
+                "head": {
+                  "startChar": 2,
+                  "endChar": 15,
+                  "quote": "second system"
+                },
+                "outer": {
+                  "startChar": 0,
+                  "endChar": 15,
+                  "quote": "A second system"
+                },
+                "publicHead": "second system",
+                "determiner": "a",
+                "sourceRole": "unknown",
+                "policyMechanism": "supported-introduction",
+                "canonicalReferenceHead": "second system",
+                "proof": "supported determiner only; no countability fact"
+              },
+              {
+                "id": "n0",
+                "elementOwner": "body",
+                "core": {
+                  "startChar": 27,
+                  "endChar": 46,
+                  "quote": "a plurality of pins"
+                },
+                "head": {
+                  "startChar": 42,
+                  "endChar": 46,
+                  "quote": "pins"
+                },
+                "outer": {
+                  "startChar": 27,
+                  "endChar": 46,
+                  "quote": "a plurality of pins"
+                },
+                "publicHead": "pins",
+                "determiner": "plurality-of",
+                "sourceRole": "unknown",
+                "policyMechanism": "supported-introduction",
+                "canonicalReferenceHead": "pins",
+                "proof": "supported determiner only; no countability fact"
+              }
+            ],
+            "frames": [
+              {
+                "id": "fr",
+                "ordinal": 1,
+                "parent": null,
+                "attachment": "main",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 15,
+                  "quote": "A second system"
+                },
+                "lexicalHeader": {
+                  "startChar": 0,
+                  "endChar": 15,
+                  "quote": "A second system"
+                },
+                "introducer": null,
+                "predicates": [],
+                "nominals": ["r"],
+                "subject": null,
+                "sharedSubject": null,
+                "coordination": null,
+                "arguments": [
+                  {
+                    "nominal": "r",
+                    "anchor": {
+                      "startChar": 0,
+                      "endChar": 15,
+                      "quote": "A second system"
+                    },
+                    "role": "unknown",
+                    "predicate": null,
+                    "predicateOwnerFrame": null,
+                    "ownerNominal": null,
+                    "ownerCore": null
+                  }
+                ],
+                "outerOwnerNominal": null
+              },
+              {
+                "id": "fb",
+                "ordinal": 2,
+                "parent": null,
+                "attachment": "main",
+                "anchor": {
+                  "startChar": 27,
+                  "endChar": 46,
+                  "quote": "a plurality of pins"
+                },
+                "lexicalHeader": {
+                  "startChar": 27,
+                  "endChar": 46,
+                  "quote": "a plurality of pins"
+                },
+                "introducer": null,
+                "predicates": [],
+                "nominals": ["n0"],
+                "subject": null,
+                "sharedSubject": null,
+                "coordination": null,
+                "arguments": [
+                  {
+                    "nominal": "n0",
+                    "anchor": {
+                      "startChar": 27,
+                      "endChar": 46,
+                      "quote": "a plurality of pins"
+                    },
+                    "role": "unknown",
+                    "predicate": null,
+                    "predicateOwnerFrame": null,
+                    "ownerNominal": null,
+                    "ownerCore": null
+                  }
+                ],
+                "outerOwnerNominal": null
+              }
+            ],
+            "declarationPlans": [],
+            "proofCertificates": [],
+            "referenceExpectations": [],
+            "coverage": "not-fixed-by-grammar-plan",
+            "deferred": []
+          },
+          "benchmarkLabel": false,
+          "runtimeExecuted": false,
+          "sourceOrdinal": 2
+        },
+        {
+          "case": "route-record-3",
+          "qualifiedText": "The system of claim 1 wherein said plurality of pins are bowed.",
+          "qualifiedParts": {
+            "preamble": "The system of claim 1",
+            "transition": "wherein",
+            "body": "said plurality of pins are bowed."
+          },
+          "claimNumber": 3,
+          "claimReferences": [1],
+          "outcome": "admitted",
+          "reason": "",
+          "lexicalEvidence": {
+            "origin": "explicit injected source-control facts; not a runtime dictionary, asset output or countability resource",
+            "tokens": [
+              {
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 3,
+                  "quote": "The"
+                },
+                "pos": "DET",
+                "lemma": "the"
+              },
+              {
+                "anchor": {
+                  "startChar": 4,
+                  "endChar": 10,
+                  "quote": "system"
+                },
+                "pos": "NOUN",
+                "lemma": "system"
+              },
+              {
+                "anchor": {
+                  "startChar": 11,
+                  "endChar": 13,
+                  "quote": "of"
+                },
+                "pos": "ADP",
+                "lemma": "of"
+              },
+              {
+                "anchor": {
+                  "startChar": 14,
+                  "endChar": 19,
+                  "quote": "claim"
+                },
+                "pos": "NOUN",
+                "lemma": "claim"
+              },
+              {
+                "anchor": {
+                  "startChar": 20,
+                  "endChar": 21,
+                  "quote": "1"
+                },
+                "pos": "NUM",
+                "lemma": "1"
+              },
+              {
+                "anchor": {
+                  "startChar": 22,
+                  "endChar": 29,
+                  "quote": "wherein"
+                },
+                "pos": "ADV",
+                "lemma": "wherein"
+              },
+              {
+                "anchor": {
+                  "startChar": 30,
+                  "endChar": 34,
+                  "quote": "said"
+                },
+                "pos": "DET",
+                "lemma": "said"
+              },
+              {
+                "anchor": {
+                  "startChar": 35,
+                  "endChar": 44,
+                  "quote": "plurality"
+                },
+                "pos": "NOUN",
+                "lemma": "plurality"
+              },
+              {
+                "anchor": {
+                  "startChar": 45,
+                  "endChar": 47,
+                  "quote": "of"
+                },
+                "pos": "ADP",
+                "lemma": "of"
+              },
+              {
+                "anchor": {
+                  "startChar": 48,
+                  "endChar": 52,
+                  "quote": "pins"
+                },
+                "pos": "NOUN",
+                "lemma": "pin"
+              },
+              {
+                "anchor": {
+                  "startChar": 53,
+                  "endChar": 56,
+                  "quote": "are"
+                },
+                "pos": "AUX",
+                "lemma": "be"
+              },
+              {
+                "anchor": {
+                  "startChar": 57,
+                  "endChar": 62,
+                  "quote": "bowed"
+                },
+                "pos": "VERB",
+                "lemma": "bow"
+              },
+              {
+                "anchor": {
+                  "startChar": 62,
+                  "endChar": 63,
+                  "quote": "."
+                },
+                "pos": "PUNCT",
+                "lemma": "."
+              }
+            ]
+          },
+          "expected": {
+            "elements": [
+              {
+                "id": "root",
+                "ordinal": 1,
+                "parent": null,
+                "kind": "preamble-subject",
+                "grouping": "preamble",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 21,
+                  "quote": "The system of claim 1"
+                },
+                "lexicalHeader": {
+                  "startChar": 0,
+                  "endChar": 10,
+                  "quote": "The system"
+                },
+                "terms": [
+                  {
+                    "nominal": "r",
+                    "anchor": {
+                      "startChar": 0,
+                      "endChar": 10,
+                      "quote": "The system"
+                    },
+                    "head": "system",
+                    "determiner": "the",
+                    "sourceRole": "unknown"
+                  }
+                ],
+                "functionalParts": []
+              },
+              {
+                "id": "body",
+                "ordinal": 2,
+                "parent": "root",
+                "kind": "functional-relation",
+                "grouping": "single-restriction",
+                "anchor": {
+                  "startChar": 30,
+                  "endChar": 62,
+                  "quote": "said plurality of pins are bowed"
+                },
+                "lexicalHeader": {
+                  "startChar": 30,
+                  "endChar": 62,
+                  "quote": "said plurality of pins are bowed"
+                },
+                "terms": [
+                  {
+                    "nominal": "n0",
+                    "anchor": {
+                      "startChar": 30,
+                      "endChar": 52,
+                      "quote": "said plurality of pins"
+                    },
+                    "head": "plurality of pins",
+                    "determiner": "said",
+                    "sourceRole": "unknown"
+                  }
+                ],
+                "functionalParts": [
+                  {
+                    "kind": "term",
+                    "nominal": "n0",
+                    "anchor": {
+                      "startChar": 30,
+                      "endChar": 52,
+                      "quote": "said plurality of pins"
+                    }
+                  },
+                  {
+                    "kind": "text",
+                    "anchor": {
+                      "startChar": 52,
+                      "endChar": 62,
+                      "quote": " are bowed"
+                    }
+                  }
+                ]
+              }
+            ],
+            "nominals": [
+              {
+                "id": "r",
+                "elementOwner": "root",
+                "core": {
+                  "startChar": 0,
+                  "endChar": 10,
+                  "quote": "The system"
+                },
+                "head": {
+                  "startChar": 4,
+                  "endChar": 10,
+                  "quote": "system"
+                },
+                "outer": {
+                  "startChar": 0,
+                  "endChar": 10,
+                  "quote": "The system"
+                },
+                "publicHead": "system",
+                "determiner": "the",
+                "sourceRole": "unknown",
+                "policyMechanism": "supported-reference",
+                "canonicalReferenceHead": "system",
+                "proof": "supported determiner only; no countability fact"
+              },
+              {
+                "id": "n0",
+                "elementOwner": "body",
+                "core": {
+                  "startChar": 30,
+                  "endChar": 52,
+                  "quote": "said plurality of pins"
+                },
+                "head": {
+                  "startChar": 35,
+                  "endChar": 52,
+                  "quote": "plurality of pins"
+                },
+                "outer": {
+                  "startChar": 30,
+                  "endChar": 52,
+                  "quote": "said plurality of pins"
+                },
+                "publicHead": "plurality of pins",
+                "determiner": "said",
+                "sourceRole": "unknown",
+                "policyMechanism": "supported-reference",
+                "canonicalReferenceHead": "pins",
+                "proof": "explicit collective reference; exact pluralityReferenceContent, never a new introduction"
+              }
+            ],
+            "frames": [
+              {
+                "id": "fr",
+                "ordinal": 1,
+                "parent": null,
+                "attachment": "main",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 21,
+                  "quote": "The system of claim 1"
+                },
+                "lexicalHeader": {
+                  "startChar": 0,
+                  "endChar": 10,
+                  "quote": "The system"
+                },
+                "introducer": null,
+                "predicates": [],
+                "nominals": ["r"],
+                "subject": null,
+                "sharedSubject": null,
+                "coordination": null,
+                "arguments": [
+                  {
+                    "nominal": "r",
+                    "anchor": {
+                      "startChar": 0,
+                      "endChar": 10,
+                      "quote": "The system"
+                    },
+                    "role": "unknown",
+                    "predicate": null,
+                    "predicateOwnerFrame": null,
+                    "ownerNominal": null,
+                    "ownerCore": null
+                  }
+                ],
+                "outerOwnerNominal": null
+              },
+              {
+                "id": "fb",
+                "ordinal": 2,
+                "parent": null,
+                "attachment": "main",
+                "anchor": {
+                  "startChar": 30,
+                  "endChar": 62,
+                  "quote": "said plurality of pins are bowed"
+                },
+                "lexicalHeader": {
+                  "startChar": 30,
+                  "endChar": 62,
+                  "quote": "said plurality of pins are bowed"
+                },
+                "introducer": null,
+                "predicates": [
+                  {
+                    "startChar": 53,
+                    "endChar": 62,
+                    "quote": "are bowed"
+                  }
+                ],
+                "nominals": ["n0"],
+                "subject": {
+                  "startChar": 30,
+                  "endChar": 52,
+                  "quote": "said plurality of pins"
+                },
+                "sharedSubject": null,
+                "coordination": null,
+                "arguments": [
+                  {
+                    "nominal": "n0",
+                    "anchor": {
+                      "startChar": 30,
+                      "endChar": 52,
+                      "quote": "said plurality of pins"
+                    },
+                    "role": "subject",
+                    "predicate": {
+                      "startChar": 53,
+                      "endChar": 62,
+                      "quote": "are bowed"
+                    },
+                    "predicateOwnerFrame": "fb",
+                    "ownerNominal": null,
+                    "ownerCore": null
+                  }
+                ],
+                "outerOwnerNominal": null
+              }
+            ],
+            "declarationPlans": [],
+            "proofCertificates": [],
+            "referenceExpectations": [],
+            "coverage": "not-fixed-by-grammar-plan",
+            "deferred": []
+          },
+          "benchmarkLabel": false,
+          "runtimeExecuted": false,
+          "sourceOrdinal": 3
+        }
+      ],
+      "canonicalReference": {
+        "record": 3,
+        "nominal": "n0",
+        "publicHead": "plurality of pins",
+        "policyHead": "pins"
+      },
+      "expectedPerRoute": [
+        {
+          "claims": [1, 3],
+          "verdict": "number-mismatch",
+          "candidateRecord": 1,
+          "candidateNominal": "n0",
+          "reason": "Existing in-route number check precedes outside-route search; outside introduction never becomes in-route proof."
+        }
+      ],
+      "providerUnavailableControl": {
+        "enhancedPlans": [],
+        "legacyStructures": "unchanged existing fallback",
+        "coverage": "partial-required",
+        "retainedSubstantiveFinding": "number-mismatch",
+        "noNewIntroduction": true
+      },
+      "treeReferenceStrategy": "unchanged; no new cross-route structural resolution law"
+    },
+    {
+      "case": "collective-outside-route",
+      "sourceKey": "synthetic-collective-outside-route",
+      "records": [
+        {
+          "case": "route-record-1",
+          "qualifiedText": "A system comprising a panel.",
+          "qualifiedParts": {
+            "preamble": "A system",
+            "transition": "comprising",
+            "body": "a panel."
+          },
+          "claimNumber": 1,
+          "claimReferences": [],
+          "outcome": "admitted",
+          "reason": "",
+          "lexicalEvidence": {
+            "origin": "explicit injected source-control facts; not a runtime dictionary, asset output or countability resource",
+            "tokens": [
+              {
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 1,
+                  "quote": "A"
+                },
+                "pos": "DET",
+                "lemma": "a"
+              },
+              {
+                "anchor": {
+                  "startChar": 2,
+                  "endChar": 8,
+                  "quote": "system"
+                },
+                "pos": "NOUN",
+                "lemma": "system"
+              },
+              {
+                "anchor": {
+                  "startChar": 9,
+                  "endChar": 19,
+                  "quote": "comprising"
+                },
+                "pos": "VERB",
+                "lemma": "comprise"
+              },
+              {
+                "anchor": {
+                  "startChar": 20,
+                  "endChar": 21,
+                  "quote": "a"
+                },
+                "pos": "DET",
+                "lemma": "a"
+              },
+              {
+                "anchor": {
+                  "startChar": 22,
+                  "endChar": 27,
+                  "quote": "panel"
+                },
+                "pos": "NOUN",
+                "lemma": "panel"
+              },
+              {
+                "anchor": {
+                  "startChar": 27,
+                  "endChar": 28,
+                  "quote": "."
+                },
+                "pos": "PUNCT",
+                "lemma": "."
+              }
+            ]
+          },
+          "expected": {
+            "elements": [
+              {
+                "id": "root",
+                "ordinal": 1,
+                "parent": null,
+                "kind": "preamble-subject",
+                "grouping": "preamble",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A system"
+                },
+                "lexicalHeader": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A system"
+                },
+                "terms": [
+                  {
+                    "nominal": "r",
+                    "anchor": {
+                      "startChar": 0,
+                      "endChar": 8,
+                      "quote": "A system"
+                    },
+                    "head": "system",
+                    "determiner": "a",
+                    "sourceRole": "unknown"
+                  }
+                ],
+                "functionalParts": []
+              },
+              {
+                "id": "body",
+                "ordinal": 2,
+                "parent": "root",
+                "kind": "limitation",
+                "grouping": "single-restriction",
+                "anchor": {
+                  "startChar": 20,
+                  "endChar": 27,
+                  "quote": "a panel"
+                },
+                "lexicalHeader": {
+                  "startChar": 20,
+                  "endChar": 27,
+                  "quote": "a panel"
+                },
+                "terms": [
+                  {
+                    "nominal": "n0",
+                    "anchor": {
+                      "startChar": 20,
+                      "endChar": 27,
+                      "quote": "a panel"
+                    },
+                    "head": "panel",
+                    "determiner": "a",
+                    "sourceRole": "unknown"
+                  }
+                ],
+                "functionalParts": []
+              }
+            ],
+            "nominals": [
+              {
+                "id": "r",
+                "elementOwner": "root",
+                "core": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A system"
+                },
+                "head": {
+                  "startChar": 2,
+                  "endChar": 8,
+                  "quote": "system"
+                },
+                "outer": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A system"
+                },
+                "publicHead": "system",
+                "determiner": "a",
+                "sourceRole": "unknown",
+                "policyMechanism": "supported-introduction",
+                "canonicalReferenceHead": "system",
+                "proof": "supported determiner only; no countability fact"
+              },
+              {
+                "id": "n0",
+                "elementOwner": "body",
+                "core": {
+                  "startChar": 20,
+                  "endChar": 27,
+                  "quote": "a panel"
+                },
+                "head": {
+                  "startChar": 22,
+                  "endChar": 27,
+                  "quote": "panel"
+                },
+                "outer": {
+                  "startChar": 20,
+                  "endChar": 27,
+                  "quote": "a panel"
+                },
+                "publicHead": "panel",
+                "determiner": "a",
+                "sourceRole": "unknown",
+                "policyMechanism": "supported-introduction",
+                "canonicalReferenceHead": "panel",
+                "proof": "supported determiner only; no countability fact"
+              }
+            ],
+            "frames": [
+              {
+                "id": "fr",
+                "ordinal": 1,
+                "parent": null,
+                "attachment": "main",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A system"
+                },
+                "lexicalHeader": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A system"
+                },
+                "introducer": null,
+                "predicates": [],
+                "nominals": ["r"],
+                "subject": null,
+                "sharedSubject": null,
+                "coordination": null,
+                "arguments": [
+                  {
+                    "nominal": "r",
+                    "anchor": {
+                      "startChar": 0,
+                      "endChar": 8,
+                      "quote": "A system"
+                    },
+                    "role": "unknown",
+                    "predicate": null,
+                    "predicateOwnerFrame": null,
+                    "ownerNominal": null,
+                    "ownerCore": null
+                  }
+                ],
+                "outerOwnerNominal": null
+              },
+              {
+                "id": "fb",
+                "ordinal": 2,
+                "parent": null,
+                "attachment": "main",
+                "anchor": {
+                  "startChar": 20,
+                  "endChar": 27,
+                  "quote": "a panel"
+                },
+                "lexicalHeader": {
+                  "startChar": 20,
+                  "endChar": 27,
+                  "quote": "a panel"
+                },
+                "introducer": null,
+                "predicates": [],
+                "nominals": ["n0"],
+                "subject": null,
+                "sharedSubject": null,
+                "coordination": null,
+                "arguments": [
+                  {
+                    "nominal": "n0",
+                    "anchor": {
+                      "startChar": 20,
+                      "endChar": 27,
+                      "quote": "a panel"
+                    },
+                    "role": "unknown",
+                    "predicate": null,
+                    "predicateOwnerFrame": null,
+                    "ownerNominal": null,
+                    "ownerCore": null
+                  }
+                ],
+                "outerOwnerNominal": null
+              }
+            ],
+            "declarationPlans": [],
+            "proofCertificates": [],
+            "referenceExpectations": [],
+            "coverage": "not-fixed-by-grammar-plan",
+            "deferred": []
+          },
+          "benchmarkLabel": false,
+          "runtimeExecuted": false,
+          "sourceOrdinal": 1
+        },
+        {
+          "case": "route-record-2",
+          "qualifiedText": "A second system comprising a plurality of pins.",
+          "qualifiedParts": {
+            "preamble": "A second system",
+            "transition": "comprising",
+            "body": "a plurality of pins."
+          },
+          "claimNumber": 2,
+          "claimReferences": [],
+          "outcome": "admitted",
+          "reason": "",
+          "lexicalEvidence": {
+            "origin": "explicit injected source-control facts; not a runtime dictionary, asset output or countability resource",
+            "tokens": [
+              {
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 1,
+                  "quote": "A"
+                },
+                "pos": "DET",
+                "lemma": "a"
+              },
+              {
+                "anchor": {
+                  "startChar": 2,
+                  "endChar": 8,
+                  "quote": "second"
+                },
+                "pos": "ADJ",
+                "lemma": "second"
+              },
+              {
+                "anchor": {
+                  "startChar": 9,
+                  "endChar": 15,
+                  "quote": "system"
+                },
+                "pos": "NOUN",
+                "lemma": "system"
+              },
+              {
+                "anchor": {
+                  "startChar": 16,
+                  "endChar": 26,
+                  "quote": "comprising"
+                },
+                "pos": "VERB",
+                "lemma": "comprise"
+              },
+              {
+                "anchor": {
+                  "startChar": 27,
+                  "endChar": 28,
+                  "quote": "a"
+                },
+                "pos": "DET",
+                "lemma": "a"
+              },
+              {
+                "anchor": {
+                  "startChar": 29,
+                  "endChar": 38,
+                  "quote": "plurality"
+                },
+                "pos": "NOUN",
+                "lemma": "plurality"
+              },
+              {
+                "anchor": {
+                  "startChar": 39,
+                  "endChar": 41,
+                  "quote": "of"
+                },
+                "pos": "ADP",
+                "lemma": "of"
+              },
+              {
+                "anchor": {
+                  "startChar": 42,
+                  "endChar": 46,
+                  "quote": "pins"
+                },
+                "pos": "NOUN",
+                "lemma": "pin"
+              },
+              {
+                "anchor": {
+                  "startChar": 46,
+                  "endChar": 47,
+                  "quote": "."
+                },
+                "pos": "PUNCT",
+                "lemma": "."
+              }
+            ]
+          },
+          "expected": {
+            "elements": [
+              {
+                "id": "root",
+                "ordinal": 1,
+                "parent": null,
+                "kind": "preamble-subject",
+                "grouping": "preamble",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 15,
+                  "quote": "A second system"
+                },
+                "lexicalHeader": {
+                  "startChar": 0,
+                  "endChar": 15,
+                  "quote": "A second system"
+                },
+                "terms": [
+                  {
+                    "nominal": "r",
+                    "anchor": {
+                      "startChar": 0,
+                      "endChar": 15,
+                      "quote": "A second system"
+                    },
+                    "head": "second system",
+                    "determiner": "a",
+                    "sourceRole": "unknown"
+                  }
+                ],
+                "functionalParts": []
+              },
+              {
+                "id": "body",
+                "ordinal": 2,
+                "parent": "root",
+                "kind": "limitation",
+                "grouping": "single-restriction",
+                "anchor": {
+                  "startChar": 27,
+                  "endChar": 46,
+                  "quote": "a plurality of pins"
+                },
+                "lexicalHeader": {
+                  "startChar": 27,
+                  "endChar": 46,
+                  "quote": "a plurality of pins"
+                },
+                "terms": [
+                  {
+                    "nominal": "n0",
+                    "anchor": {
+                      "startChar": 27,
+                      "endChar": 46,
+                      "quote": "a plurality of pins"
+                    },
+                    "head": "pins",
+                    "determiner": "plurality-of",
+                    "sourceRole": "unknown"
+                  }
+                ],
+                "functionalParts": []
+              }
+            ],
+            "nominals": [
+              {
+                "id": "r",
+                "elementOwner": "root",
+                "core": {
+                  "startChar": 0,
+                  "endChar": 15,
+                  "quote": "A second system"
+                },
+                "head": {
+                  "startChar": 2,
+                  "endChar": 15,
+                  "quote": "second system"
+                },
+                "outer": {
+                  "startChar": 0,
+                  "endChar": 15,
+                  "quote": "A second system"
+                },
+                "publicHead": "second system",
+                "determiner": "a",
+                "sourceRole": "unknown",
+                "policyMechanism": "supported-introduction",
+                "canonicalReferenceHead": "second system",
+                "proof": "supported determiner only; no countability fact"
+              },
+              {
+                "id": "n0",
+                "elementOwner": "body",
+                "core": {
+                  "startChar": 27,
+                  "endChar": 46,
+                  "quote": "a plurality of pins"
+                },
+                "head": {
+                  "startChar": 42,
+                  "endChar": 46,
+                  "quote": "pins"
+                },
+                "outer": {
+                  "startChar": 27,
+                  "endChar": 46,
+                  "quote": "a plurality of pins"
+                },
+                "publicHead": "pins",
+                "determiner": "plurality-of",
+                "sourceRole": "unknown",
+                "policyMechanism": "supported-introduction",
+                "canonicalReferenceHead": "pins",
+                "proof": "supported determiner only; no countability fact"
+              }
+            ],
+            "frames": [
+              {
+                "id": "fr",
+                "ordinal": 1,
+                "parent": null,
+                "attachment": "main",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 15,
+                  "quote": "A second system"
+                },
+                "lexicalHeader": {
+                  "startChar": 0,
+                  "endChar": 15,
+                  "quote": "A second system"
+                },
+                "introducer": null,
+                "predicates": [],
+                "nominals": ["r"],
+                "subject": null,
+                "sharedSubject": null,
+                "coordination": null,
+                "arguments": [
+                  {
+                    "nominal": "r",
+                    "anchor": {
+                      "startChar": 0,
+                      "endChar": 15,
+                      "quote": "A second system"
+                    },
+                    "role": "unknown",
+                    "predicate": null,
+                    "predicateOwnerFrame": null,
+                    "ownerNominal": null,
+                    "ownerCore": null
+                  }
+                ],
+                "outerOwnerNominal": null
+              },
+              {
+                "id": "fb",
+                "ordinal": 2,
+                "parent": null,
+                "attachment": "main",
+                "anchor": {
+                  "startChar": 27,
+                  "endChar": 46,
+                  "quote": "a plurality of pins"
+                },
+                "lexicalHeader": {
+                  "startChar": 27,
+                  "endChar": 46,
+                  "quote": "a plurality of pins"
+                },
+                "introducer": null,
+                "predicates": [],
+                "nominals": ["n0"],
+                "subject": null,
+                "sharedSubject": null,
+                "coordination": null,
+                "arguments": [
+                  {
+                    "nominal": "n0",
+                    "anchor": {
+                      "startChar": 27,
+                      "endChar": 46,
+                      "quote": "a plurality of pins"
+                    },
+                    "role": "unknown",
+                    "predicate": null,
+                    "predicateOwnerFrame": null,
+                    "ownerNominal": null,
+                    "ownerCore": null
+                  }
+                ],
+                "outerOwnerNominal": null
+              }
+            ],
+            "declarationPlans": [],
+            "proofCertificates": [],
+            "referenceExpectations": [],
+            "coverage": "not-fixed-by-grammar-plan",
+            "deferred": []
+          },
+          "benchmarkLabel": false,
+          "runtimeExecuted": false,
+          "sourceOrdinal": 2
+        },
+        {
+          "case": "route-record-3",
+          "qualifiedText": "The system of claim 1 wherein said plurality of pins are bowed.",
+          "qualifiedParts": {
+            "preamble": "The system of claim 1",
+            "transition": "wherein",
+            "body": "said plurality of pins are bowed."
+          },
+          "claimNumber": 3,
+          "claimReferences": [1],
+          "outcome": "admitted",
+          "reason": "",
+          "lexicalEvidence": {
+            "origin": "explicit injected source-control facts; not a runtime dictionary, asset output or countability resource",
+            "tokens": [
+              {
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 3,
+                  "quote": "The"
+                },
+                "pos": "DET",
+                "lemma": "the"
+              },
+              {
+                "anchor": {
+                  "startChar": 4,
+                  "endChar": 10,
+                  "quote": "system"
+                },
+                "pos": "NOUN",
+                "lemma": "system"
+              },
+              {
+                "anchor": {
+                  "startChar": 11,
+                  "endChar": 13,
+                  "quote": "of"
+                },
+                "pos": "ADP",
+                "lemma": "of"
+              },
+              {
+                "anchor": {
+                  "startChar": 14,
+                  "endChar": 19,
+                  "quote": "claim"
+                },
+                "pos": "NOUN",
+                "lemma": "claim"
+              },
+              {
+                "anchor": {
+                  "startChar": 20,
+                  "endChar": 21,
+                  "quote": "1"
+                },
+                "pos": "NUM",
+                "lemma": "1"
+              },
+              {
+                "anchor": {
+                  "startChar": 22,
+                  "endChar": 29,
+                  "quote": "wherein"
+                },
+                "pos": "ADV",
+                "lemma": "wherein"
+              },
+              {
+                "anchor": {
+                  "startChar": 30,
+                  "endChar": 34,
+                  "quote": "said"
+                },
+                "pos": "DET",
+                "lemma": "said"
+              },
+              {
+                "anchor": {
+                  "startChar": 35,
+                  "endChar": 44,
+                  "quote": "plurality"
+                },
+                "pos": "NOUN",
+                "lemma": "plurality"
+              },
+              {
+                "anchor": {
+                  "startChar": 45,
+                  "endChar": 47,
+                  "quote": "of"
+                },
+                "pos": "ADP",
+                "lemma": "of"
+              },
+              {
+                "anchor": {
+                  "startChar": 48,
+                  "endChar": 52,
+                  "quote": "pins"
+                },
+                "pos": "NOUN",
+                "lemma": "pin"
+              },
+              {
+                "anchor": {
+                  "startChar": 53,
+                  "endChar": 56,
+                  "quote": "are"
+                },
+                "pos": "AUX",
+                "lemma": "be"
+              },
+              {
+                "anchor": {
+                  "startChar": 57,
+                  "endChar": 62,
+                  "quote": "bowed"
+                },
+                "pos": "VERB",
+                "lemma": "bow"
+              },
+              {
+                "anchor": {
+                  "startChar": 62,
+                  "endChar": 63,
+                  "quote": "."
+                },
+                "pos": "PUNCT",
+                "lemma": "."
+              }
+            ]
+          },
+          "expected": {
+            "elements": [
+              {
+                "id": "root",
+                "ordinal": 1,
+                "parent": null,
+                "kind": "preamble-subject",
+                "grouping": "preamble",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 21,
+                  "quote": "The system of claim 1"
+                },
+                "lexicalHeader": {
+                  "startChar": 0,
+                  "endChar": 10,
+                  "quote": "The system"
+                },
+                "terms": [
+                  {
+                    "nominal": "r",
+                    "anchor": {
+                      "startChar": 0,
+                      "endChar": 10,
+                      "quote": "The system"
+                    },
+                    "head": "system",
+                    "determiner": "the",
+                    "sourceRole": "unknown"
+                  }
+                ],
+                "functionalParts": []
+              },
+              {
+                "id": "body",
+                "ordinal": 2,
+                "parent": "root",
+                "kind": "functional-relation",
+                "grouping": "single-restriction",
+                "anchor": {
+                  "startChar": 30,
+                  "endChar": 62,
+                  "quote": "said plurality of pins are bowed"
+                },
+                "lexicalHeader": {
+                  "startChar": 30,
+                  "endChar": 62,
+                  "quote": "said plurality of pins are bowed"
+                },
+                "terms": [
+                  {
+                    "nominal": "n0",
+                    "anchor": {
+                      "startChar": 30,
+                      "endChar": 52,
+                      "quote": "said plurality of pins"
+                    },
+                    "head": "plurality of pins",
+                    "determiner": "said",
+                    "sourceRole": "unknown"
+                  }
+                ],
+                "functionalParts": [
+                  {
+                    "kind": "term",
+                    "nominal": "n0",
+                    "anchor": {
+                      "startChar": 30,
+                      "endChar": 52,
+                      "quote": "said plurality of pins"
+                    }
+                  },
+                  {
+                    "kind": "text",
+                    "anchor": {
+                      "startChar": 52,
+                      "endChar": 62,
+                      "quote": " are bowed"
+                    }
+                  }
+                ]
+              }
+            ],
+            "nominals": [
+              {
+                "id": "r",
+                "elementOwner": "root",
+                "core": {
+                  "startChar": 0,
+                  "endChar": 10,
+                  "quote": "The system"
+                },
+                "head": {
+                  "startChar": 4,
+                  "endChar": 10,
+                  "quote": "system"
+                },
+                "outer": {
+                  "startChar": 0,
+                  "endChar": 10,
+                  "quote": "The system"
+                },
+                "publicHead": "system",
+                "determiner": "the",
+                "sourceRole": "unknown",
+                "policyMechanism": "supported-reference",
+                "canonicalReferenceHead": "system",
+                "proof": "supported determiner only; no countability fact"
+              },
+              {
+                "id": "n0",
+                "elementOwner": "body",
+                "core": {
+                  "startChar": 30,
+                  "endChar": 52,
+                  "quote": "said plurality of pins"
+                },
+                "head": {
+                  "startChar": 35,
+                  "endChar": 52,
+                  "quote": "plurality of pins"
+                },
+                "outer": {
+                  "startChar": 30,
+                  "endChar": 52,
+                  "quote": "said plurality of pins"
+                },
+                "publicHead": "plurality of pins",
+                "determiner": "said",
+                "sourceRole": "unknown",
+                "policyMechanism": "supported-reference",
+                "canonicalReferenceHead": "pins",
+                "proof": "explicit collective reference; exact pluralityReferenceContent, never a new introduction"
+              }
+            ],
+            "frames": [
+              {
+                "id": "fr",
+                "ordinal": 1,
+                "parent": null,
+                "attachment": "main",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 21,
+                  "quote": "The system of claim 1"
+                },
+                "lexicalHeader": {
+                  "startChar": 0,
+                  "endChar": 10,
+                  "quote": "The system"
+                },
+                "introducer": null,
+                "predicates": [],
+                "nominals": ["r"],
+                "subject": null,
+                "sharedSubject": null,
+                "coordination": null,
+                "arguments": [
+                  {
+                    "nominal": "r",
+                    "anchor": {
+                      "startChar": 0,
+                      "endChar": 10,
+                      "quote": "The system"
+                    },
+                    "role": "unknown",
+                    "predicate": null,
+                    "predicateOwnerFrame": null,
+                    "ownerNominal": null,
+                    "ownerCore": null
+                  }
+                ],
+                "outerOwnerNominal": null
+              },
+              {
+                "id": "fb",
+                "ordinal": 2,
+                "parent": null,
+                "attachment": "main",
+                "anchor": {
+                  "startChar": 30,
+                  "endChar": 62,
+                  "quote": "said plurality of pins are bowed"
+                },
+                "lexicalHeader": {
+                  "startChar": 30,
+                  "endChar": 62,
+                  "quote": "said plurality of pins are bowed"
+                },
+                "introducer": null,
+                "predicates": [
+                  {
+                    "startChar": 53,
+                    "endChar": 62,
+                    "quote": "are bowed"
+                  }
+                ],
+                "nominals": ["n0"],
+                "subject": {
+                  "startChar": 30,
+                  "endChar": 52,
+                  "quote": "said plurality of pins"
+                },
+                "sharedSubject": null,
+                "coordination": null,
+                "arguments": [
+                  {
+                    "nominal": "n0",
+                    "anchor": {
+                      "startChar": 30,
+                      "endChar": 52,
+                      "quote": "said plurality of pins"
+                    },
+                    "role": "subject",
+                    "predicate": {
+                      "startChar": 53,
+                      "endChar": 62,
+                      "quote": "are bowed"
+                    },
+                    "predicateOwnerFrame": "fb",
+                    "ownerNominal": null,
+                    "ownerCore": null
+                  }
+                ],
+                "outerOwnerNominal": null
+              }
+            ],
+            "declarationPlans": [],
+            "proofCertificates": [],
+            "referenceExpectations": [],
+            "coverage": "not-fixed-by-grammar-plan",
+            "deferred": []
+          },
+          "benchmarkLabel": false,
+          "runtimeExecuted": false,
+          "sourceOrdinal": 3
+        }
+      ],
+      "canonicalReference": {
+        "record": 3,
+        "nominal": "n0",
+        "publicHead": "plurality of pins",
+        "policyHead": "pins"
+      },
+      "expectedPerRoute": [
+        {
+          "claims": [1, 3],
+          "verdict": "antecedent-outside-chain",
+          "candidateRecord": 2,
+          "candidateNominal": "n0",
+          "reason": "Existing in-route number check precedes outside-route search; outside introduction never becomes in-route proof."
+        }
+      ],
+      "providerUnavailableControl": {
+        "enhancedPlans": [],
+        "legacyStructures": "unchanged existing fallback",
+        "coverage": "partial-required",
+        "retainedSubstantiveFinding": "antecedent-outside-chain",
+        "noNewIntroduction": true
+      },
+      "treeReferenceStrategy": "unchanged; no new cross-route structural resolution law"
+    },
+    {
+      "case": "collective-alternative-route",
+      "sourceKey": "synthetic-collective-alternative-route",
+      "records": [
+        {
+          "case": "route-record-1",
+          "qualifiedText": "A system comprising a plurality of pins.",
+          "qualifiedParts": {
+            "preamble": "A system",
+            "transition": "comprising",
+            "body": "a plurality of pins."
+          },
+          "claimNumber": 1,
+          "claimReferences": [],
+          "outcome": "admitted",
+          "reason": "",
+          "lexicalEvidence": {
+            "origin": "explicit injected source-control facts; not a runtime dictionary, asset output or countability resource",
+            "tokens": [
+              {
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 1,
+                  "quote": "A"
+                },
+                "pos": "DET",
+                "lemma": "a"
+              },
+              {
+                "anchor": {
+                  "startChar": 2,
+                  "endChar": 8,
+                  "quote": "system"
+                },
+                "pos": "NOUN",
+                "lemma": "system"
+              },
+              {
+                "anchor": {
+                  "startChar": 9,
+                  "endChar": 19,
+                  "quote": "comprising"
+                },
+                "pos": "VERB",
+                "lemma": "comprise"
+              },
+              {
+                "anchor": {
+                  "startChar": 20,
+                  "endChar": 21,
+                  "quote": "a"
+                },
+                "pos": "DET",
+                "lemma": "a"
+              },
+              {
+                "anchor": {
+                  "startChar": 22,
+                  "endChar": 31,
+                  "quote": "plurality"
+                },
+                "pos": "NOUN",
+                "lemma": "plurality"
+              },
+              {
+                "anchor": {
+                  "startChar": 32,
+                  "endChar": 34,
+                  "quote": "of"
+                },
+                "pos": "ADP",
+                "lemma": "of"
+              },
+              {
+                "anchor": {
+                  "startChar": 35,
+                  "endChar": 39,
+                  "quote": "pins"
+                },
+                "pos": "NOUN",
+                "lemma": "pin"
+              },
+              {
+                "anchor": {
+                  "startChar": 39,
+                  "endChar": 40,
+                  "quote": "."
+                },
+                "pos": "PUNCT",
+                "lemma": "."
+              }
+            ]
+          },
+          "expected": {
+            "elements": [
+              {
+                "id": "root",
+                "ordinal": 1,
+                "parent": null,
+                "kind": "preamble-subject",
+                "grouping": "preamble",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A system"
+                },
+                "lexicalHeader": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A system"
+                },
+                "terms": [
+                  {
+                    "nominal": "r",
+                    "anchor": {
+                      "startChar": 0,
+                      "endChar": 8,
+                      "quote": "A system"
+                    },
+                    "head": "system",
+                    "determiner": "a",
+                    "sourceRole": "unknown"
+                  }
+                ],
+                "functionalParts": []
+              },
+              {
+                "id": "body",
+                "ordinal": 2,
+                "parent": "root",
+                "kind": "limitation",
+                "grouping": "single-restriction",
+                "anchor": {
+                  "startChar": 20,
+                  "endChar": 39,
+                  "quote": "a plurality of pins"
+                },
+                "lexicalHeader": {
+                  "startChar": 20,
+                  "endChar": 39,
+                  "quote": "a plurality of pins"
+                },
+                "terms": [
+                  {
+                    "nominal": "n0",
+                    "anchor": {
+                      "startChar": 20,
+                      "endChar": 39,
+                      "quote": "a plurality of pins"
+                    },
+                    "head": "pins",
+                    "determiner": "plurality-of",
+                    "sourceRole": "unknown"
+                  }
+                ],
+                "functionalParts": []
+              }
+            ],
+            "nominals": [
+              {
+                "id": "r",
+                "elementOwner": "root",
+                "core": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A system"
+                },
+                "head": {
+                  "startChar": 2,
+                  "endChar": 8,
+                  "quote": "system"
+                },
+                "outer": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A system"
+                },
+                "publicHead": "system",
+                "determiner": "a",
+                "sourceRole": "unknown",
+                "policyMechanism": "supported-introduction",
+                "canonicalReferenceHead": "system",
+                "proof": "supported determiner only; no countability fact"
+              },
+              {
+                "id": "n0",
+                "elementOwner": "body",
+                "core": {
+                  "startChar": 20,
+                  "endChar": 39,
+                  "quote": "a plurality of pins"
+                },
+                "head": {
+                  "startChar": 35,
+                  "endChar": 39,
+                  "quote": "pins"
+                },
+                "outer": {
+                  "startChar": 20,
+                  "endChar": 39,
+                  "quote": "a plurality of pins"
+                },
+                "publicHead": "pins",
+                "determiner": "plurality-of",
+                "sourceRole": "unknown",
+                "policyMechanism": "supported-introduction",
+                "canonicalReferenceHead": "pins",
+                "proof": "supported determiner only; no countability fact"
+              }
+            ],
+            "frames": [
+              {
+                "id": "fr",
+                "ordinal": 1,
+                "parent": null,
+                "attachment": "main",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A system"
+                },
+                "lexicalHeader": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A system"
+                },
+                "introducer": null,
+                "predicates": [],
+                "nominals": ["r"],
+                "subject": null,
+                "sharedSubject": null,
+                "coordination": null,
+                "arguments": [
+                  {
+                    "nominal": "r",
+                    "anchor": {
+                      "startChar": 0,
+                      "endChar": 8,
+                      "quote": "A system"
+                    },
+                    "role": "unknown",
+                    "predicate": null,
+                    "predicateOwnerFrame": null,
+                    "ownerNominal": null,
+                    "ownerCore": null
+                  }
+                ],
+                "outerOwnerNominal": null
+              },
+              {
+                "id": "fb",
+                "ordinal": 2,
+                "parent": null,
+                "attachment": "main",
+                "anchor": {
+                  "startChar": 20,
+                  "endChar": 39,
+                  "quote": "a plurality of pins"
+                },
+                "lexicalHeader": {
+                  "startChar": 20,
+                  "endChar": 39,
+                  "quote": "a plurality of pins"
+                },
+                "introducer": null,
+                "predicates": [],
+                "nominals": ["n0"],
+                "subject": null,
+                "sharedSubject": null,
+                "coordination": null,
+                "arguments": [
+                  {
+                    "nominal": "n0",
+                    "anchor": {
+                      "startChar": 20,
+                      "endChar": 39,
+                      "quote": "a plurality of pins"
+                    },
+                    "role": "unknown",
+                    "predicate": null,
+                    "predicateOwnerFrame": null,
+                    "ownerNominal": null,
+                    "ownerCore": null
+                  }
+                ],
+                "outerOwnerNominal": null
+              }
+            ],
+            "declarationPlans": [],
+            "proofCertificates": [],
+            "referenceExpectations": [],
+            "coverage": "not-fixed-by-grammar-plan",
+            "deferred": []
+          },
+          "benchmarkLabel": false,
+          "runtimeExecuted": false,
+          "sourceOrdinal": 1
+        },
+        {
+          "case": "route-record-2",
+          "qualifiedText": "A second system comprising a panel.",
+          "qualifiedParts": {
+            "preamble": "A second system",
+            "transition": "comprising",
+            "body": "a panel."
+          },
+          "claimNumber": 2,
+          "claimReferences": [],
+          "outcome": "admitted",
+          "reason": "",
+          "lexicalEvidence": {
+            "origin": "explicit injected source-control facts; not a runtime dictionary, asset output or countability resource",
+            "tokens": [
+              {
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 1,
+                  "quote": "A"
+                },
+                "pos": "DET",
+                "lemma": "a"
+              },
+              {
+                "anchor": {
+                  "startChar": 2,
+                  "endChar": 8,
+                  "quote": "second"
+                },
+                "pos": "ADJ",
+                "lemma": "second"
+              },
+              {
+                "anchor": {
+                  "startChar": 9,
+                  "endChar": 15,
+                  "quote": "system"
+                },
+                "pos": "NOUN",
+                "lemma": "system"
+              },
+              {
+                "anchor": {
+                  "startChar": 16,
+                  "endChar": 26,
+                  "quote": "comprising"
+                },
+                "pos": "VERB",
+                "lemma": "comprise"
+              },
+              {
+                "anchor": {
+                  "startChar": 27,
+                  "endChar": 28,
+                  "quote": "a"
+                },
+                "pos": "DET",
+                "lemma": "a"
+              },
+              {
+                "anchor": {
+                  "startChar": 29,
+                  "endChar": 34,
+                  "quote": "panel"
+                },
+                "pos": "NOUN",
+                "lemma": "panel"
+              },
+              {
+                "anchor": {
+                  "startChar": 34,
+                  "endChar": 35,
+                  "quote": "."
+                },
+                "pos": "PUNCT",
+                "lemma": "."
+              }
+            ]
+          },
+          "expected": {
+            "elements": [
+              {
+                "id": "root",
+                "ordinal": 1,
+                "parent": null,
+                "kind": "preamble-subject",
+                "grouping": "preamble",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 15,
+                  "quote": "A second system"
+                },
+                "lexicalHeader": {
+                  "startChar": 0,
+                  "endChar": 15,
+                  "quote": "A second system"
+                },
+                "terms": [
+                  {
+                    "nominal": "r",
+                    "anchor": {
+                      "startChar": 0,
+                      "endChar": 15,
+                      "quote": "A second system"
+                    },
+                    "head": "second system",
+                    "determiner": "a",
+                    "sourceRole": "unknown"
+                  }
+                ],
+                "functionalParts": []
+              },
+              {
+                "id": "body",
+                "ordinal": 2,
+                "parent": "root",
+                "kind": "limitation",
+                "grouping": "single-restriction",
+                "anchor": {
+                  "startChar": 27,
+                  "endChar": 34,
+                  "quote": "a panel"
+                },
+                "lexicalHeader": {
+                  "startChar": 27,
+                  "endChar": 34,
+                  "quote": "a panel"
+                },
+                "terms": [
+                  {
+                    "nominal": "n0",
+                    "anchor": {
+                      "startChar": 27,
+                      "endChar": 34,
+                      "quote": "a panel"
+                    },
+                    "head": "panel",
+                    "determiner": "a",
+                    "sourceRole": "unknown"
+                  }
+                ],
+                "functionalParts": []
+              }
+            ],
+            "nominals": [
+              {
+                "id": "r",
+                "elementOwner": "root",
+                "core": {
+                  "startChar": 0,
+                  "endChar": 15,
+                  "quote": "A second system"
+                },
+                "head": {
+                  "startChar": 2,
+                  "endChar": 15,
+                  "quote": "second system"
+                },
+                "outer": {
+                  "startChar": 0,
+                  "endChar": 15,
+                  "quote": "A second system"
+                },
+                "publicHead": "second system",
+                "determiner": "a",
+                "sourceRole": "unknown",
+                "policyMechanism": "supported-introduction",
+                "canonicalReferenceHead": "second system",
+                "proof": "supported determiner only; no countability fact"
+              },
+              {
+                "id": "n0",
+                "elementOwner": "body",
+                "core": {
+                  "startChar": 27,
+                  "endChar": 34,
+                  "quote": "a panel"
+                },
+                "head": {
+                  "startChar": 29,
+                  "endChar": 34,
+                  "quote": "panel"
+                },
+                "outer": {
+                  "startChar": 27,
+                  "endChar": 34,
+                  "quote": "a panel"
+                },
+                "publicHead": "panel",
+                "determiner": "a",
+                "sourceRole": "unknown",
+                "policyMechanism": "supported-introduction",
+                "canonicalReferenceHead": "panel",
+                "proof": "supported determiner only; no countability fact"
+              }
+            ],
+            "frames": [
+              {
+                "id": "fr",
+                "ordinal": 1,
+                "parent": null,
+                "attachment": "main",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 15,
+                  "quote": "A second system"
+                },
+                "lexicalHeader": {
+                  "startChar": 0,
+                  "endChar": 15,
+                  "quote": "A second system"
+                },
+                "introducer": null,
+                "predicates": [],
+                "nominals": ["r"],
+                "subject": null,
+                "sharedSubject": null,
+                "coordination": null,
+                "arguments": [
+                  {
+                    "nominal": "r",
+                    "anchor": {
+                      "startChar": 0,
+                      "endChar": 15,
+                      "quote": "A second system"
+                    },
+                    "role": "unknown",
+                    "predicate": null,
+                    "predicateOwnerFrame": null,
+                    "ownerNominal": null,
+                    "ownerCore": null
+                  }
+                ],
+                "outerOwnerNominal": null
+              },
+              {
+                "id": "fb",
+                "ordinal": 2,
+                "parent": null,
+                "attachment": "main",
+                "anchor": {
+                  "startChar": 27,
+                  "endChar": 34,
+                  "quote": "a panel"
+                },
+                "lexicalHeader": {
+                  "startChar": 27,
+                  "endChar": 34,
+                  "quote": "a panel"
+                },
+                "introducer": null,
+                "predicates": [],
+                "nominals": ["n0"],
+                "subject": null,
+                "sharedSubject": null,
+                "coordination": null,
+                "arguments": [
+                  {
+                    "nominal": "n0",
+                    "anchor": {
+                      "startChar": 27,
+                      "endChar": 34,
+                      "quote": "a panel"
+                    },
+                    "role": "unknown",
+                    "predicate": null,
+                    "predicateOwnerFrame": null,
+                    "ownerNominal": null,
+                    "ownerCore": null
+                  }
+                ],
+                "outerOwnerNominal": null
+              }
+            ],
+            "declarationPlans": [],
+            "proofCertificates": [],
+            "referenceExpectations": [],
+            "coverage": "not-fixed-by-grammar-plan",
+            "deferred": []
+          },
+          "benchmarkLabel": false,
+          "runtimeExecuted": false,
+          "sourceOrdinal": 2
+        },
+        {
+          "case": "route-record-3",
+          "qualifiedText": "The system of claim 1 or 2 wherein said plurality of pins are bowed.",
+          "qualifiedParts": {
+            "preamble": "The system of claim 1 or 2",
+            "transition": "wherein",
+            "body": "said plurality of pins are bowed."
+          },
+          "claimNumber": 3,
+          "claimReferences": [1, 2],
+          "outcome": "admitted",
+          "reason": "",
+          "lexicalEvidence": {
+            "origin": "explicit injected source-control facts; not a runtime dictionary, asset output or countability resource",
+            "tokens": [
+              {
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 3,
+                  "quote": "The"
+                },
+                "pos": "DET",
+                "lemma": "the"
+              },
+              {
+                "anchor": {
+                  "startChar": 4,
+                  "endChar": 10,
+                  "quote": "system"
+                },
+                "pos": "NOUN",
+                "lemma": "system"
+              },
+              {
+                "anchor": {
+                  "startChar": 11,
+                  "endChar": 13,
+                  "quote": "of"
+                },
+                "pos": "ADP",
+                "lemma": "of"
+              },
+              {
+                "anchor": {
+                  "startChar": 14,
+                  "endChar": 19,
+                  "quote": "claim"
+                },
+                "pos": "NOUN",
+                "lemma": "claim"
+              },
+              {
+                "anchor": {
+                  "startChar": 20,
+                  "endChar": 21,
+                  "quote": "1"
+                },
+                "pos": "NUM",
+                "lemma": "1"
+              },
+              {
+                "anchor": {
+                  "startChar": 22,
+                  "endChar": 24,
+                  "quote": "or"
+                },
+                "pos": "CCONJ",
+                "lemma": "or"
+              },
+              {
+                "anchor": {
+                  "startChar": 25,
+                  "endChar": 26,
+                  "quote": "2"
+                },
+                "pos": "NUM",
+                "lemma": "2"
+              },
+              {
+                "anchor": {
+                  "startChar": 27,
+                  "endChar": 34,
+                  "quote": "wherein"
+                },
+                "pos": "ADV",
+                "lemma": "wherein"
+              },
+              {
+                "anchor": {
+                  "startChar": 35,
+                  "endChar": 39,
+                  "quote": "said"
+                },
+                "pos": "DET",
+                "lemma": "said"
+              },
+              {
+                "anchor": {
+                  "startChar": 40,
+                  "endChar": 49,
+                  "quote": "plurality"
+                },
+                "pos": "NOUN",
+                "lemma": "plurality"
+              },
+              {
+                "anchor": {
+                  "startChar": 50,
+                  "endChar": 52,
+                  "quote": "of"
+                },
+                "pos": "ADP",
+                "lemma": "of"
+              },
+              {
+                "anchor": {
+                  "startChar": 53,
+                  "endChar": 57,
+                  "quote": "pins"
+                },
+                "pos": "NOUN",
+                "lemma": "pin"
+              },
+              {
+                "anchor": {
+                  "startChar": 58,
+                  "endChar": 61,
+                  "quote": "are"
+                },
+                "pos": "AUX",
+                "lemma": "be"
+              },
+              {
+                "anchor": {
+                  "startChar": 62,
+                  "endChar": 67,
+                  "quote": "bowed"
+                },
+                "pos": "VERB",
+                "lemma": "bow"
+              },
+              {
+                "anchor": {
+                  "startChar": 67,
+                  "endChar": 68,
+                  "quote": "."
+                },
+                "pos": "PUNCT",
+                "lemma": "."
+              }
+            ]
+          },
+          "expected": {
+            "elements": [
+              {
+                "id": "root",
+                "ordinal": 1,
+                "parent": null,
+                "kind": "preamble-subject",
+                "grouping": "preamble",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 26,
+                  "quote": "The system of claim 1 or 2"
+                },
+                "lexicalHeader": {
+                  "startChar": 0,
+                  "endChar": 10,
+                  "quote": "The system"
+                },
+                "terms": [
+                  {
+                    "nominal": "r",
+                    "anchor": {
+                      "startChar": 0,
+                      "endChar": 10,
+                      "quote": "The system"
+                    },
+                    "head": "system",
+                    "determiner": "the",
+                    "sourceRole": "unknown"
+                  }
+                ],
+                "functionalParts": []
+              },
+              {
+                "id": "body",
+                "ordinal": 2,
+                "parent": "root",
+                "kind": "functional-relation",
+                "grouping": "single-restriction",
+                "anchor": {
+                  "startChar": 35,
+                  "endChar": 67,
+                  "quote": "said plurality of pins are bowed"
+                },
+                "lexicalHeader": {
+                  "startChar": 35,
+                  "endChar": 67,
+                  "quote": "said plurality of pins are bowed"
+                },
+                "terms": [
+                  {
+                    "nominal": "n0",
+                    "anchor": {
+                      "startChar": 35,
+                      "endChar": 57,
+                      "quote": "said plurality of pins"
+                    },
+                    "head": "plurality of pins",
+                    "determiner": "said",
+                    "sourceRole": "unknown"
+                  }
+                ],
+                "functionalParts": [
+                  {
+                    "kind": "term",
+                    "nominal": "n0",
+                    "anchor": {
+                      "startChar": 35,
+                      "endChar": 57,
+                      "quote": "said plurality of pins"
+                    }
+                  },
+                  {
+                    "kind": "text",
+                    "anchor": {
+                      "startChar": 57,
+                      "endChar": 67,
+                      "quote": " are bowed"
+                    }
+                  }
+                ]
+              }
+            ],
+            "nominals": [
+              {
+                "id": "r",
+                "elementOwner": "root",
+                "core": {
+                  "startChar": 0,
+                  "endChar": 10,
+                  "quote": "The system"
+                },
+                "head": {
+                  "startChar": 4,
+                  "endChar": 10,
+                  "quote": "system"
+                },
+                "outer": {
+                  "startChar": 0,
+                  "endChar": 10,
+                  "quote": "The system"
+                },
+                "publicHead": "system",
+                "determiner": "the",
+                "sourceRole": "unknown",
+                "policyMechanism": "supported-reference",
+                "canonicalReferenceHead": "system",
+                "proof": "supported determiner only; no countability fact"
+              },
+              {
+                "id": "n0",
+                "elementOwner": "body",
+                "core": {
+                  "startChar": 35,
+                  "endChar": 57,
+                  "quote": "said plurality of pins"
+                },
+                "head": {
+                  "startChar": 40,
+                  "endChar": 57,
+                  "quote": "plurality of pins"
+                },
+                "outer": {
+                  "startChar": 35,
+                  "endChar": 57,
+                  "quote": "said plurality of pins"
+                },
+                "publicHead": "plurality of pins",
+                "determiner": "said",
+                "sourceRole": "unknown",
+                "policyMechanism": "supported-reference",
+                "canonicalReferenceHead": "pins",
+                "proof": "explicit collective reference; exact pluralityReferenceContent, never a new introduction"
+              }
+            ],
+            "frames": [
+              {
+                "id": "fr",
+                "ordinal": 1,
+                "parent": null,
+                "attachment": "main",
+                "anchor": {
+                  "startChar": 0,
+                  "endChar": 26,
+                  "quote": "The system of claim 1 or 2"
+                },
+                "lexicalHeader": {
+                  "startChar": 0,
+                  "endChar": 10,
+                  "quote": "The system"
+                },
+                "introducer": null,
+                "predicates": [],
+                "nominals": ["r"],
+                "subject": null,
+                "sharedSubject": null,
+                "coordination": null,
+                "arguments": [
+                  {
+                    "nominal": "r",
+                    "anchor": {
+                      "startChar": 0,
+                      "endChar": 10,
+                      "quote": "The system"
+                    },
+                    "role": "unknown",
+                    "predicate": null,
+                    "predicateOwnerFrame": null,
+                    "ownerNominal": null,
+                    "ownerCore": null
+                  }
+                ],
+                "outerOwnerNominal": null
+              },
+              {
+                "id": "fb",
+                "ordinal": 2,
+                "parent": null,
+                "attachment": "main",
+                "anchor": {
+                  "startChar": 35,
+                  "endChar": 67,
+                  "quote": "said plurality of pins are bowed"
+                },
+                "lexicalHeader": {
+                  "startChar": 35,
+                  "endChar": 67,
+                  "quote": "said plurality of pins are bowed"
+                },
+                "introducer": null,
+                "predicates": [
+                  {
+                    "startChar": 58,
+                    "endChar": 67,
+                    "quote": "are bowed"
+                  }
+                ],
+                "nominals": ["n0"],
+                "subject": {
+                  "startChar": 35,
+                  "endChar": 57,
+                  "quote": "said plurality of pins"
+                },
+                "sharedSubject": null,
+                "coordination": null,
+                "arguments": [
+                  {
+                    "nominal": "n0",
+                    "anchor": {
+                      "startChar": 35,
+                      "endChar": 57,
+                      "quote": "said plurality of pins"
+                    },
+                    "role": "subject",
+                    "predicate": {
+                      "startChar": 58,
+                      "endChar": 67,
+                      "quote": "are bowed"
+                    },
+                    "predicateOwnerFrame": "fb",
+                    "ownerNominal": null,
+                    "ownerCore": null
+                  }
+                ],
+                "outerOwnerNominal": null
+              }
+            ],
+            "declarationPlans": [],
+            "proofCertificates": [],
+            "referenceExpectations": [],
+            "coverage": "not-fixed-by-grammar-plan",
+            "deferred": []
+          },
+          "benchmarkLabel": false,
+          "runtimeExecuted": false,
+          "sourceOrdinal": 3
+        }
+      ],
+      "canonicalReference": {
+        "record": 3,
+        "nominal": "n0",
+        "publicHead": "plurality of pins",
+        "policyHead": "pins"
+      },
+      "expectedPerRoute": [
+        {
+          "claims": [1, 3],
+          "verdict": "resolved",
+          "candidateRecord": 1,
+          "candidateNominal": "n0"
+        },
+        {
+          "claims": [2, 3],
+          "verdict": "antecedent-outside-chain",
+          "candidateRecord": 1,
+          "candidateNominal": "n0"
+        }
+      ],
+      "treeReferenceStrategy": "unchanged; this fixture requires route-specific policy verdicts, not a new universal-edge interpretation",
+      "oneRouteCannotClearOther": true
+    }
+  ]
+}

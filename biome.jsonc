@@ -74,11 +74,21 @@
       "!packages/law-practice/server/test/fixtures/claim-element/allowed-sampling.json",
       "!packages/law-practice/server/test/fixtures/claim-element/reference-freeze.json",
       "!apps/labs/ciops/test/fixtures/retained-evidence/kpi-reading.json",
+      // Restored review pages are sha256-bound by preservation-freeze.json,
+      // autonomous-review-v1/preservation.json and the reference-input provenance
+      // records, so formatting them would break the seal.
+      "!goals/claim-element-antecedent-check/history/allowed-review-v1/index.html",
+      "!goals/claim-element-antecedent-check/history/allowed-review-v2/index.html",
+      "!goals/claim-element-antecedent-check/history/attorney-review/addendum.html",
+      "!goals/claim-element-antecedent-check/history/attorney-review/index.html",
+      "!goals/claim-element-antecedent-check/research/allowed-review.template.html",
       // Canonical Python payload bytes are hash-bound and deliberately retain
       // upstream text. ops/check-operations.ts validates this generated corpus.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/operation-cases.json",
       // Sealed generated diff corpus; dedicated schema/hash verification owns its bytes.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/diff-kernel.json",
+      // Complete compact source rows are sealed by ops/verify-builtin-diff.py.
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/builtin-diff.json",
       // Complete source traces; ops/check-cleaner-pipeline.ts seals their bytes.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-pipeline.json",
       // Complete byte-source outcomes sealed by ops/verify-html-bytes.py.

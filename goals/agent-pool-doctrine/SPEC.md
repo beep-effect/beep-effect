@@ -100,6 +100,27 @@ copied).
 | 2026-10-14 | R10: the accounts poller reuses the Junie access token (cached, then stored) and refreshes in memory only after a 401/403, aborts on a rotated refresh token, and never writes the credential back. | Junie persists a stale access token; JetBrains does not rotate refresh tokens (verified: keyring item unmodified since 2026-09-25 across refreshes; refresh response returned the same token). | Drop the Junie provider from `AccountProvider`. |
 | 2026-10-18 | R11: Codex `gpt-6.1-sol` medium (the `codex.heavy` codex-cli binding) is step 2 of the Claude Code fallback chain (Opus 5.5 child → Codex → Cursor `claude-opus-5-5-medium` → grok-build `grok-4.7`); the Codex chain is unchanged and direct Claude stays out of it. | Operator ruling 2026-10-18 while Cursor's Opus quota was exhausted and the Codex CLI had returned to a paid account: Codex is an idle paid pool a Claude orchestrator should be allowed to step down to; record in [`history/2026-10-18-codex-claude-fallback.md`](./history/2026-10-18-codex-claude-fallback.md). | Delete the Codex column from the Claude row in `AGENTS.md` and the runbook; restore the "never in the Claude chain" sentence. |
 
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug agent-pool-doctrine`; add a `kind: decision` file there, never edit this block._
+
+### research-intake-2026-11 routed 69 affirmative findings here, 2026-11-07
+
+The research-intake-2026-11 intake routed 191 findings to this packet (69 affirmative, 7 critiques or disputes; 157 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
+
+- citesAsEvidence: https://cursor.com/docs/skills — Only the home Cursor skills directory syncs to Cloud Agents; the home agents skills directory, project skills and other local files stay local.
+- supports: https://www.steptoe.com/en/news-publications/step-into-ip-blog/the-weekly-inference-cocounsel-verification-citations.html — Cross-model adversarial review of citation checks, which matches separate-reviewer-session doctrine.
+- supports: https://governedautonomy.org/standards/imda-agentic-ai/ — IMDA recommends issuing and tracking all agent identities and permissions from a centralised registry.
+- citesAsEvidence: https://www.anthropic.com/research/multiagent-systems — A coordinating swarm and independent parallel agents found largely disjoint vulnerability sets. Combining fan-out strategies increases coverage.
+- citesAsEvidence: https://platform.claude.com/docs/en/build-with-claude/task-budgets — Effort and task budget are separate controls: effort sets per-step depth and the budget sets total breadth. This matters for routing doctrine that pins effort levels.
+
+This amendment adds evidence only; it changes no acceptance criterion. The owning lane decides whether any finding changes its plan.
+
+Lane `feat/research-intake-2026-11`
+
+Reverse: Delete this decision file and regenerate the block; the findings stay in the library and in research-intake-2026-11/research/routing.jsonl
+
+<!-- beep:decisions:end -->
+
 ## Exception Ledger
 
 None yet.

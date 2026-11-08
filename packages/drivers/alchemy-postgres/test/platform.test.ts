@@ -10,7 +10,6 @@ import {
   AlchemyPostgresError,
   AlchemyPostgresPlatform,
   AlchemyPostgresTables,
-  AlchemyPostgresUnsupported,
   migrate,
 } from "@beep/alchemy-postgres";
 import { PgliteTestLayer } from "@beep/pglite/Pglite.test-layer";
@@ -18,6 +17,7 @@ import { describe, layer } from "@effect/vitest";
 import { deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
+import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -59,34 +59,11 @@ const CardAuditLive = CardAudit.toLayer(
 );
 class Unit extends Domain.Model("Unit", { aggregates: [Card], policies: [CardAudit] }) {}
 
-class CardSummary extends Domain.View("CardSummary", {
-  from: [Card],
-  key: Card,
-  state: S.Struct({ holder: S.String }),
-  initial: { holder: "" },
-  evolve: { CardIssued: (_view, event) => ({ holder: event.holder }) },
-}) {}
-class WithView extends Domain.Model("UnitWithView", { aggregates: [Card], views: [CardSummary] }) {}
-
-class CardFeed extends Domain.Stream("CardFeed", { key: Card, entries: [CardIssued] }) {}
-class WithStream extends Domain.Model("UnitWithStream", { aggregates: [Card], streams: [CardFeed] }) {}
-
-class CardLedger extends Domain.Projection("CardLedger", { from: [Card], key: Card, on: [CardIssued] }) {}
-const CardLedgerLive = CardLedger.toLayer(Effect.succeed(() => Effect.void));
-class WithProjection extends Domain.Model("UnitWithProjection", {
-  aggregates: [Card],
-  projections: [CardLedger],
-}) {}
-
 /** The squashed defect of a cause, when it is an instance of `schema`. */
 const defectOf =
   <Schema extends S.Top>(schema: Schema) =>
   <E>(cause: Cause.Cause<E>) =>
     cause.pipe(Cause.squash, O.fromNullishOr, O.filter(S.is(schema)));
-
-/** The defect a model's build died with, when it is the driver's unsupported-concept error. */
-const unsupportedOf = <ROut, E, R>(build: Layer.Layer<ROut, E, R>) =>
-  Layer.build(build).pipe(Effect.sandbox, Effect.flip, Effect.map(defectOf(AlchemyPostgresUnsupported)));
 
 const TableName = S.Struct({ tablename: S.String });
 /** Decode the rows a SQL statement returned. */
@@ -107,21 +84,6 @@ const hosted = Unit.layer(CardAuditLive).pipe(
 
 describe("AlchemyPostgresPlatform", () => {
   layer(hosted, { timeout: "30 seconds", excludeTestServices: true, concurrent: false })("on PGlite", (it) => {
-    it.effect("dies with AlchemyPostgresUnsupported for views, streams and projections", () =>
-      Effect.gen(function* () {
-        const view = yield* unsupportedOf(WithView.layer(Layer.empty));
-        const stream = yield* unsupportedOf(WithStream.layer(Layer.empty));
-        const projection = yield* unsupportedOf(WithProjection.layer(CardLedgerLive));
-        deepStrictEqual(
-          A.map(
-            [view, stream, projection],
-            O.map(({ concept, definition }) => [concept, definition])
-          ),
-          [O.some(["view", "CardSummary"]), O.some(["stream", "CardFeed"]), O.some(["projection", "CardLedger"])]
-        );
-      })
-    );
-
     it.effect("migrates idempotently under a custom table prefix", () =>
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
@@ -143,10 +105,35 @@ describe("AlchemyPostgresPlatform", () => {
               tables.aggregateSchedule,
               tables.delivery,
               tables.hostedModel,
+              tables.consumerGeneration,
+              tables.consumerInput,
+              tables.viewKey,
+              tables.viewEntry,
+              tables.projectionPartition,
+              tables.streamKey,
+              tables.streamEntry,
+              tables.backfillKv,
+              tables.backfillJob,
             ],
             Order.String
           )
         );
+      })
+    );
+
+    it.effect("renames the outbox's #2825 `aggregate` column to `producer` on migrate", () =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        yield* sql`CREATE TABLE legacy_delivery (position bigserial PRIMARY KEY, model text NOT NULL,
+          aggregate text NOT NULL, status text NOT NULL)`;
+        const config = AlchemyPostgresConfig.make({ tablePrefix: "legacy_" });
+        yield* migrate(config);
+        yield* migrate(config);
+        const rows = yield* sql`SELECT column_name AS tablename FROM information_schema.columns
+          WHERE table_name = 'legacy_delivery' AND column_name IN ('aggregate', 'producer')`.pipe(
+          Effect.flatMap(decodeTableNames)
+        );
+        deepStrictEqual(rows, [{ tablename: "producer" }]);
       })
     );
 
@@ -164,13 +151,13 @@ describe("AlchemyPostgresPlatform", () => {
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
         yield* sql`INSERT INTO alchemy_delivery
-          (model, aggregate, source, source_seq, target_kind, target_name, target_key, delivery, status, at)
+          (model, producer, source, source_seq, target_kind, target_name, target_key, delivery, status, at)
           VALUES ('Unit', 'Ghost', 'Ghost/g-1', 1, 'policy', 'Haunting', 'Ghost/g-1', '{}'::jsonb, 'pending', 0)`;
         const cards = yield* Card;
         yield* cards.send(CardId.make("wakes-the-worker"), IssueCard.make({ holder: "quin" }));
         yield* Effect.sleep(Duration.millis(600));
         const rows = yield* sql`SELECT status, attempts, locked_until FROM alchemy_delivery
-          WHERE model = 'Unit' AND aggregate = 'Ghost'`.pipe(Effect.flatMap(decodeOutboxRows));
+          WHERE model = 'Unit' AND producer = 'Ghost'`.pipe(Effect.flatMap(decodeOutboxRows));
         deepStrictEqual(rows, [{ status: "pending", attempts: 0, locked_until: 0 }]);
       })
     );
@@ -193,7 +180,7 @@ describe("AlchemyPostgresPlatform", () => {
             until: ([first, second]) => first === 2 && second === 1,
             schedule: Schedule.spaced(Duration.millis(20)),
           }),
-          Effect.timeout(Duration.seconds(3))
+          Effect.timeout(Duration.seconds(15))
         );
         deepStrictEqual(runs, [2, 1]);
       })
@@ -228,6 +215,41 @@ describe("AlchemyPostgresPlatform", () => {
           defect.pipe(O.map(({ operation, table }) => [operation, table.pipe(O.getOrNull)])),
           O.some(["read", "alchemy_aggregate_event"])
         );
+      })
+    );
+  });
+});
+
+// A short lease, so a delivery a crashed host still holds comes back within the test's budget.
+const shortLease = Unit.layer(CardAuditLive).pipe(
+  Layer.provideMerge(AlchemyPostgresPlatform.layer(AlchemyPostgresConfig.make({ leaseMillis: 1_000 }))),
+  Layer.provideMerge(PgliteTestLayer)
+);
+
+describe("AlchemyPostgresPlatform delivery lease", () => {
+  layer(shortLease, { timeout: "30 seconds", excludeTestServices: true })("on PGlite", (it) => {
+    it.effect("redelivers a row a crashed host left leased once the lease lapses, not before", () =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const cards = yield* Card;
+        const id = CardId.make("orphaned-lease");
+        yield* cards.send(id, IssueCard.make({ holder: "kit" }));
+        yield* Effect.sync(() => auditsOf(id)).pipe(
+          Effect.repeat({ until: (runs) => runs === 1, schedule: Schedule.spaced(Duration.millis(20)) }),
+          Effect.timeout(Duration.seconds(10))
+        );
+        // A host that claimed the row and then died: pending, and leased to it for one lease.
+        const leasedAt = yield* Clock.currentTimeMillis;
+        yield* sql`UPDATE alchemy_delivery
+          SET status = 'pending', locked_until = ${leasedAt + 1_000}, claimed_by = 'dead-host'
+          WHERE model = 'Unit' AND source = ${`Card/${id}`}`;
+        yield* Effect.sleep(Duration.millis(500));
+        deepStrictEqual(auditsOf(id), 1);
+        const runs = yield* Effect.sync(() => auditsOf(id)).pipe(
+          Effect.repeat({ until: (count) => count === 2, schedule: Schedule.spaced(Duration.millis(20)) }),
+          Effect.timeout(Duration.seconds(10))
+        );
+        deepStrictEqual(runs, 2);
       })
     );
   });

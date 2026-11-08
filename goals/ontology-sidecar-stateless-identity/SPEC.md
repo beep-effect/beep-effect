@@ -46,10 +46,10 @@ rulings in `DECISIONS.md` cited as `(D-name)`; the Gate D amendments dated 2026-
   without exposing the token.
 - `packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts` — delete the 2025
   `mcp-session-id` read (`mcpSessionIdHeader`) in this goal's PR, so no header can key the gate.
-- `packages/epistemic/server/src/GovernedTierGate/GovernedTierGate.gate.ts` — `runIdOf` reads the
+- `packages/execution-authority/server/src/GovernedTierGate/GovernedTierGate.gate.ts` — `runIdOf` reads the
   anchor; the gate's own spans become `epistemic.governed_tier_gate.evaluate` and
   `epistemic.governed_tier_gate.record_outcome` carrying `epistemic.governed_tier_gate.run_id`
-  (the digest, never the bearer); tests in `packages/epistemic/server/test/GovernedTierGate.test.ts`.
+  (the digest, never the bearer); tests in `packages/execution-authority/server/test/GovernedTierGate.test.ts`.
 - `packages/ontology/server` — `OntologyChangeActor` keyed to the anchor value.
 - `packages/ontology/config/src/McpConfig.ts` — `OntologyMcpServerConfig` gains the Origin
   allow-list field (`ReadonlyArray` of origins, deny-all default); the desktop ConfigProvider
@@ -105,7 +105,7 @@ rulings in `DECISIONS.md` cited as `(D-name)`; the Gate D amendments dated 2026-
 
 | Claim | Command or evidence | Required result |
 | --- | --- | --- |
-| Launch keying | `bunx vitest run packages/epistemic/server/test/GovernedTierGate.test.ts -t "keys the run on the launch"`; `-t "grant expiry is permanent"`; `-t "never evicts a frozen grant"` | Passes |
+| Launch keying | `bunx vitest run packages/execution-authority/server/test/GovernedTierGate.test.ts -t "keys the run on the launch"`; `-t "grant expiry is permanent"`; `-t "never evicts a frozen grant"` | Passes |
 | Old test gone | `rg -n 'keys the run on the session, not on the per-request client id' packages/epistemic/server/test` | No matches |
 | Bearer digest | `bunx vitest run apps/professional-desktop/test/integration/ontology-mcp-http.test.ts -t "two bearers open two runs"`; `-t "one bearer keeps one run across requests"` | Passes |
 | Initialize rejected | `bunx vitest run apps/professional-desktop/test/integration/ontology-mcp-http.test.ts -t "rejects initialize with 2026 headers as 404 -32601"`; `-t "rejects bare initialize as 400 -32020"` | Passes |
@@ -114,7 +114,7 @@ rulings in `DECISIONS.md` cited as `(D-name)`; the Gate D amendments dated 2026-
 | Config-owned list | `rg -n 'allowedOrigins' packages/ontology/config/src/McpConfig.ts`; `rg -n 'beep.localhost\|tauri://' packages/ontology/config/src` | Matches; no matches |
 | Tagged error | `rg -n 'S.TaggedError' apps/professional-desktop/server/OntologyMcpTransport.ts`; `rg -n 'Data.TaggedError' apps/professional-desktop/server/OntologyMcpTransport.ts` | Matches; no matches |
 | No raw bearer leak | `rg -n 'Redacted.value' apps/professional-desktop/server packages/epistemic/server/src` lists only `rpcSessionAuthorizationHeader`, the digest function and the verifier; `rg -n 'launch:' packages/epistemic/server apps/professional-desktop/server` shows digest interpolation only | As stated |
-| Actor + spans | `bunx vitest run packages/ontology/server -t "attributes changes by the dispatch anchor"`; `rg -n 'epistemic.governed_tier_gate.run_id' packages/epistemic/server/src/GovernedTierGate/GovernedTierGate.gate.ts` | Passes; matches |
+| Actor + spans | `bunx vitest run packages/ontology/server -t "attributes changes by the dispatch anchor"`; `rg -n 'epistemic.governed_tier_gate.run_id' packages/execution-authority/server/src/GovernedTierGate/GovernedTierGate.gate.ts` | Passes; matches |
 | Live client | `rg -n '@beep/mcp-kit/client' goals/ontology-agent-surface/ops/live-mcp-client.ts`; `rg -n 'initialize' goals/ontology-agent-surface/ops/live-mcp-client.ts` | Matches; no matches |
 | Decision 10 | `rg -n 'a run is a sidecar launch' goals/agent-execution-authority/SPEC.md` | Matches |
 | Packages | `bun run beep quality package-verify @beep/epistemic-server`; `... @beep/ontology-config`; `... @beep/ontology-server`; `... @beep/mcp-kit` | Passes |
@@ -134,3 +134,26 @@ rulings in `DECISIONS.md` cited as `(D-name)`; the Gate D amendments dated 2026-
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | HTTP cancellation not delivered on 2026 | sidecar | this goal | Effect adapter gap (lane 11-u2) | upstream delivers cancellation on the stateless HTTP path |
+
+## Decision log
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug ontology-sidecar-stateless-identity`; add a `kind: decision` file there, never edit this block._
+
+### research-intake-2026-11 routed 126 affirmative findings here, 2026-11-07
+
+The research-intake-2026-11 intake routed 214 findings to this packet (126 affirmative, 1 critiques or disputes; 204 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
+
+- citesAsEvidence: http://www.ietf.org/rfc/rfc3986.txt — URI persistence is not guaranteed by the syntax. Identity stability has to come from the naming authority's governance.
+- citesAsEvidence: https://pypi.org/project/mcp/ — The package explicitly advertises all three named transports. This supplies a transport comparison reference for MCP implementation and adoption work, while providing no evidence here about stateless
+- citesAsEvidence: https://help.harvey.ai/articles/joining-harvey-mcp-connector-library — Harvey's MCP client targets the 2025-11-25 MCP authorization spec, a concrete interop target for any beep MCP server meant to plug into Harvey.
+- citesAsEvidence: https://modelcontextprotocol.io/specification/2026-07-28/changelog — The revision removes transport-level sessions, requiring MCP host and driver designs to stop depending on session identifiers.
+- citesAsEvidence: https://github.com/modelcontextprotocol/experimental-ext-skills — The README explicitly identifies the base MCP protocol revision targeted by the stable Skills extension specification, giving protocol adoption work a concrete compatibility reference.
+
+This amendment adds evidence only; it changes no acceptance criterion. The owning lane decides whether any finding changes its plan.
+
+Lane `feat/research-intake-2026-11`
+
+Reverse: Delete this decision file and regenerate the block; the findings stay in the library and in research-intake-2026-11/research/routing.jsonl
+
+<!-- beep:decisions:end -->

@@ -47,7 +47,7 @@ export { CitationOracleArtifact, CitationOracleJson } from "./internal/citationO
  * @category testing
  * @since 0.0.0
  */
-export { CitationOracleLedgers } from "./internal/citationOracleLedgers.ts";
+export { CitationOracleLedgerProofPlan, CitationOracleLedgers } from "./internal/citationOracleLedgers.ts";
 /**
  * Normalized public-operation oracle inputs, stages and outputs, isolated from
  * production contracts and independent model/helper assertion accounting.

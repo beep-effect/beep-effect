@@ -99,10 +99,8 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
     const ensureOpen = Ref.get(state).pipe(
       Effect.flatMap((value) => (value.closed ? Effect.fail(fail("closed-work")) : Effect.void))
     );
-    const reserveUnlocked = Effect.fn("Citation.reserveCleanerText")(function* (units: number) {
-      const amount = yield* S.decodeEffect(ReservationUnits)(units).pipe(
-        Effect.mapError(() => fail("invalid-reservation"))
-      );
+    // Callers pass amounts already decoded as positive integers (ReservationUnits/Units).
+    const reserveUnlocked = Effect.fn("Citation.reserveCleanerText")(function* (amount: number) {
       return yield* Ref.modify(
         state,
         (current): readonly [Effect.Effect<CitationCleanerTextCharge, Failure>, CitationCleanerWorkSnapshot] => {
@@ -118,18 +116,35 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
         }
       ).pipe(Effect.flatten);
     });
+    const releaseUnlocked = (ticket: CitationCleanerTextCharge) =>
+      Effect.sync(() => issued.delete(ticket)).pipe(
+        Effect.andThen(
+          Ref.update(state, (current) =>
+            CitationCleanerWorkSnapshot.make({
+              ...current,
+              producedTextUtf16: current.producedTextUtf16 - ticket.units,
+            })
+          )
+        )
+      );
+    // The parent ledger has no refund, so the cleaner commits atomically first and
+    // is rolled back if the parent refuses or the wait for it is interrupted.
     const reserveText = (units: number) =>
       exclusive(
-        Effect.gen(function* () {
-          const amount = yield* S.decodeEffect(ReservationUnits)(units).pipe(
-            Effect.mapError(() => fail("invalid-reservation"))
-          );
-          yield* ensureOpen;
-          const current = yield* Ref.get(state);
-          if (amount > limits.producedTextUtf16 - current.producedTextUtf16) return yield* safety("producedTextUtf16");
-          if (O.isSome(parent)) yield* parent.value.reserve(amount);
-          return yield* Effect.uninterruptible(reserveUnlocked(amount));
-        })
+        S.decodeEffect(ReservationUnits)(units).pipe(
+          Effect.mapError(() => fail("invalid-reservation")),
+          Effect.flatMap((amount) =>
+            Effect.uninterruptibleMask((restore) =>
+              reserveUnlocked(amount).pipe(
+                Effect.tap((ticket) =>
+                  O.isSome(parent)
+                    ? restore(parent.value.reserve(amount)).pipe(Effect.onError(() => releaseUnlocked(ticket)))
+                    : Effect.void
+                )
+              )
+            )
+          )
+        )
       );
     const withTextCapacity: CitationCleanerWork["withTextCapacity"] = (produce) =>
       capacity.borrow(

@@ -33,6 +33,12 @@
       "path": "../../epistemic/tables/tsconfig.json"
     },
     {
+      "path": "../../execution-authority/domain/tsconfig.json"
+    },
+    {
+      "path": "../../execution-authority/tables/tsconfig.json"
+    },
+    {
       "path": "../../foundation/modeling/identity/tsconfig.json"
     },
     {
@@ -43,6 +49,9 @@
     },
     {
       "path": "../../law-practice/tables/tsconfig.json"
+    },
+    {
+      "path": "../../shared/tables/tsconfig.json"
     },
     {
       "path": "../../tooling/test-kit/test-runner/tsconfig.json"

@@ -6,29 +6,14 @@
  */
 
 import { chatProtocolLayerAtom } from "@beep/agents-client";
-import {
-  GetVaultSyncStatusPayload,
-  MarkVaultSyncConflictReviewedPayload,
-  VaultSyncRpcs,
-  VaultSyncWorkspacePayload,
-} from "@beep/documents-use-cases/public";
-import { $ProfessionalDesktopId } from "@beep/identity/packages";
-import { LogRedactedCauseOptions, logRedactedCause } from "@beep/observability/CauseRedaction";
-import { LiteralKit } from "@beep/schema/LiteralKit";
-import { SyncConflictId } from "@beep/shared-domain/identity/Documents/SyncConflictId";
+import { VaultSyncRpcs, VaultSyncWorkspacePayload } from "@beep/documents-use-cases/public";
 import * as Effect from "effect/Effect";
 import * as Atom from "effect/reactivity/Atom";
-import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 import * as AtomRpc from "effect/reactivity/AtomRpc";
 import * as Reactivity from "effect/reactivity/Reactivity";
-import * as S from "effect/Schema";
-import * as Semaphore from "effect/Semaphore";
-import * as Tuple from "effect/Tuple";
-import { failureMessageOr } from "@/lib/failureMessage";
+import * as Stream from "effect/Stream";
 import { professionalBrowserRuntime } from "@/runtime/ProfessionalAtomRuntime";
 import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-
-const $I = $ProfessionalDesktopId.create("sync/Sync.atoms");
 
 /**
  * Browser RPC client for the professional desktop vault-sync protocol.
@@ -54,195 +39,16 @@ const vaultSyncStatusKey = (workspaceId: WorkspaceIdentity.WorkspaceId) => `vaul
 
 const vaultSyncConflictsKey = (workspaceId: WorkspaceIdentity.WorkspaceId) => `vault-sync-conflicts:${workspaceId}`;
 
-class VaultSyncIdleState extends S.Opaque<VaultSyncIdleState, { readonly brand: unique symbol }>()(
-  S.Struct({ kind: S.tag("idle") }).pipe(
-    $I.annoteSchema("VaultSyncIdleState", {
-      description: "Vault sync controls are ready for the next operator action.",
-    })
-  )
-) {}
-
-class VaultSyncRunningState extends S.Opaque<VaultSyncRunningState, { readonly brand: unique symbol }>()(
-  S.Struct({ kind: S.tag("syncing") }).pipe(
-    $I.annoteSchema("VaultSyncRunningState", {
-      description: "A workspace vault sync pass is currently running.",
-    })
-  )
-) {}
-
-class VaultSyncReviewingState extends S.Opaque<VaultSyncReviewingState, { readonly brand: unique symbol }>()(
-  S.Struct({
-    kind: S.tag("reviewing"),
-    conflictId: SyncConflictId,
-  }).pipe(
-    $I.annoteSchema("VaultSyncReviewingState", {
-      description: "A single vault sync conflict is being marked as reviewed.",
-    })
-  )
-) {}
-
-class VaultSyncSucceededState extends S.Opaque<VaultSyncSucceededState, { readonly brand: unique symbol }>()(
-  S.Struct({
-    kind: S.tag("succeeded"),
-    message: S.NonEmptyString,
-  }).pipe(
-    $I.annoteSchema("VaultSyncSucceededState", {
-      description: "The latest vault sync action completed successfully.",
-    })
-  )
-) {}
-
-class VaultSyncFailedState extends S.Opaque<VaultSyncFailedState, { readonly brand: unique symbol }>()(
-  S.Struct({
-    kind: S.tag("failed"),
-    message: S.NonEmptyString,
-  }).pipe(
-    $I.annoteSchema("VaultSyncFailedState", {
-      description: "The latest vault sync action failed with an operator-safe message.",
-    })
-  )
-) {}
-
-const VaultSyncPanelStateKind = LiteralKit(["idle", "syncing", "reviewing", "succeeded", "failed"]).pipe(
-  $I.annoteSchema("VaultSyncPanelStateKind", {
-    description: "Lifecycle variants for the vault sync operator controls.",
-  })
-);
-
 /**
- * Exhaustive state machine for vault sync operator actions.
- *
- * **Example** (Creating idle panel state)
- *
- * ```ts
- * import { VaultSyncPanelState } from "@/sync/Sync.atoms"
- *
- * const state = VaultSyncPanelState.cases.idle.make({})
- * console.log(state.kind) // "idle"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const VaultSyncPanelState = VaultSyncPanelStateKind.mapMembers(
-  Tuple.evolve([
-    () => VaultSyncIdleState,
-    () => VaultSyncRunningState,
-    () => VaultSyncReviewingState,
-    () => VaultSyncSucceededState,
-    () => VaultSyncFailedState,
-  ])
-).pipe(
-  $I.annoteSchema("VaultSyncPanelState", {
-    description: "Exhaustive lifecycle state for vault sync and conflict-review actions.",
-  }),
-  S.toTaggedUnion("kind")
-);
-
-/**
- * Runtime type for {@link VaultSyncPanelState}.
- *
- * **Example** (Typing syncing panel state)
- *
- * ```ts
- * import { VaultSyncPanelState, type VaultSyncPanelState as State } from "@/sync/Sync.atoms"
- *
- * const state: State = VaultSyncPanelState.cases.syncing.make({})
- * console.log(state.kind) // "syncing"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type VaultSyncPanelState = typeof VaultSyncPanelState.Type;
-
-class TriggerVaultSyncCommand extends S.Opaque<TriggerVaultSyncCommand, { readonly brand: unique symbol }>()(
-  S.Struct({ kind: S.tag("trigger") }).pipe(
-    $I.annoteSchema("TriggerVaultSyncCommand", {
-      description: "Request one serialized vault sync pass for the owning workspace.",
-    })
-  )
-) {}
-
-class ReviewVaultSyncConflictCommand extends S.Opaque<
-  ReviewVaultSyncConflictCommand,
-  { readonly brand: unique symbol }
->()(
-  S.Struct({
-    kind: S.tag("review"),
-    conflictId: SyncConflictId,
-  }).pipe(
-    $I.annoteSchema("ReviewVaultSyncConflictCommand", {
-      description: "Request serialized review of one conflict in the owning workspace.",
-    })
-  )
-) {}
-
-const VaultSyncCommandKind = LiteralKit(["trigger", "review"]).pipe(
-  $I.annoteSchema("VaultSyncCommandKind", {
-    description: "Commands accepted by one workspace vault sync state machine.",
-  })
-);
-
-/**
- * Exhaustive command accepted by a workspace vault sync action family.
- *
- * **Example** (Trigger command guard check)
- *
- * ```ts
- * import { VaultSyncCommand } from "@/sync/Sync.atoms"
- *
- * const command = VaultSyncCommand.cases.trigger.make({})
- * console.log(VaultSyncCommand.guards.trigger(command)) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const VaultSyncCommand = VaultSyncCommandKind.mapMembers(
-  Tuple.evolve([() => TriggerVaultSyncCommand, () => ReviewVaultSyncConflictCommand])
-).pipe(
-  $I.annoteSchema("VaultSyncCommand", {
-    description: "Serialized operator commands for one workspace vault sync state machine.",
-  }),
-  S.toTaggedUnion("kind")
-);
-
-/**
- * Runtime type for {@link VaultSyncCommand}.
- *
- * @category models
- * @since 0.0.0
- */
-type VaultSyncCommand = typeof VaultSyncCommand.Type;
-
-/**
- * Per-workspace vault sync action state.
- *
- * **Example** (Workspace panel state access)
- *
- * ```ts
- * import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace"
- * import { vaultSyncPanelStateAtoms } from "@/sync/Sync.atoms"
- *
- * const state = vaultSyncPanelStateAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID)
- * console.log(typeof state === "object") // true
- * ```
- *
- * @category atoms
- * @since 0.0.0
- */
-export const vaultSyncPanelStateAtoms = Atom.family((_workspaceId: WorkspaceIdentity.WorkspaceId) =>
-  Atom.make<VaultSyncPanelState>(VaultSyncPanelState.cases.idle.make({}))
-);
-
-/**
- * Atom family that reads the workspace vault sync status over desktop RPC.
+ * Atom family that subscribes to the workspace vault sync status over desktop RPC.
  *
  * **Details**
  *
- * Refreshes whenever a sync trigger or conflict review invalidates the
- * workspace's status reactivity key.
+ * The `WatchVaultSyncStatus` stream pushes a new status whenever the status
+ * View changes, so the counts update when a pass finishes rather than at the
+ * moment the trigger is accepted. The sidecar authorizes every frame like the
+ * other View subscriptions. A trigger, review or accepted probe still
+ * invalidates the status reactivity key, which re-subscribes.
  *
  * **Example** (Workspace status atom access)
  *
@@ -258,52 +64,28 @@ export const vaultSyncPanelStateAtoms = Atom.family((_workspaceId: WorkspaceIden
  * @since 0.0.0
  */
 export const vaultSyncStatusAtom = Atom.family((workspaceId: WorkspaceIdentity.WorkspaceId) =>
-  DesktopSyncClient.query("GetVaultSyncStatus", GetVaultSyncStatusPayload.make({ workspaceId }), {
-    reactivityKeys: [vaultSyncStatusKey(workspaceId)],
-  })
+  DesktopSyncClient.runtime
+    .atom(
+      Stream.unwrap(
+        Effect.map(DesktopSyncClient, (client) =>
+          client("WatchVaultSyncStatus", VaultSyncWorkspacePayload.make({ workspaceId }))
+        )
+      )
+    )
+    .pipe(Atom.withReactivity([vaultSyncStatusKey(workspaceId)]))
 );
 
-const forceVaultSyncProbe = Effect.fn("documents.vault_sync.force_probe")(function* (
-  workspaceId: WorkspaceIdentity.WorkspaceId,
-  client: DesktopSyncClient["Service"]
-) {
-  const reactivity = yield* Reactivity.Reactivity;
-  yield* Effect.annotateCurrentSpan({
-    "documents.vault_sync.workspace_id": workspaceId,
-  });
-  yield* Reactivity.mutation(
-    client("GetVaultSyncStatus", GetVaultSyncStatusPayload.make({ forceProbe: true, workspaceId })),
-    [vaultSyncStatusKey(workspaceId)]
-  ).pipe(
-    Effect.catchCause((cause) =>
-      logRedactedCause(
-        cause,
-        LogRedactedCauseOptions.make({
-          message: "professional desktop vault sync force probe failed",
-          level: "Warn",
-          attributes: {
-            "documents.vault_sync.command": "force-probe",
-            subsystem: "vault_sync",
-          },
-        })
-        // Invalidate anyway: the status query owns failure presentation, so a
-        // failed forced probe still re-runs it instead of leaving a retry
-        // that visibly did nothing.
-      ).pipe(Effect.andThen(reactivity.invalidate([vaultSyncStatusKey(workspaceId)])))
-    )
-  );
-});
-
 /**
- * Per-workspace forced probe retry for the vault sync connection.
+ * Per-workspace connection re-read after an accepted probe.
  *
  * **Details**
  *
- * The passive status atom is served from the sidecar's short probe cache, so a
- * plain refresh inside the failure TTL replays the cached failed probe. This
- * fn sends `forceProbe: true`, which makes the sidecar discard the cached
- * answer and ask the provider now, then invalidates the workspace status key
- * so {@link vaultSyncStatusAtom} re-reads the freshly cached result.
+ * The probe itself is the `ProbeDestination` command the intent queue
+ * delivers; its saga asks Box and refreshes the sidecar's availability. This
+ * fn only invalidates the workspace status key, so {@link vaultSyncStatusAtom}
+ * re-subscribes and its next frame reads that availability. It sends no
+ * status read, so it can never start a second probe through the compatibility
+ * `GetVaultSyncStatus` `forceProbe` path.
  *
  * **Example** (Retry atoms function check)
  *
@@ -319,8 +101,8 @@ const forceVaultSyncProbe = Effect.fn("documents.vault_sync.force_probe")(functi
 export const vaultSyncRetryConnectionAtoms = Atom.family((workspaceId: WorkspaceIdentity.WorkspaceId) =>
   DesktopSyncClient.runtime.fn<void>()(
     Effect.fnUntraced(function* () {
-      const client = yield* DesktopSyncClient;
-      yield* forceVaultSyncProbe(workspaceId, client);
+      const reactivity = yield* Reactivity.Reactivity;
+      yield* reactivity.invalidate([vaultSyncStatusKey(workspaceId)]);
     })
   )
 );
@@ -346,143 +128,3 @@ export const vaultSyncConflictsAtom = Atom.family((workspaceId: WorkspaceIdentit
     reactivityKeys: [vaultSyncConflictsKey(workspaceId)],
   })
 );
-
-const handleVaultSyncFailure = Effect.fnUntraced(function* (
-  failure: unknown,
-  command: VaultSyncCommand["kind"],
-  fallbackMessage: string,
-  stateAtom: Atom.Writable<VaultSyncPanelState>,
-  ctx: Atom.FnContext
-) {
-  yield* logRedactedCause(
-    failure,
-    LogRedactedCauseOptions.make({
-      message: `professional desktop vault sync ${command} failed`,
-      level: "Warn",
-      attributes: {
-        "documents.vault_sync.command": command,
-        subsystem: "vault_sync",
-      },
-    })
-  );
-  yield* Effect.annotateCurrentSpan({
-    "documents.vault_sync.outcome": "failed",
-  });
-  ctx.set(
-    stateAtom,
-    VaultSyncPanelState.cases.failed.make({
-      message: failureMessageOr(fallbackMessage)(failure),
-    })
-  );
-});
-
-const triggerVaultSync = Effect.fn("documents.vault_sync.trigger")(function* (
-  workspaceId: WorkspaceIdentity.WorkspaceId,
-  client: DesktopSyncClient["Service"],
-  ctx: Atom.FnContext
-) {
-  const stateAtom = vaultSyncPanelStateAtoms(workspaceId);
-  yield* Effect.annotateCurrentSpan({
-    "documents.vault_sync.workspace_id": workspaceId,
-  });
-  ctx.set(stateAtom, VaultSyncPanelState.cases.syncing.make({}));
-  yield* Reactivity.mutation(client("TriggerVaultSync", VaultSyncWorkspacePayload.make({ workspaceId })), [
-    vaultSyncStatusKey(workspaceId),
-    vaultSyncConflictsKey(workspaceId),
-  ]).pipe(
-    Effect.matchEffect({
-      onFailure: (failure) => handleVaultSyncFailure(failure, "trigger", "Vault sync failed.", stateAtom, ctx),
-      onSuccess: () =>
-        Effect.annotateCurrentSpan({
-          "documents.vault_sync.outcome": "succeeded",
-        }).pipe(
-          Effect.andThen(
-            Effect.sync(() =>
-              ctx.set(
-                stateAtom,
-                VaultSyncPanelState.cases.succeeded.make({
-                  message: "Sync complete.",
-                })
-              )
-            )
-          )
-        ),
-    })
-  );
-});
-
-const reviewVaultSyncConflict = Effect.fn("documents.vault_sync.review")(function* (
-  workspaceId: WorkspaceIdentity.WorkspaceId,
-  conflictId: SyncConflictId,
-  client: DesktopSyncClient["Service"],
-  ctx: Atom.FnContext
-) {
-  const stateAtom = vaultSyncPanelStateAtoms(workspaceId);
-  yield* Effect.annotateCurrentSpan({
-    "documents.vault_sync.conflict_id": conflictId,
-    "documents.vault_sync.workspace_id": workspaceId,
-  });
-  ctx.set(stateAtom, VaultSyncPanelState.cases.reviewing.make({ conflictId }));
-  yield* Reactivity.mutation(
-    client(
-      "MarkVaultSyncConflictReviewed",
-      MarkVaultSyncConflictReviewedPayload.make({
-        conflictId,
-        workspaceId,
-      })
-    ),
-    [vaultSyncConflictsKey(workspaceId), vaultSyncStatusKey(workspaceId)]
-  ).pipe(
-    Effect.matchEffect({
-      onFailure: (failure) =>
-        handleVaultSyncFailure(failure, "review", "Marking the conflict reviewed failed.", stateAtom, ctx),
-      onSuccess: () =>
-        Effect.annotateCurrentSpan({
-          "documents.vault_sync.outcome": "succeeded",
-        }).pipe(Effect.andThen(Effect.sync(() => ctx.set(stateAtom, VaultSyncPanelState.cases.idle.make({}))))),
-    })
-  );
-});
-
-/**
- * Per-workspace command state machine for sync and conflict review.
- *
- * **Details**
- *
- * Commands for different workspaces run independently. Commands for the same
- * workspace share one semaphore and execute in FIFO order, so a review cannot
- * race a sync pass or overwrite its state transition.
- *
- * **Example** (Command atoms function check)
- *
- * ```ts
- * import { vaultSyncCommandAtoms } from "@/sync/Sync.atoms"
- *
- * console.log(typeof vaultSyncCommandAtoms === "function") // true
- * ```
- *
- * @category atoms
- * @since 0.0.0
- */
-export const vaultSyncCommandAtoms = Atom.family((workspaceId: WorkspaceIdentity.WorkspaceId) => {
-  const commandSemaphore = Semaphore.makeUnsafe(1);
-  const stateAtom = vaultSyncPanelStateAtoms(workspaceId);
-
-  return DesktopSyncClient.runtime.fn<VaultSyncCommand>()(
-    Effect.fnUntraced(function* (command, ctx) {
-      const client = yield* DesktopSyncClient;
-      const registry = yield* AtomRegistry.AtomRegistry;
-      const resetInterruptedCommand = Effect.sync(() =>
-        registry.set(stateAtom, VaultSyncPanelState.cases.idle.make({}))
-      );
-
-      const operation = VaultSyncCommand.match(command, {
-        trigger: () => triggerVaultSync(workspaceId, client, ctx),
-        review: ({ conflictId }) => reviewVaultSyncConflict(workspaceId, conflictId, client, ctx),
-      });
-
-      yield* commandSemaphore.withPermit(operation).pipe(Effect.onInterrupt(() => resetInterruptedCommand));
-    }),
-    { concurrent: true }
-  );
-});
