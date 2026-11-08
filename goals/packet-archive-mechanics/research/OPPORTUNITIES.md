@@ -36,3 +36,20 @@ edited `effect-reference-workspace` on `main`; the batch was re-run from main
 write access the push landed on 2026-11-08 and all 50 tree hashes verified. Running the
 sweep from a host whose credential covers the archive repo, or adding the
 archive repo to the helper, would prevent this.
+
+## 2026-11-08: Yeet open pushed, then stopped before creating the PR
+
+`bun run beep yeet open` pushed the lane and then failed with `gh did not return
+a gh login token (exit 1)`. The worker's `gh` wrapper refuses `gh auth token` by
+design, so Yeet needs `BEEP_GH_TOKEN_REF` set on this host, and nothing set it.
+The failure came after the push, so the lane looked published with no PR.
+Checking the GitHub identity before the push would have failed the command
+cleanly, and a host-provided `BEEP_GH_TOKEN_REF` would have avoided it.
+
+## 2026-11-08: Consumer scans miss commands inside relocated data
+
+The batch 2 scan looked for code that reads packet files. It did not flag the
+fallow matrix's `acceptanceCommands`, which named `bun goals/.../ops/*.ts`
+scripts this batch archives; they surfaced only when each reference was
+checked for a live target. Listing references whose target no longer exists,
+after the archive write, would catch this kind of entry in every batch.
