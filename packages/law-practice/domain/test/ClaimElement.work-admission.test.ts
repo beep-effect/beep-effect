@@ -33,7 +33,10 @@ const inputOf = (text: string) =>
     ],
   });
 
-describe("source compilation finite-work admission", () => {
+// Each sweep is CPU-bound and quadratic in its required work (every allowance recompiles until the budget
+// runs out). Run concurrently they share one thread while every per-case watchdog runs from t=0, so the
+// cases time out on slower runners even though each fits its budget alone.
+describe("source compilation finite-work admission", { concurrent: false }, () => {
   for (const text of texts)
     it.effect(
       `declines every insufficient structural allowance without publishing a partial plan: ${text}`,
