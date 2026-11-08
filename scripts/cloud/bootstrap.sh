@@ -586,6 +586,9 @@ prepare_hash="$(cat bun.lock package.json packages/tooling/tool/cli/src/commands
 if [ -d node_modules ] && [ "$(cat "${lock_stamp}" 2>/dev/null || true)" = "${lock_hash}" ]; then
   log "dependencies already match bun.lock; skipping install"
 else
+  # Invalidate preparation before an install can replace the patched compiler.
+  # If installation or stamp publication stops midway, resume must prepare again.
+  rm -f "${prepare_stamp}"
   install_attempts=3
   attempt=1
   while :; do
@@ -600,8 +603,6 @@ else
     attempt=$((attempt + 1))
   done
   printf '%s' "${lock_hash}" > "${lock_stamp}"
-  # A fresh install replaces the patched compiler, so the patch must re-run.
-  rm -f "${prepare_stamp}"
 fi
 
 if [ "$(cat "${prepare_stamp}" 2>/dev/null || true)" = "${prepare_hash}" ]; then
