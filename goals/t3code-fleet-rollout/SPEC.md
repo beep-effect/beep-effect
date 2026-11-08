@@ -84,17 +84,18 @@ T3 product facts:
 
 ## Acceptance Criteria
 
-- [ ] A DankStation fork sync publishes a bundle and metadata. Each live
+- [x] A DankStation fork sync publishes a bundle and metadata. Each live
       host's timer installs the bundle unattended, and every host then
       reports the same fork commit.
-- [ ] beep-worker, dankserver and tom-pc-1 each run T3 as a service that
+- [x] beep-worker, dankserver and tom-pc-1 each run T3 as a service that
       survives a reboot (tom-pc-1: or the recorded desktop-backend
       fallback). Each is reachable over Tailscale HTTPS only.
-- [ ] DankStation lists each host as a Linked environment. A thread launched
+- [x] DankStation lists each host as a Linked environment. A thread launched
       from DankStation on each host completes one trivial turn, and a
       sanitized receipt is recorded in `history/`.
-- [ ] The tbk-worker steps are written and marked gated.
-- [ ] The runbook and host profiles are merged through `/yeet`.
+- [x] The tbk-worker steps are written and marked gated. (Superseded: the operator released
+      the latch on 2026-11-07 and the steps ran; the runbook now records the live host.)
+- [x] The runbook and host profiles are merged through `/yeet`.
 
 ## Verification Matrix
 
@@ -148,10 +149,26 @@ Lane `grok-bot-vm`
 
 Reverse: Remove the host from the fleet: tailscale logout on the box, delete the hub link and desktop pairing, drop the hosts.md row and runbook section; the box keeps only /workspace
 
+### Close with tbk-worker and tom-pc-1 reboot proofs recorded as exceptions, 2026-11-08
+
+beep-worker and dankserver survived real reboots on 2026-11-07. tbk-worker has not rebooted since install. tom-pc-1's Windows last booted before the install, and it is an in-use PC that should not be rebooted for a receipt. The operator directed closing now, so both go in the Exception Ledger instead of holding the goal for elapsed time.
+
+Lane `t3code-goals-closeout`
+
+Reverse: Remove the ledger rows once each host's next boot shows the service started, or reopen with goals set-status t3code-fleet-rollout active if it does not
+
+### Closeout lands in one PR by operator ruling, 2026-11-08
+
+The operator ruled on 2026-11-08 that these three goals reach completed-retained in one single PR, regardless of the packets' two-PR closeout, to keep the merge queue clear. So this PR commits status completed-retained with a closeout record naming itself, instead of a proposedCloseout adopted later. That puts the committed record ahead of its evidence: set-status guards only the proposal path, and no completion receipt can exist before the merge. The check runs afterward: goals completion refresh on this lane, from which a failure reopens the packet.
+
+Lane `t3code-goals-closeout`
+
+Reverse: Run goals set-status <slug> active, which turns the closeout record back into a proposal, in a packet-state PR
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
-| None | N/A | N/A | N/A | N/A |
+| Reboot proof not observed on tbk-worker and tom-pc-1 | Reboot survival criterion; tom-pc-1 Windows sign-in path, tbk-worker first reboot | Fleet orchestrator | tbk-worker has not rebooted since install; tom-pc-1 is an in-use PC. Restart path and enablement are proven (`history/2026-11-08-closeout-verify.md`) | Each host's next boot shows `t3code.service` started |

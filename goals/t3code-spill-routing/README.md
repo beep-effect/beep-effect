@@ -33,12 +33,12 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started; waits for at least one live spill host.
+Closed by the single closeout PR (operator ruling 2026-11-08). The rule is advisory, and the drill's breach was simulated.
 
 ## Latest Evidence
 
-Not started.
+2026-11-08: `history/2026-11-08-baseline.md` (recorder failure and repair, MemAvailable-0, thresholds) and `history/2026-11-08-spill-drill.md`.
 
 ## Notes
 
-Explain the MemAvailable-0 baseline sample before setting memory thresholds. An automatic dispatcher is a gated follow-up in the exploration MAP.
+An automatic dispatcher is a gated follow-up in the exploration MAP.

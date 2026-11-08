@@ -33,9 +33,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 Verify complete — all four hosts on `0.1.7-fork.20261106.1401`, every link reachable, desktop pairings confirmed, one delegated turn per host (beep-worker after recording its project MCP approvals). Residual: tom-pc-1 reboot proof at the PC user's next sign-in (restart path already exercised). Next: P3 Yeet (this receipt PR to mergeable), then P4 Close.
+Closed by the single closeout PR (operator ruling 2026-11-08). Five hosts run `0.1.7-fork.20261108.758`, linked from DankStation at Full access until 2027-05-07. Open exception: reboot proof on tbk-worker and tom-pc-1 (`SPEC.md`, Exception Ledger).
 
 ## Latest Evidence
+
+2026-11-08: `history/2026-11-08-closeout-verify.md` (version parity, reachability, one delegated turn per host, reboot evidence).
 
 2026-11-07: `history/2026-11-07-p2-verify.md` (version parity, reachability, per-host turns, beep-worker MCP-approval fix, tom-pc-1 restart-path proof).
 
@@ -43,4 +45,4 @@ P2 Verify complete — all four hosts on `0.1.7-fork.20261106.1401`, every link 
 
 ## Notes
 
-Host order: beep-worker (done), dankserver (linked), tom-pc-1 (linked). tbk-worker is gated on the operator releasing its latch. grok-bot-box-1 is out of scope.
+All hosts are linked: beep-worker, dankserver, tom-pc-1, tbk-worker (latch released 2026-11-07) and grok-bot (brought into scope 2026-11-08, decision `grok-bot-vm-in-scope`).

@@ -58,13 +58,13 @@ signal and baseline are in
 
 ## Acceptance Criteria
 
-- [ ] The MemAvailable-0 sample is explained in `history/`.
-- [ ] The threshold table and the spill rule are in `orchestrate` and the
+- [x] The MemAvailable-0 sample is explained in `history/`.
+- [x] The threshold table and the spill rule are in `orchestrate` and the
       runbook.
-- [ ] One drill: with a simulated or real breach, the orchestrator follows
+- [x] One drill: with a simulated or real breach, the orchestrator follows
       the rule, launches on beep-worker through T3, and records the decision
       in its ledger. A sanitized receipt goes in `history/`.
-- [ ] The PR is merged through `/yeet`.
+- [x] The PR is merged through `/yeet`.
 
 ## Verification Matrix
 
@@ -88,6 +88,35 @@ signal and baseline are in
 | --- | --- | --- | --- |
 | 2026-11-01 | The first cut is an advisory rule, not a dispatcher | Reuses the existing signal and T3 launch; no daemon | Delete the rule |
 | 2026-11-01 | Spill order: beep-worker, tom-pc-1, dankserver | Fitness and in-use constraints | Edit the table |
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug t3code-spill-routing`; add a `kind: decision` file there, never edit this block._
+
+### Restore the PSI sampler at a durable path, 2026-11-08
+
+The sampler and its data were retired with ~/workstation-diagnostics on 2026-11-02 while the unit still pointed there, so it failed on every tick. The sampler now lives under ~/.local/share/beep-psi and writes ~/.local/state/beep-psi/safe-pressure.jsonl with a 14-day ring, in the same record format and still without per-process scans. The spec called for read-only analysis; this goes further because a threshold table that must be re-derived needs a live recorder. The baseline itself uses the preserved data.
+
+Lane `t3code-goals-closeout`
+
+Reverse: Restore ~/.local/state/beep-psi/99-workstation-light-sampling.conf.bak-20261108 over the drop-in and run systemctl --user daemon-reload
+
+### Closeout lands in one PR by operator ruling, 2026-11-08
+
+The operator ruled on 2026-11-08 that these three goals reach completed-retained in one single PR, regardless of the packets' two-PR closeout, to keep the merge queue clear. So this PR commits status completed-retained with a closeout record naming itself, instead of a proposedCloseout adopted later. That puts the committed record ahead of its evidence: set-status guards only the proposal path, and no completion receipt can exist before the merge. The check runs afterward: goals completion refresh on this lane, from which a failure reopens the packet.
+
+Lane `t3code-goals-closeout`
+
+Reverse: Run goals set-status <slug> active, which turns the closeout record back into a proposal, in a packet-state PR
+
+### tbk-worker takes its second slot; grok-bot stays out of the spill order, 2026-11-08
+
+The operator released tbk-worker's latch on 2026-11-07, so it takes the slot after beep-worker that the spec reserved. grok-bot joined the fleet after the order was set and is left out, because it sleeps unless the operator holds its view open; an advisory rule should not pick a host that may not answer. Use it when asked.
+
+Lane `t3code-goals-closeout`
+
+Reverse: Edit the order in the orchestrate skill's Where to launch section
+
+<!-- beep:decisions:end -->
 
 ## Exception Ledger
 

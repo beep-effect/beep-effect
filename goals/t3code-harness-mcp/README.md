@@ -33,11 +33,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+Closed by the single closeout PR (operator ruling 2026-11-08). Open exception: no Junie turn has called the server (`SPEC.md`, Exception Ledger).
 
 ## Latest Evidence
 
-Not started.
+2026-11-08: `history/2026-11-08-harness-matrix.md` (harness matrix across six hosts, double-load check, reminder test fire).
 
 ## Notes
 

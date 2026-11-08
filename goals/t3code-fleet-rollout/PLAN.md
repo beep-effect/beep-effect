@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `in-progress`
+Status: `complete`
 
 ## Phases
 
@@ -68,6 +68,10 @@ Before marking the packet closed:
   access, desktop pairing handed to the operator
   (`history/2026-11-07-tbk-worker-link.md`). One delegated turn through the
   link is still open.
+
+- 2026-11-08 (lane `t3code-goals-closeout`): closeout verification on build
+  `0.1.7-fork.20261108.758`, every host including tbk-worker and grok-bot
+  (`history/2026-11-08-closeout-verify.md`).
 
 - Preserve unrelated worktree changes.
 - Keep `SPEC.md` normative and update it only when the contract changes.
