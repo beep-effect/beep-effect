@@ -4,6 +4,7 @@ import { staticDescriptorInstaller } from "@beep/schema/SchemaUtils/internal/sta
 import { optionalDefect } from "@beep/schema/SchemaUtils/optionalDefect";
 import { alwaysEquivalent } from "@beep/schema/SchemaUtils/toEquivalence";
 import { it } from "@beep/test-runner";
+import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
@@ -18,6 +19,10 @@ const decodeBoolKeySettingsEffect = S.decodeUnknownEffect(BoolKeySettings);
 const encodeBoolKeySettingsEffect = S.encodeEffect(BoolKeySettings);
 
 describe("BoolKeyDefaultFalse and BoolKeyDefaultTrue", () => {
+  it("round-trips schema-derived arbitraries through decode and encode", () => {
+    assertSchemaArbitraryDecodesToSelf(BoolKeySettings);
+  });
+
   it("default omitted constructor input", () => {
     expect(BoolKeySettings.make({})).toEqual({ visible: false, enabled: true });
     expect(BoolKeySettings.make({ visible: true, enabled: false })).toEqual({ visible: true, enabled: false });
@@ -37,6 +42,10 @@ describe("BoolKeyDefaultFalse and BoolKeyDefaultTrue", () => {
       });
     })
   );
+
+  it("decodes every schema-generated settings value back to itself", () => {
+    assertSchemaArbitraryDecodesToSelf(BoolKeySettings);
+  });
 });
 
 describe("alwaysEquivalent", () => {
