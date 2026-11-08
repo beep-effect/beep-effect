@@ -39,7 +39,10 @@ const MemoryLayer = Layer.merge(BunCrypto.layer, Layer.effect(FileSystem.FileSys
 const AdmissionLayer = Layer.mergeAll(
   PlatformLayer,
   ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
-  Layer.succeed(MemoryStats, MemoryStats.of({ availableGib: Effect.succeed(50), totalGib: Effect.succeed(128) }))
+  Layer.succeed(
+    MemoryStats,
+    MemoryStats.of({ availableGib: Effect.succeed(50), totalGib: Effect.succeed(128), ceilingGib: Effect.succeed(128) })
+  )
 );
 
 const request = AdmissionRequest.make({
@@ -124,6 +127,7 @@ describe("QualityScheduler deterministic memory readings", () => {
                   Effect.map((reads) => (reads === 0 ? 50 : 10))
                 ),
                 totalGib: Effect.succeed(128),
+                ceilingGib: Effect.succeed(128),
               })
             )
           )

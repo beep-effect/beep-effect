@@ -106,7 +106,7 @@ const PlatformLayer = NodeChildProcessSpawner.layer.pipe(
 
 const FixedMemoryStatsLayer = Layer.succeed(
   MemoryStats,
-  MemoryStats.of({ availableGib: Effect.succeed(64), totalGib: Effect.succeed(128) })
+  MemoryStats.of({ availableGib: Effect.succeed(64), totalGib: Effect.succeed(128), ceilingGib: Effect.succeed(128) })
 );
 
 const RunScopesOffLayer = ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" }));

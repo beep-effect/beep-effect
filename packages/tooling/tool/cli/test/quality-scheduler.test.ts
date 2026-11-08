@@ -383,7 +383,11 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
     });
 
   const memoryStats = (gibRef: Ref.Ref<number>, totalGib = 128) =>
-    MemoryStats.of({ availableGib: Ref.get(gibRef), totalGib: Effect.succeed(totalGib) });
+    MemoryStats.of({
+      availableGib: Ref.get(gibRef),
+      totalGib: Effect.succeed(totalGib),
+      ceilingGib: Effect.succeed(totalGib),
+    });
 
   const journalV3Events = () => {
     const ticket = orderingTicket({ attemptId: O.some(JOURNALED_ATTEMPT_ID) });
@@ -6149,6 +6153,134 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             Effect.provideService(MemoryStats, memoryStats(gibRef, 8))
           );
         }
+      }).pipe(TestClock.withLive)
+    );
+
+    // A 7 GiB slice on a 15 GiB host: the worker compute profile (D4).
+    const workerMemoryStats = MemoryStats.of({
+      availableGib: Effect.succeed(6),
+      totalGib: Effect.succeed(15),
+      ceilingGib: Effect.succeed(7),
+    });
+    const countingOriginGate = (releases: Ref.Ref<number>) => ({
+      tryAcquire: Effect.succeedSome("origin-lease"),
+      tryAcquireFallback: Effect.succeedSome("origin-lease"),
+      release: (_: string) => Ref.update(releases, (count) => count + 1),
+    });
+
+    it.effect("refuses a hosted-only gate on a worker compute profile and names yeet open", () =>
+      Effect.gen(function* () {
+        const { runtimeDir, tempRoot } = yield* admissionTemporaryRoot;
+        return yield* Effect.gen(function* () {
+          const ran = yield* Ref.make(false);
+          const error = yield* Effect.flip(
+            withQualityAdmission(
+              request({ gateRoute: O.some("check") }),
+              noAdmissionOriginGate,
+              Ref.set(ran, true),
+              fastConfig
+            )
+          );
+          expect(error.reason).toBe("compute-profile-refusal");
+          expect(error.refusal?._tag).toBe("ComputeProfileRefusal");
+          expect(error.refusal?.gate).toBe("check");
+          expect(error.refusal?.ceilingGib).toBe(7);
+          expect(error.refusal?.envelopeGib).toBe(20);
+          expect(error.message).toContain("bun run beep yeet open --body-file <md>");
+          const ranValue = yield* Ref.get(ran);
+          expect(ranValue).toBe(false);
+          const queued = yield* listDirectory(tempRoot.queue);
+          expect(A.length(queued)).toBe(0);
+        }).pipe(
+          provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
+          Effect.provideService(MemoryStats, workerMemoryStats)
+        );
+      }).pipe(TestClock.withLive)
+    );
+
+    it.effect("runs a hosted-only gate on worker with forceLocal and logs it", () =>
+      Effect.gen(function* () {
+        const { runtimeDir } = yield* admissionTemporaryRoot;
+        const testConsole = yield* TestConsole.make;
+        const logLines: Array<string> = [];
+        return yield* Effect.gen(function* () {
+          const releases = yield* Ref.make(0);
+          const result = yield* withQualityAdmission(
+            request({ gateRoute: O.some("check"), forceLocal: true }),
+            countingOriginGate(releases),
+            Effect.succeed("ran"),
+            fastConfig
+          );
+          expect(result).toBe("ran");
+          const released = yield* Ref.get(releases);
+          expect(released).toBe(1);
+          expect(A.some(logLines, Str.includes("compute-profile=worker force-local=true"))).toBe(true);
+        }).pipe(
+          provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
+          Effect.provideService(MemoryStats, workerMemoryStats),
+          Effect.provideService(Console.Console, {
+            ...testConsole,
+            log: (...args: ReadonlyArray<unknown>) => {
+              logLines.push(A.join(A.map(args, String), " "));
+            },
+          })
+        );
+      }).pipe(TestClock.withLive)
+    );
+
+    it.effect("runs a local gate on worker through the origin gate", () =>
+      Effect.gen(function* () {
+        const { runtimeDir, tempRoot } = yield* admissionTemporaryRoot;
+        return yield* Effect.gen(function* () {
+          const releases = yield* Ref.make(0);
+          const result = yield* withQualityAdmission(
+            request({ gateRoute: O.some("lint") }),
+            countingOriginGate(releases),
+            Effect.succeed("ran"),
+            fastConfig
+          );
+          expect(result).toBe("ran");
+          const released = yield* Ref.get(releases);
+          expect(released).toBe(1);
+          const leases = yield* listDirectory(tempRoot.leases);
+          expect(A.length(leases)).toBe(0);
+        }).pipe(
+          provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
+          Effect.provideService(MemoryStats, workerMemoryStats)
+        );
+      }).pipe(TestClock.withLive)
+    );
+
+    it.effect("admits a hosted-only gate normally on workstation and records the profile and forceLocal", () =>
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        const { runtimeDir, tempRoot } = yield* admissionTemporaryRoot;
+        return yield* Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const leaseDuringUse = Effect.gen(function* () {
+            const names = yield* listDirectory(tempRoot.leases);
+            const leaseNames = A.filter(names, Str.endsWith(".lease.json"));
+            expect(A.length(leaseNames)).toBe(1);
+            const leaseText = yield* fs.readFileString(path.join(tempRoot.leases, leaseNames[0] ?? ""));
+            return yield* decodeLease(leaseText);
+          });
+          const lease = yield* withQualityAdmission(
+            request({ gateRoute: O.some("check"), forceLocal: true }),
+            noAdmissionOriginGate,
+            leaseDuringUse,
+            fastConfig
+          );
+          expect(lease.computeProfile).toStrictEqual(O.some("workstation"));
+          expect(lease.forceLocal).toBe(true);
+        }).pipe(
+          provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
+          Effect.provideService(MemoryStats, memoryStats(gibRef))
+        );
       }).pipe(TestClock.withLive)
     );
 
