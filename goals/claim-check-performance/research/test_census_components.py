@@ -279,6 +279,30 @@ class AdmissionTests(unittest.TestCase):
             self.run_census()
         self.assertFalse(self.output.exists())
 
+    def test_trusted_base_and_ancestor_aliases_accept_complete_synthetic_census(self):
+        alias = self.base / "trusted-alias"
+        alias.symlink_to(self.base, target_is_directory=True)
+        with mock.patch.object(census, "RESULT_SHA256", self.sha):
+            report = census.run(alias / "repo", alias / "replay", alias / "seal.json", alias / "census")
+        self.assertEqual(report["selectedClaims"], 538)
+        self.assertEqual(report["authoritativeStrict"], 46)
+        self.assertEqual(len(report["retainedStrictClaims"]), 46)
+        self.assertTrue(self.output.is_dir())
+
+    def test_symlink_below_trusted_base_refused_even_when_target_stays_inside(self):
+        (self.replay / "linked").symlink_to(self.replay, target_is_directory=True)
+        with self.assertRaisesRegex(ValueError, "Symlink"):
+            census.checked_path(self.replay, "linked/results.json")
+
+    def test_output_alias_into_input_and_dangling_output_leaf_refused(self):
+        alias = self.base / "input-alias"
+        alias.symlink_to(self.replay, target_is_directory=True)
+        with self.assertRaisesRegex(ValueError, "overlap"):
+            census.output_path(self.root, self.replay, self.seal, alias / "new")
+        self.output.symlink_to(self.base / "absent")
+        with self.assertRaisesRegex(ValueError, "fresh directory"):
+            census.output_path(self.root, self.replay, self.seal, self.output)
+
     def test_extra_or_escaped_seal_file_and_duplicate_entries_refused(self):
         original = self.seal.read_text()
         for name in ("../foreign.prediction.json", self.files[0]["path"]):

@@ -51,6 +51,8 @@
     "research/component-census-001.script.ts.txt",
     "research/composition-candidate-measurement-001.json",
     "research/composition-candidate-measurement-002.json",
+    "research/composition-candidate-review-locations-001.json",
+    "research/contextual-nominal-head-measurement-001.json",
     "research/coverage-runtime-replay-001.json",
     "research/dependency-metadata-admission-001.json",
     "research/diagnose-structures.py",

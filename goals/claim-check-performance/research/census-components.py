@@ -227,8 +227,10 @@ def checked_path(base, relative):
     relative = pathlib.Path(relative)
     require(not relative.is_absolute() and ".." not in relative.parts, "Escaped input path")
     target = base / relative
-    require(not any(p.is_symlink() for p in [target, *target.parents]),
-            "Symlink input path refused")
+    current = base
+    for part in relative.parts:
+        current = current / part
+        require(not current.is_symlink(), "Symlink input path refused")
     require(target.resolve().is_relative_to(base.resolve()), "Escaped input path")
     return target
 
@@ -244,10 +246,11 @@ def read_json(path, used, expected=None):
 
 def output_path(root, replay, seal, output):
     require(not output.exists() and not output.is_symlink(), "Output must be a fresh directory")
+    # The caller supplies the trusted output parent. Resolve its aliases before
+    # overlap checks; the fresh output leaf itself must never be a symlink.
     target = output.resolve()
     for source in (root.resolve(), replay.resolve(), seal.resolve()):
         require(not target.is_relative_to(source) and not source.is_relative_to(target), "Input/output overlap refused")
-    require(not any(p.is_symlink() for p in output.parents), "Symlink output parent refused")
     return target
 
 
