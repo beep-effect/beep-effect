@@ -37,7 +37,7 @@ import * as Str from "effect/String";
 import { ExplorationManifest } from "../Explore/Atlas.ts";
 import { knowledgeInlineSpans, knowledgeLinkDestinations } from "../Knowledge/Knowledge.refs.ts";
 import { decodeReflectionFrontmatterText, reflectionFileNameIsArtifact } from "../Lint/ReflectionArtifact.ts";
-import { ArchiveIndexRow, ArchiveRecord, ArchiveRepoRef, InboundLinkForm, TombstoneKeep } from "./Archive.schemas.ts";
+import { ArchiveIndexRow, ArchiveRecord, ArchiveRepoRef, TombstoneKeep } from "./Archive.schemas.ts";
 import { ArchiveError } from "./Goals.errors.ts";
 import { decodeGoalManifest, renderGoalCloseoutRecord, renderGoalProposedCloseout } from "./Goals.schemas.ts";
 import { parseGoalManifestText, readmeMissionLine } from "./Inventory.ts";
@@ -907,57 +907,57 @@ export const makeTombstoneWriter = Effect.map(captureContext, (context) =>
  */
 export const TombstoneWriterLive = Layer.effect(TombstoneWriter, makeTombstoneWriter);
 
-// A link text that is one code span, ending at the destination's opening parenthesis.
-const CODE_SPAN_LINK_TEXT = /\[`([^`]+)`\]\($/u;
-const OPENING_BACKTICK_RUN = /^`+/u;
-
-// The doctor reads a code span as a tracked path even inside link text, so the span becomes plain text.
 const rewriteLinkDestination = (line: string, link: InboundLink): O.Option<string> =>
   O.map(
     A.findFirst(knowledgeLinkDestinations(line), (candidate) => candidate.destination === link.destination),
     (match) => {
       const start = match.column - 1;
-      const before = Str.replace(CODE_SPAN_LINK_TEXT, "[$1](")(Str.slice(0, start)(line));
-      return `${before}${link.rewrittenTo}${Str.slice(start + Str.length(link.destination))(line)}`;
+      return `${Str.slice(0, start)(line)}${link.rewrittenTo}${Str.slice(start + Str.length(link.destination))(line)}`;
     }
   );
 
-// The first plain code span carrying the citation becomes a link with plain text.
-const rewriteInlineCitation = (line: string, link: InboundLink): O.Option<string> =>
-  O.map(
-    A.findFirst(
-      knowledgeInlineSpans(line),
-      (inline) => inline.span === link.destination && !Str.includes(`[\`${inline.span}\`](`)(line)
-    ),
+const OPEN_LINK_TEXT = /\[[^\]]*$/u;
+const CLOSE_LINK_TEXT = /^[^[\]]*\]\(/u;
+const OPENING_BACKTICKS = /^`+/u;
+
+// The knowledge doctor reads an inline code span even inside link text, so a citation leaves as plain
+// text: wrapped in a new link, or only unquoted when it already sits inside one.
+const rewriteCodeSpan = (line: string, link: InboundLink): O.Option<string> =>
+  O.flatMap(
+    A.findFirst(knowledgeInlineSpans(line), (candidate) => candidate.span === link.destination),
     (match) => {
       const start = match.column - 1;
-      const rest = Str.slice(start)(line);
-      const run = O.getOrElse(
-        O.flatMap(Str.match(OPENING_BACKTICK_RUN)(rest), (found) => O.fromUndefinedOr(found[0])),
+      const opening = Str.slice(start)(line);
+      const delimiter = O.getOrElse(
+        O.flatMap(Str.match(OPENING_BACKTICKS)(opening), (run) => O.fromUndefinedOr(run[0])),
         () => "`"
       );
-      const closing = O.getOrElse(Str.indexOf(run)(Str.slice(Str.length(run))(rest)), () => 0);
-      const after = Str.slice(Str.length(run) + closing + Str.length(run))(rest);
-      return `${Str.slice(0, start)(line)}[${link.destination}](${link.rewrittenTo})${after}`;
+      const contentStart = Str.length(delimiter);
+      return O.map(Str.indexOf(delimiter)(Str.slice(contentStart)(opening)), (closing) => {
+        const before = Str.slice(0, start)(line);
+        const after = Str.slice(contentStart + closing + contentStart)(opening);
+        const insideLinkText =
+          O.isSome(Str.match(OPEN_LINK_TEXT)(before)) && O.isSome(Str.match(CLOSE_LINK_TEXT)(after));
+        return insideLinkText
+          ? `${before}${link.destination}${after}`
+          : `${before}[${link.destination}](${link.rewrittenTo})${after}`;
+      });
     }
   );
 
-// One citation's line, rewritten at its parsed column; `None` when the line no longer carries it
-// (the file changed after the plan was computed).
+// One reference's line, rewritten at its parsed column; `None` when the line no longer carries that
+// reference (the file changed after the plan was computed).
 const rewriteLine = (lines: ReadonlyArray<string>, link: InboundLink): O.Option<ReadonlyArray<string>> =>
   pipe(
     A.get(lines, link.line - 1),
-    O.flatMap((line) =>
-      InboundLinkForm.is["inline-code"](link.form)
-        ? rewriteInlineCitation(line, link)
-        : rewriteLinkDestination(line, link)
-    ),
+    O.flatMap((line) => (link.form === "link" ? rewriteLinkDestination(line, link) : rewriteCodeSpan(line, link))),
     O.flatMap((next) => A.replace(lines, link.line - 1, next))
   );
 
 /**
- * Rewrite the inbound links of one document's text, line-exact, by replacing
- * each link destination at its parsed column.
+ * Rewrite the inbound references of one document's text, line-exact: a link
+ * destination is replaced at its parsed column, and a code-span citation
+ * becomes plain link text.
  *
  * **Example** (Rewrite one link)
  *
@@ -966,7 +966,7 @@ const rewriteLine = (lines: ReadonlyArray<string>, link: InboundLink): O.Option<
  * import { rewriteLinksInText } from "@beep/repo-cli/commands/Goals/ArchiveExecution.service"
  * import * as Result from "effect/Result"
  *
- * const link = InboundLink.make({ file: "a.md", line: 1, form: "link", destination: "x.md", rewrittenTo: "https://e/x.md" })
+ * const link = InboundLink.make({ file: "a.md", line: 1, destination: "x.md", form: "link", rewrittenTo: "https://e/x.md" })
  * console.log(Result.getOrThrow(rewriteLinksInText("see [x](x.md)", [link]))) // "see [x](https://e/x.md)"
  * ```
  *
@@ -1010,7 +1010,7 @@ const rewriteFile = Effect.fnUntraced(function* (
         "tombstone-conflict",
         null,
         file,
-        `line ${link.line} no longer links ${link.destination}; recompute the plan`
+        `line ${link.line} no longer references ${link.destination}; recompute the plan`
       )
     )
   );

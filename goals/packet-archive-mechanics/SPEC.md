@@ -139,18 +139,6 @@ Lane `codex/cache-archive-consumer-repair-20261107`
 
 Reverse: Restore the previous consumer locators and remove the seven promoted fixtures only after another retained runtime owner is supplied; keep the full packet archive intact.
 
-### Archive rewrites inline-code citations and drops code spans from rewritten link text, 2026-11-08
-
-Batch 1 (#2834) and batch 2 (#2968) both reached Heavy / Lint Policy with introduced `knowledge:semantic-delta` findings: 30 and 54. The planner and rewriter read only Markdown link destinations, so plain inline-code citations of removed files were never repointed. Links they did rewrite kept a code span as link text, and the doctor reads that span as a tracked path. Generated tombstone READMEs also listed capability ids such as goals/graph in code spans, which read as repo paths.
-
-The plan now carries an `InboundLinkForm`. Markdown documents contribute plain inline-code citations, including directories the tombstone keeps nothing under. The rewriter emits a link with plain text in both forms, and tombstones list capability ids as plain text.
-
-Citations already on `main` from batch 1 are unchanged; they stay baseline findings. The plan is recomputed per run and receipts do not embed links, so no persisted data needs migrating. Friction receipt: each batch otherwise repeats a hand repoint after hosted Lint Policy reports it.
-
-Lane `fix/archive-inbound-citations`
-
-Reverse: Revert this PR; the planner returns to Markdown link destinations only and tombstones render Provides in code spans again.
-
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

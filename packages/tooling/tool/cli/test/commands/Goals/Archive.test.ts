@@ -23,7 +23,6 @@ import { ArchiveError } from "@beep/repo-cli/commands/Goals/Goals.errors";
 import { decodeGoalManifest } from "@beep/repo-cli/commands/Goals/Goals.schemas";
 import { GoalPacketRecord } from "@beep/repo-cli/commands/Goals/Inventory";
 import { GoalManifestFormatter } from "@beep/repo-cli/commands/Goals/Manifest.service";
-import { knowledgeInlineSpans } from "@beep/repo-cli/commands/Knowledge/Knowledge.refs";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
@@ -143,22 +142,21 @@ const FIXTURE: ReadonlyArray<readonly [string, string]> = [
   ["explorations/gone/BRIEF.md", "# Brief\n"],
   ["explorations/gone/RESEARCH.md", "# Research\n"],
   ["explorations/open/ops/manifest.json", explorationManifest("open", "active")],
-  ["goals/done/assets/figure.md", "# Figure\n"],
+  ["docs/guide.md", GUIDE],
   [
     "docs/citations.md",
     A.join(
       [
-        "Plan in `goals/done/PLAN.md`.",
-        "[`goals/done/SPEC.md`](../goals/done/SPEC.md)",
-        "Figures in `goals/done/assets`.",
-        "Friction stays in `goals/done/research`.",
-        "Run `bun run beep goals/done/PLAN.md`.",
+        "Bare `goals/done/PLAN.md#p1` and `bun run beep goals/done/PLAN.md` and `goals/done/README.md`.",
+        "Wrapped [`goals/done/SPEC.md`](../goals/done/SPEC.md) and [see `goals/done/SPEC.md` here](https://e/s).",
+        "```md",
+        "`goals/done/SPEC.md`",
+        "```",
         "",
       ],
       "\n"
     ),
   ],
-  ["docs/guide.md", GUIDE],
 ];
 
 const git = Effect.fn("ArchiveTest.git")(function* (root: string, args: ReadonlyArray<string>) {
@@ -389,6 +387,18 @@ describe("goals archive", () => {
   });
 
   it.layer(TestLayer, { timeout: "60 seconds" })((it) => {
+    it("rewrites code-span citations as plain link text", () => {
+      const span = (destination: string) =>
+        InboundLink.make({ file: "a.md", line: 1, destination, form: "code-span", rewrittenTo: "https://e/x.md" });
+      const rewrite = (text: string) => Result.getOrThrow(rewriteLinksInText(text, [span("x.md")]));
+      assert.strictEqual(rewrite("see `x.md` now"), "see [x.md](https://e/x.md) now");
+      assert.strictEqual(rewrite("see ``x.md`` now"), "see [x.md](https://e/x.md) now");
+      assert.strictEqual(rewrite("[`x.md`](https://old/x.md)"), "[x.md](https://old/x.md)");
+      assert.strictEqual(rewrite("[see `x.md` here](https://old/x.md)"), "[see x.md here](https://old/x.md)");
+      assert.strictEqual(rewrite("[a](b) `x.md` [c](d)"), "[a](b) [x.md](https://e/x.md) [c](d)");
+      assert.isTrue(Result.isFailure(rewriteLinksInText("no citation", [span("x.md")])));
+    });
+
     it.effect("plans terminal packets in index order with keep/remove partitions and inbound links", () =>
       Effect.gen(function* () {
         const root = yield* makeFixtureRepo();
@@ -421,12 +431,7 @@ describe("goals archive", () => {
                 "goals/done/ops/manifest.json",
                 "goals/done/research/OPPORTUNITIES.md",
               ],
-              remove: [
-                "goals/done/PLAN.md",
-                "goals/done/SPEC.md",
-                "goals/done/assets/figure.md",
-                "goals/done/research/notes.md",
-              ],
+              remove: ["goals/done/PLAN.md", "goals/done/SPEC.md", "goals/done/research/notes.md"],
               links: [
                 [
                   "docs/citations.md",
@@ -437,10 +442,21 @@ describe("goals archive", () => {
                 [
                   "docs/citations.md",
                   1,
-                  "goals/done/PLAN.md",
-                  `https://github.com/${REPO}/blob/main/goals/done/PLAN.md`,
+                  "goals/done/PLAN.md#p1",
+                  `https://github.com/${REPO}/blob/main/goals/done/PLAN.md#p1`,
                 ],
-                ["docs/citations.md", 3, "goals/done/assets", `https://github.com/${REPO}/blob/main/goals/done/assets`],
+                [
+                  "docs/citations.md",
+                  2,
+                  "goals/done/SPEC.md",
+                  `https://github.com/${REPO}/blob/main/goals/done/SPEC.md`,
+                ],
+                [
+                  "docs/citations.md",
+                  2,
+                  "goals/done/SPEC.md",
+                  `https://github.com/${REPO}/blob/main/goals/done/SPEC.md`,
+                ],
                 [
                   "docs/guide.md",
                   3,
@@ -696,6 +712,18 @@ describe("goals archive", () => {
         );
         assertTrue(Str.includes("[fenced](../goals/done/SPEC.md)")(guide));
 
+        // Citations leave as plain link text; commands, kept files and fenced text stay.
+        const citations = yield* readText(root, "docs/citations.md");
+        const blob = `https://github.com/${REPO}/blob/main/goals/done`;
+        assert.deepStrictEqual(Str.split(citations, "\n"), [
+          `Bare [goals/done/PLAN.md#p1](${blob}/PLAN.md#p1) and \`bun run beep goals/done/PLAN.md\` and \`goals/done/README.md\`.`,
+          `Wrapped [goals/done/SPEC.md](${blob}/SPEC.md) and [see goals/done/SPEC.md here](https://e/s).`,
+          "```md",
+          "`goals/done/SPEC.md`",
+          "```",
+          "",
+        ]);
+
         // Receipt, and archived packets leave the next plan.
         const receiptWritten = yield* existsAll(root, [`.beep/archive/receipts/${plan.planId}.json`]);
         assert.deepStrictEqual(receiptWritten, [true]);
@@ -765,59 +793,5 @@ describe("goals archive", () => {
         assert.strictEqual(status, "");
       })
     );
-  });
-
-  describe("rewriteLinksInText citation forms", () => {
-    const url = "https://e/goals/done/PLAN.md";
-    const rewritten = (text: string, form: "link" | "inline-code", destination: string, count = 1) =>
-      rewriteLinksInText(
-        text,
-        A.makeBy(count, () => InboundLink.make({ file: "a.md", line: 1, form, destination, rewrittenTo: url }))
-      );
-
-    it("turns a plain code span into a link with plain text", () => {
-      assert.deepStrictEqual(
-        rewritten("see `goals/done/PLAN.md` first", "inline-code", "goals/done/PLAN.md"),
-        Result.succeed(`see [goals/done/PLAN.md](${url}) first`)
-      );
-    });
-
-    it("rewrites a repeated span once per planned citation", () => {
-      assert.deepStrictEqual(
-        rewritten("`goals/done/PLAN.md` and `goals/done/PLAN.md`", "inline-code", "goals/done/PLAN.md", 2),
-        Result.succeed(`[goals/done/PLAN.md](${url}) and [goals/done/PLAN.md](${url})`)
-      );
-    });
-
-    it("closes a double-backtick span on its matching run", () => {
-      assert.deepStrictEqual(
-        rewritten("see ``goals/done/PLAN.md`` first", "inline-code", "goals/done/PLAN.md"),
-        Result.succeed(`see [goals/done/PLAN.md](${url}) first`)
-      );
-    });
-
-    it("drops the code span from the link text of a rewritten link", () => {
-      assert.deepStrictEqual(
-        rewritten("[`goals/done/PLAN.md`](../goals/done/PLAN.md)", "link", "../goals/done/PLAN.md"),
-        Result.succeed(`[goals/done/PLAN.md](${url})`)
-      );
-    });
-
-    it("keeps prose link text unchanged", () => {
-      assert.deepStrictEqual(
-        rewritten("[the plan](../goals/done/PLAN.md)", "link", "../goals/done/PLAN.md"),
-        Result.succeed(`[the plan](${url})`)
-      );
-    });
-
-    it("leaves no span for the knowledge doctor to read as a tracked path", () => {
-      const output = rewritten("`goals/done/PLAN.md`", "inline-code", "goals/done/PLAN.md");
-      assert.deepStrictEqual(output.pipe(Result.map(knowledgeInlineSpans)), Result.succeed([]));
-    });
-
-    it("fails when the line no longer carries the span", () => {
-      const output = rewritten("nothing here", "inline-code", "goals/done/PLAN.md");
-      assertTrue(output.pipe(Result.isFailure));
-    });
   });
 });

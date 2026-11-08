@@ -258,36 +258,37 @@ export const ArchivePlanId = S.String.check(
 export type ArchivePlanId = typeof ArchivePlanId.Type;
 
 /**
- * How a document cites a removed packet path: a Markdown `link` destination,
- * or a plain `inline-code` span with no link around it.
+ * How an inbound reference is written: a Markdown link destination, or an
+ * inline code span citing the path.
  *
- * **Example** (Recognize a citation form)
+ * **Example** (Validate a form)
  *
  * ```ts
  * import { InboundLinkForm } from "@beep/repo-cli/commands/Goals/Archive.schemas"
+ * import * as S from "effect/Schema"
  *
- * console.log(InboundLinkForm.is["inline-code"]("inline-code")) // true
+ * console.log(S.is(InboundLinkForm)("code-span")) // true
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const InboundLinkForm = LiteralKit(["link", "inline-code"]).pipe(
+export const InboundLinkForm = LiteralKit(["link", "code-span"]).pipe(
   $I.annoteSchema("InboundLinkForm", {
-    description: "Whether an inbound citation is a Markdown link destination or a plain inline-code span.",
+    description: "Whether an inbound reference is a Markdown link destination or an inline code span.",
   })
 );
 
 /**
- * How a document cites a removed packet path.
+ * Runtime type of {@link InboundLinkForm}.
  *
- * @category type-level
+ * @category models
  * @since 0.0.0
  */
 export type InboundLinkForm = typeof InboundLinkForm.Type;
 
 /**
- * One citation of a file the archive will remove from `main`, and the archive
+ * One link into a file the archive will remove from `main`, and the archive
  * URL it is rewritten to.
  *
  * **Example** (Construct an inbound link)
@@ -298,8 +299,8 @@ export type InboundLinkForm = typeof InboundLinkForm.Type;
  * const link = InboundLink.make({
  *   file: "docs/README.md",
  *   line: 3,
- *   form: "link",
  *   destination: "../goals/demo/PLAN.md",
+ *   form: "link",
  *   rewrittenTo: "https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/demo/PLAN.md",
  * })
  * console.log(link.line) // 3
@@ -312,12 +313,13 @@ export class InboundLink extends S.Opaque<InboundLink, { readonly brand: unique 
   S.Struct({
     file: S.String,
     line: S.Int.check(S.isGreaterThanOrEqualTo(1)),
-    form: InboundLinkForm,
     destination: S.String,
+    form: InboundLinkForm,
     rewrittenTo: S.String,
   }).pipe(
     $I.annoteSchema("InboundLink", {
-      description: "A citation from a file outside the packet of a removed packet path, with its archive blob URL.",
+      description:
+        "A link or code-span citation from a file outside the packet into a removed packet file, with its archive blob URL.",
     })
   )
 ) {}
