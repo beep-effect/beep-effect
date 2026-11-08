@@ -194,7 +194,8 @@ const renderBlock = (source: ts.SourceFile, text: string, block: DeclarationBloc
           `| ${row.line} | \`${cell(row.symbol)}\` | ${row.kind} | ${cell(O.getOrElse(row.category, () => "-"))} | ${cell(O.getOrElse(row.since, () => "-"))} | ${rowNotes(row)} |`
       ),
       "",
-      `${fence}ts`,
+      // Source excerpts cite names from the rest of their module, so they cannot compile as standalone fences.
+      `${fence}ts skip-type-checking`,
       code,
       fence,
       "",

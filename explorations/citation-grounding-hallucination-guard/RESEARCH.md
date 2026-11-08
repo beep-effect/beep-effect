@@ -224,7 +224,7 @@ rather than rebuilding them. All paths verified via `rg`/`ls` on 2026-06-29.
 
 - **`@beep/courtlistener` driver** — deleted 2026-08-13 (was a VERSION-only
   MIT skeleton). Recreate when this packet's citation-lookup wrap is pulled;
-  see [`goals/honest-repo-signal/research/FOLLOW-UPS.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/honest-repo-signal/research/FOLLOW-UPS.md).
+  see [goals/honest-repo-signal/research/FOLLOW-UPS.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/honest-repo-signal/research/FOLLOW-UPS.md).
   (Tree-snapshot routed the driver to `gov-legal-data-driver-codegen`; the
   citation-lookup slice stays here.)
 - **`@beep/anthropic` driver** — `packages/drivers/anthropic/src/`. The LLM driver to wire the

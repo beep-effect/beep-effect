@@ -119,7 +119,7 @@ stale, malformed-unit, or cross-matter fixture fails closed.
   `ClaimLifecycle` public surfaces under `packages/epistemic/` and
   `packages/shared/domain/src/values/ClaimLifecycle/`.
 - **Optional hosted home:** recreate `@beep/courtlistener` from
-  `goals/honest-repo-signal/research/FOLLOW-UPS.md` if a product pull needs
+  [goals/honest-repo-signal/research/FOLLOW-UPS.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/honest-repo-signal/research/FOLLOW-UPS.md) if a product pull needs
   the hosted lookup wrap. It is not in the tree today.
 
 ### Honest NET-NEW work

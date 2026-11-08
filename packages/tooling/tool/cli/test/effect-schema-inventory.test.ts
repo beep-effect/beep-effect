@@ -536,7 +536,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Git.layer.pipe(Lay
       });
       assertInclude(prompt, "export function a(x: unknown): string {\n  return `${x}`\n}");
       assertInclude(prompt, "**Example** (Format)");
-      assertInclude(prompt, "````ts\n/**\n * Formats a value.");
+      assertInclude(prompt, "````ts skip-type-checking\n/**\n * Formats a value.");
       assertInclude(prompt, "const local = 1");
     })
   );

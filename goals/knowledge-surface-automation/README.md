@@ -17,10 +17,10 @@ No closeout record.
 
 ## Provides
 
-- `knowledge/doctor`
-- `skills/warehouse`
-- `goals/graph`
-- `goals/bootstrap`
+- knowledge/doctor
+- skills/warehouse
+- goals/graph
+- goals/bootstrap
 
 ## Headline finding
 

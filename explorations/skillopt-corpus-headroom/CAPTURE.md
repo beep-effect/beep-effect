@@ -10,7 +10,7 @@ dated heading at the bottom.
 ## 2026-10-01
 
 Evidence, from
-[`goals/harness-evidence-ledger/history/p4-rerun/FINDINGS.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/harness-evidence-ledger/history/p4-rerun/FINDINGS.md):
+[goals/harness-evidence-ledger/history/p4-rerun/FINDINGS.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/harness-evidence-ledger/history/p4-rerun/FINDINGS.md):
 
 - Baseline 0.9167 on four validation items with an Opus 5.5 rollout target.
 - Three baseline passes on identical inputs spread over 0.0833, so the largest

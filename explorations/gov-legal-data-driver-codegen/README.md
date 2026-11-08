@@ -28,7 +28,7 @@ is scaffolded at [`goals/gov-legal-mcp`](../../goals/gov-legal-mcp/README.md).
 
 **Trail (2026-08-13):** `@beep/courtlistener`, `@beep/dol`, and
 `@beep/federal-register` were deleted as empty scaffolds. Recreate from
-[`goals/honest-repo-signal/research/FOLLOW-UPS.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/honest-repo-signal/research/FOLLOW-UPS.md)
+[goals/honest-repo-signal/research/FOLLOW-UPS.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/honest-repo-signal/research/FOLLOW-UPS.md)
 when delivery resumes. `@beep/ecfr` is the remaining VERSION-only skeleton.
 
 ## Read This First

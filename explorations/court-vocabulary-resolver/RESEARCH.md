@@ -464,7 +464,7 @@ ported resolver. Verified via `ls`/`rg` on 2026-06-29.
 **Routing cautions.**
 
 - `@beep/courtlistener` was a **bare stub** and was deleted 2026-08-13.
-  Recreate the HTTP driver from `goals/honest-repo-signal/research/FOLLOW-UPS.md`
+  Recreate the HTTP driver from [goals/honest-repo-signal/research/FOLLOW-UPS.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/honest-repo-signal/research/FOLLOW-UPS.md)
   if a product pull needs it. This packet lands vocabulary + resolver only;
   it does not own the API client.
 - The span-gate, exact-name fallback, and parent/child reduction are
