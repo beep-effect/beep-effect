@@ -23,7 +23,21 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 2860,
+        "role": "supporting"
+      },
+      {
+        "number": 2902,
+        "role": "supporting"
+      },
+      {
+        "number": 2906,
+        "role": "supporting"
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -39,7 +53,9 @@
     "research/cache-baseline-request-pr1.json",
     "research/cache-baseline-request-pr1b.json",
     "research/cache-baseline-request-pr1c.json",
-    "research/cache-baseline-review-pr1.md"
+    "research/cache-baseline-request-pr2.json",
+    "research/cache-baseline-review-pr1.md",
+    "research/cache-baseline-review-pr2.md"
   ],
   "agentLaunchers": [
     {
@@ -61,17 +77,17 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",

@@ -1712,12 +1712,14 @@ describe("ciLaneStepsForTesting", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const repoRoot = yield* findRepoRoot();
-        const script = yield* fs.readFileString(path.join(repoRoot, "scripts/ci-change-profile.sh"));
+        const script = yield* fs.readFileString(
+          path.join(repoRoot, "packages/tooling/tool/cli/src/commands/Ci/CiOperational.service.ts")
+        );
         const workflow = yield* fs.readFileString(path.join(repoRoot, ".github/workflows/storybook.yml"));
         expect(script).not.toContain("storybook_relevant");
         expect(script).not.toContain("storybook_pattern");
         expect(workflow).not.toContain("storybook_relevant");
-        expect(workflow).toContain('eval "$(scripts/ci-change-profile.sh');
+        expect(workflow).toContain('eval "$(beep ci change-profile)"');
         expect(workflow).toContain('if [[ "$docs_only" == "true" ]]; then');
         expect(workflow).toContain('shape_args+=(--affected --base "origin/${GITHUB_BASE_REF:-main}")');
         expect(workflow).toContain('run_lane ci lane storybook "${shape_args[@]}"');
