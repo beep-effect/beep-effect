@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "cache-accepted-observation-preparation/v1",
+  "authority": "Accepted source and bounded dispatch evidence only; no computation qualification, deployed trust readiness or elapsed rollout observation.",
+  "observedAt": "2026-11-08T02:49:06.056728+00:00",
+  "sourceRevision": "6b49badf353221e332f6c99cdbeaf9500de0e400",
+  "implementationPullRequests": [
+    {
+      "number": 2849,
+      "state": "MERGED",
+      "head": "a4b711fdedef74959cec1a89083c0955e0b739eb",
+      "unresolvedThreadsAtInspection": 0
+    },
+    {
+      "number": 2850,
+      "state": "MERGED",
+      "head": "efb4dabae8fa83470149861602d07f99458fea77",
+      "unresolvedThreadsAtInspection": 0
+    },
+    {
+      "number": 2871,
+      "state": "MERGED",
+      "head": "c32749abe626e2b0f75b4b4d654707f3ffb0c21a",
+      "unresolvedThreadsAtInspection": 0
+    },
+    {
+      "number": 2873,
+      "state": "MERGED",
+      "head": "b7727d8c34957669fff77036ea17d7ae67927139",
+      "unresolvedThreadsAtInspection": 0
+    }
+  ],
+  "sourceInputs": {
+    ".github/workflows/cache-local-observe.yml": "a74b81235ba08faafe5f90226a8b66f9c8bdc150c2c0e50118453e7fbea2f662",
+    ".github/workflows/heavy.yml": "665e4449a184ece171103658bac2312511004918b1003c1beb01d3638e936010",
+    ".github/actions/setup-monorepo-ci/action.yml": "4f96ddfcca093260f6062c00ac5bf3474fd7bb7d207591185d9e74f00a570652",
+    "packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts": "babf9a1b52f45850058954d861385011e925dc8aa04e0e00665684a7ae47226b",
+    "packages/tooling/tool/cli/src/commands/Ci/CiBootstrap.command.ts": "f5bb2e00631997385627c301f75f02378050772e15fc6f26daf3dd434f86dcf7",
+    "packages/tooling/tool/cli/src/commands/Ci/CiCachePilotInputs.ts": "91a921541980a9ad88713909ba92f7877930977eae0f203a85494116976e87b4",
+    "packages/tooling/tool/cli/src/commands/Ci/CiCachePilotHost.ts": "966fbe183970c064ee905fe4895789756527b6f393e5d45623e07748ddb75137",
+    "packages/tooling/tool/cli/src/commands/Ci/CiCacheLocalSummary.ts": "d33e0d320d9cb4356edbde581bfa7247cb57c79e6d839d6030bf83709a283d9a",
+    "packages/tooling/tool/cli/src/commands/Ci/CiCachePilot.schemas.ts": "16d90224739f48fe60dd3f285620b5a8cda02aebd09410917afd9d6c561355a2",
+    "goals/turborepo-quality-cache-adoption/research/errors-only-client-pins.json": "b98316567400a2323e0868b8558fb9250d7ceb5fd2e2af7354782e5bc8803c6d",
+    "packages/foundation/primitive/types/turbo.json": "06e627058b8867187be271aa6ca71ce0d487ba42d2260feb0864212dd6a486c6"
+  },
+  "observation": {
+    "runId": 42440013986,
+    "url": "https://github.com/beep-effect/beep-effect/actions/runs/42440013986",
+    "channel": "stable",
+    "computation": "@beep/types#lint",
+    "status": "dispatched-result-pending",
+    "bounds": {
+      "runnerJobsAtOnce": 1,
+      "jobMinutes": 20,
+      "nativeSeconds": 900,
+      "publicSummaryBytes": 65536,
+      "retentionDays": 1
+    },
+    "protectedEnvironment": false,
+    "cacheIssuerApplicationCredentials": false,
+    "signingActivation": false,
+    "qualificationGranted": false
+  },
+  "limits": [
+    "The former shell and Python adapters have moved to the reviewed Effect CLI implementation on accepted main.",
+    "Merged implementation PRs passed their final Test Unit aggregates; coverage comparison still failed and is not waived.",
+    "Current-main source differs from older signed loopback sources; historical lab results do not establish current production readiness.",
+    "The 7-day nonproduction, 7-day named-cohort and 14-day broader windows remain unstarted."
+  ]
+}
