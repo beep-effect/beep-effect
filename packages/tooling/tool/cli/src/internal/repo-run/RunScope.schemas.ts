@@ -19,6 +19,34 @@ const RunScopeUnitName = S.String.pipe(
 );
 
 /**
+ * Canonical absolute cgroup-v2 membership or controller directory path.
+ *
+ * **Example** (Validate a nested controller path)
+ *
+ * ```ts
+ * import { RunScopeCgroupPath } from "@beep/repo-cli/test/RepoRun"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(RunScopeCgroupPath)("/user.slice/agent.slice")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const RunScopeCgroupPath = S.String.pipe(
+  S.check(S.isPattern(/^(?:\/|\/(?!\.{1,2}(?:\/|$))[^/\s\\]+(?:\/(?!\.{1,2}(?:\/|$))[^/\s\\]+)*)$/u)),
+  $I.annoteSchema("RunScopeCgroupPath", {
+    description: "Absolute cgroup path without escapes, empty components or traversal.",
+  })
+);
+
+/**
+ * Path represented by {@link RunScopeCgroupPath}.
+ * @category models
+ * @since 0.0.0
+ */
+export type RunScopeCgroupPath = typeof RunScopeCgroupPath.Type;
+
+/**
  * Availability state for systemd user-manager run scopes.
  *
  * **Example** (Recognize active support)

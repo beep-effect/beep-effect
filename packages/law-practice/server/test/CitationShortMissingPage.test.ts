@@ -52,7 +52,7 @@ const Capture = S.fromJsonString(
   })
 );
 
-it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true })(
+it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true, concurrent: false })(
   "original short-form missing pages",
   (it) => {
     it.effect("normalizes only underscore pages and preserves the raw token and other groups", () =>

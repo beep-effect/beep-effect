@@ -29,8 +29,11 @@ const proofMutations =
       token: () => [],
       "intrinsic-noun": () => [],
       boundary: () => [],
-      "label-boundary": () => [],
       "citation-boundary": () => [],
+      "label-boundary": (p) => [
+        ClaimFiniteSourceProof.cases["label-boundary"].make({ ...p, markers: [] }),
+        ClaimFiniteSourceProof.cases["label-boundary"].make({ ...p, item: -1 }),
+      ],
       "verbal-boundary": () => [],
       scope: (p) => [ClaimFiniteSourceProof.cases.scope.make({ ...p, extent: foreignQuote(p.extent) })],
       opening: (p) => [ClaimFiniteSourceProof.cases.opening.make({ ...p, coreStart: p.coreStart + 1 })],

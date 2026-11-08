@@ -24,7 +24,7 @@ import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtu
 import { readCitationSpanOffsetsCorpus } from "./CitationSpanOffsets.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
-it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true })(
+it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true, concurrent: false })(
   "original builtin SequenceMatcher",
   (it) => {
     it.effect(

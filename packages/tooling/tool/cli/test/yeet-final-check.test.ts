@@ -29,6 +29,7 @@ import {
   readYeetComputeProfile,
   resolveFinalCheckProfileSkips,
   rewrittenTestFiles,
+  routeFinalCheckStepsForProfile,
   runFinalCheckGatesForTesting,
   verifyExpectationRewrites,
   vitestReplayArgs,
@@ -372,6 +373,39 @@ describe("planFinalCheckSteps", () => {
     expect(planFinalCheckSteps(BASE, ["goals/x/ops/check.ts", "packages/a/src/a.ts"])("/repo")).toEqual(steps);
     const withoutFiles = planFinalCheckSteps("/repo", BASE, []);
     expect(A.some(withoutFiles, (step) => step.step.label === "final-check:lint:changed-files")).toBe(false);
+  });
+});
+
+describe("routeFinalCheckStepsForProfile", () => {
+  const planned = planFinalCheckSteps("/repo", BASE, []);
+  const repoSanityArgs = (steps: ReadonlyArray<FinalCheckPlannedStep>) =>
+    A.map(
+      A.filter(steps, (entry) => entry.gate === "repo-sanity"),
+      (entry) => entry.step.args
+    );
+  const runsCommand = (steps: ReadonlyArray<FinalCheckPlannedStep>, fragment: string) =>
+    A.some(steps, (entry) => Str.includes(fragment)(A.join(entry.step.args, " ")));
+
+  it("runs only the changeset status check for repo-sanity on worker", () => {
+    const routed = routeFinalCheckStepsForProfile({ planned, profile: "worker", forceLocal: false });
+
+    expect(repoSanityArgs(routed)).toEqual([["run", "beep", "quality", "changeset-status", "--since", "origin/main"]]);
+    expect(runsCommand(routed, "ci lane repo-sanity")).toBe(false);
+    expect(runsCommand(routed, "schema-catalog")).toBe(false);
+  });
+
+  it("leaves every other gate and the step identity unchanged on worker", () => {
+    const routed = routeFinalCheckStepsForProfile({ planned, profile: "worker", forceLocal: false });
+
+    expect(A.map(routed, (entry) => entry.step.label)).toEqual(A.map(planned, (entry) => entry.step.label));
+    expect(A.filter(routed, (entry) => entry.gate !== "repo-sanity")).toEqual(
+      A.filter(planned, (entry) => entry.gate !== "repo-sanity")
+    );
+  });
+
+  it("keeps the full lane on workstation and under --force-local", () => {
+    expect(routeFinalCheckStepsForProfile({ planned, profile: "workstation", forceLocal: false })).toEqual(planned);
+    expect(routeFinalCheckStepsForProfile({ planned, profile: "worker", forceLocal: true })).toEqual(planned);
   });
 });
 

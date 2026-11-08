@@ -82,3 +82,9 @@
 - The headless vault gate never reached its manual form: zenity exits non-zero without a
   display, which the picker reads as "cancelled". QA hid zenity and kdialog from the sidecar
   PATH to get the documented fallback.
+
+## Final PR hand-merged while held (2026-11-08)
+
+- Doing: holding STRICT final #2933 for ep58, with a DO-NOT-MERGE-before-the-gate line first in its body and the hold posted to the orchestrator.
+- Evidence: it was hand-merged at 08:26:29Z. `goals completion refresh` then printed `unsatisfied` ("the merge-push rule suite failed required status checks"; "declared verdict is not a publish result"). A body line does not stop a human merge, and the PR had also left draft before its last step.
+- Would have prevented it: a ruleset-enforced hold for a goal final, such as a required `yeet-verdict` status posted only after `merge-ready: yes`.
