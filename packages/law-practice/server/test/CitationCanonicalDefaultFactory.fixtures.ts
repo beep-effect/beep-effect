@@ -32,6 +32,7 @@ import * as S from "effect/Schema";
 import { readCitationCanonicalCaptures } from "./CitationCanonicalCaptures.fixtures.ts";
 import { compareCitationCanonicalModel } from "./CitationCanonicalModel.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
+import { readCitationOracleFixture } from "./CitationRegexWorker.fixtures.ts";
 
 const profiles = [
   { family: "case", reporter: "U.S.", factory: "case_citation", line: 48 },
@@ -39,7 +40,7 @@ const profiles = [
   { family: "law", reporter: "Mass. Gen. Laws", factory: "law_citation", line: 71 },
 ] as const;
 const Value = S.Struct({ kind: S.tag("value"), value: S.JsonObject });
-const Equal = S.Struct({ kind: S.tag("comparison"), equal: S.tag(true) });
+const Equal = S.Struct({ kind: S.tag("comparison"), equal: S.Boolean });
 const Criterion = S.Struct({
   context: S.Struct({ values: S.JsonObject }),
   operands: S.Tuple([Value, Value]),
@@ -74,12 +75,25 @@ const installFactory = Effect.fn("CanonicalDefaultFactoryTest.install")(function
       return { reference: CitationEditionRef.make(row.ref), name: value.fields.short_name };
     })
   );
-  const create = Effect.fn("CanonicalDefaultFactoryTest.create")(function* (profile: (typeof profiles)[number]) {
+  const create = Effect.fn("CanonicalDefaultFactoryTest.create")(function* (
+    profile: (typeof profiles)[number],
+    override?: {
+      readonly reporter: string;
+      readonly reference: CitationEditionRef;
+      readonly volume: string;
+      readonly page: string;
+    }
+  ) {
     const candidates = A.filter(names, (row) => row.name === profile.reporter);
     // Every default used here has one exact named edition, so original [0]
     // selection is unambiguous without borrowing an assertion's edition guess.
     expect(candidates).toHaveLength(1);
-    const reference = A.getUnsafe(candidates, 0).reference;
+    const { reference, reporter, volume, page } = override ?? {
+      reference: A.getUnsafe(candidates, 0).reference,
+      reporter: profile.reporter,
+      volume: "1",
+      page: "1",
+    };
     yield* readCitationFrozenEdition(owner, reference);
     const publication = { editions: [reference], selectedEdition: reference };
     if (profile.family === "law")
@@ -89,7 +103,7 @@ const installFactory = Effect.fn("CanonicalDefaultFactoryTest.install")(function
         publication,
         metadata: { ...common, publisher: null },
       });
-    const components = { reporter: profile.reporter, volume: "1", page: "1" };
+    const components = { reporter, volume, page };
     if (profile.family === "journal")
       return yield* S.decodeEffect(FullJournalCitation)({ type: "journal", components, publication, metadata: common });
     const identity = yield* vocabulary.lookup(reference, "case");
@@ -104,7 +118,10 @@ const installFactory = Effect.fn("CanonicalDefaultFactoryTest.install")(function
       },
       metadata: {
         ...common,
-        court: { status: "known", id: "scotus", vocabularyVersion: vocabulary.vocabularyVersion },
+        court:
+          reporter === "U.S."
+            ? { status: "known", id: "scotus", vocabularyVersion: vocabulary.vocabularyVersion }
+            : null,
         plaintiff: null,
         defendant: null,
         additionalText: null,
@@ -156,7 +173,9 @@ export const replayCitationCanonicalDefaultFactory = Effect.fn("CanonicalDefault
   const factory = yield* installFactory();
   const read = Effect.fn("CanonicalDefaultFactoryTest.read")(function* (id: string) {
     const event = yield* Effect.fromOption(HashMap.get(assertions, id));
-    return yield* S.decodeEffect(Criterion)(event.payload);
+    const criterion = yield* S.decodeEffect(Criterion)(event.payload);
+    expect(criterion.relation.equal).toBe(true);
+    return criterion;
   });
   for (const [index, profile] of profiles.entries()) {
     const prefix = "tests.test_ModelsTest.ModelsTest.test_citation_comparison::tests/test_ModelsTest.py:";
@@ -194,4 +213,65 @@ export const replayCitationCanonicalDefaultFactory = Effect.fn("CanonicalDefault
   const expected = yield* integerOperands(resource);
   expect(expected[0]).toBe(expected[1]);
   expect(hashes.resourceHash, resourceId).toBe(expected[1]);
+});
+
+/** Replay the original known-page reporter alias and different-reporter comparisons.
+ * Ordered lookup inputs are captured independently of assertion outputs. Mock
+ * token/source protocols and identity-backed comparisons remain separate.
+ * @internal @category testing @since 0.0.0
+ */
+export const replayCitationCanonicalFactoryReporters = Effect.fn("CanonicalDefaultFactoryTest.reporters")(function* () {
+  const { assertions } = yield* readCitationCanonicalCaptures();
+  const factory = yield* installFactory();
+  const lookupText = yield* readCitationOracleFixture(
+    "factory-edition-lookup",
+    "1928ebe541398558a262096d59ccc14ada65309e0d39fb34ced939bec36d2c91"
+  );
+  const lookup = yield* S.decodeEffect(
+    S.Struct({
+      schemaVersion: S.tag("citation-factory-edition-lookup/v1"),
+      oracleCommit: S.tag("04d82c032ad5fd0f9ab72a61c87110c46ee8f52e"),
+      rows: S.Array(S.Struct({ reporter: S.String, editions: S.Array(CitationEditionRef) })),
+    }).pipe(S.fromJsonString)
+  )(lookupText);
+  const cohorts = [
+    { name: "corrected_reporter", lines: [74, 75], reporters: ["U.S.", "U. S."], equal: true },
+    { name: "different_reporter", lines: [122, 123], reporters: ["F. Supp.", "U. S."], equal: false },
+  ] as const;
+  for (const cohort of cohorts) {
+    const prefix = `tests.test_ModelsTest.ModelsTest.test_citation_comparison_with_${cohort.name}::tests/test_ModelsTest.py:`;
+    const events = yield* Effect.forEach(
+      cohort.lines,
+      Effect.fnUntraced(function* (line) {
+        const event = yield* Effect.fromOption(HashMap.get(assertions, `${prefix}${line}:8:caseDeclaration::1`));
+        return yield* S.decodeEffect(Criterion)(event.payload);
+      })
+    );
+    const equality = A.getUnsafe(events, 0);
+    const context = yield* S.decodeUnknownEffect(
+      S.Struct({ citations: S.Array(S.JsonObject).check(S.isBetweenLength(2, 2)) })
+    )(equality.context.values);
+    const models = yield* Effect.forEach(
+      cohort.reporters,
+      Effect.fnUntraced(function* (reporter) {
+        const choices = A.filter(lookup.rows, (row) => row.reporter === reporter);
+        expect(choices).toHaveLength(1);
+        // Preserve source lookup order and select [0], including duplicate aliases.
+        const reference = A.getUnsafe(A.getUnsafe(choices, 0).editions, 0);
+        return yield* factory.create(profiles[0], { reporter, reference, volume: "2", page: "4" });
+      })
+    );
+    yield* Effect.forEach(models, (model, i) =>
+      compareCitationCanonicalModel(model, A.getUnsafe(context.citations, i), cohort.name)
+    );
+    expect(A.map(equality.operands, (operand) => operand.value)).toEqual(context.citations);
+    const hashes = yield* Effect.forEach(models, factory.hash);
+    expect(equality.relation.equal).toBe(cohort.equal);
+    expect(A.getUnsafe(hashes, 0).citationHash === A.getUnsafe(hashes, 1).citationHash).toBe(cohort.equal);
+    const hashEvent = A.getUnsafe(events, 1);
+    expect(hashEvent.context.values.citations).toEqual(context.citations);
+    expect(hashEvent.relation.equal).toBe(cohort.equal);
+    const expectedHashes = yield* integerOperands(hashEvent);
+    expect(A.map(hashes, (hash) => hash.citationHash)).toEqual(expectedHashes);
+  }
 });
