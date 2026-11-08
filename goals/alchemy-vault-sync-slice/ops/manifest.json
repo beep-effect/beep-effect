@@ -23,7 +23,76 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/goals_vault-sync-observability-cf23a74eea12/verdict.json",
+        "gating": true
+      }
+    ],
+    "pullRequests": [
+      {
+        "number": 2810,
+        "role": "supporting"
+      },
+      {
+        "number": 2825,
+        "role": "supporting"
+      },
+      {
+        "number": 2861,
+        "role": "supporting"
+      },
+      {
+        "number": 2863,
+        "role": "supporting"
+      },
+      {
+        "number": 2886,
+        "role": "supporting"
+      },
+      {
+        "number": 2889,
+        "role": "supporting"
+      },
+      {
+        "number": 2894,
+        "role": "supporting"
+      },
+      {
+        "number": 2898,
+        "role": "supporting"
+      },
+      {
+        "number": 2899,
+        "role": "supporting"
+      },
+      {
+        "number": 2903,
+        "role": "supporting"
+      },
+      {
+        "number": 2907,
+        "role": "supporting"
+      },
+      {
+        "number": 2911,
+        "role": "supporting"
+      },
+      {
+        "number": 2914,
+        "role": "supporting"
+      },
+      {
+        "number": 2916,
+        "role": "supporting"
+      },
+      {
+        "number": 2933,
+        "role": "final"
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
