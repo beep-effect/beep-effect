@@ -2279,6 +2279,31 @@ const finalizeAdmissionTicket = Effect.fnUntraced(function* (
   ).pipe(Effect.catch(warnAdmissionJournalError));
 });
 
+// On a worker host a hosted-only gate is refused unless the caller forced a
+// local run or the request carries the hosted posture (hosted runners are
+// posture `hosted`, never refused, D5). Pure, so the admission entry stays flat.
+const workerProfileRefusal = (
+  request: AdmissionRequest,
+  ceilingGib: number,
+  envelopeGib: number
+): O.Option<ComputeProfileRefusal> => {
+  const hostedPosture = O.exists(request.envProfile, (profile) => profile === "hosted");
+  if (request.forceLocal || hostedPosture) return O.none();
+  return O.filter(request.gateRoute, (gate) => gateRouteFor(gate, "worker") === "hosted-only").pipe(
+    O.map((gate) =>
+      ComputeProfileRefusal.make({
+        gate,
+        ceilingGib,
+        envelopeGib,
+        message: `[yeet] admission: ${gate} is hosted-only on compute-profile=worker (ceiling ${Num.round(ceilingGib, 1)} GiB < envelope ${envelopeGib} GiB). Push first and let hosted CI prove it: bun run beep yeet open --body-file <md>. Pass --force-local to run it here anyway.`,
+      })
+    )
+  );
+};
+
+const workerBypassLine = (request: AdmissionRequest): string =>
+  `[yeet] admission: compute-profile=worker${request.forceLocal ? " force-local=true" : ""}; coordinating ${request.kind} through the origin gate only`;
+
 /**
  * Run one unit of heavy repository work under machine-wide weighted admission.
  *
@@ -2356,26 +2381,19 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
     Effect.mapError((cause) => QualitySchedulerError.make({ message: cause.message, cause }))
   );
   if (computeProfile.profile === "worker") {
-    const hostedOnlyGate = O.filter(request.gateRoute, (gate) => gateRouteFor(gate, "worker") === "hosted-only");
-    // Hosted runners are posture `hosted`, never refused (D5).
-    const hostedPosture = O.exists(request.envProfile, (profile) => profile === "hosted");
-    if (O.isSome(hostedOnlyGate) && !request.forceLocal && !hostedPosture) {
-      const probedCeilingGib = O.getOrElse(computeProfile.ceilingGib, () => schedulableGib);
-      const refusal = ComputeProfileRefusal.make({
-        gate: hostedOnlyGate.value,
-        ceilingGib: probedCeilingGib,
-        envelopeGib,
-        message: `[yeet] admission: ${hostedOnlyGate.value} is hosted-only on compute-profile=worker (ceiling ${Num.round(probedCeilingGib, 1)} GiB < envelope ${envelopeGib} GiB). Push first and let hosted CI prove it: bun run beep yeet open --body-file <md>. Pass --force-local to run it here anyway.`,
-      });
+    const refusal = workerProfileRefusal(
+      request,
+      O.getOrElse(computeProfile.ceilingGib, () => schedulableGib),
+      envelopeGib
+    );
+    if (O.isSome(refusal)) {
       return yield* QualitySchedulerError.make({
-        message: refusal.message,
+        message: refusal.value.message,
         reason: "compute-profile-refusal",
-        refusal,
+        refusal: refusal.value,
       });
     }
-    yield* Console.log(
-      `[yeet] admission: compute-profile=worker${request.forceLocal ? " force-local=true" : ""}; coordinating ${request.kind} through the origin gate only`
-    );
+    yield* Console.log(workerBypassLine(request));
     return yield* bypassAdmission(gate, use, resolved);
   }
   // Defensive fallback: a workstation profile below the envelope is impossible

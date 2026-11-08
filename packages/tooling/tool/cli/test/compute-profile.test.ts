@@ -8,10 +8,10 @@ import {
 } from "@beep/repo-cli/test/RepoRun";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import type { ComputeMemorySource } from "@beep/repo-cli/test/RepoRun";
@@ -48,7 +48,7 @@ describe("compute profile probe", () => {
       const resolution = yield* resolveComputeProfileWith(source(7 * GIB, 15 * GIB), ENVELOPE_GIB);
       expect(resolution.profile).toBe("worker");
       expect(resolution.source).toBe("probe");
-      expect(resolution.ceilingGib).toStrictEqual(O.some(7));
+      assertSome(resolution.ceilingGib, 7);
       expect(resolution.envelopeGib).toBe(ENVELOPE_GIB);
     }).pipe(withOverride({}))
   );
@@ -64,11 +64,11 @@ describe("compute profile probe", () => {
   it.effect("treats the 2^64 uncapped sentinel as no ceiling and uses installed memory", () =>
     Effect.gen(function* () {
       const capped = source(2 ** 64, 15 * GIB);
-      expect(memoryCeilingGib(capped)).toStrictEqual(O.some(15));
-      expect(constrainedCeilingGib(capped)).toStrictEqual(O.none());
+      assertSome(memoryCeilingGib(capped), 15);
+      assertNone(constrainedCeilingGib(capped));
       const resolution = yield* resolveComputeProfileWith(capped, ENVELOPE_GIB);
       expect(resolution.profile).toBe("worker");
-      expect(resolution.ceilingGib).toStrictEqual(O.some(15));
+      assertSome(resolution.ceilingGib, 15);
     }).pipe(withOverride({}))
   );
 
@@ -77,7 +77,7 @@ describe("compute profile probe", () => {
       const resolution = yield* resolveComputeProfileWith(source(undefined, 0), ENVELOPE_GIB);
       expect(resolution.profile).toBe("workstation");
       expect(resolution.source).toBe("unavailable");
-      expect(resolution.ceilingGib).toStrictEqual(O.none());
+      assertNone(resolution.ceilingGib);
     }).pipe(withOverride({}))
   );
 
@@ -86,7 +86,7 @@ describe("compute profile probe", () => {
       const resolution = yield* resolveComputeProfileWith(source(125 * GIB, 125 * GIB), ENVELOPE_GIB);
       expect(resolution.profile).toBe("worker");
       expect(resolution.source).toBe("override");
-      expect(resolution.overrideRequested).toStrictEqual(O.some("worker"));
+      assertSome(resolution.overrideRequested, "worker");
     }).pipe(withOverride({ BEEP_COMPUTE_PROFILE: "worker" }))
   );
 
@@ -97,7 +97,7 @@ describe("compute profile probe", () => {
       );
       expect(result.profile).toBe("worker");
       expect(result.source).toBe("probe");
-      expect(result.overrideRequested).toStrictEqual(O.some("workstation"));
+      assertSome(result.overrideRequested, "workstation");
       expect(warnings).toHaveLength(1);
       expect(String(warnings[0])).toContain("BEEP_COMPUTE_PROFILE=workstation ignored");
     }).pipe(withOverride({ BEEP_COMPUTE_PROFILE: "workstation" }))
@@ -143,7 +143,7 @@ describe("attempt facts carry the compute profile", () => {
   it.effect("decodes a fact written before computeProfile existed", () =>
     Effect.gen(function* () {
       const ticket = yield* decodeTicket(encodedTicket);
-      expect(ticket.computeProfile).toStrictEqual(O.none());
+      assertNone(ticket.computeProfile);
       expect(ticket.forceLocal).toBe(false);
     })
   );
@@ -151,7 +151,7 @@ describe("attempt facts carry the compute profile", () => {
   it.effect("decodes a fact that records computeProfile and forceLocal", () =>
     Effect.gen(function* () {
       const ticket = yield* decodeTicket({ ...encodedTicket, computeProfile: "worker", forceLocal: true });
-      expect(ticket.computeProfile).toStrictEqual(O.some("worker"));
+      assertSome(ticket.computeProfile, "worker");
       expect(ticket.forceLocal).toBe(true);
     })
   );
