@@ -1166,3 +1166,22 @@ evidence, what would have prevented it). Redact for the public repo.
   exceeds 1,000 runs (same PR as the 15-context ratification), so the cap
   cannot stop a busy week again.
 
+## 2026-11-08 — the coverage comparison hid why it refused its artifacts
+
+- **Doing:** replaying run 42450593133's real coverage artifacts through
+  `beep ci lane coverage --compare-only` to test the ep50 claim that the lane
+  measured law-practice from partial shard lcov (it does not; #2942 had already
+  recorded those floors).
+- **Evidence:** the refusal printed only `[ci] Coverage producer artifacts are
+  incomplete or failed regression comparison.`; `CiCommandError.mapError` kept
+  the reason in `cause`, which `reportCiCommandError` never prints. Reading the
+  reason took a debug patch in a throwaway checkout, and each following refusal
+  (`package assignment differs`, a Node 22/24 discovery mismatch, `stale source
+  census`, the last caused by the patches themselves) cost a discovery run of
+  about 80 s. That cost more than the fix, a few lines in `CiCoverage.ts`.
+- **Would have prevented it:** carrying the reason in the message, as this
+  receipt's PR does. A documented way to replay hosted artifacts locally would
+  also have helped: the checks pin the runner's exact Node version, and this
+  replay could only pass by relaxing them, so it proved floors and arithmetic
+  rather than a clean lane pass.
+
