@@ -8,6 +8,8 @@ import { AlchemyPostgresPlatform } from "@beep/alchemy-postgres";
 import {
   AggregateAttribute,
   AlchemyPostgresInstruments,
+  BackfillRunJobSpan,
+  JobRoleAttribute,
   OutboxDeliverSpan,
   PlatformSendSpan,
   TargetKindAttribute,
@@ -194,16 +196,33 @@ describe("AlchemyPostgres observability", () => {
       })
     );
 
-    it.effect("declares the send and deliver spans and their keys", () =>
+    it.effect("declares the send, deliver and backfill job spans and their keys", () =>
       Effect.sync(() => {
         deepStrictEqual(
           A.map(AlchemyPostgresInstruments.instruments, (instrument) => instrument.name),
-          [PlatformSendSpan.name, OutboxDeliverSpan.name]
+          [PlatformSendSpan.name, OutboxDeliverSpan.name, BackfillRunJobSpan.name]
         );
         deepStrictEqual(
-          A.map(AlchemyPostgresInstruments.attributes, (attribute) => attribute.key),
-          [AggregateAttribute, TargetKindAttribute, TargetNameAttribute]
+          A.take(
+            A.map(AlchemyPostgresInstruments.attributes, (attribute) => attribute.key),
+            4
+          ),
+          [AggregateAttribute, TargetKindAttribute, TargetNameAttribute, JobRoleAttribute]
         );
+      })
+    );
+
+    it.effect("declares kernel names at shape-only and kernel identifiers only from standard up", () =>
+      Effect.sync(() => {
+        const tierOf = (key: string) =>
+          O.map(
+            A.findFirst(AlchemyPostgresInstruments.attributes, (attribute) => attribute.key === key),
+            (attribute) => attribute.minTier
+          );
+        for (const key of ["domain.aggregate", "domain.command", "domain.outcome", "domain.events"])
+          deepStrictEqual(tierOf(key), O.some("shape-only"));
+        for (const key of ["domain.id", "domain.key", "domain.stream", "domain.command_id", "domain.correlation_id"])
+          deepStrictEqual(tierOf(key), O.some("standard"));
       })
     );
   });

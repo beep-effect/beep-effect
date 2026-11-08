@@ -14,9 +14,11 @@ import * as Str from "effect/String";
 import {
   claimFiniteSourceProofSlot,
   clauseNominalHead,
+  readSourceRightParenthesisList,
   validateClaimCitationWitness,
   validateClaimFiniteSourceProofs,
   validateClaimFiniteSourceProofsFromOriginalInput,
+  validateSourceRightLabelActionToken,
 } from "./ClaimClauseRole.behavior.ts";
 import {
   ClaimFrameArgument,
@@ -34,8 +36,10 @@ import type {
   ClaimCitationWitness,
   ClaimFiniteSourceProof,
   ClaimFrameSubjectInheritance,
+  ClaimListDeclaration,
   ClaimOwnedTermRegion,
   ClaimPlannedElement,
+  ClaimSourceDeclaration,
   ClaimSourceElementPlan,
   ClaimSourceExclusion,
   ClaimSourceFrame,
@@ -188,17 +192,17 @@ const coreIndex = (
   plan: ClaimSourceElementPlan,
   anchor: TextAnchor,
   charge: (amount: number) => boolean
-): O.Option<number> => {
+): O.Option<number> | false => {
   let lower = 0;
   let upper = plan.nominals.length;
   while (lower < upper) {
-    if (!charge(2)) return O.none();
+    if (!charge(2)) return false;
     const index = Math.floor((lower + upper) / 2);
     const candidate = O.getOrThrow(A.get(plan.nominals, index)).core;
     if (candidate.startChar < anchor.startChar) lower = index + 1;
     else upper = index;
   }
-  if (!charge(anchor.quote.length + 1)) return O.none();
+  if (!charge(anchor.quote.length + 1)) return false;
   return O.map(
     O.filter(A.get(plan.nominals, lower), (n) => sameAnchor(n.core, anchor)),
     () => lower
@@ -212,8 +216,11 @@ const nextInheritedFrame = (
   child: number,
   depth: number,
   charge: (amount: number) => boolean
-): O.Option<ClaimSourceFrame> =>
-  depth <= 128 && charge(2) ? O.filter(A.get(plan.frames, ordinal - 1), (f) => f.ordinal < child) : O.none();
+): O.Option<ClaimSourceFrame> | false => {
+  if (depth > 128) return O.none();
+  if (!charge(2)) return false;
+  return O.filter(A.get(plan.frames, ordinal - 1), (f) => f.ordinal < child);
+};
 const inheritedFrameStep = (
   plan: ClaimSourceElementPlan,
   frame: ClaimSourceFrame,
@@ -222,12 +229,12 @@ const inheritedFrameStep = (
   parent: number,
   depth: number,
   charge: (amount: number) => boolean
-): O.Option<readonly [ClaimSourceFrame, boolean]> => {
+): O.Option<readonly [ClaimSourceFrame, boolean]> | false => {
   const candidate = nextInheritedFrame(plan, parent, frame.ordinal, depth, charge);
+  if (candidate === false) return false;
   if (O.isNone(candidate)) return O.none();
   const ancestor = candidate.value;
-  if (!charge((predicate ? ancestor.predicates.length : ancestor.nominals.length) + anchor.quote.length))
-    return O.none();
+  if (!charge((predicate ? ancestor.predicates.length : ancestor.nominals.length) + anchor.quote.length)) return false;
   return O.some([ancestor, frameContains(ancestor, anchor, predicate)]);
 };
 const inheritedFrameReference = (
@@ -236,17 +243,18 @@ const inheritedFrameReference = (
   anchor: TextAnchor,
   predicate: boolean,
   charge: (amount: number) => boolean
-): boolean => {
+): O.Option<boolean> => {
   let parent = frame.parent;
   let depth = 0;
   while (O.isSome(parent)) {
     const step = inheritedFrameStep(plan, frame, anchor, predicate, parent.value, ++depth, charge);
-    if (O.isNone(step)) return false;
+    if (step === false) return O.none();
+    if (O.isNone(step)) return O.some(false);
     const [ancestor, matches] = step.value;
-    if (matches) return true;
+    if (matches) return O.some(true);
     parent = ancestor.parent;
   }
-  return false;
+  return O.some(false);
 };
 const declaredCoreReference = (
   plan: ClaimSourceElementPlan,
@@ -274,13 +282,12 @@ const frameCore = (
   charge: (amount: number) => boolean
 ): boolean => {
   const index = coreIndex(plan, anchor, charge);
-  if (O.isNone(index)) return false;
+  if (index === false || O.isNone(index)) return false;
   const owner = O.getOrElse(A.get(owners, index.value), () => 0);
   if (!charge(frame.nominals.length + 1)) return false;
   if (owner === frame.publicOwner && frameContains(frame, anchor, false)) return true;
-  return (
-    inheritedFrameReference(plan, frame, anchor, false, charge) || declaredCoreReference(plan, frame, owner, charge)
-  );
+  const inherited = inheritedFrameReference(plan, frame, anchor, false, charge);
+  return O.isSome(inherited) && (inherited.value || declaredCoreReference(plan, frame, owner, charge));
 };
 const validFrameParent = (plan: ClaimSourceElementPlan, frame: ClaimSourceFrame): boolean =>
   O.match(frame.parent, {
@@ -319,7 +326,7 @@ const validFrameArgument = (
   if (
     O.exists(
       argument.predicate,
-      (p) => !frameContains(frame, p, true) && !inheritedFrameReference(plan, frame, p, true, charge)
+      (p) => !frameContains(frame, p, true) && !O.contains(inheritedFrameReference(plan, frame, p, true, charge), true)
     )
   )
     return false;
@@ -331,8 +338,10 @@ const localFrameNominal = (
   nominal: TextAnchor,
   owners: ReadonlyArray<number>,
   charge: (amount: number) => boolean
-): boolean =>
-  O.exists(coreIndex(plan, nominal, charge), (index) => O.contains(A.get(owners, index), frame.publicOwner));
+): boolean => {
+  const index = coreIndex(plan, nominal, charge);
+  return index !== false && O.exists(index, (i) => O.contains(A.get(owners, i), frame.publicOwner));
+};
 const inheritedSubjectGeometry = (frame: ClaimSourceFrame, inherited: ClaimFrameSubjectInheritance): boolean =>
   O.contains(frame.parent, inherited.fromFrame) &&
   (frame.attachment === "relative" || frame.attachment === "complement") &&
@@ -435,6 +444,11 @@ const bindingRawAdjunct = (plan: ClaimSourceElementPlan, token: ClaimSourceProof
       p.kind === "token" &&
       (p.token.pos === "ADV" || HashSet.has(HashSet.make("not", "n't"), Str.toLowerCase(p.token.anchor.quote)))
   );
+const bindingModeSourceMatches = (
+  plan: ClaimSourceElementPlan,
+  op: Extract<ClaimFiniteSourceProof, { readonly kind: "operator" }>,
+  charge: (amount: number) => boolean
+): boolean => op.mode !== "distributive" || distributiveSourcePredicate(plan, op, charge);
 const bindingMemberRole = (
   plan: ClaimSourceElementPlan,
   slot: Exclude<ClaimSourceOperatorBinding["slots"][number], { readonly kind: "gap" }>,
@@ -442,6 +456,7 @@ const bindingMemberRole = (
   charge: (amount: number) => boolean
 ): boolean => {
   if (!charge(op.lexical.length + plan.roles.predicates.length + 4)) return false;
+  if (!bindingModeSourceMatches(plan, op, charge)) return false;
   const direct = A.some(op.lexical, (r) => r.ordinal === slot.token.ordinal);
   if (slot.kind === "lexical" && !direct) return false;
   const licensedAdjunct = A.some(plan.roles.predicates, (p) => p.kind === "adjunct" && contains(p.anchor, slot.extent));
@@ -477,7 +492,10 @@ const validateBindingHead = (
       O.contains(eligible, head.certificate.ordinal) &&
       O.exists(
         proofAt(plan, head.certificate),
-        (p) => p.kind === "operator" && p.head.token.ordinal === head.token.ordinal
+        (p) =>
+          p.kind === "operator" &&
+          p.head.token.ordinal === head.token.ordinal &&
+          (p.head.kind !== "distributive-direct" || head.rule === "single-operator")
       ) &&
       A.some(
         binding.slots,
@@ -592,12 +610,16 @@ const privateSelectionAncestors = (
   owner: O.Option<ClaimFiniteSourceProof>,
   charge: (amount: number) => boolean
 ): boolean => {
-  for (const other of plan.frames)
-    if (
-      privateSelectionMember(plan, other, core, owner, charge) &&
-      !sourceFrameAncestor(plan, other.ordinal, frame, charge)
-    )
-      return false;
+  let available = true;
+  const reserve = (amount: number): boolean => {
+    const accepted = charge(amount);
+    if (!accepted) available = false;
+    return accepted;
+  };
+  for (const other of plan.frames) {
+    const member = privateSelectionMember(plan, other, core, owner, reserve);
+    if (!available || (member && !sourceFrameAncestor(plan, other.ordinal, frame, charge))) return false;
+  }
   return true;
 };
 const validatePrivateSelection = (
@@ -607,7 +629,7 @@ const validatePrivateSelection = (
   certificate: Extract<ClaimFiniteSourceProof, { readonly kind: "selection" }>,
   charge: (amount: number) => boolean
 ): boolean => {
-  if (!charge(plan.roles.opaqueSelections.length + plan.frames.length + 6)) return false;
+  if (!charge(plan.roles.opaqueSelections.length + plan.frames.length + 9)) return false;
   const selection = A.findFirst(plan.roles.opaqueSelections, (s) => s.proof.ordinal === argument.certificate.ordinal);
   const owner = O.flatMap(certificate.owner, (ref) => proofAt(plan, ref));
   if (
@@ -943,10 +965,17 @@ const storedHeaderMembership = (
   );
 };
 const validateHeaderMemberships = (plan: ClaimSourceElementPlan, charge: (amount: number) => boolean): boolean => {
-  if (!charge(plan.frames.length + plan.headerMemberships.length * (plan.frames.length + 2) + 2)) return false;
+  if (!charge(plan.frames.length + plan.headerMemberships.length * (plan.frames.length + 2) + 5)) return false;
+  let available = true;
+  const reserve = (amount: number): boolean => {
+    const paid = charge(amount);
+    if (!paid) available = false;
+    return paid;
+  };
   let count = 0;
   for (const frame of plan.frames) {
-    const derived = qualifiedHeaderMembership(plan, frame, charge);
+    const derived = qualifiedHeaderMembership(plan, frame, reserve);
+    if (!available) return false;
     const stored = A.filter(plan.headerMemberships, (record) => record.frame === frame.ordinal);
     if (!storedHeaderMembership(plan, derived, stored, charge)) return false;
     count += stored.length;
@@ -1198,6 +1227,7 @@ class CandidateCommitValidator {
   }
   private candidate(state: CandidateState): boolean {
     const index = coreIndex(this.plan, state.nominal.anchor, this.charge);
+    if (index === false) return false;
     if (state.kind === "unproved") return this.excluded(state) && O.isNone(index);
     const proof = proofAt(this.plan, state.proof);
     if (!candidateProofMatches(state, proof)) return false;
@@ -1249,7 +1279,13 @@ const frameIntroducerLicensed = (
     A.some(
       plan.declarationPlans,
       (declaration) =>
-        declaration.frame === frame.ordinal && declaration.owner === frame.publicOwner && declaration.kind === "action"
+        declaration.frame === frame.ordinal &&
+        declaration.owner === frame.publicOwner &&
+        (declaration.kind === "action" ||
+          (declaration.kind === "labelled" &&
+            charge(intro.quote.length * 2 + 2) &&
+            O.isSome(Str.match(/ the steps of:$/u)(intro.quote)) &&
+            rightParenthesisDeclaration(plan, declaration, charge)))
     )
   );
 };
@@ -1474,10 +1510,12 @@ const tokenControlMatches = (
         proofAt(plan, e.proof),
         (p) =>
           p.kind === "operator" &&
-          p.mode === "infinitive" &&
           O.exists(p.position, ref) &&
-          token.token.anchor.quote === "to" &&
-          token.token.pos === "PART"
+          ((p.mode === "infinitive" && token.token.anchor.quote === "to" && token.token.pos === "PART") ||
+            (p.mode === "distributive" &&
+              p.head.kind === "distributive-direct" &&
+              p.head.each.ordinal === token.ordinal &&
+              Str.toLowerCase(token.token.anchor.quote) === "each"))
       ),
     "operator-adjunct": (e) =>
       O.exists(
@@ -1669,8 +1707,14 @@ class SourceTokenOwnershipBuilder {
     this.charge = charge;
     this.raw = raw;
   }
+  private exhausted = false;
+  private readonly reserve = (amount: number): boolean => {
+    const accepted = this.charge(amount);
+    if (!accepted) this.exhausted = true;
+    return accepted;
+  };
   run(): O.Option<ReadonlyArray<ClaimSourceTokenOwnership>> {
-    if (!this.charge(this.raw.length * 4 + 1)) return O.none();
+    if (!this.reserve(this.raw.length * 4 + 1)) return O.none();
     for (let i = 0; i < this.raw.length; i++)
       this.positions = HashMap.set(this.positions, O.getOrThrow(A.get(this.raw, i)).token.anchor.startChar, i);
     if (!this.leadingControls() || !this.trailingControls()) return O.none();
@@ -1695,18 +1739,19 @@ class SourceTokenOwnershipBuilder {
     );
   }
   private readonly positiveExclusion = (ordinal: number): boolean => {
-    if (!this.charge(3)) return false;
+    if (!this.reserve(3)) return false;
     const prior = HashMap.get(this.checkedExclusions, ordinal);
     if (O.isSome(prior)) return prior.value;
+    if (!this.reserve(2)) return false;
     const candidate = A.get(this.plan.sourceExclusions, ordinal - 1);
-    const valid = O.exists(candidate, (e) => positiveCandidateExclusion(this.plan, e, this.charge));
-    if (!this.charge(2)) return false;
-    this.checkedExclusions = HashMap.set(this.checkedExclusions, ordinal, valid);
-    return valid;
+    const valid = O.exists(candidate, (e) => positiveCandidateExclusion(this.plan, e, this.reserve));
+    if (!valid) return false;
+    this.checkedExclusions = HashMap.set(this.checkedExclusions, ordinal, true);
+    return true;
   };
 
   private readonly control = (ref: ClaimSourceProofRef, evidence: ClaimSourceControlEvidence): boolean => {
-    if (!this.charge(6)) return false;
+    if (!this.reserve(6)) return false;
     const token = proofAt(this.plan, ref);
     if (O.isNone(token) || token.value.kind !== "token") return false;
     if (!HashMap.has(this.controls, token.value.ordinal))
@@ -1715,11 +1760,11 @@ class SourceTokenOwnershipBuilder {
   };
 
   private lowerBound(startChar: number): number {
-    return sourceLowerBound(this.raw, startChar, rawTokenSourceStart, this.charge);
+    return sourceLowerBound(this.raw, startChar, rawTokenSourceStart, this.reserve);
   }
   private intervalFrom(start: number, extent: TextAnchor, evidence: ClaimSourceControlEvidence): boolean {
     for (let i = start; i < this.raw.length; i++) {
-      if (!this.charge(3)) return false;
+      if (!this.reserve(3)) return false;
       const token = O.getOrThrow(A.get(this.raw, i));
       if (token.token.anchor.startChar >= extent.endChar) break;
       if (
@@ -1731,7 +1776,7 @@ class SourceTokenOwnershipBuilder {
     return true;
   }
   private readonly interval = (extent: TextAnchor, evidence: ClaimSourceControlEvidence): boolean => {
-    if (!this.charge(3)) return false;
+    if (!this.reserve(3)) return false;
     const exact = HashMap.get(this.positions, extent.startChar);
     let start = O.getOrElse(exact, () => 0);
     if (O.isNone(exact)) start = this.lowerBound(extent.startChar);
@@ -1741,7 +1786,7 @@ class SourceTokenOwnershipBuilder {
 
   private collectOwners(): boolean {
     for (const element of this.plan.elements) {
-      if (!this.charge(element.ownedTermRegions.length * 5 + 1)) return false;
+      if (!this.reserve(element.ownedTermRegions.length * 5 + 1)) return false;
       for (const region of element.ownedTermRegions)
         this.owners = HashMap.set(this.owners, region.core, element.ordinal);
     }
@@ -1750,7 +1795,7 @@ class SourceTokenOwnershipBuilder {
 
   private proofs(): boolean {
     for (const proof of this.plan.roles.certificates) {
-      if (!this.charge(2) || !this.proofControl(proof)) return false;
+      if (!this.reserve(2) || !this.proofControl(proof)) return false;
     }
     return true;
   }
@@ -1811,7 +1856,7 @@ class SourceTokenOwnershipBuilder {
     const first = proofAt(this.plan, proof.token);
     const last = O.flatMap(proof.successor, (r) => proofAt(this.plan, r));
     if (O.isNone(first) || first.value.kind !== "token" || O.isNone(last) || last.value.kind !== "token") return false;
-    if (!this.charge(last.value.tokenOrdinal - first.value.tokenOrdinal + 1)) return false;
+    if (!this.reserve(last.value.tokenOrdinal - first.value.tokenOrdinal + 1)) return false;
     for (let i = first.value.tokenOrdinal; i <= last.value.tokenOrdinal; i++) {
       const token = A.get(this.raw, i - 1);
       if (
@@ -1831,11 +1876,18 @@ class SourceTokenOwnershipBuilder {
   }
   private selectionControl(proof: Extract<ClaimFiniteSourceProof, { readonly kind: "selection" }>): boolean {
     const evidence = this.argumentEvidence(proof);
-    if (!this.charge(proof.selector.length + 1) || !this.control(proof.linkage, evidence)) return false;
+    if (!this.reserve(proof.selector.length + 1) || !this.control(proof.linkage, evidence)) return false;
     for (const ref of proof.selector) if (!this.control(ref, evidence)) return false;
     return true;
   }
   private operatorPositionControl(proof: Extract<ClaimFiniteSourceProof, { readonly kind: "operator" }>): boolean {
+    if (proof.mode === "distributive" && proof.head.kind === "distributive-direct")
+      return this.control(
+        proof.head.each,
+        ClaimSourceControlEvidence.cases["operator-position"].make({
+          proof: ClaimSourceProofRef.make({ ordinal: proof.ordinal, slot: "operator" }),
+        })
+      );
     if (proof.mode !== "infinitive" || O.isNone(proof.position)) return true;
     const token = proofAt(this.plan, proof.position.value);
     if (!O.exists(token, (p) => p.kind === "token" && p.token.anchor.quote === "to" && p.token.pos === "PART"))
@@ -1854,7 +1906,7 @@ class SourceTokenOwnershipBuilder {
     slot: (typeof binding.slots)[number]
   ): boolean {
     if (slot.kind === "gap") return true;
-    if (!this.charge(5)) return false;
+    if (!this.reserve(5)) return false;
     if (slot.kind === "adjunct")
       return this.control(
         slot.token,
@@ -1877,7 +1929,7 @@ class SourceTokenOwnershipBuilder {
   private operatorSlots(): boolean {
     for (let i = 0; i < this.plan.operatorBindings.length; i++) {
       const binding = O.getOrThrow(A.get(this.plan.operatorBindings, i));
-      if (!this.charge(binding.slots.length + 1)) return false;
+      if (!this.reserve(binding.slots.length + 1)) return false;
       for (const slot of binding.slots) if (!this.operatorSlot(binding, i, slot)) return false;
     }
     return true;
@@ -1893,10 +1945,10 @@ class SourceTokenOwnershipBuilder {
     return O.filter(token, (p) => HashSet.has(HashSet.make("and", "or"), Str.toLowerCase(p.token.anchor.quote)));
   }
   private operatorCoordinate(index: number, right: ClaimSourceOperatorBinding): boolean {
-    if (!this.charge(4)) return false;
+    if (!this.reserve(4)) return false;
     const token = this.coordinateBefore(right.operator, 1);
     if (O.isNone(token)) return true;
-    if (!this.charge(this.plan.operatorBindings.length + 2)) return false;
+    if (!this.reserve(this.plan.operatorBindings.length + 2)) return false;
     const left = A.findLastIndex(
       this.plan.operatorBindings,
       (b) => b.frame === right.frame && b.operator.startChar < right.operator.startChar
@@ -1917,13 +1969,13 @@ class SourceTokenOwnershipBuilder {
   }
 
   private frameCoordinate(right: ClaimSourceFrame): boolean {
-    if (!this.charge(4)) return false;
+    if (!this.reserve(4)) return false;
     if (O.isNone(right.parent) || O.isNone(right.introducer) || Str.toLowerCase(right.introducer.value.quote) !== "to")
       return true;
     const token = this.coordinateBefore(right.extent, 2);
     if (O.isNone(token)) return true;
     const previous = O.getOrThrow(A.get(this.raw, token.value.tokenOrdinal - 2));
-    if (!this.charge(this.plan.frames.length + 2)) return false;
+    if (!this.reserve(this.plan.frames.length + 2)) return false;
     const left = A.filter(
       this.plan.frames,
       (frame) =>
@@ -1980,13 +2032,13 @@ class SourceTokenOwnershipBuilder {
     return Str.toLowerCase(token.token.anchor.quote) !== "response" || this.responseAdjunct(position.value, evidence);
   }
   private roleAdjuncts(): boolean {
-    if (!this.charge(this.plan.roles.predicates.length * 4 + this.plan.elements.length + 2)) return false;
+    if (!this.reserve(this.plan.roles.predicates.length * 4 + this.plan.elements.length + 2)) return false;
     for (let i = 0; i < this.plan.roles.predicates.length; i++) if (!this.roleAdjunct(i)) return false;
     return true;
   }
   private elementCoordinate(right: ClaimPlannedElement): boolean {
     if (right.grouping !== "independent-coordinate") return true;
-    if (!this.charge(this.plan.elements.length + 2)) return false;
+    if (!this.reserve(this.plan.elements.length + 2)) return false;
     const start = HashMap.get(this.positions, right.extent.startChar);
     const left = A.findLast(
       this.plan.elements,
@@ -2012,7 +2064,7 @@ class SourceTokenOwnershipBuilder {
     if (argument.role !== "object" || O.isNone(argument.predicate)) return true;
     const token = this.coordinateBefore(argument.nominal, 1);
     if (O.isNone(token)) return true;
-    if (!this.charge(frame.arguments.length + 2)) return false;
+    if (!this.reserve(frame.arguments.length + 2)) return false;
     const left = A.findLastIndex(
       frame.arguments,
       (a, ordinal) =>
@@ -2046,39 +2098,47 @@ class SourceTokenOwnershipBuilder {
     );
   }
   private frameArgumentControls(frame: ClaimSourceFrame): boolean {
-    if (!this.charge(frame.arguments.length * 6 + 1)) return false;
+    if (!this.reserve(frame.arguments.length * 6 + 1)) return false;
     for (let index = 0; index < frame.arguments.length; index++) {
       const argument = O.getOrThrow(A.get(frame.arguments, index));
       if (!this.objectCoordinate(frame, index, argument) || !this.argumentIntroducer(frame, index, argument))
         return false;
     }
+    return this.frameIntroducerControl(frame);
+  }
+  private frameIntroducerControl(frame: ClaimSourceFrame): boolean {
     if (O.isNone(frame.introducer)) return true;
+    const licensed = frameIntroducerLicensed(this.plan, frame, this.reserve);
+    if (this.exhausted) return false;
     if (
-      frameIntroducerLicensed(this.plan, frame, this.charge) &&
+      licensed &&
       !this.interval(
         frame.introducer.value,
         ClaimSourceControlEvidence.cases["frame-introducer"].make({ frame: frame.ordinal })
       )
     )
       return false;
-    return this.charge(0);
+    return this.reserve(0);
   }
   private frameArguments(): boolean {
-    if (!this.charge(this.plan.frames.length + this.plan.sourceExclusions.length + 1)) return false;
+    if (!this.reserve(this.plan.frames.length + this.plan.sourceExclusions.length + 1)) return false;
     for (const frame of this.plan.frames) if (!this.frameArgumentControls(frame)) return false;
     return true;
   }
 
+  private exclusionControl(exclusion: ClaimSourceExclusion, ordinal: number): boolean {
+    if (exclusion.kind === "quoted-protection") return true;
+    const positive = this.positiveExclusion(ordinal);
+    if (this.exhausted) return false;
+    return (
+      !positive ||
+      this.interval(exclusion.extent, ClaimSourceControlEvidence.cases.exclusion.make({ exclusion: ordinal }))
+    );
+  }
   private exclusions(): boolean {
     for (let i = 0; i < this.plan.sourceExclusions.length; i++) {
       const exclusion = O.getOrThrow(A.get(this.plan.sourceExclusions, i));
-      if (
-        exclusion.kind !== "quoted-protection" &&
-        this.positiveExclusion(i + 1) &&
-        !this.interval(exclusion.extent, ClaimSourceControlEvidence.cases.exclusion.make({ exclusion: i + 1 }))
-      )
-        return false;
-      if (!this.charge(1)) return false;
+      if (!this.exclusionControl(exclusion, i + 1) || !this.reserve(1)) return false;
     }
     return true;
   }
@@ -2103,7 +2163,7 @@ class SourceTokenOwnershipBuilder {
     const lower = this.lowerBound(start);
     if (lower < 0) return false;
     for (let k = lower; k < this.raw.length; k++) {
-      if (!this.charge(3)) return false;
+      if (!this.reserve(3)) return false;
       const token = O.getOrThrow(A.get(this.raw, k));
       if (token.token.anchor.startChar >= end) break;
       if (!this.declarationGapToken(token, end, declaration, left)) return false;
@@ -2113,7 +2173,7 @@ class SourceTokenOwnershipBuilder {
   private declarations(): boolean {
     for (let i = 0; i < this.plan.declarationPlans.length; i++) {
       const declaration = O.getOrThrow(A.get(this.plan.declarationPlans, i));
-      if (!this.charge(declaration.items.length + 1)) return false;
+      if (!this.reserve(declaration.items.length + 1)) return false;
       for (let j = 1; j < declaration.items.length; j++) {
         const left = O.getOrThrow(A.get(declaration.items, j - 1));
         const right = O.getOrThrow(A.get(declaration.items, j));
@@ -2130,7 +2190,7 @@ class SourceTokenOwnershipBuilder {
       this.publicCursor < this.plan.nominals.length &&
       O.getOrThrow(A.get(this.plan.nominals, this.publicCursor)).core.endChar <= extent.startChar
     ) {
-      if (!this.charge(2)) return false;
+      if (!this.reserve(2)) return false;
       this.publicCursor++;
     }
     return true;
@@ -2140,7 +2200,7 @@ class SourceTokenOwnershipBuilder {
       this.privateCursor < this.plan.roles.privateCandidates.length &&
       O.getOrThrow(A.get(this.plan.roles.privateCandidates, this.privateCursor)).core.endChar <= extent.startChar
     ) {
-      if (!this.charge(2)) return false;
+      if (!this.reserve(2)) return false;
       this.privateCursor++;
     }
     return true;
@@ -2175,7 +2235,7 @@ class SourceTokenOwnershipBuilder {
       evidence = O.some(ClaimSourceControlEvidence.cases.punctuation.make({}));
     if (
       O.isNone(evidence) ||
-      !tokenControlMatches(this.plan, token, evidence.value, this.positiveExclusion, this.charge)
+      !tokenControlMatches(this.plan, token, evidence.value, this.positiveExclusion, this.reserve)
     )
       return O.none();
     return O.some(
@@ -2209,7 +2269,7 @@ class SourceTokenOwnershipBuilder {
     token: Extract<ClaimFiniteSourceProof, { readonly kind: "token" }>
   ): O.Option<ClaimSourceTokenOwnership> {
     // The extracted row stage adds one transient Option result per token.
-    if (!this.charge(9)) return O.none();
+    if (!this.reserve(9)) return O.none();
     const ref = ClaimSourceProofRef.make({ ordinal: token.ordinal, slot: "token" });
     if (!this.advancePublic(token.token.anchor)) return O.none();
     const nominal = A.get(this.plan.nominals, this.publicCursor);
@@ -2237,9 +2297,8 @@ const sourceTokenOwnership = (
     return O.none();
   const raw = A.filter(plan.roles.certificates, (p) => p.kind === "token");
   if (raw.length === 0) return O.some([]);
-  // The builder adds one bounded source-local state object; stage work and its
-  // short-circuit order retain the original charged traversal sequence.
-  if (!charge(1)) return O.none();
+  // Reserve the builder plus its exhaustion flag and forwarding reservation closure.
+  if (!charge(3)) return O.none();
   return new SourceTokenOwnershipBuilder(plan, charge, raw).run();
 };
 
@@ -2393,11 +2452,12 @@ const validateSourceTokenOwnership = (
     if (!charge(3)) return false;
     const previous = HashMap.get(checkedExclusions, ordinal);
     if (O.isSome(previous)) return previous.value;
+    if (!charge(2)) return false;
     const exclusion = A.get(plan.sourceExclusions, ordinal - 1);
     const valid = O.exists(exclusion, (e) => positiveCandidateExclusion(plan, e, charge));
-    if (!charge(2)) return false;
-    checkedExclusions = HashMap.set(checkedExclusions, ordinal, valid);
-    return valid;
+    if (!valid) return false;
+    checkedExclusions = HashMap.set(checkedExclusions, ordinal, true);
+    return true;
   };
   let cursor = 0;
   for (let index = 0; index < raw.length; index++) {
@@ -2407,11 +2467,26 @@ const validateSourceTokenOwnership = (
   return validateLedgerOperators(plan, charge);
 };
 
-const validateCommittedSourceFacts = (plan: ClaimSourceElementPlan, charge: (amount: number) => boolean): boolean => {
+type SourceValidationFacts = { distributive: boolean; rightLabels: boolean };
+const collectSourceValidationFacts = (
+  proofs: ReadonlyArray<ClaimFiniteSourceProof>,
+  facts: SourceValidationFacts
+): void => {
+  for (const proof of proofs) {
+    if (proof.kind === "operator" && proof.mode === "distributive") facts.distributive = true;
+    if (proof.kind === "label-boundary") facts.rightLabels = true;
+  }
+};
+const validateCommittedSourceFacts = (
+  plan: ClaimSourceElementPlan,
+  charge: (amount: number) => boolean,
+  facts: SourceValidationFacts
+): boolean => {
   if (plan.roles.certificates.length === 0) return true;
   const original = plan.roles.originalLexicalInput;
   if (O.isSome(original)) {
-    if (!charge(plan.qualifiedText.length + 4)) return false;
+    if (!charge(plan.qualifiedText.length + plan.roles.certificates.length * 2 + 6)) return false;
+    collectSourceValidationFacts(plan.roles.certificates, facts);
     const claim = plan.roles.qualifiedClaim;
     return (
       O.isSome(claim) &&
@@ -2428,20 +2503,160 @@ const validateCommittedSourceFacts = (plan: ClaimSourceElementPlan, charge: (amo
   if (!charge(plan.roles.certificates.length * 3 + plan.qualifiedText.length + 4)) return false;
   const claim = plan.roles.qualifiedClaim;
   if (O.isNone(claim) || claim.value.claimText !== plan.qualifiedText) return false;
-  const tokens = A.flatMap(plan.roles.certificates, (proof) => (proof.kind === "token" ? [proof.token] : []));
+  // The existing prepaid 3N map covers the two discriminator checks and output cells.
+  // Collect the operational census in this same visit, without another registry scan.
+  const tokens = A.flatMap(plan.roles.certificates, (proof) => {
+    if (proof.kind === "operator" && proof.mode === "distributive") facts.distributive = true;
+    return proof.kind === "token" ? [proof.token] : [];
+  });
   return validateClaimFiniteSourceProofs(claim.value, tokens, plan.roles.certificates, plan.roles.proofs, charge);
+};
+const validateDistributivePredicate = (
+  plan: ClaimSourceElementPlan,
+  predicate: ClaimSourceElementPlan["roles"]["predicates"][number],
+  charge: (amount: number) => boolean
+): boolean => {
+  if (!charge(plan.roles.certificates.length + predicate.anchor.quote.length + 4)) return false;
+  let matching = 0;
+  for (const proof of plan.roles.certificates)
+    if (proof.kind === "operator" && proof.mode === "distributive" && sameAnchor(proof.extent, predicate.anchor))
+      matching++;
+  return matching === 1;
+};
+const distributiveFrameCores = (
+  plan: ClaimSourceElementPlan,
+  proof: Extract<ClaimFiniteSourceProof, { readonly kind: "operator" }>
+) => {
+  if (proof.head.kind !== "distributive-direct" || O.isNone(proof.subject))
+    return O.none<{
+      subject: TextAnchor;
+      object: TextAnchor;
+      position: TextAnchor;
+    }>();
+  return O.all({
+    subject: O.map(
+      O.filter(
+        proofAt(plan, proof.subject.value),
+        (p): p is Extract<ClaimFiniteSourceProof, { readonly kind: "head" }> => p.kind === "head"
+      ),
+      (p) => p.core
+    ),
+    object: O.map(
+      O.filter(
+        proofAt(plan, proof.head.direct),
+        (p): p is Extract<ClaimFiniteSourceProof, { readonly kind: "head" }> => p.kind === "head"
+      ),
+      (p) => p.core
+    ),
+    position: O.map(O.filter(proofAt(plan, proof.head.each), rawTokenProof), (p) => p.token.anchor),
+  });
+};
+const distributiveArgumentMatches = (
+  frame: ClaimSourceFrame,
+  role: "subject" | "object",
+  nominal: TextAnchor,
+  operator: TextAnchor
+): boolean =>
+  A.some(
+    frame.arguments,
+    (a) => a.role === role && sameAnchor(a.nominal, nominal) && O.exists(a.predicate, (p) => sameAnchor(p, operator))
+  );
+const distributiveFrameMatches = (
+  frame: ClaimSourceFrame,
+  subject: TextAnchor,
+  object: TextAnchor,
+  operator: TextAnchor
+): boolean =>
+  O.exists(frame.subject, (s) => sameAnchor(s, subject)) &&
+  distributiveArgumentMatches(frame, "subject", subject, operator) &&
+  distributiveArgumentMatches(frame, "object", object, operator);
+const distributiveSourcePredicate = (
+  plan: ClaimSourceElementPlan,
+  op: Extract<ClaimFiniteSourceProof, { readonly kind: "operator" }>,
+  charge: (amount: number) => boolean
+): boolean =>
+  charge(plan.roles.predicates.length + op.extent.quote.length + 2) &&
+  A.some(plan.roles.predicates, (p) => p.kind === "distributive" && sameAnchor(p.anchor, op.extent));
+const validateDistributiveFrame = (
+  frame: ClaimSourceFrame,
+  proof: Extract<ClaimFiniteSourceProof, { readonly kind: "operator" }>,
+  cores: O.Option.Value<ReturnType<typeof distributiveFrameCores>>,
+  charge: (amount: number) => boolean
+): number => {
+  if (
+    !charge(
+      frame.predicates.length +
+        frame.arguments.length * 3 +
+        cores.subject.quote.length +
+        cores.object.quote.length +
+        proof.extent.quote.length +
+        8
+    )
+  )
+    return -1;
+  if (!A.some(frame.predicates, (p) => sameAnchor(p, proof.extent))) return 0;
+  return distributiveFrameMatches(frame, cores.subject, cores.object, proof.extent) ? 1 : -1;
+};
+const validateDistributiveOperatorFrames = (
+  plan: ClaimSourceElementPlan,
+  proof: Extract<ClaimFiniteSourceProof, { readonly kind: "operator" }>,
+  charge: (amount: number) => boolean
+): boolean => {
+  if (
+    !distributiveSourcePredicate(plan, proof, charge) ||
+    !charge(plan.frames.length * 3 + plan.roles.nominals.length * 2 + 32)
+  )
+    return false;
+  const cores = distributiveFrameCores(plan, proof);
+  if (O.isNone(cores)) return false;
+  const { position } = cores.value;
+  if (A.some(plan.roles.nominals, (n) => overlaps(n.anchor, proof.extent) || overlaps(n.anchor, position)))
+    return false;
+  let found = false;
+  for (const frame of plan.frames) {
+    const result = validateDistributiveFrame(frame, proof, cores.value, charge);
+    if (result < 0) return false;
+    found = found || result > 0;
+  }
+  return found;
+};
+const validateDistributiveFrames = (
+  plan: ClaimSourceElementPlan,
+  charge: (amount: number) => boolean,
+  facts: SourceValidationFacts
+): boolean => {
+  if (!charge(plan.roles.predicates.length + 1)) return false;
+  if (!facts.distributive && !A.some(plan.roles.predicates, (p) => p.kind === "distributive")) return true;
+  if (!charge(plan.roles.certificates.length)) return false;
+  return (
+    A.every(
+      plan.roles.predicates,
+      (p) => p.kind !== "distributive" || validateDistributivePredicate(plan, p, charge)
+    ) &&
+    A.every(
+      plan.roles.certificates,
+      (p) => p.kind !== "operator" || p.mode !== "distributive" || validateDistributiveOperatorFrames(plan, p, charge)
+    )
+  );
 };
 const validateSourcePlanComponents = (
   plan: ClaimSourceElementPlan,
   owners: Array<number>,
   charge: (amount: number) => boolean
-): boolean =>
-  validateCommittedSourceFacts(plan, charge) &&
-  validateAttached(plan, charge) &&
-  validateCandidateCommit(plan, charge) &&
-  validatePrivateAndOperators(plan, charge) &&
-  validateHeaderMemberships(plan, charge) &&
-  validateOwners(plan, owners, charge);
+): boolean => {
+  if (!charge(1)) return false;
+  const facts: SourceValidationFacts = { distributive: false, rightLabels: false };
+  return (
+    validateCommittedSourceFacts(plan, charge, facts) &&
+    validateDistributiveFrames(plan, charge, facts) &&
+    validateSourceLabelDeclarations(plan, charge, facts.rightLabels) &&
+    validateAttached(plan, charge) &&
+    validateCandidateCommit(plan, charge) &&
+    validatePrivateAndOperators(plan, charge) &&
+    validateHeaderMemberships(plan, charge) &&
+    validateOwners(plan, owners, charge)
+  );
+};
 const validateSourcePlanCompletion = (
   plan: ClaimSourceElementPlan,
   owners: Array<number>,
@@ -2451,6 +2666,368 @@ const validateSourcePlanCompletion = (
   A.every(owners, (owner) => owner > 0) &&
   A.every(plan.frames, (frame) => validateFrame(plan, frame, owners, charge)) &&
   validateSourceTokenOwnership(plan, owners, charge);
+/**
+ * Existing composition vocabulary shared by declaration compilation and source validation.
+ *
+ * **Example** (Recognize an existing declaration operator)
+ * ```ts
+ * import { claimDeclarationCompositions } from "../../src/values/ClaimElement/ClaimClauseRole.projection.ts"
+ * import * as HashSet from "effect/HashSet"
+ * console.log(HashSet.has(claimDeclarationCompositions, "comprising")) // true
+ * ```
+ * @category constants
+ * @since 0.0.0
+ */
+export const claimDeclarationCompositions = HashSet.make("includes", "including", "comprises", "comprising", "having");
+
+/**
+ * Read the rank of a complete lowercase dotted source label, without supplying term evidence.
+ *
+ * **Example** (Reject a sentence initial)
+ * ```ts
+ * import { sourceDottedLabelRank } from "../../src/values/ClaimElement/ClaimClauseRole.projection.ts"
+ * console.log(sourceDottedLabelRank("A.")) // -1
+ * ```
+ * @category validation
+ * @since 0.0.0
+ */
+export const sourceDottedLabelRank = (quote: string): number => {
+  if (quote.length !== 2 || Str.slice(1, 2)(quote) !== ".") return -1;
+  const code = O.getOrElse(Str.charCodeAt(0)(quote), () => -1);
+  return code >= 97 && code <= 122 ? code - 97 : -1;
+};
+
+type SourceLabelDeclaration = Extract<ClaimSourceDeclaration, { readonly kind: "labelled" }>;
+type SourceLabelToken = Extract<ClaimFiniteSourceProof, { readonly kind: "token" }>;
+const dottedLabelTokenAligned = (
+  tokens: ReadonlyArray<SourceLabelToken>,
+  label: TextAnchor,
+  charge: (amount: number) => boolean
+): boolean => {
+  const index = sourceLowerBound(tokens, label.startChar, rawTokenSourceStart, charge);
+  if (index < 0 || !charge(8)) return false;
+  const first = A.get(tokens, index);
+  if (O.isNone(first) || first.value.token.anchor.startChar !== label.startChar) return false;
+  if (sameAnchor(first.value.token.anchor, label)) return true;
+  const dot = A.get(tokens, index + 1);
+  return (
+    first.value.token.anchor.quote === Str.slice(0, 1)(label.quote) &&
+    O.exists(
+      dot,
+      (p) =>
+        p.token.anchor.quote === "." &&
+        p.token.anchor.startChar === first.value.token.anchor.endChar &&
+        p.token.anchor.endChar === label.endChar
+    )
+  );
+};
+const dottedSourceGap = (
+  plan: ClaimSourceElementPlan,
+  start: number,
+  end: number,
+  first: boolean,
+  charge: (amount: number) => boolean
+): boolean => {
+  if (end < start || !charge((end - start) * 2 + 4)) return false;
+  const gap = Str.slice(start, end)(plan.qualifiedText);
+  return first ? Str.trim(gap) === "" : O.isSome(Str.match(/^\s*;\s*(?:(?:and|or)\s+)?$/u)(gap));
+};
+const dottedCompositionPredicate = (frame: ClaimSourceFrame, charge: (amount: number) => boolean): boolean => {
+  for (const predicate of frame.predicates) {
+    if (!charge(predicate.quote.length * 2 + 1)) return false;
+    if (HashSet.has(claimDeclarationCompositions, Str.toLowerCase(predicate.quote))) return true;
+  }
+  return false;
+};
+const dottedDeclarationFrame = (
+  plan: ClaimSourceElementPlan,
+  declaration: SourceLabelDeclaration,
+  charge: (amount: number) => boolean
+): O.Option<ClaimSourceFrame> => {
+  if (!charge(declaration.anchor.quote.length + 4)) return O.none();
+  const frame = A.get(plan.frames, declaration.frame - 1);
+  if (O.isSome(frame) && !charge(frame.value.predicates.length + 1)) return O.none();
+  return O.filter(
+    frame,
+    (f) =>
+      f.publicOwner === declaration.owner &&
+      O.exists(f.introducer, (a) => sameAnchor(a, declaration.anchor)) &&
+      Str.endsWith(":")(declaration.anchor.quote) &&
+      dottedCompositionPredicate(f, charge)
+  );
+};
+type SourceLabelItem = SourceLabelDeclaration["items"][number];
+const dottedChildMatches = (plan: ClaimSourceElementPlan, owner: number, item: SourceLabelItem): boolean =>
+  O.exists(
+    A.get(plan.elements, item.child - 1),
+    (child) => O.contains(child.parent, owner) && sameAnchor(child.extent, item.extent)
+  );
+const dottedDeclarationItem = (
+  plan: ClaimSourceElementPlan,
+  declaration: SourceLabelDeclaration,
+  item: SourceLabelItem,
+  index: number,
+  previousEnd: number,
+  raw: ReadonlyArray<SourceLabelToken>,
+  charge: (amount: number) => boolean
+): boolean => {
+  if (!charge(6)) return false;
+  if (
+    sourceDottedLabelRank(item.label.quote) !== index ||
+    !sourceAnchor(plan, item.label, charge) ||
+    !dottedLabelTokenAligned(raw, item.label, charge) ||
+    !dottedSourceGap(plan, previousEnd, item.label.startChar, index === 0, charge)
+  )
+    return false;
+  if (!dottedChildMatches(plan, declaration.owner, item)) return false;
+  return (
+    item.extent.startChar > item.label.endChar &&
+    dottedSourceGap(plan, item.label.endChar, item.extent.startChar, true, charge)
+  );
+};
+const dottedDeclarationItems = (
+  plan: ClaimSourceElementPlan,
+  declaration: SourceLabelDeclaration,
+  raw: ReadonlyArray<SourceLabelToken>,
+  charge: (amount: number) => boolean
+): boolean => {
+  if (declaration.items.length < 2) return false;
+  const frame = dottedDeclarationFrame(plan, declaration, charge);
+  if (O.isNone(frame)) return false;
+  let previousEnd = declaration.anchor.endChar;
+  for (let i = 0; i < declaration.items.length; i++) {
+    if (!charge(1)) return false;
+    const item = O.getOrThrow(A.get(declaration.items, i));
+    if (!dottedDeclarationItem(plan, declaration, item, i, previousEnd, raw, charge)) return false;
+    previousEnd = item.extent.endChar;
+  }
+  return previousEnd === frame.value.extent.endChar;
+};
+const sourceLabelListHeaderMatches = (declaration: SourceLabelDeclaration, list: ClaimListDeclaration): boolean =>
+  list.owner === declaration.owner &&
+  sameAnchor(list.anchor, declaration.anchor) &&
+  list.items.length === declaration.items.length;
+const sourceLabelListItemMatches = (
+  item: ClaimListDeclaration["items"][number],
+  original: SourceLabelItem,
+  charge: (amount: number) => boolean
+): boolean =>
+  charge(item.label.quote.length + original.label.quote.length + 2) &&
+  item.child === original.child &&
+  sameAnchor(item.label, original.label);
+const sourceLabelListMatches = (
+  declaration: SourceLabelDeclaration,
+  list: ClaimListDeclaration,
+  charge: (amount: number) => boolean
+): boolean => {
+  if (!charge(declaration.anchor.quote.length + list.anchor.quote.length + 4)) return false;
+  if (!sourceLabelListHeaderMatches(declaration, list)) return false;
+  for (let i = 0; i < list.items.length; i++) {
+    if (!charge(4)) return false;
+    const item = O.getOrThrow(A.get(list.items, i));
+    const original = O.getOrThrow(A.get(declaration.items, i));
+    if (!sourceLabelListItemMatches(item, original, charge)) return false;
+  }
+  return true;
+};
+// Operational source-local validation cache; never persisted as evidence.
+type SourceLabelValidation = { labelled: number; right: number; raw: O.Option<ReadonlyArray<SourceLabelToken>> };
+const parenthesizedSourceLabelPattern =
+  /^\(\s*(?:[a-z]|(?=[ivxlcdm]+\s*\)$)m*(?:cm|cd|d?c{0,3})(?:xc|xl|l?x{0,3})(?:ix|iv|v?i{0,3}))\s*\)$/u;
+const parenthesizedSourceLabel = (
+  plan: ClaimSourceElementPlan,
+  label: TextAnchor,
+  charge: (amount: number) => boolean
+): boolean =>
+  charge(label.quote.length * 3 + 6) &&
+  O.isSome(Str.match(parenthesizedSourceLabelPattern)(Str.toLowerCase(label.quote))) &&
+  sourceAnchor(plan, label, charge);
+const sourceLabelRawTokens = (
+  plan: ClaimSourceElementPlan,
+  state: SourceLabelValidation,
+  charge: (amount: number) => boolean
+): boolean => {
+  if (O.isSome(state.raw)) return true;
+  if (!charge(plan.roles.certificates.length * 2 + 1)) return false;
+  state.raw = O.some(A.filter(plan.roles.certificates, (p): p is SourceLabelToken => p.kind === "token"));
+  return true;
+};
+type RightDeclarationContext = {
+  readonly plan: ClaimSourceElementPlan;
+  readonly declaration: SourceLabelDeclaration;
+  readonly tokens: ReadonlyArray<import("./ClaimLexicalEvidence.model.ts").ClaimLexicalToken>;
+  readonly markers: ReadonlyArray<readonly [number, number]>;
+  readonly certificates: ReadonlyArray<ClaimFiniteSourceProof>;
+  readonly charge: (n: number) => boolean;
+  readonly procedural: boolean;
+  readonly governor: TextAnchor;
+};
+const rightLabelShape = (label: TextAnchor, start: TextAnchor, close: TextAnchor, index: number): boolean =>
+  label.startChar === start.startChar &&
+  label.endChar === close.endChar &&
+  label.quote.length === 2 &&
+  Str.endsWith(")")(label.quote) &&
+  O.contains(Str.charCodeAt(0)(label.quote), 97 + index);
+const rightChildActionRequired = (context: RightDeclarationContext, item: SourceLabelItem): boolean =>
+  context.procedural ||
+  A.some(context.plan.roles.predicates, (p) => p.kind === "gerund" && p.anchor.startChar === item.extent.startChar);
+const rightDeclaredAction = (context: RightDeclarationContext, item: SourceLabelItem, index: number): boolean => {
+  const { plan, charge } = context;
+  if (!charge(plan.roles.predicates.length + 1)) return false;
+  if (!rightChildActionRequired(context, item)) return true;
+  const marker = O.getOrThrow(A.get(context.markers, index));
+  const token = A.get(context.tokens, marker[1]);
+  if (
+    O.isNone(token) ||
+    token.value.anchor.startChar !== item.extent.startChar ||
+    !validateSourceRightLabelActionToken(token.value, charge)
+  )
+    return false;
+  if (!charge(plan.roles.proofs.length * (plan.roles.predicates.length + 1) + 4)) return false;
+  return A.some(
+    plan.roles.proofs,
+    (p) =>
+      p.kind === "action" &&
+      sameAnchor(p.governor, context.governor) &&
+      p.operator.startChar === item.extent.startChar &&
+      contains(item.extent, p.object) &&
+      A.some(plan.roles.predicates, (q) => q.kind === "gerund" && sameAnchor(q.anchor, p.operator))
+  );
+};
+const rightDeclarationItem = (context: RightDeclarationContext, i: number, previousEnd: number): boolean => {
+  const { plan, declaration, tokens, markers, certificates, charge } = context;
+  const item = O.getOrThrow(A.get(declaration.items, i));
+  const marker = O.getOrThrow(A.get(markers, i));
+  const start = O.getOrThrow(A.get(tokens, marker[0])).anchor;
+  const close = O.getOrThrow(A.get(tokens, marker[1] - 1)).anchor;
+  if (
+    !rightLabelShape(item.label, start, close, i) ||
+    !sourceAnchor(plan, item.label, charge) ||
+    !A.some(certificates, (p) => p.kind === "label-boundary" && p.item === i) ||
+    !dottedChildMatches(plan, declaration.owner, item) ||
+    !rightDeclaredAction(context, item, i) ||
+    !dottedSourceGap(plan, previousEnd, item.label.startChar, i === 0, charge) ||
+    item.extent.startChar <= item.label.endChar ||
+    !dottedSourceGap(plan, item.label.endChar, item.extent.startChar, true, charge)
+  )
+    return false;
+  return true;
+};
+const rightDeclarationFrame = (
+  frame: ClaimSourceFrame,
+  declaration: SourceLabelDeclaration,
+  governor: TextAnchor,
+  colon: TextAnchor,
+  end: number
+): boolean =>
+  O.isNone(frame.parent) &&
+  frame.attachment === "main" &&
+  frame.extent.endChar === end &&
+  declaration.anchor.startChar === governor.startChar &&
+  declaration.anchor.endChar === colon.endChar;
+const sourceRightInputs = (
+  plan: ClaimSourceElementPlan,
+  declaration: SourceLabelDeclaration,
+  charge: (n: number) => boolean
+) => {
+  const claim = plan.roles.qualifiedClaim;
+  const input = plan.roles.originalLexicalInput;
+  if (O.isNone(claim) || O.isNone(input) || input.value.status !== "aligned") return O.none();
+  const source = readSourceRightParenthesisList(claim.value, input.value.tokens, charge);
+  if (O.isNone(source) || declaration.owner !== 1 || declaration.items.length !== source.value.markers.length)
+    return O.none();
+  return O.some({ tokens: input.value.tokens, source: source.value });
+};
+const rightDeclarationItems = (context: RightDeclarationContext, start: number, end: number): boolean => {
+  const { declaration, certificates, charge } = context;
+  let previousEnd = start;
+  for (let i = 0; i < declaration.items.length; i++) {
+    if (!charge(certificates.length + 6)) return false;
+    const item = O.getOrThrow(A.get(declaration.items, i));
+    if (!rightDeclarationItem(context, i, previousEnd)) return false;
+    previousEnd = item.extent.endChar;
+  }
+  return previousEnd === end;
+};
+const rightParenthesisDeclaration = (
+  plan: ClaimSourceElementPlan,
+  declaration: SourceLabelDeclaration,
+  charge: (amount: number) => boolean
+): boolean => {
+  const inputs = sourceRightInputs(plan, declaration, charge);
+  if (O.isNone(inputs)) return false;
+  const source = inputs.value.source;
+  if (!charge(plan.roles.certificates.length * 2 + source.markers.length * 8 + 8)) return false;
+  const certificates = A.filter(plan.roles.certificates, (p) => p.kind === "label-boundary");
+  if (certificates.length !== declaration.items.length) return false;
+  const frame = dottedDeclarationFrame(plan, declaration, charge);
+  if (O.isNone(frame)) return false;
+  const tokens = inputs.value.tokens;
+  const governor = O.getOrThrow(A.get(tokens, source.governor)).anchor;
+  const colon = O.getOrThrow(A.get(tokens, source.colon)).anchor;
+  if (
+    !rightDeclarationFrame(
+      frame.value,
+      declaration,
+      governor,
+      colon,
+      O.getOrThrow(A.get(tokens, source.end - 1)).anchor.endChar
+    )
+  )
+    return false;
+  const context: RightDeclarationContext = {
+    plan,
+    declaration,
+    tokens,
+    markers: source.markers,
+    certificates,
+    charge,
+    procedural: source.colon - source.governor === 4,
+    governor,
+  };
+  return rightDeclarationItems(context, colon.endChar, frame.value.extent.endChar);
+};
+const validateSourceLabelDeclaration = (
+  plan: ClaimSourceElementPlan,
+  declaration: SourceLabelDeclaration,
+  state: SourceLabelValidation,
+  charge: (amount: number) => boolean
+): boolean => {
+  if (!charge(declaration.items.length * 3 + 2)) return false;
+  const list = A.get(plan.declarations, state.labelled++);
+  if (O.isNone(list) || !sourceLabelListMatches(declaration, list.value, charge)) return false;
+  if (
+    A.some(declaration.items, (item) => Str.endsWith(")")(item.label.quote) && !Str.startsWith("(")(item.label.quote))
+  ) {
+    state.right++;
+    return rightParenthesisDeclaration(plan, declaration, charge);
+  }
+  const dotted = A.some(declaration.items, (item) => sourceDottedLabelRank(item.label.quote) >= 0);
+  if (!dotted) return A.every(declaration.items, (item) => parenthesizedSourceLabel(plan, item.label, charge));
+  return (
+    sourceLabelRawTokens(plan, state, charge) &&
+    dottedDeclarationItems(plan, declaration, O.getOrThrow(state.raw), charge)
+  );
+};
+const sourceLabelCensusMatches = (
+  plan: ClaimSourceElementPlan,
+  state: SourceLabelValidation,
+  rightLabels: boolean
+): boolean => state.labelled === plan.declarations.length && state.right === (rightLabels ? 1 : 0);
+const validateSourceLabelDeclarations = (
+  plan: ClaimSourceElementPlan,
+  charge: (amount: number) => boolean,
+  rightLabels: boolean
+): boolean => {
+  if (!charge(plan.declarationPlans.length + plan.declarations.length + 1) || !charge(4)) return false;
+  const state: SourceLabelValidation = { labelled: 0, right: 0, raw: O.none() };
+  for (const declaration of plan.declarationPlans) {
+    if (declaration.kind !== "labelled") continue;
+    if (!validateSourceLabelDeclaration(plan, declaration, state, charge)) return false;
+  }
+  return sourceLabelCensusMatches(plan, state, rightLabels);
+};
+
 const validateOwnership = (plan: ClaimSourceElementPlan, charge: (amount: number) => boolean): boolean => {
   if (!charge(plan.nominals.length + plan.elements.length + plan.frames.length + plan.roles.clauses.length + 1))
     return false;

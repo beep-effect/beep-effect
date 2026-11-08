@@ -20,6 +20,8 @@ import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
+import { ComputeProfile } from "./ComputeProfile.schemas.ts";
+import { GateRouteId } from "./GateRoute.schemas.ts";
 import { RunScopeRecord } from "./RunScope.schemas.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/QualityScheduler.schemas");
@@ -210,6 +212,12 @@ export type ProofStage = typeof ProofStage.Type;
 /**
  * Shared schema fields for immutable facts recorded at attempt start.
  *
+ * **Details**
+ *
+ * `computeProfile` sits beside `envProfile`: the posture says how the proof
+ * ran, the compute profile says which memory class ran it. Rows written before
+ * the field existed decode it as `None`.
+ *
  * **Example** (Reuse the fact field group)
  *
  * ```ts
@@ -226,6 +234,7 @@ export const attemptInputFactFields = {
   diffFingerprint: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   proofTier: YeetProofTier.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   envProfile: ProofEnvProfile.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+  computeProfile: ComputeProfile.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   stage: ProofStage.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 };
 
@@ -272,6 +281,10 @@ const admissionOwnerFields = {
   coordinationProtocol: AdmissionCoordinationProtocol.pipe(
     S.withConstructorDefault(Effect.succeed(AdmissionCoordinationProtocol.Enum["scheduler-origin-concurrency/v1"])),
     S.withDecodingDefaultKey(Effect.succeed(AdmissionCoordinationProtocol.Enum["legacy-origin-lock/v1"]))
+  ),
+  forceLocal: S.Boolean.pipe(
+    S.withConstructorDefault(Effect.succeed(false)),
+    S.withDecodingDefaultKey(Effect.succeed(false))
   ),
 };
 
@@ -664,6 +677,12 @@ export class AdmissionConfig extends S.Opaque<AdmissionConfig, { readonly brand:
 /**
  * One admission request derived from a Yeet run mode.
  *
+ * **Details**
+ *
+ * `gateRoute` names the gate family the work proves, when the caller knows it.
+ * On a `worker` compute profile a hosted-only route is refused unless
+ * `forceLocal` is set; both default so existing callers are unchanged.
+ *
  * **Example** (Build a full-proof request)
  *
  * ```ts
@@ -695,6 +714,8 @@ export class AdmissionRequest extends S.Opaque<AdmissionRequest, { readonly bran
     checkoutRoot: S.String,
     branch: S.String,
     command: S.String,
+    gateRoute: GateRouteId.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    forceLocal: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
   }).pipe(
     $I.annoteSchema("AdmissionRequest", {
       description: "One admission request for heavyweight repository work.",
@@ -816,7 +837,55 @@ interface QualitySchedulerErrorOptions {
   readonly reason?: QualitySchedulerErrorReason;
 }
 
-const QualitySchedulerErrorReason = LiteralKit(["journal-lock-lost", "journal-lock-retry-exhausted"]);
+const QualitySchedulerErrorReason = LiteralKit([
+  "journal-lock-lost",
+  "journal-lock-retry-exhausted",
+  "compute-profile-refusal",
+]);
+
+/**
+ * Refusal to run a hosted-only gate locally on a `worker` compute profile (D4).
+ *
+ * **Details**
+ *
+ * The message names the gate, the probe ceiling, the admission envelope and
+ * the push-first route (`bun run beep yeet open --body-file <md>`), where
+ * hosted CI is the proof. Passing `forceLocal` runs the gate anyway.
+ *
+ * **Example** (Construct a refusal)
+ *
+ * ```ts
+ * import { ComputeProfileRefusal } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const refusal = ComputeProfileRefusal.make({
+ *   gate: "check",
+ *   ceilingGib: 7,
+ *   envelopeGib: 20,
+ *   message: "check is hosted-only on compute-profile=worker"
+ * })
+ * console.log(refusal.gate) // "check"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class ComputeProfileRefusal extends S.TaggedError<ComputeProfileRefusal, { readonly brand: unique symbol }>(
+  $I`ComputeProfileRefusal`
+)(
+  "ComputeProfileRefusal",
+  {
+    gate: GateRouteId,
+    ceilingGib: S.Finite,
+    envelopeGib: S.Finite,
+    message: S.String,
+  },
+  $I.annoteError<ComputeProfileRefusal>("ComputeProfileRefusal", {
+    description: "A hosted-only gate was refused locally on a worker compute profile.",
+  })
+) {
+  /** Process exit code reported when this error reaches the runtime boundary. */
+  override readonly [Runtime.errorExitCode] = 1;
+}
 
 type QualitySchedulerErrorReason = typeof QualitySchedulerErrorReason.Type;
 
@@ -843,6 +912,7 @@ export class QualitySchedulerError extends S.TaggedError<QualitySchedulerError, 
     message: S.String,
     exitCode: S.optionalKey(S.Finite),
     reason: S.optionalKey(QualitySchedulerErrorReason),
+    refusal: S.optionalKey(ComputeProfileRefusal),
     cause: S.optionalKey(OpaqueDefect),
   },
   $I.annoteError<QualitySchedulerError>("QualitySchedulerError", {

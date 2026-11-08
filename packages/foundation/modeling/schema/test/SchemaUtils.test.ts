@@ -115,7 +115,7 @@ describe("optionalDefect", () => {
   const same = S.toEquivalence(Failure);
 
   it.effect.prop(
-    "round-trips schema-derived failures while keeping defect details out of identity",
+    "round-trips schema-derived diagnostic identity and optional cause presence",
     [Arbitrary.schema(Failure)],
     Effect.fnUntraced(function* ([failure]) {
       const encoded = yield* encode(failure);
@@ -129,6 +129,7 @@ describe("optionalDefect", () => {
       assertNone(withoutCause.cause);
       const encodedWithoutCause = yield* encode(withoutCause);
       expect(encodedWithoutCause).toEqual({ code: failure.code });
+      if (O.isNone(failure.cause)) expect(encoded).toEqual({ code: failure.code });
     })
   );
 

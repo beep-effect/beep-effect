@@ -16,6 +16,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("census", type=Path)
     parser.add_argument(
+        "--nested-entrypoint-inventory", type=Path,
+        help="Current source-bound native catalogue join, required to preserve script-only coverage",
+    )
+    parser.add_argument(
         "--prior-review-archive", type=Path,
         help="Fresh sibling JSON archive required before replacing reviewed population evidence",
     )
@@ -34,6 +38,68 @@ def main():
         raise SystemExit("The current population must be a regular non-symlink file.")
     existing_bytes = output.read_bytes() if output.is_file() else None
     existing = json.loads(existing_bytes) if existing_bytes is not None else {}
+    nested = None
+    nested_path = None
+    if existing.get("nestedEntrypointInventory") and args.nested_entrypoint_inventory is None:
+        raise SystemExit("Script-only inventory exists; supply its current replacement. Nothing was replaced.")
+    if args.nested_entrypoint_inventory is not None:
+        nested_path = args.nested_entrypoint_inventory.absolute()
+        if nested_path.is_symlink() or nested_path.parent.resolve() != recipe.parent or not nested_path.is_file():
+            raise SystemExit("The nested inventory must be a regular non-symlink sibling file.")
+        nested_path = nested_path.parent.resolve() / nested_path.name
+        nested = json.loads(nested_path.read_text(encoding="utf-8"))
+        scripts = {
+            workspace["name"] + "#" + task: command
+            for workspace in census["workspaces"] for task, command in workspace["scripts"].items()
+        }
+        nodes = {node["id"]: node for node in census["nodes"]}
+        workspaces = {workspace["name"]: workspace for workspace in census["workspaces"]}
+        if len(nodes) != len(census["nodes"]) or len(workspaces) != len(census["workspaces"]):
+            raise SystemExit("Census node and workspace identities must be unique.")
+        if any(node.get("command") != scripts.get(task) for task, node in nodes.items()):
+            raise SystemExit("Configured commands disagree with the manifest scripts.")
+        callers = defaultdict(list)
+        for task, node in nodes.items():
+            command = node.get("command")
+            if command and command.startswith("bun run ") and command[8:] in workspaces[node["workspace"]]["scripts"]:
+                callers[node["workspace"] + "#" + command[8:]].append(task)
+        extras = sorted(set(scripts) - set(nodes))
+        expected_rows = [{
+            "entrypoint": task,
+            "literalCommandSha256": hashlib.sha256(scripts[task].encode()).hexdigest(),
+            "directConfiguredCallers": sorted(callers[task]),
+        } for task in extras]
+        executable = sum(bool(node.get("command")) for node in nodes.values())
+        expected_counts = {
+            "workspaces": len(workspaces), "configuredGraphNodes": len(nodes),
+            "configuredExecutable": executable, "graphOnly": len(nodes) - executable,
+            "catalogue": len(set(nodes) | set(scripts)), "scripts": len(scripts),
+            "scriptOnly": len(extras),
+            "withLiteralCaller": sum(bool(row["directConfiguredCallers"]) for row in expected_rows),
+            "withoutLiteralCaller": sum(not row["directConfiguredCallers"] for row in expected_rows),
+            "literalCallerEdges": sum(len(row["directConfiguredCallers"]) for row in expected_rows),
+        }
+        observation = nested.get("nativeObservation", {})
+        observations = observation.get("observations", [])
+        if (
+            nested.get("schemaVersion") != "cache-adoption-native-catalogue-join/v1"
+            or nested.get("sourceBaseRevision") != census["revision"]
+            or nested.get("censusSha256") != digest(census_path)
+            or nested.get("sourceBindingsVerified") != len(census["sources"])
+            or nested.get("counts") != expected_counts or nested.get("rows") != expected_rows
+            or nested.get("taskBodiesExecuted") != 0 or nested.get("qualificationGranted") is not False
+            or observation.get("sourceHead") != census["revision"]
+            or observation.get("censusSha256") != digest(census_path)
+            or observation.get("sourceBindingsVerifiedBeforeAndAfter") != len(census["sources"])
+            or observation.get("taskBodiesExecuted") != 0
+            or observation.get("taskQualificationGranted") is not False
+            or observation.get("featureAcceptanceGranted") is not False
+            or len(observations) != 2 or {item.get("channel") for item in observations} != {"stable", "canary"}
+            or any(item.get("tasks") != expected_counts["catalogue"]
+                   or item.get("executableTasks") != len(scripts)
+                   or item.get("packages") != len(workspaces) for item in observations)
+        ):
+            raise SystemExit("The nested inventory does not completely match this census. Nothing was replaced.")
     reviewed = {
         row["computation"]: row for row in existing.get("rows", [])
         if row.get("currentSemanticReview", "pending") != "pending" or row.get("finalDisposition") is not None
@@ -150,6 +216,26 @@ def main():
             "The retained prior-reviewed population preserves earlier decisions, including computations no longer present; this refresh does not revalidate them.",
         ],
     }
+    if nested is not None:
+        counts = nested["counts"]
+        report["counts"].update({
+            "declaredExecutableScriptEntrypoints": counts["scripts"],
+            "configuredGraphExecutableComputations": counts["configuredExecutable"],
+            "additionalScriptOnlyEntrypoints": counts["scriptOnly"],
+            "queryCatalogueNodes": counts["catalogue"],
+        })
+        report["nestedEntrypointInventory"] = {
+            "path": str(nested_path.relative_to(recipe.parent.parent)),
+            "sha256": digest(nested_path),
+            "scriptOnlyEntrypoints": counts["scriptOnly"],
+            "withLiteralConfiguredCaller": counts["withLiteralCaller"],
+            "withoutLiteralConfiguredCaller": counts["withoutLiteralCaller"],
+            "reviewState": "pending",
+            "countsDoNotMeanDistinctSemanticComputations": True,
+        }
+        report["limits"].append(
+            "The linked script-only inventory preserves complete manifest coverage; literal callers do not prove execution or equivalence."
+        )
     if archive is not None:
         with archive.open("xb") as handle:
             handle.write(existing_bytes)

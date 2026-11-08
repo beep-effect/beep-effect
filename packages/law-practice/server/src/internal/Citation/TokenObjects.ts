@@ -36,6 +36,7 @@ export class CitationTokenConstruction extends S.Opaque<CitationTokenConstructio
 ) {}
 const Seed = S.toType(CitationTokenSeed);
 const sameGroups = S.toEquivalence(Groups);
+const sameData = S.toEquivalence(Native);
 const failure = () => CitationTokenAssemblyFailure.make({ reason: "host-failed" });
 const safety = (limit: "candidates" | "producedTextUtf16") =>
   CitationSafetyLimitExceeded.make({ operation: "extract", limit });
@@ -55,7 +56,8 @@ const nativeBytes = (value: typeof Native.Type) => (value === null ? 0 : value.b
 
 /** Immutable native token data/groups plus source-mutated edition lists.
  * Effect HashMap owns local identities and Semaphore serializes compound
- * merges. The frozen edition adapter owns source set iteration; no new
+ * merges and builtin value equality. Equality is distinct from merge compatibility.
+ * The frozen edition adapter owns source set iteration; no new
  * collection/hash implementation is introduced. All methods capture R = never.
  * Arbitrary subclass protocols and external field mutation remain open.
  * @internal @category operations @since 0.0.0
@@ -151,6 +153,17 @@ export const makeCitationTokenObjects = Effect.fn("Citation.makeTokenObjects")(f
     const row = yield* lookup(id);
     return row.kind === "CitationToken" ? yield* editions.nominative(row.exact, row.variation) : false;
   });
+  const equal = Effect.fn("Citation.equalTokenObjects")(function* (left: number, right: number) {
+    const a = yield* lookup(left);
+    const b = yield* lookup(right);
+    if (left === right) return true;
+    if (a.kind !== b.kind || !sameData(a.data, b.data) || a.start !== b.start || a.end !== b.end) return false;
+    // Original dataclass equality excludes groups, while merge compares them.
+    if (a.kind !== "CitationToken") return true;
+    if (!(yield* editions.equalOccurrences(a.exact, b.exact))) return false;
+    if (!(yield* editions.equalOccurrences(a.variation, b.variation))) return false;
+    return a.short === b.short;
+  });
   const constructFrom = Effect.fn("Citation.constructTokenWithCapacity")(function* <E>(
     produce: (remaining: number) => Effect.Effect<CitationTokenConstruction, E>
   ) {
@@ -180,6 +193,9 @@ export const makeCitationTokenObjects = Effect.fn("Citation.makeTokenObjects")(f
     ),
     nominative: Effect.fn("Citation.serialNominativeToken")((id: number) =>
       timing.timed(mutex.withPermit(nominative(id)))
+    ),
+    equal: Effect.fn("Citation.serialEqualTokens")((left: number, right: number) =>
+      timing.timed(mutex.withPermit(equal(left, right)))
     ),
   };
 });

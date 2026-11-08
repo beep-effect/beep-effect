@@ -51,6 +51,7 @@ import {
   KnowledgeMintContextRefusal,
   KnowledgeOperationalError,
 } from "./Knowledge.errors.ts";
+import { knowledgeDocumentPackageOwners, verifiedPackageExportColumns } from "./Knowledge.export-claims.ts";
 import {
   decodeKnowledgeUtf8,
   isKnowledgeArchivalPath,
@@ -155,6 +156,7 @@ import type {
   KnowledgeEvaluatorId,
   KnowledgePathRemoval,
   KnowledgeSpanForm,
+  KnowledgeWorkspacePackage,
 } from "./KnowledgeDoctor.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Knowledge/KnowledgeDoctor.service");
@@ -413,7 +415,8 @@ const namesBranch = (text: string, column: number): boolean => BRANCH_NAME_PREFI
 const proseSpans = (
   line: KnowledgeDocumentFenceLine,
   documentPath: string,
-  gitRefNames: HashSet.HashSet<string>
+  gitRefNames: HashSet.HashSet<string>,
+  exportColumns: HashSet.HashSet<number>
 ): ReadonlyArray<readonly [KnowledgeSpanForm, string, number]> => {
   const assertions = O.toArray(
     O.map(knowledgePathAssertion(line.text), ({ path, column }) => ["path-assertion", path, column] as const)
@@ -423,7 +426,8 @@ const proseSpans = (
       if (isKnowledgeCommandSpan(inlineSpan.span)) {
         return O.some(["command", inlineSpan.span, inlineSpan.column] as const);
       }
-      return HashSet.has(gitRefNames, inlineSpan.span) ||
+      return HashSet.has(exportColumns, inlineSpan.column) ||
+        HashSet.has(gitRefNames, inlineSpan.span) ||
         namesBranch(line.text, inlineSpan.column) ||
         O.isNone(normalizeKnowledgeRepoPath(documentPath, inlineSpan.span))
         ? O.none()
@@ -467,15 +471,21 @@ const proseSpans = (
  * @param documentPath - Repository-relative path of the scanned document.
  * @param text - Decoded document text.
  * @param gitRefNames - Exact ref spellings that are never read as paths.
+ * @param packages - Workspace export facts from the scanned tree, when available.
+ * @param entries - Tracked entries used to prove the export targets.
  * @returns Source-ordered spans plus every historical marker in the document.
  * @category parsing
  * @since 0.0.0
  */
-export const extractKnowledgeDocumentSpans: {
-  (text: string, gitRefNames: HashSet.HashSet<string>): (documentPath: string) => KnowledgeDocumentExtraction;
-  (documentPath: string, text: string, gitRefNames: HashSet.HashSet<string>): KnowledgeDocumentExtraction;
-} = dual(3, (documentPath: string, text: string, gitRefNames: HashSet.HashSet<string>): KnowledgeDocumentExtraction => {
+const extractDocumentSpans = (
+  documentPath: string,
+  text: string,
+  gitRefNames: HashSet.HashSet<string>,
+  packages: ReadonlyArray<KnowledgeWorkspacePackage> = [],
+  entries: ReadonlyArray<KnowledgeTrackedEntry> = []
+): KnowledgeDocumentExtraction => {
   const lines = knowledgeDocumentFenceLines(text);
+  const documentPackages = knowledgeDocumentPackageOwners(lines, packages);
   const surface = isKnowledgeArchivalPath(documentPath)
     ? KnowledgeRefSurface.Enum.archival
     : KnowledgeRefSurface.Enum.live;
@@ -510,22 +520,51 @@ export const extractKnowledgeDocumentSpans: {
       O.toArray
     );
     const prose = line.prose
-      ? A.map(A.appendAll(phase, proseSpans(line, documentPath, gitRefNames)), ([form, raw, column]) =>
-          KnowledgeSpan.make({
-            form,
-            documentPath,
-            surface,
-            location: spanLocation(documentPath, line.number, column),
-            raw,
-            generatedBy: O.none(),
-            citation: citationAt(line.number),
-          })
+      ? A.map(
+          A.appendAll(
+            phase,
+            proseSpans(
+              line,
+              documentPath,
+              gitRefNames,
+              verifiedPackageExportColumns(line.text, packages, documentPackages, entries)
+            )
+          ),
+          ([form, raw, column]) =>
+            KnowledgeSpan.make({
+              form,
+              documentPath,
+              surface,
+              location: spanLocation(documentPath, line.number, column),
+              raw,
+              generatedBy: O.none(),
+              citation: citationAt(line.number),
+            })
         )
       : A.empty<KnowledgeSpan>();
     return A.appendAll(generated, prose);
   });
   return KnowledgeDocumentExtraction.make({ spans, markers: A.appendAll(O.toArray(documentMarker), blocks.markers) });
-});
+};
+
+/**
+ * Extracts reference spans without tree-specific package export evidence.
+ *
+ * **Example** (Extract a relative path)
+ * ```ts
+ * import { extractKnowledgeDocumentSpans } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.service"
+ * import * as HashSet from "effect/HashSet"
+ * console.log(extractKnowledgeDocumentSpans("docs/a.md", "`./missing`", HashSet.empty()).spans.length) // 1
+ * ```
+ * @category parsing
+ * @since 0.0.0
+ */
+export const extractKnowledgeDocumentSpans: {
+  (text: string, gitRefNames: HashSet.HashSet<string>): (documentPath: string) => KnowledgeDocumentExtraction;
+  (documentPath: string, text: string, gitRefNames: HashSet.HashSet<string>): KnowledgeDocumentExtraction;
+} = dual(3, (documentPath: string, text: string, gitRefNames: HashSet.HashSet<string>) =>
+  extractDocumentSpans(documentPath, text, gitRefNames)
+);
 
 /* -------------------------------------------------------------------------------------------------
  * Classification rule table
@@ -1355,6 +1394,7 @@ export const scanKnowledgeDoctorTree = Effect.fn("KnowledgeDoctor.scanTree")(fun
   evaluators: ReadonlyArray<KnowledgeEvaluator> = KNOWLEDGE_DOCTOR_EVALUATORS
 ) {
   const documents = A.sort(A.filter(tree.trackedEntries, isDoctorDocument), entryOrder);
+  const packages = yield* tree.domain.packages;
   const extractions = yield* Effect.forEach(documents, (entry) =>
     tree.readBytes(entry.path).pipe(
       Effect.flatMap((bytes) =>
@@ -1362,7 +1402,7 @@ export const scanKnowledgeDoctorTree = Effect.fn("KnowledgeDoctor.scanTree")(fun
       ),
       Effect.map((text) => ({
         documentPath: entry.path,
-        extraction: extractKnowledgeDocumentSpans(entry.path, text, tree.gitRefNames),
+        extraction: extractDocumentSpans(entry.path, text, tree.gitRefNames, packages, tree.trackedEntries),
       }))
     )
   );
