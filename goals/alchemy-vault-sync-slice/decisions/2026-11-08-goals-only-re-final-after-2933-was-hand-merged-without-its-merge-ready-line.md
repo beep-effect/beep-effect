@@ -12,3 +12,5 @@ reversal: "Restore proposedCloseout.finalPullRequest and the final gate entry to
 - gating `yeet-verdict`: unknown, because the declared verdict is not a publish result.
 
 The work itself is on `main`, so nothing is reverted. A goals-only PR takes over as the final PR: `proposedCloseout.finalPullRequest` and the gate's final entry move to it, its branch's verdict becomes the gating evidence, and #2933 becomes supporting. It stays a draft until its last step and merges only on `merge-ready: yes`.
+
+This PR's first publish was refused on six `lint:effect-vitest` findings inherited from `main` (ep59, ep61), so its publish waited until both were off `main` (#2965, #2960). A goals-only final needs only the cheap gates, so ep58 does not hold it.
