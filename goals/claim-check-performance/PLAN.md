@@ -1,6 +1,6 @@
 # Claim Checker Performance Plan
 
-Status: active. Last measured with a frozen runtime closure: 46/538 strict at b8ef2bb2cff (not 43: the 43 figure was the earlier owner-integrated replay), 537 parsed, 538 abstained, all mandatory identities retained. Current development replay at 2eaee38e926, not a gate measurement: 48/538 with all 46 retained, 537 parsed, 538 abstained. The component census (research/component-census-001.json) shows only 61/538 selected claims and 0/60 independent claims receive an enhanced source plan; the rest use the word-scanner fallback. All original 37 and accepted main evidence remain unchanged. Every usefulness and final delivery gate still fails and remains required; the frozen closure needs a bun.lock metadata admission before the next gate measurement.
+Status: active. Latest frozen combined-runtime measurement: 50/538 strict at ae2be7b13d74, retaining all 49 mandatory identities with zero losses; 537 parsed and all 538 abstained. This incorporates accepted main #2987 without adopting the private contextual-head candidates. The earlier accepted-main development replay at 2eaee38e926 scored 48/538 and remains historical evidence; it is not the combined measurement. All labels, previous results and all original 37/46 identities remain preserved. All 50 current strict identities are now mandatory. Every unmet usefulness, final-cohort, hosted readiness and delivery gate remains required. Evidence: research/accepted-main-2987-measurement-001.json.
 
 ## P0 — Baseline and evaluation integrity
 
@@ -52,6 +52,14 @@ native cleanup. Mark completed-retained only after P0-P4 truly pass.
 
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug claim-check-performance`; add a `kind: checkpoint` file there, never edit this block._
+
+### Integrate accepted fallback repair and measure all fifty retained identities, 2026-11-08
+
+Integrate accepted main #2987 through a normal merge while retaining the two-item closed-composition guard, explicit source/inspection view and unchanged source validators. Preserve the earlier census JSON at its original path and retain accepted main’s updated receipt separately with exact hash bindings. The fresh canonical main-runner comparison on all 60 families/538 selected/1,219 context records scores 50/538, retaining every prior 49 strict identity with zero losses. One new strict identity becomes mandatory, making 50 protected. The runtime freeze changes only ClaimElement.behavior.ts; the 1,845 paths, 94 lexical assets, scorer, source/reference selection, Bun and caps remain unchanged. All 538 outcomes still abstain; no private nominal candidate is adopted and no usefulness or legal-quality gate is declared passed. The 121 output files are sealed separately; original 1,213 bindings and 5,222 historical files across 47 anchored groups remain exact. Six focused files/99 tests and both package compiler checks pass. Hosted combined-head CI and review remain required. Evidence: research/accepted-main-2987-measurement-001.json.
+
+Lane `feat/claim-check-census-composition` · PR #2980
+
+Reverse: Revert the integration behavior only while retaining both census receipts, all original labels and every measured result.
 
 ### Preserve closed compositions through accepted POS fallback integration, 2026-11-08
 
