@@ -918,7 +918,7 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
       });
       // A GitHub-API command needs Bun and a script-free install, not the
       // monorepo setup (quality audit M15).
-      expect(job(["steps", 1, "uses"])).toMatch(/^oven-sh\/setup-bun@[0-9a-f]{40}$/u);
+      expect(job(["steps", 1, "uses"])).toBe("./.github/actions/setup-bun");
       expect(job(["steps", 2, "run"])).toBe("bun install --frozen-lockfile --ignore-scripts");
       expect(workflow.text).not.toContain("setup-monorepo-ci");
       expect(job(["steps", 3, "run"])).toBe(
