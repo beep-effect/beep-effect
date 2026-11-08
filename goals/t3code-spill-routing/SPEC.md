@@ -94,11 +94,11 @@ _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions wr
 
 ### Restore the PSI sampler at a durable path, 2026-11-08
 
-The sampler and its data were retired with ~/workstation-diagnostics on 2026-11-02 while the unit still pointed there, so it failed on every tick. The sampler now lives under ~/.local/share/beep-psi and writes ~/.local/state/beep-psi/safe-pressure.jsonl with a 14-day ring, in the same record format and still without per-process scans. The spec called for read-only analysis; this goes further because a threshold table that must be re-derived needs a live recorder. The baseline itself uses the preserved data.
+The sampler and its data were retired with $HOME/workstation-diagnostics on 2026-11-02 while the unit still pointed there, so it failed on every tick. The sampler now lives under $HOME/.local/share/beep-psi and writes $HOME/.local/state/beep-psi/safe-pressure.jsonl with a 14-day ring, in the same record format and still without per-process scans. The spec called for read-only analysis; this goes further because a threshold table that must be re-derived needs a live recorder. The baseline itself uses the preserved data.
 
 Lane `t3code-goals-closeout`
 
-Reverse: Restore ~/.local/state/beep-psi/99-workstation-light-sampling.conf.bak-20261108 over the drop-in and run systemctl --user daemon-reload
+Reverse: Restore $HOME/.local/state/beep-psi/99-workstation-light-sampling.conf.bak-20261108 over the drop-in and run systemctl --user daemon-reload
 
 ### Closeout lands in one PR by operator ruling, 2026-11-08
 
