@@ -587,6 +587,23 @@ describe("reviewed recurrence source frames and actual enhanced topology", () =>
           A.map(result.decompositions, fallbackTopology),
           A.map(legacy.decompositions, fallbackTopology)
         );
+        // The comparison above cannot see a defect both trees share, so pin the shape itself.
+        const decomposition = O.getOrThrow(A.head(result.decompositions));
+        assert.strictEqual(decomposition.status, "decomposed");
+        if (decomposition.status === "decomposed") {
+          const [root, body, ...rest] = decomposition.tree.elements;
+          const rootElement = O.getOrThrow(O.fromUndefinedOr(root));
+          const bodyElement = O.getOrThrow(O.fromUndefinedOr(body));
+          assert.deepStrictEqual(rest, []);
+          assert.strictEqual(
+            expanded.qualifiedText,
+            `${rootElement.anchor.quote} comprising ${bodyElement.anchor.quote}.`
+          );
+          assert.deepStrictEqual(
+            A.filter(decomposition.tree.edges, ({ kind }) => kind === "part-of"),
+            [{ kind: "part-of", child: bodyElement.path, parent: rootElement.path }]
+          );
+        }
         const report = yield* inspectPreparedClaimRoles(prepared, evidence);
         assert.strictEqual(O.getOrThrow(A.head(report.records)).status, "partial");
       }
