@@ -1819,6 +1819,12 @@ Schedule the remaining 22 original annotation workflows on Bun and Node using ex
 
 Reverse: Revise any finite proof on contrary source or runtime evidence; retain all unqualified workflows and laws.
 
+### Recompute original pin-cite-span assertions from raw source, 2026-11-08
+
+Join five authenticated standalone-cleaner/parser operation pairs to all nine original span_with_pincite equalities. Run the same ordered pure builtin cleaning through the public raw-input extraction pipeline, then compare actual verified pin-inclusive coordinates and substrings with original assertion operands. Qualify cases only after both native runtimes pass; this finite composition does not waive retained Document/callback protocols or full-goal acceptance.
+
+Reverse: Reopen exact bindings on contrary original-source or runtime evidence; preserve all broader retained protocol and fidelity obligations.
+
 ### Schedule remaining original extraction calls with exact cleaner choices, 2026-11-08
 
 Schedule the remaining 69 original nonhelper extraction calls on both native configurations. Decode every recorded cleaner choice; preserve None, empty lists, plain HTML/whitespace cleaning and markup cleaning. The previously qualified custom callable remains in its dedicated full workflow. Ten focused cleaner-profile/parser/court/reference tests pass. Refresh fourteen existing assertion references after the applicable reruns without promoting operation snapshots to canonical assertion completion. Full hosted replay, alternate tokenizer interfaces and exhaustive acceptance remain required. Evidence: history/evidence/2026-11-07-remaining-extraction-inputs.md.

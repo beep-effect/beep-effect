@@ -1752,7 +1752,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/ops/ledger-proof-plan.json",
-          "sha256": "309b63fa2c16015dd67e1ef1265991970078d0159169bc2c019925c268a0b37a"
+          "sha256": "1125eba310b3a859381f0864081ba6eb4e55cc918504ca7bce163f291f46b73c"
         },
         {
           "path": "packages/law-practice/server/test/CitationCanonicalAnnotation.fixtures.ts",
