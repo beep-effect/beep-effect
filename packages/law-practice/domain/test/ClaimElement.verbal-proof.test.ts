@@ -139,6 +139,27 @@ describe("verbal-boundary source witnesses", () => {
           ClaimFiniteSourceProof.cases["verbal-boundary"].make({ ...proof, scope: fixture.tokenRef("plate") }),
           ClaimFiniteSourceProof.cases["verbal-boundary"].make({
             ...proof,
+            token: ClaimSourceProofRef.make({
+              ordinal: ClaimSourceProofOrdinal.make(proof.ordinal + 1),
+              slot: "token",
+            }),
+          }),
+          ClaimFiniteSourceProof.cases["verbal-boundary"].make({
+            ...proof,
+            governor: ClaimSourceProofRef.make({
+              ordinal: ClaimSourceProofOrdinal.make(proof.ordinal + 1),
+              slot: "token",
+            }),
+          }),
+          ClaimFiniteSourceProof.cases["verbal-boundary"].make({
+            ...proof,
+            scope: ClaimSourceProofRef.make({
+              ordinal: ClaimSourceProofOrdinal.make(proof.ordinal + 1),
+              slot: "scope",
+            }),
+          }),
+          ClaimFiniteSourceProof.cases["verbal-boundary"].make({
+            ...proof,
             governor: ClaimSourceProofRef.make({ ...proof.governor, slot: "core" }),
           }),
         ];
@@ -210,6 +231,20 @@ describe("independent nominal boundary witnesses", () => {
           ClaimFiniteSourceProof.cases.boundary.make({ ...proof, token: fixture.bodyScope }),
           ClaimFiniteSourceProof.cases.boundary.make({ ...proof, scope: nominal }),
           ClaimFiniteSourceProof.cases.boundary.make({ ...proof, scope: fixture.transitionScope }),
+          ClaimFiniteSourceProof.cases.boundary.make({
+            ...proof,
+            token: ClaimSourceProofRef.make({
+              ordinal: ClaimSourceProofOrdinal.make(proof.ordinal + 1),
+              slot: "token",
+            }),
+          }),
+          ClaimFiniteSourceProof.cases.boundary.make({
+            ...proof,
+            scope: ClaimSourceProofRef.make({
+              ordinal: ClaimSourceProofOrdinal.make(proof.ordinal + 1),
+              slot: "scope",
+            }),
+          }),
         ];
         for (const corrupted of corruptions) assert.isFalse(validate([...fixture.proofs, corrupted]));
         assert.isFalse(

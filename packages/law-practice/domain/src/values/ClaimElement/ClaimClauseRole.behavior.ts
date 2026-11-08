@@ -1198,23 +1198,24 @@ const validateFiniteBoundaryMode = (
   return validateFiniteSimpleBoundary(context.tokens, proof.mode, token, index);
 };
 
+// Only for this record's direct refs, after validateFiniteProofEdges and before any charge callback.
+const checkedFiniteReference = (
+  context: FiniteProofValidationContext,
+  ref: ClaimSourceProofRef
+): ClaimFiniteSourceProof => O.getOrThrow(context.resolve(ref));
 const validateFiniteBoundaryProof = (context: FiniteProofValidationContext, proof: FiniteBoundaryProof): boolean => {
-  const { resolve } = context;
-  const raw = resolve(proof.token);
-  const scope = resolve(proof.scope);
-  if (O.isNone(raw) || raw.value.kind !== "token" || O.isNone(scope) || scope.value.kind !== "scope") return false;
-  const token = raw.value.token;
-  if (token.anchor.startChar < scope.value.extent.startChar || token.anchor.endChar > scope.value.extent.endChar)
-    return false;
-  return validateFiniteBoundaryMode(context, proof, raw.value, scope.value.extent.endChar);
+  const raw = checkedFiniteReference(context, proof.token);
+  const scope = checkedFiniteReference(context, proof.scope);
+  if (raw.kind !== "token" || scope.kind !== "scope") return false;
+  const token = raw.token;
+  if (token.anchor.startChar < scope.extent.startChar || token.anchor.endChar > scope.extent.endChar) return false;
+  return validateFiniteBoundaryMode(context, proof, raw, scope.extent.endChar);
 };
 
 type FiniteVerbalBoundaryProof = Extract<ClaimFiniteSourceProof, { readonly kind: "verbal-boundary" }>;
 type FiniteScopeProof = Extract<ClaimFiniteSourceProof, { readonly kind: "scope" }>;
 const isFiniteTokenProofOption = (proof: O.Option<ClaimFiniteSourceProof>): proof is O.Some<FiniteTokenProof> =>
   O.isSome(proof) && proof.value.kind === "token";
-const isFiniteScopeProofOption = (proof: O.Option<ClaimFiniteSourceProof>): proof is O.Some<FiniteScopeProof> =>
-  O.isSome(proof) && proof.value.kind === "scope";
 const validateFiniteVerbalScope = (
   context: FiniteProofValidationContext,
   scope: FiniteScopeProof,
@@ -1282,15 +1283,13 @@ const validateFiniteVerbalBoundaryProof = (
   context: FiniteProofValidationContext,
   proof: FiniteVerbalBoundaryProof
 ): boolean => {
-  const raw = context.resolve(proof.token);
-  const governor = context.resolve(proof.governor);
-  const scope = context.resolve(proof.scope);
-  if (!isFiniteTokenProofOption(raw) || !isFiniteTokenProofOption(governor) || !isFiniteScopeProofOption(scope))
-    return false;
-  if (!validateFiniteVerbalScope(context, scope.value, raw.value, governor.value)) return false;
-  if (proof.mode === "infinitive-introducer")
-    return finiteInfinitiveIntroducerMatches(context.tokens, raw.value, governor.value);
-  return validateFiniteVerbalComplement(context, proof, raw.value, governor.value);
+  const raw = checkedFiniteReference(context, proof.token);
+  const governor = checkedFiniteReference(context, proof.governor);
+  const scope = checkedFiniteReference(context, proof.scope);
+  if (raw.kind !== "token" || governor.kind !== "token" || scope.kind !== "scope") return false;
+  if (!validateFiniteVerbalScope(context, scope, raw, governor)) return false;
+  if (proof.mode === "infinitive-introducer") return finiteInfinitiveIntroducerMatches(context.tokens, raw, governor);
+  return validateFiniteVerbalComplement(context, proof, raw, governor);
 };
 
 const finiteCitationQualificationMatches = (claim: PatentClaim, witness: ClaimCitationWitness): boolean =>
