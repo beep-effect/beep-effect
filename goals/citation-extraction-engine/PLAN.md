@@ -1831,6 +1831,12 @@ Schedule the remaining 22 original annotation workflows on Bun and Node using ex
 
 Reverse: Revise any finite proof on contrary source or runtime evidence; retain all unqualified workflows and laws.
 
+### Recompute original page correction from actual parsed models, 2026-11-08
+
+Join six original raw parser calls to twelve corrected-citation/page equalities. Use actual public extraction components, selected editions and verified matched text as input to the existing correction service; preserve absence versus explicit None. Qualify only on both native runtime results. Integrate main #2929 and preserve all remaining exhaustive, protocol, fidelity and lifecycle requirements.
+
+Reverse: Reopen exact bindings on contrary original-source or runtime evidence; retain generic model/mutation/hash and formatting law obligations.
+
 ### Recompute original pin-cite-span assertions from raw source, 2026-11-08
 
 Join five authenticated standalone-cleaner/parser operation pairs to all nine original span_with_pincite equalities. Run the same ordered pure builtin cleaning through the public raw-input extraction pipeline, then compare actual verified pin-inclusive coordinates and substrings with original assertion operands. Qualify cases only after both native runtimes pass; this finite composition does not waive retained Document/callback protocols or full-goal acceptance.
