@@ -15,6 +15,7 @@ const aggregateCases = A.flatMap(["success", "failure", "skipped", "cancelled"],
   )
 );
 const passingStates = ["success:true:skipped", "success:false:success"];
+const decodeWorkflowSteps = S.decodeUnknownEffect(S.Array(S.Unknown));
 
 it.effect(
   "executes the real aggregate scripts across classification and shard outcomes",
@@ -138,7 +139,7 @@ it.effect(
         catch: CiCommandError.new("Unable to read the trusted artifact naming contract."),
       });
       const workflow = parseWorkflowYaml(source);
-      const steps = yield* S.decodeUnknownEffect(S.Array(S.Unknown))(yamlAt(workflow, ["jobs", "verify", "steps"]));
+      const steps = yield* decodeWorkflowSteps(yamlAt(workflow, ["jobs", "verify", "steps"]));
       const uploads = A.filter(steps, (step) => yamlAt(step, ["name"]) === "Upload trusted Turbo summaries");
       assert.strictEqual(uploads.length, 1);
       assert.strictEqual(

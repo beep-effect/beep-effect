@@ -68,3 +68,27 @@ After merging, a genuine documentation-only acceptance PR must confirm the
 production check names, successful aggregate results, skipped runner allocation,
 and Yeet merge-gate behavior. After-change job counts and timings remain
 unmeasured until that acceptance run completes.
+
+## Authoring preflight
+
+Package `--quick` runs Biome and the compiler. It does not replace root Oxlint,
+Effect Vitest, or Fallow checks on a changed test. In this change, direct checks
+caught test complexity, an unnecessary platform layer, and an inline schema
+compilation before publication. Keep those checks in the authoring loop so a
+small test issue does not require another full publication inventory run.
+
+The direct commands verified here were:
+
+```sh
+bun run beep quality package-verify @beep/repo-cli --quick
+bun run lint:oxlint
+bun run beep ci workflow-lint
+bun run beep quality fallow audit --base origin/main --check --out .beep/fallow/authoring.json --quiet
+bunx --bun vitest run packages/tooling/tool/cli/test/ci-docs-job-admission.test.ts
+```
+
+The focused Effect Vitest check invoked the public
+`detectEffectVitestFindings` detector on the changed test using a `ts-morph`
+project and `NodeCrypto.layer`; it returned no findings. The full
+`bun run beep lint effect-vitest` scan remains part of canonical publication.
+Do not update inventory baselines to clear an introduced authoring issue.
