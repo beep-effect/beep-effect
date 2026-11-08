@@ -25,7 +25,7 @@ needed to resolve an evidenced discrepancy. It is not a general independent
 correctness review of every implementation. Untracked and ignored boundaries
 receive exclusion records; private material is not copied into public ledgers.
 
-This campaign is linked to [knowledge-surface-automation](../knowledge-surface-automation/SPEC.md).
+This campaign is linked to [knowledge-surface-automation](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/knowledge-surface-automation/SPEC.md).
 Reuse its Knowledge finding and reference machinery, skill provenance contracts,
 and settled patch-first decisions. Keep its broader roadmap, graph, generic
 bootstrap/materializer, warehouse rollout, and recurring scheduler commitments
@@ -98,7 +98,7 @@ evidence, authority rules, or evaluator versions change. Preserve old receipts
 as history and recheck mutable dependencies before repair publication.
 
 Cross-reference (2026-09-25): the
-[harness-evidence-ledger](../harness-evidence-ledger/SPEC.md) goal applies the
+[harness-evidence-ledger](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/harness-evidence-ledger/SPEC.md) goal applies the
 same principle of expiring stale evidence to harness edits. Its
 `HarnessFingerprint` changes with the model id, reasoning effort, or harness
 surfaces. Audit determinations separately invalidate when claims, evidence,

@@ -34,11 +34,7 @@
     "goals/fleet-mirror/research/SOURCES.md",
     "goals/fleet-mirror/research/p0-policy-surface-measurement.md"
   ],
-  "researchReports": [
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md",
-    "research/p0-policy-surface-measurement.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -88,5 +84,13 @@
     "A signal cannot be made correct without inferring a field from a proxy. Report rather than infer.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/fleet-mirror",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "a85699b9afbf77ed273c41c0400e91905e79d2ec",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }

@@ -53,8 +53,8 @@ may also need qualifier-specific partitions.
 The triage SPEC is explicit: no preferred-view selection or working-view
 recovery; detection does not mutate authority; an approved resolution composes
 the core supersession path
-([`SPEC.md:10-25`](../../../goals/epistemic-contradiction-triage/SPEC.md#L10),
-[`SPEC.md:62-81`](../../../goals/epistemic-contradiction-triage/SPEC.md#L62)).
+([`SPEC.md:10-25`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/epistemic-contradiction-triage/SPEC.md#L10),
+[`SPEC.md:62-81`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/epistemic-contradiction-triage/SPEC.md#L62)).
 Its RPC does use the name `ContradictionBeliefView`, but the type preserves the
 two canonical sides and explicitly marks neither preferred nor authoritative
 ([`ContradictionTriage.rpc.ts:207-241`](../../../packages/epistemic/use-cases/src/ContradictionTriage/ContradictionTriage.rpc.ts#L207));

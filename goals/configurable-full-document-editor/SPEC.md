@@ -102,7 +102,7 @@ named ownership boundaries requires a user-ratified SPEC change.
 
 ### Inherited P0 waivers
 
-Goal A's [Exception Ledger](../lexical-playground-capability-atlas/SPEC.md#exception-ledger)
+Goal A's [Exception Ledger](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/lexical-playground-capability-atlas/SPEC.md#exception-ledger)
 records the approved waivers. Goal B must retain each obligation until the
 named proof removes it:
 

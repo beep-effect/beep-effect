@@ -291,7 +291,7 @@ All paths verified via `ls`/`rg` on 2026-06-29 (working tree, branch
 - **Shipped epistemic gate spine.** Goals `epistemic-claim-lifecycle-gate` and
   `provenance-shared-claim-kernel` (both `completed-retained`) shipped
   CandidateClaim + Evidence + ClaimLifecycle + SHACL-backed ClaimGate. **Scoping
-  correction (live `goals/epistemic-claim-lifecycle-gate/SPEC.md`):** the SPEC
+  correction (live [goals/epistemic-claim-lifecycle-gate/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/epistemic-claim-lifecycle-gate/SPEC.md)):** the SPEC
   explicitly defers *FalkorDB / persistent projection store* (line 32), *the v3
   GraphRAG / extraction-pipeline port* (line 34), *richer SHACL than the bounded
   adapter* (line 36), and *matter-wall enforcement* (line 40) — it does **not**

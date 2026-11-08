@@ -73,8 +73,8 @@ const COVERAGE_NOOP_PREFIXES = [".changeset/", "docs/", "explorations/", "goals/
 // manifests). Prefixes cover recursively consumed trees; all matching consumers
 // are retained alongside the ordinary workspace owner.
 const COVERAGE_REPOSITORY_FIXTURE_OWNER_FILES: ReadonlyArray<readonly [string, string]> = [
-  ["goals/fallow-quality-enforcement/research/feature-matrix.jsonc", "@beep/repo-cli"],
-  ["goals/lexical-playground-capability-atlas/research/capability-atlas.json", "@beep/editor"],
+  ["standards/fallow.feature-matrix.jsonc", "@beep/repo-cli"],
+  ["packages/foundation/ui-system/editor/test/fixtures/capability-atlas.json", "@beep/editor"],
   ["goals/ship-velocity/research/branch-protection-contexts.json", "@beep/repo-cli"],
   ["goals/*/ops/manifest.json", "@beep/repo-cli"],
   ["standards/schema-crispening.policy.jsonc", "@beep/repo-cli"],

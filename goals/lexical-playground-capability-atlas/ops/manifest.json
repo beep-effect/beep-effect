@@ -37,15 +37,7 @@
     "goals/lexical-playground-capability-atlas/research/capability-atlas.json",
     "goals/lexical-playground-capability-atlas/research/p0-evidence-gaps.md"
   ],
-  "researchReports": [
-    "research/LIVE-EXERCISE-2026-08-24.md",
-    "research/OPPORTUNITIES.md",
-    "research/P1-CAPABILITY-CONTRACT.md",
-    "research/SOURCES.md",
-    "research/UPSTREAM-ISSUES.md",
-    "research/capability-atlas.json",
-    "research/p0-evidence-gaps.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "plannedArtifacts": [
     {
       "path": "research/capability-atlas.json",
@@ -132,5 +124,13 @@
     "Existing consumer behavior cannot be preserved within named scope.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/lexical-playground-capability-atlas",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "9edd7c4feca0c6334ac49f6b1033bfddd6f53c8a",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }

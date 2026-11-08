@@ -292,14 +292,6 @@
     }
   ],
   "nextAction": "None — packet closed 2026-07-27. Consumers start from history/outputs/p5-implementation-notes.md; follow-up debt (FileProcessingWarningRecord, streaming digests) is recorded there and in the closeout reflection.",
-  "researchReports": [
-    "research/2026-08-17-academia-wave2-reentry.md",
-    "research/SOURCES.md",
-    "research/engine-selection.md",
-    "research/gold-intake-ocr-pdf-diagnostics.md",
-    "research/p3-libpff-design.md",
-    "research/p4-files-process-design.md"
-  ],
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,
@@ -307,5 +299,13 @@
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
     "grandfathered": false
   },
-  "packetPath": "goals/file-processing-capability"
+  "packetPath": "goals/file-processing-capability",
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/file-processing-capability",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "8a188ee811de7e31983c16fc5f980e607cb94cce",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }
