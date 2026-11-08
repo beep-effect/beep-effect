@@ -75,7 +75,7 @@ export const cacheProtocolSandboxMounts: ReadonlyArray<string> = [
   "usr/lib",
   "/lib",
   "--symlink",
-  "usr/lib",
+  "usr/lib64",
   "/lib64",
   "--symlink",
   "usr/bin",

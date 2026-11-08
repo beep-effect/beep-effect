@@ -16,6 +16,7 @@ import { assert, describe } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import { assertClaimReservationPrefixes } from "./helpers/ClaimElementWorkAssertions.ts";
 
 const source = "A system comprising a welded joint is fixed.";
 const claim = PatentClaim.cases.independent.make({
@@ -75,6 +76,56 @@ const positive = () => {
   return { input, plan };
 };
 describe("intrinsic terminal original source proof", () => {
+  it.effect("ends every denied original intrinsic-proof reservation at the exact funded prefix", () =>
+    Effect.sync(() => {
+      const { input, plan } = positive();
+      assertClaimReservationPrefixes("original intrinsic source registry", (reserve) =>
+        validateClaimFiniteSourceProofsFromOriginalInput(claim, input, plan.certificates, plan.proofs, reserve)
+      );
+    })
+  );
+  it.effect("rejects coherent original token and certificate joins with unproved intrinsic membership", () =>
+    Effect.sync(() => {
+      const { input, plan } = positive();
+      const original = A.get(input.tokens, 5).pipe(O.getOrThrow);
+      const witness = original.intrinsicNoun;
+      assert.isTrue(ClaimIntrinsicNounWitness.guards.known(witness));
+      if (!ClaimIntrinsicNounWitness.guards.known(witness)) return;
+      const alteredTokens = [
+        ClaimLexicalToken.make({ ...original, pos: "NOUN" }),
+        ClaimLexicalToken.make({ ...original, intrinsicNoun: ClaimIntrinsicNounWitness.cases.unavailable.make({}) }),
+        ...A.map(
+          [
+            ClaimIntrinsicNounWitness.cases.known.make({ ...witness, baseNoun: false }),
+            ClaimIntrinsicNounWitness.cases.known.make({ ...witness, oov: true }),
+            ClaimIntrinsicNounWitness.cases.known.make({ ...witness, rawForm: "Joint" }),
+            ClaimIntrinsicNounWitness.cases.known.make({
+              ...witness,
+              anchor: TextAnchor.make({ ...witness.anchor, quote: "WRONG" }),
+            }),
+          ],
+          (intrinsicNoun) => ClaimLexicalToken.make({ ...original, intrinsicNoun })
+        ),
+      ];
+      for (const token of alteredTokens) {
+        const coherentInput = ClaimLexicalEvidence.cases.aligned.make({
+          ...input,
+          tokens: A.map(input.tokens, (member, index) => (index === 5 ? token : member)),
+        });
+        const coherentProofs = A.map(plan.certificates, (proof) =>
+          proof.kind === "token" && proof.tokenOrdinal === 6
+            ? ClaimFiniteSourceProof.cases.token.make({ ...proof, token })
+            : proof
+        );
+        assert.isFalse(
+          validateClaimFiniteSourceProofsFromOriginalInput(claim, coherentInput, coherentProofs, plan.proofs, charge())
+        );
+      }
+      assert.isTrue(
+        validateClaimFiniteSourceProofsFromOriginalInput(claim, input, plan.certificates, plan.proofs, charge())
+      );
+    })
+  );
   it.effect("preserves contextual ADJ and complete modifier head without reconstructing evidence", () =>
     Effect.sync(() => {
       const { input, plan } = positive();
@@ -104,6 +155,11 @@ describe("intrinsic terminal original source proof", () => {
     Effect.sync(() => {
       const { input, plan } = positive();
       const mutations = [
+        (p: Extract<ClaimFiniteSourceProof, { readonly kind: "intrinsic-noun" }>) =>
+          ClaimFiniteSourceProof.cases["intrinsic-noun"].make({
+            ...p,
+            originalTokenDataOrdinal: OriginalLexicalTokenOrdinal.make(input.tokens.length + 1),
+          }),
         (p: Extract<ClaimFiniteSourceProof, { readonly kind: "intrinsic-noun" }>) =>
           ClaimFiniteSourceProof.cases["intrinsic-noun"].make({
             ...p,

@@ -159,6 +159,7 @@ export class ClaimPredicateSpan extends S.Opaque<ClaimPredicateSpan, { readonly 
       "auxiliary-head",
       "possession",
       "adjectival",
+      "distributive",
       "adjunct",
     ]),
   }).pipe(
@@ -443,6 +444,7 @@ export const ClaimOperatorLicense = LiteralKit([
   "continued-action",
   "event",
   "reduced",
+  "distributive",
 ]).pipe(
   $I.annoteSchema("ClaimOperatorLicense", {
     description: "A positive operator result; provisional, unsupported and rejected candidates are not certificates.",
@@ -505,17 +507,30 @@ export type ClaimArgumentCoverage = typeof ClaimArgumentCoverage.Type;
  * @category models
  * @since 0.0.0
  */
-export const ClaimOperatorHeadWitness = LiteralKit(["singleton", "finite-pp", "scalar", "reduced"])
+export const ClaimOperatorHeadWitness = LiteralKit([
+  "singleton",
+  "finite-pp",
+  "scalar",
+  "reduced",
+  "distributive-direct",
+])
   .toTaggedUnion("kind")({
     singleton: { token: ClaimSourceProofRef },
     "finite-pp": { token: ClaimSourceProofRef, proof: PosInt },
     scalar: { token: ClaimSourceProofRef, proof: PosInt },
     reduced: { token: ClaimSourceProofRef, proof: PosInt },
+    "distributive-direct": {
+      token: ClaimSourceProofRef,
+      scope: ClaimSourceProofRef,
+      comma: ClaimSourceProofRef,
+      each: ClaimSourceProofRef,
+      direct: ClaimSourceProofRef,
+    },
   })
   .pipe(
     $I.annoteSchema("ClaimOperatorHeadWitness", {
       description:
-        "A uniquely licensed lexical head; primitive source proof ordinals are checked against their exact operator/token fields.",
+        "A uniquely licensed lexical head; distributive predication consumes complete lower-rank source/head witnesses without asserting voice, and existing source proof ordinals match their operator/token fields.",
     })
   );
 /**
@@ -635,6 +650,7 @@ export const ClaimFiniteSourceProof = LiteralKit([
   "intrinsic-noun",
   "boundary",
   "citation-boundary",
+  "label-boundary",
   "verbal-boundary",
   "opening",
   "closure",
@@ -676,6 +692,16 @@ export const ClaimFiniteSourceProof = LiteralKit([
       token: ClaimSourceProofRef,
       scope: ClaimSourceProofRef,
       successor: S.OptionFromNullOr(ClaimSourceProofRef),
+    },
+    "label-boundary": {
+      ordinal: ClaimSourceProofOrdinal,
+      rank: S.tag(-2),
+      token: ClaimSourceProofRef,
+      scope: ClaimSourceProofRef,
+      governor: ClaimSourceProofRef,
+      colon: ClaimSourceProofRef,
+      markers: S.Array(S.Struct({ start: ClaimSourceProofRef, close: ClaimSourceProofRef })),
+      item: S.Int,
     },
     "citation-boundary": {
       ordinal: ClaimSourceProofOrdinal,

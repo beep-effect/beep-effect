@@ -5,13 +5,13 @@
     "title": "Citation Extraction Engine",
     "status": "active",
     "created": "2026-07-14",
-    "updated": "2026-11-07",
+    "updated": "2026-11-08",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/citation-extraction-engine",
   "lifecycle": "active",
   "mission": "Deliver Effect-native observable capability parity with pinned official eyecite 2.7.6, exact verified source evidence, schema-first legal models, lawful transformations, and proven TypeScript-port extensions.",
-  "statusNote": "Active implementation and exhaustive qualification. The public CitationEngine composes clean/extract/resolve/annotate with captured closed failures and no caller requirements. Configured and default Layers snapshot installation data; the default Layer creates coherent cleaner/value/container owners and shared operation/native admission. Original public corpus/grouping/metadata/vocabulary/span comparisons and focused lifecycle controls are implemented. Missing-page identities, source access and host callbacks remain trusted injected services; production identity allocation and deployment attestation remain open. Schema-lawful Bluebook transforms currently support the declared U.S. Reports profile. Explicit useDmp=false now executes source-derived CPython builtin diff in the existing isolated worker, with 4,231 independent step observations, canonical SpanUpdater entry/query replay and Bun/Node public annotation proof. Verified-source construction still rejects lone surrogates; native exact-string coverage does not waive fidelity questions. General retained host/document/model/callback behavior, further formatting forms, whole-engine safety/scaling, exhaustive source/donor reconciliation and lifecycle closeout remain required. All eleven representation laws, four fidelity questions and fifteen unfinished proof rows remain open.",
+  "statusNote": "Active implementation and exhaustive qualification. Public clean/extract/resolve/annotate methods and configured/default Layers capture their server dependencies, closed errors, installed cleaner plans, coherent owned containers, shared admission, clocks and text capacity. Finite bound proof covers all 23 original annotation workflows and all 39 AnnotateTest assertions, original span/style/long-diff utilities, selected parsed/full/corrected/model/factory/Resource/missing-page behavior, the complete builtin debug workflow and all 29 original parenthetical-court assertions. The ledger retains 182 complete canonical events, zero nonterminal bindings and 15,316 rows without completion proof. Native builtin diff uses the authenticated CPython kernel and existing isolated transport. Repr has 3113 independent native observations; dump has 803; the token owner now supports builtin value equality with 1454 comparisons and three actual merge histories. Existing Effect services and collection operations provide ownership, serialization and comparison. Shared timing consistently attributes typed safety failures to the installed operation while preserving limits and unrelated error identity. These finite corpora do not qualify complete generic retained protocols or universal laws. Verified source construction still rejects lone surrogates, and Bluebook transforms support only the declared U.S. Reports profile. General retained host/document/model/token/callback/subclass/mutation/hash/UserString behavior, alternate backend contracts, native identity allocation and production attestation, exhaustive static/runtime and TypeScript donor reconciliation, all eleven representation laws, four fidelity questions and fifteen unfinished proof rows, whole-engine safety/scaling and lifecycle closeout remain required. Main through 9140b1f5c4d is integrated. Its reported InputDocument reservation-assertion and full Bun diff-corpus watchdog failures remain pending repairs; hosted exact-head acceptance remains open.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -335,7 +335,28 @@
     "goals/citation-extraction-engine/history/evidence/2026-11-07-xml-worker-entry-reachability.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-07-original-resolution-parser-fragments.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-court-extraction.md",
-    "goals/citation-extraction-engine/history/reflections/2026-11-07-codex-capture-profiles.md"
+    "goals/citation-extraction-engine/history/reflections/2026-11-07-codex-capture-profiles.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-captured-extraction-cleaner-plans.md",
+    "goals/citation-extraction-engine/history/reflections/2026-11-07-codex-custom-plan.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-07-remaining-extraction-inputs.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-08-original-annotation-workflows.md",
+    "goals/citation-extraction-engine/history/reflections/2026-11-08-codex-annotation-workflows.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-08-annotation-and-full-span-qualification.md",
+    "goals/citation-extraction-engine/history/reflections/2026-11-08-codex-full-cohorts.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-08-original-pin-cite-spans.md",
+    "goals/citation-extraction-engine/history/reflections/2026-11-08-codex-pin-cite-spans.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-08-original-style-tag-predicates.md",
+    "goals/citation-extraction-engine/history/reflections/2026-11-08-codex-style-predicates.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-08-original-long-diff-workflow.md",
+    "goals/citation-extraction-engine/history/reflections/2026-11-08-codex-long-diff.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-08-original-parsed-page-correction.md",
+    "goals/citation-extraction-engine/history/reflections/2026-11-08-codex-parsed-page-correction.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-08-original-corrected-full-rendering.md",
+    "goals/citation-extraction-engine/history/reflections/2026-11-08-codex-corrected-full-rendering.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-08-original-parsed-model-equality.md",
+    "goals/citation-extraction-engine/history/reflections/2026-11-08-codex-parsed-model-equality.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-08-original-default-factory-hashes.md",
+    "goals/citation-extraction-engine/history/reflections/2026-11-08-codex-default-factory-hashes.md"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",
@@ -862,6 +883,22 @@
     {
       "path": "ops/probe-short-missing-page.py",
       "purpose": "Capture original short-form underscore-page groups, metadata and all three spans from the exact clean source pin; no target-derived expectations."
+    },
+    {
+      "path": "ops/probe-factory-edition-lookup.py",
+      "purpose": "Capture ordered immutable factory reporter lookup inputs at the clean source pin, preserving duplicate edition occurrences independently of expected models and hashes."
+    },
+    {
+      "path": "ops/probe-python-repr.py",
+      "purpose": "Capture complete pinned Unicode printability ranges and independent builtin str repr observations from CPython 3.11.15, preserving native surrogate points and source/license provenance."
+    },
+    {
+      "path": "ops/probe-dump.py",
+      "purpose": "Capture eight original builtin metadata layouts and 803 independent exact native debug-output observations with source/license/producer provenance."
+    },
+    {
+      "path": "ops/probe-token-equality.py",
+      "purpose": "Capture actual builtin dataclass comparison fields, 1454 independent token comparisons and three merge/equality histories at the exact clean source pin, with frozen edition value and provenance validation."
     }
   ]
 }

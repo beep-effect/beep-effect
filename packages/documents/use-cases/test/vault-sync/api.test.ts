@@ -2,6 +2,7 @@ import * as Domain from "@alchemy.run/domain";
 import * as V from "@beep/documents-domain/aggregates/VaultSync";
 import {
   VaultSyncApi,
+  VaultSyncDestinationIdAttribute,
   VaultSyncPass,
   VaultSyncRequests,
   VaultSyncRequestsLive,
@@ -16,6 +17,7 @@ import * as Layer from "effect/Layer";
 import * as Order from "effect/Order";
 import * as Ref from "effect/Ref";
 import * as Schedule from "effect/Schedule";
+import * as Tracer from "effect/Tracer";
 import * as TestClock from "effect/testing/TestClock";
 
 it("derives a CLI without internal command targets", () => {
@@ -86,4 +88,34 @@ it.effect("routes each public request to one pass or probe run keyed by its requ
       "probe:documents_sync_destination_avaultrouting/DestinationProbeRequested/p1",
     ]);
   }).pipe(TestClock.withLive)
+);
+
+const spans: Array<Tracer.NativeSpan> = [];
+const tracer = Tracer.make({
+  span: (options) => {
+    const span = new Tracer.NativeSpan(options);
+    spans.push(span);
+    return span;
+  },
+});
+
+it.effect("records the destination on each VaultSyncRequests.start span (D17)", () =>
+  Effect.gen(function* () {
+    const starts = yield* Ref.make<ReadonlyArray<string>>([]);
+    const context = yield* Layer.build(
+      Initiators.layer(Layer.merge(VaultSyncRequestsLive, recordingPass)).pipe(
+        Layer.provide(Layer.succeed(Starts, starts)),
+        Layer.provide(Domain.InMemory)
+      )
+    );
+    const destinations = Context.get(context, V.SyncDestination);
+    const id = V.DestinationId.make("documents_sync_destination_atracedrouting");
+    yield* destinations.send(id, V.RegisterDestination.make({ orgId: 1, workspaceId: 1, name: "vault" }));
+    yield* destinations.send(id, V.RequestVaultSync.make({ requestId: "t1" }));
+    yield* Ref.get(starts).pipe(
+      Effect.repeat({ until: A.isReadonlyArrayNonEmpty, schedule: Schedule.spaced("5 millis"), times: 400 })
+    );
+    const started = A.filter(spans, (span) => span.name === "VaultSyncRequests.start");
+    expect(A.map(started, (span) => span.attributes.get(VaultSyncDestinationIdAttribute))).toEqual([id]);
+  }).pipe(Effect.withTracer(tracer), TestClock.withLive)
 );

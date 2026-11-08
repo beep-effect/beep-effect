@@ -258,3 +258,22 @@ export class CitationCleaner extends Context.Service<
     ) => Effect.Effect<CitationCleanerProduced, Failure>;
   }
 >()($I`CitationCleaner`) {}
+
+/** Resolve an installed extraction plan to its original live cleaner container.
+ * The server must share value ownership and cleaner/Document protocols with the
+ * engine. Lookup must not iterate or normalize the container. Requests carry
+ * only the bounded name; unknown plans fail without executable request data.
+ * **Example** (Capture the installed plan port)
+ * ```ts
+ * import { CitationExtractionCleanerPlans } from "@beep/law-practice-use-cases/server"
+ * import * as Effect from "effect/Effect"
+ * const port = Effect.gen(function* () { return yield* CitationExtractionCleanerPlans })
+ * console.log(typeof port)
+ * ```
+ * @category services
+ * @since 0.0.0
+ */
+export class CitationExtractionCleanerPlans extends Context.Service<
+  CitationExtractionCleanerPlans,
+  { readonly resolve: (name: string) => Effect.Effect<CitationCleanerObject, Failure> }
+>()($I`CitationExtractionCleanerPlans`) {}

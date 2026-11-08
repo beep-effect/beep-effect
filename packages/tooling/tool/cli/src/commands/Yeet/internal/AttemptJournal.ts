@@ -60,6 +60,8 @@ export class YeetAttemptStarted extends S.Opaque<YeetAttemptStarted, { readonly 
     ownerPid: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     ownerProcStart: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     ...attemptInputFactFields,
+    // Set only when `--force-local` kept a worker-profile publish local.
+    forceLocal: S.Boolean.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("YeetAttemptStarted", {
       description: "A durable marker written immediately before a Yeet attempt executes.",

@@ -191,6 +191,12 @@ describe("vault sync panel", { concurrent: false }, () => {
       );
       expect(screen.getByTestId("vault-sync-destination-predicted")).toBeInTheDocument();
       expect(screen.getByTestId("vault-sync-pause-toggle")).toHaveTextContent("Resume sync");
+      // The panel renders a queued intent before the flush hands it to the transport.
+      yield* Effect.promise(() =>
+        waitFor(() => {
+          expect(A.isReadonlyArrayNonEmpty(Ref.getUnsafe(sent))).toBe(true);
+        })
+      );
       const intents = yield* Ref.get(sent);
       expect(A.map(intents, (intent) => intent.action.kind)).toEqual(["pause"]);
     })
@@ -246,6 +252,12 @@ describe("vault sync panel", { concurrent: false }, () => {
         waitFor(() => expect(screen.getAllByTestId("vault-sync-pending-intent")).toHaveLength(2))
       );
 
+      // The pending rows render from the queue before the flush hands the head intent to the transport.
+      yield* Effect.promise(() =>
+        waitFor(() => {
+          expect(A.isReadonlyArrayNonEmpty(Ref.getUnsafe(sent))).toBe(true);
+        })
+      );
       const [review] = yield* Ref.get(sent);
       expect(review?.action.kind).toBe("review-conflict");
       expect(

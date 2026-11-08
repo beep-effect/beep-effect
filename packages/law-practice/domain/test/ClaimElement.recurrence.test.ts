@@ -26,7 +26,11 @@ import * as Str from "effect/String";
 import materialOverlay from "./fixtures/claim-element/finite-clause-material-correction.json" with { type: "json" };
 import routeInput from "./fixtures/claim-element/recurrence-route-plans.json" with { type: "json" };
 import sourceInput from "./fixtures/claim-element/recurrence-source-plans.json" with { type: "json" };
+import rightParenthesisActivation from "./fixtures/claim-element/right-parenthesis-synthetic-activation-v1.json" with {
+  type: "json",
+};
 import { assertVersionedMaterialConformance } from "./helpers/ClaimElementMaterialConformance.ts";
+import { assertRightParenthesisActivation } from "./helpers/ClaimElementRightParenthesisActivation.ts";
 import type {
   AntecedentFinding,
   ClaimElementTree,
@@ -568,11 +572,13 @@ describe("reviewed recurrence source frames and actual enhanced topology", () =>
       }
     })
   );
-  //52 unchanged historical rows; the two accepted material versions execute
-  // their full separate schema below. Original54 bytes and raw diagnostics stay.
+  //51 unchanged rows, two material versions and one locally reviewed label activation
+  // execute separately. Original54 source bytes and declined metadata remain intact.
   for (const raw of A.filter(
     sourceInput.fixtures,
-    (row) => !A.some(materialOverlay.entries, (entry) => entry.historicalCase === row.case)
+    (row) =>
+      row.case !== rightParenthesisActivation.historicalCase &&
+      !A.some(materialOverlay.entries, (entry) => entry.historicalCase === row.case)
   ))
     it.effect(raw.case, () =>
       Effect.gen(function* () {
@@ -584,6 +590,23 @@ describe("reviewed recurrence source frames and actual enhanced topology", () =>
   it.layer(TestCrypto)("two explicit accepted material versions (historical54 retained)", (it) => {
     for (const entry of materialOverlay.entries)
       it.effect(entry.historicalCase, () => assertVersionedMaterialConformance(entry.historicalCase));
+  });
+  it.layer(TestCrypto)("one locally reviewed right-parenthesis activation (historical54 retained)", (it) => {
+    it.effect(rightParenthesisActivation.historicalCase, () =>
+      Effect.gen(function* () {
+        const original = O.getOrThrow(
+          A.findFirst(sourceInput.fixtures, (row) => row.case === rightParenthesisActivation.historicalCase)
+        );
+        const record = yield* S.decodeUnknownEffect(control)({
+          ...original,
+          outcome: "admitted",
+          expected: rightParenthesisActivation.expected,
+        });
+        const { result } = yield* planOf(record);
+        assertAdmittedProjection(record, result);
+        yield* assertRightParenthesisActivation(result);
+      })
+    );
   });
   for (const raw of routeInput.fixtures)
     it.effect(raw.case, () =>

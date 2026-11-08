@@ -5,7 +5,7 @@
     "title": "Agent and Linux Development Readiness",
     "status": "active",
     "created": "2026-10-01",
-    "updated": "2026-11-02",
+    "updated": "2026-11-08",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/cloud-agent-readiness",
@@ -47,7 +47,9 @@
     "scripts/cloud/bootstrap.sh",
     "goals/cloud-agent-readiness/history/2026-11-01-claude-cloud-smoke.md",
     "goals/cloud-agent-readiness/history/2026-11-01-fleet-cloud-setup.md",
-    "goals/cloud-agent-readiness/history/2026-11-01-cloud-task-admission.md"
+    "goals/cloud-agent-readiness/history/2026-11-01-cloud-task-admission.md",
+    "goals/cloud-agent-readiness/ops/fleet-dev-toolset.sh",
+    "goals/cloud-agent-readiness/history/2026-11-08-fleet-dev-toolset.md"
   ],
   "researchReports": [
     "research/2026-10-01-container-probe.md",
@@ -60,6 +62,7 @@
     "research/2026-10-14-mcp-qualification.json",
     "research/2026-10-14-schema-memory.json",
     "research/2026-10-14-workstation-cli-inventory.json",
+    "research/2026-11-08-fleet-toolset-survey.json",
     "research/OPPORTUNITIES.md",
     "research/SOURCES.md"
   ],

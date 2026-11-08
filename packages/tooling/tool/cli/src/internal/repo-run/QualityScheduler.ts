@@ -62,6 +62,13 @@ import {
   writeAdmissionProtocol,
 } from "./AdmissionJournal.ts";
 import { appendSchedulerAttemptTerminated } from "./AttemptTerminationJournal.ts";
+import {
+  computeEnvelopeGib,
+  constrainedCeilingGib,
+  liveComputeMemorySource,
+  resolveComputeProfileForCeiling,
+} from "./ComputeProfile.ts";
+import { gateRouteFor } from "./GateRoute.schemas.ts";
 import { isProcessIdentityAlive, processStartIdentityForPid } from "./ProcessIdentity.ts";
 import {
   AdmissionClaimSinkState,
@@ -74,6 +81,7 @@ import {
   AdmissionRequest,
   AdmissionSnapshot,
   AdmissionTicketReapClaim,
+  ComputeProfileRefusal,
   DeadLeaseScopePlan,
   QualitySchedulerError,
   YeetAdmissionLease,
@@ -91,6 +99,7 @@ import { admissionRootFor, perUserRuntimeRoot } from "./RuntimeRoot.ts";
 import type { UUID } from "@beep/repo-cli-kit/schema/Uuid";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { AdmissionJournalLeaseEvicted, AdmissionJournalTicketEvicted } from "./AdmissionJournal.ts";
+import type { ComputeMemorySource } from "./ComputeProfile.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/QualityScheduler");
 
@@ -244,9 +253,21 @@ const textEncoder = new TextEncoder();
  * @since 0.0.0
  */
 export interface MemoryStatsShape {
-  /** Currently available memory in GiB, re-read on every evaluation. */
+  /**
+   * Currently available memory in GiB, re-read on every evaluation.
+   *
+   * Under a cgroup ceiling this is `min(MemAvailable, ceilingGib - process RSS)`:
+   * the runtime exposes no cgroup `memory.current`, so the slice's other
+   * members are invisible and the reading is an upper bound.
+   */
   readonly availableGib: Effect.Effect<number>;
-  /** Installed physical memory in GiB. */
+  /**
+   * The process memory ceiling in GiB: the cgroup ceiling from
+   * `process.constrainedMemory()` when it is tighter than installed memory,
+   * otherwise `MemTotal`.
+   */
+  readonly ceilingGib: Effect.Effect<number>;
+  /** Installed physical memory in GiB (`MemTotal`). */
   readonly totalGib: Effect.Effect<number>;
 }
 
@@ -261,7 +282,7 @@ export interface MemoryStatsShape {
  * import * as Layer from "effect/Layer";
  * const fixed = Layer.succeed(
  *   MemoryStats,
- *   MemoryStats.of({ availableGib: Effect.succeed(50), totalGib: Effect.succeed(128) })
+ *   MemoryStats.of({ availableGib: Effect.succeed(50), totalGib: Effect.succeed(128), ceilingGib: Effect.succeed(128) })
  * )
  * console.log(Layer.isLayer(fixed)) // true
  * ```
@@ -281,11 +302,9 @@ const parseMeminfoFieldGib = (meminfo: string, field: string): O.Option<number> 
     O.map((kib) => (kib * 1024) / GIB)
   );
 
-const makeMemoryStats = Effect.fnUntraced(function* (): Effect.fn.Return<
-  MemoryStatsShape,
-  never,
-  FileSystem.FileSystem
-> {
+const makeMemoryStats = Effect.fnUntraced(function* (
+  source: ComputeMemorySource
+): Effect.fn.Return<MemoryStatsShape, never, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const meminfoFieldGib = (field: string, fallback: () => number) =>
     fs.readFileString(MEMINFO_PATH).pipe(
@@ -293,16 +312,64 @@ const makeMemoryStats = Effect.fnUntraced(function* (): Effect.fn.Return<
       Effect.orElseSucceed(O.none<number>),
       Effect.map(O.getOrElse(fallback))
     );
+  // Non-Linux fallback: NodeOS.freemem() under-reports (no reclaimable cache), which
+  // only makes admission more conservative.
+  const memAvailableGib = meminfoFieldGib("MemAvailable:", () => NodeOS.freemem() / GIB);
+  const totalGib = meminfoFieldGib("MemTotal:", () => NodeOS.totalmem() / GIB);
+  const constrainedGib = Effect.sync(() => constrainedCeilingGib(source));
   return {
-    // Non-Linux fallback: NodeOS.freemem() under-reports (no reclaimable cache), which
-    // only makes admission more conservative.
-    availableGib: meminfoFieldGib("MemAvailable:", () => NodeOS.freemem() / GIB),
-    totalGib: meminfoFieldGib("MemTotal:", () => NodeOS.totalmem() / GIB),
+    availableGib: Effect.flatMap(
+      constrainedGib,
+      O.match({
+        onNone: () => memAvailableGib,
+        onSome: (ceilingGib) =>
+          Effect.map(memAvailableGib, (available) =>
+            Math.min(available, Math.max(0, ceilingGib - source.residentBytes() / GIB))
+          ),
+      })
+    ),
+    totalGib,
+    ceilingGib: Effect.flatMap(constrainedGib, O.match({ onNone: () => totalGib, onSome: Effect.succeed })),
   };
 });
 
 /**
- * Production {@link MemoryStats} layer reading `/proc/meminfo` `MemAvailable`.
+ * Build a {@link MemoryStats} layer from an explicit memory source.
+ *
+ * **Details**
+ *
+ * `/proc/meminfo` supplies `MemAvailable` and `MemTotal`; the source supplies
+ * the cgroup ceiling and process RSS. Under a ceiling tighter than installed
+ * memory, `availableGib` is clamped to `ceilingGib - RSS` and `ceilingGib`
+ * reports the ceiling, otherwise `MemTotal`.
+ *
+ * **Example** (Build a layer for a 7 GiB slice)
+ *
+ * ```ts
+ * import { memoryStatsLayerFor } from "@beep/repo-cli/test/RepoRun"
+ * import * as Layer from "effect/Layer";
+ * const GIB = 1024 ** 3
+ * const layer = memoryStatsLayerFor({
+ *   constrainedMemoryBytes: () => 7 * GIB,
+ *   totalMemoryBytes: () => 15 * GIB,
+ *   residentBytes: () => 0,
+ * })
+ * console.log(Layer.isLayer(layer)) // true
+ * ```
+ *
+ * @param source - Cgroup ceiling, installed memory, and RSS readings.
+ * @returns A layer reading live meminfo through the given source.
+ * @category services
+ * @since 0.0.0
+ */
+export const memoryStatsLayerFor = (
+  source: ComputeMemorySource
+): Layer.Layer<MemoryStats, never, FileSystem.FileSystem> =>
+  Layer.effect(MemoryStats, Effect.map(makeMemoryStats(source), MemoryStats.of));
+
+/**
+ * Production {@link MemoryStats} layer reading `/proc/meminfo` `MemAvailable`,
+ * clamped by the process cgroup ceiling from `process.constrainedMemory()`.
  *
  * **Example** (Reference the live layer)
  *
@@ -316,7 +383,7 @@ const makeMemoryStats = Effect.fnUntraced(function* (): Effect.fn.Return<
  * @since 0.0.0
  */
 export const MemoryStatsLive: Layer.Layer<MemoryStats, never, SecureRandom.SecureRandom | FileSystem.FileSystem> =
-  Layer.effect(MemoryStats, Effect.map(makeMemoryStats(), MemoryStats.of));
+  memoryStatsLayerFor(liveComputeMemorySource);
 
 /**
  * Compute the admission capacity in tokens for one memory reading.
@@ -1904,7 +1971,9 @@ const stageSelfLease = Effect.fnUntraced(function* (
     diffFingerprint: ticket.diffFingerprint,
     proofTier: ticket.proofTier,
     envProfile: ticket.envProfile,
+    computeProfile: ticket.computeProfile,
     stage: ticket.stage,
+    forceLocal: ticket.forceLocal,
   });
   const leasePath = path.join(directories.leases, `${ticket.nonce}-${ticket.pid}.lease.json`);
   const promotionPath = promotionTransitionPath(path, directories, ticket.nonce);
@@ -2244,6 +2313,31 @@ const finalizeAdmissionTicket = Effect.fnUntraced(function* (
   ).pipe(Effect.catch(warnAdmissionJournalError));
 });
 
+// On a worker host a hosted-only gate is refused unless the caller forced a
+// local run or the request carries the hosted posture (hosted runners are
+// posture `hosted`, never refused, D5). Pure, so the admission entry stays flat.
+const workerProfileRefusal = (
+  request: AdmissionRequest,
+  ceilingGib: number,
+  envelopeGib: number
+): O.Option<ComputeProfileRefusal> => {
+  const hostedPosture = O.exists(request.envProfile, (profile) => profile === "hosted");
+  if (request.forceLocal || hostedPosture) return O.none();
+  return O.filter(request.gateRoute, (gate) => gateRouteFor(gate, "worker") === "hosted-only").pipe(
+    O.map((gate) =>
+      ComputeProfileRefusal.make({
+        gate,
+        ceilingGib,
+        envelopeGib,
+        message: `[yeet] admission: ${gate} is hosted-only on compute-profile=worker (ceiling ${Num.round(ceilingGib, 1)} GiB < envelope ${envelopeGib} GiB). Push first and let hosted CI prove it: bun run beep yeet open --body-file <md>. Pass --force-local to run it here anyway.`,
+      })
+    )
+  );
+};
+
+const workerBypassLine = (request: AdmissionRequest): string =>
+  `[yeet] admission: compute-profile=worker${request.forceLocal ? " force-local=true" : ""}; coordinating ${request.kind} through the origin gate only`;
+
 /**
  * Run one unit of heavy repository work under machine-wide weighted admission.
  *
@@ -2298,16 +2392,46 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
   const resolved = config ?? AdmissionConfig.make({});
   const path = yield* Path.Path;
   const stats = yield* MemoryStats;
-  // Machines whose installed memory can never reach the requested weight must
+  // Machines whose memory ceiling can never reach the requested weight must
   // not wait forever: clamp the weight to the machine ceiling, or fall back to
   // origin-gate-only coordination (the pre-scheduler behavior) when even one
-  // token can never be admitted.
+  // token can never be admitted. A cgroup ceiling below MemTotal (a 7 GiB
+  // slice on a 15 GiB host) is what the work can actually use.
   const totalGib = yield* stats.totalGib;
-  const machineCeiling = admissionCapacityTokensFor(totalGib, AdmissionConfig.make({ ...resolved, hardFloorGib: 0 }));
+  const ceilingGib = yield* stats.ceilingGib;
+  const schedulableGib = Math.min(totalGib, ceilingGib);
+  const machineCeiling = admissionCapacityTokensFor(
+    schedulableGib,
+    AdmissionConfig.make({ ...resolved, hardFloorGib: 0 })
+  );
   // A host must be able to hold the hard floor PLUS one slot of available
   // memory; kernel and resident overhead keep MemAvailable well below the
   // installed total, so a total near the floor can never admit anything.
-  const floorAttainable = totalGib >= resolved.hardFloorGib + resolved.slotSizeGib;
+  const envelopeGib = computeEnvelopeGib(resolved);
+  const floorAttainable = schedulableGib >= envelopeGib;
+  // The profile is derived from the same ceiling MemoryStats reports, so the
+  // refusal and the capacity view can never disagree.
+  const computeProfile = yield* resolveComputeProfileForCeiling(O.some(schedulableGib), envelopeGib).pipe(
+    Effect.mapError((cause) => QualitySchedulerError.make({ message: cause.message, cause }))
+  );
+  if (computeProfile.profile === "worker") {
+    const refusal = workerProfileRefusal(
+      request,
+      O.getOrElse(computeProfile.ceilingGib, () => schedulableGib),
+      envelopeGib
+    );
+    if (O.isSome(refusal)) {
+      return yield* QualitySchedulerError.make({
+        message: refusal.value.message,
+        reason: "compute-profile-refusal",
+        refusal: refusal.value,
+      });
+    }
+    yield* Console.log(workerBypassLine(request));
+    return yield* bypassAdmission(gate, use, resolved);
+  }
+  // Defensive fallback: a workstation profile below the envelope is impossible
+  // unless the probe and MemoryStats disagree; keep the pre-profile bypass.
   if (machineCeiling <= 0 || !floorAttainable) {
     yield* Console.log(
       `[yeet] admission: installed memory is below the scheduling envelope; coordinating ${request.kind} through the origin gate only`
@@ -2344,7 +2468,9 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
     diffFingerprint: admittedRequest.diffFingerprint,
     proofTier: admittedRequest.proofTier,
     envProfile: admittedRequest.envProfile,
+    computeProfile: O.some(computeProfile.profile),
     stage: admittedRequest.stage,
+    forceLocal: admittedRequest.forceLocal,
   });
   const ticketPath = path.join(directories.queue, `${ticket.nonce}-${ticket.pid}.ticket.json`);
   return yield* Effect.uninterruptibleMask((restore) =>

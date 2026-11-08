@@ -2,15 +2,22 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `paused`
 
 Source: [ops/manifest.json](./ops/manifest.json).
 Active for the early handoff consumed by task qualification. See
 [PLAN.md](./PLAN.md) for current evidence and remaining milestone gates.
 
+## Paused operational scope
+
+The operator adopted the [operational finish line](../turborepo-quality-cache-adoption/OPERATIONAL-SCOPE.md) on 2026-11-08 and
+requested the in-flight PRs be retained and worktrees cleaned up before a later
+resume. Existing assurance work remains unfinished. Start with the amendment's
+handoff and six-gate evidence audit; do not launch the historical program.
+
 ## Mission
 
-Enforce signed artifact reuse, independent upload authorization, tenant isolation and attributable cache outcomes with bounded safe telemetry.
+Operate the shared R2 cache across approved development and CI surfaces with baseline safety and measured cost/time benefits.
 
 ## Launch
 
@@ -28,7 +35,7 @@ Enforce signed artifact reuse, independent upload authorization, tenant isolatio
 4. [Manifest](./ops/manifest.json), [friction ledger](./research/OPPORTUNITIES.md)
    and [history](./history/).
 
-## Current phase
+## Historical phase (suspended)
 
 P0 Threat and receipt contracts, in progress.
 
