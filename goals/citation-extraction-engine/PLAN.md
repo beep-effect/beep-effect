@@ -1825,6 +1825,12 @@ Root lint reproduced seventeen no-inline-schema-compile sites missed by package-
 
 Reverse: Supersede if schema construction becomes dependent on invocation data.
 
+### Normalize nested safety attribution in the existing Effect timing adapter, 2026-11-08
+
+Two regressions reproduce incorrect extraction labels at the generic timing and actual repr/dump allocation boundaries. Reuse Effect mapError, timeoutOrElse and captured Clock in the existing adapter; retain actual limits and unrelated Error identity, and remove duplicate court remapping. Twenty focused tests pass including source corpora and Bun/Node original debug output. No completion row or universal law is promoted. See history/evidence/2026-11-08-shared-timing-safety-attribution.md.
+
+Reverse: Supersede if typed safety attribution or installed operation ownership changes.
+
 ### Preserve installed court operation in nested safety failures, 2026-11-08
 
 A regression reproduced hardcoded extraction labels in court lookup. Reuse existing Effect timing.failSafety and catchTag, pass the captured operation to Unicode and preserve existing deadlines. Eight tests pass including all 17156 independent lookup observations and four-stage Clock/context replacement controls. No event or universal law is promoted; exact-head hosted workflow acceptance remains pending. See history/evidence/2026-11-08-court-operation-capture.md.

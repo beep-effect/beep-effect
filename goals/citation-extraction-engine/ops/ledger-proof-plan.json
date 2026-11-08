@@ -2310,6 +2310,22 @@
           {
             "path": "goals/citation-extraction-engine/history/evidence/2026-11-08-cached-schema-fixtures.md",
             "sha256": "0e275bddeaffd131bb3cbf4ce14045dd7d50335753b0d7fca85e5153b7a4a76a"
+          },
+          {
+            "path": "goals/citation-extraction-engine/history/evidence/2026-11-08-shared-timing-safety-attribution.md",
+            "sha256": "ff985372077aed4eff2ed7282d035b17152859124d592ae408b6aecef03a62cd"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/RegexPolicy.ts",
+            "sha256": "7fda6e95f70eb4dd38aaf667d8a6aa73310f47e32492125a6601d31eba8ee3cb"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationRenderingOperation.test.ts",
+            "sha256": "bc55f57d973f1de3bb9066d4aa37f19d59021b8ab10583fc824f9b5cd32707a7"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationRegexPolicyCoverage.test.ts",
+            "sha256": "44c422a48187f45b2d0c8f90c39cd7e4f5ba2d91f67864a2ca999c45985f43a3"
           }
         ]
       }
@@ -2460,7 +2476,7 @@
           },
           {
             "path": "packages/law-practice/server/src/internal/Citation/CourtLookup.ts",
-            "sha256": "28d7e12a052467563d46a648a5fb4dce2ac5f845bda2250bf0707208a5a0725c"
+            "sha256": "7cefee9581eb96642fa4456255e0cc096548e54a04e60c83510c0d756008ebf9"
           },
           {
             "path": "packages/law-practice/server/src/internal/Citation/SemanticExtraction.ts",
@@ -2477,6 +2493,22 @@
           {
             "path": "packages/law-practice/server/test/CitationCourtLookup.test.ts",
             "sha256": "6db8f6ff8ccd6e65846244f6c82db74b5fde98f611faf298e7754241551e3127"
+          },
+          {
+            "path": "goals/citation-extraction-engine/history/evidence/2026-11-08-shared-timing-safety-attribution.md",
+            "sha256": "ff985372077aed4eff2ed7282d035b17152859124d592ae408b6aecef03a62cd"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/RegexPolicy.ts",
+            "sha256": "7fda6e95f70eb4dd38aaf667d8a6aa73310f47e32492125a6601d31eba8ee3cb"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationRenderingOperation.test.ts",
+            "sha256": "bc55f57d973f1de3bb9066d4aa37f19d59021b8ab10583fc824f9b5cd32707a7"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationRegexPolicyCoverage.test.ts",
+            "sha256": "44c422a48187f45b2d0c8f90c39cd7e4f5ba2d91f67864a2ca999c45985f43a3"
           }
         ]
       }

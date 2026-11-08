@@ -128,7 +128,6 @@ export const makeCitationCourtLookup = Effect.fn("Citation.makeCourtLookup")(fun
     },
     (body) =>
       body.pipe(
-        Effect.catchTag("CitationSafetyLimitExceeded", timing.failSafety),
         Effect.mapError((failure) =>
           failure._tag === "CitationPythonUnicodeFailure" && failure.reason === "deadline-exceeded"
             ? CitationSafetyLimitExceeded.make({ operation: timing.operation, limit: timing.deadlineLimit })
