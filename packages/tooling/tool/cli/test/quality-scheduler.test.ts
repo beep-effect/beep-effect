@@ -100,6 +100,7 @@ import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
@@ -6403,6 +6404,324 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
         total: yield* stats.totalGib,
       };
     });
+
+    it.effect("checks the prospective destination without moving queued work and reuses adoption after rollback", () =>
+      Effect.gen(function* () {
+        const { runtimeDir, tempRoot } = yield* admissionTemporaryRoot;
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const bin = path.join(runtimeDir, "bin");
+        const unit = path.join(bin, "unit");
+        const starts = path.join(bin, "starts");
+        yield* fs.makeDirectory(bin);
+        yield* writeExecutable(
+          path.join(bin, "busctl"),
+          `#!/bin/sh\nnext=0\nfor arg do\n [ "$next" = 1 ] && { printf '%s' "$arg" > '${unit}'; printf 'start\\n' >> '${starts}'; next=0; }\n [ "$arg" = 'ssa(sv)a(sa(sv))' ] && next=1\ndone\nfor arg do\n if [ "$arg" = GetUnitByPID ] && [ -f '${unit}' ]; then printf 'o "/org/freedesktop/systemd1/unit/%s"\\n' "$(sed 's/-/_2d/g; s/\\./_2e/g' '${unit}')"; fi\ndone\nexit 0\n`
+        );
+        yield* writeExecutable(path.join(bin, "systemctl"), "#!/bin/sh\nprintf '/execution\\n'\n");
+        const waiting = yield* Deferred.make<void>();
+        const allow = yield* Ref.make(false);
+        const postchecks = yield* Ref.make(0);
+        const stats = MemoryStats.of({
+          availableGib: Effect.succeed(32),
+          totalGib: Effect.succeed(128),
+          ceilingGib: Effect.succeed(128),
+          reservationCapacity: Effect.fn("MemoryStats.reservationCapacity")(function* (
+            _leases,
+            _config,
+            destination = O.none()
+          ) {
+            if (O.isSome(destination)) {
+              expect(destination.value).toBe("/execution");
+              if (!(yield* Ref.get(allow))) {
+                const reading1 = yield* fs.exists(unit).pipe(Effect.orDie);
+                expect(reading1).toBe(false);
+                yield* Deferred.succeed(waiting, undefined);
+                return 0;
+              }
+              return 10;
+            }
+            const reading2 = yield* fs.exists(unit).pipe(Effect.orDie);
+            expect(reading2).toBe(true);
+            const count = yield* Ref.updateAndGet(postchecks, Num.increment);
+            return count === 1 ? 0 : 10;
+          }),
+        });
+        yield* withPrependedPath(
+          bin,
+          Effect.gen(function* () {
+            const fiber = yield* Effect.forkChild(
+              withQualityAdmission(request(), noAdmissionOriginGate, Effect.succeed("ran"), fastConfig)
+            );
+            yield* Deferred.await(waiting);
+            const reading3 = yield* fs.exists(unit).pipe(Effect.orDie);
+            expect(reading3).toBe(false);
+            yield* Ref.set(allow, true);
+            const reading4 = yield* Fiber.join(fiber);
+            expect(reading4).toBe("ran");
+            const reading5 = yield* Ref.get(postchecks);
+            expect(reading5).toBe(2);
+            const reading6 = yield* fs.readFileString(starts);
+            expect(reading6).toBe("start\n");
+            const reading7 = yield* listDirectory(tempRoot.leases);
+            expect(A.length(reading7)).toBe(0);
+            const reading8 = yield* listDirectory(tempRoot.queue);
+            expect(A.length(reading8)).toBe(0);
+          })
+        ).pipe(
+          provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "1" })),
+          Effect.provideService(MemoryStats, stats)
+        );
+      }).pipe(TestClock.withLive)
+    );
+
+    it.effect("keeps failed adoption on the caller budget and cleans a cancelled retry", () =>
+      Effect.gen(function* () {
+        const { runtimeDir, tempRoot } = yield* admissionTemporaryRoot;
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const bin = path.join(runtimeDir, "bin");
+        yield* fs.makeDirectory(bin);
+        yield* writeExecutable(
+          path.join(bin, "busctl"),
+          '#!/bin/sh\nfor arg do [ "$arg" = StartTransientUnit ] && exit 23; done\nexit 0\n'
+        );
+        yield* writeExecutable(path.join(bin, "systemctl"), "#!/bin/sh\nprintf '/execution\\n'\n");
+        const retried = yield* Deferred.make<void>();
+        const calls = yield* Ref.make(0);
+        const releases = yield* Ref.make(0);
+        const used = yield* Ref.make(false);
+        const stats = MemoryStats.of({
+          availableGib: Effect.succeed(32),
+          totalGib: Effect.succeed(128),
+          ceilingGib: Effect.succeed(128),
+          reservationCapacity: Effect.fn("MemoryStats.reservationCapacity")(function* (
+            _leases,
+            _config,
+            destination = O.none()
+          ) {
+            const count = yield* Ref.updateAndGet(calls, Num.increment);
+            if (count === 1) {
+              assertSome(destination, "/execution");
+              return 10;
+            }
+            assertNone(destination);
+            if (count === 2) return 4;
+            yield* Deferred.succeed(retried, undefined);
+            return 0;
+          }),
+        });
+        yield* withPrependedPath(
+          bin,
+          Effect.gen(function* () {
+            yield* writeFakeLease(tempRoot, {});
+            const gate = {
+              tryAcquire: Effect.succeedSome("origin"),
+              tryAcquireFallback: Effect.succeedSome("origin"),
+              release: () => Ref.update(releases, Num.increment),
+            };
+            const fiber = yield* Effect.forkChild(
+              withQualityAdmission(request(), gate, Ref.set(used, true), fastConfig)
+            );
+            yield* Deferred.await(retried);
+            const reading9 = yield* Ref.get(used);
+            expect(reading9).toBe(false);
+            const reading10 = yield* Ref.get(releases);
+            expect(reading10).toBe(1);
+            yield* Fiber.interrupt(fiber);
+            const reading11 = yield* listDirectory(tempRoot.leases);
+            expect(A.length(reading11)).toBe(1);
+            const reading12 = yield* listDirectory(tempRoot.queue);
+            expect(A.length(reading12)).toBe(0);
+            const reading13 = yield* listDirectory(tempRoot.promotions);
+            expect(A.length(reading13)).toBe(0);
+          })
+        ).pipe(
+          provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "1" })),
+          Effect.provideService(MemoryStats, stats)
+        );
+      }).pipe(TestClock.withLive)
+    );
+
+    it.effect("uses the same scoped reservation budget before promotion and during overshoot rollback", () =>
+      Effect.gen(function* () {
+        const { runtimeDir, tempRoot } = yield* admissionTemporaryRoot;
+        const calls = yield* Ref.make(0);
+        const used = yield* Ref.make(false);
+        const gibRef = yield* Ref.make(32);
+        const stats = MemoryStats.of({
+          ...memoryStats(gibRef),
+          reservationCapacity: Effect.fn("MemoryStats.reservationCapacity")(function* (leases) {
+            const count = yield* Ref.updateAndGet(calls, Num.increment);
+            expect(A.length(leases)).toBe(1);
+            return count === 1 ? 7 : 4;
+          }),
+        });
+        yield* Effect.gen(function* () {
+          yield* writeFakeLease(tempRoot, {});
+          const running = yield* Effect.forkChild(
+            withQualityAdmission(request(), noAdmissionOriginGate, Ref.set(used, true), fastConfig)
+          );
+          yield* Effect.sleep("100 millis");
+          const reading14 = yield* Ref.get(calls);
+          expect(reading14).toBeGreaterThanOrEqual(2);
+          const reading15 = yield* Ref.get(used);
+          expect(reading15).toBe(false);
+          yield* Fiber.interrupt(running);
+          const names = yield* listDirectory(tempRoot.leases);
+          expect(A.length(names)).toBe(1);
+        }).pipe(
+          provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
+          Effect.provideService(MemoryStats, stats)
+        );
+      }).pipe(TestClock.withLive)
+    );
+
+    it.effect("separates host reservations from caller and shared ancestor cgroup budgets", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const identity = yield* processStartIdentityForPid(process.ppid);
+        const procStart = O.getOrElse(identity, () => "");
+        expect(procStart).not.toBe("");
+        const lease = YeetAdmissionLease.make({
+          schemaVersion: "yeet-admission-lease/v1",
+          pid: process.ppid,
+          procStart,
+          kind: "full-proof",
+          weightTokens: 3,
+          priority: "verify",
+          originKey: "other",
+          checkoutRoot: "/repo/other",
+          branch: "test",
+          command: "test",
+          startedAt: "2026-11-08T00:00:00Z",
+          admittedAtMillis: 1,
+          heartbeatAtMillis: 1,
+          runScope: RunScopeRecord.make({
+            unitName: "agent-run-fixture.scope",
+            support: "disabled",
+            attachedPid: process.ppid,
+            attachedAt: "2026-11-08T00:00:00Z",
+          }),
+        });
+        const capacity = Effect.fnUntraced(function* (
+          member: string,
+          hostGib: number,
+          ancestorGib: number,
+          malformed = false,
+          destination: O.Option<string> = O.none(),
+          fault = ""
+        ) {
+          let liveAncestorGib = ancestorGib;
+          const mocked = FileSystem.FileSystem.of({
+            ...fs,
+            readFileString: Effect.fn("FileSystem.FileSystem.readFileString")((target, encoding) => {
+              if (target === "/proc/meminfo")
+                return Effect.succeed(`MemAvailable: ${hostGib * 1024 * 1024} kB\nMemTotal: 134217728 kB\n`);
+              if (target === "/proc/self/mountinfo" && fault === "mount") return Effect.succeed("invalid");
+              if (target === "/proc/self/mountinfo")
+                return Effect.succeed(
+                  `1 0 0:1 ${fault === "subtree-root" ? "/shared" : "/"} /sys/fs/cgroup rw - cgroup2 cgroup rw`
+                );
+              if (target === `/proc/${process.pid}/cgroup`)
+                return Effect.succeed(fault === "caller" ? "invalid" : "0::/shared/caller\n");
+              if (target === `/proc/${process.ppid}/cgroup`)
+                return Effect.succeed(malformed === true ? "invalid" : `0::${member}\n`);
+              if (Str.startsWith("/sys/fs/cgroup/")(target)) {
+                const rootFile = A.length(Str.split(target, "/")) === 5;
+                if (
+                  rootFile &&
+                  (fault === "root-absent" ||
+                    fault === "root-denied" ||
+                    (fault === "root-partial" && Str.endsWith("memory.high")(target)))
+                ) {
+                  return Effect.fail(
+                    PlatformError.systemError({
+                      _tag: fault === "root-denied" ? "PermissionDenied" : "NotFound",
+                      module: "FileSystem",
+                      method: "readFileString",
+                    })
+                  );
+                }
+                if (Str.endsWith("memory.current")(target))
+                  return Effect.succeed(fault === "current" ? "malformed" : "0");
+                const gib =
+                  rootFile && (fault === "namespace-root" || fault === "subtree-root")
+                    ? 20
+                    : Str.startsWith("/sys/fs/cgroup/shared/caller/")(target)
+                      ? 32
+                      : liveAncestorGib;
+                return Effect.succeed(`${gib * GIB}`);
+              }
+              return fs.readFileString(target, encoding);
+            }),
+          });
+          const context = yield* Layer.build(
+            memoryStatsLayerFor({
+              constrainedMemoryBytes: () => 32 * GIB,
+              totalMemoryBytes: () => 128 * GIB,
+              residentBytes: () => 0,
+            }).pipe(Layer.provide(Layer.succeed(FileSystem.FileSystem, mocked)))
+          );
+          const stats = Context.get(context, MemoryStats);
+          assertDefined(stats.reservationCapacity);
+          const leases = [
+            fault === "pid-reuse" ? YeetAdmissionLease.make({ ...lease, procStart: "not-the-recorded-start" }) : lease,
+          ];
+          const initial = yield* stats.reservationCapacity(leases, AdmissionConfig.make({}), destination);
+          if (fault === "fresh") {
+            expect(initial).toBe(10);
+            liveAncestorGib = 20;
+            return yield* stats.reservationCapacity(leases, AdmissionConfig.make({}), destination);
+          }
+          return initial;
+        });
+        // Host capacity 10, private capacity 4: foreign 3 plus new 3 fits.
+        const reading16 = yield* capacity("/elsewhere", 80, 128);
+        expect(reading16).toBe(7);
+        // The new weight is compared with global reservations, so effective
+        // capacity 7 admits 3 + 3, whereas effective capacity 4 holds it.
+        const reading17 = yield* capacity("/shared/caller/child", 80, 128);
+        expect(reading17).toBe(4);
+        const reading18 = yield* capacity("/shared/sibling", 80, 32);
+        expect(reading18).toBe(4);
+        const reading19 = yield* capacity("/elsewhere", 25, 128);
+        expect(reading19).toBe(3);
+        const reading20 = yield* capacity("/elsewhere", 80, 128, true);
+        expect(reading20).toBe(4);
+        // Prospective execution in a larger sibling slice does not charge the
+        // caller's private preparation scope with the full workload weight.
+        const reading21 = yield* capacity("/elsewhere", 80, 128, false, O.some("/execution"));
+        expect(reading21).toBe(10);
+        const reading22 = yield* capacity("/execution/peer", 80, 32, false, O.some("/execution"));
+        expect(reading22).toBe(4);
+        const reading23 = yield* capacity("/elsewhere", 80, 128, false, O.some("/bad/../path"));
+        expect(reading23).toBe(4);
+        const reading24 = yield* capacity("/elsewhere", 80, 128, false, O.none(), "mount");
+        expect(reading24).toBe(4);
+        const reading25 = yield* capacity("/elsewhere", 80, 128, false, O.none(), "caller");
+        expect(reading25).toBe(4);
+        const reading26 = yield* capacity("/elsewhere", 80, 128, false, O.none(), "current");
+        expect(reading26).toBe(4);
+        const reading27 = yield* capacity("/elsewhere", 80, 128, false, O.none(), "pid-reuse");
+        expect(reading27).toBe(4);
+        const reading28 = yield* capacity("/elsewhere", 80, 128, false, O.some("/execution"), "namespace-root");
+        expect(reading28).toBe(2);
+        const reading29 = yield* capacity("/shared/sibling", 80, 128, false, O.some("/shared/caller"), "subtree-root");
+        expect(reading29).toBe(2);
+        const reading30 = yield* capacity("/elsewhere", 80, 128, false, O.some("/execution"), "root-absent");
+        expect(reading30).toBe(10);
+        const reading31 = yield* capacity("/elsewhere", 80, 128, false, O.some("/execution"), "root-denied");
+        expect(reading31).toBe(4);
+        const reading32 = yield* capacity("/elsewhere", 80, 128, false, O.some("/execution"), "root-partial");
+        expect(reading32).toBe(4);
+        const reading33 = yield* capacity("/elsewhere", 80, 128, false, O.some("/execution"), "fresh");
+        expect(reading33).toBe(2);
+      })
+    );
 
     it.effect("reports the cgroup ceiling and clamps available memory to ceiling minus RSS", () =>
       Effect.gen(function* () {

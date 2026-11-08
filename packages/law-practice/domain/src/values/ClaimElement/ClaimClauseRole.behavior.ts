@@ -1301,10 +1301,11 @@ const validateFiniteLabelSource = (
 };
 const finiteLabelOriginalAligned = (context: FiniteProofValidationContext): boolean =>
   O.exists(context.originalInput, ClaimLexicalEvidence.guards.aligned);
+const isFiniteScopeProof = ClaimFiniteSourceProof.isAnyOf(["scope"]);
 const finiteLabelBodyScope = (
   scope: O.Option<ClaimFiniteSourceProof>
 ): scope is O.Some<Extract<ClaimFiniteSourceProof, { readonly kind: "scope" }>> =>
-  isFiniteScopeProofOption(scope) && scope.value.role === "body";
+  O.isSome(scope) && isFiniteScopeProof(scope.value) && scope.value.role === "body";
 const computeFiniteRightListSource = (context: FiniteProofValidationContext): O.Option<RawRightList> | false => {
   // Eight prepaid setup slots: denial latch, forwarding closure, two captures,
   // Found cell and its two fields, and the context publication.
