@@ -38,7 +38,7 @@ export class EyeciteRawRange extends S.Opaque<EyeciteRawRange, { readonly brand:
  * **Example** (Inspect the recognition contract)
  * ```ts
  * import { EyeciteComponentName } from "@beep/eyecite"
- * console.log(EyeciteComponentName.is("plaintiff")) // true
+ * console.log(EyeciteComponentName.is.plaintiff("plaintiff")) // true
  * ```
  * @category models
  * @since 0.0.0
