@@ -1008,42 +1008,61 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
       );
     });
 
-    it.effect("escalates a queued admission after two minutes", () => {
-      const ticket = YeetAdmissionTicket.make({
-        schemaVersion: "yeet-admission-ticket/v1",
-        pid: process.pid,
-        procStart: "test-start",
-        kind: "full-proof",
-        weightTokens: 3,
-        priority: "verify",
-        originKey: "origin-escalation",
-        checkoutRoot: "/repo/escalation",
-        branch: "feat/escalation",
-        enqueuedAtMillis: 0,
-        heartbeatAtMillis: 0,
-        blockedOnOriginAtMillis: 0,
-        nonce: "escalation-ticket",
-      });
+    const noteEscalationWait = (escalated: number, nowMillis: number) =>
+      noteAdmissionWaitForTesting(
+        request(),
+        YeetAdmissionTicket.make({
+          schemaVersion: "yeet-admission-ticket/v1",
+          pid: process.pid,
+          procStart: "test-start",
+          kind: "full-proof",
+          weightTokens: 3,
+          priority: "verify",
+          originKey: "origin-escalation",
+          checkoutRoot: "/repo/escalation",
+          branch: "feat/escalation",
+          enqueuedAtMillis: 0,
+          heartbeatAtMillis: 0,
+          blockedOnOriginAtMillis: 0,
+          nonce: "escalation-ticket",
+        }),
+        0,
+        { escalated, lastProgressMillis: 0 },
+        fastConfig,
+        {
+          availableGib: 10,
+          capacityTokens: 0,
+          nowMillis,
+          state: {
+            dead: [],
+            deadLeases: [],
+            deadTickets: [],
+            leases: [],
+            quarantined: [],
+            tickets: [],
+          },
+        }
+      );
 
-      return noteAdmissionWaitForTesting(request(), ticket, 0, { escalated: 0, lastProgressMillis: 0 }, fastConfig, {
-        availableGib: 10,
-        capacityTokens: 0,
-        nowMillis: 120_000,
-        state: {
-          dead: [],
-          deadLeases: [],
-          deadTickets: [],
-          leases: [],
-          quarantined: [],
-          tickets: [],
-        },
-      }).pipe(
+    it.effect("escalates a queued admission after two minutes", () =>
+      noteEscalationWait(0, 120_000).pipe(
         Effect.map((progress) => {
           expect(progress.escalated).toBe(1);
           expect(progress.lastProgressMillis).toBe(120_000);
         })
-      );
-    });
+      )
+    );
+
+    it.effect("points a queued admission at the holders after ten minutes, once", () =>
+      Effect.gen(function* () {
+        const progress = yield* noteEscalationWait(1, 600_000);
+        expect(progress.escalated).toBe(2);
+        const repeated = yield* noteEscalationWait(2, 660_000);
+        expect(repeated.escalated).toBe(2);
+        const lines = yield* TestConsole.logLines;
+        expect(A.filter(A.map(lines, String), Str.includes("waited 10 minutes"))).toHaveLength(1);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
     it("pins the chartered token weights", () => {
       expect(admissionTokenWeight("full-proof")).toBe(3);
@@ -6475,6 +6494,38 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
           Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "1" })),
           Effect.provideService(MemoryStats, stats)
         );
+      }).pipe(TestClock.withLive)
+    );
+
+    it.effect("reports status capacity from the reservations of the live leases", () =>
+      Effect.gen(function* () {
+        const { runtimeDir } = yield* admissionTemporaryRoot;
+        const reserved = yield* Ref.make(A.empty<number>());
+        const stats = MemoryStats.of({
+          availableGib: Effect.succeed(1),
+          totalGib: Effect.succeed(128),
+          ceilingGib: Effect.succeed(128),
+          reservationCapacity: Effect.fn("MemoryStats.reservationCapacity")(function* (leases) {
+            yield* Ref.set(
+              reserved,
+              A.map(leases, (lease) => lease.weightTokens)
+            );
+            return 10;
+          }),
+        });
+        const snapshot = yield* withQualityAdmission(
+          request(),
+          noAdmissionOriginGate,
+          admissionStatus(fastConfig),
+          fastConfig
+        ).pipe(
+          provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
+          Effect.provideService(MemoryStats, stats)
+        );
+        expect(snapshot.capacityTokens).toBe(10);
+        const weights = yield* Ref.get(reserved);
+        expect(weights).toEqual([request().weightTokens]);
       }).pipe(TestClock.withLive)
     );
 
