@@ -521,6 +521,7 @@ const reconcileJournalLocked = Effect.fn("AttemptTerminationJournal.reconcileLoc
               diffFingerprint: started.diffFingerprint,
               proofTier: started.proofTier,
               envProfile: started.envProfile,
+              computeProfile: started.computeProfile,
               stage: started.stage,
             }).pipe(
               Effect.mapBoth({
@@ -758,6 +759,7 @@ export const appendSchedulerAttemptTerminated = Effect.fn("AttemptTerminationJou
       diffFingerprint: owner.diffFingerprint,
       proofTier: owner.proofTier,
       envProfile: owner.envProfile,
+      computeProfile: owner.computeProfile,
       stage: owner.stage,
     }).pipe(Effect.mapError(QualitySchedulerError.new("Failed to encode scheduler attempt terminal event.")));
     yield* appendEncodedAttemptJournalEvent(journalPath, line, "attempt-terminated");

@@ -940,3 +940,39 @@ original eyecite's `wrap_html_tags`; it is not a general Python regex runtime.
 Original wrapping observations derive from eyecite 2.7.6 `utils.py` under its
 existing BSD-2-Clause notice. Source exception diagnostics are retained only in
 public synthetic fixtures; target failures and warnings contain no source text.
+
+## CPython builtin string representation
+
+The private citation `PythonRepr.ts` adapts `unicode_repr` from CPython
+3.11.15 `Objects/unicodeobject.c` (SHA-256
+`5dde8eb1b99878b4ea113cd6b5f88bca3667b0e23dc8c5262a07f5ea14d0d82e`).
+It uses the existing Effect-native Unicode, resource-budget and captured-clock
+services. The complete PSF license is retained above. The maintainer producer
+`goals/citation-extraction-engine/ops/probe-python-repr.py` records immutable
+Unicode 14.0.0 printability facts and independent native string observations
+from pinned CPython 3.11.15. The packed printability asset includes source,
+producer, version and license provenance. Neither the engine nor its portable
+tests require a runtime Python installation.
+
+## eyecite builtin citation debug output
+
+The private citation Dump.ts and BuiltinDump.ts adapt dump_citations from
+Free Law Project eyecite 2.7.6 utils.py and the builtin model dump methods in
+models.py at 04d82c032ad5fd0f9ab72a61c87110c46ee8f52e. The existing complete
+BSD-2-Clause notice applies. The maintainer producer
+`goals/citation-extraction-engine/ops/probe-dump.py` captures original dataclass
+field ordering and independent output observations, preserving native Unicode
+words, source digests and license provenance. Runtime composition reuses existing
+Effect Unicode, allocation, captured-clock and string-representation services.
+Neither portable tests nor production require Python.
+
+## eyecite builtin token equality
+
+The native token owner's builtin value equality follows the dataclass comparison
+fields declared by Free Law Project eyecite 2.7.6 models.py at
+04d82c032ad5fd0f9ab72a61c87110c46ee8f52e, under the existing BSD-2-Clause notice.
+The independent producer `goals/citation-extraction-engine/ops/probe-token-equality.py`
+records actual source comparisons and merge histories with source, license and
+producer digests. Ordered edition comparisons reuse the previously captured frozen
+edition value classes and existing Effect collection operations. Dynamic subclass,
+external mutation, general UserString and process-hash protocols remain separate.

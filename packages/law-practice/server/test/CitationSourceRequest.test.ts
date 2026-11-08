@@ -64,6 +64,31 @@ it.layer(citationTokenizerTestLayer)("canonical single-source request adapter", 
       expect(calls).toBe(1);
     })
   );
+  it.effect("captures an installed plan name before resolver-side request mutation", () =>
+    Effect.gen(function* () {
+      const proof = yield* citationFixtureSourceProof("1 Abbott’s Pr.Rep. 1");
+      const selection = { plan: "quotes/v1" };
+      const resolver = SourceTextResolver.of({
+        resolve: Effect.fn("SourceRequestTest.mutatePlan")(() =>
+          Effect.sync(() => {
+            selection.plan = "different-plan";
+            return ResolvedSourceText.make({ identity: proof.source, text: proof.sourceText });
+          })
+        ),
+      });
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      const adapter = yield* makeCitationSourceRequestAdapter(limits).pipe(
+        Effect.provideService(SourceTextResolver, resolver)
+      );
+      const result = yield* adapter.preparePair({
+        plain: { source: proof.source, sourceText: proof.sourceText },
+        cleanSteps: selection,
+      });
+      if (result._tag !== "Extract") return yield* Effect.die("expected Extract");
+      expect(result.cleanSteps).toEqual({ plan: "quotes/v1" });
+      expect(selection.plan).toBe("different-plan");
+    })
+  );
   it.effect("rejects resolver-side identity mutation instead of changing the authorized expectation", () =>
     Effect.gen(function* () {
       const proof = yield* citationFixtureSourceProof("Alpha");

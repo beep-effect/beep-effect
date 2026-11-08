@@ -20,6 +20,7 @@ export const CitationRegexOperation = Context.Reference<CitationEngineOperation>
 });
 const deadlineName = <Op extends CitationEngineOperation>(operation: Op): `${Op}Deadline` => `${operation}Deadline`;
 const Limits = S.toType(CitationEngineLimits);
+const isSafetyFailure = S.is(CitationSafetyLimitExceeded);
 /** Decode the schema-owned policy with the caller's closed boundary failure.
  * @internal @category operations @since 0.0.0
  */
@@ -46,23 +47,26 @@ export const makeCitationRegexTiming = Effect.fn("Citation.makeRegexTiming")(fun
   const deadlineLimit = Duration.isLessThanOrEqualTo(limits.operationDeadline, stageDeadline)
     ? ("operationDeadline" as const)
     : stageLimit;
-  const timed = <A, E>(body: Effect.Effect<A, E>) =>
-    body.pipe(
-      Effect.timeoutOrElse({
-        duration: deadline,
-        orElse: () => Effect.fail(CitationSafetyLimitExceeded.make({ operation, limit: deadlineLimit })),
-      }),
-      Effect.provideService(Clock.Clock, clock)
-    );
-  const operationTimed = <A, E>(body: Effect.Effect<A, E>) =>
-    body.pipe(
-      Effect.timeoutOrElse({
-        duration: limits.operationDeadline,
-        orElse: () => Effect.fail(CitationSafetyLimitExceeded.make({ operation, limit: "operationDeadline" })),
-      }),
-      Effect.provideService(Clock.Clock, clock)
-    );
-  const failSafety = (error: CitationSafetyLimitExceeded) =>
-    Effect.fail(CitationSafetyLimitExceeded.make({ operation, limit: error.limit }));
+  const safetyFailure = (error: CitationSafetyLimitExceeded) =>
+    CitationSafetyLimitExceeded.make({ operation, limit: error.limit });
+  const normalizeSafety = <E>(error: E): E | CitationSafetyLimitExceeded =>
+    isSafetyFailure(error) ? safetyFailure(error) : error;
+  const timedFor =
+    (duration: Duration.Duration, limit: typeof deadlineLimit) =>
+    <A, E>(body: Effect.Effect<A, E>) =>
+      body.pipe(
+        Effect.mapError(normalizeSafety),
+        Effect.timeoutOrElse({
+          duration,
+          orElse: () => Effect.fail(CitationSafetyLimitExceeded.make({ operation, limit })),
+        }),
+        Effect.provideService(Clock.Clock, clock)
+      );
+  const timed = timedFor(deadline, deadlineLimit);
+  const operationTimed = timedFor(limits.operationDeadline, "operationDeadline");
+  const failSafety = (error: CitationSafetyLimitExceeded) => {
+    const failure = safetyFailure(error);
+    return Effect.fail(failure);
+  };
   return { operation, deadline, deadlineLimit, timed, operationTimed, failSafety };
 });

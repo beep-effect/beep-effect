@@ -2,6 +2,7 @@ import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { makeCitationCourtLookup } from "@beep/law-practice-server/internal/Citation/CourtLookup";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
+import { CitationRegexOperation } from "@beep/law-practice-server/internal/Citation/RegexPolicy";
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
 import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
@@ -173,6 +174,62 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source cour
       yield* timer.trigger;
       const refused = yield* Fiber.join(pending).pipe(Effect.flip);
       expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "extractDeadline" });
+    })
+  );
+  it.effect("retains installed operation labels for source and allocation refusals", () =>
+    Effect.gen(function* () {
+      const { limits, table } = yield* install();
+      for (const operation of ["clean", "extract", "resolve", "annotate"] as const) {
+        const parser = yield* makeCitationCourtLookup({ ...limits, sourceUtf16: 3 }, table.payload).pipe(
+          Effect.provideService(CitationRegexOperation, operation)
+        );
+        const source = yield* parser
+          .lookup(native("S.C."))
+          .pipe(Effect.provideService(CitationRegexOperation, "extract"), Effect.flip);
+        expect(source).toMatchObject({ _tag: "CitationSafetyLimitExceeded", operation, limit: "sourceUtf16" });
+        const tight = yield* makeCitationCourtLookup({ ...limits, producedTextUtf16: 2 }, table.payload).pipe(
+          Effect.provideService(CitationRegexOperation, operation)
+        );
+        const allocation = yield* tight
+          .lookup(native("A"))
+          .pipe(Effect.provideService(CitationRegexOperation, "extract"), Effect.flip);
+        expect(allocation).toMatchObject({
+          _tag: "CitationSafetyLimitExceeded",
+          operation,
+          limit: "producedTextUtf16",
+        });
+      }
+    })
+  );
+  it.effect("retains each installed stage deadline and Clock across caller replacement", () =>
+    Effect.gen(function* () {
+      const { limits, table } = yield* install();
+      const deadline = Duration.millis(997);
+      const disabled = yield* makeCitationNativeSleepClock(() => Effect.never);
+      for (const operation of ["clean", "extract", "resolve", "annotate"] as const) {
+        const timer = yield* makeCitationNativeManualClock(deadline);
+        const parser = yield* makeCitationCourtLookup(
+          { ...limits, [`${operation}Deadline`]: deadline },
+          table.payload
+        ).pipe(
+          Effect.provideService(Clock.Clock, timer.clock),
+          Effect.provideService(CitationRegexOperation, operation)
+        );
+        const pending = yield* parser
+          .lookup({ width: 1, bytes: new Uint8Array(65536).fill(65) })
+          .pipe(
+            Effect.provideService(Clock.Clock, disabled),
+            Effect.provideService(CitationRegexOperation, "extract"),
+            Effect.forkChild
+          );
+        yield* timer.trigger;
+        const failure = yield* Fiber.join(pending).pipe(Effect.flip);
+        expect(failure).toMatchObject({
+          _tag: "CitationSafetyLimitExceeded",
+          operation,
+          limit: `${operation}Deadline`,
+        });
+      }
     })
   );
   it.effect("rejects malformed native storage and the captured raw source ceiling", () =>

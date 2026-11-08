@@ -584,13 +584,47 @@ const permitsAdverbHead = (tokens: ReadonlyArray<Span>, position: number, offset
     identity
   );
 
-const headAt = (tokens: ReadonlyArray<Span>, index: number, quotations: ReadonlyArray<Span>): ReadonlyArray<Span> =>
+const predicateCoordinators = HashSet.make("and", "or", "and/or");
+const coordinatorBeforeCopula = (tokens: ReadonlyArray<Span>, position: number): boolean =>
+  O.exists(
+    A.get(tokens, position),
+    ({ text, spacedBefore }) =>
+      spacedBefore !== false && text.length <= 6 && HashSet.has(predicateCoordinators, Str.toLowerCase(text))
+  ) &&
+  O.exists(
+    A.get(tokens, position + 1),
+    ({ text, spacedBefore }) =>
+      spacedBefore !== false && text.length <= 4 && HashSet.has(copulas, Str.toLowerCase(text))
+  );
+const coordinatedHeadBoundary = (
+  tokens: ReadonlyArray<Span>,
+  position: number,
+  offset: number,
+  enabled: boolean
+): boolean => enabled && offset > 0 && coordinatorBeforeCopula(tokens, position);
+const shieldedHeadToken = (
+  tokens: ReadonlyArray<Span>,
+  position: number,
+  start: number,
+  quotations: ReadonlyArray<Span>
+): boolean =>
+  A.some(quotations, (quote) => start >= quote.start && start < quote.start + Str.length(quote.text)) ||
+  A.some([position, position - 1, position - 2], (at) => abbreviationAt(tokens, at));
+const headResumeAt = (tokens: ReadonlyArray<Span>, start: number, end: number, enabled: boolean): number =>
+  enabled && end > start && coordinatorBeforeCopula(tokens, end) ? end + 1 : end;
+
+const headAt = (
+  tokens: ReadonlyArray<Span>,
+  index: number,
+  quotations: ReadonlyArray<Span>,
+  coordinatedPredicates = false
+): ReadonlyArray<Span> =>
   A.takeWhile(A.drop(tokens, index), ({ text, start }, offset) => {
     const word = Str.toLowerCase(text);
     const position = index + offset;
-    if (A.some(quotations, (quote) => start >= quote.start && start < quote.start + Str.length(quote.text)))
-      return true;
-    if (A.some([position, position - 1, position - 2], (at) => abbreviationAt(tokens, at))) return true;
+    if (shieldedHeadToken(tokens, position, start, quotations)) return true;
+    // Use the existing head traversal and quote shielding; no second source scan.
+    if (coordinatedHeadBoundary(tokens, position, offset, coordinatedPredicates)) return false;
     if (isSelectorHead(tokens, index) && HashSet.has(HashSet.make(",", "or", "and"), word)) return true;
     return (
       !HashSet.has(punctuation, text) &&
@@ -638,10 +672,15 @@ const quotedTokenAt = (tokens: ReadonlyArray<Span>, index: number, quotations: R
   O.exists(A.get(tokens, index), ({ start }) =>
     A.some(quotations, (quote) => start >= quote.start && start < quote.start + Str.length(quote.text))
   );
-const legacyNominalPlan: NominalPlanner = (tokens, _index, headStart, quotations) => {
-  const end = headStart + headAt(tokens, headStart, quotations).length;
-  return NominalBoundaryPlan.make({ headEnd: end, resumeAt: end, reason: "legacy" });
-};
+const nominalPlanFor =
+  (coordinatedPredicates: boolean): NominalPlanner =>
+  (tokens, _index, headStart, quotations) => {
+    const end = headStart + headAt(tokens, headStart, quotations, coordinatedPredicates).length;
+    const resumeAt = headResumeAt(tokens, headStart, end, coordinatedPredicates);
+    return NominalBoundaryPlan.make({ headEnd: end, resumeAt, reason: "legacy" });
+  };
+const legacyNominalPlan = nominalPlanFor(false);
+const inspectionLegacyNominalPlan = nominalPlanFor(true);
 const copulas = HashSet.make("is", "are", "was", "were");
 const hardNominalBarrier = (tokens: ReadonlyArray<Span>, index: number, quotations: ReadonlyArray<Span>): boolean =>
   !quotedTokenAt(tokens, index, quotations) && HashSet.has(boundaryWords, tokenWordAt(tokens, index));
@@ -681,7 +720,11 @@ const copularNominalPlan = (
       })
     )
       return O.none();
-    return O.some(NominalBoundaryPlan.make({ headEnd: end, resumeAt: end, reason: "copular-subject" }));
+    // Admission and continuation keep the existing copula boundary. A paired
+    // quote cannot enclose its immediately preceding coordinator without an
+    // intervening closing-quote token, so the original quote check suffices.
+    const headEnd = end - 1 > headStart && coordinatorBeforeCopula(tokens, end - 1) ? end - 1 : end;
+    return O.some(NominalBoundaryPlan.make({ headEnd, resumeAt: end, reason: "copular-subject" }));
   });
 };
 const participleAt = (tokens: ReadonlyArray<Span>, at: number): boolean => {
@@ -827,7 +870,7 @@ const inspectionNominalPlan: NominalPlanner = (tokens, index, headStart, quotati
     O.orElse(participialNominalPlan(tokens, headStart, quotations), () =>
       copularNominalPlan(tokens, index, headStart, quotations)
     ),
-    () => legacyNominalPlan(tokens, index, headStart, quotations)
+    () => inspectionLegacyNominalPlan(tokens, index, headStart, quotations)
   );
 
 class InspectionSourceRole extends S.Opaque<InspectionSourceRole, { readonly brand: unique symbol }>()(
@@ -1003,6 +1046,7 @@ const relationalNominalPlan = (
   );
 };
 type LexicalGrammar = {
+  readonly coordinatedPredicates: boolean;
   readonly plan: NominalPlanner;
   readonly functionalAt: (span: Span) => boolean;
   readonly refineTerms: (span: Span, terms: ReadonlyArray<EncodedTerm>) => ReadonlyArray<EncodedTerm>;
@@ -1013,12 +1057,14 @@ type LexicalGrammar = {
   ) => O.Option<InspectionSourceRole>;
 };
 const strictLexicalGrammar: LexicalGrammar = {
+  coordinatedPredicates: false,
   plan: legacyNominalPlan,
   functionalAt: () => false,
   ignoreAt: () => O.none(),
   refineTerms: (_span, terms) => terms,
 };
 const inspectionLexicalGrammar: LexicalGrammar = {
+  coordinatedPredicates: true,
   functionalAt: () => false,
   refineTerms: (_span, terms) => terms,
   plan: (tokens, index, headStart, quotations) =>
@@ -1088,7 +1134,9 @@ const scanStep =
       determinerAt(tokens, index),
       O.match({
         onNone: () => {
-          const head = headAt(tokens, index, quotations);
+          const head = headAt(tokens, index, quotations, grammar.coordinatedPredicates);
+          const end = index + head.length;
+          const resumeAt = headResumeAt(tokens, index, end, grammar.coordinatedPredicates);
           const previous = O.map(A.get(tokens, index - 1), ({ text }) => text);
           const isReferenceNumber =
             O.exists(previous, (word) =>
@@ -1098,7 +1146,7 @@ const scanStep =
             O.contains(previous, "[") ||
             O.exists(A.head(head), ({ text }) => O.isSome(Str.match(digitsPattern)(text)));
           return A.isReadonlyArrayNonEmpty(head) && !isReferenceNumber && !isClaimReference(head)
-            ? scanStepOf(O.some(termOf(claimText, A.headNonEmpty(head).start, "bare", head)), index + head.length)
+            ? scanStepOf(O.some(termOf(claimText, A.headNonEmpty(head).start, "bare", head)), resumeAt)
             : scanStepOf(O.none(), index + 1);
         },
         onSome: ({ determiner, start, width }) => {

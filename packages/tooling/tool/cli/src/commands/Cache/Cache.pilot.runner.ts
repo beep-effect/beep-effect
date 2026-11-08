@@ -275,7 +275,7 @@ const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker"
           "usr/lib",
           "/lib",
           "--symlink",
-          "usr/lib",
+          "usr/lib64",
           "/lib64",
           "--symlink",
           "usr/bin",

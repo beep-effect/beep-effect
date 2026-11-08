@@ -26,7 +26,7 @@
 #   claude  CLAUDE_CODE_REMOTE=true   (Claude cloud sessions set it on the VM)
 #   codex   CODEX_ENV_* or CODEX_PROXY_CERT (codex-universal image markers);
 #           the Codex setup script also passes BEEP_CLOUD_VENDOR=codex explicitly
-#   cursor  .cursor/install.sh passes BEEP_CLOUD_VENDOR=cursor
+#   cursor  CURSOR_AGENT is set, or .cursor/install.sh passes BEEP_CLOUD_VENDOR=cursor
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -586,6 +586,9 @@ prepare_hash="$(cat bun.lock package.json packages/tooling/tool/cli/src/commands
 if [ -d node_modules ] && [ "$(cat "${lock_stamp}" 2>/dev/null || true)" = "${lock_hash}" ]; then
   log "dependencies already match bun.lock; skipping install"
 else
+  # Invalidate preparation before an install can replace the patched compiler.
+  # If installation or stamp publication stops midway, resume must prepare again.
+  rm -f "${prepare_stamp}"
   install_attempts=3
   attempt=1
   while :; do
@@ -600,8 +603,6 @@ else
     attempt=$((attempt + 1))
   done
   printf '%s' "${lock_hash}" > "${lock_stamp}"
-  # A fresh install replaces the patched compiler, so the patch must re-run.
-  rm -f "${prepare_stamp}"
 fi
 
 if [ "$(cat "${prepare_stamp}" 2>/dev/null || true)" = "${prepare_hash}" ]; then

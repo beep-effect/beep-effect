@@ -1,11 +1,56 @@
 # Friction and opportunities
 
+## 2026-11-08: sandbox library discovery refused the prepared pilot
+
+Accepted-source observation run 42452673520 at `0ba15ffc57a3` prepared
+inputs successfully, then refused with `Sandbox bun library discovery failed.`
+Its summary projection also refused, no artifact was produced and cleanup
+passed. The local pilot, signed supervisor and protocol sandbox all mapped
+`/lib64` to `usr/lib`, hiding libraries kept separately in `/usr/lib64`.
+Use the existing read-only `/usr/lib64` path in all three mappings; it also
+preserves a host where `/usr/lib64` aliases `/usr/lib`. Keep the exact ldd
+exit, stderr, truncation, path and digest checks. Report only the role,
+exit code, truncation and stderr-emptiness on refusal, never worker streams.
+The original failure does not establish that this mapping was its sole
+cause. Hosted checks and a fresh accepted-source observation must establish
+the outcome; no local quality suite or repeated dispatch ran. Reverse the
+mapping through a PR if the new observation contradicts the profile, and
+keep qualification closed while the failure remains unresolved.
+
 Record friction as it occurs: work, minimum command/error/file evidence,
 impact, prevention and owner/disposition.
 Record friction as it occurs: work, minimum
 command/error/file evidence, impact, prevention and owner/disposition.
 Redact secrets, use portable paths, omit machine/session IDs and keep raw logs
 in bounded artifacts.
+
+## 2026-11-08: concurrent proof publishers race on inbox creation
+
+Hosted Property Laws on PR #2951 failed in the existing proof-job finalizer
+test: two publishers observed a missing inbox parent, and its second creation
+returned `AlreadyExists`. This is a shared filesystem guard defect on the
+accepted base, outside the sandbox library-path repair. Accept only that
+creation collision, then retain the existing no-follow directory validation.
+Deterministic hosted regressions cover a directory, file and symlink winning
+the race, plus unrelated creation failure. No local suite was run under the
+operator's hosted-first instruction. Keep failures attributable; do not retry
+the same run or pre-create the fixture directory to hide the race.
+
+The first hosted unit-c run on this repair exposed an older generic-failure
+fixture that manufactured its cause by creating an already-existing root.
+That is specifically `AlreadyExists`, which now correctly triggers no-follow
+reinspection; its synthetic parent was never created. Inject an explicit
+`PermissionDenied` for the intended directory instead, preserving the original
+cause-identity and refusal assertions. Add a separate absent-parent collision
+case so swallowing `AlreadyExists` can never turn a missing parent into success.
+Keep the original failed job and obtain fresh hosted proof on the changed
+source; no local suite or unchanged-source rerun is used.
+
+The changed-head hosted Check then reported `TS377050` on the new nested
+Option-presence assertion. Use the equivalent pipeable form while retaining
+the assertion. This introduced compiler-diagnostic finding was absent from
+the syntax-only test-pattern inspection; that inspection is not type proof.
+The hosted failure log is retained, and fresh hosted proof is still required.
 
 ## 2026-11-03: hosted policy must cover the new mask tests
 
@@ -2691,3 +2736,40 @@ logging repair and no local quality suite was run.
 - Prevention: accompany schema boundary changes with schema-derived property
   coverage, not only fixed examples. Hosted CI is authoritative; no local suite,
   baseline rewrite or suppression is used.
+
+## 2026-11-08: bind observation preflight to accepted adapter ownership
+
+The first accepted-source dispatch preflight refused because the former
+`ci-cache-pilot-inputs.sh` path was retired by #2921. Main now routes the same
+observation through the Effect CLI input, sandbox, summary and cleanup commands.
+Refresh the explicit source digest set to those accepted owners before dispatch;
+do not retain obsolete script paths or silently skip their verification. The
+prepared request stayed undispatched until that review completed. The resulting
+run is 42440013986, with its original resource and authority bounds unchanged.
+Owner: the current observation evidence lane. A future preflight should derive
+its required source roles from the accepted workflow command map, then refuse
+unknown roles, instead of keeping a parallel list of retired adapter filenames.
+
+## 2026-11-08: local pilot execution drifted from its creation-mask preview
+
+Run 42440013986 prepared inputs successfully but the pilot refused with
+`The pilot activation preview is stale.` Preparation's CLI brackets its process
+and children with mask `077`, while the local execution shell omitted that mask;
+the signed execution shell already sets it. Creation mask is intentionally a
+toolchain identity input. Align local execution with preparation rather than
+remove that field, refresh a stale receipt, or bypass exact preview equivalence.
+No public summary was produced and owned cleanup passed. The workflow repair
+and real-shell mask regression belong to PR #2926; hosted proof and a new
+accepted-source observation remain pending.
+
+## 2026-11-08: codec regressions crossed the property-coverage threshold
+
+Hosted Lint Policy job 128642129299 at PR #2937 reported
+`SchemaUtils.test.ts :: schema-codec-tests`: four codec assertions without
+schema-derived property coverage. The fixed examples passed, but did not
+meet the schema-first property requirement. Add a property derived from
+the owning optional-defect schema that round-trips diagnostic identity
+and cause presence, with absent causes omitted from encoding. Preserve
+the existing regression examples and leave the inventory unchanged.
+Consider the file-level property obligation whenever adding codec tests.
+No local test or quality suite ran; hosted execution must prove the repair.

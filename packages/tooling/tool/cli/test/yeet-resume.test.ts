@@ -43,7 +43,14 @@ const TestLayer = Layer.provideMerge(
     NodeServices.layer,
     NodeCrypto.layer,
     TestConsole.layer,
-    Layer.succeed(MemoryStats, MemoryStats.of({ availableGib: Effect.succeed(50), totalGib: Effect.succeed(128) }))
+    Layer.succeed(
+      MemoryStats,
+      MemoryStats.of({
+        availableGib: Effect.succeed(50),
+        totalGib: Effect.succeed(128),
+        ceilingGib: Effect.succeed(128),
+      })
+    )
   )
 );
 const HostileProvenanceJson = JsonStringCodec(

@@ -6,7 +6,7 @@
     "title": "Compute-Profile Gate Routing",
     "status": "active",
     "created": "2026-11-07",
-    "updated": "2026-11-07",
+    "updated": "2026-11-08",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/compute-profile-gate-routing",
@@ -34,7 +34,11 @@
     "goals/compute-profile-gate-routing/GOAL.md",
     "goals/compute-profile-gate-routing/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/2026-11-08-p0-probe-evidence.md",
+    "research/2026-11-08-p1-yeet-lefthook-evidence.md",
+    "research/SOURCES.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -50,12 +54,12 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",

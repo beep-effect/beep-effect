@@ -30,6 +30,13 @@ model aliases, fast variants or silent same-provider substitutions.
   workers do not delegate onward; native same-provider children retain their pins,
   bounded ownership and evidence requirements. A fallback retains reviewer
   separation, existing findings and the same acceptance gates.
+- Delegated children run unsupervised (operator 2026-11-08, R12): Claude children
+  in `bypassPermissions`, T3 `delegate_task` with `runtimeMode: "full-access"`,
+  and the per-CLI equivalents in the runbook's "Child permission mode". T3 rejects
+  a child above its parent, so orchestrators and linked T3 environments open in
+  Full access. Cursor's sandbox, D11, D21 and the money escalation still hold. A
+  child that raises approvals is a route defect: stop and fix the route, never
+  approve command by command.
 - A named `review.panel` is three independent sessions: Astra, Fable and Grok at
   xhigh, with launch argv retained as effort evidence. The panel is used only when
   assigned. Muse is opt-in and never a fallback. Junie is the preferred bounded

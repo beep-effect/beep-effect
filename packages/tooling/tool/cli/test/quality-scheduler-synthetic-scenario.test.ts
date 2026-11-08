@@ -571,7 +571,11 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: fal
           Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
           Effect.provideService(
             MemoryStats,
-            MemoryStats.of({ availableGib: Effect.succeed(25), totalGib: Effect.succeed(128) })
+            MemoryStats.of({
+              availableGib: Effect.succeed(25),
+              totalGib: Effect.succeed(128),
+              ceilingGib: Effect.succeed(128),
+            })
           )
         );
       }).pipe(TestClock.withLive)

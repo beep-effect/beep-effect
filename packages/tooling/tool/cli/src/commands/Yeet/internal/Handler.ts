@@ -33,6 +33,7 @@ import { GhPrView } from "../../../internal/github/index.ts";
 import {
   AdmissionRequest,
   admissionTokenWeight,
+  ComputeProfileProbe,
   commandTextForStep,
   noAdmissionOriginGate,
   processStartIdentityForPid,
@@ -161,7 +162,12 @@ import {
   validatePublishBranch,
   warnOnMismatchedPublishUpstream,
 } from "./PublishScope.ts";
-import { applyHeavyAdmissionLabel, ensurePullRequest, YeetPrBodyRequest } from "./PullRequest.ts";
+import {
+  applyComputeProfileLabel,
+  applyHeavyAdmissionLabel,
+  ensurePullRequest,
+  YeetPrBodyRequest,
+} from "./PullRequest.ts";
 import { buildQualityIssueIndex } from "./QualityIssueIndex.ts";
 import { collectRemoteChecks, collectYeetStatus, renderYeetStatusSummary, writeYeetStatusSnapshot } from "./Status.ts";
 import { collectTurboPlanSnapshot } from "./TurboQuery.ts";
@@ -196,6 +202,7 @@ const admissionAttemptFields = (attempt: O.Option<YeetAttemptStarted>) => ({
   diffFingerprint: O.flatMap(attempt, (value) => value.diffFingerprint),
   proofTier: O.flatMap(attempt, (value) => value.proofTier),
   envProfile: O.flatMap(attempt, (value) => value.envProfile),
+  computeProfile: O.flatMap(attempt, (value) => value.computeProfile),
   stage: O.flatMap(attempt, (value) => value.stage),
 });
 
@@ -1277,6 +1284,7 @@ const finishPublishWithPullRequest = Effect.fn("Yeet.finishPublishWithPullReques
       A.findFirst(plan.steps, (step) => step.id === PR_HEAVY_ADMISSION_LABEL_STEP_ID),
       ensured
     );
+    if (options.hostedProof) yield* applyComputeProfileLabel(ensured);
     return ensured;
   }).pipe(provideYeetGhLogin(plan.context.repoRoot));
   const submitSteps = A.filter(monitorSteps, (step) => step.id === MONITOR_READY_SUBMIT_STEP_ID);
@@ -2542,6 +2550,7 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
       diffFingerprint: attempt.diffFingerprint,
       proofTier: attempt.proofTier,
       envProfile: attempt.envProfile,
+      computeProfile: attempt.computeProfile,
       stage: attempt.stage,
     })
   );
@@ -2603,6 +2612,7 @@ const ensureAttemptTerminated = Effect.fn("Yeet.ensureAttemptTerminated")(functi
       diffFingerprint: attempt.diffFingerprint,
       proofTier: attempt.proofTier,
       envProfile: attempt.envProfile,
+      computeProfile: attempt.computeProfile,
       stage: attempt.stage,
     })
   ).pipe(
@@ -2680,6 +2690,14 @@ export const attemptStageForTesting = attemptStageFor;
  */
 export const attemptEnvProfileForTesting = attemptEnvProfileFor;
 
+// The attempt fact records the compute profile as evidence only; an
+// unreadable override leaves it unset instead of failing the attempt (the
+// admission scheduler surfaces that error).
+const attemptComputeProfile = ComputeProfileProbe.use((probe) => probe.resolve).pipe(
+  Effect.map((resolution) => O.some(resolution.profile)),
+  Effect.orElseSucceed(O.none)
+);
+
 const makeYeetAttempt = Effect.fn("Yeet.makeAttempt")(function* (
   context: RepoRunContext,
   options: YeetRunOptions,
@@ -2714,6 +2732,8 @@ const makeYeetAttempt = Effect.fn("Yeet.makeAttempt")(function* (
     diffFingerprint: O.some(diffFingerprint),
     proofTier: attemptProofTierFor(options),
     envProfile: O.some(attemptEnvProfileFor(options)),
+    computeProfile: yield* attemptComputeProfile,
+    forceLocal: options.forceLocal ? O.some(true) : O.none(),
     stage: O.some(attemptStageFor(options)),
   });
 });

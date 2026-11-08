@@ -4,6 +4,7 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
+  CitationEngineCleanerPlan,
   CitationEngineExtractionOptions,
   CitationEngineLimits,
   CitationEngineSourceInput,
@@ -75,10 +76,17 @@ const prepareOptions = Effect.fn("Citation.prepareSourceRequestOptions")(functio
   const decoded = yield* S.decodeUnknownEffect(CitationEngineExtractionOptions)(raw).pipe(
     Effect.mapError(inputFailure)
   );
-  if (decoded.cleanSteps !== null && decoded.cleanSteps.length > maximum) return yield* safety("resolutionIterations");
+  const selection = decoded.cleanSteps;
+  if (S.is(CitationEngineCleanerPlan)(selection)) {
+    return CitationEngineExtractionOptions.make({
+      ...decoded,
+      cleanSteps: CitationEngineCleanerPlan.make({ plan: selection.plan }),
+    });
+  }
+  if (selection !== null && selection.length > maximum) return yield* safety("resolutionIterations");
   return CitationEngineExtractionOptions.make({
     ...decoded,
-    cleanSteps: decoded.cleanSteps === null ? null : A.copy(decoded.cleanSteps),
+    cleanSteps: selection === null ? null : A.copy(selection),
   });
 });
 /** Capture resolver, digest, policy and Clock. Returned preparation has R=never.
