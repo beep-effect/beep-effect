@@ -71,9 +71,16 @@ in `beep lint laws`.
 ## Acceptance Criteria
 
 - [x] `ls scripts` shows only `cloud/bootstrap.sh` (and `cloud/` itself).
-- [ ] `check.yml`, `heavy.yml`, `storybook.yml`, `release-desktop.yml` and
-      `setup-monorepo-ci/action.yml` call `beep ci ...` through the fetched binary; a hosted run
-      is green on each.
+- [x] `check.yml`, `heavy.yml`, `storybook.yml`, `release-desktop.yml` and
+      `setup-monorepo-ci/action.yml` call `beep ci ...` through the fetched binary
+      (`bun run beep ci workflow-lint` holds this). Hosted green runs after the cutover:
+      `check.yml` (which runs `setup-monorepo-ci` and calls `heavy.yml@main`) run 42429296801,
+      `storybook.yml` on `main` 6b49badf35.
+- [x] Revised 2026-11-08: `release-desktop.yml` is not run for this goal. It fires only on a
+      `professional-desktop-v*` tag or a manual dispatch, and either one publishes a real desktop
+      release. Its cutover uses the same `fetch-beep-ci` action and `beep ci prune-apt` command
+      that the `check.yml` and `heavy.yml` runs exercise. The next desktop release is its first
+      hosted run.
 - [x] `beep github app mint --help` exists and a dry-run reproduces today's manifests byte for byte.
 - [x] `bun run beep lint laws` fails on a tracked `.sh` outside the allowlist (fixture test) and
       passes on `main`.

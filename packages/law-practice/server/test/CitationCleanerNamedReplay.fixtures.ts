@@ -6,7 +6,6 @@ import {
   CitationBuiltinCleanerName,
   CitationCleaner,
   CitationCleanerFailure,
-  CitationInputError,
 } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { LiteralKit } from "@beep/schema";
@@ -145,16 +144,16 @@ export const replayNamedCleanerScenes = Effect.fn("NamedCorpusTest.replay")(func
         const input = { text: text(row.input.text), plan: row.name };
         if (expected.kind === "failure") {
           const failure = yield* Effect.flip(operation.run(input));
-          expect({ ...failure }, row.name).toEqual({ ...CitationInputError.make({ operation: "clean" }) });
-          expect(failure, row.name).not.toHaveProperty("reason");
-          expect(failure, row.name).not.toHaveProperty("cause");
           if (expected.pythonType === "lxml.etree.ParserError") {
+            expect(failure, row.name).toMatchObject({ reason: "html-parse-error" });
             parseFailures++;
           } else if (mode === "html") {
             expect(expected.pythonType).toBe("builtins.ValueError");
+            expect(failure, row.name).toMatchObject({ reason: "html-unicode-encoding-declaration" });
             declarationFailures++;
           } else {
             expect(expected.pythonType).toBe("builtins.ValueError");
+            expect(failure, row.name).toMatchObject({ reason: "unknown-step" });
             unknownSteps++;
           }
         } else {
