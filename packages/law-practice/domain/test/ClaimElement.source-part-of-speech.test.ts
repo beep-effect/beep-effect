@@ -34,6 +34,7 @@ const lexicon = HashMap.fromIterable<string, string>([
   ["including", "VERB"],
   ["detects", "VERB"],
   ["stores", "VERB"],
+  ["supplies", "VERB"],
   ["reaches", "VERB"],
   ["echo", "VERB"],
   ["erasing", "VERB"],
@@ -202,6 +203,32 @@ describe("part-of-speech boundary rules", () => {
       const headAfterCoordinator = yield* treeOf(refused("the left and posts"), true);
       assert.isTrue(A.contains(quotesOf(adverbs), "the upwardly and downwardly extending posts"));
       assert.isTrue(A.contains(quotesOf(headAfterCoordinator), "the left and posts"));
+    })
+  );
+});
+
+describe("part-of-speech element kinds", () => {
+  const kindOf = (tree: ClaimElementTree, quote: string) =>
+    O.map(
+      A.findFirst(tree.elements, ({ anchor }) => anchor.quote === quote),
+      ({ kind }) => kind
+    );
+
+  it.effect("classifies an element with a tagged finite verb as functional", () =>
+    Effect.gen(function* () {
+      const tree = yield* treeOf(refused("the module supplies power"), true);
+      const evidenceFree = yield* treeOf(refused("the module supplies power"), false);
+      assert.deepStrictEqual(kindOf(tree, "the module supplies power"), O.some("functional-relation"));
+      assert.deepStrictEqual(kindOf(evidenceFree, "the module supplies power"), O.some("limitation"));
+    })
+  );
+
+  it.effect("keeps a noun phrase with a participial modifier or a mistagged compound as a limitation", () =>
+    Effect.gen(function* () {
+      const participial = yield* treeOf(refused("an erasing plate"), true);
+      const compound = yield* treeOf(refused("a pulse echo signal"), true);
+      assert.deepStrictEqual(kindOf(participial, "an erasing plate"), O.some("limitation"));
+      assert.deepStrictEqual(kindOf(compound, "a pulse echo signal"), O.some("limitation"));
     })
   );
 });

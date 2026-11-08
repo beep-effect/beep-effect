@@ -2151,7 +2151,17 @@ const sourcePartOfSpeechGrammar = (facts: ReadonlyArray<ClaimLexicalToken>): Lex
     ...inspectionLexicalGrammar,
     functionalAt: (span) => {
       const tokens = tokensIn(span);
-      return tagged(tokens, 0, HashSet.make("VERB")) && Str.endsWith("ing")(tokenWordAt(tokens, 0));
+      return (
+        (tagged(tokens, 0, HashSet.make("VERB")) && Str.endsWith("ing")(tokenWordAt(tokens, 0))) ||
+        A.some(
+          tokens,
+          (_, index) =>
+            tagged(tokens, index, HashSet.make("VERB", "AUX")) &&
+            !participleAt(tokens, index) &&
+            (!nominalAt(tokens, index + 1) ||
+              (nominalAt(tokens, index - 1) && Str.endsWith("s")(tokenWordAt(tokens, index))))
+        )
+      );
     },
     boundBareHead: (tokens, index, end) => {
       const bounded = boundedEnd(tokens, index, end);
