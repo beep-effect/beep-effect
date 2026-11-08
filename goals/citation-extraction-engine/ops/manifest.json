@@ -11,7 +11,7 @@
   "packetPath": "goals/citation-extraction-engine",
   "lifecycle": "active",
   "mission": "Deliver bounded six-form citation extraction and document-local linking on supplied plain text, with schema-first semantic values, exact verified source anchors, explicit ambiguity and Effect-native resource boundaries.",
-  "statusNote": "PR #2966 carries the approved six-form contract and pinned eyecite-ts 0.34.2 driver. The actual CitationExtractorLive now passes all 29 frozen inputs/33 occurrences on Bun and Node with verified source/component anchors and strict local links. Eleven public controls cover source/prerequisite refusal, candidate/mention/authority/quoted-text budgets, late diagnostics, captured services, deadlines and cancellation with independent retirement. Legacy APIs remain available. Focused types/tests/laws/JSDoc and zero-finding Fallow audit/health pass; hosted exact-head proof, review, reflection closeout and retained merge remain open. No historical exhaustive row is promoted.",
+  "statusNote": "PR #2966 is the prospective final delivery of the approved six-form contract. The actual public Layer passes the frozen 29-input/33-occurrence profile on Bun and Node and 11 public controls/regressions; its source, identity, ambiguity and isolated resource contracts are implemented. Hosted Repo Sanity, Fallow, lint, Codegen Drift and JSDoc pass on the implementation head. Required heavy checks, review interval, merge and verified retention remain pending. The closeout proposal is not completion evidence; operative lifecycle stays active until canonical completion receipts verify. Historical exhaustive rows remain superseded.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -28,7 +28,25 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Achieved only when the approved six-form contract, selected real Layer, reviewed profile/source/link/resource evidence, owned CI repairs, attribution, reflection and lifecycle update are merged and verified retained on main through linked Yeet PRs.",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 2966,
+        "role": "final"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "hosted-required-checks",
+        "ref": "required",
+        "gating": true
+      },
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/feat_citation-six-form-contract-dc27129853c4/verdict.json",
+        "gating": true
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -112,12 +130,12 @@
     {
       "id": "P8",
       "name": "Bounded implementation and owned CI repairs",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P9",
       "name": "Hosted proof, reflection and verified retention",
-      "status": "pending"
+      "status": "in-progress"
     }
   ],
   "verificationCommands": [
@@ -574,5 +592,10 @@
       "path": "ops/probe-token-equality.py",
       "purpose": "Capture actual builtin dataclass comparison fields, 1454 independent token comparisons and three merge/equality histories at the exact clean source pin, with frozen edition value and provenance validation."
     }
-  ]
+  ],
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2966
+  },
+  "retentionReason": "Retain the bounded six-form public Layer, frozen selection/comparison, source and identity contracts, attribution, resource evidence and historical superseded parity records. Adopt completed-retained only after accepted-head hosted proof and merged retention verify."
 }

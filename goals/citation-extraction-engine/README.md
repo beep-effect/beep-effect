@@ -15,19 +15,25 @@ Start with [GOAL.md](GOAL.md), [SPEC.md](SPEC.md), [PLAN.md](PLAN.md), and the
 [research assessment](research/2026-11-08-re-grounding.md) explains the strategy
 change; the [source ledger](research/SOURCES.md) retains earlier provenance.
 
-The frozen selection screen and actual native/TypeScript adapter comparison are
-retained in history. A strict local-linking path and supplied-Effect process
-transport adapter now have focused tests; see the
-[implementation receipt](history/evidence/2026-11-08-six-form-link-transport.md).
-The [selection decision](decisions/2026-11-08-select-typescript-recognizer.md)
-adopts exact eyecite-ts0.34.2 behind a technical driver; its distributed-artifact
-comparison and package checks pass. No Python runtime change. The production
-engine has not switched. Next: connect the actual isolated service and prove its
-source/link/resource contract through hosted CI.
+The frozen selection screen and actual native/TypeScript comparison support the
+[selection decision](decisions/2026-11-08-select-typescript-recognizer.md): exact
+eyecite-ts 0.34.2 behind a product-neutral driver. The actual server-only
+CitationExtractorLive now composes isolated recognition, genuine source and
+component verification, existing mention/authority identities and strict local
+linking. The legacy four-operation CitationEngine remains available. No Python
+runtime change or API retirement is part of this delivery.
 
-The original packet remains recoverable at git commit 7dc8c2d443d. Original
-corpora, decision/checkpoint records and ledgers remain in this packet for
-history. They are not the new release gates. PR #2927 is retained on main; owned
-CI repairs and bounded implementation/verification remain open.
+The [public Layer receipt](history/evidence/2026-11-08-six-form-public-layer.md)
+records all 29 frozen inputs / 33 expected occurrences passing on Bun and Node,
+and 11 public resource/capture/regression controls. These are finite-profile
+results, not general accuracy or deployment attestation. The implementation and
+review fixes are published in final [PR #2966](https://github.com/beep-effect/beep-effect/pull/2966).
+Required exact-head hosted checks, review, merge and retention remain pending.
+The manifest proposes completed-retained closeout through that PR; this proposal
+is not completion evidence and the operative lifecycle remains active.
+
+The original packet is recoverable at git commit 7dc8c2d443d. Original corpora,
+decisions, checkpoints and ledgers remain as historical evidence, not release
+gates. No superseded exhaustive row is promoted by this bounded delivery.
 
 Source of lifecycle and routing: [ops/manifest.json](ops/manifest.json).

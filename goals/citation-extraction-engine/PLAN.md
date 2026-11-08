@@ -12,20 +12,22 @@ checkpoint. Baseline packet: git commit 7dc8c2d443d.
 - P7 Finite implementation selection: Status: complete; Exit evidence: Frozen
   reviewed profile, actual-Layer/candidate comparison, decision
 
-- P8 Bounded implementation and owned repairs: Status: in-progress; Exit evidence:
+- P8 Bounded implementation and owned repairs: Status: complete; Exit evidence:
   Six-form Layer, source/link/resource controls, consumer-safe retirement
 
-- P9 Hosted proof and retention: Status: pending; Exit evidence: Scoped checks,
+- P9 Hosted proof and retention: Status: in-progress; Exit evidence: Scoped checks,
   review, reflection, merged main and lifecycle receipt
 
 ## Next actions
 
-1. Publish the actual six-form public Layer and its reviewed source/link/resource
-   evidence. The legacy service remains available; no API retirement is needed.
+1. Finish exact-head hosted acceptance and review of final PR #2966. The actual
+   six-form public Layer and source/link/resource evidence are published; the
+   legacy service remains available and no API retirement is needed.
 2. Resolve exact-head hosted checks and review findings. Keep finite-profile
    acceptance separate from general accuracy and deployment attestation.
-3. Verify retained merge, finish reflection/lifecycle evidence and complete the
-   bounded goal only when those delivery requirements are proven.
+3. Verify retained merge with the canonical completion receipt, then adopt the
+   prospective completed-retained closeout. Its presence does not change the
+   operative active lifecycle or prove completion.
 
 ## Current evidence and ownership
 
