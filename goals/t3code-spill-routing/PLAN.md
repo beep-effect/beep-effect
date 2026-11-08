@@ -23,9 +23,9 @@ Before marking the packet closed:
    validate against `ReflectionFrontmatter`.
 2. Run `bun run beep lint reflection-artifacts`.
 3. Update `README.md` (status, latest evidence) and `ops/manifest.json` phase
-   statuses and a typed `proposedCloseout` with status `completed-retained`
-   and finalPullRequest. Keep `initiative.status` operative until completion
-   evidence verifies; do not close the external execution/session ledger from a proposal.
+   statuses and a committed `closeout` record with status `completed-retained` and
+   finalPullRequest. This packet closed in one PR by operator ruling (decision
+   `single-pr-closeout`), so the record precedes its completion receipt.
 
 ## Execution Notes
 

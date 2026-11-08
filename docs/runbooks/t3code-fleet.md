@@ -241,8 +241,10 @@ The baseline came from the contained PSI sampler: `beep-psi-sample.timer` (30 s)
 `99-workstation-light-sampling.conf` and appends to
 `$HOME/.local/state/beep-psi/safe-pressure.jsonl`, ring-trimmed at 14 days. Do not read
 the older `psi.log`, `runtime.json` or `runtime-history.ndjson` in that directory; they
-are stale since 2026-09-15. To re-derive the thresholds, take p99 of each signal over 7
-days, as `goals/t3code-spill-routing/history/2026-11-08-baseline.md` did.
+are stale since 2026-09-15. To re-derive the thresholds, use 7 days of samples and the
+same percentile for each signal: p99 for the avg60 stall rows, p95 for the CPU avg300
+qualifier, and p1 for available memory, as
+`goals/t3code-spill-routing/history/2026-11-08-baseline.md` did.
 
 ## Gotchas
 

@@ -17,9 +17,9 @@ T3 product facts:
 
 ## Non-Goals
 
-- tbk-worker until the operator releases its protective-stop latch. The
-  steps are written down, but they do not run before then.
-- grok-bot-box-1, Hyper-V on tom-pc-1, T3 Connect, Tailscale Funnel, and
+- Clearing a later tbk-worker protective-stop latch. That stays the operator's to release;
+  the first release came on 2026-11-07.
+- Hyper-V on tom-pc-1, T3 Connect, Tailscale Funnel, and
   any public listener.
 - Harness MCP registration (`goals/t3code-harness-mcp`) and spill routing
   (`goals/t3code-spill-routing`).
@@ -57,7 +57,10 @@ T3 product facts:
   credentials. The existing Ubuntu distro is preserved untouched. Prove
   `t3 service` under systemd inside the distro first. If that fails, use the
   desktop app's WSL backend and record that the app must stay open.
-- tbk-worker (gated): SSH-forward-only exposure per its network design.
+- tbk-worker: as built, Serve on the guest's own tagged tailnet node, replacing the
+  SSH-forward design (`history/2026-11-07-tbk-worker-link.md`).
+- grok-bot: no systemd, so a supervisor reconciled from the hub replaces `t3 service` and
+  the pull timer (decision `grok-bot-vm-in-scope`).
 - Every host: Tailscale HTTPS for T3's listener, and hub-and-spoke
   `t3 environment link` from DankStation with full access, with Labs
   "Linked environments" enabled at both ends.
@@ -84,24 +87,26 @@ T3 product facts:
 
 ## Acceptance Criteria
 
-- [x] A DankStation fork sync publishes a bundle and metadata. Each live
-      host's timer installs the bundle unattended, and every host then
-      reports the same fork commit.
+- [x] A DankStation fork sync publishes a bundle and metadata. Each systemd host's timer
+      installs the bundle unattended. grok-bot has no systemd: `ensure-services.sh` runs its
+      pull, reconciled by the hub's `grok-bot-ensure.timer` only while the box is awake
+      (`history/2026-11-08-grok-bot-vm.md`). Every host then reports the same fork build
+      (`history/2026-11-08-closeout-verify.md`).
 - [x] beep-worker, dankserver and tom-pc-1 each run T3 as a service that
       survives a reboot (tom-pc-1: or the recorded desktop-backend
       fallback). Each is reachable over Tailscale HTTPS only.
 - [x] DankStation lists each host as a Linked environment. A thread launched
       from DankStation on each host completes one trivial turn, and a
       sanitized receipt is recorded in `history/`.
-- [x] The tbk-worker steps are written and marked gated. (Superseded: the operator released
-      the latch on 2026-11-07 and the steps ran; the runbook now records the live host.)
+- [x] tbk-worker is live: the operator released its latch on 2026-11-07, replacing the
+      original "written and marked gated" criterion. The runbook records the host.
 - [x] The runbook and host profiles are merged through `/yeet`.
 
 ## Verification Matrix
 
 | Check | Command or evidence | Required result |
 | --- | --- | --- |
-| Version parity | Each host's installed stamp equals the published metadata | Equal |
+| Version parity | Each host's installed version equals the published metadata | Equal |
 | Service | `systemctl --user is-active` on each host (or the recorded fallback) | active |
 | Reachability | Tailscale HTTPS fetch of each host's T3 health endpoint from DankStation | 200 |
 | Link round trip | `history/` receipt for each host | One completed turn each |
@@ -155,15 +160,15 @@ beep-worker and dankserver survived real reboots on 2026-11-07. tbk-worker has n
 
 Lane `t3code-goals-closeout`
 
-Reverse: Remove the ledger rows once each host's next boot shows the service started, or reopen with goals set-status t3code-fleet-rollout active if it does not
+Reverse: Remove the ledger rows once each host's next boot shows the service started, or reopen the packet by the single-pr-closeout reversal if it does not
 
 ### Closeout lands in one PR by operator ruling, 2026-11-08
 
-The operator ruled on 2026-11-08 that these three goals reach completed-retained in one single PR, regardless of the packets' two-PR closeout, to keep the merge queue clear. So this PR commits status completed-retained with a closeout record naming itself, instead of a proposedCloseout adopted later. That puts the committed record ahead of its evidence: set-status guards only the proposal path, and no completion receipt can exist before the merge. The check runs afterward: goals completion refresh on this lane, from which a failure reopens the packet.
+The operator ruled on 2026-11-08 that these three goals reach completed-retained in one single PR, regardless of the packets' two-PR closeout, to keep the merge queue clear. So this PR commits status completed-retained with a closeout record naming itself, instead of a proposedCloseout adopted later. That puts the committed record ahead of its evidence: set-status guards only the proposal path, and no completion receipt can exist before the merge. The session that owns the closeout lane runs the refresh after merge and reads each packet's outcome; if that session has ended, the orchestrator does. Refresh records an outcome without failing or reopening anything, so for any outcome other than verified, that owner opens a packet-state PR reopening the packet.
 
 Lane `t3code-goals-closeout`
 
-Reverse: Run goals set-status <slug> active, which turns the closeout record back into a proposal, in a packet-state PR
+Reverse: In a packet-state PR, run goals set-status <slug> active, delete the proposedCloseout it leaves (a matching verified receipt would otherwise still project the packet as completed), and set the reopened phase back to pending
 
 <!-- beep:decisions:end -->
 

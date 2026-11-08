@@ -47,9 +47,10 @@ signal and baseline are in
   existing fields, are stated as a table in the skill, and are re-derived
   if the recorder changes.
 - Spill order: beep-worker, then tom-pc-1 (one job at a time), then
-  dankserver as the last resort. tbk-worker goes after beep-worker only
-  once its latch is released. Skip a host whose T3 environment is
-  unreachable or already at its one-job limit.
+  dankserver as the last resort. tbk-worker goes after beep-worker (latch
+  released 2026-11-07). Skip a host whose T3 environment is unreachable,
+  already at its one-job limit, or missing the checkout, credentials or data
+  boundary the work needs.
 - Launch through T3 tools (`t3_thread_launch` / `delegate_task` with the
   target `environmentId`) using the model routing policy's pins. Spilling
   never changes the model or the provider.
@@ -98,15 +99,15 @@ The sampler and its data were retired with $HOME/workstation-diagnostics on 2026
 
 Lane `t3code-goals-closeout`
 
-Reverse: Restore $HOME/.local/state/beep-psi/99-workstation-light-sampling.conf.bak-20261108 over the drop-in and run systemctl --user daemon-reload
+Reverse: Run systemctl --user disable --now beep-psi-sample.timer and daemon-reload, which stops new samples and leaves history in place. Do not restore the previous drop-in alone: it names the retired path and fails every tick
 
 ### Closeout lands in one PR by operator ruling, 2026-11-08
 
-The operator ruled on 2026-11-08 that these three goals reach completed-retained in one single PR, regardless of the packets' two-PR closeout, to keep the merge queue clear. So this PR commits status completed-retained with a closeout record naming itself, instead of a proposedCloseout adopted later. That puts the committed record ahead of its evidence: set-status guards only the proposal path, and no completion receipt can exist before the merge. The check runs afterward: goals completion refresh on this lane, from which a failure reopens the packet.
+The operator ruled on 2026-11-08 that these three goals reach completed-retained in one single PR, regardless of the packets' two-PR closeout, to keep the merge queue clear. So this PR commits status completed-retained with a closeout record naming itself, instead of a proposedCloseout adopted later. That puts the committed record ahead of its evidence: set-status guards only the proposal path, and no completion receipt can exist before the merge. The session that owns the closeout lane runs the refresh after merge and reads each packet's outcome; if that session has ended, the orchestrator does. Refresh records an outcome without failing or reopening anything, so for any outcome other than verified, that owner opens a packet-state PR reopening the packet.
 
 Lane `t3code-goals-closeout`
 
-Reverse: Run goals set-status <slug> active, which turns the closeout record back into a proposal, in a packet-state PR
+Reverse: In a packet-state PR, run goals set-status <slug> active, delete the proposedCloseout it leaves (a matching verified receipt would otherwise still project the packet as completed), and set the reopened phase back to pending
 
 ### tbk-worker takes its second slot; grok-bot stays out of the spill order, 2026-11-08
 

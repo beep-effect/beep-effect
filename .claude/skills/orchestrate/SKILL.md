@@ -225,7 +225,9 @@ Any one row is a breach. Baseline and derivation:
 recorder changes.
 
 On a breach, launch on the first host in this order that `t3_environment_links` lists
-`reachable` and that is below its job limit:
+`reachable`, that is below its job limit, and that has the checkout, credentials and data
+boundary the work needs (`tom-pc-1` has no beep-effect checkout today, so beep-effect work
+skips it):
 
 1. `beep-worker`
 2. `tbk-worker`

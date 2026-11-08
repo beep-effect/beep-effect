@@ -9,7 +9,7 @@ Status: `complete`
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Verify each harness's `mcp add`/login path against the current CLI `--help`; run the double-load check inside T3-launched Claude and Codex sessions. | Required facts and blockers are recorded. |
-| P1 Implement | complete | Register `t3-hub` in all five harnesses on DankStation, then on each live host; add the renewal reminder timer; write the recipe. | Acceptance criteria are met. |
+| P1 Implement | complete | Register `t3-code` in all five harnesses on DankStation, then on each live host; add the renewal reminder timer; write the recipe. | Acceptance criteria are met. |
 | P2 Verify | complete | One `t3_thread_read` per harness per host; a test fire of the reminder; receipts in `history/`. | Verification is green or blockers are documented. |
 | P3 Yeet: PR to mergeable | complete | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | complete | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
@@ -23,9 +23,9 @@ Before marking the packet closed:
    validate against `ReflectionFrontmatter`.
 2. Run `bun run beep lint reflection-artifacts`.
 3. Update `README.md` (status, latest evidence) and `ops/manifest.json` phase
-   statuses and a typed `proposedCloseout` with status `completed-retained`
-   and finalPullRequest. Keep `initiative.status` operative until completion
-   evidence verifies; do not close the external execution/session ledger from a proposal.
+   statuses and a committed `closeout` record with status `completed-retained` and
+   finalPullRequest. This packet closed in one PR by operator ruling (decision
+   `single-pr-closeout`), so the record precedes its completion receipt.
 
 ## Execution Notes
 
