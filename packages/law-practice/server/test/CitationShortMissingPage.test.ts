@@ -57,7 +57,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
           Effect.gen(function* () {
             const raw = yield* readCitationOracleFixture(
               "short-missing-page",
-              "a0ef3bb1308d890aed337ca53465607430ca4d8452734365561ce87dbefd9b20"
+              "c6066e527726aa524731ab922abed61f32c3f4f19bd1fe918018b7c26c24eb60"
             );
             const corpus = yield* S.decodeEffect(Capture)(raw);
             const installed = yield* installCitationDefaultConfigurationFixture(kind);
