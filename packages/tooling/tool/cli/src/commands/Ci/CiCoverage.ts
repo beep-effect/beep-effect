@@ -46,6 +46,13 @@ import type { CiLanePartitionProof, CiLaneRunOptions } from "./CiLane.ts";
 import type { CiLanePartitionShard } from "./CiLanePartitions.ts";
 
 const $I = $RepoCliId.create("commands/Ci/CiCoverage");
+// Only `[ci] <message>` reaches the log, so a refusal's reason has to travel in the message. A failed
+// ratchet has already printed its rows and its cause carries no message, so nothing is appended for it.
+const coverageCommandError = (message: string) => (cause: unknown) =>
+  CiCommandError.new(
+    cause,
+    P.isError(cause) && Str.isNonEmpty(cause.message) ? messageWithCause(message, cause) : `${message}.`
+  );
 const VitestTestFile = S.Struct({ file: S.String }).pipe(
   $I.annoteSchema("VitestTestFile", {
     description: "A configured test file discovered by Vitest without executing it.",
@@ -457,12 +464,7 @@ const runAndWrite = Effect.fn("CiCoverage.runAndWrite")(function* (
       partitionId,
       packages,
     })
-  ).pipe(
-    Effect.mapError((cause) => {
-      const message = `Failed to seal coverage partition ${partitionId}.`;
-      return CiCommandError.new(cause, P.isError(cause) ? messageWithCause(message, cause) : message);
-    })
-  );
+  ).pipe(Effect.mapError(coverageCommandError(`Failed to seal coverage partition ${partitionId}`)));
 });
 
 const coverageReporterArgument = (repoRoot: string) =>
@@ -687,7 +689,9 @@ export const runCiCoverageComparison = Effect.fn("CiCoverage.compare")(function*
         CoverageProducerPartition.make({ partitionId: "labs", packages: labs })
       ),
     })
-  ).pipe(CiCommandError.mapError("Coverage producer artifacts are incomplete or failed regression comparison."));
+  ).pipe(
+    Effect.mapError(coverageCommandError("Coverage producer artifacts are incomplete or failed regression comparison"))
+  );
 });
 
 /**
