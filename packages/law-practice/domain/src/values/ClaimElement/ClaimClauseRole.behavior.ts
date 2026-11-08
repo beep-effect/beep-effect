@@ -1910,10 +1910,16 @@ const finiteArgumentExtentMatches = (
     proof.extent.startChar !== operator.extent.startChar ||
     proof.extent.endChar !== direct.core.endChar
   );
+const finiteDerivedExtentMatches = (context: FiniteProofValidationContext, extent: TextAnchor): boolean =>
+  context.charge(extent.quote.length + 4) &&
+  extent.endChar <= context.claim.claimText.length &&
+  extent.quote === Str.slice(extent.startChar, extent.endChar)(context.claim.claimText);
+
 const validateFiniteOrderedArgumentsProof = (
   context: FiniteProofValidationContext,
   proof: FiniteOrderedArgumentsProof
 ): boolean => {
+  if (!finiteDerivedExtentMatches(context, proof.extent)) return false;
   const pp = context.resolve(proof.pp);
   const direct = context.resolve(proof.direct);
   const adposition = context.resolve(proof.adposition);
@@ -1936,6 +1942,7 @@ const validateFiniteDescriptionProof = (
   context: FiniteProofValidationContext,
   proof: Extract<ClaimFiniteSourceProof, { readonly kind: "description" }>
 ): boolean => {
+  if (!finiteDerivedExtentMatches(context, proof.extent)) return false;
   const { resolve } = context;
   const seed = resolve(proof.candidate);
   const operator = resolve(proof.operator);
