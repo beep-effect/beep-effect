@@ -15,6 +15,7 @@ import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
 import * as MutableList from "effect/MutableList";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { makeCitationNativeRendering } from "./NativeRendering.ts";
 import { makeCitationPythonRepr } from "./PythonRepr.ts";
@@ -187,7 +188,7 @@ const makeParts = Effect.fn("Citation.makeDumpParts")(function* (
     range(native.storage);
   });
   const label = (value: CitationDumpLabel) =>
-    typeof value === "string"
+    P.isString(value)
       ? literal(value)
       : unicode.fromStorageReserved(value, budget.reserve).pipe(Effect.map((owned) => range(owned.storage)));
   let first = true;
