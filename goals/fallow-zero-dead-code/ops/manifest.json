@@ -93,5 +93,12 @@
     "Lane promotion breaks pre-push for unrelated consumers.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval."
   ],
-  "researchReports": ["research/triage.md"]
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/fallow-zero-dead-code",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "c72bc491a19e5a9dc4e2d17b583d45ff12f0f70b",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }

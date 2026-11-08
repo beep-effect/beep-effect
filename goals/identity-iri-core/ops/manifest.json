@@ -32,7 +32,6 @@
     "goals/identity-iri-core/GOAL.md",
     "goals/identity-iri-core/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -89,5 +88,13 @@
     "../../explorations/identity-as-iri/research/11-audit-identity-coupling.md",
     "../../explorations/identity-as-iri/research/20-repo-mining-synthesis.md",
     "../../explorations/identity-as-iri/research/21-synthesis-adversarial-review.md"
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/identity-iri-core",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "28e46a645f1840f5fc7b586efc54e80abc55e1ba",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }

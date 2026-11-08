@@ -33,7 +33,7 @@ corpus, `synthesis/wave2-synthesis.md`, sections 4, 5, new findings, honest limi
 and proposed routing table. Repository counterparts:
 `explorations/academia-corpus-mining/research/t3-master-synthesis.md`,
 `explorations/academia-corpus-mining/research/t3-retrieval-citation-grounding.md`,
-and `goals/epistemic-bitemporal-edge-core/research/2026-08-17-academia-wave2-reentry.md`.
+and [goals/epistemic-bitemporal-edge-core/research/2026-08-17-academia-wave2-reentry.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/epistemic-bitemporal-edge-core/research/2026-08-17-academia-wave2-reentry.md).
 
 ### 2026-10-09 — Prior art survey
 
@@ -88,7 +88,7 @@ surfaces, not a claim about every experimental file in the repository.
 Design inputs are not runtime dependencies. `goals/legal-document-intake/SPEC.md`
 D7-S1 supersedes only D7's validator with the real `@beep/shacl` driver;
 `goals/semantic-foundation/PLAN.md` M4 remains gated. The bounded engine in
-`goals/epistemic-claim-lifecycle-gate/SPEC.md` therefore cannot be assumed to
+[goals/epistemic-claim-lifecycle-gate/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/epistemic-claim-lifecycle-gate/SPEC.md) therefore cannot be assumed to
 cover G3's final shapes. G3 must pin a ready validator and shape version.
 `explorations/ingestion-security-secret-governance/research/secret-pii-scrub-and-audit.md`
 uses “validator score” as design vocabulary, not an authoritative schema.

@@ -3,7 +3,7 @@
 ## 2026-09-25: Resume trigger moves to harness-evidence-ledger
 
 **Decision:** Replace the resume trigger. The packet resumes when
-[`goals/harness-evidence-ledger`](../../goals/harness-evidence-ledger/SPEC.md)
+[`goals/harness-evidence-ledger`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/harness-evidence-ledger/SPEC.md)
 ships `bun run beep harness-ledger prune-proposals`. Status stays `parked`.
 
 **Rationale:** That goal now owns retention-side pruning proposals for skills,

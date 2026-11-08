@@ -194,7 +194,8 @@ const renderBlock = (source: ts.SourceFile, text: string, block: DeclarationBloc
           `| ${row.line} | \`${cell(row.symbol)}\` | ${row.kind} | ${cell(O.getOrElse(row.category, () => "-"))} | ${cell(O.getOrElse(row.since, () => "-"))} | ${rowNotes(row)} |`
       ),
       "",
-      `${fence}ts`,
+      // Source excerpts cite names from the rest of their module, so they cannot compile as standalone fences.
+      `${fence}ts skip-type-checking`,
       code,
       fence,
       "",
@@ -333,7 +334,7 @@ const assemblePrompt = (input: PromptInput, blockCount: number, blocksText: Read
       "",
       "## How to use this prompt",
       "",
-      "This prompt is the knowledge half of a lane on the effect-schema-parity goal. The lane brief supplies the task, the phase done-signal, and the bounce conditions from `goals/effect-schema-parity/SPEC.md`.",
+      "This prompt is the knowledge half of a lane on the effect-schema-parity goal. The lane brief supplies the task, the phase done-signal, and the bounce conditions from the archived effect-schema-parity SPEC (`goals/effect-schema-parity/README.md` links it).",
       "",
       "- Every declaration below is upstream Effect at the pin, inlined in full with its JSDoc block (signature, sections, examples). The reference checkout is not needed to read it.",
       "- Judge coverage facet by facet. Only a public symbol covers a facet: a row marked `@internal`, or a row of a module that is not importable, is provenance and never a coverage target.",

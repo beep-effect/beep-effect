@@ -1,7 +1,0 @@
-/** @deprecated Use CurrentComponent instead. */
-export const DeprecatedComponent = (): null => null;
-
-export const CurrentComponent = (): null => null;
-
-export const deprecatedElement = <DeprecatedComponent />;
-export const currentElement = <CurrentComponent />;

@@ -35,7 +35,11 @@
     "goals/packet-archive-mechanics/GOAL.md",
     "goals/packet-archive-mechanics/research/SOURCES.md"
   ],
-  "researchReports": ["research/P0-DESIGN.md", "research/SOURCES.md"],
+  "researchReports": [
+    "research/OPPORTUNITIES.md",
+    "research/P0-DESIGN.md",
+    "research/SOURCES.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

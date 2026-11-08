@@ -1,3 +1,0 @@
-import { deprecatedCall } from "../src/api.ts";
-
-export const scriptUsage = deprecatedCall();

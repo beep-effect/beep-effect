@@ -53,7 +53,7 @@
     "goals/epistemic-retention-policy-calibration/research/SOURCES.md",
     "goals/epistemic-memory-retention-projections/ops/REPORT.md"
   ],
-  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -113,5 +113,13 @@
   "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2357
+  },
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/epistemic-retention-policy-calibration",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "26690197856e624688482a488c712774ec3643d2",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
   }
 }
