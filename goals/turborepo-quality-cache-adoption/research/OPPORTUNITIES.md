@@ -1,5 +1,23 @@
 # Friction and opportunities
 
+## 2026-11-08: population refresh dropped script-only coverage
+
+The metadata refresh writer reconstructed configured graph rows but omitted
+the existing linked script-only entrypoint inventory. The unpublished result
+would have narrowed the audit silently. Preserve the prior reviewed bytes,
+capture both pinned native catalogues, and require a source-bound supplement
+whose complete rows, command hashes and literal callers reconcile with the
+census before writing. The current refresh covers 2,512 configured executable
+computations plus 1,856 script-only entrypoints, without granting execution,
+equivalence or qualification. Use this complete join on subsequent refreshes;
+never treat graph-only inventory as the full script population.
+
+The ordinary Git hook also formatted the new linked JSON after its digest
+was recorded. Rebind the population to those final bytes before pushing and
+check the committed digest against the linked file. Preserve byte-identical
+historical archives; formatting a receipt must not silently invalidate its
+parent's evidence link.
+
 ## Preserve source and counter attribution when coverage blocks a pilot, 2026-11-08
 
 The completed [coverage comparison](https://github.com/beep-effect/beep-effect/actions/runs/42445527449/job/128629930550)
