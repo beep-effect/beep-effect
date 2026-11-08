@@ -1,0 +1,2187 @@
+{
+  "date": "2026-11-08",
+  "scope": "developer and CLI toolset on the five fleet hosts; no credentials (brief: fleet-dev-toolset)",
+  "method": "goals/cloud-agent-readiness/ops/fleet-dev-toolset survey: PATH resolution as the host's agent account, from inside its beep-effect checkout, with mise shims, ~/.local/bin, ~/.bun/bin, ~/.cargo/bin and Go bins prepended; origin classifies the resolved path (apt/mise/user/local). Presence is not authentication or runtime proof. Home paths are written as ~.",
+  "receipt": "goals/cloud-agent-readiness/history/2026-11-08-fleet-dev-toolset.md",
+  "drift": {
+    "dankserver": "before: the worker checkout's mise.toml was untrusted, so every mise shim failed inside the checkout and node fell through to apt node v22; yq was Ubuntu's jq-wrapper yq 3.4.3",
+    "beep-worker": "the primary clone is stale (pins node 24 / bun 1.4.2) and was not touched; bootstrap ran from a fresh origin/main worktree",
+    "grok-bot": "/workspace/beep-effect is a stale clone (pins node 24 / bun 1.4.2); /usr/local bun 1.4.2 is root-owned image state, bootstrap's ~/.bun/bin bun 1.4.4 leads in login shells"
+  },
+  "hosts": {
+    "dankserver": {
+      "user": "worker",
+      "os": "Ubuntu 26.04.1 LTS",
+      "checkoutPins": {
+        "node": "24.22.1",
+        "bun": "1.4.4"
+      },
+      "before": {
+        "missing": [
+          "bat",
+          "direnv",
+          "eza",
+          "fd",
+          "fzf",
+          "just",
+          "ninja",
+          "pipx",
+          "pnpm",
+          "portless",
+          "qrencode"
+        ],
+        "tools": {
+          "git": {
+            "path": "/usr/bin/git",
+            "version": "git version 2.53.0",
+            "origin": "apt"
+          },
+          "gh": {
+            "path": "~/.local/share/mise/shims/gh",
+            "version": "mise ERROR Version: 2026.10.17 linux-x64 (2026-10-21)",
+            "origin": "mise"
+          },
+          "node": {
+            "path": "/usr/bin/node",
+            "version": "v22.23.4",
+            "origin": "apt"
+          },
+          "bun": {
+            "path": "~/.bun/bin/bun",
+            "version": "1.4.4",
+            "origin": "user"
+          },
+          "pnpm": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "corepack": {
+            "path": "/usr/bin/corepack",
+            "version": "0.36.0",
+            "origin": "apt"
+          },
+          "python3": {
+            "path": "/usr/bin/python3",
+            "version": "Python 3.14.4",
+            "origin": "apt"
+          },
+          "uv": {
+            "path": "~/.local/bin/uv",
+            "version": "uv 0.13.5 (x86_64-unknown-linux-gnu)",
+            "origin": "user"
+          },
+          "pipx": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "rustup": {
+            "path": "~/.cargo/bin/rustup",
+            "version": "rustup 1.29.2 (d8c92c676 2026-10-21)",
+            "origin": "user"
+          },
+          "cargo": {
+            "path": "~/.cargo/bin/cargo",
+            "version": "cargo 1.99.1 (5f94df478 2026-08-27)",
+            "origin": "user"
+          },
+          "go": {
+            "path": "/usr/bin/go",
+            "version": "go version go1.26.8 linux/amd64",
+            "origin": "apt"
+          },
+          "mise": {
+            "path": "~/.local/bin/mise",
+            "version": "2026.10.17 linux-x64 (2026-10-21)",
+            "origin": "user"
+          },
+          "direnv": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "make": {
+            "path": "/usr/bin/make",
+            "version": "GNU Make 4.4.1",
+            "origin": "apt"
+          },
+          "gcc": {
+            "path": "/usr/bin/gcc",
+            "version": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+            "origin": "apt"
+          },
+          "cmake": {
+            "path": "/usr/bin/cmake",
+            "version": "cmake version 4.2.3",
+            "origin": "apt"
+          },
+          "ninja": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "jq": {
+            "path": "/usr/bin/jq",
+            "version": "jq-1.8.1",
+            "origin": "apt"
+          },
+          "yq": {
+            "path": "/usr/bin/yq",
+            "version": "yq 3.4.3",
+            "origin": "apt"
+          },
+          "rg": {
+            "path": "/usr/bin/rg",
+            "version": "ripgrep 15.1.0",
+            "origin": "apt"
+          },
+          "fd": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "fzf": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "bat": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "eza": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "just": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "sqlite3": {
+            "path": "/usr/bin/sqlite3",
+            "version": "3.46.1 2024-08-13 09:16:08 c9c2ab54ba1f5f46360f1b4f35d849cd3f080e6fc2b6c60e91b16",
+            "origin": "apt"
+          },
+          "rsync": {
+            "path": "/usr/bin/rsync",
+            "version": "rsync  version 3.4.1  protocol version 32",
+            "origin": "apt"
+          },
+          "gpg": {
+            "path": "/usr/bin/gpg",
+            "version": "gpg (GnuPG) 2.4.8",
+            "origin": "apt"
+          },
+          "qrencode": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "docker": {
+            "path": "/usr/bin/docker",
+            "version": "Docker version 29.9.3, build 5457199",
+            "origin": "apt"
+          },
+          "cloudflared": {
+            "path": "~/.local/share/mise/shims/cloudflared",
+            "version": "mise ERROR Version: 2026.10.17 linux-x64 (2026-10-21)",
+            "origin": "mise"
+          },
+          "ffmpeg": {
+            "path": "/usr/bin/ffmpeg",
+            "version": "ffmpeg version 8.0.1-3ubuntu2 Copyright (c) 2000-2025 the FFmpeg developers",
+            "origin": "apt"
+          },
+          "imagemagick": {
+            "path": "/usr/bin/convert",
+            "version": "Version: ImageMagick 7.1.2-18 Q16 x86_64 23822 https://imagemagick.org",
+            "origin": "apt"
+          },
+          "pdftotext": {
+            "path": "/usr/bin/pdftotext",
+            "version": "pdftotext version 26.01.0",
+            "origin": "apt"
+          },
+          "pandoc": {
+            "path": "/usr/bin/pandoc",
+            "version": "pandoc 3.7.0.2",
+            "origin": "apt"
+          },
+          "tesseract": {
+            "path": "/usr/bin/tesseract",
+            "version": "tesseract 5.5.0",
+            "origin": "apt"
+          },
+          "portless": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "typos": {
+            "path": "~/.local/share/mise/shims/typos",
+            "version": "mise ERROR Version: 2026.10.17 linux-x64 (2026-10-21)",
+            "origin": "mise"
+          },
+          "gitleaks": {
+            "path": "~/.local/share/mise/shims/gitleaks",
+            "version": "mise ERROR Version: 2026.10.17 linux-x64 (2026-10-21)",
+            "origin": "mise"
+          }
+        }
+      },
+      "after": {
+        "missing": [],
+        "tools": {
+          "git": {
+            "path": "/usr/bin/git",
+            "version": "git version 2.53.0",
+            "origin": "apt"
+          },
+          "gh": {
+            "path": "~/.local/share/mise/shims/gh",
+            "version": "gh version 2.102.0 (2026-09-30)",
+            "origin": "mise"
+          },
+          "node": {
+            "path": "~/.local/share/mise/shims/node",
+            "version": "v24.22.1",
+            "origin": "mise"
+          },
+          "bun": {
+            "path": "~/.local/share/mise/shims/bun",
+            "version": "1.4.4",
+            "origin": "mise"
+          },
+          "pnpm": {
+            "path": "~/.local/share/mise/shims/pnpm",
+            "version": "",
+            "origin": "mise"
+          },
+          "corepack": {
+            "path": "~/.local/share/mise/shims/corepack",
+            "version": "0.36.0",
+            "origin": "mise"
+          },
+          "python3": {
+            "path": "/usr/bin/python3",
+            "version": "Python 3.14.4",
+            "origin": "apt"
+          },
+          "uv": {
+            "path": "~/.local/bin/uv",
+            "version": "uv 0.13.5 (x86_64-unknown-linux-gnu)",
+            "origin": "user"
+          },
+          "pipx": {
+            "path": "/usr/bin/pipx",
+            "version": "1.8.0",
+            "origin": "apt"
+          },
+          "rustup": {
+            "path": "~/.cargo/bin/rustup",
+            "version": "rustup 1.29.2 (d8c92c676 2026-10-21)",
+            "origin": "user"
+          },
+          "cargo": {
+            "path": "~/.cargo/bin/cargo",
+            "version": "cargo 1.99.1 (5f94df478 2026-08-27)",
+            "origin": "user"
+          },
+          "go": {
+            "path": "/usr/bin/go",
+            "version": "go version go1.26.8 linux/amd64",
+            "origin": "apt"
+          },
+          "mise": {
+            "path": "~/.local/bin/mise",
+            "version": "2026.10.17 linux-x64 (2026-10-21)",
+            "origin": "user"
+          },
+          "direnv": {
+            "path": "/usr/bin/direnv",
+            "version": "2.37.1",
+            "origin": "apt"
+          },
+          "make": {
+            "path": "/usr/bin/make",
+            "version": "GNU Make 4.4.1",
+            "origin": "apt"
+          },
+          "gcc": {
+            "path": "/usr/bin/gcc",
+            "version": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+            "origin": "apt"
+          },
+          "cmake": {
+            "path": "/usr/bin/cmake",
+            "version": "cmake version 4.2.3",
+            "origin": "apt"
+          },
+          "ninja": {
+            "path": "/usr/bin/ninja",
+            "version": "1.13.2",
+            "origin": "apt"
+          },
+          "jq": {
+            "path": "/usr/bin/jq",
+            "version": "jq-1.8.1",
+            "origin": "apt"
+          },
+          "yq": {
+            "path": "~/.local/share/mise/shims/yq",
+            "version": "yq (https://github.com/mikefarah/yq/) version v4.54.2",
+            "origin": "mise"
+          },
+          "rg": {
+            "path": "/usr/bin/rg",
+            "version": "ripgrep 15.1.0",
+            "origin": "apt"
+          },
+          "fd": {
+            "path": "~/.local/bin/fd",
+            "version": "fdfind 10.3.0",
+            "origin": "apt"
+          },
+          "fzf": {
+            "path": "/usr/bin/fzf",
+            "version": "0.67.0 (debian)",
+            "origin": "apt"
+          },
+          "bat": {
+            "path": "~/.local/bin/bat",
+            "version": "bat 0.25.0",
+            "origin": "apt"
+          },
+          "eza": {
+            "path": "/usr/bin/eza",
+            "version": "v0.23.4 [+git]",
+            "origin": "apt"
+          },
+          "just": {
+            "path": "/usr/bin/just",
+            "version": "just 1.45.0",
+            "origin": "apt"
+          },
+          "sqlite3": {
+            "path": "/usr/bin/sqlite3",
+            "version": "3.46.1 2024-08-13 09:16:08 c9c2ab54ba1f5f46360f1b4f35d849cd3f080e6fc2b6c60e91b16",
+            "origin": "apt"
+          },
+          "rsync": {
+            "path": "/usr/bin/rsync",
+            "version": "rsync  version 3.4.1  protocol version 32",
+            "origin": "apt"
+          },
+          "gpg": {
+            "path": "/usr/bin/gpg",
+            "version": "gpg (GnuPG) 2.4.8",
+            "origin": "apt"
+          },
+          "qrencode": {
+            "path": "/usr/bin/qrencode",
+            "version": "qrencode version 4.1.1",
+            "origin": "apt"
+          },
+          "docker": {
+            "path": "/usr/bin/docker",
+            "version": "Docker version 29.9.3, build 5457199",
+            "origin": "apt"
+          },
+          "cloudflared": {
+            "path": "~/.local/share/mise/shims/cloudflared",
+            "version": "cloudflared version 2026.10.3 (built 2026-10-21-13:11 UTC)",
+            "origin": "mise"
+          },
+          "ffmpeg": {
+            "path": "/usr/bin/ffmpeg",
+            "version": "ffmpeg version 8.0.1-3ubuntu2 Copyright (c) 2000-2025 the FFmpeg developers",
+            "origin": "apt"
+          },
+          "imagemagick": {
+            "path": "/usr/bin/convert",
+            "version": "Version: ImageMagick 7.1.2-18 Q16 x86_64 23822 https://imagemagick.org",
+            "origin": "apt"
+          },
+          "pdftotext": {
+            "path": "/usr/bin/pdftotext",
+            "version": "pdftotext version 26.01.0",
+            "origin": "apt"
+          },
+          "pandoc": {
+            "path": "/usr/bin/pandoc",
+            "version": "pandoc 3.7.0.2",
+            "origin": "apt"
+          },
+          "tesseract": {
+            "path": "/usr/bin/tesseract",
+            "version": "tesseract 5.5.0",
+            "origin": "apt"
+          },
+          "portless": {
+            "path": "~/.bun/bin/portless",
+            "version": "0.16.0",
+            "origin": "user"
+          },
+          "typos": {
+            "path": "~/.local/share/mise/shims/typos",
+            "version": "typos-cli 1.51.1",
+            "origin": "mise"
+          },
+          "gitleaks": {
+            "path": "~/.local/share/mise/shims/gitleaks",
+            "version": "8.30.1",
+            "origin": "mise"
+          }
+        }
+      },
+      "note": "T3 runs as worker; system packages shared with elpresidank"
+    },
+    "beep-worker": {
+      "user": "elpresidank",
+      "os": "Ubuntu 26.04.1 LTS",
+      "checkoutPins": {
+        "node": "24",
+        "bun": "1.4.2"
+      },
+      "before": {
+        "missing": ["qrencode"],
+        "tools": {
+          "git": {
+            "path": "/usr/bin/git",
+            "version": "git version 2.53.0",
+            "origin": "apt"
+          },
+          "gh": {
+            "path": "~/.local/bin/gh",
+            "version": "gh version 2.102.0 (2026-09-30)",
+            "origin": "user"
+          },
+          "node": {
+            "path": "~/.nvm/versions/node/v24.21.0/bin/node",
+            "version": "v24.21.0",
+            "origin": "user"
+          },
+          "bun": {
+            "path": "~/.local/share/mise/shims/bun",
+            "version": "1.4.2",
+            "origin": "mise"
+          },
+          "pnpm": {
+            "path": "~/.local/share/mise/shims/pnpm",
+            "version": "",
+            "origin": "mise"
+          },
+          "corepack": {
+            "path": "~/.nvm/versions/node/v24.21.0/bin/corepack",
+            "version": "0.36.0",
+            "origin": "user"
+          },
+          "python3": {
+            "path": "~/.local/bin/python3",
+            "version": "Python 3.14.9",
+            "origin": "user"
+          },
+          "uv": {
+            "path": "~/.local/bin/uv",
+            "version": "uv 0.13.5 (x86_64-unknown-linux-gnu)",
+            "origin": "user"
+          },
+          "pipx": {
+            "path": "/usr/bin/pipx",
+            "version": "1.8.0",
+            "origin": "apt"
+          },
+          "rustup": {
+            "path": "~/.cargo/bin/rustup",
+            "version": "rustup 1.29.1 (d95a37b6a 2026-08-13)",
+            "origin": "user"
+          },
+          "cargo": {
+            "path": "~/.cargo/bin/cargo",
+            "version": "cargo 1.99.0 (5f94df478 2026-08-27)",
+            "origin": "user"
+          },
+          "go": {
+            "path": "~/.local/share/mise/shims/go",
+            "version": "go version go1.26.8 linux/amd64",
+            "origin": "mise"
+          },
+          "mise": {
+            "path": "~/.local/bin/mise",
+            "version": "2026.10.8 linux-x64 (2026-10-11)",
+            "origin": "user"
+          },
+          "direnv": {
+            "path": "~/.local/share/mise/shims/direnv",
+            "version": "2.37.1",
+            "origin": "mise"
+          },
+          "make": {
+            "path": "/usr/bin/make",
+            "version": "GNU Make 4.4.1",
+            "origin": "apt"
+          },
+          "gcc": {
+            "path": "/usr/bin/gcc",
+            "version": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+            "origin": "apt"
+          },
+          "cmake": {
+            "path": "/usr/bin/cmake",
+            "version": "cmake version 4.2.3",
+            "origin": "apt"
+          },
+          "ninja": {
+            "path": "/usr/bin/ninja",
+            "version": "1.13.2",
+            "origin": "apt"
+          },
+          "jq": {
+            "path": "/usr/bin/jq",
+            "version": "jq-1.8.1",
+            "origin": "apt"
+          },
+          "yq": {
+            "path": "~/.local/share/mise/shims/yq",
+            "version": "yq (https://github.com/mikefarah/yq/) version v4.53.2",
+            "origin": "mise"
+          },
+          "rg": {
+            "path": "/usr/bin/rg",
+            "version": "ripgrep 15.1.0",
+            "origin": "apt"
+          },
+          "fd": {
+            "path": "~/.local/bin/fd",
+            "version": "fdfind 10.3.0",
+            "origin": "apt"
+          },
+          "fzf": {
+            "path": "/usr/bin/fzf",
+            "version": "0.67.0 (debian)",
+            "origin": "apt"
+          },
+          "bat": {
+            "path": "~/.local/bin/bat",
+            "version": "bat 0.25.0",
+            "origin": "apt"
+          },
+          "eza": {
+            "path": "/usr/bin/eza",
+            "version": "v0.23.4 [+git]",
+            "origin": "apt"
+          },
+          "just": {
+            "path": "/usr/bin/just",
+            "version": "just 1.45.0",
+            "origin": "apt"
+          },
+          "sqlite3": {
+            "path": "/usr/bin/sqlite3",
+            "version": "3.46.1 2024-08-13 09:16:08 c9c2ab54ba1f5f46360f1b4f35d849cd3f080e6fc2b6c60e91b16",
+            "origin": "apt"
+          },
+          "rsync": {
+            "path": "/usr/bin/rsync",
+            "version": "rsync  version 3.4.1  protocol version 32",
+            "origin": "apt"
+          },
+          "gpg": {
+            "path": "/usr/bin/gpg",
+            "version": "gpg (GnuPG) 2.4.8",
+            "origin": "apt"
+          },
+          "qrencode": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "docker": {
+            "path": "/usr/bin/docker",
+            "version": "Docker version 29.9.3, build 5457199",
+            "origin": "apt"
+          },
+          "cloudflared": {
+            "path": "~/.local/share/mise/shims/cloudflared",
+            "version": "cloudflared version 2026.10.0 (built 2026-10-05-17:37 UTC)",
+            "origin": "mise"
+          },
+          "ffmpeg": {
+            "path": "/usr/bin/ffmpeg",
+            "version": "ffmpeg version 8.0.1-3ubuntu2 Copyright (c) 2000-2025 the FFmpeg developers",
+            "origin": "apt"
+          },
+          "imagemagick": {
+            "path": "/usr/bin/convert",
+            "version": "Version: ImageMagick 7.1.2-18 Q16 x86_64 23822 https://imagemagick.org",
+            "origin": "apt"
+          },
+          "pdftotext": {
+            "path": "/usr/bin/pdftotext",
+            "version": "pdftotext version 26.01.0",
+            "origin": "apt"
+          },
+          "pandoc": {
+            "path": "/usr/bin/pandoc",
+            "version": "pandoc 3.7.0.2",
+            "origin": "apt"
+          },
+          "tesseract": {
+            "path": "/usr/bin/tesseract",
+            "version": "tesseract 5.5.0",
+            "origin": "apt"
+          },
+          "portless": {
+            "path": "~/.nvm/versions/node/v24.21.0/bin/portless",
+            "version": "0.15.8",
+            "origin": "user"
+          },
+          "typos": {
+            "path": "~/.local/share/mise/shims/typos",
+            "version": "typos-cli 1.51.1",
+            "origin": "mise"
+          },
+          "gitleaks": {
+            "path": "~/.local/share/mise/shims/gitleaks",
+            "version": "8.30.1",
+            "origin": "mise"
+          }
+        }
+      },
+      "after": {
+        "missing": [],
+        "tools": {
+          "git": {
+            "path": "/usr/bin/git",
+            "version": "git version 2.53.0",
+            "origin": "apt"
+          },
+          "gh": {
+            "path": "~/.local/bin/gh",
+            "version": "gh version 2.102.0 (2026-09-30)",
+            "origin": "user"
+          },
+          "node": {
+            "path": "~/.local/share/mise/shims/node",
+            "version": "v24.22.2",
+            "origin": "mise"
+          },
+          "bun": {
+            "path": "~/.local/share/mise/shims/bun",
+            "version": "1.4.2",
+            "origin": "mise"
+          },
+          "pnpm": {
+            "path": "~/.local/share/mise/shims/pnpm",
+            "version": "",
+            "origin": "mise"
+          },
+          "corepack": {
+            "path": "~/.local/share/mise/shims/corepack",
+            "version": "0.36.0",
+            "origin": "mise"
+          },
+          "python3": {
+            "path": "~/.local/bin/python3",
+            "version": "Python 3.14.9",
+            "origin": "user"
+          },
+          "uv": {
+            "path": "~/.local/bin/uv",
+            "version": "uv 0.13.5 (x86_64-unknown-linux-gnu)",
+            "origin": "user"
+          },
+          "pipx": {
+            "path": "/usr/bin/pipx",
+            "version": "1.8.0",
+            "origin": "apt"
+          },
+          "rustup": {
+            "path": "~/.cargo/bin/rustup",
+            "version": "rustup 1.29.1 (d95a37b6a 2026-08-13)",
+            "origin": "user"
+          },
+          "cargo": {
+            "path": "~/.cargo/bin/cargo",
+            "version": "cargo 1.99.0 (5f94df478 2026-08-27)",
+            "origin": "user"
+          },
+          "go": {
+            "path": "~/.local/share/mise/shims/go",
+            "version": "go version go1.26.8 linux/amd64",
+            "origin": "mise"
+          },
+          "mise": {
+            "path": "~/.local/bin/mise",
+            "version": "2026.10.8 linux-x64 (2026-10-11)",
+            "origin": "user"
+          },
+          "direnv": {
+            "path": "~/.local/share/mise/shims/direnv",
+            "version": "2.37.1",
+            "origin": "mise"
+          },
+          "make": {
+            "path": "/usr/bin/make",
+            "version": "GNU Make 4.4.1",
+            "origin": "apt"
+          },
+          "gcc": {
+            "path": "/usr/bin/gcc",
+            "version": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+            "origin": "apt"
+          },
+          "cmake": {
+            "path": "/usr/bin/cmake",
+            "version": "cmake version 4.2.3",
+            "origin": "apt"
+          },
+          "ninja": {
+            "path": "/usr/bin/ninja",
+            "version": "1.13.2",
+            "origin": "apt"
+          },
+          "jq": {
+            "path": "/usr/bin/jq",
+            "version": "jq-1.8.1",
+            "origin": "apt"
+          },
+          "yq": {
+            "path": "~/.local/share/mise/shims/yq",
+            "version": "yq (https://github.com/mikefarah/yq/) version v4.53.2",
+            "origin": "mise"
+          },
+          "rg": {
+            "path": "/usr/bin/rg",
+            "version": "ripgrep 15.1.0",
+            "origin": "apt"
+          },
+          "fd": {
+            "path": "~/.local/bin/fd",
+            "version": "fdfind 10.3.0",
+            "origin": "apt"
+          },
+          "fzf": {
+            "path": "/usr/bin/fzf",
+            "version": "0.67.0 (debian)",
+            "origin": "apt"
+          },
+          "bat": {
+            "path": "~/.local/bin/bat",
+            "version": "bat 0.25.0",
+            "origin": "apt"
+          },
+          "eza": {
+            "path": "/usr/bin/eza",
+            "version": "v0.23.4 [+git]",
+            "origin": "apt"
+          },
+          "just": {
+            "path": "/usr/bin/just",
+            "version": "just 1.45.0",
+            "origin": "apt"
+          },
+          "sqlite3": {
+            "path": "/usr/bin/sqlite3",
+            "version": "3.46.1 2024-08-13 09:16:08 c9c2ab54ba1f5f46360f1b4f35d849cd3f080e6fc2b6c60e91b16",
+            "origin": "apt"
+          },
+          "rsync": {
+            "path": "/usr/bin/rsync",
+            "version": "rsync  version 3.4.1  protocol version 32",
+            "origin": "apt"
+          },
+          "gpg": {
+            "path": "/usr/bin/gpg",
+            "version": "gpg (GnuPG) 2.4.8",
+            "origin": "apt"
+          },
+          "qrencode": {
+            "path": "/usr/bin/qrencode",
+            "version": "qrencode version 4.1.1",
+            "origin": "apt"
+          },
+          "docker": {
+            "path": "/usr/bin/docker",
+            "version": "Docker version 29.9.3, build 5457199",
+            "origin": "apt"
+          },
+          "cloudflared": {
+            "path": "~/.local/share/mise/shims/cloudflared",
+            "version": "cloudflared version 2026.10.0 (built 2026-10-05-17:37 UTC)",
+            "origin": "mise"
+          },
+          "ffmpeg": {
+            "path": "/usr/bin/ffmpeg",
+            "version": "ffmpeg version 8.0.1-3ubuntu2 Copyright (c) 2000-2025 the FFmpeg developers",
+            "origin": "apt"
+          },
+          "imagemagick": {
+            "path": "/usr/bin/convert",
+            "version": "Version: ImageMagick 7.1.2-18 Q16 x86_64 23822 https://imagemagick.org",
+            "origin": "apt"
+          },
+          "pdftotext": {
+            "path": "/usr/bin/pdftotext",
+            "version": "pdftotext version 26.01.0",
+            "origin": "apt"
+          },
+          "pandoc": {
+            "path": "/usr/bin/pandoc",
+            "version": "pandoc 3.7.0.2",
+            "origin": "apt"
+          },
+          "tesseract": {
+            "path": "/usr/bin/tesseract",
+            "version": "tesseract 5.5.0",
+            "origin": "apt"
+          },
+          "portless": {
+            "path": "~/.nvm/versions/node/v24.21.0/bin/portless",
+            "version": "0.15.8",
+            "origin": "user"
+          },
+          "typos": {
+            "path": "~/.local/share/mise/shims/typos",
+            "version": "typos-cli 1.51.1",
+            "origin": "mise"
+          },
+          "gitleaks": {
+            "path": "~/.local/share/mise/shims/gitleaks",
+            "version": "8.30.1",
+            "origin": "mise"
+          }
+        }
+      }
+    },
+    "tbk-worker": {
+      "user": "worker",
+      "os": "Ubuntu 26.04.1 LTS",
+      "checkoutPins": {
+        "node": "24.22.1",
+        "bun": "1.4.4"
+      },
+      "before": {
+        "missing": [
+          "bat",
+          "cmake",
+          "eza",
+          "ffmpeg",
+          "fzf",
+          "go",
+          "imagemagick",
+          "just",
+          "ninja",
+          "pandoc",
+          "pdftotext",
+          "qrencode",
+          "sqlite3",
+          "tesseract",
+          "yq"
+        ],
+        "tools": {
+          "git": {
+            "path": "/usr/bin/git",
+            "version": "git version 2.53.0",
+            "origin": "apt"
+          },
+          "gh": {
+            "path": "~/.local/share/mise/shims/gh",
+            "version": "gh version 2.46.0 (2025-12-13 Ubuntu 2.46.0-4)",
+            "origin": "mise"
+          },
+          "node": {
+            "path": "~/.local/share/mise/shims/node",
+            "version": "v24.22.1",
+            "origin": "mise"
+          },
+          "bun": {
+            "path": "~/.local/share/mise/shims/bun",
+            "version": "1.4.4",
+            "origin": "mise"
+          },
+          "pnpm": {
+            "path": "~/.nvm/versions/node/v24.22.1/bin/pnpm",
+            "version": "",
+            "origin": "user"
+          },
+          "corepack": {
+            "path": "~/.local/share/mise/shims/corepack",
+            "version": "0.36.0",
+            "origin": "mise"
+          },
+          "python3": {
+            "path": "/usr/bin/python3",
+            "version": "Python 3.14.4",
+            "origin": "apt"
+          },
+          "uv": {
+            "path": "~/.local/bin/uv",
+            "version": "uv 0.13.5 (x86_64-unknown-linux-gnu)",
+            "origin": "user"
+          },
+          "pipx": {
+            "path": "/usr/bin/pipx",
+            "version": "1.8.0",
+            "origin": "apt"
+          },
+          "rustup": {
+            "path": "~/.cargo/bin/rustup",
+            "version": "rustup 1.29.2 (d8c92c676 2026-10-21)",
+            "origin": "user"
+          },
+          "cargo": {
+            "path": "~/.cargo/bin/cargo",
+            "version": "cargo 1.99.1 (5f94df478 2026-08-27)",
+            "origin": "user"
+          },
+          "go": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "mise": {
+            "path": "~/.local/bin/mise",
+            "version": "2026.10.17 linux-x64 (2026-10-21)",
+            "origin": "user"
+          },
+          "direnv": {
+            "path": "/usr/bin/direnv",
+            "version": "2.37.1",
+            "origin": "apt"
+          },
+          "make": {
+            "path": "/usr/bin/make",
+            "version": "GNU Make 4.4.1",
+            "origin": "apt"
+          },
+          "gcc": {
+            "path": "/usr/bin/gcc",
+            "version": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+            "origin": "apt"
+          },
+          "cmake": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "ninja": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "jq": {
+            "path": "/usr/bin/jq",
+            "version": "jq-1.8.1",
+            "origin": "apt"
+          },
+          "yq": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "rg": {
+            "path": "/usr/bin/rg",
+            "version": "ripgrep 15.1.0",
+            "origin": "apt"
+          },
+          "fd": {
+            "path": "/usr/bin/fdfind",
+            "version": "fdfind 10.3.0",
+            "origin": "apt"
+          },
+          "fzf": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "bat": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "eza": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "just": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "sqlite3": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "rsync": {
+            "path": "/usr/bin/rsync",
+            "version": "rsync  version 3.4.1  protocol version 32",
+            "origin": "apt"
+          },
+          "gpg": {
+            "path": "/usr/bin/gpg",
+            "version": "gpg (GnuPG) 2.4.8",
+            "origin": "apt"
+          },
+          "qrencode": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "docker": {
+            "path": "/usr/bin/docker",
+            "version": "Docker version 29.9.3, build 5457199",
+            "origin": "apt"
+          },
+          "cloudflared": {
+            "path": "~/.local/share/mise/shims/cloudflared",
+            "version": "cloudflared version 2026.10.3 (built 2026-10-21-13:11 UTC)",
+            "origin": "mise"
+          },
+          "ffmpeg": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "imagemagick": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "pdftotext": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "pandoc": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "tesseract": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "portless": {
+            "path": "~/.nvm/versions/node/v24.22.1/bin/portless",
+            "version": "0.15.10",
+            "origin": "user"
+          },
+          "typos": {
+            "path": "~/.local/share/mise/shims/typos",
+            "version": "typos-cli 1.51.1",
+            "origin": "mise"
+          },
+          "gitleaks": {
+            "path": "~/.local/share/mise/shims/gitleaks",
+            "version": "8.30.1",
+            "origin": "mise"
+          }
+        }
+      },
+      "after": {
+        "missing": [],
+        "tools": {
+          "git": {
+            "path": "/usr/bin/git",
+            "version": "git version 2.53.0",
+            "origin": "apt"
+          },
+          "gh": {
+            "path": "~/.local/share/mise/shims/gh",
+            "version": "gh version 2.46.0 (2025-12-13 Ubuntu 2.46.0-4)",
+            "origin": "mise"
+          },
+          "node": {
+            "path": "~/.local/share/mise/shims/node",
+            "version": "v24.22.1",
+            "origin": "mise"
+          },
+          "bun": {
+            "path": "~/.local/share/mise/shims/bun",
+            "version": "1.4.4",
+            "origin": "mise"
+          },
+          "pnpm": {
+            "path": "~/.nvm/versions/node/v24.22.1/bin/pnpm",
+            "version": "",
+            "origin": "user"
+          },
+          "corepack": {
+            "path": "~/.local/share/mise/shims/corepack",
+            "version": "0.36.0",
+            "origin": "mise"
+          },
+          "python3": {
+            "path": "/usr/bin/python3",
+            "version": "Python 3.14.4",
+            "origin": "apt"
+          },
+          "uv": {
+            "path": "~/.local/bin/uv",
+            "version": "uv 0.13.5 (x86_64-unknown-linux-gnu)",
+            "origin": "user"
+          },
+          "pipx": {
+            "path": "/usr/bin/pipx",
+            "version": "1.8.0",
+            "origin": "apt"
+          },
+          "rustup": {
+            "path": "~/.cargo/bin/rustup",
+            "version": "rustup 1.29.2 (d8c92c676 2026-10-21)",
+            "origin": "user"
+          },
+          "cargo": {
+            "path": "~/.cargo/bin/cargo",
+            "version": "cargo 1.99.1 (5f94df478 2026-08-27)",
+            "origin": "user"
+          },
+          "go": {
+            "path": "/usr/bin/go",
+            "version": "go version go1.26.8 linux/amd64",
+            "origin": "apt"
+          },
+          "mise": {
+            "path": "~/.local/bin/mise",
+            "version": "2026.10.17 linux-x64 (2026-10-21)",
+            "origin": "user"
+          },
+          "direnv": {
+            "path": "/usr/bin/direnv",
+            "version": "2.37.1",
+            "origin": "apt"
+          },
+          "make": {
+            "path": "/usr/bin/make",
+            "version": "GNU Make 4.4.1",
+            "origin": "apt"
+          },
+          "gcc": {
+            "path": "/usr/bin/gcc",
+            "version": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+            "origin": "apt"
+          },
+          "cmake": {
+            "path": "/usr/bin/cmake",
+            "version": "cmake version 4.2.3",
+            "origin": "apt"
+          },
+          "ninja": {
+            "path": "/usr/bin/ninja",
+            "version": "1.13.2",
+            "origin": "apt"
+          },
+          "jq": {
+            "path": "/usr/bin/jq",
+            "version": "jq-1.8.1",
+            "origin": "apt"
+          },
+          "yq": {
+            "path": "~/.local/share/mise/shims/yq",
+            "version": "yq (https://github.com/mikefarah/yq/) version v4.54.2",
+            "origin": "mise"
+          },
+          "rg": {
+            "path": "/usr/bin/rg",
+            "version": "ripgrep 15.1.0",
+            "origin": "apt"
+          },
+          "fd": {
+            "path": "~/.local/bin/fd",
+            "version": "fdfind 10.3.0",
+            "origin": "apt"
+          },
+          "fzf": {
+            "path": "/usr/bin/fzf",
+            "version": "0.67.0 (debian)",
+            "origin": "apt"
+          },
+          "bat": {
+            "path": "~/.local/bin/bat",
+            "version": "bat 0.25.0",
+            "origin": "apt"
+          },
+          "eza": {
+            "path": "/usr/bin/eza",
+            "version": "v0.23.4 [+git]",
+            "origin": "apt"
+          },
+          "just": {
+            "path": "/usr/bin/just",
+            "version": "just 1.45.0",
+            "origin": "apt"
+          },
+          "sqlite3": {
+            "path": "/usr/bin/sqlite3",
+            "version": "3.46.1 2024-08-13 09:16:08 c9c2ab54ba1f5f46360f1b4f35d849cd3f080e6fc2b6c60e91b16",
+            "origin": "apt"
+          },
+          "rsync": {
+            "path": "/usr/bin/rsync",
+            "version": "rsync  version 3.4.1  protocol version 32",
+            "origin": "apt"
+          },
+          "gpg": {
+            "path": "/usr/bin/gpg",
+            "version": "gpg (GnuPG) 2.4.8",
+            "origin": "apt"
+          },
+          "qrencode": {
+            "path": "/usr/bin/qrencode",
+            "version": "qrencode version 4.1.1",
+            "origin": "apt"
+          },
+          "docker": {
+            "path": "/usr/bin/docker",
+            "version": "Docker version 29.9.3, build 5457199",
+            "origin": "apt"
+          },
+          "cloudflared": {
+            "path": "~/.local/share/mise/shims/cloudflared",
+            "version": "cloudflared version 2026.10.3 (built 2026-10-21-13:11 UTC)",
+            "origin": "mise"
+          },
+          "ffmpeg": {
+            "path": "/usr/bin/ffmpeg",
+            "version": "ffmpeg version 8.0.1-3ubuntu2 Copyright (c) 2000-2025 the FFmpeg developers",
+            "origin": "apt"
+          },
+          "imagemagick": {
+            "path": "/usr/bin/convert",
+            "version": "Version: ImageMagick 7.1.2-18 Q16 x86_64 23822 https://imagemagick.org",
+            "origin": "apt"
+          },
+          "pdftotext": {
+            "path": "/usr/bin/pdftotext",
+            "version": "pdftotext version 26.01.0",
+            "origin": "apt"
+          },
+          "pandoc": {
+            "path": "/usr/bin/pandoc",
+            "version": "pandoc 3.7.0.2",
+            "origin": "apt"
+          },
+          "tesseract": {
+            "path": "/usr/bin/tesseract",
+            "version": "tesseract 5.5.0",
+            "origin": "apt"
+          },
+          "portless": {
+            "path": "~/.nvm/versions/node/v24.22.1/bin/portless",
+            "version": "0.15.10",
+            "origin": "user"
+          },
+          "typos": {
+            "path": "~/.local/share/mise/shims/typos",
+            "version": "typos-cli 1.51.1",
+            "origin": "mise"
+          },
+          "gitleaks": {
+            "path": "~/.local/share/mise/shims/gitleaks",
+            "version": "8.30.1",
+            "origin": "mise"
+          }
+        }
+      }
+    },
+    "tom-pc-1-wsl": {
+      "user": "agent",
+      "os": "Ubuntu 26.04.1 LTS",
+      "checkoutPins": {
+        "node": "24.22.1",
+        "bun": "1.4.4"
+      },
+      "before": {
+        "missing": [
+          "bat",
+          "cargo",
+          "cloudflared",
+          "cmake",
+          "direnv",
+          "docker",
+          "eza",
+          "fd",
+          "ffmpeg",
+          "fzf",
+          "gitleaks",
+          "go",
+          "imagemagick",
+          "just",
+          "ninja",
+          "pandoc",
+          "pdftotext",
+          "pipx",
+          "pnpm",
+          "portless",
+          "qrencode",
+          "rg",
+          "rustup",
+          "sqlite3",
+          "tesseract",
+          "typos",
+          "uv",
+          "yq"
+        ],
+        "tools": {
+          "git": {
+            "path": "/usr/bin/git",
+            "version": "git version 2.53.0",
+            "origin": "apt"
+          },
+          "gh": {
+            "path": "/usr/bin/gh",
+            "version": "gh version 2.46.0 (2025-12-13 Ubuntu 2.46.0-4)",
+            "origin": "apt"
+          },
+          "node": {
+            "path": "~/.local/share/mise/shims/node",
+            "version": "v24.22.1",
+            "origin": "mise"
+          },
+          "bun": {
+            "path": "~/.local/share/mise/shims/bun",
+            "version": "1.4.4",
+            "origin": "mise"
+          },
+          "pnpm": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "corepack": {
+            "path": "~/.local/share/mise/shims/corepack",
+            "version": "0.36.0",
+            "origin": "mise"
+          },
+          "python3": {
+            "path": "/usr/bin/python3",
+            "version": "Python 3.14.4",
+            "origin": "apt"
+          },
+          "uv": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "pipx": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "rustup": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "cargo": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "go": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "mise": {
+            "path": "~/.local/bin/mise",
+            "version": "2026.11.3 linux-x64 (2026-11-06)",
+            "origin": "user"
+          },
+          "direnv": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "make": {
+            "path": "/usr/bin/make",
+            "version": "GNU Make 4.4.1",
+            "origin": "apt"
+          },
+          "gcc": {
+            "path": "/usr/bin/gcc",
+            "version": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+            "origin": "apt"
+          },
+          "cmake": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "ninja": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "jq": {
+            "path": "/usr/bin/jq",
+            "version": "jq-1.8.1",
+            "origin": "apt"
+          },
+          "yq": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "rg": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "fd": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "fzf": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "bat": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "eza": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "just": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "sqlite3": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "rsync": {
+            "path": "/usr/bin/rsync",
+            "version": "rsync  version 3.4.1  protocol version 32",
+            "origin": "apt"
+          },
+          "gpg": {
+            "path": "/usr/bin/gpg",
+            "version": "gpg (GnuPG) 2.4.8",
+            "origin": "apt"
+          },
+          "qrencode": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "docker": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "cloudflared": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "ffmpeg": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "imagemagick": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "pdftotext": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "pandoc": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "tesseract": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "portless": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "typos": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "gitleaks": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          }
+        }
+      },
+      "after": {
+        "missing": [],
+        "tools": {
+          "git": {
+            "path": "/usr/bin/git",
+            "version": "git version 2.53.0",
+            "origin": "apt"
+          },
+          "gh": {
+            "path": "/usr/bin/gh",
+            "version": "gh version 2.46.0 (2025-12-13 Ubuntu 2.46.0-4)",
+            "origin": "apt"
+          },
+          "node": {
+            "path": "~/.local/share/mise/shims/node",
+            "version": "v24.22.1",
+            "origin": "mise"
+          },
+          "bun": {
+            "path": "~/.local/share/mise/shims/bun",
+            "version": "1.4.4",
+            "origin": "mise"
+          },
+          "pnpm": {
+            "path": "~/.local/share/mise/shims/pnpm",
+            "version": "",
+            "origin": "mise"
+          },
+          "corepack": {
+            "path": "~/.local/share/mise/shims/corepack",
+            "version": "0.36.0",
+            "origin": "mise"
+          },
+          "python3": {
+            "path": "/usr/bin/python3",
+            "version": "Python 3.14.4",
+            "origin": "apt"
+          },
+          "uv": {
+            "path": "~/.local/bin/uv",
+            "version": "uv 0.13.7 (x86_64-unknown-linux-gnu)",
+            "origin": "user"
+          },
+          "pipx": {
+            "path": "/usr/bin/pipx",
+            "version": "1.8.0",
+            "origin": "apt"
+          },
+          "rustup": {
+            "path": "~/.cargo/bin/rustup",
+            "version": "rustup 1.29.3 (edbc831ce 2026-11-02)",
+            "origin": "user"
+          },
+          "cargo": {
+            "path": "~/.cargo/bin/cargo",
+            "version": "cargo 1.99.1 (5f94df478 2026-08-27)",
+            "origin": "user"
+          },
+          "go": {
+            "path": "/usr/bin/go",
+            "version": "go version go1.26.8 linux/amd64",
+            "origin": "apt"
+          },
+          "mise": {
+            "path": "~/.local/bin/mise",
+            "version": "2026.11.3 linux-x64 (2026-11-06)",
+            "origin": "user"
+          },
+          "direnv": {
+            "path": "/usr/bin/direnv",
+            "version": "2.37.1",
+            "origin": "apt"
+          },
+          "make": {
+            "path": "/usr/bin/make",
+            "version": "GNU Make 4.4.1",
+            "origin": "apt"
+          },
+          "gcc": {
+            "path": "/usr/bin/gcc",
+            "version": "gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+            "origin": "apt"
+          },
+          "cmake": {
+            "path": "/usr/bin/cmake",
+            "version": "cmake version 4.2.3",
+            "origin": "apt"
+          },
+          "ninja": {
+            "path": "/usr/bin/ninja",
+            "version": "1.13.2",
+            "origin": "apt"
+          },
+          "jq": {
+            "path": "/usr/bin/jq",
+            "version": "jq-1.8.1",
+            "origin": "apt"
+          },
+          "yq": {
+            "path": "~/.local/share/mise/shims/yq",
+            "version": "yq (https://github.com/mikefarah/yq/) version v4.54.2",
+            "origin": "mise"
+          },
+          "rg": {
+            "path": "/usr/bin/rg",
+            "version": "ripgrep 15.1.0",
+            "origin": "apt"
+          },
+          "fd": {
+            "path": "~/.local/bin/fd",
+            "version": "fdfind 10.3.0",
+            "origin": "apt"
+          },
+          "fzf": {
+            "path": "/usr/bin/fzf",
+            "version": "0.67.0 (debian)",
+            "origin": "apt"
+          },
+          "bat": {
+            "path": "~/.local/bin/bat",
+            "version": "bat 0.25.0",
+            "origin": "apt"
+          },
+          "eza": {
+            "path": "/usr/bin/eza",
+            "version": "v0.23.4 [+git]",
+            "origin": "apt"
+          },
+          "just": {
+            "path": "/usr/bin/just",
+            "version": "just 1.45.0",
+            "origin": "apt"
+          },
+          "sqlite3": {
+            "path": "/usr/bin/sqlite3",
+            "version": "3.46.1 2024-08-13 09:16:08 c9c2ab54ba1f5f46360f1b4f35d849cd3f080e6fc2b6c60e91b16",
+            "origin": "apt"
+          },
+          "rsync": {
+            "path": "/usr/bin/rsync",
+            "version": "rsync  version 3.4.1  protocol version 32",
+            "origin": "apt"
+          },
+          "gpg": {
+            "path": "/usr/bin/gpg",
+            "version": "gpg (GnuPG) 2.4.8",
+            "origin": "apt"
+          },
+          "qrencode": {
+            "path": "/usr/bin/qrencode",
+            "version": "qrencode version 4.1.1",
+            "origin": "apt"
+          },
+          "docker": {
+            "path": "/usr/bin/docker",
+            "version": "Docker version 29.9.3, build 5457199",
+            "origin": "apt"
+          },
+          "cloudflared": {
+            "path": "~/.local/share/mise/shims/cloudflared",
+            "version": "cloudflared version 2026.10.7 (built 2026-10-30-17:05 UTC)",
+            "origin": "mise"
+          },
+          "ffmpeg": {
+            "path": "/usr/bin/ffmpeg",
+            "version": "ffmpeg version 8.0.1-3ubuntu2 Copyright (c) 2000-2025 the FFmpeg developers",
+            "origin": "apt"
+          },
+          "imagemagick": {
+            "path": "/usr/bin/convert",
+            "version": "Version: ImageMagick 7.1.2-18 Q16 x86_64 23822 https://imagemagick.org",
+            "origin": "apt"
+          },
+          "pdftotext": {
+            "path": "/usr/bin/pdftotext",
+            "version": "pdftotext version 26.01.0",
+            "origin": "apt"
+          },
+          "pandoc": {
+            "path": "/usr/bin/pandoc",
+            "version": "pandoc 3.7.0.2",
+            "origin": "apt"
+          },
+          "tesseract": {
+            "path": "/usr/bin/tesseract",
+            "version": "tesseract 5.5.0",
+            "origin": "apt"
+          },
+          "portless": {
+            "path": "~/.bun/bin/portless",
+            "version": "0.16.0",
+            "origin": "user"
+          },
+          "typos": {
+            "path": "~/.bun/bin/typos",
+            "version": "typos-cli 1.50.3",
+            "origin": "user"
+          },
+          "gitleaks": {
+            "path": "~/.bun/bin/gitleaks",
+            "version": "8.30.1",
+            "origin": "user"
+          }
+        }
+      }
+    },
+    "grok-bot": {
+      "user": "box",
+      "os": "Debian GNU/Linux 13 (trixie)",
+      "checkoutPins": {
+        "node": "24",
+        "bun": "1.4.2"
+      },
+      "before": {
+        "missing": [
+          "bat",
+          "cloudflared",
+          "cmake",
+          "direnv",
+          "docker",
+          "eza",
+          "fd",
+          "fzf",
+          "gitleaks",
+          "imagemagick",
+          "just",
+          "make",
+          "mise",
+          "ninja",
+          "pandoc",
+          "pipx",
+          "portless",
+          "qrencode",
+          "rsync",
+          "rustup",
+          "sqlite3",
+          "tesseract",
+          "typos",
+          "yq"
+        ],
+        "tools": {
+          "git": {
+            "path": "/usr/bin/git",
+            "version": "git version 2.47.3",
+            "origin": "apt"
+          },
+          "gh": {
+            "path": "/usr/local/bin/gh",
+            "version": "gh version 2.103.0 (2026-10-21)",
+            "origin": "local"
+          },
+          "node": {
+            "path": "/usr/local/bin/node",
+            "version": "v24.22.1",
+            "origin": "local"
+          },
+          "bun": {
+            "path": "/usr/local/bin/bun",
+            "version": "1.4.2",
+            "origin": "local"
+          },
+          "pnpm": {
+            "path": "/usr/local/bin/pnpm",
+            "version": "Unsupported package manager specification (bun@1.4.2)",
+            "origin": "local"
+          },
+          "corepack": {
+            "path": "/usr/local/bin/corepack",
+            "version": "0.36.0",
+            "origin": "local"
+          },
+          "python3": {
+            "path": "/usr/bin/python3",
+            "version": "Python 3.13.5",
+            "origin": "apt"
+          },
+          "uv": {
+            "path": "/usr/local/bin/uv",
+            "version": "uv 0.13.6 (x86_64-unknown-linux-gnu)",
+            "origin": "local"
+          },
+          "pipx": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "rustup": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "cargo": {
+            "path": "/usr/bin/cargo",
+            "version": "cargo 1.85.1 (d73d2caf9 2024-12-31)",
+            "origin": "apt"
+          },
+          "go": {
+            "path": "/usr/local/go/bin/go",
+            "version": "go version go1.27.3 linux/amd64",
+            "origin": "local"
+          },
+          "mise": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "direnv": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "make": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "gcc": {
+            "path": "/usr/bin/gcc",
+            "version": "gcc (Debian 14.2.0-19) 14.2.0",
+            "origin": "apt"
+          },
+          "cmake": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "ninja": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "jq": {
+            "path": "/usr/bin/jq",
+            "version": "jq-1.7",
+            "origin": "apt"
+          },
+          "yq": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "rg": {
+            "path": "/usr/bin/rg",
+            "version": "ripgrep 14.1.1",
+            "origin": "apt"
+          },
+          "fd": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "fzf": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "bat": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "eza": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "just": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "sqlite3": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "rsync": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "gpg": {
+            "path": "/usr/bin/gpg",
+            "version": "gpg (GnuPG) 2.4.7",
+            "origin": "apt"
+          },
+          "qrencode": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "docker": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "cloudflared": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "ffmpeg": {
+            "path": "/usr/bin/ffmpeg",
+            "version": "ffmpeg version 7.1.5-0+deb13u1 Copyright (c) 2000-2026 the FFmpeg developers",
+            "origin": "apt"
+          },
+          "imagemagick": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "pdftotext": {
+            "path": "/usr/bin/pdftotext",
+            "version": "pdftotext version 25.03.0",
+            "origin": "apt"
+          },
+          "pandoc": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "tesseract": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "portless": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "typos": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "gitleaks": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          }
+        }
+      },
+      "after": {
+        "missing": ["docker"],
+        "tools": {
+          "git": {
+            "path": "/usr/bin/git",
+            "version": "git version 2.47.3",
+            "origin": "apt"
+          },
+          "gh": {
+            "path": "/usr/local/bin/gh",
+            "version": "gh version 2.103.0 (2026-10-21)",
+            "origin": "local"
+          },
+          "node": {
+            "path": "/usr/local/bin/node",
+            "version": "v24.22.1",
+            "origin": "local"
+          },
+          "bun": {
+            "path": "~/.bun/bin/bun",
+            "version": "1.4.4",
+            "origin": "user"
+          },
+          "pnpm": {
+            "path": "/usr/local/bin/pnpm",
+            "version": "Unsupported package manager specification (bun@1.4.2)",
+            "origin": "local"
+          },
+          "corepack": {
+            "path": "/usr/local/bin/corepack",
+            "version": "0.36.0",
+            "origin": "local"
+          },
+          "python3": {
+            "path": "/usr/bin/python3",
+            "version": "Python 3.13.5",
+            "origin": "apt"
+          },
+          "uv": {
+            "path": "/usr/local/bin/uv",
+            "version": "uv 0.13.6 (x86_64-unknown-linux-gnu)",
+            "origin": "local"
+          },
+          "pipx": {
+            "path": "/usr/bin/pipx",
+            "version": "1.7.1",
+            "origin": "apt"
+          },
+          "rustup": {
+            "path": "~/.cargo/bin/rustup",
+            "version": "rustup 1.29.3 (edbc831ce 2026-11-02)",
+            "origin": "user"
+          },
+          "cargo": {
+            "path": "~/.cargo/bin/cargo",
+            "version": "cargo 1.99.1 (5f94df478 2026-08-27)",
+            "origin": "user"
+          },
+          "go": {
+            "path": "/usr/local/go/bin/go",
+            "version": "go version go1.27.3 linux/amd64",
+            "origin": "local"
+          },
+          "mise": {
+            "path": "~/.local/bin/mise",
+            "version": "2026.11.3 linux-x64 (2026-11-06)",
+            "origin": "user"
+          },
+          "direnv": {
+            "path": "/usr/bin/direnv",
+            "version": "2.32.1",
+            "origin": "apt"
+          },
+          "make": {
+            "path": "/usr/bin/make",
+            "version": "GNU Make 4.4.1",
+            "origin": "apt"
+          },
+          "gcc": {
+            "path": "/usr/bin/gcc",
+            "version": "gcc (Debian 14.2.0-19) 14.2.0",
+            "origin": "apt"
+          },
+          "cmake": {
+            "path": "/usr/bin/cmake",
+            "version": "cmake version 3.31.6",
+            "origin": "apt"
+          },
+          "ninja": {
+            "path": "/usr/bin/ninja",
+            "version": "1.12.1",
+            "origin": "apt"
+          },
+          "jq": {
+            "path": "/usr/bin/jq",
+            "version": "jq-1.7",
+            "origin": "apt"
+          },
+          "yq": {
+            "path": "~/.local/share/mise/shims/yq",
+            "version": "yq (https://github.com/mikefarah/yq/) version v4.54.2",
+            "origin": "mise"
+          },
+          "rg": {
+            "path": "/usr/bin/rg",
+            "version": "ripgrep 14.1.1",
+            "origin": "apt"
+          },
+          "fd": {
+            "path": "~/.local/bin/fd",
+            "version": "fdfind 10.2.0",
+            "origin": "apt"
+          },
+          "fzf": {
+            "path": "/usr/bin/fzf",
+            "version": "0.60 (devel)",
+            "origin": "apt"
+          },
+          "bat": {
+            "path": "~/.local/bin/bat",
+            "version": "bat 0.25.0",
+            "origin": "apt"
+          },
+          "eza": {
+            "path": "/usr/bin/eza",
+            "version": "v0.21.0 [+git]",
+            "origin": "apt"
+          },
+          "just": {
+            "path": "/usr/bin/just",
+            "version": "just 1.40.0",
+            "origin": "apt"
+          },
+          "sqlite3": {
+            "path": "/usr/bin/sqlite3",
+            "version": "3.46.1 2024-08-13 09:16:08 c9c2ab54ba1f5f46360f1b4f35d849cd3f080e6fc2b6c60e91b16",
+            "origin": "apt"
+          },
+          "rsync": {
+            "path": "/usr/bin/rsync",
+            "version": "rsync  version 3.5.0  protocol version 32",
+            "origin": "apt"
+          },
+          "gpg": {
+            "path": "/usr/bin/gpg",
+            "version": "gpg (GnuPG) 2.4.7",
+            "origin": "apt"
+          },
+          "qrencode": {
+            "path": "/usr/bin/qrencode",
+            "version": "qrencode version 4.1.1",
+            "origin": "apt"
+          },
+          "docker": {
+            "path": null,
+            "version": null,
+            "origin": "missing"
+          },
+          "cloudflared": {
+            "path": "~/.local/share/mise/shims/cloudflared",
+            "version": "cloudflared version 2026.10.7 (built 2026-10-30-17:05 UTC)",
+            "origin": "mise"
+          },
+          "ffmpeg": {
+            "path": "/usr/bin/ffmpeg",
+            "version": "ffmpeg version 7.1.5-0+deb13u1 Copyright (c) 2000-2026 the FFmpeg developers",
+            "origin": "apt"
+          },
+          "imagemagick": {
+            "path": "/usr/bin/convert",
+            "version": "Version: ImageMagick 7.1.1-43 Q16 x86_64 22550 https://imagemagick.org",
+            "origin": "apt"
+          },
+          "pdftotext": {
+            "path": "/usr/bin/pdftotext",
+            "version": "pdftotext version 25.03.0",
+            "origin": "apt"
+          },
+          "pandoc": {
+            "path": "/usr/bin/pandoc",
+            "version": "pandoc 3.1.11.1",
+            "origin": "apt"
+          },
+          "tesseract": {
+            "path": "/usr/bin/tesseract",
+            "version": "tesseract 5.5.0",
+            "origin": "apt"
+          },
+          "portless": {
+            "path": "~/.bun/bin/portless",
+            "version": "0.16.0",
+            "origin": "user"
+          },
+          "typos": {
+            "path": "~/.bun/bin/typos",
+            "version": "typos-cli 1.50.3",
+            "origin": "user"
+          },
+          "gitleaks": {
+            "path": "~/.bun/bin/gitleaks",
+            "version": "8.30.1",
+            "origin": "user"
+          }
+        }
+      },
+      "note": "checkout /workspace/beep-effect"
+    }
+  }
+}
