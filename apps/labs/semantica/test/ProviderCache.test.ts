@@ -1,12 +1,13 @@
 // @vitest-environment node
 
 import { ANTHROPIC_DEFAULT_MODEL } from "@beep/anthropic";
+import { $SemanticaId } from "@beep/identity/packages";
 import { it } from "@beep/test-runner";
 import { provideScopedLayer } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { describe, expect } from "@effect/vitest";
-import { assertFalse, assertSome, assertTrue } from "@effect/vitest/utils";
+import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import * as Response from "effect/ai/Response";
@@ -47,6 +48,8 @@ import { ModelIdentity } from "@/schema/Model";
 import { ProviderCacheEntry, ProviderCacheKey } from "@/schema/ProviderCache";
 import { ActiveModelIdentity } from "@/services/LanguageModel";
 import { ProviderCache } from "@/services/ProviderCache";
+
+const $I = $SemanticaId.create("test/ProviderCache");
 
 const BunPlatformLive = Layer.merge(BunServices.layer, BunCrypto.layer);
 
@@ -247,6 +250,22 @@ const CompetingStageServices = CompetingStageCacheLive.pipe(
   Layer.provideMerge(BunPlatformLive)
 );
 
+class CacheWaitProbe extends Context.Service<CacheWaitProbe, Effect.Success<ReturnType<typeof makeCacheWaitProbe>>>()(
+  $I`CacheWaitProbe`
+) {}
+
+const SlowWinnerServices = Layer.unwrap(
+  Effect.gen(function* () {
+    const { cacheDirectory } = yield* CompetingStageProbe;
+    const { fileSystem } = yield* CacheWaitProbe;
+    return providerCacheTestRuntime(cacheDirectory, fileSystem);
+  })
+).pipe(
+  Layer.provideMerge(Layer.effect(CacheWaitProbe, FileSystem.FileSystem.use(makeCacheWaitProbe))),
+  Layer.provideMerge(CompetingStageProbeLive),
+  Layer.provideMerge(CacheTestServices)
+);
+
 describe("C0 provider cache and language-model boundary", () => {
   it.layer(BunPlatformLive, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("is write-once, caches misses, replays hits, and keeps offline misses typed", () =>
@@ -415,53 +434,66 @@ describe("C0 provider cache and language-model boundary", () => {
     })
   );
 
-  it.layer(CacheTestServices, { timeout: "30 seconds", excludeTestServices: true })((it) => {
+  it.layer(SlowWinnerServices, { timeout: "30 seconds", excludeTestServices: true })((it) => {
     it.effect("lets a contender observe a healthy slow winner within the lock wait window", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const cacheDirectory = yield* fs.makeTempDirectoryScoped({ prefix: "semantica-cache-slow-winner-" });
-        const probe = yield* makeCacheWaitProbe(fs);
-        const runtime = providerCacheTestRuntime(cacheDirectory, probe.fileSystem);
-
-        yield* provideScopedLayer(runtime)(
+        const { cacheDirectory } = yield* CompetingStageProbe;
+        const probe = yield* CacheWaitProbe;
+        const winnerClock = yield* Clock.Clock;
+        const cache = yield* ProviderCache;
+        const key = makeKey("healthy slow winner");
+        const cacheKey = yield* contentDigest(ProviderCacheKey)(key);
+        const entry = ProviderCacheEntry.make({
+          cacheKey,
+          key,
+          response: "slow-winner",
+          responseDigest: sha256TextSync("slow-winner"),
+        });
+        const target = path.join(cacheDirectory, `${cacheKey}.json`);
+        const lock = `${target}.lock`;
+        const winnerTemporary = `${target}.winner.tmp`;
+        yield* fs.makeDirectory(lock);
+        yield* fs.writeFileString(path.join(lock, "owner.pid"), `${process.pid}\n`);
+        const json = yield* encodeProviderCacheEntry(entry);
+        const winnerWriteStarted = yield* Deferred.make<void>();
+        const finishWinnerWrite = yield* Deferred.make<void>();
+        const publicationObserver = yield* Effect.gen(function* () {
+          yield* Deferred.await(winnerWriteStarted);
+          const beforePromotion = yield* cache.lookup(key);
+          assertNone(beforePromotion);
+        }).pipe(Effect.ensuring(Deferred.succeed(finishWinnerWrite, undefined)), Effect.forkChild);
+        // Keep incomplete bytes outside the published path until atomic promotion.
+        const winner = yield* winnerClock
+          .sleep(Duration.seconds(2))
+          .pipe(
+            Effect.andThen(fs.writeFileString(winnerTemporary, "")),
+            Effect.andThen(Deferred.succeed(winnerWriteStarted, undefined)),
+            Effect.andThen(Deferred.await(finishWinnerWrite)),
+            Effect.andThen(fs.writeFileString(winnerTemporary, `${json}\n`)),
+            Effect.andThen(fs.rename(winnerTemporary, target)),
+            Effect.andThen(fs.remove(lock, { force: true, recursive: true })),
+            Effect.forkChild({ startImmediately: true })
+          );
+        const contender = yield* cache
+          .store(entry)
+          .pipe(Effect.provideService(Clock.Clock, probe.clock), Effect.forkChild);
+        yield* probe.drive(
+          contender,
+          "healthy slow winner",
           Effect.gen(function* () {
-            const cache = yield* ProviderCache;
-            const key = makeKey("healthy slow winner");
-            const cacheKey = yield* contentDigest(ProviderCacheKey)(key);
-            const entry = ProviderCacheEntry.make({
-              cacheKey,
-              key,
-              response: "slow-winner",
-              responseDigest: sha256TextSync("slow-winner"),
-            });
-            const target = path.join(cacheDirectory, `${cacheKey}.json`);
-            const lock = `${target}.lock`;
-            yield* fs.makeDirectory(lock);
-            yield* fs.writeFileString(path.join(lock, "owner.pid"), `${process.pid}\n`);
-            const json = yield* encodeProviderCacheEntry(entry);
-            const winner = yield* Effect.sleep(Duration.seconds(2)).pipe(
-              Effect.andThen(fs.writeFileString(target, `${json}\n`)),
-              Effect.andThen(fs.remove(lock, { force: true, recursive: true })),
-              Effect.forkChild({ startImmediately: true })
-            );
-            const contender = yield* cache
-              .store(entry)
-              .pipe(Effect.provideService(Clock.Clock, probe.clock), Effect.forkChild);
-            yield* probe.drive(
-              contender,
-              "healthy slow winner",
-              Effect.gen(function* () {
-                if ((yield* probe.clock.currentTimeMillis) >= 2000) yield* Fiber.join(winner);
-              })
-            );
-            yield* Fiber.join(contender);
-            yield* Fiber.join(winner);
-
-            const lookup6 = yield* cache.lookup(key);
-            assertSome(lookup6, entry);
+            if ((yield* probe.clock.currentTimeMillis) >= 2000) {
+              yield* Fiber.join(publicationObserver);
+              yield* Fiber.join(winner);
+            }
           })
         );
+        yield* Fiber.join(contender);
+        yield* Fiber.join(winner);
+
+        const lookup6 = yield* cache.lookup(key);
+        assertSome(lookup6, entry);
       })
     );
   });

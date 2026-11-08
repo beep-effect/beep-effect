@@ -1,0 +1,212 @@
+{
+  "schemaVersion": "claim-post-merge-delivery-audit/v1",
+  "observedAt": "2026-11-02T05:22:07Z",
+  "pullRequest": "https://github.com/beep-effect/beep-effect/pull/2411",
+  "head": "6f692e9e5fbf18a86fc275af22c127ae597acab8",
+  "mergeCommit": "3057999b3345619629e00923d94a322c62cf8d06",
+  "mergedAt": "2026-11-01T00:47:14Z",
+  "state": "closed",
+  "merged": true,
+  "unresolvedThreads": 0,
+  "reviewThreadCount": 7,
+  "deliveryAuthority": "Repository AGENTS.md S11 exception, exercised by designated orchestrator; not an all-green hosted result.",
+  "mergeReceipt": {
+    "url": "https://github.com/beep-effect/beep-effect/pull/2411#issuecomment-6551357882",
+    "body": "yeet merge-gate (S11): merged 6f692e9e5f as 3057999b33.\n\npending at merge: Codegen Drift [S11: unattributed at merge; the same-day fix PR burns it down]; Commitlint [S11: unattributed at merge; the same-day fix PR burns it down]; Heavy / Check [S11: unattributed at merge; the same-day fix PR burns it down]; Heavy / Docgen [S11: unattributed at merge; the same-day fix PR burns it down]; Heavy / Doctest [S11: unattributed at merge; the same-day fix PR burns it down]; Heavy / Test Integration [S11: unattributed at merge; the same-day fix PR burns it down]; JSDoc Ratchet [S11: unattributed at merge; the same-day fix PR burns it down]; Lint [S11: unattributed at merge; the same-day fix PR burns it down]; Nix Shell [S11: unattributed at merge; the same-day fix PR burns it down]; Professional Desktop IPC Stdio [S11: unattributed at merge; the same-day fix PR burns it down]; Repo Sanity [S11: unattributed at merge; the same-day fix PR burns it down]; SAST [S11: unattributed at merge; the same-day fix PR burns it down]; Secret Scanning [S11: unattributed at merge; the same-day fix PR burns it down]; Security [S11: unattributed at merge; the same-day fix PR burns it down]; Test Unit [S11: unattributed at merge; the same-day fix PR burns it down]; Ecosystem Contracts [S11: unattributed at merge; the same-day fix PR burns it down]; Fallow Advisory Envelopes [S11: unattributed at merge; the same-day fix PR burns it down]; Greptile Review [S11: unattributed at merge; the same-day fix PR burns it down]; Heavy Admission [S11: unattributed at merge; the same-day fix PR burns it down]; Labs [S11: unattributed at merge; the same-day fix PR burns it down]; Lint (lint-a) [S11: unattributed at merge; the same-day fix PR burns it down]; Lint (lint-b) [S11: unattributed at merge; the same-day fix PR burns it down]; PR Size Label [S11: unattributed at merge; the same-day fix PR burns it down]; Property Laws [S11: unattributed at merge; the same-day fix PR burns it down]; Shadcn Lint [S11: unattributed at merge; the same-day fix PR burns it down]; Storybook [S11: unattributed at merge; the same-day fix PR burns it down]; Test Unit (repo-cli-1) [S11: unattributed at merge; the same-day fix PR burns it down]; Test Unit (repo-cli-2) [S11: unattributed at merge; the same-day fix PR burns it down]; Test Unit (repo-cli-3) [S11: unattributed at merge; the same-day fix PR burns it down]; Test Unit (repo-cli-4) [S11: unattributed at merge; the same-day fix PR burns it down]; Test Unit (unit-a) [S11: unattributed at merge; the same-day fix PR burns it down]; Test Unit (unit-b) [S11: unattributed at merge; the same-day fix PR burns it down]\n\nMerged under operator ruling S11 (AGENTS.md \"Mergeable\"): threads addressed, no conflict, review window forced (a fix that unblocks main). Owner: `bun run beep yeet sweep --retire` from the lane."
+  },
+  "hostedJobs": [
+    {
+      "id": 124705909214,
+      "name": "Professional Desktop IPC Stdio",
+      "status": "completed",
+      "conclusion": "cancelled"
+    },
+    {
+      "id": 124705909364,
+      "name": "PR Size Label",
+      "status": "completed",
+      "conclusion": "cancelled"
+    },
+    {
+      "id": 124705909453,
+      "name": "Fallow Advisory Envelopes",
+      "status": "completed",
+      "conclusion": "cancelled"
+    },
+    {
+      "id": 124705909475,
+      "name": "Heavy Admission",
+      "status": "completed",
+      "conclusion": "cancelled"
+    },
+    {
+      "id": 124705909494,
+      "name": "Lint (lint-b)",
+      "status": "completed",
+      "conclusion": "cancelled"
+    },
+    {
+      "id": 124705909496,
+      "name": "Commitlint",
+      "status": "completed",
+      "conclusion": "cancelled"
+    },
+    {
+      "id": 124705909530,
+      "name": "Secret Scanning",
+      "status": "completed",
+      "conclusion": "cancelled"
+    },
+    {
+      "id": 124705909531,
+      "name": "Property Laws",
+      "status": "completed",
+      "conclusion": "cancelled"
+    },
+    {
+      "id": 124705909572,
+      "name": "Lint (lint-a)",
+      "status": "completed",
+      "conclusion": "cancelled"
+    },
+    {
+      "id": 124705909600,
+      "name": "JSDoc Ratchet",
+      "status": "completed",
+      "conclusion": "cancelled"
+    },
+    {
+      "id": 124705909605,
+      "name": "SAST",
+      "status": "completed",
+      "conclusion": "cancelled"
+    },
+    {
+      "id": 124705909629,
+      "name": "Test Unit (repo-cli-4)",
+      "status": "completed",
+      "conclusion": "cancelled"
+    },
+    {
+      "id": 124705909643,
+      "name": "Test Unit (repo-cli-2)",
+      "status": "completed",
+      "conclusion": "cancelled"
+    },
+    {
+      "id": 124705909659,
+      "name": "Codegen Drift",
+      "status": "completed",
+      "conclusion": "cancelled"
+    },
+    {
+      "id": 124705909662,
+      "name": "Nix Shell",
+      "status": "completed",
+      "conclusion": "cancelled"
+    },
+    {
+      "id": 124705909706,
+      "name": "Test Unit (unit-a)",
+      "status": "completed",
+      "conclusion": "cancelled"
+    },
+    {
+      "id": 124705909730,
+      "name": "Test Unit (unit-b)",
+      "status": "completed",
+      "conclusion": "cancelled"
+    },
+    {
+      "id": 124705909743,
+      "name": "Security",
+      "status": "completed",
+      "conclusion": "cancelled"
+    },
+    {
+      "id": 124705909753,
+      "name": "Test Unit (repo-cli-3)",
+      "status": "completed",
+      "conclusion": "cancelled"
+    },
+    {
+      "id": 124705909757,
+      "name": "Test Unit (repo-cli-1)",
+      "status": "completed",
+      "conclusion": "cancelled"
+    },
+    {
+      "id": 124705909789,
+      "name": "Labs",
+      "status": "completed",
+      "conclusion": "cancelled"
+    },
+    {
+      "id": 124705909792,
+      "name": "Repo Sanity",
+      "status": "completed",
+      "conclusion": "cancelled"
+    },
+    {
+      "id": 124705909866,
+      "name": "Shadcn Lint",
+      "status": "completed",
+      "conclusion": "cancelled"
+    },
+    {
+      "id": 124705910511,
+      "name": "Ecosystem Contracts",
+      "status": "completed",
+      "conclusion": "cancelled"
+    },
+    {
+      "id": 124706005709,
+      "name": "Lint",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "id": 124706046648,
+      "name": "Test Unit",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "id": 124706116144,
+      "name": "Heavy",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "id": 124706242326,
+      "name": "Heavy / Coverage Regression",
+      "status": "completed",
+      "conclusion": "failure"
+    }
+  ],
+  "failureAttribution": [
+    {
+      "jobId": 124706005709,
+      "name": "Lint",
+      "cause": "Aggregate fails because lint shards were cancelled; log explicitly reports cancelled, not lint diagnostics."
+    },
+    {
+      "jobId": 124706046648,
+      "name": "Test Unit",
+      "cause": "Aggregate fails because unit shards were cancelled; no failed test assertion in this aggregate."
+    },
+    {
+      "jobId": 124706242326,
+      "name": "Heavy / Coverage Regression",
+      "cause": "Comparison execution precondition failed with ADMISSION_RESULT=cancelled and UNIT_RESULT=failure; coverage download/comparison steps skipped. No actual coverage regression measurement was produced."
+    }
+  ],
+  "allHostedChecksPassed": false,
+  "requiredCancellationsCountedAsPass": false,
+  "oldMonitorTerminal": true,
+  "oldWorktreeRetired": true,
+  "attorneyReviewRequired": false,
+  "actualAttorneyAgreementRecorded": false,
+  "actualAttorneyAdjudicationRecorded": false,
+  "remainingAtResume": "Packet P4/P5 metadata stale; post-takeover parser change not yet measured. New v24 receipts and post-merge packet closeout prepared in separate worktree."
+}

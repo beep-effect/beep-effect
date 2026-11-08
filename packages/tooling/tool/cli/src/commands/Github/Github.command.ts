@@ -20,6 +20,7 @@ const mintCommand = Command.make(
   {
     app: Argument.Literals("app", GitHubAppName.literals).pipe(Argument.withDescription("GitHub App to register")),
     dryRun: Flag.Boolean("dry-run").pipe(
+      Flag.withDefault(false),
       Flag.withDescription("Print the checked-in App manifest byte for byte and exit without serving")
     ),
   },

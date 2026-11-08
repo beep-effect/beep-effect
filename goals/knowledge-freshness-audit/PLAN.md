@@ -244,9 +244,37 @@ Lane `codex/audit-error-boundary`
 
 Reverse: Revert this checkpoint, the narrow example change and its fence regression if the recovery branch intentionally stops logging.
 
+### Correct the pinned Effect actor send guard guidance, 2026-11-07
+
+Reverse: Revert the guide correction if a later pinned implementation removes the runtime guard
+
+### Count distinct classes in coverage examples, 2026-11-07
+
+Parent review found that OPTIONAL and UNION can yield several rows per class. Correct both label and definition coverage examples to count distinct total and covered class identities. Preserve the blank-node exclusion, both definition properties and existing targets. Static cardinality counterexamples and primary SPARQL syntax review support the correction; no ontology or endpoint query was executed. PM and ADHD remain separate.
+
+Lane `codex/audit-timer-guidance`
+
+Reverse: Revert this checkpoint and its two coverage example corrections if class-based coverage is no longer the intended metric.
+
 ### Isolate each model-refusal test scenario, 2026-11-07
 
 Reverse: Restore grouped cases only after they fit the unchanged timeout under package verification
+
+### Make the slow-winner cache fixture publish atomically, 2026-11-07
+
+A local final-check coverage run exposed ProviderCacheCorrupt in the Semantica healthy slow-winner fixture. The same source passed in a parallel run. The fixture wrote JSON directly to its published path, while the production writer stages and atomically renames. A controlled pause in that direct-write window reproduced the same schema decode failure. The fixture now stages its bytes and renames after the write; the retained observer asserts that lookup sees no entry during the incomplete staging write. All 22 provider-cache tests pass, while the direct-write negative control fails. Production cache code, corruption handling, retry schedule, 30-second test deadline and four-second watchdog are unchanged. The original failing run did not capture the partial bytes, so this validates and repairs the fixture race without claiming it is the exclusive cause of every historical failure. The touched fixture now builds its runtime through it.layer and uses the explicitly provided test clock that the bounded retry driver advances. Native test-policy analysis resolves two existing findings (14 to 12) with zero introduced findings and no baseline changes. Full package verification passes after that harness change (lint and audit; app docgen is not applicable), and package coverage passes all 140 tests across 16 files. Hosted proof remains pending. PM and ADHD holds are separate; no cloud admission or spending.
+
+Lane `codex/audit-semantica-winner`
+
+Reverse: Revert the fixture-only commit; production cache behavior is unchanged.
+
+### Qualify the retired-module guide's deliberate exceptions, 2026-11-07
+
+Parent review revalidated T52 kfa-t52-001 against its frozen file, blob and line hashes. Reject a contradiction inferred solely from the historical fingerprint exemption: the current fingerprint file has no literal retired prefix. Confirm the narrower omission against the actual retirement law: its implementation, model and regression fixtures deliberately retain retired strings and are explicitly allowlisted. Describe the guide as the canonical mapping and include those existing exceptions. Preserve the allowlist, vendor patches, historical fingerprints and dated migration facts. Twenty open PRs had no target overlap. This is bounded documentation reconciliation, not full T52/P4 acceptance or runtime proof; PM and ADHD remain separately held, and no spending is admitted.
+
+Lane `codex/audit-timer-guidance`
+
+Reverse: Restore the two guide paragraphs and remove this checkpoint; retain the private original report and review evidence.
 
 ### Pin the notification sender citation to the verified source, 2026-11-07
 
@@ -263,6 +291,14 @@ Reverse: Revert the wording clarification; retain the original source and parent
 ### Partition independent CI profile scenarios, 2026-11-07
 
 Reverse: Restore the combined scenario only after package verification fits its unchanged deadline
+
+### Protect class coverage examples with real query regressions, 2026-11-07
+
+Reuse the already-declared public Oxigraph SPARQL service and MarkdownDocument/MarkdownFence APIs in a repo-cli regression. Execute both actual checklist query fences over six small in-memory synthetic fixtures: multiple language values, values shared across classes, no annotations, both definition properties, excluded blank-node classes and empty data. The corrected guide passes six cases; the original accepted-main guide fails two and passes four. Restore the corrected owned file byte-for-byte after the negative control. No dependency, installation, endpoint, driver source or real ontology asset is added. This closes the precise local standing-query regression gap, not campaign-wide acceptance or hosted proof. Earlier failed harness attempts remain private; PM and ADHD remain separate.
+
+Lane `codex/audit-timer-guidance`
+
+Reverse: Revert this regression and checkpoint if the public query consumer contract changes; preserve the original-versus-corrected cardinality evidence.
 
 ### Require a closed error channel in the protocol example, 2026-11-07
 
@@ -286,5 +322,25 @@ or cloud work is admitted.
 Lane `codex/audit-error-boundary`
 
 Reverse: Revert the example and its regression, regenerate packet projections, and retain the private before/after compiler receipts.
+
+### Scope timer network waits to research services, 2026-11-07
+
+Reverse: Restore the prior paragraph only if both service renderers add the documented wait
+
+### Preserve published history after generated-artifact refreshes, 2026-11-08
+
+Parent review found an unqualified rebase instruction in the generated-artifact refresh policy. The workflow applies to in-flight feature PRs, while Yeet prohibits rebasing published branches. Replace that instruction with merging accepted origin/main after the dedicated refresh PR lands. Preserve the dedicated-refresh rule, scoped catalog exception, ratchet behavior and historical evidence. Ten open PR file lists and 131 existing registered checkouts showed no competing target edit before this change. This is a documentation repair; no artifact regeneration, baseline change, git-history rewrite or service action is performed. P4 remains partial, PM and ADHD stay separate, and no spending is admitted.
+
+Lane `codex/audit-generated-refresh`
+
+Reverse: Restore the prior paragraph and remove this checkpoint if published feature branches adopt a different history policy.
+
+### Revalidate accepted P4 repairs without erasing early-merge gaps, 2026-11-08
+
+Record the normally gated Semantica fixture merge and the generated-refresh guidance merge that occurred outside the source lane before its current local proof finished. Preserve the 13-second last-ready window as a delivery gap. Exact changed blobs match both merges; the guidance final receipt passed afterward and cannot retroactively prove the original gate. On fresh accepted main, 140 Semantica tests and eight guidance regressions pass without baseline or deadline changes. Link the dated evidence record from README, keep P4 active and P5 pending, and require ordinary exact-head gates for this revalidation. PM and ADHD remain separate; raw records stay private, and no spending or cloud admission is authorized.
+
+Lane `codex/audit-p4-delivery-record`
+
+Reverse: Remove this checkpoint and delivery addendum if its source pins or proof distinctions are disproved; retain all original private receipts.
 
 <!-- beep:decisions:end -->

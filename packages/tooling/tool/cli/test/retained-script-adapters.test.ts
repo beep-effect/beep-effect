@@ -9,15 +9,13 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 
-const run = Effect.fn("RetainedScriptAdaptersTest.run")(function* (
-  executable: string,
-  script: string,
-  cwd: string,
-  args: ReadonlyArray<string> = []
-) {
+// `beep ci prune-apt` through the slim entry the compiled CI binary is built from.
+const runPruneApt = Effect.fn("RetainedScriptAdaptersTest.runPruneApt")(function* (cwd: string, directory: string) {
   const path = yield* Path.Path;
-  const source = yield* path.fromFileUrl(new URL(`../../../../../scripts/${script}`, import.meta.url));
-  const handle = yield* ChildProcess.make(executable, [source, ...args], {
+  const entry = yield* path.fromFileUrl(
+    new URL("../../../../../packages/tooling/tool/cli/src/bin-ci.ts", import.meta.url)
+  );
+  const handle = yield* ChildProcess.make("bun", [entry, "ci", "prune-apt", directory], {
     cwd,
     stdin: "ignore",
     stdout: "pipe",
@@ -98,17 +96,11 @@ const prepareCloudDownloadFixture = Effect.fn("RetainedScriptAdaptersTest.prepar
   yield* fs.makeDirectory(path.join(root, "scripts/cloud"), { recursive: true });
   yield* fs.makeDirectory(bin);
   yield* fs.makeDirectory(home);
-  for (const file of [
-    "scripts/cloud/bootstrap.sh",
-    "scripts/cloud/fetch.sh",
-    ".bun-version",
-    ".nvmrc",
-    ".bun-linux-x64.sha256",
-  ]) {
+  for (const file of ["scripts/cloud/bootstrap.sh", ".bun-version", ".nvmrc", ".bun-linux-x64.sha256"]) {
     yield* fs.copyFile(path.join(repoRoot, file), path.join(root, file));
   }
   if (scenario.phase === "escaped") {
-    const workerPath = path.join(root, "scripts/cloud/fetch.sh");
+    const workerPath = path.join(root, "scripts/cloud/bootstrap.sh");
     const worker = yield* fs.readFileString(workerPath);
     yield* fs.writeFileString(workerPath, Str.replace("trap 'exit 143' TERM", "")(worker));
   }
@@ -412,7 +404,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("retained install and pr
       }
       yield* fs.writeFileString(path.join(root, "sources.list"), "archive");
       yield* fs.symlink(path.join(root, "sources.list"), path.join(sources, "linked.list"));
-      const result = yield* run("bash", "ci-prune-apt-sources.sh", root, [sources]);
+      const result = yield* runPruneApt(root, sources);
       expect(result.exitCode, result.stderr).toBe(0);
       const exists14 = yield* fs.exists(path.join(sources, "vendor.list"));
       expect(exists14).toBe(false);
@@ -426,8 +418,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("retained install and pr
       expect(readFileString17).toBe("archive");
       const readLink18 = yield* fs.readLink(path.join(sources, "linked.list"));
       expect(readLink18).toBe(path.join(root, "sources.list"));
-      expect((yield* run("bash", "ci-prune-apt-sources.sh", root, [sources])).exitCode).toBe(0);
-      expect((yield* run("bash", "ci-prune-apt-sources.sh", root, [path.join(root, "missing")])).exitCode).not.toBe(0);
+      expect((yield* runPruneApt(root, sources)).exitCode).toBe(0);
+      expect((yield* runPruneApt(root, path.join(root, "missing"))).exitCode).not.toBe(0);
     })
   );
 });

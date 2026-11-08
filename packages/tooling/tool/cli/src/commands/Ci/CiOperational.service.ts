@@ -21,6 +21,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -276,7 +277,8 @@ export const CiOperationalLive = Layer.effect(
         } else {
           // `find -maxdepth 1 -type f` without privilege: regular files only, symlinks excluded.
           const prefix = Str.endsWith("/")(directory) ? directory : `${directory}/`;
-          const entries = yield* fs.readDirectory(directory);
+          // Sorted so the deletion log is stable; readDirectory order is filesystem-defined.
+          const entries = yield* Effect.map(fs.readDirectory(directory), A.sort(Order.String));
           const pruned = A.filter(
             entries,
             (name) => (Str.endsWith(".list")(name) || Str.endsWith(".sources")(name)) && name !== "ubuntu.sources"

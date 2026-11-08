@@ -206,13 +206,16 @@ jobs:
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
+      - name: Fetch beep CI binary
+        uses: ./.github/actions/fetch-beep-ci
+
       - name: Determine lane execution
         id: lane-gate
         shell: bash
         run: |
           set -euo pipefail
           should_run=true
-          eval "$(scripts/ci-change-profile.sh)"
+          eval "$(beep ci change-profile)"
           # Docs-only diffs (Heavy admission's path rule) give these lanes
           # nothing to prove. Repo Sanity validates `.changeset/*.md`, which that
           # rule counts as documentation, so only packet prose suppresses it.
@@ -368,13 +371,16 @@ jobs:
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
+      - name: Fetch beep CI binary
+        uses: ./.github/actions/fetch-beep-ci
+
       - name: Determine lane execution
         id: lane-gate
         shell: bash
         run: |
           set -euo pipefail
           should_run=true
-          eval "$(scripts/ci-change-profile.sh)"
+          eval "$(beep ci change-profile)"
           if [[ "$docs_only" == "true" ]]; then
             should_run=false
           fi
@@ -509,13 +515,16 @@ jobs:
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
+      - name: Fetch beep CI binary
+        uses: ./.github/actions/fetch-beep-ci
+
       - name: Determine lane execution
         id: lane-gate
         shell: bash
         run: |
           set -euo pipefail
           should_run=true
-          eval "$(scripts/ci-change-profile.sh)"
+          eval "$(beep ci change-profile)"
           if [[ "$docs_only" == "true" ]]; then
             should_run=false
           fi
@@ -619,7 +628,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        partition: [repo-cli-1, repo-cli-2, repo-cli-3, repo-cli-4, repo-cli-5, repo-cli-6, unit-a, unit-b, unit-c, unit-d]
+        partition: [repo-cli-1, repo-cli-2, repo-cli-3, repo-cli-4, repo-cli-5, repo-cli-6, law-practice-1, law-practice-2, law-practice-3, unit-a, unit-b, unit-c, unit-d]
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -634,13 +643,16 @@ jobs:
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
+      - name: Fetch beep CI binary
+        uses: ./.github/actions/fetch-beep-ci
+
       - name: Determine lane execution
         id: lane-gate
         shell: bash
         run: |
           set -euo pipefail
           should_run=true
-          eval "$(scripts/ci-change-profile.sh)"
+          eval "$(beep ci change-profile)"
           if [[ "$docs_only" == "true" ]]; then
             should_run=false
           fi
@@ -800,6 +812,9 @@ jobs:
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
+      - name: Fetch beep CI binary
+        uses: ./.github/actions/fetch-beep-ci
+
       - name: Determine comparison execution
         id: lane-gate
         shell: bash
@@ -812,7 +827,7 @@ jobs:
           [[ "$ADMISSION_RESULT" == "success" ]]
           [[ "$LEGACY_COVERAGE" == "true" || "$LEGACY_COVERAGE" == "false" ]]
           [[ "$UNIT_RESULT" == "success" ]]
-          eval "$(scripts/ci-change-profile.sh)"
+          eval "$(beep ci change-profile)"
           echo "should_run=$([[ "$docs_only" == "true" ]] && echo false || echo true)" >> "$GITHUB_OUTPUT"
 
       # The comparison only reads artifacts through the repo CLI: no Turbo,
@@ -935,18 +950,21 @@ jobs:
         run: |
           git fetch --quiet --no-tags --depth=100 origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
+      - name: Fetch beep CI binary
+        uses: ./.github/actions/fetch-beep-ci
+
       - name: Determine lane execution
         id: lane-gate
         shell: bash
         run: |
           set -euo pipefail
           should_run=true
-          # desktop_rust_relevant (scripts/ci-change-profile.sh) gates the
+          # desktop_rust_relevant (beep ci change-profile) gates the
           # Tauri system packages and the cargo steps: only src-tauri or this
           # workflow's changes compile the crate on pull requests; pushes
           # always compile. The toolchain itself is provisioned whenever the
           # lane runs (see "Setup Rust toolchain" below).
-          eval "$(scripts/ci-change-profile.sh)"
+          eval "$(beep ci change-profile)"
           rust_should_run="$desktop_rust_relevant"
 
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
@@ -974,7 +992,7 @@ jobs:
           # The image's third-party apt sources (Google Chrome, Microsoft) fail apt-get
           # update with "Hash Sum mismatch" / "403 Forbidden" for minutes at a time;
           # keep only the Ubuntu archive, which is where these packages come from.
-          scripts/ci-prune-apt-sources.sh
+          beep ci prune-apt
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             libwebkit2gtk-4.1-dev \
@@ -1053,13 +1071,16 @@ jobs:
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
+      - name: Fetch beep CI binary
+        uses: ./.github/actions/fetch-beep-ci
+
       - name: Determine lane execution
         id: lane-gate
         shell: bash
         run: |
           set -euo pipefail
           should_run=true
-          eval "$(scripts/ci-change-profile.sh)"
+          eval "$(beep ci change-profile)"
           if [[ "$docs_only" == "true" ]]; then
             should_run=false
           fi
@@ -1169,6 +1190,9 @@ jobs:
       # Fallow reads code only, so a docs-only diff skips the envelopes. A
       # diff this depth-100 checkout cannot classify (failed base fetch, no
       # merge base) keeps the full run.
+      - name: Fetch beep CI binary
+        uses: ./.github/actions/fetch-beep-ci
+
       - name: Determine lane execution
         id: lane-gate
         shell: bash
@@ -1178,7 +1202,7 @@ jobs:
           set -euo pipefail
           should_run=true
           if [[ "$BASE_FETCH_STATUS" == "0" ]]; then
-            eval "$(scripts/ci-change-profile.sh || true)"
+            eval "$(beep ci change-profile || true)"
             if [[ "${docs_only:-false}" == "true" ]]; then
               should_run=false
             fi
@@ -1298,13 +1322,16 @@ jobs:
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
+      - name: Fetch beep CI binary
+        uses: ./.github/actions/fetch-beep-ci
+
       - name: Determine lane execution
         id: lane-gate
         shell: bash
         run: |
           set -euo pipefail
           should_run=true
-          eval "$(scripts/ci-change-profile.sh)"
+          eval "$(beep ci change-profile)"
           if [[ "$docs_only" == "true" ]]; then
             should_run=false
           fi

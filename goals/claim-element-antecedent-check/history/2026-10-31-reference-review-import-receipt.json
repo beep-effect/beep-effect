@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "claim-reference-review-import-receipt/v1",
+  "date": "2026-10-31",
+  "baselineCommit": "2e0417f68b",
+  "historicalFilesByteCompared": 209,
+  "runtimeFilesHashVerified": 20,
+  "runtimeChanged": false,
+  "referenceLabelsChanged": false,
+  "previousResultsChanged": false,
+  "reviewPacketsChanged": false,
+  "operatorReportsAttorneyReviewAvailable": false,
+  "actualAttorneyAgreementRecorded": false,
+  "mainClaimDenominator": 50,
+  "mainConventionQuestions": 7,
+  "separateAddendumQuestions": 1,
+  "referenceReviewSyntheticTestsPassed": 7,
+  "allowedReviewSyntheticTestsPassed": 8,
+  "agreementFraction": null,
+  "files": [
+    {
+      "path": "goals/claim-element-antecedent-check/research/validate-reference-review.py",
+      "sha256": "0110ebe37c127dcf9b82ed028dc3dfea966715ab70cfe3367cac5d549e16780d"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/test-reference-review.py",
+      "sha256": "4d302c86dd23e5ec19e74a39b7bc4eb676fd1d870100c7504c5c35c691dd0a85"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-reference-review-import-audit.json",
+      "sha256": "ba5c0020c418dc42d7a2d5529f657f3168d2639d0f9b22f288a6407c0d44b034"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-31-reference-review-import.md",
+      "sha256": "ea2b308a84c5b7c73dff518544276faf0840f017102993ef65a95e2f2a36feed"
+    }
+  ]
+}

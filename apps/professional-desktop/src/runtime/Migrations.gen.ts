@@ -1094,4 +1094,48 @@ ALTER TABLE "workspace_thread" ALTER COLUMN "row_version" SET DEFAULT 1;--> stat
 ALTER TABLE "workspace_turn" ALTER COLUMN "row_version" SET DEFAULT 1;--> statement-breakpoint
 ALTER TABLE "workspace_workspace" ALTER COLUMN "row_version" SET DEFAULT 1;`,
   }),
+  MigrationBundleEntry.make({
+    name: "20261107032821_execution_authority_rename",
+    sql: `-- Forward: rename the execution ledger from the epistemic slice prefix to the execution_authority prefix (goals/execution-authority-slice P1).
+-- Table names, constraint names (including PostgreSQL 18's named NOT NULL
+-- constraints and the indexes behind PRIMARY KEY and UNIQUE), trigger names and
+-- the append-only guard function move together. Rows, columns, hash inputs and
+-- the guard function body are unchanged. RENAME is DDL, so the append-only
+-- triggers, which fire on row UPDATE, DELETE and TRUNCATE only, do not block it.
+ALTER TABLE "epistemic_execution_decision" RENAME TO "execution_authority_decision";--> statement-breakpoint
+ALTER TABLE "epistemic_execution_outcome" RENAME TO "execution_authority_outcome";--> statement-breakpoint
+DO $rename$ DECLARE c record; BEGIN FOR c IN SELECT conrelid::regclass::text AS rel, conname FROM pg_constraint WHERE conrelid IN ('"execution_authority_decision"'::regclass, '"execution_authority_outcome"'::regclass) AND starts_with(conname, 'epistemic_execution_') ORDER BY conname LOOP EXECUTE format('ALTER TABLE %s RENAME CONSTRAINT %I TO %I', c.rel, c.conname, 'execution_authority_' || substr(c.conname, 21)); END LOOP; END $rename$;--> statement-breakpoint
+ALTER TRIGGER "epistemic_execution_decision_append_only" ON "execution_authority_decision" RENAME TO "execution_authority_decision_append_only";--> statement-breakpoint
+ALTER TRIGGER "epistemic_execution_decision_block_truncate" ON "execution_authority_decision" RENAME TO "execution_authority_decision_block_truncate";--> statement-breakpoint
+ALTER TRIGGER "epistemic_execution_outcome_append_only" ON "execution_authority_outcome" RENAME TO "execution_authority_outcome_append_only";--> statement-breakpoint
+ALTER TRIGGER "epistemic_execution_outcome_block_truncate" ON "execution_authority_outcome" RENAME TO "execution_authority_outcome_block_truncate";--> statement-breakpoint
+ALTER FUNCTION epistemic_execution_ledger_block_mutation() RENAME TO execution_authority_ledger_block_mutation;
+`,
+  }),
+  MigrationBundleEntry.make({
+    name: "20261107120500_shared_membership",
+    sql: `CREATE TABLE "shared_membership" (
+	"created_at" bigint NOT NULL,
+	"row_version" integer DEFAULT 1 NOT NULL,
+	"updated_at" bigint NOT NULL,
+	"created_by_principal" jsonb NOT NULL,
+	"deleted_at" bigint,
+	"deleted_by_principal" jsonb,
+	"schema_version" text NOT NULL,
+	"source" text NOT NULL,
+	"updated_by_principal" jsonb NOT NULL,
+	"org_id" integer NOT NULL,
+	"role" text NOT NULL,
+	"status" text NOT NULL,
+	"user_id" integer NOT NULL,
+	"entity_type" text NOT NULL,
+	"id" serial PRIMARY KEY,
+	"public_id" text NOT NULL
+);
+--> statement-breakpoint
+CREATE INDEX "shared_membership_source_btree_idx" ON "shared_membership" ("source");--> statement-breakpoint
+CREATE INDEX "shared_membership_org_id_btree_idx" ON "shared_membership" ("org_id");--> statement-breakpoint
+CREATE INDEX "shared_membership_user_id_btree_idx" ON "shared_membership" ("user_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "shared_membership_public_id_unique_idx" ON "shared_membership" ("public_id");`,
+  }),
 ];

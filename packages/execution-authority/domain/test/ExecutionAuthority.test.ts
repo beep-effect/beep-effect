@@ -1,0 +1,535 @@
+import {
+  addGrant,
+  DecisionRecordHash,
+  DenialReason,
+  DraftGrantSet,
+  denialGuidance,
+  destinationDigestOf,
+  ExecutionDecisionRecord,
+  ExecutionGrant,
+  ExecutionOutcomeRecord,
+  ExecutionRequest,
+  ExecutionRequestEvaluationOptions,
+  ExecutionRunKey,
+  ExecutionSink,
+  emptyDraftGrantSet,
+  evaluateExecutionRequest,
+  evaluatorDenialReasons,
+  FrozenGrantSet,
+  freezeGrantSet,
+  GrantBudget,
+  GrantOperation,
+  GrantOperationDigest,
+  GrantPurpose,
+  GrantResource,
+  GrantSetDigest,
+  operationDigestOf,
+  PolicyRevision,
+  SinkClass,
+  SinkDestination,
+  SinkDestinationDigest,
+  sealExecutionDecision,
+  sealExecutionOutcome,
+  ungovernedInfrastructureDestinations,
+  verifyExecutionDecisionChain,
+  verifyExecutionDecisionHash,
+  verifyExecutionOutcomeHash,
+  verifyFrozenGrantSetDigest,
+  verifyOutcomeBinding,
+} from "@beep/execution-authority-domain";
+import { SystemPrincipal } from "@beep/shared-domain/entity/Principal";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
+import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as O from "effect/Option";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import type {
+  ChainVerification,
+  DecisionRecordHash as DecisionRecordHashType,
+  ExecutionVerdict,
+} from "@beep/execution-authority-domain";
+
+const decodeFrozenGrantSet = S.decodeEffect(FrozenGrantSet);
+const encodeFrozenGrantSet = S.encodeEffect(FrozenGrantSet);
+const decodeExecutionDecisionRecord = S.decodeEffect(ExecutionDecisionRecord);
+const encodeExecutionDecisionRecord = S.encodeEffect(ExecutionDecisionRecord);
+const decodeExecutionOutcomeRecord = S.decodeEffect(ExecutionOutcomeRecord);
+const encodeExecutionOutcomeRecord = S.encodeEffect(ExecutionOutcomeRecord);
+
+const assertSchemaRoundTrip = <Schema extends S.Codec<unknown>>(
+  schema: Schema,
+  value: Schema["Type"],
+  label: string
+): void => {
+  const encoded = Result.getOrThrow(S.encodeResult(schema)(value));
+  const decoded = Result.getOrThrow(S.decodeUnknownResult(schema)(encoded));
+  expect(S.toEquivalence(schema)(decoded, value), label).toBe(true);
+};
+
+const sha256HexPattern = /^[0-9a-f]{64}$/;
+
+const revision = PolicyRevision.make("1.0.0");
+const otherRevision = PolicyRevision.make("2.0.0");
+
+const grant = ExecutionGrant.make({
+  budget: GrantBudget.make({ maxToolCalls: O.none() }),
+  expiresAt: DateTime.makeUnsafe(60000),
+  operation: GrantOperation.make("ontology_publish_provenance"),
+  policyRevision: revision,
+  principal: { component: "Runtime", kind: "System" },
+  purpose: GrantPurpose.make("provenance-publication"),
+  resource: GrantResource.make("ontology-workspace"),
+  sink: ExecutionSink.make({
+    audience: "external-network",
+    destination: SinkDestination.make("https://registry.example"),
+    sinkClass: "network-egress",
+  }),
+});
+
+const request = (
+  overrides: {
+    readonly destination?: string;
+    readonly operation?: string;
+    readonly principal?: ExecutionRequest["principal"];
+    readonly resolvedAudience?: ExecutionRequest["resolvedAudience"];
+    readonly sinkClass?: ExecutionRequest["sinkClass"];
+  } = {}
+): ExecutionRequest =>
+  ExecutionRequest.make({
+    destination: SinkDestination.make(overrides.destination ?? "https://registry.example"),
+    operation: GrantOperation.make(overrides.operation ?? "ontology_publish_provenance"),
+    principal: overrides.principal ?? { component: "Runtime", kind: "System" },
+    resolvedAudience: overrides.resolvedAudience ?? "external-network",
+    sinkClass: overrides.sinkClass ?? "network-egress",
+  });
+
+const now = DateTime.makeUnsafe(0);
+const afterExpiry = DateTime.makeUnsafe(120000);
+const evaluationOptions = (
+  evaluationTime: DateTime.Utc,
+  currentPolicyRevision: PolicyRevision
+): ExecutionRequestEvaluationOptions =>
+  ExecutionRequestEvaluationOptions.make({ currentPolicyRevision, now: evaluationTime });
+
+const draft = Result.getOrThrow(addGrant(emptyDraftGrantSet(revision), grant));
+const frozen = Result.getOrThrow(freezeGrantSet(draft, DateTime.makeUnsafe(0)));
+
+const expectDenied = (verdict: ExecutionVerdict, reason: DenialReason): void => {
+  expect(verdict.verdict).toBe("denied");
+  if (verdict.verdict === "denied") {
+    expect(verdict.reason).toBe(reason);
+  }
+};
+
+const expectChainBrokenAt = (verification: ChainVerification, atIndex: number): void => {
+  expect(verification.result).toBe("chain-broken");
+  if (verification.result === "chain-broken") {
+    expect(verification.atIndex).toBe(atIndex);
+  }
+};
+
+const decisionContent = (input: {
+  readonly seq: number;
+  readonly prevHash: O.Option<DecisionRecordHashType>;
+  readonly destinationDigest?: string;
+  readonly runKey?: string;
+}) =>
+  ({
+    audience: "external-network",
+    decidedAt: DateTime.makeUnsafe(input.seq + 1),
+    destinationDigest: SinkDestinationDigest.make(input.destinationDigest ?? Str.repeat(64)("e")),
+    grantSetDigest: GrantSetDigest.make(Str.repeat(64)("a")),
+    operationDigest: GrantOperationDigest.make(Str.repeat(64)("f")),
+    policyRevision: revision,
+    prevHash: input.prevHash,
+    runKey: ExecutionRunKey.make(input.runKey ?? Str.repeat(64)("b")),
+    seq: S.Natural.make(input.seq),
+    sinkClass: "network-egress",
+    verdict: "allowed",
+  }) as const;
+
+describe("ExecutionAuthority", () => {
+  describe("evaluateExecutionRequest", () => {
+    it("allows a request matching every grant axis", () => {
+      const verdict = evaluateExecutionRequest(request(), evaluationOptions(now, revision))(frozen);
+
+      expect(verdict.verdict).toBe("allowed");
+    });
+
+    it.effect("reaches every evaluator denial reason distinctly, one axis per case", () =>
+      Effect.gen(function* () {
+        const tamperedFrozen = yield* decodeFrozenGrantSet({
+          ...(yield* encodeFrozenGrantSet(frozen)),
+          grants: [],
+        });
+        const verdictsByReason: Record<(typeof evaluatorDenialReasons)[number], ExecutionVerdict> = {
+          "grant-set-digest-mismatch": evaluateExecutionRequest(
+            tamperedFrozen,
+            request(),
+            evaluationOptions(now, revision)
+          ),
+          "policy-revision-mismatch": evaluateExecutionRequest(
+            frozen,
+            request(),
+            evaluationOptions(now, otherRevision)
+          ),
+          "principal-not-granted": evaluateExecutionRequest(
+            frozen,
+            request({ principal: SystemPrincipal.make({ component: "Policy", kind: "System" }) }),
+            evaluationOptions(now, revision)
+          ),
+          "operation-not-granted": evaluateExecutionRequest(
+            frozen,
+            request({ operation: "ontology_delete_everything" }),
+            evaluationOptions(now, revision)
+          ),
+          "sink-class-not-granted": evaluateExecutionRequest(
+            frozen,
+            request({ sinkClass: "mcp-write" }),
+            evaluationOptions(now, revision)
+          ),
+          "audience-not-granted": evaluateExecutionRequest(
+            frozen,
+            request({ resolvedAudience: "local-workspace" }),
+            evaluationOptions(now, revision)
+          ),
+          "destination-not-granted": evaluateExecutionRequest(
+            frozen,
+            request({ destination: "https://attacker.example" }),
+            evaluationOptions(now, revision)
+          ),
+          "grant-expired": evaluateExecutionRequest(frozen, request(), evaluationOptions(afterExpiry, revision)),
+        };
+
+        expect(evaluatorDenialReasons.length).toBe(8);
+        for (const reason of evaluatorDenialReasons) {
+          expectDenied(verdictsByReason[reason], reason);
+        }
+      })
+    );
+
+    it("fails closed: an operation absent from the set denies, never allows", () => {
+      const verdict = evaluateExecutionRequest(
+        frozen,
+        request({ operation: "ontology_delete_everything" }),
+        evaluationOptions(now, revision)
+      );
+
+      expectDenied(verdict, "operation-not-granted");
+    });
+
+    it.effect("denies grant-set-digest-mismatch for a tampered seal before answering anything else", () =>
+      Effect.gen(function* () {
+        // The tampered set's grants would otherwise produce operation-not-granted;
+        // the broken seal must win because a set that fails its own digest cannot
+        // be trusted to answer any narrower question.
+        const tampered = yield* decodeFrozenGrantSet({
+          ...(yield* encodeFrozenGrantSet(frozen)),
+          grants: [],
+        });
+
+        expectDenied(
+          evaluateExecutionRequest(tampered, request(), evaluationOptions(now, revision)),
+          "grant-set-digest-mismatch"
+        );
+      })
+    );
+  });
+
+  describe("grant sets", () => {
+    it("addGrant appends and preserves the policy revision", () => {
+      const widened = Result.getOrThrow(addGrant(draft, grant));
+
+      expect(widened.grants.length).toBe(draft.grants.length + 1);
+      expect(widened.grants[widened.grants.length - 1]).toStrictEqual(grant);
+      expect(widened.policyRevision).toBe(draft.policyRevision);
+    });
+
+    it("addGrant rejects a grant issued under a different policy revision", () => {
+      const failed = addGrant(emptyDraftGrantSet(otherRevision), grant);
+
+      pipe(failed, Result.isFailure, assertTrue);
+      if (Result.isFailure(failed)) {
+        expect(failed.failure._tag).toBe("GrantRevisionMismatch");
+        expect(failed.failure.setRevision).toBe(otherRevision);
+        expect(failed.failure.grantRevision).toBe(revision);
+      }
+    });
+
+    it("freezeGrantSet seals with a deterministic 64-char lowercase hex digest", () => {
+      expect(frozen.digest).toMatch(sha256HexPattern);
+
+      const again = Result.getOrThrow(freezeGrantSet(draft, DateTime.makeUnsafe(0)));
+      expect(again.digest).toBe(frozen.digest);
+
+      const later = Result.getOrThrow(freezeGrantSet(draft, DateTime.makeUnsafe(1)));
+      expect(later.digest).not.toBe(frozen.digest);
+    });
+
+    it.effect("verifyFrozenGrantSetDigest accepts the sealed set and rejects a tampered copy", () =>
+      Effect.gen(function* () {
+        expect(verifyFrozenGrantSetDigest(frozen)).toBe(true);
+
+        const tampered = yield* decodeFrozenGrantSet({
+          ...(yield* encodeFrozenGrantSet(frozen)),
+          policyRevision: "2.0.0",
+        });
+        expect(verifyFrozenGrantSetDigest(tampered)).toBe(false);
+      })
+    );
+  });
+
+  describe("decision records", () => {
+    it("sealExecutionDecision round-trips through verifyExecutionDecisionHash", () => {
+      const record = sealExecutionDecision(decisionContent({ seq: 0, prevHash: O.none() }));
+
+      expect(record.hash).toMatch(sha256HexPattern);
+      expect(verifyExecutionDecisionHash(record)).toBe(true);
+    });
+
+    it.effect("rejects a tampered decision record keeping its old hash", () =>
+      Effect.gen(function* () {
+        const record = sealExecutionDecision(decisionContent({ seq: 0, prevHash: O.none() }));
+        const tampered = yield* decodeExecutionDecisionRecord({
+          ...(yield* encodeExecutionDecisionRecord(record)),
+          audience: "local-workspace",
+        });
+
+        expect(verifyExecutionDecisionHash(tampered)).toBe(false);
+      })
+    );
+
+    it("verifies an intact 3-record chain and the empty chain", () => {
+      const first = sealExecutionDecision(decisionContent({ seq: 0, prevHash: O.none() }));
+      const second = sealExecutionDecision(decisionContent({ seq: 1, prevHash: O.some(first.hash) }));
+      const third = sealExecutionDecision(decisionContent({ seq: 2, prevHash: O.some(second.hash) }));
+
+      expect(verifyExecutionDecisionChain([first, second, third]).result).toBe("chain-intact");
+      expect(verifyExecutionDecisionChain([]).result).toBe("chain-intact");
+    });
+
+    it.effect("breaks the chain at the tampered middle record", () =>
+      Effect.gen(function* () {
+        const first = sealExecutionDecision(decisionContent({ seq: 0, prevHash: O.none() }));
+        const second = sealExecutionDecision(decisionContent({ seq: 1, prevHash: O.some(first.hash) }));
+        const third = sealExecutionDecision(decisionContent({ seq: 2, prevHash: O.some(second.hash) }));
+        const tamperedSecond = yield* decodeExecutionDecisionRecord({
+          ...(yield* encodeExecutionDecisionRecord(second)),
+          destinationDigest: Str.repeat(64)("0"),
+        });
+
+        expectChainBrokenAt(verifyExecutionDecisionChain([first, tamperedSecond, third]), 1);
+      })
+    );
+
+    it("breaks the chain at a seq gap", () => {
+      const first = sealExecutionDecision(decisionContent({ seq: 0, prevHash: O.none() }));
+      const gapped = sealExecutionDecision(decisionContent({ seq: 2, prevHash: O.some(first.hash) }));
+
+      expectChainBrokenAt(verifyExecutionDecisionChain([first, gapped]), 1);
+    });
+
+    it("breaks the chain at a cross-run splice: a foreign runKey continuing the chain", () => {
+      // The foreign record is correctly sealed and continues seq/prevHash —
+      // only its runKey names another run. Without the in-verifier run check,
+      // this mixed-run array would certify as intact.
+      const first = sealExecutionDecision(decisionContent({ seq: 0, prevHash: O.none() }));
+      const foreign = sealExecutionDecision(
+        decisionContent({ seq: 1, prevHash: O.some(first.hash), runKey: Str.repeat(64)("d") })
+      );
+
+      expectChainBrokenAt(verifyExecutionDecisionChain([first, foreign]), 1);
+    });
+
+    it("accepts an intact chain whose runKey matches expectedRunKey", () => {
+      const first = sealExecutionDecision(decisionContent({ seq: 0, prevHash: O.none() }));
+      const second = sealExecutionDecision(decisionContent({ seq: 1, prevHash: O.some(first.hash) }));
+
+      const verification = verifyExecutionDecisionChain([first, second], ExecutionRunKey.make(Str.repeat(64)("b")));
+
+      expect(verification.result).toBe("chain-intact");
+    });
+
+    it("rejects an internally consistent chain whose runKey differs from expectedRunKey", () => {
+      const first = sealExecutionDecision(decisionContent({ seq: 0, prevHash: O.none() }));
+      const second = sealExecutionDecision(decisionContent({ seq: 1, prevHash: O.some(first.hash) }));
+
+      expectChainBrokenAt(verifyExecutionDecisionChain([first, second], ExecutionRunKey.make(Str.repeat(64)("d"))), 0);
+    });
+  });
+
+  describe("outcome records", () => {
+    it("sealExecutionOutcome round-trips through verifyExecutionOutcomeHash", () => {
+      const outcome = sealExecutionOutcome({
+        decisionHash: DecisionRecordHash.make(Str.repeat(64)("c")),
+        recordedAt: DateTime.makeUnsafe(2),
+        runKey: ExecutionRunKey.make(Str.repeat(64)("b")),
+        settlement: "completed",
+      });
+
+      expect(outcome.hash).toMatch(sha256HexPattern);
+      expect(verifyExecutionOutcomeHash(outcome)).toBe(true);
+    });
+
+    it.effect("rejects a tampered outcome record keeping its old hash", () =>
+      Effect.gen(function* () {
+        const outcome = sealExecutionOutcome({
+          decisionHash: DecisionRecordHash.make(Str.repeat(64)("c")),
+          recordedAt: DateTime.makeUnsafe(2),
+          runKey: ExecutionRunKey.make(Str.repeat(64)("b")),
+          settlement: "completed",
+        });
+        const tampered = yield* decodeExecutionOutcomeRecord({
+          ...(yield* encodeExecutionOutcomeRecord(outcome)),
+          settlement: "failed",
+        });
+
+        expect(verifyExecutionOutcomeHash(tampered)).toBe(false);
+      })
+    );
+  });
+
+  describe("verifyOutcomeBinding", () => {
+    const allowedDecision = sealExecutionDecision(decisionContent({ seq: 0, prevHash: O.none() }));
+
+    it("accepts an outcome bound to its own allowed decision", () => {
+      const outcome = sealExecutionOutcome({
+        decisionHash: allowedDecision.hash,
+        recordedAt: DateTime.makeUnsafe(2),
+        runKey: allowedDecision.runKey,
+        settlement: "completed",
+      });
+
+      expect(verifyOutcomeBinding(outcome, allowedDecision)).toBe(true);
+    });
+
+    it("rejects an outcome recorded under the wrong runKey", () => {
+      const outcome = sealExecutionOutcome({
+        decisionHash: allowedDecision.hash,
+        recordedAt: DateTime.makeUnsafe(2),
+        runKey: ExecutionRunKey.make(Str.repeat(64)("d")),
+        settlement: "completed",
+      });
+
+      expect(verifyOutcomeBinding(outcome, allowedDecision)).toBe(false);
+    });
+
+    it("rejects an outcome claiming to settle a denied decision", () => {
+      // A denied decision never executes, so nothing can legitimately settle it.
+      const deniedDecision = sealExecutionDecision({
+        ...decisionContent({ seq: 0, prevHash: O.none() }),
+        verdict: "denied",
+        reason: DenialReason.Enum["destination-not-granted"],
+      });
+      const outcome = sealExecutionOutcome({
+        decisionHash: deniedDecision.hash,
+        recordedAt: DateTime.makeUnsafe(2),
+        runKey: deniedDecision.runKey,
+        settlement: "completed",
+      });
+
+      expect(verifyOutcomeBinding(outcome, deniedDecision)).toBe(false);
+    });
+  });
+
+  describe("ledger digests", () => {
+    it("ledger digesters are deterministic and produce distinct 64-char digests per input", () => {
+      const operation = GrantOperation.make("ontology_publish_provenance");
+      const destination = SinkDestination.make("https://registry.example");
+
+      expect(operationDigestOf(operation)).toMatch(sha256HexPattern);
+      expect(destinationDigestOf(destination)).toMatch(sha256HexPattern);
+      expect(operationDigestOf(operation)).toBe(operationDigestOf(operation));
+      expect(destinationDigestOf(destination)).toBe(destinationDigestOf(destination));
+      expect(operationDigestOf(GrantOperation.make("ontology_read_provenance"))).not.toBe(operationDigestOf(operation));
+      expect(destinationDigestOf(SinkDestination.make("https://other.example"))).not.toBe(
+        destinationDigestOf(destination)
+      );
+    });
+  });
+
+  describe("bounded vocabularies", () => {
+    it("keeps the ungoverned-infrastructure destination set empty", () => {
+      // Membership is CLOSED: this set is the only fail-open branch at the
+      // policy seam, and a change here must be deliberate — update this
+      // assertion only alongside an explicit governance decision.
+      expect(ungovernedInfrastructureDestinations.length).toBe(0);
+    });
+
+    it("denialGuidance is total with constant, non-interpolated guidance", () => {
+      for (const reason of DenialReason.literals) {
+        const guidance = denialGuidance[reason];
+
+        expect(guidance.length).toBeGreaterThan(0);
+        expect(Str.includes("$" + "{")(guidance)).toBe(false);
+      }
+    });
+
+    it("exposes LiteralKit guards for hyphenated members", () => {
+      expect(DenialReason.is["grant-expired"]("grant-expired")).toBe(true);
+      expect(SinkClass.is["mcp-write"]("mcp-write")).toBe(true);
+    });
+  });
+
+  describe("golden digest vectors", () => {
+    // These vectors pin the EXACT output of the canonical encodings and their
+    // version prefixes. A change to ANY part of a canonical encoding — the
+    // shared canonicalJson, the wire-form projections, the field sets, or the
+    // version strings — MUST break these assertions deliberately: bump the
+    // encoding version and update the vectors in the same change. A silent
+    // digest change would strand every previously persisted seal.
+    it("pins freezeGrantSet over the empty draft at frozenAt=0, policyRevision 1.0.0", () => {
+      const emptyFrozen = Result.getOrThrow(freezeGrantSet(emptyDraftGrantSet(revision), DateTime.makeUnsafe(0)));
+
+      expect(emptyFrozen.digest).toBe("6b964a03608449b6b1900d53904a30b85625b8086f18dee48593d05cc94bc623");
+    });
+
+    it("pins freezeGrantSet over the one-grant draft at frozenAt=0", () => {
+      expect(frozen.digest).toBe("637c2eed3a1a2cc13e35c71e3d309a63a56b5c26eea8cbb3eb7e15333ac33379");
+    });
+
+    it("pins sealExecutionDecision over a fixed allowed content", () => {
+      const record = sealExecutionDecision(decisionContent({ seq: 0, prevHash: O.none() }));
+
+      expect(record.hash).toBe("59963d1ec97b2eaabb2c4d6ff37cf1118b3f513a8da259b736586ab6791dbe9b");
+    });
+
+    it("pins sealExecutionOutcome over a fixed content", () => {
+      const outcome = sealExecutionOutcome({
+        decisionHash: DecisionRecordHash.make(Str.repeat(64)("c")),
+        recordedAt: DateTime.makeUnsafe(2),
+        runKey: ExecutionRunKey.make(Str.repeat(64)("b")),
+        settlement: "completed",
+      });
+
+      expect(outcome.hash).toBe("c73e693653a6eb591d9a1cff1f46e5addf7e771ac3a32d9faa4d52dd7536113d");
+    });
+  });
+
+  describe("schema arbitraries", () => {
+    it.effect.prop(
+      "derives round-tripping arbitraries for execution authority schemas",
+      {
+        ExecutionGrant: Arbitrary.schema(ExecutionGrant),
+        DraftGrantSet: Arbitrary.schema(DraftGrantSet),
+        ExecutionDecisionRecord: Arbitrary.schema(ExecutionDecisionRecord),
+        ExecutionOutcomeRecord: Arbitrary.schema(ExecutionOutcomeRecord),
+      },
+      (values) =>
+        Effect.sync(() => {
+          assertSchemaRoundTrip(ExecutionGrant, values.ExecutionGrant, "ExecutionGrant");
+          assertSchemaRoundTrip(DraftGrantSet, values.DraftGrantSet, "DraftGrantSet");
+          assertSchemaRoundTrip(ExecutionDecisionRecord, values.ExecutionDecisionRecord, "ExecutionDecisionRecord");
+          assertSchemaRoundTrip(ExecutionOutcomeRecord, values.ExecutionOutcomeRecord, "ExecutionOutcomeRecord");
+        }),
+      { arbitrary: fcRuns(10) }
+    );
+  });
+});

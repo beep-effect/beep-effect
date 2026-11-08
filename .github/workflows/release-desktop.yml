@@ -159,6 +159,10 @@ jobs:
             exit 1
           fi
 
+      - name: Fetch beep CI binary
+        if: runner.os == 'Linux'
+        uses: ./.github/actions/fetch-beep-ci
+
       # Tauri v2 Linux prerequisites (webkit2gtk 4.1, gtk, rsvg, appindicator, …).
       - name: Install Tauri Linux system dependencies
         if: runner.os == 'Linux'
@@ -168,7 +172,7 @@ jobs:
           # The image's third-party apt sources (Google Chrome, Microsoft) fail apt-get
           # update with "Hash Sum mismatch" / "403 Forbidden" for minutes at a time;
           # keep only the Ubuntu archive, which is where these packages come from.
-          scripts/ci-prune-apt-sources.sh
+          beep ci prune-apt
           sudo apt-get update
           sudo apt-get install -y \
             libwebkit2gtk-4.1-dev \

@@ -28,6 +28,25 @@
 - Package-verifier failures create P0 inbox rows despite this lane's no-publication scope.
   Only mandatory inbox acknowledgements were used; no publication workflow ran.
 
+### 2026-11-07: part 2 checkout and proof friction
+
+- Fresh checkout: the first main merge commit hook could not resolve
+  `@commitlint/config-conventional`. `bun install` repaired local dependencies;
+  the merge then committed through normal hooks. Bootstrap dependencies before
+  invoking merge hooks in a new T3 checkout.
+- Package verification caught an unsupported docgen category, Effect diagnostics
+  and formatting in the new source. These were repaired and the package verifier
+  reran. The mandatory harness required local inbox acknowledgement commands;
+  no publication/readiness/monitor command was run.
+- Main's cache repair was integrated first. Twelve stack-local dependency subjects
+  still needed the reviewed request; re-recording only those subjects restored
+  zero policy blockers. The requested `cache-baseline-request-pr2b-main.json`
+  was absent from this branch; the existing request schema and current main
+  baseline were used instead, without hand-merging baseline JSON.
+- The writer transition remains incomplete: an added startup check cannot make
+  a previously released executable epoch-aware. Cutover needs a database refusal
+  boundary and a tested post-admission reversal before the legacy writer is
+  removed. The packet decision records this implementation hold explicitly.
 ## PR 3c API integration friction
 
 - The fresh checkout lacked dependencies: session tooling failed with "Cannot find module
@@ -40,3 +59,26 @@
 - The installed beta.85 Api client declaration exposes a private CallOptions type through
   inferred wrappers. A mapped client contract names the original indexed method types,
   avoiding a patch or a type assertion.
+
+## PR 4 frontend friction
+
+- A concurrent `runtime.fn` disposes its previous context when it is triggered again, and
+  `get.set` on a disposed context is silently dropped. The flush resent a delivered intent
+  about 1000 times in a panel test (`expected [ 'probe', 'probe', … ] to deeply equal
+  [ 'probe' ]`). Fix: read and write through the `AtomRegistry` service inside fns. An
+  effect-atom lint for `get.set` after an async boundary in a fn would catch this.
+- Desktop tests run concurrently by default (`sequence.concurrent`), and jsdom `localStorage`
+  is shared per file. Two queue tests saw each other's writes until the describe opted out
+  with `{ concurrent: false }`.
+- View `atLeast` cannot bound `VaultSyncStatus`: it is built from `SyncDestinationSnapshot`,
+  another View, so a read bounded by the aggregate receipt never resolved. Confirmation now
+  re-decides accepted intents against fresh reads instead.
+- Effect's RPC HTTP client posts to `<url>/`. Effect's `HttpRouter` accepts that; an
+  exact-path harness host did not, which cost a QA iteration.
+- `portless proxy start --help` starts the proxy instead of printing help and makes a bare
+  `sudo` attempt for port 443. It fell back to port 1355 without a TTY.
+- A fresh worktree's Playwright install lacked the headless shell build the pinned Playwright
+  needs (`chromium_headless_shell-1254`).
+- The headless vault gate never reached its manual form: zenity exits non-zero without a
+  display, which the picker reads as "cancelled". QA hid zenity and kdialog from the sidecar
+  PATH to get the documented fallback.

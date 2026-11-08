@@ -1,15 +1,15 @@
-import { defaultPolicyRevision, EpistemicServerConfig } from "@beep/epistemic-config/server";
-import { fixtureAllowedDestination, makeEpistemicConfigTest } from "@beep/epistemic-config/test";
-import { GrantOperation, SinkDestination } from "@beep/epistemic-domain/values/ExecutionGrant";
+import { defaultPolicyRevision, ExecutionAuthorityServerConfig } from "@beep/execution-authority-config/server";
+import { fixtureAllowedDestination, makeExecutionAuthorityConfigTest } from "@beep/execution-authority-config/test";
 import {
   destinationDigestOf,
   ExecutionRunKey,
   operationDigestOf,
   verifyExecutionDecisionChain,
   verifyOutcomeBinding,
-} from "@beep/epistemic-domain/values/ExecutionRecord";
-import { ExecutionLedgerDrizzle } from "@beep/epistemic-server/ExecutionLedger";
-import { ExecutionLedger } from "@beep/epistemic-use-cases/ExecutionLedger";
+} from "@beep/execution-authority-domain/entities/ExecutionRecord";
+import { GrantOperation, SinkDestination } from "@beep/execution-authority-domain/values/ExecutionGrant";
+import { ExecutionLedgerDrizzle } from "@beep/execution-authority-server/ExecutionLedger";
+import { ExecutionLedger } from "@beep/execution-authority-use-cases/ExecutionLedger";
 import {
   ExportProvenanceRequest,
   ExportProvenanceTool,
@@ -47,7 +47,10 @@ import {
   makeMcpClient,
   openThroughMcp,
 } from "./support/ontology-mcp-harness.ts";
-import type { ExecutionDecisionRecord, ExecutionOutcomeRecord } from "@beep/epistemic-domain/values/ExecutionRecord";
+import type {
+  ExecutionDecisionRecord,
+  ExecutionOutcomeRecord,
+} from "@beep/execution-authority-domain/entities/ExecutionRecord";
 
 const isOntologySparqlQueryRequest = S.is(OntologySparqlQueryRequest);
 
@@ -88,7 +91,7 @@ const rawSql = Effect.map(SqlClient.SqlClient, (client) => client.withoutTransfo
 const readRunKeys = Effect.fnUntraced(function* () {
   const sql = yield* rawSql;
   const rows = yield* sql<{ readonly run_key: string }>`
-    SELECT DISTINCT run_key FROM epistemic_execution_decision
+    SELECT DISTINCT run_key FROM execution_authority_decision
   `;
   return A.map(rows, (row) => row.run_key);
 });
@@ -172,8 +175,8 @@ ex:poison
               mutationsEnabled: true,
               approvedMutationTools: [PublishProvenanceTool.name],
               egressFetch,
-              epistemicConfig: makeEpistemicConfigTest(
-                EpistemicServerConfig.make({
+              executionAuthorityConfig: makeExecutionAuthorityConfigTest(
+                ExecutionAuthorityServerConfig.make({
                   destinationAllowlist: [fixtureAllowedDestination],
                   policyRevision: defaultPolicyRevision,
                 })
@@ -423,36 +426,36 @@ SELECT ?value WHERE {
           SELECT table_name, column_name, data_type
           FROM information_schema.columns
           WHERE table_schema = current_schema()
-            AND table_name IN ('epistemic_execution_decision', 'epistemic_execution_outcome')
+            AND table_name IN ('execution_authority_decision', 'execution_authority_outcome')
           ORDER BY table_name, ordinal_position
         `;
         expect(columnRows).toEqual([
-          { table_name: "epistemic_execution_decision", column_name: "run_key", data_type: "text" },
-          { table_name: "epistemic_execution_decision", column_name: "seq", data_type: "integer" },
-          { table_name: "epistemic_execution_decision", column_name: "prev_hash", data_type: "text" },
-          { table_name: "epistemic_execution_decision", column_name: "hash", data_type: "text" },
-          { table_name: "epistemic_execution_decision", column_name: "verdict", data_type: "text" },
-          { table_name: "epistemic_execution_decision", column_name: "reason", data_type: "text" },
-          { table_name: "epistemic_execution_decision", column_name: "operation_digest", data_type: "text" },
-          { table_name: "epistemic_execution_decision", column_name: "sink_class", data_type: "text" },
-          { table_name: "epistemic_execution_decision", column_name: "audience", data_type: "text" },
-          { table_name: "epistemic_execution_decision", column_name: "destination_digest", data_type: "text" },
-          { table_name: "epistemic_execution_decision", column_name: "grant_set_digest", data_type: "text" },
-          { table_name: "epistemic_execution_decision", column_name: "policy_revision", data_type: "text" },
-          { table_name: "epistemic_execution_decision", column_name: "decided_at", data_type: "bigint" },
-          { table_name: "epistemic_execution_outcome", column_name: "run_key", data_type: "text" },
-          { table_name: "epistemic_execution_outcome", column_name: "decision_hash", data_type: "text" },
-          { table_name: "epistemic_execution_outcome", column_name: "decision_verdict", data_type: "text" },
-          { table_name: "epistemic_execution_outcome", column_name: "settlement", data_type: "text" },
-          { table_name: "epistemic_execution_outcome", column_name: "recorded_at", data_type: "bigint" },
-          { table_name: "epistemic_execution_outcome", column_name: "hash", data_type: "text" },
+          { table_name: "execution_authority_decision", column_name: "run_key", data_type: "text" },
+          { table_name: "execution_authority_decision", column_name: "seq", data_type: "integer" },
+          { table_name: "execution_authority_decision", column_name: "prev_hash", data_type: "text" },
+          { table_name: "execution_authority_decision", column_name: "hash", data_type: "text" },
+          { table_name: "execution_authority_decision", column_name: "verdict", data_type: "text" },
+          { table_name: "execution_authority_decision", column_name: "reason", data_type: "text" },
+          { table_name: "execution_authority_decision", column_name: "operation_digest", data_type: "text" },
+          { table_name: "execution_authority_decision", column_name: "sink_class", data_type: "text" },
+          { table_name: "execution_authority_decision", column_name: "audience", data_type: "text" },
+          { table_name: "execution_authority_decision", column_name: "destination_digest", data_type: "text" },
+          { table_name: "execution_authority_decision", column_name: "grant_set_digest", data_type: "text" },
+          { table_name: "execution_authority_decision", column_name: "policy_revision", data_type: "text" },
+          { table_name: "execution_authority_decision", column_name: "decided_at", data_type: "bigint" },
+          { table_name: "execution_authority_outcome", column_name: "run_key", data_type: "text" },
+          { table_name: "execution_authority_outcome", column_name: "decision_hash", data_type: "text" },
+          { table_name: "execution_authority_outcome", column_name: "decision_verdict", data_type: "text" },
+          { table_name: "execution_authority_outcome", column_name: "settlement", data_type: "text" },
+          { table_name: "execution_authority_outcome", column_name: "recorded_at", data_type: "bigint" },
+          { table_name: "execution_authority_outcome", column_name: "hash", data_type: "text" },
         ]);
 
         const decisionRows = yield* sql<Record<string, unknown>>`
-          SELECT * FROM epistemic_execution_decision
+          SELECT * FROM execution_authority_decision
         `;
         const outcomeRows = yield* sql<Record<string, unknown>>`
-          SELECT * FROM epistemic_execution_outcome
+          SELECT * FROM execution_authority_outcome
         `;
         expect(A.length(decisionRows)).toBeGreaterThan(0);
         expect(A.length(outcomeRows)).toBeGreaterThan(0);

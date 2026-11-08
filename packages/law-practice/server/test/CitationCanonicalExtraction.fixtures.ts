@@ -190,3 +190,36 @@ export const replayCitationCanonicalExtraction = Effect.fn("CanonicalExtractionT
   const counts = yield* installed.setup.observed.snapshot;
   expect(counts.confirmed).toBe(counts.spawned);
 });
+
+const canonicalFamilyGroups = [
+  ["law", 10],
+  ["journal", 6],
+  ["tax", 4],
+  ["ambiguous", 11],
+  ["markup", 32],
+] as const;
+const canonicalShard = (
+  title: string,
+  replay: (kind: CitationNativeRuntimeKind) => ReturnType<typeof replayCitationCanonicalExtraction>
+) => ({ title, replay });
+/**
+ * Every canonical replay shard, titled without its runtime. The integration
+ * suites register one runtime per file so vitest's two workers replay bun and
+ * node side by side instead of serializing both behind one file's
+ * `maxConcurrency` cap.
+ * @internal @category testing @since 0.0.0
+ */
+export const citationCanonicalExtractionShards = [
+  ...A.makeBy(13, (shard) =>
+    canonicalShard(`replays original documents ${shard * 10 + 1}-${shard * 10 + 10}`, (kind) =>
+      replayCitationCanonicalExtraction(kind, shard, 10)
+    )
+  ),
+  ...A.flatMap(canonicalFamilyGroups, ([family, count]) =>
+    A.makeBy(Math.ceil(count / 10), (shard) =>
+      canonicalShard(`replays original ${family} inputs in group ${shard}`, (kind) =>
+        replayCitationCanonicalExtraction(kind, shard, 10, family)
+      )
+    )
+  ),
+];

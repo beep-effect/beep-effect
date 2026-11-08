@@ -1,0 +1,59 @@
+<claims id="claims">
+<claim id="CLM-00001" num="00001">
+<claim-text><b>1</b>. Manufacturing process of a jig (M) for the thermal forming and/or inspection of a tube (T) with neutral axis (x) comprising n bent sections (c<b>1</b>-c<b>3</b>) connected by straight sections (d<b>2</b>-d<b>3</b>), comprising:
+<claim-text>producing n individual jigs (M<b>1</b>-M<b>3</b>):
+<claim-text>each dedicated to a tube segment (d<b>1</b>-c<b>1</b>-d<b>2</b>.<b>1</b>, d<b>2</b>.<b>2</b>-c<b>2</b>-d<b>3</b>.<b>1</b>, d<b>3</b>.<b>2</b>-c<b>3</b>-d<b>4</b>) made up of one of the n bent sections (c<b>1</b>, c<b>2</b>, c<b>3</b>) of tube (T) and of a predetermined length, in part or in full, of each of the straight sections (d<b>1</b>-d<b>4</b>) extending in the continuation of said bent section, so that each of these tube segments includes a planar neutral axis (x) that extends into a plane (P<b>1</b>, P<b>2</b>, P<b>3</b>), the so-called bending plane, corresponding to the bending plane of the bent section (c<b>1</b>-c<b>3</b>) of said tube segment,</claim-text>
+<claim-text>each comprising guiding means (<b>7</b>-<b>10</b>) delimiting an open guiding duct section (<b>18</b>, <b>18</b>′) with planar neutral axis (x′) extending into a plane (P′<b>1</b>, P′<b>2</b>, P′<b>3</b>), with each of the guiding duct sections showing on the one hand, the longitudinal profile of the tube segment (d<b>1</b>-c<b>1</b>-d<b>2</b>.<b>1</b>, d<b>2</b>.<b>2</b>-c<b>2</b>-d<b>3</b>.<b>1</b>, d<b>3</b>.<b>2</b>-c<b>3</b>-d<b>4</b>) and on the other hand, a section adapted to house the latter,</claim-text>
+</claim-text>
+<claim-text>juxtaposing the n individual jigs (m<b>1</b>-M<b>3</b>) with the guiding duct sections (<b>18</b>, <b>18</b>′) in the continuation of each other and to orient the individual jigs so as to obtain a relative orientation between the n planes (P′<b>1</b>, P′<b>2</b>, P′<b>3</b>) defined by the neutral axes (x′) of the n guiding duct sections (<b>18</b>, <b>18</b>′) identical to the relative orientation among the n bending planes (P<b>1</b>, P<b>2</b>, P<b>3</b>) defined by the n bent sections (c<b>1</b>-c<b>3</b>) of the tube (T), and</claim-text>
+<claim-text>coupling the n individual jigs (M<b>1</b>-M<b>3</b>) among each other.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00002" num="00002">
+<claim-text><b>2</b>. Process according to <claim-ref idref="CLM-00001">claim 1</claim-ref> characterized in that individual jigs (M<b>1</b>-M<b>3</b>) are produced with guiding means delimiting an overall guiding duct with a non-retentive section adapted to permit the insertion of the tube in said duct and the removal of said tube.</claim-text>
+</claim>
+<claim id="CLM-00003" num="00003">
+<claim-text><b>3</b>. Process according to <claim-ref idref="CLM-00001">claim 1</claim-ref> characterized in that individual jigs (M<b>1</b>-M<b>3</b>) are produced with guiding means
+<claim-text>delimiting the full guiding duct (<b>18</b>, <b>18</b>′) with a retentive section adapted to insert and keep the tube (T) in place in said duct, and then to remove said tube.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00004" num="00004">
+<claim-text><b>4</b>. Process according to claim characterized in that individual jigs (M<b>1</b>-M<b>3</b>) are produced with guiding means made up of pinpoint guiding components (<b>7</b>-<b>10</b>) comprising a groove (<b>18</b>, <b>18</b>′) with a section coupled to that of the tube (T), forming a duct made up of a succession of pinpoint supports of said tube.</claim-text>
+</claim>
+<claim id="CLM-00005" num="00005">
+<claim-text><b>5</b>. Process according to <claim-ref idref="CLM-00004">claim 4</claim-ref> characterized in that individual jigs (M<b>1</b>-M<b>3</b>) are produced, comprising:
+<claim-text>a base (<b>1</b>-<b>2</b>, <b>3</b>-<b>4</b>, <b>5</b>-<b>6</b>) comprising at least a longitudinal flat plate (<b>2</b>, <b>4</b>, <b>6</b>) called the bottom base plate, in which multiple ports (<b>23</b>, <b>24</b>) are made aligned along a longitudinal line parallel to the planar neutral axes (x′), and planar guiding components (<b>7</b>-<b>10</b>) adapted for insertion in the ports (<b>23</b>, <b>24</b>) of the bottom base plate (<b>2</b>, <b>4</b>, <b>6</b>) of each base (<b>1</b>-<b>2</b>, <b>3</b>-<b>4</b>, <b>5</b>-<b>6</b>) so that the grooves (<b>18</b>, <b>18</b>′) of said guiding components are oriented towards the neutral axis (x′).</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00006" num="00006">
+<claim-text><b>6</b>. Process according to <claim-ref idref="CLM-00005">claim 5</claim-ref> characterized in that a range of pinpoint guiding components (<b>7</b>-<b>10</b>) is produced with grooves (<b>18</b>, <b>18</b>′) showing symmetrical planes, including the neutral axis (x′) for which the incline with respect to the plane of each bottom base plate (<b>2</b>, <b>4</b>, <b>6</b>) varies over a value range between 0° and 90°.</claim-text>
+</claim>
+<claim id="CLM-00007" num="00007">
+<claim-text><b>7</b>. Process according to <claim-ref idref="CLM-00005">claim 5</claim-ref> characterized in that individual jigs (M<b>1</b>-M<b>3</b>) are produced for which the base is made up of two flat base plates (<b>1</b>-<b>2</b>, <b>3</b>-<b>4</b>, <b>5</b>-<b>6</b>) assembled with securing components (<b>26</b>) suitable to keep them parallel, at a predetermined distance from one another:
+<claim-text>a bottom base plate (<b>2</b>, <b>4</b>, <b>6</b>) provided with openings (<b>23</b>,<b>24</b>) in which a so-called anchoring portion (<b>20</b>) is installed of the guiding components (<b>7</b>-<b>10</b>), and a plate (<b>1</b>, <b>3</b>, <b>5</b>) called top base plate, in which ports (<b>23</b>, <b>24</b>) are drilled through which extends a so-called guiding portion (<b>17</b>) of the guiding components (<b>7</b>-<b>10</b>) in which the guiding groove (<b>18</b>, <b>18</b>′) is installed.</claim-text>
+</claim-text>
+</claim>
+<claim id="CLM-00008" num="00008">
+<claim-text><b>8</b>. Process according to <claim-ref idref="CLM-00007">claim 7</claim-ref> characterized in that guiding components (<b>7</b>-<b>10</b>) are produced comprising a median portion (<b>15</b>) with dimensions adapted to form a spacer that defines the distance separating the two base plates (<b>1</b>-<b>2</b>, <b>3</b>-<b>4</b>, <b>5</b>-<b>6</b>) of each base.</claim-text>
+</claim>
+<claim id="CLM-00009" num="00009">
+<claim-text><b>9</b>. Process according to <claim-ref idref="CLM-00007">claim 7</claim-ref> characterized in the a bottom base plate (<b>2</b>, <b>4</b>, <b>6</b>) is produced with transversal ports (<b>23</b>, <b>24</b>) and guiding components (<b>7</b>-<b>10</b>) in the continuation of their anchoring portion (<b>20</b>), with a deformable portion (<b>21</b>) that locks said guiding components.</claim-text>
+</claim>
+<claim id="CLM-00010" num="00010">
+<claim-text><b>10</b>. Process according to <claim-ref idref="CLM-00009">claim 9</claim-ref> characterized in that guiding components (<b>7</b>-<b>10</b>) are produced with a deformable locking portion that is frangible beyond a predetermined degree of deformation.</claim-text>
+</claim>
+<claim id="CLM-00011" num="00011">
+<claim-text><b>11</b>. Process according to <claim-ref idref="CLM-00005">claim 5</claim-ref> characterized in that individual jigs (M<b>1</b>-M<b>3</b>) are produced comprising, for their assembly with a juxtaposed individual jig, an interface place (<b>11</b>-<b>14</b>) for each base plate (<b>1</b>-<b>2</b>, <b>3</b>-<b>4</b>, <b>5</b>-<b>6</b>), with a port (<b>31</b>, <b>32</b>) for anchoring said base plate.</claim-text>
+</claim>
+<claim id="CLM-00012" num="00012">
+<claim-text><b>12</b>. Process according to <claim-ref idref="CLM-00011">claim 11</claim-ref> characterized in that a base (<b>1</b>-<b>2</b>, <b>3</b>-<b>4</b>, <b>5</b>-<b>6</b>) is produced for which the bottom base plate (<b>2</b>, <b>4</b>, <b>6</b>) comprises for each interface plate (<b>11</b>-<b>14</b>) a port (<b>24</b>) made for joining said interface plate, and so that one installs in said port a guiding component (<b>9</b>, <b>10</b>) having securing means (<b>35</b>) adapted for connecting it to the interface plate (<b>11</b>-<b>14</b>).</claim-text>
+</claim>
+<claim id="CLM-00013" num="00013">
+<claim-text><b>13</b>. Process according to <claim-ref idref="CLM-00005">claim 5</claim-ref> for producing a jig (M) for the thermal forming of a tube (T), characterized in that one installs at the free end of the base (<b>1</b>-<b>2</b>, <b>3</b>-<b>4</b>, <b>5</b>-<b>6</b>) at least one of the individual jigs (M<b>1</b>,M<b>3</b>) dedicated to an end segment of the tube (T), an eyelet (<b>29</b>) for holding the jig (M) by suspension.</claim-text>
+</claim>
+<claim id="CLM-00014" num="00014">
+<claim-text><b>14</b>. Jig (M) for thermal forming and/or inspecting a tube (T) with a neutral axis (x) comprising n bent sections (c<b>1</b>-c<b>3</b>) connected by straight sections (d<b>2</b>-d<b>3</b>) characterized in that it includes:
+<claim-text>n individual jigs (M<b>1</b>-M<b>3</b>) each dedicated to a tube segment (d<b>1</b>-c<b>1</b>-d<b>2</b>.<b>1</b>, d<b>2</b>.<b>2</b>-c<b>2</b>-d<b>3</b>.<b>1</b>, d<b>3</b>.<b>2</b>-c<b>3</b>-d<b>4</b>) with a planar neutral axis (x) made up of one of the n bent sections (c<b>1</b>-c<b>3</b>) of tube (T) and having a predetermined length, in part or in full, for each of the straight sections (d<b>1</b>-d<b>4</b>) extending into the continuation of said bent section, with each of these individual jigs comprising guiding means (<b>7</b>-<b>10</b>) delimiting an open guiding duct section (<b>18</b>.<b>18</b>′), with a planar neutral axis (x′), showing on the one hand, the longitudinal profile of the tube segment (d<b>1</b>-c<b>1</b>-d<b>2</b>.<b>1</b>, d<b>2</b>.<b>2</b>-c<b>2</b>-d<b>3</b>.<b>1</b>, d<b>3</b>.<b>2</b>-c<b>3</b>-d<b>4</b>) and on the other hand, a section adapted to house the latter, and assembly means (<b>11</b>-<b>14</b>, <b>35</b>, <b>38</b>) of the n individual jigs (M<b>1</b>-M<b>3</b>) adapted to connect them with the guiding duct sections (<b>18</b>, <b>18</b>′) in the continuation of one another, and with a relative orientation of said individual jigs adapted so that the relative orientation between the n planes (P′<b>1</b>, P<b>2</b>, P′<b>3</b>) defined by the neutral axes (X′) of the n guiding duct sections (<b>18</b>, <b>18</b>′) is identical to the relative orientation between the n bending planes (P<b>1</b>, P<b>2</b>, P<b>3</b>) defined by the n bent sections (c<b>1</b>-c<b>3</b>) of the tube (T).</claim-text>
+</claim-text>
+</claim>
+</claims>

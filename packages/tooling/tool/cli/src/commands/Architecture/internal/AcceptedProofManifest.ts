@@ -737,7 +737,7 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
   AcceptedProofFile.make({
     role: "db-admin",
     stage: "persistence",
-    path: "packages/_internal/db-admin/src/migrations/EpistemicExecutionLedger.ts",
+    path: "packages/_internal/db-admin/src/migrations/ExecutionAuthorityLedger.ts",
     writer: "template",
   }),
   AcceptedProofFile.make({
@@ -827,6 +827,42 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
   AcceptedProofFile.make({
     role: "db-admin",
     stage: "persistence",
+    path: "packages/_internal/db-admin/drizzle/20261107032821_execution_authority_rename/down.sql",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
+    path: "packages/_internal/db-admin/drizzle/20261107032821_execution_authority_rename/migration.sql",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
+    path: "packages/_internal/db-admin/drizzle/20261107032821_execution_authority_rename/snapshot.json",
+    writer: "json",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
+    path: "packages/_internal/db-admin/drizzle/20261107120500_shared_membership/down.sql",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
+    path: "packages/_internal/db-admin/drizzle/20261107120500_shared_membership/migration.sql",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
+    path: "packages/_internal/db-admin/drizzle/20261107120500_shared_membership/snapshot.json",
+    writer: "json",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
     path: "packages/_internal/db-admin/test/ArchitectureLabMigrationTarget.test.ts",
     writer: "template",
   }),
@@ -846,6 +882,12 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
     role: "db-admin",
     stage: "persistence",
     path: "packages/_internal/db-admin/test/integration/ArchitectureLabMigration.pglite.test.ts",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "db-admin",
+    stage: "persistence",
+    path: "packages/_internal/db-admin/test/integration/SharedMembershipMigration.pglite.test.ts",
     writer: "template",
   }),
   AcceptedProofFile.make({
@@ -881,7 +923,7 @@ export const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
   AcceptedProofFile.make({
     role: "db-admin",
     stage: "persistence",
-    path: "packages/_internal/db-admin/test/integration/EpistemicExecutionLedgerMigration.pglite.test.ts",
+    path: "packages/_internal/db-admin/test/integration/ExecutionAuthorityLedgerMigration.pglite.test.ts",
     writer: "template",
   }),
 ];

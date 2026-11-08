@@ -159,7 +159,7 @@ export const validateLibraryBoxEvidence = Effect.fn("Library.validateBoxEvidence
   if (O.isNone(original)) return false;
   const bytes = yield* fs.readFile(path.resolve(root, original.value.path)).pipe(Effect.option);
   if (O.isNone(bytes)) return false;
-  const sha1 = yield* libraryBoxSha1(bytes.value).pipe(Effect.orElseSucceed(() => ""));
+  const sha1 = yield* libraryBoxSha1(bytes.value);
   return sha1 === metadata.value.boxSha1 && sha1 === metadata.value.sha1 && bytes.value.byteLength > 0;
 });
 

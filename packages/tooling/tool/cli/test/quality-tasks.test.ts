@@ -1783,6 +1783,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:retired-effect-paths",
         "lint:entity-kit-freeze",
         "lint:retired-iri-authorities",
+        "lint:tracked-shell-allowlist",
         "lint:schema-tag-idioms",
         "lint:holds",
         "lint:schema-first",
@@ -1830,6 +1831,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       );
       expect(qualityLaneArgs(lanes, "lint:retired-iri-authorities")).toEqual(
         expectedTurboArgs("lint:retired-iri-authorities", ["--summarize"])
+      );
+      expect(qualityLaneArgs(lanes, "lint:tracked-shell-allowlist")).toEqual(
+        expectedTurboArgs("lint:tracked-shell-allowlist", ["--summarize"])
       );
       expect(qualityLaneArgs(lanes, "lint:schema-tag-idioms")).toEqual(
         expectedTurboArgs("lint:schema-tag-idioms", ["--summarize"])
@@ -5647,6 +5651,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:retired-effect-paths",
         "lint:entity-kit-freeze",
         "lint:retired-iri-authorities",
+        "lint:tracked-shell-allowlist",
         "lint:opaque-roundtrips",
       ]);
       for (const index of [0, 1, 4]) {
@@ -5709,6 +5714,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:retired-effect-paths",
         "lint:entity-kit-freeze",
         "lint:retired-iri-authorities",
+        "lint:tracked-shell-allowlist",
         "lint:opaque-roundtrips",
       ]);
       // A local full-scope plan (no review base) leaves the two git-delta knowledge checks and the
@@ -5808,6 +5814,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           "lint:retired-effect-paths",
           "lint:entity-kit-freeze",
           "lint:retired-iri-authorities",
+          "lint:tracked-shell-allowlist",
           "lint:schema-tag-idioms",
           "lint:holds",
           "quality:test-tsgo",

@@ -1,0 +1,205 @@
+{
+  "schemaVersion": "claim-antecedent-positive-run-receipt/v1",
+  "date": "2026-10-28",
+  "positiveBenchmarkPredictionsRun": true,
+  "status": "poor deterministic floor; stop-at-measurement condition triggered",
+  "provisional": true,
+  "actualAttorneyAgreementRecorded": false,
+  "protocol": "strict-source-map/v1",
+  "files": [
+    {
+      "path": "goals/claim-element-antecedent-check/research/positive-source-freeze.json",
+      "sha256": "59fe84a8963fdb7265f464afc2ee1ff081c325fa6bb1acd66bf6bf10ff232028"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/reference-freeze.json",
+      "sha256": "9c1ba8d210af9b27f3ac02cdea643e6437ae7068d23b449038a51a6de5e0932c"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/implementation-freeze.json",
+      "sha256": "f17b4b91029e5ebfb0f17b7866295f4e4b1bd3dd4c8477501a9129c51e420dde"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-positive-evaluation.json",
+      "sha256": "a33627b77740d7a368131b98f7646ed2507ca8a8246afc4710992b2b0fbcfaac"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/history/2026-10-28-positive-evaluation-summary.json",
+      "sha256": "e5ebe913a7f54ce35eebdaeab1f2fc4e034263ab3e6ddd29d93a4f284e44a1db"
+    },
+    {
+      "path": "goals/claim-element-antecedent-check/research/summarize-positive.py",
+      "sha256": "088f543b909a74459c03ac7338183cfa210ed50831a6c13cd7ed05ffa559967c"
+    },
+    {
+      "path": "packages/law-practice/server/test/evaluation/positive.main.ts",
+      "sha256": "a0f3fbf12b76d31aef6ab66f10a213ab329ae0c3bcc6d7dd7db71d8fd32d8f7b"
+    },
+    {
+      "path": "packages/law-practice/server/test/evaluation/Structural.ts",
+      "sha256": "2505d74a14e57454aa422c9f021b8e98348f50c6d552e0fdc4d10599e10d999f"
+    }
+  ],
+  "predictions": [
+    {
+      "familyId": "11246782-root-28",
+      "sha256": "4ea27edbd95e81346aa7610320ce18ccbd71c4f7b83718b15515e9fa7d87f406"
+    },
+    {
+      "familyId": "11279554-root-25",
+      "sha256": "cb4a7fd52a5337a59d9d1db1eee0ccffb98684808e1530f19f718c4a0ada2959"
+    },
+    {
+      "familyId": "11299450-root-1",
+      "sha256": "c9199e14c9f50c15bfbcc9d8cb0eadb02cd6e2ff270c2ca90ed951a1753b3883"
+    },
+    {
+      "familyId": "11457178-root-1",
+      "sha256": "56579e618f2bc7c56bc74a922425307d006ecc57425b52548f68fe8272189642"
+    },
+    {
+      "familyId": "11575704-root-1",
+      "sha256": "e1c4a0af05b63de4a89110ff6a3d8fb0262d5afca3f8e6ed8883188027910c2a"
+    },
+    {
+      "familyId": "11910514-root-1",
+      "sha256": "633bc0581a3746169241b68dec5816a9b0a88fe28d1459c9920ae614cd007312"
+    },
+    {
+      "familyId": "11973401-root-12",
+      "sha256": "4bb0ae4238cf07cda55dd79b59f10b745dd7af8090cbde51b5d626acd346ba33"
+    },
+    {
+      "familyId": "12117564-root-7",
+      "sha256": "513a98eed5e52edc7242203e0052b0f7f640aa6dde11ba17025bc3a3ab3631b4"
+    },
+    {
+      "familyId": "12268372-root-10",
+      "sha256": "413ab1ce976390f3851eda6f4cb3657be944e1ddfc584460b01289b242624a36"
+    },
+    {
+      "familyId": "12360911-root-1",
+      "sha256": "3c69c3541e873ca569c173bfa345af9cb7ac78279957b872f7874b4f2aa1f517"
+    },
+    {
+      "familyId": "12656234-root-1",
+      "sha256": "ce400300efc2211729ed108d5a1ea2e5a8c8be9722028df0447dfc287fab0990"
+    },
+    {
+      "familyId": "12748625-root-1",
+      "sha256": "73645a7acead9075b6ea308551729dab8e9285a891cd54541b4cb270ee2048f4"
+    },
+    {
+      "familyId": "12838228-root-1",
+      "sha256": "4006e9bef1b71ce7515c547f11864795a8e7145b74d38cc51cf69cf550ac4e48"
+    },
+    {
+      "familyId": "13062032-root-1",
+      "sha256": "5b6e7711e7e25a7b44096a0dcb4409a38e3166133bb45d6d9d34c29d984013df"
+    },
+    {
+      "familyId": "13070851-root-1",
+      "sha256": "8c18351588f387fbda1f9226eb804a029bf9d3323fd30804e447fe224cf363d1"
+    },
+    {
+      "familyId": "13272881-root-1",
+      "sha256": "0c740702ebdf03aabcd2ce5f8060d5c917f74dd8b1fadfb6aa2034d5f67ef652"
+    },
+    {
+      "familyId": "13275397-root-1",
+      "sha256": "e97f63c3e7d900d5e2e11d4965930cf2efa5b260a04db4e4be3ff4b8d37b5773"
+    },
+    {
+      "familyId": "13484431-root-19",
+      "sha256": "efd6802be64c255d57955e071146d583657129b8276f187ccad0f23679cd37eb"
+    },
+    {
+      "familyId": "13575735-root-1",
+      "sha256": "590af60db4363d3c5d0712d44b47d8a29277c3a94f763d7db9e85956ae2b0909"
+    },
+    {
+      "familyId": "13687596-root-1",
+      "sha256": "d335922e0021634be677d21b98f2fb7c0c2320b85a8863df686d245a70a21dc2"
+    },
+    {
+      "familyId": "13822885-root-1",
+      "sha256": "fac6ce158c40f9e16c82fa4fd145413c72b3c8a58e7f1e54d0a4b13c2c1262d3"
+    },
+    {
+      "familyId": "14260199-root-1",
+      "sha256": "93d88d0a4c2802ce9d8edc1f95f3332557d43a03f92801c77583aa2e47164b2b"
+    },
+    {
+      "familyId": "14262251-root-1",
+      "sha256": "62cb60bcfdb9de03e6679fc83115e7f3ed0f1895b93924810d77292e8898d157"
+    },
+    {
+      "familyId": "14657939-root-1",
+      "sha256": "9b8782824f21701a2d892afd2b0d9e3938d479c17b6eefb3511a3602dda2c7d7"
+    },
+    {
+      "familyId": "14813790-root-1",
+      "sha256": "beb06aa2b2316e9baab39e28ade802be6b5b96de060c8f1062471c490b2b49e0"
+    },
+    {
+      "familyId": "14970678-root-17",
+      "sha256": "9bf8f27d5d029f93ad52647b284772e867602737b0ef776ea3be0607b208a35e"
+    },
+    {
+      "familyId": "14971439-root-17",
+      "sha256": "bc37282e8ba6bcbf8d54875ae530b9f0d2a6a9aae3f7b4d5e63554037ea3833d"
+    },
+    {
+      "familyId": "15276859-root-19",
+      "sha256": "cdb6d0df889fc01b9333223bdcda9c581690729c91b202c602c990e932d951cc"
+    },
+    {
+      "familyId": "15803808-root-15",
+      "sha256": "366fdee1e7e094aac02ae8862ffc773a068e2fdd544280b3f380c51959dd5ef0"
+    },
+    {
+      "familyId": "15958729-root-1",
+      "sha256": "15b8d7c783c62975e1c5f916493e0b7bd16d9afc6b6fcfc84d77a1eb57633fb0"
+    },
+    {
+      "familyId": "16068637-root-11",
+      "sha256": "bc084df3d741b9a87ec949527cb6ba3832eed2b7ce7d52d1d1b1babf3f227909"
+    },
+    {
+      "familyId": "16135952-root-20",
+      "sha256": "4bb270b3b0b55e9800b4232a28197b271cd845466f0f3bbf1290e005b7d9ffc1"
+    },
+    {
+      "familyId": "16819424-root-10",
+      "sha256": "16b1259e82c85eca09b43803102f783b9239e28dcb63fce8d52c9af9b27f97ca"
+    },
+    {
+      "familyId": "16963517-root-1",
+      "sha256": "b4cb19c5b7759c750215b43457444ae390b2883a7aad106c8427f90b89b9bc55"
+    },
+    {
+      "familyId": "17139442-root-1",
+      "sha256": "3d5f3f305efe6971e38921584b5fa844cc1666ee7fb6f3e996514eadd7b45b00"
+    },
+    {
+      "familyId": "18018354-root-6",
+      "sha256": "18896c1d92bc487c2c382e0cd75080158424b9d6b512096eda6fcd8fce79f436"
+    },
+    {
+      "familyId": "18087856-root-11",
+      "sha256": "4363b55f89e493df01d981ffbbc8197e573e44f5e7bddb3ac57b8686e19dcc71"
+    },
+    {
+      "familyId": "18307241-root-1",
+      "sha256": "1e1a970b53eb198a7d2547482a8665076019859d0cb8243c2baad4211dac0849"
+    },
+    {
+      "familyId": "18409554-root-16",
+      "sha256": "df1af7047bc7c800cda5d8f2aaef00163dded47fbc38d2cd3edacca2bf34f8c3"
+    },
+    {
+      "familyId": "18547866-root-1",
+      "sha256": "04e7ad1a9b7580b17fd3b1222e3ea86e9f9658d5d5a45e05f1a28a041593eb83"
+    }
+  ]
+}

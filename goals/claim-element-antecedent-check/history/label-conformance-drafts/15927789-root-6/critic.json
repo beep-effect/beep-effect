@@ -1,0 +1,68 @@
+{
+  "familyId": "15927789-root-6",
+  "role": "critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 1,
+  "confidence": 0.98,
+  "confidenceScope": "Structural labels and unsupported-source classifications only; positive-source eligibility is provisional.",
+  "verdict": "unresolved",
+  "reviewedClaimNumbers": [
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "resolvedClaimNumbers": [
+    6
+  ],
+  "resolvedLabelSetVerdict": "accepted",
+  "familyCoverage": "unresolved",
+  "findings": [],
+  "unresolved": [
+    {
+      "claimNumber": 7,
+      "reason": "Intended source transition characterized in that is unsupported; preserve source instead of inventing a canonical transition.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 8,
+      "reason": "Intended source transition characterized in that is unsupported; preserve source instead of inventing a canonical transition.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 9,
+      "reason": "Intended source transition characterized in that is unsupported; preserve source instead of inventing a canonical transition.",
+      "sourceQuote": "characterized in that"
+    },
+    {
+      "claimNumber": 10,
+      "reason": "Intended source transition characterized in that is unsupported; preserve source instead of inventing a canonical transition.",
+      "sourceQuote": "characterized in that"
+    }
+  ],
+  "sourceEligibility": "provisional-pending-per-claim-quote-version-audit",
+  "audit": {
+    "resolvedTrees": 1,
+    "elements": 5,
+    "terms": 14,
+    "typedEdges": 6,
+    "allProposedElementAndTermUtf16SlicesVerified": true,
+    "allSelectedClaimsMatchNativeXml": true,
+    "claimsXmlSha256Matches": true,
+    "headsDeterminersEdgesAndMembershipManuallyReviewed": true,
+    "schemaDecode": "pending-root",
+    "attorneySpotCheck": "pending",
+    "positiveSourceCertification": "not-claimed"
+  },
+  "rationale": [
+    "Resolved root6 main comprising follows characterized by, preserved in the preamble. The inner location-measurement-module comprising colon correctly forms parent6.a and three absorbed sub-limitations. All19 element/term anchors, heads and determiners are correct.",
+    "All six typed edges are correct and complete: four part-of edges and two antecedent edges from the later wire references to a wire [227,233). The earlier parent the wire has no earlier introduction. No intra-claim transport-unit introduction is fabricated.",
+    "Natural-language children7-10 each expressly depend on6 and use unsupported intended characterized in that. All four abstentions are justified and remain in the denominator. Root6 structural acceptance does not make this family complete.",
+    "Retained office action KGTL26UADFLYX10 cites selected6-10, including carrier/transport/wire and motion concerns. Some examiner quoted words are spelling variants of native text, so this structural receipt does not certify phrase/version correspondence. No original exact matches are retained. Stronger per-claim source eligibility review is pending."
+  ],
+  "sourceQualification": "This is structural-only review. Native XML supplies the exact label text; retained original comparisons are corroboration only. Dates and no-intervening-CLM assertions do not establish per-claim in-force correspondence or eliminate renumbering/version contradictions. Separate stronger source audit is pending; no source-certified positive acceptance is claimed.",
+  "independence": "No decomposer/policy implementation, rule fixtures, predictions or live reports read/run; no network. Helpers checked source normalization, hashes, existing selected UTF16 slices and opening inventories only.",
+  "acceptanceScope": "All unresolved claims remain visible in frozen coverage denominators. Structural acceptance of a resolved subset is not complete-family coverage, positive-source certification, attorney adjudication or corpus completion. Root schema/span checks remain separate."
+}

@@ -39,6 +39,8 @@ import { formatRetiredIriAuthorityFinding, runRetiredIriAuthorities } from "./Re
 import { SchemaTagIdiomsOptions } from "./SchemaTagIdioms.model.ts";
 import { formatSchemaTagIdiomFinding, runSchemaTagIdioms } from "./SchemaTagIdioms.ts";
 import { runTerseEffectRules, TerseEffectRulesOptions } from "./TerseEffect.ts";
+import { TrackedShellAllowlistOptions } from "./TrackedShellAllowlist.model.ts";
+import { formatTrackedShellFinding, runTrackedShellAllowlist } from "./TrackedShellAllowlist.ts";
 import type { EffectFnRulesSummary } from "./EffectFn.ts";
 import type { FrozenGrantSetRulesSummary } from "./FrozenGrantSet.ts";
 
@@ -815,6 +817,44 @@ const lawsSchemaTagIdiomsCommand = Command.make(
 ).pipe(Command.withDescription("Check git-tracked TypeScript and Markdown for hand-spelled fixed schema tags"));
 
 /**
+ * CLI command for the tracked shell allowlist law.
+ *
+ * **Example** (Reference the tracked-shell-allowlist subcommand)
+ *
+ * ```ts
+ * console.log("lawsTrackedShellAllowlistCommand")
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+const lawsTrackedShellAllowlistCommand = Command.make(
+  "tracked-shell-allowlist",
+  lawCheckFlags("Fail when a git-tracked .sh file sits outside the allowed roots and files"),
+  Effect.fn(function* ({ check, json }) {
+    const summary = yield* runTrackedShellAllowlist(
+      TrackedShellAllowlistOptions.make({ cwd: process.cwd(), strictCheck: check })
+    );
+
+    yield* reportLawSummary({
+      prefix: "effect-governance-tracked-shell-allowlist",
+      check,
+      json,
+      summary,
+      counters: [
+        ["tracked_shell_files", summary.trackedShellFiles],
+        ["allowed_files", summary.allowedFiles],
+      ],
+      findings: A.map(summary.findings, formatTrackedShellFinding),
+    });
+
+    if (summary.strictFailure) {
+      return yield* failWithReportedExit("effect-governance-tracked-shell-allowlist: check failed.");
+    }
+  })
+).pipe(Command.withDescription("Check that every git-tracked shell script is on the reviewed allowlist"));
+
+/**
  * CLI command for repo-local native runtime governance checks.
  *
  * **Example** (Reference the native-runtime subcommand)
@@ -932,6 +972,7 @@ export const lawsCommand = Command.make("laws", {}, () =>
     "- bun run beep laws retired-effect-paths --check",
     "- bun run beep laws retired-iri-authorities --check",
     "- bun run beep laws schema-tag-idioms --check",
+    "- bun run beep laws tracked-shell-allowlist --check",
     "- bun run beep laws terse-effect --check",
     "- bun run beep laws terse-effect --write",
     "- bun run beep laws allowlist-check",
@@ -948,6 +989,7 @@ export const lawsCommand = Command.make("laws", {}, () =>
     lawsRetiredEffectPathsCommand,
     lawsRetiredIriAuthoritiesCommand,
     lawsSchemaTagIdiomsCommand,
+    lawsTrackedShellAllowlistCommand,
     lawsTerseEffectCommand,
     lawsAllowlistCheckCommand,
   ])

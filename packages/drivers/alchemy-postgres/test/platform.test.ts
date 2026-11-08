@@ -17,6 +17,7 @@ import { describe, layer } from "@effect/vitest";
 import { deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
+import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -214,6 +215,41 @@ describe("AlchemyPostgresPlatform", () => {
           defect.pipe(O.map(({ operation, table }) => [operation, table.pipe(O.getOrNull)])),
           O.some(["read", "alchemy_aggregate_event"])
         );
+      })
+    );
+  });
+});
+
+// A short lease, so a delivery a crashed host still holds comes back within the test's budget.
+const shortLease = Unit.layer(CardAuditLive).pipe(
+  Layer.provideMerge(AlchemyPostgresPlatform.layer(AlchemyPostgresConfig.make({ leaseMillis: 1_000 }))),
+  Layer.provideMerge(PgliteTestLayer)
+);
+
+describe("AlchemyPostgresPlatform delivery lease", () => {
+  layer(shortLease, { timeout: "30 seconds", excludeTestServices: true })("on PGlite", (it) => {
+    it.effect("redelivers a row a crashed host left leased once the lease lapses, not before", () =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const cards = yield* Card;
+        const id = CardId.make("orphaned-lease");
+        yield* cards.send(id, IssueCard.make({ holder: "kit" }));
+        yield* Effect.sync(() => auditsOf(id)).pipe(
+          Effect.repeat({ until: (runs) => runs === 1, schedule: Schedule.spaced(Duration.millis(20)) }),
+          Effect.timeout(Duration.seconds(10))
+        );
+        // A host that claimed the row and then died: pending, and leased to it for one lease.
+        const leasedAt = yield* Clock.currentTimeMillis;
+        yield* sql`UPDATE alchemy_delivery
+          SET status = 'pending', locked_until = ${leasedAt + 1_000}, claimed_by = 'dead-host'
+          WHERE model = 'Unit' AND source = ${`Card/${id}`}`;
+        yield* Effect.sleep(Duration.millis(500));
+        deepStrictEqual(auditsOf(id), 1);
+        const runs = yield* Effect.sync(() => auditsOf(id)).pipe(
+          Effect.repeat({ until: (count) => count === 2, schedule: Schedule.spaced(Duration.millis(20)) }),
+          Effect.timeout(Duration.seconds(10))
+        );
+        deepStrictEqual(runs, 2);
       })
     );
   });

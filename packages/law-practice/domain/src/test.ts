@@ -41,3 +41,23 @@
  * @since 0.0.0
  */
 export { fixtureSource, TestCrypto } from "./internal/officeActionFixture.ts";
+/**
+ * Pure inspection-plan assertions for source-only ownership controls.
+ *
+ * **Example** (Inspect source ownership helpers)
+ *
+ * ```ts
+ * import { projectClaimRoleTerms, validateClaimSourceOwnership } from "@beep/law-practice-domain/test"
+ * console.log(typeof projectClaimRoleTerms, typeof validateClaimSourceOwnership) // "function", "function"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export {
+  projectClaimFrameLexicalView,
+  projectClaimRoleTerms,
+  validateClaimSourceOwnership,
+} from "./values/ClaimElement/ClaimClauseRole.projection.ts";
+/** Source-only transition scope controls through the canonical test entrypoint. */
+export { rawClaimTransitionScope } from "./values/PatentDocument/PatentDocument.transition.ts";

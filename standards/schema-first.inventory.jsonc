@@ -378,6 +378,14 @@
       "reason": "Mixed in-memory state: customEntities and instanceId are already modeled by WinkEngineState, while nlp is the live wink-nlp runtime object."
     },
     {
+      "file": "packages/drivers/wink/src/WinkIntrinsicNoun.models.ts",
+      "symbol": "WinkIntrinsicNounShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/wink",
+      "reason": "This is a live scoped SDK capability: provider identity plus a query function returning Effect with typed failures. It holds a captured engine/cache lifetime and is not serializable pure data. Request, result, raw witness and activation errors are annotated schemas; runtime adapter is immutable and scoped. Modeling this executable service object as a data codec would neither validate captured ownership nor its lifetime. Owner: @beep/wink. Exit: re-review if the executable contract or captured engine ownership changes."
+    },
+    {
       "file": "packages/drivers/xstate/src/StatelyInspector.service.ts",
       "symbol": "StatelyInspectorShape",
       "kind": "exported-interface",
@@ -400,14 +408,6 @@
       "status": "exception",
       "owner": "@beep/epistemic-domain",
       "reason": "Type-level projection of the schema-owned EdgeVersion endpoint quadruple consumed by the table converters; every field type is already an annotated schema (branded ids, EdgeEntityRef, EdgeObservationRef, EdgeEndpointKind), so re-modeling the projection would duplicate the entity schema."
-    },
-    {
-      "file": "packages/epistemic/server/src/GovernedEgress/GovernedEgress.layer.ts",
-      "symbol": "GovernedEgressLiveOptions",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/epistemic-server",
-      "reason": "Mixed governed-egress layer wiring: baseFetch is a live transport function, while grant is already schema-backed by GovernedEgressOptions; the options are assembled in-process and never decoded or persisted."
     },
     {
       "file": "packages/epistemic/server/test/BoundedShaclValidator.test.ts",
@@ -480,22 +480,30 @@
       "reason": "Restart regression decodes fixed commands to write history in one PGlite scope and re-read it in a second over the same dataDir; what is under test is that the data files carry history, lineage, dispositions, and live constraints across a process boundary, not schema laws."
     },
     {
-      "file": "packages/epistemic/tables/test/ExecutionRecordTables.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 53,
-      "owner": "@beep/epistemic-tables",
-      "reason": "Fixed-fixture suite: physical table and column pins, insert/select round-trips of an allowed decision, a denied decision, an outcome and a sealed pair, plus the converter failure paths (an unencodable record, a corrupted row on each ledger boundary, and the empty-message fromSchema fallback). Schema-derived property coverage for ExecutionDecisionRecord and ExecutionOutcomeRecord lives with the owning @beep/epistemic-domain value models; the table converters only project them across the persistence boundary."
-    },
-    {
       "file": "packages/epistemic/use-cases/src/ContradictionTriage/ContradictionTriage.rpc.ts",
       "symbol": "EvidenceSourceHighlightArbitrary",
       "kind": "object-struct-schema",
       "status": "exception",
       "owner": "@beep/epistemic-use-cases",
       "reason": "Native Arbitrary companion (Arbitrary.schema + combinators) for the RPC highlight protocol; it is a generator value, not an object schema."
+    },
+    {
+      "file": "packages/execution-authority/server/src/GovernedEgress/GovernedEgress.layer.ts",
+      "symbol": "GovernedEgressLiveOptions",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/execution-authority-server",
+      "reason": "Mixed governed-egress layer wiring: baseFetch is a live transport function, while grant is already schema-backed by GovernedEgressOptions; the options are assembled in-process and never decoded or persisted."
+    },
+    {
+      "file": "packages/execution-authority/tables/test/ExecutionRecordTables.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 53,
+      "owner": "@beep/execution-authority-tables",
+      "reason": "Fixed-fixture suite: physical table and column pins, insert/select round-trips of an allowed decision, a denied decision, an outcome and a sealed pair, plus the converter failure paths (an unencodable record, a corrupted row on each ledger boundary, and the empty-message fromSchema fallback). Schema-derived property coverage for ExecutionDecisionRecord and ExecutionOutcomeRecord lives with the owning @beep/execution-authority-domain entity models; the table converters only project them across the persistence boundary."
     },
     {
       "file": "packages/foundation/capability/chalk/src/Chalk.browser.ts",
@@ -1162,6 +1170,26 @@
       "reason": "Pure parser over in-memory content plus schema-backed PatentSectionKind values; it returns the schema-backed PatentSections model and the transient option bag is never decoded or persisted."
     },
     {
+      "file": "packages/law-practice/domain/test/ClaimElement.preamble-ownership.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 211,
+      "owner": "@beep/law-practice-domain",
+      "reason": "Source-led fixed ownership conformance and corrupt-plan regressions require exact token/core/head/frame/citation/route/partition anchors. Random independently generated schema values do not provide the joint qualified-source and grammatical-owner certificates these assertions exercise. This scoped exception covers only this file/rule occurrence; source proof, actual budget controls and output assertions remain required."
+    },
+    {
+      "file": "packages/law-practice/domain/test/ClaimElement.recurrence.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 128,
+      "owner": "@beep/law-practice-domain",
+      "reason": "Fixed reviewed source grammar regression controls decode 54 authored source plans and three route families to assert exact UTF-16 terms, head/outer extents, kinds, topology, frame argument provenance, functional partitions and route verdicts, plus atomic negative controls. Random codec round trips cannot establish those source grammar obligations. Public claim/tree model properties remain covered by the existing domain model tests; no arbitrary padding is introduced. This exception is limited to @beep/law-practice-domain fixed source-regression tests and must be re-reviewed when this file or its asserted invariants change."
+    },
+    {
       "file": "packages/law-practice/server/src/internal/Citation/RegexInput.ts",
       "symbol": "CitationPreparedRegexInput",
       "kind": "exported-interface",
@@ -1428,6 +1456,16 @@
       "line": 113,
       "owner": "@beep/law-practice-server",
       "reason": "Read-only integrity audit of frozen public reference fixtures: selected claim ownership, exact source spans and cross-claim endpoints are the subjects. Generated arbitrary claims cannot establish the immutable source corpus. Owner: @beep/law-practice-server. Exit: retire when the detector distinguishes frozen-source integrity tests from schema-law tests."
+    },
+    {
+      "file": "packages/law-practice/server/test/ClaimInspection.projection-fixtures.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 48,
+      "owner": "@beep/law-practice-server",
+      "reason": "This is fixed source-led golden/regression evidence, not an owner or test of the imported codecs. Four decode operations read actual pinned bytes and validate the original authored anchors before a three-field additive overlay. Random schema samples cannot establish original/correction SHA identity or their exact old fields. Codec property laws belong to their owning packages; no synthetic property is added to pad this fixture proof. Owner: @beep/law-practice-server. Valid only for source SHA a2b5f71a0070d0750460ef64143a75b840f394af8ecb0c54afb7b501c26b5ce8; re-review on source or invariant change. Independent review: structural-projection-implementation-independent-review-001."
     },
     {
       "file": "packages/law-practice/server/test/ClaimSelfCheck.corpus.test.ts",
