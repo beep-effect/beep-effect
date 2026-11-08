@@ -29,6 +29,12 @@ case so swallowing `AlreadyExists` can never turn a missing parent into success.
 Keep the original failed job and obtain fresh hosted proof on the changed
 source; no local suite or unchanged-source rerun is used.
 
+The changed-head hosted Check then reported `TS377050` on the new nested
+Option-presence assertion. Use the equivalent pipeable form while retaining
+the assertion. This introduced compiler-diagnostic finding was absent from
+the syntax-only test-pattern inspection; that inspection is not type proof.
+The hosted failure log is retained, and fresh hosted proof is still required.
+
 ## 2026-11-03: hosted policy must cover the new mask tests
 
 PR #2691's current hosted policy log found one introduced Effect Vitest

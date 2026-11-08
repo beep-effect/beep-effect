@@ -157,7 +157,7 @@ describe("cli/FsGuards contained writes", () => {
 
         expect(error.reason).toBe("filesystem-failure");
         expect(error.path).toBe(path.join(root, "inbox"));
-        assertTrue(O.isSome(error.cause));
+        error.cause.pipe(O.isSome, assertTrue);
       })
     );
 
