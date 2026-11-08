@@ -29,6 +29,7 @@ const proofMutations =
       token: () => [],
       "intrinsic-noun": () => [],
       boundary: () => [],
+      "label-boundary": () => [],
       "citation-boundary": () => [],
       "verbal-boundary": () => [],
       scope: (p) => [ClaimFiniteSourceProof.cases.scope.make({ ...p, extent: foreignQuote(p.extent) })],

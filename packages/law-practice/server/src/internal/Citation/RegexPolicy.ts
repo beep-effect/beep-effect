@@ -48,7 +48,7 @@ export const makeCitationRegexTiming = Effect.fn("Citation.makeRegexTiming")(fun
     ? ("operationDeadline" as const)
     : stageLimit;
   const safetyFailure = (error: CitationSafetyLimitExceeded) =>
-    CitationSafetyLimitExceeded.make({ operation, limit: error.limit });
+    error.operation === operation ? error : CitationSafetyLimitExceeded.make({ operation, limit: error.limit });
   const normalizeSafety = <E>(error: E): E | CitationSafetyLimitExceeded =>
     isSafetyFailure(error) ? safetyFailure(error) : error;
   const timedFor =

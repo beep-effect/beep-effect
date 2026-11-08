@@ -1304,7 +1304,7 @@ const finiteLabelOriginalAligned = (context: FiniteProofValidationContext): bool
 const finiteLabelBodyScope = (
   scope: O.Option<ClaimFiniteSourceProof>
 ): scope is O.Some<Extract<ClaimFiniteSourceProof, { readonly kind: "scope" }>> =>
-  isFiniteScopeProofOption(scope) && scope.value.role === "body";
+  O.isSome(scope) && scope.value.kind === "scope" && scope.value.role === "body";
 const computeFiniteRightListSource = (context: FiniteProofValidationContext): O.Option<RawRightList> | false => {
   // Eight prepaid setup slots: denial latch, forwarding closure, two captures,
   // Found cell and its two fields, and the context publication.
