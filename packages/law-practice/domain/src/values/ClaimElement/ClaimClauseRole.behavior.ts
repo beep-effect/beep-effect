@@ -1266,17 +1266,22 @@ const validateFiniteLabelSource = (
   if (!finiteLabelMembers(context, proof, source, scope)) return false;
   return finiteLabelTokenAt(context, proof.token, O.getOrThrow(A.get(source.markers, proof.item))[1] - 1);
 };
+const finiteLabelOriginalAligned = (context: FiniteProofValidationContext): boolean =>
+  O.exists(context.originalInput, ClaimLexicalEvidence.guards.aligned);
+const finiteLabelBodyScope = (
+  scope: O.Option<ClaimFiniteSourceProof>
+): scope is O.Some<Extract<ClaimFiniteSourceProof, { readonly kind: "scope" }>> =>
+  isFiniteScopeProofOption(scope) && scope.value.role === "body";
 const validateFiniteLabelBoundary = (
   context: FiniteProofValidationContext,
   proof: Extract<ClaimFiniteSourceProof, { readonly kind: "label-boundary" }>
 ): boolean => {
   if (!context.charge(proof.markers.length * 16 + 32) || Result.isFailure(strictLabelBoundary(proof))) return false;
-  if (O.isNone(context.originalInput) || context.originalInput.value.status !== "aligned") return false;
+  if (!finiteLabelOriginalAligned(context)) return false;
   const source = readSourceRightParenthesisList(context.claim, context.tokens, context.charge);
   if (O.isNone(source)) return false;
   const scope = context.resolve(proof.scope);
-  if (!isFiniteScopeProofOption(scope) || scope.value.role !== "body" || !finiteLabelCensus(proof, source.value))
-    return false;
+  if (!finiteLabelBodyScope(scope) || !finiteLabelCensus(proof, source.value)) return false;
   return validateFiniteLabelSource(context, proof, source.value, scope.value);
 };
 
@@ -2096,11 +2101,51 @@ const validateFiniteOperatorMode = (context: FiniteProofValidationContext, proof
   if (proof.mode === "qualified-transition") return finiteOperatorTransitionMatches(context, proof);
   return true;
 };
+const rightOperatorSourceList = (
+  context: FiniteProofValidationContext,
+  head: FiniteTokenProof
+): O.Option<RawRightList> | false => {
+  if (!context.charge(6)) return false;
+  const before = A.get(context.tokens, head.tokenOrdinal - 2);
+  if (O.isNone(before) || !Str.endsWith(")")(before.value.anchor.quote)) return O.none();
+  let failed = false;
+  const reserve = (amount: number): boolean => {
+    const ok = context.charge(amount);
+    if (!ok) failed = true;
+    return ok;
+  };
+  const source = readSourceRightParenthesisList(context.claim, context.tokens, reserve);
+  return failed ? false : source;
+};
+const rightOperatorPosition = (
+  context: FiniteProofValidationContext,
+  proof: FiniteOperatorProof,
+  head: FiniteTokenProof
+): boolean => {
+  if (!context.charge(3)) return false;
+  return O.exists(proof.position, (ref) =>
+    O.exists(context.resolve(ref), (p) => p.kind === "token" && p.tokenOrdinal === head.tokenOrdinal - 1)
+  );
+};
+const validateRightLabelOperator = (
+  context: FiniteProofValidationContext,
+  proof: FiniteOperatorProof,
+  head: FiniteTokenProof
+): boolean => {
+  if (O.isNone(context.originalInput)) return true;
+  const source = rightOperatorSourceList(context, head);
+  if (source === false) return false;
+  if (O.isNone(source)) return true;
+  if (!context.charge(source.value.markers.length + 1)) return false;
+  if (!A.some(source.value.markers, (m) => m[1] === head.tokenOrdinal - 1)) return true;
+  return rightOperatorPosition(context, proof, head) && validateSourceRightLabelActionToken(head.token, context.charge);
+};
 const validateFiniteOperatorProof = (context: FiniteProofValidationContext, proof: FiniteOperatorProof): boolean => {
   if (proof.lexical.length === 0 || !A.some(proof.lexical, (ref) => ref.ordinal === proof.head.token.ordinal))
     return false;
   const lexicalHead = context.resolve(proof.head.token);
   if (O.isNone(lexicalHead) || lexicalHead.value.kind !== "token") return false;
+  if (!validateRightLabelOperator(context, proof, lexicalHead.value)) return false;
   if (!validateFiniteOperatorHead(context, proof, lexicalHead.value)) return false;
   if (!validateFiniteOperatorTokens(context, proof)) return false;
   return validateFiniteOperatorMode(context, proof);
@@ -2526,6 +2571,35 @@ const isAlignedLexicalInput = (
   O.isSome(input) && input.value.status === "aligned";
 // Operational parser state owns one source and one shared reservation. It is not
 // persisted domain data; emitted data is constructed through the schemas above.
+const sourceGerundForm = (token: ClaimLexicalToken): boolean =>
+  O.exists(token.lemma, (lemma) => {
+    const base = normalized(lemma);
+    return word(token) === `${base}ing` || (Str.endsWith("e")(base) && word(token) === `${Str.slice(0, -1)(base)}ing`);
+  });
+/**
+ * Recheck the original lexical action premise for a witnessed right-parenthesis child.
+ *
+ * **Example** (Inspect the source-only action guard)
+ *
+ * ```ts
+ * import { validateSourceRightLabelActionToken } from "@beep/law-practice-domain/values/ClaimElement"
+ * console.log(typeof validateSourceRightLabelActionToken) // "function"
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const validateSourceRightLabelActionToken: {
+  (charge: (amount: number) => boolean): (token: ClaimLexicalToken) => boolean;
+  (token: ClaimLexicalToken, charge: (amount: number) => boolean): boolean;
+} = dual(
+  2,
+  (token: ClaimLexicalToken, charge: (amount: number) => boolean): boolean =>
+    charge(token.anchor.quote.length * 4 + (O.isSome(token.lemma) ? token.lemma.value.length : 0) * 4 + 8) &&
+    token.pos === "VERB" &&
+    sourceGerundForm(token)
+);
+
 type RawRightLabel = readonly [number, number];
 type RawRightList = {
   readonly governor: number;
@@ -4502,13 +4576,7 @@ class RoleCompiler {
     }
     return true;
   };
-  private gerundForm = (token: ClaimLexicalToken): boolean =>
-    O.exists(token.lemma, (lemma) => {
-      const base = normalized(lemma);
-      return (
-        word(token) === `${base}ing` || (Str.endsWith("e")(base) && word(token) === `${Str.slice(0, -1)(base)}ing`)
-      );
-    });
+  private gerundForm = sourceGerundForm;
   private adjunctSlot = (index: number): boolean =>
     tagAt(this.tokens, index) === "ADV" || HashSet.has(HashSet.make("not", "n't"), wordAt(this.tokens, index));
   private skipAdjuncts = (index: number, step: -1 | 1): number => {

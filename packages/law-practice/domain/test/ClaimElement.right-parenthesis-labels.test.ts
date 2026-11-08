@@ -452,4 +452,63 @@ describe("source-proved right-parenthesis list labels", () => {
       );
     })
   );
+  for (const { joined, mutation } of A.flatMap([false, true], (joined) =>
+    A.map(["pos", "missing-lemma", "wrong-lemma", "bare-header-pos", "pos-without-position"] as const, (mutation) => ({
+      joined,
+      mutation,
+    }))
+  )) {
+    it.effect(`rejects coherent action ${mutation} mutation with ${joined ? "combined" : "split"} labels`, () =>
+      Effect.gen(function* () {
+        const text =
+          mutation === "bare-header-pos"
+            ? "A method comprising: a) placing a panel; b) forming a port."
+            : "A method comprising the steps of: a) placing a panel; b) forming a port.";
+        const plan = yield* planOf(text, joined);
+        const original = O.getOrThrow(plan.roles.originalLexicalInput);
+        const claim = O.getOrThrow(plan.roles.qualifiedClaim);
+        if (original.status !== "aligned") throw new Error("expected aligned input");
+        const action = O.getOrThrow(A.findFirst(original.tokens, (t) => t.anchor.quote === "placing"));
+        const token = ClaimLexicalToken.make({
+          ...action,
+          ...(mutation === "pos" || mutation === "bare-header-pos" || mutation === "pos-without-position"
+            ? { pos: "NOUN" }
+            : { lemma: mutation === "missing-lemma" ? O.none() : O.some("draw") }),
+        });
+        const input = ClaimLexicalEvidence.cases.aligned.make({
+          ...original,
+          tokens: A.map(original.tokens, (t) => (t.anchor.startChar === action.anchor.startChar ? token : t)),
+        });
+        const certificates = A.map(plan.roles.certificates, (p) =>
+          p.kind === "token" && p.token.anchor.startChar === action.anchor.startChar
+            ? ClaimFiniteSourceProof.cases.token.make({ ...p, token })
+            : mutation === "pos-without-position" &&
+                p.kind === "operator" &&
+                p.extent.startChar === action.anchor.startChar
+              ? ClaimFiniteSourceProof.cases.operator.make({ ...p, position: O.none() })
+              : p
+        );
+        const changed = ClaimSourceElementPlan.make({
+          ...plan,
+          roles: ClaimClauseRolePlan.make({ ...plan.roles, certificates, originalLexicalInput: O.some(input) }),
+        });
+        const prepared = yield* prepareClaimInspection(inputOf(text));
+        const produced = yield* decomposePreparedClaimRoles(prepared, [input]);
+        assert.deepStrictEqual(
+          {
+            producerPlans: produced.plans.length,
+            ownership: validateClaimSourceOwnership(changed, () => true),
+            finite: validateClaimFiniteSourceProofsFromOriginalInput(
+              claim,
+              input,
+              certificates,
+              plan.roles.proofs,
+              () => true
+            ),
+          },
+          { producerPlans: 0, ownership: false, finite: false }
+        );
+      })
+    );
+  }
 });
