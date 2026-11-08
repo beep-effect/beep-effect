@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-11-07",
+  "generatedOn": "2026-11-08",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
