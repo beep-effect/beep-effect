@@ -1938,6 +1938,22 @@ const CI_EFFECTIVE_LANE_SPECS: ReadonlyArray<CiEffectiveLaneSpec> = [
         "Test Unit (unit-c)",
         "Test Unit (unit-d)",
       ],
+      // From 2026-11-08: @beep/law-practice-server leaves unit-d for three Vitest shards of its own.
+      [
+        "Test Unit (repo-cli-1)",
+        "Test Unit (repo-cli-2)",
+        "Test Unit (repo-cli-3)",
+        "Test Unit (repo-cli-4)",
+        "Test Unit (repo-cli-5)",
+        "Test Unit (repo-cli-6)",
+        "Test Unit (law-practice-1)",
+        "Test Unit (law-practice-2)",
+        "Test Unit (law-practice-3)",
+        "Test Unit (unit-a)",
+        "Test Unit (unit-b)",
+        "Test Unit (unit-c)",
+        "Test Unit (unit-d)",
+      ],
     ],
   }),
 ];
