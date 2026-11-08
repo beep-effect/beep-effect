@@ -809,6 +809,90 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
     }));
 
   describe("quality-scheduler", () => {
+    it.layer(NodeCrypto.layer, { concurrent: false, timeout: "10 seconds" })((it) => {
+      it.effect("publishes atomic state without process identity and removes its staging sibling", () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const { runtimeDir } = yield* admissionTemporaryRoot;
+          const filePath = `${runtimeDir}/state`;
+          const staged = yield* Ref.make<ReadonlyArray<string>>([]);
+          const unavailableIdentity = FileSystem.FileSystem.of({
+            ...fs,
+            readFileString: Effect.fn("FileSystem.FileSystem.readFileString")((target, encoding) =>
+              Str.startsWith("/proc/")(target) ? Effect.succeed("") : fs.readFileString(target, encoding)
+            ),
+            open: Effect.fn("QualitySchedulerTest.openWithoutIdentity")(function* (target, options) {
+              const file = yield* fs.open(target, options);
+              yield* Ref.update(staged, A.append(target));
+              return file;
+            }),
+          });
+          yield* withProcessPath(
+            runtimeDir,
+            Effect.gen(function* () {
+              const identity = yield* processStartIdentityForPid(process.pid);
+              identity.pipe(assertNone);
+              yield* writeFileAtomicForTesting(filePath, "complete");
+              const paths = yield* Ref.get(staged);
+              expect(paths).toHaveLength(1);
+              const temporary = yield* Effect.fromOption(A.head(paths)).pipe(Effect.orDie);
+              const prefix = `${filePath}.tmp-${process.pid}-`;
+              expect(Str.startsWith(prefix)(temporary)).toBe(true);
+              expect(S.is(UUID)(Str.slice(prefix.length)(temporary))).toBe(true);
+              const content = yield* fs.readFileString(filePath);
+              expect(content).toBe("complete");
+              const siblings = yield* fs.readDirectory(runtimeDir);
+              expect(siblings).toEqual(["state"]);
+            }).pipe(Effect.provideService(FileSystem.FileSystem, unavailableIdentity))
+          );
+        }).pipe(TestClock.withLive)
+      );
+
+      it.effect("budgets live status using its identity-fenced active reservation", () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const { runtimeDir, tempRoot } = yield* admissionTemporaryRoot;
+          const observedWeights = yield* Ref.make<ReadonlyArray<number>>([]);
+          const stats = MemoryStats.of({
+            availableGib: Effect.succeed(80),
+            totalGib: Effect.succeed(128),
+            ceilingGib: Effect.succeed(128),
+            reservationCapacity: Effect.fn("MemoryStats.reservationCapacity")((leases) =>
+              Ref.set(
+                observedWeights,
+                A.map(leases, (lease) => lease.weightTokens)
+              ).pipe(Effect.as(8))
+            ),
+          });
+          yield* withQualityAdmission(
+            request(),
+            noAdmissionOriginGate,
+            Effect.gen(function* () {
+              const snapshot = yield* admissionStatus();
+              expect(snapshot.capacityTokens).toBe(8);
+              expect(snapshot.activeTokens).toBe(3);
+              expect(snapshot.leases).toHaveLength(1);
+              const identity = yield* processStartIdentityForPid(process.pid);
+              identity.pipe(O.isSome, assertTrue);
+              const procStart = yield* Effect.fromOption(identity).pipe(Effect.orDie);
+              assertSome(A.head(snapshot.leases).pipe(O.map((lease) => lease.procStart)), procStart);
+              const weights = yield* Ref.get(observedWeights);
+              expect(weights).toEqual([3]);
+            }),
+            fastConfig
+          ).pipe(
+            provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
+            Effect.provideService(MemoryStats, stats),
+            Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" }))
+          );
+          const remainingLeases = yield* fs.readDirectory(tempRoot.leases);
+          const remainingTickets = yield* fs.readDirectory(tempRoot.queue);
+          expect(remainingLeases).toEqual([]);
+          expect(remainingTickets).toEqual([]);
+        }).pipe(TestClock.withLive)
+      );
+    });
+
     it.layer(MemoryStatsLive.pipe(Layer.provideMerge(NodeCrypto.layer)), { timeout: "5 seconds" })((it) => {
       it.effect("reads the live memory inputs used by the scheduler capacity model", () =>
         Effect.gen(function* () {
