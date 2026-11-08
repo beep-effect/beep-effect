@@ -22,7 +22,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Enforce signed artifact reuse, independent upload authorization, tenant isolation and attributable cache outcomes with bounded safe telemetry. Complete only after SPEC acceptance, representative evidence, final same-PR reflection/lifecycle, and Yeet merge-ready: yes.",
+    "statement": "Enforce signed artifact reuse, independent upload authorization, tenant isolation and attributable cache outcomes with bounded safe telemetry. Complete only after SPEC acceptance, representative evidence and a final Yeet merge-ready: yes verdict. Land final evidence, reflection and proposedCloseout in the final implementation PR while the goal stays active or paused. After that PR merges, completion refresh verifies the proposal and a separate packet-state PR adopts completed-retained. That PR must merge, and origin/main must show matching closeout and initiative statuses.",
     "grandfathered": false
   },
   "currentSourceOfTruth": [

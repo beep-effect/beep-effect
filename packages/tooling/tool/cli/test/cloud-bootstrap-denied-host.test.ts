@@ -529,6 +529,45 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("cloud bootstrap require
     );
   }
 
+  it.effect("invalidates cached preparation before reinstall can stop at stamp cleanup", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const fixture = yield* prepareFixture();
+      const first = yield* runBootstrap(fixture, { bun: "pinned", node: "pinned" });
+      expect(first.exitCode, first.stderr).toBe(0);
+      const prepareStamp = path.join(fixture.root, "node_modules/.beep-cloud-bootstrap.prepare.sha256");
+      const preparedBeforeReinstall = yield* fs.exists(prepareStamp);
+      expect(preparedBeforeReinstall).toBe(true);
+      // A cache may retain preparation while its install stamp is missing.
+      yield* fs.remove(path.join(fixture.root, "node_modules/.beep-cloud-bootstrap.lock.sha256"));
+      yield* fs.writeFileString(path.join(fixture.root, "events"), "");
+      // Fail only a late invalidation, after the fake installer replaced the
+      // compiler. An early invalidation succeeds; no real installer runs.
+      yield* fs.writeFileString(
+        path.join(fixture.bin, "rm"),
+        `#!/bin/sh
+case "$*" in
+  *".beep-cloud-bootstrap.prepare.sha256"*)
+    if grep -qx 'bun-install' "$FIXTURE/events"; then
+      echo 'fixture: preparation invalidated after reinstall' >&2
+      exit 95
+    fi
+    ;;
+esac
+exec /usr/bin/rm "$@"
+`
+      );
+      const second = yield* runBootstrap(fixture, { bun: "pinned", node: "pinned" });
+      expect(second.exitCode, second.stderr).toBe(0);
+      const events = yield* fs.readFileString(path.join(fixture.root, "events"));
+      expect(events).toContain("bun-install");
+      expect(events).toContain("bun-run-prepare");
+      const preparedAfterReinstall = yield* fs.exists(prepareStamp);
+      expect(preparedAfterReinstall).toBe(true);
+    })
+  );
+
   it.effect("continues through install on an allowed host and is a no-op on re-run", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

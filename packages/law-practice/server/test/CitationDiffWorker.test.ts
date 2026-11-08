@@ -51,6 +51,26 @@ const controlled = Effect.fn("DiffWorkerTest.controlled")(function* (
 });
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned default-diff worker", (it) => {
+  it.effect("rejects malformed runtime and Unicode input before starting a child", () =>
+    Effect.gen(function* () {
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      const fixture = yield* makeCitationNativeWorkerFixture("busy", "diff", "bun");
+      const observed = yield* makeCitationNativeAcknowledgementSpawner(Effect.void);
+      const invalidRuntime = yield* makeCitationDiffWorker(limits, { ...fixture, kind: "unsupported" }).pipe(
+        Effect.provideService(ChildProcessSpawner, observed.spawner),
+        Effect.flip
+      );
+      expect(invalidRuntime).toMatchObject({ reason: "invalid-runtime" });
+      const worker = yield* makeCitationDiffWorker(limits, fixture).pipe(
+        Effect.provideService(ChildProcessSpawner, observed.spawner)
+      );
+      const invalidUnicode = yield* worker.evaluate({ width: 3, bytes: new Uint8Array([97]) }, after).pipe(Effect.flip);
+      expect(invalidUnicode).toMatchObject({ reason: "invalid-input" });
+      const counts = yield* observed.snapshot;
+      expect(counts).toEqual({ spawned: 0, confirmed: 0 });
+    })
+  );
+
   it.effect("refuses combined input and captured text capacity before spawning or receiving copies", () =>
     Effect.gen(function* () {
       const fixture = yield* makeCitationNativeWorkerFixture("busy", "diff", "bun");
