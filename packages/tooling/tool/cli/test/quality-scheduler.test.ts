@@ -1008,42 +1008,61 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
       );
     });
 
-    it.effect("escalates a queued admission after two minutes", () => {
-      const ticket = YeetAdmissionTicket.make({
-        schemaVersion: "yeet-admission-ticket/v1",
-        pid: process.pid,
-        procStart: "test-start",
-        kind: "full-proof",
-        weightTokens: 3,
-        priority: "verify",
-        originKey: "origin-escalation",
-        checkoutRoot: "/repo/escalation",
-        branch: "feat/escalation",
-        enqueuedAtMillis: 0,
-        heartbeatAtMillis: 0,
-        blockedOnOriginAtMillis: 0,
-        nonce: "escalation-ticket",
-      });
+    const noteEscalationWait = (escalated: number, nowMillis: number) =>
+      noteAdmissionWaitForTesting(
+        request(),
+        YeetAdmissionTicket.make({
+          schemaVersion: "yeet-admission-ticket/v1",
+          pid: process.pid,
+          procStart: "test-start",
+          kind: "full-proof",
+          weightTokens: 3,
+          priority: "verify",
+          originKey: "origin-escalation",
+          checkoutRoot: "/repo/escalation",
+          branch: "feat/escalation",
+          enqueuedAtMillis: 0,
+          heartbeatAtMillis: 0,
+          blockedOnOriginAtMillis: 0,
+          nonce: "escalation-ticket",
+        }),
+        0,
+        { escalated, lastProgressMillis: 0 },
+        fastConfig,
+        {
+          availableGib: 10,
+          capacityTokens: 0,
+          nowMillis,
+          state: {
+            dead: [],
+            deadLeases: [],
+            deadTickets: [],
+            leases: [],
+            quarantined: [],
+            tickets: [],
+          },
+        }
+      );
 
-      return noteAdmissionWaitForTesting(request(), ticket, 0, { escalated: 0, lastProgressMillis: 0 }, fastConfig, {
-        availableGib: 10,
-        capacityTokens: 0,
-        nowMillis: 120_000,
-        state: {
-          dead: [],
-          deadLeases: [],
-          deadTickets: [],
-          leases: [],
-          quarantined: [],
-          tickets: [],
-        },
-      }).pipe(
+    it.effect("escalates a queued admission after two minutes", () =>
+      noteEscalationWait(0, 120_000).pipe(
         Effect.map((progress) => {
           expect(progress.escalated).toBe(1);
           expect(progress.lastProgressMillis).toBe(120_000);
         })
-      );
-    });
+      )
+    );
+
+    it.effect("points a queued admission at the holders after ten minutes, once", () =>
+      Effect.gen(function* () {
+        const progress = yield* noteEscalationWait(1, 600_000);
+        expect(progress.escalated).toBe(2);
+        const repeated = yield* noteEscalationWait(2, 660_000);
+        expect(repeated.escalated).toBe(2);
+        const lines = yield* TestConsole.logLines;
+        expect(A.filter(A.map(lines, String), Str.includes("waited 10 minutes"))).toHaveLength(1);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
     it("pins the chartered token weights", () => {
       expect(admissionTokenWeight("full-proof")).toBe(3);
@@ -6478,6 +6497,38 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
       }).pipe(TestClock.withLive)
     );
 
+    it.effect("reports status capacity from the reservations of the live leases", () =>
+      Effect.gen(function* () {
+        const { runtimeDir } = yield* admissionTemporaryRoot;
+        const reserved = yield* Ref.make(A.empty<number>());
+        const stats = MemoryStats.of({
+          availableGib: Effect.succeed(1),
+          totalGib: Effect.succeed(128),
+          ceilingGib: Effect.succeed(128),
+          reservationCapacity: Effect.fn("MemoryStats.reservationCapacity")(function* (leases) {
+            yield* Ref.set(
+              reserved,
+              A.map(leases, (lease) => lease.weightTokens)
+            );
+            return 10;
+          }),
+        });
+        const snapshot = yield* withQualityAdmission(
+          request(),
+          noAdmissionOriginGate,
+          admissionStatus(fastConfig),
+          fastConfig
+        ).pipe(
+          provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
+          Effect.provideService(MemoryStats, stats)
+        );
+        expect(snapshot.capacityTokens).toBe(10);
+        const weights = yield* Ref.get(reserved);
+        expect(weights).toEqual([request().weightTokens]);
+      }).pipe(TestClock.withLive)
+    );
+
     it.effect("keeps failed adoption on the caller budget and cleans a cancelled retry", () =>
       Effect.gen(function* () {
         const { runtimeDir, tempRoot } = yield* admissionTemporaryRoot;
@@ -6618,6 +6669,7 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
           fault = ""
         ) {
           let liveAncestorGib = ancestorGib;
+          let callerReads = 0;
           const unavailableRoot = fault === "root-absent" || fault === "root-denied";
           const partialRoot = fault === "root-partial";
           const tightRoot = fault === "namespace-root" || fault === "subtree-root";
@@ -6634,7 +6686,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               const rootMissing = isRoot && unavailableRoot;
               // The changing limit is evaluated only when the file is read.
               const limit = Effect.sync(
-                () => `${(isRoot && tightRoot ? 20 : suffix === "/shared/caller" ? 32 : liveAncestorGib) * GIB}`
+                () =>
+                  `${(isRoot && tightRoot ? 20 : suffix === "/shared/caller" ? (fault === "loose-caller" ? 64 : 32) : liveAncestorGib) * GIB}`
               );
               const current = Effect.sync(() => (fault === "current" ? "malformed" : "0"));
               const directory = `/sys/fs/cgroup${suffix}`;
@@ -6656,12 +6709,16 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
                 Effect.sync(() =>
                   fault === "mount"
                     ? "invalid"
-                    : `1 0 0:1 ${fault === "subtree-root" ? "/shared" : "/"} /sys/fs/cgroup rw - cgroup2 cgroup rw`
+                    : `1 0 0:1 ${fault === "subtree-root" ? "/shared" : fault === "foreign-root" ? "/foreign" : "/"} /sys/fs/cgroup rw - cgroup2 cgroup rw`
                 )
               ),
               Tuple.make(
                 `/proc/${process.pid}/cgroup`,
-                Effect.sync(() => (fault === "caller" ? "invalid" : "0::/shared/caller\n"))
+                Effect.sync(() => {
+                  callerReads += 1;
+                  if (fault === "caller") return "invalid";
+                  return fault === "moved-caller" && callerReads > 1 ? "0::/shared/moved\n" : "0::/shared/caller\n";
+                })
               ),
               Tuple.make(
                 `/proc/${process.ppid}/cgroup`,
@@ -6739,6 +6796,17 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
         expect(reading32).toBe(4);
         const reading33 = yield* capacity("/elsewhere", 80, 128, false, O.some("/execution"), "fresh");
         expect(reading33).toBe(2);
+        // Without a fault this inspection reads 7 (reading16); each of these distrusts it and falls back to 4.
+        const reading34 = yield* capacity("/elsewhere", 80, 128, false, O.none(), "foreign-root");
+        expect(reading34).toBe(4);
+        const reading35 = yield* capacity("/elsewhere", 80, 128, false, O.none(), "moved-caller");
+        expect(reading35).toBe(4);
+        // The source's 32 GiB ceiling is tighter than every cgroup limit, so it decides. A prospective
+        // destination is judged by its own limits instead.
+        const reading36 = yield* capacity("/elsewhere", 80, 128, false, O.none(), "loose-caller");
+        expect(reading36).toBe(4);
+        const reading37 = yield* capacity("/elsewhere", 80, 128, false, O.some("/shared/caller"), "loose-caller");
+        expect(reading37).toBeGreaterThan(4);
       })
     );
 
