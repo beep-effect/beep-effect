@@ -83,6 +83,21 @@ const provideSpawnerWith =
       )
     ).pipe(provideSpawner(spawner));
 
+// `process.geteuid` replaced for one effect, restored afterwards.
+const withGeteuid = <A, E, R>(geteuid: (() => number) | undefined, effect: Effect.Effect<A, E, R>) =>
+  Effect.acquireUseRelease(
+    Effect.sync(() => {
+      const previous = Object.getOwnPropertyDescriptor(process, "geteuid");
+      Object.defineProperty(process, "geteuid", { value: geteuid, configurable: true, writable: true });
+      return previous;
+    }),
+    () => effect,
+    (previous) =>
+      Effect.sync(() =>
+        Object.defineProperty(process, "geteuid", previous ?? { value: undefined, configurable: true, writable: true })
+      )
+  );
+
 const reportedExit = (failure: unknown) =>
   P.hasProperty(failure, "exitCode") && P.hasProperty(failure, "message")
     ? { exitCode: failure.exitCode, message: `${failure.message}` }
@@ -167,6 +182,32 @@ it.layer(platform, { timeout: "60 seconds" })("cache pilot host commands in proc
       const installing = ScriptedSpawner.make(() => ({}));
       yield* sandbox(paths).pipe(withPath(bin), provideSpawnerWith(installing, installBwrap(fs, bwrap)));
       assertSome(A.last(spawnLines(installing)), `${bwrap} --version`);
+    }, freshConsole)
+  );
+
+  it.effect(
+    "runs the install directly as root or without geteuid and through sudo -n otherwise",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const { bin, apt, bwrap } = yield* makeTools(["dnf"]);
+      const firstSpawn = Effect.fnUntraced(function* (geteuid: (() => number) | undefined) {
+        const installing = ScriptedSpawner.make(() => ({}));
+        yield* fs.remove(bwrap, { force: true });
+        yield* withGeteuid(
+          geteuid,
+          sandbox({ bwrap, aptSources: apt }).pipe(
+            withPath(bin),
+            provideSpawnerWith(installing, installBwrap(fs, bwrap))
+          )
+        );
+        return A.head(spawnLines(installing));
+      });
+      const root = yield* firstSpawn(() => 0);
+      const noGeteuid = yield* firstSpawn(undefined);
+      const user = yield* firstSpawn(() => 1000);
+      assertSome(root, "dnf install -y bubblewrap");
+      assertSome(noGeteuid, "dnf install -y bubblewrap");
+      assertSome(user, "sudo -n dnf install -y bubblewrap");
     }, freshConsole)
   );
 
