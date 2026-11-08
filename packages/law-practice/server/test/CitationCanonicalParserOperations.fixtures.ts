@@ -75,7 +75,7 @@ const replayRows = Effect.fn("CanonicalParserTest.rows")(function* (
 ) {
   const replay = yield* makeCitationCanonicalExtractionReplay(kind);
   for (const row of rows) {
-    const result = yield* replay.extract(row.body.input.plain_text, "plain", row.models, row.id);
+    const result = yield* replay.extract(row.body.input.plain_text, "plain", row.models, row.id, null);
     expect(result.source.source.sourceText, row.id).toBe(row.body.stages.document.plainText);
   }
   yield* replay.assertRetired;

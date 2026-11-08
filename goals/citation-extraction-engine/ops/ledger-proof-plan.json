@@ -606,12 +606,12 @@
       ],
       "rationale": "Complete local public-engine replay of these exact original reference-order and overlap-filtering assertions on both runtimes. Other original inputs and parent capabilities remain separate.",
       "proof": {
-        "command": "bunx --bun vitest run test/CitationCanonicalParserOperations.test.ts test/CitationCanonicalReferenceMarkup.test.ts --reporter=json --outputFile=../../../.beep/parser-replay-expanded-results.json",
+        "command": "bunx --bun vitest run test/CitationCanonicalRemainingExtraction.test.ts test/CitationCanonicalParserOperations.test.ts test/CitationCanonicalCourts.test.ts test/CitationCanonicalReferenceMarkup.test.ts --reporter=json --outputFile=../../../.beep/remaining-extraction-results.json",
         "result": "passed",
         "scope": "complete-case",
         "operation": "extract",
-        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-original-resolution-parser-fragments.md",
-        "evidenceSha256": "f3f442f98980b42a951c9aca20e65c6e612eaf8726e870e10124868fc7dc6b42",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-remaining-extraction-inputs.md",
+        "evidenceSha256": "c8b4e4e2b7a4dea5cf02ffc70d013289fa59fc5e0cb60cfbd838e1ec74ebc352",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalReferenceMarkup.test.ts",
@@ -646,7 +646,7 @@
           },
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtractionRuntime.fixtures.ts",
-            "sha256": "39dcc7ba10285a36dda617542933c34ed10ce7910c8594021f52183f406261e3"
+            "sha256": "eac40362076e5d4825be8800df084ffe5304ae645ba804c63cc6c77bbf81a5c6"
           }
         ]
       }
@@ -919,12 +919,12 @@
       ],
       "rationale": "Seven original single-citation assertions joined to exact independent raw parser observations and replayed through the default public engine on both runtimes. Full 77-fragment hosted replay, alternate tokenizer interfaces and general native model protocols remain separate.",
       "proof": {
-        "command": "bunx --bun vitest run test/CitationCanonicalParserOperations.test.ts test/CitationCanonicalCourts.test.ts --reporter=json --outputFile=../../../.beep/canonical-courts-final-results.json",
+        "command": "bunx --bun vitest run test/CitationCanonicalRemainingExtraction.test.ts test/CitationCanonicalParserOperations.test.ts test/CitationCanonicalCourts.test.ts test/CitationCanonicalReferenceMarkup.test.ts --reporter=json --outputFile=../../../.beep/remaining-extraction-results.json",
         "result": "passed",
         "scope": "complete-case",
         "operation": "extract",
-        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-court-extraction.md",
-        "evidenceSha256": "6d88ff4602111735e42fb51a3152dbc65aded6ce011db4f6c7126ed919ae5de2",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-remaining-extraction-inputs.md",
+        "evidenceSha256": "c8b4e4e2b7a4dea5cf02ffc70d013289fa59fc5e0cb60cfbd838e1ec74ebc352",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalParserOperations.test.ts",
@@ -939,11 +939,11 @@
           },
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtractionRuntime.fixtures.ts",
-            "sha256": "39dcc7ba10285a36dda617542933c34ed10ce7910c8594021f52183f406261e3"
+            "sha256": "eac40362076e5d4825be8800df084ffe5304ae645ba804c63cc6c77bbf81a5c6"
           },
           {
             "path": "packages/law-practice/server/test/CitationCanonicalParserOperations.fixtures.ts",
-            "sha256": "a49547a84bed65ea4cb5a3ebb5752cf950e84e8c1687a89706eaa4e45db75890"
+            "sha256": "d158f88295424a2426a973d7b0d5edc191eab406f81f06d83130c9fa67f48f4b"
           },
           {
             "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
@@ -986,12 +986,12 @@
       ],
       "rationale": "Five original court equality assertions replayed from their raw independently captured inputs through the default public engine on both native configurations. Full 29-court hosted replay, alternate tokenizers and general model protocols remain separate.",
       "proof": {
-        "command": "bunx --bun vitest run test/CitationCanonicalParserOperations.test.ts test/CitationCanonicalCourts.test.ts --reporter=json --outputFile=../../../.beep/canonical-courts-final-results.json",
+        "command": "bunx --bun vitest run test/CitationCanonicalRemainingExtraction.test.ts test/CitationCanonicalParserOperations.test.ts test/CitationCanonicalCourts.test.ts test/CitationCanonicalReferenceMarkup.test.ts --reporter=json --outputFile=../../../.beep/remaining-extraction-results.json",
         "result": "passed",
         "scope": "complete-case",
         "operation": "extract",
-        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-court-extraction.md",
-        "evidenceSha256": "6d88ff4602111735e42fb51a3152dbc65aded6ce011db4f6c7126ed919ae5de2",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-remaining-extraction-inputs.md",
+        "evidenceSha256": "c8b4e4e2b7a4dea5cf02ffc70d013289fa59fc5e0cb60cfbd838e1ec74ebc352",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalCourts.test.ts",
@@ -1002,11 +1002,11 @@
         "references": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalParserOperations.fixtures.ts",
-            "sha256": "a49547a84bed65ea4cb5a3ebb5752cf950e84e8c1687a89706eaa4e45db75890"
+            "sha256": "d158f88295424a2426a973d7b0d5edc191eab406f81f06d83130c9fa67f48f4b"
           },
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtractionRuntime.fixtures.ts",
-            "sha256": "39dcc7ba10285a36dda617542933c34ed10ce7910c8594021f52183f406261e3"
+            "sha256": "eac40362076e5d4825be8800df084ffe5304ae645ba804c63cc6c77bbf81a5c6"
           },
           {
             "path": "packages/law-practice/server/test/CitationCanonicalModel.fixtures.ts",

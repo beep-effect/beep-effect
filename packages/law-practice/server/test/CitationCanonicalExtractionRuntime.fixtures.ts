@@ -38,7 +38,8 @@ export const makeCitationCanonicalExtractionReplay = Effect.fn("CanonicalExtract
     sourceText: string,
     mode: "plain" | "html",
     expected: ReadonlyArray<unknown>,
-    id: string
+    id: string,
+    cleanSteps?: CitationEngineSourcePairInput["cleanSteps"]
   ) {
     const proof = yield* citationFixtureSourceProof(sourceText);
     yield* Ref.set(current, proof);
@@ -47,7 +48,7 @@ export const makeCitationCanonicalExtractionReplay = Effect.fn("CanonicalExtract
       CitationEngineSourcePairInput.make({
         plain: mode === "plain" ? source : null,
         markup: mode === "html" ? source : null,
-        cleanSteps: mode === "html" ? ["html", "all_whitespace"] : [],
+        cleanSteps: cleanSteps === undefined ? (mode === "html" ? ["html", "all_whitespace"] : []) : cleanSteps,
         removeAmbiguous: false,
         container: "list",
       })
