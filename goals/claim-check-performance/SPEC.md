@@ -274,6 +274,14 @@ Accepted main archive sweep c8d729841b removed 364 files protected by the active
 
 Reverse: Remove original-path copies only after this active goal no longer depends on them and a separately reviewed migration preserves every original byte, unchanged scorer behavior and all historical results; never weaken preservation to accept missing evidence.
 
+### Measure components first and bound the fallback with aligned part-of-speech, 2026-11-08
+
+Feasibility adjudication 002 asked for one component census and then paired comparison before any architecture choice. The census over all 538 exposed legacy claims reconciles with the unchanged scorer and shows the enhanced source plan reaches 61 of 538 selected claims and 0 of 60 independent claims; the rest use the word-scanner fallback, which ignored the aligned part-of-speech evidence already computed for them. Removing the most frequent planner refusal gained no strict claim, so loosening single guards is not the route and the guard stays. The adopted repair uses aligned facts only inside the fallback: it cuts clear nominal overruns, keeps premodifiers with their head, drops non-nominal bare mentions and opens elements at gated parallel coordinates. Development replay moves 46 to 47 of 538 with all 46 identities retained, matched elements 752 to 858 and matched edges 2141 to 2317. Three parity tests now assert that a declined plan keeps the record outcome and partial coverage instead of byte equality with the evidence-free tree, because fallback terms now differ by design. No label, scorer, fixture, denominator or gate changed, the replay is not a frozen gate measurement, and every usefulness gate still fails. Evidence: research/component-census-001.json.
+
+Lane `goals/claim-check-performance-p1`
+
+Reverse: Revert the fallback commit and remove sourcePartOfSpeechGrammar; the census receipt stays as retained evidence.
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger
