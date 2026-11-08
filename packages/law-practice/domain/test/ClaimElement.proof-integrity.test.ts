@@ -30,6 +30,7 @@ const proofMutations =
       "intrinsic-noun": () => [],
       boundary: () => [],
       "citation-boundary": () => [],
+      "label-boundary": () => [],
       "verbal-boundary": () => [],
       scope: (p) => [ClaimFiniteSourceProof.cases.scope.make({ ...p, extent: foreignQuote(p.extent) })],
       opening: (p) => [ClaimFiniteSourceProof.cases.opening.make({ ...p, coreStart: p.coreStart + 1 })],
