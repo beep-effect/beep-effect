@@ -37,9 +37,9 @@ Higher sources outrank lower sources when they conflict.
 
 | Today | Becomes |
 | --- | --- |
-| `scripts/ci-change-profile.sh` | `beep ci change-profile <base>` (prints the same `eval`-able assignments) |
-| `scripts/ci-runner-resources.sh` | `beep ci runner-resources <lane> -- <command>` |
-| `scripts/ci-prune-apt-sources.sh` | `beep ci prune-apt` |
+| `ci-change-profile.sh` (retired) | `beep ci change-profile <base>` (prints the same `eval`-able assignments) |
+| `ci-runner-resources.sh` (retired) | `beep ci runner-resources <lane> -- <command>` |
+| `ci-prune-apt-sources.sh` (retired) | `beep ci prune-apt` |
 | the two GitHub App `create-*.ts` registration scripts + manifests (retired) | `beep github app mint <app>` over `@beep/github`; manifests move to the command's policy data |
 | `prune-tsgo-backups.mjs` (retired) | `beep toolchain prune-tsgo-backups` in `packages/tooling/tool/cli/src/commands/Toolchain/` (root `prepare` calls it) |
 | `regenerate-merge-driver.sh` (retired) | `beep git merge-driver regenerate` (the `check.yml` assertion updates) |
@@ -47,7 +47,7 @@ Higher sources outrank lower sources when they conflict.
 | `test-gitleaks-observation-digest.py` (retired) | `packages/tooling/tool/cli/test/gitleaks-observation-digest.test.ts` (`python-free-repo` triage row) |
 | `knowledge-refs-rewrite.rules.json`, `references.json` (moved) | `packages/tooling/policy-pack/repo-configs/data/` |
 | the `agent-runs.slice` systemd units (retired) | `beep quality scheduler slice [--install]`, rendered from `packages/tooling/tool/cli/src/internal/repo-run/AgentRunsSlice.ts` |
-| `scripts/cloud/bootstrap.sh`, `scripts/cloud/fetch.sh` | `bootstrap.sh` stays as the one exception; `fetch.sh` folds into it or into the compiled binary fetch |
+| `scripts/cloud/bootstrap.sh`, `fetch.sh` (retired) | `bootstrap.sh` stays as the one exception; `fetch.sh` folded into it as its `--fetch-worker` mode |
 
 New: a `release`/`main` workflow step that runs `bun build --compile` on the beep CLI and
 publishes `beep-linux-x64` (and the runner image arch) as a release asset or cached action
@@ -74,12 +74,12 @@ in `beep lint laws`.
 - [ ] `check.yml`, `heavy.yml`, `storybook.yml`, `release-desktop.yml` and
       `setup-monorepo-ci/action.yml` call `beep ci ...` through the fetched binary; a hosted run
       is green on each.
-- [ ] `beep github app mint --help` exists and a dry-run reproduces today's manifests byte for byte.
-- [ ] `bun run beep lint laws` fails on a tracked `.sh` outside the allowlist (fixture test) and
+- [x] `beep github app mint --help` exists and a dry-run reproduces today's manifests byte for byte.
+- [x] `bun run beep lint laws` fails on a tracked `.sh` outside the allowlist (fixture test) and
       passes on `main`.
-- [ ] Root `prepare`, `.changeset/config.json` and the merge-driver assertion reference beep
+- [x] Root `prepare`, `.changeset/config.json` and the merge-driver assertion reference beep
       commands, not `scripts/`.
-- [ ] No unrelated refactors or formatting churn.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 
@@ -90,7 +90,7 @@ in `beep lint laws`.
 | Whitespace | `git diff --check -- goals/scripts-to-beep-cli` | Passes |
 | Scripts gone | `git ls-files scripts \| grep -v '^scripts/cloud/bootstrap.sh$'` | empty |
 | Shell law | `bun run beep lint laws` | Passes |
-| Change-profile parity | `diff <(scripts/ci-change-profile.sh origin/main) <(beep ci change-profile origin/main)` before deletion | identical |
+| Change-profile parity | shell output captured before deletion; `packages/tooling/tool/cli/test/ci-bootstrap-parity.test.ts` holds it as golden strings | passes |
 
 ## Stop Conditions
 
@@ -119,9 +119,17 @@ Lane `goals/scripts-to-beep-cli`
 
 Reverse: Compile src/bin-main.ts with native externals and fix its eager DuckDB load
 
+### Port the #2850 cache-pilot scripts into beep ci commands in PR 2, 2026-11-07
+
+#2850 (e9187a295fe) added `ci-cache-native-sandbox.sh`, `ci-cache-pilot-cleanup.sh`, `ci-cache-pilot-inputs.sh` and `ci-cache-local-summary.py` (with a Python test) under scripts/ after PR 1 branched. SPEC acceptance requires scripts/ to hold only `cloud/bootstrap.sh` and the tracked-shell law rejects them, so PR 2 ports each to a `beep ci` subcommand with identical behaviour, moves the Python test to vitest, and switches heavy.yml to `bun --no-env-file run beep ci <command>`. Every call runs after `setup-monorepo-ci`, and the pinned CI binary predates the new commands, so they run from the checkout; `cache-sandbox` and `cache-pilot-cleanup` are also registered in the bootstrap set, so a later pin bump can move them onto the binary. Their workflow semantics stay owned by the cache-pilot lane.
+
+Lane `scripts-to-beep-cli-p2`
+
+Reverse: Restore the four scripts/ci-cache-* files and their heavy.yml calls from #2850
+
 ### change-profile reads the checkout's pattern file and fails open like the shell, 2026-11-07
 
-Parity with scripts/ci-change-profile.sh: pinned `BEEP_CI_PR_BASE_SHA`/`BEEP_CI_PR_HEAD_SHA` win over positional base/head; a missing pin or failed diff on a pull_request warns and keeps every profile active; patterns come from the checkout's `CiOperational.patterns.json` when present (fail closed on an invalid file) because the binary is main's code but must classify the PR's tree.
+Parity with the retired ci-change-profile.sh: pinned `BEEP_CI_PR_BASE_SHA`/`BEEP_CI_PR_HEAD_SHA` win over positional base/head; a missing pin or failed diff on a pull_request warns and keeps every profile active; patterns come from the checkout's `CiOperational.patterns.json` when present (fail closed on an invalid file) because the binary is main's code but must classify the PR's tree.
 
 Lane `goals/scripts-to-beep-cli`
 
@@ -134,6 +142,14 @@ A workflow on `push` to `main` (paths: the CLI and its workspace deps, plus `wor
 Lane `goals/scripts-to-beep-cli`
 
 Reverse: Delete the publish workflow and restore the shell steps from git history
+
+### Delete the scripts heavy.yml@main still calls in a third PR, 2026-11-07
+
+check.yml calls heavy.yml as a reusable workflow pinned to @main, so a PR's own heavy.yml edits take effect only after merge. #2906 deleted the scripts that main's heavy.yml calls and every Heavy lane failed at its first step (`scripts/ci-change-profile.sh: No such file`, then `goals_only: unbound variable`; run 42418724321). #2906 therefore keeps the seven scripts that heavy.yml@main references (`ci-change-profile.sh`, `ci-runner-resources.sh`, `ci-prune-apt-sources.sh`, `ci-cache-native-sandbox.sh`, `ci-cache-pilot-cleanup.sh`, `ci-cache-pilot-inputs.sh`, `ci-cache-local-summary.py`) while it switches every workflow to the pinned binary. The tracked-shell law allowlists those exact files, with the removal condition 'deleted by PR 3'. PR 3, opened after #2906 makes the binary-calling heavy.yml the @main copy, deletes them and their allowlist entries and is the goal's final PR carrying proposedCloseout.
+
+Lane `scripts-to-beep-cli-p2` · PR #2906
+
+Reverse: Delete the seven scripts in #2906 and accept red Heavy lanes until it merges
 
 ### New command groups toolchain, git and github in @beep/repo-cli, 2026-11-07
 
@@ -167,3 +183,8 @@ Reverse: Remove the extra roots from the law's allowlist once their owners delet
 | --- | --- | --- | --- | --- |
 | `scripts/cloud/bootstrap.sh` stays shell | one file | packet owner | installs the toolchain the binary needs; vendor dashboards call it by path | a vendor-side way to run a fetched binary before any toolchain |
 | `.claude/`, `.codex/`, `.cursor/` hook `.sh` files | hook dirs | harness owners | run inside the agent harness before any repo toolchain | harnesses accept TypeScript hooks without a runtime |
+| `goals/`, `explorations/` packet `.sh` files | packet roots | packet owners | packet evidence and ops replays, a SPEC non-goal | the operator extends `python-free-repo`'s triage rule to packet shell |
+| `infra/` `.sh` files | `infra/` root (10 files on 2026-11-07) | `infra-alchemy-rebuild` | Pulumi-era infra scripts the Alchemy rebuild replaces | `infra-alchemy-rebuild` retires `infra/` |
+| `packages/tooling/tool/cli/test/fixtures/models/locators.sh` | one test fixture | `@beep/repo-cli` | `models-check.test.ts` locates model pins inside a shell source | the models manifest stops listing shell locator fixtures |
+| `packages/tooling/tool/docgen/test/fixtures/section-example/tsc-wrapper.sh` | one test fixture | `@beep/docgen` | `Core.test.ts` proves docgen runs a configured compiler wrapper | docgen drops the wrapped-compiler configuration |
+| Transitional `scripts/ci-change-profile.sh`, `ci-runner-resources.sh`, `ci-prune-apt-sources.sh`, `ci-cache-native-sandbox.sh`, `ci-cache-pilot-cleanup.sh`, `ci-cache-pilot-inputs.sh` (plus `ci-cache-local-summary.py`) | six exact `.sh` files and one `.py` | packet owner | `check.yml` calls `heavy.yml@main`, which still runs them until #2906's binary-calling `heavy.yml` is the `@main` copy; nothing else calls them (decision 2026-11-07-heavy-at-main-three-prs) | deleted by PR 3 after #2906's heavy.yml is heavy.yml@main |

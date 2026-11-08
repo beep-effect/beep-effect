@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "claim-premerge-evidence-hold/v2",
+  "date": "2026-11-02",
+  "pullRequest": 2513,
+  "head": "04933da8178267cca36d4b16b5ef2b21ed04be41",
+  "merge": "9c48b544a37810d3a56b5b6ee9359648e6ab0e12",
+  "mergedAt": "2026-11-02T12:29:09Z",
+  "readinessJob": "4c1a53f5-89aa-49e3-94d1-468370922a9d",
+  "observedJobPhase": "terminated",
+  "jobWaitExit": 3,
+  "successfulTerminalReadinessRetainedBeforeMerge": false,
+  "canonicalRefreshObservedOutcome": "unknown",
+  "completionVerified": false,
+  "decision": "Retain this merge and every historical receipt; bind a new prospective draft final PR to actual pre-merge proof. Do not weaken Completion.ts or relabel pending/failed checks as green."
+}

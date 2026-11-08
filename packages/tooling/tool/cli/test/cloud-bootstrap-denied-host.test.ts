@@ -188,7 +188,7 @@ printf '%s\\n' "$v"
   // deadline expiry (exit 124) at once, so the attribution path runs in ms.
   timeout: `#!/bin/sh
 if [ -n "$FIXTURE_TIMEOUT_KIND" ]; then
-  case " $* " in *"fetch.sh $FIXTURE_TIMEOUT_KIND "*) exit 124 ;; esac
+  case " $* " in *"--fetch-worker $FIXTURE_TIMEOUT_KIND "*) exit 124 ;; esac
 fi
 exec /usr/bin/timeout "$@"
 `,
@@ -265,7 +265,8 @@ const GITLEAKS_VERSION = "8.30.1";
 
 // Builds the fixture release archives (each holds a stub binary that reports
 // the pinned version) and, when `fixturePins` is set, rewrites only the copied
-// fetch.sh digests to those archives' hashes. The repo's fetch.sh is untouched.
+// fetch-worker digests in bootstrap.sh to those archives' hashes. The repo's
+// bootstrap.sh is untouched.
 const tarballScript = `set -eu
 for tool in typos gitleaks; do
   v=$(cat "$tool.version")
@@ -277,7 +278,7 @@ for tool in typos gitleaks; do
   if [ "$FIXTURE_PINS" = 1 ]; then
     sum=$(sha256sum "$tool.tar.gz" | cut -d' ' -f1)
     esc=$(printf '%s' "$v" | sed 's/\\./\\\\./g')
-    sed -i "s/\\($esc) sha=.\\)[0-9a-f]\\{64\\}/\\1$sum/" scripts/cloud/fetch.sh
+    sed -i "s/\\($esc) sha=.\\)[0-9a-f]\\{64\\}/\\1$sum/" scripts/cloud/bootstrap.sh
   fi
 done
 `;
@@ -294,13 +295,7 @@ const prepareFixture = Effect.fn("CloudBootstrapDeniedHostTest.prepareFixture")(
   yield* fs.makeDirectory(path.join(root, "scripts/cloud"), { recursive: true });
   yield* fs.makeDirectory(bin);
   yield* fs.makeDirectory(home);
-  for (const file of [
-    "scripts/cloud/bootstrap.sh",
-    "scripts/cloud/fetch.sh",
-    ".bun-version",
-    ".nvmrc",
-    ".bun-linux-x64.sha256",
-  ]) {
+  for (const file of ["scripts/cloud/bootstrap.sh", ".bun-version", ".nvmrc", ".bun-linux-x64.sha256"]) {
     yield* fs.copyFile(path.join(repoRoot, file), path.join(root, file));
   }
   // Stand-ins for the files the install and prepare stamps hash.

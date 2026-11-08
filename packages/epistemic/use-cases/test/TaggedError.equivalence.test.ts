@@ -6,10 +6,6 @@ import {
   EdgeRepositoryUnavailable,
   SupersessionConflict,
 } from "@beep/epistemic-use-cases/EdgeAuthority";
-import {
-  ExecutionLedgerConstraintViolation,
-  ExecutionLedgerUnavailable,
-} from "@beep/epistemic-use-cases/ExecutionLedger";
 import { ContradictionActionError } from "@beep/epistemic-use-cases/public";
 import {
   ContradictionRepositoryUnavailable,
@@ -104,21 +100,6 @@ describe("epistemic-use-cases tagged-error declared equivalence", () => {
       EdgeRepositoryUnavailable.during("readLatest", "database unavailable", { code: "cause-a" }),
       EdgeRepositoryUnavailable.during("readLatest", "database unavailable", { code: "cause-b" }),
       EdgeRepositoryUnavailable.during("readLatest", "transaction aborted", { code: "cause-a" })
-    );
-  });
-
-  it("compares ledger errors by stable declared fields and excludes opaque cause", () => {
-    expectDeclaredEquivalence(
-      ExecutionLedgerConstraintViolation,
-      ExecutionLedgerConstraintViolation.on("appendDecision", "epistemic_execution_decision_pk"),
-      ExecutionLedgerConstraintViolation.on("appendDecision", "epistemic_execution_decision_pk"),
-      ExecutionLedgerConstraintViolation.on("appendOutcome", "epistemic_execution_outcome_pk")
-    );
-    expectDeclaredEquivalence(
-      ExecutionLedgerUnavailable,
-      ExecutionLedgerUnavailable.during("readDecisions", "database unavailable", { code: "cause-a" }),
-      ExecutionLedgerUnavailable.during("readDecisions", "database unavailable", { code: "cause-b" }),
-      ExecutionLedgerUnavailable.during("readDecisions", "transaction aborted", { code: "cause-a" })
     );
   });
 });

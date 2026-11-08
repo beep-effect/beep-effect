@@ -1,0 +1,43 @@
+# Incremental Catalog Writer
+
+## Status
+
+Lifecycle: `active`
+
+Source: [`ops/manifest.json`](./ops/manifest.json)
+
+## Mission
+
+Per-file incremental shard splice for the lefthook catalog writers so a commit costs ~1 GB on any host (5.3 GB today for a repo-cli touch); graduated from `explorations/compute-profile-gate-routing` (D2, D7).
+
+## Launch
+
+Use this command for execution-capable sessions:
+
+```text
+/goal follow the instructions in goals/catalog-writer-incremental/GOAL.md
+```
+
+`GOAL.md` is the compact launcher. `SPEC.md` remains the normative contract.
+
+## Read This First
+
+1. [`GOAL.md`](./GOAL.md) - compact `/goal` launcher.
+2. [`SPEC.md`](./SPEC.md) - normative source of truth.
+3. [`PLAN.md`](./PLAN.md) - active execution plan.
+4. [`ops/manifest.json`](./ops/manifest.json) - machine-readable routing.
+5. [`research/`](./research/) - supporting research, if present.
+6. [`history/`](./history/) - evidence and closeouts, if present.
+
+## Current Phase
+
+P0 Research — not started.
+
+## Latest Evidence
+
+Not started.
+
+## Notes
+
+- Baseline table (seven variants) in `explorations/compute-profile-gate-routing/RESEARCH.md`; reuse the same five fixture files for before/after.
+- Sibling goal `compute-profile-gate-routing` skips these hooks on worker hosts until this lands; its MAP.md gated re-entry removes the skip once a dankserver commit measures ≤ 1.5 GB.

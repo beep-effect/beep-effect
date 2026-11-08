@@ -66,8 +66,6 @@ const decodeJobRefs = rowsOf(JobRef);
 const decodeDeliveries = rowsOf(DeliveryRow);
 const decodeGenerations = rowsOf(S.Struct({ generation: S.Int }));
 
-/** How long a claimed outbox row or job stays leased to the host running it. */
-const leaseMillis = Duration.toMillis(Duration.seconds(30));
 /** The longest a failed delivery waits before its next attempt. */
 const retryCeilingMillis = Duration.toMillis(Duration.minutes(1));
 /** The largest backoff exponent: keeps `pollMillis * 2^attempts` inside `bigint` however often a row fails. */
@@ -381,7 +379,7 @@ export const makeContext = (deps: HostDeps) => {
   /** Claim due jobs, run each, and drop a job only when no newer request came in while it ran. */
   const jobPass = Effect.gen(function* () {
     const at = yield* now;
-    const claimed = yield* sql`UPDATE ${sql(tables.backfillJob)} SET locked_until = ${at + leaseMillis}
+    const claimed = yield* sql`UPDATE ${sql(tables.backfillJob)} SET locked_until = ${at + config.leaseMillis}
       WHERE (model, address, job_id) IN (
         SELECT model, address, job_id FROM ${sql(tables.backfillJob)}
         WHERE model = ${modelName} AND due_at <= ${at} AND locked_until <= ${at}
@@ -520,7 +518,7 @@ export const makeContext = (deps: HostDeps) => {
    */
   const claim = Effect.fnUntraced(function* (at: number, hosted: A.NonEmptyReadonlyArray<string>) {
     const rows = yield* sql`UPDATE ${sql(tables.delivery)}
-      SET locked_until = ${at + leaseMillis}, claimed_by = ${owner}
+      SET locked_until = ${at + config.leaseMillis}, claimed_by = ${owner}
       WHERE position IN (
         SELECT head.position FROM ${sql(tables.delivery)} head
         WHERE head.model = ${modelName} AND head.status = 'pending' AND head.producer IN ${sql.in(hosted)}

@@ -96,7 +96,7 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         Effect.gen(function* () {
           yield* writeProjectScaffold;
           yield* writeProjectFile(
-            "packages/epistemic/domain/src/values/GrantSet/GrantSet.model.ts",
+            "packages/execution-authority/domain/src/values/GrantSet/GrantSet.model.ts",
             A.join(
               [
                 "declare const FrozenGrantSet: { make: (input: object) => unknown };",
@@ -166,7 +166,7 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             "packages/demo/src/index.ts",
             A.join(
               [
-                'import { FrozenGrantSet as F } from "@beep/epistemic-domain";',
+                'import { FrozenGrantSet as F } from "@beep/execution-authority-domain";',
                 "",
                 "export const grants = F.make({});",
                 "",

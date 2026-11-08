@@ -45,8 +45,6 @@
     "./entities/Evidence": "./src/entities/Evidence/index.ts",
     "./entities/EvidenceVerification": "./src/entities/EvidenceVerification/index.ts",
     "./entities/UsageRecord": "./src/entities/UsageRecord/index.ts",
-    "./values": "./src/values/index.ts",
-    "./values/ExecutionRecord": "./src/values/ExecutionRecord/index.ts",
     "./package.json": "./package.json"
   },
   "files": [
@@ -70,8 +68,6 @@
       "./entities/Evidence": "./dist/entities/Evidence/index.js",
       "./entities/EvidenceVerification": "./dist/entities/EvidenceVerification/index.js",
       "./entities/UsageRecord": "./dist/entities/UsageRecord/index.js",
-      "./values": "./dist/values/index.js",
-      "./values/ExecutionRecord": "./dist/values/ExecutionRecord/index.js",
       "./package.json": "./package.json"
     }
   },

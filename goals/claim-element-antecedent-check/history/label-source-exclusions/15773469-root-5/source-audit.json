@@ -1,0 +1,65 @@
+{
+  "familyId": "15773469-root-5",
+  "role": "extractor-source-audit",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "confidence": 0.98,
+  "verdict": "unresolved",
+  "quotedEvidence": [
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the sequential steps:",
+      "nativeQuote": "the sequential steps:",
+      "literalMatch": true,
+      "explanation": "Exact selected root5."
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the vertical displacement",
+      "nativeQuote": "the vertical displacement",
+      "literalMatch": true,
+      "explanation": "Exact selected7."
+    }
+  ],
+  "concerns": [
+    "Original JGR0CBY0RXEAPX5 count11 matches native11;6/8 exact. Other differences mostly line bullets,1/l and Greek delta/a. However selected10 and11 native variable delta-N-G differs from original delta-D-G (after delta/a glyph correction); variable identity is potentially substantive and cannot be resolved from OCR alone.",
+    "Native publication identity/digest and dates match;36/36 inventory and original2018-05-03 before OA2021-01-04 do not resolve conflicting variable spelling."
+  ],
+  "rationale": "Actual112(b) grounds directly cite selected5/7-11 and natural family memberships agree. Hold source version qualification until variable discrepancy is resolved with authoritative original visual/native evidence.",
+  "sourceIdentity": {
+    "applicationNumber": "15773469",
+    "publicationNumber": "US20180317457A1",
+    "publicationDate": "2018-11-08",
+    "officeActionMailDate": "2021-01-04",
+    "officeActionDocumentIdentifiers": ["KJCUP25EDFLYX10"],
+    "publicationXmlIdentity": {
+      "publication-reference": "US 20180317457 A1 20181108",
+      "application-reference": "US 15773469 20160816",
+      "nativeXmlDigestMatchesProvenance": true
+    }
+  },
+  "versionEvidence": {
+    "originalClaimDocuments": [
+      {
+        "documentIdentifier": "JGR0CBY0RXEAPX5",
+        "officialDate": "2018-05-03T00:00:00.000-0400"
+      }
+    ],
+    "originalComparisons": [
+      {
+        "documentIdentifier": "JGR0CBY0RXEAPX5",
+        "officialDate": "2018-05-03T00:00:00.000-0400",
+        "sha256": "1e216d0f8c1b6b05219706a3f428981bb5926b56f1871f75740fb33be5324219",
+        "ocrCorroborationOnly": true,
+        "exactNonWhitespaceClaimNumbers": [3, 4, 6, 8],
+        "sourceClaimCount": 11
+      }
+    ],
+    "documentInventoryCount": 36,
+    "documentInventoryRows": 36,
+    "assessment": "Original cached XML was inspected where available; each reconciliation or unresolved gap is stated in concerns. Chronology alone is not treated as proof."
+  },
+  "attorneyAdjudication": "pending",
+  "independence": "Source/provenance/original-XML audit only. No implementation, predictions or rule fixtures inspected; no source/expected/code edits.",
+  "comparisonNote": "literalMatch means exact string equality, including case; typography/case/wording differences are explicitly explained. quotedEvidence is the source-binding evidence sample, not an exhaustive legal issue inventory."
+}

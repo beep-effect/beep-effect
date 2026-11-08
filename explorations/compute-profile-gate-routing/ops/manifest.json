@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "compute-profile-gate-routing",
+    "title": "Compute-Profile Gate Routing",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [
+        "goals/compute-profile-gate-routing",
+        "goals/catalog-writer-incremental"
+      ],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-11-07",
+    "updated": "2026-11-07"
+  }
+}

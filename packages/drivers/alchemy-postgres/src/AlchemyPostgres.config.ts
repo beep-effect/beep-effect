@@ -188,6 +188,13 @@ export class AlchemyPostgresConfig extends S.Opaque<AlchemyPostgresConfig, { rea
       S.withConstructorDefault(Effect.succeed(250)),
       S.annotateKey({ description: "Polling interval for live reads and workers when LISTEN/NOTIFY is unavailable." })
     ),
+    leaseMillis: S.Int.check(S.isGreaterThan(0)).pipe(
+      S.withConstructorDefault(Effect.succeed(30_000)),
+      S.annotateKey({
+        description:
+          "How long a claimed outbox row or backfill job stays leased to the host running it; a crashed host's claims are retried once it lapses.",
+      })
+    ),
     deliveryBatchSize: S.Int.check(S.isGreaterThan(0)).pipe(
       S.withConstructorDefault(Effect.succeed(100)),
       S.annotateKey({ description: "Maximum outbox rows one delivery worker pass locks with SKIP LOCKED." })

@@ -3520,6 +3520,7 @@ const policyTrackedDiscoveryTasks = [
   "lint:retired-effect-paths",
   "lint:entity-kit-freeze",
   "lint:retired-iri-authorities",
+  "lint:tracked-shell-allowlist",
   "lint:opaque-roundtrips",
 ];
 // The git-delta checks compare the merge-base archive with HEAD. They are uncached by

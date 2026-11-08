@@ -183,6 +183,7 @@ const trackedDiscoveryTasks = LiteralKit([
   "lint:entity-kit-freeze",
   "lint:retired-effect-paths",
   "lint:retired-iri-authorities",
+  "lint:tracked-shell-allowlist",
   "lint:markdown-fences",
 ]);
 const nonReusableTasks: ReadonlyArray<string> = [
@@ -215,6 +216,7 @@ const directInputs: Readonly<Record<string, string>> = {
   "lint:retired-effect-paths": "explorations/fixture/c3-probe.json",
   "lint:entity-kit-freeze": "packages/fixture/src/c3-entity-probe.tsx",
   "lint:retired-iri-authorities": "goals/fixture/c3-probe.ttl",
+  "lint:tracked-shell-allowlist": "tools/fixture/c3-probe.sh",
   "lint:schema-tag-idioms": "scratchpad/fixture/c3-probe.cts",
   "lint:holds": "hold-ledger/claims.jsonl",
   "lint:tsgo-rules": "tooling/c3-probe.cts",
@@ -669,7 +671,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
         });
         const digest = yield* Digest.Digest;
         const bytes = yield* digest.digest(Digest.sha256, new TextEncoder().encode(encoded));
-        expect(Hex.encode(bytes)).toBe("43d21c6408507786da1c2bec8ed2c05684b4a1745ca603eb24cc3379c72a67d1");
+        expect(Hex.encode(bytes)).toBe("cd35596d72214abd4a62d52a751b6f60163337701fcc9a5c31eb8cdcf605b4a0");
       })
     );
   });

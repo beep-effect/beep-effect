@@ -1,0 +1,162 @@
+{
+  "schemaVersion": "claim-v24-retention/v1",
+  "baselineVersion": "v23",
+  "currentVersion": "v24",
+  "baselineStrictCount": 37,
+  "currentStrictCount": 37,
+  "protectedRetained": 34,
+  "retained": [
+    {
+      "familyId": "11575704-root-1",
+      "claimNumber": 9
+    },
+    {
+      "familyId": "11575704-root-1",
+      "claimNumber": 10
+    },
+    {
+      "familyId": "11575704-root-1",
+      "claimNumber": 11
+    },
+    {
+      "familyId": "12360911-root-1",
+      "claimNumber": 9
+    },
+    {
+      "familyId": "12447956-root-7",
+      "claimNumber": 13
+    },
+    {
+      "familyId": "12749812-root-1",
+      "claimNumber": 3
+    },
+    {
+      "familyId": "12749812-root-1",
+      "claimNumber": 4
+    },
+    {
+      "familyId": "12749812-root-1",
+      "claimNumber": 5
+    },
+    {
+      "familyId": "12749812-root-1",
+      "claimNumber": 7
+    },
+    {
+      "familyId": "12749812-root-1",
+      "claimNumber": 10
+    },
+    {
+      "familyId": "12838228-root-1",
+      "claimNumber": 9
+    },
+    {
+      "familyId": "12838228-root-1",
+      "claimNumber": 10
+    },
+    {
+      "familyId": "13062032-root-1",
+      "claimNumber": 3
+    },
+    {
+      "familyId": "13062032-root-1",
+      "claimNumber": 10
+    },
+    {
+      "familyId": "13062032-root-1",
+      "claimNumber": 11
+    },
+    {
+      "familyId": "13062032-root-1",
+      "claimNumber": 12
+    },
+    {
+      "familyId": "13070851-root-1",
+      "claimNumber": 1
+    },
+    {
+      "familyId": "13070851-root-1",
+      "claimNumber": 3
+    },
+    {
+      "familyId": "13070851-root-1",
+      "claimNumber": 5
+    },
+    {
+      "familyId": "13070851-root-1",
+      "claimNumber": 6
+    },
+    {
+      "familyId": "13070851-root-1",
+      "claimNumber": 7
+    },
+    {
+      "familyId": "13275397-root-1",
+      "claimNumber": 3
+    },
+    {
+      "familyId": "13275397-root-1",
+      "claimNumber": 4
+    },
+    {
+      "familyId": "13275397-root-1",
+      "claimNumber": 5
+    },
+    {
+      "familyId": "13275397-root-1",
+      "claimNumber": 6
+    },
+    {
+      "familyId": "13468456-root-1",
+      "claimNumber": 6
+    },
+    {
+      "familyId": "13822885-root-1",
+      "claimNumber": 5
+    },
+    {
+      "familyId": "13822885-root-1",
+      "claimNumber": 9
+    },
+    {
+      "familyId": "13822885-root-1",
+      "claimNumber": 14
+    },
+    {
+      "familyId": "14262251-root-1",
+      "claimNumber": 3
+    },
+    {
+      "familyId": "15752303-root-1",
+      "claimNumber": 6
+    },
+    {
+      "familyId": "15958729-root-1",
+      "claimNumber": 3
+    },
+    {
+      "familyId": "15958729-root-1",
+      "claimNumber": 4
+    },
+    {
+      "familyId": "15958729-root-1",
+      "claimNumber": 5
+    },
+    {
+      "familyId": "15958729-root-1",
+      "claimNumber": 6
+    },
+    {
+      "familyId": "16135952-root-20",
+      "claimNumber": 23
+    },
+    {
+      "familyId": "18547866-root-1",
+      "claimNumber": 20
+    }
+  ],
+  "gained": [],
+  "lost": [],
+  "referenceLabelsChanged": false,
+  "previousResultsChanged": false
+}

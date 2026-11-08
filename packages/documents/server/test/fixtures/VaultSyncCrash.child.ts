@@ -1,5 +1,5 @@
 import * as Domain from "@alchemy.run/domain";
-import { AlchemyPostgres } from "@beep/alchemy-postgres";
+import { AlchemyPostgres, AlchemyPostgresConfig } from "@beep/alchemy-postgres";
 import * as V from "@beep/documents-domain/aggregates/VaultSync";
 import {
   BoxMirrorEvidence,
@@ -72,7 +72,9 @@ const main = Effect.gen(function* () {
   const runtime = CrashModel.layer(Layer.mergeAll(U.VaultSyncPolicies, VaultSyncPassLive)).pipe(
     Layer.provide(adapter),
     Layer.provide(roots),
-    Layer.provide(AlchemyPostgres.layer()),
+    // A short lease lets the resumed process reclaim, within the test's budget, the deliveries the killed
+    // process still held.
+    Layer.provide(AlchemyPostgres.layer(AlchemyPostgresConfig.make({ leaseMillis: 1_000 }))),
     Layer.provide(
       Layer.succeed(
         VaultSyncCheckpoint,
