@@ -114,6 +114,8 @@
     "research/preservation-location-addendum.json",
     "research/preservation-verification-admission-001.json",
     "research/rejected-lexical-dependency-001.patch.txt",
+    "research/resolver-probe-001.md",
+    "research/resolver-probe-001.script.py.txt",
     "research/retired-runtime-admission-001.json",
     "research/runtime-nominal-replay-001.json",
     "research/runtime-parent-replay-001.json",
