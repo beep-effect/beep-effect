@@ -12,8 +12,9 @@ permission to remove its floor.
 
 The accepted cache-module repair is consumed from #2929 rather than duplicated.
 PR #2937 adds behavioral controls for optional defect identity/defaults, citation
-proof-plan uniqueness/completion, pre-spawn malformed diff input refusals and
-missing-page normalization boundaries. Hosted execution and comparison remain
+proof-plan uniqueness/completion, pre-spawn malformed diff input refusals,
+missing-page normalization boundaries and initialization error translation.
+Hosted execution and comparison remain
 required; these authored tests establish no passing coverage or pilot result.
 The retired desktop path and remaining law-practice findings stay unresolved.
 Include negative-path and normalization-boundary tests with new modules, and
