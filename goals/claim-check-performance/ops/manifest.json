@@ -127,6 +127,7 @@
     "research/runtime-provider-lifetime-admission-001.json",
     "research/source-body-first-return-001.json",
     "research/source-certified-fallback-measurement-001.json",
+    "research/source-inspection-view-measurement-001.json",
     "research/source-public-composition-measurement-001.json",
     "research/test_census_components.py",
     "research/test_evaluation_coverage.py",

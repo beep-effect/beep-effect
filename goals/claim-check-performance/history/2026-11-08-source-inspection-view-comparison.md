@@ -1,0 +1,15 @@
+# Explicit source and inspection views with preserved references
+
+The fresh unchanged production evaluation at source commit `0906812bbeb02f62f1e0d13bae2521a581b65188` remains **49/538 strict**, retaining every mandatory pass with zero gains, losses or changed selected score rows. All 60 inspection reports and 1,219 source/qualification records are unchanged from the previous canonical run. Parsed remains 537; all 538 outcomes still abstain. The full goal remains active.
+
+The expanded test run exposed a compatibility conflict: the frozen source-topology fixture requires the detailed four-element decomposition, while the new inspection projection groups a narrowly closed flat list. The fixture and its existing assertions were preserved. The implementation now selects an explicit view before the claim registry, tree assembly, whole-family reference resolution and policy.
+
+`decomposePreparedClaimRoles` retains detailed source topology. `inspectPreparedClaimRoles` selects the canonical inspection projection through an internal adapter excluded from the package barrel. This is a new explicit boundary, not a claim that the two APIs previously returned different geometries. Both routes compile and project once on the validated immutable source plan and carried allowance. No donor aliases, fixture/ID tests, post-report collapse, new public wire fields or work resets are introduced. With zero declarations, canonical inspection uses the same detailed identity projector and avoids unnecessary grouping work.
+
+Readiness checks also found five introduced complexity findings and one duplicated validation block. Shared coordinate-binding proofs now feed separate object and governed-PP checks. Composition eligibility and projection phases are separated into small helpers. Conditions and work charges remain intact; no baseline, threshold or suppression was weakened.
+
+Validation now covers **78 passing tests across five files**, including the unchanged source-projection fixtures and 100-NP/107-NP budget controls. Both package compiler checks and formatting pass. Native Fallow reports zero findings and zero clone groups across the six changed files. This expanded actual scope supersedes the earlier reported 23-test scope; that earlier report did not prove coverage of these controls.
+
+The fresh production runtime freeze is `b0ab5ba350127deb2db131186bfb9cd51770de7d1f8a00808dc7efa5f77f3b5a`, retaining 1,845 paths, 1,544 inputs, 94 assets, Bun and caps. The 121 outputs are sealed separately; results hash is `7b8418de393faa22df473f1e3b10ed70585bcbeec061ba7df972766df548d84e`. Original labels, prior results and scorer remain unchanged. The earlier private 48/538 failure and both earlier 49/538 measurements remain preserved.
+
+Machine-readable evidence: [source-inspection-view-measurement-001.json](../research/source-inspection-view-measurement-001.json). New hosted CI and review remain required. This record claims no strict gain, legal precision/recall or usefulness completion.
