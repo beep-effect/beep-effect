@@ -71,3 +71,13 @@ a coverage drop on `ArchiveExecution.service.ts`. A worker `final-check` defers 
 tombstone PR, running the Markdown fence and knowledge doctor checks scoped to the batch's touched
 files would surface the first two locally. `gh pr checks` also reports a cancelled job as `fail`, so
 read each job's conclusion before attributing it.
+
+## 2026-11-08: The first code-span plan listed symlinked documents twice
+
+The first batch 3 write stopped with `tombstone-conflict apps/practice-kg-mcp/CLAUDE.md: line 20 no
+longer references ...`. That file is a tracked symlink to `AGENTS.md`, so the plan held each citation
+twice and the second rewrite found it already gone. The planner now skips mode `120000` entries. The
+stop also left two rewritten files and two unpushed archive commits, because inbound rewrites are not
+atomic and the archive commit precedes them; both were undone by hand. A symlink in the fixture repo
+would have caught this before #2979 merged. A rewrite dry run over the whole plan before the archive
+commit would make this failure leave nothing behind.

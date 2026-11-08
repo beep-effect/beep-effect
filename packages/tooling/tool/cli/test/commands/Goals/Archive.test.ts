@@ -163,6 +163,7 @@ const FIXTURE: ReadonlyArray<readonly [string, string]> = [
   ["explorations/gone/RESEARCH.md", "# Research\n"],
   ["explorations/open/ops/manifest.json", explorationManifest("open", "active")],
   ["docs/guide.md", GUIDE],
+  ["docs/AGENTS.md", "Spec is `goals/done/SPEC.md`.\n"],
   ["goals/done/assets/figure.md", "# Figure\n"],
   ["docs/directories.md", "Figures in `goals/done/assets`.\nFriction stays in `goals/done/research`.\n"],
   ["packages/demo/src/prompt.ts", "export const prompt = 'Read `goals/done/PLAN.md` first.';\n"],
@@ -207,6 +208,7 @@ const makeFixtureRepo = Effect.fn("ArchiveTest.makeFixtureRepo")(function* () {
       }),
     { discard: true }
   );
+  yield* fs.symlink("AGENTS.md", path.join(root, "docs/CLAUDE.md"));
   yield* git(root, ["add", "-A"]);
   yield* git(root, [
     "-c",
@@ -463,6 +465,7 @@ describe("goals archive", () => {
                 "goals/done/research/notes.md",
               ],
               links: [
+                ["docs/AGENTS.md", 1, "goals/done/SPEC.md", `https://github.com/${REPO}/blob/main/goals/done/SPEC.md`],
                 [
                   "docs/citations.md",
                   2,
@@ -762,6 +765,17 @@ describe("goals archive", () => {
           )(guide)
         );
         assertTrue(Str.includes("[fenced](../goals/done/SPEC.md)")(guide));
+
+        // A symlink stays a symlink, and reads the target's single rewrite.
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const claudeLink = yield* fs.readLink(path.join(root, "docs/CLAUDE.md"));
+        assert.strictEqual(claudeLink, "AGENTS.md");
+        const agents = yield* readText(root, "docs/AGENTS.md");
+        assert.strictEqual(
+          agents,
+          `Spec is [goals/done/SPEC.md](https://github.com/${REPO}/blob/main/goals/done/SPEC.md).\n`
+        );
 
         // Citations leave as plain link text; commands, kept files and fenced text stay.
         const citations = yield* readText(root, "docs/citations.md");

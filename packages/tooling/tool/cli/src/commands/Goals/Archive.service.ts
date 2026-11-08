@@ -338,10 +338,22 @@ const scanFileLinks = Effect.fnUntraced(function* (repoRoot: string, file: strin
   return A.appendAll(A.getSomes(resolved), codeSpans);
 });
 
+const GIT_SYMLINK_MODE = "120000";
+
+// A tracked symlink has no text of its own: its target is scanned and rewritten once, under its own path.
 const scanInboundLinks = Effect.fnUntraced(function* (repoRoot: string) {
-  const tracked = yield* trackedPaths(repoRoot, INBOUND_LINK_ROOTS);
-  const documents = A.filter(tracked, (file) =>
-    A.some(INBOUND_LINK_EXTENSIONS, (extension) => Str.endsWith(extension)(file))
+  const git = yield* Git;
+  const tracked = yield* git
+    .lsFiles(repoRoot, { pathspec: INBOUND_LINK_ROOTS })
+    .pipe(Effect.mapError(gitFailed(repoRoot)));
+  const documents = A.dedupe(
+    A.filter(
+      A.map(
+        A.filter(tracked, (entry) => entry.mode !== GIT_SYMLINK_MODE),
+        (entry) => entry.path
+      ),
+      (file) => A.some(INBOUND_LINK_EXTENSIONS, (extension) => Str.endsWith(extension)(file))
+    )
   );
   const links = yield* Effect.forEach(documents, (file) => scanFileLinks(repoRoot, file), { concurrency: 16 });
   return A.flatten(links);
