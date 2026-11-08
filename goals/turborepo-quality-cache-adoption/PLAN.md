@@ -2,8 +2,8 @@
 
 ## Status
 
-Status: `active`
-Lifecycle: `active`
+Status: `paused`
+Lifecycle: `paused`
 
 Launched 2026-10-28 in the isolated `codex/turborepo-goals-completion` lane.
 The current population and feature inventories are review queues, not
@@ -11,7 +11,17 @@ qualification grants. The retained signed pilot remains limited to its recorded
 older private-loopback tuple. No acceptance criterion or representative window
 is treated as complete by this launch.
 
-## Phases
+## Paused checkpoint: 2026-11-08
+
+The [operational scope amendment](OPERATIONAL-SCOPE.md) replaces the exhaustive finish line.
+Finish and preserve the current PRs, then archive the owned worktrees. Resume
+only on a new operator instruction, starting with the six-gate evidence audit.
+No acceptance criterion or representative window is declared complete.
+The historical phase table and checkpoints below are retained for provenance;
+they are suspended, not the automatic next-work queue. The amendment governs
+conflicts with those earlier instructions and the old P6 checklist.
+
+## Phases (historical assurance plan, suspended)
 
 | Phase | Status | Work | Exit criteria |
 | --- | --- | --- | --- |

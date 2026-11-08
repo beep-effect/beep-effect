@@ -3,14 +3,14 @@
   "initiative": {
     "id": "turborepo-quality-cache-adoption",
     "title": "Turborepo quality cache adoption",
-    "status": "active",
+    "status": "paused",
     "created": "2026-09-08",
-    "updated": "2026-11-03",
+    "updated": "2026-11-08",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/turborepo-quality-cache-adoption",
-  "lifecycle": "active",
-  "mission": "Adopt every eligible quality computation in its proven profiles and optimize the full Turbo/CI/Yeet workflow with measured benefits and fresh hosted statuses.",
+  "lifecycle": "paused",
+  "mission": "Operate the shared R2 cache across approved development and CI surfaces with baseline safety and measured cost/time benefits.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -22,7 +22,7 @@
     "operator": "yeet",
     "requiresPullRequest": true,
     "requiresMergeable": true,
-    "statement": "Adopt every eligible quality computation in its proven profiles and optimize the full Turbo/CI/Yeet workflow with measured benefits and fresh hosted statuses. Complete only after SPEC acceptance, representative evidence and a final Yeet merge-ready: yes verdict. Land final evidence, reflection and proposedCloseout in the final implementation PR while the goal stays active or paused. After that PR merges, completion refresh verifies the proposal and a separate packet-state PR adopts completed-retained. That PR must merge, and origin/main must show matching closeout and initiative statuses.",
+    "statement": "Complete only after the six operational gates in turborepo-quality-cache-adoption/OPERATIONAL-SCOPE.md pass with source-bound evidence. Original exhaustive assurance requirements remain deferred and unfinished. Land final evidence, reflection and proposedCloseout with implementation while active or paused; after merge, completion refresh and a separate merged packet-state adoption PR must establish matching closeout and initiative statuses on origin/main.",
     "grandfathered": false
   },
   "currentSourceOfTruth": [
@@ -47,7 +47,9 @@
     "goals/turborepo-quality-cache-adoption/research/signature-key-source-binding-controls.py",
     "goals/turborepo-quality-cache-adoption/research/native-source-family-controls.py",
     "goals/turborepo-quality-cache-adoption/research/native-boundaries-controls.py",
-    "goals/turborepo-quality-cache-adoption/research/native-worktree-controls.py"
+    "goals/turborepo-quality-cache-adoption/research/native-worktree-controls.py",
+    "goals/turborepo-quality-cache-adoption/OPERATIONAL-SCOPE.md",
+    "goals/turborepo-quality-cache-adoption/PAUSED-HANDOFF.md"
   ],
   "researchReports": [
     "research/OPPORTUNITIES.md",
@@ -298,5 +300,5 @@
     "Unresolved numeric deployment budget or ungranted external scope requires a concrete decision before mutation.",
     "Do not overwrite another owner's artifacts or weaken hosted proof."
   ],
-  "statusNote": "Active. Source-bound accepted10fe inventory: 200 workspaces, 2512 configured executable computations and 1856 additional script-only entrypoints. Both declared pinned native clients reconcile all4368 manifest scripts and6524 catalogue nodes against484 source bindings; no fresh upstream registry claim. Current source review gives whole-command keep-fresh dispositions to196 formatting-fixer wrappers and separately identifies their196 script-only implementations; their nonwriting lint counterparts remain unqualified. There are2316 configured and1660 script-only reviews remaining. The archive chain preserves205 historical reviewed identities without renewing their profiles. Feature acceptance, task qualification, production trust, representative observation and all whole-goal criteria remain incomplete."
+  "statusNote": "Paused by operator 2026-11-08 after preserving in-flight PRs. Operational six-gate scope adopted; exhaustive assurance remains unfinished. Resume with OPERATIONAL-SCOPE.md and PAUSED-HANDOFF.md evidence audit; no pilot or rollout automatically restarts."
 }
