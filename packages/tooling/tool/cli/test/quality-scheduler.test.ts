@@ -38,6 +38,7 @@ import {
   isProcessIdentityAliveWithStartForTesting,
   MemoryStats,
   MemoryStatsLive,
+  memoryStatsLayerFor,
   noAdmissionOriginGate,
   noteAdmissionWaitForTesting,
   orderAdmissionTicketsForTesting,
@@ -86,6 +87,7 @@ import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
+import * as Context from "effect/Context";
 import * as Command from "effect/cli/Command";
 import * as Digest from "effect/crypto/Digest";
 import * as SecureRandom from "effect/crypto/SecureRandom";
@@ -6252,6 +6254,176 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
           Effect.provideService(MemoryStats, workerMemoryStats)
         );
       }).pipe(TestClock.withLive)
+    );
+
+    it.effect("runs a hosted-only gate on worker under the hosted posture without refusing", () =>
+      Effect.gen(function* () {
+        const { runtimeDir } = yield* admissionTemporaryRoot;
+        return yield* Effect.gen(function* () {
+          const releases = yield* Ref.make(0);
+          const result = yield* withQualityAdmission(
+            request({ gateRoute: O.some("check"), envProfile: O.some("hosted") }),
+            countingOriginGate(releases),
+            Effect.succeed("ran"),
+            fastConfig
+          );
+          expect(result).toBe("ran");
+          const released = yield* Ref.get(releases);
+          expect(released).toBe(1);
+        }).pipe(
+          provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
+          Effect.provideService(MemoryStats, workerMemoryStats)
+        );
+      }).pipe(TestClock.withLive)
+    );
+
+    it.effect("fails admission with a scheduler error when the compute-profile override is invalid", () =>
+      Effect.gen(function* () {
+        const { runtimeDir } = yield* admissionTemporaryRoot;
+        return yield* Effect.gen(function* () {
+          const error = yield* Effect.flip(
+            withQualityAdmission(request(), noAdmissionOriginGate, Effect.succeed("ran"), fastConfig)
+          );
+          expect(error._tag).toBe("QualitySchedulerError");
+          expect(error.message).toContain("BEEP_COMPUTE_PROFILE");
+        }).pipe(
+          provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
+          Effect.provideService(
+            ConfigProvider.ConfigProvider,
+            ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0", BEEP_COMPUTE_PROFILE: "bogus" })
+          ),
+          Effect.provideService(MemoryStats, workerMemoryStats)
+        );
+      }).pipe(TestClock.withLive)
+    );
+
+    it.effect("runs a local gate on worker with the default admission config", () =>
+      Effect.gen(function* () {
+        const { runtimeDir } = yield* admissionTemporaryRoot;
+        return yield* Effect.gen(function* () {
+          const releases = yield* Ref.make(0);
+          const result = yield* withQualityAdmission(
+            request({ gateRoute: O.some("lint") }),
+            countingOriginGate(releases),
+            Effect.succeed("ran")
+          );
+          expect(result).toBe("ran");
+          const released = yield* Ref.get(releases);
+          expect(released).toBe(1);
+        }).pipe(
+          provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
+          Effect.provideService(MemoryStats, workerMemoryStats)
+        );
+      }).pipe(TestClock.withLive)
+    );
+
+    it.effect(
+      "falls back to the origin gate on a workstation whose reserve leaves no token, polling until it grants",
+      () =>
+        Effect.gen(function* () {
+          const gibRef = yield* Ref.make(50);
+          const { runtimeDir, tempRoot } = yield* admissionTemporaryRoot;
+          return yield* Effect.gen(function* () {
+            const attempts = yield* Ref.make(0);
+            const releases = yield* Ref.make(0);
+            const pollingGate = {
+              tryAcquire: Effect.succeedSome("origin-lease"),
+              tryAcquireFallback: Ref.updateAndGet(attempts, (count) => count + 1).pipe(
+                Effect.map((count) => (count < 2 ? O.none<string>() : O.some("origin-lease")))
+              ),
+              release: (_: string) => Ref.update(releases, (count) => count + 1),
+            };
+            const result = yield* withQualityAdmission(
+              request(),
+              pollingGate,
+              Effect.succeed("ran"),
+              AdmissionConfig.make({ ...fastConfig, reserveGib: 1_000 })
+            );
+            expect(result).toBe("ran");
+            const attempted = yield* Ref.get(attempts);
+            expect(attempted).toBe(2);
+            const released = yield* Ref.get(releases);
+            expect(released).toBe(1);
+            const queued = yield* listDirectory(tempRoot.queue);
+            expect(A.length(queued)).toBe(0);
+          }).pipe(
+            provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
+            Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
+            Effect.provideService(MemoryStats, memoryStats(gibRef))
+          );
+        }).pipe(TestClock.withLive)
+    );
+
+    it.effect("skips empty and unreadable queue entries and an unreadable promotion transition while admitting", () =>
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        const { runtimeDir, tempRoot } = yield* admissionTemporaryRoot;
+        return yield* Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          yield* fs.makeDirectory(tempRoot.queue, { recursive: true, mode: 0o700 });
+          yield* fs.makeDirectory(tempRoot.promotions, { recursive: true, mode: 0o700 });
+          yield* fs.writeFileString(path.join(tempRoot.queue, "empty.ticket.json"), "");
+          yield* fs.makeDirectory(path.join(tempRoot.queue, "unreadable.ticket.json"), { mode: 0o700 });
+          yield* fs.makeDirectory(path.join(tempRoot.promotions, "unreadable.promotion.json"), { mode: 0o700 });
+          const result = yield* withQualityAdmission(
+            request(),
+            noAdmissionOriginGate,
+            Effect.succeed("ran"),
+            fastConfig
+          );
+          expect(result).toBe("ran");
+        }).pipe(
+          provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
+          Effect.provideService(MemoryStats, memoryStats(gibRef))
+        );
+      }).pipe(TestClock.withLive)
+    );
+
+    const GIB = 1024 * 1024 * 1024;
+    const readMemoryStats = (constrained: number | undefined, total: number, resident: number) =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const services = yield* Layer.build(
+            memoryStatsLayerFor({
+              constrainedMemoryBytes: () => constrained,
+              totalMemoryBytes: () => total,
+              residentBytes: () => resident,
+            })
+          );
+          const stats = Context.get(services, MemoryStats);
+          return {
+            available: yield* stats.availableGib,
+            ceiling: yield* stats.ceilingGib,
+            total: yield* stats.totalGib,
+          };
+        })
+      );
+
+    it.effect("reports the cgroup ceiling and clamps available memory to ceiling minus RSS", () =>
+      Effect.gen(function* () {
+        const reading = yield* readMemoryStats(0.5 * GIB, 1024 * GIB, 0.25 * GIB);
+        expect(reading.ceiling).toBe(0.5);
+        expect(reading.available).toBeLessThanOrEqual(0.25);
+        expect(reading.available).toBeGreaterThanOrEqual(0);
+      })
+    );
+
+    it.effect("clamps available memory at zero when RSS exceeds the cgroup ceiling", () =>
+      Effect.gen(function* () {
+        const reading = yield* readMemoryStats(0.5 * GIB, 1024 * GIB, 2 * GIB);
+        expect(reading.available).toBe(0);
+      })
+    );
+
+    it.effect("reports installed memory as the ceiling when the process is uncapped", () =>
+      Effect.gen(function* () {
+        const reading = yield* readMemoryStats(undefined, 1024 * GIB, 0);
+        expect(reading.ceiling).toBe(reading.total);
+      })
     );
 
     it.effect("admits a hosted-only gate normally on workstation and records the profile and forceLocal", () =>
