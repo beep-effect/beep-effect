@@ -1456,6 +1456,58 @@ const tokenControlRoleAdjunct = (
 };
 const coordinateControlWord = (token: RawControlToken): boolean =>
   HashSet.has(HashSet.make("and", "or"), Str.toLowerCase(token.token.anchor.quote));
+type PPCoordinateEvidence = Extract<ClaimSourceControlEvidence, { readonly kind: "pp-operator-coordinate" }>;
+const tokenControlPPCoordinate = (
+  plan: ClaimSourceElementPlan,
+  token: RawControlToken,
+  e: PPCoordinateEvidence,
+  charge: (amount: number) => boolean
+): boolean => {
+  if (!charge(plan.operatorBindings.length + 12)) return false;
+  const left = A.get(plan.operatorBindings, e.left - 1);
+  const right = A.get(plan.operatorBindings, e.right - 1);
+  const next = A.get(plan.roles.certificates, token.ordinal);
+  if (
+    !coordinateControlWord(token) ||
+    O.isNone(left) ||
+    O.isNone(right) ||
+    left.value.frame !== right.value.frame ||
+    left.value.operator.endChar > token.token.anchor.startChar ||
+    left.value.operator.startChar >= right.value.operator.startChar ||
+    !O.exists(
+      next,
+      (p) =>
+        p.kind === "token" &&
+        p.tokenOrdinal === token.tokenOrdinal + 1 &&
+        p.token.anchor.startChar === right.value.operator.startChar
+    )
+  )
+    return false;
+  const frame = A.get(plan.frames, left.value.frame - 1);
+  if (O.isNone(frame) || O.isNone(frame.value.subject) || !charge(frame.value.arguments.length + 8)) return false;
+  const argument = A.get(frame.value.arguments, e.argument - 1);
+  const intro = proofAt(plan, e.introducer);
+  if (
+    O.isNone(argument) ||
+    argument.value.role !== "prepositional-complement" ||
+    O.isSome(argument.value.ownerNominal) ||
+    !O.exists(argument.value.predicate, (p) => sameAnchor(p, left.value.operator)) ||
+    argument.value.nominal.endChar > token.token.anchor.startChar ||
+    O.isNone(intro) ||
+    intro.value.kind !== "token" ||
+    e.introducer.slot !== "token" ||
+    !sourceAnchor(plan, intro.value.token.anchor, charge) ||
+    !tokenControlArgumentIntro(plan, intro.value, argument.value, charge)
+  )
+    return false;
+  return !A.some(
+    plan.operatorBindings,
+    (b) =>
+      b.frame === frame.value.ordinal &&
+      b.operator.startChar > left.value.operator.startChar &&
+      b.operator.startChar < right.value.operator.startChar
+  );
+};
 const tokenControlMatches = (
   plan: ClaimSourceElementPlan,
   token: Extract<ClaimFiniteSourceProof, { readonly kind: "token" }>,
@@ -1605,6 +1657,7 @@ const tokenControlMatches = (
           )
       );
     },
+    "pp-operator-coordinate": (e) => tokenControlPPCoordinate(plan, token, e, charge),
     "frame-coordinate": (e) => {
       const left = A.get(plan.frames, e.left - 1);
       const right = A.get(plan.frames, e.right - 1);
@@ -1944,6 +1997,39 @@ class SourceTokenOwnershipBuilder {
     const token = A.get(this.raw, start.value - 1);
     return O.filter(token, (p) => HashSet.has(HashSet.make("and", "or"), Str.toLowerCase(p.token.anchor.quote)));
   }
+  private ppCoordinateEvidence(left: number, right: number, token: RawControlToken): O.Option<PPCoordinateEvidence> {
+    if (!this.reserve(5)) return O.none();
+    const binding = O.getOrThrow(A.get(this.plan.operatorBindings, left));
+    const frame = A.get(this.plan.frames, binding.frame - 1);
+    if (O.isNone(frame) || O.isNone(frame.value.subject) || !this.reserve(frame.value.arguments.length * 4 + 6))
+      return O.none();
+    const argument = A.findFirstIndex(
+      frame.value.arguments,
+      (a) =>
+        a.role === "prepositional-complement" &&
+        O.isNone(a.ownerNominal) &&
+        a.nominal.endChar <= token.token.anchor.startChar &&
+        O.exists(a.predicate, (p) => sameAnchor(p, binding.operator))
+    );
+    if (O.isNone(argument)) return O.none();
+    const actual = O.getOrThrow(A.get(frame.value.arguments, argument.value));
+    const position = HashMap.get(this.positions, actual.nominal.startChar);
+    const intro = O.flatMap(position, (at) => A.get(this.raw, at - 1));
+    if (
+      O.isNone(intro) ||
+      intro.value.token.pos !== "ADP" ||
+      !tokenControlArgumentIntro(this.plan, intro.value, actual, this.reserve)
+    )
+      return O.none();
+    return O.some(
+      ClaimSourceControlEvidence.cases["pp-operator-coordinate"].make({
+        left: left + 1,
+        right: right + 1,
+        argument: argument.value + 1,
+        introducer: ClaimSourceProofRef.make({ ordinal: intro.value.ordinal, slot: "token" }),
+      })
+    );
+  }
   private operatorCoordinate(index: number, right: ClaimSourceOperatorBinding): boolean {
     if (!this.reserve(4)) return false;
     const token = this.coordinateBefore(right.operator, 1);
@@ -1953,13 +2039,13 @@ class SourceTokenOwnershipBuilder {
       this.plan.operatorBindings,
       (b) => b.frame === right.frame && b.operator.startChar < right.operator.startChar
     );
-    return (
-      O.isNone(left) ||
-      this.control(
-        ClaimSourceProofRef.make({ ordinal: token.value.ordinal, slot: "token" }),
-        ClaimSourceControlEvidence.cases["operator-coordinate"].make({ left: left.value + 1, right: index + 1 })
-      )
+    if (O.isNone(left)) return true;
+    const pp = this.ppCoordinateEvidence(left.value, index, token.value);
+    if (this.exhausted) return false;
+    const evidence = O.getOrElse(pp, () =>
+      ClaimSourceControlEvidence.cases["operator-coordinate"].make({ left: left.value + 1, right: index + 1 })
     );
+    return this.control(ClaimSourceProofRef.make({ ordinal: token.value.ordinal, slot: "token" }), evidence);
   }
   private operatorCoordinates(): boolean {
     for (let index = 0; index < this.plan.operatorBindings.length; index++) {

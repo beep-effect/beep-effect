@@ -1206,7 +1206,17 @@ class SourcePlanner {
       true
     );
     if (O.isNone(owner)) return O.none();
-    return this.parseChildren(children.value, owner.value, "composition-child", depth) ? O.some(true) : O.none();
+    this.declarationIntroducer(owner.value, operator.value, operator.value + 1);
+    const ordinals = this.declaredChildren(children.value, owner.value, depth);
+    if (O.isNone(ordinals)) return O.none();
+    return this.canonicalDeclaration(
+      "composition",
+      owner.value,
+      this.span(operator.value, operator.value + 1),
+      ordinals.value
+    )
+      ? O.some(true)
+      : O.none();
   };
   private ambiguousRelative = (index: number, sourceStart: number): boolean => {
     const before = A.filter(

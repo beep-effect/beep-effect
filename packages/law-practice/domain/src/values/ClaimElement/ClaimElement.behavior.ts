@@ -2513,14 +2513,86 @@ const sourcePathLetterWidth = (siblings: number, charge: (amount: number) => boo
   }
   return letters;
 };
-const sourceElementPaths = (
+// Projection-only quotient: internal source ordinals, frames and owners stay exact.
+const flatCompositionPublicOwners = (
   structural: ClaimSourceElementPlan,
+  terms: ReadonlyArray<ReadonlyArray<EncodedTerm>>,
+  charge: (amount: number) => boolean
+): O.Option<HashMap.HashMap<number, number>> => {
+  if (!charge(structural.elements.length * 8 + structural.declarationPlans.length + 4)) return O.none();
+  let owners = HashMap.fromIterable(
+    A.map(structural.elements, (element) => [element.ordinal, element.ordinal] as const)
+  );
+  for (const declaration of structural.declarationPlans) {
+    if (declaration.kind !== "composition" || declaration.items.length !== 2) continue;
+    const owner = A.get(structural.elements, declaration.owner - 1);
+    if (O.isNone(owner) || owner.value.grouping !== "composition-header" || owner.value.kind !== "limitation") continue;
+    if (
+      !charge(
+        owner.value.extent.quote.length * 32 +
+          structural.elements.length * 12 +
+          structural.frames.length * 8 +
+          structural.declarationPlans.length * 8 +
+          32
+      )
+    )
+      return O.none();
+    if (A.filter(structural.declarationPlans, (d) => d.owner === declaration.owner).length !== 1) continue;
+    const children = A.getSomes(A.map(declaration.items, (item) => A.get(structural.elements, item.child - 1)));
+    const headerTerms = O.getOrElse(A.get(terms, owner.value.ordinal - 1), () => []);
+    if (
+      children.length !== 2 ||
+      headerTerms.length !== 1 ||
+      !A.every(children, (child, index) => {
+        const item = O.getOrThrow(A.get(declaration.items, index));
+        const childTerms = O.getOrElse(A.get(terms, child.ordinal - 1), () => []);
+        const frames = A.filter(structural.frames, (frame) => frame.publicOwner === child.ordinal);
+        return (
+          child.grouping === "composition-child" &&
+          child.kind !== "functional-relation" &&
+          O.contains(child.parent, declaration.owner) &&
+          child.extent.startChar === item.extent.startChar &&
+          child.extent.endChar === item.extent.endChar &&
+          child.extent.quote === item.extent.quote &&
+          childTerms.length === 1 &&
+          child.ownedTermRegions.length === 1 &&
+          !A.some(structural.elements, (e) => O.contains(e.parent, child.ordinal)) &&
+          !A.some(structural.declarationPlans, (d) => d.owner === child.ordinal) &&
+          frames.length === 1 &&
+          A.every(
+            frames,
+            (frame) =>
+              frame.attachment === "composition-child" &&
+              frame.predicates.length === 0 &&
+              frame.privateArguments.length === 0
+          )
+        );
+      })
+    )
+      continue;
+    const merged = A.appendAll(
+      headerTerms,
+      A.flatMap(children, (child) => O.getOrElse(A.get(terms, child.ordinal - 1), () => []))
+    );
+    const span = { start: owner.value.extent.startChar, text: owner.value.extent.quote };
+    if (!closedCompositionEnumeration(span, merged, tokensIn(span))) continue;
+    if (
+      !O.contains(HashMap.get(owners, declaration.owner), declaration.owner) ||
+      !A.every(children, (child) => O.contains(HashMap.get(owners, child.ordinal), child.ordinal))
+    )
+      continue;
+    for (const child of children) owners = HashMap.set(owners, child.ordinal, declaration.owner);
+  }
+  return O.some(owners);
+};
+const sourceElementPaths = (
+  sourceElements: ClaimSourceElementPlan["elements"],
   rootPath: string,
   charge: (amount: number) => boolean
 ): O.Option<HashMap.HashMap<number, string>> => {
   let paths = HashMap.empty<number, string>();
   let siblingCounts = HashMap.empty<number, number>();
-  for (const element of structural.elements) {
+  for (const element of sourceElements) {
     const parent = O.flatMap(element.parent, (ordinal) => HashMap.get(paths, ordinal));
     const key = O.getOrElse(element.parent, () => 0);
     const siblings = O.getOrElse(HashMap.get(siblingCounts, key), () => 0);
@@ -2562,31 +2634,49 @@ const projectedClaimInput = (
   // its actual path/term construction; external plans never enter this seam.
   if (!charge(structural.elements.length * 16 + structural.roles.nominals.length + 32)) return O.none();
   const rootPath = `${claim.claimNumber}`;
-  const paths = sourceElementPaths(structural, rootPath, charge);
-  if (O.isNone(paths)) return O.none();
   const terms = O.all(A.map(structural.elements, (element) => projectClaimRoleTerms(element, charge)));
   if (O.isNone(terms)) return O.none();
+  const groups = flatCompositionPublicOwners(structural, terms.value, charge);
+  if (O.isNone(groups) || !charge(structural.elements.length * 12 + structural.roles.nominals.length * 4 + 8))
+    return O.none();
+  const publicElements = A.filter(structural.elements, (e) =>
+    O.contains(HashMap.get(groups.value, e.ordinal), e.ordinal)
+  );
+  const paths = sourceElementPaths(publicElements, rootPath, charge);
+  if (O.isNone(paths)) return O.none();
+  let groupedTerms = HashMap.empty<number, ReadonlyArray<EncodedTerm>>();
+  for (let index = 0; index < structural.elements.length; index++) {
+    const original = O.getOrThrow(A.get(structural.elements, index));
+    const owner = O.getOrThrow(HashMap.get(groups.value, original.ordinal));
+    const prior = O.getOrElse(HashMap.get(groupedTerms, owner), () => []);
+    const next = O.getOrThrow(A.get(terms.value, index));
+    if (!charge(prior.length + next.length + 8)) return O.none();
+    groupedTerms = HashMap.set(groupedTerms, owner, A.appendAll(prior, next));
+  }
   const elements = A.map(
-    structural.elements,
-    (element, index): EncodedElement => ({
+    publicElements,
+    (element): EncodedElement => ({
       path: O.getOrThrow(HashMap.get(paths.value, element.ordinal)),
       anchor: element.extent,
       kind: element.kind,
-      terms: O.getOrThrow(A.get(terms.value, index)),
+      terms: O.getOrThrow(HashMap.get(groupedTerms, element.ordinal)),
     })
   );
-  const containment = A.flatMap(structural.elements, (element) =>
-    O.match(element.parent, {
-      onNone: () => [],
-      onSome: (ordinal): ReadonlyArray<EncodedEdge> => [
-        {
-          kind: "part-of",
-          child: O.getOrThrow(HashMap.get(paths.value, element.ordinal)),
-          parent: O.getOrThrow(HashMap.get(paths.value, ordinal)),
-        },
-      ],
-    })
-  );
+  const containment: Array<EncodedEdge> = [];
+  let seenContainment = HashSet.empty<string>();
+  for (const element of structural.elements) {
+    if (O.isNone(element.parent)) continue;
+    const childOrdinal = O.getOrThrow(HashMap.get(groups.value, element.ordinal));
+    const parentOrdinal = O.getOrThrow(HashMap.get(groups.value, element.parent.value));
+    if (childOrdinal === parentOrdinal) continue;
+    const child = O.getOrThrow(HashMap.get(paths.value, childOrdinal));
+    const parent = O.getOrThrow(HashMap.get(paths.value, parentOrdinal));
+    const key = `${child}:${parent}`;
+    if (!charge(key.length + 8)) return O.none();
+    if (HashSet.has(seenContainment, key)) continue;
+    seenContainment = HashSet.add(seenContainment, key);
+    containment.push({ kind: "part-of", child, parent });
+  }
   let opaqueNonDonors = HashSet.empty<string>();
   for (const selection of structural.roles.opaqueSelections) {
     // Registry storage belongs to this successful immutable source projection.
