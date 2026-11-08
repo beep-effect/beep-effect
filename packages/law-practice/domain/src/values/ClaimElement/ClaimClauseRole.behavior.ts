@@ -2020,16 +2020,10 @@ const validateFiniteDerivedProof = (context: FiniteProofValidationContext, proof
   }
   return validateFiniteOpaqueCoreProof(context, proof);
 };
-type FiniteRawRecord = Extract<
-  ClaimFiniteSourceProof,
-  { readonly kind: "token" | "intrinsic-noun" | "scope" | "attachment" }
->;
+type FiniteRawRecord = Extract<ClaimFiniteSourceProof, { readonly kind: "token" | "intrinsic-noun" | "attachment" }>;
 const isFiniteRawRecord = (proof: ClaimFiniteSourceProof): proof is FiniteRawRecord =>
-  proof.kind === "token" || proof.kind === "intrinsic-noun" || proof.kind === "scope" || proof.kind === "attachment";
+  proof.kind === "token" || proof.kind === "intrinsic-noun" || proof.kind === "attachment";
 const validateFiniteRawRecord = (context: FiniteProofValidationContext, proof: FiniteRawRecord): boolean => {
-  if (proof.kind === "scope") {
-    return true;
-  }
   if (proof.kind === "attachment") {
     return true;
   }
@@ -2038,7 +2032,10 @@ const validateFiniteRawRecord = (context: FiniteProofValidationContext, proof: F
   }
   return validateFiniteIntrinsicFact(context, proof);
 };
-const validateFiniteProofRecord = (context: FiniteProofValidationContext, proof: ClaimFiniteSourceProof): boolean => {
+const validateFiniteProofRecord = (
+  context: FiniteProofValidationContext,
+  proof: Exclude<ClaimFiniteSourceProof, { readonly kind: "scope" }>
+): boolean => {
   if (isFiniteRawRecord(proof)) return validateFiniteRawRecord(context, proof);
   if (proof.kind === "boundary") {
     return validateFiniteBoundaryProof(context, proof);
