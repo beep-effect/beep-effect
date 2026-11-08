@@ -25,7 +25,7 @@ verbs by it, so worker-class hosts defer compute-heavy proof to hosted CI by con
 **Depends on.** Nothing (D7). **Phases / PR lanes (max three concurrent).**
 - P0 profile + scheduler: `ComputeProfile` service, `MemoryStats` ceiling, gate routing table,
   scheduler refusal + `--force-local`, facts carry the profile. Cites B1, B2 (`ProofEnvProfile`),
-  `AdmissionConfig`. NET-NEW: `ComputeProfile`, `GateRoute` table, `beep compute profile` command.
+  `AdmissionConfig`. NET-NEW: `ComputeProfile`, `GateRoute` table, the profile probe subcommand.
 - P1 yeet + lefthook: `publish`→`open` posture on worker, `final-check` auto-skips with
   `compute-profile=worker`, `ready` accepts hosted cheap-tier green for those gates, lefthook
   `skip: - run:` on both catalog commands. Cites B5, B6, `gates-and-proof.md` skip receipts.
@@ -33,7 +33,7 @@ verbs by it, so worker-class hosts defer compute-heavy proof to hosted CI by con
   relock pattern (D9, `skills-update-train.yml`); AGENTS.md amendment; agent-pools per-host table
   (dankserver measured; beep-worker and tom-pc-1-wsl rows from a working route); remote skill and
   yeet skill sections; Palantiri host-pressure carries the profile (B7).
-**First vertical slice.** P0 on dankserver: `beep compute profile` prints `worker` inside the
+**First vertical slice.** P0 on dankserver: the profile probe subcommand prints `worker` inside the
 slice and `workstation` on DankStation; the scheduler refuses `yeet final-check` there and prints
 the `yeet open` route; evidence = per-gate RSS table recorded in the goal's `research/`.
 **Acceptance.** A worker-profile lane can go edit → commit → `yeet open` → hosted green → `yeet ready`
