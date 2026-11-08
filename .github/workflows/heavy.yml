@@ -133,7 +133,10 @@ jobs:
             install_typos: "false"
           - id: test-integration
             name: Test Integration
-            timeout_minutes: 40
+            # law-practice-server's canonical citation replay (#2847) alone
+            # needs ~40 min on the 8-vCPU pool at two files x two shards;
+            # the budget covers the whole lane with headroom.
+            timeout_minutes: 90
             uses_turbo: "true"
             install_typos: "false"
           - id: docgen

@@ -1,15 +1,17 @@
 # CI coverage artifacts
 
 The Check workflow collects coverage during its existing unit and Labs test
-executions. Its coverage comparison job validates those reports, merges the six
-repo-cli test shards and runs the existing regression comparator. It does not
+executions. Its coverage comparison job validates those reports, merges the
+repo-cli and law-practice-server test shards and runs the existing regression
+comparator. It does not
 execute tests or regenerate the baseline.
 
 ## Producers
 
-The ten Test Unit partitions keep stable identities: `unit-a` to `unit-d` and
-`repo-cli-1` to `repo-cli-6` (six and four before 2026-11-02; the lane-timings
-census knows both layouts). Each unit partition runs its packages two at a
+The thirteen Test Unit partitions keep stable identities: `unit-a` to `unit-d`,
+`repo-cli-1` to `repo-cli-6` and `law-practice-1` to `law-practice-3` (ten
+before 2026-11-08, six and four before 2026-11-02; the lane-timings census
+knows every layout). Each unit partition runs its packages two at a
 time with buffered output. They run each package's canonical coverage
 commands, preserving environment assignments, configuration and test selection.
 Node invocations use V8; Bun invocations use Istanbul. The CLI's six partitions
