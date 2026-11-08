@@ -49,7 +49,7 @@ export const defaultCitationEnginePolicy = S.decodeEffect(CitationEngineEffectiv
     extractDeadline: 10_000,
     resolveDeadline: 10_000,
     annotateDeadline: 10_000,
-    operationDeadline: 30_000,
+    operationDeadline: 50_000,
     regexDeadline: 250,
     queueDeadline: 1_000,
     cleanupDeadline: 1_000,

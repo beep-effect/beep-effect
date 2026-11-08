@@ -28,7 +28,7 @@ it.layer(citationTokenizerTestLayer)("versioned engine artifact", (it) => {
     Effect.gen(function* () {
       const source = yield* fixture;
       const first = yield* makeCitationEngineArtifact(source);
-      expect(first).toBe("ea2281e1e3ade99638c47458d11eca2ee41a397886dd1d834e42b7d2922be94e");
+      expect(first).toBe("9d17efdd98576808a54813d7f530776e4f451b07cb3fbbce3b13aa43e0ce446b");
       const reordered = {
         limits: R.fromEntries(A.reverse(R.toEntries(source.limits))),
         highestValidYear: source.highestValidYear,

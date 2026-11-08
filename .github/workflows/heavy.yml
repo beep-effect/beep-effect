@@ -367,7 +367,9 @@ jobs:
         include:
           - id: test-integration
             name: Test Integration
-            timeout_minutes: 40
+            # Canonical citation replay needs ~40 min on the 8-vCPU pool;
+            # retain main's whole-lane budget with headroom (#2915).
+            timeout_minutes: 90
             uses_turbo: "true"
             install_typos: "false"
     env: *heavy-lane-env
@@ -414,6 +416,8 @@ jobs:
     env: *heavy-lane-env
     steps: *heavy-lane-steps
 
+  # PRs prove affected tsc emit + babel with read-only cache. Trusted main
+  # pushes stay unscoped and own cache writes; this path owns fleet access.
   build:
     name: Build
     if: ${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}
