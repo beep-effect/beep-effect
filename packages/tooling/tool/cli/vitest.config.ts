@@ -73,6 +73,7 @@ const isolatedSuites = [
   "test/codex-findings-refresh.test.ts",
   "test/codex-findings-write.test.ts",
   "test/codex-security-dispatch.test.ts",
+  "test/compute-command.test.ts",
   "test/coverage-artifacts.test.ts",
   "test/create-package-lab.test.ts",
   "test/create-package.test.ts",

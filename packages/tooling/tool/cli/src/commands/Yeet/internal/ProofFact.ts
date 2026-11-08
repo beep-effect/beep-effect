@@ -29,7 +29,9 @@
  */
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import { ComputeProfile } from "../../../internal/repo-run/ComputeProfile.schemas.ts";
 import { ProofEnvProfile, ProofStage, YeetProofTier } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
 import { CiLaneClass } from "../../Ci/CiLane.ts";
 
@@ -204,6 +206,10 @@ export class ProofInputDigest extends S.Opaque<ProofInputDigest, { readonly bran
     // can be audited. It is evidence only and never enters `key`; rows written
     // before it existed simply omit it.
     environmentDigest: S.optionalKey(S.NonEmptyString),
+    // The compute profile the lane ran under. Evidence only, like
+    // `environmentDigest`: it never enters `key`, so existing digests and
+    // reuse decisions are unchanged.
+    computeProfile: ComputeProfile.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("ProofInputDigest", {
       description:
@@ -516,6 +522,7 @@ export class ProofLedgerShadowRow extends S.Opaque<ProofLedgerShadowRow, { reado
     branch: S.NonEmptyString,
     stage: ProofStage,
     envProfile: ProofEnvProfile,
+    computeProfile: ComputeProfile.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     decision: ProofReuseDecision,
     observed: ProofOutcome,
     durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),

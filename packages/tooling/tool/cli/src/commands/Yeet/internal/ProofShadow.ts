@@ -19,6 +19,7 @@ import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { ComputeProfile } from "../../../internal/repo-run/ComputeProfile.schemas.ts";
 import { ProofEnvProfile, ProofStage, YeetProofTier } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
 import { changedPackageNamesForPaths, collectWorkspaces } from "../../Quality/internal/PackageVerify.ts";
 import { GithubCheckLaneRunStatus } from "../../Quality/Quality.schemas.ts";
@@ -330,6 +331,7 @@ export class ProofShadowAttemptFacts extends S.Opaque<ProofShadowAttemptFacts, {
     tier: YeetProofTier,
     stage: ProofStage,
     envProfile: ProofEnvProfile,
+    computeProfile: ComputeProfile.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("ProofShadowAttemptFacts", {
       description: "Attempt identity, branch, head, tier, stage and env profile the shadow pass records against.",
@@ -385,6 +387,7 @@ export const proofShadowAttemptFacts = (attempt: YeetAttemptStarted): ProofShado
     tier: O.getOrElse(attempt.proofTier, () => "full" as const),
     stage: O.getOrElse(attempt.stage, () => "pre-push" as const),
     envProfile: O.getOrElse(attempt.envProfile, () => "local" as const),
+    computeProfile: attempt.computeProfile,
   });
 
 /**
@@ -855,6 +858,7 @@ const shadowInputDigest = Effect.fn("Yeet.ProofShadow.inputDigest")(function* (
     laneClass: "cli-runnable",
     inputSource: O.isSome(declared) ? "turbo-task-hash" : "undeclared",
     key,
+    computeProfile: facts.computeProfile,
     ...OptionUtils.getSomesStruct({
       environmentDigest: O.flatMap(candidate.parentLaneId, (parentLaneId) =>
         HashMap.get(environmentDigests, parentLaneId)
@@ -903,6 +907,7 @@ const shadowRow = (
     branch: facts.branch,
     stage: facts.stage,
     envProfile: facts.envProfile,
+    computeProfile: facts.computeProfile,
     decision,
     observed: candidate.observed,
     durationMs: O.getOrElse(candidate.lane.durationMs, () => 0),

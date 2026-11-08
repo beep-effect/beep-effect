@@ -14,6 +14,7 @@ import { cacheCommand } from "./Cache/index.ts";
 import { ciCommand } from "./Ci/index.ts";
 import { codegenCommand } from "./Codegen/index.ts";
 import { codexCommand } from "./Codex/index.ts";
+import { computeCommand } from "./Compute/index.ts";
 import { corpusCommand } from "./Corpus/index.ts";
 import { createPackageCommand } from "./CreatePackage/index.ts";
 import { deletePackageCommand } from "./DeletePackage/index.ts";
@@ -91,6 +92,7 @@ export const rootCommand = Command.make("beep-cli").pipe(
     cacheCommand,
     ciCommand,
     codexCommand,
+    computeCommand,
     corpusCommand,
     docgenCommand,
     docsCommand,
