@@ -3608,6 +3608,9 @@ if __name__ == "__main__":
     if not argv:
         print(__doc__)
         sys.exit(2)
+    if "--repo" in argv and argv.index("--repo") + 1 >= len(argv):
+        print("usage: --repo requires a repository path", file=sys.stderr)
+        sys.exit(2)
     gate = "--gate" in argv
     repo = argv[argv.index("--repo") + 1] if "--repo" in argv else None
     validate_dir(Path(argv[0]), gate=gate, repo=repo)

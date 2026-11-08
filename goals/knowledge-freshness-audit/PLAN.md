@@ -343,4 +343,12 @@ Lane `codex/audit-p4-delivery-record`
 
 Reverse: Remove this checkpoint and delivery addendum if its source pins or proof distinctions are disproved; retain all original private receipts.
 
+### Reject a missing validator repository operand before artifact validation, 2026-11-08
+
+Parent review of T37 confirms a trailing --repo raises IndexError at the CLI boundary. Add the existing usage exit-2 convention without changing valid argument dispatch. A synthetic extracted-main regression stops at a stubbed validation boundary; no ontology artifacts or validator functions execute. The old source fails that regression and the repaired source passes. P4 remains partial; PM, ADHD provenance and private teaching holds remain separate.
+
+Lane `codex/audit-validator-cli`
+
+Reverse: Revert this checkpoint and the three-line guard with its focused regression; retain private original audit evidence.
+
 <!-- beep:decisions:end -->
