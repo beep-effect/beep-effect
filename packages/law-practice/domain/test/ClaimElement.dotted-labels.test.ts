@@ -152,6 +152,21 @@ describe("source-owned dotted alphabetic declarations", () => {
       assert.strictEqual(O.getOrThrow(A.head(dotted.declarationPlans)).anchor.quote, "comprising:");
     })
   );
+  it.effect("retains source whitespace inside legacy parenthesized labels", () =>
+    Effect.gen(function* () {
+      const cases: ReadonlyArray<readonly [string, ReadonlyArray<string>]> = [
+        ["A system comprising: ( a ) a plate; ( b ) a cover.", ["( a )", "( b )"]],
+        ["A system comprising: (a ) a plate; (b ) a cover.", ["(a )", "(b )"]],
+        ["A system comprising: ( a) a plate; ( b) a cover.", ["( a)", "( b)"]],
+        ["A system comprising: ( i ) a plate; ( ii ) a cover.", ["( i )", "( ii )"]],
+      ];
+      for (const [text, labels] of cases) {
+        const plan = yield* planOf(text);
+        assert.deepStrictEqual(labelsOf(plan), labels);
+        assert.isTrue(validateClaimSourceOwnership(plan, meter().charge));
+      }
+    })
+  );
   it.effect("reuses a proved local owner and nested Roman declaration", () =>
     Effect.gen(function* () {
       const local = yield* planOf("A system comprising a housing comprising: a. a plate; b. a cover.");

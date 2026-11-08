@@ -2614,7 +2614,7 @@ const sourceLabelListMatches = (
 // Operational source-local validation cache; never persisted as evidence.
 type SourceLabelValidation = { labelled: number; raw: O.Option<ReadonlyArray<SourceLabelToken>> };
 const parenthesizedSourceLabelPattern =
-  /^\((?:[a-z]|(?=[ivxlcdm]+\)$)m*(?:cm|cd|d?c{0,3})(?:xc|xl|l?x{0,3})(?:ix|iv|v?i{0,3}))\)$/u;
+  /^\(\s*(?:[a-z]|(?=[ivxlcdm]+\s*\)$)m*(?:cm|cd|d?c{0,3})(?:xc|xl|l?x{0,3})(?:ix|iv|v?i{0,3}))\s*\)$/u;
 const parenthesizedSourceLabel = (
   plan: ClaimSourceElementPlan,
   label: TextAnchor,
