@@ -20,7 +20,7 @@ prose when they conflict.
 
 Scope:
 
-- In: `packages/tooling/tool/cli/src/internal/repo-run/**`, `packages/tooling/tool/cli/src/commands/Yeet/**`, a new `beep compute profile` command, `lefthook.yml`, `.github/workflows/check.yml`, `AGENTS.md` Quality Operator, `docs/runbooks/agent-pools.md`, `.claude/skills/remote-development-agents/SKILL.md`, `.claude/skills/yeet/references/gates-and-proof.md`, Palantiri host-pressure.
+- In: `packages/tooling/tool/cli/src/internal/repo-run/**`, `packages/tooling/tool/cli/src/commands/Yeet/**`, a NET-NEW profile probe subcommand of the repo CLI, `lefthook.yml`, `.github/workflows/check.yml`, `AGENTS.md` Quality Operator, `docs/runbooks/agent-pools.md`, `.claude/skills/remote-development-agents/SKILL.md`, `.claude/skills/yeet/references/gates-and-proof.md`, Palantiri host-pressure.
 - Out: the catalog writer internals (goal `catalog-writer-incremental`), hosted heavy admission, dankserver provisioning, workstation hook behavior.
 
 Workflow:

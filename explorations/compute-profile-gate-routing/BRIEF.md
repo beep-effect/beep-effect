@@ -34,8 +34,7 @@ scheduler; yeet + lefthook; CI step + docs). Neither waits on the other.
    `ready-for-heavy`, monitor, no local proof); `yeet final-check` auto-skips hosted-only gates
    with reason `compute-profile=worker`; `yeet ready` accepts hosted cheap-tier green in place of
    the local receipt for those gates and prints them for the PR body.
-5. **Hooks**: both catalog commands in `lefthook.yml` gain `skip: - run: bun run beep compute
-   profile --is worker` (a sub-second command; `LEFTHOOK_EXCLUDE` in the worker env until it
+5. **Hooks**: both catalog commands in `lefthook.yml` gain `skip: - run: <profile probe --is worker>` (a sub-second repo CLI subcommand, name fixed in P0; `LEFTHOOK_EXCLUDE` in the worker env until it
    lands). The incremental writer (other goal) parses only the staged files and splices their
    entries into the existing shard, targeting the ~1 GB floor.
 6. **Hosted regeneration**: a `check.yml` job, draft-PRs-only, runs when the PR declares worker
