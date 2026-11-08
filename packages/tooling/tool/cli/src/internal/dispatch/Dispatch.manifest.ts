@@ -112,6 +112,10 @@ export const commandGroupRoutes: ReadonlyArray<CommandGroupRoute> = [
     []
   )(() => import("../../commands/Codex/index.ts").then((module) => module.codexCommand)),
   groupRoute(
+    { name: "compute", description: "Compute profile of this process: workstation or a sub-envelope worker" },
+    []
+  )(() => import("../../commands/Compute/index.ts").then((module) => module.computeCommand)),
+  groupRoute(
     { name: "corpus", description: "Corpus salvage and curation commands" },
     []
   )(() => import("../../commands/Corpus/index.ts").then((module) => module.corpusCommand)),

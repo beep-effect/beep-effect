@@ -28,3 +28,27 @@ it.effect("bounds operation-timed bodies by the enclosing deadline alone, attrib
     deepStrictEqual(error, CitationSafetyLimitExceeded.make({ operation: "annotate", limit: "operationDeadline" }));
   })
 );
+
+it.effect("attributes nested safety failures to the installed operation without changing other outcomes", () =>
+  Effect.gen(function* () {
+    const { limits } = yield* defaultCitationEnginePolicy;
+    for (const operation of ["clean", "extract", "resolve", "annotate"] as const) {
+      const timing = yield* makeCitationRegexTiming(limits, true).pipe(
+        Effect.provideService(CitationRegexOperation, operation)
+      );
+      for (const method of ["timed", "operationTimed"] as const) {
+        const nested = CitationSafetyLimitExceeded.make({ operation: "extract", limit: "producedTextUtf16" });
+        const failure = yield* timing[method](Effect.fail(nested)).pipe(
+          Effect.provideService(CitationRegexOperation, "extract"),
+          Effect.flip
+        );
+        deepStrictEqual(failure, CitationSafetyLimitExceeded.make({ operation, limit: "producedTextUtf16" }));
+        const original = new Error("unrelated synthetic failure");
+        const unrelated = yield* timing[method](Effect.fail(original)).pipe(Effect.flip);
+        deepStrictEqual(unrelated === original, true);
+        const success = yield* timing[method](Effect.succeed("complete"));
+        deepStrictEqual(success, "complete");
+      }
+    }
+  })
+);

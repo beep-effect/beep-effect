@@ -252,3 +252,18 @@ because it is unmounted or mostly empty. Staking backup work remains excluded.
 | Current bootstrap and closeout doctrine | Retired commands historical only; one closeout boundary per host | pending |
 | Detached Yeet qualification | Bounded job/slice lifecycle and terminal receipt | partial: complete serial cheap-gate tier passes with normal detached finalization and wait 0; guarded terminal recovery and cancellation also proven; heavy/full proof remains open; repeat boot, guarded proxy startup and headless GitHub credential retrieval pass |
 | Cloud credentials: Azure/Vercel/Cloudflare/AWS/Pulumi | Actual output-suppressed authenticated operation per selected account/project | complete for worker read-only access: Azure/Vercel/Cloudflare checks, AWS identity/state bucket, and S3 Pulumi stack discovery pass; deployments remain separate |
+
+## Checkpoints
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug cloud-agent-readiness`; add a `kind: checkpoint` file there, never edit this block._
+
+### Qualify bootstrap detection and historical comparison evidence, 2026-11-08
+
+The knowledge audit found that the bootstrap header omitted the existing CURSOR_AGENT marker. Add it to the comment without changing vendor detection or precedence. A separately dated history note qualifies the mixed comparison revisions and missing table marker in the original 2026-11-02 receipt; the original receipt remains unchanged. Preserve the default-severity ShellCheck gap and distinguish milestone prose from unverified acceptance rows. Shell syntax and comment-only identity checks are local source checks, not a fresh bootstrap, denied-host, cloud or fleet proof. No phase, acceptance checkbox, initiative lifecycle or billing state changes.
+
+Lane `codex/audit-bootstrap-header`
+
+Reverse: Revert the comment and separate qualification note without rewriting the original receipt.
+
+<!-- beep:decisions:end -->

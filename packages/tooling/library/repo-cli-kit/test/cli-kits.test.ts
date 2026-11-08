@@ -39,6 +39,7 @@ import * as Layer from "effect/Layer";
 import * as MutableList from "effect/MutableList";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
@@ -237,9 +238,14 @@ describe("cli/FsGuards", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const root = yield* fs.makeTempDirectoryScoped();
-        const cause = yield* fs.makeDirectory(root).pipe(Effect.flip);
         const directory = path.join(root, "nested");
         const target = path.join(directory, "value.txt");
+        const cause = PlatformError.systemError({
+          _tag: "PermissionDenied",
+          module: "FileSystem",
+          method: "makeDirectory",
+          pathOrDescriptor: directory,
+        });
         const create = vi.spyOn(fs, "makeDirectory").mockReturnValueOnce(Effect.fail(cause));
         yield* Effect.addFinalizer(() => Effect.sync(() => create.mockRestore()));
 

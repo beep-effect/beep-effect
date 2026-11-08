@@ -870,7 +870,11 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
     runCachePilotExperiment(root, changed).pipe(
       Effect.provideService(
         MemoryStats,
-        MemoryStats.of({ availableGib: Effect.succeed(64), totalGib: Effect.succeed(64) })
+        MemoryStats.of({
+          availableGib: Effect.succeed(64),
+          totalGib: Effect.succeed(64),
+          ceilingGib: Effect.succeed(64),
+        })
       ),
       Effect.provideServiceEffect(Git, Git.make),
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),

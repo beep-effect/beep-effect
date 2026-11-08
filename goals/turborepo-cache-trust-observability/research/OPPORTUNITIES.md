@@ -24,6 +24,34 @@ command/error/file evidence, impact, prevention and owner/disposition.
 Redact secrets, use portable paths, omit machine/session IDs and keep raw logs
 in bounded artifacts.
 
+## 2026-11-08: concurrent proof publishers race on inbox creation
+
+Hosted Property Laws on PR #2951 failed in the existing proof-job finalizer
+test: two publishers observed a missing inbox parent, and its second creation
+returned `AlreadyExists`. This is a shared filesystem guard defect on the
+accepted base, outside the sandbox library-path repair. Accept only that
+creation collision, then retain the existing no-follow directory validation.
+Deterministic hosted regressions cover a directory, file and symlink winning
+the race, plus unrelated creation failure. No local suite was run under the
+operator's hosted-first instruction. Keep failures attributable; do not retry
+the same run or pre-create the fixture directory to hide the race.
+
+The first hosted unit-c run on this repair exposed an older generic-failure
+fixture that manufactured its cause by creating an already-existing root.
+That is specifically `AlreadyExists`, which now correctly triggers no-follow
+reinspection; its synthetic parent was never created. Inject an explicit
+`PermissionDenied` for the intended directory instead, preserving the original
+cause-identity and refusal assertions. Add a separate absent-parent collision
+case so swallowing `AlreadyExists` can never turn a missing parent into success.
+Keep the original failed job and obtain fresh hosted proof on the changed
+source; no local suite or unchanged-source rerun is used.
+
+The changed-head hosted Check then reported `TS377050` on the new nested
+Option-presence assertion. Use the equivalent pipeable form while retaining
+the assertion. This introduced compiler-diagnostic finding was absent from
+the syntax-only test-pattern inspection; that inspection is not type proof.
+The hosted failure log is retained, and fresh hosted proof is still required.
+
 ## 2026-11-03: hosted policy must cover the new mask tests
 
 PR #2691's current hosted policy log found one introduced Effect Vitest

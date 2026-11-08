@@ -715,7 +715,11 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
             ),
             Effect.provideService(
               MemoryStats,
-              MemoryStats.of({ availableGib: Effect.succeed(50), totalGib: Effect.succeed(128) })
+              MemoryStats.of({
+                availableGib: Effect.succeed(50),
+                totalGib: Effect.succeed(128),
+                ceilingGib: Effect.succeed(128),
+              })
             )
           );
 
