@@ -4,9 +4,10 @@ import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { LenientManifest } from "@beep/package-json/LenientManifest";
 import { ChangeAtom, ChangeClassifier, ChangeSet, RouteError } from "@beep/repo-cli/commands/Ci";
 import { LintPolicySweeps } from "@beep/repo-cli/commands/Quality/Quality.schemas";
-import { ComputeProfileProbe, makeComputeProfileProbe } from "@beep/repo-cli/test/RepoRun";
+import { ComputeProfileError, ComputeProfileProbe, makeComputeProfileProbe } from "@beep/repo-cli/test/RepoRun";
 import { configStringOption } from "@beep/repo-cli/test/SharedInternals";
 import {
+  applyComputeProfileLabel,
   COMPUTE_PROFILE_WORKER_SKIP_REASON,
   collectExpectationRewrites,
   collectFinalCheckRoute,
@@ -25,19 +26,26 @@ import {
   planFinalCheckRoute,
   planFinalCheckSteps,
   readFinalCheckReceipt,
+  readYeetComputeProfile,
   resolveFinalCheckProfileSkips,
   rewrittenTestFiles,
   runFinalCheckGatesForTesting,
   verifyExpectationRewrites,
   vitestReplayArgs,
+  YEET_WORKER_PUBLISH_BODY_SENTENCE,
+  YeetEnsuredPullRequest,
   YeetInboxRowJson,
+  YeetPublishOwnRouteFlags,
   YeetPublishPostureInput,
+  yeetPublishKeepsOwnRoute,
   yeetPublishPostureFor,
+  yeetWorkerPublishBody,
 } from "@beep/repo-cli/test/Yeet";
 import { QualityTaskStep } from "@beep/repo-cli-kit/process/index";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -49,8 +57,10 @@ import * as PlatformError from "effect/PlatformError";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as TestConsole from "effect/testing/TestConsole";
 import { NodeCommandTestLayer } from "./support/CommandTest.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
+import { recordedGithub } from "./support/YeetGithub.ts";
 import type { ScriptResult } from "@beep/commands/ScriptedSpawner";
 import type { FinalCheckVerdict } from "@beep/repo-cli/test/Yeet";
 
@@ -1048,4 +1058,98 @@ describe("yeet publish posture", () => {
     expect(posture({ profile: "worker", mode: "verify" })).toBe("publish");
     expect(posture({ profile: "worker", mode: "publish", keepsOwnRoute: true })).toBe("publish");
   });
+});
+
+describe("yeet publish worker helpers", () => {
+  it("keeps its own route when any commit-reusing or detach flag is set", () => {
+    const flags = ["detach", "proveFirst", "pushOnly", "reuseVerified", "amend", "noEdit", "stagedOnly"] as const;
+    expect(yeetPublishKeepsOwnRoute(YeetPublishOwnRouteFlags.make({}))).toBe(false);
+    expect(
+      A.map(flags, (flag) => yeetPublishKeepsOwnRoute(YeetPublishOwnRouteFlags.make({ [flag]: true })))
+    ).toStrictEqual(A.replicate(true, 7));
+  });
+
+  it("synthesizes the worker body with and without a commit message", () => {
+    expect(yeetWorkerPublishBody("  feat: add x  ")).toBe(`feat: add x\n\n${YEET_WORKER_PUBLISH_BODY_SENTENCE}.\n`);
+    expect(yeetWorkerPublishBody("   ")).toBe(`${YEET_WORKER_PUBLISH_BODY_SENTENCE}.\n`);
+  });
+});
+
+describe("readYeetComputeProfile", () => {
+  it.effect("returns the resolved profile", () =>
+    Effect.gen(function* () {
+      const profile = yield* readYeetComputeProfile("yeet publish");
+      expect(profile).toBe("worker");
+    }).pipe(Effect.provideService(ComputeProfileProbe, workerProbe))
+  );
+
+  it.effect("maps an unreadable probe to a labelled exit-2 command error", () =>
+    Effect.gen(function* () {
+      const error = yield* readYeetComputeProfile("yeet publish").pipe(Effect.flip);
+      expect(error).toMatchObject({ _tag: "YeetCommandError", exitCode: 2, message: "yeet publish: bad override" });
+    }).pipe(
+      Effect.provideService(ComputeProfileProbe, {
+        resolve: Effect.fail(ComputeProfileError.make({ message: "bad override" })),
+        resolveFor: () => Effect.fail(ComputeProfileError.make({ message: "bad override" })),
+      })
+    )
+  );
+});
+
+describe("applyComputeProfileLabel", () => {
+  const pullRequest = YeetEnsuredPullRequest.make({ number: 7, created: true });
+  const labelCalls = (github: ReturnType<typeof recordedGithub>) =>
+    A.filter(github.calls, (call) => Str.endsWith("/issues/7/labels")(call.path));
+
+  it.effect("adds the worker label on a worker host", () =>
+    Effect.gen(function* () {
+      const github = recordedGithub(() => ({ body: [{ name: "compute-profile-worker" }] }));
+      yield* github.provide(applyComputeProfileLabel(pullRequest));
+      expect(A.length(labelCalls(github))).toBe(1);
+      const lines = yield* TestConsole.logLines;
+      expect(A.map(lines, String)).toContain("[yeet] applied compute-profile-worker to PR #7");
+    }).pipe(Effect.provideService(ComputeProfileProbe, workerProbe))
+  );
+
+  it.effect("warns with the manual command when the label add fails", () =>
+    Effect.gen(function* () {
+      const github = recordedGithub(() => ({ status: 500, body: { message: "boom" } }));
+      yield* github.provide(applyComputeProfileLabel(pullRequest));
+      const lines = yield* TestConsole.errorLines;
+      expect(A.join(A.map(lines, String), "\n")).toContain(
+        "[yeet] warning: could not apply compute-profile-worker to PR #7; run: gh api -X POST"
+      );
+    }).pipe(Effect.provideService(ComputeProfileProbe, workerProbe))
+  );
+
+  it.effect("does nothing on a workstation or an unreadable probe", () =>
+    Effect.gen(function* () {
+      const github = recordedGithub(() => ({ body: [] }));
+      yield* github.provide(applyComputeProfileLabel(pullRequest));
+      yield* github.provide(
+        applyComputeProfileLabel(pullRequest).pipe(
+          Effect.provideService(ComputeProfileProbe, {
+            resolve: Effect.fail(ComputeProfileError.make({ message: "bad override" })),
+            resolveFor: () => Effect.fail(ComputeProfileError.make({ message: "bad override" })),
+          })
+        )
+      );
+      expect(labelCalls(github)).toStrictEqual([]);
+    }).pipe(Effect.provideService(ComputeProfileProbe, workstationProbe))
+  );
+});
+
+describe("final-check wire schemas", () => {
+  it.effect.prop(
+    "round trips the receipt step and publish posture schemas",
+    [Arbitrary.schema(FinalCheckStepResult), Arbitrary.schema(YeetPublishPostureInput)],
+    Effect.fnUntraced(function* ([step, posture]) {
+      const stepEncoded = yield* S.encodeEffect(FinalCheckStepResult)(step);
+      const stepDecoded = yield* S.decodeEffect(FinalCheckStepResult)(stepEncoded);
+      assertTrue(S.toEquivalence(FinalCheckStepResult)(stepDecoded, step));
+      const postureEncoded = yield* S.encodeEffect(YeetPublishPostureInput)(posture);
+      const postureDecoded = yield* S.decodeEffect(YeetPublishPostureInput)(postureEncoded);
+      assertTrue(S.toEquivalence(YeetPublishPostureInput)(postureDecoded, posture));
+    })
+  );
 });

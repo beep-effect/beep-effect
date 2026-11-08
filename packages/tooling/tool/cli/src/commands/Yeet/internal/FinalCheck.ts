@@ -45,7 +45,6 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ComputeProfileProbe } from "../../../internal/repo-run/ComputeProfile.ts";
 import { COMPUTE_PROFILE_WORKER_SKIP_REASON, gateRouteFor } from "../../../internal/repo-run/GateRoute.schemas.ts";
 import { CiLocalStepPlan, ciLaneDispatchStep } from "../../Ci/CiLane.ts";
 import { ChangeAtomKind, RouteSentinel } from "../../Ci/Route.schemas.ts";
@@ -62,6 +61,7 @@ import { resolveLintPolicyScope } from "../../Quality/internal/LintPolicyScope.t
 import { GithubCheckLaneSpec } from "../../Quality/Quality.schemas.ts";
 import { readLintPolicySweeps } from "../../Quality/Tasks.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
+import { readYeetComputeProfile } from "./ComputeProfileRead.ts";
 import { collectExpectationRewrites, verifyExpectationRewrites } from "./ExpectationRewrite.ts";
 import {
   FinalCheckGate,
@@ -521,7 +521,7 @@ export const FINAL_CHECK_WORKER_ROUTE_LINE =
  *
  * **Details**
  *
- * Reads {@link ComputeProfileProbe} once; an unreadable
+ * Reads `ComputeProfileProbe` once; an unreadable
  * `BEEP_COMPUTE_PROFILE` override fails the run (exit 2) instead of silently
  * running hosted-only gates.
  *
@@ -546,12 +546,7 @@ export const resolveFinalCheckProfileSkips = Effect.fn("Yeet.resolveFinalCheckPr
   operatorSkips: ReadonlyArray<FinalCheckSkip>,
   forceLocal: boolean
 ) {
-  const computeProfile = yield* ComputeProfileProbe.use((probe) => probe.resolve).pipe(
-    Effect.mapBoth({
-      onFailure: (cause) => YeetCommandError.make({ message: `yeet final-check: ${cause.message}`, exitCode: 2 }),
-      onSuccess: (resolution) => resolution.profile,
-    })
-  );
+  const computeProfile = yield* readYeetComputeProfile("yeet final-check");
   return {
     computeProfile,
     profileSkips: computeProfileFinalCheckSkips({ gates, operatorSkips, profile: computeProfile, forceLocal }),

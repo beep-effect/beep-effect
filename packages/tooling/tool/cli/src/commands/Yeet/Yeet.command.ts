@@ -30,13 +30,13 @@ import * as Match from "effect/Match";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ComputeProfileProbe } from "../../internal/repo-run/ComputeProfile.ts";
 import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
 import { processStartIdentityForPid } from "../../internal/repo-run/ProcessIdentity.ts";
 import { runRepoCommandCapture } from "../../internal/repo-run/RepoRun.executor.ts";
 import { WorktreeRemovalServiceLive } from "../Worktree/Worktree.service.ts";
 import { yeetGhCommand } from "./Gh.command.ts";
 import { writeYeetAckReceipt, YeetAckObservedResolution, YeetAckReceipt } from "./internal/Ack.ts";
+import { readYeetComputeProfile } from "./internal/ComputeProfileRead.ts";
 import { runYeetEconomicsCommand } from "./internal/Economics.ts";
 import { runYeetFallowFeedback } from "./internal/FallowFeedback.ts";
 import { YeetFinalCheckOptions } from "./internal/FinalCheck.schemas.ts";
@@ -50,7 +50,14 @@ import { renderYeetPrWaveLine } from "./internal/InboxView.ts";
 import { MergeGateCommandOptions, runYeetMergeGate } from "./internal/MergeGate.ts";
 import { YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS, YeetUntilReadyPolicy } from "./internal/MonitorPolicy.ts";
 import { DEFAULT_YEET_PACKET_DIR } from "./internal/Planner.schemas.ts";
-import { YeetProofTier, YeetPublishPostureInput, yeetPublishPostureFor } from "./internal/Planner.ts";
+import {
+  YeetProofTier,
+  YeetPublishOwnRouteFlags,
+  YeetPublishPostureInput,
+  yeetPublishKeepsOwnRoute,
+  yeetPublishPostureFor,
+  yeetWorkerPublishBody,
+} from "./internal/Planner.ts";
 import {
   rejectYeetUntilEventPairing,
   rejectYeetUntilReadyPairing,
@@ -774,22 +781,20 @@ const runYeetMode = (mode: YeetRunMode, options: SharedOptionsInput & { readonly
   ).pipe(Effect.asVoid);
 };
 
-// The body a redirected publish opens its draft with when no --body-file was given.
-const WORKER_PUBLISH_BODY_SENTENCE = "Local proof deferred: compute-profile=worker (hosted CI is the proof)";
-
-const synthesizedWorkerBody = Effect.fnUntraced(function* (message: string) {
+const writeSynthesizedWorkerBody = Effect.fnUntraced(function* (message: string) {
   const fs = yield* FileSystem.FileSystem;
   const file = yield* fs
     .makeTempFileScoped({ prefix: "yeet-worker-body-", suffix: ".md" })
     .pipe(Effect.mapError(YeetCommandError.new("yeet publish could not write the synthesized PR body.")));
-  const body = Str.isNonEmpty(Str.trim(message))
-    ? `${Str.trim(message)}\n\n${WORKER_PUBLISH_BODY_SENTENCE}.\n`
-    : `${WORKER_PUBLISH_BODY_SENTENCE}.\n`;
   yield* fs
-    .writeFileString(file, body)
+    .writeFileString(file, yeetWorkerPublishBody(message))
     .pipe(Effect.mapError(YeetCommandError.new("yeet publish could not write the synthesized PR body.")));
   return file;
 });
+
+// An explicit --body-file wins; otherwise the redirected publish synthesizes one.
+const workerPublishBodyFile = (bodyFile: string, message: string | undefined) =>
+  Str.isNonEmpty(Str.trim(bodyFile)) ? Effect.succeed(bodyFile) : writeSynthesizedWorkerBody(message ?? "");
 
 // `yeet publish` on a worker compute profile takes the `yeet open` posture
 // (goal compute-profile-gate-routing P1): the cheap gates it would run are
@@ -797,34 +802,30 @@ const synthesizedWorkerBody = Effect.fnUntraced(function* (message: string) {
 // them. `--force-local` and the commit-reusing flags keep the local publish.
 const runYeetPublish = Effect.fnUntraced(function* (options: SharedOptionsInput & { readonly message?: string }) {
   const shared = SharedOptions.make(options);
-  const profile = yield* ComputeProfileProbe.use((probe) => probe.resolve).pipe(
-    Effect.mapBoth({
-      onFailure: (cause) => YeetCommandError.make({ message: `yeet publish: ${cause.message}`, exitCode: 2 }),
-      onSuccess: (resolution) => resolution.profile,
-    })
-  );
+  const profile = yield* readYeetComputeProfile("yeet publish");
   const posture = yeetPublishPostureFor(
     YeetPublishPostureInput.make({
       profile,
       mode: "publish",
       forceLocal: shared.forceLocal,
-      keepsOwnRoute:
-        shared.detach ||
-        shared.proveFirst ||
-        shared.pushOnly ||
-        shared.reuseVerified ||
-        shared.amend ||
-        shared.noEdit ||
-        shared.stagedOnly,
+      keepsOwnRoute: yeetPublishKeepsOwnRoute(
+        YeetPublishOwnRouteFlags.make({
+          detach: shared.detach,
+          proveFirst: shared.proveFirst,
+          pushOnly: shared.pushOnly,
+          reuseVerified: shared.reuseVerified,
+          amend: shared.amend,
+          noEdit: shared.noEdit,
+          stagedOnly: shared.stagedOnly,
+        })
+      ),
     })
   );
   if (posture === "publish") return yield* runYeetMode("publish", options);
   yield* Console.log(
     "[yeet] compute-profile=worker: publish takes the yeet open posture (push the committed HEAD, draft PR, no local proof; hosted CI is the proof). Pass --force-local to run the local publish."
   );
-  const bodyFile = Str.isNonEmpty(Str.trim(shared.bodyFile))
-    ? shared.bodyFile
-    : yield* synthesizedWorkerBody(options.message ?? "");
+  const bodyFile = yield* workerPublishBodyFile(shared.bodyFile, options.message);
   return yield* runYeetMode("publish", { ...options, bodyFile, hostedProof: true, pr: true });
 }, Effect.scoped);
 

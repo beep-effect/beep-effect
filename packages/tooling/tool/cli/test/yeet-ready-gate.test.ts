@@ -16,6 +16,7 @@ import {
   FinalCheckRefreshRefused,
   FinalCheckStepResult,
   flipPullRequestReady,
+  judgeHostedDeferrals,
   MergeGateCheckRun,
   ProofJobRecord,
   ProofJobRequest,
@@ -68,7 +69,7 @@ import * as Struct from "effect/Struct";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
-import { provideLegacyGh, restPullRequest } from "./support/YeetGithub.ts";
+import { provideLegacyGh, recordedGithub, restPullRequest } from "./support/YeetGithub.ts";
 import type { SpawnScript } from "@beep/commands/ScriptedSpawner";
 import type { GraphQLDocument } from "@beep/github/GraphQL";
 
@@ -798,6 +799,50 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         const lines = yield* TestConsole.logLines;
         const printed = A.join(A.map(lines, String), "\n");
         expect(printed).toContain("check (admission waited 10 minutes); name them in the PR body");
+      })
+    );
+
+    const runDeferredDefaultReader = (calls: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>) =>
+      runYeetReadyGate(context, {
+        finalCheck: deferredCheckReceipt("compute-profile=worker"),
+        squashCommitlint: passingSquashCommitlint,
+        recordInherited: () => Effect.void,
+        read: () => Effect.succeed(prView()),
+        markReady: recordingMarkReady(calls),
+        requestReview: stubReviewerRequest,
+        findMonitor: () => Effect.succeedNone,
+      });
+
+    it.effect("reads the deferred gate's hosted runs through the default REST reader", () =>
+      Effect.gen(function* () {
+        const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+        const github = recordedGithub((call) =>
+          Str.endsWith("/check-runs")(call.path)
+            ? {
+                body: {
+                  total_count: 1,
+                  check_runs: [{ id: 9, name: "Heavy / Check", status: "completed", conclusion: "success" }],
+                },
+              }
+            : undefined
+        );
+        const decision = yield* github.provide(runDeferredDefaultReader(calls));
+        expect(decision._tag).toBe("flip");
+        expect(A.some(github.calls, (call) => Str.endsWith("/check-runs")(call.path))).toBe(true);
+        const flips = yield* Ref.get(calls);
+        expect(flips).toEqual([["ready", "42"]]);
+      })
+    );
+
+    it.effect("refuses on final-check when the deferred gate's hosted runs cannot be read", () =>
+      Effect.gen(function* () {
+        const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+        const github = recordedGithub(() => ({ status: 500, body: { message: "boom" } }));
+        const refused = yield* github.provide(runDeferredDefaultReader(calls)).pipe(Effect.flip);
+        expect(refused).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "final-check" });
+        expect(refused.message).toContain("check runs could not be read");
+        const flips = yield* Ref.get(calls);
+        expect(flips).toEqual([]);
       })
     );
 
@@ -2357,3 +2402,52 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
     );
   }
 );
+
+// compute-profile-gate-routing P1: the pure judgement behind the worker-profile flip.
+describe("judgeHostedDeferrals", () => {
+  const deferredReceipt = (gate: "check" | "lint") =>
+    FinalCheckReceipt.make({
+      schemaVersion: "yeet-final-check/v1",
+      headSha: Str.repeat(40)("a"),
+      mergeBase: Str.repeat(40)("b"),
+      base: "origin/main",
+      complete: true,
+      verdict: "pass",
+      startedAt: "2026-11-08T00:00:00.000Z",
+      finishedAt: "2026-11-08T00:01:00.000Z",
+      steps: [
+        FinalCheckStepResult.make({
+          gate,
+          label: `final-check:${gate}`,
+          hostedContext: "Heavy / Check",
+          command: "(skipped)",
+          status: "skipped",
+          durationMs: 0,
+          reason: "compute-profile=worker",
+        }),
+      ],
+      expectationRewrites: [],
+    });
+
+  it("refuses a deferred gate that has no hosted context", () => {
+    const judged = judgeHostedDeferrals(deferredReceipt("lint"), []);
+    expect(judged.accepted).toStrictEqual([]);
+    assertSome(
+      judged.refusal,
+      "lint was deferred to hosted CI (compute-profile=worker) but has no hosted context; run `bun run beep yeet final-check --force-local`"
+    );
+  });
+
+  it("refuses with a wait when the deferred gate's hosted run is missing", () => {
+    const judged = judgeHostedDeferrals([])(deferredReceipt("check"));
+    assertSome(judged.refusal, "wait for hosted Heavy / Check (worker profile defers check)");
+  });
+
+  it("accepts a green hosted run", () => {
+    const judged = judgeHostedDeferrals(deferredReceipt("check"), [
+      MergeGateCheckRun.make({ id: 1, name: "Heavy / Check", status: "completed", conclusion: "success" }),
+    ]);
+    expect(judged.accepted).toStrictEqual(["check"]);
+    assertNone(judged.refusal);
+  });
+});
