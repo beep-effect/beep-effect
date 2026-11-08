@@ -45,9 +45,12 @@ assessment](research/2026-11-08-re-grounding.md) records findings and
 uncertainties. The [nine-case
 smoke](history/evidence/2026-11-08-six-form-smoke/README.md) is operability
 evidence, not accuracy or safety. No parser has been selected. The frozen
-29-input selection receipt records actual donor captures; native, exact
-field/range/link and resource comparison
-remain open.
+29-input selection receipt records actual donor captures. The
+[adapter experiment](history/evidence/2026-11-08-six-form-adapter/README.md)
+records actual native failures and a TypeScript adapter matching all 33 labeled
+occurrences through existing schemas, source proofs and local resolver.
+Production adoption, strict party matching, isolated transport and resource
+qualification remain open.
 
 PR #2927 is merged at f849b3b901e. The baseline integration receipt identifies
 InputDocument reservation accounting and the full Bun diff-corpus watchdog as
