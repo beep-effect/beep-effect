@@ -922,7 +922,19 @@ export const validateClaimCitationWitness: {
   ): boolean;
 } = dual(6, completeClaimCitationWitness);
 
+// Operational control states contain no proof verdict and are never persisted.
+// Only the field on each fresh validation context can hold a Found classification.
+const unreadRightListMemo = { status: "unread" } as const;
+const noMatchRightListMemo = { status: "none" } as const;
+const deniedRightListMemo = { status: "denied" } as const;
+type FiniteRightListMemo =
+  | typeof unreadRightListMemo
+  | typeof noMatchRightListMemo
+  | typeof deniedRightListMemo
+  | { readonly status: "found"; readonly source: O.Some<RawRightList> };
+
 type FiniteProofValidationContext = {
+  rightListMemo: FiniteRightListMemo;
   scopes: HashSet.HashSet<"preamble" | "body" | "transition">;
   readonly claim: PatentClaim;
   readonly tokens: ReadonlyArray<ClaimLexicalToken>;
@@ -1272,14 +1284,53 @@ const finiteLabelBodyScope = (
   scope: O.Option<ClaimFiniteSourceProof>
 ): scope is O.Some<Extract<ClaimFiniteSourceProof, { readonly kind: "scope" }>> =>
   isFiniteScopeProofOption(scope) && scope.value.role === "body";
+const computeFiniteRightListSource = (context: FiniteProofValidationContext): O.Option<RawRightList> | false => {
+  // Eight prepaid setup slots: denial latch, forwarding closure, two captures,
+  // Found cell and its two fields, and the context publication.
+  if (!context.charge(8)) {
+    context.rightListMemo = deniedRightListMemo;
+    return false;
+  }
+  let denied = false;
+  const reserve = (amount: number): boolean => {
+    const paid = context.charge(amount);
+    if (!paid) denied = true;
+    return paid;
+  };
+  const source = readSourceRightParenthesisList(context.claim, context.tokens, reserve);
+  if (denied) {
+    context.rightListMemo = deniedRightListMemo;
+    return false;
+  }
+  context.rightListMemo = O.isSome(source) ? { status: "found", source } : noMatchRightListMemo;
+  return source;
+};
+const finiteRightListSource = (context: FiniteProofValidationContext): O.Option<RawRightList> | false => {
+  // State dispatch and returning the existing result reference; no hit allocation.
+  if (!context.charge(2)) {
+    context.rightListMemo = deniedRightListMemo;
+    return false;
+  }
+  const memo = context.rightListMemo;
+  switch (memo.status) {
+    case "unread":
+      return computeFiniteRightListSource(context);
+    case "none":
+      return O.none();
+    case "found":
+      return memo.source;
+    case "denied":
+      return false;
+  }
+};
 const validateFiniteLabelBoundary = (
   context: FiniteProofValidationContext,
   proof: Extract<ClaimFiniteSourceProof, { readonly kind: "label-boundary" }>
 ): boolean => {
   if (!context.charge(proof.markers.length * 16 + 32) || Result.isFailure(strictLabelBoundary(proof))) return false;
   if (!finiteLabelOriginalAligned(context)) return false;
-  const source = readSourceRightParenthesisList(context.claim, context.tokens, context.charge);
-  if (O.isNone(source)) return false;
+  const source = finiteRightListSource(context);
+  if (source === false || O.isNone(source)) return false;
   const scope = context.resolve(proof.scope);
   if (!finiteLabelBodyScope(scope) || !finiteLabelCensus(proof, source.value)) return false;
   return validateFiniteLabelSource(context, proof, source.value, scope.value);
@@ -2108,14 +2159,7 @@ const rightOperatorSourceList = (
   if (!context.charge(6)) return false;
   const before = A.get(context.tokens, head.tokenOrdinal - 2);
   if (O.isNone(before) || !Str.endsWith(")")(before.value.anchor.quote)) return O.none();
-  let failed = false;
-  const reserve = (amount: number): boolean => {
-    const ok = context.charge(amount);
-    if (!ok) failed = true;
-    return ok;
-  };
-  const source = readSourceRightParenthesisList(context.claim, context.tokens, reserve);
-  return failed ? false : source;
+  return finiteRightListSource(context);
 };
 const rightOperatorPosition = (
   context: FiniteProofValidationContext,
@@ -2492,13 +2536,14 @@ const validateFiniteProofRegistry = (
       A.get(proofs, ref.ordinal - 1),
       (proof) => proof.ordinal === ref.ordinal && finiteProofSlot(proof) === ref.slot
     );
-  // The extracted validator context is one new source-local allocation.
-  if (!charge(1)) return false;
+  // Prepay the context allocation plus its fresh memo slot before either is published.
+  if (!charge(2)) return false;
   const originalScopes = O.isSome(originalInput)
     ? originalQualifiedScopes(claim, charge)
     : O.none<ClaimOriginalQualifiedScopes>();
   if (!originalScopeAvailable(originalInput, originalScopes)) return false;
   const context: FiniteProofValidationContext = {
+    rightListMemo: unreadRightListMemo,
     claim,
     tokens,
     proofs,
