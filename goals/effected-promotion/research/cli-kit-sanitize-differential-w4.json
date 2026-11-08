@@ -1,7 +1,0 @@
-{
-  "schemaVersion": "cli-kit-sanitize-differential/v1",
-  "oracleBase": "230b4a4101",
-  "inputs": 201466,
-  "differences": 0,
-  "changedByOracle": 196152
-}

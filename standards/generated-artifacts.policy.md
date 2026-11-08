@@ -48,7 +48,7 @@ diff of which only 416 lines belonged to the branch, and a ~2,246-line
 schema catalog diff (then one file, now sharded) of which ~10 entries did. Both regens
 were reverted; the full local proof and all 25 hosted checks passed without
 them, proving the staleness is not gating
-(`goals/epistemic-bitemporal-edge-core/history/2026-07-25-p1-implementation.md`).
+([goals/epistemic-bitemporal-edge-core/history/2026-07-25-p1-implementation.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/epistemic-bitemporal-edge-core/history/2026-07-25-p1-implementation.md)).
 
 ## Per-package shards (2026-10-15)
 

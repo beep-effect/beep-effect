@@ -165,7 +165,7 @@ Stories live in `stories/` and render through the `apps/storybook` host.
 - **Goal B.** Later goals extend the surface by adding descriptors under
   their atlas ids (dependencies, commands, chords, and the `beep-md`
   compatibility row copied from
-  `goals/lexical-playground-capability-atlas/research/capability-atlas.json`)
+  `packages/foundation/ui-system/editor/test/fixtures/capability-atlas.json`)
   and keeping `test/capability-catalog.test.ts`, the strict atlas
   reconciliation, green.
 

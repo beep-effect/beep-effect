@@ -40,7 +40,7 @@
     "packages/epistemic/domain/src/entities/Contradiction/Contradiction.model.ts",
     "packages/epistemic/domain/src/values/Contradiction/Contradiction.model.ts"
   ],
-  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -96,5 +96,13 @@
     "Required source files are missing or materially contradictory.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/epistemic-contradiction-detection",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "35489893124f2c2322c2f48b0df858cdd773efa2",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }

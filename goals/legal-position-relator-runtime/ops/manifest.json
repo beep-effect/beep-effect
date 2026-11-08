@@ -33,12 +33,7 @@
     "goals/legal-position-relator-runtime/GOAL.md",
     "goals/legal-position-relator-runtime/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/01-surface-reverification.md",
-    "research/02-handoff-shape-evidence.md",
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -89,5 +84,13 @@
     "Pressure appears to amend goals/epistemic-contradiction-triage's SPEC, add detection heuristics, or teach the generic engine legal verdict families.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/legal-position-relator-runtime",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "421a4ce0b3d95be6bc589b09fada90bf56e4dfc5",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }

@@ -37,12 +37,7 @@
     "explorations/ingestion-security-secret-governance/MAP.md",
     "explorations/ingestion-security-secret-governance/DECISIONS.md"
   ],
-  "researchReports": [
-    "research/2026-07-25-academia-corpus-mining-note.md",
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md",
-    "research/p0-bank-inventory.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -89,5 +84,13 @@
     "Required source files or a real prompt boundary are unavailable or materially contradictory.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/ingestion-secret-scrub",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "34c2b7b0d3f319c8ff13aeb5a6a22d00082035e0",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }

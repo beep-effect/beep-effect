@@ -76,4 +76,12 @@ beep goals archive --kind goals --batch 50 (plan 736f91a4) mirrored 50 goals fro
 
 Reverse: Revert the batch PR on main to restore the 50 packets; the archive repo keeps its copies
 
+### Batch 2 archived and verified on the public archive, 2026-11-08
+
+Plan 2fc4f570 archived 50 goal packets from main 19c9aa06b0. Archive commits 87fc463 and 2feb1eb reached the remote on 2026-11-08 after the operator granted write access, and all 50 manifest content hashes matched the remote trees. Batch 3 follows this PR's merge.
+
+Lane `feat/packet-archive-batch-2b`
+
+Reverse: Revert the batch 2 tombstone PR to restore the packets on main; the archive commits stay public
+
 <!-- beep:decisions:end -->

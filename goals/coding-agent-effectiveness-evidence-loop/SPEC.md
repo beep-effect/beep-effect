@@ -12,7 +12,7 @@ p95 105 min, input waits p95 14 min, polling at 3.4x tool-execution time)
 measurably reduced behind guardrails.
 
 > **Amendment 2026-09-25.** The
-> [`harness-evidence-ledger`](../harness-evidence-ledger/SPEC.md) goal now
+> [`harness-evidence-ledger`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/harness-evidence-ledger/SPEC.md) goal now
 > owns the typed harness ledger. P7's improvement dispositions are recorded
 > as rows in the tracked `harness-ledger/` surface through
 > `bun run beep harness-ledger` (its decision D7). This packet consumes that

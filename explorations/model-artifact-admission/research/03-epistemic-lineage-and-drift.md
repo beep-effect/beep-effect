@@ -31,7 +31,7 @@ type
 `ModelArrangementDisposition` should be model-admission-local, just as the
 core SPEC kept claim disposition epistemic-local and orthogonal to shared claim
 lifecycle
-([`epistemic-bitemporal-edge-core/SPEC.md:14-31`](../../../goals/epistemic-bitemporal-edge-core/SPEC.md#L14)).
+([`epistemic-bitemporal-edge-core/SPEC.md:14-31`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/epistemic-bitemporal-edge-core/SPEC.md#L14)).
 
 ## Lineage rules
 

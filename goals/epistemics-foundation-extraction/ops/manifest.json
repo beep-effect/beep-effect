@@ -37,14 +37,7 @@
     "goals/epistemics-foundation-extraction/GOAL.md",
     "goals/epistemics-foundation-extraction/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/2026-10-28-acceptance-audit.md",
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md",
-    "research/cache-baseline-request-p1.json",
-    "research/cache-baseline-review-p1.md",
-    "research/p1-move-report.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -98,5 +91,13 @@
   "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2334
+  },
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/epistemics-foundation-extraction",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "3e83b537f953befc8661df95de422c734f2a296c",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
   }
 }

@@ -43,7 +43,7 @@ Higher sources outrank lower sources when they conflict.
   `CitingApplicationIdentity.model.ts`.
 - Doctrine: `standards/architecture/DECISIONS.md`,
   `standards/architecture/11-evolution-and-deprecation.md`, the standards docs
-  that name `$match`, `goals/effect-schema-parity/SPEC.md`,
+  that name `$match`, [goals/effect-schema-parity/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/effect-schema-parity/SPEC.md),
   `explorations/effect-schema-parity/DECISIONS.md`, `explorations/INBOX.md`.
 - Typeperf fixtures under `@beep/schema`'s typeperf suite.
 
