@@ -311,8 +311,9 @@ const proofJobEnvironment = Effect.fn("ProofJob.environment")(function* () {
     segments: ReadonlyArray<string>
   ): Effect.fn.Return<ReadonlyArray<readonly [string, string]>, YeetCommandError> {
     const name = A.join(segments, "_");
-    // The GitHub token reference is loaded so `forwardedProofJobEnvironment` can admit an `op://` value.
-    if (isDeniedProofJobEnvName(name) && name !== GITHUB_TOKEN_REF_ENV) return [];
+    // The walk reaches names segment by segment: the GitHub token reference (and its prefixes, such as
+    // `BEEP_GH_TOKEN`) is loaded so `forwardedProofJobEnvironment` can admit an `op://` value.
+    if (isDeniedProofJobEnvName(name) && !Str.startsWith(name)(GITHUB_TOKEN_REF_ENV)) return [];
     const node = yield* provider
       .load(segments)
       .pipe(Effect.mapError(YeetCommandError.new("Failed to read job environment.")));
