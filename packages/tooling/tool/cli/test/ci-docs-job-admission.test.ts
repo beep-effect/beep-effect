@@ -4,6 +4,7 @@ import { assert } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
@@ -124,6 +125,26 @@ it.effect(
         );
         assert.strictEqual(taken.exitCode === 0 ? "skip-satisfied" : admission.verdict, row.verdict);
       }
+    }
+  })
+);
+
+it.effect(
+  "keeps trusted summary artifact names stable when verification jobs split",
+  Effect.fnUntraced(function* () {
+    for (const file of ["check.yml", "heavy.yml"]) {
+      const source = yield* Effect.tryPromise({
+        try: () => Bun.file(new URL(`../../../../../.github/workflows/${file}`, import.meta.url)).text(),
+        catch: CiCommandError.new("Unable to read the trusted artifact naming contract."),
+      });
+      const workflow = parseWorkflowYaml(source);
+      const steps = yield* S.decodeUnknownEffect(S.Array(S.Unknown))(yamlAt(workflow, ["jobs", "verify", "steps"]));
+      const uploads = A.filter(steps, (step) => yamlAt(step, ["name"]) === "Upload trusted Turbo summaries");
+      assert.strictEqual(uploads.length, 1);
+      assert.strictEqual(
+        yamlAt(A.head(uploads).pipe(O.getOrThrow), ["with", "name"]),
+        "turbo-summary-verify-${{ matrix.id || matrix.partition || 'single' }}"
+      );
     }
   })
 );
