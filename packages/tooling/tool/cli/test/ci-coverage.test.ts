@@ -302,6 +302,26 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
     })
   );
 
+  it.effect("names the reason a comparison refused its artifacts", () =>
+    Effect.gen(function* () {
+      const { root } = yield* fixture([owner()]);
+      mocks.compare.mockReturnValue(Effect.fail(QualityTaskConfigurationError.new("missing producer partitions.")));
+      const error = yield* Effect.flip(runCiCoverageComparison(root, options()));
+      expect(error.message).toBe(
+        "Coverage producer artifacts are incomplete or failed regression comparison: missing producer partitions."
+      );
+    })
+  );
+
+  it.effect("appends nothing when the failed comparison has no reason of its own", () =>
+    Effect.gen(function* () {
+      const { root } = yield* fixture([owner()]);
+      mocks.compare.mockReturnValue(Effect.fail(QualityTaskConfigurationError.new("")));
+      const error = yield* Effect.flip(runCiCoverageComparison(root, options()));
+      expect(error.message).toBe("Coverage producer artifacts are incomplete or failed regression comparison.");
+    })
+  );
+
   it.effect("runs Labs checks separately and instruments only selected Labs tests", () =>
     Effect.gen(function* () {
       const entries = [owner(), owner("@beep/ciops", "apps/labs/ciops")];
@@ -391,7 +411,7 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
       });
       const error = yield* runCiCoveragePartition(root, options(), plan([]), proof, undefined).pipe(Effect.flip);
       expect(error.message).toBe(
-        "Failed to seal coverage partition unit-a.: Coverage artifact: missing executable source packages/tool/src/value.ts."
+        "Failed to seal coverage partition unit-a: Coverage artifact: missing executable source packages/tool/src/value.ts."
       );
       expect(error.cause).toBe(original);
       expect(error.message).not.toContain("DO_NOT_RENDER_SEAL_STACK");
