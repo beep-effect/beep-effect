@@ -34,8 +34,10 @@ import type {
   ClaimCitationWitness,
   ClaimFiniteSourceProof,
   ClaimFrameSubjectInheritance,
+  ClaimListDeclaration,
   ClaimOwnedTermRegion,
   ClaimPlannedElement,
+  ClaimSourceDeclaration,
   ClaimSourceElementPlan,
   ClaimSourceExclusion,
   ClaimSourceFrame,
@@ -2437,6 +2439,7 @@ const validateSourcePlanComponents = (
   charge: (amount: number) => boolean
 ): boolean =>
   validateCommittedSourceFacts(plan, charge) &&
+  validateSourceLabelDeclarations(plan, charge) &&
   validateAttached(plan, charge) &&
   validateCandidateCommit(plan, charge) &&
   validatePrivateAndOperators(plan, charge) &&
@@ -2451,6 +2454,204 @@ const validateSourcePlanCompletion = (
   A.every(owners, (owner) => owner > 0) &&
   A.every(plan.frames, (frame) => validateFrame(plan, frame, owners, charge)) &&
   validateSourceTokenOwnership(plan, owners, charge);
+/**
+ * Existing composition vocabulary shared by declaration compilation and source validation.
+ *
+ * **Example** (Recognize an existing declaration operator)
+ * ```ts
+ * import { claimDeclarationCompositions } from "../../src/values/ClaimElement/ClaimClauseRole.projection.ts"
+ * import * as HashSet from "effect/HashSet"
+ * console.log(HashSet.has(claimDeclarationCompositions, "comprising")) // true
+ * ```
+ * @category constants
+ * @since 0.0.0
+ */
+export const claimDeclarationCompositions = HashSet.make("includes", "including", "comprises", "comprising", "having");
+
+/**
+ * Read the rank of a complete lowercase dotted source label, without supplying term evidence.
+ *
+ * **Example** (Reject a sentence initial)
+ * ```ts
+ * import { sourceDottedLabelRank } from "../../src/values/ClaimElement/ClaimClauseRole.projection.ts"
+ * console.log(sourceDottedLabelRank("A.")) // -1
+ * ```
+ * @category validation
+ * @since 0.0.0
+ */
+export const sourceDottedLabelRank = (quote: string): number => {
+  if (quote.length !== 2 || Str.slice(1, 2)(quote) !== ".") return -1;
+  const code = O.getOrElse(Str.charCodeAt(0)(quote), () => -1);
+  return code >= 97 && code <= 122 ? code - 97 : -1;
+};
+
+type SourceLabelDeclaration = Extract<ClaimSourceDeclaration, { readonly kind: "labelled" }>;
+type SourceLabelToken = Extract<ClaimFiniteSourceProof, { readonly kind: "token" }>;
+const dottedLabelTokenAligned = (
+  tokens: ReadonlyArray<SourceLabelToken>,
+  label: TextAnchor,
+  charge: (amount: number) => boolean
+): boolean => {
+  const index = sourceLowerBound(tokens, label.startChar, rawTokenSourceStart, charge);
+  if (index < 0 || !charge(8)) return false;
+  const first = A.get(tokens, index);
+  if (O.isNone(first) || first.value.token.anchor.startChar !== label.startChar) return false;
+  if (sameAnchor(first.value.token.anchor, label)) return true;
+  const dot = A.get(tokens, index + 1);
+  return (
+    first.value.token.anchor.quote === Str.slice(0, 1)(label.quote) &&
+    O.exists(
+      dot,
+      (p) =>
+        p.token.anchor.quote === "." &&
+        p.token.anchor.startChar === first.value.token.anchor.endChar &&
+        p.token.anchor.endChar === label.endChar
+    )
+  );
+};
+const dottedSourceGap = (
+  plan: ClaimSourceElementPlan,
+  start: number,
+  end: number,
+  first: boolean,
+  charge: (amount: number) => boolean
+): boolean => {
+  if (end < start || !charge((end - start) * 2 + 4)) return false;
+  const gap = Str.slice(start, end)(plan.qualifiedText);
+  return first ? Str.trim(gap) === "" : O.isSome(Str.match(/^\s*;\s*(?:(?:and|or)\s+)?$/u)(gap));
+};
+const dottedCompositionPredicate = (frame: ClaimSourceFrame, charge: (amount: number) => boolean): boolean => {
+  for (const predicate of frame.predicates) {
+    if (!charge(predicate.quote.length * 2 + 1)) return false;
+    if (HashSet.has(claimDeclarationCompositions, Str.toLowerCase(predicate.quote))) return true;
+  }
+  return false;
+};
+const dottedDeclarationFrame = (
+  plan: ClaimSourceElementPlan,
+  declaration: SourceLabelDeclaration,
+  charge: (amount: number) => boolean
+): O.Option<ClaimSourceFrame> => {
+  if (!charge(declaration.anchor.quote.length + 4)) return O.none();
+  const frame = A.get(plan.frames, declaration.frame - 1);
+  if (O.isSome(frame) && !charge(frame.value.predicates.length + 1)) return O.none();
+  return O.filter(
+    frame,
+    (f) =>
+      f.publicOwner === declaration.owner &&
+      O.exists(f.introducer, (a) => sameAnchor(a, declaration.anchor)) &&
+      Str.endsWith(":")(declaration.anchor.quote) &&
+      dottedCompositionPredicate(f, charge)
+  );
+};
+type SourceLabelItem = SourceLabelDeclaration["items"][number];
+const dottedChildMatches = (plan: ClaimSourceElementPlan, owner: number, item: SourceLabelItem): boolean =>
+  O.exists(
+    A.get(plan.elements, item.child - 1),
+    (child) => O.contains(child.parent, owner) && sameAnchor(child.extent, item.extent)
+  );
+const dottedDeclarationItem = (
+  plan: ClaimSourceElementPlan,
+  declaration: SourceLabelDeclaration,
+  item: SourceLabelItem,
+  index: number,
+  previousEnd: number,
+  raw: ReadonlyArray<SourceLabelToken>,
+  charge: (amount: number) => boolean
+): boolean => {
+  if (!charge(6)) return false;
+  if (
+    sourceDottedLabelRank(item.label.quote) !== index ||
+    !sourceAnchor(plan, item.label, charge) ||
+    !dottedLabelTokenAligned(raw, item.label, charge) ||
+    !dottedSourceGap(plan, previousEnd, item.label.startChar, index === 0, charge)
+  )
+    return false;
+  if (!dottedChildMatches(plan, declaration.owner, item)) return false;
+  return (
+    item.extent.startChar > item.label.endChar &&
+    dottedSourceGap(plan, item.label.endChar, item.extent.startChar, true, charge)
+  );
+};
+const dottedDeclarationItems = (
+  plan: ClaimSourceElementPlan,
+  declaration: SourceLabelDeclaration,
+  raw: ReadonlyArray<SourceLabelToken>,
+  charge: (amount: number) => boolean
+): boolean => {
+  if (declaration.items.length < 2) return false;
+  const frame = dottedDeclarationFrame(plan, declaration, charge);
+  if (O.isNone(frame)) return false;
+  let previousEnd = declaration.anchor.endChar;
+  for (let i = 0; i < declaration.items.length; i++) {
+    if (!charge(1)) return false;
+    const item = O.getOrThrow(A.get(declaration.items, i));
+    if (!dottedDeclarationItem(plan, declaration, item, i, previousEnd, raw, charge)) return false;
+    previousEnd = item.extent.endChar;
+  }
+  return previousEnd === frame.value.extent.endChar;
+};
+const sourceLabelListHeaderMatches = (declaration: SourceLabelDeclaration, list: ClaimListDeclaration): boolean =>
+  list.owner === declaration.owner &&
+  sameAnchor(list.anchor, declaration.anchor) &&
+  list.items.length === declaration.items.length;
+const sourceLabelListMatches = (
+  declaration: SourceLabelDeclaration,
+  list: ClaimListDeclaration,
+  charge: (amount: number) => boolean
+): boolean => {
+  if (!charge(declaration.anchor.quote.length + list.anchor.quote.length + 4)) return false;
+  if (!sourceLabelListHeaderMatches(declaration, list)) return false;
+  for (let i = 0; i < list.items.length; i++) {
+    if (!charge(4)) return false;
+    const item = O.getOrThrow(A.get(list.items, i));
+    const original = O.getOrThrow(A.get(declaration.items, i));
+    if (!charge(item.label.quote.length + original.label.quote.length + 2)) return false;
+    if (item.child !== original.child || !sameAnchor(item.label, original.label)) return false;
+  }
+  return true;
+};
+// Operational source-local validation cache; never persisted as evidence.
+type SourceLabelValidation = { labelled: number; raw: O.Option<ReadonlyArray<SourceLabelToken>> };
+const sourceLabelRawTokens = (
+  plan: ClaimSourceElementPlan,
+  state: SourceLabelValidation,
+  charge: (amount: number) => boolean
+): boolean => {
+  if (O.isSome(state.raw)) return true;
+  if (!charge(plan.roles.certificates.length * 2 + 1)) return false;
+  state.raw = O.some(A.filter(plan.roles.certificates, (p): p is SourceLabelToken => p.kind === "token"));
+  return true;
+};
+const validateSourceLabelDeclaration = (
+  plan: ClaimSourceElementPlan,
+  declaration: SourceLabelDeclaration,
+  state: SourceLabelValidation,
+  charge: (amount: number) => boolean
+): boolean => {
+  if (!charge(declaration.items.length * 3 + 2)) return false;
+  const list = A.get(plan.declarations, state.labelled++);
+  if (O.isNone(list) || !sourceLabelListMatches(declaration, list.value, charge)) return false;
+  const dotted = A.some(declaration.items, (item) => sourceDottedLabelRank(item.label.quote) >= 0);
+  if (!dotted) return true;
+  return (
+    sourceLabelRawTokens(plan, state, charge) &&
+    dottedDeclarationItems(plan, declaration, O.getOrThrow(state.raw), charge)
+  );
+};
+const validateSourceLabelDeclarations = (
+  plan: ClaimSourceElementPlan,
+  charge: (amount: number) => boolean
+): boolean => {
+  if (!charge(plan.declarationPlans.length + plan.declarations.length + 1) || !charge(3)) return false;
+  const state: SourceLabelValidation = { labelled: 0, raw: O.none() };
+  for (const declaration of plan.declarationPlans) {
+    if (declaration.kind !== "labelled") continue;
+    if (!validateSourceLabelDeclaration(plan, declaration, state, charge)) return false;
+  }
+  return state.labelled === plan.declarations.length;
+};
+
 const validateOwnership = (plan: ClaimSourceElementPlan, charge: (amount: number) => boolean): boolean => {
   if (!charge(plan.nominals.length + plan.elements.length + plan.frames.length + plan.roles.clauses.length + 1))
     return false;

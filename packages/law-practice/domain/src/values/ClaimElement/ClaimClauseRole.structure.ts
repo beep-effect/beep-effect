@@ -36,8 +36,10 @@ import {
   ClaimTermOwnerCertificate,
 } from "./ClaimClauseRole.model.ts";
 import {
+  claimDeclarationCompositions as compositions,
   deriveClaimQualifiedHeaderMembership,
   deriveClaimSourceTokenOwnership,
+  sourceDottedLabelRank,
   validateClaimSourceOwnership,
 } from "./ClaimClauseRole.projection.ts";
 import { sourceLowerBound, sourceSelectionFrameMember } from "./ClaimClauseRole.sourceQuery.ts";
@@ -51,7 +53,6 @@ import type {
 import type { ClaimLexicalToken } from "./ClaimLexicalEvidence.model.ts";
 
 const nominalSourceStart = (nominal: ClaimNominalSpan): number => nominal.anchor.startChar;
-const compositions = HashSet.make("includes", "including", "comprises", "comprising", "having");
 const separators = HashSet.make(",", ";", "and", "or");
 const relatives = HashSet.make("that", "which", "wherein", "whereby", "when", "if", "while");
 // Closed grammatical location markers; lexical ADP alone does not prove an
@@ -84,6 +85,9 @@ const inside = (outer: TextAnchor, inner: TextAnchor): boolean =>
 
 const optionalProof = <Value>(option: O.Option<Value>, proof: (value: Value) => boolean): boolean =>
   O.match(option, { onNone: () => true, onSome: proof });
+
+// Operational scan cursor only; never persisted or used as source evidence.
+type DottedListScan = { readonly markers: Array<readonly [number, number]>; depth: number; nested: boolean };
 
 // Operational state is local to one compilation. All accepted data uses the
 // domain schemas; no provisional entry is visible to route resolution.
@@ -643,6 +647,87 @@ class SourcePlanner {
       return O.some([label, index + 3]);
     return O.none();
   };
+  private dottedLabel = (index: number): O.Option<readonly [string, number]> => {
+    if (!this.charge(12)) return O.none();
+    const first = this.token(index);
+    if (O.isNone(first)) return O.none();
+    const quote = first.value.anchor.quote;
+    if (sourceDottedLabelRank(quote) >= 0) return O.some([Str.slice(0, 1)(quote), index + 1]);
+    if (quote.length !== 1 || sourceDottedLabelRank(`${quote}.`) < 0) return O.none();
+    const dot = this.token(index + 1);
+    return O.exists(dot, (token) => token.anchor.quote === "." && token.anchor.startChar === first.value.anchor.endChar)
+      ? O.some([quote, index + 2])
+      : O.none();
+  };
+  private dottedPrecededBySeparator(index: number): boolean {
+    if (this.word(index - 1) === ";") return true;
+    return HashSet.has(HashSet.make("and", "or"), this.word(index - 1)) && this.word(index - 2) === ";";
+  }
+  private dottedBoundary = (colon: number, index: number, markerEnd: number): boolean => {
+    const first = this.token(index);
+    const after = this.token(markerEnd);
+    if (O.isNone(first) || O.isNone(after)) return false;
+    const before = O.getOrThrow(this.token(index === colon + 1 ? colon : index - 1)).anchor.endChar;
+    const gap = first.value.anchor.startChar - before;
+    const labelEnd = O.getOrThrow(this.token(markerEnd - 1)).anchor.endChar;
+    const afterGap = after.value.anchor.startChar - labelEnd;
+    if (gap < 0 || afterGap <= 0 || !this.charge((gap + afterGap) * 2 + 8)) return false;
+    if (
+      Str.trim(Str.slice(before, first.value.anchor.startChar)(this.claim.claimText)) !== "" ||
+      Str.trim(Str.slice(labelEnd, after.value.anchor.startChar)(this.claim.claimText)) !== ""
+    )
+      return false;
+    return index === colon + 1 || this.dottedPrecededBySeparator(index);
+  };
+  private dottedNestedStep(index: number, scan: DottedListScan): number {
+    if (!this.charge(O.match(this.token(index + 1), { onNone: () => 0, onSome: (t) => t.anchor.quote.length * 2 }) + 4))
+      return -1;
+    const old = this.label(index);
+    if (O.isNone(old)) return 0;
+    return scan.nested && O.isSome(Str.match(romanLabel)(old.value[0])) ? old.value[1] : -1;
+  }
+  private dottedMarkerStep(index: number, colon: number, scan: DottedListScan): number {
+    const marker = this.dottedLabel(index);
+    if (this.remaining < 0) return -1;
+    if (O.isNone(marker)) return 0;
+    const boundary = this.dottedBoundary(colon, index, marker.value[1]);
+    if (this.remaining < 0) return -1;
+    if (!boundary) return marker.value[1];
+    if (this.alphabetRank(marker.value[0]) !== scan.markers.length || !this.charge(2)) return -1;
+    scan.markers.push([index, marker.value[1]]);
+    scan.nested = false;
+    return marker.value[1];
+  }
+  private dottedTopStep(index: number, colon: number, spelling: string, scan: DottedListScan): number {
+    if (spelling === "(") {
+      const nested = this.dottedNestedStep(index, scan);
+      if (nested !== 0) return nested;
+    }
+    if (spelling === ":") scan.nested = true;
+    return this.dottedMarkerStep(index, colon, scan);
+  }
+  private dottedScanStep(index: number, colon: number, scan: DottedListScan): number {
+    if (HashSet.has(this.protected, index)) return index + 1;
+    const spelling = O.getOrThrow(this.token(index)).anchor.quote;
+    if (scan.depth === 0) {
+      const next = this.dottedTopStep(index, colon, spelling, scan);
+      if (next !== 0) return next;
+    }
+    scan.depth += this.bracketStep(spelling);
+    return scan.depth < 0 || scan.depth > 128 ? -1 : index + 1;
+  }
+  private dottedListMarkers(colon: number, end: number): O.Option<ReadonlyArray<readonly [number, number]>> {
+    if (!this.charge(4)) return O.none();
+    const markers: Array<readonly [number, number]> = [];
+    if (!this.charge(4)) return O.none();
+    const scan: DottedListScan = { markers, depth: 0, nested: false };
+    for (let i = colon + 1; i < end; ) {
+      if (!this.charge(8)) return O.none();
+      i = this.dottedScanStep(i, colon, scan);
+      if (i < 0) return O.none();
+    }
+    return scan.depth === 0 ? O.some(markers) : O.none();
+  }
   private romanRank = (label: string): number => {
     let total = 0;
     let previous = 0;
@@ -839,6 +924,14 @@ class SourcePlanner {
     const roman = first.value[0] === "i";
     if (this.labelRank(first.value[0], roman) !== 0) return false;
     const markers = this.listMarkers(colon, end, roman);
+    if (O.isNone(markers) || markers.value.length < 2) return false;
+    const owner = this.listOwner(start, end, colon, parent);
+    if (O.isNone(owner)) return false;
+    const items = this.listItems(markers.value, end, owner.value, depth);
+    return O.exists(items, (values) => this.recordDeclaration(owner.value, values));
+  };
+  private dottedLabelled = (start: number, end: number, colon: number, parent: number, depth: number): boolean => {
+    const markers = this.dottedListMarkers(colon, end);
     if (O.isNone(markers) || markers.value.length < 2) return false;
     const owner = this.listOwner(start, end, colon, parent);
     if (O.isNone(owner)) return false;
@@ -1989,10 +2082,32 @@ class SourcePlanner {
       onSome: (composed) => composed || this.leaf(start, end, parent, grouping),
     });
   };
-  private colonProduction = (start: number, end: number, colon: number, parent: number, depth: number): boolean =>
-    O.isSome(this.label(colon + 1))
-      ? this.labelled(start, end, colon, parent, depth)
+  private dottedCompositionHeader = (start: number, colon: number): boolean => {
+    if (!this.charge(4)) return false;
+    const operator = this.token(colon - 1);
+    const first = this.token(start);
+    if (O.isNone(operator) || O.isNone(first) || !this.charge(operator.value.anchor.quote.length * 2)) return false;
+    if (!HashSet.has(compositions, Str.toLowerCase(operator.value.anchor.quote))) return false;
+    if (!this.charge(this.roles.predicates.length + 4)) return false;
+    return A.some(
+      this.roles.predicates,
+      (p) =>
+        p.kind !== "adjunct" &&
+        p.anchor.startChar >= first.value.anchor.startChar &&
+        p.anchor.endChar === operator.value.anchor.endChar &&
+        p.anchor.startChar <= operator.value.anchor.startChar
+    );
+  };
+  private colonProduction = (start: number, end: number, colon: number, parent: number, depth: number): boolean => {
+    if (O.isSome(this.label(colon + 1))) return this.labelled(start, end, colon, parent, depth);
+    if (!this.dottedCompositionHeader(start, colon))
+      return this.remaining >= 0 && this.unlabelledDeclaration(start, end, colon, parent, depth);
+    const dotted = this.dottedLabel(colon + 1);
+    if (this.remaining < 0) return false;
+    return O.isSome(dotted)
+      ? this.dottedLabelled(start, end, colon, parent, depth)
       : this.unlabelledDeclaration(start, end, colon, parent, depth);
+  };
   private parse = (
     rawStart: number,
     rawEnd: number,
@@ -2071,6 +2186,13 @@ class SourcePlanner {
     if (!nominal && !action) return this.nonDeclaration(children.value);
     return this.governingDeclaration(start, end, root, children.value, action);
   };
+  private dottedRoot(start: number, end: number, root: number): number {
+    if (this.word(start - 1) !== ":" || !HashSet.has(compositions, this.claim.transition)) return -1;
+    const dotted = this.dottedLabel(start);
+    if (this.remaining < 0) return 0;
+    if (O.isNone(dotted)) return -1;
+    return this.dottedLabelled(start - 1, end, start - 1, root, 1) ? 1 : 0;
+  }
   private projectBody = (root: number): boolean => {
     if (!this.charge(this.tokens.length)) return false;
     const indexes = this.located(this.body);
@@ -2085,6 +2207,8 @@ class SourcePlanner {
     const declaration =
       O.isSome(this.label(start)) && this.word(start - 1) === ":" && HashSet.has(compositions, this.claim.transition);
     if (declaration) return this.labelled(start - 1, end, start - 1, root, 1);
+    const dotted = this.dottedRoot(start, end, root);
+    if (dotted >= 0) return dotted === 1;
     return O.match(this.governingComposition(start, end, root), {
       onNone: () => false,
       onSome: (composed) => composed || this.parse(start, end, root, "single-restriction", 1),
