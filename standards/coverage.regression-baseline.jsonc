@@ -9,7 +9,7 @@
   "schema_version": 2,
   "generated_at": "2026-11-07T23:40:52.407Z",
   "git_sha": "bc1d8715ecaf2c0241d1de428fb43699a16e12d9",
-  "command": "bun run coverage -- --filter=@beep/professional-desktop --write-baseline --add-missing-files-only",
+  "command": "bun run coverage:baseline:write",
   "epsilon": 0.001,
   "minimum": {
     "lines": 70,
@@ -12708,6 +12708,69 @@
             "statements": 8,
             "branches": 3,
             "functions": 3
+          }
+        }
+      }
+    },
+    "@beep/firecrawl": {
+      "path": "packages/drivers/firecrawl",
+      "lines": 83.56,
+      "statements": 83.78,
+      "branches": 95,
+      "functions": 65.51,
+      "uncovered": {
+        "lines": 12,
+        "statements": 12,
+        "branches": 1,
+        "functions": 10
+      },
+      "files": {
+        "packages/drivers/firecrawl/src/Firecrawl.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/firecrawl/src/Firecrawl.models.ts": {
+          "lines": 81.81,
+          "statements": 81.81,
+          "branches": 88.88,
+          "functions": 55.55,
+          "uncovered": {
+            "lines": 4,
+            "statements": 4,
+            "branches": 1,
+            "functions": 4
+          }
+        },
+        "packages/drivers/firecrawl/src/Firecrawl.service.ts": {
+          "lines": 82.6,
+          "statements": 82.97,
+          "branches": 100,
+          "functions": 68.42,
+          "uncovered": {
+            "lines": 8,
+            "statements": 8,
+            "branches": 0,
+            "functions": 6
+          }
+        },
+        "packages/drivers/firecrawl/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         }
       }
