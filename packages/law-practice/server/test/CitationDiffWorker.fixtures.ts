@@ -4,7 +4,6 @@ import {
   CitationNativeProcessAdmission,
   makeCitationNativeProcessAdmission,
 } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
-import { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -12,32 +11,29 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import { readCitationDiffCorpus } from "./CitationDiffCorpus.fixtures.ts";
-import { makeCitationNodeTestRuntime, makeCitationObservedSpawner } from "./CitationNativeSpawner.fixtures.ts";
+import { makeCitationBundledTestRuntime, makeCitationObservedSpawner } from "./CitationNativeSpawner.fixtures.ts";
 import type { CitationDiffKernelFailure } from "@beep/law-practice-server/internal/Citation/DiffKernel";
 import type { CitationDiffWorkerFailure } from "@beep/law-practice-server/internal/Citation/DiffWorkerProtocol";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import type { CitationSpanDiffStep } from "@beep/law-practice-server/internal/Citation/SpanOffsets";
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 
-/** Use the actual runtime entry without creating another admission owner. */
-export const makeCitationDiffTestRuntime = Effect.fn("DiffWorkerTest.runtime")(function* (
-  kind: CitationNativeRuntimeKind,
-  cwd: string
-) {
-  const runtime =
-    kind === "node"
-      ? yield* makeCitationNodeTestRuntime(
-          NodeURL.fileURLToPath(new URL("../src/internal/Citation/DiffWorker.node.entry.ts", import.meta.url)),
-          cwd
-        )
-      : CitationNativeProcessRuntime.make({
-          kind,
-          executable: process.execPath,
-          cwd,
-          workerFile: NodeURL.fileURLToPath(new URL("../src/internal/Citation/DiffWorker.entry.ts", import.meta.url)),
-        });
-  return runtime;
-});
+/** Bundle the actual runtime entry once per scope, as the HTML and regex runtimes do.
+ * Every diff spawns a child, so an unbundled Bun leg reloads the whole module graph per
+ * row (about 500 ms against 70 ms, measured over the first 40 corpus rows).
+ */
+export const makeCitationDiffTestRuntime = Effect.fn("DiffWorkerTest.runtime")(
+  (kind: CitationNativeRuntimeKind, cwd: string) =>
+    makeCitationBundledTestRuntime(
+      kind,
+      NodeURL.fileURLToPath(
+        kind === "node"
+          ? new URL("../src/internal/Citation/DiffWorker.node.entry.ts", import.meta.url)
+          : new URL("../src/internal/Citation/DiffWorker.entry.ts", import.meta.url)
+      ),
+      cwd
+    )
+);
 export const makeCitationDiffWorkerFixture = Effect.fn("DiffWorkerTest.fixture")(function* (
   kind: CitationNativeRuntimeKind,
   policy: unknown,
