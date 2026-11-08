@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-11-07",
+  "generatedOn": "2026-11-08",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -1066,6 +1066,16 @@
       "line": 13,
       "owner": "@beep/schema",
       "reason": "Exception: meta-test of the Fn/ThunkOf/AnyFn schema combinator over function values (declareConstructor with self-identity equivalence); no structural data for S.toArbitrary to generate or round-trip."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/SchemaUtils.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 17,
+      "owner": "@beep/schema",
+      "reason": "Schema-heavy test file has 4 Schema codec assertions but no schema-derived property coverage."
     },
     {
       "file": "packages/foundation/modeling/schema/test/TerritoryCode.test.ts",
