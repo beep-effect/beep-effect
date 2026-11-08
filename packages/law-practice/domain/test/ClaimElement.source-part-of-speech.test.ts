@@ -44,20 +44,23 @@ const lexicon = HashMap.fromIterable<string, string>([
   ["upwardly", "ADV"],
   ["left", "ADJ"],
   ["capable", "ADJ"],
+  ["processing", "VERB"],
   ["joint", "ADJ"],
   ["subassembly", "ADV"],
   ["presents", "VERB"],
   ["right", "ADJ"],
 ]);
 
-const evidenceFor = (text: string) =>
+const wholeHyphenatedTokens = /[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*|[^\s\p{L}\p{N}]/gu;
+const splitHyphenatedTokens = /[\p{L}\p{N}]+|[^\s\p{L}\p{N}]/gu;
+const evidenceFor = (text: string, tokenPattern: RegExp = wholeHyphenatedTokens) =>
   ClaimLexicalEvidence.cases.aligned.make({
     sourceKey,
     sourceOrdinal: 1,
     qualifiedText: text,
     provider: "explicit-source-control",
     assetDigest: "test-only",
-    tokens: A.map(A.fromIterable(Str.matchAll(/[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*|[^\s\p{L}\p{N}]/gu)(text)), (match) => {
+    tokens: A.map(A.fromIterable(Str.matchAll(tokenPattern)(text)), (match) => {
       const startChar = O.getOrThrow(O.fromUndefinedOr(match.index));
       const isWord = O.isSome(Str.match(/^[\p{L}\p{N}]/u)(match[0]));
       return ClaimLexicalToken.make({
@@ -149,6 +152,20 @@ describe("part-of-speech boundary rules", () => {
       assert.isTrue(A.contains(quotesOf(trailing), "a tab"));
       assert.isFalse(A.contains(quotesOf(trailing), "a tab capable"));
       assert.isTrue(A.contains(quotesOf(modifying), "a tab left post"));
+    })
+  );
+
+  it.effect("applies no tag to a word the provider split differently", () =>
+    Effect.gen(function* () {
+      const text = refused("a plate on data-processing");
+      const prepared = yield* prepareClaimInspection(inputOf(text));
+      const split = yield* decomposePreparedClaimRoles(prepared, [evidenceFor(text, splitHyphenatedTokens)]);
+      const whole = yield* treeOf(text, false);
+      const decomposition = O.getOrThrow(A.head(split.decompositions));
+      assert.isTrue(A.contains(quotesOf(whole), "data-processing"));
+      assert.strictEqual(decomposition.status, "decomposed");
+      if (decomposition.status === "decomposed")
+        assert.isTrue(A.contains(quotesOf(decomposition.tree), "data-processing"));
     })
   );
 

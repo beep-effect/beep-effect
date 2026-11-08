@@ -2011,13 +2011,17 @@ const sourceModifierTags = HashSet.make("ADJ", "NUM");
 const sourceCoordinators = HashSet.make("and", "or", "and/or");
 const participialModifierPattern = /(?:ing|ed)$/u;
 
-// Bound nominal candidates with the claim's aligned part-of-speech facts. Facts are looked
-// up by exact source end offset, so a token the provider split differently keeps its
+// Bound nominal candidates with the claim's aligned part-of-speech facts. A fact applies only
+// when both source offsets match, so a token the provider split differently keeps its
 // historical boundary instead of receiving a guessed tag.
 const sourcePartOfSpeechGrammar = (facts: ReadonlyArray<ClaimLexicalToken>): LexicalGrammar => {
-  const tagByEnd = HashMap.fromIterable(A.map(facts, (fact) => Tuple.make(fact.anchor.endChar, fact.pos)));
+  const tagBySpan = HashMap.fromIterable(
+    A.map(facts, (fact) => Tuple.make(`${fact.anchor.startChar}:${fact.anchor.endChar}`, fact.pos))
+  );
   const tagAt = (tokens: ReadonlyArray<Span>, index: number): O.Option<string> =>
-    O.flatMap(A.get(tokens, index), ({ start, text }) => HashMap.get(tagByEnd, start + Str.length(text)));
+    O.flatMap(A.get(tokens, index), ({ start, text }) =>
+      HashMap.get(tagBySpan, `${start}:${start + Str.length(text)}`)
+    );
   const tagged = (tokens: ReadonlyArray<Span>, index: number, tags: HashSet.HashSet<string>): boolean =>
     O.exists(tagAt(tokens, index), (tag) => HashSet.has(tags, tag));
   const nominalAt = (tokens: ReadonlyArray<Span>, index: number): boolean => tagged(tokens, index, sourceNominalTags);

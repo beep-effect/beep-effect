@@ -34,6 +34,7 @@ import { assertRightParenthesisActivation } from "./helpers/ClaimElementRightPar
 import type {
   AntecedentFinding,
   ClaimElementTree,
+  ClaimInputDecomposition,
   ClaimInputInspectionReport,
   ClaimRoleDecomposition,
   ClaimSourceElementPlan,
@@ -469,6 +470,13 @@ const assertAdmittedProjection = (record: Control, result: ClaimRoleDecompositio
     );
   }
 };
+const fallbackTopology = (decomposition: ClaimInputDecomposition) =>
+  decomposition.status === "decomposed"
+    ? {
+        elements: A.map(decomposition.tree.elements, ({ path, anchor }) => ({ path, anchor })),
+        containment: A.filter(decomposition.tree.edges, ({ kind }) => kind === "part-of"),
+      }
+    : O.none();
 const runControl = Effect.fn("recurrence.runControl")(function* (record: Control) {
   const { prepared, evidence, result } = yield* planOf(record);
   assert.strictEqual(result.plans.length, record.outcome === "admitted" ? 1 : 0);
@@ -573,6 +581,11 @@ describe("reviewed recurrence source frames and actual enhanced topology", () =>
         assert.deepStrictEqual(
           A.map(result.decompositions, ({ status }) => status),
           A.map(legacy.decompositions, ({ status }) => status)
+        );
+        // Terms may differ by design; the fallback keeps every body group at its historical place.
+        assert.deepStrictEqual(
+          A.map(result.decompositions, fallbackTopology),
+          A.map(legacy.decompositions, fallbackTopology)
         );
         const report = yield* inspectPreparedClaimRoles(prepared, evidence);
         assert.strictEqual(O.getOrThrow(A.head(report.records)).status, "partial");
