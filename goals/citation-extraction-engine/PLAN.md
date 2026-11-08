@@ -1825,6 +1825,12 @@ Both native configurations pass the full original standalone-clean/public-annota
 
 Reverse: Reopen exact bindings on contrary source or runtime evidence; preserve generic protocols, fidelity, safety and remaining exhaustive accounting.
 
+### Qualify original missing-page constructor and parser conversions, 2026-11-08
+
+Both original missing-page None assertions now replay through the existing native predicate and actual public parsing on Bun/Node. The unchanged production predicate is reused by semantic factory reconstruction; no synthetic verified token geometry or identity hash is introduced. Six existing missing-page regressions and the final five focused tests pass, alongside package lint/types and Fallow new-only. Main 4766f3b1886 is integrated. Total 157 complete canonical events; production identity allocation and general retained model/token protocols remain open.
+
+Reverse: Reopen these two assertions if the native page predicate, factory reconstruction, original parser input or source verification changes.
+
 ### Qualify original Resource comparisons through the existing owned registry, 2026-11-08
 
 The two original known-page Resource comparison assertions now execute the existing CitationResourceObjects registry with detached semantic references, actual equality and exact hashes. The already counted fourth persistent Resource assertion moves to actual owned-handle proof without double counting. Three focused tests, package lint/types and Fallow new-only pass. Total 155 complete canonical events; general retained host/model/token, identity, safety, fidelity and exhaustive reconciliation remain open.

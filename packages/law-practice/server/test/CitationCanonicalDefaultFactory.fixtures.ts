@@ -12,6 +12,7 @@ import {
   CitationCaseResourceHashInput,
   makeCitationCaseResourceHash,
 } from "@beep/law-practice-server/internal/Citation/CaseResourceHash";
+import { isMissingCitationModelPage } from "@beep/law-practice-server/internal/Citation/ExtractionContext";
 import {
   makeCitationFrozenEditions,
   readCitationFrozenEdition,
@@ -20,7 +21,9 @@ import {
   CitationPublicationResourceHashInput,
   makeCitationPublicationResourceHash,
 } from "@beep/law-practice-server/internal/Citation/PublicationResourceHash";
+import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import { makeCitationSemanticVocabulary } from "@beep/law-practice-server/internal/Citation/SemanticVocabulary";
+import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -71,6 +74,8 @@ export const installCitationCanonicalFactory = Effect.fn("CanonicalDefaultFactor
   const assetPath = yield* path.fromFileUrl(new URL("../assets/citation/semantic-editions.json", import.meta.url));
   const text = yield* fs.readFileString(assetPath);
   const vocabulary = yield* makeCitationSemanticVocabulary(text);
+  const policy = yield* defaultCitationEnginePolicy;
+  const unicode = yield* makeCitationPythonUnicode(policy.limits);
   const names = yield* Effect.forEach(
     bundle.editions,
     Effect.fnUntraced(function* (row) {
@@ -106,7 +111,9 @@ export const installCitationCanonicalFactory = Effect.fn("CanonicalDefaultFactor
         publication,
         metadata: { ...common, publisher: null },
       });
-    const components = { reporter, volume, page };
+    const nativePage = yield* unicode.fromText(page);
+    const missingPage = yield* isMissingCitationModelPage(nativePage.storage);
+    const components = { reporter, volume, page: missingPage ? null : page };
     if (profile.family === "journal")
       return yield* S.decodeEffect(FullJournalCitation)({ type: "journal", components, publication, metadata: common });
     const identity = yield* vocabulary.lookup(reference, "case");

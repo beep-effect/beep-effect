@@ -18,6 +18,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { readCitationCanonicalCaptures } from "./CitationCanonicalCaptures.fixtures.ts";
+import { readCitationCanonicalAssertionPayloads } from "./CitationCanonicalCriteria.fixtures.ts";
 import { installCitationCanonicalFactory } from "./CitationCanonicalDefaultFactory.fixtures.ts";
 import { compareCitationCanonicalModel } from "./CitationCanonicalModel.fixtures.ts";
 
@@ -45,13 +46,11 @@ export const replayCitationCanonicalResourceComparison = Effect.fn("CanonicalRes
   const factory = yield* installCitationCanonicalFactory();
   const policy = yield* defaultCitationEnginePolicy;
   const prefix = "tests.test_ModelsTest.ModelsTest.test_resource_comparison::tests/test_ModelsTest.py:";
-  const events = yield* Effect.forEach(
-    [36, 37],
-    Effect.fnUntraced(function* (line) {
-      const row = yield* Effect.fromOption(HashMap.get(assertions, `${prefix}${line}:8:caseDeclaration::1`));
-      return yield* S.decodeEffect(Criterion)(row.payload);
-    })
+  const payloads = yield* readCitationCanonicalAssertionPayloads(
+    assertions,
+    A.map([36, 37], (line) => `${prefix}${line}:8:caseDeclaration::1`)
   );
+  const events = yield* Effect.forEach(payloads, (payload) => S.decodeEffect(Criterion)(payload));
   const equality = A.getUnsafe(events, 0);
   const context = yield* S.decodeUnknownEffect(Context)(equality.context.values);
   const profile = { family: "case", reporter: "U.S.", factory: "case_citation", line: 48 } as const;
