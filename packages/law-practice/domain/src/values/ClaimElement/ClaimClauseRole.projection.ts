@@ -597,12 +597,16 @@ const privateSelectionAncestors = (
   owner: O.Option<ClaimFiniteSourceProof>,
   charge: (amount: number) => boolean
 ): boolean => {
-  for (const other of plan.frames)
-    if (
-      privateSelectionMember(plan, other, core, owner, charge) &&
-      !sourceFrameAncestor(plan, other.ordinal, frame, charge)
-    )
-      return false;
+  let available = true;
+  const reserve = (amount: number): boolean => {
+    const accepted = charge(amount);
+    if (!accepted) available = false;
+    return accepted;
+  };
+  for (const other of plan.frames) {
+    const member = privateSelectionMember(plan, other, core, owner, reserve);
+    if (!available || (member && !sourceFrameAncestor(plan, other.ordinal, frame, charge))) return false;
+  }
   return true;
 };
 const validatePrivateSelection = (
@@ -612,7 +616,7 @@ const validatePrivateSelection = (
   certificate: Extract<ClaimFiniteSourceProof, { readonly kind: "selection" }>,
   charge: (amount: number) => boolean
 ): boolean => {
-  if (!charge(plan.roles.opaqueSelections.length + plan.frames.length + 6)) return false;
+  if (!charge(plan.roles.opaqueSelections.length + plan.frames.length + 9)) return false;
   const selection = A.findFirst(plan.roles.opaqueSelections, (s) => s.proof.ordinal === argument.certificate.ordinal);
   const owner = O.flatMap(certificate.owner, (ref) => proofAt(plan, ref));
   if (

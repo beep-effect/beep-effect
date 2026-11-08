@@ -9,6 +9,8 @@ import { assert, describe } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import controls from "./fixtures/claim-element/finite-clause-source-plans.json" with { type: "json" };
+import { decomposeFiniteSourceFixture } from "./helpers/ClaimElementFiniteSource.ts";
 import { roleEvidenceOf, rolePlansOf } from "./helpers/ClaimElementRoleInspection.ts";
 
 const assertAtomicReservations = (name: string, operation: (charge: (amount: number) => boolean) => boolean) => {
@@ -73,4 +75,16 @@ describe("source-proof reservation failure atomicity", () => {
           assertAtomicReservations("term projection", (charge) => O.isSome(projectClaimRoleTerms(element, charge)));
       })
     );
+});
+
+describe("complete finite source family reservation failures", () => {
+  for (const row of controls.cases)
+    if (row.outcome === "admitted")
+      it.effect(`stops at each denied ownership reservation: ${row.case}`, () =>
+        Effect.gen(function* () {
+          const result = yield* decomposeFiniteSourceFixture(row);
+          const source = A.head(result.plans).pipe(O.getOrThrow).sourcePlan;
+          assertAtomicReservations(row.case, (charge) => validateClaimSourceOwnership(source, charge));
+        })
+      );
 });
