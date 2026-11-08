@@ -2,93 +2,6 @@
   "schemaVersion": "citation-ledger-proof-plan/v1",
   "bindings": [
     {
-      "workflowState": "ready",
-      "cases": [
-        {
-          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::2",
-          "observationSha256": "b313048322570644e5d8479edb3be9f1aea8e0c15757402e17a5a1184e9fe8c4"
-        },
-        {
-          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::3",
-          "observationSha256": "9bf10c2ed637ec18b999caacf3c65150ed1fc20f05f10d47ef446ef805b63c40"
-        },
-        {
-          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::4",
-          "observationSha256": "3ea313c246ffafc4f59832720a823d71fd1670306fe268f457239cda9ca2c6b6"
-        },
-        {
-          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::5",
-          "observationSha256": "3686748f4bc37d4df3586481d5892f30b44dc1a6f6d0bbc03cdab8185983ad33"
-        },
-        {
-          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::6",
-          "observationSha256": "8498de28d5db2821c7bc524542300b800a7dc055894b5b67e85643cd122fe06c"
-        },
-        {
-          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::7",
-          "observationSha256": "579183aeead234d86cac0731f4ecef2f0d599d1ae07516c87abe8d720bc8111c"
-        },
-        {
-          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::8",
-          "observationSha256": "86f6bd021f51bd09a1e25be91e047a387865942b35fd7271715b9a543bc90505"
-        },
-        {
-          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::9",
-          "observationSha256": "738ec3f68d4617c1869ab2763e5afd4a1f8d3ad6bda8e5a9c787c41a1cae6250"
-        },
-        {
-          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::13",
-          "observationSha256": "91c753a13b85c5a45ad9cd6adc8a398b9763aeb1e3d5df1577869395c685bdb9"
-        },
-        {
-          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::15",
-          "observationSha256": "ecc4b9384838dff87f34556ceb738ab39288cdb8bbfbf3329abb2e8f98d908ba"
-        },
-        {
-          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::19",
-          "observationSha256": "553e720b567f36b0c7359b5bb80f14c1323cb7d44115cfe7a1d20590f4933cd9"
-        },
-        {
-          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::20",
-          "observationSha256": "c5a017115ec4f8ee0efb912c873bb406636df9abea3cac14fafe8efb2e0ed61f"
-        },
-        {
-          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::21",
-          "observationSha256": "ecd545411564b8de427a4f9f650652c457da46b070b951a193e7940a807e3a7c"
-        },
-        {
-          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::22",
-          "observationSha256": "e94d8eaa960d7093b29686e33e10c3937d9497e4993c27a4e87cb817a41b93b4"
-        },
-        {
-          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::23",
-          "observationSha256": "7848993cdd01e6eec27335f9db90b34803666cfa6a17596de2f28011bec2743e"
-        }
-      ],
-      "rationale": "Exact original annotation-stage outputs pass on Bun and Node; upstream cleaning/extraction remain separately unqualified, so these assertions are nonterminal.",
-      "proof": {
-        "command": "bunx --bun vitest run packages/law-practice/server/test/CitationCanonicalAnnotation.test.ts",
-        "result": "passed",
-        "scope": "stage",
-        "operation": "annotate",
-        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-annotation-ledger.md",
-        "evidenceSha256": "bee7984de7eed37b95ba4e528f2c55b64372040fd41e4adb0c760dd31722cc0e",
-        "targetTests": [
-          {
-            "path": "packages/law-practice/server/test/CitationCanonicalAnnotation.test.ts",
-            "name": "matches all canonical annotation assertions on",
-            "sha256": "fab662ceeb813f285530ed67e820cf644aeeefc89dc04d8b2720495fcff70298"
-          }
-        ],
-        "references": [
-          {
-            "path": "packages/law-practice/server/test/CitationCanonicalAnnotation.fixtures.ts",
-            "sha256": "cb5b76cb5ecfae64cc9ac2baefa9b053f56f8b7797936357d75216e944d000ae"
-          }
-        ]
-      }
-    },
-    {
       "workflowState": "complete",
       "cases": [
         {
@@ -1106,6 +1019,38 @@
           "observationSha256": "c6dff8d7a9d66b376ecf0762902c765854f93ad32c44a04c2819e94aa4a52e1f"
         },
         {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::2",
+          "observationSha256": "b313048322570644e5d8479edb3be9f1aea8e0c15757402e17a5a1184e9fe8c4"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::3",
+          "observationSha256": "9bf10c2ed637ec18b999caacf3c65150ed1fc20f05f10d47ef446ef805b63c40"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::4",
+          "observationSha256": "3ea313c246ffafc4f59832720a823d71fd1670306fe268f457239cda9ca2c6b6"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::5",
+          "observationSha256": "3686748f4bc37d4df3586481d5892f30b44dc1a6f6d0bbc03cdab8185983ad33"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::6",
+          "observationSha256": "8498de28d5db2821c7bc524542300b800a7dc055894b5b67e85643cd122fe06c"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::7",
+          "observationSha256": "579183aeead234d86cac0731f4ecef2f0d599d1ae07516c87abe8d720bc8111c"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::8",
+          "observationSha256": "86f6bd021f51bd09a1e25be91e047a387865942b35fd7271715b9a543bc90505"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::9",
+          "observationSha256": "738ec3f68d4617c1869ab2763e5afd4a1f8d3ad6bda8e5a9c787c41a1cae6250"
+        },
+        {
           "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::10",
           "observationSha256": "4e6a3539d9dd2de67632bacc1cf7f7cb76da14ed873b762a81c1374636dec479"
         },
@@ -1118,8 +1063,16 @@
           "observationSha256": "a434791e870768275986ba6eb03becd36b5b932d68ae8bddd6d8a0f13da20999"
         },
         {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::13",
+          "observationSha256": "91c753a13b85c5a45ad9cd6adc8a398b9763aeb1e3d5df1577869395c685bdb9"
+        },
+        {
           "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::14",
           "observationSha256": "2a553682f613fca202c8e04aa228929655fd4972612f8c0357466e53560a4ca6"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::15",
+          "observationSha256": "ecc4b9384838dff87f34556ceb738ab39288cdb8bbfbf3329abb2e8f98d908ba"
         },
         {
           "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::17",
@@ -1128,21 +1081,41 @@
         {
           "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::18",
           "observationSha256": "39be3e99eabc9da341309726db11878983c30431cbfdea89336f64918481849d"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::19",
+          "observationSha256": "553e720b567f36b0c7359b5bb80f14c1323cb7d44115cfe7a1d20590f4933cd9"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::20",
+          "observationSha256": "c5a017115ec4f8ee0efb912c873bb406636df9abea3cac14fafe8efb2e0ed61f"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::21",
+          "observationSha256": "ecd545411564b8de427a4f9f650652c457da46b070b951a193e7940a807e3a7c"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::22",
+          "observationSha256": "e94d8eaa960d7093b29686e33e10c3937d9497e4993c27a4e87cb817a41b93b4"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::23",
+          "observationSha256": "7848993cdd01e6eec27335f9db90b34803666cfa6a17596de2f28011bec2743e"
         }
       ],
-      "rationale": "Exact original annotation equalities recomputed from raw source through actual cleaning, extraction, verified mention-derived replacement positions and independent final rendered text on both native configurations. Generic host/callback and Unicode fidelity remain separate.",
+      "rationale": "All 22 original non-custom-cleaner annotation equalities recomputed from raw input with exact cleaning choices, actual extraction and verified mention-derived ranges, original caller parts and independently expected final text on both native configurations. Original ordinal 16 retains its separate custom-cleaner proof. Generic utilities and host protocols remain open.",
       "proof": {
-        "command": "bunx --bun vitest run test/CitationCanonicalAnnotationWorkflow.test.ts test/CitationCanonicalParserOperations.test.ts test/CitationCanonicalCourts.test.ts --reporter=json --outputFile=../../../.beep/annotation-workflows-final-results.json",
+        "command": "bunx --bun vitest run test/integration/CitationCanonicalAnnotationWorkflow.test.ts --reporter=json --outputFile=../../../.beep/annotation-workflows-full-results.json",
         "result": "passed",
         "scope": "complete-case",
         "operation": "annotate",
-        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-original-annotation-workflows.md",
-        "evidenceSha256": "9c2455b80c73c5f76bbe55e52d6c3895553dda8a595d9f231bd697e122f639c4",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-annotation-and-full-span-qualification.md",
+        "evidenceSha256": "0850714bd99030e92441c614256d7f5f6c11e39437c55c7193b3b400b937c493",
         "targetTests": [
           {
-            "path": "packages/law-practice/server/test/CitationCanonicalAnnotationWorkflow.test.ts",
-            "name": "recomputes seven original annotation workflows from raw input on",
-            "sha256": "6ca93424b92d01102b75e01a1bc0abb3fc57a4e502f48906bb09c1f367d85a11"
+            "path": "packages/law-practice/server/test/integration/CitationCanonicalAnnotationWorkflow.test.ts",
+            "name": "recomputes original annotation workflow group",
+            "sha256": "380381e2237d3918b92ffb218a4e46ea2800a391cf1b6188971f77f5469d60a1"
           }
         ],
         "references": [

@@ -1807,6 +1807,12 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the new component and source-v2 field together while preserving original observations and all unfinished parity duties.
 
+### Qualify all original annotation workflows and full-span equalities, 2026-11-08
+
+All eight Bun/Node groups pass for the remaining 22 original annotation workflows, completing the original test_annotate cohort together with the separately qualified quote-cleaner case. Add a direct parser-to-verified-component replay for all thirteen original full_span equalities; qualify its binding only on matching final runtime results. General annotation utilities, host/model/callback protocols and exhaustive goal acceptance remain open.
+
+Reverse: Reopen any exact binding on contrary source or runtime evidence; preserve every unfinished capability, fidelity law and accounting row.
+
 ### Recompute original annotation workflows from raw input, 2026-11-08
 
 Schedule the remaining 22 original annotation workflows on Bun and Node using exact original cleaner modes, actual verified mention-derived positions, independent expected output and the existing captured annotation callback service. Initial twelve selected tests pass. Final proof accounting advances only exact workflows with matching runtime evidence; full integration, general host protocols, representation/fidelity laws and exhaustive qualification remain open.
