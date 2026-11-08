@@ -19,19 +19,30 @@ import {
   LibraryHopGateInput,
   LibraryHopPolicy,
   LibraryImportOriginal,
+  LibraryIntake,
+  LibraryIntakeFile,
   LibraryInventoryOptions,
   LibraryOccurrence,
   LibraryPacketConcept,
+  LibraryQualification,
   LibrarySource,
+  LibrarySourceVersion,
   LibraryVidbeeImportPayload,
   libraryHopGate,
+  libraryHopReport,
   libraryHopTotals,
+  libraryLiveConcepts,
   libraryPacketConcepts,
+  libraryRefusedHopTwo,
+  librarySourceDomain,
   loadCatalog,
+  recordLibraryHops,
+  registerLibraryBoxSources,
   verifyLibrary,
   withCatalog,
 } from "@beep/repo-cli/commands/Research";
 import {
+  acquireLibraryBoxFile,
   acquireLibrarySource,
   LibraryBoxFile,
   LibraryBoxFixture,
@@ -41,10 +52,13 @@ import {
   librarySourceEvidenceValid,
   makeLibraryBoxTest,
   saveLibraryText,
+  validateLibraryBoxEvidence,
+  validateLibraryRouteEvidence,
 } from "@beep/repo-cli/test/ResearchLibrary";
 import { ShaclValidationServiceLive } from "@beep/shacl";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, layer } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Duration from "effect/Duration";
@@ -54,9 +68,12 @@ import * as HttpClient from "effect/http/HttpClient";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
+import * as TestConsole from "effect/testing/TestConsole";
+import type * as HashSet from "effect/HashSet";
 
 const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
 const bytesOf = (text: string) => new TextEncoder().encode(text);
@@ -79,11 +96,19 @@ const firecrawl = Firecrawl.makeTestLayer((request) =>
 );
 
 const boxBytes = { shared: bytesOf("Identical exhibit bytes."), other: bytesOf("A different memo.") };
+// A 202-folder chain, one past the Box selection bound.
+const chain = A.makeBy(202, (i) => `f${i}`);
 const boxFixture = Effect.gen(function* () {
   const sharedSha1 = yield* libraryBoxSha1(boxBytes.shared);
   const otherSha1 = yield* libraryBoxSha1(boxBytes.other);
+  const memoSha1 = yield* libraryBoxSha1(bytesOf("Memo text."));
   return LibraryBoxFixture.make({
     folders: {
+      ...R.fromEntries(A.map(chain, (id) => [id, A.empty<LibraryBoxFile>()] as const)),
+      docs: [
+        LibraryBoxFile.make({ id: "201", versionId: "3", name: "", sha1: memoSha1, size: 10 }),
+        LibraryBoxFile.make({ id: "202", versionId: "1", name: "notes.md", sha1: memoSha1, size: 10 }),
+      ],
       top: [
         LibraryBoxFile.make({ id: "101", versionId: "1", name: "exhibit.pdf", sha1: sharedSha1, size: 24 }),
         LibraryBoxFile.make({ id: "102", versionId: "1", name: "exhibit copy.pdf", sha1: sharedSha1, size: 24 }),
@@ -93,14 +118,20 @@ const boxFixture = Effect.gen(function* () {
         LibraryBoxFile.make({ id: "104", versionId: "1", name: "bad.txt", sha1: Str.repeat(40)("0"), size: 17 }),
       ],
       versioned: [LibraryBoxFile.make({ id: "105", versionId: "2", name: "draft.txt", sha1: sharedSha1, size: 24 })],
+      empty: [],
     },
-    subfolders: { top: ["nested"] },
+    subfolders: {
+      top: ["nested"],
+      ...R.fromEntries(A.map(A.drop(chain, 1), (id, i) => [A.getUnsafe(chain, i), [id]] as const)),
+    },
     bytes: {
       "101": boxBytes.shared,
       "102": boxBytes.shared,
       "103": boxBytes.other,
       "104": boxBytes.other,
       "105": boxBytes.other,
+      "201": bytesOf("Memo text."),
+      "202": bytesOf("Memo text."),
     },
   });
 });
@@ -823,6 +854,214 @@ describe("research library routes", () => {
         })
       );
     });
+
+    layer(services, { timeout: "60 seconds" })((it) => {
+      it.effect(
+        "admits a captured hop-2 child, merges a child with two parents and refuses a parentless hop-3 source",
+        () =>
+          Effect.sync(() => {
+            const first = web("r", "https://example.com/r");
+            const second = web("r2", "https://example.com/r2");
+            const shared = web("shared", "https://other.org/shared");
+            const captured = web("captured-child", "https://other.org/captured");
+            const deep = web("deep", "https://other.org/deep");
+            const deepCatalog = LibraryCatalog.make({
+              schema: "beep.research.library/v2",
+              documents: [],
+              sources: [first, second, shared, captured, deep],
+              occurrences: [],
+              derivations: [
+                edge(1, "doc", "r"),
+                edge(1, "doc", "r2"),
+                edge(2, "r", "shared"),
+                edge(2, "r2", "shared"),
+                edge(2, "r", "captured-child"),
+                edge(3, "shared", "deep"),
+              ],
+              findings: [
+                LibraryFinding.make({ ...finding(first, "goals/live-goal"), id: "f-r-live" }),
+                LibraryFinding.make({ ...finding(first, "goals/done-goal"), id: "f-r-done" }),
+                LibraryFinding.make({ ...finding(second, "goals/live-goal"), id: "f-r2-live" }),
+              ],
+              captures: [
+                LibraryCapture.make({
+                  id: "capture",
+                  sourceId: "captured-child",
+                  status: "readable",
+                  method: "firecrawl",
+                  recordedAt: "2026-11-06",
+                  capturedRevision: "",
+                  complete: true,
+                  artifacts: [],
+                  reason: "",
+                }),
+              ],
+              qualifications: [],
+            });
+            const decisions = libraryHopGate(
+              deepCatalog,
+              LibraryHopGateInput.make({ concepts, policy: LibraryHopPolicy.make({ domainCap: 1 }) })
+            );
+            expect(
+              A.map(decisions, (decision) => [
+                decision.sourceId,
+                decision.intakeId,
+                decision.parentIds,
+                decision.routedInDegree,
+                decision.admitted,
+                decision.reason,
+              ])
+            ).toEqual([
+              ["shared", "intake", ["r", "r2"], 2, false, "domain-cap"],
+              ["captured-child", "intake", ["r"], 1, true, "routed-parent"],
+              ["deep", "", [], 0, false, "unrouted-parent"],
+            ]);
+          })
+      );
+
+      it.effect("derives every intake when none is named, reusing each parent's scan", () =>
+        Effect.gen(function* () {
+          const { root } = yield* tempLibrary();
+          const document = (id: string) =>
+            LibraryDocument.make({
+              id,
+              originalPath: `/${id}.md`,
+              snapshotPath: `intakes/${id}.md`,
+              sha256: Str.repeat(64)("a"),
+              bytes: 1,
+              title: id,
+              reportDate: "",
+              expectedOccurrences: 1,
+            });
+          const intake = (id: string, documentId: string) =>
+            LibraryIntake.make({
+              id,
+              date: "2026-11-06",
+              createdAt: "2026-11-06T00:00:00.000Z",
+              repoCommit: "",
+              inputRoots: [],
+              manifestPath: `intakes/${id}.json`,
+              files: [
+                LibraryIntakeFile.make({
+                  originalPath: `/${documentId}.md`,
+                  snapshotPath: `intakes/${documentId}.md`,
+                  sha256: Str.repeat(64)("a"),
+                  bytes: 1,
+                  parseable: true,
+                }),
+              ],
+            });
+          const cites = (documentId: string, sourceId: string) =>
+            LibraryOccurrence.make({ ...occurrence(web(sourceId, "")), id: `${documentId}-${sourceId}`, documentId });
+          const aliased = LibrarySource.make({ ...web("p", "https://example.com/p"), aliasIds: ["p-alias"] });
+          const intakeCatalog = LibraryCatalog.make({
+            schema: "beep.research.library/v2",
+            documents: [document("d1"), document("d2")],
+            intakes: [intake("i1", "d1"), intake("i2", "d2")],
+            sources: [aliased, web("q", "https://example.com/q")],
+            occurrences: [cites("d1", "p"), cites("d1", "q"), cites("d1", "ghost"), cites("d2", "p")],
+            captures: [],
+            qualifications: [],
+          });
+          const recorded = yield* recordLibraryHops(root, intakeCatalog, "2026-11-07T00:00:00.000Z");
+          expect(
+            A.sort(
+              A.map(recorded.derivations, (edge) => `${edge.intakeId}:${edge.hopDepth}:${edge.derivedId}`),
+              Str.Order
+            )
+          ).toEqual(["i1:1:ghost", "i1:1:p", "i1:1:q", "i2:1:p"]);
+          expect(recorded.sources).toEqual(intakeCatalog.sources);
+        })
+      );
+
+      it.effect("counts a captured hop-1 identity without a source as unreadable", () =>
+        Effect.gen(function* () {
+          const { root } = yield* tempLibrary();
+          const orphanCatalog = LibraryCatalog.make({
+            schema: "beep.research.library/v2",
+            documents: [],
+            sources: [],
+            occurrences: [],
+            derivations: [edge(1, "doc", "orphan")],
+            captures: [
+              LibraryCapture.make({
+                id: "orphan-capture",
+                sourceId: "orphan",
+                status: "readable",
+                method: "firecrawl",
+                recordedAt: "2026-11-06",
+                capturedRevision: "",
+                complete: true,
+                artifacts: [],
+                reason: "",
+              }),
+            ],
+            qualifications: [],
+          });
+          const totals = yield* libraryHopTotals(root, orphanCatalog);
+          expect(A.getUnsafe(totals, 1)).toBe("hop 1: identities=1 readable=0");
+        })
+      );
+
+      it.effect("prints the hop report and lists refusals, admitting arXiv only on demand", () =>
+        Effect.gen(function* () {
+          const { root } = yield* tempLibrary();
+          const policy = LibraryHopPolicy.make({});
+          // The report reads the live packet concepts of this repository, so route through one of them.
+          const live = yield* libraryLiveConcepts(policy);
+          const topic = O.getOrThrow(A.findFirst(live, (concept) => concept.live)).id;
+          const routed = web("rp", "https://example.com/rp");
+          const unrouted = web("up", "https://example.com/up");
+          const kids = [
+            web("child-a", "https://other.org/a"),
+            web("child-b", "https://other.org/b"),
+            web("2501.00002", "https://arxiv.org/abs/2501.00002", "paper"),
+          ];
+          const reportCatalog = LibraryCatalog.make({
+            schema: "beep.research.library/v2",
+            documents: [],
+            sources: [routed, unrouted, ...kids],
+            occurrences: [],
+            derivations: [
+              edge(1, "doc", "rp"),
+              edge(1, "doc", "up"),
+              edge(2, "rp", "child-a"),
+              edge(2, "up", "child-b"),
+              edge(2, "rp", "2501.00002"),
+            ],
+            findings: [finding(routed, topic)],
+            captures: [],
+            qualifications: [],
+          });
+          yield* withCatalog(root, () => Effect.succeed(reportCatalog));
+          // The test environment's TestConsole records the report.
+          const lines = yield* libraryHopReport(root, 10, policy).pipe(Effect.andThen(TestConsole.logLines));
+          expect(A.drop(lines, 3)).toEqual([
+            "admit routed-parent in=1 other.org child-a https://other.org/a",
+            "refuse arxiv-catalogue-only in=1 arxiv.org 2501.00002 https://arxiv.org/abs/2501.00002",
+            "refuse unrouted-parent in=0 other.org child-b https://other.org/b",
+          ]);
+          const sorted = (ids: HashSet.HashSet<string>) => A.sort(A.fromIterable(ids), Str.Order);
+          const refused = yield* libraryRefusedHopTwo(reportCatalog, policy, []);
+          const onDemand = yield* libraryRefusedHopTwo(reportCatalog, policy, ["2501.00002"]);
+          expect(sorted(refused)).toEqual(["2501.00002", "child-b"]);
+          expect(sorted(onDemand)).toEqual(["child-b"]);
+        })
+      );
+
+      it.effect("reads no packet concepts outside a repository and no domain from a non-URL", () =>
+        Effect.gen(function* () {
+          const concepts = yield* libraryLiveConcepts(LibraryHopPolicy.make({})).pipe(
+            Effect.provideService(FileSystem.FileSystem, FileSystem.makeNoop({ exists: () => Effect.succeed(false) }))
+          );
+          expect(concepts).toEqual([]);
+          expect([librarySourceDomain("not a url"), librarySourceDomain("https://www.Example.org/a")]).toEqual([
+            "",
+            "example.org",
+          ]);
+        })
+      );
+    });
   });
 });
 
@@ -860,6 +1099,605 @@ describe("Box authentication precedence", () => {
           modeWith
         );
         expect(modes).toEqual(["ccg-user", "ccg-enterprise", "developer-token", "ccg-enterprise", "ccg-enterprise"]);
+      })
+    );
+  });
+});
+
+describe("research library route edges", () => {
+  layer(services, { timeout: "60 seconds" })((it) => {
+    it.effect("returns the catalog unchanged for an empty Box selection", () =>
+      Effect.gen(function* () {
+        const { root } = yield* tempLibrary();
+        const catalog = yield* acquireLibraryBox(
+          root,
+          LibraryBoxAcquireOptions.make({ folderIds: ["empty"], fileIds: [] })
+        );
+        expect([catalog.sources, catalog.captures, catalog.qualifications]).toEqual([[], [], []]);
+      })
+    );
+
+    it.effect("requalifies the Box route when the previous qualification's provider events are unreadable", () =>
+      Effect.gen(function* () {
+        const { root } = yield* tempLibrary();
+        const options = LibraryBoxAcquireOptions.make({ folderIds: ["nested"], fileIds: [] });
+        const first = yield* acquireLibraryBox(root, options);
+        const boxQualifications = (catalog: LibraryCatalog) =>
+          A.filter(catalog.qualifications, (qualification) => qualification.adapter === "box");
+        expect(boxQualifications(first)).toHaveLength(1);
+        const events = yield* saveLibraryText(
+          root,
+          "receipts/box/provider-events.jsonl",
+          "not provider events\n",
+          "application/x-ndjson",
+          "raw-provider-events"
+        );
+        yield* withCatalog(root, (catalog) =>
+          Effect.succeed(
+            LibraryCatalog.make({
+              ...catalog,
+              // The required qualification's evidence no longer reads; a later optional failed one
+              // keeps the qualify step itself from re-reading it.
+              qualifications: A.flatMap(catalog.qualifications, (qualification) => [
+                LibraryQualification.make({ ...qualification, evidence: [...qualification.evidence, events] }),
+                LibraryQualification.make({
+                  ...qualification,
+                  id: `${qualification.id}-optional`,
+                  required: false,
+                  status: "failed",
+                }),
+              ]),
+            })
+          )
+        );
+        const second = yield* acquireLibraryBox(root, options);
+        expect(A.map(boxQualifications(second), (qualification) => qualification.status)).toEqual([
+          "verified",
+          "failed",
+          "verified",
+        ]);
+      })
+    );
+
+    it.effect("derives hops for the newest of several intakes over the same roots", () =>
+      Effect.gen(function* () {
+        const { root, temporary, fs, path } = yield* tempLibrary();
+        const november = path.join(temporary, "november");
+        yield* fs.makeDirectory(november, { recursive: true });
+        const options = LibraryInventoryOptions.make({ libraryRoot: root, inputRoots: [november, november] });
+        yield* fs.writeFileString(path.join(november, "new.md"), "# New 2026-11-06\n\nSee https://example.com/new.\n");
+        const first = yield* inventoryLibraryWithHops(options);
+        expect(A.map(first.intakes, (intake) => intake.inputRoots.length)).toEqual([1]);
+        const firstIntake = A.getUnsafe(first.intakes, 0);
+        // Edited content records a second intake over the same root; only the newer one gains edges.
+        yield* fs.writeFileString(
+          path.join(november, "new.md"),
+          "# New 2026-11-06\n\nSee https://example.com/newer.\n"
+        );
+        const second = yield* inventoryLibraryWithHops(options);
+        expect(second.intakes).toHaveLength(2);
+        const newest = O.getOrThrow(A.findFirst(second.intakes, (intake) => intake.id !== firstIntake.id));
+        const newer = O.getOrThrow(
+          A.findFirst(second.sources, (source) => source.canonicalUrl === "https://example.com/newer")
+        );
+        expect(
+          A.map(
+            A.filter(second.derivations, (edge) => edge.intakeId === newest.id),
+            (edge) => [edge.hopDepth, edge.derivedId]
+          )
+        ).toEqual([[1, newer.id]]);
+      })
+    );
+
+    it.effect("records each onward page of a parent once across its cited links", () =>
+      Effect.gen(function* () {
+        const { root, temporary, fs, path } = yield* tempLibrary();
+        const input = path.join(temporary, "input");
+        yield* fs.makeDirectory(input, { recursive: true });
+        yield* fs.writeFileString(
+          path.join(input, "report.md"),
+          "# Report 2026-11-06\n\nSee https://example.com/first and https://example.com/second.\n"
+        );
+        const options = LibraryInventoryOptions.make({ libraryRoot: root, inputRoots: [input] });
+        const first = yield* inventoryLibraryWithHops(options);
+        const article = O.getOrThrow(
+          A.findFirst(first.sources, (source) => source.canonicalUrl === "https://example.com/first")
+        );
+        // The page cites each onward page twice.
+        const linking = Firecrawl.of({
+          scrape: Effect.fn("test.linkingScrape")(function* (request) {
+            const body = yield* encodeJson({
+              success: true,
+              data: {
+                markdown: `# Article\n\nSee https://other.org/a, https://other.org/b and again https://other.org/a [b](https://other.org/b).`,
+                rawHtml: `<article>Full text of ${request.url}.</article>`,
+                metadata: { sourceURL: request.url, statusCode: 200, contentType: "text/html" },
+              },
+            }).pipe(Effect.orDie);
+            return yield* decodeFirecrawlScrapeBody(request.url, bytesOf(body));
+          }),
+        });
+        const capture = yield* acquireLibrarySource(root, article).pipe(Effect.provideService(Firecrawl, linking));
+        expect(capture.status).toBe("readable");
+        const second = yield* inventoryLibraryWithHops(options);
+        const onward = A.getSomes(
+          A.map(
+            A.filter(second.derivations, (edge) => edge.hopDepth === 2 && edge.sourceId === article.id),
+            (edge) =>
+              O.map(
+                A.findFirst(second.sources, (source) => source.id === edge.derivedId),
+                (source) => source.canonicalUrl
+              )
+          )
+        );
+        expect(A.sort(onward, Str.Order)).toEqual(["https://other.org/a", "https://other.org/b"]);
+      })
+    );
+
+    it.effect("scans the text of every cited version of a parent", () =>
+      Effect.gen(function* () {
+        const { root, temporary, fs, path } = yield* tempLibrary();
+        const input = path.join(temporary, "input");
+        yield* fs.makeDirectory(input, { recursive: true });
+        yield* fs.writeFileString(
+          path.join(input, "report.md"),
+          "# Report 2026-11-06\n\nSee https://arxiv.org/abs/2610.00609v1 and https://arxiv.org/abs/2610.00609v2.\n"
+        );
+        const options = LibraryInventoryOptions.make({ libraryRoot: root, inputRoots: [input] });
+        const first = yield* inventoryLibraryWithHops(options);
+        const paper = O.getOrThrow(A.findFirst(first.sources, (source) => source.identity === "arxiv:2610.00609"));
+        for (const version of ["v1", "v2"]) {
+          const cited = O.getOrThrow(A.findFirst(paper.versions, (item) => item.revision === version));
+          const fullText = yield* original(
+            temporary,
+            `paper-${version}.txt`,
+            `${Str.repeat(80)("Full paper sentence. ")}Follow-up: https://other.org/${version}.`,
+            "text/plain"
+          );
+          const manifest = path.join(temporary, `alpha-${version}.json`);
+          const text = yield* encodeAlphaxiv(
+            LibraryAlphaxivImportPayload.make({
+              kind: "alphaxiv",
+              sourceId: paper.id,
+              canonicalUrl: cited.canonicalUrl,
+              arxivId: "2610.00609",
+              version,
+              fullText,
+              references: [],
+            })
+          );
+          yield* fs.writeFileString(manifest, text);
+          yield* importLibraryRoutedResult(root, manifest);
+        }
+        const second = yield* inventoryLibraryWithHops(options);
+        const onward = A.getSomes(
+          A.map(
+            A.filter(second.derivations, (edge) => edge.hopDepth === 2 && edge.sourceId === paper.id),
+            (edge) =>
+              O.map(
+                A.findFirst(second.sources, (source) => source.id === edge.derivedId),
+                (source) => source.canonicalUrl
+              )
+          )
+        );
+        expect(A.sort(onward, Str.Order)).toEqual(["https://other.org/v1", "https://other.org/v2"]);
+      })
+    );
+
+    it.effect("rejects a Box capture whose metadata, revision, original or bytes do not bind its source", () =>
+      Effect.gen(function* () {
+        const { root, fs, path } = yield* tempLibrary();
+        const catalog = yield* acquireLibraryBox(
+          root,
+          LibraryBoxAcquireOptions.make({ folderIds: ["nested"], fileIds: [] })
+        );
+        const source = O.getOrThrow(A.findFirst(catalog.sources, (item) => Str.startsWith("box:")(item.identity)));
+        const capture = O.getOrThrow(A.findFirst(catalog.captures, (item) => item.sourceId === source.id));
+        const without = (role: string) =>
+          LibraryCapture.make({
+            ...capture,
+            artifacts: A.filter(capture.artifacts, (artifact) => artifact.role !== role),
+          });
+        const checks = yield* Effect.forEach(
+          [
+            [source, capture],
+            [LibrarySource.make({ ...source, canonicalUrl: "https://example.com/memo" }), capture],
+            [source, LibraryCapture.make({ ...capture, capturedRevision: "103:999" })],
+            [source, without("raw-full-text")],
+            [source, without("box-file-metadata")],
+          ] as const,
+          ([item, claim]) => validateLibraryBoxEvidence(root, item, claim)
+        );
+        expect(checks).toEqual([true, false, false, false, false]);
+        const original = O.getOrThrow(A.findFirst(capture.artifacts, (artifact) => artifact.role === "raw-full-text"));
+        yield* fs.remove(path.join(root, original.path));
+        const removed = yield* validateLibraryBoxEvidence(root, source, capture);
+        expect(removed).toBe(false);
+      })
+    );
+
+    it.effect("binds VidBee imports through aliases, versions and locators and refuses unbound bundles", () =>
+      Effect.gen(function* () {
+        const { root, temporary, fs, path } = yield* tempLibrary();
+        const versioned = LibrarySource.make({
+          id: "vid-one",
+          aliasIds: ["vid-one-alias"],
+          kind: "youtube",
+          canonicalUrl: "https://www.youtube.com/watch?v=one",
+          identity: "youtube:one",
+          revision: "",
+          repository: "",
+          ownership: "external",
+          locators: [],
+          versions: [LibrarySourceVersion.make({ revision: "r2", canonicalUrl: "https://youtu.be/one", locators: [] })],
+        });
+        const located = LibrarySource.make({
+          id: "vid-two",
+          kind: "youtube",
+          canonicalUrl: "https://www.youtube.com/watch?v=two",
+          identity: "youtube:two",
+          revision: "r1",
+          repository: "",
+          ownership: "external",
+          locators: ["https://www.youtube.com/watch?v=two", "https://youtu.be/two"],
+          versions: [],
+        });
+        yield* withCatalog(root, (catalog) =>
+          Effect.succeed(LibraryCatalog.make({ ...catalog, sources: [versioned, located] }))
+        );
+        // A catalog write re-keys sources by identity and keeps the given ids as aliases.
+        const idOf = (catalog: LibraryCatalog, identity: string) =>
+          O.getOrThrow(A.findFirst(catalog.sources, (source) => source.identity === identity)).id;
+        const media = yield* original(temporary, "0.mkv", "matroska bytes", "video/x-matroska");
+        const transcript = yield* original(
+          temporary,
+          "0.en.vtt",
+          "WEBVTT\n\n00:00.000 --> 00:01.000\nHello.\n",
+          "text/vtt"
+        );
+        const faqFile = (name: string, lines: ReadonlyArray<string>) =>
+          original(temporary, name, `---\n${A.join(lines, "\n")}\n---\n\n# Why?\nBecause.\n`, "text/markdown");
+        const importAs = Effect.fn("test.importVidbee")(function* (name: string, value: LibraryVidbeeImportPayload) {
+          const manifest = path.join(temporary, name);
+          const text = yield* encodeVidbee(value);
+          yield* fs.writeFileString(manifest, text);
+          return yield* importLibraryRoutedResult(root, manifest);
+        });
+        const base = LibraryVidbeeImportPayload.make({
+          kind: "vidbee",
+          sourceId: "vid-one-alias",
+          canonicalUrl: "https://youtu.be/one",
+          media,
+          transcript,
+          faq: yield* faqFile("plain.md", ['media: "0.mkv"', 'model: "gpt-6.1-sol"']),
+        });
+        yield* importAs("one.json", base);
+        const again = yield* importAs("one.json", base);
+        const oneId = idOf(again, "youtube:one");
+        const plainCapture = O.getOrThrow(A.findFirst(again.captures, (item) => item.sourceId === oneId));
+        expect(A.filter(again.captures, (item) => item.sourceId === oneId)).toHaveLength(1);
+        expect(plainCapture.requestedRevision).toBe("r2");
+        expect(A.map(again.modelRuns, (run) => [run.model, run.effort, run.startedAt])).toEqual([
+          ["gpt-6.1-sol", "unrecorded", plainCapture.recordedAt],
+        ]);
+        // A capture whose requested revision names no version is checked against the canonical URL.
+        const unversioned = yield* validateLibraryRouteEvidence(
+          root,
+          LibrarySource.make({ ...versioned, id: oneId, canonicalUrl: "https://youtu.be/one", versions: [] }),
+          plainCapture
+        );
+        assertSome(unversioned, true);
+
+        const locatedFaq = yield* faqFile("located.md", [
+          'media: "./0.mkv"',
+          'model: "gpt-6.1-sol(medium)"',
+          'effort: "high"',
+          'source_url: "https://www.youtube.com/watch?v=two"',
+          'generated_at: "2026-11-06T00:00:00.000Z"',
+        ]);
+        const viaLocator = yield* importAs(
+          "two.json",
+          LibraryVidbeeImportPayload.make({
+            ...base,
+            sourceId: "vid-two",
+            canonicalUrl: "https://youtu.be/two",
+            faq: locatedFaq,
+          })
+        );
+        const twoId = idOf(viaLocator, "youtube:two");
+        const locatedCapture = O.getOrThrow(A.findFirst(viaLocator.captures, (item) => item.sourceId === twoId));
+        // No version names the locator, so the capture requests the source's own revision.
+        const twoSource = O.getOrThrow(A.findFirst(viaLocator.sources, (item) => item.id === twoId));
+        expect(A.some(twoSource.versions, (version) => version.canonicalUrl === "https://youtu.be/two")).toBe(false);
+        expect(locatedCapture.requestedRevision).toBe(twoSource.revision);
+        expect(
+          A.map(
+            A.filter(viaLocator.modelRuns, (run) => run.effort === "high"),
+            (run) => [run.model, run.startedAt]
+          )
+        ).toEqual([["gpt-6.1-sol", "2026-11-06T00:00:00.000Z"]]);
+
+        const blank = yield* original(temporary, "blank.vtt", "  \n", "text/vtt");
+        const refusals = [
+          ["unknown.json", LibraryVidbeeImportPayload.make({ ...base, sourceId: "nope" })],
+          ["moved.json", LibraryVidbeeImportPayload.make({ ...base, canonicalUrl: "https://youtu.be/other" })],
+          [
+            "absent.json",
+            LibraryVidbeeImportPayload.make({
+              ...base,
+              media: LibraryImportOriginal.make({ ...media, path: "absent.mkv" }),
+            }),
+          ],
+          [
+            "no-media.json",
+            LibraryVidbeeImportPayload.make({ ...base, faq: yield* faqFile("no-media.md", ['model: "m"']) }),
+          ],
+          [
+            "elsewhere.json",
+            LibraryVidbeeImportPayload.make({
+              ...base,
+              faq: yield* faqFile("elsewhere.md", [
+                'media: "0.mkv"',
+                'model: "m"',
+                'source_url: "https://example.com/x"',
+              ]),
+            }),
+          ],
+          [
+            "no-model.json",
+            LibraryVidbeeImportPayload.make({ ...base, faq: yield* faqFile("no-model.md", ['media: "0.mkv"']) }),
+          ],
+          ["blank.json", LibraryVidbeeImportPayload.make({ ...base, transcript: blank })],
+        ] as const;
+        const messages = yield* Effect.forEach(refusals, ([name, value]) =>
+          importAs(name, value).pipe(
+            Effect.flip,
+            Effect.map((error) => error.message)
+          )
+        );
+        expect(messages).toEqual([
+          "Import source nope is not in the inventory.",
+          "Import canonical URL differs from the inventoried source.",
+          "VidBee media original is missing: absent.mkv",
+          "VidBee FAQ frontmatter does not bind the referenced media file.",
+          "VidBee FAQ frontmatter names a different source URL.",
+          "VidBee FAQ frontmatter omits the generating model.",
+          "VidBee transcript is empty.",
+        ]);
+      })
+    );
+
+    it.effect("checks alphaXiv versions and length, carries the parent's intake and stops references at hop 3", () =>
+      Effect.gen(function* () {
+        const { root, temporary, fs, path } = yield* tempLibrary();
+        const paper = yield* classifyLibraryReference("https://arxiv.org/abs/2610.00609", "report");
+        const cited = LibrarySource.make({
+          ...paper,
+          locators: [...paper.locators, "https://www.alphaxiv.org/abs/2610.00609"],
+          versions: [
+            ...paper.versions,
+            LibrarySourceVersion.make({
+              revision: "v2",
+              canonicalUrl: "https://arxiv.org/abs/2610.00609v2",
+              locators: [],
+            }),
+          ],
+        });
+        const deep = yield* classifyLibraryReference("https://arxiv.org/abs/2610.00700", "report");
+        const derivation = (id: string, derivedId: string, hopDepth: number) =>
+          LibraryDerivation.make({
+            id,
+            derivedId,
+            sourceId: "doc-1",
+            intakeId: "intake-1",
+            rootId: "doc-1",
+            hopDepth,
+            recordedAt: "2026-11-06",
+          });
+        yield* withCatalog(root, (catalog) =>
+          Effect.succeed(
+            LibraryCatalog.make({
+              ...catalog,
+              sources: [cited, deep],
+              derivations: [derivation("hop-1", cited.id, 1), derivation("hop-2", deep.id, 2)],
+            })
+          )
+        );
+        const fullText = yield* original(temporary, "paper.txt", Str.repeat(80)("Full paper sentence. "), "text/plain");
+        const importAs = Effect.fn("test.importAlpha")(function* (name: string, value: LibraryAlphaxivImportPayload) {
+          const manifest = path.join(temporary, name);
+          const text = yield* encodeAlphaxiv(value);
+          yield* fs.writeFileString(manifest, text);
+          return yield* importLibraryRoutedResult(root, manifest);
+        });
+        const payload = LibraryAlphaxivImportPayload.make({
+          kind: "alphaxiv",
+          sourceId: cited.id,
+          canonicalUrl: cited.canonicalUrl,
+          arxivId: "2610.00609",
+          version: "v2",
+          fullText,
+          references: [
+            { arxivId: "2501.00001", url: "", title: "Cited arXiv paper" },
+            { arxivId: "", url: "https://example.org/benchmark", title: "Cited page" },
+          ],
+        });
+        yield* importAs("alpha.json", payload);
+        const again = yield* importAs("alpha.json", payload);
+        const edges = A.filter(again.derivations, (edge) => edge.sourceId === cited.id);
+        expect(A.map(edges, (edge) => [edge.intakeId, edge.rootId, edge.hopDepth])).toEqual([
+          ["intake-1", "doc-1", 2],
+          ["intake-1", "doc-1", 2],
+        ]);
+        expect(A.filter(again.sources, (item) => item.identity === "arxiv:2501.00001")).toHaveLength(1);
+
+        const hopThree = yield* importAs(
+          "deep.json",
+          LibraryAlphaxivImportPayload.make({
+            ...payload,
+            sourceId: deep.id,
+            canonicalUrl: deep.canonicalUrl,
+            arxivId: "2610.00700",
+          })
+        );
+        const deepCapture = O.getOrThrow(A.findFirst(hopThree.captures, (item) => item.sourceId === deep.id));
+        expect(deepCapture.reason).toBe(
+          "alphaXiv full text bound to arXiv 2610.00700v2; 0 references catalogued at hop 3."
+        );
+
+        // A locator that names no version requests the source's own revision.
+        const viaLocator = yield* importAs(
+          "locator.json",
+          LibraryAlphaxivImportPayload.make({ ...payload, canonicalUrl: "https://www.alphaxiv.org/abs/2610.00609" })
+        );
+        const citedSource = O.getOrThrow(A.findFirst(viaLocator.sources, (item) => item.identity === cited.identity));
+        expect(
+          A.map(
+            A.filter(viaLocator.captures, (item) => item.sourceId === citedSource.id),
+            (item) => item.requestedRevision
+          )
+        ).toContain(citedSource.revision);
+
+        const versionError = yield* importAs(
+          "version.json",
+          LibraryAlphaxivImportPayload.make({
+            ...payload,
+            canonicalUrl: "https://arxiv.org/abs/2610.00609v2",
+            version: "v1",
+          })
+        ).pipe(Effect.flip);
+        expect(versionError.message).toBe("alphaXiv version v1 differs from the cited version v2.");
+        const short = yield* original(temporary, "abstract.txt", "Only an abstract.", "text/plain");
+        const shortError = yield* importAs(
+          "short.json",
+          LibraryAlphaxivImportPayload.make({ ...payload, fullText: short })
+        ).pipe(Effect.flip);
+        expect(shortError.message).toBe(
+          "alphaXiv full text is shorter than 1000 characters; abstracts are not full text."
+        );
+      })
+    );
+  });
+});
+
+const boxEdgeFile = (id: string, versionId: string, name: string, size: number) =>
+  LibraryBoxFile.make({ id, versionId, name, sha1: "", size });
+
+describe("Box acquisition edges", () => {
+  layer(services, { timeout: "60 seconds" })((it) => {
+    it.effect("registers explicitly selected files and fails on unknown Box items", () =>
+      Effect.gen(function* () {
+        const { root } = yield* tempLibrary();
+        const ids = yield* registerLibraryBoxSources(
+          root,
+          LibraryBoxAcquireOptions.make({ folderIds: [], fileIds: ["202"] })
+        );
+        const catalog = yield* loadCatalog(root);
+        expect(A.map(catalog.sources, (source) => [source.id, source.canonicalUrl])).toEqual([
+          [A.getUnsafe(ids, 0), "https://app.box.com/file/202"],
+        ]);
+        const file = yield* registerLibraryBoxSources(
+          root,
+          LibraryBoxAcquireOptions.make({ folderIds: [], fileIds: ["999"] })
+        ).pipe(Effect.flip);
+        expect(file.message).toBe("Box item 999 not found.");
+        const folder = yield* registerLibraryBoxSources(
+          root,
+          LibraryBoxAcquireOptions.make({ folderIds: ["nowhere"], fileIds: [] })
+        ).pipe(Effect.flip);
+        expect(folder.message).toBe("Box item nowhere not found.");
+      })
+    );
+
+    it.effect("refuses a Box selection deeper than 200 folders", () =>
+      Effect.gen(function* () {
+        const { root } = yield* tempLibrary();
+        const failure = yield* registerLibraryBoxSources(
+          root,
+          LibraryBoxAcquireOptions.make({ folderIds: ["f0"], fileIds: [] })
+        ).pipe(Effect.flip);
+        expect([failure.cause, failure.message]).toEqual(["box", "Box selection exceeds 200 folders."]);
+        const shallow = yield* registerLibraryBoxSources(
+          root,
+          LibraryBoxAcquireOptions.make({ folderIds: ["f0"], fileIds: [], recursive: false })
+        );
+        expect(shallow).toEqual([]);
+      })
+    );
+
+    it.effect("reports a library root that cannot be created", () =>
+      Effect.gen(function* () {
+        const { fs, path, temporary } = yield* tempLibrary();
+        const blocker = path.join(temporary, "plain-file");
+        yield* fs.writeFileString(blocker, "not a directory");
+        const failure = yield* registerLibraryBoxSources(
+          path.join(blocker, "library"),
+          LibraryBoxAcquireOptions.make({ folderIds: [], fileIds: [] })
+        ).pipe(Effect.flip);
+        expect(failure.message).toBe("Cannot create the library root.");
+      })
+    );
+
+    it.effect("names unnamed downloads and types Markdown and unknown files", () =>
+      Effect.gen(function* () {
+        const { root } = yield* tempLibrary();
+        yield* registerLibraryBoxSources(root, LibraryBoxAcquireOptions.make({ folderIds: ["docs"], fileIds: [] }));
+        const catalog = yield* loadCatalog(root);
+        const originals = yield* Effect.forEach(catalog.sources, (source) =>
+          acquireLibraryBoxFile(root, source, `captures/${source.id}`).pipe(
+            Effect.map((result) => {
+              const original = A.getUnsafe(result.artifacts, 0);
+              const name = O.getOrElse(A.last(Str.split("/")(original.path)), () => "");
+              return [result.status, result.revision, name, original.mediaType];
+            })
+          )
+        );
+        expect(originals).toEqual([
+          ["readable", "201:3", "file", "application/octet-stream"],
+          ["readable", "202:1", "notes.md", "text/markdown"],
+        ]);
+      })
+    );
+
+    it.effect("refuses non-Box locators and Box versions without a retained listing", () =>
+      Effect.gen(function* () {
+        const { root } = yield* tempLibrary();
+        const web = LibrarySource.make({
+          id: "web",
+          kind: "web",
+          canonicalUrl: "https://example.com/report",
+          identity: "https://example.com/report",
+          revision: "",
+          repository: "",
+          ownership: "external",
+          locators: [],
+        });
+        const unsupported = yield* acquireLibraryBoxFile(root, web, "captures/web");
+        expect([unsupported.status, unsupported.reason]).toEqual(["unsupported", "Source is not a Box file locator."]);
+
+        // A retained listing that records other versions does not vouch for version 2.
+        const listingText = yield* encodeJson({
+          folderIds: [],
+          fileIds: ["202"],
+          files: [boxEdgeFile("202", "1", "notes.md", 10), boxEdgeFile("201", "2", "", 10)],
+        });
+        yield* withCatalog(root, (catalog) => Effect.succeed(catalog));
+        const listing = yield* saveLibraryText(
+          root,
+          "receipts/box/listing.json",
+          listingText,
+          "application/json",
+          "box-listing"
+        );
+        const stale = yield* libraryBoxSource(boxEdgeFile("202", "2", "notes.md", 10), "private");
+        yield* withCatalog(root, (catalog) =>
+          Effect.succeed(LibraryCatalog.make({ ...catalog, artifacts: [...catalog.artifacts, listing] }))
+        );
+        const blocked = yield* acquireLibraryBoxFile(root, stale, "captures/stale");
+        expect([blocked.status, blocked.reason]).toEqual([
+          "blocked",
+          "Box file 202 version 2 has no retained listing with its SHA-1; re-run acquire --route box to register it.",
+        ]);
       })
     );
   });

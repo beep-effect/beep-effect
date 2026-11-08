@@ -16,7 +16,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { nativeTraceWire } from "./internal/native-trace-wire.ts";
 import { ManagedControllerObservation, managedControllerTraceIdentity } from "./managed-controller.ts";
-import { NativeLifecycleMetadata } from "./native-lifecycle.ts";
+import { NativeLifecycleObservation } from "./native-lifecycle.ts";
 import { hashPrivateIdentifier } from "./privacy.ts";
 
 const $I = $RepoAiMetricsId.create("native-trace");
@@ -150,7 +150,7 @@ export class NativeTraceMetadata extends S.Opaque<NativeTraceMetadata, { readonl
     managedController: S.OptionFromOptionalKey(ManagedControllerObservation).pipe(
       S.withConstructorDefault(Effect.succeedNone)
     ),
-    nativeLifecycle: S.OptionFromOptionalKey(NativeLifecycleMetadata).pipe(
+    nativeLifecycle: S.OptionFromOptionalKey(NativeLifecycleObservation).pipe(
       S.withConstructorDefault(Effect.succeedNone)
     ),
     usage: NativeUsageEvidence,

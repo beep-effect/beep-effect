@@ -21,6 +21,12 @@
       "path": "../../epistemic/tables/tsconfig.json"
     },
     {
+      "path": "../../execution-authority/domain/tsconfig.json"
+    },
+    {
+      "path": "../../execution-authority/tables/tsconfig.json"
+    },
+    {
       "path": "../../foundation/modeling/identity/tsconfig.json"
     },
     {

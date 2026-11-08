@@ -445,7 +445,8 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The provider layers depend on the test's native temporary directory, a filesystem race probe or mutable call-count refs; live/replay and claimant acquisitions stay scoped inside the case with real disk publication and exact invocation counts. Owner: @beep/semantica. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
       "id": "EV002:apps/labs/semantica/test/ProviderCache.test.ts:348:provideScopedLayer@37#1",
@@ -532,7 +533,8 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The provider layers depend on the test's native temporary directory, a filesystem race probe or mutable call-count refs; live/replay and claimant acquisitions stay scoped inside the case with real disk publication and exact invocation counts. Owner: @beep/semantica. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
       "id": "EV002:apps/labs/semantica/test/ProviderCache.test.ts:539:provideScopedLayer@31#1",
@@ -641,7 +643,8 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The provider layers depend on the test's native temporary directory, a filesystem race probe or mutable call-count refs; live/replay and claimant acquisitions stay scoped inside the case with real disk publication and exact invocation counts. Owner: @beep/semantica. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
       "id": "EV002:apps/labs/semantica/test/ProviderCache.test.ts:927:provideScopedLayer@30#1",
@@ -710,13 +713,35 @@
       "reason": "Owner: @beep/practice-kg-mcp. The test drops matters.client_name through a DuckDB connection built over the temp bundle it copied in the body, and must close that connection before runPracticeKgMcpSelfCheck reopens the same practice.duckdb (DuckDB locks the file). it.layer builds before the body and would hold the connection across the self-check. Exit: retire when the self-check accepts an injected DuckDb service, or when EV002 recognises a body-derived provision followed by a subject that reopens the same path (#1855 wave 4 register)."
     },
     {
-      "id": "EV002:apps/professional-desktop/test/integration/execution-authority.pglite.test.ts:274:provide@18#1",
+      "id": "EV002:apps/professional-desktop/test/integration/execution-authority-recording.pglite.test.ts:117:provide@18#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/professional-desktop",
+      "file": "apps/professional-desktop/test/integration/execution-authority-recording.pglite.test.ts",
+      "line": 117,
+      "endLine": 117,
+      "symbol": "provide",
+      "occurrence": "v2:da12ec77f5a757d2b826e7933a94a9596070b977b6f883608441085e07b5e1c2",
+      "class": "unresolved-layer-provide",
+      "evidence": "Effect.provide(context)",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The provided value is the Context from Layer.build(makeHttpServerLayer(...)) inside an explicit inner scope; the server consumes test-local state or returns a distinct execution window before later ledger assertions (goals/effect-vitest-canon/research/desktop-http-layer-proof.md). Owner: @beep/professional-desktop. Exit: retire when EV002 recognises a Context built by Layer.build inside an explicit shorter scope (#1855 wave 8 register)."
+    },
+    {
+      "id": "EV002:apps/professional-desktop/test/integration/execution-authority.pglite.test.ts:277:provide@18#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
-      "line": 274,
-      "endLine": 274,
+      "line": 277,
+      "endLine": 277,
       "symbol": "provide",
       "occurrence": "v2:d2e3886d55f705547645559a834e5a41d062b04a09307c7cd8649c78e494d96b",
       "class": "unresolved-layer-provide",
@@ -732,13 +757,13 @@
       "reason": "The provided value is the Context from Layer.build(makeHttpServerLayer(...)) inside an explicit inner scope; the server consumes test-local state or returns a distinct execution window before later ledger assertions (goals/effect-vitest-canon/research/desktop-http-layer-proof.md). Owner: @beep/professional-desktop. Exit: retire when EV002 recognises a Context built by Layer.build inside an explicit shorter scope (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/professional-desktop/test/integration/execution-authority.pglite.test.ts:412:provide@18#1",
+      "id": "EV002:apps/professional-desktop/test/integration/execution-authority.pglite.test.ts:415:provide@18#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
-      "line": 412,
-      "endLine": 412,
+      "line": 415,
+      "endLine": 415,
       "symbol": "provide",
       "occurrence": "v2:d70146d769b56ee0dc0cab08e99951fd8d463572499637f2673e21f8befedc14",
       "class": "unresolved-layer-provide",
@@ -754,13 +779,13 @@
       "reason": "The provided value is the Context from Layer.build(makeHttpServerLayer(...)) inside an explicit inner scope; the server consumes test-local state or returns a distinct execution window before later ledger assertions (goals/effect-vitest-canon/research/desktop-http-layer-proof.md). Owner: @beep/professional-desktop. Exit: retire when EV002 recognises a Context built by Layer.build inside an explicit shorter scope (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/professional-desktop/test/integration/execution-authority.pglite.test.ts:520:provide@18#1",
+      "id": "EV002:apps/professional-desktop/test/integration/execution-authority.pglite.test.ts:523:provide@18#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
-      "line": 520,
-      "endLine": 520,
+      "line": 523,
+      "endLine": 523,
       "symbol": "provide",
       "occurrence": "v2:8917e86eb503b527e007a367dd9ec750a82697729db1c5a7869455d89ac79573",
       "class": "unresolved-layer-provide",
@@ -772,16 +797,17 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The provided value is the Context from Layer.build(makeHttpServerLayer(...)) inside an explicit inner scope; the server consumes test-local state or returns a distinct execution window before later ledger assertions (goals/effect-vitest-canon/research/desktop-http-layer-proof.md). Owner: @beep/professional-desktop. Exit: retire when EV002 recognises a Context built by Layer.build inside an explicit shorter scope (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/professional-desktop/test/integration/execution-authority.pglite.test.ts:574:provide@18#1",
+      "id": "EV002:apps/professional-desktop/test/integration/execution-authority.pglite.test.ts:577:provide@18#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
-      "line": 574,
-      "endLine": 574,
+      "line": 577,
+      "endLine": 577,
       "symbol": "provide",
       "occurrence": "v2:ecbe85535d9e397910a296749b979b544e1e4c4089ee92e1bc80a49a584ae1f2",
       "class": "unresolved-layer-provide",
@@ -797,13 +823,13 @@
       "reason": "The provided value is the Context from Layer.build(makeHttpServerLayer(...)) inside an explicit inner scope; the server consumes test-local state or returns a distinct execution window before later ledger assertions (goals/effect-vitest-canon/research/desktop-http-layer-proof.md). Owner: @beep/professional-desktop. Exit: retire when EV002 recognises a Context built by Layer.build inside an explicit shorter scope (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/professional-desktop/test/integration/ontology-mcp-http.test.ts:246:provide@18#1",
+      "id": "EV002:apps/professional-desktop/test/integration/ontology-mcp-http.test.ts:252:provide@18#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
-      "line": 246,
-      "endLine": 246,
+      "line": 252,
+      "endLine": 252,
       "symbol": "provide",
       "occurrence": "v2:84ac3a206480ee786709573e121a24c5a9c02ff06d6c32259e50c224170f8152",
       "class": "unresolved-layer-provide",
@@ -819,13 +845,13 @@
       "reason": "The provided value is the Context from Layer.build(makeHttpServerLayer(...)) inside an explicit inner scope; the server consumes test-local state or returns a distinct execution window before later ledger assertions (goals/effect-vitest-canon/research/desktop-http-layer-proof.md). Owner: @beep/professional-desktop. Exit: retire when EV002 recognises a Context built by Layer.build inside an explicit shorter scope (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/professional-desktop/test/integration/ontology-mcp-http.test.ts:299:provide@18#1",
+      "id": "EV002:apps/professional-desktop/test/integration/ontology-mcp-http.test.ts:305:provide@18#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
-      "line": 299,
-      "endLine": 299,
+      "line": 305,
+      "endLine": 305,
       "symbol": "provide",
       "occurrence": "v2:5d598043bf81aec9723ef84eee1f6bcd7909b88791274cc748690295aa75d3c3",
       "class": "unresolved-layer-provide",
@@ -841,13 +867,13 @@
       "reason": "The provided value is the Context from Layer.build(makeHttpServerLayer(...)) inside an explicit inner scope; the server consumes test-local state or returns a distinct execution window before later ledger assertions (goals/effect-vitest-canon/research/desktop-http-layer-proof.md). Owner: @beep/professional-desktop. Exit: retire when EV002 recognises a Context built by Layer.build inside an explicit shorter scope (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/professional-desktop/test/integration/ontology-mcp-http.test.ts:367:provide@18#1",
+      "id": "EV002:apps/professional-desktop/test/integration/ontology-mcp-http.test.ts:373:provide@18#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
-      "line": 367,
-      "endLine": 367,
+      "line": 373,
+      "endLine": 373,
       "symbol": "provide",
       "occurrence": "v2:339cb09b3a24918605885dd84c71b5e9e404d61e296cba6463c402df5ab81906",
       "class": "unresolved-layer-provide",
@@ -859,16 +885,17 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The provided value is the Context from Layer.build(makeHttpServerLayer(...)) inside an explicit inner scope; the server consumes test-local state or returns a distinct execution window before later ledger assertions (goals/effect-vitest-canon/research/desktop-http-layer-proof.md). Owner: @beep/professional-desktop. Exit: retire when EV002 recognises a Context built by Layer.build inside an explicit shorter scope (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/professional-desktop/test/integration/ontology-mcp-http.test.ts:483:provide@18#1",
+      "id": "EV002:apps/professional-desktop/test/integration/ontology-mcp-http.test.ts:489:provide@18#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
-      "line": 483,
-      "endLine": 483,
+      "line": 489,
+      "endLine": 489,
       "symbol": "provide",
       "occurrence": "v2:1b4fb265e1158abfea385eaf9998863439c8cf032164333deaea0ed4723692b8",
       "class": "unresolved-layer-provide",
@@ -884,13 +911,35 @@
       "reason": "The provided value is the Context from Layer.build(makeHttpServerLayer(...)) inside an explicit inner scope; the server consumes test-local state or returns a distinct execution window before later ledger assertions (goals/effect-vitest-canon/research/desktop-http-layer-proof.md). Owner: @beep/professional-desktop. Exit: retire when EV002 recognises a Context built by Layer.build inside an explicit shorter scope (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/documents/server/test/DmsMirrorBox.test.ts:1046:provideScopedLayer@14#1",
+      "id": "EV002:packages/documents/server/test/DmsMirrorBox.test.ts:1002:provideScopedLayer@10#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/documents-server",
       "file": "packages/documents/server/test/DmsMirrorBox.test.ts",
-      "line": 1046,
-      "endLine": 1046,
+      "line": 1002,
+      "endLine": 1008,
+      "symbol": "provideScopedLayer",
+      "occurrence": "v2:ee5248bf0ecc53097f39013ab0f5605cc1340ca1d395552c8996fd5ab51dbf0c",
+      "class": "unresolved-layer-provide",
+      "evidence": "provideScopedLayer( availabilityLayer( makeFakeBox({ folders: { getFolderItems: () => Promise.reject({ responseInfo: { statusCode } }) }, }) ) )",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Each status probe builds a distinct fake and scoped adapter for 401, 403, 404, 429, 503 and 400; cache reuse across statuses would invalidate the classification. Owner: @beep/documents-server. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
+    },
+    {
+      "id": "EV002:packages/documents/server/test/DmsMirrorBox.test.ts:1049:provideScopedLayer@14#1",
+      "lens": "resource",
+      "ruleId": "EV002",
+      "package": "@beep/documents-server",
+      "file": "packages/documents/server/test/DmsMirrorBox.test.ts",
+      "line": 1049,
+      "endLine": 1049,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:6a58d2f1a9ba535793ed1e62132cb75697d6faee375e1451e43d4cd2e5145d3d",
       "class": "unresolved-layer-provide",
@@ -906,13 +955,13 @@
       "reason": "A body-owned malformed remote-root response exercises the real schema decoding path in an isolated scoped adapter. Owner: @beep/documents-server. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/documents/server/test/DmsMirrorBox.test.ts:1075:provideScopedLayer@14#1",
+      "id": "EV002:packages/documents/server/test/DmsMirrorBox.test.ts:1078:provideScopedLayer@14#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/documents-server",
       "file": "packages/documents/server/test/DmsMirrorBox.test.ts",
-      "line": 1075,
-      "endLine": 1075,
+      "line": 1078,
+      "endLine": 1078,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:c412ff022399f0f4e6f73fb7ca2d4a3bf46751c6fa0985b3a8fa302875ec3278",
       "class": "unresolved-layer-provide",
@@ -928,13 +977,13 @@
       "reason": "The callback owns a mutable invocation counter, and the three probe and refresh operations share one cache within this scoped program, keeping the identity and refresh-count assertions. Owner: @beep/documents-server. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/documents/server/test/DmsMirrorBox.test.ts:463:provideScopedLayer@14#1",
+      "id": "EV002:packages/documents/server/test/DmsMirrorBox.test.ts:466:provideScopedLayer@14#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/documents-server",
       "file": "packages/documents/server/test/DmsMirrorBox.test.ts",
-      "line": 463,
-      "endLine": 463,
+      "line": 466,
+      "endLine": 466,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:9df9783210f7c88da8e587a9855c204ef307c3c6e099423fb0ed1a25978a0ce8",
       "class": "unresolved-layer-provide",
@@ -950,13 +999,13 @@
       "reason": "The pagination callback captures the body-owned markers array and root identity, and the scoped adapter keeps the exact two-page order and zero writes. Owner: @beep/documents-server. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/documents/server/test/DmsMirrorBox.test.ts:501:provideScopedLayer@14#1",
+      "id": "EV002:packages/documents/server/test/DmsMirrorBox.test.ts:504:provideScopedLayer@14#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/documents-server",
       "file": "packages/documents/server/test/DmsMirrorBox.test.ts",
-      "line": 501,
-      "endLine": 501,
+      "line": 504,
+      "endLine": 504,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:d153297aa23c8f850bb1a37c1a79f8bf7b666e909fd21d2d4cc088163289a659",
       "class": "unresolved-layer-provide",
@@ -972,13 +1021,13 @@
       "reason": "The callback captures rootVisible and the lookup and create counters to simulate a competing creator, and a fresh scoped adapter observes that invocation state. Owner: @beep/documents-server. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/documents/server/test/DmsMirrorBox.test.ts:938:provideScopedLayer@14#1",
+      "id": "EV002:packages/documents/server/test/DmsMirrorBox.test.ts:941:provideScopedLayer@14#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/documents-server",
       "file": "packages/documents/server/test/DmsMirrorBox.test.ts",
-      "line": 938,
-      "endLine": 938,
+      "line": 941,
+      "endLine": 941,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:c2c5525e8a601eed015768ed848158c6742eb1035d1f209243b2f06577b04219",
       "class": "unresolved-layer-provide",
@@ -992,28 +1041,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The failing folders callback is built in this body, and its adapter yields an exact disconnected probe without a live provider. Owner: @beep/documents-server. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
-    },
-    {
-      "id": "EV002:packages/documents/server/test/DmsMirrorBox.test.ts:999:provideScopedLayer@10#1",
-      "lens": "resource",
-      "ruleId": "EV002",
-      "package": "@beep/documents-server",
-      "file": "packages/documents/server/test/DmsMirrorBox.test.ts",
-      "line": 999,
-      "endLine": 1005,
-      "symbol": "provideScopedLayer",
-      "occurrence": "v2:ee5248bf0ecc53097f39013ab0f5605cc1340ca1d395552c8996fd5ab51dbf0c",
-      "class": "unresolved-layer-provide",
-      "evidence": "provideScopedLayer( availabilityLayer( makeFakeBox({ folders: { getFolderItems: () => Promise.reject({ responseInfo: { statusCode } }) }, }) ) )",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Each status probe builds a distinct fake and scoped adapter for 401, 403, 404, 429, 503 and 400; cache reuse across statuses would invalidate the classification. Owner: @beep/documents-server. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
       "id": "EV002:packages/drivers/box-provisioning/test/BoxProvisioningApplier.test.ts:179:provideScopedLayer@12#1",
@@ -1342,7 +1369,8 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The inner session scope must close before the assertions verify exactly one logout with the rotated token; a suite-owned scope would outlive them. Owner: @beep/pacer. Exit: retire when EV002 recognises a provision whose scope close the later assertions observe (#1855 wave 8 register)."
     },
     {
       "id": "EV002:packages/drivers/pacer/test/Pacer.test.ts:307:provideScopedLayer@13#1",
@@ -1363,7 +1391,8 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The inner session scope must close before the assertions verify exactly one logout with the rotated token; a suite-owned scope would outlive them. Owner: @beep/pacer. Exit: retire when EV002 recognises a provision whose scope close the later assertions observe (#1855 wave 8 register)."
     },
     {
       "id": "EV002:packages/drivers/pacer/test/Pacer.test.ts:324:provideScopedLayer@13#1",
@@ -1454,15 +1483,15 @@
       "reason": "The client is built and provided within an inner scope so close completes before the same dataDir is reopened or ordered results are read; suite sharing would remove the close/reopen durability witness. Owner: @beep/pglite. Exit: retire when EV002 recognises a Context built by Layer.build inside an explicit shorter scope (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/epistemic/config/test/Config.test.ts:83:provideScopedLayer@61#1",
+      "id": "EV002:packages/execution-authority/config/test/Config.test.ts:91:provideScopedLayer@70#1",
       "lens": "resource",
       "ruleId": "EV002",
-      "package": "@beep/epistemic-config",
-      "file": "packages/epistemic/config/test/Config.test.ts",
-      "line": 83,
-      "endLine": 83,
+      "package": "@beep/execution-authority-config",
+      "file": "packages/execution-authority/config/test/Config.test.ts",
+      "line": 91,
+      "endLine": 91,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:9cef4e4d11137a9c01d4750c5df8d763ccf679172cbcf418cb2a261c3e15d9cd",
+      "occurrence": "v2:1add42e36f574f0bd38af5acd40c03cc8bf1c8083f67c459ff79238dc16a5efe",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(configLayer(configuration))",
       "replacement": {
@@ -1473,7 +1502,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Each malformed configuration is acquired inside Effect.exit so its typed failure and the absence of defects can be asserted; suite-hook acquisition would fail first. Owner: @beep/epistemic-config. Exit: retire when EV002 recognises a provision inside Effect.exit whose acquisition failure the test asserts (#1855 wave 8 register)."
+      "reason": "Each malformed configuration is acquired inside Effect.exit so its typed failure and the absence of defects can be asserted; suite-hook acquisition would fail first. Owner: @beep/execution-authority-config. Exit: retire when EV002 recognises a provision inside Effect.exit whose acquisition failure the test asserts (#1855 wave 8 register)."
     },
     {
       "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1214:provideScopedLayer@16#1",
@@ -2392,7 +2421,8 @@
       "severity": "major",
       "confidence": 0.95,
       "mechanization": "detector",
-      "status": "open"
+      "status": "exception",
+      "reason": "Public layers own services. inTempRepo and inTempCheckout keep per-invocation root lifetimes; checkout release ownership precedes seeding, restores cwd and exposes remove failures. See goals/effect-vitest-canon/research/inbox-porcelain-scope-proof.md. Owner: @beep/repo-cli. Exit: the yeet inbox runners resolve the checkout through an injected working-directory service instead of process.cwd(). #1855 wave 5 register."
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/yeet-inbox-porcelain.test.ts:571:inTempCheckout@6#1",
@@ -2413,7 +2443,8 @@
       "severity": "major",
       "confidence": 0.95,
       "mechanization": "detector",
-      "status": "open"
+      "status": "exception",
+      "reason": "Public layers own services. inTempRepo and inTempCheckout keep per-invocation root lifetimes; checkout release ownership precedes seeding, restores cwd and exposes remove failures. See goals/effect-vitest-canon/research/inbox-porcelain-scope-proof.md. Owner: @beep/repo-cli. Exit: the yeet inbox runners resolve the checkout through an injected working-directory service instead of process.cwd(). #1855 wave 5 register."
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/yeet-inbox-porcelain.test.ts:593:inTempCheckout@6#1",
@@ -2434,7 +2465,8 @@
       "severity": "major",
       "confidence": 0.95,
       "mechanization": "detector",
-      "status": "open"
+      "status": "exception",
+      "reason": "Public layers own services. inTempRepo and inTempCheckout keep per-invocation root lifetimes; checkout release ownership precedes seeding, restores cwd and exposes remove failures. See goals/effect-vitest-canon/research/inbox-porcelain-scope-proof.md. Owner: @beep/repo-cli. Exit: the yeet inbox runners resolve the checkout through an injected working-directory service instead of process.cwd(). #1855 wave 5 register."
     },
     {
       "id": "EV003:packages/tooling/tool/cli/test/yeet-inbox-porcelain.test.ts:611:inTempCheckout@6#1",
@@ -3203,7 +3235,8 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The inner scope releases child processes that hold cwd, open-file or flock references before the outer temporary-directory fixture removes its root (goals/effect-vitest-canon/research/cli-next-five-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
       "id": "EV004:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:885:scoped@8#1",
@@ -3622,13 +3655,13 @@
       "reason": "Production dispatchTurnWithConfirm starts a detached Effect.runFork with a real 50 ms confirmation sleep; the test joins that fiber under its 200 ms live timeout, which the TestClock cannot drive (goals/effect-vitest-canon/research/desktop-final-clock-proof.md). Owner: @beep/professional-desktop. Exit: retire when dispatchTurnWithConfirm runs its confirmation wait on the caller's Clock instead of a detached runFork (#1855 wave 8 register)."
     },
     {
-      "id": "EV009:apps/professional-desktop/test/sync-atoms.test.ts:51:it.live@2#1",
+      "id": "EV009:apps/professional-desktop/test/sync-atoms.test.ts:55:it.live@2#1",
       "lens": "resource",
       "ruleId": "EV009",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/sync-atoms.test.ts",
-      "line": 51,
-      "endLine": 88,
+      "line": 55,
+      "endLine": 92,
       "symbol": "it.live",
       "occurrence": "v2:14bf856a354b2adf88b399cd03f76fc0a22c9ca3a656266bcff35dfb7dee8342",
       "class": "unjustified-live-test",
@@ -3644,13 +3677,13 @@
       "reason": "The test waits for state in an independently built AtomRegistry runtime that TestClock cannot drive; the wait subscribes through AtomRegistry.toStream with the original predicate and a three-second live timeoutOrElse watchdog (goals/effect-vitest-canon/research/desktop-subscription-waits-proof.md). Owner: @beep/professional-desktop. Exit: retire when AtomRegistry runtimes built in a test can be driven by the test's TestClock (#1855 wave 8 register)."
     },
     {
-      "id": "EV009:apps/professional-desktop/test/sync-atoms.test.ts:90:it.live@2#1",
+      "id": "EV009:apps/professional-desktop/test/sync-atoms.test.ts:94:it.live@2#1",
       "lens": "resource",
       "ruleId": "EV009",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/sync-atoms.test.ts",
-      "line": 90,
-      "endLine": 130,
+      "line": 94,
+      "endLine": 134,
       "symbol": "it.live",
       "occurrence": "v2:f241cffc6aaffe32bb49c349e6e56265e412df49d4a7254f0ba7250fb0b2aaba",
       "class": "unjustified-live-test",
@@ -3662,7 +3695,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "The test waits for state in an independently built AtomRegistry runtime that TestClock cannot drive; the wait subscribes through AtomRegistry.toStream with the original predicate and a three-second live timeoutOrElse watchdog (goals/effect-vitest-canon/research/desktop-subscription-waits-proof.md). Owner: @beep/professional-desktop. Exit: retire when AtomRegistry runtimes built in a test can be driven by the test's TestClock (#1855 wave 8 register)."
     },
     {
       "id": "EV009:packages/agents/client/test/run-turn-reconciliation.test.ts:130:it.live@2#1",
@@ -4100,7 +4134,8 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open"
+      "status": "exception",
+      "reason": "This is the native filesystem atomic-lock test: it keeps real concurrent-writer backoff or the bounded stale-lock failure with the original deadlines, and virtual time would change the external-resource subject. Owner: @beep/repo-ai-metrics. Exit: retire when the registry lock takes its backoff schedule from the caller's Clock, so the test can drive it with TestClock (#1855 wave 8 register)."
     },
     {
       "id": "EV009:packages/tooling/test-kit/test-runner/test/Vitest.test.ts:448:it.live@0#1",
@@ -4587,6 +4622,28 @@
       "reason": "RuntimeTest internally provides BunServices.layer to OntologyServerLive, so the fixture workspace must be visible to that runtime filesystem; replacing only the outer adapter would create a disconnected virtual workspace (goals/effect-vitest-canon/research/desktop-sidecar-boundaries-proof.md). Owner: @beep/professional-desktop. Exit: retire when RuntimeTest accepts the fixture's FileSystem instead of providing BunServices.layer itself."
     },
     {
+      "id": "EV010:apps/professional-desktop/test/integration/execution-authority-recording.pglite.test.ts:14:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/professional-desktop",
+      "file": "apps/professional-desktop/test/integration/execution-authority-recording.pglite.test.ts",
+      "line": 14,
+      "endLine": 14,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Real ontology workspace paths and optional loopback HTTP sockets are the integration subject, with native platform services owned by public it.layer fixtures and per-call workspace, handler and MCP session scopes. Owner: @beep/professional-desktop. Exit: retire when the execution-authority cases run over an injected workspace store with the socket mode split into its own block."
+    },
+    {
       "id": "EV010:apps/professional-desktop/test/integration/execution-authority.pglite.test.ts:26:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -4609,13 +4666,13 @@
       "reason": "Real ontology workspace paths and optional loopback HTTP sockets are the integration subject, with native platform services owned by public it.layer fixtures and per-call workspace, handler and MCP session scopes. Owner: @beep/professional-desktop. Exit: retire when the execution-authority cases run over an injected workspace store with the socket mode split into its own block."
     },
     {
-      "id": "EV010:apps/professional-desktop/test/integration/ontology-mcp-http.test.ts:24:@effect/platform-node@0#1",
+      "id": "EV010:apps/professional-desktop/test/integration/ontology-mcp-http.test.ts:27:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/ontology-mcp-http.test.ts",
-      "line": 24,
-      "endLine": 24,
+      "line": 27,
+      "endLine": 27,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -4761,6 +4818,28 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Native Node Crypto and ChildProcess are the subjects: only the rendered Bash missing-mode usage path executes (exit 1 with its usage diagnostic), and provider, secret and privileged modes stay unexecuted strings. Owner: @beep/infra. Exit: retire when the rendered script's usage path is checked by a scripted spawner."
+    },
+    {
+      "id": "EV010:packages/_internal/db-admin/test/integration/ExecutionAuthorityLedgerMigration.pglite.test.ts:26:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/db-admin",
+      "file": "packages/_internal/db-admin/test/integration/ExecutionAuthorityLedgerMigration.pglite.test.ts",
+      "line": 26,
+      "endLine": 26,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The real db-admin drizzle folder is the subject: the test copies the folders that precede the rename into a scoped temp directory to seed a pre-move ledger, and reads the committed down.sql to prove the reversal. Native platform services are owned by the public it.layer fixture. Owner: @beep/db-admin. Exit: retire when the migrator accepts an in-memory folder set."
     },
     {
       "id": "EV010:packages/agents/domain/test/AgentsDomain.test.ts:28:@effect/platform-node@0#1",
@@ -7534,13 +7613,13 @@
       "reason": "Reads and authenticates committed oracle fixture bytes through the real repository filesystem, using the per-test BunServices layer. Replacing the fixture loader with an independently seeded memory filesystem would remove the repository-artifact proof. Owner: @beep/law-practice-server. Exit: retire when the artifact check is separated from pure vector replay."
     },
     {
-      "id": "EV010:packages/law-practice/server/test/integration/CitationHtmlUnicode.test.ts:16:@effect/platform-bun/BunServices@0#1",
+      "id": "EV010:packages/law-practice/server/test/integration/CitationHtmlUnicode.test.ts:13:@effect/platform-bun/BunServices@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/integration/CitationHtmlUnicode.test.ts",
-      "line": 16,
-      "endLine": 16,
+      "line": 13,
+      "endLine": 13,
       "symbol": "@effect/platform-bun/BunServices",
       "occurrence": "v2:30f5ad27b3466e9087faebe94dfc83f5ea9ae5070b9af25a085792eb5bd68f2c",
       "class": "platform-resource-provenance-review",
@@ -8390,6 +8469,27 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Real temporary filesystem behavior is the subject: ledger path overlap, persisted output, or SQLite reopen. Test scope cleans temporary directories. Owner: @beep/repo-cli. Exit: remove if these integration tests no longer exercise disk behavior."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/Research/research-library-mine-pdf.test.ts:42:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/Research/research-library-mine-pdf.test.ts",
+      "line": 42,
+      "endLine": 42,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/accounts-usage.test.ts:68:@effect/platform-node@0#1",
@@ -11469,27 +11569,6 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Fixed-count independent race trials, not retries: every trial asserts its result and a single failure fails the test. TestClock and explicit lease completion govern ownership; no failed trial is retried. Owner: @beep/law-practice-server. Exit: detector distinguishes repeated independent cases from retry-until-success loops. Re-reviewed after expression-only Effect 4.1.2 adaptation; independent trials and shorter child Scope are unchanged."
-    },
-    {
-      "id": "EV010:packages/tooling/tool/cli/test/Research/research-library-mine-pdf.test.ts:42:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/Research/research-library-mine-pdf.test.ts",
-      "line": 42,
-      "endLine": 42,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "open"
     }
   ]
 }

@@ -21,7 +21,7 @@ prose when they conflict.
 Scope:
 
 - In: DankStation fork sync gains pack+publish; per-host pull timer and `t3 service` on beep-worker, dankserver, tom-pc-1 (new WSL distro); Tailscale HTTPS; hub-and-spoke Linked environments; host runbook and `remote-development-agents` host profiles.
-- Out: tbk-worker until the operator releases its latch; grok-bot-box-1; Hyper-V; Funnel/T3 Connect; harness MCP registration; spill rule; copying credentials between hosts.
+- Out: grok-bot-box-1; Hyper-V; Funnel/T3 Connect; harness MCP registration; spill rule; copying credentials between hosts.
 
 Workflow:
 

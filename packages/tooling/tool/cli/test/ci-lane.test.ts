@@ -459,18 +459,18 @@ describe("CI lane partitions", () => {
         weightSeconds: partition.weightSeconds,
       }))
     ).toEqual([
-      { id: "lint-a", packages: 72, weightSeconds: 1132 },
-      { id: "lint-b", packages: 67, weightSeconds: 1134 },
+      { id: "lint-a", packages: 75, weightSeconds: 1132 },
+      { id: "lint-b", packages: 68, weightSeconds: 1134 },
       { id: "repo-cli-1", packages: 1, weightSeconds: 402 },
       { id: "repo-cli-2", packages: 1, weightSeconds: 402 },
       { id: "repo-cli-3", packages: 1, weightSeconds: 402 },
       { id: "repo-cli-4", packages: 1, weightSeconds: 402 },
       { id: "repo-cli-5", packages: 1, weightSeconds: 402 },
       { id: "repo-cli-6", packages: 1, weightSeconds: 402 },
-      { id: "unit-a", packages: 45, weightSeconds: 749 },
-      { id: "unit-b", packages: 45, weightSeconds: 750 },
-      { id: "unit-c", packages: 45, weightSeconds: 749 },
-      { id: "unit-d", packages: 46, weightSeconds: 749 },
+      { id: "unit-a", packages: 46, weightSeconds: 749 },
+      { id: "unit-b", packages: 46, weightSeconds: 750 },
+      { id: "unit-c", packages: 46, weightSeconds: 749 },
+      { id: "unit-d", packages: 47, weightSeconds: 749 },
     ]);
   });
 

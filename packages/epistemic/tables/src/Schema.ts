@@ -14,7 +14,6 @@ import {
   EvidenceVerification,
   UsageRecord,
 } from "./entities/index.ts";
-import { ExecutionRecord } from "./values/index.ts";
 
 type DbSchemaShape = {
   readonly candidateClaim: typeof CandidateClaim.Table;
@@ -25,8 +24,6 @@ type DbSchemaShape = {
   readonly edgeVersion: typeof EdgeVersion.Table;
   readonly evidence: typeof Evidence.Table;
   readonly evidenceVerification: typeof EvidenceVerification.Table;
-  readonly executionDecision: typeof ExecutionRecord.executionDecisionTable;
-  readonly executionOutcome: typeof ExecutionRecord.executionOutcomeTable;
   readonly usageRecord: typeof UsageRecord.Table;
 };
 
@@ -55,8 +52,6 @@ export const DbSchema: DbSchemaShape = {
   edgeVersion: EdgeVersion.Table,
   evidence: Evidence.Table,
   evidenceVerification: EvidenceVerification.Table,
-  executionDecision: ExecutionRecord.executionDecisionTable,
-  executionOutcome: ExecutionRecord.executionOutcomeTable,
   usageRecord: UsageRecord.Table,
 };
 

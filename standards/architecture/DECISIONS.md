@@ -1140,6 +1140,9 @@ instance is the agent-execution-authority work: `ontology/server` consumes
 `@beep/mcp-kit`'s `TierGate`, `epistemic/server` implements it, and the desktop
 entrypoint binds them. `ontology` cannot learn that `epistemic` exists, and
 `epistemic` cannot learn that `ontology` does.
+Since 2026-11-07 the implementer is `execution-authority/server`: the
+execution values left the epistemic slice in `goals/execution-authority-slice`,
+and the binding site is unchanged.
 
 This was already legal under the existing dependency rules — slice `server`
 packages may import `foundation/capability`, and app-entrypoint composition is
