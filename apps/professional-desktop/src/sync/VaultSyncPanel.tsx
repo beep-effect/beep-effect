@@ -7,28 +7,38 @@
 
 "use client";
 
+import * as V from "@beep/documents-domain/aggregates/VaultSync";
 import { DmsMirrorDisconnectReason } from "@beep/documents-use-cases/public";
 import { Button } from "@beep/ui/components/button";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
 import { thunkNull } from "@beep/utils/thunk";
-import { useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
+import { useAtomMount, useAtomRefresh, useAtomSet, useAtomValue } from "@effect/atom-react";
 import * as DateTime from "effect/DateTime";
 import { pipe } from "effect/Function";
+import * as H from "effect/HashMap";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace";
+import { vaultSyncConflictsAtom, vaultSyncStatusAtom } from "./Sync.atoms.ts";
 import {
-  VaultSyncCommand,
-  VaultSyncPanelState,
-  vaultSyncCommandAtoms,
-  vaultSyncConflictsAtom,
-  vaultSyncPanelStateAtoms,
-  vaultSyncRetryConnectionAtoms,
-  vaultSyncStatusAtom,
-} from "./Sync.atoms.ts";
+  vaultSyncDismissRefusalAtom,
+  vaultSyncFlushAtom,
+  vaultSyncIntentQueueAtom,
+  vaultSyncLinkAtom,
+  vaultSyncPredictionAtom,
+  vaultSyncRefusalsAtom,
+  vaultSyncReplayOnReconnectAtom,
+  vaultSyncServerStateAtom,
+  vaultSyncSubmitAtom,
+} from "./VaultSyncIntent.atoms.ts";
+import { VaultSyncAction, VaultSyncActionKind } from "./VaultSyncIntent.model.ts";
 import type { SyncConflict } from "@beep/documents-domain/entities/SyncConflict";
 import type { VaultSyncStatus } from "@beep/documents-use-cases/public";
 import type { JSX } from "react";
+import type { VaultSyncIntent, VaultSyncRefusal } from "./VaultSyncIntent.model.ts";
+import type { VaultSyncPrediction } from "./VaultSyncIntent.prediction.ts";
 
 const statusCounts = (status: VaultSyncStatus) => [
   { key: "pending", label: "Pending", value: status.pendingItems },
@@ -40,16 +50,28 @@ const statusCounts = (status: VaultSyncStatus) => [
   { key: "open-conflicts", label: "Open conflicts", value: status.openConflicts },
 ];
 
-const ConnectionBadge = ({ connected }: { readonly connected: boolean }): JSX.Element => (
+// While the sidecar is unreachable the Box state is only the last answer it gave, so the badge
+// drops its live colour and says so instead of claiming a healthy connection.
+const ConnectionBadge = ({
+  connected,
+  lastKnown,
+}: {
+  readonly connected: boolean;
+  readonly lastKnown: boolean;
+}): JSX.Element => (
   <span
     className={
-      connected
-        ? "rounded-sm bg-primary/10 px-1.5 py-0.5 text-xs text-primary"
-        : "rounded-sm bg-warning/10 px-1.5 py-0.5 text-xs text-warning-text"
+      lastKnown
+        ? "rounded-sm bg-muted px-1.5 py-0.5 text-xs text-muted-foreground"
+        : connected
+          ? "rounded-sm bg-primary/10 px-1.5 py-0.5 text-xs text-primary"
+          : "rounded-sm bg-warning/10 px-1.5 py-0.5 text-xs text-warning-text"
     }
     data-testid="vault-sync-connection"
+    data-last-known={lastKnown}
   >
     {connected ? "connected" : "disconnected"}
+    {lastKnown ? " (last known)" : ""}
   </span>
 );
 
@@ -192,33 +214,139 @@ const DisconnectedNote = ({
   });
 };
 
-const VaultSyncActionStatus = ({ state }: { readonly state: VaultSyncPanelState }): JSX.Element | null =>
-  VaultSyncPanelState.match(state, {
-    idle: thunkNull,
-    syncing: thunkNull,
-    reviewing: thunkNull,
-    succeeded: ({ message }) => (
-      <span className="text-xs text-muted-foreground" role="status" data-testid="vault-sync-complete">
-        {message}
-      </span>
-    ),
-    failed: ({ message }) => (
-      <span className="text-xs text-destructive" role="status" data-testid="vault-sync-error">
-        {message}
-      </span>
-    ),
+const actionLabel = (kind: VaultSyncActionKind): string =>
+  VaultSyncActionKind.match(kind, {
+    "request-sync": () => "Sync now",
+    probe: () => "Retry connection",
+    pause: () => "Pause sync",
+    resume: () => "Resume sync",
+    "review-conflict": () => "Mark reviewed",
   });
+
+const refusalReason = (refusal: VaultSyncRefusal): string =>
+  refusal.reason._tag === "SyncRuleViolation"
+    ? Str.replaceAll("-", " ")(refusal.reason.rule)
+    : "this session may not act on the workspace";
+
+// A refusal is the typed rejection the server's decide returned (or that the
+// same decide predicted locally): its prediction is already reverted, so the
+// notice says which action did not happen and why.
+const VaultSyncRefusals = ({
+  refusals,
+  onDismiss,
+}: {
+  readonly refusals: ReadonlyArray<VaultSyncRefusal>;
+  readonly onDismiss: (commandId: string) => void;
+}): JSX.Element | null =>
+  A.isReadonlyArrayNonEmpty(refusals) ? (
+    <ul className="mt-2 space-y-1" data-testid="vault-sync-refusals">
+      {A.map(refusals, (refusal) => (
+        <li
+          key={refusal.commandId}
+          className="flex items-center justify-between gap-2 rounded-sm border border-destructive/40 px-2 py-1.5 text-xs text-destructive"
+          role="alert"
+          data-testid="vault-sync-refusal"
+          data-source={refusal.source}
+        >
+          <span>
+            {actionLabel(refusal.intentKind)} {refusal.source === "server" ? "was refused" : "would be refused"}:{" "}
+            {refusalReason(refusal)}.
+          </span>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => onDismiss(refusal.commandId)}
+            data-testid="vault-sync-refusal-dismiss"
+          >
+            Dismiss
+          </Button>
+        </li>
+      ))}
+    </ul>
+  ) : null;
+
+// Queued intents are what the operator asked for and the sidecar has not
+// answered yet. Offline they wait; the panel already shows their predicted
+// effect, and a replay sends each one again with the same command id.
+const VaultSyncPendingIntents = ({
+  intents,
+  offline,
+  onRetry,
+}: {
+  readonly intents: ReadonlyArray<VaultSyncIntent>;
+  readonly offline: boolean;
+  readonly onRetry: () => void;
+}): JSX.Element | null =>
+  A.isReadonlyArrayNonEmpty(intents) ? (
+    <div className="mt-2 rounded-sm border border-dashed p-2 text-xs" data-testid="vault-sync-pending">
+      <div className="flex items-center justify-between gap-2">
+        <span className="font-medium">
+          {offline ? "Queued until the sidecar answers" : "Sending"} ({intents.length})
+        </span>
+        {offline ? (
+          <Button type="button" size="sm" variant="outline" onClick={onRetry} data-testid="vault-sync-pending-retry">
+            Retry now
+          </Button>
+        ) : null}
+      </div>
+      <ol className="mt-1 space-y-0.5 text-muted-foreground">
+        {A.map(intents, (intent) => (
+          <li key={intent.commandId} data-testid="vault-sync-pending-intent" data-kind={intent.action.kind}>
+            {actionLabel(intent.action.kind)}
+          </li>
+        ))}
+      </ol>
+    </div>
+  ) : null;
+
+const DestinationStateBadge = ({ paused }: { readonly paused: boolean }): JSX.Element => (
+  <span
+    className={
+      paused
+        ? "rounded-sm bg-warning/10 px-1.5 py-0.5 text-warning-text"
+        : "rounded-sm bg-primary/10 px-1.5 py-0.5 text-primary"
+    }
+    data-testid="vault-sync-destination-state"
+  >
+    {paused ? "paused" : "active"}
+  </span>
+);
+
+const DestinationSummary = ({
+  prediction,
+  pending,
+  lastKnown,
+}: {
+  readonly lastKnown: boolean;
+  readonly prediction: VaultSyncPrediction;
+  readonly pending: boolean;
+}): JSX.Element | null =>
+  prediction.destination._tag === "Registered" ? (
+    <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground" data-testid="vault-sync-destination">
+      <span className="font-medium text-foreground">{prediction.destination.name}</span>
+      <DestinationStateBadge paused={prediction.destination.paused} />
+      {pending ? <span data-testid="vault-sync-destination-predicted">(pending confirmation)</span> : null}
+      {/* After a reload with the sidecar unreachable the row is the cached last answer. */}
+      {lastKnown ? <span data-testid="vault-sync-destination-last-known">last known</span> : null}
+    </p>
+  ) : null;
+
+const healOperationFor = (publicId: string) =>
+  S.decodeOption(V.OperationId)(Str.replace("documents_sync_conflict_", "documents_sync_operation_")(publicId));
 
 const VaultSyncConflictsList = ({
   conflicts,
   onRetry,
   onReview,
-  busy,
+  canReview,
+  reviewQueued,
 }: {
-  readonly busy: boolean;
+  readonly canReview: (conflict: SyncConflict) => boolean;
   readonly conflicts: AsyncResult.AsyncResult<ReadonlyArray<SyncConflict>, unknown>;
   readonly onRetry: () => void;
   readonly onReview: (conflict: SyncConflict) => void;
+  readonly reviewQueued: (conflict: SyncConflict) => boolean;
 }): JSX.Element | null => {
   // A failed conflict query used to render as `null` — exactly like "no
   // conflicts" — so an operator could be told everything was clean while the
@@ -246,16 +374,22 @@ const VaultSyncConflictsList = ({
         <li key={conflict.id} className="rounded-sm border border-warning/40 p-2" data-testid="vault-sync-conflict-row">
           <div className="flex items-center justify-between gap-2">
             <span className="font-medium">{conflict.conflictKind}</span>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => onReview(conflict)}
-              disabled={busy}
-              data-testid="vault-sync-conflict-review"
-            >
-              Mark reviewed
-            </Button>
+            {reviewQueued(conflict) ? (
+              <span className="text-xs text-muted-foreground" data-testid="vault-sync-conflict-review-queued">
+                Review queued
+              </span>
+            ) : (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => onReview(conflict)}
+                disabled={!canReview(conflict)}
+                data-testid="vault-sync-conflict-review"
+              >
+                Mark reviewed
+              </Button>
+            )}
           </div>
           <p className="mt-1 break-all text-xs text-muted-foreground">
             {O.getOrElse(conflict.localRelPath, () => "(no local path)")}
@@ -294,19 +428,47 @@ const VaultSyncConflictsList = ({
  */
 // fallow-ignore-next-line complexity -- fallow's React model adds one cognitive point per hook binding; cognitive 15 comes from six atom-hook bindings plus the status and panel-state conditionals, so splitting would only fragment hook ownership (#1855 detector frontier). Owner: @beep/professional-desktop. Exit: remove when the component sheds bindings or fallow stops counting hook bindings as branches.
 export function VaultSyncPanel({ floating = true }: { readonly floating?: boolean }): JSX.Element {
-  const status = useAtomValue(vaultSyncStatusAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
-  const refreshStatus = useAtomRefresh(vaultSyncStatusAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
-  // A plain refresh inside the sidecar's 3s failure cache replays the cached
-  // failed probe; the explicit retry forces a fresh probe instead.
-  const retryConnection = useAtomSet(vaultSyncRetryConnectionAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
-  const refreshConflicts = useAtomRefresh(vaultSyncConflictsAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
-  const conflicts = useAtomValue(vaultSyncConflictsAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
-  const panelState = useAtomValue(vaultSyncPanelStateAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
-  const runCommand = useAtomSet(vaultSyncCommandAtoms(DEFAULT_PROFESSIONAL_WORKSPACE_ID));
+  const workspaceId = DEFAULT_PROFESSIONAL_WORKSPACE_ID;
+  useAtomMount(vaultSyncReplayOnReconnectAtom(workspaceId));
+  const status = useAtomValue(vaultSyncStatusAtom(workspaceId));
+  const refreshStatus = useAtomRefresh(vaultSyncStatusAtom(workspaceId));
+  const refreshConflicts = useAtomRefresh(vaultSyncConflictsAtom(workspaceId));
+  const conflicts = useAtomValue(vaultSyncConflictsAtom(workspaceId));
+  const predicted = useAtomValue(vaultSyncPredictionAtom(workspaceId));
+  const prediction = O.flatten(predicted);
+  const serverState = useAtomValue(vaultSyncServerStateAtom(workspaceId));
+  const queue = useAtomValue(vaultSyncIntentQueueAtom);
+  const offline = useAtomValue(vaultSyncLinkAtom) === "offline";
+  const refusals = useAtomValue(vaultSyncRefusalsAtom);
+  const submit = useAtomSet(vaultSyncSubmitAtom(workspaceId));
+  const flush = useAtomSet(vaultSyncFlushAtom(workspaceId));
+  const dismissRefusal = useAtomSet(vaultSyncDismissRefusalAtom);
 
-  const connected = AsyncResult.isSuccess(status) && status.value.connected;
-  const syncing = VaultSyncPanelState.guards.syncing(panelState);
-  const busy = syncing || VaultSyncPanelState.guards.reviewing(panelState);
+  // The last status the sidecar sent stays authoritative for Box connectivity
+  // while the sidecar itself is unreachable; intents queue meanwhile.
+  const lastStatus = AsyncResult.value(status);
+  const connected = O.exists(lastStatus, (value) => value.connected);
+  const paused = O.exists(prediction, (value) => value.destination._tag === "Registered" && value.destination.paused);
+  const syncBlockedReason = O.isNone(prediction)
+    ? O.some("No vault destination is available yet.")
+    : !connected
+      ? O.some("Box is not connected.")
+      : paused
+        ? O.some("This destination is paused. Resume sync first.")
+        : O.none<string>();
+  const recordFor = (conflict: SyncConflict) =>
+    O.flatMap(prediction, (value) =>
+      value.server.conflicts.pipe(
+        H.values,
+        A.fromIterable,
+        A.findFirst((record) => `${record.publicId}` === `${conflict.publicId}`)
+      )
+    );
+  const reviewQueued = (conflict: SyncConflict) =>
+    A.some(
+      queue,
+      (intent) => intent.action.kind === "review-conflict" && `${intent.action.conflictId}` === `${conflict.publicId}`
+    );
 
   return (
     <section
@@ -320,42 +482,87 @@ export function VaultSyncPanel({ floating = true }: { readonly floating?: boolea
       <div className="flex items-center justify-between gap-2">
         <h2 className="font-semibold">Vault sync</h2>
         <div className="flex items-center gap-2">
+          {offline ? (
+            <span
+              className="rounded-sm bg-muted px-1.5 py-0.5 text-xs text-muted-foreground"
+              data-testid="vault-sync-offline"
+            >
+              sidecar offline
+            </span>
+          ) : null}
           <span className="text-xs text-muted-foreground" data-testid="vault-sync-provider">
-            {AsyncResult.isSuccess(status) ? status.value.provider : "box"}
+            {O.match(lastStatus, { onNone: () => "box", onSome: (value) => value.provider })}
           </span>
-          <ConnectionBadge connected={connected} />
+          <ConnectionBadge connected={connected} lastKnown={offline} />
         </div>
       </div>
+      {O.match(prediction, {
+        onNone: thunkNull,
+        onSome: (value) => (
+          <DestinationSummary
+            prediction={value}
+            pending={A.isReadonlyArrayNonEmpty(value.pending)}
+            lastKnown={offline || !AsyncResult.isSuccess(serverState)}
+          />
+        ),
+      })}
       <VaultSyncStatusView status={status} onRetry={refreshStatus} />
-      {AsyncResult.isSuccess(status) && !status.value.connected ? (
-        <DisconnectedNote
-          probedAt={status.value.probedAt}
-          reason={status.value.disconnectReason}
-          waiting={status.waiting}
-          onRetry={() => retryConnection()}
-        />
-      ) : null}
+      {O.match(lastStatus, {
+        onNone: thunkNull,
+        onSome: (value) =>
+          value.connected ? null : (
+            <DisconnectedNote
+              probedAt={value.probedAt}
+              reason={value.disconnectReason}
+              waiting={status.waiting || A.some(queue, (intent) => intent.action.kind === "probe")}
+              onRetry={() => submit(VaultSyncAction.cases.probe.make({}))}
+            />
+          ),
+      })}
       <div className="mt-3 flex items-center gap-2">
         <Button
           type="button"
           size="sm"
-          onClick={() => runCommand(VaultSyncCommand.cases.trigger.make({}))}
-          disabled={busy || !connected}
+          // Disabled for long stretches (paused, Box down): muted reads better than a faded primary.
+          disabledTone="muted"
+          title={O.getOrUndefined(syncBlockedReason)}
+          onClick={() => submit(VaultSyncAction.cases["request-sync"].make({}))}
+          disabled={O.isSome(syncBlockedReason)}
           data-testid="vault-sync-trigger"
         >
-          {syncing ? "Syncing" : "Sync now"}
+          Sync now
         </Button>
-        <VaultSyncActionStatus state={panelState} />
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => submit(paused ? VaultSyncAction.cases.resume.make({}) : VaultSyncAction.cases.pause.make({}))}
+          disabled={O.isNone(prediction)}
+          data-testid="vault-sync-pause-toggle"
+        >
+          {paused ? "Resume sync" : "Pause sync"}
+        </Button>
       </div>
+      <VaultSyncPendingIntents intents={queue} offline={offline} onRetry={() => flush()} />
+      <VaultSyncRefusals refusals={refusals} onDismiss={dismissRefusal} />
       <VaultSyncConflictsList
-        busy={busy}
         conflicts={conflicts}
         onRetry={refreshConflicts}
+        canReview={(conflict) => O.isSome(recordFor(conflict))}
+        reviewQueued={reviewQueued}
         onReview={(conflict) =>
-          runCommand(
-            VaultSyncCommand.cases.review.make({
-              conflictId: conflict.id,
-            })
+          O.match(
+            O.flatMap(recordFor(conflict), (record) =>
+              O.map(healOperationFor(record.publicId), (healOperationId) =>
+                VaultSyncAction.cases["review-conflict"].make({
+                  conflictId: record.publicId,
+                  remoteEventId: record.remoteEventId,
+                  workspaceId: record.workspaceId,
+                  healOperationId,
+                })
+              )
+            ),
+            { onNone: () => undefined, onSome: submit }
           )
         }
       />

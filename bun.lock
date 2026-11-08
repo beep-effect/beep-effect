@@ -580,6 +580,7 @@
         "xstate": "catalog:",
       },
       "devDependencies": {
+        "@alchemy.run/domain": "catalog:",
         "@beep/memfs": "workspace:^",
         "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",

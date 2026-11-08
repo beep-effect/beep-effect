@@ -3655,50 +3655,6 @@
       "reason": "Production dispatchTurnWithConfirm starts a detached Effect.runFork with a real 50 ms confirmation sleep; the test joins that fiber under its 200 ms live timeout, which the TestClock cannot drive (goals/effect-vitest-canon/research/desktop-final-clock-proof.md). Owner: @beep/professional-desktop. Exit: retire when dispatchTurnWithConfirm runs its confirmation wait on the caller's Clock instead of a detached runFork (#1855 wave 8 register)."
     },
     {
-      "id": "EV009:apps/professional-desktop/test/sync-atoms.test.ts:55:it.live@2#1",
-      "lens": "resource",
-      "ruleId": "EV009",
-      "package": "@beep/professional-desktop",
-      "file": "apps/professional-desktop/test/sync-atoms.test.ts",
-      "line": 55,
-      "endLine": 92,
-      "symbol": "it.live",
-      "occurrence": "v2:14bf856a354b2adf88b399cd03f76fc0a22c9ca3a656266bcff35dfb7dee8342",
-      "class": "unjustified-live-test",
-      "evidence": "it.live( \"runs different workspace command families independently\", Effect.fnUntraced(function* () { const releaseA = yield* Deferred.make<void>(); const releaseB = yield* Deferred.make<void>(); const",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The test waits for state in an independently built AtomRegistry runtime that TestClock cannot drive; the wait subscribes through AtomRegistry.toStream with the original predicate and a three-second live timeoutOrElse watchdog (goals/effect-vitest-canon/research/desktop-subscription-waits-proof.md). Owner: @beep/professional-desktop. Exit: retire when AtomRegistry runtimes built in a test can be driven by the test's TestClock (#1855 wave 8 register)."
-    },
-    {
-      "id": "EV009:apps/professional-desktop/test/sync-atoms.test.ts:94:it.live@2#1",
-      "lens": "resource",
-      "ruleId": "EV009",
-      "package": "@beep/professional-desktop",
-      "file": "apps/professional-desktop/test/sync-atoms.test.ts",
-      "line": 94,
-      "endLine": 134,
-      "symbol": "it.live",
-      "occurrence": "v2:f241cffc6aaffe32bb49c349e6e56265e412df49d4a7254f0ba7250fb0b2aaba",
-      "class": "unjustified-live-test",
-      "evidence": "it.live( \"serializes a same-workspace review behind the active sync command\", Effect.fnUntraced(function* () { const releaseTrigger = yield* Deferred.make<void>(); const releaseReview = yield* Deferre",
-      "replacement": {
-        "primitive": "it.effect",
-        "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The test waits for state in an independently built AtomRegistry runtime that TestClock cannot drive; the wait subscribes through AtomRegistry.toStream with the original predicate and a three-second live timeoutOrElse watchdog (goals/effect-vitest-canon/research/desktop-subscription-waits-proof.md). Owner: @beep/professional-desktop. Exit: retire when AtomRegistry runtimes built in a test can be driven by the test's TestClock (#1855 wave 8 register)."
-    },
-    {
       "id": "EV009:packages/agents/client/test/run-turn-reconciliation.test.ts:130:it.live@2#1",
       "lens": "resource",
       "ruleId": "EV009",
