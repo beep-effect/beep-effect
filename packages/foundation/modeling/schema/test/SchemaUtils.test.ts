@@ -4,6 +4,7 @@ import { staticDescriptorInstaller } from "@beep/schema/SchemaUtils/internal/sta
 import { optionalDefect } from "@beep/schema/SchemaUtils/optionalDefect";
 import { alwaysEquivalent } from "@beep/schema/SchemaUtils/toEquivalence";
 import { it } from "@beep/test-runner";
+import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -48,6 +49,10 @@ describe("BoolKeyDefaultFalse and BoolKeyDefaultTrue", () => {
       });
     })
   );
+
+  it("decodes every schema-generated settings value back to itself", () => {
+    assertSchemaArbitraryDecodesToSelf(BoolKeySettings);
+  });
 });
 
 describe("alwaysEquivalent", () => {
