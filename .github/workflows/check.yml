@@ -185,7 +185,8 @@ jobs:
                   .workflow_runs[]
                   | select(.head_repository.full_name == $repo)
                   | select(any(.pull_requests[]?; .number == $pr))
-                  | select(.head_sha != null and .head_sha != $sha)
+                  | select(.head_sha | strings | test("^[0-9a-f]{40}$"))
+                  | select(.head_sha != $sha)
                   | .id | select(type == "number")' \
               | while read -r run_id; do
                   [[ -n "$run_id" ]] || continue

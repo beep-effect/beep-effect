@@ -304,14 +304,18 @@ it.effect(
     if [[ "$*" == *'status=queued'* ]]; then
       cat <<'RUNS'
 {"workflow_runs":[
-  {"id":101,"head_repository":{"full_name":"beep-effect/beep-effect"},"pull_requests":[{"number":2935}],"head_sha":"old-head"},
-  {"id":102,"head_repository":{"full_name":"contributor/fork"},"pull_requests":[{"number":2935}],"head_sha":"old-head"},
-  {"id":103,"head_repository":{"full_name":"beep-effect/beep-effect"},"pull_requests":[{"number":99}],"head_sha":"old-head"},
-  {"id":104,"head_repository":{"full_name":"beep-effect/beep-effect"},"head_sha":"old-head"},
-  {"id":105,"pull_requests":[{"number":2935}],"head_sha":"old-head"},
-  {"id":106,"head_repository":{"full_name":"beep-effect/beep-effect"},"pull_requests":[{"number":2935}],"head_sha":"fixture-head"},
+  {"id":101,"head_repository":{"full_name":"beep-effect/beep-effect"},"pull_requests":[{"number":2935}],"head_sha":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+  {"id":102,"head_repository":{"full_name":"contributor/fork"},"pull_requests":[{"number":2935}],"head_sha":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+  {"id":103,"head_repository":{"full_name":"beep-effect/beep-effect"},"pull_requests":[{"number":99}],"head_sha":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+  {"id":104,"head_repository":{"full_name":"beep-effect/beep-effect"},"head_sha":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+  {"id":105,"pull_requests":[{"number":2935}],"head_sha":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},
+  {"id":106,"head_repository":{"full_name":"beep-effect/beep-effect"},"pull_requests":[{"number":2935}],"head_sha":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
   {"id":107,"head_repository":{"full_name":"beep-effect/beep-effect"},"pull_requests":[{"number":2935}]},
-  {"head_repository":{"full_name":"beep-effect/beep-effect"},"pull_requests":[{"number":2935}],"head_sha":"old-head"}
+  {"id":108,"head_repository":{"full_name":"beep-effect/beep-effect"},"pull_requests":[{"number":2935}],"head_sha":""},
+  {"id":109,"head_repository":{"full_name":"beep-effect/beep-effect"},"pull_requests":[{"number":2935}],"head_sha":null},
+  {"id":110,"head_repository":{"full_name":"beep-effect/beep-effect"},"pull_requests":[{"number":2935}],"head_sha":123},
+  {"id":111,"head_repository":{"full_name":"beep-effect/beep-effect"},"pull_requests":[{"number":2935}],"head_sha":"malformed"},
+  {"head_repository":{"full_name":"beep-effect/beep-effect"},"pull_requests":[{"number":2935}],"head_sha":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}
 ]}
 RUNS
     else
@@ -334,7 +338,7 @@ fi`;
           GH_TOKEN: "fixture",
           HEAD_REF: "main",
           PR_NUMBER: "2935",
-          HEAD_SHA: "fixture-head",
+          HEAD_SHA: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         },
         stdout: "pipe",
         stderr: "pipe",
