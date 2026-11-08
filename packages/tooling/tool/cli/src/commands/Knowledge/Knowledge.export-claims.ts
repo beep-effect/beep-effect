@@ -19,6 +19,23 @@ const isRegularBlob = (entry: KnowledgeTrackedEntry): boolean => entry.mode === 
 const negativePackageClaimPrefix = (prefix: string): boolean =>
   /\b(?:not|no|never|without|remove|drop|avoid|proposed|planned|if|whether|could|would|might)\b[^.;|]*$/iu.test(prefix);
 
+// A wildcard spelling is ownership evidence only when its resolved target is tracked.
+const hasTrackedExportTarget = (
+  pkg: KnowledgeWorkspacePackage,
+  subpath: string,
+  entries: ReadonlyArray<KnowledgeTrackedEntry>
+): boolean =>
+  O.exists(matchKnowledgeEntrypoint(pkg.entrypoints, subpath), (entry) =>
+    O.exists(
+      entry.target,
+      (target) =>
+        (Str.isEmpty(pkg.root) || Str.startsWith(`${pkg.root}/`)(target)) &&
+        !/[\\*?#]/u.test(target) &&
+        A.some(entries, (tracked) => tracked.path === target && isRegularBlob(tracked)) &&
+        !A.some(entries, (tracked) => !isRegularBlob(tracked) && Str.startsWith(`${tracked.path}/`)(target))
+    )
+  );
+
 /**
  * Proves affirmative relative export claims using document ownership and tracked package targets.
  *
@@ -77,20 +94,8 @@ export const verifiedPackageExportColumns: {
           )
             return O.none();
           if (A.isReadonlyArrayNonEmpty(localOwners) && localOwners.length !== 1) return O.none();
-          const matches = A.filter(owners, (pkg) => O.isSome(matchKnowledgeEntrypoint(pkg.entrypoints, inline.span)));
-          if (matches.length !== 1) return O.none();
-          return O.flatMap(A.head(matches), (pkg) =>
-            O.flatMap(matchKnowledgeEntrypoint(pkg.entrypoints, inline.span), (entry) =>
-              O.flatMap(entry.target, (target) =>
-                (Str.isEmpty(pkg.root) || Str.startsWith(`${pkg.root}/`)(target)) &&
-                !/[\\*?#]/u.test(target) &&
-                A.some(entries, (tracked) => tracked.path === target && isRegularBlob(tracked)) &&
-                !A.some(entries, (tracked) => !isRegularBlob(tracked) && Str.startsWith(`${tracked.path}/`)(target))
-                  ? O.some(inline.column)
-                  : O.none()
-              )
-            )
-          );
+          const matches = A.filter(owners, (pkg) => hasTrackedExportTarget(pkg, inline.span, entries));
+          return matches.length === 1 ? O.some(inline.column) : O.none();
         })
       )
     );

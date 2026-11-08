@@ -61,6 +61,19 @@ describe("knowledge doctor proven package export context", () => {
         }
       })
     );
+    it.effect("counts only tracked wildcard targets when proving unique document ownership", () =>
+      Effect.gen(function* () {
+        const wildcard = {
+          ...files,
+          "packages/wild/package.json": '{"name":"@beep/wild","exports":{"./*":"./src/*.ts"}}',
+        };
+        const text = `${named}Also \`@beep/wild\`.\n${claim}`;
+        const proved = yield* scan(text, wildcard);
+        assert.deepStrictEqual(proved.findings, []);
+        const ambiguous = yield* scan(text, { ...wildcard, "packages/wild/src/Sub.ts": "export const Sub = 2;" });
+        assert.isTrue(A.some(ambiguous.findings, (row) => row.finding.kind === "broken-tracked-path"));
+      })
+    );
     it.effect("fails closed for missing targets and reports neighboring missing paths", () =>
       Effect.gen(function* () {
         const missing = yield* scan(`${named}${claim}`, R.remove(files, "packages/demo/src/Sub.ts"));

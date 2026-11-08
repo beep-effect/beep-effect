@@ -299,6 +299,25 @@ describe("knowledge semantic-delta proven package exports", () => {
         }
       })
     );
+    it.effect("ignores unresolved wildcard owners but keeps real target ambiguity governed", () =>
+      Effect.gen(function* () {
+        const wildcard = {
+          ...files,
+          "packages/wild/package.json": '{"name":"@beep/wild","exports":{"./*":"./src/*.ts"}}',
+        };
+        const text = `${named}Also \`@beep/wild\`.\n${claim}`;
+        const proved = yield* scan(fixture(wildcard, { ...wildcard, "docs/guide.md": text }));
+        expect(proved.introduced).toEqual([]);
+        const ambiguous = yield* scan(
+          fixture(wildcard, {
+            ...wildcard,
+            "packages/wild/src/Sub.ts": "export const Sub = 2;",
+            "docs/guide.md": text,
+          })
+        );
+        assert.isTrue(A.some(ambiguous.introduced, (row) => row.kind === "broken-tracked-path"));
+      })
+    );
     it.effect("keeps unproven, negative, ambiguous and ordinary file claims governed", () =>
       Effect.gen(function* () {
         const other = {
