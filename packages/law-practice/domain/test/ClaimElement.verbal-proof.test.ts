@@ -1,5 +1,6 @@
 import {
   ClaimFiniteSourceProof,
+  ClaimHeadTerminalEvidence,
   ClaimLexicalEvidence,
   ClaimLexicalToken,
   ClaimSourceProofOrdinal,
@@ -15,6 +16,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import { roleEvidenceOf } from "./helpers/ClaimElementRoleInspection.ts";
 import { assertClaimReservationPrefixes } from "./helpers/ClaimElementWorkAssertions.ts";
 
@@ -31,7 +33,10 @@ const lexical = HashMap.make(
   ["which", { pos: "PRON", lemma: "which" }],
   ["plates", { pos: "NOUN", lemma: "plate" }],
   ["rotates", { pos: "VERB", lemma: "rotate" }],
-  ["presses", { pos: "VERB", lemma: "press" }]
+  ["presses", { pos: "VERB", lemma: "press" }],
+  ["its", { pos: "DET", lemma: "its" }],
+  ["7x", { pos: "NUM", lemma: "7x" }],
+  ["shafts", { pos: "NOUN", lemma: "shaft" }]
 );
 const registry = (body: string) => {
   const preamble = "A system";
@@ -211,6 +216,148 @@ describe("independent nominal boundary witnesses", () => {
           validate([...fixture.proofs, ClaimFiniteSourceProof.cases.boundary.make({ ...proof, token: nominal })])
         );
         assert.isTrue(validate([...fixture.proofs, proof]));
+      })
+    );
+});
+
+const openingRows = [
+  { mode: "determiner", body: "a plate.", core: "a plate", first: "a", terminal: "plate", witness: "a" },
+  { mode: "quantity", body: "two plates.", core: "two plates", first: "two", terminal: "plates", witness: "two" },
+  { mode: "unknown-number", body: "7x plates.", core: "7x plates", first: "7x", terminal: "plates", witness: "7x" },
+  { mode: "possessive", body: "its plate.", core: "its plate", first: "its", terminal: "plate", witness: "its" },
+  { mode: "qualified-start", body: "plate.", core: "plate", first: "plate", terminal: "plate", witness: "plate" },
+  {
+    mode: "preposition-object",
+    body: "a plate on the frame.",
+    core: "the frame",
+    first: "the",
+    terminal: "frame",
+    witness: "on",
+  },
+  {
+    mode: "list-item",
+    body: "a plate; the cover.",
+    core: "the cover",
+    first: "the",
+    terminal: "cover",
+    witness: ";",
+    witnessMode: "separator",
+  },
+  {
+    mode: "lexical-object",
+    body: "a plate rotates quickly shafts.",
+    core: "shafts",
+    first: "shafts",
+    terminal: "shafts",
+    witness: "rotates",
+    witnessMode: "finite",
+    adjunct: "quickly",
+  },
+] as const;
+type OpeningRow = (typeof openingRows)[number];
+const openedHead = (row: OpeningRow) => {
+  const fixture = registry(row.body);
+  const proofs: Array<ClaimFiniteSourceProof> = [...fixture.proofs];
+  const coreStart = A.get(fixture.tokens, fixture.tokenRef(row.first).ordinal - 1).pipe(O.getOrThrow).anchor.startChar;
+  const closingBoundary = ClaimFiniteSourceProof.cases.boundary.make({
+    ordinal: ClaimSourceProofOrdinal.make(proofs.length + 1),
+    mode: "terminal",
+    token: fixture.tokenRef("."),
+    scope: fixture.bodyScope,
+    successor: O.none(),
+  });
+  proofs.push(closingBoundary);
+  let evidence: ReadonlyArray<ClaimSourceProofRef> = [fixture.tokenRef(row.witness)];
+  if (row.mode === "qualified-start") evidence = [fixture.bodyScope];
+  if ("witnessMode" in row) {
+    const boundary = ClaimFiniteSourceProof.cases.boundary.make({
+      ordinal: ClaimSourceProofOrdinal.make(proofs.length + 1),
+      mode: row.witnessMode,
+      token: fixture.tokenRef(row.witness),
+      scope: fixture.bodyScope,
+      successor: O.none(),
+    });
+    proofs.push(boundary);
+    evidence = [ClaimSourceProofRef.make({ ordinal: boundary.ordinal, slot: "boundary" })];
+    if ("adjunct" in row) evidence = [...evidence, fixture.tokenRef(row.adjunct)];
+  }
+  const opening = ClaimFiniteSourceProof.cases.opening.make({
+    ordinal: ClaimSourceProofOrdinal.make(proofs.length + 1),
+    mode: row.mode,
+    coreStart,
+    scope: fixture.bodyScope,
+    evidence,
+  });
+  proofs.push(opening);
+  const core = TextAnchor.make({ startChar: coreStart, endChar: coreStart + row.core.length, quote: row.core });
+  const closure = ClaimFiniteSourceProof.cases.closure.make({
+    ordinal: ClaimSourceProofOrdinal.make(proofs.length + 1),
+    coreEnd: core.endChar,
+    scope: fixture.bodyScope,
+    boundary: O.some(ClaimSourceProofRef.make({ ordinal: closingBoundary.ordinal, slot: "boundary" })),
+    gap: O.none(),
+  });
+  proofs.push(closure);
+  const terminal = fixture.tokenRef(row.terminal);
+  const head = A.get(fixture.tokens, terminal.ordinal - 1).pipe(O.getOrThrow).anchor;
+  proofs.push(
+    ClaimFiniteSourceProof.cases.head.make({
+      ordinal: ClaimSourceProofOrdinal.make(proofs.length + 1),
+      core,
+      head,
+      terminal,
+      opening: ClaimSourceProofRef.make({ ordinal: opening.ordinal, slot: "opening" }),
+      closure: ClaimSourceProofRef.make({ ordinal: closure.ordinal, slot: "closure" }),
+      terminalEvidence: ClaimHeadTerminalEvidence.cases["lexical-terminal"].make({}),
+      tokens: A.filterMap(fixture.tokens, (token, index) =>
+        token.anchor.startChar >= core.startChar && token.anchor.endChar <= core.endChar
+          ? Result.succeed(
+              ClaimSourceProofRef.make({ ordinal: ClaimSourceProofOrdinal.make(index + 1), slot: "token" })
+            )
+          : Result.failVoid
+      ),
+    })
+  );
+  return { fixture, opening, proofs };
+};
+
+describe("nominal opening source positions and ranked witnesses", () => {
+  for (const row of openingRows)
+    it.effect(`binds the actual ${row.mode} opening to a complete synthetic head`, () =>
+      Effect.sync(() => {
+        const { fixture, opening, proofs } = openedHead(row);
+        const validate = (certificates: ReadonlyArray<ClaimFiniteSourceProof>) =>
+          validateClaimFiniteSourceProofs(fixture.claim, fixture.tokens, certificates, [], () => true);
+        assert.isTrue(validate(proofs));
+        assertClaimReservationPrefixes((charge) =>
+          validateClaimFiniteSourceProofs(fixture.claim, fixture.tokens, proofs, [], charge)
+        )(row.mode);
+        const wrongFirst = row.mode === "qualified-start" ? fixture.tokenRef(row.first) : fixture.bodyScope;
+        const corruptions = [
+          ClaimFiniteSourceProof.cases.opening.make({ ...opening, evidence: [] }),
+          ClaimFiniteSourceProof.cases.opening.make({
+            ...opening,
+            evidence: [wrongFirst, ...A.drop(opening.evidence, 1)],
+          }),
+          ClaimFiniteSourceProof.cases.opening.make({ ...opening, scope: fixture.tokenRef(row.first) }),
+          ClaimFiniteSourceProof.cases.opening.make({ ...opening, scope: fixture.transitionScope }),
+          ClaimFiniteSourceProof.cases.opening.make({ ...opening, coreStart: fixture.claim.claimText.length }),
+        ];
+        for (const corrupted of corruptions)
+          assert.isFalse(validate(A.map(proofs, (proof) => (proof.ordinal === opening.ordinal ? corrupted : proof))));
+        if (row.mode === "lexical-object") {
+          const missingAdjunct = ClaimFiniteSourceProof.cases.opening.make({
+            ...opening,
+            evidence: A.take(opening.evidence, 1),
+          });
+          const foreignAdjunct = ClaimFiniteSourceProof.cases.opening.make({
+            ...opening,
+            evidence: [A.head(opening.evidence).pipe(O.getOrThrow), fixture.bodyScope],
+          });
+          for (const corrupted of [missingAdjunct, foreignAdjunct])
+            assert.isFalse(validate(A.map(proofs, (proof) => (proof.ordinal === opening.ordinal ? corrupted : proof))));
+        }
+        assert.isTrue(validate(proofs));
       })
     );
 });
