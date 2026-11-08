@@ -9,10 +9,10 @@
   "reviews": {
     "//": {
       "reviewer": "Codex GPT-6.1-Sol medium, citation-extraction-engine",
-      "reason": "Record the five audited server dependency/reference drifts plus review-only root/new-driver source drift from the selected recognizer workspace. The eight new driver tasks are explicitly uncached. Existing commands, cache flags, outputs, environment, epoch and qualification scope are unchanged; no qualification or exception is granted.",
+      "reason": "Refresh the recorded recognizer dependency review after Syncpack workspace specifier normalization and the main-owned two MemoryStats inputs on repo-cli policy fingerprinting. Existing commands, cache flags, outputs, environment, epoch and qualification scope are unchanged. No qualification or exception is granted.",
       "basis": {
         "path": "goals/citation-extraction-engine/research/2026-11-08-recognizer-cache-review.md",
-        "sha256": "770f93cf963f77ff4e482337d1c0d188fa4ee1d074fca7a03f3aff08c606f60d"
+        "sha256": "da0afcc4823529e1e27638637aaab704f1012d377244a8cdde9af50180ceb7d4"
       }
     },
     "@beep/acp": {
@@ -505,10 +505,10 @@
     },
     "@beep/eyecite": {
       "reviewer": "Codex GPT-6.1-Sol medium, citation-extraction-engine",
-      "reason": "Record the five audited server dependency/reference drifts plus review-only root/new-driver source drift from the selected recognizer workspace. The eight new driver tasks are explicitly uncached. Existing commands, cache flags, outputs, environment, epoch and qualification scope are unchanged; no qualification or exception is granted.",
+      "reason": "Refresh the recorded recognizer dependency review after Syncpack workspace specifier normalization and the main-owned two MemoryStats inputs on repo-cli policy fingerprinting. Existing commands, cache flags, outputs, environment, epoch and qualification scope are unchanged. No qualification or exception is granted.",
       "basis": {
         "path": "goals/citation-extraction-engine/research/2026-11-08-recognizer-cache-review.md",
-        "sha256": "770f93cf963f77ff4e482337d1c0d188fa4ee1d074fca7a03f3aff08c606f60d"
+        "sha256": "da0afcc4823529e1e27638637aaab704f1012d377244a8cdde9af50180ceb7d4"
       }
     },
     "@beep/fc-runs": {
@@ -697,10 +697,10 @@
     },
     "@beep/law-practice-server": {
       "reviewer": "Codex GPT-6.1-Sol medium, citation-extraction-engine",
-      "reason": "Record the five audited server dependency/reference drifts plus review-only root/new-driver source drift from the selected recognizer workspace. The eight new driver tasks are explicitly uncached. Existing commands, cache flags, outputs, environment, epoch and qualification scope are unchanged; no qualification or exception is granted.",
+      "reason": "Refresh the recorded recognizer dependency review after Syncpack workspace specifier normalization and the main-owned two MemoryStats inputs on repo-cli policy fingerprinting. Existing commands, cache flags, outputs, environment, epoch and qualification scope are unchanged. No qualification or exception is granted.",
       "basis": {
         "path": "goals/citation-extraction-engine/research/2026-11-08-recognizer-cache-review.md",
-        "sha256": "770f93cf963f77ff4e482337d1c0d188fa4ee1d074fca7a03f3aff08c606f60d"
+        "sha256": "da0afcc4823529e1e27638637aaab704f1012d377244a8cdde9af50180ceb7d4"
       }
     },
     "@beep/law-practice-tables": {
@@ -1216,11 +1216,11 @@
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Claude Opus 5.5 (goals/scripts-to-beep-cli PR 1, #2860)",
-      "reason": "Re-record this PR's root prepare swap to beep toolchain prune-tsgo-backups, the repo-cli changeset formatter dev dependencies and beep:check script, and the regenerated policy-fingerprint seals on top of main after #2881, #2859 and #2863 (97a7bb87f4); no command, input, output, env or cache flag changes and no qualification is granted.",
+      "reviewer": "Codex GPT-6.1-Sol medium, citation-extraction-engine",
+      "reason": "Refresh the recorded recognizer dependency review after Syncpack workspace specifier normalization and the main-owned two MemoryStats inputs on repo-cli policy fingerprinting. Existing commands, cache flags, outputs, environment, epoch and qualification scope are unchanged. No qualification or exception is granted.",
       "basis": {
-        "path": "goals/scripts-to-beep-cli/research/cache-baseline-review-pr1.md",
-        "sha256": "910deea915420b8f5e03f5a4a8e878bb62bdc35e9e03fb3d6215afec3d912540"
+        "path": "goals/citation-extraction-engine/research/2026-11-08-recognizer-cache-review.md",
+        "sha256": "da0afcc4823529e1e27638637aaab704f1012d377244a8cdde9af50180ceb7d4"
       }
     },
     "@beep/repo-cli-kit": {
@@ -128729,7 +128729,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "a92c0a0ca05b8f754f2e93aa2add5eb5b9d5667e90975fea14e423ce05a208c5"
+        "sha256": "166b31fcbc0338bbfd3084701e5927a84efc103ac9f41e7b2c0027c027926b0f"
       }
     ]
   }

@@ -17,7 +17,7 @@ inputs and local authority relationships. Every quote is produced through the
 published genuine source/anchor verifier, not decoded from a receipt. This is a
 finite reviewed-profile result, not a general accuracy claim.
 
-`CitationExtractorControls.test.ts` has nine passing controls. Caller/source
+`CitationExtractorControls.test.ts` has eleven passing controls. Caller/source
 mismatch and source prerequisite failure refuse before parser spawn. Real parser
 candidate, mention, authority and aggregate quoted-text exhaustion refuse the
 whole result after independently observed physical retirement. A diagnostic
@@ -32,13 +32,15 @@ fixtures. The block runs after a real direct recognizer call; it demonstrates
 supervisor responsiveness and retirement, not a measured pathological donor
 regex. All discovery/profile calls use the real pinned recognizer.
 
-The final two-file public suite passes 11 tests. A combined six-file run also
+The final two-file public suite passes 13 tests. A combined six-file run also
 passes 34 tests across public extraction, controls, legacy/new artifact identity,
-legacy public engine composition and native admission. The fourth quoted-text
-budget control was added after that combined run and is covered by the final
-11-test public run. The separate worker/socket/process run passes 21 tests;
-report/error contracts pass four tests. No combined coverage percentage is
-claimed.
+legacy public engine composition and native admission. The quoted-text,
+aggregate-only budget and blank-page regression
+controls were added after that combined run and are covered by the final
+13-test public run. The separate worker/socket/process run passes 21 tests;
+report/error contracts pass four tests. The driver has four passing tests,
+including absent-page preservation without refusing other citations. No combined
+coverage percentage is claimed.
 
 ## Identity, prerequisites and installation
 
@@ -49,6 +51,11 @@ version. The new report names those actual profile/recognizer/vocabulary
 versions and reports excluded recognizer tokens without claiming exhaustive
 outside-profile discovery. No Python oracle, invented confidence or selected
 reporter edition is asserted. Unknown edition candidates remain absent.
+
+Blank case pages remain explicit absent semantic components and occurrence-unique
+authorities under the existing identity owner. They do not refuse the rest of
+the document. The aggregate-only budget control gives each possible quote a
+ceiling equal to the entire source length, then proves their sum is refused.
 
 The installer must authenticate its implementation/runtime and supply the
 correct worker launch capability. Hashing configuration commits those claims;

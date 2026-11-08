@@ -12,6 +12,10 @@ It missed both explicit mentions in each public bare-USC and bare-CFR context
 and the repeated bare-CFR row. Empty input failed. Ambiguous-short preserved
 ambiguity; ambiguous-supra incorrectly resolved to the first Alpha authority.
 The second full citation's party metadata did not preserve its Alpha plaintiff.
+The native Layer also emits and resolves outside-profile 42 U.S.C. and journal
+citations; the bounded profile expects neither. In public-short-roe it retains
+page 154 but loses the labeled pin 154–155. These additional disagreements are
+retained in native.observed.json.
 The native projection retains counts, fields and links. Its opaque proof objects
 were redacted by JSON serialization, so it does not establish exact native ranges.
 This is actual Layer execution with test host dependencies, not deployment proof.
@@ -41,7 +45,10 @@ The existing engine has been measured and is preserved; no API is retired here.
 
 The Effect 4.1.2 source audit identifies RpcServer.layerProtocolStdio and
 RpcSerialization.layerSchemaBinary as supplied transport/codec machinery.
-RpcClient.Protocol.make provides the narrow parent process-stream adapter point.
+The implemented parent route uses NativeSocket with Socket.make and
+RpcClient.makeProtocolSocket; the Protocol.make direction is superseded because
+it would require unchecked parser-message envelope adaptation. See the later
+[transport receipt](../2026-11-08-six-form-link-transport.md).
 ChildProcess killSignal and forceKillAfter configure shutdown; the existing
 owner supplies separate physical-exit observation and quarantined permits.
 NodeWorker/BunWorker have a hardcoded five-second graceful policy in this version.

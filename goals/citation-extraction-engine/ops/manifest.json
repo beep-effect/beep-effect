@@ -11,7 +11,7 @@
   "packetPath": "goals/citation-extraction-engine",
   "lifecycle": "active",
   "mission": "Deliver bounded six-form citation extraction and document-local linking on supplied plain text, with schema-first semantic values, exact verified source anchors, explicit ambiguity and Effect-native resource boundaries.",
-  "statusNote": "PR #2966 carries the approved six-form contract and pinned eyecite-ts0.34.2 driver. The actual CitationExtractorLive now passes all29 frozen inputs/33 occurrences on Bun and Node with verified source/component anchors and strict local links. Nine public controls cover source/prerequisite refusal, candidate/mention/authority/quoted-text budgets, late diagnostics, captured services, deadlines and cancellation with independent retirement. Legacy APIs remain available. Focused types/tests/laws/JSDoc and zero-finding Fallow audit/health pass; hosted exact-head proof, review, reflection closeout and retained merge remain open. No historical exhaustive row is promoted.",
+  "statusNote": "PR #2966 carries the approved six-form contract and pinned eyecite-ts 0.34.2 driver. The actual CitationExtractorLive now passes all 29 frozen inputs/33 occurrences on Bun and Node with verified source/component anchors and strict local links. Eleven public controls cover source/prerequisite refusal, candidate/mention/authority/quoted-text budgets, late diagnostics, captured services, deadlines and cancellation with independent retirement. Legacy APIs remain available. Focused types/tests/laws/JSDoc and zero-finding Fallow audit/health pass; hosted exact-head proof, review, reflection closeout and retained merge remain open. No historical exhaustive row is promoted.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {

@@ -25,6 +25,7 @@ import * as Path from "effect/Path";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 import {
@@ -136,6 +137,33 @@ it.layer(testLayer, { excludeTestServices: true })("public extractor refusal con
       })
     );
   }
+  it.effect("refuses aggregate evidence even when every original-source quote fits individually", () =>
+    Effect.gen(function* () {
+      const text = "35 U.S.C. 101";
+      // Every verified slice is bounded by the original source, so each fits this
+      // ceiling. The primary plus component slices together exceed it.
+      const control = yield* fixture(text, { limits: { producedTextUtf16: Str.length(text) } });
+      const failure = yield* control.extractor.extract(control.input).pipe(Effect.flip);
+      expect(failure).toMatchObject({
+        _tag: "CitationSafetyLimitExceeded",
+        operation: "extract",
+        limit: "producedTextUtf16",
+      });
+      yield* expectPhysical(control.snapshot, 1);
+    })
+  );
+  it.effect("keeps a blank-page case and the rest of the document as verified occurrences", () =>
+    Effect.gen(function* () {
+      const control = yield* fixture("Foo v. Bar, 123 U.S. ___ (2020). 35 U.S.C. 101.");
+      const result = yield* control.extractor.extract(control.input);
+      expect(result.document.mentions).toHaveLength(2);
+      const first = O.getOrThrow(O.fromUndefinedOr(result.document.mentions[0]));
+      expect(first.citation.type).toBe("case");
+      expect(first.citation.components.page).toEqual(O.none());
+      expect(result.report.outsideProfile).toBe(0);
+      yield* expectPhysical(control.snapshot, 1);
+    })
+  );
   it.effect("maps a real late worker diagnostic to a source-free public refusal after retirement", () =>
     Effect.gen(function* () {
       const control = yield* fixture("35 U.S.C. 101", {

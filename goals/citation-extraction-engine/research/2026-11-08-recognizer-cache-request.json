@@ -1,14 +1,19 @@
 {
-  "previous": "d14f9e948ee5f2734d9ed5dadd679d6c7b0554f85939e7d6a5cb0dcf28a44867",
+  "previous": "342e0a2ae8cea0cd120d89e7ddc0a63074b8a6fb4d4a1088ebe91dd887bbcd37",
   "review": {
     "reviewer": "Codex GPT-6.1-Sol medium, citation-extraction-engine",
-    "reason": "Record the five audited server dependency/reference drifts plus review-only root/new-driver source drift from the selected recognizer workspace. The eight new driver tasks are explicitly uncached. Existing commands, cache flags, outputs, environment, epoch and qualification scope are unchanged; no qualification or exception is granted.",
+    "reason": "Refresh the recorded recognizer dependency review after Syncpack workspace specifier normalization and the main-owned two MemoryStats inputs on repo-cli policy fingerprinting. Existing commands, cache flags, outputs, environment, epoch and qualification scope are unchanged. No qualification or exception is granted.",
     "basis": {
       "path": "goals/citation-extraction-engine/research/2026-11-08-recognizer-cache-review.md",
-      "sha256": "770f93cf963f77ff4e482337d1c0d188fa4ee1d074fca7a03f3aff08c606f60d"
+      "sha256": "da0afcc4823529e1e27638637aaab704f1012d377244a8cdde9af50180ceb7d4"
     }
   },
-  "subjects": ["//", "@beep/eyecite", "@beep/law-practice-server"],
+  "subjects": [
+    "//",
+    "@beep/eyecite",
+    "@beep/law-practice-server",
+    "@beep/repo-cli"
+  ],
   "scope": ["@beep/identity#lint", "@beep/types#lint"],
   "profile": "local-linux-x64-bun1.4.4",
   "epoch": "qualification-v3"

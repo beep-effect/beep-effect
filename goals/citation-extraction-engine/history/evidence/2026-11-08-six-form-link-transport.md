@@ -43,7 +43,7 @@ Bun 1.4.4, Vitest 5.1.0, Effect/platform 4.1.2:
   error after a successful Echo fails the next pending call while the real child
   remains alive. A separate setup-failure control rejects the call promptly.
 - Full server source/test type checking passes with tsrs. Biome checks all six
-  changed implementation/test files. The strict resolver also replays all29
+  changed implementation/test files. The strict resolver also replays all 29
   frozen prototype inputs with zero field/range/link disagreements.
 
 Commands ran from the server package unless shown otherwise:

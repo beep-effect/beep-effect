@@ -68,9 +68,9 @@
     "eyecite-ts": "catalog:"
   },
   "devDependencies": {
+    "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
-    "bun-types": "catalog:",
-    "@effect/platform-node": "catalog:"
+    "bun-types": "catalog:"
   }
 }

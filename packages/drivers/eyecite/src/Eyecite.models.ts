@@ -90,7 +90,7 @@ const Case = S.Struct({
   ...common,
   volume: SourceText,
   reporter: SourceText,
-  page: SourceText,
+  page: optionalText,
   plaintiff: optionalText,
   defendant: optionalText,
   caseName: optionalText,

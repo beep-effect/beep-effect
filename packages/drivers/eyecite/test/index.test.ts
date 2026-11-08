@@ -77,6 +77,20 @@ layer(NodeFileSystem.layer)("pinned raw recognition", (it) => {
       expect(empty.tokens).toEqual([]);
     })
   );
+  it.effect("preserves an absent case page without refusing other citations", () =>
+    Effect.gen(function* () {
+      const output = yield* recognizeEyecite({
+        source: "Foo v. Bar, 123 U.S. ___ (2020). 35 U.S.C. 101.",
+        sourceUtf16: 100,
+        candidates: 10,
+      });
+      expect(output.tokens).toHaveLength(2);
+      const first = A.getUnsafe(output.tokens, 0);
+      expect(first.type).toBe("case");
+      if (first.type === "case") expect(first.page).toBeNull();
+      expect(A.getUnsafe(output.tokens, 1).type).toBe("statute");
+    })
+  );
   it.effect("uses provided codecs to preserve isolated UTF-16 surrogates on the wire", () =>
     Effect.gen(function* () {
       const input = yield* S.decodeUnknownEffect(S.toType(EyeciteRecognizeInput))({

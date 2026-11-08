@@ -18,7 +18,7 @@ is granted by this review.
 Build/check/doctest/test now resolve the new recognizer dependency and its
 upstream build. Deprecated-API lint reads the changed TypeScript dependency
 program. These are real input/graph changes; this request does not hide a test
-failure. The focused34 tests and full server source/test types pass; blocking
+failure. The 34 focused tests and full server source/test types pass; blocking
 package laws pass. Hosted broad proof remains pending.
 
 Exact reviewed current input bytes (SHA-256):
@@ -64,3 +64,29 @@ Additional exact reviewed input bytes (SHA-256):
   `e9da9c28882dcb7040c9d9cc2375fbc4a6edd0e1dcb9eb51fdd68ff8b43037e9`
 - `packages/drivers/eyecite/turbo.json`:
   `79f75a5991e21248a9bad352212ee7f26a773a52132aae01cf152fa460f83aee`
+
+## Review refresh after hosted CI and main integration
+
+The three workspace dependency specifiers now use `workspace:^`, as required by
+Syncpack. The dependency graph and task commands remain the same. The bytes
+above describe the original review; these current manifest hashes supersede
+those two manifest entries for this refresh. No qualification is added.
+
+Main integration also adds MemoryStats.schemas.ts and MemoryStats.service.ts to
+the existing inputs of `@beep/repo-cli#lint:policy-fingerprint:shared`. This
+main-owned input correction is recorded as subject `@beep/repo-cli`; its command,
+cache flag, outputs and environment are unchanged. The root Turbo source hash
+changes for this explicit two-input addition. No other task-setting change is
+introduced by this refresh.
+
+The driver's devDependencies are also alphabetized for Sherif. This changes only
+manifest ordering, not dependency versions, graph edges or task behavior.
+
+Refreshed exact input bytes (SHA-256):
+
+- `packages/drivers/eyecite/package.json`:
+  `3eaf9757db429f2fffad0ea6accab07f15a008455f4b6426affefbfa50af2c23`
+- `packages/law-practice/server/package.json`:
+  `41fd20481e22937291b8469f054d7b4ad633f4e1e58d882a0afa8c6f222724b9`
+- `turbo.json`:
+  `166b31fcbc0338bbfd3084701e5927a84efc103ac9f41e7b2c0027c027926b0f`
