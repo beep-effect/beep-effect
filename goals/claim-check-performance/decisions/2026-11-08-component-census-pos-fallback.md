@@ -1,7 +1,6 @@
 ---
 title: "Measure components first and bound the fallback with aligned part-of-speech"
 date: 2026-11-08
-lane: "goals/claim-check-performance-p1"
 reversal: "Revert the fallback commit and remove sourcePartOfSpeechGrammar; the census receipt stays as retained evidence."
 ---
 
