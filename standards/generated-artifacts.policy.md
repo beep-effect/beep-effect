@@ -37,7 +37,8 @@ scope — they are edited, not regenerated.
 - If a gate genuinely fails without a regen, stop: that means the artifact has
   become gating for unrelated drift. Land a dedicated
   `chore: refresh generated standards artifacts` PR from a clean `main`
-  checkout first, then rebase the feature branch.
+  checkout first. After that PR merges, merge `origin/main` into the feature
+  branch, preserving any published branch history.
 
 ## Evidence
 
