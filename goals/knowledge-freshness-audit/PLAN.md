@@ -359,6 +359,14 @@ Lane `codex/audit-validator-cli`
 
 Reverse: Revert this checkpoint and the three-line guard with its focused regression; retain private original audit evidence.
 
+### Escape control characters at the final flag output boundary, 2026-11-08
+
+Parent review validates that needed-evidence strings enter flags raw and the final CLI loop prints them raw, contrary to the existing safe_text flag-output contract. Reuse safe_text once at the final print boundary, preserving ordinary text and already-escaped text. A focused permanent CLI-boundary regression executes only the extracted pure formatter and output loop with an inert print sink; it passes after the fix and fails against the original rendering line. No full validator module, artifact-validation function, self-test suite or ontology artifacts were invoked. The argument-boundary regression also passes. P4 remains partial, with PM and ADHD held separately.
+
+Lane `codex/audit-validator-cli`
+
+Reverse: Revert the final print formatting call and its focused rendering regression if the boundary evidence is disproved; preserve all original reports and private counterfactual receipts.
+
 ### Make the negation fixture exercise the identifier guard, 2026-11-08
 
 Parent review validates that the existing positive negation-context criterion lacks the identifier token needed to enter the guarded branch. Strengthen that fixture sentence without changing validator logic. An isolated actual-condition probe with an inert diagnostic confirms the old fixture is unchanged when the negation exemption is deleted, while the revised fixture detects that mutation. The actual branch AST is unchanged; no validator function, ontology record, full module or self-test was executed by this probe. Whole self-test and integration coverage remain unproved; P4 stays partial and PM/ADHD holds stay separate.

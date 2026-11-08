@@ -3615,7 +3615,7 @@ if __name__ == "__main__":
     repo = argv[argv.index("--repo") + 1] if "--repo" in argv else None
     validate_dir(Path(argv[0]), gate=gate, repo=repo)
     for fl in flags:
-        print("FLAGGED -", fl)
+        print("FLAGGED -", safe_text(str(fl)))
     if errors:
         print(f"VIOLATIONS ({len(errors)}):")
         for e in errors:
