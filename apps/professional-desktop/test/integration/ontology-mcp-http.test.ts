@@ -1,7 +1,10 @@
-import { defaultPolicyRevision, EpistemicServerConfig } from "@beep/epistemic-config/server";
-import { fixtureAllowedDestination, makeEpistemicConfigTest } from "@beep/epistemic-config/test";
-import { verifyExecutionDecisionChain, verifyOutcomeBinding } from "@beep/epistemic-domain/values/ExecutionRecord";
-import { ExecutionLedger, ExecutionLedgerUnavailable } from "@beep/epistemic-use-cases/ExecutionLedger";
+import { defaultPolicyRevision, ExecutionAuthorityServerConfig } from "@beep/execution-authority-config/server";
+import { fixtureAllowedDestination, makeExecutionAuthorityConfigTest } from "@beep/execution-authority-config/test";
+import {
+  verifyExecutionDecisionChain,
+  verifyOutcomeBinding,
+} from "@beep/execution-authority-domain/entities/ExecutionRecord";
+import { ExecutionLedger, ExecutionLedgerUnavailable } from "@beep/execution-authority-use-cases/ExecutionLedger";
 import { ChangeOperation } from "@beep/ontology-domain/aggregates/Session";
 import {
   CapabilityMetadataResponse,
@@ -46,7 +49,10 @@ import {
   openThroughMcp,
   token,
 } from "./support/ontology-mcp-harness.ts";
-import type { ExecutionDecisionRecord, ExecutionOutcomeRecord } from "@beep/epistemic-domain/values/ExecutionRecord";
+import type {
+  ExecutionDecisionRecord,
+  ExecutionOutcomeRecord,
+} from "@beep/execution-authority-domain/entities/ExecutionRecord";
 
 const decodeCapabilityMetadataResponse = S.decodeUnknownEffect(CapabilityMetadataResponse);
 const encodeOntologySparqlQueryRequest = S.encodeUnknownEffect(OntologySparqlQueryRequest);
@@ -377,8 +383,8 @@ describe("professional desktop ontology MCP streamable HTTP mount", { concurrent
       makeHttpServerLayer({
         mutationsEnabled: true,
         approvedMutationTools: [ProposeChangeBatchTool.name],
-        epistemicConfig: makeEpistemicConfigTest(
-          EpistemicServerConfig.make({ destinationAllowlist: [], policyRevision: defaultPolicyRevision })
+        executionAuthorityConfig: makeExecutionAuthorityConfigTest(
+          ExecutionAuthorityServerConfig.make({ destinationAllowlist: [], policyRevision: defaultPolicyRevision })
         ),
       }),
       { timeout: "30 seconds" }

@@ -7,7 +7,6 @@
 
 import { ActionOutputs } from "@beep/github-actions/ActionOutputs";
 import { $RepoCliId } from "@beep/identity/packages";
-import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { formatDurationSeconds, makeTaggedLogger, printLines } from "@beep/repo-cli-kit/cli/Printer";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A, Str, thunkFalse } from "@beep/utils";
@@ -26,10 +25,12 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { CiCommandError, reportCiCommandError } from "./Ci.errors.ts";
 import { ciAdmissionCommand } from "./CiAdmission.ts";
+import { ciBootstrapCommands } from "./CiBootstrap.command.ts";
+import { writeCacheLocalSummary } from "./CiCacheLocalSummary.ts";
+import { runCachePilotInputs } from "./CiCachePilotInputs.ts";
+import { ciCompileBinaryCommand } from "./CiCompileBinary.ts";
 import { ciGovernanceCommands } from "./CiGovernance.ts";
 import { ciLaneCommand, ciLocalCommand } from "./CiLane.ts";
-import { CiResourceLane } from "./CiOperational.schemas.ts";
-import { CiOperational, CiOperationalLive } from "./CiOperational.service.ts";
 import { ciRerunRunnerLossCommand } from "./CiRerunRunnerLoss.ts";
 import { CiRunnerOutputsLive } from "./CiRunnerOutputs.ts";
 import { ciDependencyReviewCommand } from "./DependencyReviewCommand.ts";
@@ -345,60 +346,32 @@ const appendTurboSummaryCommand = Command.make(
   Command.provide(CiRunnerOutputsLive)
 );
 
-const operationalFailure = <A, R>(effect: Effect.Effect<A, CiCommandError, R>) =>
-  effect.pipe(
-    Effect.catchTag("CiCommandError", (error) =>
-      Console.error(error.message).pipe(Effect.andThen(failWithReportedExit(error.message)))
-    )
-  );
-const patternsCommand = Command.make(
-  "patterns",
-  { write: Flag.Boolean("write").pipe(Flag.withDefault(false)) },
-  ({ write }) => CiOperational.use((service) => operationalFailure(service.patterns(write)))
-).pipe(
-  Command.withDescription("Check the pre-runtime CI pattern projection, or regenerate with --write"),
-  Command.provide(CiOperationalLive)
-);
-const changeProfileCommand = Command.make(
-  "change-profile",
+// `${1:-default}`: an absent or empty positional takes the adapter's default.
+const positionalOr = (value: O.Option<string>, fallback: string) =>
+  O.getOrElse(O.filter(value, Str.isNonEmpty), () => fallback);
+
+const cachePilotInputsCommand = Command.make(
+  "cache-pilot-inputs",
   {
-    base: Argument.String("base").pipe(Argument.optional),
+    mode: Argument.String("mode").pipe(Argument.optional),
+    computation: Argument.String("computation").pipe(Argument.optional),
   },
-  Effect.fn("Ci.changeProfileCommand")(function* ({ base }) {
-    const defaultBase = yield* Config.String("GITHUB_BASE_REF").pipe(Config.withDefault("main"));
-    yield* CiOperational.use((service) =>
-      operationalFailure(service.changeProfile(O.getOrElse(base, () => `origin/${defaultBase}`)))
-    );
-  })
-).pipe(Command.withDescription("Export goals-only and desktop Rust lane profiles"), Command.provide(CiOperationalLive));
-const jobEnvironmentCommand = Command.make("job-env", {}, () =>
-  CiOperational.use((service) => operationalFailure(service.jobEnvironment))
-).pipe(
-  Command.withDescription("Append the trusted event's explicit environment inputs to GITHUB_ENV"),
-  Command.provide(CiOperationalLive)
-);
-const decodeCiRuntimeArguments = S.decodeUnknownEffect(S.Array(S.String));
-const runnerResourcesCommand = Command.make(
-  "runner-resources",
+  ({ mode, computation }) =>
+    runCachePilotInputs(positionalOr(mode, "signed"), positionalOr(computation, "@beep/identity#lint"))
+).pipe(Command.withDescription("Prepare the fixed full-pilot inputs of a hosted cache pilot job, without credentials"));
+
+const cacheLocalSummaryCommand = Command.make(
+  "cache-local-summary",
   {
-    lane: Argument.String("lane"),
-    command: Argument.String("command"),
-    args: Argument.String("args").pipe(Argument.variadic),
+    report: Flag.String("report").pipe(Flag.withDescription("Private local observation receipt")),
+    request: Flag.String("request").pipe(Flag.withDescription("Local pilot request the receipt answers")),
+    output: Flag.String("output").pipe(Flag.withDescription("Public summary to create (refuses an existing file)")),
+    revision: Flag.String("revision").pipe(Flag.withDescription("Observed source commit")),
+    channel: Flag.String("channel").pipe(Flag.withDescription("Native client channel")),
+    computation: Flag.String("computation").pipe(Flag.withDescription("Observed lint computation")),
   },
-  Effect.fn("Ci.runRunnerResources")(function* ({ lane, command, args }) {
-    if (!S.is(CiResourceLane)(lane)) return yield* failWithReportedExit("Invalid resource lane name", 64);
-    const values = yield* decodeCiRuntimeArguments(args).pipe(
-      CiCommandError.mapError("Runtime arguments must be strings.")
-    );
-    const status = yield* CiOperational.use((service) =>
-      operationalFailure(service.runnerResources(lane, command, values))
-    ).pipe(Effect.scoped);
-    if (status !== 0) return yield* failWithReportedExit("CI lane failed", status);
-  })
-).pipe(
-  Command.withDescription("Measure host resources around a command while preserving its status"),
-  Command.provide(CiOperationalLive)
-);
+  writeCacheLocalSummary
+).pipe(Command.withDescription("Project a private local cache observation onto bounded public digests and counts"));
 
 /**
  * CI helper command group.
@@ -420,11 +393,17 @@ export const ciCommand = Command.make("ci", {}, () =>
     "CI commands:",
     "- bun run beep ci admission [--event-name n] [--event-path p] [--base b] [--no-json] [--github-output]",
     "- bun run beep ci append-turbo-summary",
+    "- bun run beep ci change-profile [base] [head] (BEEP_CI_PR_BASE_SHA/BEEP_CI_PR_HEAD_SHA win)",
+    "- bun run beep ci compile-binary --outfile <path> [--target bun-linux-x64]",
     "- bun run beep ci dependency-review --base <sha> --head <sha>",
     "- bun run beep ci ruleset [--capture|--check]",
     "- bun run beep ci settings [--check]",
     "- bun run beep ci held-group",
+    "- bun run beep ci job-env",
+    "- bun run beep ci patterns [--write]",
     "- bun run beep ci pr-size <number>",
+    "- bun run beep ci prune-apt [sources-dir]",
+    "- bun run beep ci runner-resources <lane> <command> [args...]",
     "- bun run beep ci workflow-lint",
     "- bun run beep ci lane <id> [flags] (or --list)",
     "- bun run beep ci lane-timings [--runs n] [--tsv] or --window --since ISO --until ISO [--preview] [filters]",
@@ -435,10 +414,10 @@ export const ciCommand = Command.make("ci", {}, () =>
 ).pipe(
   Command.withDescription("Continuous integration helper commands"),
   Command.withSubcommands([
-    patternsCommand,
-    changeProfileCommand,
-    jobEnvironmentCommand,
-    runnerResourcesCommand,
+    ...ciBootstrapCommands,
+    cacheLocalSummaryCommand,
+    cachePilotInputsCommand,
+    ciCompileBinaryCommand,
     ...ciGovernanceCommands,
     ciAdmissionCommand,
     appendTurboSummaryCommand,

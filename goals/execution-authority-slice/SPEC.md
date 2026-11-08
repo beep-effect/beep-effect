@@ -51,7 +51,7 @@ Higher sources outrank lower sources when they conflict.
 - New packages `packages/execution-authority/{domain,use-cases,server,tables,config}`,
   created only with `bun run beep create-package`.
 - The execution modules in `packages/epistemic/{domain,use-cases,server,tables}`,
-  which move out, and `packages/epistemic/config`, which is retired.
+  which move out, and `@beep/epistemic-config`, which is retired.
 - `packages/_internal/db-admin`: the rename migration, its down-migration, the
   name-pinned tests and the schema composition.
 - `apps/professional-desktop`: imports, `src/runtime/Layer.ts`,
@@ -205,6 +205,70 @@ Reuse before recreate; copying without searching may trip the fallow duplication
 Lane `docs/execution-authority-home-exploration`
 
 Reverse: Promote the helper to a foundation package
+
+### Behavior proof is a committed observable-state recording, diffed pre and post move, 2026-11-07
+
+execution-authority-recording.pglite.test.ts drives the real desktop MCP transport over a migrated PGlite ledger: one allowed and one egress-denied publish. It records the sidecar bind host, verdict chains with verification results, outcome settlements, information_schema column pins, constraints and triggers. With EXECUTION_AUTHORITY_RECORDING_OUT set it writes JSON. research/recordings/pre-move.json (taken on cf46c70048) and post-move.json are identical after mapping the declared epistemic_execution_ prefix to execution_authority_.
+
+Lane `feat/execution-authority-slice`
+
+Reverse: Delete apps/professional-desktop/test/integration/execution-authority-recording.pglite.test.ts and the recordings
+
+### No desktop runtime Layer change: main.ts already composes ExecutionLedgerDrizzle, 2026-11-07
+
+EpistemicServerDrizzleLive no longer provides ExecutionLedger. apps/professional-desktop/src/runtime/Layer.ts only Layer.provides it to the contradiction QA seed, whose output never included the ledger, and server/main.ts already provides ExecutionLedgerDrizzle beside PgliteDrizzleLive to the governed MCP transport. Typecheck of @beep/professional-desktop and the four desktop integration suites confirm it.
+
+Lane `feat/execution-authority-slice`
+
+Reverse: Merge ExecutionLedgerDrizzle back into EpistemicServerDrizzleLive
+
+### ExecutionRecord lives under entities/; grants, grant sets and verdicts under values/, 2026-11-07
+
+SPEC Constraints classify decision and outcome records as entities. Domain and tables therefore export ./entities/ExecutionRecord and ./values/{ExecutionGrant,GrantSet,ExecutionVerdict}. Use-cases and server keep the epistemic concept folders (ExecutionLedger, GovernedTierGate, GovernedEgress), so the move stays a relocation. $I composer paths follow the new file paths. No test pins an execution identifier (RESEARCH section 6).
+
+Lane `feat/execution-authority-slice`
+
+Reverse: Move entities/ExecutionRecord back under values/ in domain and tables and update the export maps
+
+### Promote optionalDefect to @beep/schema SchemaUtils instead of copying it, 2026-11-07
+
+Search result (2026-11-07): no foundation helper combines `S.Defect` with `SchemaUtils.alwaysEquivalent` and `Effect.succeedNone`. The only equivalent is `law-practice/use-cases/src/internal/DefectCause.ts`, which another slice cannot import. A first copy into `@beep/execution-authority-use-cases` tripped the Fallow audit duplication gate (introduced clone `dup:f67f335a`, 6 lines). Following this decision's recorded reversal, the helper moves to `@beep/schema/SchemaUtils/optionalDefect`, and the epistemic internal copy is deleted. Its two consumers, `EdgeAuthority.errors.ts` and `ExecutionLedger.errors.ts`, import that subpath directly. The helper is deliberately left out of the `SchemaUtils` barrel: re-exporting it there made `@beep/storybook`'s stories typecheck lose `TaskList.make` and `TaskItem.make` on `@beep/md` (6 errors, reproduced deterministically; clean main and the subpath-only form both have 0). The law-practice `DefectCause` takes no description argument and stays out of scope.
+
+Lane `feat/execution-authority-slice`
+
+Reverse: Restore packages/epistemic/use-cases/src/internal/OptionalDefect.ts and an internal copy in @beep/execution-authority-use-cases, then drop SchemaUtils.optionalDefect
+
+### Rename migration covers named NOT NULL constraints; guard body unchanged; down.sql sits beside migration.sql, 2026-11-07
+
+The forward migration renames both tables, every constraint through one DO block (PostgreSQL 18 names NOT NULL constraints, which ALTER TABLE RENAME leaves alone; the block is a single line, safe for the LegacyStatementBoundary splitter), the four triggers and the guard function. The function body and its RAISE text are unchanged, so behavior stays byte-identical. down.sql is the exact inverse. The drizzle migrator and the desktop bundler read only migration.sql, so down.sql is never applied automatically. ExecutionAuthorityLedgerMigration.pglite.test.ts seeds a pre-move database with an allowed-denied-allowed chain and two outcomes, migrates it forward, verifies the chain and outcome bindings, runs down.sql and checks that the old names and row counts are back. The db-admin target is renamed to execution-authority-ledger with schemaName execution_authority.
+
+Lane `feat/execution-authority-slice`
+
+Reverse: Run drizzle/20261107032821_execution_authority_rename/down.sql, then delete the folder and re-sync the desktop bundle
+
+### Config symbols, span names and log subsystems take the slice name; digest prefixes stay frozen, 2026-11-07
+
+EpistemicConfig, EpistemicServerConfig and the rest become ExecutionAuthority*. Spans Epistemic.{ExecutionLedger,GovernedTierGate,GovernedEgress}.* become ExecutionAuthority.*, and log subsystems become execution_authority_governed_*, because the instrumentation catalog keys span names by owning package. Hash and digest inputs stay byte-identical: the three epistemic-*/v1 labels and the run-key prefixes epistemic-run/ and epistemic-egress/. Each now carries a comment explaining why.
+
+Lane `feat/execution-authority-slice`
+
+Reverse: Restore the Epistemic* config symbols, the Epistemic.* span names and the epistemic_governed_* subsystem annotations
+
+### research-intake-2026-11 routed 96 affirmative findings here, 2026-11-07
+
+The research-intake-2026-11 intake routed 211 findings to this packet (96 affirmative, 1 critiques or disputes; 169 public, the rest from the private partition and not quoted). Routing table and method: goals/research-intake-2026-11/research/ROUTING.md; per-finding rows with spans live in the research library, filtered by packet in goals/research-intake-2026-11/research/routing.jsonl. Contested claims, if any, are clustered in goals/research-intake-2026-11/research/CONTRADICTIONS.md. Strongest public evidence:
+
+- citesAsEvidence: https://github.com/beep-effect/beep-effect/blob/main/docs/ROADMAP.md — Approval is required for legal advice, filings, and client-visible outputs, defining an explicit execution-authority boundary.
+- supports: https://developer.nvidia.com/blog/nvidia-open-agent-safety-platform-a-reference-for-continuous-in-silicon-agent-monitoring/ — Principle 1: agent policy should be formally verified before execution.
+- usesMethodIn: https://arxiv.org/abs/2610.33489 — A product-lattice security property model of trust, sensitivity and capability, propagated over a unified dependence graph; applicable to agent execution authority modeling.
+- supports: https://www.artificiallawyer.com/2026/10/14/from-ai-tools-to-agentic-ai-a-roadmap/ — Agents should inherit the initiating lawyer's permissions, with ethical walls enforced at retrieval time.
+- supports: https://www.debevoisedatablog.com/2026/11/04/your-ai-agent-can-bind-you-a-governance-framework-for-autonomous-contracts/ — Authority limits for agents must be enforced by system permissions and technical controls, not by prompts alone.
+
+This amendment adds evidence only; it changes no acceptance criterion. The owning lane decides whether any finding changes its plan.
+
+Lane `feat/research-intake-2026-11`
+
+Reverse: Delete this decision file and regenerate the block; the findings stay in the library and in research-intake-2026-11/research/routing.jsonl
 
 ### Config follows its domain; the desktop composes the ledger; one atomic PR, 2026-11-07
 

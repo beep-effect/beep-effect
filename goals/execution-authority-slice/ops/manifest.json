@@ -34,7 +34,20 @@
     "goals/execution-authority-slice/GOAL.md",
     "goals/execution-authority-slice/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/cache-baseline-request-main-19c9aa06b0.json",
+    "research/cache-baseline-request-main-6c3a4b3d06.json",
+    "research/cache-baseline-request-main-de49e2a842.json",
+    "research/cache-baseline-request.json",
+    "research/cache-baseline-review-main-19c9aa06b0.md",
+    "research/cache-baseline-review-main-6c3a4b3d06.md",
+    "research/cache-baseline-review-main-de49e2a842.md",
+    "research/cache-baseline-review.md",
+    "research/p1-move-evidence.md",
+    "research/recordings/post-move.json",
+    "research/recordings/pre-move.json"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -50,12 +63,12 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",

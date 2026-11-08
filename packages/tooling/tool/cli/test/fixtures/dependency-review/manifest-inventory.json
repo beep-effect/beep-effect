@@ -550,7 +550,7 @@
       "classification": "production"
     },
     {
-      "path": "packages/epistemic/config/package.json",
+      "path": "packages/execution-authority/config/package.json",
       "source": "dependency-graph",
       "classification": "production"
     },

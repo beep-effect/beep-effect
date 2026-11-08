@@ -1,0 +1,23 @@
+{
+  "previous": "2c1be6c679009496631354e7eb1e0c439f6308f72c9e5d88b3dba8c9b7ba8ce6",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (goals/vault-sync-cutover PR 3b2)",
+    "reason": "Restore the PR 3b dependency-edge records for @beep/documents-server and @beep/documents-use-cases on top of #2863's re-recorded baseline. No command, input, output, env or cache flag changes, and no qualification is granted.",
+    "basis": {
+      "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-pr3b2-main.md",
+      "sha256": "8dbdd4fd5711c75a6c8550ed6c5c9989aa9ebfd6e6640bb46c4dfe90acc4f931"
+    }
+  },
+  "scope": [
+    "@beep/documents-server#build",
+    "@beep/documents-server#check",
+    "@beep/documents-server#lint:deprecated-apis",
+    "@beep/documents-server#test",
+    "@beep/documents-use-cases#build",
+    "@beep/documents-use-cases#check",
+    "@beep/documents-use-cases#lint:deprecated-apis",
+    "@beep/documents-use-cases#test"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

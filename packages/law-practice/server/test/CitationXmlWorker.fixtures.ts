@@ -36,7 +36,7 @@ export const installCitationXmlWorker = Effect.fn("XmlWorkerTest.install")(funct
   const setup = yield* setupCitationMetadataRuntime(kind, undefined, true);
   const runtime = yield* makeCitationXmlTestRuntime(kind);
   const worker = yield* makeCitationXmlWorker(setup.limits, runtime).pipe(Effect.provideContext(setup.provided));
-  return { ...setup, runtime, worker };
+  return { ...setup, regexRuntime: setup.runtime, runtime, worker };
 });
 /** @internal @category testing @since 0.0.0 */
 export const replayCitationXmlWorker = Effect.fn("XmlWorkerTest.replay")(function* (

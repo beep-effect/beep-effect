@@ -1,0 +1,4027 @@
+{
+  "canonicalPrivateOracleSha256": "987dbc0c9ca2ce9208b8e7cc817a58258fb3f297cf09665ffa92628a1f4b26ae",
+  "status": "10 unchanged synthetic route protocols with explicit injected nominal lexical witnesses; CRC is NOUN here, not an assertion about actual Wink PROPN support",
+  "cases": [
+    {
+      "case": "earlier-same-source-description",
+      "sourceContract": {
+        "case": "earlier-same-source-description",
+        "sources": [
+          {
+            "ordinal": 1,
+            "text": "A system comprising the plate is formed of plastic; the plastic is coloured.",
+            "refs": [],
+            "tokens": [
+              {
+                "startChar": 0,
+                "endChar": 1,
+                "quote": "A"
+              },
+              {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              },
+              {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              },
+              {
+                "startChar": 20,
+                "endChar": 23,
+                "quote": "the"
+              },
+              {
+                "startChar": 24,
+                "endChar": 29,
+                "quote": "plate"
+              },
+              {
+                "startChar": 30,
+                "endChar": 32,
+                "quote": "is"
+              },
+              {
+                "startChar": 33,
+                "endChar": 39,
+                "quote": "formed"
+              },
+              {
+                "startChar": 40,
+                "endChar": 42,
+                "quote": "of"
+              },
+              {
+                "startChar": 43,
+                "endChar": 50,
+                "quote": "plastic"
+              },
+              {
+                "startChar": 50,
+                "endChar": 51,
+                "quote": ";"
+              },
+              {
+                "startChar": 52,
+                "endChar": 55,
+                "quote": "the"
+              },
+              {
+                "startChar": 56,
+                "endChar": 63,
+                "quote": "plastic"
+              },
+              {
+                "startChar": 64,
+                "endChar": 66,
+                "quote": "is"
+              },
+              {
+                "startChar": 67,
+                "endChar": 75,
+                "quote": "coloured"
+              },
+              {
+                "startChar": 75,
+                "endChar": 76,
+                "quote": "."
+              }
+            ]
+          }
+        ],
+        "privateCandidate": "plastic first occurrence",
+        "publicReference": "the plastic later occurrence",
+        "privateBasis": true,
+        "result": "source-role-unresolved; no private endpoint"
+      },
+      "sources": [
+        {
+          "sourceOrdinal": 1,
+          "source": "A system comprising the plate is formed of plastic; the plastic is coloured.",
+          "references": [],
+          "tokens": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 1,
+                "quote": "A"
+              },
+              "pos": "DET",
+              "lemma": "a",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              },
+              "pos": "NOUN",
+              "lemma": "system",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              },
+              "pos": "VERB",
+              "lemma": "comprise",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 23,
+                "quote": "the"
+              },
+              "pos": "DET",
+              "lemma": "the",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 24,
+                "endChar": 29,
+                "quote": "plate"
+              },
+              "pos": "NOUN",
+              "lemma": "plate",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 30,
+                "endChar": 32,
+                "quote": "is"
+              },
+              "pos": "AUX",
+              "lemma": "be",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 33,
+                "endChar": 39,
+                "quote": "formed"
+              },
+              "pos": "VERB",
+              "lemma": "form",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 40,
+                "endChar": 42,
+                "quote": "of"
+              },
+              "pos": "ADP",
+              "lemma": "of",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 43,
+                "endChar": 50,
+                "quote": "plastic"
+              },
+              "pos": "NOUN",
+              "lemma": "plastic",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 50,
+                "endChar": 51,
+                "quote": ";"
+              },
+              "pos": "PUNCT",
+              "lemma": ";",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 52,
+                "endChar": 55,
+                "quote": "the"
+              },
+              "pos": "DET",
+              "lemma": "the",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 56,
+                "endChar": 63,
+                "quote": "plastic"
+              },
+              "pos": "NOUN",
+              "lemma": "plastic",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 64,
+                "endChar": 66,
+                "quote": "is"
+              },
+              "pos": "AUX",
+              "lemma": "be",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 67,
+                "endChar": 75,
+                "quote": "coloured"
+              },
+              "pos": "VERB",
+              "lemma": "colour",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 75,
+                "endChar": 76,
+                "quote": "."
+              },
+              "pos": "PUNCT",
+              "lemma": ".",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            }
+          ]
+        }
+      ],
+      "reference": {
+        "sourceOrdinal": 1,
+        "anchor": {
+          "startChar": 52,
+          "endChar": 63,
+          "quote": "the plastic"
+        }
+      }
+    },
+    {
+      "case": "actual-ancestor-description",
+      "sourceContract": {
+        "case": "actual-ancestor-description",
+        "sources": [
+          {
+            "ordinal": 1,
+            "text": "A system comprising the plate is formed of plastic.",
+            "refs": [],
+            "tokens": [
+              {
+                "startChar": 0,
+                "endChar": 1,
+                "quote": "A"
+              },
+              {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              },
+              {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              },
+              {
+                "startChar": 20,
+                "endChar": 23,
+                "quote": "the"
+              },
+              {
+                "startChar": 24,
+                "endChar": 29,
+                "quote": "plate"
+              },
+              {
+                "startChar": 30,
+                "endChar": 32,
+                "quote": "is"
+              },
+              {
+                "startChar": 33,
+                "endChar": 39,
+                "quote": "formed"
+              },
+              {
+                "startChar": 40,
+                "endChar": 42,
+                "quote": "of"
+              },
+              {
+                "startChar": 43,
+                "endChar": 50,
+                "quote": "plastic"
+              },
+              {
+                "startChar": 50,
+                "endChar": 51,
+                "quote": "."
+              }
+            ]
+          },
+          {
+            "ordinal": 2,
+            "text": "The system of claim 1, wherein the plastic is mounted.",
+            "refs": [1],
+            "tokens": [
+              {
+                "startChar": 0,
+                "endChar": 3,
+                "quote": "The"
+              },
+              {
+                "startChar": 4,
+                "endChar": 10,
+                "quote": "system"
+              },
+              {
+                "startChar": 11,
+                "endChar": 13,
+                "quote": "of"
+              },
+              {
+                "startChar": 14,
+                "endChar": 19,
+                "quote": "claim"
+              },
+              {
+                "startChar": 20,
+                "endChar": 21,
+                "quote": "1"
+              },
+              {
+                "startChar": 21,
+                "endChar": 22,
+                "quote": ","
+              },
+              {
+                "startChar": 23,
+                "endChar": 30,
+                "quote": "wherein"
+              },
+              {
+                "startChar": 31,
+                "endChar": 34,
+                "quote": "the"
+              },
+              {
+                "startChar": 35,
+                "endChar": 42,
+                "quote": "plastic"
+              },
+              {
+                "startChar": 43,
+                "endChar": 45,
+                "quote": "is"
+              },
+              {
+                "startChar": 46,
+                "endChar": 53,
+                "quote": "mounted"
+              },
+              {
+                "startChar": 53,
+                "endChar": 54,
+                "quote": "."
+              }
+            ]
+          }
+        ],
+        "privateBasis": true,
+        "result": "source-role-unresolved, never confident missing/outside"
+      },
+      "sources": [
+        {
+          "sourceOrdinal": 1,
+          "source": "A system comprising the plate is formed of plastic.",
+          "references": [],
+          "tokens": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 1,
+                "quote": "A"
+              },
+              "pos": "DET",
+              "lemma": "a",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              },
+              "pos": "NOUN",
+              "lemma": "system",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              },
+              "pos": "VERB",
+              "lemma": "comprise",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 23,
+                "quote": "the"
+              },
+              "pos": "DET",
+              "lemma": "the",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 24,
+                "endChar": 29,
+                "quote": "plate"
+              },
+              "pos": "NOUN",
+              "lemma": "plate",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 30,
+                "endChar": 32,
+                "quote": "is"
+              },
+              "pos": "AUX",
+              "lemma": "be",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 33,
+                "endChar": 39,
+                "quote": "formed"
+              },
+              "pos": "VERB",
+              "lemma": "form",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 40,
+                "endChar": 42,
+                "quote": "of"
+              },
+              "pos": "ADP",
+              "lemma": "of",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 43,
+                "endChar": 50,
+                "quote": "plastic"
+              },
+              "pos": "NOUN",
+              "lemma": "plastic",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 50,
+                "endChar": 51,
+                "quote": "."
+              },
+              "pos": "PUNCT",
+              "lemma": ".",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            }
+          ]
+        },
+        {
+          "sourceOrdinal": 2,
+          "source": "The system of claim 1, wherein the plastic is mounted.",
+          "references": [1],
+          "tokens": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 3,
+                "quote": "The"
+              },
+              "pos": "DET",
+              "lemma": "the",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 4,
+                "endChar": 10,
+                "quote": "system"
+              },
+              "pos": "NOUN",
+              "lemma": "system",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 11,
+                "endChar": 13,
+                "quote": "of"
+              },
+              "pos": "ADP",
+              "lemma": "of",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 14,
+                "endChar": 19,
+                "quote": "claim"
+              },
+              "pos": "NOUN",
+              "lemma": "claim",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 21,
+                "quote": "1"
+              },
+              "pos": "NOUN",
+              "lemma": "1",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 21,
+                "endChar": 22,
+                "quote": ","
+              },
+              "pos": "PUNCT",
+              "lemma": ",",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 23,
+                "endChar": 30,
+                "quote": "wherein"
+              },
+              "pos": "ADV",
+              "lemma": "wherein",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 31,
+                "endChar": 34,
+                "quote": "the"
+              },
+              "pos": "DET",
+              "lemma": "the",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 35,
+                "endChar": 42,
+                "quote": "plastic"
+              },
+              "pos": "NOUN",
+              "lemma": "plastic",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 43,
+                "endChar": 45,
+                "quote": "is"
+              },
+              "pos": "AUX",
+              "lemma": "be",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 46,
+                "endChar": 53,
+                "quote": "mounted"
+              },
+              "pos": "VERB",
+              "lemma": "mount",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 53,
+                "endChar": 54,
+                "quote": "."
+              },
+              "pos": "PUNCT",
+              "lemma": ".",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            }
+          ]
+        }
+      ],
+      "reference": {
+        "sourceOrdinal": 2,
+        "anchor": {
+          "startChar": 31,
+          "endChar": 42,
+          "quote": "the plastic"
+        }
+      }
+    },
+    {
+      "case": "sibling-description-not-route",
+      "sourceContract": {
+        "case": "sibling-description-not-route",
+        "sources": [
+          {
+            "ordinal": 1,
+            "text": "A system comprising the plate is formed of plastic.",
+            "refs": [],
+            "tokens": [
+              {
+                "startChar": 0,
+                "endChar": 1,
+                "quote": "A"
+              },
+              {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              },
+              {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              },
+              {
+                "startChar": 20,
+                "endChar": 23,
+                "quote": "the"
+              },
+              {
+                "startChar": 24,
+                "endChar": 29,
+                "quote": "plate"
+              },
+              {
+                "startChar": 30,
+                "endChar": 32,
+                "quote": "is"
+              },
+              {
+                "startChar": 33,
+                "endChar": 39,
+                "quote": "formed"
+              },
+              {
+                "startChar": 40,
+                "endChar": 42,
+                "quote": "of"
+              },
+              {
+                "startChar": 43,
+                "endChar": 50,
+                "quote": "plastic"
+              },
+              {
+                "startChar": 50,
+                "endChar": 51,
+                "quote": "."
+              }
+            ]
+          },
+          {
+            "ordinal": 2,
+            "text": "A system comprising a cover.",
+            "refs": [],
+            "tokens": [
+              {
+                "startChar": 0,
+                "endChar": 1,
+                "quote": "A"
+              },
+              {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              },
+              {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              },
+              {
+                "startChar": 20,
+                "endChar": 21,
+                "quote": "a"
+              },
+              {
+                "startChar": 22,
+                "endChar": 27,
+                "quote": "cover"
+              },
+              {
+                "startChar": 27,
+                "endChar": 28,
+                "quote": "."
+              }
+            ]
+          },
+          {
+            "ordinal": 3,
+            "text": "The system of claim 2, wherein the plastic is mounted.",
+            "refs": [2],
+            "tokens": [
+              {
+                "startChar": 0,
+                "endChar": 3,
+                "quote": "The"
+              },
+              {
+                "startChar": 4,
+                "endChar": 10,
+                "quote": "system"
+              },
+              {
+                "startChar": 11,
+                "endChar": 13,
+                "quote": "of"
+              },
+              {
+                "startChar": 14,
+                "endChar": 19,
+                "quote": "claim"
+              },
+              {
+                "startChar": 20,
+                "endChar": 21,
+                "quote": "2"
+              },
+              {
+                "startChar": 21,
+                "endChar": 22,
+                "quote": ","
+              },
+              {
+                "startChar": 23,
+                "endChar": 30,
+                "quote": "wherein"
+              },
+              {
+                "startChar": 31,
+                "endChar": 34,
+                "quote": "the"
+              },
+              {
+                "startChar": 35,
+                "endChar": 42,
+                "quote": "plastic"
+              },
+              {
+                "startChar": 43,
+                "endChar": 45,
+                "quote": "is"
+              },
+              {
+                "startChar": 46,
+                "endChar": 53,
+                "quote": "mounted"
+              },
+              {
+                "startChar": 53,
+                "endChar": 54,
+                "quote": "."
+              }
+            ]
+          }
+        ],
+        "privateBasis": false,
+        "result": "existing public verdict unchanged; no uncertainty donation from sibling"
+      },
+      "sources": [
+        {
+          "sourceOrdinal": 1,
+          "source": "A system comprising the plate is formed of plastic.",
+          "references": [],
+          "tokens": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 1,
+                "quote": "A"
+              },
+              "pos": "DET",
+              "lemma": "a",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              },
+              "pos": "NOUN",
+              "lemma": "system",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              },
+              "pos": "VERB",
+              "lemma": "comprise",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 23,
+                "quote": "the"
+              },
+              "pos": "DET",
+              "lemma": "the",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 24,
+                "endChar": 29,
+                "quote": "plate"
+              },
+              "pos": "NOUN",
+              "lemma": "plate",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 30,
+                "endChar": 32,
+                "quote": "is"
+              },
+              "pos": "AUX",
+              "lemma": "be",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 33,
+                "endChar": 39,
+                "quote": "formed"
+              },
+              "pos": "VERB",
+              "lemma": "form",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 40,
+                "endChar": 42,
+                "quote": "of"
+              },
+              "pos": "ADP",
+              "lemma": "of",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 43,
+                "endChar": 50,
+                "quote": "plastic"
+              },
+              "pos": "NOUN",
+              "lemma": "plastic",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 50,
+                "endChar": 51,
+                "quote": "."
+              },
+              "pos": "PUNCT",
+              "lemma": ".",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            }
+          ]
+        },
+        {
+          "sourceOrdinal": 2,
+          "source": "A system comprising a cover.",
+          "references": [],
+          "tokens": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 1,
+                "quote": "A"
+              },
+              "pos": "DET",
+              "lemma": "a",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              },
+              "pos": "NOUN",
+              "lemma": "system",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              },
+              "pos": "VERB",
+              "lemma": "comprise",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 21,
+                "quote": "a"
+              },
+              "pos": "DET",
+              "lemma": "a",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 22,
+                "endChar": 27,
+                "quote": "cover"
+              },
+              "pos": "NOUN",
+              "lemma": "cover",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 27,
+                "endChar": 28,
+                "quote": "."
+              },
+              "pos": "PUNCT",
+              "lemma": ".",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            }
+          ]
+        },
+        {
+          "sourceOrdinal": 3,
+          "source": "The system of claim 2, wherein the plastic is mounted.",
+          "references": [2],
+          "tokens": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 3,
+                "quote": "The"
+              },
+              "pos": "DET",
+              "lemma": "the",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 4,
+                "endChar": 10,
+                "quote": "system"
+              },
+              "pos": "NOUN",
+              "lemma": "system",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 11,
+                "endChar": 13,
+                "quote": "of"
+              },
+              "pos": "ADP",
+              "lemma": "of",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 14,
+                "endChar": 19,
+                "quote": "claim"
+              },
+              "pos": "NOUN",
+              "lemma": "claim",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 21,
+                "quote": "2"
+              },
+              "pos": "NOUN",
+              "lemma": "2",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 21,
+                "endChar": 22,
+                "quote": ","
+              },
+              "pos": "PUNCT",
+              "lemma": ",",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 23,
+                "endChar": 30,
+                "quote": "wherein"
+              },
+              "pos": "ADV",
+              "lemma": "wherein",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 31,
+                "endChar": 34,
+                "quote": "the"
+              },
+              "pos": "DET",
+              "lemma": "the",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 35,
+                "endChar": 42,
+                "quote": "plastic"
+              },
+              "pos": "NOUN",
+              "lemma": "plastic",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 43,
+                "endChar": 45,
+                "quote": "is"
+              },
+              "pos": "AUX",
+              "lemma": "be",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 46,
+                "endChar": 53,
+                "quote": "mounted"
+              },
+              "pos": "VERB",
+              "lemma": "mount",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 53,
+                "endChar": 54,
+                "quote": "."
+              },
+              "pos": "PUNCT",
+              "lemma": ".",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            }
+          ]
+        }
+      ],
+      "reference": {
+        "sourceOrdinal": 3,
+        "anchor": {
+          "startChar": 31,
+          "endChar": 42,
+          "quote": "the plastic"
+        }
+      }
+    },
+    {
+      "case": "later-description-not-basis",
+      "sourceContract": {
+        "case": "later-description-not-basis",
+        "sources": [
+          {
+            "ordinal": 1,
+            "text": "A system comprising the plastic is mounted; the plate is formed of plastic.",
+            "refs": [],
+            "tokens": [
+              {
+                "startChar": 0,
+                "endChar": 1,
+                "quote": "A"
+              },
+              {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              },
+              {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              },
+              {
+                "startChar": 20,
+                "endChar": 23,
+                "quote": "the"
+              },
+              {
+                "startChar": 24,
+                "endChar": 31,
+                "quote": "plastic"
+              },
+              {
+                "startChar": 32,
+                "endChar": 34,
+                "quote": "is"
+              },
+              {
+                "startChar": 35,
+                "endChar": 42,
+                "quote": "mounted"
+              },
+              {
+                "startChar": 42,
+                "endChar": 43,
+                "quote": ";"
+              },
+              {
+                "startChar": 44,
+                "endChar": 47,
+                "quote": "the"
+              },
+              {
+                "startChar": 48,
+                "endChar": 53,
+                "quote": "plate"
+              },
+              {
+                "startChar": 54,
+                "endChar": 56,
+                "quote": "is"
+              },
+              {
+                "startChar": 57,
+                "endChar": 63,
+                "quote": "formed"
+              },
+              {
+                "startChar": 64,
+                "endChar": 66,
+                "quote": "of"
+              },
+              {
+                "startChar": 67,
+                "endChar": 74,
+                "quote": "plastic"
+              },
+              {
+                "startChar": 74,
+                "endChar": 75,
+                "quote": "."
+              }
+            ]
+          }
+        ],
+        "privateBasis": false,
+        "result": "later source candidate cannot change earlier reference verdict"
+      },
+      "sources": [
+        {
+          "sourceOrdinal": 1,
+          "source": "A system comprising the plastic is mounted; the plate is formed of plastic.",
+          "references": [],
+          "tokens": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 1,
+                "quote": "A"
+              },
+              "pos": "DET",
+              "lemma": "a",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              },
+              "pos": "NOUN",
+              "lemma": "system",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              },
+              "pos": "VERB",
+              "lemma": "comprise",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 23,
+                "quote": "the"
+              },
+              "pos": "DET",
+              "lemma": "the",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 24,
+                "endChar": 31,
+                "quote": "plastic"
+              },
+              "pos": "NOUN",
+              "lemma": "plastic",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 32,
+                "endChar": 34,
+                "quote": "is"
+              },
+              "pos": "AUX",
+              "lemma": "be",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 35,
+                "endChar": 42,
+                "quote": "mounted"
+              },
+              "pos": "VERB",
+              "lemma": "mount",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 42,
+                "endChar": 43,
+                "quote": ";"
+              },
+              "pos": "PUNCT",
+              "lemma": ";",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 44,
+                "endChar": 47,
+                "quote": "the"
+              },
+              "pos": "DET",
+              "lemma": "the",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 48,
+                "endChar": 53,
+                "quote": "plate"
+              },
+              "pos": "NOUN",
+              "lemma": "plate",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 54,
+                "endChar": 56,
+                "quote": "is"
+              },
+              "pos": "AUX",
+              "lemma": "be",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 57,
+                "endChar": 63,
+                "quote": "formed"
+              },
+              "pos": "VERB",
+              "lemma": "form",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 64,
+                "endChar": 66,
+                "quote": "of"
+              },
+              "pos": "ADP",
+              "lemma": "of",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 67,
+                "endChar": 74,
+                "quote": "plastic"
+              },
+              "pos": "NOUN",
+              "lemma": "plastic",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 74,
+                "endChar": 75,
+                "quote": "."
+              },
+              "pos": "PUNCT",
+              "lemma": ".",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            }
+          ]
+        }
+      ],
+      "reference": {
+        "sourceOrdinal": 1,
+        "anchor": {
+          "startChar": 20,
+          "endChar": 31,
+          "quote": "the plastic"
+        }
+      }
+    },
+    {
+      "case": "failed-source-atomicity",
+      "sourceContract": {
+        "case": "failed-source-atomicity",
+        "sources": [
+          {
+            "ordinal": 1,
+            "text": "A system comprising the plate is formed of plastic.",
+            "refs": [],
+            "sourcePlan": "declined due independently invalid competing certificate",
+            "tokens": [
+              {
+                "startChar": 0,
+                "endChar": 1,
+                "quote": "A"
+              },
+              {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              },
+              {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              },
+              {
+                "startChar": 20,
+                "endChar": 23,
+                "quote": "the"
+              },
+              {
+                "startChar": 24,
+                "endChar": 29,
+                "quote": "plate"
+              },
+              {
+                "startChar": 30,
+                "endChar": 32,
+                "quote": "is"
+              },
+              {
+                "startChar": 33,
+                "endChar": 39,
+                "quote": "formed"
+              },
+              {
+                "startChar": 40,
+                "endChar": 42,
+                "quote": "of"
+              },
+              {
+                "startChar": 43,
+                "endChar": 50,
+                "quote": "plastic"
+              },
+              {
+                "startChar": 50,
+                "endChar": 51,
+                "quote": "."
+              }
+            ]
+          },
+          {
+            "ordinal": 2,
+            "text": "The system of claim 1, wherein the plastic is mounted.",
+            "refs": [1],
+            "tokens": [
+              {
+                "startChar": 0,
+                "endChar": 3,
+                "quote": "The"
+              },
+              {
+                "startChar": 4,
+                "endChar": 10,
+                "quote": "system"
+              },
+              {
+                "startChar": 11,
+                "endChar": 13,
+                "quote": "of"
+              },
+              {
+                "startChar": 14,
+                "endChar": 19,
+                "quote": "claim"
+              },
+              {
+                "startChar": 20,
+                "endChar": 21,
+                "quote": "1"
+              },
+              {
+                "startChar": 21,
+                "endChar": 22,
+                "quote": ","
+              },
+              {
+                "startChar": 23,
+                "endChar": 30,
+                "quote": "wherein"
+              },
+              {
+                "startChar": 31,
+                "endChar": 34,
+                "quote": "the"
+              },
+              {
+                "startChar": 35,
+                "endChar": 42,
+                "quote": "plastic"
+              },
+              {
+                "startChar": 43,
+                "endChar": 45,
+                "quote": "is"
+              },
+              {
+                "startChar": 46,
+                "endChar": 53,
+                "quote": "mounted"
+              },
+              {
+                "startChar": 53,
+                "endChar": 54,
+                "quote": "."
+              }
+            ]
+          }
+        ],
+        "privateBasis": false,
+        "result": "no failed-plan private donor; actual unavailable route coverage remains adverse"
+      },
+      "sources": [
+        {
+          "sourceOrdinal": 1,
+          "source": "A system comprising the plate is formed of plastic.",
+          "references": [],
+          "tokens": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 1,
+                "quote": "A"
+              },
+              "pos": "DET",
+              "lemma": "a",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              },
+              "pos": "NOUN",
+              "lemma": "system",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              },
+              "pos": "VERB",
+              "lemma": "comprise",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 23,
+                "quote": "the"
+              },
+              "pos": "DET",
+              "lemma": "the",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 24,
+                "endChar": 29,
+                "quote": "plate"
+              },
+              "pos": "NOUN",
+              "lemma": "plate",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 30,
+                "endChar": 32,
+                "quote": "is"
+              },
+              "pos": "AUX",
+              "lemma": "be",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 33,
+                "endChar": 39,
+                "quote": "formed"
+              },
+              "pos": "VERB",
+              "lemma": "form",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 40,
+                "endChar": 42,
+                "quote": "of"
+              },
+              "pos": "ADP",
+              "lemma": "of",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 43,
+                "endChar": 50,
+                "quote": "plastic"
+              },
+              "pos": "NOUN",
+              "lemma": "plastic",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 50,
+                "endChar": 51,
+                "quote": "."
+              },
+              "pos": "PUNCT",
+              "lemma": ".",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            }
+          ]
+        },
+        {
+          "sourceOrdinal": 2,
+          "source": "The system of claim 1, wherein the plastic is mounted.",
+          "references": [1],
+          "tokens": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 3,
+                "quote": "The"
+              },
+              "pos": "DET",
+              "lemma": "the",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 4,
+                "endChar": 10,
+                "quote": "system"
+              },
+              "pos": "NOUN",
+              "lemma": "system",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 11,
+                "endChar": 13,
+                "quote": "of"
+              },
+              "pos": "ADP",
+              "lemma": "of",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 14,
+                "endChar": 19,
+                "quote": "claim"
+              },
+              "pos": "NOUN",
+              "lemma": "claim",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 21,
+                "quote": "1"
+              },
+              "pos": "NOUN",
+              "lemma": "1",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 21,
+                "endChar": 22,
+                "quote": ","
+              },
+              "pos": "PUNCT",
+              "lemma": ",",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 23,
+                "endChar": 30,
+                "quote": "wherein"
+              },
+              "pos": "ADV",
+              "lemma": "wherein",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 31,
+                "endChar": 34,
+                "quote": "the"
+              },
+              "pos": "DET",
+              "lemma": "the",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 35,
+                "endChar": 42,
+                "quote": "plastic"
+              },
+              "pos": "NOUN",
+              "lemma": "plastic",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 43,
+                "endChar": 45,
+                "quote": "is"
+              },
+              "pos": "AUX",
+              "lemma": "be",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 46,
+                "endChar": 53,
+                "quote": "mounted"
+              },
+              "pos": "VERB",
+              "lemma": "mount",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 53,
+                "endChar": 54,
+                "quote": "."
+              },
+              "pos": "PUNCT",
+              "lemma": ".",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            }
+          ]
+        }
+      ],
+      "reference": {
+        "sourceOrdinal": 2,
+        "anchor": {
+          "startChar": 31,
+          "endChar": 42,
+          "quote": "the plastic"
+        }
+      }
+    },
+    {
+      "case": "alternative-routes-separate",
+      "sourceContract": {
+        "case": "alternative-routes-separate",
+        "sources": [
+          {
+            "ordinal": 1,
+            "text": "A system comprising the plate is formed of plastic.",
+            "refs": [],
+            "tokens": [
+              {
+                "startChar": 0,
+                "endChar": 1,
+                "quote": "A"
+              },
+              {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              },
+              {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              },
+              {
+                "startChar": 20,
+                "endChar": 23,
+                "quote": "the"
+              },
+              {
+                "startChar": 24,
+                "endChar": 29,
+                "quote": "plate"
+              },
+              {
+                "startChar": 30,
+                "endChar": 32,
+                "quote": "is"
+              },
+              {
+                "startChar": 33,
+                "endChar": 39,
+                "quote": "formed"
+              },
+              {
+                "startChar": 40,
+                "endChar": 42,
+                "quote": "of"
+              },
+              {
+                "startChar": 43,
+                "endChar": 50,
+                "quote": "plastic"
+              },
+              {
+                "startChar": 50,
+                "endChar": 51,
+                "quote": "."
+              }
+            ]
+          },
+          {
+            "ordinal": 2,
+            "text": "A system comprising a cover.",
+            "refs": [],
+            "tokens": [
+              {
+                "startChar": 0,
+                "endChar": 1,
+                "quote": "A"
+              },
+              {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              },
+              {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              },
+              {
+                "startChar": 20,
+                "endChar": 21,
+                "quote": "a"
+              },
+              {
+                "startChar": 22,
+                "endChar": 27,
+                "quote": "cover"
+              },
+              {
+                "startChar": 27,
+                "endChar": 28,
+                "quote": "."
+              }
+            ]
+          },
+          {
+            "ordinal": 3,
+            "text": "The system of claim 1 or claim 2, wherein the plastic is mounted.",
+            "refs": [1, 2],
+            "tokens": [
+              {
+                "startChar": 0,
+                "endChar": 3,
+                "quote": "The"
+              },
+              {
+                "startChar": 4,
+                "endChar": 10,
+                "quote": "system"
+              },
+              {
+                "startChar": 11,
+                "endChar": 13,
+                "quote": "of"
+              },
+              {
+                "startChar": 14,
+                "endChar": 19,
+                "quote": "claim"
+              },
+              {
+                "startChar": 20,
+                "endChar": 21,
+                "quote": "1"
+              },
+              {
+                "startChar": 22,
+                "endChar": 24,
+                "quote": "or"
+              },
+              {
+                "startChar": 25,
+                "endChar": 30,
+                "quote": "claim"
+              },
+              {
+                "startChar": 31,
+                "endChar": 32,
+                "quote": "2"
+              },
+              {
+                "startChar": 32,
+                "endChar": 33,
+                "quote": ","
+              },
+              {
+                "startChar": 34,
+                "endChar": 41,
+                "quote": "wherein"
+              },
+              {
+                "startChar": 42,
+                "endChar": 45,
+                "quote": "the"
+              },
+              {
+                "startChar": 46,
+                "endChar": 53,
+                "quote": "plastic"
+              },
+              {
+                "startChar": 54,
+                "endChar": 56,
+                "quote": "is"
+              },
+              {
+                "startChar": 57,
+                "endChar": 64,
+                "quote": "mounted"
+              },
+              {
+                "startChar": 64,
+                "endChar": 65,
+                "quote": "."
+              }
+            ]
+          }
+        ],
+        "privateBasisByRoute": {
+          "3->1": true,
+          "3->2": false
+        },
+        "result": "keep per-route outcomes; no donor installed on unsupported route"
+      },
+      "sources": [
+        {
+          "sourceOrdinal": 1,
+          "source": "A system comprising the plate is formed of plastic.",
+          "references": [],
+          "tokens": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 1,
+                "quote": "A"
+              },
+              "pos": "DET",
+              "lemma": "a",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              },
+              "pos": "NOUN",
+              "lemma": "system",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              },
+              "pos": "VERB",
+              "lemma": "comprise",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 23,
+                "quote": "the"
+              },
+              "pos": "DET",
+              "lemma": "the",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 24,
+                "endChar": 29,
+                "quote": "plate"
+              },
+              "pos": "NOUN",
+              "lemma": "plate",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 30,
+                "endChar": 32,
+                "quote": "is"
+              },
+              "pos": "AUX",
+              "lemma": "be",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 33,
+                "endChar": 39,
+                "quote": "formed"
+              },
+              "pos": "VERB",
+              "lemma": "form",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 40,
+                "endChar": 42,
+                "quote": "of"
+              },
+              "pos": "ADP",
+              "lemma": "of",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 43,
+                "endChar": 50,
+                "quote": "plastic"
+              },
+              "pos": "NOUN",
+              "lemma": "plastic",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 50,
+                "endChar": 51,
+                "quote": "."
+              },
+              "pos": "PUNCT",
+              "lemma": ".",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            }
+          ]
+        },
+        {
+          "sourceOrdinal": 2,
+          "source": "A system comprising a cover.",
+          "references": [],
+          "tokens": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 1,
+                "quote": "A"
+              },
+              "pos": "DET",
+              "lemma": "a",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              },
+              "pos": "NOUN",
+              "lemma": "system",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              },
+              "pos": "VERB",
+              "lemma": "comprise",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 21,
+                "quote": "a"
+              },
+              "pos": "DET",
+              "lemma": "a",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 22,
+                "endChar": 27,
+                "quote": "cover"
+              },
+              "pos": "NOUN",
+              "lemma": "cover",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 27,
+                "endChar": 28,
+                "quote": "."
+              },
+              "pos": "PUNCT",
+              "lemma": ".",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            }
+          ]
+        },
+        {
+          "sourceOrdinal": 3,
+          "source": "The system of claim 1 or claim 2, wherein the plastic is mounted.",
+          "references": [1, 2],
+          "tokens": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 3,
+                "quote": "The"
+              },
+              "pos": "DET",
+              "lemma": "the",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 4,
+                "endChar": 10,
+                "quote": "system"
+              },
+              "pos": "NOUN",
+              "lemma": "system",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 11,
+                "endChar": 13,
+                "quote": "of"
+              },
+              "pos": "ADP",
+              "lemma": "of",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 14,
+                "endChar": 19,
+                "quote": "claim"
+              },
+              "pos": "NOUN",
+              "lemma": "claim",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 21,
+                "quote": "1"
+              },
+              "pos": "NOUN",
+              "lemma": "1",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 22,
+                "endChar": 24,
+                "quote": "or"
+              },
+              "pos": "CCONJ",
+              "lemma": "or",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 25,
+                "endChar": 30,
+                "quote": "claim"
+              },
+              "pos": "NOUN",
+              "lemma": "claim",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 31,
+                "endChar": 32,
+                "quote": "2"
+              },
+              "pos": "NOUN",
+              "lemma": "2",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 32,
+                "endChar": 33,
+                "quote": ","
+              },
+              "pos": "PUNCT",
+              "lemma": ",",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 34,
+                "endChar": 41,
+                "quote": "wherein"
+              },
+              "pos": "ADV",
+              "lemma": "wherein",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 42,
+                "endChar": 45,
+                "quote": "the"
+              },
+              "pos": "DET",
+              "lemma": "the",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 46,
+                "endChar": 53,
+                "quote": "plastic"
+              },
+              "pos": "NOUN",
+              "lemma": "plastic",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 54,
+                "endChar": 56,
+                "quote": "is"
+              },
+              "pos": "AUX",
+              "lemma": "be",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 57,
+                "endChar": 64,
+                "quote": "mounted"
+              },
+              "pos": "VERB",
+              "lemma": "mount",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 64,
+                "endChar": 65,
+                "quote": "."
+              },
+              "pos": "PUNCT",
+              "lemma": ".",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            }
+          ]
+        }
+      ],
+      "reference": {
+        "sourceOrdinal": 3,
+        "anchor": {
+          "startChar": 42,
+          "endChar": 53,
+          "quote": "the plastic"
+        }
+      }
+    },
+    {
+      "case": "opaque-branch-no-positive-donor",
+      "sourceContract": {
+        "case": "opaque-branch-no-positive-donor",
+        "sources": [
+          {
+            "ordinal": 1,
+            "text": "A system comprising a core of one of foam material cardboard, card or wood.",
+            "refs": [],
+            "tokens": [
+              {
+                "startChar": 0,
+                "endChar": 1,
+                "quote": "A"
+              },
+              {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              },
+              {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              },
+              {
+                "startChar": 20,
+                "endChar": 21,
+                "quote": "a"
+              },
+              {
+                "startChar": 22,
+                "endChar": 26,
+                "quote": "core"
+              },
+              {
+                "startChar": 27,
+                "endChar": 29,
+                "quote": "of"
+              },
+              {
+                "startChar": 30,
+                "endChar": 33,
+                "quote": "one"
+              },
+              {
+                "startChar": 34,
+                "endChar": 36,
+                "quote": "of"
+              },
+              {
+                "startChar": 37,
+                "endChar": 41,
+                "quote": "foam"
+              },
+              {
+                "startChar": 42,
+                "endChar": 50,
+                "quote": "material"
+              },
+              {
+                "startChar": 51,
+                "endChar": 60,
+                "quote": "cardboard"
+              },
+              {
+                "startChar": 60,
+                "endChar": 61,
+                "quote": ","
+              },
+              {
+                "startChar": 62,
+                "endChar": 66,
+                "quote": "card"
+              },
+              {
+                "startChar": 67,
+                "endChar": 69,
+                "quote": "or"
+              },
+              {
+                "startChar": 70,
+                "endChar": 74,
+                "quote": "wood"
+              },
+              {
+                "startChar": 74,
+                "endChar": 75,
+                "quote": "."
+              }
+            ]
+          },
+          {
+            "ordinal": 2,
+            "text": "The system of claim 1, wherein the wood is mounted.",
+            "refs": [1],
+            "tokens": [
+              {
+                "startChar": 0,
+                "endChar": 3,
+                "quote": "The"
+              },
+              {
+                "startChar": 4,
+                "endChar": 10,
+                "quote": "system"
+              },
+              {
+                "startChar": 11,
+                "endChar": 13,
+                "quote": "of"
+              },
+              {
+                "startChar": 14,
+                "endChar": 19,
+                "quote": "claim"
+              },
+              {
+                "startChar": 20,
+                "endChar": 21,
+                "quote": "1"
+              },
+              {
+                "startChar": 21,
+                "endChar": 22,
+                "quote": ","
+              },
+              {
+                "startChar": 23,
+                "endChar": 30,
+                "quote": "wherein"
+              },
+              {
+                "startChar": 31,
+                "endChar": 34,
+                "quote": "the"
+              },
+              {
+                "startChar": 35,
+                "endChar": 39,
+                "quote": "wood"
+              },
+              {
+                "startChar": 40,
+                "endChar": 42,
+                "quote": "is"
+              },
+              {
+                "startChar": 43,
+                "endChar": 50,
+                "quote": "mounted"
+              },
+              {
+                "startChar": 50,
+                "endChar": 51,
+                "quote": "."
+              }
+            ]
+          }
+        ],
+        "privateBasis": true,
+        "positiveAntecedent": false,
+        "aliasEligible": false,
+        "result": "adverse possible basis only; first branch stays literal compound"
+      },
+      "sources": [
+        {
+          "sourceOrdinal": 1,
+          "source": "A system comprising a core of one of foam material cardboard, card or wood.",
+          "references": [],
+          "tokens": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 1,
+                "quote": "A"
+              },
+              "pos": "DET",
+              "lemma": "a",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              },
+              "pos": "NOUN",
+              "lemma": "system",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              },
+              "pos": "VERB",
+              "lemma": "comprise",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 21,
+                "quote": "a"
+              },
+              "pos": "DET",
+              "lemma": "a",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 22,
+                "endChar": 26,
+                "quote": "core"
+              },
+              "pos": "NOUN",
+              "lemma": "core",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 27,
+                "endChar": 29,
+                "quote": "of"
+              },
+              "pos": "ADP",
+              "lemma": "of",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 30,
+                "endChar": 33,
+                "quote": "one"
+              },
+              "pos": "NOUN",
+              "lemma": "one",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 34,
+                "endChar": 36,
+                "quote": "of"
+              },
+              "pos": "ADP",
+              "lemma": "of",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 37,
+                "endChar": 41,
+                "quote": "foam"
+              },
+              "pos": "NOUN",
+              "lemma": "foam",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 42,
+                "endChar": 50,
+                "quote": "material"
+              },
+              "pos": "NOUN",
+              "lemma": "material",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 51,
+                "endChar": 60,
+                "quote": "cardboard"
+              },
+              "pos": "NOUN",
+              "lemma": "cardboard",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 60,
+                "endChar": 61,
+                "quote": ","
+              },
+              "pos": "PUNCT",
+              "lemma": ",",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 62,
+                "endChar": 66,
+                "quote": "card"
+              },
+              "pos": "NOUN",
+              "lemma": "card",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 67,
+                "endChar": 69,
+                "quote": "or"
+              },
+              "pos": "CCONJ",
+              "lemma": "or",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 70,
+                "endChar": 74,
+                "quote": "wood"
+              },
+              "pos": "NOUN",
+              "lemma": "wood",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 74,
+                "endChar": 75,
+                "quote": "."
+              },
+              "pos": "PUNCT",
+              "lemma": ".",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            }
+          ]
+        },
+        {
+          "sourceOrdinal": 2,
+          "source": "The system of claim 1, wherein the wood is mounted.",
+          "references": [1],
+          "tokens": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 3,
+                "quote": "The"
+              },
+              "pos": "DET",
+              "lemma": "the",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 4,
+                "endChar": 10,
+                "quote": "system"
+              },
+              "pos": "NOUN",
+              "lemma": "system",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 11,
+                "endChar": 13,
+                "quote": "of"
+              },
+              "pos": "ADP",
+              "lemma": "of",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 14,
+                "endChar": 19,
+                "quote": "claim"
+              },
+              "pos": "NOUN",
+              "lemma": "claim",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 21,
+                "quote": "1"
+              },
+              "pos": "NOUN",
+              "lemma": "1",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 21,
+                "endChar": 22,
+                "quote": ","
+              },
+              "pos": "PUNCT",
+              "lemma": ",",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 23,
+                "endChar": 30,
+                "quote": "wherein"
+              },
+              "pos": "ADV",
+              "lemma": "wherein",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 31,
+                "endChar": 34,
+                "quote": "the"
+              },
+              "pos": "DET",
+              "lemma": "the",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 35,
+                "endChar": 39,
+                "quote": "wood"
+              },
+              "pos": "NOUN",
+              "lemma": "wood",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 40,
+                "endChar": 42,
+                "quote": "is"
+              },
+              "pos": "AUX",
+              "lemma": "be",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 43,
+                "endChar": 50,
+                "quote": "mounted"
+              },
+              "pos": "VERB",
+              "lemma": "mount",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 50,
+                "endChar": 51,
+                "quote": "."
+              },
+              "pos": "PUNCT",
+              "lemma": ".",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            }
+          ]
+        }
+      ],
+      "reference": {
+        "sourceOrdinal": 2,
+        "anchor": {
+          "startChar": 31,
+          "endChar": 39,
+          "quote": "the wood"
+        }
+      }
+    },
+    {
+      "case": "opaque-uppercase-branch-no-alias",
+      "sourceContract": {
+        "case": "opaque-uppercase-branch-no-alias",
+        "sources": [
+          {
+            "ordinal": 1,
+            "text": "A system comprising a core of one of CRC or wood.",
+            "refs": [],
+            "tokens": [
+              {
+                "startChar": 0,
+                "endChar": 1,
+                "quote": "A"
+              },
+              {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              },
+              {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              },
+              {
+                "startChar": 20,
+                "endChar": 21,
+                "quote": "a"
+              },
+              {
+                "startChar": 22,
+                "endChar": 26,
+                "quote": "core"
+              },
+              {
+                "startChar": 27,
+                "endChar": 29,
+                "quote": "of"
+              },
+              {
+                "startChar": 30,
+                "endChar": 33,
+                "quote": "one"
+              },
+              {
+                "startChar": 34,
+                "endChar": 36,
+                "quote": "of"
+              },
+              {
+                "startChar": 37,
+                "endChar": 40,
+                "quote": "CRC"
+              },
+              {
+                "startChar": 41,
+                "endChar": 43,
+                "quote": "or"
+              },
+              {
+                "startChar": 44,
+                "endChar": 48,
+                "quote": "wood"
+              },
+              {
+                "startChar": 48,
+                "endChar": 49,
+                "quote": "."
+              }
+            ]
+          },
+          {
+            "ordinal": 2,
+            "text": "The system of claim 1, wherein the CRC is mounted.",
+            "refs": [1],
+            "tokens": [
+              {
+                "startChar": 0,
+                "endChar": 3,
+                "quote": "The"
+              },
+              {
+                "startChar": 4,
+                "endChar": 10,
+                "quote": "system"
+              },
+              {
+                "startChar": 11,
+                "endChar": 13,
+                "quote": "of"
+              },
+              {
+                "startChar": 14,
+                "endChar": 19,
+                "quote": "claim"
+              },
+              {
+                "startChar": 20,
+                "endChar": 21,
+                "quote": "1"
+              },
+              {
+                "startChar": 21,
+                "endChar": 22,
+                "quote": ","
+              },
+              {
+                "startChar": 23,
+                "endChar": 30,
+                "quote": "wherein"
+              },
+              {
+                "startChar": 31,
+                "endChar": 34,
+                "quote": "the"
+              },
+              {
+                "startChar": 35,
+                "endChar": 38,
+                "quote": "CRC"
+              },
+              {
+                "startChar": 39,
+                "endChar": 41,
+                "quote": "is"
+              },
+              {
+                "startChar": 42,
+                "endChar": 49,
+                "quote": "mounted"
+              },
+              {
+                "startChar": 49,
+                "endChar": 50,
+                "quote": "."
+              }
+            ]
+          }
+        ],
+        "privateBasis": true,
+        "positiveAntecedent": false,
+        "aliasEligible": false,
+        "result": "map membership/uppercase never establishes alias eligibility"
+      },
+      "sources": [
+        {
+          "sourceOrdinal": 1,
+          "source": "A system comprising a core of one of CRC or wood.",
+          "references": [],
+          "tokens": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 1,
+                "quote": "A"
+              },
+              "pos": "DET",
+              "lemma": "a",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              },
+              "pos": "NOUN",
+              "lemma": "system",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              },
+              "pos": "VERB",
+              "lemma": "comprise",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 21,
+                "quote": "a"
+              },
+              "pos": "DET",
+              "lemma": "a",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 22,
+                "endChar": 26,
+                "quote": "core"
+              },
+              "pos": "NOUN",
+              "lemma": "core",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 27,
+                "endChar": 29,
+                "quote": "of"
+              },
+              "pos": "ADP",
+              "lemma": "of",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 30,
+                "endChar": 33,
+                "quote": "one"
+              },
+              "pos": "NOUN",
+              "lemma": "one",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 34,
+                "endChar": 36,
+                "quote": "of"
+              },
+              "pos": "ADP",
+              "lemma": "of",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 37,
+                "endChar": 40,
+                "quote": "CRC"
+              },
+              "pos": "NOUN",
+              "lemma": "crc",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 41,
+                "endChar": 43,
+                "quote": "or"
+              },
+              "pos": "CCONJ",
+              "lemma": "or",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 44,
+                "endChar": 48,
+                "quote": "wood"
+              },
+              "pos": "NOUN",
+              "lemma": "wood",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 48,
+                "endChar": 49,
+                "quote": "."
+              },
+              "pos": "PUNCT",
+              "lemma": ".",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            }
+          ]
+        },
+        {
+          "sourceOrdinal": 2,
+          "source": "The system of claim 1, wherein the CRC is mounted.",
+          "references": [1],
+          "tokens": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 3,
+                "quote": "The"
+              },
+              "pos": "DET",
+              "lemma": "the",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 4,
+                "endChar": 10,
+                "quote": "system"
+              },
+              "pos": "NOUN",
+              "lemma": "system",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 11,
+                "endChar": 13,
+                "quote": "of"
+              },
+              "pos": "ADP",
+              "lemma": "of",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 14,
+                "endChar": 19,
+                "quote": "claim"
+              },
+              "pos": "NOUN",
+              "lemma": "claim",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 21,
+                "quote": "1"
+              },
+              "pos": "NOUN",
+              "lemma": "1",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 21,
+                "endChar": 22,
+                "quote": ","
+              },
+              "pos": "PUNCT",
+              "lemma": ",",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 23,
+                "endChar": 30,
+                "quote": "wherein"
+              },
+              "pos": "ADV",
+              "lemma": "wherein",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 31,
+                "endChar": 34,
+                "quote": "the"
+              },
+              "pos": "DET",
+              "lemma": "the",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 35,
+                "endChar": 38,
+                "quote": "CRC"
+              },
+              "pos": "NOUN",
+              "lemma": "crc",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 39,
+                "endChar": 41,
+                "quote": "is"
+              },
+              "pos": "AUX",
+              "lemma": "be",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 42,
+                "endChar": 49,
+                "quote": "mounted"
+              },
+              "pos": "VERB",
+              "lemma": "mount",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 49,
+                "endChar": 50,
+                "quote": "."
+              },
+              "pos": "PUNCT",
+              "lemma": ".",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            }
+          ]
+        }
+      ],
+      "reference": {
+        "sourceOrdinal": 2,
+        "anchor": {
+          "startChar": 31,
+          "endChar": 38,
+          "quote": "the CRC"
+        }
+      }
+    },
+    {
+      "case": "plural-suffix-is-uncertainty-only",
+      "sourceContract": {
+        "case": "plural-suffix-is-uncertainty-only",
+        "sources": [
+          {
+            "ordinal": 1,
+            "text": "A system comprising a core of one of sensors or valves.",
+            "refs": [],
+            "tokens": [
+              {
+                "startChar": 0,
+                "endChar": 1,
+                "quote": "A"
+              },
+              {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              },
+              {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              },
+              {
+                "startChar": 20,
+                "endChar": 21,
+                "quote": "a"
+              },
+              {
+                "startChar": 22,
+                "endChar": 26,
+                "quote": "core"
+              },
+              {
+                "startChar": 27,
+                "endChar": 29,
+                "quote": "of"
+              },
+              {
+                "startChar": 30,
+                "endChar": 33,
+                "quote": "one"
+              },
+              {
+                "startChar": 34,
+                "endChar": 36,
+                "quote": "of"
+              },
+              {
+                "startChar": 37,
+                "endChar": 44,
+                "quote": "sensors"
+              },
+              {
+                "startChar": 45,
+                "endChar": 47,
+                "quote": "or"
+              },
+              {
+                "startChar": 48,
+                "endChar": 54,
+                "quote": "valves"
+              },
+              {
+                "startChar": 54,
+                "endChar": 55,
+                "quote": "."
+              }
+            ]
+          },
+          {
+            "ordinal": 2,
+            "text": "The system of claim 1, wherein the valve is mounted.",
+            "refs": [1],
+            "tokens": [
+              {
+                "startChar": 0,
+                "endChar": 3,
+                "quote": "The"
+              },
+              {
+                "startChar": 4,
+                "endChar": 10,
+                "quote": "system"
+              },
+              {
+                "startChar": 11,
+                "endChar": 13,
+                "quote": "of"
+              },
+              {
+                "startChar": 14,
+                "endChar": 19,
+                "quote": "claim"
+              },
+              {
+                "startChar": 20,
+                "endChar": 21,
+                "quote": "1"
+              },
+              {
+                "startChar": 21,
+                "endChar": 22,
+                "quote": ","
+              },
+              {
+                "startChar": 23,
+                "endChar": 30,
+                "quote": "wherein"
+              },
+              {
+                "startChar": 31,
+                "endChar": 34,
+                "quote": "the"
+              },
+              {
+                "startChar": 35,
+                "endChar": 40,
+                "quote": "valve"
+              },
+              {
+                "startChar": 41,
+                "endChar": 43,
+                "quote": "is"
+              },
+              {
+                "startChar": 44,
+                "endChar": 51,
+                "quote": "mounted"
+              },
+              {
+                "startChar": 51,
+                "endChar": 52,
+                "quote": "."
+              }
+            ]
+          }
+        ],
+        "privateBasis": true,
+        "positiveAntecedent": false,
+        "aliasEligible": false,
+        "canonicalGroupHead": "sensors or valves",
+        "result": "existing singular compatibility can establish possible basis only; it cannot resolve from branch/group"
+      },
+      "sources": [
+        {
+          "sourceOrdinal": 1,
+          "source": "A system comprising a core of one of sensors or valves.",
+          "references": [],
+          "tokens": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 1,
+                "quote": "A"
+              },
+              "pos": "DET",
+              "lemma": "a",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              },
+              "pos": "NOUN",
+              "lemma": "system",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              },
+              "pos": "VERB",
+              "lemma": "comprise",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 21,
+                "quote": "a"
+              },
+              "pos": "DET",
+              "lemma": "a",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 22,
+                "endChar": 26,
+                "quote": "core"
+              },
+              "pos": "NOUN",
+              "lemma": "core",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 27,
+                "endChar": 29,
+                "quote": "of"
+              },
+              "pos": "ADP",
+              "lemma": "of",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 30,
+                "endChar": 33,
+                "quote": "one"
+              },
+              "pos": "NOUN",
+              "lemma": "one",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 34,
+                "endChar": 36,
+                "quote": "of"
+              },
+              "pos": "ADP",
+              "lemma": "of",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 37,
+                "endChar": 44,
+                "quote": "sensors"
+              },
+              "pos": "NOUN",
+              "lemma": "sensor",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 45,
+                "endChar": 47,
+                "quote": "or"
+              },
+              "pos": "CCONJ",
+              "lemma": "or",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 48,
+                "endChar": 54,
+                "quote": "valves"
+              },
+              "pos": "NOUN",
+              "lemma": "valve",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 54,
+                "endChar": 55,
+                "quote": "."
+              },
+              "pos": "PUNCT",
+              "lemma": ".",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            }
+          ]
+        },
+        {
+          "sourceOrdinal": 2,
+          "source": "The system of claim 1, wherein the valve is mounted.",
+          "references": [1],
+          "tokens": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 3,
+                "quote": "The"
+              },
+              "pos": "DET",
+              "lemma": "the",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 4,
+                "endChar": 10,
+                "quote": "system"
+              },
+              "pos": "NOUN",
+              "lemma": "system",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 11,
+                "endChar": 13,
+                "quote": "of"
+              },
+              "pos": "ADP",
+              "lemma": "of",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 14,
+                "endChar": 19,
+                "quote": "claim"
+              },
+              "pos": "NOUN",
+              "lemma": "claim",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 21,
+                "quote": "1"
+              },
+              "pos": "NOUN",
+              "lemma": "1",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 21,
+                "endChar": 22,
+                "quote": ","
+              },
+              "pos": "PUNCT",
+              "lemma": ",",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 23,
+                "endChar": 30,
+                "quote": "wherein"
+              },
+              "pos": "ADV",
+              "lemma": "wherein",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 31,
+                "endChar": 34,
+                "quote": "the"
+              },
+              "pos": "DET",
+              "lemma": "the",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 35,
+                "endChar": 40,
+                "quote": "valve"
+              },
+              "pos": "NOUN",
+              "lemma": "valve",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 41,
+                "endChar": 43,
+                "quote": "is"
+              },
+              "pos": "AUX",
+              "lemma": "be",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 44,
+                "endChar": 51,
+                "quote": "mounted"
+              },
+              "pos": "VERB",
+              "lemma": "mount",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 51,
+                "endChar": 52,
+                "quote": "."
+              },
+              "pos": "PUNCT",
+              "lemma": ".",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            }
+          ]
+        }
+      ],
+      "reference": {
+        "sourceOrdinal": 2,
+        "anchor": {
+          "startChar": 31,
+          "endChar": 40,
+          "quote": "the valve"
+        }
+      }
+    },
+    {
+      "case": "whole-group-reference-unknown-not-introduction",
+      "sourceContract": {
+        "case": "whole-group-reference-unknown-not-introduction",
+        "sources": [
+          {
+            "ordinal": 1,
+            "text": "A system comprising a core of one of sensors or valves.",
+            "refs": [],
+            "tokens": [
+              {
+                "startChar": 0,
+                "endChar": 1,
+                "quote": "A"
+              },
+              {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              },
+              {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              },
+              {
+                "startChar": 20,
+                "endChar": 21,
+                "quote": "a"
+              },
+              {
+                "startChar": 22,
+                "endChar": 26,
+                "quote": "core"
+              },
+              {
+                "startChar": 27,
+                "endChar": 29,
+                "quote": "of"
+              },
+              {
+                "startChar": 30,
+                "endChar": 33,
+                "quote": "one"
+              },
+              {
+                "startChar": 34,
+                "endChar": 36,
+                "quote": "of"
+              },
+              {
+                "startChar": 37,
+                "endChar": 44,
+                "quote": "sensors"
+              },
+              {
+                "startChar": 45,
+                "endChar": 47,
+                "quote": "or"
+              },
+              {
+                "startChar": 48,
+                "endChar": 54,
+                "quote": "valves"
+              },
+              {
+                "startChar": 54,
+                "endChar": 55,
+                "quote": "."
+              }
+            ]
+          },
+          {
+            "ordinal": 2,
+            "text": "The system of claim 1, wherein said sensors or valves are mounted.",
+            "refs": [1],
+            "tokens": [
+              {
+                "startChar": 0,
+                "endChar": 3,
+                "quote": "The"
+              },
+              {
+                "startChar": 4,
+                "endChar": 10,
+                "quote": "system"
+              },
+              {
+                "startChar": 11,
+                "endChar": 13,
+                "quote": "of"
+              },
+              {
+                "startChar": 14,
+                "endChar": 19,
+                "quote": "claim"
+              },
+              {
+                "startChar": 20,
+                "endChar": 21,
+                "quote": "1"
+              },
+              {
+                "startChar": 21,
+                "endChar": 22,
+                "quote": ","
+              },
+              {
+                "startChar": 23,
+                "endChar": 30,
+                "quote": "wherein"
+              },
+              {
+                "startChar": 31,
+                "endChar": 35,
+                "quote": "said"
+              },
+              {
+                "startChar": 36,
+                "endChar": 43,
+                "quote": "sensors"
+              },
+              {
+                "startChar": 44,
+                "endChar": 46,
+                "quote": "or"
+              },
+              {
+                "startChar": 47,
+                "endChar": 53,
+                "quote": "valves"
+              },
+              {
+                "startChar": 54,
+                "endChar": 57,
+                "quote": "are"
+              },
+              {
+                "startChar": 58,
+                "endChar": 65,
+                "quote": "mounted"
+              },
+              {
+                "startChar": 65,
+                "endChar": 66,
+                "quote": "."
+              }
+            ]
+          }
+        ],
+        "publicUnknownGroupBasis": true,
+        "privateLookupNeeded": false,
+        "positiveAntecedent": false,
+        "aliasEligible": false,
+        "result": "unknown bare whole-group source can retain adverse public role evidence; exact head equality does not establish introduction"
+      },
+      "sources": [
+        {
+          "sourceOrdinal": 1,
+          "source": "A system comprising a core of one of sensors or valves.",
+          "references": [],
+          "tokens": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 1,
+                "quote": "A"
+              },
+              "pos": "DET",
+              "lemma": "a",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              },
+              "pos": "NOUN",
+              "lemma": "system",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              },
+              "pos": "VERB",
+              "lemma": "comprise",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 21,
+                "quote": "a"
+              },
+              "pos": "DET",
+              "lemma": "a",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 22,
+                "endChar": 26,
+                "quote": "core"
+              },
+              "pos": "NOUN",
+              "lemma": "core",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 27,
+                "endChar": 29,
+                "quote": "of"
+              },
+              "pos": "ADP",
+              "lemma": "of",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 30,
+                "endChar": 33,
+                "quote": "one"
+              },
+              "pos": "NOUN",
+              "lemma": "one",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 34,
+                "endChar": 36,
+                "quote": "of"
+              },
+              "pos": "ADP",
+              "lemma": "of",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 37,
+                "endChar": 44,
+                "quote": "sensors"
+              },
+              "pos": "NOUN",
+              "lemma": "sensor",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 45,
+                "endChar": 47,
+                "quote": "or"
+              },
+              "pos": "CCONJ",
+              "lemma": "or",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 48,
+                "endChar": 54,
+                "quote": "valves"
+              },
+              "pos": "NOUN",
+              "lemma": "valve",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 54,
+                "endChar": 55,
+                "quote": "."
+              },
+              "pos": "PUNCT",
+              "lemma": ".",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            }
+          ]
+        },
+        {
+          "sourceOrdinal": 2,
+          "source": "The system of claim 1, wherein said sensors or valves are mounted.",
+          "references": [1],
+          "tokens": [
+            {
+              "anchor": {
+                "startChar": 0,
+                "endChar": 3,
+                "quote": "The"
+              },
+              "pos": "DET",
+              "lemma": "the",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 4,
+                "endChar": 10,
+                "quote": "system"
+              },
+              "pos": "NOUN",
+              "lemma": "system",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 11,
+                "endChar": 13,
+                "quote": "of"
+              },
+              "pos": "ADP",
+              "lemma": "of",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 14,
+                "endChar": 19,
+                "quote": "claim"
+              },
+              "pos": "NOUN",
+              "lemma": "claim",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 20,
+                "endChar": 21,
+                "quote": "1"
+              },
+              "pos": "NOUN",
+              "lemma": "1",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 21,
+                "endChar": 22,
+                "quote": ","
+              },
+              "pos": "PUNCT",
+              "lemma": ",",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 23,
+                "endChar": 30,
+                "quote": "wherein"
+              },
+              "pos": "ADV",
+              "lemma": "wherein",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 31,
+                "endChar": 35,
+                "quote": "said"
+              },
+              "pos": "DET",
+              "lemma": "said",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 36,
+                "endChar": 43,
+                "quote": "sensors"
+              },
+              "pos": "NOUN",
+              "lemma": "sensor",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 44,
+                "endChar": 46,
+                "quote": "or"
+              },
+              "pos": "CCONJ",
+              "lemma": "or",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 47,
+                "endChar": 53,
+                "quote": "valves"
+              },
+              "pos": "NOUN",
+              "lemma": "valve",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 54,
+                "endChar": 57,
+                "quote": "are"
+              },
+              "pos": "AUX",
+              "lemma": "be",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 58,
+                "endChar": 65,
+                "quote": "mounted"
+              },
+              "pos": "VERB",
+              "lemma": "mount",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            },
+            {
+              "anchor": {
+                "startChar": 65,
+                "endChar": 66,
+                "quote": "."
+              },
+              "pos": "PUNCT",
+              "lemma": ".",
+              "evidence": "explicit injected synthetic source-only lexical fact, not fixed-provider output or countability fact"
+            }
+          ]
+        }
+      ],
+      "reference": {
+        "sourceOrdinal": 2,
+        "anchor": {
+          "startChar": 31,
+          "endChar": 53,
+          "quote": "said sensors or valves"
+        }
+      }
+    }
+  ]
+}

@@ -29,12 +29,12 @@
       "rationale": "Unused private driver removed 2026-10-21 on branch chore/remove-unused-drivers at the operator's request. Name-reuse guard; recover the source from commit 426d494b34."
     },
     {
-      "name": "@beep/firecrawl",
+      "name": "@beep/face-detection",
       "rationale": "Unused private driver removed 2026-10-21 on branch chore/remove-unused-drivers at the operator's request. Name-reuse guard; recover the source from commit 426d494b34."
     },
     {
-      "name": "@beep/face-detection",
-      "rationale": "Unused private driver removed 2026-10-21 on branch chore/remove-unused-drivers at the operator's request. Name-reuse guard; recover the source from commit 426d494b34."
+      "name": "@beep/epistemic-config",
+      "rationale": "Retired by goals/execution-authority-slice P1 (#2853): execution-authority config moved to @beep/execution-authority-config with EXECUTION_AUTHORITY_* env keys and no fallback. Name-reuse guard; recover the source from commit cf46c70048."
     }
   ]
 }

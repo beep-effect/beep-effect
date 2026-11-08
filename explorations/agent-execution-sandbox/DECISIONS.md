@@ -501,7 +501,7 @@ client session, so the store needs eviction tied to the client's lifecycle.
 **Question.** Where do the destination allowlist, audience map, and pinned
 policy revision live as typed configuration?
 
-**Answer.** A new `packages/epistemic/config`, in the canonical slice-config
+**Answer.** A new `@beep/epistemic-config` (now `packages/execution-authority/config`), in the canonical slice-config
 shape (`ServerConfig.ts`, `Layer.ts`, `TestLayer.ts`, with `/server` and
 `/test` subpaths). The existing ad-hoc entrypoint config reads are migrated
 onto it in the same PR.

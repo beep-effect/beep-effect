@@ -62,9 +62,23 @@ const $I = $RepoCliId.create("commands/Yeet/internal/PullRequest");
 const ghPullRequestViewArgs = ["pr", "view", "--json", "number,headRefName,state,url,title"] as const;
 const ghPullRequestViewCommand = "gh pr view --json number,headRefName,state,url,title";
 const decodeGhPullRequestView = S.decodeUnknownEffect(S.fromJsonString(GhPrView));
-const isGraphQlRateLimitOutput = (output: string) => /GraphQL: API rate limit (already )?exceeded/.test(output);
-const graphQlRateLimited = (failure: GhCommandFailure) =>
-  failure._tag === "nonzero-exit" && isGraphQlRateLimitOutput(failure.output);
+const confirmedMissingPullRequest = (
+  context: RepoRunContext,
+  headOwner: O.Option<string>,
+  failure: GhCommandFailure
+): boolean =>
+  failure._tag === "nonzero-exit" &&
+  A.contains(
+    [
+      "no pull requests found",
+      `no pull requests found for branch "${context.branch}"`,
+      ...headOwner.pipe(
+        O.map((owner) => `no pull requests found for branch "${owner}:${context.branch}"`),
+        O.toArray
+      ),
+    ],
+    Str.trim(failure.output)
+  );
 const ghPullRequestViewOutput = (context: RepoRunContext) =>
   ghOutput({
     args: ghPullRequestViewArgs,
@@ -149,7 +163,11 @@ export const findOpenPullRequestViaRest = Effect.fn("Yeet.findOpenPullRequestVia
   );
 });
 
-const ghPullRequestViewFailure = (failure: GhCommandFailure): YeetCommandError => {
+const ghPullRequestViewFailure = (
+  context: RepoRunContext,
+  headOwner: O.Option<string>,
+  failure: GhCommandFailure
+): YeetCommandError => {
   if (failure._tag === "spawn") {
     return YeetCommandError.new("Failed to inspect current branch pull request.")(failure.cause);
   }
@@ -161,12 +179,24 @@ const ghPullRequestViewFailure = (failure: GhCommandFailure): YeetCommandError =
     });
   }
   return YeetCommandError.make({
-    message:
-      "yeet monitor requires an open pull request for the current branch. Run the full local proof fallback with `bun run audit:github pre-push` when no PR is available.",
+    message: confirmedMissingPullRequest(context, headOwner, failure)
+      ? "yeet monitor requires an open pull request for the current branch. Run the full local proof fallback with `bun run audit:github pre-push` when no PR is available."
+      : "Failed to inspect current branch pull request through gh pr view; PR presence is unknown.",
     command: ghPullRequestViewCommand,
     exitCode: failure.exitCode,
+    cause: failure,
   });
 };
+
+const pullRequestLookupFailure = (
+  context: RepoRunContext,
+  headOwner: O.Option<string>,
+  restFailure: O.Option<YeetCommandError>,
+  fallbackFailure: GhCommandFailure
+): YeetCommandError =>
+  !confirmedMissingPullRequest(context, headOwner, fallbackFailure) && O.isSome(restFailure)
+    ? restFailure.value
+    : ghPullRequestViewFailure(context, headOwner, fallbackFailure);
 
 /**
  * Read the current branch pull request through `gh pr view`.
@@ -206,20 +236,15 @@ export const runGhPullRequestView = Effect.fn("Yeet.runGhPullRequestView")(funct
 > {
   // REST first: its budget is separate from the shared GraphQL budget that
   // `gh pr view` spends. `gh pr view` stays as the fallback for a REST failure.
-  const viaRest = yield* findOpenPullRequestViaRest(context).pipe(Effect.option, Effect.map(O.flatten));
-  if (O.isSome(viaRest)) return viaRest.value;
+  const viaRest = yield* Effect.result(findOpenPullRequestViaRest(context));
+  if (Result.isSuccess(viaRest) && O.isSome(viaRest.success)) return viaRest.success.value;
+  // Optional owner metadata only qualifies an exact fork-owner absence message.
+  // An unresolved owner cannot confirm qualified absence.
+  const headOwner = yield* originPushOwner(context).pipe(Effect.result, Effect.map(Result.getSuccess));
   return yield* ghPullRequestViewOutput(context).pipe(
     Effect.matchEffect({
       onFailure: (failure) =>
-        Effect.fail(
-          graphQlRateLimited(failure)
-            ? YeetCommandError.make({
-                message: "yeet monitor requires an open pull request for the current branch.",
-                command: "gh api repos/{owner}/{repo}/pulls",
-                exitCode: 1,
-              })
-            : ghPullRequestViewFailure(failure)
-        ),
+        Effect.fail(pullRequestLookupFailure(context, headOwner, Result.getFailure(viaRest), failure)),
       onSuccess: (output) =>
         decodeGhPullRequestView(output).pipe(
           Effect.mapError(YeetCommandError.new("Failed to decode gh pr view JSON."))
@@ -252,8 +277,8 @@ export const runGhPullRequestView = Effect.fn("Yeet.runGhPullRequestView")(funct
  * ```
  *
  * @param context - Repo context whose branch must match the PR head ref.
- * @returns `Some` open pull request metadata for the current branch, otherwise
- * `None`.
+ * @returns `Some` open metadata, or `None` from a confirmed empty/closed/mismatched
+ * lookup. Transport, rate, auth and undecodable failures remain typed errors.
  * @category clients
  * @since 0.0.0
  */
@@ -265,17 +290,16 @@ export const findOpenPullRequest = Effect.fn("Yeet.findOpenPullRequest")(functio
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git | YeetGithubServices
 > {
   // REST first (separate budget); `gh pr view` only when the REST read failed,
-  // and a spent GraphQL budget then reports the REST failure, never "no PR".
+  // and any unknown fallback failure preserves a typed error, never "no PR".
   const viaRest = yield* Effect.result(findOpenPullRequestViaRest(context));
   if (Result.isSuccess(viaRest)) return viaRest.success;
+  const headOwner = yield* originPushOwner(context).pipe(Effect.result, Effect.map(Result.getSuccess));
   return yield* ghPullRequestViewOutput(context).pipe(
     Effect.matchEffect({
       onFailure: (failure) =>
-        graphQlRateLimited(failure)
-          ? Effect.fail(viaRest.failure)
-          : failure._tag === "spawn"
-            ? Effect.fail(YeetCommandError.new("Failed to inspect current branch pull request.")(failure.cause))
-            : Effect.succeedNone,
+        confirmedMissingPullRequest(context, headOwner, failure)
+          ? Effect.succeedNone
+          : Effect.fail(pullRequestLookupFailure(context, headOwner, O.some(viaRest.failure), failure)),
       onSuccess: (output) =>
         decodeGhPullRequestView(output).pipe(
           Effect.mapBoth({

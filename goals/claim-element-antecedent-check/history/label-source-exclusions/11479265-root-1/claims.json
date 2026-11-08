@@ -1,0 +1,77 @@
+{
+  "familyId": "11479265-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "An equalizer receiving a digitally modulated single-carrier signal and performing equalization using frequency domain signal processing, wherein the equalizer comprises: a filtering part accepting a received signal sampled using a predetermined number of over-samples as input and performing filtering by converting the received signal to an over-sample number small enough to avoid foldover noise generation in the frequency domain; a transmission channel estimation part converting the received signal to an over-sample number large enough to obtain sufficient timing resolution, performing path timing detection using the timing resolution, converting the transmission channel responses corresponding to the path timings to the frequency domain, and calculating transmission channel estimates corresponding to the subcarriers of the received signal in the frequency domain; and a weight calculation part, which calculates the weights of the equalizing filter used in the filtering part based on the output of the transmission channel estimation part.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The equalizer according to claim 1, wherein the filtering part has: a downsampling part that downsamples a received signal sampled using an over-sample number of NOS to an over-sample number of N′OS (N′OSNOS/n, where n is 1 or greater and an integer equal to a power of 2), a first FFT part that performs a fast Fourier transform (FFT: Fast Fourier Transform) on the output of the downsampling part using N′OS×NFFT points (NFFT: fast Fourier transform block length), an equalizing filter that filters the output of the first FFT part using the weights, and an IFFT part that performs an inverse fast Fourier transform (IFFT: Inverse Fast Fourier Transform) on the output of the equalizing filter using N′OS×NFFT points.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The equalizer according to claim 1, wherein the transmission channel estimation part has: an upsampling part that upsamples a received signal sampled using an over-sample number of NOS to an over-sample number of N″OS (N″OS=mNOS, where m is 1 or greater and an integer equal to a power of 2), a timing detection part that detects the timings of a plurality of paths using the output of the upsampling part, a transmission channel response estimation part that estimates the transmission channels at a plurality of detected path timings, a second FFT part that performs FFT on the impulse responses obtained as output from the transmission channel response estimation part using N″OS×N′FFT points (N′FFT=NFFT/l, where l is 1 or greater and an integer equal to a power of 2 and N′FFT is an FFT block length), a subcarrier removal part that removes high frequency component subcarriers from the subcarriers outputted from the second FFT part, and a subcarrier interpolation part that performs subcarrier interpolation between subcarriers remaining after removal by the subcarrier removal part.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The equalizer according to claim 1, wherein the transmission channel estimation part has: an upsampling part that upsamples the received signal sampled using an over-sample number of NOS to an over-sample number of N″OS, a timing detection part that detects the timings of a plurality of paths using the received signal, a transmission channel response estimation part that estimates the transmission channels at a plurality of detected path timings, a second FFT part that performs FFT on the impulse responses obtained as output from the transmission channel response estimation part using N″OS×NFFT points, a subcarrier removal part that removes high frequency component subcarriers from the subcarriers outputted from the second FFT part, and a subcarrier interpolation part that performs subcarrier interpolation between the subcarriers remaining after removal by the subcarrier removal part.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The equalizer according to claim 1, wherein the weight calculation part calculates the weights of the equalizing filter based on the minimum mean square error method (MMSE: Minimum Mean Square Error) or the zero forcing method.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The equalizer according to claim 3, wherein the timing detection part has: a delay profile generation part that generates a delay profile based on the results of detection of sliding correlation between a known pilot signal sequence and a pilot signal contained in an upsampled received signal with an over-sample number of N″OS, and a path timing selection part that selects the timings of a plurality of high-level paths based on the delay profile.",
+      "sourceXmlParentClaimNumbers": [3]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The equalizer according to claim 4, wherein the timing detection part has: a delay profile generation part that generates a delay profile based on the results of detection of sliding correlation between a known pilot signal sequence and a pilot signal contained in a received signal with an over-sample number of NOS, a profile interpolation part that interpolates the delay profile to an over-sample number of N″OS, and a path timing selection part that selects the timings of a plurality of high-level paths using the output of the profile interpolation part.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The equalizer according to claim 4, wherein the timing detection part has: a delay profile generation part that generates a delay profile based on the results of detection of sliding correlation between a known pilot signal sequence and a pilot signal contained in a received signal with an over-sample number of NOS, a path timing selection part that selects the timings of a plurality of high-level paths based on the delay profile, a partial profile interpolation part that interpolates the delay profile in the peripheral portions of the path timings to an over-sample number of N″OS based on the delay profile and the timings of the plurality of paths, and a path timing adjustment part that designates the highest-level points in each path as the path timings using the output of the partial profile interpolation part.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The equalizer according to claim 4, wherein the timing detection part has: a delay profile generation part that generates a delay profile based on the results of detection of sliding correlation between a known pilot signal sequence and a pilot signal contained in a received signal with an over-sample number of NOS, a path timing selection part that selects the timings of a plurality of high-level paths based on the delay profile, a partial profile calculation part that calculates the delay profile in the peripheral portions of the path timings using the timings of the plurality of paths and the upsampled received signal with an over-sample number of N″OS, and a path timing adjustment part that designates the highest-level point in each path as the path timing using the output of the partial profile calculation part.",
+      "sourceXmlParentClaimNumbers": [4]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The equalizer according to claim 3 or 4, wherein the subcarrier removal part removes sub carriers in the range of (N′OS/2)×(NFFT/l)<f≦(N″OS−N′OS/2)×(NFFT/l) for transmission channel estimates H(f) (1≦f≦N″OS×(NFFT/l)) outputted from the second FFT part.",
+      "sourceXmlParentClaimNumbers": [3, 4]
+    },
+    {
+      "claimNumber": 11,
+      "claimText": "The equalizer according to claims 3 or 4, wherein the subcarrier interpolation part performs subcarrier interpolation with l-1 subcarriers each between the subcarriers, using subcarriers in the range of 1≦f≦(N′OS/2)×(NFFT/l), (N″OS−N′OS/2)×(NFFT/l)<f≦N″OS×(NFFT/l), i.e. the remainder after removal by the subcarrier removal part, for transmission channel estimates H(f) (1≦f≦N″OS×(NFFT/l)) outputted from the second FFT part.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 12,
+      "claimText": "The equalizer according to claims 3 or 4, wherein the subcarrier interpolation part uses N (where N is an integer of 2 or more) subcarriers to interpolate the respective subcarriers based on a (N−1)th order function.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 13,
+      "claimText": "The equalizer according to claim 3 or 4 wherein, in the processing size of the second FFT part, i.e. N″OS×N′FFT (N′FFT=NFFTl), l=m×n, and the processing size N″OS×N′FFT can be made identical to the processing size N′OS×NFFT of the first FFT part.",
+      "sourceXmlParentClaimNumbers": [3, 4]
+    },
+    {
+      "claimNumber": 14,
+      "claimText": "An equalizing method comprising receiving a digitally modulated single-carrier signal and performing equalization using frequency domain signal processing, wherein a received signal sampled using a predetermined number of over-samples is filtered by conversion to an over-sample number small enough to avoid foldover noise generation in the frequency domain, and, on the other hand, the received signal is converted to an over-sample number large enough to obtain sufficient timing resolution, path timing detection is carried out using this timing resolution, transmission channel responses corresponding to the path timings are converted to the frequency domain, transmission channel estimates corresponding to the subcarriers of the received signal in the frequency domain are calculated, and the weights of the equalizing filter used for the filtering are calculated from the channel estimates.",
+      "sourceXmlParentClaimNumbers": []
+    }
+  ]
+}

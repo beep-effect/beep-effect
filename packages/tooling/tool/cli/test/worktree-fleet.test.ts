@@ -419,14 +419,15 @@ it.effect(
     const f = yield* fixture();
     yield* f.fs.makeDirectory(f.path.join(f.owner, ".git"));
     yield* f.fs.writeFileString(f.path.join(f.owner, ".env"), "COPIED=yes\n");
-    yield* f.fs.makeDirectory(f.path.join(f.owner, "scripts"), { recursive: true });
-    yield* f.fs.writeFileString(f.path.join(f.owner, "scripts", "regenerate-merge-driver.sh"), "#!/bin/sh\nexit 1\n");
+    const driverSource = f.path.join("packages", "tooling", "tool", "cli", "src", "commands", "Git");
+    yield* f.fs.makeDirectory(f.path.join(f.owner, driverSource), { recursive: true });
+    yield* f.fs.writeFileString(f.path.join(f.owner, driverSource, "Git.command.ts"), "\n");
     yield* writeExecutable(
       f.path.join(f.bin, "git"),
       `#!/bin/sh
 case "$1 $2" in
   "worktree list") printf 'worktree %s\\0HEAD 0000000000000000000000000000000000000000\\0branch refs/heads/main\\0\\0' "$PWD" ;;
-  "worktree add") mkdir -p "$5/scripts"; cp "$PWD/scripts/regenerate-merge-driver.sh" "$5/scripts/" ;;
+  "worktree add") mkdir -p "$5/${driverSource}"; cp "$PWD/${driverSource}/Git.command.ts" "$5/${driverSource}/" ;;
   "fetch origin"|"submodule update"|"config merge.regenerate."*) exit 0 ;;
   "rev-parse --verify") printf '0000000000000000000000000000000000000000\\n' ;;
   *) exit 91 ;;

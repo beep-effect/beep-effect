@@ -1,0 +1,1949 @@
+{
+  "schemaVersion": "accepted-two-material-source-conformance-overlay/v1",
+  "status": "mechanical derivative of already activated plan; not a new normative correction",
+  "canonicalDigestRule": "SHA256 of UTF-8 JSON sort_keys=True,separators=(comma,colon),ensure_ascii=False",
+  "activationSha256": "1fac3bf660a4e1609a5c7753aaf6ca2c37e224315e3f8f3be232214ecc818d1a",
+  "acceptedNormativeMapSha256": "1170835796644dabe6adc801df200ba621df321f0dfb534ead0d02819756dd3e",
+  "acceptedCompleteSourceOraclesSha256": "a8e95d969c8e198eff9b635e820223cd64a35203f8054a0ab8ad485345a79ae8",
+  "historicalFixturePath": "packages/law-practice/domain/test/fixtures/claim-element/recurrence-source-plans.json",
+  "historicalFixtureSha256": "30c157e028651b63ac6074be1d8bfbca01887a6c215b6a077e79446f57648e07",
+  "historicalRows": 54,
+  "unchangedNormativeCarry": 52,
+  "explicitMaterialOverlays": 2,
+  "historicalCasePins": [
+    {
+      "case": "qualified-governing-colon",
+      "caseSha256": "389540dca934087da6c4143cb508e75003c26c5e6a72ffeae7e5cb0fadc1ea3a"
+    },
+    {
+      "case": "quoted-incidental-colon",
+      "caseSha256": "36b718f547c2c529e267475e481122dfdd9290ac480274df6c2f33fab0f881c3"
+    },
+    {
+      "case": "explicit-balanced-labels",
+      "caseSha256": "b3f837e0b11b01df40ed90bba0e001eaf62cb2d586713261fe543f91a2c4c3b8"
+    },
+    {
+      "case": "repeated-colon-unsupported",
+      "caseSha256": "5eaf08546d489bcace288457ff208708ea03dabacb08763660ef3f0256ed2dcf"
+    },
+    {
+      "case": "internal-unlabelled-composition",
+      "caseSha256": "b962dc850c69ee6f0d81c65777d14560fb2640db2f5a48f7f9ec44f2045fd6b5"
+    },
+    {
+      "case": "nondeclaration-colon",
+      "caseSha256": "aa83f0a20efdf94f343a89a507ebb389d3aa9ad765d6065043fcca824805aea3"
+    },
+    {
+      "case": "finite-PP-complement",
+      "caseSha256": "fb07546fff730dcc2d32b71bd47fd1b26b9daef0b3cfeb12fb12c2562318e37d"
+    },
+    {
+      "case": "postnominal-complement",
+      "caseSha256": "5f2a328d088498b780996e2a4ef1993e099562307640a3f3c43940a939f6ec8a"
+    },
+    {
+      "case": "prenominal-modifier-retained",
+      "caseSha256": "2389b5eb179556f219ba046b4f1c90ebe44deccf75b3c97e2300fa47812c5011"
+    },
+    {
+      "case": "competing-relative-owner",
+      "caseSha256": "2e08f596425e1ded18f2dc48c1709be68afa07e5e7eb2e24b012b7dff9b3d667"
+    },
+    {
+      "case": "scalar-auxiliary-adjunct",
+      "caseSha256": "36d2edad5e5e143db377e0a47974c2f627057e948d6ce754533e741c396bc33a"
+    },
+    {
+      "case": "shared-article-alternative",
+      "caseSha256": "1408f89345762dda62972074aaf26572c56d68a47df26590a7a93010110ccce3"
+    },
+    {
+      "case": "renewed-article-coordinates",
+      "caseSha256": "5984d300ad89a02796c6f703e8245d3d8f1c437cd2c937332bd711be6bc79a54"
+    },
+    {
+      "case": "shared-head-modifiers",
+      "caseSha256": "67d11b52a1f932d61313a0c0c97832e7e205e65085c2a95c66338dff3ecab314"
+    },
+    {
+      "case": "definite-quantity-reference",
+      "caseSha256": "31ea40e05614ff492b40c755a7f0888c5c494571b6eeac5642334f6999b87239"
+    },
+    {
+      "case": "ambiguous-partitive",
+      "caseSha256": "663702dcba717f12692fefa7a12c3e448b3f6f7fa087b04abd104c7c54fedc13"
+    },
+    {
+      "case": "coordinated-action-slot",
+      "caseSha256": "ee965217c7f04953619849ccdce4b88cd5e8a2b1549b768d5ac5de7c2f78e358"
+    },
+    {
+      "case": "nominal-action-words",
+      "caseSha256": "48b98aba5bfaf4e6f61872f17aab4e18d78844508da8006ab2b50a64143edd18"
+    },
+    {
+      "case": "unresolved-material-role",
+      "caseSha256": "7eb585ce25c0a96fce07894b2b26a28117dd485fe5abd7655e1b28fad9f3e61a"
+    },
+    {
+      "case": "declared-action-steps",
+      "caseSha256": "4ed847f3953f36ca2c7fadc0a87e6284fae1f5f1971eed45e834fbbcd06a6266"
+    },
+    {
+      "case": "quoted-steps-name",
+      "caseSha256": "880a41b06194f7bef3289346d08ba9449c7fa6fbdb40fa1e187c83f0673df5ce"
+    },
+    {
+      "case": "finite-PP-unproved-plural",
+      "caseSha256": "dc55e4f4caaef06b58ade7d68c78b8b4229d5873d72c29f99e93830147cac5fc"
+    },
+    {
+      "case": "finite-PP-unproved-lexical",
+      "caseSha256": "c43951409865942f3719c10b6c50eb12c5e0e25f4901bbfaf9a625fdb58c1e4c"
+    },
+    {
+      "case": "finite-PP-licensed-adverb",
+      "caseSha256": "6d8c077cd6a53492b70ab765ea8cc67340bef050f726e9d9e501350efd464c39"
+    },
+    {
+      "case": "postnominal-participle-evidence",
+      "caseSha256": "96566f9210ad3245e808cbaebf5b02acdeeae88869a727003e5275bd90cb2bf1"
+    },
+    {
+      "case": "postnominal-competing-owner",
+      "caseSha256": "ead02acd81f534398fdab22c1a57fd26772d38f7a3b71f550998546dd0780187"
+    },
+    {
+      "case": "scalar-versus-quantity",
+      "caseSha256": "f41021824855448b00b5ad93853567dbd86710402aabbe6b37844acd2587cbb5"
+    },
+    {
+      "case": "scalar-incomplete-auxiliary",
+      "caseSha256": "974a19153a3ded80198b7b0cb856ce15a1e1d86373e6e2b92b8657a5dc1f7da3"
+    },
+    {
+      "case": "shared-head-renewed-heads",
+      "caseSha256": "2f2570c0a3938706c544316dac2659b21ded73f1982e2136e36ade0a0625f9b9"
+    },
+    {
+      "case": "the-quantity-reference",
+      "caseSha256": "472be5bf58ea64d14031fbff6ba91855d50daf438e8f685dac78b6f53f6fb904"
+    },
+    {
+      "case": "unresolved-numeric-selector",
+      "caseSha256": "374f9e01c6c105ac092aa810b2bb157239e9866ff61805182b7be86a8946b52e"
+    },
+    {
+      "case": "corroborated-plural-cardinal",
+      "caseSha256": "99bdcb3e87373677e54f29d225be02611376c6a60beb66204df7c88769f6579c"
+    },
+    {
+      "case": "unproved-cardinal-head",
+      "caseSha256": "4ad002663baf3998a14e8ee194e7512e3a0218aa093e61c2c906d076e1613048"
+    },
+    {
+      "case": "action-no-independent-first-proof",
+      "caseSha256": "e71b2d0145b264d603accbccc2e94a89f08ff545a71262a79abd6adaa53a42ba"
+    },
+    {
+      "case": "finite-object-coordination",
+      "caseSha256": "82249bf22f6e9698c043b656bb40367c7da77c5124f23831864c83766aa0c60c"
+    },
+    {
+      "case": "ambiguous-nested-unlabelled-declaration",
+      "caseSha256": "e1233d10725cdc3dc75b87aab7e739f8e31fd1f19f2c44d886aa3a67cb8d456d"
+    },
+    {
+      "case": "nested-labelled-retention",
+      "caseSha256": "cee9ddacb62eed44fd2285e047b7dcaffb520cafee47ae96051fdd1c1d9c4a2e"
+    },
+    {
+      "case": "NP-purpose-retention",
+      "caseSha256": "15b5fa5105b59bdc15134fc80d3eab2681788740d650fc97d0e455b7e644a1d3"
+    },
+    {
+      "case": "finite-manner-retention",
+      "caseSha256": "3a45a937545959b9a344046434ccca76244f8242766b38585ed414d62bad7f0c"
+    },
+    {
+      "case": "finite-purpose-competition",
+      "caseSha256": "2f6cf66283b3485b0cbefca3e0108bd3ac054645febbedb45fcddc134b4d46c3"
+    },
+    {
+      "case": "configured-infinitive-retention",
+      "caseSha256": "fe38d8349e7bbb36d2cc7614571a09ea4c51ef08c91472c3c139b1ee908bcd44"
+    },
+    {
+      "case": "material-entity-unknown-hair",
+      "caseSha256": "b609f5ea3d76b51aa040c50e9299676702c1faa7b6ec9dd7576e6f2d3ef91a15"
+    },
+    {
+      "case": "relational-noun-deferred",
+      "caseSha256": "7681de015e7f60cc05167e53fa92bb169a73866895fa6c3c5908553b54179fbc"
+    },
+    {
+      "case": "bare-label-deferred",
+      "caseSha256": "4c40940345698114d40605faf9f26d43241310828554a87d8b14f19fe4151017"
+    },
+    {
+      "case": "shared-subject-semicolon-unsupported",
+      "caseSha256": "47bac51045735761111be9f717beef3caab73aa3ce99d382b953103bcee5f2bd"
+    },
+    {
+      "case": "ordinary-to-NP-not-infinitive",
+      "caseSha256": "c2d7114493fd157386fb413fb5ede4837b6155d9bec1044a1fcdaf9ab394003c"
+    },
+    {
+      "case": "ordinary-to-unproved-slot",
+      "caseSha256": "db21dec4c0c3af28985b4cb2221d07b7638b5207f0022c38781433d74308dc62"
+    },
+    {
+      "case": "duplicate-quantity-introductions",
+      "caseSha256": "54c44eebfd3f9e0983f08b8c079c5afdb1df46ee14ea49d19278c3e55e2be082"
+    },
+    {
+      "case": "quantity-object-number-unproved",
+      "caseSha256": "3c604a066acd850ae79bc95cfa4ef5b400886b22ab2008426eddc3181f2ac3ad"
+    },
+    {
+      "case": "shared-group-exact-reference",
+      "caseSha256": "1e6180726bf0363dc974eac80d6a9cba1f5ffb9ee6aff2e56c1adf4f34bb0741"
+    },
+    {
+      "case": "shared-group-branch-unproved",
+      "caseSha256": "8c0b4649e8765ca6007b2fdf13e84aa62e35718475744afac7125339424eade0"
+    },
+    {
+      "case": "reduced-owned-PP-object",
+      "caseSha256": "cd87313ae37d013b77b2327043a9fa192bf3a5c0cc4180121e4113317c8af2e5"
+    },
+    {
+      "case": "reduced-finite-object-competition",
+      "caseSha256": "686229f5047b07a6664a3f92beb5afd3327660772ff1609bd6c05ba49a774c73"
+    },
+    {
+      "case": "proved-nominal-compound-retention",
+      "caseSha256": "dbd55ba1a77d7ff634b6322c7604d79986cc4e285f7818ce90ad7ea6a35418c3"
+    }
+  ],
+  "unchanged52": [
+    {
+      "case": "qualified-governing-colon",
+      "caseSha256": "389540dca934087da6c4143cb508e75003c26c5e6a72ffeae7e5cb0fadc1ea3a",
+      "expectedSha256": "8e1e6179567e85bd2250f4806cf43793e0ff190416899399c8090616ab0d29fe"
+    },
+    {
+      "case": "quoted-incidental-colon",
+      "caseSha256": "36b718f547c2c529e267475e481122dfdd9290ac480274df6c2f33fab0f881c3",
+      "expectedSha256": "f3be2a201eef7989ac878d83c956081ccdafc8559ebac1fda9b226a8b01d338e"
+    },
+    {
+      "case": "explicit-balanced-labels",
+      "caseSha256": "b3f837e0b11b01df40ed90bba0e001eaf62cb2d586713261fe543f91a2c4c3b8",
+      "expectedSha256": "7fece20bec2c09502277a78f849bc1ce0df2c6700d32b05617deb3fd91029890"
+    },
+    {
+      "case": "repeated-colon-unsupported",
+      "caseSha256": "5eaf08546d489bcace288457ff208708ea03dabacb08763660ef3f0256ed2dcf",
+      "expectedSha256": "42584fbf7e6f5b2440ad01e1cde176bf1e2f353cb2efe13358b36d430bc16c11"
+    },
+    {
+      "case": "internal-unlabelled-composition",
+      "caseSha256": "b962dc850c69ee6f0d81c65777d14560fb2640db2f5a48f7f9ec44f2045fd6b5",
+      "expectedSha256": "b68837898eb1ae874a8124083c41f42e34453ee925e40e8568c076f2df4899e9"
+    },
+    {
+      "case": "nondeclaration-colon",
+      "caseSha256": "aa83f0a20efdf94f343a89a507ebb389d3aa9ad765d6065043fcca824805aea3",
+      "expectedSha256": "42584fbf7e6f5b2440ad01e1cde176bf1e2f353cb2efe13358b36d430bc16c11"
+    },
+    {
+      "case": "finite-PP-complement",
+      "caseSha256": "fb07546fff730dcc2d32b71bd47fd1b26b9daef0b3cfeb12fb12c2562318e37d",
+      "expectedSha256": "6201839a2e9d03463f99cc89ab9958d52b34aff751eea67c26ff7f3ddbaab816"
+    },
+    {
+      "case": "postnominal-complement",
+      "caseSha256": "5f2a328d088498b780996e2a4ef1993e099562307640a3f3c43940a939f6ec8a",
+      "expectedSha256": "974143c91b963f3c31304bf27d6dab025e83b7a9ed91d0eaca90c135970e8bd0"
+    },
+    {
+      "case": "prenominal-modifier-retained",
+      "caseSha256": "2389b5eb179556f219ba046b4f1c90ebe44deccf75b3c97e2300fa47812c5011",
+      "expectedSha256": "334f9bfd287739e933b41e64c5b00e641b20e7eb7a61ef8ee5febed4fe41fb0e"
+    },
+    {
+      "case": "competing-relative-owner",
+      "caseSha256": "2e08f596425e1ded18f2dc48c1709be68afa07e5e7eb2e24b012b7dff9b3d667",
+      "expectedSha256": "42584fbf7e6f5b2440ad01e1cde176bf1e2f353cb2efe13358b36d430bc16c11"
+    },
+    {
+      "case": "scalar-auxiliary-adjunct",
+      "caseSha256": "36d2edad5e5e143db377e0a47974c2f627057e948d6ce754533e741c396bc33a",
+      "expectedSha256": "92b148ba6b2342e721f2aab486f3f731e8c105b61f04b97ccd508b233d1ec21d"
+    },
+    {
+      "case": "shared-article-alternative",
+      "caseSha256": "1408f89345762dda62972074aaf26572c56d68a47df26590a7a93010110ccce3",
+      "expectedSha256": "9d714a8c82de195563c5163702c6301187d276d7b2de65857d8c7ddb5686fd78"
+    },
+    {
+      "case": "renewed-article-coordinates",
+      "caseSha256": "5984d300ad89a02796c6f703e8245d3d8f1c437cd2c937332bd711be6bc79a54",
+      "expectedSha256": "8c034e7da8d1721a58ee1b80528be6a04b9e6f6858e9bbd5d79f7064a2a34cb8"
+    },
+    {
+      "case": "shared-head-modifiers",
+      "caseSha256": "67d11b52a1f932d61313a0c0c97832e7e205e65085c2a95c66338dff3ecab314",
+      "expectedSha256": "acd1a804405e7940f8740b3c8681871b556bcb8afe044b7370ec75dfb3e31e9f"
+    },
+    {
+      "case": "definite-quantity-reference",
+      "caseSha256": "31ea40e05614ff492b40c755a7f0888c5c494571b6eeac5642334f6999b87239",
+      "expectedSha256": "2d3432dbc0087efb6836fe50de7c983d74ae50acddce402f68871abe9f3faca0"
+    },
+    {
+      "case": "ambiguous-partitive",
+      "caseSha256": "663702dcba717f12692fefa7a12c3e448b3f6f7fa087b04abd104c7c54fedc13",
+      "expectedSha256": "42584fbf7e6f5b2440ad01e1cde176bf1e2f353cb2efe13358b36d430bc16c11"
+    },
+    {
+      "case": "coordinated-action-slot",
+      "caseSha256": "ee965217c7f04953619849ccdce4b88cd5e8a2b1549b768d5ac5de7c2f78e358",
+      "expectedSha256": "378bbf5459b7a5bf32729b6276ad7335a0cc8b99eba8709fd61687f118425cc4"
+    },
+    {
+      "case": "nominal-action-words",
+      "caseSha256": "48b98aba5bfaf4e6f61872f17aab4e18d78844508da8006ab2b50a64143edd18",
+      "expectedSha256": "a36bdaac71fccb315b67f6348c1af63de753c02a75660653b90fe7a05838dabe"
+    },
+    {
+      "case": "declared-action-steps",
+      "caseSha256": "4ed847f3953f36ca2c7fadc0a87e6284fae1f5f1971eed45e834fbbcd06a6266",
+      "expectedSha256": "fa7a1fcc012782d0ce84c2b9a9a93ec33ee897e29c5e16157c36690bf9d4698c"
+    },
+    {
+      "case": "quoted-steps-name",
+      "caseSha256": "880a41b06194f7bef3289346d08ba9449c7fa6fbdb40fa1e187c83f0673df5ce",
+      "expectedSha256": "a2c820fbf43d3396da373dd9c245dcee5fd79c82db571de7d1caf12080d61737"
+    },
+    {
+      "case": "finite-PP-unproved-plural",
+      "caseSha256": "dc55e4f4caaef06b58ade7d68c78b8b4229d5873d72c29f99e93830147cac5fc",
+      "expectedSha256": "42584fbf7e6f5b2440ad01e1cde176bf1e2f353cb2efe13358b36d430bc16c11"
+    },
+    {
+      "case": "finite-PP-unproved-lexical",
+      "caseSha256": "c43951409865942f3719c10b6c50eb12c5e0e25f4901bbfaf9a625fdb58c1e4c",
+      "expectedSha256": "42584fbf7e6f5b2440ad01e1cde176bf1e2f353cb2efe13358b36d430bc16c11"
+    },
+    {
+      "case": "finite-PP-licensed-adverb",
+      "caseSha256": "6d8c077cd6a53492b70ab765ea8cc67340bef050f726e9d9e501350efd464c39",
+      "expectedSha256": "7b4eea9dc307b024f55aa83c809ca81c78a5bfc3a8df25a8e1eb4525c5dfaf79"
+    },
+    {
+      "case": "postnominal-participle-evidence",
+      "caseSha256": "96566f9210ad3245e808cbaebf5b02acdeeae88869a727003e5275bd90cb2bf1",
+      "expectedSha256": "50e1a035ad1dbe46a2f50e52dcaec0f80085943d3101b57fbaf7801055a5f25c"
+    },
+    {
+      "case": "postnominal-competing-owner",
+      "caseSha256": "ead02acd81f534398fdab22c1a57fd26772d38f7a3b71f550998546dd0780187",
+      "expectedSha256": "42584fbf7e6f5b2440ad01e1cde176bf1e2f353cb2efe13358b36d430bc16c11"
+    },
+    {
+      "case": "scalar-versus-quantity",
+      "caseSha256": "f41021824855448b00b5ad93853567dbd86710402aabbe6b37844acd2587cbb5",
+      "expectedSha256": "68162257d07e21b942624a7aca363259f99dd1b9ada00ff1c09bb209a17a9ce5"
+    },
+    {
+      "case": "scalar-incomplete-auxiliary",
+      "caseSha256": "974a19153a3ded80198b7b0cb856ce15a1e1d86373e6e2b92b8657a5dc1f7da3",
+      "expectedSha256": "42584fbf7e6f5b2440ad01e1cde176bf1e2f353cb2efe13358b36d430bc16c11"
+    },
+    {
+      "case": "shared-head-renewed-heads",
+      "caseSha256": "2f2570c0a3938706c544316dac2659b21ded73f1982e2136e36ade0a0625f9b9",
+      "expectedSha256": "408fbd48a73376138ec87ea197eca3521e01fde3ca0d52fe71cc2c563f76961d"
+    },
+    {
+      "case": "the-quantity-reference",
+      "caseSha256": "472be5bf58ea64d14031fbff6ba91855d50daf438e8f685dac78b6f53f6fb904",
+      "expectedSha256": "1aaf21b96e7da06d066b241f85cff512a7a1bded7c9a001af428b14b97dda76f"
+    },
+    {
+      "case": "unresolved-numeric-selector",
+      "caseSha256": "374f9e01c6c105ac092aa810b2bb157239e9866ff61805182b7be86a8946b52e",
+      "expectedSha256": "569562368b96720ae808e031da728c969bb9aaafe023f463c708be605ad17805"
+    },
+    {
+      "case": "corroborated-plural-cardinal",
+      "caseSha256": "99bdcb3e87373677e54f29d225be02611376c6a60beb66204df7c88769f6579c",
+      "expectedSha256": "7662a9aa7f590c179940cec3d6b654344315cb3b59ff19e31df02c5c4ec81228"
+    },
+    {
+      "case": "unproved-cardinal-head",
+      "caseSha256": "4ad002663baf3998a14e8ee194e7512e3a0218aa093e61c2c906d076e1613048",
+      "expectedSha256": "006ca0763a777ed583a135b350d9451aaeb7158db032d92a75d7e04cb254007c"
+    },
+    {
+      "case": "action-no-independent-first-proof",
+      "caseSha256": "e71b2d0145b264d603accbccc2e94a89f08ff545a71262a79abd6adaa53a42ba",
+      "expectedSha256": "42584fbf7e6f5b2440ad01e1cde176bf1e2f353cb2efe13358b36d430bc16c11"
+    },
+    {
+      "case": "finite-object-coordination",
+      "caseSha256": "82249bf22f6e9698c043b656bb40367c7da77c5124f23831864c83766aa0c60c",
+      "expectedSha256": "72cb6fca7a5413b0405f52e38d09ab7a0a30df9191a68071db6bad2eac1bb393"
+    },
+    {
+      "case": "ambiguous-nested-unlabelled-declaration",
+      "caseSha256": "e1233d10725cdc3dc75b87aab7e739f8e31fd1f19f2c44d886aa3a67cb8d456d",
+      "expectedSha256": "42584fbf7e6f5b2440ad01e1cde176bf1e2f353cb2efe13358b36d430bc16c11"
+    },
+    {
+      "case": "nested-labelled-retention",
+      "caseSha256": "cee9ddacb62eed44fd2285e047b7dcaffb520cafee47ae96051fdd1c1d9c4a2e",
+      "expectedSha256": "723aaaa0696305ddb1bb3a6acd63da97c88f36721e9d1a965b9407c87fd02b8e"
+    },
+    {
+      "case": "NP-purpose-retention",
+      "caseSha256": "15b5fa5105b59bdc15134fc80d3eab2681788740d650fc97d0e455b7e644a1d3",
+      "expectedSha256": "25d132fece0a19932f55879541f32e132fbb5e135558d9359740bed06c61adb9"
+    },
+    {
+      "case": "finite-manner-retention",
+      "caseSha256": "3a45a937545959b9a344046434ccca76244f8242766b38585ed414d62bad7f0c",
+      "expectedSha256": "948059a848ec33fe03e1fe36b59af514d6ee136eab41e3186a844476706a1884"
+    },
+    {
+      "case": "finite-purpose-competition",
+      "caseSha256": "2f6cf66283b3485b0cbefca3e0108bd3ac054645febbedb45fcddc134b4d46c3",
+      "expectedSha256": "42584fbf7e6f5b2440ad01e1cde176bf1e2f353cb2efe13358b36d430bc16c11"
+    },
+    {
+      "case": "configured-infinitive-retention",
+      "caseSha256": "fe38d8349e7bbb36d2cc7614571a09ea4c51ef08c91472c3c139b1ee908bcd44",
+      "expectedSha256": "70adf7179264c8f9b3c1cc04225474ac0ff13f122c4cd88b28f49d9f9a9f017c"
+    },
+    {
+      "case": "relational-noun-deferred",
+      "caseSha256": "7681de015e7f60cc05167e53fa92bb169a73866895fa6c3c5908553b54179fbc",
+      "expectedSha256": "42584fbf7e6f5b2440ad01e1cde176bf1e2f353cb2efe13358b36d430bc16c11"
+    },
+    {
+      "case": "bare-label-deferred",
+      "caseSha256": "4c40940345698114d40605faf9f26d43241310828554a87d8b14f19fe4151017",
+      "expectedSha256": "42584fbf7e6f5b2440ad01e1cde176bf1e2f353cb2efe13358b36d430bc16c11"
+    },
+    {
+      "case": "shared-subject-semicolon-unsupported",
+      "caseSha256": "47bac51045735761111be9f717beef3caab73aa3ce99d382b953103bcee5f2bd",
+      "expectedSha256": "42584fbf7e6f5b2440ad01e1cde176bf1e2f353cb2efe13358b36d430bc16c11"
+    },
+    {
+      "case": "ordinary-to-NP-not-infinitive",
+      "caseSha256": "c2d7114493fd157386fb413fb5ede4837b6155d9bec1044a1fcdaf9ab394003c",
+      "expectedSha256": "f4b375eb795a68eeb0e793b95fdc58a03732e1e3c18b718f2541d4f1399fd20d"
+    },
+    {
+      "case": "ordinary-to-unproved-slot",
+      "caseSha256": "db21dec4c0c3af28985b4cb2221d07b7638b5207f0022c38781433d74308dc62",
+      "expectedSha256": "42584fbf7e6f5b2440ad01e1cde176bf1e2f353cb2efe13358b36d430bc16c11"
+    },
+    {
+      "case": "duplicate-quantity-introductions",
+      "caseSha256": "54c44eebfd3f9e0983f08b8c079c5afdb1df46ee14ea49d19278c3e55e2be082",
+      "expectedSha256": "5e2ffc4f4053a3373136412e27d1f8afd8aae374da61563aa18d590e12ef936b"
+    },
+    {
+      "case": "quantity-object-number-unproved",
+      "caseSha256": "3c604a066acd850ae79bc95cfa4ef5b400886b22ab2008426eddc3181f2ac3ad",
+      "expectedSha256": "42584fbf7e6f5b2440ad01e1cde176bf1e2f353cb2efe13358b36d430bc16c11"
+    },
+    {
+      "case": "shared-group-exact-reference",
+      "caseSha256": "1e6180726bf0363dc974eac80d6a9cba1f5ffb9ee6aff2e56c1adf4f34bb0741",
+      "expectedSha256": "1ce6db6b728cb921b09aa5965d5d95355ff62a2ffda7ce99e26ae1bd561adcdb"
+    },
+    {
+      "case": "shared-group-branch-unproved",
+      "caseSha256": "8c0b4649e8765ca6007b2fdf13e84aa62e35718475744afac7125339424eade0",
+      "expectedSha256": "a268f5045bde93a3c4a4191abab07b85f04a1c0e7e1326226dda7bbee4e37f6f"
+    },
+    {
+      "case": "reduced-owned-PP-object",
+      "caseSha256": "cd87313ae37d013b77b2327043a9fa192bf3a5c0cc4180121e4113317c8af2e5",
+      "expectedSha256": "888010f1cc1f09aa6bdd67bec5258d857cef83d24e6ecf09b4c13cda5979570f"
+    },
+    {
+      "case": "reduced-finite-object-competition",
+      "caseSha256": "686229f5047b07a6664a3f92beb5afd3327660772ff1609bd6c05ba49a774c73",
+      "expectedSha256": "42584fbf7e6f5b2440ad01e1cde176bf1e2f353cb2efe13358b36d430bc16c11"
+    },
+    {
+      "case": "proved-nominal-compound-retention",
+      "caseSha256": "dbd55ba1a77d7ff634b6322c7604d79986cc4e285f7818ce90ad7ea6a35418c3",
+      "expectedSha256": "31aee1ed3a71e6e9c27e224a928d1622f4bed8275089f416b8fa7f0f111935ac"
+    }
+  ],
+  "entries": [
+    {
+      "historicalCase": "unresolved-material-role",
+      "acceptedConformanceCase": "unknown-description-plastic",
+      "source": "A system comprising the plate is formed of plastic.",
+      "sourceSha256": "7391590192a58c1e0e083b75ec01b80d16216b6a97b2756e99eb9385d75a8c73",
+      "sourceAndQualifiedPartsUnchanged": true,
+      "exactAnchorPosLemmaDigest": "acebb67c9393ebe1a338283a7b553fbd32eec340d19e33f23e6d01a45da1c361",
+      "originalCaseSha256": "7eb585ce25c0a96fce07894b2b26a28117dd485fe5abd7655e1b28fad9f3e61a",
+      "originalCaseCanonicalJson": "{\"benchmarkLabel\":false,\"case\":\"unresolved-material-role\",\"claimNumber\":1,\"claimReferences\":[],\"expected\":{\"coverage\":\"partial-required for unresolved bare value/entity NP; substantive supported-reference checks retained\",\"declarationPlans\":[],\"deferred\":[\"No mass/countability inference; no public term deletion; no material-literal role admitted.\"],\"elements\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"functionalParts\":[],\"grouping\":\"preamble\",\"id\":\"root\",\"kind\":\"preamble-subject\",\"lexicalHeader\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"ordinal\":1,\"parent\":null,\"terms\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"head\":\"system\",\"nominal\":\"r\",\"sourceRole\":\"unknown\"}]},{\"anchor\":{\"endChar\":50,\"quote\":\"the plate is formed of plastic\",\"startChar\":20},\"functionalParts\":[{\"anchor\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"kind\":\"term\",\"nominal\":\"n0\"},{\"anchor\":{\"endChar\":43,\"quote\":\" is formed of \",\"startChar\":29},\"kind\":\"text\"},{\"anchor\":{\"endChar\":50,\"quote\":\"plastic\",\"startChar\":43},\"kind\":\"term\",\"nominal\":\"n1\"}],\"grouping\":\"single-restriction\",\"id\":\"body\",\"kind\":\"functional-relation\",\"lexicalHeader\":{\"endChar\":50,\"quote\":\"the plate is formed of plastic\",\"startChar\":20},\"ordinal\":2,\"parent\":\"root\",\"terms\":[{\"anchor\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"determiner\":\"the\",\"head\":\"plate\",\"nominal\":\"n0\",\"sourceRole\":\"unknown\"},{\"anchor\":{\"endChar\":50,\"quote\":\"plastic\",\"startChar\":43},\"determiner\":\"bare\",\"head\":\"plastic\",\"nominal\":\"n1\",\"sourceRole\":\"unknown\"}]}],\"frames\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"arguments\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"nominal\":\"r\",\"ownerCore\":null,\"ownerNominal\":null,\"predicate\":null,\"predicateOwnerFrame\":null,\"role\":\"unknown\"}],\"attachment\":\"main\",\"coordination\":null,\"id\":\"fr\",\"introducer\":null,\"lexicalHeader\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"nominals\":[\"r\"],\"ordinal\":1,\"outerOwnerNominal\":null,\"parent\":null,\"predicates\":[],\"sharedSubject\":null,\"subject\":null},{\"anchor\":{\"endChar\":50,\"quote\":\"the plate is formed of plastic\",\"startChar\":20},\"arguments\":[{\"anchor\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"nominal\":\"n0\",\"ownerCore\":null,\"ownerNominal\":null,\"predicate\":{\"endChar\":39,\"quote\":\"is formed\",\"startChar\":30},\"predicateOwnerFrame\":\"fb\",\"role\":\"subject\"},{\"anchor\":{\"endChar\":50,\"quote\":\"plastic\",\"startChar\":43},\"nominal\":\"n1\",\"ownerCore\":null,\"ownerNominal\":null,\"predicate\":{\"endChar\":39,\"quote\":\"is formed\",\"startChar\":30},\"predicateOwnerFrame\":\"fb\",\"role\":\"prepositional-complement\"}],\"attachment\":\"main\",\"coordination\":null,\"id\":\"fb\",\"introducer\":null,\"lexicalHeader\":{\"endChar\":50,\"quote\":\"the plate is formed of plastic\",\"startChar\":20},\"nominals\":[\"n0\",\"n1\"],\"ordinal\":2,\"outerOwnerNominal\":null,\"parent\":null,\"predicates\":[{\"endChar\":39,\"quote\":\"is formed\",\"startChar\":30}],\"sharedSubject\":null,\"subject\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20}}],\"nominals\":[{\"canonicalReferenceHead\":\"system\",\"core\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"elementOwner\":\"root\",\"head\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2},\"id\":\"r\",\"outer\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"policyMechanism\":\"supported-introduction\",\"proof\":\"supported determiner only; no countability fact\",\"publicHead\":\"system\",\"sourceRole\":\"unknown\"},{\"canonicalReferenceHead\":\"plate\",\"core\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"determiner\":\"the\",\"elementOwner\":\"body\",\"head\":{\"endChar\":29,\"quote\":\"plate\",\"startChar\":24},\"id\":\"n0\",\"outer\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"policyMechanism\":\"supported-reference\",\"proof\":\"supported determiner only; no countability fact\",\"publicHead\":\"plate\",\"sourceRole\":\"unknown\"},{\"canonicalReferenceHead\":\"plastic\",\"core\":{\"endChar\":50,\"quote\":\"plastic\",\"startChar\":43},\"determiner\":\"bare\",\"elementOwner\":\"body\",\"head\":{\"endChar\":50,\"quote\":\"plastic\",\"startChar\":43},\"id\":\"n1\",\"outer\":{\"endChar\":50,\"quote\":\"plastic\",\"startChar\":43},\"policyMechanism\":\"unresolved-bare-reference-or-value\",\"proof\":\"no source role independently proves an introduction\",\"publicHead\":\"plastic\",\"sourceRole\":\"unknown\"}],\"proofCertificates\":[],\"referenceExpectations\":[]},\"lexicalEvidence\":{\"origin\":\"explicit injected source-control facts; not a runtime dictionary, asset output or countability resource\",\"tokens\":[{\"anchor\":{\"endChar\":1,\"quote\":\"A\",\"startChar\":0},\"lemma\":\"a\",\"pos\":\"DET\"},{\"anchor\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2},\"lemma\":\"system\",\"pos\":\"NOUN\"},{\"anchor\":{\"endChar\":19,\"quote\":\"comprising\",\"startChar\":9},\"lemma\":\"comprise\",\"pos\":\"VERB\"},{\"anchor\":{\"endChar\":23,\"quote\":\"the\",\"startChar\":20},\"lemma\":\"the\",\"pos\":\"DET\"},{\"anchor\":{\"endChar\":29,\"quote\":\"plate\",\"startChar\":24},\"lemma\":\"plate\",\"pos\":\"NOUN\"},{\"anchor\":{\"endChar\":32,\"quote\":\"is\",\"startChar\":30},\"lemma\":\"be\",\"pos\":\"AUX\"},{\"anchor\":{\"endChar\":39,\"quote\":\"formed\",\"startChar\":33},\"lemma\":\"form\",\"pos\":\"VERB\"},{\"anchor\":{\"endChar\":42,\"quote\":\"of\",\"startChar\":40},\"lemma\":\"of\",\"pos\":\"ADP\"},{\"anchor\":{\"endChar\":50,\"quote\":\"plastic\",\"startChar\":43},\"lemma\":\"plastic\",\"pos\":\"NOUN\"},{\"anchor\":{\"endChar\":51,\"quote\":\".\",\"startChar\":50},\"lemma\":\".\",\"pos\":\"PUNCT\"}]},\"outcome\":\"admitted\",\"qualifiedParts\":{\"body\":\"the plate is formed of plastic.\",\"preamble\":\"A system\",\"transition\":\"comprising\"},\"qualifiedText\":\"A system comprising the plate is formed of plastic.\",\"reason\":\"\",\"runtimeExecuted\":false}",
+      "originalExpectedSha256": "621ee8a5f919072d78afee31d609eb0cc6321c79b089fae175efc4bae5a95de2",
+      "originalExpectedCanonicalJson": "{\"coverage\":\"partial-required for unresolved bare value/entity NP; substantive supported-reference checks retained\",\"declarationPlans\":[],\"deferred\":[\"No mass/countability inference; no public term deletion; no material-literal role admitted.\"],\"elements\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"functionalParts\":[],\"grouping\":\"preamble\",\"id\":\"root\",\"kind\":\"preamble-subject\",\"lexicalHeader\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"ordinal\":1,\"parent\":null,\"terms\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"head\":\"system\",\"nominal\":\"r\",\"sourceRole\":\"unknown\"}]},{\"anchor\":{\"endChar\":50,\"quote\":\"the plate is formed of plastic\",\"startChar\":20},\"functionalParts\":[{\"anchor\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"kind\":\"term\",\"nominal\":\"n0\"},{\"anchor\":{\"endChar\":43,\"quote\":\" is formed of \",\"startChar\":29},\"kind\":\"text\"},{\"anchor\":{\"endChar\":50,\"quote\":\"plastic\",\"startChar\":43},\"kind\":\"term\",\"nominal\":\"n1\"}],\"grouping\":\"single-restriction\",\"id\":\"body\",\"kind\":\"functional-relation\",\"lexicalHeader\":{\"endChar\":50,\"quote\":\"the plate is formed of plastic\",\"startChar\":20},\"ordinal\":2,\"parent\":\"root\",\"terms\":[{\"anchor\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"determiner\":\"the\",\"head\":\"plate\",\"nominal\":\"n0\",\"sourceRole\":\"unknown\"},{\"anchor\":{\"endChar\":50,\"quote\":\"plastic\",\"startChar\":43},\"determiner\":\"bare\",\"head\":\"plastic\",\"nominal\":\"n1\",\"sourceRole\":\"unknown\"}]}],\"frames\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"arguments\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"nominal\":\"r\",\"ownerCore\":null,\"ownerNominal\":null,\"predicate\":null,\"predicateOwnerFrame\":null,\"role\":\"unknown\"}],\"attachment\":\"main\",\"coordination\":null,\"id\":\"fr\",\"introducer\":null,\"lexicalHeader\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"nominals\":[\"r\"],\"ordinal\":1,\"outerOwnerNominal\":null,\"parent\":null,\"predicates\":[],\"sharedSubject\":null,\"subject\":null},{\"anchor\":{\"endChar\":50,\"quote\":\"the plate is formed of plastic\",\"startChar\":20},\"arguments\":[{\"anchor\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"nominal\":\"n0\",\"ownerCore\":null,\"ownerNominal\":null,\"predicate\":{\"endChar\":39,\"quote\":\"is formed\",\"startChar\":30},\"predicateOwnerFrame\":\"fb\",\"role\":\"subject\"},{\"anchor\":{\"endChar\":50,\"quote\":\"plastic\",\"startChar\":43},\"nominal\":\"n1\",\"ownerCore\":null,\"ownerNominal\":null,\"predicate\":{\"endChar\":39,\"quote\":\"is formed\",\"startChar\":30},\"predicateOwnerFrame\":\"fb\",\"role\":\"prepositional-complement\"}],\"attachment\":\"main\",\"coordination\":null,\"id\":\"fb\",\"introducer\":null,\"lexicalHeader\":{\"endChar\":50,\"quote\":\"the plate is formed of plastic\",\"startChar\":20},\"nominals\":[\"n0\",\"n1\"],\"ordinal\":2,\"outerOwnerNominal\":null,\"parent\":null,\"predicates\":[{\"endChar\":39,\"quote\":\"is formed\",\"startChar\":30}],\"sharedSubject\":null,\"subject\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20}}],\"nominals\":[{\"canonicalReferenceHead\":\"system\",\"core\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"elementOwner\":\"root\",\"head\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2},\"id\":\"r\",\"outer\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"policyMechanism\":\"supported-introduction\",\"proof\":\"supported determiner only; no countability fact\",\"publicHead\":\"system\",\"sourceRole\":\"unknown\"},{\"canonicalReferenceHead\":\"plate\",\"core\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"determiner\":\"the\",\"elementOwner\":\"body\",\"head\":{\"endChar\":29,\"quote\":\"plate\",\"startChar\":24},\"id\":\"n0\",\"outer\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"policyMechanism\":\"supported-reference\",\"proof\":\"supported determiner only; no countability fact\",\"publicHead\":\"plate\",\"sourceRole\":\"unknown\"},{\"canonicalReferenceHead\":\"plastic\",\"core\":{\"endChar\":50,\"quote\":\"plastic\",\"startChar\":43},\"determiner\":\"bare\",\"elementOwner\":\"body\",\"head\":{\"endChar\":50,\"quote\":\"plastic\",\"startChar\":43},\"id\":\"n1\",\"outer\":{\"endChar\":50,\"quote\":\"plastic\",\"startChar\":43},\"policyMechanism\":\"unresolved-bare-reference-or-value\",\"proof\":\"no source role independently proves an introduction\",\"publicHead\":\"plastic\",\"sourceRole\":\"unknown\"}],\"proofCertificates\":[],\"referenceExpectations\":[]}",
+      "acceptedCompleteExpectedSha256": "34cb832486a312b1ddaee816d2937c0a09a009f608fb7cba2e43ac961c252d82",
+      "acceptedCompleteExpectedCanonicalJson": "{\"certificateGraph\":[{\"anchors\":[{\"endChar\":19,\"quote\":\"comprising\",\"startChar\":9}],\"dependencies\":[],\"id\":\"source\",\"kind\":\"qualified-source/transition\",\"rank\":0},{\"anchors\":[{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},{\"endChar\":8,\"quote\":\"system\",\"startChar\":2}],\"dependencies\":[],\"endpointEvidence\":{\"kind\":\"positive maximal nominal head chain in independently opened source slot\",\"noFailedPredicatePremise\":true,\"notCandidateReservation\":true,\"outerAttachmentNotEstablishedBySeed\":true},\"id\":\"head-r\",\"kind\":\"existing-independent-head/name/quantity-seed\",\"rank\":0,\"schema\":\"ClaimHeadSeedCertificate\",\"seedKind\":\"existing-nominal-head\",\"terminalHeadWitness\":{\"anchor\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2},\"countability\":\"not inferred\",\"origin\":\"explicit source-only witness\",\"pos\":\"NOUN\"}},{\"anchors\":[{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},{\"endChar\":29,\"quote\":\"plate\",\"startChar\":24}],\"dependencies\":[],\"endpointEvidence\":{\"kind\":\"positive maximal nominal head chain in independently opened source slot\",\"noFailedPredicatePremise\":true,\"notCandidateReservation\":true,\"outerAttachmentNotEstablishedBySeed\":true},\"id\":\"head-s\",\"kind\":\"existing-independent-head/name/quantity-seed\",\"rank\":0,\"schema\":\"ClaimHeadSeedCertificate\",\"seedKind\":\"existing-nominal-head\",\"terminalHeadWitness\":{\"anchor\":{\"endChar\":29,\"quote\":\"plate\",\"startChar\":24},\"countability\":\"not inferred\",\"origin\":\"explicit source-only witness\",\"pos\":\"NOUN\"}},{\"anchors\":[{\"endChar\":50,\"quote\":\"plastic\",\"startChar\":43},{\"endChar\":50,\"quote\":\"plastic\",\"startChar\":43}],\"dependencies\":[],\"endpointEvidence\":{\"kind\":\"positive maximal nominal head chain in independently opened source slot\",\"noFailedPredicatePremise\":true,\"notCandidateReservation\":true,\"outerAttachmentNotEstablishedBySeed\":true},\"id\":\"head-v\",\"kind\":\"existing-independent-head/name/quantity-seed\",\"rank\":0,\"schema\":\"ClaimHeadSeedCertificate\",\"seedKind\":\"existing-nominal-head\",\"terminalHeadWitness\":{\"anchor\":{\"endChar\":50,\"quote\":\"plastic\",\"startChar\":43},\"countability\":\"not inferred\",\"origin\":\"explicit source-only witness\",\"pos\":\"NOUN\"}},{\"anchors\":[{\"endChar\":19,\"quote\":\"comprising\",\"startChar\":9}],\"dependencies\":[],\"id\":\"lex-0\",\"kind\":\"explicit-POS/lemma-witness\",\"rank\":0},{\"anchors\":[{\"endChar\":32,\"quote\":\"is\",\"startChar\":30}],\"dependencies\":[],\"id\":\"lex-1\",\"kind\":\"explicit-POS/lemma-witness\",\"rank\":0},{\"anchors\":[{\"endChar\":39,\"quote\":\"formed\",\"startChar\":33}],\"dependencies\":[],\"id\":\"lex-2\",\"kind\":\"explicit-POS/lemma-witness\",\"rank\":0},{\"anchors\":[{\"endChar\":32,\"quote\":\"is\",\"startChar\":30},{\"endChar\":39,\"quote\":\"formed\",\"startChar\":33}],\"dependencies\":[\"source\",\"lex-1\",\"lex-2\",\"head-s\"],\"id\":\"operator-fb\",\"kind\":\"existing-independently-licensed-operator; exact family specified by frame/source witnesses\",\"rank\":1},{\"anchors\":[{\"endChar\":50,\"quote\":\"the plate is formed of plastic\",\"startChar\":20}],\"dependencies\":[\"operator-fb\",\"head-s\"],\"id\":\"arguments-fb\",\"kind\":\"existing-argument-closure\",\"rank\":2},{\"anchors\":[{\"endChar\":42,\"quote\":\"is formed of\",\"startChar\":30}],\"dependencies\":[\"head-v\",\"operator-fb\"],\"id\":\"description-d\",\"kind\":\"constitutive-description-UNRESOLVED\",\"rank\":2},{\"anchors\":[],\"dependencies\":[\"source\",\"head-r\",\"head-s\",\"head-v\",\"lex-0\",\"lex-1\",\"lex-2\",\"operator-fb\",\"arguments-fb\",\"description-d\"],\"id\":\"projection\",\"kind\":\"atomic-topology/owner/partition/token-ledger\",\"rank\":4}],\"coverageObligations\":[\"policy-uncovered: unresolved description/entity role\"],\"declarations\":[],\"descriptionProofs\":[{\"auxiliary\":{\"endChar\":32,\"quote\":\"is\",\"startChar\":30},\"completeCandidate\":\"v\",\"existingOperatorLicense\":\"existing be+VERB regular-participle certificate, lemma form, exact formed/of-or-from construction\",\"id\":\"d\",\"introducer\":{\"endChar\":42,\"quote\":\"of\",\"startChar\":40},\"lexicalPredicate\":{\"anchor\":{\"endChar\":39,\"quote\":\"formed\",\"startChar\":33},\"lemma\":\"form\",\"pos\":\"VERB\"},\"operator\":{\"endChar\":42,\"quote\":\"is formed of\",\"startChar\":30},\"possibleBasis\":\"retain-complete-unknown-candidate-on-actual-route\",\"publicTerm\":false,\"referentialStatus\":\"unresolved\",\"sourceFrame\":\"fb\"}],\"elements\":[{\"extent\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"functionalParts\":[],\"grouping\":\"preamble\",\"id\":\"root\",\"kind\":\"preamble-subject\",\"lexicalHeader\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"nominals\":[\"r\"],\"ordinal\":1,\"ownedTermRegions\":[{\"core\":\"r\",\"extent\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"positiveCertificate\":\"existing-closed-nominal/source-frame-owned-region\"}],\"parent\":null},{\"extent\":{\"endChar\":50,\"quote\":\"the plate is formed of plastic\",\"startChar\":20},\"functionalParts\":[{\"anchor\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"kind\":\"term\",\"nominal\":\"s\"},{\"anchor\":{\"endChar\":50,\"quote\":\" is formed of plastic\",\"startChar\":29},\"kind\":\"text\"}],\"grouping\":\"single-restriction\",\"id\":\"body\",\"kind\":\"functional-relation\",\"lexicalHeader\":{\"endChar\":50,\"quote\":\"the plate is formed of plastic\",\"startChar\":20},\"nominals\":[\"s\"],\"ordinal\":2,\"ownedTermRegions\":[{\"core\":\"s\",\"extent\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"positiveCertificate\":\"existing-closed-nominal/source-frame-owned-region\"}],\"parent\":\"root\"}],\"frames\":[{\"arguments\":[],\"attachment\":\"main\",\"coordination\":null,\"extent\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"id\":\"fr\",\"inheritedSubject\":null,\"introducer\":null,\"lexicalHeader\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"nominals\":[\"r\"],\"parent\":null,\"predicates\":[],\"publicOwner\":\"root\",\"subject\":null},{\"arguments\":[{\"nominal\":\"s\",\"ownerNominal\":null,\"predicate\":\"formed\",\"role\":\"subject\"},{\"description\":\"d\",\"ownerNominal\":null,\"predicate\":\"formed\",\"role\":\"descriptive-complement\"}],\"attachment\":\"main\",\"coordination\":null,\"extent\":{\"endChar\":50,\"quote\":\"the plate is formed of plastic\",\"startChar\":20},\"id\":\"fb\",\"inheritedSubject\":null,\"introducer\":null,\"lexicalHeader\":{\"endChar\":50,\"quote\":\"the plate is formed of plastic\",\"startChar\":20},\"nominals\":[\"s\"],\"parent\":null,\"predicates\":[{\"endChar\":32,\"quote\":\"is\",\"startChar\":30},{\"endChar\":39,\"quote\":\"formed\",\"startChar\":33}],\"publicOwner\":\"body\",\"subject\":\"s\"}],\"nominals\":[{\"aliasEligible\":\"only independently existing explicit alias certificate; not map membership\",\"canonicalReferenceHead\":\"system\",\"core\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"head\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2},\"id\":\"r\",\"outer\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"proofClass\":\"independent existing NP/name/quantity certificate\",\"publicHead\":\"system\",\"publicOwner\":\"root\",\"role\":\"unknown\"},{\"aliasEligible\":\"only independently existing explicit alias certificate; not map membership\",\"canonicalReferenceHead\":\"plate\",\"core\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"determiner\":\"the\",\"head\":{\"endChar\":29,\"quote\":\"plate\",\"startChar\":24},\"id\":\"s\",\"outer\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"proofClass\":\"independent existing NP/name/quantity certificate\",\"publicHead\":\"plate\",\"publicOwner\":\"body\",\"role\":\"unknown\"}],\"privateCandidates\":[{\"aliasEligible\":false,\"canonicalReferenceHead\":\"plastic\",\"core\":{\"endChar\":50,\"quote\":\"plastic\",\"startChar\":43},\"determiner\":\"bare\",\"head\":{\"endChar\":50,\"quote\":\"plastic\",\"startChar\":43},\"id\":\"v\",\"outer\":{\"endChar\":50,\"quote\":\"plastic\",\"startChar\":43},\"proofClass\":\"independent existing NP/name/quantity certificate\",\"publicHead\":\"plastic\",\"publicOwner\":null,\"role\":\"unknown\"}],\"publicTree\":{\"claimNumber\":1,\"edges\":[{\"child\":\"1.a\",\"kind\":\"part-of\",\"parent\":\"1\"},{\"element\":\"1.a\",\"kind\":\"functional\",\"parts\":[{\"kind\":\"term\",\"term\":{\"anchor\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"path\":\"1.a\"}},{\"anchor\":{\"endChar\":50,\"quote\":\" is formed of plastic\",\"startChar\":29},\"kind\":\"text\"}]}],\"elements\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"kind\":\"preamble-subject\",\"path\":\"1\",\"terms\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"head\":\"system\"}]},{\"anchor\":{\"endChar\":50,\"quote\":\"the plate is formed of plastic\",\"startChar\":20},\"kind\":\"functional-relation\",\"path\":\"1.a\",\"terms\":[{\"anchor\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"determiner\":\"the\",\"head\":\"plate\"}]}],\"producer\":\"rule\"},\"selectorProofs\":[],\"sourceTokenOwnership\":[{\"owner\":{\"id\":\"r\",\"kind\":\"public-core\"},\"token\":{\"endChar\":1,\"quote\":\"A\",\"startChar\":0}},{\"owner\":{\"id\":\"r\",\"kind\":\"public-core\"},\"token\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2}},{\"owner\":{\"certificate\":\"specific declared construction/transition/selector/attachment boundary\",\"kind\":\"certified-structural-control\",\"sourceWord\":\"comprising\"},\"token\":{\"endChar\":19,\"quote\":\"comprising\",\"startChar\":9}},{\"owner\":{\"id\":\"s\",\"kind\":\"public-core\"},\"token\":{\"endChar\":23,\"quote\":\"the\",\"startChar\":20}},{\"owner\":{\"id\":\"s\",\"kind\":\"public-core\"},\"token\":{\"endChar\":29,\"quote\":\"plate\",\"startChar\":24}},{\"owner\":{\"id\":\"fb\",\"kind\":\"certified-predicate\"},\"token\":{\"endChar\":32,\"quote\":\"is\",\"startChar\":30}},{\"owner\":{\"id\":\"fb\",\"kind\":\"certified-predicate\"},\"token\":{\"endChar\":39,\"quote\":\"formed\",\"startChar\":33}},{\"owner\":{\"certificate\":\"specific declared construction/transition/selector/attachment boundary\",\"kind\":\"certified-structural-control\",\"sourceWord\":\"of\"},\"token\":{\"endChar\":42,\"quote\":\"of\",\"startChar\":40}},{\"owner\":{\"id\":\"v\",\"kind\":\"private-description-core\"},\"token\":{\"endChar\":50,\"quote\":\"plastic\",\"startChar\":43}},{\"owner\":{\"certificate\":\"specific declared construction/transition/selector/attachment boundary\",\"kind\":\"certified-structural-control\",\"sourceWord\":\".\"},\"token\":{\"endChar\":51,\"quote\":\".\",\"startChar\":50}}]}",
+      "acceptedCompleteExpected": {
+        "nominals": [
+          {
+            "id": "r",
+            "core": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "head": {
+              "startChar": 2,
+              "endChar": 8,
+              "quote": "system"
+            },
+            "outer": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "publicHead": "system",
+            "canonicalReferenceHead": "system",
+            "determiner": "a",
+            "role": "unknown",
+            "publicOwner": "root",
+            "proofClass": "independent existing NP/name/quantity certificate",
+            "aliasEligible": "only independently existing explicit alias certificate; not map membership"
+          },
+          {
+            "id": "s",
+            "core": {
+              "startChar": 20,
+              "endChar": 29,
+              "quote": "the plate"
+            },
+            "head": {
+              "startChar": 24,
+              "endChar": 29,
+              "quote": "plate"
+            },
+            "outer": {
+              "startChar": 20,
+              "endChar": 29,
+              "quote": "the plate"
+            },
+            "publicHead": "plate",
+            "canonicalReferenceHead": "plate",
+            "determiner": "the",
+            "role": "unknown",
+            "publicOwner": "body",
+            "proofClass": "independent existing NP/name/quantity certificate",
+            "aliasEligible": "only independently existing explicit alias certificate; not map membership"
+          }
+        ],
+        "privateCandidates": [
+          {
+            "id": "v",
+            "core": {
+              "startChar": 43,
+              "endChar": 50,
+              "quote": "plastic"
+            },
+            "head": {
+              "startChar": 43,
+              "endChar": 50,
+              "quote": "plastic"
+            },
+            "outer": {
+              "startChar": 43,
+              "endChar": 50,
+              "quote": "plastic"
+            },
+            "publicHead": "plastic",
+            "canonicalReferenceHead": "plastic",
+            "determiner": "bare",
+            "role": "unknown",
+            "publicOwner": null,
+            "proofClass": "independent existing NP/name/quantity certificate",
+            "aliasEligible": false
+          }
+        ],
+        "frames": [
+          {
+            "id": "fr",
+            "extent": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "lexicalHeader": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "publicOwner": "root",
+            "parent": null,
+            "attachment": "main",
+            "introducer": null,
+            "predicates": [],
+            "subject": null,
+            "arguments": [],
+            "nominals": ["r"],
+            "inheritedSubject": null,
+            "coordination": null
+          },
+          {
+            "id": "fb",
+            "extent": {
+              "startChar": 20,
+              "endChar": 50,
+              "quote": "the plate is formed of plastic"
+            },
+            "lexicalHeader": {
+              "startChar": 20,
+              "endChar": 50,
+              "quote": "the plate is formed of plastic"
+            },
+            "publicOwner": "body",
+            "parent": null,
+            "attachment": "main",
+            "introducer": null,
+            "predicates": [
+              {
+                "startChar": 30,
+                "endChar": 32,
+                "quote": "is"
+              },
+              {
+                "startChar": 33,
+                "endChar": 39,
+                "quote": "formed"
+              }
+            ],
+            "subject": "s",
+            "arguments": [
+              {
+                "nominal": "s",
+                "role": "subject",
+                "predicate": "formed",
+                "ownerNominal": null
+              },
+              {
+                "description": "d",
+                "role": "descriptive-complement",
+                "predicate": "formed",
+                "ownerNominal": null
+              }
+            ],
+            "nominals": ["s"],
+            "inheritedSubject": null,
+            "coordination": null
+          }
+        ],
+        "elements": [
+          {
+            "id": "root",
+            "parent": null,
+            "kind": "preamble-subject",
+            "grouping": "preamble",
+            "extent": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "lexicalHeader": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "ordinal": 1,
+            "nominals": ["r"],
+            "ownedTermRegions": [
+              {
+                "core": "r",
+                "extent": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A system"
+                },
+                "positiveCertificate": "existing-closed-nominal/source-frame-owned-region"
+              }
+            ],
+            "functionalParts": []
+          },
+          {
+            "id": "body",
+            "parent": "root",
+            "kind": "functional-relation",
+            "grouping": "single-restriction",
+            "extent": {
+              "startChar": 20,
+              "endChar": 50,
+              "quote": "the plate is formed of plastic"
+            },
+            "lexicalHeader": {
+              "startChar": 20,
+              "endChar": 50,
+              "quote": "the plate is formed of plastic"
+            },
+            "ordinal": 2,
+            "nominals": ["s"],
+            "ownedTermRegions": [
+              {
+                "core": "s",
+                "extent": {
+                  "startChar": 20,
+                  "endChar": 29,
+                  "quote": "the plate"
+                },
+                "positiveCertificate": "existing-closed-nominal/source-frame-owned-region"
+              }
+            ],
+            "functionalParts": [
+              {
+                "kind": "term",
+                "nominal": "s",
+                "anchor": {
+                  "startChar": 20,
+                  "endChar": 29,
+                  "quote": "the plate"
+                }
+              },
+              {
+                "kind": "text",
+                "anchor": {
+                  "startChar": 29,
+                  "endChar": 50,
+                  "quote": " is formed of plastic"
+                }
+              }
+            ]
+          }
+        ],
+        "descriptionProofs": [
+          {
+            "id": "d",
+            "operator": {
+              "startChar": 30,
+              "endChar": 42,
+              "quote": "is formed of"
+            },
+            "auxiliary": {
+              "startChar": 30,
+              "endChar": 32,
+              "quote": "is"
+            },
+            "lexicalPredicate": {
+              "anchor": {
+                "startChar": 33,
+                "endChar": 39,
+                "quote": "formed"
+              },
+              "pos": "VERB",
+              "lemma": "form"
+            },
+            "introducer": {
+              "startChar": 40,
+              "endChar": 42,
+              "quote": "of"
+            },
+            "completeCandidate": "v",
+            "sourceFrame": "fb",
+            "referentialStatus": "unresolved",
+            "publicTerm": false,
+            "possibleBasis": "retain-complete-unknown-candidate-on-actual-route",
+            "existingOperatorLicense": "existing be+VERB regular-participle certificate, lemma form, exact formed/of-or-from construction"
+          }
+        ],
+        "selectorProofs": [],
+        "coverageObligations": [
+          "policy-uncovered: unresolved description/entity role"
+        ],
+        "sourceTokenOwnership": [
+          {
+            "token": {
+              "startChar": 0,
+              "endChar": 1,
+              "quote": "A"
+            },
+            "owner": {
+              "kind": "public-core",
+              "id": "r"
+            }
+          },
+          {
+            "token": {
+              "startChar": 2,
+              "endChar": 8,
+              "quote": "system"
+            },
+            "owner": {
+              "kind": "public-core",
+              "id": "r"
+            }
+          },
+          {
+            "token": {
+              "startChar": 9,
+              "endChar": 19,
+              "quote": "comprising"
+            },
+            "owner": {
+              "kind": "certified-structural-control",
+              "certificate": "specific declared construction/transition/selector/attachment boundary",
+              "sourceWord": "comprising"
+            }
+          },
+          {
+            "token": {
+              "startChar": 20,
+              "endChar": 23,
+              "quote": "the"
+            },
+            "owner": {
+              "kind": "public-core",
+              "id": "s"
+            }
+          },
+          {
+            "token": {
+              "startChar": 24,
+              "endChar": 29,
+              "quote": "plate"
+            },
+            "owner": {
+              "kind": "public-core",
+              "id": "s"
+            }
+          },
+          {
+            "token": {
+              "startChar": 30,
+              "endChar": 32,
+              "quote": "is"
+            },
+            "owner": {
+              "kind": "certified-predicate",
+              "id": "fb"
+            }
+          },
+          {
+            "token": {
+              "startChar": 33,
+              "endChar": 39,
+              "quote": "formed"
+            },
+            "owner": {
+              "kind": "certified-predicate",
+              "id": "fb"
+            }
+          },
+          {
+            "token": {
+              "startChar": 40,
+              "endChar": 42,
+              "quote": "of"
+            },
+            "owner": {
+              "kind": "certified-structural-control",
+              "certificate": "specific declared construction/transition/selector/attachment boundary",
+              "sourceWord": "of"
+            }
+          },
+          {
+            "token": {
+              "startChar": 43,
+              "endChar": 50,
+              "quote": "plastic"
+            },
+            "owner": {
+              "kind": "private-description-core",
+              "id": "v"
+            }
+          },
+          {
+            "token": {
+              "startChar": 50,
+              "endChar": 51,
+              "quote": "."
+            },
+            "owner": {
+              "kind": "certified-structural-control",
+              "certificate": "specific declared construction/transition/selector/attachment boundary",
+              "sourceWord": "."
+            }
+          }
+        ],
+        "declarations": [],
+        "certificateGraph": [
+          {
+            "id": "source",
+            "rank": 0,
+            "kind": "qualified-source/transition",
+            "anchors": [
+              {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              }
+            ],
+            "dependencies": []
+          },
+          {
+            "id": "head-r",
+            "rank": 0,
+            "kind": "existing-independent-head/name/quantity-seed",
+            "anchors": [
+              {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              }
+            ],
+            "dependencies": [],
+            "schema": "ClaimHeadSeedCertificate",
+            "seedKind": "existing-nominal-head",
+            "terminalHeadWitness": {
+              "anchor": {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              },
+              "pos": "NOUN",
+              "countability": "not inferred",
+              "origin": "explicit source-only witness"
+            },
+            "endpointEvidence": {
+              "kind": "positive maximal nominal head chain in independently opened source slot",
+              "notCandidateReservation": true,
+              "noFailedPredicatePremise": true,
+              "outerAttachmentNotEstablishedBySeed": true
+            }
+          },
+          {
+            "id": "head-s",
+            "rank": 0,
+            "kind": "existing-independent-head/name/quantity-seed",
+            "anchors": [
+              {
+                "startChar": 20,
+                "endChar": 29,
+                "quote": "the plate"
+              },
+              {
+                "startChar": 24,
+                "endChar": 29,
+                "quote": "plate"
+              }
+            ],
+            "dependencies": [],
+            "schema": "ClaimHeadSeedCertificate",
+            "seedKind": "existing-nominal-head",
+            "terminalHeadWitness": {
+              "anchor": {
+                "startChar": 24,
+                "endChar": 29,
+                "quote": "plate"
+              },
+              "pos": "NOUN",
+              "countability": "not inferred",
+              "origin": "explicit source-only witness"
+            },
+            "endpointEvidence": {
+              "kind": "positive maximal nominal head chain in independently opened source slot",
+              "notCandidateReservation": true,
+              "noFailedPredicatePremise": true,
+              "outerAttachmentNotEstablishedBySeed": true
+            }
+          },
+          {
+            "id": "head-v",
+            "rank": 0,
+            "kind": "existing-independent-head/name/quantity-seed",
+            "anchors": [
+              {
+                "startChar": 43,
+                "endChar": 50,
+                "quote": "plastic"
+              },
+              {
+                "startChar": 43,
+                "endChar": 50,
+                "quote": "plastic"
+              }
+            ],
+            "dependencies": [],
+            "schema": "ClaimHeadSeedCertificate",
+            "seedKind": "existing-nominal-head",
+            "terminalHeadWitness": {
+              "anchor": {
+                "startChar": 43,
+                "endChar": 50,
+                "quote": "plastic"
+              },
+              "pos": "NOUN",
+              "countability": "not inferred",
+              "origin": "explicit source-only witness"
+            },
+            "endpointEvidence": {
+              "kind": "positive maximal nominal head chain in independently opened source slot",
+              "notCandidateReservation": true,
+              "noFailedPredicatePremise": true,
+              "outerAttachmentNotEstablishedBySeed": true
+            }
+          },
+          {
+            "id": "lex-0",
+            "rank": 0,
+            "kind": "explicit-POS/lemma-witness",
+            "anchors": [
+              {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              }
+            ],
+            "dependencies": []
+          },
+          {
+            "id": "lex-1",
+            "rank": 0,
+            "kind": "explicit-POS/lemma-witness",
+            "anchors": [
+              {
+                "startChar": 30,
+                "endChar": 32,
+                "quote": "is"
+              }
+            ],
+            "dependencies": []
+          },
+          {
+            "id": "lex-2",
+            "rank": 0,
+            "kind": "explicit-POS/lemma-witness",
+            "anchors": [
+              {
+                "startChar": 33,
+                "endChar": 39,
+                "quote": "formed"
+              }
+            ],
+            "dependencies": []
+          },
+          {
+            "id": "operator-fb",
+            "rank": 1,
+            "kind": "existing-independently-licensed-operator; exact family specified by frame/source witnesses",
+            "anchors": [
+              {
+                "startChar": 30,
+                "endChar": 32,
+                "quote": "is"
+              },
+              {
+                "startChar": 33,
+                "endChar": 39,
+                "quote": "formed"
+              }
+            ],
+            "dependencies": ["source", "lex-1", "lex-2", "head-s"]
+          },
+          {
+            "id": "arguments-fb",
+            "rank": 2,
+            "kind": "existing-argument-closure",
+            "anchors": [
+              {
+                "startChar": 20,
+                "endChar": 50,
+                "quote": "the plate is formed of plastic"
+              }
+            ],
+            "dependencies": ["operator-fb", "head-s"]
+          },
+          {
+            "id": "description-d",
+            "rank": 2,
+            "kind": "constitutive-description-UNRESOLVED",
+            "anchors": [
+              {
+                "startChar": 30,
+                "endChar": 42,
+                "quote": "is formed of"
+              }
+            ],
+            "dependencies": ["head-v", "operator-fb"]
+          },
+          {
+            "id": "projection",
+            "rank": 4,
+            "kind": "atomic-topology/owner/partition/token-ledger",
+            "anchors": [],
+            "dependencies": [
+              "source",
+              "head-r",
+              "head-s",
+              "head-v",
+              "lex-0",
+              "lex-1",
+              "lex-2",
+              "operator-fb",
+              "arguments-fb",
+              "description-d"
+            ]
+          }
+        ],
+        "publicTree": {
+          "claimNumber": 1,
+          "producer": "rule",
+          "elements": [
+            {
+              "path": "1",
+              "anchor": {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              "kind": "preamble-subject",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 0,
+                    "endChar": 8,
+                    "quote": "A system"
+                  },
+                  "head": "system",
+                  "determiner": "a"
+                }
+              ]
+            },
+            {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 20,
+                "endChar": 50,
+                "quote": "the plate is formed of plastic"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 20,
+                    "endChar": 29,
+                    "quote": "the plate"
+                  },
+                  "head": "plate",
+                  "determiner": "the"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "kind": "part-of",
+              "child": "1.a",
+              "parent": "1"
+            },
+            {
+              "kind": "functional",
+              "element": "1.a",
+              "parts": [
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.a",
+                    "anchor": {
+                      "startChar": 20,
+                      "endChar": 29,
+                      "quote": "the plate"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 29,
+                    "endChar": 50,
+                    "quote": " is formed of plastic"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "correctedCaseSha256": "f858d50453d547075aed3963e55c43ec4384ac721f6ca8ecccc688510b835cbb",
+      "correctedCaseCanonicalJson": "{\"benchmarkLabel\":false,\"case\":\"unresolved-material-role\",\"claimNumber\":1,\"claimReferences\":[],\"expected\":{\"certificateGraph\":[{\"anchors\":[{\"endChar\":19,\"quote\":\"comprising\",\"startChar\":9}],\"dependencies\":[],\"id\":\"source\",\"kind\":\"qualified-source/transition\",\"rank\":0},{\"anchors\":[{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},{\"endChar\":8,\"quote\":\"system\",\"startChar\":2}],\"dependencies\":[],\"endpointEvidence\":{\"kind\":\"positive maximal nominal head chain in independently opened source slot\",\"noFailedPredicatePremise\":true,\"notCandidateReservation\":true,\"outerAttachmentNotEstablishedBySeed\":true},\"id\":\"head-r\",\"kind\":\"existing-independent-head/name/quantity-seed\",\"rank\":0,\"schema\":\"ClaimHeadSeedCertificate\",\"seedKind\":\"existing-nominal-head\",\"terminalHeadWitness\":{\"anchor\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2},\"countability\":\"not inferred\",\"origin\":\"explicit source-only witness\",\"pos\":\"NOUN\"}},{\"anchors\":[{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},{\"endChar\":29,\"quote\":\"plate\",\"startChar\":24}],\"dependencies\":[],\"endpointEvidence\":{\"kind\":\"positive maximal nominal head chain in independently opened source slot\",\"noFailedPredicatePremise\":true,\"notCandidateReservation\":true,\"outerAttachmentNotEstablishedBySeed\":true},\"id\":\"head-s\",\"kind\":\"existing-independent-head/name/quantity-seed\",\"rank\":0,\"schema\":\"ClaimHeadSeedCertificate\",\"seedKind\":\"existing-nominal-head\",\"terminalHeadWitness\":{\"anchor\":{\"endChar\":29,\"quote\":\"plate\",\"startChar\":24},\"countability\":\"not inferred\",\"origin\":\"explicit source-only witness\",\"pos\":\"NOUN\"}},{\"anchors\":[{\"endChar\":50,\"quote\":\"plastic\",\"startChar\":43},{\"endChar\":50,\"quote\":\"plastic\",\"startChar\":43}],\"dependencies\":[],\"endpointEvidence\":{\"kind\":\"positive maximal nominal head chain in independently opened source slot\",\"noFailedPredicatePremise\":true,\"notCandidateReservation\":true,\"outerAttachmentNotEstablishedBySeed\":true},\"id\":\"head-v\",\"kind\":\"existing-independent-head/name/quantity-seed\",\"rank\":0,\"schema\":\"ClaimHeadSeedCertificate\",\"seedKind\":\"existing-nominal-head\",\"terminalHeadWitness\":{\"anchor\":{\"endChar\":50,\"quote\":\"plastic\",\"startChar\":43},\"countability\":\"not inferred\",\"origin\":\"explicit source-only witness\",\"pos\":\"NOUN\"}},{\"anchors\":[{\"endChar\":19,\"quote\":\"comprising\",\"startChar\":9}],\"dependencies\":[],\"id\":\"lex-0\",\"kind\":\"explicit-POS/lemma-witness\",\"rank\":0},{\"anchors\":[{\"endChar\":32,\"quote\":\"is\",\"startChar\":30}],\"dependencies\":[],\"id\":\"lex-1\",\"kind\":\"explicit-POS/lemma-witness\",\"rank\":0},{\"anchors\":[{\"endChar\":39,\"quote\":\"formed\",\"startChar\":33}],\"dependencies\":[],\"id\":\"lex-2\",\"kind\":\"explicit-POS/lemma-witness\",\"rank\":0},{\"anchors\":[{\"endChar\":32,\"quote\":\"is\",\"startChar\":30},{\"endChar\":39,\"quote\":\"formed\",\"startChar\":33}],\"dependencies\":[\"source\",\"lex-1\",\"lex-2\",\"head-s\"],\"id\":\"operator-fb\",\"kind\":\"existing-independently-licensed-operator; exact family specified by frame/source witnesses\",\"rank\":1},{\"anchors\":[{\"endChar\":50,\"quote\":\"the plate is formed of plastic\",\"startChar\":20}],\"dependencies\":[\"operator-fb\",\"head-s\"],\"id\":\"arguments-fb\",\"kind\":\"existing-argument-closure\",\"rank\":2},{\"anchors\":[{\"endChar\":42,\"quote\":\"is formed of\",\"startChar\":30}],\"dependencies\":[\"head-v\",\"operator-fb\"],\"id\":\"description-d\",\"kind\":\"constitutive-description-UNRESOLVED\",\"rank\":2},{\"anchors\":[],\"dependencies\":[\"source\",\"head-r\",\"head-s\",\"head-v\",\"lex-0\",\"lex-1\",\"lex-2\",\"operator-fb\",\"arguments-fb\",\"description-d\"],\"id\":\"projection\",\"kind\":\"atomic-topology/owner/partition/token-ledger\",\"rank\":4}],\"coverageObligations\":[\"policy-uncovered: unresolved description/entity role\"],\"declarations\":[],\"descriptionProofs\":[{\"auxiliary\":{\"endChar\":32,\"quote\":\"is\",\"startChar\":30},\"completeCandidate\":\"v\",\"existingOperatorLicense\":\"existing be+VERB regular-participle certificate, lemma form, exact formed/of-or-from construction\",\"id\":\"d\",\"introducer\":{\"endChar\":42,\"quote\":\"of\",\"startChar\":40},\"lexicalPredicate\":{\"anchor\":{\"endChar\":39,\"quote\":\"formed\",\"startChar\":33},\"lemma\":\"form\",\"pos\":\"VERB\"},\"operator\":{\"endChar\":42,\"quote\":\"is formed of\",\"startChar\":30},\"possibleBasis\":\"retain-complete-unknown-candidate-on-actual-route\",\"publicTerm\":false,\"referentialStatus\":\"unresolved\",\"sourceFrame\":\"fb\"}],\"elements\":[{\"extent\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"functionalParts\":[],\"grouping\":\"preamble\",\"id\":\"root\",\"kind\":\"preamble-subject\",\"lexicalHeader\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"nominals\":[\"r\"],\"ordinal\":1,\"ownedTermRegions\":[{\"core\":\"r\",\"extent\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"positiveCertificate\":\"existing-closed-nominal/source-frame-owned-region\"}],\"parent\":null},{\"extent\":{\"endChar\":50,\"quote\":\"the plate is formed of plastic\",\"startChar\":20},\"functionalParts\":[{\"anchor\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"kind\":\"term\",\"nominal\":\"s\"},{\"anchor\":{\"endChar\":50,\"quote\":\" is formed of plastic\",\"startChar\":29},\"kind\":\"text\"}],\"grouping\":\"single-restriction\",\"id\":\"body\",\"kind\":\"functional-relation\",\"lexicalHeader\":{\"endChar\":50,\"quote\":\"the plate is formed of plastic\",\"startChar\":20},\"nominals\":[\"s\"],\"ordinal\":2,\"ownedTermRegions\":[{\"core\":\"s\",\"extent\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"positiveCertificate\":\"existing-closed-nominal/source-frame-owned-region\"}],\"parent\":\"root\"}],\"frames\":[{\"arguments\":[],\"attachment\":\"main\",\"coordination\":null,\"extent\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"id\":\"fr\",\"inheritedSubject\":null,\"introducer\":null,\"lexicalHeader\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"nominals\":[\"r\"],\"parent\":null,\"predicates\":[],\"publicOwner\":\"root\",\"subject\":null},{\"arguments\":[{\"nominal\":\"s\",\"ownerNominal\":null,\"predicate\":\"formed\",\"role\":\"subject\"},{\"description\":\"d\",\"ownerNominal\":null,\"predicate\":\"formed\",\"role\":\"descriptive-complement\"}],\"attachment\":\"main\",\"coordination\":null,\"extent\":{\"endChar\":50,\"quote\":\"the plate is formed of plastic\",\"startChar\":20},\"id\":\"fb\",\"inheritedSubject\":null,\"introducer\":null,\"lexicalHeader\":{\"endChar\":50,\"quote\":\"the plate is formed of plastic\",\"startChar\":20},\"nominals\":[\"s\"],\"parent\":null,\"predicates\":[{\"endChar\":32,\"quote\":\"is\",\"startChar\":30},{\"endChar\":39,\"quote\":\"formed\",\"startChar\":33}],\"publicOwner\":\"body\",\"subject\":\"s\"}],\"nominals\":[{\"aliasEligible\":\"only independently existing explicit alias certificate; not map membership\",\"canonicalReferenceHead\":\"system\",\"core\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"head\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2},\"id\":\"r\",\"outer\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"proofClass\":\"independent existing NP/name/quantity certificate\",\"publicHead\":\"system\",\"publicOwner\":\"root\",\"role\":\"unknown\"},{\"aliasEligible\":\"only independently existing explicit alias certificate; not map membership\",\"canonicalReferenceHead\":\"plate\",\"core\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"determiner\":\"the\",\"head\":{\"endChar\":29,\"quote\":\"plate\",\"startChar\":24},\"id\":\"s\",\"outer\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"proofClass\":\"independent existing NP/name/quantity certificate\",\"publicHead\":\"plate\",\"publicOwner\":\"body\",\"role\":\"unknown\"}],\"privateCandidates\":[{\"aliasEligible\":false,\"canonicalReferenceHead\":\"plastic\",\"core\":{\"endChar\":50,\"quote\":\"plastic\",\"startChar\":43},\"determiner\":\"bare\",\"head\":{\"endChar\":50,\"quote\":\"plastic\",\"startChar\":43},\"id\":\"v\",\"outer\":{\"endChar\":50,\"quote\":\"plastic\",\"startChar\":43},\"proofClass\":\"independent existing NP/name/quantity certificate\",\"publicHead\":\"plastic\",\"publicOwner\":null,\"role\":\"unknown\"}],\"publicTree\":{\"claimNumber\":1,\"edges\":[{\"child\":\"1.a\",\"kind\":\"part-of\",\"parent\":\"1\"},{\"element\":\"1.a\",\"kind\":\"functional\",\"parts\":[{\"kind\":\"term\",\"term\":{\"anchor\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"path\":\"1.a\"}},{\"anchor\":{\"endChar\":50,\"quote\":\" is formed of plastic\",\"startChar\":29},\"kind\":\"text\"}]}],\"elements\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"kind\":\"preamble-subject\",\"path\":\"1\",\"terms\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"head\":\"system\"}]},{\"anchor\":{\"endChar\":50,\"quote\":\"the plate is formed of plastic\",\"startChar\":20},\"kind\":\"functional-relation\",\"path\":\"1.a\",\"terms\":[{\"anchor\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"determiner\":\"the\",\"head\":\"plate\"}]}],\"producer\":\"rule\"},\"selectorProofs\":[],\"sourceTokenOwnership\":[{\"owner\":{\"id\":\"r\",\"kind\":\"public-core\"},\"token\":{\"endChar\":1,\"quote\":\"A\",\"startChar\":0}},{\"owner\":{\"id\":\"r\",\"kind\":\"public-core\"},\"token\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2}},{\"owner\":{\"certificate\":\"specific declared construction/transition/selector/attachment boundary\",\"kind\":\"certified-structural-control\",\"sourceWord\":\"comprising\"},\"token\":{\"endChar\":19,\"quote\":\"comprising\",\"startChar\":9}},{\"owner\":{\"id\":\"s\",\"kind\":\"public-core\"},\"token\":{\"endChar\":23,\"quote\":\"the\",\"startChar\":20}},{\"owner\":{\"id\":\"s\",\"kind\":\"public-core\"},\"token\":{\"endChar\":29,\"quote\":\"plate\",\"startChar\":24}},{\"owner\":{\"id\":\"fb\",\"kind\":\"certified-predicate\"},\"token\":{\"endChar\":32,\"quote\":\"is\",\"startChar\":30}},{\"owner\":{\"id\":\"fb\",\"kind\":\"certified-predicate\"},\"token\":{\"endChar\":39,\"quote\":\"formed\",\"startChar\":33}},{\"owner\":{\"certificate\":\"specific declared construction/transition/selector/attachment boundary\",\"kind\":\"certified-structural-control\",\"sourceWord\":\"of\"},\"token\":{\"endChar\":42,\"quote\":\"of\",\"startChar\":40}},{\"owner\":{\"id\":\"v\",\"kind\":\"private-description-core\"},\"token\":{\"endChar\":50,\"quote\":\"plastic\",\"startChar\":43}},{\"owner\":{\"certificate\":\"specific declared construction/transition/selector/attachment boundary\",\"kind\":\"certified-structural-control\",\"sourceWord\":\".\"},\"token\":{\"endChar\":51,\"quote\":\".\",\"startChar\":50}}]},\"lexicalEvidence\":{\"origin\":\"explicit injected source-control facts; not a runtime dictionary, asset output or countability resource\",\"tokens\":[{\"anchor\":{\"endChar\":1,\"quote\":\"A\",\"startChar\":0},\"lemma\":\"a\",\"pos\":\"DET\"},{\"anchor\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2},\"lemma\":\"system\",\"pos\":\"NOUN\"},{\"anchor\":{\"endChar\":19,\"quote\":\"comprising\",\"startChar\":9},\"lemma\":\"comprise\",\"pos\":\"VERB\"},{\"anchor\":{\"endChar\":23,\"quote\":\"the\",\"startChar\":20},\"lemma\":\"the\",\"pos\":\"DET\"},{\"anchor\":{\"endChar\":29,\"quote\":\"plate\",\"startChar\":24},\"lemma\":\"plate\",\"pos\":\"NOUN\"},{\"anchor\":{\"endChar\":32,\"quote\":\"is\",\"startChar\":30},\"lemma\":\"be\",\"pos\":\"AUX\"},{\"anchor\":{\"endChar\":39,\"quote\":\"formed\",\"startChar\":33},\"lemma\":\"form\",\"pos\":\"VERB\"},{\"anchor\":{\"endChar\":42,\"quote\":\"of\",\"startChar\":40},\"lemma\":\"of\",\"pos\":\"ADP\"},{\"anchor\":{\"endChar\":50,\"quote\":\"plastic\",\"startChar\":43},\"lemma\":\"plastic\",\"pos\":\"NOUN\"},{\"anchor\":{\"endChar\":51,\"quote\":\".\",\"startChar\":50},\"lemma\":\".\",\"pos\":\"PUNCT\"}]},\"outcome\":\"admitted\",\"qualifiedParts\":{\"body\":\"the plate is formed of plastic.\",\"preamble\":\"A system\",\"transition\":\"comprising\"},\"qualifiedText\":\"A system comprising the plate is formed of plastic.\",\"reason\":\"\",\"runtimeExecuted\":false}",
+      "operation": {
+        "op": "replace-exact",
+        "path": "/expected",
+        "beforeSha256": "621ee8a5f919072d78afee31d609eb0cc6321c79b089fae175efc4bae5a95de2",
+        "afterSha256": "34cb832486a312b1ddaee816d2937c0a09a009f608fb7cba2e43ac961c252d82"
+      },
+      "inverse": {
+        "op": "replace-exact",
+        "path": "/expected",
+        "beforeSha256": "34cb832486a312b1ddaee816d2937c0a09a009f608fb7cba2e43ac961c252d82",
+        "afterSha256": "621ee8a5f919072d78afee31d609eb0cc6321c79b089fae175efc4bae5a95de2",
+        "restoresEntireOriginalCase": true
+      },
+      "allFieldsOutsideExpectedDeepEqual": true
+    },
+    {
+      "historicalCase": "material-entity-unknown-hair",
+      "acceptedConformanceCase": "unknown-description-animal-hair",
+      "source": "A system comprising the plate is formed of animal hair.",
+      "sourceSha256": "88d6548fc4cb4d53dfdd1337823dc07fc22607a43a6454ac05a9afd26e0b1d11",
+      "sourceAndQualifiedPartsUnchanged": true,
+      "exactAnchorPosLemmaDigest": "863b86cb412d30d7a783ac9f5c3ea72ed0eeb9b32371b9eae242c39d3b32791d",
+      "originalCaseSha256": "b609f5ea3d76b51aa040c50e9299676702c1faa7b6ec9dd7576e6f2d3ef91a15",
+      "originalCaseCanonicalJson": "{\"benchmarkLabel\":false,\"case\":\"material-entity-unknown-hair\",\"claimNumber\":1,\"claimReferences\":[],\"expected\":{\"coverage\":\"partial-required for unresolved bare value/entity NP; substantive supported-reference checks retained\",\"declarationPlans\":[],\"deferred\":[\"No mass/countability inference; no public term deletion; no material-literal role admitted.\"],\"elements\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"functionalParts\":[],\"grouping\":\"preamble\",\"id\":\"root\",\"kind\":\"preamble-subject\",\"lexicalHeader\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"ordinal\":1,\"parent\":null,\"terms\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"head\":\"system\",\"nominal\":\"r\",\"sourceRole\":\"unknown\"}]},{\"anchor\":{\"endChar\":54,\"quote\":\"the plate is formed of animal hair\",\"startChar\":20},\"functionalParts\":[{\"anchor\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"kind\":\"term\",\"nominal\":\"n0\"},{\"anchor\":{\"endChar\":43,\"quote\":\" is formed of \",\"startChar\":29},\"kind\":\"text\"},{\"anchor\":{\"endChar\":54,\"quote\":\"animal hair\",\"startChar\":43},\"kind\":\"term\",\"nominal\":\"n1\"}],\"grouping\":\"single-restriction\",\"id\":\"body\",\"kind\":\"functional-relation\",\"lexicalHeader\":{\"endChar\":54,\"quote\":\"the plate is formed of animal hair\",\"startChar\":20},\"ordinal\":2,\"parent\":\"root\",\"terms\":[{\"anchor\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"determiner\":\"the\",\"head\":\"plate\",\"nominal\":\"n0\",\"sourceRole\":\"unknown\"},{\"anchor\":{\"endChar\":54,\"quote\":\"animal hair\",\"startChar\":43},\"determiner\":\"bare\",\"head\":\"animal hair\",\"nominal\":\"n1\",\"sourceRole\":\"unknown\"}]}],\"frames\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"arguments\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"nominal\":\"r\",\"ownerCore\":null,\"ownerNominal\":null,\"predicate\":null,\"predicateOwnerFrame\":null,\"role\":\"unknown\"}],\"attachment\":\"main\",\"coordination\":null,\"id\":\"fr\",\"introducer\":null,\"lexicalHeader\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"nominals\":[\"r\"],\"ordinal\":1,\"outerOwnerNominal\":null,\"parent\":null,\"predicates\":[],\"sharedSubject\":null,\"subject\":null},{\"anchor\":{\"endChar\":54,\"quote\":\"the plate is formed of animal hair\",\"startChar\":20},\"arguments\":[{\"anchor\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"nominal\":\"n0\",\"ownerCore\":null,\"ownerNominal\":null,\"predicate\":{\"endChar\":39,\"quote\":\"is formed\",\"startChar\":30},\"predicateOwnerFrame\":\"fb\",\"role\":\"subject\"},{\"anchor\":{\"endChar\":54,\"quote\":\"animal hair\",\"startChar\":43},\"nominal\":\"n1\",\"ownerCore\":null,\"ownerNominal\":null,\"predicate\":{\"endChar\":39,\"quote\":\"is formed\",\"startChar\":30},\"predicateOwnerFrame\":\"fb\",\"role\":\"prepositional-complement\"}],\"attachment\":\"main\",\"coordination\":null,\"id\":\"fb\",\"introducer\":null,\"lexicalHeader\":{\"endChar\":54,\"quote\":\"the plate is formed of animal hair\",\"startChar\":20},\"nominals\":[\"n0\",\"n1\"],\"ordinal\":2,\"outerOwnerNominal\":null,\"parent\":null,\"predicates\":[{\"endChar\":39,\"quote\":\"is formed\",\"startChar\":30}],\"sharedSubject\":null,\"subject\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20}}],\"nominals\":[{\"canonicalReferenceHead\":\"system\",\"core\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"elementOwner\":\"root\",\"head\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2},\"id\":\"r\",\"outer\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"policyMechanism\":\"supported-introduction\",\"proof\":\"supported determiner only; no countability fact\",\"publicHead\":\"system\",\"sourceRole\":\"unknown\"},{\"canonicalReferenceHead\":\"plate\",\"core\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"determiner\":\"the\",\"elementOwner\":\"body\",\"head\":{\"endChar\":29,\"quote\":\"plate\",\"startChar\":24},\"id\":\"n0\",\"outer\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"policyMechanism\":\"supported-reference\",\"proof\":\"supported determiner only; no countability fact\",\"publicHead\":\"plate\",\"sourceRole\":\"unknown\"},{\"canonicalReferenceHead\":\"animal hair\",\"core\":{\"endChar\":54,\"quote\":\"animal hair\",\"startChar\":43},\"determiner\":\"bare\",\"elementOwner\":\"body\",\"head\":{\"endChar\":54,\"quote\":\"animal hair\",\"startChar\":43},\"id\":\"n1\",\"outer\":{\"endChar\":54,\"quote\":\"animal hair\",\"startChar\":43},\"policyMechanism\":\"unresolved-bare-reference-or-value\",\"proof\":\"no source role independently proves an introduction\",\"publicHead\":\"animal hair\",\"sourceRole\":\"unknown\"}],\"proofCertificates\":[],\"referenceExpectations\":[]},\"lexicalEvidence\":{\"origin\":\"explicit injected source-control facts; not a runtime dictionary, asset output or countability resource\",\"tokens\":[{\"anchor\":{\"endChar\":1,\"quote\":\"A\",\"startChar\":0},\"lemma\":\"a\",\"pos\":\"DET\"},{\"anchor\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2},\"lemma\":\"system\",\"pos\":\"NOUN\"},{\"anchor\":{\"endChar\":19,\"quote\":\"comprising\",\"startChar\":9},\"lemma\":\"comprise\",\"pos\":\"VERB\"},{\"anchor\":{\"endChar\":23,\"quote\":\"the\",\"startChar\":20},\"lemma\":\"the\",\"pos\":\"DET\"},{\"anchor\":{\"endChar\":29,\"quote\":\"plate\",\"startChar\":24},\"lemma\":\"plate\",\"pos\":\"NOUN\"},{\"anchor\":{\"endChar\":32,\"quote\":\"is\",\"startChar\":30},\"lemma\":\"be\",\"pos\":\"AUX\"},{\"anchor\":{\"endChar\":39,\"quote\":\"formed\",\"startChar\":33},\"lemma\":\"form\",\"pos\":\"VERB\"},{\"anchor\":{\"endChar\":42,\"quote\":\"of\",\"startChar\":40},\"lemma\":\"of\",\"pos\":\"ADP\"},{\"anchor\":{\"endChar\":49,\"quote\":\"animal\",\"startChar\":43},\"lemma\":\"animal\",\"pos\":\"NOUN\"},{\"anchor\":{\"endChar\":54,\"quote\":\"hair\",\"startChar\":50},\"lemma\":\"hair\",\"pos\":\"NOUN\"},{\"anchor\":{\"endChar\":55,\"quote\":\".\",\"startChar\":54},\"lemma\":\".\",\"pos\":\"PUNCT\"}]},\"outcome\":\"admitted\",\"qualifiedParts\":{\"body\":\"the plate is formed of animal hair.\",\"preamble\":\"A system\",\"transition\":\"comprising\"},\"qualifiedText\":\"A system comprising the plate is formed of animal hair.\",\"reason\":\"\",\"runtimeExecuted\":false}",
+      "originalExpectedSha256": "4616ac37128ffd291a075ddaeb9ebf1ab86040b178f94097d31f73bfb060506b",
+      "originalExpectedCanonicalJson": "{\"coverage\":\"partial-required for unresolved bare value/entity NP; substantive supported-reference checks retained\",\"declarationPlans\":[],\"deferred\":[\"No mass/countability inference; no public term deletion; no material-literal role admitted.\"],\"elements\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"functionalParts\":[],\"grouping\":\"preamble\",\"id\":\"root\",\"kind\":\"preamble-subject\",\"lexicalHeader\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"ordinal\":1,\"parent\":null,\"terms\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"head\":\"system\",\"nominal\":\"r\",\"sourceRole\":\"unknown\"}]},{\"anchor\":{\"endChar\":54,\"quote\":\"the plate is formed of animal hair\",\"startChar\":20},\"functionalParts\":[{\"anchor\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"kind\":\"term\",\"nominal\":\"n0\"},{\"anchor\":{\"endChar\":43,\"quote\":\" is formed of \",\"startChar\":29},\"kind\":\"text\"},{\"anchor\":{\"endChar\":54,\"quote\":\"animal hair\",\"startChar\":43},\"kind\":\"term\",\"nominal\":\"n1\"}],\"grouping\":\"single-restriction\",\"id\":\"body\",\"kind\":\"functional-relation\",\"lexicalHeader\":{\"endChar\":54,\"quote\":\"the plate is formed of animal hair\",\"startChar\":20},\"ordinal\":2,\"parent\":\"root\",\"terms\":[{\"anchor\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"determiner\":\"the\",\"head\":\"plate\",\"nominal\":\"n0\",\"sourceRole\":\"unknown\"},{\"anchor\":{\"endChar\":54,\"quote\":\"animal hair\",\"startChar\":43},\"determiner\":\"bare\",\"head\":\"animal hair\",\"nominal\":\"n1\",\"sourceRole\":\"unknown\"}]}],\"frames\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"arguments\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"nominal\":\"r\",\"ownerCore\":null,\"ownerNominal\":null,\"predicate\":null,\"predicateOwnerFrame\":null,\"role\":\"unknown\"}],\"attachment\":\"main\",\"coordination\":null,\"id\":\"fr\",\"introducer\":null,\"lexicalHeader\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"nominals\":[\"r\"],\"ordinal\":1,\"outerOwnerNominal\":null,\"parent\":null,\"predicates\":[],\"sharedSubject\":null,\"subject\":null},{\"anchor\":{\"endChar\":54,\"quote\":\"the plate is formed of animal hair\",\"startChar\":20},\"arguments\":[{\"anchor\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"nominal\":\"n0\",\"ownerCore\":null,\"ownerNominal\":null,\"predicate\":{\"endChar\":39,\"quote\":\"is formed\",\"startChar\":30},\"predicateOwnerFrame\":\"fb\",\"role\":\"subject\"},{\"anchor\":{\"endChar\":54,\"quote\":\"animal hair\",\"startChar\":43},\"nominal\":\"n1\",\"ownerCore\":null,\"ownerNominal\":null,\"predicate\":{\"endChar\":39,\"quote\":\"is formed\",\"startChar\":30},\"predicateOwnerFrame\":\"fb\",\"role\":\"prepositional-complement\"}],\"attachment\":\"main\",\"coordination\":null,\"id\":\"fb\",\"introducer\":null,\"lexicalHeader\":{\"endChar\":54,\"quote\":\"the plate is formed of animal hair\",\"startChar\":20},\"nominals\":[\"n0\",\"n1\"],\"ordinal\":2,\"outerOwnerNominal\":null,\"parent\":null,\"predicates\":[{\"endChar\":39,\"quote\":\"is formed\",\"startChar\":30}],\"sharedSubject\":null,\"subject\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20}}],\"nominals\":[{\"canonicalReferenceHead\":\"system\",\"core\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"elementOwner\":\"root\",\"head\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2},\"id\":\"r\",\"outer\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"policyMechanism\":\"supported-introduction\",\"proof\":\"supported determiner only; no countability fact\",\"publicHead\":\"system\",\"sourceRole\":\"unknown\"},{\"canonicalReferenceHead\":\"plate\",\"core\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"determiner\":\"the\",\"elementOwner\":\"body\",\"head\":{\"endChar\":29,\"quote\":\"plate\",\"startChar\":24},\"id\":\"n0\",\"outer\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"policyMechanism\":\"supported-reference\",\"proof\":\"supported determiner only; no countability fact\",\"publicHead\":\"plate\",\"sourceRole\":\"unknown\"},{\"canonicalReferenceHead\":\"animal hair\",\"core\":{\"endChar\":54,\"quote\":\"animal hair\",\"startChar\":43},\"determiner\":\"bare\",\"elementOwner\":\"body\",\"head\":{\"endChar\":54,\"quote\":\"animal hair\",\"startChar\":43},\"id\":\"n1\",\"outer\":{\"endChar\":54,\"quote\":\"animal hair\",\"startChar\":43},\"policyMechanism\":\"unresolved-bare-reference-or-value\",\"proof\":\"no source role independently proves an introduction\",\"publicHead\":\"animal hair\",\"sourceRole\":\"unknown\"}],\"proofCertificates\":[],\"referenceExpectations\":[]}",
+      "acceptedCompleteExpectedSha256": "bd6e3f30f7784d18793a943fa48cdd1bdfd63148c89065d86c56c1959cc2be36",
+      "acceptedCompleteExpectedCanonicalJson": "{\"certificateGraph\":[{\"anchors\":[{\"endChar\":19,\"quote\":\"comprising\",\"startChar\":9}],\"dependencies\":[],\"id\":\"source\",\"kind\":\"qualified-source/transition\",\"rank\":0},{\"anchors\":[{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},{\"endChar\":8,\"quote\":\"system\",\"startChar\":2}],\"dependencies\":[],\"endpointEvidence\":{\"kind\":\"positive maximal nominal head chain in independently opened source slot\",\"noFailedPredicatePremise\":true,\"notCandidateReservation\":true,\"outerAttachmentNotEstablishedBySeed\":true},\"id\":\"head-r\",\"kind\":\"existing-independent-head/name/quantity-seed\",\"rank\":0,\"schema\":\"ClaimHeadSeedCertificate\",\"seedKind\":\"existing-nominal-head\",\"terminalHeadWitness\":{\"anchor\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2},\"countability\":\"not inferred\",\"origin\":\"explicit source-only witness\",\"pos\":\"NOUN\"}},{\"anchors\":[{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},{\"endChar\":29,\"quote\":\"plate\",\"startChar\":24}],\"dependencies\":[],\"endpointEvidence\":{\"kind\":\"positive maximal nominal head chain in independently opened source slot\",\"noFailedPredicatePremise\":true,\"notCandidateReservation\":true,\"outerAttachmentNotEstablishedBySeed\":true},\"id\":\"head-s\",\"kind\":\"existing-independent-head/name/quantity-seed\",\"rank\":0,\"schema\":\"ClaimHeadSeedCertificate\",\"seedKind\":\"existing-nominal-head\",\"terminalHeadWitness\":{\"anchor\":{\"endChar\":29,\"quote\":\"plate\",\"startChar\":24},\"countability\":\"not inferred\",\"origin\":\"explicit source-only witness\",\"pos\":\"NOUN\"}},{\"anchors\":[{\"endChar\":54,\"quote\":\"animal hair\",\"startChar\":43},{\"endChar\":54,\"quote\":\"animal hair\",\"startChar\":43}],\"dependencies\":[],\"endpointEvidence\":{\"kind\":\"positive maximal nominal head chain in independently opened source slot\",\"noFailedPredicatePremise\":true,\"notCandidateReservation\":true,\"outerAttachmentNotEstablishedBySeed\":true},\"id\":\"head-v\",\"kind\":\"existing-independent-head/name/quantity-seed\",\"rank\":0,\"schema\":\"ClaimHeadSeedCertificate\",\"seedKind\":\"existing-nominal-head\",\"terminalHeadWitness\":{\"anchor\":{\"endChar\":54,\"quote\":\"hair\",\"startChar\":50},\"countability\":\"not inferred\",\"origin\":\"explicit source-only witness\",\"pos\":\"NOUN\"}},{\"anchors\":[{\"endChar\":19,\"quote\":\"comprising\",\"startChar\":9}],\"dependencies\":[],\"id\":\"lex-0\",\"kind\":\"explicit-POS/lemma-witness\",\"rank\":0},{\"anchors\":[{\"endChar\":32,\"quote\":\"is\",\"startChar\":30}],\"dependencies\":[],\"id\":\"lex-1\",\"kind\":\"explicit-POS/lemma-witness\",\"rank\":0},{\"anchors\":[{\"endChar\":39,\"quote\":\"formed\",\"startChar\":33}],\"dependencies\":[],\"id\":\"lex-2\",\"kind\":\"explicit-POS/lemma-witness\",\"rank\":0},{\"anchors\":[{\"endChar\":32,\"quote\":\"is\",\"startChar\":30},{\"endChar\":39,\"quote\":\"formed\",\"startChar\":33}],\"dependencies\":[\"source\",\"lex-1\",\"lex-2\",\"head-s\"],\"id\":\"operator-fb\",\"kind\":\"existing-independently-licensed-operator; exact family specified by frame/source witnesses\",\"rank\":1},{\"anchors\":[{\"endChar\":54,\"quote\":\"the plate is formed of animal hair\",\"startChar\":20}],\"dependencies\":[\"operator-fb\",\"head-s\"],\"id\":\"arguments-fb\",\"kind\":\"existing-argument-closure\",\"rank\":2},{\"anchors\":[{\"endChar\":42,\"quote\":\"is formed of\",\"startChar\":30}],\"dependencies\":[\"head-v\",\"operator-fb\"],\"id\":\"description-d\",\"kind\":\"constitutive-description-UNRESOLVED\",\"rank\":2},{\"anchors\":[],\"dependencies\":[\"source\",\"head-r\",\"head-s\",\"head-v\",\"lex-0\",\"lex-1\",\"lex-2\",\"operator-fb\",\"arguments-fb\",\"description-d\"],\"id\":\"projection\",\"kind\":\"atomic-topology/owner/partition/token-ledger\",\"rank\":4}],\"coverageObligations\":[\"policy-uncovered: unresolved description/entity role\"],\"declarations\":[],\"descriptionProofs\":[{\"auxiliary\":{\"endChar\":32,\"quote\":\"is\",\"startChar\":30},\"completeCandidate\":\"v\",\"existingOperatorLicense\":\"existing be+VERB regular-participle certificate, lemma form, exact formed/of-or-from construction\",\"id\":\"d\",\"introducer\":{\"endChar\":42,\"quote\":\"of\",\"startChar\":40},\"lexicalPredicate\":{\"anchor\":{\"endChar\":39,\"quote\":\"formed\",\"startChar\":33},\"lemma\":\"form\",\"pos\":\"VERB\"},\"operator\":{\"endChar\":42,\"quote\":\"is formed of\",\"startChar\":30},\"possibleBasis\":\"retain-complete-unknown-candidate-on-actual-route\",\"publicTerm\":false,\"referentialStatus\":\"unresolved\",\"sourceFrame\":\"fb\"}],\"elements\":[{\"extent\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"functionalParts\":[],\"grouping\":\"preamble\",\"id\":\"root\",\"kind\":\"preamble-subject\",\"lexicalHeader\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"nominals\":[\"r\"],\"ordinal\":1,\"ownedTermRegions\":[{\"core\":\"r\",\"extent\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"positiveCertificate\":\"existing-closed-nominal/source-frame-owned-region\"}],\"parent\":null},{\"extent\":{\"endChar\":54,\"quote\":\"the plate is formed of animal hair\",\"startChar\":20},\"functionalParts\":[{\"anchor\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"kind\":\"term\",\"nominal\":\"s\"},{\"anchor\":{\"endChar\":54,\"quote\":\" is formed of animal hair\",\"startChar\":29},\"kind\":\"text\"}],\"grouping\":\"single-restriction\",\"id\":\"body\",\"kind\":\"functional-relation\",\"lexicalHeader\":{\"endChar\":54,\"quote\":\"the plate is formed of animal hair\",\"startChar\":20},\"nominals\":[\"s\"],\"ordinal\":2,\"ownedTermRegions\":[{\"core\":\"s\",\"extent\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"positiveCertificate\":\"existing-closed-nominal/source-frame-owned-region\"}],\"parent\":\"root\"}],\"frames\":[{\"arguments\":[],\"attachment\":\"main\",\"coordination\":null,\"extent\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"id\":\"fr\",\"inheritedSubject\":null,\"introducer\":null,\"lexicalHeader\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"nominals\":[\"r\"],\"parent\":null,\"predicates\":[],\"publicOwner\":\"root\",\"subject\":null},{\"arguments\":[{\"nominal\":\"s\",\"ownerNominal\":null,\"predicate\":\"formed\",\"role\":\"subject\"},{\"description\":\"d\",\"ownerNominal\":null,\"predicate\":\"formed\",\"role\":\"descriptive-complement\"}],\"attachment\":\"main\",\"coordination\":null,\"extent\":{\"endChar\":54,\"quote\":\"the plate is formed of animal hair\",\"startChar\":20},\"id\":\"fb\",\"inheritedSubject\":null,\"introducer\":null,\"lexicalHeader\":{\"endChar\":54,\"quote\":\"the plate is formed of animal hair\",\"startChar\":20},\"nominals\":[\"s\"],\"parent\":null,\"predicates\":[{\"endChar\":32,\"quote\":\"is\",\"startChar\":30},{\"endChar\":39,\"quote\":\"formed\",\"startChar\":33}],\"publicOwner\":\"body\",\"subject\":\"s\"}],\"nominals\":[{\"aliasEligible\":\"only independently existing explicit alias certificate; not map membership\",\"canonicalReferenceHead\":\"system\",\"core\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"head\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2},\"id\":\"r\",\"outer\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"proofClass\":\"independent existing NP/name/quantity certificate\",\"publicHead\":\"system\",\"publicOwner\":\"root\",\"role\":\"unknown\"},{\"aliasEligible\":\"only independently existing explicit alias certificate; not map membership\",\"canonicalReferenceHead\":\"plate\",\"core\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"determiner\":\"the\",\"head\":{\"endChar\":29,\"quote\":\"plate\",\"startChar\":24},\"id\":\"s\",\"outer\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"proofClass\":\"independent existing NP/name/quantity certificate\",\"publicHead\":\"plate\",\"publicOwner\":\"body\",\"role\":\"unknown\"}],\"privateCandidates\":[{\"aliasEligible\":false,\"canonicalReferenceHead\":\"animal hair\",\"core\":{\"endChar\":54,\"quote\":\"animal hair\",\"startChar\":43},\"determiner\":\"bare\",\"head\":{\"endChar\":54,\"quote\":\"animal hair\",\"startChar\":43},\"id\":\"v\",\"outer\":{\"endChar\":54,\"quote\":\"animal hair\",\"startChar\":43},\"proofClass\":\"independent existing NP/name/quantity certificate\",\"publicHead\":\"animal hair\",\"publicOwner\":null,\"role\":\"unknown\"}],\"publicTree\":{\"claimNumber\":1,\"edges\":[{\"child\":\"1.a\",\"kind\":\"part-of\",\"parent\":\"1\"},{\"element\":\"1.a\",\"kind\":\"functional\",\"parts\":[{\"kind\":\"term\",\"term\":{\"anchor\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"path\":\"1.a\"}},{\"anchor\":{\"endChar\":54,\"quote\":\" is formed of animal hair\",\"startChar\":29},\"kind\":\"text\"}]}],\"elements\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"kind\":\"preamble-subject\",\"path\":\"1\",\"terms\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"head\":\"system\"}]},{\"anchor\":{\"endChar\":54,\"quote\":\"the plate is formed of animal hair\",\"startChar\":20},\"kind\":\"functional-relation\",\"path\":\"1.a\",\"terms\":[{\"anchor\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"determiner\":\"the\",\"head\":\"plate\"}]}],\"producer\":\"rule\"},\"selectorProofs\":[],\"sourceTokenOwnership\":[{\"owner\":{\"id\":\"r\",\"kind\":\"public-core\"},\"token\":{\"endChar\":1,\"quote\":\"A\",\"startChar\":0}},{\"owner\":{\"id\":\"r\",\"kind\":\"public-core\"},\"token\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2}},{\"owner\":{\"certificate\":\"specific declared construction/transition/selector/attachment boundary\",\"kind\":\"certified-structural-control\",\"sourceWord\":\"comprising\"},\"token\":{\"endChar\":19,\"quote\":\"comprising\",\"startChar\":9}},{\"owner\":{\"id\":\"s\",\"kind\":\"public-core\"},\"token\":{\"endChar\":23,\"quote\":\"the\",\"startChar\":20}},{\"owner\":{\"id\":\"s\",\"kind\":\"public-core\"},\"token\":{\"endChar\":29,\"quote\":\"plate\",\"startChar\":24}},{\"owner\":{\"id\":\"fb\",\"kind\":\"certified-predicate\"},\"token\":{\"endChar\":32,\"quote\":\"is\",\"startChar\":30}},{\"owner\":{\"id\":\"fb\",\"kind\":\"certified-predicate\"},\"token\":{\"endChar\":39,\"quote\":\"formed\",\"startChar\":33}},{\"owner\":{\"certificate\":\"specific declared construction/transition/selector/attachment boundary\",\"kind\":\"certified-structural-control\",\"sourceWord\":\"of\"},\"token\":{\"endChar\":42,\"quote\":\"of\",\"startChar\":40}},{\"owner\":{\"id\":\"v\",\"kind\":\"private-description-core\"},\"token\":{\"endChar\":49,\"quote\":\"animal\",\"startChar\":43}},{\"owner\":{\"id\":\"v\",\"kind\":\"private-description-core\"},\"token\":{\"endChar\":54,\"quote\":\"hair\",\"startChar\":50}},{\"owner\":{\"certificate\":\"specific declared construction/transition/selector/attachment boundary\",\"kind\":\"certified-structural-control\",\"sourceWord\":\".\"},\"token\":{\"endChar\":55,\"quote\":\".\",\"startChar\":54}}]}",
+      "acceptedCompleteExpected": {
+        "nominals": [
+          {
+            "id": "r",
+            "core": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "head": {
+              "startChar": 2,
+              "endChar": 8,
+              "quote": "system"
+            },
+            "outer": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "publicHead": "system",
+            "canonicalReferenceHead": "system",
+            "determiner": "a",
+            "role": "unknown",
+            "publicOwner": "root",
+            "proofClass": "independent existing NP/name/quantity certificate",
+            "aliasEligible": "only independently existing explicit alias certificate; not map membership"
+          },
+          {
+            "id": "s",
+            "core": {
+              "startChar": 20,
+              "endChar": 29,
+              "quote": "the plate"
+            },
+            "head": {
+              "startChar": 24,
+              "endChar": 29,
+              "quote": "plate"
+            },
+            "outer": {
+              "startChar": 20,
+              "endChar": 29,
+              "quote": "the plate"
+            },
+            "publicHead": "plate",
+            "canonicalReferenceHead": "plate",
+            "determiner": "the",
+            "role": "unknown",
+            "publicOwner": "body",
+            "proofClass": "independent existing NP/name/quantity certificate",
+            "aliasEligible": "only independently existing explicit alias certificate; not map membership"
+          }
+        ],
+        "privateCandidates": [
+          {
+            "id": "v",
+            "core": {
+              "startChar": 43,
+              "endChar": 54,
+              "quote": "animal hair"
+            },
+            "head": {
+              "startChar": 43,
+              "endChar": 54,
+              "quote": "animal hair"
+            },
+            "outer": {
+              "startChar": 43,
+              "endChar": 54,
+              "quote": "animal hair"
+            },
+            "publicHead": "animal hair",
+            "canonicalReferenceHead": "animal hair",
+            "determiner": "bare",
+            "role": "unknown",
+            "publicOwner": null,
+            "proofClass": "independent existing NP/name/quantity certificate",
+            "aliasEligible": false
+          }
+        ],
+        "frames": [
+          {
+            "id": "fr",
+            "extent": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "lexicalHeader": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "publicOwner": "root",
+            "parent": null,
+            "attachment": "main",
+            "introducer": null,
+            "predicates": [],
+            "subject": null,
+            "arguments": [],
+            "nominals": ["r"],
+            "inheritedSubject": null,
+            "coordination": null
+          },
+          {
+            "id": "fb",
+            "extent": {
+              "startChar": 20,
+              "endChar": 54,
+              "quote": "the plate is formed of animal hair"
+            },
+            "lexicalHeader": {
+              "startChar": 20,
+              "endChar": 54,
+              "quote": "the plate is formed of animal hair"
+            },
+            "publicOwner": "body",
+            "parent": null,
+            "attachment": "main",
+            "introducer": null,
+            "predicates": [
+              {
+                "startChar": 30,
+                "endChar": 32,
+                "quote": "is"
+              },
+              {
+                "startChar": 33,
+                "endChar": 39,
+                "quote": "formed"
+              }
+            ],
+            "subject": "s",
+            "arguments": [
+              {
+                "nominal": "s",
+                "role": "subject",
+                "predicate": "formed",
+                "ownerNominal": null
+              },
+              {
+                "description": "d",
+                "role": "descriptive-complement",
+                "predicate": "formed",
+                "ownerNominal": null
+              }
+            ],
+            "nominals": ["s"],
+            "inheritedSubject": null,
+            "coordination": null
+          }
+        ],
+        "elements": [
+          {
+            "id": "root",
+            "parent": null,
+            "kind": "preamble-subject",
+            "grouping": "preamble",
+            "extent": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "lexicalHeader": {
+              "startChar": 0,
+              "endChar": 8,
+              "quote": "A system"
+            },
+            "ordinal": 1,
+            "nominals": ["r"],
+            "ownedTermRegions": [
+              {
+                "core": "r",
+                "extent": {
+                  "startChar": 0,
+                  "endChar": 8,
+                  "quote": "A system"
+                },
+                "positiveCertificate": "existing-closed-nominal/source-frame-owned-region"
+              }
+            ],
+            "functionalParts": []
+          },
+          {
+            "id": "body",
+            "parent": "root",
+            "kind": "functional-relation",
+            "grouping": "single-restriction",
+            "extent": {
+              "startChar": 20,
+              "endChar": 54,
+              "quote": "the plate is formed of animal hair"
+            },
+            "lexicalHeader": {
+              "startChar": 20,
+              "endChar": 54,
+              "quote": "the plate is formed of animal hair"
+            },
+            "ordinal": 2,
+            "nominals": ["s"],
+            "ownedTermRegions": [
+              {
+                "core": "s",
+                "extent": {
+                  "startChar": 20,
+                  "endChar": 29,
+                  "quote": "the plate"
+                },
+                "positiveCertificate": "existing-closed-nominal/source-frame-owned-region"
+              }
+            ],
+            "functionalParts": [
+              {
+                "kind": "term",
+                "nominal": "s",
+                "anchor": {
+                  "startChar": 20,
+                  "endChar": 29,
+                  "quote": "the plate"
+                }
+              },
+              {
+                "kind": "text",
+                "anchor": {
+                  "startChar": 29,
+                  "endChar": 54,
+                  "quote": " is formed of animal hair"
+                }
+              }
+            ]
+          }
+        ],
+        "descriptionProofs": [
+          {
+            "id": "d",
+            "operator": {
+              "startChar": 30,
+              "endChar": 42,
+              "quote": "is formed of"
+            },
+            "auxiliary": {
+              "startChar": 30,
+              "endChar": 32,
+              "quote": "is"
+            },
+            "lexicalPredicate": {
+              "anchor": {
+                "startChar": 33,
+                "endChar": 39,
+                "quote": "formed"
+              },
+              "pos": "VERB",
+              "lemma": "form"
+            },
+            "introducer": {
+              "startChar": 40,
+              "endChar": 42,
+              "quote": "of"
+            },
+            "completeCandidate": "v",
+            "sourceFrame": "fb",
+            "referentialStatus": "unresolved",
+            "publicTerm": false,
+            "possibleBasis": "retain-complete-unknown-candidate-on-actual-route",
+            "existingOperatorLicense": "existing be+VERB regular-participle certificate, lemma form, exact formed/of-or-from construction"
+          }
+        ],
+        "selectorProofs": [],
+        "coverageObligations": [
+          "policy-uncovered: unresolved description/entity role"
+        ],
+        "sourceTokenOwnership": [
+          {
+            "token": {
+              "startChar": 0,
+              "endChar": 1,
+              "quote": "A"
+            },
+            "owner": {
+              "kind": "public-core",
+              "id": "r"
+            }
+          },
+          {
+            "token": {
+              "startChar": 2,
+              "endChar": 8,
+              "quote": "system"
+            },
+            "owner": {
+              "kind": "public-core",
+              "id": "r"
+            }
+          },
+          {
+            "token": {
+              "startChar": 9,
+              "endChar": 19,
+              "quote": "comprising"
+            },
+            "owner": {
+              "kind": "certified-structural-control",
+              "certificate": "specific declared construction/transition/selector/attachment boundary",
+              "sourceWord": "comprising"
+            }
+          },
+          {
+            "token": {
+              "startChar": 20,
+              "endChar": 23,
+              "quote": "the"
+            },
+            "owner": {
+              "kind": "public-core",
+              "id": "s"
+            }
+          },
+          {
+            "token": {
+              "startChar": 24,
+              "endChar": 29,
+              "quote": "plate"
+            },
+            "owner": {
+              "kind": "public-core",
+              "id": "s"
+            }
+          },
+          {
+            "token": {
+              "startChar": 30,
+              "endChar": 32,
+              "quote": "is"
+            },
+            "owner": {
+              "kind": "certified-predicate",
+              "id": "fb"
+            }
+          },
+          {
+            "token": {
+              "startChar": 33,
+              "endChar": 39,
+              "quote": "formed"
+            },
+            "owner": {
+              "kind": "certified-predicate",
+              "id": "fb"
+            }
+          },
+          {
+            "token": {
+              "startChar": 40,
+              "endChar": 42,
+              "quote": "of"
+            },
+            "owner": {
+              "kind": "certified-structural-control",
+              "certificate": "specific declared construction/transition/selector/attachment boundary",
+              "sourceWord": "of"
+            }
+          },
+          {
+            "token": {
+              "startChar": 43,
+              "endChar": 49,
+              "quote": "animal"
+            },
+            "owner": {
+              "kind": "private-description-core",
+              "id": "v"
+            }
+          },
+          {
+            "token": {
+              "startChar": 50,
+              "endChar": 54,
+              "quote": "hair"
+            },
+            "owner": {
+              "kind": "private-description-core",
+              "id": "v"
+            }
+          },
+          {
+            "token": {
+              "startChar": 54,
+              "endChar": 55,
+              "quote": "."
+            },
+            "owner": {
+              "kind": "certified-structural-control",
+              "certificate": "specific declared construction/transition/selector/attachment boundary",
+              "sourceWord": "."
+            }
+          }
+        ],
+        "declarations": [],
+        "certificateGraph": [
+          {
+            "id": "source",
+            "rank": 0,
+            "kind": "qualified-source/transition",
+            "anchors": [
+              {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              }
+            ],
+            "dependencies": []
+          },
+          {
+            "id": "head-r",
+            "rank": 0,
+            "kind": "existing-independent-head/name/quantity-seed",
+            "anchors": [
+              {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              }
+            ],
+            "dependencies": [],
+            "schema": "ClaimHeadSeedCertificate",
+            "seedKind": "existing-nominal-head",
+            "terminalHeadWitness": {
+              "anchor": {
+                "startChar": 2,
+                "endChar": 8,
+                "quote": "system"
+              },
+              "pos": "NOUN",
+              "countability": "not inferred",
+              "origin": "explicit source-only witness"
+            },
+            "endpointEvidence": {
+              "kind": "positive maximal nominal head chain in independently opened source slot",
+              "notCandidateReservation": true,
+              "noFailedPredicatePremise": true,
+              "outerAttachmentNotEstablishedBySeed": true
+            }
+          },
+          {
+            "id": "head-s",
+            "rank": 0,
+            "kind": "existing-independent-head/name/quantity-seed",
+            "anchors": [
+              {
+                "startChar": 20,
+                "endChar": 29,
+                "quote": "the plate"
+              },
+              {
+                "startChar": 24,
+                "endChar": 29,
+                "quote": "plate"
+              }
+            ],
+            "dependencies": [],
+            "schema": "ClaimHeadSeedCertificate",
+            "seedKind": "existing-nominal-head",
+            "terminalHeadWitness": {
+              "anchor": {
+                "startChar": 24,
+                "endChar": 29,
+                "quote": "plate"
+              },
+              "pos": "NOUN",
+              "countability": "not inferred",
+              "origin": "explicit source-only witness"
+            },
+            "endpointEvidence": {
+              "kind": "positive maximal nominal head chain in independently opened source slot",
+              "notCandidateReservation": true,
+              "noFailedPredicatePremise": true,
+              "outerAttachmentNotEstablishedBySeed": true
+            }
+          },
+          {
+            "id": "head-v",
+            "rank": 0,
+            "kind": "existing-independent-head/name/quantity-seed",
+            "anchors": [
+              {
+                "startChar": 43,
+                "endChar": 54,
+                "quote": "animal hair"
+              },
+              {
+                "startChar": 43,
+                "endChar": 54,
+                "quote": "animal hair"
+              }
+            ],
+            "dependencies": [],
+            "schema": "ClaimHeadSeedCertificate",
+            "seedKind": "existing-nominal-head",
+            "terminalHeadWitness": {
+              "anchor": {
+                "startChar": 50,
+                "endChar": 54,
+                "quote": "hair"
+              },
+              "pos": "NOUN",
+              "countability": "not inferred",
+              "origin": "explicit source-only witness"
+            },
+            "endpointEvidence": {
+              "kind": "positive maximal nominal head chain in independently opened source slot",
+              "notCandidateReservation": true,
+              "noFailedPredicatePremise": true,
+              "outerAttachmentNotEstablishedBySeed": true
+            }
+          },
+          {
+            "id": "lex-0",
+            "rank": 0,
+            "kind": "explicit-POS/lemma-witness",
+            "anchors": [
+              {
+                "startChar": 9,
+                "endChar": 19,
+                "quote": "comprising"
+              }
+            ],
+            "dependencies": []
+          },
+          {
+            "id": "lex-1",
+            "rank": 0,
+            "kind": "explicit-POS/lemma-witness",
+            "anchors": [
+              {
+                "startChar": 30,
+                "endChar": 32,
+                "quote": "is"
+              }
+            ],
+            "dependencies": []
+          },
+          {
+            "id": "lex-2",
+            "rank": 0,
+            "kind": "explicit-POS/lemma-witness",
+            "anchors": [
+              {
+                "startChar": 33,
+                "endChar": 39,
+                "quote": "formed"
+              }
+            ],
+            "dependencies": []
+          },
+          {
+            "id": "operator-fb",
+            "rank": 1,
+            "kind": "existing-independently-licensed-operator; exact family specified by frame/source witnesses",
+            "anchors": [
+              {
+                "startChar": 30,
+                "endChar": 32,
+                "quote": "is"
+              },
+              {
+                "startChar": 33,
+                "endChar": 39,
+                "quote": "formed"
+              }
+            ],
+            "dependencies": ["source", "lex-1", "lex-2", "head-s"]
+          },
+          {
+            "id": "arguments-fb",
+            "rank": 2,
+            "kind": "existing-argument-closure",
+            "anchors": [
+              {
+                "startChar": 20,
+                "endChar": 54,
+                "quote": "the plate is formed of animal hair"
+              }
+            ],
+            "dependencies": ["operator-fb", "head-s"]
+          },
+          {
+            "id": "description-d",
+            "rank": 2,
+            "kind": "constitutive-description-UNRESOLVED",
+            "anchors": [
+              {
+                "startChar": 30,
+                "endChar": 42,
+                "quote": "is formed of"
+              }
+            ],
+            "dependencies": ["head-v", "operator-fb"]
+          },
+          {
+            "id": "projection",
+            "rank": 4,
+            "kind": "atomic-topology/owner/partition/token-ledger",
+            "anchors": [],
+            "dependencies": [
+              "source",
+              "head-r",
+              "head-s",
+              "head-v",
+              "lex-0",
+              "lex-1",
+              "lex-2",
+              "operator-fb",
+              "arguments-fb",
+              "description-d"
+            ]
+          }
+        ],
+        "publicTree": {
+          "claimNumber": 1,
+          "producer": "rule",
+          "elements": [
+            {
+              "path": "1",
+              "anchor": {
+                "startChar": 0,
+                "endChar": 8,
+                "quote": "A system"
+              },
+              "kind": "preamble-subject",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 0,
+                    "endChar": 8,
+                    "quote": "A system"
+                  },
+                  "head": "system",
+                  "determiner": "a"
+                }
+              ]
+            },
+            {
+              "path": "1.a",
+              "anchor": {
+                "startChar": 20,
+                "endChar": 54,
+                "quote": "the plate is formed of animal hair"
+              },
+              "kind": "functional-relation",
+              "terms": [
+                {
+                  "anchor": {
+                    "startChar": 20,
+                    "endChar": 29,
+                    "quote": "the plate"
+                  },
+                  "head": "plate",
+                  "determiner": "the"
+                }
+              ]
+            }
+          ],
+          "edges": [
+            {
+              "kind": "part-of",
+              "child": "1.a",
+              "parent": "1"
+            },
+            {
+              "kind": "functional",
+              "element": "1.a",
+              "parts": [
+                {
+                  "kind": "term",
+                  "term": {
+                    "path": "1.a",
+                    "anchor": {
+                      "startChar": 20,
+                      "endChar": 29,
+                      "quote": "the plate"
+                    }
+                  }
+                },
+                {
+                  "kind": "text",
+                  "anchor": {
+                    "startChar": 29,
+                    "endChar": 54,
+                    "quote": " is formed of animal hair"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "correctedCaseSha256": "0863755ab78bea5d2824c94f7ebe57043e77fbc7416aca81f3aed31d82bbb393",
+      "correctedCaseCanonicalJson": "{\"benchmarkLabel\":false,\"case\":\"material-entity-unknown-hair\",\"claimNumber\":1,\"claimReferences\":[],\"expected\":{\"certificateGraph\":[{\"anchors\":[{\"endChar\":19,\"quote\":\"comprising\",\"startChar\":9}],\"dependencies\":[],\"id\":\"source\",\"kind\":\"qualified-source/transition\",\"rank\":0},{\"anchors\":[{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},{\"endChar\":8,\"quote\":\"system\",\"startChar\":2}],\"dependencies\":[],\"endpointEvidence\":{\"kind\":\"positive maximal nominal head chain in independently opened source slot\",\"noFailedPredicatePremise\":true,\"notCandidateReservation\":true,\"outerAttachmentNotEstablishedBySeed\":true},\"id\":\"head-r\",\"kind\":\"existing-independent-head/name/quantity-seed\",\"rank\":0,\"schema\":\"ClaimHeadSeedCertificate\",\"seedKind\":\"existing-nominal-head\",\"terminalHeadWitness\":{\"anchor\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2},\"countability\":\"not inferred\",\"origin\":\"explicit source-only witness\",\"pos\":\"NOUN\"}},{\"anchors\":[{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},{\"endChar\":29,\"quote\":\"plate\",\"startChar\":24}],\"dependencies\":[],\"endpointEvidence\":{\"kind\":\"positive maximal nominal head chain in independently opened source slot\",\"noFailedPredicatePremise\":true,\"notCandidateReservation\":true,\"outerAttachmentNotEstablishedBySeed\":true},\"id\":\"head-s\",\"kind\":\"existing-independent-head/name/quantity-seed\",\"rank\":0,\"schema\":\"ClaimHeadSeedCertificate\",\"seedKind\":\"existing-nominal-head\",\"terminalHeadWitness\":{\"anchor\":{\"endChar\":29,\"quote\":\"plate\",\"startChar\":24},\"countability\":\"not inferred\",\"origin\":\"explicit source-only witness\",\"pos\":\"NOUN\"}},{\"anchors\":[{\"endChar\":54,\"quote\":\"animal hair\",\"startChar\":43},{\"endChar\":54,\"quote\":\"animal hair\",\"startChar\":43}],\"dependencies\":[],\"endpointEvidence\":{\"kind\":\"positive maximal nominal head chain in independently opened source slot\",\"noFailedPredicatePremise\":true,\"notCandidateReservation\":true,\"outerAttachmentNotEstablishedBySeed\":true},\"id\":\"head-v\",\"kind\":\"existing-independent-head/name/quantity-seed\",\"rank\":0,\"schema\":\"ClaimHeadSeedCertificate\",\"seedKind\":\"existing-nominal-head\",\"terminalHeadWitness\":{\"anchor\":{\"endChar\":54,\"quote\":\"hair\",\"startChar\":50},\"countability\":\"not inferred\",\"origin\":\"explicit source-only witness\",\"pos\":\"NOUN\"}},{\"anchors\":[{\"endChar\":19,\"quote\":\"comprising\",\"startChar\":9}],\"dependencies\":[],\"id\":\"lex-0\",\"kind\":\"explicit-POS/lemma-witness\",\"rank\":0},{\"anchors\":[{\"endChar\":32,\"quote\":\"is\",\"startChar\":30}],\"dependencies\":[],\"id\":\"lex-1\",\"kind\":\"explicit-POS/lemma-witness\",\"rank\":0},{\"anchors\":[{\"endChar\":39,\"quote\":\"formed\",\"startChar\":33}],\"dependencies\":[],\"id\":\"lex-2\",\"kind\":\"explicit-POS/lemma-witness\",\"rank\":0},{\"anchors\":[{\"endChar\":32,\"quote\":\"is\",\"startChar\":30},{\"endChar\":39,\"quote\":\"formed\",\"startChar\":33}],\"dependencies\":[\"source\",\"lex-1\",\"lex-2\",\"head-s\"],\"id\":\"operator-fb\",\"kind\":\"existing-independently-licensed-operator; exact family specified by frame/source witnesses\",\"rank\":1},{\"anchors\":[{\"endChar\":54,\"quote\":\"the plate is formed of animal hair\",\"startChar\":20}],\"dependencies\":[\"operator-fb\",\"head-s\"],\"id\":\"arguments-fb\",\"kind\":\"existing-argument-closure\",\"rank\":2},{\"anchors\":[{\"endChar\":42,\"quote\":\"is formed of\",\"startChar\":30}],\"dependencies\":[\"head-v\",\"operator-fb\"],\"id\":\"description-d\",\"kind\":\"constitutive-description-UNRESOLVED\",\"rank\":2},{\"anchors\":[],\"dependencies\":[\"source\",\"head-r\",\"head-s\",\"head-v\",\"lex-0\",\"lex-1\",\"lex-2\",\"operator-fb\",\"arguments-fb\",\"description-d\"],\"id\":\"projection\",\"kind\":\"atomic-topology/owner/partition/token-ledger\",\"rank\":4}],\"coverageObligations\":[\"policy-uncovered: unresolved description/entity role\"],\"declarations\":[],\"descriptionProofs\":[{\"auxiliary\":{\"endChar\":32,\"quote\":\"is\",\"startChar\":30},\"completeCandidate\":\"v\",\"existingOperatorLicense\":\"existing be+VERB regular-participle certificate, lemma form, exact formed/of-or-from construction\",\"id\":\"d\",\"introducer\":{\"endChar\":42,\"quote\":\"of\",\"startChar\":40},\"lexicalPredicate\":{\"anchor\":{\"endChar\":39,\"quote\":\"formed\",\"startChar\":33},\"lemma\":\"form\",\"pos\":\"VERB\"},\"operator\":{\"endChar\":42,\"quote\":\"is formed of\",\"startChar\":30},\"possibleBasis\":\"retain-complete-unknown-candidate-on-actual-route\",\"publicTerm\":false,\"referentialStatus\":\"unresolved\",\"sourceFrame\":\"fb\"}],\"elements\":[{\"extent\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"functionalParts\":[],\"grouping\":\"preamble\",\"id\":\"root\",\"kind\":\"preamble-subject\",\"lexicalHeader\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"nominals\":[\"r\"],\"ordinal\":1,\"ownedTermRegions\":[{\"core\":\"r\",\"extent\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"positiveCertificate\":\"existing-closed-nominal/source-frame-owned-region\"}],\"parent\":null},{\"extent\":{\"endChar\":54,\"quote\":\"the plate is formed of animal hair\",\"startChar\":20},\"functionalParts\":[{\"anchor\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"kind\":\"term\",\"nominal\":\"s\"},{\"anchor\":{\"endChar\":54,\"quote\":\" is formed of animal hair\",\"startChar\":29},\"kind\":\"text\"}],\"grouping\":\"single-restriction\",\"id\":\"body\",\"kind\":\"functional-relation\",\"lexicalHeader\":{\"endChar\":54,\"quote\":\"the plate is formed of animal hair\",\"startChar\":20},\"nominals\":[\"s\"],\"ordinal\":2,\"ownedTermRegions\":[{\"core\":\"s\",\"extent\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"positiveCertificate\":\"existing-closed-nominal/source-frame-owned-region\"}],\"parent\":\"root\"}],\"frames\":[{\"arguments\":[],\"attachment\":\"main\",\"coordination\":null,\"extent\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"id\":\"fr\",\"inheritedSubject\":null,\"introducer\":null,\"lexicalHeader\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"nominals\":[\"r\"],\"parent\":null,\"predicates\":[],\"publicOwner\":\"root\",\"subject\":null},{\"arguments\":[{\"nominal\":\"s\",\"ownerNominal\":null,\"predicate\":\"formed\",\"role\":\"subject\"},{\"description\":\"d\",\"ownerNominal\":null,\"predicate\":\"formed\",\"role\":\"descriptive-complement\"}],\"attachment\":\"main\",\"coordination\":null,\"extent\":{\"endChar\":54,\"quote\":\"the plate is formed of animal hair\",\"startChar\":20},\"id\":\"fb\",\"inheritedSubject\":null,\"introducer\":null,\"lexicalHeader\":{\"endChar\":54,\"quote\":\"the plate is formed of animal hair\",\"startChar\":20},\"nominals\":[\"s\"],\"parent\":null,\"predicates\":[{\"endChar\":32,\"quote\":\"is\",\"startChar\":30},{\"endChar\":39,\"quote\":\"formed\",\"startChar\":33}],\"publicOwner\":\"body\",\"subject\":\"s\"}],\"nominals\":[{\"aliasEligible\":\"only independently existing explicit alias certificate; not map membership\",\"canonicalReferenceHead\":\"system\",\"core\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"head\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2},\"id\":\"r\",\"outer\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"proofClass\":\"independent existing NP/name/quantity certificate\",\"publicHead\":\"system\",\"publicOwner\":\"root\",\"role\":\"unknown\"},{\"aliasEligible\":\"only independently existing explicit alias certificate; not map membership\",\"canonicalReferenceHead\":\"plate\",\"core\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"determiner\":\"the\",\"head\":{\"endChar\":29,\"quote\":\"plate\",\"startChar\":24},\"id\":\"s\",\"outer\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"proofClass\":\"independent existing NP/name/quantity certificate\",\"publicHead\":\"plate\",\"publicOwner\":\"body\",\"role\":\"unknown\"}],\"privateCandidates\":[{\"aliasEligible\":false,\"canonicalReferenceHead\":\"animal hair\",\"core\":{\"endChar\":54,\"quote\":\"animal hair\",\"startChar\":43},\"determiner\":\"bare\",\"head\":{\"endChar\":54,\"quote\":\"animal hair\",\"startChar\":43},\"id\":\"v\",\"outer\":{\"endChar\":54,\"quote\":\"animal hair\",\"startChar\":43},\"proofClass\":\"independent existing NP/name/quantity certificate\",\"publicHead\":\"animal hair\",\"publicOwner\":null,\"role\":\"unknown\"}],\"publicTree\":{\"claimNumber\":1,\"edges\":[{\"child\":\"1.a\",\"kind\":\"part-of\",\"parent\":\"1\"},{\"element\":\"1.a\",\"kind\":\"functional\",\"parts\":[{\"kind\":\"term\",\"term\":{\"anchor\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"path\":\"1.a\"}},{\"anchor\":{\"endChar\":54,\"quote\":\" is formed of animal hair\",\"startChar\":29},\"kind\":\"text\"}]}],\"elements\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"kind\":\"preamble-subject\",\"path\":\"1\",\"terms\":[{\"anchor\":{\"endChar\":8,\"quote\":\"A system\",\"startChar\":0},\"determiner\":\"a\",\"head\":\"system\"}]},{\"anchor\":{\"endChar\":54,\"quote\":\"the plate is formed of animal hair\",\"startChar\":20},\"kind\":\"functional-relation\",\"path\":\"1.a\",\"terms\":[{\"anchor\":{\"endChar\":29,\"quote\":\"the plate\",\"startChar\":20},\"determiner\":\"the\",\"head\":\"plate\"}]}],\"producer\":\"rule\"},\"selectorProofs\":[],\"sourceTokenOwnership\":[{\"owner\":{\"id\":\"r\",\"kind\":\"public-core\"},\"token\":{\"endChar\":1,\"quote\":\"A\",\"startChar\":0}},{\"owner\":{\"id\":\"r\",\"kind\":\"public-core\"},\"token\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2}},{\"owner\":{\"certificate\":\"specific declared construction/transition/selector/attachment boundary\",\"kind\":\"certified-structural-control\",\"sourceWord\":\"comprising\"},\"token\":{\"endChar\":19,\"quote\":\"comprising\",\"startChar\":9}},{\"owner\":{\"id\":\"s\",\"kind\":\"public-core\"},\"token\":{\"endChar\":23,\"quote\":\"the\",\"startChar\":20}},{\"owner\":{\"id\":\"s\",\"kind\":\"public-core\"},\"token\":{\"endChar\":29,\"quote\":\"plate\",\"startChar\":24}},{\"owner\":{\"id\":\"fb\",\"kind\":\"certified-predicate\"},\"token\":{\"endChar\":32,\"quote\":\"is\",\"startChar\":30}},{\"owner\":{\"id\":\"fb\",\"kind\":\"certified-predicate\"},\"token\":{\"endChar\":39,\"quote\":\"formed\",\"startChar\":33}},{\"owner\":{\"certificate\":\"specific declared construction/transition/selector/attachment boundary\",\"kind\":\"certified-structural-control\",\"sourceWord\":\"of\"},\"token\":{\"endChar\":42,\"quote\":\"of\",\"startChar\":40}},{\"owner\":{\"id\":\"v\",\"kind\":\"private-description-core\"},\"token\":{\"endChar\":49,\"quote\":\"animal\",\"startChar\":43}},{\"owner\":{\"id\":\"v\",\"kind\":\"private-description-core\"},\"token\":{\"endChar\":54,\"quote\":\"hair\",\"startChar\":50}},{\"owner\":{\"certificate\":\"specific declared construction/transition/selector/attachment boundary\",\"kind\":\"certified-structural-control\",\"sourceWord\":\".\"},\"token\":{\"endChar\":55,\"quote\":\".\",\"startChar\":54}}]},\"lexicalEvidence\":{\"origin\":\"explicit injected source-control facts; not a runtime dictionary, asset output or countability resource\",\"tokens\":[{\"anchor\":{\"endChar\":1,\"quote\":\"A\",\"startChar\":0},\"lemma\":\"a\",\"pos\":\"DET\"},{\"anchor\":{\"endChar\":8,\"quote\":\"system\",\"startChar\":2},\"lemma\":\"system\",\"pos\":\"NOUN\"},{\"anchor\":{\"endChar\":19,\"quote\":\"comprising\",\"startChar\":9},\"lemma\":\"comprise\",\"pos\":\"VERB\"},{\"anchor\":{\"endChar\":23,\"quote\":\"the\",\"startChar\":20},\"lemma\":\"the\",\"pos\":\"DET\"},{\"anchor\":{\"endChar\":29,\"quote\":\"plate\",\"startChar\":24},\"lemma\":\"plate\",\"pos\":\"NOUN\"},{\"anchor\":{\"endChar\":32,\"quote\":\"is\",\"startChar\":30},\"lemma\":\"be\",\"pos\":\"AUX\"},{\"anchor\":{\"endChar\":39,\"quote\":\"formed\",\"startChar\":33},\"lemma\":\"form\",\"pos\":\"VERB\"},{\"anchor\":{\"endChar\":42,\"quote\":\"of\",\"startChar\":40},\"lemma\":\"of\",\"pos\":\"ADP\"},{\"anchor\":{\"endChar\":49,\"quote\":\"animal\",\"startChar\":43},\"lemma\":\"animal\",\"pos\":\"NOUN\"},{\"anchor\":{\"endChar\":54,\"quote\":\"hair\",\"startChar\":50},\"lemma\":\"hair\",\"pos\":\"NOUN\"},{\"anchor\":{\"endChar\":55,\"quote\":\".\",\"startChar\":54},\"lemma\":\".\",\"pos\":\"PUNCT\"}]},\"outcome\":\"admitted\",\"qualifiedParts\":{\"body\":\"the plate is formed of animal hair.\",\"preamble\":\"A system\",\"transition\":\"comprising\"},\"qualifiedText\":\"A system comprising the plate is formed of animal hair.\",\"reason\":\"\",\"runtimeExecuted\":false}",
+      "operation": {
+        "op": "replace-exact",
+        "path": "/expected",
+        "beforeSha256": "4616ac37128ffd291a075ddaeb9ebf1ab86040b178f94097d31f73bfb060506b",
+        "afterSha256": "bd6e3f30f7784d18793a943fa48cdd1bdfd63148c89065d86c56c1959cc2be36"
+      },
+      "inverse": {
+        "op": "replace-exact",
+        "path": "/expected",
+        "beforeSha256": "bd6e3f30f7784d18793a943fa48cdd1bdfd63148c89065d86c56c1959cc2be36",
+        "afterSha256": "4616ac37128ffd291a075ddaeb9ebf1ab86040b178f94097d31f73bfb060506b",
+        "restoresEntireOriginalCase": true
+      },
+      "allFieldsOutsideExpectedDeepEqual": true
+    }
+  ],
+  "reporting": "Report original54 historical conformance separately from52unchangedcarry and2versionedmaterialconformance. Do not call original54unchanged passes. Full accepted private/frame/public/coverage expectations remain asserted.",
+  "application": "Test-only complete expected schema/view replacement for exact two rows, guarded by original file/source/fullcase/expected/token hashes and accepted complete expected digests. Inverse restores entire original row. Source inputs/old fixture bytes/runtime matching never change.",
+  "legacyLabelsScorerPriorResultsChanged": false
+}

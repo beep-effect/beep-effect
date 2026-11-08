@@ -1,0 +1,57 @@
+{
+  "familyId": "17045367-root-1",
+  "rootClaimNumber": 1,
+  "labelClaimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+  "claims": [
+    {
+      "claimNumber": 1,
+      "claimText": "An anemometer for wind speed and direction comprising a tail, axle, cups, mounting rod, pointer arm and nose cone, wherein the electronics in the tail are hermetically sealed inside a lightweight plastic shell and the battery is a counterweight in the nose cone.",
+      "sourceXmlParentClaimNumbers": []
+    },
+    {
+      "claimNumber": 2,
+      "claimText": "The anemometer of claim 1, wherein the pointer arm for the wind direction arrow comprises a hollow tube extending from the circuit board in the tail to the nose cone with a wire inside.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 3,
+      "claimText": "The anemometer of claim 2, wherein the wire has a small plug on the end that can plug into a shrink-wrapped battery with a wire and plug on it.",
+      "sourceXmlParentClaimNumbers": [2]
+    },
+    {
+      "claimNumber": 4,
+      "claimText": "The anemometer of claim 1, wherein a hole in the base of the nose cone is attached to the hollow pointer arm with adhesive, through which the battery wire comes into the nose cone.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 5,
+      "claimText": "The anemometer of claim 1, wherein the nose cone has a space up the side of the battery for the wire to avoid chafing of the wire, and a space inside the cap for the plug on the end of the wire to plug into the battery wire.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 6,
+      "claimText": "The anemometer of claim 1, wherein the cap for the nose cone turns on threads onto the nose cone, with an O-ring around the base of the threads to ensure a waterproof seal.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 7,
+      "claimText": "The anemometer of claim 1, wherein the hollow pointer arm attaches to the circuit board in the tail using a hollow clevis fastener, with adhesive joining the clevis to the pointer arm, and the clevis attached onto one side of the circuit board with a small pair of nuts and bolts, and the battery wire exiting from the tube on the other side of the circuit board.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 8,
+      "claimText": "The anemometer of claim 1, wherein the electronics in the tail are hermetically sealed inside a lightweight shell using adhesive or ultrasonic welding to join the two sides of the case.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 9,
+      "claimText": "The anemometer of claim 1, wherein the tail is comprised of the solar panels and circuit board, and the solar panels are attached with double-sided tape to the outside of the plastic shell encapsulating the electronics, to provide clearer sunlight to the solar cells.",
+      "sourceXmlParentClaimNumbers": [1]
+    },
+    {
+      "claimNumber": 10,
+      "claimText": "The anemometer of claim 1, wherein the hermetically sealed shell around the tail electronics provides an air gap over the radio antenna, allowing the air molecules to vibrate and transmit out in radio waves, with no need for an additional box around the antenna to keep resin away and form an air gap.",
+      "sourceXmlParentClaimNumbers": [1]
+    }
+  ]
+}

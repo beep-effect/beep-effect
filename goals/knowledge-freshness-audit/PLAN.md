@@ -236,6 +236,38 @@ Lane `codex/knowledge-audit-p4-enforcement-context` · PR #2817
 
 Reverse: Remove this publication checkpoint and regenerate projections; preserve the private original reports, source bundles and failure receipts.
 
+### Compose the documented recovery logging Effect, 2026-11-07
+
+Parent static and bounded runtime review found that the error-pattern handler discarded Console.log before returning a fallback. Return the logging Effect mapped to the same fallback. A regression extracts the actual Markdown fence, substitutes a local ValidationError operation, and requires exactly one log with the unchanged fallback. The original guide fails that assertion; no HTTP or retry branch is executed. Live local registered-worktree census found no competing committed or dirty target changes. Remote PR census remains unavailable under canonical API quota; publication and finality remain held pending normal remote checks. PM and ADHD remain separate.
+
+Lane `codex/audit-error-boundary`
+
+Reverse: Revert this checkpoint, the narrow example change and its fence regression if the recovery branch intentionally stops logging.
+
+### Correct the pinned Effect actor send guard guidance, 2026-11-07
+
+Reverse: Revert the guide correction if a later pinned implementation removes the runtime guard
+
+### Count distinct classes in coverage examples, 2026-11-07
+
+Parent review found that OPTIONAL and UNION can yield several rows per class. Correct both label and definition coverage examples to count distinct total and covered class identities. Preserve the blank-node exclusion, both definition properties and existing targets. Static cardinality counterexamples and primary SPARQL syntax review support the correction; no ontology or endpoint query was executed. PM and ADHD remain separate.
+
+Lane `codex/audit-timer-guidance`
+
+Reverse: Revert this checkpoint and its two coverage example corrections if class-based coverage is no longer the intended metric.
+
+### Isolate each model-refusal test scenario, 2026-11-07
+
+Reverse: Restore grouped cases only after they fit the unchanged timeout under package verification
+
+### Qualify the retired-module guide's deliberate exceptions, 2026-11-07
+
+Parent review revalidated T52 kfa-t52-001 against its frozen file, blob and line hashes. Reject a contradiction inferred solely from the historical fingerprint exemption: the current fingerprint file has no literal retired prefix. Confirm the narrower omission against the actual retirement law: its implementation, model and regression fixtures deliberately retain retired strings and are explicitly allowlisted. Describe the guide as the canonical mapping and include those existing exceptions. Preserve the allowlist, vendor patches, historical fingerprints and dated migration facts. Twenty open PRs had no target overlap. This is bounded documentation reconciliation, not full T52/P4 acceptance or runtime proof; PM and ADHD remain separately held, and no spending is admitted.
+
+Lane `codex/audit-timer-guidance`
+
+Reverse: Restore the two guide paragraphs and remove this checkpoint; retain the private original report and review evidence.
+
 ### Pin the notification sender citation to the verified source, 2026-11-07
 
 Read the current 99-line notification guide and checked bounded hook, worker and upstream source context. The URI override is forwarded before its environment name is removed, and desktop markup is escaped before delivery; those suspected discrepancies were rejected. The cited Ghostty v1.3.1 line 1578 handles environment setup, while the notification sender begins at line 1718. Pin that link to verified commit 332b2aefc6e72d363aa93ab6ecfc86eeeeb5ed28 and the actual sender. This is a source-citation repair, not proof of installed desktop behavior, focus, receipt visibility or clicks. No hooks, services or billing changed. P4 remains partial; PM and ADHD holds remain separate. Raw source and parent review receipts stay in the private archive.
@@ -247,5 +279,44 @@ Reverse: Revert this citation repair and checkpoint together if the pinned upstr
 ### P4 clarifies config package naming without inventing a directory migration, 2026-11-07
 
 Reverse: Revert the wording clarification; retain the original source and parent qualification in the private archive.
+
+### Partition independent CI profile scenarios, 2026-11-07
+
+Reverse: Restore the combined scenario only after package verification fits its unchanged deadline
+
+### Protect class coverage examples with real query regressions, 2026-11-07
+
+Reuse the already-declared public Oxigraph SPARQL service and MarkdownDocument/MarkdownFence APIs in a repo-cli regression. Execute both actual checklist query fences over six small in-memory synthetic fixtures: multiple language values, values shared across classes, no annotations, both definition properties, excluded blank-node classes and empty data. The corrected guide passes six cases; the original accepted-main guide fails two and passes four. Restore the corrected owned file byte-for-byte after the negative control. No dependency, installation, endpoint, driver source or real ontology asset is added. This closes the precise local standing-query regression gap, not campaign-wide acceptance or hosted proof. Earlier failed harness attempts remain private; PM and ADHD remain separate.
+
+Lane `codex/audit-timer-guidance`
+
+Reverse: Revert this regression and checkpoint if the public query consumer contract changes; preserve the original-versus-corrected cardinality evidence.
+
+### Require a closed error channel in the protocol example, 2026-11-07
+
+Parent review validated a precision gap in the worked protocol handler:
+Effect.catchTags can leave a newly added action error in the inferred channel.
+The example now declares Effect.fn.Return<void | typeof ProblemDetail.Type>,
+preserving its success shape while requiring a never error channel.
+
+The regression typechecks the actual Markdown fence. The current example and
+an explicitly unguarded expanded-union control compile; the guarded example
+rejects the newly unhandled tag. No illustrative service or handler is invoked.
+The test also fails against the old guide. Initial probes that incorrectly
+required a problem-detail value on successful void paths were rejected and
+retained in the private archive.
+
+This is bounded example proof and standing regression protection, not evidence
+of production transport behavior, every translator, or complete audit coverage.
+P4 remains active. Original reports and raw proof stay private; no paid pilot
+or cloud work is admitted.
+
+Lane `codex/audit-error-boundary`
+
+Reverse: Revert the example and its regression, regenerate packet projections, and retain the private before/after compiler receipts.
+
+### Scope timer network waits to research services, 2026-11-07
+
+Reverse: Restore the prior paragraph only if both service renderers add the documented wait
 
 <!-- beep:decisions:end -->

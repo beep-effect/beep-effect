@@ -63,6 +63,26 @@ it.layer(BunCrypto.layer)("admitted cleaner operations", (it) => {
       expect(state).toMatchObject({ active: 0, queued: 0 });
     })
   );
+  it.effect("admits owned cleaner runs, preserving the issued handle and closing malformed requests", () =>
+    Effect.gen(function* () {
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      const h = yield* makeCitationCleanerRegistryHarness();
+      const admission = yield* makeCitationOperationAdmission(limits);
+      const cleaner = yield* makeCitationCleanerOperation(limits).pipe(
+        Effect.provideService(CitationOperationAdmission, admission),
+        Effect.provideService(CitationCleaner, h.registry.runtime)
+      );
+      const value = yield* h.values.sourceText("ABCD");
+      h.select([]);
+      const owned = yield* cleaner.runOwned({ value, plan: "owned-admitted" });
+      expect(owned.value).toBe(value);
+      expect(owned.producedTextUtf16).toBe(4);
+      const malformed = yield* cleaner.runOwned({ plan: "owned-malformed" }).pipe(Effect.flip);
+      expect(malformed).toMatchObject({ _tag: "CitationInputError", operation: "clean" });
+      const state = yield* admission.snapshot;
+      expect(state).toEqual({ active: 0, queued: 0, closed: false });
+    })
+  );
   it.layer(TestClock.layer())("isolated clock: 62", (it) => {
     it.effect("shares admission across cleaner instances while nested plans reuse the outer permit and ledger", () =>
       Effect.gen(function* () {

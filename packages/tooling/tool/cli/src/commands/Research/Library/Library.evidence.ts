@@ -11,6 +11,7 @@ import { COMMON_HTML, CURRENCY, ENTITY_ACTION, EntityDecoder } from "@nodable/en
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
@@ -25,6 +26,7 @@ import { readLibraryProviderEvents } from "./Library.events.ts";
 import { LibraryDispositionImportPayload, LibraryImportPayload, libraryDispositionValid } from "./Library.import.ts";
 import { libraryArtifactIntegrity } from "./Library.integrity.ts";
 import { AlphaFullText, validateProviderQualification } from "./Library.provenance.ts";
+import { libraryBoxRevisionValid, validateLibraryRouteEvidence } from "./Library.routeEvidence.ts";
 import { LibraryArtifact, LibraryCapture } from "./Library.schemas.ts";
 import { hashBytes } from "./Library.store.ts";
 import { libraryCitedRevisions } from "./Library.versions.ts";
@@ -1366,10 +1368,23 @@ const arxivCapturedRevisionValid = (capture: LibraryCapture) =>
   /^v\d+$/.test(capture.capturedRevision) &&
   (capture.requestedRevision === "" || capture.capturedRevision === capture.requestedRevision);
 const sourceCapturedRevisionValid = (source: LibrarySource, capture: LibraryCapture) => {
+  const box = libraryBoxRevisionValid(source, capture);
+  if (O.isSome(box)) return box.value;
   if (source.kind === "youtube" || Str.startsWith("github-")(source.kind)) return true;
   if (source.kind === "paper" && Str.startsWith("arxiv:")(source.identity)) return arxivCapturedRevisionValid(capture);
   return capture.capturedRevision === capture.requestedRevision;
 };
+// Imported, paper and web evidence share the document-capture contracts.
+const validateDocumentEvidence = Effect.fn("Library.validateDocumentEvidence")(function* (context: EvidenceContext) {
+  const imported = yield* validateImportedEvidence(context);
+  if (imported !== undefined) return imported;
+  if (
+    context.source.kind === "paper" &&
+    A.some(context.role("raw-full-text"), (artifact) => artifact.mediaType === "application/pdf")
+  )
+    return yield* validatePaperEvidence(context);
+  return yield* context.webResponseValid();
+});
 /**
  * Revalidate source-specific target and content provenance.
  * **Example** (Checking a retained source)
@@ -1392,17 +1407,12 @@ export const librarySourceEvidenceValid = Effect.fn("Research.Library.verifySour
   const revisions = A.dedupe([source.revision, ...A.map(source.versions, (version) => version.revision)]);
   if (!A.contains(revisions, capture.requestedRevision) || !sourceCapturedRevisionValid(source, capture)) return false;
   if (!(yield* libraryArtifactsValid(root, capture.artifacts))) return false;
+  const routed = yield* validateLibraryRouteEvidence(root, source, capture);
+  if (O.isSome(routed)) return routed.value;
   const context = yield* makeEvidenceContext(root, source, capture);
   if (Str.startsWith("github-")(source.kind)) return yield* validateGithubEvidence(context);
   if (source.kind === "youtube") return yield* validateYoutubeEvidence(context);
-  const imported = yield* validateImportedEvidence(context);
-  if (imported !== undefined) return imported;
-  if (
-    source.kind === "paper" &&
-    A.some(context.role("raw-full-text"), (artifact) => artifact.mediaType === "application/pdf")
-  )
-    return yield* validatePaperEvidence(context);
-  return yield* context.webResponseValid();
+  return yield* validateDocumentEvidence(context);
 });
 
 const currentCaptureClaim = Effect.fn("Library.currentCaptureClaim")(function* (
@@ -1471,6 +1481,22 @@ export class LibraryEffectiveCapture extends S.Opaque<
   )
 ) {}
 
+// Catalogs are immutable values: one capture index per catalog reference keeps per-source evidence linear.
+let lastCaptureIndex: O.Option<readonly [LibraryCatalog, HashMap.HashMap<string, ReadonlyArray<LibraryCapture>>]> =
+  O.none();
+
+const capturesBySourceIndex = (catalog: LibraryCatalog): HashMap.HashMap<string, ReadonlyArray<LibraryCapture>> => {
+  if (O.isSome(lastCaptureIndex) && lastCaptureIndex.value[0] === catalog) return lastCaptureIndex.value[1];
+  let index = HashMap.empty<string, Array<LibraryCapture>>();
+  for (const capture of catalog.captures) {
+    const existing = HashMap.get(index, capture.sourceId);
+    if (O.isSome(existing)) existing.value.push(capture);
+    else index = HashMap.set(index, capture.sourceId, [capture]);
+  }
+  lastCaptureIndex = O.some([catalog, index] as const);
+  return index;
+};
+
 /**
  * Select the latest validated claim in immutable catalog append order for each required revision.
  * **Details**
@@ -1501,8 +1527,11 @@ export const libraryEffectiveCaptures = Effect.fn("Library.effectiveCaptures")(f
         capture: null,
         category: "missing",
       });
-      for (const capture of catalog.captures) {
-        if (capture.sourceId !== source.id || capture.requestedRevision !== revision) continue;
+      for (const capture of O.getOrElse(
+        HashMap.get(capturesBySourceIndex(catalog), source.id),
+        A.empty<LibraryCapture>
+      )) {
+        if (capture.requestedRevision !== revision) continue;
         const claim = yield* currentCaptureClaim(root, catalog, source, capture, revision);
         if (O.isSome(claim)) selected = claim.value;
       }

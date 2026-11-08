@@ -199,8 +199,8 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
           short: false,
         };
         const input = {
-          patternsChecked: 0,
           source: { width: 1, bytes: new TextEncoder().encode(" Id.") },
+          patternsChecked: 0,
           assembly: {
             items: [
               { _tag: "Text", start: 0, end: 1 },

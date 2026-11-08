@@ -29,12 +29,14 @@
 import "./IpcStdoutGuard.prelude.ts";
 
 import { ChatRpcs } from "@beep/agents-use-cases/public";
-import { EpistemicConfigLive } from "@beep/epistemic-config/layer";
-import { ExecutionLedgerDrizzle } from "@beep/epistemic-server/ExecutionLedger";
+import { ExecutionAuthorityConfigLive } from "@beep/execution-authority-config/layer";
+import { ExecutionLedgerDrizzle } from "@beep/execution-authority-server/ExecutionLedger";
 import { OntologyMcpConfigLive } from "@beep/ontology-config/layer";
 import { OntologyMcpMutationsEnabledConfig } from "@beep/ontology-config/server";
-import { BunHttpServer, BunRuntime } from "@effect/platform-bun";
+import { Workspace } from "@beep/workspace-server";
+import { BunHttpServer, BunRuntime, BunServices } from "@effect/platform-bun";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
+import * as Cause from "effect/Cause";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
@@ -46,13 +48,14 @@ import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
 import * as RpcSerialization from "effect/rpc/RpcSerialization";
 import * as RpcServer from "effect/rpc/RpcServer";
-import { RuntimeLive } from "@/runtime/Layer";
+import { RuntimeLive, VaultSyncDesktopHostLive } from "@/runtime/Layer";
 import { SidecarReadyMarker } from "@/runtime/Migrations";
 import { PgliteDrizzleLive } from "@/runtime/Pglite";
 import { DesktopRpcs } from "./DesktopRpcs.ts";
 import { ipcTransport, SidecarStdioLive } from "./IpcStdoutGuard.ts";
-import { makeOntologyMcpTransportLayer } from "./OntologyMcpTransport.ts";
+import { makeOntologyMcpTransportLayer, OntologyMcpTransportOptions } from "./OntologyMcpTransport.ts";
 import { DesktopRpcSessionToken, RpcSessionAuthLayer } from "./RpcSessionAuth.ts";
+import { makeVaultSyncTransportLayer } from "./VaultSyncTransport.ts";
 import type { ServeError } from "effect/http/HttpServerError";
 import type * as Redacted from "effect/Redacted";
 import type { DesktopStartupError } from "@/runtime/Layer";
@@ -100,10 +103,10 @@ const httpMain = (): Layer.Layer<never, DesktopStartupError | ServeError> => {
   const OntologyMcp = O.match(RPC_SESSION_TOKEN, {
     onNone: () => Layer.empty,
     onSome: (token: Redacted.Redacted<string>) =>
-      makeOntologyMcpTransportLayer({ token }).pipe(
+      makeOntologyMcpTransportLayer(OntologyMcpTransportOptions.make({ token })).pipe(
         Layer.provide(OntologyMcpConfigLive),
         Layer.provide(ExecutionLedgerDrizzle),
-        Layer.provide(EpistemicConfigLive),
+        Layer.provide(ExecutionAuthorityConfigLive),
         // The same module-level const RuntimeLive provides: layer memoization
         // builds one PGlite instance shared by the rpc handlers and the
         // governed MCP gate's execution ledger.
@@ -111,7 +114,29 @@ const httpMain = (): Layer.Layer<never, DesktopStartupError | ServeError> => {
         Layer.provide(HttpRouter.layer)
       ),
   });
-  const App = Layer.mergeAll(Protocol, RpcPreflight, Auth, OntologyMcp);
+  // HTTP, the gated `/vault-sync/rpc` remote CLI protocol and MCP over the same hosted Model the
+  // desktop RPC handlers use: the host and its store are the same module-level layer values, so
+  // memoization builds one Model and one PGlite. Without a launch token none of them is mounted.
+  const VaultSyncTransport = O.match(RPC_SESSION_TOKEN, {
+    onNone: () => Layer.empty,
+    onSome: (token: Redacted.Redacted<string>) =>
+      makeVaultSyncTransportLayer({ token }).pipe(
+        Layer.provide(VaultSyncDesktopHostLive),
+        Layer.provide(Workspace.WorkspaceVaultStoreDrizzleLayer),
+        Layer.provide(PgliteDrizzleLive),
+        Layer.provide(BunServices.layer),
+        Layer.provide(HttpRouter.layer),
+        // A refused admission leaves vault sync without a writer; the rest of the sidecar still serves.
+        Layer.catchCause((cause) =>
+          Layer.effectDiscard(
+            Effect.logError("vault sync transport is unavailable").pipe(
+              Effect.annotateLogs({ cause: Cause.pretty(cause) })
+            )
+          )
+        )
+      ),
+  });
+  const App = Layer.mergeAll(Protocol, RpcPreflight, Auth, OntologyMcp, VaultSyncTransport);
   // HttpRouter.serve builds its app in a forked layer memo map and serves only the
   // router built there, so the rpc handlers must sit inside the served app: a
   // sibling `RpcServerLive.pipe(Layer.provideMerge(App))` outside `serve` would

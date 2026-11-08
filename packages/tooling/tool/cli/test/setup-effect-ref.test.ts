@@ -1,4 +1,5 @@
 import { ReferenceWorkspace, referenceWorkspaceLayer } from "@beep/repo-cli/commands/Refs";
+import { ReferencesManifestPath } from "@beep/repo-configs/PolicyData";
 import { it } from "@beep/test-runner";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
@@ -26,7 +27,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         const path = yield* Path.Path;
         const ambientPath = yield* Config.String("PATH");
         const setupScriptPath = yield* path.fromFileUrl(
-          new URL("../../../../../scripts/references.json", import.meta.url)
+          new URL(`../../../../../${ReferencesManifestPath}`, import.meta.url)
         );
         const binDir = path.join(tempDir, "bin");
         const repoRoot = path.join(tempDir, "repo");
@@ -61,8 +62,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         const expectedRoot = useDefault
           ? path.join(canonicalTempDir, "home", "YeeBois", "references", "effect")
           : path.join(canonicalTempDir, "working", "effect reference");
-        yield* fs.makeDirectory(path.join(repoRoot, "scripts"));
-        const argument1 = path.join(repoRoot, "scripts", "references.json");
+        const argument1 = path.join(repoRoot, ReferencesManifestPath);
+        yield* fs.makeDirectory(path.dirname(argument1), { recursive: true });
         const readFileString1 = yield* fs.readFileString(setupScriptPath);
         yield* fs.writeFileString(argument1, readFileString1);
         const run = Effect.fn("SetupEffectRefTest.run")(function* () {

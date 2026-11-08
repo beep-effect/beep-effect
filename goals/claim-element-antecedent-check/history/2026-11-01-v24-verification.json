@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "claim-v24-verification/v1",
+  "date": "2026-11-01",
+  "implementationDigest": "cc7722a1492e408278842353ee8f2bc7233ecc1a194c266211849e51825e75cb",
+  "sourceSnapshotFiles": 21,
+  "sourceSnapshotTakenBeforePredictions": true,
+  "referenceAndHistoryPins": 631,
+  "referenceAndHistoryMismatches": [],
+  "priorV11ExactBytesRestored": true,
+  "priorV11ExpectedSha256": "8863be400e9ce9b5d29305fa3eecd3717b71b9bb9dfc8d9f771ed1c2be4682dd",
+  "priorV11FormattingOnlyDriftSha256": "5864b95f9362341ccac36f31282048a70fdafc6d3b82fa2dab57bd63de3b23b4",
+  "priorV11JsonValuesChanged": false,
+  "priorV11FormattingCommit": "4bcd7ff7bf",
+  "formatterProtection": "Formatter-only override for frozen *-evaluation.json and *-results.json; no lint rule disabled. Identity profile regenerated canonically.",
+  "packageVerification": {
+    "domain": {
+      "audit": "pass",
+      "docgen": "pass",
+      "exitCode": 0,
+      "logSha256": "af72b226a520d42710dc8bcbef943b4aa86487ba740726fa158a3085a55b82c6"
+    },
+    "use-cases": {
+      "audit": "pass",
+      "docgen": "pass",
+      "exitCode": 0,
+      "logSha256": "24db38b86f3369f6f59b0191cf7ef9cfd14f2320d36af65fb36336be8b289407"
+    },
+    "server": {
+      "audit": "pass",
+      "docgen": "pass",
+      "exitCode": 0,
+      "logSha256": "de9d8bc930f7b3ce4bf86644dca2b36429ab61aca18c894f09277f6b51c87b0a"
+    }
+  },
+  "actualAttorneyAgreementRecorded": false,
+  "actualAttorneyAdjudicationRecorded": false
+}

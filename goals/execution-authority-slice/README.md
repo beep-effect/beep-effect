@@ -33,11 +33,15 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+P1 Implement: the move (P1 of the SPEC acceptance) is in review; the `authorizedBy`
+link (P2 acceptance) follows in its own PR.
 
 ## Latest Evidence
 
-Not started.
+[`research/p1-move-evidence.md`](./research/p1-move-evidence.md): pre-move and post-move
+observable-state recordings are identical once the declared prefix rename is mapped. A seeded
+PGlite ledger migrates forward with its chain verifying, and the down-migration restores the
+old names.
 
 ## Notes
 

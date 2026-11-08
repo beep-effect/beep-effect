@@ -27,14 +27,14 @@ protocol its host serves (`rg -n '"@beep/mcp-kit' --glob package.json`):
 | `packages/drivers/nlp-mcp` | `sanitizedToolkit`, `annotateFourHints` | `v2025_06_18` (held: the 2026-09-22 capture in the goal's `history/nlp-mcp-capture.md` shows Claude Code defaults stdio to `initialize`; re-entry gate in the exploration MAP) |
 | `packages/ontology/use-cases` | `annotateFourHints` on the ontology toolkit | n/a (toolkit definitions) |
 | `packages/ontology/server` | `TierGate`, `dispatchWithTierGate`, `CurrentMcpCaller` in tool handlers | served by the desktop sidecar |
-| `packages/epistemic/server` | implements `TierGateShape` (`GovernedTierGate`), reads `CurrentMcpCaller` and, after the sibling goal, the dispatch anchor | served by the desktop sidecar |
+| `packages/execution-authority/server` | implements `TierGateShape` (`GovernedTierGate`), reads `CurrentMcpCaller` and, after the sibling goal, the dispatch anchor | served by the desktop sidecar |
 | `apps/professional-desktop` | `sanitizedToolkit` in `server/OntologyMcpTransport.ts`; integration harness | `v2025_06_18` (`goals/ontology-sidecar-stateless-identity`) |
 
 Foundation-mediated port inversion: `ontology/server` consumes `TierGate`,
-`epistemic/server` implements it, and neither names the other; the binding
+`execution-authority/server` implements it, and neither names the other; the binding
 happens at `apps/professional-desktop/server/OntologyMcpTransport.ts`. The
 dispatch anchor (`CurrentMcpDispatchAnchor`) follows the same pattern: app
-composition provides it, `epistemic/server` and `ontology/server` read it, the
+composition provides it, `execution-authority/server` and `ontology/server` read it, the
 kit never interprets it.
 
 ## Deliverables

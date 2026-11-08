@@ -4,150 +4,6 @@
   "entries": [
     {
       "rule": "beep-laws/no-native-runtime",
-      "file": "packages/law-practice/server/src/internal/Citation/DocumentCleanerProtocols.ts",
-      "kind": "weak-collection",
-      "reason": "Named cleaner containers are issued object capabilities shared by Document and cleaner protocols. Weak identity membership rejects copied handles and permits abandoned containers to be collected without retaining their contents for the owner lifetime. Effect collections do not provide weak keys; scope closure replaces the issuer map.",
-      "owner": "@beep/law-practice-server",
-      "issue": "CITATION-EXTRACTION-ENGINE-RUNTIME-IDENTITY"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
-      "file": "packages/law-practice/server/src/internal/Citation/CallbackObservations.ts",
-      "kind": "weak-collection",
-      "reason": "Default-branch observations are capabilities bound to the exact callback result object. Weak issuer membership rejects copied or structurally forged results without retaining every result and its encoded observation for the lifetime of the module. Effect collections cannot provide weak keys or identity-only issuance.",
-      "owner": "@beep/law-practice-server",
-      "issue": "CITATION-EXTRACTION-ENGINE-RUNTIME-IDENTITY"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
-      "file": "packages/law-practice/server/src/internal/Citation/CallbackSession.ts",
-      "kind": "weak-collection",
-      "reason": "Issued session snapshots retain native verified anchors only while the exact outward capability remains reachable. Per-operation weak maps also bind detached semantic objects and callback list handles to their actual identities, without retaining abandoned foreign objects merely for membership. Structural equality or a strong Effect collection changes forgery rejection or garbage-collection behavior.",
-      "owner": "@beep/law-practice-server",
-      "issue": "CITATION-EXTRACTION-ENGINE-RUNTIME-IDENTITY"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
-      "file": "packages/law-practice/server/src/internal/Citation/CleanerPipeline.ts",
-      "kind": "weak-collection",
-      "reason": "Cleaner reservations are closure-issued runtime capabilities. The weak map binds the exact charge handle to its reserved amount, rejects copied handles, and permits abandoned handles to be collected while the owning operation remains alive. Effect collections do not provide weak-key identity membership.",
-      "owner": "@beep/law-practice-server",
-      "issue": "CITATION-EXTRACTION-ENGINE-RUNTIME-IDENTITY"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
-      "file": "packages/law-practice/server/src/internal/Citation/CleanerValues.ts",
-      "kind": "weak-collection",
-      "reason": "The scoped cleaner arena binds exact issued object identities to retained host/text/byte payloads. Weak keys prevent the arena from retaining every intermediate result; only the explicitly bounded empty/space caches retain handles strongly. Replacing the weak map at Scope closure drops all arena-held payloads. Effect collections provide no weak-key equivalent.",
-      "owner": "@beep/law-practice-server",
-      "issue": "CITATION-EXTRACTION-ENGINE-RUNTIME-IDENTITY"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
-      "file": "packages/law-practice/server/src/internal/Citation/ResourceObjects.ts",
-      "kind": "weak-collection",
-      "reason": "Resource handles are operation-owned capabilities whose slot fields alone cannot authenticate membership. Weak-key lookup rejects copied handles without retaining all external handle objects for the operation lifetime. Slot-to-reference state is separately bounded and cleared by the owner. An Effect collection cannot supply weak identity semantics.",
-      "owner": "@beep/law-practice-server",
-      "issue": "CITATION-EXTRACTION-ENGINE-RUNTIME-IDENTITY"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
-      "file": "packages/law-practice/server/src/internal/Citation/CleanerValues.ts",
-      "kind": "object-method",
-      "reason": "Object.freeze seals the issued cleaner handle before it reaches injected code. This protects its slot property against replacement, including substituted getters, while the private weak map authenticates identity. The native property descriptor read validates a data slot without invoking foreign getters. Schema readonly typing alone does not freeze a JavaScript object at this capability boundary.",
-      "owner": "@beep/law-practice-server",
-      "issue": "CITATION-EXTRACTION-ENGINE-IMMUTABLE-HANDLES"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
-      "file": "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.limits.ts",
-      "kind": "object-method",
-      "reason": "The exported absolute resource ceilings cross a JavaScript consumer boundary. Object.freeze prevents runtime consumers from mutating the authoritative limits after schema filters and operation owners import them; TypeScript readonly types cannot enforce that runtime safety invariant. All fields are primitive numeric ceilings, so a shallow freeze seals the complete table.",
-      "owner": "@beep/law-practice-use-cases",
-      "issue": "CITATION-EXTRACTION-ENGINE-IMMUTABLE-CEILINGS"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
-      "file": "packages/foundation/capability/observability/src/server/DevTools.ts",
-      "kind": "new-map-set",
-      "reason": "Effect DevToolsSchema.Span types attributes as ReadonlyMap at the protocol boundary, and Tracer.Span exposes the live span's mutable attribute map. Copying into a native Map snapshots the attributes at publish time, the same copy upstream effect/devtools DevToolsClient makes; no Effect collection satisfies the ReadonlyMap wire type.",
-      "owner": "@beep/observability",
-      "issue": "OBSERVABILITY-DEVTOOLS-READONLYMAP-BOUNDARY"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
-      "file": "packages/foundation/modeling/utils/src/Schema.ts",
-      "kind": "native-error",
-      "reason": "compileAssertion is a low-level adapter that precompiles the decoded schema parser while preserving Effect Schema.asserts compatibility: schema failures must throw native Error with the exact generic message and SchemaIssue cause, while defects and mixed causes must preserve the complete Cause. A tagged application error would change that observable vendor contract.",
-      "owner": "@beep/utils",
-      "issue": "UTILS-SCHEMA-ASSERTS-NATIVE-ERROR-COMPATIBILITY"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
-      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
-      "kind": "weak-collection",
-      "reason": "Conformance proofs need weak identity semantics in two places: private issuer membership and proof-to-detached-root storage must not retain validated trees, while recursive snapshot traversal needs cycle detection without retaining previously inspected ASTs. Effect collections provide neither weak keys nor weak membership.",
-      "owner": "@beep/html",
-      "issue": "HTML-CONFORMANCE-WEAK-IDENTITY-PROOFS"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
-      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
-      "kind": "object-method",
-      "reason": "Conformance proofs are closure-issued, null-prototype, frozen tokens, and validated trees are frozen detached snapshots. Object.create(null) prevents inherited or prototype-forged proof state; Object.freeze prevents token mutation and post-validation tree mutation between proof issuance and serialization.",
-      "owner": "@beep/html",
-      "issue": "HTML-CONFORMANCE-IMMUTABLE-PROOF-TOKENS"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
-      "file": "packages/foundation/modeling/html/src/Html.meta.ts",
-      "kind": "object-method",
-      "reason": "Generated conformance registries are public plain-object APIs consumed directly by foreign-name and child-grammar validation. Object.freeze prevents JavaScript consumers from mutating the authoritative tables after validation code imports them.",
-      "owner": "@beep/html",
-      "issue": "HTML-GENERATED-CONFORMANCE-REGISTRY-IMMUTABILITY"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
-      "file": "packages/foundation/modeling/html/src/internal/Html.language-tag-registry.generated.ts",
-      "kind": "object-method",
-      "reason": "The generated pinned IANA registry is a public plain-array and plain-record snapshot consumed directly by language-tag validation. Object.freeze prevents JavaScript consumers from mutating authoritative membership data after the validator imports it.",
-      "owner": "@beep/html",
-      "issue": "HTML-GENERATED-LANGUAGE-REGISTRY-IMMUTABILITY"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
-      "file": "packages/foundation/modeling/html/src/Html.policy.ts",
-      "kind": "weak-collection",
-      "reason": "SafeHtmlAst provenance uses private weak issuer membership and weak proof-to-conformant-value storage so callers cannot forge safe values and the module does not strongly retain every accepted document. Effect collections do not provide weak identity semantics.",
-      "owner": "@beep/html",
-      "issue": "HTML-SAFE-AST-WEAK-IDENTITY-PROOFS"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
-      "file": "packages/foundation/modeling/html/src/Html.policy.ts",
-      "kind": "object-method",
-      "reason": "SafeHtmlAst proofs are closure-issued, null-prototype, frozen tokens. Object.create(null) removes inherited and prototype-forged state, while Object.freeze makes the module-issued provenance token immutable after issuance.",
-      "owner": "@beep/html",
-      "issue": "HTML-SAFE-AST-IMMUTABLE-PROOF-TOKENS"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
-      "file": "packages/foundation/modeling/html/src/Html.serialize.ts",
-      "kind": "weak-collection",
-      "reason": "The opaque SafeHtml sink marker uses private weak issuer membership and weak proof-to-string storage so arbitrary strings cannot be forged as safe and issued values do not become a process-lifetime string registry. Effect collections do not provide weak identity semantics.",
-      "owner": "@beep/html",
-      "issue": "HTML-SAFE-STRING-WEAK-IDENTITY-PROOFS"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
-      "file": "packages/foundation/modeling/html/src/Html.serialize.ts",
-      "kind": "object-method",
-      "reason": "SafeHtml sink proofs are closure-issued, null-prototype, frozen tokens. Object.create(null) prevents inherited and prototype-forged proof state, while Object.freeze makes the module-issued token immutable before it crosses into an explicit sink adapter.",
-      "owner": "@beep/html",
-      "issue": "HTML-SAFE-STRING-IMMUTABLE-PROOF-TOKENS"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
       "file": "apps/storybook/vitest.storybook.setup.ts",
       "kind": "native-error",
       "reason": "Vitest browser-mode setup guard: throwing in afterAll is the only failure channel before any Effect runtime exists, and vitest surfaces the native Error directly as the test failure.",
@@ -156,11 +12,19 @@
     },
     {
       "rule": "beep-laws/no-native-runtime",
-      "file": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
+      "file": "packages/drivers/wink/src/WinkSimilarity.service.ts",
+      "kind": "new-map-set",
+      "reason": "wink-nlp similarity.set.tversky requires native Set inputs because it reads Set size and membership directly as part of its third-party API contract.",
+      "owner": "@beep/wink",
+      "issue": "WINK-SIMILARITY-NATIVE-SET-BRIDGE"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/drivers/wink/src/internal/WinkIntrinsicRuntime.ts",
       "kind": "object-method",
-      "reason": "ChangeOperation must keep the tagged-union match statics across a schema pipe; Object.assign merges the piped schema with the base statics and no Effect helper performs a static-preserving schema merge.",
-      "owner": "@beep/ontology-domain",
-      "issue": "ONTOLOGY-CHANGE-OPERATION-STATICS-MERGE"
+      "reason": "Object.freeze seals the operation-local model adapter before the fixed external Wink constructor receives it. Its overridden core factory captures the sole existing engine core without modifying the imported model or its functions. Runtime replacement of the core callback or model fields would invalidate that one-owner proof; TypeScript readonly typing and Effect collections cannot freeze the plain-object SDK protocol. Only the detached adapter shell is frozen; imported model/core objects remain unchanged.",
+      "owner": "@beep/wink",
+      "issue": "CLAIM-INSPECTION-INTRINSIC-SINGLE-CORE-ADAPTER"
     },
     {
       "rule": "beep-laws/no-native-runtime",
@@ -172,11 +36,107 @@
     },
     {
       "rule": "beep-laws/no-native-runtime",
-      "file": "packages/drivers/wink/src/WinkSimilarity.service.ts",
+      "file": "packages/foundation/capability/observability/src/server/DevTools.ts",
       "kind": "new-map-set",
-      "reason": "wink-nlp similarity.set.tversky requires native Set inputs because it reads Set size and membership directly as part of its third-party API contract.",
-      "owner": "@beep/wink",
-      "issue": "WINK-SIMILARITY-NATIVE-SET-BRIDGE"
+      "reason": "Effect DevToolsSchema.Span types attributes as ReadonlyMap at the protocol boundary, and Tracer.Span exposes the live span's mutable attribute map. Copying into a native Map snapshots the attributes at publish time, the same copy upstream effect/devtools DevToolsClient makes; no Effect collection satisfies the ReadonlyMap wire type.",
+      "owner": "@beep/observability",
+      "issue": "OBSERVABILITY-DEVTOOLS-READONLYMAP-BOUNDARY"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "kind": "object-method",
+      "reason": "Conformance proofs are closure-issued, null-prototype, frozen tokens, and validated trees are frozen detached snapshots. Object.create(null) prevents inherited or prototype-forged proof state; Object.freeze prevents token mutation and post-validation tree mutation between proof issuance and serialization.",
+      "owner": "@beep/html",
+      "issue": "HTML-CONFORMANCE-IMMUTABLE-PROOF-TOKENS"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/modeling/html/src/Html.conformance.ts",
+      "kind": "weak-collection",
+      "reason": "Conformance proofs need weak identity semantics in two places: private issuer membership and proof-to-detached-root storage must not retain validated trees, while recursive snapshot traversal needs cycle detection without retaining previously inspected ASTs. Effect collections provide neither weak keys nor weak membership.",
+      "owner": "@beep/html",
+      "issue": "HTML-CONFORMANCE-WEAK-IDENTITY-PROOFS"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/modeling/html/src/Html.meta.ts",
+      "kind": "object-method",
+      "reason": "Generated conformance registries are public plain-object APIs consumed directly by foreign-name and child-grammar validation. Object.freeze prevents JavaScript consumers from mutating the authoritative tables after validation code imports them.",
+      "owner": "@beep/html",
+      "issue": "HTML-GENERATED-CONFORMANCE-REGISTRY-IMMUTABILITY"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/modeling/html/src/Html.policy.ts",
+      "kind": "object-method",
+      "reason": "SafeHtmlAst proofs are closure-issued, null-prototype, frozen tokens. Object.create(null) removes inherited and prototype-forged state, while Object.freeze makes the module-issued provenance token immutable after issuance.",
+      "owner": "@beep/html",
+      "issue": "HTML-SAFE-AST-IMMUTABLE-PROOF-TOKENS"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/modeling/html/src/Html.policy.ts",
+      "kind": "weak-collection",
+      "reason": "SafeHtmlAst provenance uses private weak issuer membership and weak proof-to-conformant-value storage so callers cannot forge safe values and the module does not strongly retain every accepted document. Effect collections do not provide weak identity semantics.",
+      "owner": "@beep/html",
+      "issue": "HTML-SAFE-AST-WEAK-IDENTITY-PROOFS"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/modeling/html/src/Html.serialize.ts",
+      "kind": "object-method",
+      "reason": "SafeHtml sink proofs are closure-issued, null-prototype, frozen tokens. Object.create(null) prevents inherited and prototype-forged proof state, while Object.freeze makes the module-issued token immutable before it crosses into an explicit sink adapter.",
+      "owner": "@beep/html",
+      "issue": "HTML-SAFE-STRING-IMMUTABLE-PROOF-TOKENS"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/modeling/html/src/Html.serialize.ts",
+      "kind": "weak-collection",
+      "reason": "The opaque SafeHtml sink marker uses private weak issuer membership and weak proof-to-string storage so arbitrary strings cannot be forged as safe and issued values do not become a process-lifetime string registry. Effect collections do not provide weak identity semantics.",
+      "owner": "@beep/html",
+      "issue": "HTML-SAFE-STRING-WEAK-IDENTITY-PROOFS"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/modeling/html/src/internal/Html.language-tag-registry.generated.ts",
+      "kind": "object-method",
+      "reason": "The generated pinned IANA registry is a public plain-array and plain-record snapshot consumed directly by language-tag validation. Object.freeze prevents JavaScript consumers from mutating authoritative membership data after the validator imports it.",
+      "owner": "@beep/html",
+      "issue": "HTML-GENERATED-LANGUAGE-REGISTRY-IMMUTABILITY"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/modeling/provenance/src/VerifiedTextAnchor.ts",
+      "kind": "weak-collection",
+      "reason": "Verified source and anchor capabilities require module-private weak identity registries so structural lookalikes remain unforgeable without retaining discarded proof objects.",
+      "owner": "@beep/provenance",
+      "issue": "CODEX-SECURITY-VERIFIED-ANCHOR-WEAK-IDENTITY"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/modeling/utils/src/Schema.ts",
+      "kind": "native-error",
+      "reason": "compileAssertion is a low-level adapter that precompiles the decoded schema parser while preserving Effect Schema.asserts compatibility: schema failures must throw native Error with the exact generic message and SchemaIssue cause, while defects and mixed causes must preserve the complete Cause. A tagged application error would change that observable vendor contract.",
+      "owner": "@beep/utils",
+      "issue": "UTILS-SCHEMA-ASSERTS-NATIVE-ERROR-COMPATIBILITY"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/ui-system/dock-react/src/internal/AdapterState.ts",
+      "kind": "weak-collection",
+      "reason": "Adapter state is keyed by host-owned DockAtomGraph identity and DOM roots; WeakMap/WeakSet weak-key semantics prevent retaining disposed graphs and detached elements, which Effect MutableHashMap cannot provide.",
+      "owner": "@beep/dock-react",
+      "issue": "DOCK-REACT-ADAPTER-WEAK-IDENTITY"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/ui-system/dock-react/src/internal/ResizeObserverHarness.ts",
+      "kind": "new-map-set",
+      "reason": "The controllable jsdom harness mirrors the native ResizeObserver contract (observer registry and per-observer Element targets) so tests drive resize callbacks exactly as the DOM would. Observers and DOM Elements must be keyed by reference; Effect MutableHashSet keys through Equal, which compares plain objects structurally in v4 and so does not guarantee per-node identity.",
+      "owner": "@beep/dock-react",
+      "issue": "DOCK-REACT-RESIZE-HARNESS-DOM-CONTRACT"
     },
     {
       "rule": "beep-laws/no-native-runtime",
@@ -212,51 +172,75 @@
     },
     {
       "rule": "beep-laws/no-native-runtime",
-      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.subjects.ts",
-      "kind": "new-map-set",
-      "reason": "Docgen quality aggregation uses native Set indexes to deduplicate generated documentation findings before rendering CLI output.",
-      "owner": "@beep/repo-cli",
-      "issue": "DOCGEN-QUALITY-NATIVE-SET"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/ServicePrograms.ts",
-      "kind": "new-map-set",
-      "reason": "Corpus CLI catalog, organize, and enrich flows use native Map and Set indexes for JSONL restoration joins, duplicate suppression, version grouping, and identifier candidate aggregation at tooling boundaries.",
-      "owner": "@beep/repo-cli",
-      "issue": "REPO-CLI-CORPUS-NATIVE-COLLECTION-INDEXES"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
-      "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
-      "kind": "date-static",
-      "reason": "Fallow quality parses ISO timestamps from prior tool reports at the CLI boundary to sort and summarize historical quality envelopes.",
-      "owner": "@beep/repo-cli",
-      "issue": "FALLOW-QUALITY-REPORT-TIMESTAMP-PARSE"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
-      "file": "packages/foundation/ui-system/dock-react/src/internal/AdapterState.ts",
+      "file": "packages/law-practice/server/src/internal/Citation/CallbackObservations.ts",
       "kind": "weak-collection",
-      "reason": "Adapter state is keyed by host-owned DockAtomGraph identity and DOM roots; WeakMap/WeakSet weak-key semantics prevent retaining disposed graphs and detached elements, which Effect MutableHashMap cannot provide.",
-      "owner": "@beep/dock-react",
-      "issue": "DOCK-REACT-ADAPTER-WEAK-IDENTITY"
+      "reason": "Default-branch observations are capabilities bound to the exact callback result object. Weak issuer membership rejects copied or structurally forged results without retaining every result and its encoded observation for the lifetime of the module. Effect collections cannot provide weak keys or identity-only issuance.",
+      "owner": "@beep/law-practice-server",
+      "issue": "CITATION-EXTRACTION-ENGINE-RUNTIME-IDENTITY"
     },
     {
       "rule": "beep-laws/no-native-runtime",
-      "file": "packages/foundation/modeling/provenance/src/VerifiedTextAnchor.ts",
+      "file": "packages/law-practice/server/src/internal/Citation/CallbackSession.ts",
       "kind": "weak-collection",
-      "reason": "Verified source and anchor capabilities require module-private weak identity registries so structural lookalikes remain unforgeable without retaining discarded proof objects.",
-      "owner": "@beep/provenance",
-      "issue": "CODEX-SECURITY-VERIFIED-ANCHOR-WEAK-IDENTITY"
+      "reason": "Issued session snapshots retain native verified anchors only while the exact outward capability remains reachable. Per-operation weak maps also bind detached semantic objects and callback list handles to their actual identities, without retaining abandoned foreign objects merely for membership. Structural equality or a strong Effect collection changes forgery rejection or garbage-collection behavior.",
+      "owner": "@beep/law-practice-server",
+      "issue": "CITATION-EXTRACTION-ENGINE-RUNTIME-IDENTITY"
     },
     {
       "rule": "beep-laws/no-native-runtime",
-      "file": "packages/foundation/ui-system/dock-react/src/internal/ResizeObserverHarness.ts",
-      "kind": "new-map-set",
-      "reason": "The controllable jsdom harness mirrors the native ResizeObserver contract (observer registry and per-observer Element targets) so tests drive resize callbacks exactly as the DOM would. Observers and DOM Elements must be keyed by reference; Effect MutableHashSet keys through Equal, which compares plain objects structurally in v4 and so does not guarantee per-node identity.",
-      "owner": "@beep/dock-react",
-      "issue": "DOCK-REACT-RESIZE-HARNESS-DOM-CONTRACT"
+      "file": "packages/law-practice/server/src/internal/Citation/CleanerPipeline.ts",
+      "kind": "weak-collection",
+      "reason": "Cleaner reservations are closure-issued runtime capabilities. The weak map binds the exact charge handle to its reserved amount, rejects copied handles, and permits abandoned handles to be collected while the owning operation remains alive. Effect collections do not provide weak-key identity membership.",
+      "owner": "@beep/law-practice-server",
+      "issue": "CITATION-EXTRACTION-ENGINE-RUNTIME-IDENTITY"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/law-practice/server/src/internal/Citation/CleanerValues.ts",
+      "kind": "object-method",
+      "reason": "Object.freeze seals the issued cleaner handle before it reaches injected code. This protects its slot property against replacement, including substituted getters, while the private weak map authenticates identity. The native property descriptor read validates a data slot without invoking foreign getters. Schema readonly typing alone does not freeze a JavaScript object at this capability boundary.",
+      "owner": "@beep/law-practice-server",
+      "issue": "CITATION-EXTRACTION-ENGINE-IMMUTABLE-HANDLES"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/law-practice/server/src/internal/Citation/CleanerValues.ts",
+      "kind": "weak-collection",
+      "reason": "The scoped cleaner arena binds exact issued object identities to retained host/text/byte payloads. Weak keys prevent the arena from retaining every intermediate result; only the explicitly bounded empty/space caches retain handles strongly. Replacing the weak map at Scope closure drops all arena-held payloads. Effect collections provide no weak-key equivalent.",
+      "owner": "@beep/law-practice-server",
+      "issue": "CITATION-EXTRACTION-ENGINE-RUNTIME-IDENTITY"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/law-practice/server/src/internal/Citation/DocumentCleanerProtocols.ts",
+      "kind": "weak-collection",
+      "reason": "Named cleaner containers are issued object capabilities shared by Document and cleaner protocols. Weak identity membership rejects copied handles and permits abandoned containers to be collected without retaining their contents for the owner lifetime. Effect collections do not provide weak keys; scope closure replaces the issuer map.",
+      "owner": "@beep/law-practice-server",
+      "issue": "CITATION-EXTRACTION-ENGINE-RUNTIME-IDENTITY"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/law-practice/server/src/internal/Citation/ResourceObjects.ts",
+      "kind": "weak-collection",
+      "reason": "Resource handles are operation-owned capabilities whose slot fields alone cannot authenticate membership. Weak-key lookup rejects copied handles without retaining all external handle objects for the operation lifetime. Slot-to-reference state is separately bounded and cleared by the owner. An Effect collection cannot supply weak identity semantics.",
+      "owner": "@beep/law-practice-server",
+      "issue": "CITATION-EXTRACTION-ENGINE-RUNTIME-IDENTITY"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/law-practice/use-cases/src/CitationEngine/CitationEngine.limits.ts",
+      "kind": "object-method",
+      "reason": "The exported absolute resource ceilings cross a JavaScript consumer boundary. Object.freeze prevents runtime consumers from mutating the authoritative limits after schema filters and operation owners import them; TypeScript readonly types cannot enforce that runtime safety invariant. All fields are primitive numeric ceilings, so a shallow freeze seals the complete table.",
+      "owner": "@beep/law-practice-use-cases",
+      "issue": "CITATION-EXTRACTION-ENGINE-IMMUTABLE-CEILINGS"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/ontology/domain/src/aggregates/Session/Session.model.ts",
+      "kind": "object-method",
+      "reason": "ChangeOperation must keep the tagged-union match statics across a schema pipe; Object.assign merges the piped schema with the base statics and no Effect helper performs a static-preserving schema merge.",
+      "owner": "@beep/ontology-domain",
+      "issue": "ONTOLOGY-CHANGE-OPERATION-STATICS-MERGE"
     },
     {
       "rule": "beep-laws/no-native-runtime",
@@ -268,6 +252,30 @@
     },
     {
       "rule": "beep-laws/no-native-runtime",
+      "file": "packages/tooling/test-kit/test-runner/src/internal/VitestRuntime.ts",
+      "kind": "object-method",
+      "reason": "The adapter exposes Vitest methods on a callable registration function. Object.assign copies enumerable own vendor method values onto that callable before Proxy interception, preserving the combined callable/object protocol. A plain Effect Record would lose callability; omitting the copy would change own-property inspection. Public each, conditional and layer registration regression tests exercise this adapter.",
+      "owner": "@beep/test-runner",
+      "issue": "https://github.com/beep-effect/beep-effect/pull/1067"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/ServicePrograms.ts",
+      "kind": "new-map-set",
+      "reason": "Corpus CLI catalog, organize, and enrich flows use native Map and Set indexes for JSONL restoration joins, duplicate suppression, version grouping, and identifier candidate aggregation at tooling boundaries.",
+      "owner": "@beep/repo-cli",
+      "issue": "REPO-CLI-CORPUS-NATIVE-COLLECTION-INDEXES"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.subjects.ts",
+      "kind": "new-map-set",
+      "reason": "Docgen quality aggregation uses native Set indexes to deduplicate generated documentation findings before rendering CLI output.",
+      "owner": "@beep/repo-cli",
+      "issue": "DOCGEN-QUALITY-NATIVE-SET"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
       "file": "packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestSyntax.ts",
       "kind": "weak-collection",
       "reason": "Per-parse compiler caches use ts-morph node objects as weak identity keys. Distinct syntax nodes with equal text must remain distinct, and caches must not keep discarded parse trees alive. Effect HashMap and HashSet do not supply weak-key lifetime semantics. These invocation-local node caches feed schema-validated findings; alias, shadowing and provenance regressions verify identity boundaries.",
@@ -276,11 +284,11 @@
     },
     {
       "rule": "beep-laws/no-native-runtime",
-      "file": "packages/tooling/test-kit/test-runner/src/internal/VitestRuntime.ts",
-      "kind": "object-method",
-      "reason": "The adapter exposes Vitest methods on a callable registration function. Object.assign copies enumerable own vendor method values onto that callable before Proxy interception, preserving the combined callable/object protocol. A plain Effect Record would lose callability; omitting the copy would change own-property inspection. Public each, conditional and layer registration regression tests exercise this adapter.",
-      "owner": "@beep/test-runner",
-      "issue": "https://github.com/beep-effect/beep-effect/pull/1067"
+      "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+      "kind": "date-static",
+      "reason": "Fallow quality parses ISO timestamps from prior tool reports at the CLI boundary to sort and summarize historical quality envelopes.",
+      "owner": "@beep/repo-cli",
+      "issue": "FALLOW-QUALITY-REPORT-TIMESTAMP-PARSE"
     }
   ]
 }

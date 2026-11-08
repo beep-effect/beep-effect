@@ -1,0 +1,446 @@
+{
+  "actualAttorneyAgreementRecorded": false,
+  "attorneyHeld": {
+    "edgeF1": 0.19661016949152543,
+    "edgePrecision": 0.20374707259953162,
+    "edgeRecall": 0.18995633187772926,
+    "goldEdges": 458,
+    "matchedEdges": 87,
+    "predictedEdges": 427,
+    "selectedClaims": 21,
+    "stages": {
+      "structural-mismatch": 21
+    },
+    "strictMatches": 0,
+    "strictRate": 0.0
+  },
+  "cpc": {
+    "A": {
+      "edgeF1": 0.2802986789201608,
+      "edgePrecision": 0.30886075949367087,
+      "edgeRecall": 0.2565720294426919,
+      "goldEdges": 951,
+      "matchedEdges": 244,
+      "predictedEdges": 790,
+      "selectedClaims": 78,
+      "stages": {
+        "input-failed": 6,
+        "strict-match": 2,
+        "structural-mismatch": 70
+      },
+      "strictMatches": 2,
+      "strictRate": 0.02564102564102564
+    },
+    "B": {
+      "edgeF1": 0.23376623376623376,
+      "edgePrecision": 0.2875,
+      "edgeRecall": 0.19695528068506185,
+      "goldEdges": 2102,
+      "matchedEdges": 414,
+      "predictedEdges": 1440,
+      "selectedClaims": 147,
+      "stages": {
+        "input-failed": 22,
+        "strict-match": 4,
+        "structural-mismatch": 121
+      },
+      "strictMatches": 4,
+      "strictRate": 0.027210884353741496
+    },
+    "E": {
+      "edgeF1": 0.05555555555555555,
+      "edgePrecision": 0.05521472392638037,
+      "edgeRecall": 0.055900621118012424,
+      "goldEdges": 161,
+      "matchedEdges": 9,
+      "predictedEdges": 163,
+      "selectedClaims": 15,
+      "stages": {
+        "structural-mismatch": 15
+      },
+      "strictMatches": 0,
+      "strictRate": 0.0
+    },
+    "F": {
+      "edgeF1": 0.24609375,
+      "edgePrecision": 0.3247422680412371,
+      "edgeRecall": 0.19811320754716982,
+      "goldEdges": 636,
+      "matchedEdges": 126,
+      "predictedEdges": 388,
+      "selectedClaims": 71,
+      "stages": {
+        "input-failed": 20,
+        "structural-mismatch": 51
+      },
+      "strictMatches": 0,
+      "strictRate": 0.0
+    },
+    "G": {
+      "edgeF1": 0.31714677640603567,
+      "edgePrecision": 0.33900293255131964,
+      "edgeRecall": 0.2979381443298969,
+      "goldEdges": 1940,
+      "matchedEdges": 578,
+      "predictedEdges": 1705,
+      "selectedClaims": 131,
+      "stages": {
+        "input-failed": 10,
+        "strict-match": 10,
+        "structural-mismatch": 111
+      },
+      "strictMatches": 10,
+      "strictRate": 0.07633587786259542
+    },
+    "H": {
+      "edgeF1": 0.42565597667638483,
+      "edgePrecision": 0.4669509594882729,
+      "edgeRecall": 0.39107142857142857,
+      "goldEdges": 1120,
+      "matchedEdges": 438,
+      "predictedEdges": 938,
+      "selectedClaims": 96,
+      "stages": {
+        "strict-match": 9,
+        "structural-mismatch": 87
+      },
+      "strictMatches": 9,
+      "strictRate": 0.09375
+    }
+  },
+  "currentConventionAcceptedDiagnostic": {
+    "edgeF1": 0.3008122980172941,
+    "edgePrecision": 0.34460676405843504,
+    "edgeRecall": 0.26689398636081835,
+    "goldEdges": 6452,
+    "matchedEdges": 1722,
+    "predictedEdges": 4997,
+    "selectedClaims": 517,
+    "stages": {
+      "input-failed": 58,
+      "strict-match": 25,
+      "structural-mismatch": 434
+    },
+    "strictMatches": 25,
+    "strictRate": 0.048355899419729204
+  },
+  "familyCount": 60,
+  "goldDeterminer": {
+    "a": {
+      "edgeF1": 0.26936988387588046,
+      "edgePrecision": 0.30489118724412845,
+      "edgeRecall": 0.2412617220801364,
+      "goldEdges": 5865,
+      "matchedEdges": 1415,
+      "predictedEdges": 4641,
+      "selectedClaims": 403,
+      "stages": {
+        "input-failed": 32,
+        "strict-match": 13,
+        "structural-mismatch": 358
+      },
+      "strictMatches": 13,
+      "strictRate": 0.03225806451612903
+    },
+    "an": {
+      "edgeF1": 0.23568403608911803,
+      "edgePrecision": 0.2731540759709774,
+      "edgeRecall": 0.20725388601036268,
+      "goldEdges": 3088,
+      "matchedEdges": 640,
+      "predictedEdges": 2343,
+      "selectedClaims": 167,
+      "stages": {
+        "input-failed": 16,
+        "strict-match": 5,
+        "structural-mismatch": 146
+      },
+      "strictMatches": 5,
+      "strictRate": 0.029940119760479042
+    },
+    "at-least-one": {
+      "edgeF1": 0.22113022113022113,
+      "edgePrecision": 0.29654036243822074,
+      "edgeRecall": 0.1762977473065622,
+      "goldEdges": 1021,
+      "matchedEdges": 180,
+      "predictedEdges": 607,
+      "selectedClaims": 50,
+      "stages": {
+        "input-failed": 10,
+        "structural-mismatch": 40
+      },
+      "strictMatches": 0,
+      "strictRate": 0.0
+    },
+    "bare": {
+      "edgeF1": 0.2454848728862303,
+      "edgePrecision": 0.28355035875631146,
+      "edgeRecall": 0.21643002028397565,
+      "goldEdges": 4930,
+      "matchedEdges": 1067,
+      "predictedEdges": 3763,
+      "selectedClaims": 343,
+      "stages": {
+        "input-failed": 38,
+        "strict-match": 10,
+        "structural-mismatch": 295
+      },
+      "strictMatches": 10,
+      "strictRate": 0.029154518950437316
+    },
+    "plurality-of": {
+      "edgeF1": 0.28964059196617337,
+      "edgePrecision": 0.3246445497630332,
+      "edgeRecall": 0.26145038167938933,
+      "goldEdges": 524,
+      "matchedEdges": 137,
+      "predictedEdges": 422,
+      "selectedClaims": 24,
+      "stages": {
+        "input-failed": 2,
+        "structural-mismatch": 22
+      },
+      "strictMatches": 0,
+      "strictRate": 0.0
+    },
+    "said": {
+      "edgeF1": 0.30118343195266273,
+      "edgePrecision": 0.37731653076352856,
+      "edgeRecall": 0.25061546036435256,
+      "goldEdges": 2031,
+      "matchedEdges": 509,
+      "predictedEdges": 1349,
+      "selectedClaims": 150,
+      "stages": {
+        "input-failed": 35,
+        "strict-match": 4,
+        "structural-mismatch": 111
+      },
+      "strictMatches": 4,
+      "strictRate": 0.02666666666666667
+    },
+    "the": {
+      "edgeF1": 0.28934634626425,
+      "edgePrecision": 0.3292887810341609,
+      "edgeRecall": 0.2580456407255705,
+      "goldEdges": 6836,
+      "matchedEdges": 1764,
+      "predictedEdges": 5357,
+      "selectedClaims": 524,
+      "stages": {
+        "input-failed": 56,
+        "strict-match": 24,
+        "structural-mismatch": 444
+      },
+      "strictMatches": 24,
+      "strictRate": 0.04580152671755725
+    }
+  },
+  "goldFeature": {
+    "functional": {
+      "edgeF1": 0.2920237310481213,
+      "edgePrecision": 0.33289498403156115,
+      "edgeRecall": 0.2600910024952297,
+      "goldEdges": 6813,
+      "matchedEdges": 1772,
+      "predictedEdges": 5323,
+      "selectedClaims": 521,
+      "stages": {
+        "input-failed": 57,
+        "strict-match": 24,
+        "structural-mismatch": 440
+      },
+      "strictMatches": 24,
+      "strictRate": 0.046065259117082535
+    },
+    "nested": {
+      "edgeF1": 0.2933354953786282,
+      "edgePrecision": 0.33351769911504425,
+      "edgeRecall": 0.261794500723589,
+      "goldEdges": 6910,
+      "matchedEdges": 1809,
+      "predictedEdges": 5424,
+      "selectedClaims": 538,
+      "stages": {
+        "input-failed": 58,
+        "strict-match": 25,
+        "structural-mismatch": 455
+      },
+      "strictMatches": 25,
+      "strictRate": 0.046468401486988845
+    }
+  },
+  "inputFailedFamilies": 5,
+  "noFinding": {
+    "edgeF1": 0.8145161290322581,
+    "edgePrecision": 0.8211382113821138,
+    "edgeRecall": 0.808,
+    "goldEdges": 125,
+    "matchedEdges": 101,
+    "predictedEdges": 123,
+    "selectedClaims": 18,
+    "stages": {
+      "strict-match": 9,
+      "structural-mismatch": 9
+    },
+    "strictMatches": 9,
+    "strictRate": 0.5
+  },
+  "overall": {
+    "edgeF1": 0.2933354953786282,
+    "edgePrecision": 0.33351769911504425,
+    "edgeRecall": 0.261794500723589,
+    "goldEdges": 6910,
+    "matchedEdges": 1809,
+    "predictedEdges": 5424,
+    "selectedClaims": 538,
+    "stages": {
+      "input-failed": 58,
+      "strict-match": 25,
+      "structural-mismatch": 455
+    },
+    "strictMatches": 25,
+    "strictRate": 0.046468401486988845
+  },
+  "provisional": true,
+  "ruleActivation": {
+    "chain-through-undecomposed": {
+      "edgeF1": null,
+      "edgePrecision": null,
+      "edgeRecall": null,
+      "goldEdges": 0,
+      "matchedEdges": 0,
+      "predictedEdges": 0,
+      "selectedClaims": 0,
+      "stages": {},
+      "strictMatches": 0,
+      "strictRate": null
+    },
+    "chain-unresolvable": {
+      "edgeF1": null,
+      "edgePrecision": null,
+      "edgeRecall": null,
+      "goldEdges": 0,
+      "matchedEdges": 0,
+      "predictedEdges": 0,
+      "selectedClaims": 0,
+      "stages": {},
+      "strictMatches": 0,
+      "strictRate": null
+    },
+    "chain-work-limit": {
+      "edgeF1": 0.15853658536585366,
+      "edgePrecision": 0.1720226843100189,
+      "edgeRecall": 0.1470113085621971,
+      "goldEdges": 619,
+      "matchedEdges": 91,
+      "predictedEdges": 529,
+      "selectedClaims": 35,
+      "stages": {
+        "structural-mismatch": 35
+      },
+      "strictMatches": 0,
+      "strictRate": 0.0
+    },
+    "definite-without-introduction": {
+      "edgeF1": 0.2937749156700399,
+      "edgePrecision": 0.31624119718309857,
+      "edgeRecall": 0.27428898644779537,
+      "goldEdges": 5239,
+      "matchedEdges": 1437,
+      "predictedEdges": 4544,
+      "selectedClaims": 385,
+      "stages": {
+        "strict-match": 13,
+        "structural-mismatch": 372
+      },
+      "strictMatches": 13,
+      "strictRate": 0.033766233766233764
+    },
+    "determiner-number-mismatch": {
+      "edgeF1": 0.1691919191919192,
+      "edgePrecision": 0.21405750798722045,
+      "edgeRecall": 0.13987473903966596,
+      "goldEdges": 479,
+      "matchedEdges": 67,
+      "predictedEdges": 313,
+      "selectedClaims": 18,
+      "stages": {
+        "structural-mismatch": 18
+      },
+      "strictMatches": 0,
+      "strictRate": 0.0
+    },
+    "multiple-introductions": {
+      "edgeF1": 0.18515037593984962,
+      "edgePrecision": 0.21160042964554243,
+      "edgeRecall": 0.164578111946533,
+      "goldEdges": 1197,
+      "matchedEdges": 197,
+      "predictedEdges": 931,
+      "selectedClaims": 48,
+      "stages": {
+        "structural-mismatch": 48
+      },
+      "strictMatches": 0,
+      "strictRate": 0.0
+    },
+    "ordinal-variants": {
+      "edgeF1": 0.21008403361344538,
+      "edgePrecision": 0.24509803921568626,
+      "edgeRecall": 0.18382352941176472,
+      "goldEdges": 136,
+      "matchedEdges": 25,
+      "predictedEdges": 102,
+      "selectedClaims": 6,
+      "stages": {
+        "structural-mismatch": 6
+      },
+      "strictMatches": 0,
+      "strictRate": 0.0
+    },
+    "outside-chain": {
+      "edgeF1": 0.22956422671603532,
+      "edgePrecision": 0.24247894103489773,
+      "edgeRecall": 0.21795565170362358,
+      "goldEdges": 1849,
+      "matchedEdges": 403,
+      "predictedEdges": 1662,
+      "selectedClaims": 106,
+      "stages": {
+        "structural-mismatch": 106
+      },
+      "strictMatches": 0,
+      "strictRate": 0.0
+    },
+    "tree-without-claim": {
+      "edgeF1": null,
+      "edgePrecision": null,
+      "edgeRecall": null,
+      "goldEdges": 0,
+      "matchedEdges": 0,
+      "predictedEdges": 0,
+      "selectedClaims": 0,
+      "stages": {},
+      "strictMatches": 0,
+      "strictRate": null
+    },
+    "unsupported-determiner": {
+      "edgeF1": 0.2878898508396787,
+      "edgePrecision": 0.3088630259623993,
+      "edgeRecall": 0.2695839031060754,
+      "goldEdges": 5119,
+      "matchedEdges": 1380,
+      "predictedEdges": 4468,
+      "selectedClaims": 371,
+      "stages": {
+        "strict-match": 10,
+        "structural-mismatch": 361
+      },
+      "strictMatches": 10,
+      "strictRate": 0.026954177897574125
+    }
+  },
+  "schemaVersion": "claim-antecedent-positive-summary/v1"
+}

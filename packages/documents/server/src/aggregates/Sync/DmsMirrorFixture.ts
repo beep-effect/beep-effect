@@ -37,6 +37,7 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import type {
   EnsureFolderInput,
   MoveItemInput,
@@ -577,7 +578,11 @@ const connectedProbe = Effect.succeed(
   DmsMirrorProbe.make({ connected: true, provider: "box", rootRemoteId: O.some(DMS_MIRROR_FIXTURE_ROOT_ID) })
 );
 
-const connectedAvailability = DmsMirrorAvailability.of({ probe: connectedProbe, refresh: connectedProbe });
+const connectedAvailability = DmsMirrorAvailability.of({
+  changes: Stream.fromEffect(connectedProbe),
+  probe: connectedProbe,
+  refresh: connectedProbe,
+});
 
 /**
  * Deterministic fixture layer providing the DMS mirror port, a connected

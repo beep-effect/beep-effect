@@ -1,6 +1,8 @@
+import { decodeFirecrawlScrapeBody, Firecrawl } from "@beep/firecrawl";
 import {
   hashBytes,
   importLibraryResult,
+  importLibraryRoutedResult,
   LibraryArtifact,
   LibraryCapture,
   LibraryCatalog,
@@ -12,7 +14,6 @@ import {
   LibrarySourceVersion,
   loadCatalog,
   qualifyLibrary,
-  removedLibraryWebAdapter,
   requiredLibraryAdapters,
   saveImmutable,
   validateLibraryScrape,
@@ -22,13 +23,17 @@ import {
   acquireLibraryGithub,
   acquireLibraryPaper,
   acquireLibrarySource,
+  acquireLibraryWeb,
   acquireLibraryYoutube,
   correctLibraryCaptures,
   encodeLibraryCaptureJson,
+  LibraryBoxFixture,
   LibraryCaptureCorrection,
+  LibraryFirecrawlLive,
   libraryCaptionProvenance,
   libraryQualificationValid,
   librarySourceEvidenceValid,
+  makeLibraryBoxTest,
   runLibraryCommand,
   saveLibraryText,
   validateProviderQualification,
@@ -36,10 +41,13 @@ import {
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it, vi } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
@@ -50,6 +58,9 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as TestClock from "effect/testing/TestClock";
+
+const encodeCatalogJson = S.encodeEffect(S.fromJsonString(LibraryCatalog));
 
 const LibraryImportPayloadJson = S.fromJsonString(LibraryImportPayload);
 const UnknownJson = S.fromJsonString(S.Unknown);
@@ -66,6 +77,25 @@ const source = LibrarySource.make({
   ownership: "external",
   locators: [],
 });
+const encodeFixtureJson = S.encodeEffect(UnknownJson);
+// Deterministic Firecrawl: a 404 target for `status-404`, a PDF for `.pdf`, a full page otherwise.
+const fixtureFirecrawl = Firecrawl.makeTestLayer((request) =>
+  encodeFixtureJson({
+    success: true,
+    data: {
+      markdown: `# Article\n\nFull text of ${request.url}.`,
+      rawHtml: Str.endsWith(".pdf")(request.url) ? "%PDF-1.7" : `<article>Full text of ${request.url}.</article>`,
+      metadata: {
+        sourceURL: request.url,
+        statusCode: Str.includes("status-404")(request.url) ? 404 : 200,
+        contentType: "text/html",
+      },
+    },
+  }).pipe(
+    Effect.orDie,
+    Effect.flatMap((body) => decodeFirecrawlScrapeBody(request.url, new TextEncoder().encode(body)))
+  )
+);
 const prepare = Effect.fn("test.prepare")(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -132,7 +162,9 @@ it.layer(
     Layer.succeed(
       HttpClient.HttpClient,
       HttpClient.make(() => Effect.die("Unexpected fixture HTTP request"))
-    )
+    ),
+    fixtureFirecrawl,
+    makeLibraryBoxTest(LibraryBoxFixture.make({ folders: {}, bytes: {} }))
   ),
   { timeout: "30 seconds" }
 )("research acquisition integrity", (it) => {
@@ -218,6 +250,27 @@ it.layer(
         expect(librarySourceEvidenceValid5).toBe(scenario === "unchanged");
       })
   );
+  it.effect("rereads the catalog after an outside writer replaces it between writes", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const temporary = yield* fs.makeTempDirectoryScoped({ prefix: "library-writer-cache-" });
+      const root = path.join(temporary, "library");
+      yield* withCatalog(root, (catalog) => Effect.succeed(LibraryCatalog.make({ ...catalog, sources: [source] })));
+      const canonical = path.join(root, "catalog/library.json");
+      const other = LibraryCatalog.make({ ...(yield* loadCatalog(root)), sources: [] });
+      const encoded = yield* encodeCatalogJson(other);
+      yield* fs.writeFileString(canonical, `${encoded}\n`);
+      const seen = yield* withCatalog(root, Effect.succeed);
+      expect(seen.sources).toHaveLength(0);
+      const reused = yield* withCatalog(root, (catalog) =>
+        Effect.succeed(LibraryCatalog.make({ ...catalog, sources: [source] }))
+      );
+      expect(A.map(reused.sources, (item) => item.id)).toEqual([source.id]);
+      expect(A.map((yield* loadCatalog(root)).sources, (item) => item.id)).toEqual([source.id]);
+    })
+  );
+
   it.effect("decodes authentic plain alphaXiv envelopes before class-based qualification", () =>
     Effect.gen(function* () {
       const receipt = {
@@ -622,6 +675,20 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
     })
   );
 
+  it.effect("routes a manifest without a VidBee or alphaXiv kind to the capture importer", () =>
+    Effect.gen(function* () {
+      const fixture = yield* prepare();
+      yield* writePayload(fixture.resultPath, fixture.payload);
+      const catalog = yield* importLibraryRoutedResult(fixture.root, fixture.resultPath);
+      expect(A.map(catalog.captures, (capture) => [capture.method, capture.status])).toEqual([
+        ["fixture-original-import", "readable"],
+      ]);
+      const absent = fixture.path.join(fixture.path.dirname(fixture.resultPath), "absent.json");
+      const missing = yield* importLibraryRoutedResult(fixture.root, absent).pipe(Effect.flip);
+      expect(missing.message).toBe(`Cannot read import manifest ${absent}.`);
+    })
+  );
+
   it.effect("preserves hash-bound before and after states when correcting an invalid reading claim", () =>
     Effect.gen(function* () {
       const fixture = yield* prepare();
@@ -858,44 +925,174 @@ else: print(json.dumps({'html_url':'https://github.com/fixture/renamed/issues/1'
     })
   );
 
-  it.effect("routes web sources to an import-only disposition and never requires the removed scraper route", () =>
+  it.effect("acquires web sources natively through Firecrawl under the unchanged web contract", () =>
     Effect.gen(function* () {
       const fixture = yield* prepare();
-      // The suite HTTP client dies on any request, so a network attempt would fail this test.
       const capture = yield* acquireLibrarySource(fixture.root, source);
-      expect(capture.method).toBe("disposition");
-      expect(capture.status).toBe("unsupported");
-      expect(capture.reason).toContain("library import-result");
-      const retained = LibraryQualification.make({
-        id: "retained-firecrawl",
-        adapter: "firecrawl",
-        status: "verified",
-        required: true,
-        recordedAt: "2026-10-06T00:00:00Z",
-        evidence: [],
-        reason: "Retained receipt from the removed web route.",
-      });
-      const catalog = yield* loadCatalog(fixture.root);
-      expect(requiredLibraryAdapters(LibraryCatalog.make({ ...catalog, qualifications: [retained] }))).toEqual([
-        "grok-deep-research",
+      expect(capture.method).toBe("firecrawl");
+      expect(capture.status).toBe("readable");
+      expect(A.map(capture.artifacts, (artifact) => artifact.role)).toEqual([
+        "raw-response",
+        "raw-full-text",
+        "extracted-full-text",
       ]);
+      const observed5 = yield* librarySourceEvidenceValid(fixture.root, source, capture);
+      expect(observed5).toBe(true);
+      const catalog = yield* loadCatalog(fixture.root);
+      expect(requiredLibraryAdapters(catalog)).toContain("firecrawl");
     })
   );
 
-  it.effect("refuses to probe the removed web route instead of skipping it", () =>
+  it.effect("keeps a non-2xx or mismatched web target blocked with its response retained", () =>
     Effect.gen(function* () {
       const fixture = yield* prepare();
-      const error = yield* Effect.flip(
-        qualifyLibrary(
-          fixture.root,
-          LibraryQualifyOptions.make({ adapters: [removedLibraryWebAdapter], sourceIds: [], maxProbes: 1 })
-        )
+      const missing = LibrarySource.make({ ...source, id: "missing", canonicalUrl: "https://example.com/status-404" });
+      const pdf = LibrarySource.make({ ...source, id: "pdf", canonicalUrl: "https://example.com/report.pdf" });
+      const blocked = yield* acquireLibrarySource(fixture.root, missing);
+      const unsupported = yield* acquireLibrarySource(fixture.root, pdf);
+      expect([blocked.status, blocked.complete]).toEqual(["blocked", false]);
+      expect(A.some(blocked.artifacts, (artifact) => artifact.role === "raw-response")).toBe(true);
+      const observed6 = yield* librarySourceEvidenceValid(fixture.root, missing, blocked);
+      expect(observed6).toBe(false);
+      expect(unsupported.status).toBe("unsupported");
+      expect(unsupported.reason).toContain("unsupported-content");
+    })
+  );
+
+  it.effect("qualifies the web route by a real bounded scrape of a catalogued source", () =>
+    Effect.gen(function* () {
+      const fixture = yield* prepare();
+      const catalog = yield* qualifyLibrary(
+        fixture.root,
+        LibraryQualifyOptions.make({ adapters: ["firecrawl"], sourceIds: [], maxProbes: 1 })
       );
-      expect(error.message).toContain(`Adapter ${removedLibraryWebAdapter} was removed`);
-      expect((yield* loadCatalog(fixture.root)).qualifications).toEqual([]);
+      const qualification = A.findLast(catalog.qualifications, (item) => item.adapter === "firecrawl");
+      assertSome(
+        O.map(qualification, (item) => item.status),
+        "verified"
+      );
+      const observed7 = yield* libraryQualificationValid(fixture.root, catalog, O.getOrThrow(qualification));
+      expect(observed7).toBe(true);
     })
   );
 });
+
+// Live Firecrawl over a fake HTTP client and an `op` answered by a local `printf`, or by `false`
+// for an unreadable reference; the recorded headers and `op` arguments show which key was used.
+const liveFirecrawl = (env: Record<string, unknown>, opBinary: "printf" | "false") => {
+  const authorizations: Array<string> = [];
+  const opArgs: Array<ReadonlyArray<unknown>> = [];
+  const http = Layer.succeed(
+    HttpClient.HttpClient,
+    HttpClient.make((request) => {
+      authorizations.push(request.headers.authorization ?? "");
+      return encodeFixtureJson({
+        success: true,
+        data: {
+          markdown: "# Article\n\nFull text of the article.",
+          rawHtml: "<article>Full text of the article.</article>",
+          metadata: { sourceURL: source.canonicalUrl, statusCode: 200, contentType: "text/html" },
+        },
+      }).pipe(
+        Effect.orDie,
+        Effect.map((body) => HttpClientResponse.fromWeb(request, new Response(body, { status: 200 })))
+      );
+    })
+  );
+  const op = Layer.effect(
+    ChildProcessSpawner.ChildProcessSpawner,
+    Effect.gen(function* () {
+      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+      return ChildProcessSpawner.make((command) => {
+        opArgs.push(command._tag === "StandardCommand" ? command.args : []);
+        return spawner.spawn(
+          opBinary === "printf" ? ChildProcess.make("printf", ["%s", "fc-from-op"]) : ChildProcess.make("false", [])
+        );
+      });
+    })
+  ).pipe(Layer.provide(NodeServices.layer));
+  const layer = Layer.mergeAll(
+    NodeServices.layer,
+    NodeCrypto.layer,
+    LibraryFirecrawlLive.pipe(
+      Layer.provide(Layer.merge(http, op)),
+      Layer.provide(ConfigProvider.layer(ConfigProvider.fromUnknown(env)))
+    )
+  );
+  return { layer, authorizations, opArgs };
+};
+
+const literalKey = liveFirecrawl({ FIRECRAWL_API_KEY: "fc-literal" }, "printf");
+it.layer(literalKey.layer, { timeout: "30 seconds" })("live Firecrawl key from a literal", (it) => {
+  it.effect("sends a literal FIRECRAWL_API_KEY without reading 1Password", () =>
+    Effect.gen(function* () {
+      const fixture = yield* prepare();
+      const result = yield* acquireLibraryWeb(fixture.root, source, "captures/literal");
+      expect([result.status, literalKey.authorizations, literalKey.opArgs]).toEqual([
+        "readable",
+        ["Bearer fc-literal"],
+        [],
+      ]);
+    })
+  );
+});
+
+const referencedKey = liveFirecrawl({ FIRECRAWL_API_KEY: "op://Vault/Firecrawl/key" }, "printf");
+it.layer(referencedKey.layer, { timeout: "30 seconds" })("live Firecrawl key from an op:// reference", (it) => {
+  it.effect("reads a referenced FIRECRAWL_API_KEY through op", () =>
+    Effect.gen(function* () {
+      const fixture = yield* prepare();
+      const result = yield* acquireLibraryWeb(fixture.root, source, "captures/reference");
+      expect([result.status, referencedKey.authorizations, referencedKey.opArgs]).toEqual([
+        "readable",
+        ["Bearer fc-from-op"],
+        [["read", "op://Vault/Firecrawl/key", "--no-newline"]],
+      ]);
+    })
+  );
+});
+
+const unreadableKey = liveFirecrawl({}, "false");
+it.layer(unreadableKey.layer, { timeout: "30 seconds" })("live Firecrawl key that op cannot read", (it) => {
+  it.effect("blocks the capture without a request when the canonical reference is unreadable", () =>
+    Effect.gen(function* () {
+      const fixture = yield* prepare();
+      const result = yield* acquireLibraryWeb(fixture.root, source, "captures/unreadable");
+      expect([result.status, result.reason, unreadableKey.authorizations]).toEqual([
+        "blocked",
+        "Firecrawl config: The Firecrawl key reference could not be resolved through op.",
+        [],
+      ]);
+      expect(unreadableKey.opArgs).toHaveLength(1);
+    })
+  );
+});
+
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 seconds" })(
+  "stalled Firecrawl scrape",
+  (it) => {
+    it.effect("blocks a web capture whose Firecrawl scrape exceeds the timeout", () =>
+      Effect.gen(function* () {
+        const stalled = Firecrawl.of({
+          scrape: Effect.fn("test.stalledScrape")(function* () {
+            return yield* Effect.never;
+          }),
+        });
+        const fiber = yield* acquireLibraryWeb("/library", source, "captures/slow").pipe(
+          Effect.provideService(Firecrawl, stalled),
+          Effect.forkChild
+        );
+        yield* TestClock.adjust("151 seconds");
+        const result = yield* Fiber.join(fiber);
+        expect([result.status, result.complete, result.reason]).toEqual([
+          "blocked",
+          false,
+          "Firecrawl timeout: Firecrawl scrape timed out.",
+        ]);
+      })
+    );
+  }
+);
 
 it.effect.prop(
   "property: schema-generated capture corrections survive a JSON round trip",

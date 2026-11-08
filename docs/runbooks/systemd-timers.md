@@ -9,14 +9,14 @@ Two repo CLI commands render systemd **user** units into
 | `bun run beep refs install-timer --owner <clone>` | `beep-refs-refresh.{service,timer}` | nightly 03:30 |
 
 The refs timer fast-forwards every manifest member under
-`$HOME/YeeBois/references/effect`, provisioned from `scripts/references.json` by
+`$HOME/YeeBois/references/effect`, provisioned from `packages/tooling/policy-pack/repo-configs/data/references.json` by
 `bun run beep refs provision` (`BEEP_REFERENCES_ROOT` overrides the root).
 It needs no model provider or secrets.
 
 ## Add a reference repository
 
 The manifest is the membership authority. Add a unique `name` and upstream
-`url` to `scripts/references.json`. The optional `branch` defaults to `main`. Setup clones that branch; refresh
+`url` to `packages/tooling/policy-pack/repo-configs/data/references.json`. The optional `branch` defaults to `main`. Setup clones that branch; refresh
 requires a clean checkout on that branch and pulls `origin <branch>` with
 `--ff-only`, independently of the checkout's configured tracking branch.
 Existing checkouts on another branch are preserved and reported as
@@ -179,16 +179,35 @@ immediately after `enable --now`; read its journal rather than waiting for the
 next tick.
 
 The same replay happens seconds after a reboot that crossed a scheduled tick,
-before NetworkManager is online, so each service carries
+before NetworkManager is online. The research services carry
 `ExecStartPre=-/bin/sh -c "command -v nm-online >/dev/null 2>&1 && exec nm-online -q --timeout=90"`:
 where `nm-online` exists the run waits up to 90 seconds for connectivity, and
 the `-` prefix keeps a missing helper or a timed-out wait from failing the unit.
+The reference-refresh service uses a frozen dependency-install preflight instead;
+its renderer does not currently add this network-online wait.
 
 The daily vault capture commits with `commit.gpgsign=false`. A user unit has no
 desktop signing agent, so a global SSH signer such as the 1Password helper fails
 there with `failed to write commit object` (git exit 128); a machine-generated
 capture of the private vault needs no signature. Re-render installed units after
 a renderer change with `bun run beep research install-timers --repo-root <clone> --refresh`.
+
+## Agent run slice
+
+Admitted heavy runs join `agent-runs.slice` (`agent-run-<ticket>.scope`, and
+detached `beep-proof-<jobId>.service` proofs). Without installed units systemd
+creates a transient slice with default accounting. The slice unit and its
+systemd-oomd drop-in are rendered by the quality scheduler:
+
+```sh
+bun run beep quality scheduler slice            # print both unit files
+bun run beep quality scheduler slice --install  # write ~/.config/systemd/user/agent-runs.slice{,.d/50-oomd.conf}
+systemctl --user daemon-reload                  # the command never reloads systemd itself
+```
+
+The slice carries the workstation heavy budget (`MemoryHigh=48G`,
+`MemoryMax=60G`, `MemorySwapMax=8G`) and the drop-in the pressure policy
+(`ManagedOOMMemoryPressure=kill` at 50%).
 
 ## Related
 

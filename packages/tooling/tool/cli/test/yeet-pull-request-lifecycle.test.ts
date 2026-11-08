@@ -1,6 +1,8 @@
 import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
+import { GitHubError } from "@beep/github/GitHubError";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
+import { GithubRest } from "@beep/repo-cli/test/SharedInternals";
 import {
   applyHeavyAdmissionLabel,
   buildYeetRunPlan,
@@ -63,6 +65,14 @@ const provideGitOver =
     self.pipe(provideLegacyGh, Effect.provideServiceEffect(Git, Git.make), provideSpawner(spawner));
 const withGh = (output: string, exitCode = 0) =>
   provideGitOver(ScriptedSpawner.make(() => ({ stdout: output, exit: exitCode })));
+const lookupRunner = (output: string, exit: number, spawnFailure: boolean) =>
+  ScriptedSpawner.make((command) =>
+    command === "git"
+      ? { stdout: "git@github.com:beep-effect/beep-effect.git" }
+      : spawnFailure
+        ? PlatformError.badArgument({ module: "ChildProcess", method: "spawn" })
+        : { stdout: output, exit }
+  );
 const encodeView = S.encodeEffect(
   S.fromJsonString(
     S.Struct({
@@ -125,8 +135,134 @@ describe("Yeet pull request lifecycle boundaries", () => {
           const direct = yield* findOpenPullRequestViaRest(context).pipe(Effect.flip, provide);
           expect(direct.message).toBe(failure.message);
           const required = yield* runGhPullRequestView(context).pipe(Effect.flip, provide);
-          expect(required.command).toBe("gh api repos/{owner}/{repo}/pulls");
+          expect(required.command).toBe(direct.command);
+          expect(required.message).toBe(direct.message);
         }
+      })
+    );
+
+    for (const scenario of [
+      { name: "rate limit", output: "GraphQL: API rate limit already exceeded", exit: 1, spawn: false },
+      { name: "authentication failure", output: "authentication required", exit: 1, spawn: false },
+      { name: "network failure", output: "network unreachable", exit: 1, spawn: false },
+      { name: "ambiguous 404", output: "HTTP 404: Not Found", exit: 1, spawn: false },
+      { name: "ambiguous absence", output: "no PR", exit: 1, spawn: false },
+      {
+        name: "another owner's absence",
+        output: `no pull requests found for branch "other:${context.branch}"`,
+        exit: 1,
+        spawn: false,
+      },
+      {
+        name: "another branch's absence",
+        output: `no pull requests found for branch "beep-effect:other"`,
+        exit: 1,
+        spawn: false,
+      },
+      {
+        name: "empty owner's absence",
+        output: `no pull requests found for branch ":${context.branch}"`,
+        exit: 1,
+        spawn: false,
+      },
+      {
+        name: "prefixed absence",
+        output: `warning: no pull requests found for branch "beep-effect:${context.branch}"`,
+        exit: 1,
+        spawn: false,
+      },
+      {
+        name: "suffixed absence",
+        output: `no pull requests found for branch "beep-effect:${context.branch}" (unknown)`,
+        exit: 1,
+        spawn: false,
+      },
+      { name: "spawn failure", output: "", exit: 1, spawn: true },
+      { name: "truncated output", output: Str.repeat(512 * 1024 + 1)("x"), exit: 0, spawn: false },
+    ]) {
+      it.effect(`keeps typed REST rate and retry information when fallback has ${scenario.name}`, () => {
+        const primary = GitHubError.make({
+          kind: "rateLimited",
+          operation: "PullRequest.list",
+          reason: "API rate limit exceeded",
+          status: 403,
+          retryAfterMillis: 60000,
+        });
+        const runner = lookupRunner(scenario.output, scenario.exit, scenario.spawn);
+        return Effect.gen(function* () {
+          const rest = yield* GithubRest;
+          const failedRest = { ...rest, openPullRequestForBranch: () => Effect.fail(primary) };
+          const required = yield* runGhPullRequestView(context).pipe(
+            Effect.flip,
+            Effect.provideService(GithubRest, failedRest)
+          );
+          const optional = yield* findOpenPullRequest(context).pipe(
+            Effect.flip,
+            Effect.provideService(GithubRest, failedRest)
+          );
+          expect(required._tag).toBe("YeetCommandError");
+          expect(required.message).toContain("REST");
+          expect(required.message).not.toContain("requires an open pull request");
+          expect(required.cause).toBe(primary);
+          expect(optional.cause).toBe(primary);
+          expect(primary.retryAfterMillis).toBe(60000);
+        }).pipe(provideGitOver(runner));
+      });
+    }
+
+    it.effect("recognizes exact fork-owner absence while a required lookup still reports no open PR", () => {
+      const runner = ScriptedSpawner.make((command, args) =>
+        command === "git"
+          ? { stdout: "git@github.com:fork-owner/beep-effect.git" }
+          : args[0] === "api"
+            ? { stdout: "HTTP 403: API rate limit exceeded", exit: 1 }
+            : { stdout: `no pull requests found for branch "fork-owner:${context.branch}"`, exit: 1 }
+      );
+      return Effect.gen(function* () {
+        const optional = yield* findOpenPullRequest(context);
+        assertNone(optional);
+        const required = yield* runGhPullRequestView(context).pipe(Effect.flip);
+        expect(required.message).toContain("requires an open pull request");
+        expect(required.command).toBe("gh pr view --json number,headRefName,state,url,title");
+      }).pipe(provideGitOver(runner));
+    });
+
+    for (const scenario of [
+      { name: "spawn", output: "", exit: 1, spawn: true, message: "Failed to inspect current branch" },
+      { name: "truncation", output: Str.repeat(512 * 1024 + 1)("x"), exit: 0, spawn: false, message: "capture limit" },
+      { name: "unknown", output: "network unavailable", exit: 1, spawn: false, message: "presence is unknown" },
+    ]) {
+      it.effect(`reports the fallback ${scenario.name} failure when REST had no error`, () => {
+        const runner = lookupRunner(scenario.output, scenario.exit, scenario.spawn);
+        return Effect.gen(function* () {
+          const rest = yield* GithubRest;
+          const failure = yield* runGhPullRequestView(context).pipe(
+            Effect.flip,
+            Effect.provideService(GithubRest, { ...rest, openPullRequestForBranch: () => Effect.succeedNone })
+          );
+          expect(failure._tag).toBe("YeetCommandError");
+          expect(failure.message).toContain(scenario.message);
+        }).pipe(provideGitOver(runner));
+      });
+    }
+
+    it.effect("a successful branch fallback still recovers after a failed REST lookup", () =>
+      Effect.gen(function* () {
+        const output = yield* encodeView({ number: 42, state: "OPEN", headRefName: context.branch });
+        const runner = ScriptedSpawner.make((command, args) =>
+          command === "git"
+            ? { stdout: "git@github.com:beep-effect/beep-effect.git" }
+            : args[0] === "api"
+              ? { stdout: "HTTP 403: API rate limit exceeded", exit: 1 }
+              : { stdout: output }
+        );
+        const required = yield* runGhPullRequestView(context).pipe(provideGitOver(runner));
+        expect(required.number).toBe(42);
+        const optional = yield* findOpenPullRequest(context).pipe(provideGitOver(runner));
+        assertSome(
+          O.map(optional, (view) => view.number),
+          42
+        );
       })
     );
 
@@ -178,7 +314,7 @@ describe("Yeet pull request lifecycle boundaries", () => {
 
     it.effect("reports nonzero, truncated, and spawn failures when a PR is required", () =>
       Effect.gen(function* () {
-        const nonzero = yield* runGhPullRequestView(context).pipe(Effect.flip, withGh("no PR", 1));
+        const nonzero = yield* runGhPullRequestView(context).pipe(Effect.flip, withGh("no pull requests found", 1));
         expect(nonzero).toMatchObject({
           exitCode: 1,
           message: expect.stringContaining("requires an open pull request"),
@@ -187,12 +323,19 @@ describe("Yeet pull request lifecycle boundaries", () => {
           Effect.flip,
           withGh(Str.repeat(512 * 1024 + 1)("x"))
         );
-        expect(truncated.message).toContain("capture limit");
+        const restTruncated = yield* findOpenPullRequestViaRest(context).pipe(
+          Effect.flip,
+          withGh(Str.repeat(512 * 1024 + 1)("x"))
+        );
+        expect(truncated.message).toBe(restTruncated.message);
+        expect(truncated.command).toBe(restTruncated.command);
         const withSpawnFailure = provideGitOver(
           ScriptedSpawner.make(() => PlatformError.badArgument({ module: "ChildProcess", method: "spawn" }))
         );
         const spawnFailure = yield* runGhPullRequestView(context).pipe(Effect.flip, withSpawnFailure);
-        expect(spawnFailure.message).toBe("Failed to inspect current branch pull request.");
+        const restSpawnFailure = yield* findOpenPullRequestViaRest(context).pipe(Effect.flip, withSpawnFailure);
+        expect(spawnFailure.message).toBe(restSpawnFailure.message);
+        expect(spawnFailure.command).toBe(restSpawnFailure.command);
         const findFailure = yield* findOpenPullRequest(context).pipe(Effect.flip, withSpawnFailure);
         expect(findFailure.message).toBe(spawnFailure.message);
       })
@@ -200,7 +343,9 @@ describe("Yeet pull request lifecycle boundaries", () => {
 
     it.effect("treats a missing PR as None but rejects closed or mismatched PRs for monitoring", () =>
       Effect.gen(function* () {
-        const missingPr = yield* findOpenPullRequest(context).pipe(withGh("no PR", 1));
+        const missingPr = yield* findOpenPullRequest(context).pipe(
+          withGh(`no pull requests found for branch "${context.branch}"`, 1)
+        );
         assertNone(missingPr);
         for (const view of [
           { number: 42, state: "CLOSED", headRefName: context.branch },

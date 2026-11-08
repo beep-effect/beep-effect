@@ -29,19 +29,52 @@ new document versions and intake snapshots. Earlier evidence remains available.
 Do not edit snapshots or acquired artifacts to repair extraction: change the
 extractor or import a new derivation with its own provenance.
 
+### Private inputs
+
+Pass `--private-input <dir>` (repeatable) for a root whose documents belong to the
+private partition:
+
+```sh
+bun run beep research library inventory \
+  --input /absolute/path/to/aggregation \
+  --private-input /absolute/path/to/aggregation/Research-11-5-26
+```
+
+- Files under a private root are inventoried exactly like `--input` files, but their
+  documents, intake census entries and roots carry `accessClass: "private"`. A private
+  root may sit inside an `--input` root: the private class wins for that subtree and
+  each file is inventoried once.
+- The class belongs to the document's location, not its bytes. A byte-identical copy
+  under a public root shares the snapshot object but stays a public document.
+- Every inventory run reclassifies cited sources from all catalogued occurrences. A
+  source cited only by private documents is private, and so is the GitHub repository
+  identity such a citation implies. One public citation makes it public. Box sources
+  keep the class `acquire --route box` gave them.
+- The intake manifest of a run with private files is a private artifact. Private roots
+  enter the intake identity, so changing a root's class records a new intake snapshot.
+- `--private-input` alone does not add the default public roots; pass `--input` too
+  when both are wanted.
+- `status` reports the result on its `private partition:` line; views and `render`
+  leave it out unless `--include-private` is given.
+
 Qualification performs actual source acquisition. An installed executable, a
 configured MCP server, and a successful provider request are insufficient: the
 target source, returned content, and completeness must also pass. Keep secret
 values out of commands, logs, import manifests, and packet documents.
 
-Web, docs, and registry sources have no acquisition route, because the repository
-has no web scraper. `acquire` gives them an unsupported `disposition` receipt that
-points to `import-result`, and `qualify` never probes a web route. To read one of
-these sources, scrape it with a session tool and import the result (see
-[Session-owned provider results](#session-owned-provider-results)), or record a
-reviewed disposition. Captures and the qualification receipt from the removed
-`firecrawl` route remain valid. `verify`, `status`, and `render` still check them
-against their retained response, HTML, and Markdown.
+Web, docs, and registry sources take the native `firecrawl` route through the
+`@beep/firecrawl` driver. The key is the reference
+`op://BEEP_SECRETS/BEEP_SECRETS/AI_FIRECRAWL_API_KEY`, read through the PATH `op`
+shim on the first scrape; `FIRECRAWL_API_KEY` may instead hold a resolved key (for
+example under `op run`) or another `op://` reference. The key never appears in
+argv, logs, receipts, or packet files. A capture retains the exact bounded response
+body as `raw-response`, its `rawHtml` as `raw-full-text`, and its `markdown` as
+`extracted-full-text`, which is the envelope `Library.web.ts` validates, so native
+captures and October's imported scrapes verify under one contract. The response
+stream is cut at 20 MB before bytes are kept, whatever `Content-Length` declares,
+and a PDF target is refused as `unsupported` even when it is labelled HTML: cite the
+PDF as a paper source instead. Qualify the route with
+`qualify --adapter firecrawl --max-probes 1`.
 
 Acquisition retains a start receipt before each attempt and records its terminal
 result. Qualified routes can progress independently. Inspect failed receipts
@@ -49,8 +82,7 @@ before using `--retry-failed`; do not repeatedly retry an unavailable source or
 mistake a provider outage for source unavailability. `--source <source-id>` selects
 a source for a bounded retry. A valid reviewed disposition survives a blanket
 `--retry-failed` run. An explicit source selection can force a reviewed network
-route; X imports, web sources, and unresolved disposition routes remain explicit
-imports.
+route; X imports and unresolved disposition routes remain explicit imports.
 Concurrency is bounded from 1 through 8. GitHub operations are sequential within
 one repository and concurrent across repository groups; catalog writes share one
 writer. `qualify --adapter <adapter> --source <source-id> --max-probes <1..3>`
@@ -84,6 +116,88 @@ comes from the retained paper header or
 from official metadata plus identical bytes from an explicitly versioned PDF;
 never infer a version number.
 
+## Box route
+
+`acquire --route box --box-folder <id>` (repeatable; subfolders included, at most
+200 folders) or `--box-file <id>` lists the selection through `@beep/box`, keeps the
+listing as a `box-listing` receipt, and registers each file as a `docs` source at
+`https://app.box.com/file/<id>`. Box sources and their artifacts are private unless
+`--box-public` is passed. The Box file version id is the source revision and the
+captured revision is `<fileId>:<versionId>`; a capture is readable only when the
+downloaded bytes match the SHA-1 Box reports. Each file gets one start and one
+terminal receipt and the catalog is written after every file, because Box quota is
+not observable. A rerun downloads nothing that is already captured readable for its
+version; byte-identical files share one object under `objects/sha256`. A new Box
+version is registered and acquired once more; earlier versions keep their captures.
+If the route has no valid qualification, the first selected file is downloaded as
+the qualification probe before the rest.
+
+Credentials: the client credentials grant reads `DMS_BOX_CLIENT_ID`,
+`DMS_BOX_CLIENT_SECRET`, and a subject from `BEEP_SECRETS` through the `op` shim; each
+variable may also hold a resolved value or another `op://` reference. The enterprise
+service account sees only folders shared with it; set `DMS_BOX_USER_ID=<box user id>`
+to take a user as the token subject for user-owned files. Precedence:
+
+1. `DMS_BOX_USER_ID` set: client credentials grant with that user.
+2. `DMS_BOX_ENTERPRISE_ID` set: client credentials grant with the enterprise subject.
+3. `CLOUD_BOX_TOKEN` set and non-empty: the developer token.
+4. Otherwise: client credentials grant with the `BEEP_SECRETS` enterprise subject.
+
+An explicit subject wins over `CLOUD_BOX_TOKEN` because Bun loads a worktree's `.env`,
+which can carry an expired desktop developer token; that token would otherwise fail
+every lookup with `Box file lookup failed: sdk thrown`. An empty `CLOUD_BOX_TOKEN`
+counts as unset.
+
+## Hops and the hop-2 gate
+
+`inventory` records a hop-1 `Derivation` (with `hopDepth = 1`) for every citation in
+a hop-0 document of the intake that run recorded; earlier intakes keep their edges unchanged. It then reads the readable text of every hop-1
+capture (Markdown, plain text, and transcripts up to 5 MB) and records each URL in it
+as a hop-2 `Source` with a `hopDepth = 2` derivation from its hop-1 parent. Depth is
+on the edge; nothing is dropped, and re-running inventory on the same roots adds no duplicate edges. Run
+`inventory`, `acquire`, then `inventory` again to catalogue hop 2.
+
+`acquire` fetches a hop-2-only source only when the gate admits it:
+
+- a URL that names no content is refused as `non-content` before any other rule:
+  a reserved or placeholder host (`example.com`, `example.org`, `example.net`, and
+  any host under `example`, `invalid`, `test` or `localhost`, subdomains included),
+  a literal IPv4 or IPv6 host, or a path ending in a static-asset or media extension
+  (`png jpg jpeg gif svg webp ico css js woff woff2 ttf mp4 mp3 webm zip tar gz`).
+  The lists are `LibraryHopNonContentHosts` and `LibraryHopNonContentExtensions`,
+  the defaults of the policy's `nonContentHosts` and `nonContentExtensions`;
+- a hop-1 parent has a `Finding` whose topics name a live packet concept: a goal
+  whose status is `active` or `paused`, or an exploration that is not `parked`,
+  `killed`, or `graduated`;
+- GitHub is never transitive: a GitHub child, or any child of a GitHub parent, is
+  refused;
+- arXiv hop 2 is catalogued only; name it with `--source <id>` to acquire it on
+  demand;
+- every other domain admits at most 25 acquired hop-2 sources per intake
+  (`--hop2-domain-cap <n>`), counting sources already captured;
+- the whole gate admits at most 400 hop-2 sources (`--hop2-limit <n>` on `acquire`
+  and `hops`), again counting sources already captured; candidates past it are
+  refused as `budget`.
+
+Candidates are taken in descending routed in-degree, the number of distinct hop-1
+parents that have a routed `Finding` and a hop-2 edge to the candidate, then in
+canonical-URL order. The domain cap and the budget are both spent in that order, so
+the most widely cited sources are acquired first and the cut is deterministic.
+
+Catalogued-only hop-2 identities are counted as `cataloguedHop2` by `verify` instead
+of being reported missing. `status` ends with per-hop totals:
+
+```text
+hop 0: documents=<n> citations=<n>
+hop 1: identities=<n> readable=<n>
+hop 2: identities=<n> readable=<n> cataloguedOnly=<n> gateAdmitted=<n> gateRefused=<n> (<reason>=<n> ...)
+```
+
+`hops --limit <n>` prints the same totals and the first `n` gate decisions, admitted
+ones first, each group in admission order
+(`admit|refuse <reason> in=<routed in-degree> <domain> <sourceId> <url>`), without
+acquiring.
+
 ## Session-owned provider results
 
 Use `import-result <manifest-file>` for evidence obtained through a session tool,
@@ -102,6 +216,24 @@ capture becomes readable only when the status is 2xx, `sourceURL` matches the ci
 URL, and both full-text files equal the response's `rawHtml` and `markdown`. A
 `target-metadata` redirect proof can bind a resolved URL that differs from the
 cited one.
+
+A VidBee bundle imports with a `kind: "vidbee"` manifest naming `sourceId`,
+`canonicalUrl`, and three originals (`path` relative to the manifest, `sha256`,
+`bytes`, `mediaType`): `media`, `transcript` (the `.vtt`), and `faq` (the FAQ `.md`).
+The transcript is kept as `raw-full-text` and the FAQ as `ai-interpretation`; the
+media file is hashed in place and never copied. The FAQ frontmatter must name the same
+media file (`media:`) and, if it records one, the same `source_url`. Its `model` (a
+`model(effort)` pin or a separate `effort:` key) becomes the `ModelRun` agent; a
+missing effort is recorded as `unrecorded`. The yt-dlp caption route stays primary
+for cited YouTube URLs; VidBee is the fallback import.
+
+An alphaXiv paper imports with a `kind: "alphaxiv"` manifest naming `sourceId`,
+`canonicalUrl`, `arxivId`, `version` (`vN`), a `fullText` original of at least 1,000
+characters, and an optional `references` list of `{ "arxivId" }` or `{ "url" }`
+entries. The source must be the inventoried `arxiv:<arxivId>` paper and the version
+must match any cited version, or the import fails with an identity error. Full text is
+kept as `extracted-full-text` bound to the id and version; references become hop-2
+sources with a derivation edge and no capture.
 
 Grok research must dispatch the literal `/deep-research` workflow and retain both
 launch and completion evidence. An ordinary model answer is insufficient. Grok
@@ -316,6 +448,88 @@ succeeds as a no-op and writes nothing.
 To reverse, copy the receipt's `catalog/history/<beforeCatalogSha256>.json` over
 `catalog/library.json`. The reader continues to accept v1. Preserve the receipt
 and backup for audit and do not edit historical artifacts.
+
+### Status summary for a large catalog
+
+`status` builds the SPARQL view dataset, which takes tens of minutes and many
+gigabytes at the November intake's size (78k sources). `status --summary` prints
+only the per-hop and private-partition lines straight from the catalog, in
+seconds; `--intake <id-or-date>` scopes them to one intake's documents and
+derivation edges:
+
+```sh
+bun run beep research library status --summary --intake <intake-id>
+```
+
+## Mining (T1/T2/T3)
+
+`mine` turns an intake's readable sources and its own hop-0 documents into
+CiTO-typed findings. There are two kinds of mining unit:
+
+- A source job is one bound text artifact (extracted full text, then transcript,
+  then raw plain text, or a PDF when no text artifact exists) of an effective
+  readable, complete capture of a source cited by the intake's documents or derived from the intake. Incomplete or unread
+  sources yield no job and no finding.
+- A document job is one parseable intake document (nightlies, link lists, the
+  private DM archive's markdown) or snapshotted `.pdf` intake file, bound to its
+  snapshot under
+  `intakes/<date>/raw/`. A document whose sha256 equals a planned capture text
+  artifact (for example a Box nightly the Box route already captured) is skipped,
+  because the source job reads the same bytes. A document job inherits the
+  document's access class, so private documents are refused by `junie` and
+  `cursor` like private sources.
+
+PDF jobs use `@beep/pdf-tools` (`PdfTools.inspect` and `pageText`). The first run
+writes immutable derived text to `ops/mine/text/<pdf-sha256>.txt` and a sibling
+JSON receipt recording the PDF digest, page count, extractor and version, and text
+digest. Reruns reuse that receipt. Empty text and extraction errors record
+`no-text`: those jobs are skipped as unreadable, never failed or used for findings.
+`--dry-run` lists PDF jobs without extracting text. PDF bytes are deduplicated by
+sha256 within the intake, with private access retained if any copy is private.
+Readable intake PDFs register hop-0 documents with no citation census; their
+findings bind `documentId` through the same SHACL constraints as parsed documents.
+
+A source finding binds `sourceId` and `captureId`. A document finding binds
+`documentId` with an empty `sourceId`. The generated SHACL shapes require
+exactly one of the two (`sh:xone`), and the projection writes no edge for the
+empty one. Document findings carry no `sourceId`, so the hop-2 routed-parent
+gate ignores them.
+
+```sh
+bun run beep research library mine triage --intake <id-or-date> --dry-run
+bun run beep research library mine triage --intake <id-or-date> --concurrency 4
+bun run beep research library mine read --intake <id-or-date> --profile junie --exclude-private
+bun run beep research library mine read --intake <id-or-date> --profile claude
+bun run beep research library mine synthesize <t3.json>
+```
+
+- `triage` (T1) gives every unit without a record a `select`, `skip` or `defer`
+  decision. Default profile `codex-luna`: `codex exec -m gpt-6-luna -c
+  model_reasoning_effort="medium" --output-schema <schema> -s read-only`.
+- `read` (T2) deep-reads every T1-selected unit. Profiles: `junie`
+  (`claude-opus-5-5` medium, the default while JetBrains credits remain), `claude`
+  (`claude -p --model claude-opus-5-5 --effort medium --tools ""`) and `cursor`
+  (`claude-opus-5-5-medium`, fallback only). `junie` and `cursor` refuse any
+  private-partition unit with `LibraryMinePrivateRouteError` before launching; mine
+  the private partition with `--profile claude`.
+- `synthesize` (T3) imports a session-authored `LibrarySynthesisImport` file: an
+  `id`, the orchestrator `author` (`model`, `effort`, `route`, `argv`) and findings
+  that each name a `sourceId`, a readable `captureId`, a CiTO relation and a span.
+
+Every answer decodes against its tier schema. A finding whose span is not a
+verbatim substring of the bound text (capture text, document snapshot, or derived
+PDF text) rejects the whole job (`LibraryMineSpanError`). Affirmative relations (`citesAsEvidence`, `supports`,
+`extends`, `usesMethodIn`, `usesDataFrom`) are dropped from `partial` or `unread`
+readings, and a prompt truncated at 200,000 characters is never `complete`. Topic
+ids outside the live goal and exploration packets are dropped and listed on the
+receipt. `--repo` names the repository whose packets supply topic ids.
+
+Runs write under the library's `ops/mine/<tier>/`: `records/` (one immutable
+record per unit; its presence marks the job done), `receipts/` (outcome, error tag,
+prompt and output hashes, and the `ModelRun` with model, effort, route and exact
+launch argv), `prompts/` and `outputs/`. One catalog write per run imports every
+record not yet in the catalog, so rerunning resumes and skips completed jobs. A
+quota or rate-limit exit pauses the batch; `--limit` caps pending jobs.
 
 ## Exploration boundary
 

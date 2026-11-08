@@ -20,6 +20,7 @@ import {
   ensurePullRequest,
   FinalCheckReceipt,
   findOpenPullRequest,
+  findOpenPullRequestViaRest,
   isMergeCommitSubject,
   mergePr,
   mergeYeetPullRequestAtHead,
@@ -404,6 +405,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
       Effect.gen(function* () {
         const commands = yield* makeCommands;
         const context = contextAt("/repo");
+        const restFailure = yield* findOpenPullRequestViaRest(context).pipe(Effect.flip, withProcesses([], commands));
         const view = yield* runGhPullRequestView(context).pipe(
           withProcesses([["gh pr view", 0, prView({ url: PR_URL })]], commands)
         );
@@ -421,13 +423,15 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
           Effect.flip,
           withProcesses([["gh pr view", -1, "gh is not installed"]], commands)
         );
-        expect(unspawnable.message).toBe("Failed to inspect current branch pull request.");
+        expect(unspawnable.message).toBe(restFailure.message);
+        expect(unspawnable.command).toBe(restFailure.command);
 
         const truncated = yield* runGhPullRequestView(context).pipe(
           Effect.flip,
           withProcesses([["gh pr view", 0, pipe("x", Str.repeat(600 * 1024))]], commands)
         );
-        expect(truncated.message).toBe("gh pr view output exceeded the repo-run capture limit.");
+        expect(truncated.message).toBe(restFailure.message);
+        expect(truncated.command).toBe(restFailure.command);
 
         const undecodable = yield* runGhPullRequestView(context).pipe(
           Effect.flip,
@@ -441,6 +445,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
       Effect.gen(function* () {
         const commands = yield* makeCommands;
         const context = contextAt("/repo");
+        const restFailure = yield* findOpenPullRequestViaRest(context).pipe(Effect.flip, withProcesses([], commands));
         const found = (replies: ReadonlyArray<Reply>) =>
           findOpenPullRequest(context).pipe(withProcesses(replies, commands));
 
@@ -455,11 +460,13 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
         assertNone(otherBranchPr);
         const missingPr = yield* found([["gh pr view", 1, "no pull requests found"]]);
         assertNone(missingPr);
-        const oversizedPr = yield* found([["gh pr view", 0, pipe("x", Str.repeat(600 * 1024))]]);
-        assertNone(oversizedPr);
+        const oversizedPr = yield* found([["gh pr view", 0, pipe("x", Str.repeat(600 * 1024))]]).pipe(Effect.flip);
+        expect(oversizedPr.message).toBe(restFailure.message);
+        expect(oversizedPr.command).toBe(restFailure.command);
 
         const unspawnable = yield* Effect.flip(found([["gh pr view", -1, "gh is not installed"]]));
-        expect(unspawnable.message).toBe("Failed to inspect current branch pull request.");
+        expect(unspawnable.message).toBe(restFailure.message);
+        expect(unspawnable.command).toBe(restFailure.command);
         const undecodable = yield* Effect.flip(found([["gh pr view", 0, "not json"]]));
         expect(undecodable.message).toBe("Failed to decode gh pr view JSON.");
       })

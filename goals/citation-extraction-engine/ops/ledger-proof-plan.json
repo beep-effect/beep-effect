@@ -844,12 +844,12 @@
       ],
       "rationale": "Complete resolver-boundary replay of 23 original formatted resource-map and seven reference-index equality assertions through the default public engine. Complete source inputs and finite label adaptation conditions are verified. Parser assertions, outer helper calls, native hash/identity and general model laws remain separate.",
       "proof": {
-        "command": "bunx --bun vitest run test/CitationEngineResolution.test.ts",
+        "command": "bunx --bun vitest run test/CitationCapturedCleanerPlan.test.ts test/CitationSourceRequest.test.ts test/CitationCanonicalSource.test.ts test/CitationDocumentServices.test.ts test/CitationExtractionEntry.test.ts test/CitationEngineResolution.test.ts test/CitationTokenDispatch.test.ts --reporter=json --outputFile=../../../.beep/captured-plan-merged-results.json",
         "result": "passed",
         "scope": "complete-case",
         "operation": "resolve",
-        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-canonical-resolution-assertions.md",
-        "evidenceSha256": "93f0546f10b8b8d11bebb16462f5cc7e529180f81f64f818db803ed78b511e6f",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-captured-extraction-cleaner-plans.md",
+        "evidenceSha256": "f0cfaa6412d7ce8f466efd9f2b8e4015d2ab860fb8da1b57c558dc1b2bcd93c0",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationEngineResolution.test.ts",
@@ -880,7 +880,7 @@
           },
           {
             "path": "packages/law-practice/server/test/CitationXmlWorker.fixtures.ts",
-            "sha256": "7e597a184fb8404dc9c50690b8956f91ffd8675aa1125cca6d906bd5aa384e84"
+            "sha256": "ccb6e15c8d00ff54a0f903aaa915f05385b22fd659afaff55c3de99571f37e52"
           }
         ]
       }
@@ -1037,12 +1037,12 @@
       ],
       "rationale": "Original custom quote-cleaner annotation equality recomputed from raw source through the real captured server cleaner, public extraction, verified mention-derived replacements and public annotation on both native configurations. General host protocols, exact native hashes and remaining original workflows stay separate.",
       "proof": {
-        "command": "bunx --bun vitest run test/CitationCapturedCleanerPlan.test.ts --reporter=json --outputFile=../../../.beep/captured-plan-final-results.json",
+        "command": "bunx --bun vitest run test/CitationCapturedCleanerPlan.test.ts test/CitationSourceRequest.test.ts test/CitationCanonicalSource.test.ts test/CitationDocumentServices.test.ts test/CitationExtractionEntry.test.ts test/CitationEngineResolution.test.ts test/CitationTokenDispatch.test.ts --reporter=json --outputFile=../../../.beep/captured-plan-merged-results.json",
         "result": "passed",
         "scope": "complete-case",
         "operation": "annotate",
         "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-captured-extraction-cleaner-plans.md",
-        "evidenceSha256": "485c77362801e77afdfaf98118f523a2bb3624f925b482a8506eb05074288621",
+        "evidenceSha256": "f0cfaa6412d7ce8f466efd9f2b8e4015d2ab860fb8da1b57c558dc1b2bcd93c0",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCapturedCleanerPlan.test.ts",
@@ -1102,6 +1102,18 @@
           {
             "path": "packages/law-practice/server/src/internal/Citation/CanonicalSource.ts",
             "sha256": "2944d86593ff34cf82159aa9d096aa85872b08a11f14a1d28979ac819eeffd73"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/CleanerPipeline.ts",
+            "sha256": "b6d7d153f95882ac947e4194f72634d14fc4c4a2faf4b59e121a60a001b3df33"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/DiffKernel.ts",
+            "sha256": "2276be58e9dcfd5919c9746733d5ea763c1d7c5471fc8e370e563bcdf52a8997"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/NativeWasm.ts",
+            "sha256": "a308f2d5dab1371efcb01b212560dedd23159d2e6b5980ac62ce77bdd507c76d"
           }
         ]
       }

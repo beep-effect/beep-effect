@@ -1,0 +1,15 @@
+{
+  "previous": "2c1be6c679009496631354e7eb1e0c439f6308f72c9e5d88b3dba8c9b7ba8ce6",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (steward lane for #2864, launched by the orchestrator)",
+    "reason": "Re-record only the two claim-inspection workspace dependency edges (@beep/wink on law-practice-server, @beep/nlp-processing on law-practice-use-cases) on top of main 8e6ebf6611 baseline; no command, input, output, env or cache flag change and no qualification is granted.",
+    "basis": {
+      "path": "goals/claim-check-performance/research/cache-baseline-review-main-8e6ebf-2026-11-07.md",
+      "sha256": "5853c27312ebdf766dca0d19c1e31866c53789b867b7040366a11f028fac39bd"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "subjects": ["@beep/law-practice-server", "@beep/law-practice-use-cases"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

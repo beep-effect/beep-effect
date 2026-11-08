@@ -329,7 +329,8 @@
     "drizzle-orm@1.0.0-rc.5-ab785fc": "patches/drizzle-orm@1.0.0-rc.5-ab785fc.patch",
     "effect@4.1.2": "patches/effect@4.1.2.patch",
     "@effect/platform-node-shared@4.1.2": "patches/@effect%2Fplatform-node-shared@4.1.2.patch",
-    "@alchemy.run/domain@2.0.0-beta.85": "patches/@alchemy.run%2Fdomain@2.0.0-beta.85.patch"
+    "@alchemy.run/domain@2.0.0-beta.85": "patches/@alchemy.run%2Fdomain@2.0.0-beta.85.patch",
+    "rdf-validation@0.1.1": "patches/rdf-validation@0.1.1.patch"
   },
   "private": true,
   "repository": {
@@ -397,7 +398,7 @@
     "pkg:verify": "beep-cli quality package-verify",
     "pkg:verify:quick": "beep-cli quality package-verify --quick",
     "postinstall": "lefthook install && bun run infra:prepare-gha-runners",
-    "prepare": "effect-tsgo unpatch --tsrs && node scripts/prune-tsgo-backups.mjs && effect-tsgo patch --tsrs",
+    "prepare": "effect-tsgo unpatch --tsrs && bun run beep toolchain prune-tsgo-backups && effect-tsgo patch --tsrs",
     "purge": "bun run beep purge",
     "quality:dev": "bun run beep quality dev",
     "services:up": "docker compose up -d",
@@ -446,6 +447,7 @@
     "lint:entity-kit-freeze": "bun run beep laws entity-kit-freeze --check",
     "lint:retired-iri-authorities": "bun run beep laws retired-iri-authorities --check",
     "lint:schema-tag-idioms": "bun run beep laws schema-tag-idioms --check",
+    "lint:tracked-shell-allowlist": "bun run beep laws tracked-shell-allowlist --check",
     "lint:holds": "bun run beep holds lint",
     "lint:ecosystem-polarity": "bun run beep lint ecosystem-polarity",
     "goals:index-check": "bun run beep goals index --check",
@@ -485,12 +487,16 @@
     "packages/agents/client",
     "packages/agents/server",
     "packages/agents/tables",
-    "packages/epistemic/config",
     "packages/epistemic/client",
     "packages/epistemic/domain",
     "packages/epistemic/tables",
     "packages/epistemic/ui",
     "packages/epistemic/use-cases",
+    "packages/execution-authority/config",
+    "packages/execution-authority/domain",
+    "packages/execution-authority/server",
+    "packages/execution-authority/tables",
+    "packages/execution-authority/use-cases",
     "packages/epistemic/server",
     "packages/law-practice/domain",
     "packages/law-practice/use-cases",
@@ -585,6 +591,7 @@
     "packages/party/domain",
     "packages/party/use-cases",
     "packages/party/server",
-    "packages/drivers/alchemy-postgres"
+    "packages/drivers/alchemy-postgres",
+    "packages/drivers/firecrawl"
   ]
 }

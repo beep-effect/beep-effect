@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "claim-performance-dependency-metadata-admission/v2",
+  "acceptedMain": "d192effc4647f49ef27f1404f3ecb4b965a745d0",
+  "clauseCheckpoint": "00e16ed7773e29e1d705d5f41b2780a54d0906fd",
+  "oldBaselinePath": "goals/claim-check-performance/research/implementation-accepted-main-metadata-003.json",
+  "oldBaselineSha256": "46a6c3a03af62187d3af906005acf9c0a3b72568074b80c65f3c15da07e3ef35",
+  "oldBaselineImplementationDigest": "f1298a049415da29f0a5a0008d58e7289e313479575f5df32d11e4c1b53e1cb5",
+  "historicalLockArchive": "goals/claim-check-performance/research/legacy-protocol/bun.lock.metadata003.txt",
+  "historicalLockSha256": "673b0349426053698cfc3f5e86e78eab359644497699c10929d3afcd3dd1f658",
+  "acceptedMainLockSha256": "c5f9668430c5d285309637c6fd8602464cc23fb4b4a548ee0e4cc14f939e3e92",
+  "activeLockPath": "bun.lock",
+  "activeLockSha256": "b7aa98fe7f7a9aaa015c26e9c7e6543f4f2020312632931c27c927e5bd7edc07",
+  "acceptedMainWorkspaceChanges": [
+    {
+      "path": "/workspaces/packages/tooling/tool/cli/dependencies/@beep/jsonl",
+      "added": "workspace:^"
+    },
+    {
+      "path": "/workspaces/packages/tooling/tool/cli/dependencies/@beep/provenance",
+      "added": "workspace:^"
+    },
+    {
+      "path": "/workspaces/packages/tooling/tool/cli/dependencies/@beep/rdf",
+      "added": "workspace:^"
+    }
+  ],
+  "clauseWorkspaceChanges": [
+    {
+      "path": "/workspaces/packages/law-practice/server/dependencies/@beep/wink",
+      "added": "workspace:^"
+    },
+    {
+      "path": "/workspaces/packages/law-practice/use-cases/dependencies/@beep/nlp-processing",
+      "added": "workspace:^"
+    }
+  ],
+  "externalResolutionsVersionsCatalogOverridesAndPatchesUnchanged": true,
+  "scopedTwoEdgeRemovalReconstructsAcceptedMainBytes": true,
+  "independentReview": {
+    "packet": "clause-role-composition001/root-metadata-review-001.json",
+    "sha256": "2391b4aff26de9d479da3f2a2653422b94ddec81c9087b28aa5d7059ef8aed0d",
+    "requiredFindings": 0
+  },
+  "scope": "Prospective exact metadata binding only. Historical baselines and archived bytes remain unchanged. Fresh full runtime/94-asset capture and all43 retention are required; no scorer/reference/label/gate change."
+}

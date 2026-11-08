@@ -58,7 +58,7 @@ const mergeObservations = (observations: ReadonlyArray<VaultScanObservation>): V
  * ```ts
  * import * as Effect from "effect/Effect"
  * import * as FileSystem from "effect/FileSystem"
- * import { makeVaultSyncFileStore } from "./VaultSync.file-store.ts"
+ * import { makeVaultSyncFileStore } from "@beep/documents-server/aggregates/Sync"
  *
  * const scan = Effect.gen(function* () {
  *   const fs = yield* FileSystem.FileSystem
@@ -67,7 +67,6 @@ const mergeObservations = (observations: ReadonlyArray<VaultScanObservation>): V
  *   return yield* files.scan(root)
  * })
  * ```
- * @internal
  * @category constructors
  * @since 0.0.0
  */
@@ -153,8 +152,9 @@ export const makeVaultSyncFileStore = Effect.fn($I`makeVaultSyncFileStore`)(func
           // `readLink` succeeds exactly when the entry is a symlink.
           const symlinkTarget = yield* Effect.result(fs.readLink(childAbsolutePath));
           if (Result.isSuccess(symlinkTarget)) {
+            // The entry's path is never logged: vault paths name clients and matters.
             yield* Effect.logDebug("Documents vault scan skipped a symlink").pipe(
-              Effect.annotateLogs({ path: childAbsolutePath })
+              Effect.annotateLogs({ "documents.vault_sync.depth": childSegments.length })
             );
             return emptyObservation;
           }

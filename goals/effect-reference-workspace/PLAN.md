@@ -54,7 +54,7 @@ add `--add-dir "$(git rev-parse --path-format=absolute --git-common-dir)"` and
 spent only by the graft deep pass. Prepend the mise bun to PATH in every lane that runs the beep CLI
 (current-state §"Toolchain gotcha").
 
-1. **S1 Manifest + provisioner** (Codex lane). Add `scripts/references.json`
+1. **S1 Manifest + provisioner** (Codex lane). Add `packages/tooling/policy-pack/repo-configs/data/references.json`
    (`beep-references/v1`, theme `effect`, members `effect` and `effect-tsgo`, both `deep`,
    `rootDefault` `$HOME/YeeBois/references/effect`, `workspaceLink` `.repos/effect-workspace`).
    Rewrite `scripts/setup-effect-ref.sh` to read it with `jq`-free POSIX parsing or a tiny
@@ -77,7 +77,7 @@ spent only by the graft deep pass. Prepend the mise bun to PATH in every lane th
    (dirty/off-branch skips), unit rendering, and the worktree step.
 3. **S3 Docs sweep** (Codex lane, R13). Files listed in `SPEC.md` Target Surfaces. Prose says the
    reference workspace lives at the manifest-configured reference root (provisioned by
-   `scripts/setup-effect-ref.sh` from `scripts/references.json`), `.repos/effect` is the Effect
+   `scripts/setup-effect-ref.sh` from `packages/tooling/policy-pack/repo-configs/data/references.json`), `.repos/effect` is the Effect
    child, `.repos/effect-workspace` is the graft target. Add the routing line to the AGENTS.md
    graft block. Cross-link the graft local-recovery runbook (retired 2026-10-28) and
    `docs/runbooks/systemd-timers.md`. No edits under `explorations/**` or `goals/**`.

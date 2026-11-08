@@ -7,6 +7,7 @@ import {
   ReferenceWorkspaceManifest,
   RefsRefreshStatus,
 } from "@beep/repo-cli/commands/Refs";
+import { ReferencesManifestPath } from "@beep/repo-configs/PolicyData";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -32,7 +33,7 @@ describe("reference manifest schemas", () => {
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      const file = yield* path.fromFileUrl(new URL("../../../../../scripts/references.json", import.meta.url));
+      const file = yield* path.fromFileUrl(new URL(`../../../../../${ReferencesManifestPath}`, import.meta.url));
       const readFileString1 = yield* fs.readFileString(file);
       const manifest = yield* ReferenceWorkspaceManifest.decodeJson(readFileString1);
       expect(manifest.rootDefault).toBe("$HOME/YeeBois/references/effect");
