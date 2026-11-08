@@ -20,7 +20,7 @@
         "scope": "complete-case",
         "operation": "extract",
         "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-original-style-tag-predicates.md",
-        "evidenceSha256": "7ead94fd2bbae26510863b2688023fab2f4581c944a3c8c6302c312deff200cc",
+        "evidenceSha256": "01e09bef845fbb9d27501370d0ce0efaafb83dec8b7890bcf578decc8496c8e7",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
@@ -83,7 +83,7 @@
         "scope": "complete-case",
         "operation": "extract",
         "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-original-style-tag-predicates.md",
-        "evidenceSha256": "7ead94fd2bbae26510863b2688023fab2f4581c944a3c8c6302c312deff200cc",
+        "evidenceSha256": "01e09bef845fbb9d27501370d0ce0efaafb83dec8b7890bcf578decc8496c8e7",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
@@ -138,7 +138,7 @@
         "scope": "complete-case",
         "operation": "extract",
         "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-original-style-tag-predicates.md",
-        "evidenceSha256": "7ead94fd2bbae26510863b2688023fab2f4581c944a3c8c6302c312deff200cc",
+        "evidenceSha256": "01e09bef845fbb9d27501370d0ce0efaafb83dec8b7890bcf578decc8496c8e7",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
@@ -197,7 +197,7 @@
         "scope": "complete-case",
         "operation": "extract",
         "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-original-style-tag-predicates.md",
-        "evidenceSha256": "7ead94fd2bbae26510863b2688023fab2f4581c944a3c8c6302c312deff200cc",
+        "evidenceSha256": "01e09bef845fbb9d27501370d0ce0efaafb83dec8b7890bcf578decc8496c8e7",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
@@ -260,7 +260,7 @@
         "scope": "complete-case",
         "operation": "extract",
         "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-original-style-tag-predicates.md",
-        "evidenceSha256": "7ead94fd2bbae26510863b2688023fab2f4581c944a3c8c6302c312deff200cc",
+        "evidenceSha256": "01e09bef845fbb9d27501370d0ce0efaafb83dec8b7890bcf578decc8496c8e7",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
@@ -315,7 +315,7 @@
         "scope": "complete-case",
         "operation": "extract",
         "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-original-style-tag-predicates.md",
-        "evidenceSha256": "7ead94fd2bbae26510863b2688023fab2f4581c944a3c8c6302c312deff200cc",
+        "evidenceSha256": "01e09bef845fbb9d27501370d0ce0efaafb83dec8b7890bcf578decc8496c8e7",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalRanges.test.ts",
@@ -382,7 +382,7 @@
         "scope": "complete-case",
         "operation": "extract",
         "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-original-style-tag-predicates.md",
-        "evidenceSha256": "7ead94fd2bbae26510863b2688023fab2f4581c944a3c8c6302c312deff200cc",
+        "evidenceSha256": "01e09bef845fbb9d27501370d0ce0efaafb83dec8b7890bcf578decc8496c8e7",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
@@ -437,7 +437,7 @@
         "scope": "complete-case",
         "operation": "extract",
         "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-original-style-tag-predicates.md",
-        "evidenceSha256": "7ead94fd2bbae26510863b2688023fab2f4581c944a3c8c6302c312deff200cc",
+        "evidenceSha256": "01e09bef845fbb9d27501370d0ce0efaafb83dec8b7890bcf578decc8496c8e7",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtraction.test.ts",
@@ -1391,7 +1391,7 @@
         "scope": "complete-case",
         "operation": "annotate",
         "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-original-style-tag-predicates.md",
-        "evidenceSha256": "7ead94fd2bbae26510863b2688023fab2f4581c944a3c8c6302c312deff200cc",
+        "evidenceSha256": "01e09bef845fbb9d27501370d0ce0efaafb83dec8b7890bcf578decc8496c8e7",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalStyle.test.ts",
