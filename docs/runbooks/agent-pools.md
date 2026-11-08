@@ -580,6 +580,28 @@ https://forum.cursor.com/t/how-much-usage-is-available-on-the-200-subscription/1
 https://forum.cursor.com/t/does-using-oh-my-pi-s-cursor-provider-or-an-openai-compatible-proxy-to-the-same-endpoints-violate-cursor-s-tos/167778
 https://forum.cursor.com/t/agent-cli-linux-sandbox-preflight-fails-unshare-eperm-unless-run-under-strace-apparmor-restrict-unprivileged-userns-1/160039
 
+## Child permission mode
+
+Every delegated child runs unsupervised (operator 2026-11-08,
+[R12](../../goals/agent-pool-doctrine/history/2026-11-08-unsupervised-children.md)).
+The operator is not an approval queue.
+
+| Surface | Unsupervised setting |
+| --- | --- |
+| Claude `Agent` tool and Workflow children | inherit the parent's `bypassPermissions`; launch the parent with `--permission-mode bypassPermissions` |
+| T3 `delegate_task` | `runtimeMode: "full-access"`; the parent thread and any linked environment must also be Full access, because T3 rejects a child above its parent |
+| T3 environment link | grant Full access on the link card; an approval-required link makes every remote child ask per command |
+| Codex CLI | `codex exec --dangerously-bypass-approvals-and-sandbox` (Desktop: Full access, then verify the effective tuple below) |
+| grok-build | `--permission-mode bypassPermissions` |
+| Kimi Code | `--auto` |
+| Junie | headless `-p` runs without prompts; `--brave` applies to interactive sessions only |
+| Cursor | unchanged: `--sandbox enabled --force` with the D21 deny list; never `--sandbox disabled` |
+
+Unsupervised is not unbounded: D11, D21, the money escalation and the
+YubiKey and 1Password routes still apply. If a child still raises an
+approval, its route is misconfigured: stop that child, fix the launch mode,
+and relaunch. Never clear it by approving command by command.
+
 ## Desktop permission continuity
 
 Use the [permission continuity runbook](./agent-permission-continuity.md) for
