@@ -346,8 +346,8 @@ const nominalOpeningPattern = /^(?:and\s+)?(?:an?|the|said|each|at least one|one
 const gerundOpeningPattern = /^\p{L}+ing\s/iu;
 const openListPattern = /\b(?:including|comprising|having|consisting|that|which|wherein|when|if|between|from|of)\b/iu;
 const predicatePattern = /\b(?:is|are|was|were|has|have|comprises|includes)\b/iu;
-// A comma opens a new coordinate when the following text starts the same way as the current one.
 const absoluteClausePattern = /^(?:said|the)\s[^,;]*?\b(?:being|having|comprising)\b/iu;
+// A comma opens a new coordinate when the following text starts the same way as the current one.
 const parallelCoordinate = (head: string, tail: string): boolean => {
   const opening = Str.trimStart(head);
   // A comma left inside the current coordinate means its internal structure is unresolved.
@@ -361,7 +361,7 @@ const parallelCoordinate = (head: string, tail: string): boolean => {
   );
 };
 const splitInspectionBodyWith =
-  (parallelComma: (head: string, tail: string) => boolean) =>
+  (parallelComma?: (head: string, tail: string) => boolean) =>
   (body: Span): ReadonlyArray<Span> => {
     const quotations = matchesIn(quotedPhrasePattern)(body);
     const separators = A.filter(
@@ -370,20 +370,13 @@ const splitInspectionBodyWith =
         !isStepLabelSeparator(body, mark) &&
         !A.some(quotations, (quote) => mark.start >= quote.start && mark.start < quote.start + Str.length(quote.text))
     );
-    return A.filter(splitAtSeparators(body, separators, parallelComma), (span) =>
-      O.isNone(Str.match(/^\s*(?:and|or)\s*$/iu)(span.text))
-    );
+    return splitAtSeparators(body, separators, parallelComma);
   };
-const splitInspectionBody = (body: Span): ReadonlyArray<Span> => {
-  const quotations = matchesIn(quotedPhrasePattern)(body);
-  const separators = A.filter(
-    matchesIn(separatorPattern)(body),
-    (mark) =>
-      !isStepLabelSeparator(body, mark) &&
-      !A.some(quotations, (quote) => mark.start >= quote.start && mark.start < quote.start + Str.length(quote.text))
+const splitInspectionBody = splitInspectionBodyWith();
+const splitParallelInspectionBody = (body: Span): ReadonlyArray<Span> =>
+  A.filter(splitInspectionBodyWith(parallelCoordinate)(body), (span) =>
+    O.isNone(Str.match(/^\s*(?:and|or)\s*$/iu)(span.text))
   );
-  return splitAtSeparators(body, separators);
-};
 
 const cleanSegment = flow(
   trimSpan,
@@ -2042,25 +2035,17 @@ const sourcePartOfSpeechGrammar = (facts: ReadonlyArray<ClaimLexicalToken>): Lex
     modifierAt(tokens, index) || participleAt(tokens, index) || adverbAt(tokens, index);
   // Walk determiner-introduced premodifiers and the nominal run; a coordinator continues only
   // between premodifiers, so "the left and right posts" stays one mention.
+  const coordinatedPremodifierAt = (tokens: ReadonlyArray<Span>, at: number, start: number): boolean =>
+    at > start &&
+    HashSet.has(sourceCoordinators, tokenWordAt(tokens, at)) &&
+    premodifierAt(tokens, at - 1) &&
+    (premodifierAt(tokens, at + 1) || nominalAt(tokens, at + 1));
   const nominalEnd = (tokens: ReadonlyArray<Span>, start: number): O.Option<number> => {
-    let last = O.none<number>();
-    for (let at = start; at < tokens.length; at++) {
-      if (nominalAt(tokens, at)) {
-        last = O.some(at + 1);
-        continue;
-      }
-      if (O.isSome(last)) break;
-      if (premodifierAt(tokens, at)) continue;
-      if (
-        at > start &&
-        HashSet.has(sourceCoordinators, tokenWordAt(tokens, at)) &&
-        premodifierAt(tokens, at - 1) &&
-        (premodifierAt(tokens, at + 1) || nominalAt(tokens, at + 1))
-      )
-        continue;
-      break;
-    }
-    return last;
+    let at = start;
+    while (premodifierAt(tokens, at) || coordinatedPremodifierAt(tokens, at, start)) at++;
+    if (!nominalAt(tokens, at)) return O.none();
+    while (nominalAt(tokens, at)) at++;
+    return O.some(at);
   };
   // A tagged non-nominal word directly after a nominal ends the mention. Compounds the
   // provider mistags as verbs stay whole because a nominal continues immediately after them.
@@ -2566,6 +2551,47 @@ const projectedClaimInput = (
     ? O.some({ input: assembleTree(claim, elements, containment), opaqueNonDonors })
     : O.none();
 };
+// Evidence rows bound to one record; only a single aligned row supplies fallback facts.
+const sourceFactsFor = (
+  prepared: PreparedClaimInspection,
+  sourceOrdinal: number,
+  claimText: string,
+  evidence: ReadonlyArray<ClaimLexicalEvidence>
+): ReadonlyArray<ClaimLexicalEvidence> =>
+  A.filter(
+    evidence,
+    (fact) =>
+      fact.sourceKey === prepared.input.sourceKey &&
+      fact.sourceOrdinal === sourceOrdinal &&
+      fact.qualifiedText === claimText
+  );
+const alignedFactsOf = (
+  prepared: PreparedClaimInspection,
+  evidence: ReadonlyArray<ClaimLexicalEvidence>
+): HashMap.HashMap<number, ReadonlyArray<ClaimLexicalToken>> =>
+  HashMap.fromIterable(
+    A.flatMap(prepared.qualifications, (qualification) => {
+      if (!ClaimInputQualification.guards["context-ready"](qualification)) return [];
+      const facts = sourceFactsFor(
+        prepared,
+        qualification.record.sourceOrdinal,
+        qualification.claim.claimText,
+        evidence
+      );
+      const [fact] = facts;
+      return facts.length === 1 && fact?.status === "aligned"
+        ? [Tuple.make(qualification.claim.claimNumber, fact.tokens)]
+        : [];
+    })
+  );
+const sourceFallbackTree =
+  (aligned: HashMap.HashMap<number, ReadonlyArray<ClaimLexicalToken>>): typeof inspectionTreeInput =>
+  (claim, parts) =>
+    O.match(HashMap.get(aligned, claim.claimNumber), {
+      onNone: () => inspectionTreeInput(claim, parts),
+      onSome: (facts) =>
+        inspectionTreeInputFor(sourcePartOfSpeechGrammar(facts), splitParallelInspectionBody)(claim, parts),
+    });
 const boundedSourceEvidence = (
   prepared: PreparedClaimInspection,
   evidence: ReadonlyArray<ClaimLexicalEvidence>
@@ -2607,22 +2633,15 @@ export const decomposePreparedClaimRoles = Effect.fn("ClaimElement.decomposePrep
     { readonly input: ReturnType<typeof inspectionTreeInput>; readonly opaqueNonDonors: HashSet.HashSet<string> }
   >();
   const plans = A.empty<ClaimBoundRolePlan>();
-  let alignedFacts = HashMap.empty<number, ReadonlyArray<ClaimLexicalToken>>();
   const boundedEvidence = boundedSourceEvidence(prepared, evidence);
+  const fallbackTree = sourceFallbackTree(alignedFactsOf(prepared, boundedEvidence));
   for (const qualification of prepared.qualifications) {
     if (!ClaimInputQualification.guards["context-ready"](qualification)) continue;
     const claim = qualification.claim;
-    const facts = A.filter(
-      boundedEvidence,
-      (fact) =>
-        fact.sourceKey === prepared.input.sourceKey &&
-        fact.sourceOrdinal === qualification.record.sourceOrdinal &&
-        fact.qualifiedText === claim.claimText
+    const facts = sourceFactsFor(prepared, qualification.record.sourceOrdinal, claim.claimText, boundedEvidence);
+    const plan = O.flatMap(facts.length === 1 ? A.head(facts) : O.none(), (fact) =>
+      compileClaimClauseRoles(claim, fact)
     );
-    const single = facts.length === 1 ? A.head(facts) : O.none();
-    if (O.isSome(single) && single.value.status === "aligned")
-      alignedFacts = HashMap.set(alignedFacts, claim.claimNumber, single.value.tokens);
-    const plan = O.flatMap(single, (fact) => compileClaimClauseRoles(claim, fact));
     const structure = O.flatMap(plan, (value) =>
       O.flatMap(A.head(facts), (fact) =>
         fact.status === "aligned" ? sourcePlanFor(claim, value, fact.tokens) : O.none()
@@ -2642,15 +2661,7 @@ export const decomposePreparedClaimRoles = Effect.fn("ClaimElement.decomposePrep
   const construct: typeof inspectionTreeInput = (claim, parts) =>
     O.getOrElse(
       O.map(HashMap.get(inputs, claim.claimNumber), (projected) => projected.input),
-      () =>
-        O.match(HashMap.get(alignedFacts, claim.claimNumber), {
-          onNone: () => inspectionTreeInput(claim, parts),
-          onSome: (facts) =>
-            inspectionTreeInputFor(sourcePartOfSpeechGrammar(facts), splitInspectionBodyWith(parallelCoordinate))(
-              claim,
-              parts
-            ),
-        })
+      () => fallbackTree(claim, parts)
     );
   const enhancedRoots = HashSet.fromIterable(A.map(plans, ({ claimNumber }) => `${claimNumber}`));
   const sourceAbbreviation: typeof isExplicitAbbreviatedHead = (head) => (candidate) =>
