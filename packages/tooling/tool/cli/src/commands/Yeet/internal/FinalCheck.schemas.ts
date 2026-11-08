@@ -11,6 +11,7 @@ import { QualityTaskStep } from "@beep/repo-cli-kit/process/index";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import { ComputeProfile } from "../../../internal/repo-run/ComputeProfile.schemas.ts";
 import { CI_LANE_ID_VALUES } from "../../Ci/CiLane.ts";
 import { ChangeAtomKind, RouteDecision } from "../../Ci/Route.schemas.ts";
 
@@ -381,6 +382,11 @@ export class FinalCheckReceipt extends S.Opaque<FinalCheckReceipt, { readonly br
     steps: S.Array(FinalCheckStepResult),
     expectationRewrites: S.Array(ExpectationRewriteVerdict),
     route: S.optionalKey(FinalCheckRoute),
+    // The profile the run resolved and whether `--force-local` kept the
+    // hosted-only gates local. Optional so receipts written before the
+    // compute-profile routing still decode.
+    computeProfile: S.optionalKey(ComputeProfile),
+    forceLocal: S.optionalKey(S.Boolean),
   }).pipe(
     $I.annoteSchema("FinalCheckReceipt", {
       description: "Head-pinned record of a yeet final-check run, required by yeet ready before a draft flips.",
@@ -438,6 +444,10 @@ export class YeetFinalCheckOptions extends S.Opaque<YeetFinalCheckOptions, { rea
     dryRun: S.Boolean,
     failFast: S.Boolean,
     resume: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultKey(Effect.succeed(false))
+    ),
+    forceLocal: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefaultKey(Effect.succeed(false))
     ),

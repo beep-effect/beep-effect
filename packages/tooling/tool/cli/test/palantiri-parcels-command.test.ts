@@ -273,7 +273,11 @@ describe("lane-reds", () => {
 describe("host-pressure", () => {
   const CPU =
     "some avg10=2.13 avg60=1.05 avg300=0.48 total=987654321\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n";
-  const memoryStats = MemoryStats.of({ availableGib: Effect.succeed(40), totalGib: Effect.succeed(64) });
+  const memoryStats = MemoryStats.of({
+    availableGib: Effect.succeed(40),
+    totalGib: Effect.succeed(64),
+    ceilingGib: Effect.succeed(64),
+  });
 
   // A temporary proc root, optionally with pressure files, read through the
   // live source.

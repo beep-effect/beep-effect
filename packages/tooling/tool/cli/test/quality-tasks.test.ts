@@ -11077,7 +11077,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       oxlintThreads: 2,
       notes: [],
     });
-    const idleStats = MemoryStats.of({ availableGib: Effect.succeed(50), totalGib: Effect.succeed(128) });
+    const idleStats = MemoryStats.of({
+      availableGib: Effect.succeed(50),
+      totalGib: Effect.succeed(128),
+      ceilingGib: Effect.succeed(128),
+    });
 
     it("folds an admission snapshot into the tokens other runs hold", () => {
       const snapshot = {

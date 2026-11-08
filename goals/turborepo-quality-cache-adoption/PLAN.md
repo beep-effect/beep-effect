@@ -2,8 +2,8 @@
 
 ## Status
 
-Status: `active`
-Lifecycle: `active`
+Status: `paused`
+Lifecycle: `paused`
 
 Launched 2026-10-28 in the isolated `codex/turborepo-goals-completion` lane.
 The current population and feature inventories are review queues, not
@@ -11,7 +11,17 @@ qualification grants. The retained signed pilot remains limited to its recorded
 older private-loopback tuple. No acceptance criterion or representative window
 is treated as complete by this launch.
 
-## Phases
+## Paused checkpoint: 2026-11-08
+
+The [operational scope amendment](OPERATIONAL-SCOPE.md) replaces the exhaustive finish line.
+Finish and preserve the current PRs, then archive the owned worktrees. Resume
+only on a new operator instruction, starting with the six-gate evidence audit.
+No acceptance criterion or representative window is declared complete.
+The historical phase table and checkpoints below are retained for provenance;
+they are suspended, not the automatic next-work queue. The amendment governs
+conflicts with those earlier instructions and the old P6 checklist.
+
+## Phases (historical assurance plan, suspended)
 
 | Phase | Status | Work | Exit criteria |
 | --- | --- | --- | --- |
@@ -1093,5 +1103,23 @@ Temporarily restore the original Storybook schema resolution in draft PR #2827 w
 PR #2827
 
 Reverse: Restore the two proposed schema aliases from candidate 63f21c77; remove the diagnostic-only pretty setting. Keep the PR draft until controlled evidence is reviewed.
+
+### Align the manifest completion statement with two-PR adoption, 2026-11-08
+
+The authored completionGate.statement retained same-PR lifecycle wording after PR2926 corrected the launcher and acceptance audit. Follow the existing SPEC and Agent Guide: final evidence, reflection and proposedCloseout land with implementation while status stays active or paused; after merge, completion refresh verifies the proposal and a separate packet-state PR adopts completed-retained. That PR must merge and origin/main must show matching closeout and initiative statuses. Preserve all behavioral, hosted-proof and observation requirements; this records no completion or runtime activation.
+
+Reverse: Revert this wording alignment if the canonical lifecycle changes; never claim completion from an unmerged adoption.
+
+### Preserve complete script-only scope during accepted-source population refresh, 2026-11-08
+
+At accepted source 10fe469ae2106a502ef1f74b2dfdac5844444b67, both declared pinned clients agree on 6524 catalogue nodes and all 4368 manifest scripts. Retain 2512 configured executable rows and 1856 script-only entrypoints with complete literal caller edges. Check all 484 source bindings and native binary pins around query capture. Require the current source-bound nested inventory before replacing a report that already contains one, validate complete row identities, command hashes and counts, and preserve prior reviewed bytes and history. All current rows remain pending revalidation; no task bodies, local quality suite, credential change or qualification promotion occurred. The native query pins are declared committed clients, not a new registry freshness claim. See research/current-population-refresh-2026-11-08.md.
+
+Reverse: Restore the preceding projection through a PR while retaining every historical archive; runtime configuration and qualification remain unchanged.
+
+### Revalidate the complete current formatting-fixer family as whole-command keep-fresh, 2026-11-08
+
+Read all current manifests and all 484 census source bindings at accepted10fe. The 196 executable lint:fix wrappers invoke five exact biome check implementations with --write; all effective cache settings are false and outputs empty. Their 196 named script-only implementations receive the same whole-command exclusion with explicit caller links, without semantic deduplication. The separate nonwriting lint counterparts remain unqualified. Seven fixer names were added and one removed since the preceding190-row review; retain that earlier report unchanged. Current final dispositions now cover196 configured rows and196 script-only implementation entrypoints, leaving2316 and1660 respectively pending. The native inventory statement that all were pending describes capture before this independent review. No task body, local quality suite, cache setting or qualification ledger state changed. See research/current-mutating-fixer-review-2026-11-08.json.
+
+Reverse: Reopen a named disposition when its manifest, literal command or effective configuration changes; never infer a reuse grant or pure-counterpart qualification.
 
 <!-- beep:decisions:end -->

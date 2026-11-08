@@ -1533,6 +1533,12 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert optional table budget bindings and owner mappings together while retaining source table histories, capture controls and all acceptance duties.
 
+### Capture custom extraction cleaner plans through server ports, 2026-11-07
+
+Add a bounded schema plan selector and server-only use-case port resolving actual owned containers. Reuse the existing admitted Document cleaner and capture the port through extraction children. Expose explicit value-owner composition for coherent host Layers. Both native configurations recompute the original quote-cleaner case through public extraction and verified mention-derived annotation, including original final output. Refuse unknown and forged plans, retain callback error redaction and worker retirement, snapshot selectors, and commit plan names in derived source identities. One original annotation event advances from stage to complete-case proof; all other acceptance duties remain. Evidence: history/evidence/2026-11-07-captured-extraction-cleaner-plans.md.
+
+Reverse: Revisit the selector adaptation if the captured host container contract or verified derivation identity changes.
+
 ### Capture resolver admission policy and implementation identity, 2026-11-07
 
 Standalone registered resolution now captures normalized policy/artifact, Clock and shared admission. Four focused tests and twenty-seven regressions pass, with package lint/types/build/blocking laws and zero introduced Fallow findings. Queue time consumes the resolve deadline and cancellation returns capacity. Public raw-source service/Layer and all open acceptance duties remain. See history/evidence/2026-11-07-admitted-resolver-operation.md.
@@ -1800,5 +1806,125 @@ Publish canonical spanWithPincite evidence using the pinned source algorithm and
 Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the new component and source-v2 field together while preserving original observations and all unfinished parity duties.
+
+### Add source-derived native builtin string repr using existing Effect services, 2026-11-08
+
+A private CPython 3.11.15 builtin string repr primitive now reuses existing Unicode, text-budget, timing and clock adapters. The producer scans all Unicode points and seals 700 printability intervals; 3,113 independent native cases and corruption, expansion, budget-capture and clock-capture controls pass. Package lint/types and Fallow new-only pass. Main 1f682563312 is integrated. Full debug/token/extractor integration and general object repr remain open; no canonical assertion is promoted.
+
+Reverse: Reopen the primitive proof if frozen printability, source quote/escape rules, native storage, reservation or captured timing behavior changes.
+
+### Compose original builtin dump output from actual native parser models, 2026-11-08
+
+Add source-attributed builtin debug formatting using existing Effect Unicode, timing, allocation and Python repr services. Independently freeze 803 output observations and recompute the original UtilsTest assertion on Bun and Node, preserving semantic comparisons and genuine primary/full/pin-inclusive source ranges. General retained hooks, unbounded integers and mutation protocols remain open; exhaustive goal scope is unchanged. See history/evidence/2026-11-08-original-builtin-dump.md.
+
+Reverse: Supersede if the source workflow, native field ordering or captured ownership proof changes.
+
+### Hoist reusable replay schemas to preserve Effect parser caching, 2026-11-08
+
+Root lint reproduced seventeen no-inline-schema-compile sites missed by package-only checks. Move identical schemas to module bindings, preserving decode directions, inputs, expected values, assertions and deadlines. Rerun affected finite proofs before refreshing references; no completion event is promoted. See history/evidence/2026-11-08-cached-schema-fixtures.md.
+
+Reverse: Supersede if schema construction becomes dependent on invocation data.
+
+### Normalize nested safety attribution in the existing Effect timing adapter, 2026-11-08
+
+Two regressions reproduce incorrect extraction labels at the generic timing and actual repr/dump allocation boundaries. Reuse Effect mapError, timeoutOrElse and captured Clock in the existing adapter; retain actual limits and unrelated Error identity, and remove duplicate court remapping. Twenty focused tests pass including source corpora and Bun/Node original debug output. No completion row or universal law is promoted. See history/evidence/2026-11-08-shared-timing-safety-attribution.md.
+
+Reverse: Supersede if typed safety attribution or installed operation ownership changes.
+
+### Port builtin retained token value equality with existing Effect owners, 2026-11-08
+
+Add value equality to the existing token owner, distinct from group-based merge compatibility. Reuse schema-native storage equivalence, captured edition value classes, Effect findFirst, existing serialization and timing. Independent 1454 comparisons and three actual merge histories pass with constructor/merge/edition controls. No canonical event or complete retained capability is promoted; general hashing/UserString/subclass/mutation behavior remains open. See history/evidence/2026-11-08-builtin-token-equality.md.
+
+Reverse: Supersede if source dataclass fields or frozen edition equality contracts change.
+
+### Preserve installed court operation in nested safety failures, 2026-11-08
+
+A regression reproduced hardcoded extraction labels in court lookup. Reuse existing Effect timing.failSafety and catchTag, pass the captured operation to Unicode and preserve existing deadlines. Eight tests pass including all 17156 independent lookup observations and four-stage Clock/context replacement controls. No event or universal law is promoted; exact-head hosted workflow acceptance remains pending. See history/evidence/2026-11-08-court-operation-capture.md.
+
+Reverse: Supersede if trusted operation timing or nested safety ownership changes.
+
+### Qualify all original annotation workflows and full-span equalities, 2026-11-08
+
+All eight Bun/Node groups pass for the remaining 22 original annotation workflows, completing the original test_annotate cohort together with the separately qualified quote-cleaner case. Add a direct parser-to-verified-component replay for all thirteen original full_span equalities; qualify its binding only on matching final runtime results. General annotation utilities, host/model/callback protocols and exhaustive goal acceptance remain open.
+
+Reverse: Reopen any exact binding on contrary source or runtime evidence; preserve every unfinished capability, fidelity law and accounting row.
+
+### Qualify every original parenthetical court assertion on both native runtimes, 2026-11-08
+
+All six existing bounded integration groups pass, covering all 29 original court equalities on Bun and Node through actual default public extraction, independent semantic/edition comparison, genuine source ranges and physical child retirement. Bind only the remaining 24 events: 182 complete canonical events and 15316 unfinished accounting rows. General court syntax, tokenizer protocols and exhaustive acceptance remain open. See history/evidence/2026-11-08-complete-original-court-cohort.md.
+
+Reverse: Supersede the bindings if source inputs, criteria or implementation dependencies change.
+
+### Qualify original default factory equality and persistent hashes, 2026-11-08
+
+Reconstruct the three zero-argument semantic factory profiles from pinned source defaults and independently authenticated unique edition choices. Check actual groups/metadata/editions, then replay six comparison/hash assertions and four exact persistent integers through existing hash implementations. Keep fake token positions outside verified evidence and retain arbitrary factory, alias, mutation, identity and resource-wrapper obligations.
+
+Reverse: Reopen exact bindings on contrary source or runtime evidence; preserve factory overrides, native token/resource protocols and all remaining laws.
+
+### Qualify original full-opinion long-diff workflow, 2026-11-08
+
+Both native configurations pass the full original standalone-clean/public-annotate workflow and independent complete output plus original membership predicate. Register actual cleaned native text as a genuine test-host source without claiming automatic derived-source proof from clean. This qualifies the final original test_AnnotateTest.py assertion; all 39 assertions in that cohort now have complete-case proof. Whole-capability and full-goal acceptance remain open.
+
+Reverse: Reopen exact bindings on contrary source or runtime evidence; preserve generic protocols, fidelity, safety and remaining exhaustive accounting.
+
+### Qualify original missing-page constructor and parser conversions, 2026-11-08
+
+Both original missing-page None assertions now replay through the existing native predicate and actual public parsing on Bun/Node. The unchanged production predicate is reused by semantic factory reconstruction; no synthetic verified token geometry or identity hash is introduced. Six existing missing-page regressions and the final five focused tests pass, alongside package lint/types and Fallow new-only. Main 4766f3b1886 is integrated. Total 157 complete canonical events; production identity allocation and general retained model/token protocols remain open.
+
+Reverse: Reopen these two assertions if the native page predicate, factory reconstruction, original parser input or source verification changes.
+
+### Qualify original Resource comparisons through the existing owned registry, 2026-11-08
+
+The two original known-page Resource comparison assertions now execute the existing CitationResourceObjects registry with detached semantic references, actual equality and exact hashes. The already counted fourth persistent Resource assertion moves to actual owned-handle proof without double counting. Three focused tests, package lint/types and Fallow new-only pass. Total 155 complete canonical events; general retained host/model/token, identity, safety, fidelity and exhaustive reconciliation remain open.
+
+Reverse: Reopen these bindings if live registry, source semantic reconstruction, exact hash behavior or authenticated edition ownership changes.
+
+### Qualify original style-tag predicates and integrate main replay repairs, 2026-11-08
+
+Replay the original four style prefix truth predicates and two counterexample equalities through the existing captured style balancer and native Unicode budget. Recompute original caller coordinates by literal search. Integrate main #2915 unit/integration repairs and test-policy change; refresh canonical fixture proof only after affected entry/range tests pass. Pure utility proof does not imply XML or worker-runtime qualification.
+
+Reverse: Reopen exact bindings on contrary original-source or runtime evidence; retain XML, general protocol and safety/fidelity obligations.
+
+### Recompute corrected-full presentation after actual parsing, 2026-11-08
+
+Replay two original journal/case corrected_citation_full equalities from raw inputs through actual public extraction and the existing renderer. Share actual-model resource adaptation and owner-capturing service setup with page correction; qualify only after both runtimes and the moved-helper page regression pass. Heavy hosted lanes remain queued, not accepted. Keep full scope and all remaining laws, accounting and lifecycle obligations.
+
+Reverse: Reopen exact bindings on contrary original-source or runtime evidence; preserve general presentation, model protocols and all transformation laws.
+
+### Recompute original annotation workflows from raw input, 2026-11-08
+
+Schedule the remaining 22 original annotation workflows on Bun and Node using exact original cleaner modes, actual verified mention-derived positions, independent expected output and the existing captured annotation callback service. Initial twelve selected tests pass. Final proof accounting advances only exact workflows with matching runtime evidence; full integration, general host protocols, representation/fidelity laws and exhaustive qualification remain open.
+
+Reverse: Revise any finite proof on contrary source or runtime evidence; retain all unqualified workflows and laws.
+
+### Recompute original factory reporter alias and inequality hashes, 2026-11-08
+
+Four original known-page reporter comparison/hash assertions now replay explicit source arguments against independently captured ordered EDITIONS_LOOKUP inputs. Duplicate equal edition occurrences and literal U.S. court metadata decisions are preserved. Existing production hash functions match exact original integer operands. Ten prior default assertions pass again after the shared fixture change. The ledger now has 153 complete canonical events; retained factory/token/resource/identity protocols and exhaustive goal acceptance remain open.
+
+Reverse: Reopen these four assertions if the ordered input capture, literal court choice, semantic comparison or exact hash replay changes.
+
+### Recompute original page correction from actual parsed models, 2026-11-08
+
+Join six original raw parser calls to twelve corrected-citation/page equalities. Use actual public extraction components, selected editions and verified matched text as input to the existing correction service; preserve absence versus explicit None. Qualify only on both native runtime results. Integrate main #2929 and preserve all remaining exhaustive, protocol, fidelity and lifecycle requirements.
+
+Reverse: Reopen exact bindings on contrary original-source or runtime evidence; retain generic model/mutation/hash and formatting law obligations.
+
+### Recompute original pin-cite-span assertions from raw source, 2026-11-08
+
+Join five authenticated standalone-cleaner/parser operation pairs to all nine original span_with_pincite equalities. Run the same ordered pure builtin cleaning through the public raw-input extraction pipeline, then compare actual verified pin-inclusive coordinates and substrings with original assertion operands. Qualify cases only after both native runtimes pass; this finite composition does not waive retained Document/callback protocols or full-goal acceptance.
+
+Reverse: Reopen exact bindings on contrary original-source or runtime evidence; preserve all broader retained protocol and fidelity obligations.
+
+### Recompute parsed model equality with exact source hashes, 2026-11-08
+
+Replay original nominative and tax-court parser pairs, compare actual exact integer hashes with independent source operands, and execute CitationBase hash-based equality instead of structural equality. Actual selected edition references drive authenticated short-name lookup. Qualify only on both native runtimes; no identity hashes are manufactured and remaining model/law/safety/accounting duties stay open.
+
+Reverse: Reopen exact bindings on contrary source or runtime evidence; retain factory, identity-backed, resource and general protocol obligations.
+
+### Schedule remaining original extraction calls with exact cleaner choices, 2026-11-08
+
+Schedule the remaining 69 original nonhelper extraction calls on both native configurations. Decode every recorded cleaner choice; preserve None, empty lists, plain HTML/whitespace cleaning and markup cleaning. The previously qualified custom callable remains in its dedicated full workflow. Ten focused cleaner-profile/parser/court/reference tests pass. Refresh fourteen existing assertion references after the applicable reruns without promoting operation snapshots to canonical assertion completion. Full hosted replay, alternate tokenizer interfaces and exhaustive acceptance remain required. Evidence: history/evidence/2026-11-07-remaining-extraction-inputs.md.
+
+Reverse: Revisit replay profiles if authenticated source inputs or their callable and builtin selections change.
 
 <!-- beep:decisions:end -->

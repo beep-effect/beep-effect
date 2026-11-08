@@ -3,7 +3,7 @@
   "goal": "turborepo-cache-trust-observability",
   "authority": "Requirement-level working audit. No acceptance criterion is declared complete.",
   "sourceBaseRevision": "2c59e073c86e88843139a588f1ed765392537d8c",
-  "specSha256": "60222d2f1c620e53a4e2ace2a354df51e77e86c92286dd85a0d4b882c019fed4",
+  "specSha256": "960c28a6c85cbd8e22d20a378b5b55a060157f53a9e761bf34278640f40df46f",
   "acceptance": [
     {
       "id": "AC-01",
@@ -88,9 +88,9 @@
     {
       "id": "AC-09",
       "source": "SPEC.md:166",
-      "requirement": "Final evidence, reflection and lifecycle closeout land in that same PR.",
+      "requirement": "Final evidence, reflection and proposedCloseout land in the final implementation PR; after merge, completion refresh verifies the proposal and a separate merged packet-state PR adopts completed-retained, with matching closeout and initiative statuses on origin/main.",
       "status": "unproven",
-      "nextProof": "Land final evidence, reflection and completed-retained lifecycle in that same final implementation PR."
+      "nextProof": "Merge the final evidence, reflection and proposedCloseout while the packet stays active or paused. Then run goals completion refresh, adopt completed-retained in a separate packet-state PR, merge it and inspect matching statuses on origin/main."
     }
   ],
   "implementationContract": [
@@ -543,5 +543,11 @@
     "path": "research/candidate-openssl-prerequisite-repair-2026-11-03.json",
     "sha256": "7981c3390cff25148c39cab61d20c2ab89ca347916a0e81ab1d793263e09b6f8",
     "authority": "Source-level prerequisite repair only. Hosted regression proof, accepted-source build and independent artifact inspection are still required."
+  },
+  "lifecycleRequirementRefresh": {
+    "sourceRevision": "6b49badf353221e332f6c99cdbeaf9500de0e400",
+    "reviewedRequirement": "AC-09",
+    "previousSpecSha256": "60222d2f1c620e53a4e2ace2a354df51e77e86c92286dd85a0d4b882c019fed4",
+    "scope": "Refresh the current specification digest and two-PR lifecycle requirement only. Preserve every unproven acceptance status and the historical evidence source revision; no whole-audit runtime refresh or completion is claimed."
   }
 }

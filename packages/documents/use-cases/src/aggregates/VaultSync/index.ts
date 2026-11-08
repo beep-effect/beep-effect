@@ -9,6 +9,7 @@ export * from "./Api.ts";
 export * from "./BoxMirror.external.ts";
 export * from "./LegacySync.projection.ts";
 export * from "./Model.ts";
+export * from "./VaultSync.instruments.ts";
 export * from "./VaultSync.policy.ts";
 export * from "./VaultSync.policy-handlers.ts";
 export * from "./VaultSyncPass.saga.ts";

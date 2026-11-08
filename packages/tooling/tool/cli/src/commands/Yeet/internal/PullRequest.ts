@@ -20,6 +20,8 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GhPrView, GithubRest, ghOutput } from "../../../internal/github/index.ts";
+import { ComputeProfileProbe } from "../../../internal/repo-run/ComputeProfile.ts";
+import { COMPUTE_PROFILE_WORKER_LABEL } from "../../../internal/repo-run/GateRoute.schemas.ts";
 import { RepoStepRunResult, sortedUniquePaths } from "../../../internal/repo-run/index.ts";
 import { HEAVY_ADMISSION_LABEL, isHeavyDocsOnlyPath } from "../../Ci/HeavyAdmission.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
@@ -1065,6 +1067,51 @@ export const applyHeavyAdmissionLabel = Effect.fn("Yeet.applyHeavyAdmissionLabel
   }
   yield* Console.log(`[yeet] applied ${HEAVY_ADMISSION_LABEL} to PR #${pullRequest.number}`);
   yield* recordPrLabelLane(recorder, labelStep.value, "passed", A.join(result.success, ","));
+});
+
+/**
+ * Add the `compute-profile-worker` label to a pull request `yeet open` pushed
+ * from a `worker` host.
+ *
+ * **Details**
+ *
+ * Resolves the compute profile through `ComputeProfileProbe`; on `workstation`
+ * (or an unreadable override) it does nothing. The REST issues endpoint
+ * creates the label when the repository lacks it. A failed add is one warning:
+ * the hosted regeneration job that keys on the label is a convenience, never a
+ * reason to fail the publish.
+ *
+ * **Example** (Build the label effect)
+ *
+ * ```ts
+ * import { applyComputeProfileLabel, YeetEnsuredPullRequest } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const pullRequest = YeetEnsuredPullRequest.make({ number: 7, created: true })
+ * console.log(Effect.isEffect(applyComputeProfileLabel(pullRequest))) // true
+ * ```
+ *
+ * @param pullRequest - The pull request the open created or found.
+ * @returns An Effect that completes once the label is added or skipped.
+ * @category workflows
+ * @since 0.0.0
+ */
+export const applyComputeProfileLabel = Effect.fn("Yeet.applyComputeProfileLabel")(function* (
+  pullRequest: YeetEnsuredPullRequest
+): Effect.fn.Return<void, never, YeetGithubServices> {
+  const profile = yield* ComputeProfileProbe.use((probe) => probe.resolve).pipe(
+    Effect.map((resolution) => O.some(resolution.profile)),
+    Effect.orElseSucceed(O.none)
+  );
+  if (!O.contains(profile, "worker")) return;
+  const result = yield* Effect.result(
+    GithubRest.use((rest) => rest.addLabels(pullRequest.number, [COMPUTE_PROFILE_WORKER_LABEL]))
+  );
+  yield* Result.isFailure(result)
+    ? Console.error(
+        `[yeet] warning: could not apply ${COMPUTE_PROFILE_WORKER_LABEL} to PR #${pullRequest.number}; run: gh api -X POST repos/{owner}/{repo}/issues/${pullRequest.number}/labels -f labels[]=${COMPUTE_PROFILE_WORKER_LABEL}\n${result.failure.message}`
+      )
+    : Console.log(`[yeet] applied ${COMPUTE_PROFILE_WORKER_LABEL} to PR #${pullRequest.number}`);
 });
 
 /**

@@ -74,7 +74,11 @@ const runGit = Effect.fnUntraced(function* (cwd: string, args: ReadonlyArray<str
 });
 
 const memoryStatsTestService = (availableGib: number, totalGib: number) =>
-  MemoryStats.of({ availableGib: Effect.succeed(availableGib), totalGib: Effect.succeed(totalGib) });
+  MemoryStats.of({
+    availableGib: Effect.succeed(availableGib),
+    totalGib: Effect.succeed(totalGib),
+    ceilingGib: Effect.succeed(totalGib),
+  });
 
 const prepareProofCoordinatorRepo = Effect.fnUntraced(function* (tmpDir: string) {
   const fs = yield* FileSystem.FileSystem;

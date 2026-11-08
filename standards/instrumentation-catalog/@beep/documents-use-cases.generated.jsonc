@@ -3,8 +3,12 @@
   "schemaVersion": "instrumentation-catalog-shard/v1",
   "generatedBy": "bun run beep observability catalog --write",
   "package": "@beep/documents-use-cases",
-  "attributes": [],
-  "instruments": [],
+  "attributes": [
+    {"key":"documents.vault_sync.destination_id","type":"string","signals":["span"],"cardinality":"unbounded","minTier":"standard","owner":"@beep/documents-use-cases","description":"Opaque minted DestinationId a vault-sync call targets; never a name."}
+  ],
+  "instruments": [
+    {"_tag":"SpanInstrument","name":"VaultSyncRequests.start","owner":"@beep/documents-use-cases","family":"slice","attributes":[],"minTier":"shape-only","description":"Starts the durable pass or probe workflow for a public request; from standard up it carries destination_id.","kind":"internal","protocol":false,"origin":"declared","conforms":true}
+  ],
   "spans": [
     {"name":"VaultSyncRequests.start","owner":"@beep/documents-use-cases","family":"slice","conforms":true}
   ]

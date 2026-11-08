@@ -17,6 +17,7 @@ import * as Random from "effect/Random";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { annotateVaultSyncOutcome, VaultSyncAttribute } from "./VaultSync.instruments.ts";
 import { VaultSyncSessionLive } from "./VaultSyncApi.ts";
 import { VaultSyncMembership } from "./VaultSyncSession.repository.ts";
 
@@ -112,15 +113,17 @@ const makeResolver = Effect.fnUntraced(function* (sourceKind: V.TransportKind, b
   const destinations = yield* V.SyncDestination;
   const conflicts = yield* V.SyncConflict;
   const pause = yield* VaultSyncRevocationPause;
-  const grants = Effect.fn("VaultSyncSession.grants")(function* (request: V.VaultSyncRequest) {
+  // Every Session span records the entrypoint's fixed transport and its own outcome.
+  const traced = { attributes: { [VaultSyncAttribute.transport]: sourceKind } };
+  const grants = Effect.fn("VaultSyncSession.grants", traced)(function* (request: V.VaultSyncRequest) {
     if (request.principal.kind !== "User") return yield* V.ScopeDenied.make({});
     return yield* memberships.read(request.principal.userId, V.VaultSyncScope.make(request));
-  });
-  const registered = Effect.fn("VaultSyncSession.registered")(function* (destinationId: V.DestinationId) {
+  }, annotateVaultSyncOutcome);
+  const registered = Effect.fn("VaultSyncSession.registered", traced)(function* (destinationId: V.DestinationId) {
     const state = yield* destinations.state(destinationId);
     if (state._tag !== "Registered") return yield* V.ScopeDenied.make({});
     return V.VaultSyncScope.make(state);
-  });
+  }, annotateVaultSyncOutcome);
   // A conflict's scope is its destination's, and the two must agree on the workspace.
   const conflictScope = Effect.fn("VaultSyncSession.conflictScope")(function* (id: string) {
     const conflictId = yield* decode(V.ConflictId, id);
@@ -130,7 +133,7 @@ const makeResolver = Effect.fnUntraced(function* (sourceKind: V.TransportKind, b
     if (owner.workspaceId !== conflict.workspaceId) return yield* V.ScopeDenied.make({});
     return owner;
   });
-  const scope = Effect.fn("VaultSyncSession.scope")(function* (rpc: string, payload: unknown) {
+  const scope = Effect.fn("VaultSyncSession.scope", traced)(function* (rpc: string, payload: unknown) {
     if (rpc === "ClaimDestinationName") {
       const {
         input: { claim },
@@ -154,10 +157,10 @@ const makeResolver = Effect.fnUntraced(function* (sourceKind: V.TransportKind, b
     if (rpc === "ReviewConflict") return yield* conflictScope(id);
     const destinationId = yield* decode(V.DestinationId, id);
     return yield* registered(destinationId);
-  });
+  }, annotateVaultSyncOutcome);
   const expected = `Bearer ${Redacted.value(binding.token)}`;
   return V.SessionResolver.of({
-    resolve: Effect.fn("VaultSyncSession.resolve")(function* (headers) {
+    resolve: Effect.fn("VaultSyncSession.resolve", traced)(function* (headers) {
       // The transport kind is fixed by the entrypoint; headers can only prove the launch token.
       if (by === "launch-token" && !O.contains(Headers.get(headers, "authorization"), expected)) {
         return yield* V.ScopeDenied.make({});
@@ -171,14 +174,16 @@ const makeResolver = Effect.fnUntraced(function* (sourceKind: V.TransportKind, b
         sourceKind,
         correlationId,
       });
-    }),
+    }, annotateVaultSyncOutcome),
     grants,
     scope,
-    revoked: Effect.fn("VaultSyncSession.revoked")((request) =>
-      grants(request).pipe(
-        Effect.flatMap((current) => (A.isReadonlyArrayEmpty(current) ? V.ScopeDenied.make({}) : pause)),
-        Effect.forever
-      )
+    revoked: Effect.fn("VaultSyncSession.revoked", traced)(
+      (request) =>
+        grants(request).pipe(
+          Effect.flatMap((current) => (A.isReadonlyArrayEmpty(current) ? V.ScopeDenied.make({}) : pause)),
+          Effect.forever
+        ),
+      annotateVaultSyncOutcome
     ),
   });
 });

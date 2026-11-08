@@ -13,6 +13,26 @@ import { CitationCleanerValues, makeCitationCleanerValues } from "./CleanerValue
 import { CitationDocumentStepContainers, makeCitationDocumentCleanerProtocols } from "./DocumentCleanerProtocols.ts";
 import { CitationDocumentInputProtocols } from "./InputDocument.ts";
 import { prepareCitationNativeRuntime } from "./NativeProcess.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
+
+const prepareRuntime = (policy: unknown, htmlRuntime: unknown) =>
+  prepareCitationNativeRuntime(policy, htmlRuntime, () => CitationCleanerFailure.make({ reason: "invalid-input" }));
+
+/** Compose document services around an explicitly provided scoped value owner.
+ * This supports host protocol Layers which capture that same owner. Callers own
+ * its Scope and must provide coherent cleaner and optional Document protocols.
+ * @internal @category operations @since 0.0.0
+ */
+export const makeCitationDocumentServicesFromValues = Effect.fn("Citation.makeDocumentServicesFromValues")(function* (
+  policy: unknown,
+  htmlRuntime: unknown
+) {
+  const host = yield* CitationCleanerProtocols;
+  const { limits, runtime } = yield* prepareRuntime(policy, htmlRuntime);
+  const values = yield* CitationCleanerValues;
+  return yield* assemble(limits, runtime, values, host);
+});
 
 /** Compose one caller-scoped owner cohort. Host cleaner protocols are required
  * injected services, and optional host Document protocols retain their existing
@@ -25,11 +45,18 @@ export const makeCitationDocumentServices = Effect.fn("Citation.makeDocumentServ
   policy: unknown,
   htmlRuntime: unknown
 ) {
-  const host = yield* CitationCleanerProtocols;
-  const { limits, runtime } = yield* prepareCitationNativeRuntime(policy, htmlRuntime, () =>
-    CitationCleanerFailure.make({ reason: "invalid-input" })
-  );
+  const { limits, runtime } = yield* prepareRuntime(policy, htmlRuntime);
   const values = yield* makeCitationCleanerValues(limits);
+  return yield* makeCitationDocumentServicesFromValues(limits, runtime).pipe(
+    Effect.provideService(CitationCleanerValues, values)
+  );
+});
+const assemble = Effect.fn("Citation.assembleDocumentServices")(function* (
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime,
+  values: CitationCleanerValues["Service"],
+  host: CitationCleanerProtocols["Service"]
+) {
   const builtins = yield* makeCitationBuiltinCleaners(limits, runtime).pipe(
     Effect.provideService(CitationCleanerValues, values)
   );
