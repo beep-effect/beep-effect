@@ -279,11 +279,11 @@ def need_hex(d, key, path, n, required=True):
 
 
 def skey(x):
-    """Exact-string-or-None join key. Malformed ids/refs are diagnosed by
-    the record checks and the intake sweep; THIS filter is what keeps them
-    out of every hash table and .get() lookup so they can never traceback
-    downstream. dict.get(unhashable) raises too — lookups need it as much
-    as constructions."""
+    """Exact-string-or-None join key for callers using this filter.
+    Record checks and the intake sweep diagnose malformed ids/refs separately.
+    Returning None keeps unhashable values out of those joins and .get()
+    lookups. Review joins that stringify targets use a different boundary;
+    this helper does not establish their target validity."""
     return x if type(x) is str else None
 
 
@@ -310,11 +310,11 @@ def join_key(x, path, what):
 
 
 def identity_expectation(supplies, carries):
-    """What the OTP's ontoclean.identity MUST say, given the card's two
-    provider facts. UNRESOLVED TAKES PRECEDENCE: a card with EITHER provider
-    unsettled is an unsettled card, and a definite OTP claim over it is a
-    commitment the analysis never made — the affirmative branches run only
-    on fully settled cards."""
+    """What the OTP's ontoclean.identity MUST say for validated tri-state
+    provider facts. UNRESOLVED TAKES PRECEDENCE: either unresolved provider
+    makes the card unsettled. Within that domain, affirmative branches run
+    only on fully settled cards. check_ic diagnoses malformed provider facts
+    separately; this helper does not validate its input domain."""
     if "unresolved" in (supplies, carries):
         return "unresolved"
     if supplies is True:
@@ -3580,7 +3580,7 @@ def print_run_id(ont_root):
     try:
         d = yload(man.read_bytes())
     except Exception as ex:  # noqa: BLE001
-        print(f"refusing: manifest unreadable ({ex})", file=sys.stderr)
+        print(f"refusing: manifest unreadable ({safe_text(str(ex))})", file=sys.stderr)
         return 1
     rid = d.get("run_id") if isinstance(d, dict) else None
     if not valid_run_id(rid):
@@ -3619,7 +3619,7 @@ if __name__ == "__main__":
     if errors:
         print(f"VIOLATIONS ({len(errors)}):")
         for e in errors:
-            print(" -", e)
+            print(" -", safe_text(str(e)))
         sys.exit(1)
     print("ARTIFACTS VALID" + (" — GATE PASSED (flags above go to the steward)"
                                if gate else ""))

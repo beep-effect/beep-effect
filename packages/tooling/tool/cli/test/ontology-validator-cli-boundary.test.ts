@@ -95,6 +95,61 @@ assert rendered[3][1] == samples[3], repr(rendered[3])
 print("flag boundary passed; controls escaped without artifact validation")
 `;
 
+// Only pure formatting and output statements are compiled; print is inert.
+const diagnosticRenderingProbe = `
+import ast
+import json
+import sys
+from pathlib import Path
+from types import SimpleNamespace
+
+source = Path(sys.argv[1]).read_bytes()
+tree = ast.parse(source)
+safe_text = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'safe_text')
+main = next(n for n in tree.body if isinstance(n, ast.If) and isinstance(n.test, ast.Compare)
+            and isinstance(n.test.left, ast.Name) and n.test.left.id == '__name__')
+samples = ['ordinary diagnostic', 'synthetic-path' + chr(27) + '[2J' + chr(10) + 'FORGED',
+           chr(127) + chr(133), 'literal ' + chr(92) + 'x1b']
+loops = [n for n in ast.walk(main) if isinstance(n, ast.For)
+         and isinstance(n.iter, ast.Name) and n.iter.id == 'errors']
+assert len(loops) == 1
+rendered = []
+namespace = {'errors': samples, 'print': lambda *args: rendered.append(args)}
+exec(compile(ast.Module(body=[safe_text, loops[0]], type_ignores=[]),
+             'isolated-diagnostic-rendering', 'exec'), namespace)
+assert len(rendered) == len(samples)
+assert all(row[0] == ' -' for row in rendered)
+control_free = lambda value: not any(ord(c) < 32 or 127 <= ord(c) <= 159 for c in value)
+errors_safe = all(control_free(row[1]) for row in rendered)
+errors_preserved = rendered[0][1] == samples[0] and rendered[3][1] == samples[3]
+errors_exact = rendered[1][1] == ('synthetic-path' + chr(92) + 'x1b[2J' + chr(92) + 'x0aFORGED')
+
+run_id = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'print_run_id')
+handlers = [h for n in ast.walk(run_id) if isinstance(n, ast.Try) for h in n.handlers]
+prints = [n for h in handlers for n in h.body if isinstance(n, ast.Expr)
+          and isinstance(n.value, ast.Call) and isinstance(n.value.func, ast.Name)
+          and n.value.func.id == 'print']
+assert len(prints) == 1
+exceptions = []
+for sample in samples:
+    rows = []
+    stderr_token = object()
+    ns = {'ex': Exception(sample), 'sys': SimpleNamespace(stderr=stderr_token),
+          'print': lambda *args, **kwargs: rows.append((args, kwargs))}
+    exec(compile(ast.Module(body=[safe_text, prints[0]], type_ignores=[]),
+                 'isolated-unreadable-diagnostic', 'exec'), ns)
+    assert len(rows) == 1 and rows[0][1]['file'] is stderr_token
+    exceptions.append(rows[0][0][0])
+exceptions_safe = all(control_free(x) for x in exceptions)
+exceptions_preserved = exceptions[0] == 'refusing: manifest unreadable (ordinary diagnostic)'
+print(json.dumps({'errorsControlFree': errors_safe, 'errorsOrdinaryAndEscapedPreserved': errors_preserved,
+                  'errorsExactEscapes': errors_exact, 'exceptionControlFree': exceptions_safe,
+                  'exceptionOrdinaryPreserved': exceptions_preserved,
+                  'scope': 'only existing pure formatter, final diagnostic loop and one exception print; inert print; no actual artifact validation'}))
+assert errors_safe and errors_preserved and errors_exact and exceptions_safe and exceptions_preserved
+print("diagnostic boundaries passed; no artifact validation")
+`;
+
 const runBoundaryProbe = Effect.fnUntraced(function* (probe: string) {
   const path = yield* Path.Path;
   const source = yield* path.fromFileUrl(
@@ -132,6 +187,13 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })((it) => {
       const [exitCode, stdout, stderr] = yield* runBoundaryProbe(flagRenderingProbe);
       expect(exitCode, stderr).toBe(0);
       expect(stdout).toContain("flag boundary passed; controls escaped without artifact validation");
+    })
+  );
+  it.effect("escapes violation and unreadable-manifest diagnostics without changing ordinary text", () =>
+    Effect.gen(function* () {
+      const [exitCode, stdout, stderr] = yield* runBoundaryProbe(diagnosticRenderingProbe);
+      expect(exitCode, stderr).toBe(0);
+      expect(stdout).toContain("diagnostic boundaries passed; no artifact validation");
     })
   );
 });
