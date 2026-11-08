@@ -1,7 +1,7 @@
 # Host profiles
 
 These are routing records, not live health attestations. Last reconciled:
-2026-11-07 (tbk-worker linked; fork T3 build on beep-worker and dankserver; tom-pc-1 distro provisioned). The canonical Beep packet is `goals/cloud-agent-readiness` at the
+2026-11-08 (grok-bot host in scope; tbk-worker linked; fork T3 build on beep-worker and dankserver; tom-pc-1 distro provisioned). The canonical Beep packet is `goals/cloud-agent-readiness` at the
 repository containing this skill's real path. Read `SPEC.md` before changing a
 boundary. Host-specific receipts are under that packet's `history/` directory.
 
@@ -11,7 +11,7 @@ boundary. Host-specific receipts are under that packet's `history/` directory.
 | `tbk-worker` | `environmentId: <tbk-worker>` (linked 2026-11-07, Auto access, renew by 2026-12-07; id in the private handoff) | `ssh-tbk-worker` | Separate KVM guest, account `worker`, no sudo; initial serialized development verified. Runs the fork T3 build as `t3code.service` on loopback under `agent-runs.slice`, reached through Serve on the guest's own tailnet node; its tagged node has grants only for hub SSH, hub to Serve, and guest to the hub mirror (`history/2026-11-07-tbk-worker-link.md` in `goals/t3code-fleet-rollout`). |
 | `dankserver` | `environmentId: <dankserver>` (linked 2026-11-06, Auto access, renew by 2026-12-06; id in the private handoff) | `ssh-dankserver-worker` | Dedicated bare-metal account `worker`; initial serialized development verified. Runs the fork T3 build as `t3code.service` on loopback (same pull timer), reached through an administrator-owned tailnet-only Serve route on HTTPS 8448. Codex/Claude enabled in T3 there; Cursor/Grok/Muse disabled. |
 | `tom-pc-1` | `environmentId: <tom-pc-1-wsl>` (linked 2026-11-06, Auto access, renew by 2026-12-06; id in the private handoff) | key-auth SSH to the PC (`<windows-user>@tom-pc-1`), then `wsl -d t3-agent -u agent` | Dedicated WSL distro `t3-agent` (user `agent`, automount and interop off, own tailnet node `tom-pc-1-wsl`), kept alive by the `T3AgentWSL` logon task; runs the fork T3 build as `t3code.service` with the same pull timer. Claude signed in there; no Codex. Only the `receipt` project exists (no beep-effect checkout: no GitHub credential granted). Strict tier: no client data in the repo. |
-| `grok-bot-box-1` | out of scope | none | Not a T3 host (exploration ruling 2026-11-01): no operator SSH, no repo record of what runs there, no local credentials allowed. |
+| `grok-bot` (the Grok Bot computer) | `environmentId: <grok-bot>` (linked 2026-11-08, Auto access, renew by 2026-12-08; id in the private handoff) | `ssh-grok-bot` (Tailscale SSH as `box`; `--admin` forwards the YubiKey agent for `pam_rssh` sudo) | Cursor-hosted Debian 13 microVM, 8 cores / 15 GiB, no systemd, sleeps minutes after the Grok Bot app's computer view closes; in scope since 2026-11-08 (decision `grok-bot-vm-in-scope`). T3 runs as `t3 serve` reconciled from the hub's `grok-bot-ensure.timer` while awake; everything re-runnable from `/workspace/bootstrap`. Attended worker only; see the runbook's grok-bot section. |
 
 ## T3 route
 
