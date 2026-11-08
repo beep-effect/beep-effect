@@ -44,3 +44,12 @@ Friction receipts for `t3code-fleet-rollout`, recorded as they happen.
 - Evidence: `knowledge refs --check: 8 live host-path observation(s)`, from `~/` paths in a decision file and
   its `SPEC.md` projection, while the PR showed 15 of 15 hosted checks green.
 - Would have prevented it: running `knowledge refs --check` in `yeet publish`'s cheap gates.
+
+## 2026-11-08 — BEEP_YEET_PROOF_BASE makes `yeet verify` fail repo-cli's own tests
+
+- Doing: the closeout PR's `yeet verify --detach`.
+- Evidence: 17 failures in `quality-tasks.test.ts` and `yeet-tier-dedupe.test.ts` under verify, on a head where
+  final-check and a plain shell both pass. Setting only that variable reproduces it; three other Yeet variables do not.
+  The tests' temporary repositories do not contain the pinned base SHA.
+- Would have prevented it: clearing Yeet's proof variables in the repo-cli test configuration. Some tests already
+  clear this one individually, so the protection was partial.
