@@ -40,7 +40,7 @@ After the resume condition is met, use:
 4. [`ops/manifest.json`](./ops/manifest.json) - machine-readable routing.
 5. [`research/SOURCES.md`](./research/SOURCES.md) - inherited source corpus.
 6. Goal A prerequisite contract:
-   [`SPEC.md`](../lexical-playground-capability-atlas/SPEC.md).
+   [`SPEC.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/lexical-playground-capability-atlas/SPEC.md).
 7. Binding decisions D1-D27 and D28 pause semantics:
    [`DECISIONS.md`](../../explorations/full-document-editor/DECISIONS.md).
 8. [`history/`](./history/) - later execution evidence and closeout reflection.
@@ -81,7 +81,7 @@ contract this goal consumes:
   (`projectCommands`, `projectShortcutHelp`, `projectSlashItems`), runtime
   bindings with a guarded `KeybindingPlugin`, `CapabilityComposer`, and the
   `minimal` / `document-proof` reference profiles. Design record:
-  `goals/lexical-playground-capability-atlas/research/P1-CAPABILITY-CONTRACT.md`.
+  [goals/lexical-playground-capability-atlas/research/P1-CAPABILITY-CONTRACT.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/lexical-playground-capability-atlas/research/P1-CAPABILITY-CONTRACT.md).
 - Extension path: add one descriptor per atlas id (dependencies, commands,
   chords, and the `beep-md` compatibility row copied from the atlas), register
   its Lexical node/plugin/transformer in `capability/runtime.tsx`, and keep
@@ -90,6 +90,6 @@ contract this goal consumes:
 - Proof surfaces to extend: `stories/capability-profiles.stories.tsx` and the
   Professional Desktop `editor-proof` shell panel (`src/editor-proof/`), with
   the recorded QA harness at
-  `goals/lexical-playground-capability-atlas/history/p2-qa/2026-08-25/qa-capture.mjs`.
+  [goals/lexical-playground-capability-atlas/history/p2-qa/2026-08-25/qa-capture.mjs](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/lexical-playground-capability-atlas/history/p2-qa/2026-08-25/qa-capture.mjs).
 
 Resume remains a user decision once the Goal A closeout PR merges.

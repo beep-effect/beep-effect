@@ -43,12 +43,7 @@
     "goals/identity-iri-fibered/history/p1-p2-evidence.md",
     "goals/identity-iri-fibered/history/reflections/2026-08-25-claude.md"
   ],
-  "researchReports": [
-    "research/2026-08-17-academia-wave2-findings.md",
-    "research/2026-08-25-p1-design.md",
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -106,5 +101,13 @@
     "history/p1-lane-a-report.md",
     "history/p1-lane-b-report.md",
     "history/p1-p2-evidence.md"
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/identity-iri-fibered",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "9fa5321797e5d0fed8136c9c49a9e0da1a8e14de",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }

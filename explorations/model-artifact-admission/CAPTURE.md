@@ -107,7 +107,7 @@ dated heading at the bottom.
   runtime truth” wording is scheduled for typed-verdict correction by align
   decision 2 in a separate PR; this packet should use the corrected vocabulary
   from the start.
-- [`epistemic-bitemporal-edge-core/SPEC.md`](../../goals/epistemic-bitemporal-edge-core/SPEC.md)
+- [`epistemic-bitemporal-edge-core/SPEC.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/epistemic-bitemporal-edge-core/SPEC.md)
   already owns immutable facts, dispositions, lineage, supersession, and
   valid-time/knowledge-time reads. Model trust changes look like a consumer of
   that core, consistent with align decision 3’s retained inconsistent evidence

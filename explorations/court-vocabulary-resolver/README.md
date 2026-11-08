@@ -26,7 +26,7 @@ and compatibility contract are proven. Fuzzy ranking and SKOS remain gated.
 
 **Trail (2026-08-13):** the CourtListener HTTP driver package is gone. Search
 `packages/law-practice/domain` for vocabulary gaps. Recreate the driver only
-from `goals/honest-repo-signal/research/FOLLOW-UPS.md` if a product pull needs
+from [goals/honest-repo-signal/research/FOLLOW-UPS.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/honest-repo-signal/research/FOLLOW-UPS.md) if a product pull needs
 it.
 
 ## Sources & provenance

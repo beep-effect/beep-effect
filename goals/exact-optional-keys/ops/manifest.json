@@ -51,18 +51,7 @@
     "goals/exact-optional-keys/GOAL.md",
     "goals/exact-optional-keys/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md",
-    "research/classification-ledger.md",
-    "research/codemod-dry-run.jsonc",
-    "research/codemod-write.jsonc",
-    "research/completion-audit-2026-10-28.md",
-    "research/detection-reconciliation-2026-10-28.jsonc",
-    "research/optional-vs-optional-key.md",
-    "research/package-verification-2026-10-28.md",
-    "research/verification.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -116,5 +105,13 @@
   "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2326
+  },
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/exact-optional-keys",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "f30b4f40d12944d3b8ec2287cd9125e88dfa69e9",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
   }
 }

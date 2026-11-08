@@ -8,7 +8,7 @@ the bottom.
 ## 2026-07-31
 
 Spin-off ratified during the knowledge-surface-automation interview (see
-`goals/knowledge-surface-automation/SPEC.md`, "Spin-off explorations"): deliberately
+[goals/knowledge-surface-automation/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/knowledge-surface-automation/SPEC.md), "Spin-off explorations"): deliberately
 kept OUT of Workstream D's v1 scope so the now-view engine ships without a time
 dimension.
 

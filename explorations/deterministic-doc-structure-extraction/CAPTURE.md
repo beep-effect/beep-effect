@@ -99,7 +99,7 @@ Notable secondary-target coordination notes from routing:
 
 ### Cautions
 
-- LOCKED-DECISION CONFLICT: langextract V1 SPEC (`goals/langextract-capability/SPEC.md` L88-89) defers streaming — the Partial/Complete gate (TalentScore#3/#4/#6) is marked `gapStatus=dup` in the catalog but is actually net-new-CONFLICTING; route to THIS sibling, do NOT reopen the langextract streaming lock. (Surfaced as a standards decision in DECISIONS.)
+- LOCKED-DECISION CONFLICT: langextract V1 SPEC ([goals/langextract-capability/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/langextract-capability/SPEC.md) L88-89) defers streaming — the Partial/Complete gate (TalentScore#3/#4/#6) is marked `gapStatus=dup` in the catalog but is actually net-new-CONFLICTING; route to THIS sibling, do NOT reopen the langextract streaming lock. (Surfaced as a standards decision in DECISIONS.)
 - Streaming, IF ever pulled into langextract, must be exposed as schema-backed LangExtract domain events, never raw AI chunks — keep this sibling's stream surface schema-first to stay reconcilable.
 - PROVENANCE WALL: all adopted LLM-prompt nuggets emit free text / "exact clause text" but NO char offsets — beep's provenance wall requires source spans; no char-offset-less LLM prompts. The extend note must add `GroundedExtraction.span` before adoption.
 - Source nuggets are Python (doctor, stenoai, Legal-AI_Project, LegalEase) and BAML (TalentScore) — port to Effect/TS + effect/Schema; do not vendor Python or BAML runtimes.

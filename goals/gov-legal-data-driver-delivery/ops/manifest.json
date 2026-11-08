@@ -42,38 +42,6 @@
     "goals/gov-legal-data-driver-codegen/SPEC.md",
     "goals/gov-legal-data-driver-codegen/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/SOURCES.md",
-    "research/courtlistener-deltas.md",
-    "research/data-source-terms-matrix.md",
-    "research/specs/courtlistener/api-root.v4.json",
-    "research/specs/courtlistener/options-status.tsv",
-    "research/specs/courtlistener/options/aba-ratings.json",
-    "research/specs/courtlistener/options/agreements.json",
-    "research/specs/courtlistener/options/audio.json",
-    "research/specs/courtlistener/options/courts.json",
-    "research/specs/courtlistener/options/debts.json",
-    "research/specs/courtlistener/options/disclosure-positions.json",
-    "research/specs/courtlistener/options/educations.json",
-    "research/specs/courtlistener/options/financial-disclosures.json",
-    "research/specs/courtlistener/options/gifts.json",
-    "research/specs/courtlistener/options/increment-event.json",
-    "research/specs/courtlistener/options/investments.json",
-    "research/specs/courtlistener/options/non-investment-incomes.json",
-    "research/specs/courtlistener/options/people.json",
-    "research/specs/courtlistener/options/political-affiliations.json",
-    "research/specs/courtlistener/options/positions.json",
-    "research/specs/courtlistener/options/recap-fetch.json",
-    "research/specs/courtlistener/options/reimbursements.json",
-    "research/specs/courtlistener/options/retention-events.json",
-    "research/specs/courtlistener/options/schools.json",
-    "research/specs/courtlistener/options/search.json",
-    "research/specs/courtlistener/options/sources.json",
-    "research/specs/courtlistener/options/spouse-incomes.json",
-    "research/specs/courtlistener/options/tags.json",
-    "research/specs/ecfr-official-v1.json",
-    "research/specs/federal-register-openapi.json"
-  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -145,5 +113,13 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "mission": "Deliver the research foundation and first product-pulled driver on the substrate the predecessor proved: committed source/terms research plus `@beep/ecfr` at 15-operation parity. Federal Register, DOL, and CourtListener resume individually only when a product feature pulls that driver."
+  "mission": "Deliver the research foundation and first product-pulled driver on the substrate the predecessor proved: committed source/terms research plus `@beep/ecfr` at 15-operation parity. Federal Register, DOL, and CourtListener resume individually only when a product feature pulls that driver.",
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/gov-legal-data-driver-delivery",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "e1fb27501957339303864db10f118900c6fba3bf",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }

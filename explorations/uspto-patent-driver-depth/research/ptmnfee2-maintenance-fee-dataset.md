@@ -222,7 +222,7 @@ seal terms](https://www.uspto.gov/terms-use-uspto-websites)
    documentation/code-list checksums, generator version, row count, rejected-row
    count, and vocabulary diff. Re-running against pinned inputs must be byte-for-
    byte deterministic, with CI `git diff --exit-code` drift proof.
-   [`gov-legal-data-driver-codegen` AC#6/Q7](../../../goals/gov-legal-data-driver-codegen/SPEC.md#acceptance-criteria)
+   [`gov-legal-data-driver-codegen` AC#6/Q7](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/gov-legal-data-driver-codegen/SPEC.md#acceptance-criteria)
 
 ### `law-docketing-patent-spine` owns
 

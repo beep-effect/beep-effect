@@ -54,7 +54,7 @@ inventory below is therefore grounded in live source/barrel searches plus
 package READMEs and specs: `goals/rich-text-foundation/SPEC.md`,
 `packages/foundation/modeling/lexical/README.md`,
 `packages/foundation/modeling/md/README.md`,
-and `goals/file-processing-capability/SPEC.md`.
+and [goals/file-processing-capability/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/file-processing-capability/SPEC.md).
 
 ### `@beep/md`
 
@@ -111,7 +111,7 @@ Paths:
 
 - `packages/foundation/capability/file-processing`
 - `packages/drivers/tika`
-- `goals/file-processing-capability/SPEC.md`
+- [goals/file-processing-capability/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/file-processing-capability/SPEC.md)
 
 Existing role: file detection/extraction IR and broad document extraction
 direction. The file-processing spec says the extraction IR is not a

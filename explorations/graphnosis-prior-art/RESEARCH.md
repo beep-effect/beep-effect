@@ -151,7 +151,7 @@ different extractors are *distinguishable*, where Graphnosis has only `{file, of
 The contradiction substrate is materially stronger: `ContradictionCandidate` is immutable and
 digest-sealed, `ContradictionDisposition` is append-only with `resolvedBy: Principal`, and
 `Contradiction.model.ts:562-566` annotates the detector as *"provenance, not authority"* —
-`goals/epistemic-contradiction-triage/SPEC.md` already refuses automatic supersession.
+[goals/epistemic-contradiction-triage/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/epistemic-contradiction-triage/SPEC.md) already refuses automatic supersession.
 Effect-first `Config`/`Context.Service` discipline makes the donor's ambient-env-var defect
 structurally impossible in domain slices (`rg "process.env"` over the five product families → 3
 hits, all JSDoc prose).

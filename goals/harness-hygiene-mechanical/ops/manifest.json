@@ -34,10 +34,6 @@
     "goals/harness-hygiene-mechanical/GOAL.md",
     "goals/harness-hygiene-mechanical/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/2026-07-14-eviction-and-laws.md",
-    "research/SOURCES.md"
-  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -81,5 +77,13 @@
     "The implementation would exceed named scope.",
     "A deleted skill is referenced by tooling (plugin manifests, hooks).",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/harness-hygiene-mechanical",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "72e19ca2977017ac31a2c47d4c0f5b7a97fa1dbb",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }

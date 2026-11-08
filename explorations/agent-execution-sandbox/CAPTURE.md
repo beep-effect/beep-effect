@@ -96,7 +96,7 @@ limit
 
 ### Repo pieces this must compose with
 
-The [ingestion secret scrub spec](../../goals/ingestion-secret-scrub/SPEC.md)
+The [ingestion secret scrub spec](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ingestion-secret-scrub/SPEC.md)
 already makes `safeForPrompt` a narrow, fail-closed prompt-admission result and
 explicitly leaves operational egress to a later boundary. The sandbox must
 consume that result without treating it as action authorization.
@@ -115,7 +115,7 @@ authority boundary, while that packet owns the wider governance protocol, but
 the seam is not settled.
 
 The
-[epistemic bitemporal edge core](../../goals/epistemic-bitemporal-edge-core/SPEC.md)
+[epistemic bitemporal edge core](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/epistemic-bitemporal-edge-core/SPEC.md)
 already establishes immutable payloads, lineage, correction by supersession,
 and two-axis history. Under align decision 3, sandbox records may later feed
 preferred belief views, but execution events must not become beliefs or truth

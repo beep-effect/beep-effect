@@ -38,7 +38,6 @@
     "goals/epistemic-bitemporal-edge-core/SPEC.md",
     "goals/epistemic-bitemporal-edge-core/ops/handoffs/p0-to-p1-handoff.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -97,5 +96,13 @@
     "The implementation would exceed named scope, especially any pressure to add detection heuristics or NLP inference.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/epistemic-contradiction-triage",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "8f02e58296ca7c6f3747224b59d53d6b2246599e",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }

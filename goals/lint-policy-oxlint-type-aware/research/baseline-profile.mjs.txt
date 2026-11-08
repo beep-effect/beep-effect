@@ -1,4 +1,0 @@
-import tseslint from '@typescript-eslint/eslint-plugin';
-import parser from '@typescript-eslint/parser';
-import { fileURLToPath } from 'node:url';
-export default [{ignores:[".next/**", "**/.next/**", ".repos/**", ".sst/**", "coverage/**", "**/coverage/**", "dist/**", "**/dist/**", "**/docs/**", "storybook-static/**", "**/storybook-static/**", "node_modules/**", "**/node_modules/**", "apps/*/src/app/sw.ts", "**/.turbo/**", "**/.cache/**", "**/generated/**", "**/vendor/**", "**/*.gen.*", "**/*.d.ts", "**/typetests/**/*.tst.ts", "**/src-tauri/target/**", "infra/lambda/**/build/**", "packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/.runtime-*/**"]},{files:['**/*.ts','**/*.tsx'],languageOptions:{parser,parserOptions:{projectService:true,tsconfigRootDir:fileURLToPath(new URL('../../',import.meta.url)),warnOnUnsupportedTypeScriptVersion:false}},plugins:{'@typescript-eslint':tseslint},rules:{'@typescript-eslint/no-deprecated':'error'}}];

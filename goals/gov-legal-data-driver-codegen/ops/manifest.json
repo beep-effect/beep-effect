@@ -84,10 +84,12 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "researchReports": [
-    "research/2026-06-29-codex-spec.md",
-    "research/2026-06-30-ecfr-generator-spike.md",
-    "research/README.md",
-    "research/SOURCES.md"
-  ]
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/gov-legal-data-driver-codegen",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "a1917f14d4ae9c0655a176eca5a067a94c82347a",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }

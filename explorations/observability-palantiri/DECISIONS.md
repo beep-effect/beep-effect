@@ -59,7 +59,7 @@ and are not re-litigated in align.
 
 - **Answer:** Umbrella exploration. Inherits the `beep.*` attribute contract
   from
-  [`goals/harness-otel-adoption/research/p0-attribute-contract.md`](../../goals/harness-otel-adoption/research/p0-attribute-contract.md)
+  [goals/harness-otel-adoption/research/p0-attribute-contract.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/harness-otel-adoption/research/p0-attribute-contract.md)
   as the join key; cites `goals/ai-metrics-stack`,
   `goals/ai-metrics-raw-retention`, `goals/turborepo-cache-trust-observability`,
   `explorations/context-rent-telemetry`, `explorations/ci-hang-observability`

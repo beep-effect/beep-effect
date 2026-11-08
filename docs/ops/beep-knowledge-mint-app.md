@@ -2,7 +2,7 @@
 
 The App that `.github/workflows/knowledge-baseline-mint.yml` acts as when it opens the
 baseline-only pull request from `automation/knowledge-baseline-mint` (design K32–K37 in
-`goals/knowledge-surface-automation/research/p4-knowledge-doctor-design.md`). The Lint
+[goals/knowledge-surface-automation/research/p4-knowledge-doctor-design.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/knowledge-surface-automation/research/p4-knowledge-doctor-design.md)). The Lint
 Policy seal guard admits that pull request only when its author is `<slug>[bot]` for
 `KNOWLEDGE_MINT_APP_SLUG`.
 

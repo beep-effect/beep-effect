@@ -1,8 +1,0 @@
-{
-  "rootSchema": "passed",
-  "invalid": [],
-  "rootUniqueIds": 5155,
-  "ledgerRows": 15066,
-  "ledgerUniqueIds": 15066,
-  "onExcessProperty": "error"
-}

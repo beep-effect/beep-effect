@@ -16,7 +16,7 @@ The generic runners `runGitOutput`, `runGitPathList`, `runGitLines`, `runGitRawO
 pre-runtime `Bun.spawnSync`) and X8-X10 (ai-metrics evidence probes) stand as censused. **Uncensused live callers found
 at retirement.** `Laws/EffectImports.listGitVisiblePaths` (`ls-files -z --cached --others --exclude-standard`) ->
 `Git.lsFiles` plus `Git.untrackedFiles` unioned, so the Laws command, its tests and
-`goals/effected-promotion/ops/glob-adoption-parity.ts` provide `Git`; `Goals/Doctor.makeGoalPacketWorkingTreeReader`
+[goals/effected-promotion/ops/glob-adoption-parity.ts](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/effected-promotion/ops/glob-adoption-parity.ts) provide `Git`; `Goals/Doctor.makeGoalPacketWorkingTreeReader`
 (`ls-files -z --others --ignored --exclude-standard -- goals`, landed by #2704 after the census) -> KEEP on
 `runRepoCommandCaptureRaw` because the kit has no `--ignored` member, and the `GoalsGitError` adapter it fed is
 deleted. **Frozen evidence.** The older differentials (`yeet-git-differential-w1b.ts`, `dirty-axis-differential-w2.ts`,

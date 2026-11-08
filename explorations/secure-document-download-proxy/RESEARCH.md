@@ -299,7 +299,7 @@ Already present to compose against (verified via `rg`/`ls`, 2026-06-29):
 secure-download proxy should be its own thin, provider-agnostic capability packet,
 not attached: (a) `goals/m365-driver/SPEC.md` is a *read-only Graph driver* that
 explicitly defers delivery ("No document-portal ingest wiring…that is the
-`m365-document-ingest` follow-on"); (b) `goals/file-processing-capability/SPEC.md`
+`m365-document-ingest` follow-on"); (b) [goals/file-processing-capability/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/file-processing-capability/SPEC.md)
 is an *extraction substrate* with zero download/serve scope; (c) burying the gate
 inside `@beep/uspto` would couple a cross-cutting delivery concern to one origin
 and violate the driver-boundary rule (a driver wraps an external API; it does not
