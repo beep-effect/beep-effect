@@ -940,3 +940,16 @@ original eyecite's `wrap_html_tags`; it is not a general Python regex runtime.
 Original wrapping observations derive from eyecite 2.7.6 `utils.py` under its
 existing BSD-2-Clause notice. Source exception diagnostics are retained only in
 public synthetic fixtures; target failures and warnings contain no source text.
+
+## CPython builtin string representation
+
+The private citation `PythonRepr.ts` adapts `unicode_repr` from CPython
+3.11.15 `Objects/unicodeobject.c` (SHA-256
+`5dde8eb1b99878b4ea113cd6b5f88bca3667b0e23dc8c5262a07f5ea14d0d82e`).
+It uses the existing Effect-native Unicode, resource-budget and captured-clock
+services. The complete PSF license is retained above. The maintainer producer
+`goals/citation-extraction-engine/ops/probe-python-repr.py` records immutable
+Unicode 14.0.0 printability facts and independent native string observations
+from pinned CPython 3.11.15. The packed printability asset includes source,
+producer, version and license provenance. Neither the engine nor its portable
+tests require a runtime Python installation.

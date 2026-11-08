@@ -99,6 +99,7 @@
       "!packages/law-practice/use-cases/test/fixtures/eyecite/python-hashes.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-unicode.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/assertion-cases.json",
+      "!packages/law-practice/use-cases/test/fixtures/eyecite/python-repr-cases.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/source-inventory.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/canonical-cases.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/regex-inventory.json",

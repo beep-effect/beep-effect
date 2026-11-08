@@ -1807,6 +1807,12 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert the new component and source-v2 field together while preserving original observations and all unfinished parity duties.
 
+### Add source-derived native builtin string repr using existing Effect services, 2026-11-08
+
+A private CPython 3.11.15 builtin string repr primitive now reuses existing Unicode, text-budget, timing and clock adapters. The producer scans all Unicode points and seals 700 printability intervals; 3,113 independent native cases and corruption, expansion, budget-capture and clock-capture controls pass. Package lint/types and Fallow new-only pass. Main 1f682563312 is integrated. Full debug/token/extractor integration and general object repr remain open; no canonical assertion is promoted.
+
+Reverse: Reopen the primitive proof if frozen printability, source quote/escape rules, native storage, reservation or captured timing behavior changes.
+
 ### Qualify all original annotation workflows and full-span equalities, 2026-11-08
 
 All eight Bun/Node groups pass for the remaining 22 original annotation workflows, completing the original test_annotate cohort together with the separately qualified quote-cleaner case. Add a direct parser-to-verified-component replay for all thirteen original full_span equalities; qualify its binding only on matching final runtime results. General annotation utilities, host/model/callback protocols and exhaustive goal acceptance remain open.

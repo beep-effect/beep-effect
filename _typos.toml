@@ -237,8 +237,8 @@ contibutors = "contibutors"
 
 # Native source words are hex data, not prose. Keep the rest of the fixture checked.
 [type.citation-metadata-strings]
-extend-glob = ["metadata-strings.json"]
-extend-ignore-re = ['"bytes": "[0-9a-f]*"']
+extend-glob = ["metadata-strings.json", "python-repr-cases.json"]
+extend-ignore-re = ['"(?:bytes|hex)":\s*"[0-9a-f]*"']
 
 # Authenticated upstream court IDs and every truncated prefix are source data.
 # Keep headers/provenance checked; do not correct or globally allow their words.
