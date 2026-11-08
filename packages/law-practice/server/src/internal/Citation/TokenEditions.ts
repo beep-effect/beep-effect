@@ -8,6 +8,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
@@ -63,6 +64,7 @@ const probeFailure = (error: CitationRuntimeDictionaryFailure) =>
 /** Capture a frozen source edition hash profile. Python None/date hashes are
  * runtime facts; this adapter does not invent a universal process hash or
  * normalize intermediate set order. It reuses the existing CPython set owner.
+ * Ordered occurrence equality reads those value classes without set normalization.
  * Dynamic hash/equality protocols and custom edition populations remain open.
  * @internal @category operations @since 0.0.0
  */
@@ -121,5 +123,16 @@ export const makeCitationTokenEditions = Effect.fn("Citation.makeTokenEditions")
     const citationResult2 = yield* read(first);
     return HashSet.has(nominativeNames, citationResult2.reporterShortName);
   }, timing.timed);
-  return { deduplicate, nominative };
+  const equalOccurrences = Effect.fn("Citation.equalTokenEditionOccurrences")(function* (
+    left: unknown,
+    right: unknown
+  ) {
+    const a = yield* decode(left);
+    const b = yield* decode(right);
+    const mismatch = yield* Effect.findFirst(A.zip(a, b), ([left, right]) =>
+      comparison.equal(left, right).pipe(Effect.mapBoth({ onSuccess: (equal) => !equal, onFailure: failure }))
+    );
+    return O.isNone(mismatch) && a.length === b.length;
+  }, timing.timed);
+  return { deduplicate, nominative, equalOccurrences };
 });

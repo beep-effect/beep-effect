@@ -965,3 +965,14 @@ field ordering and independent output observations, preserving native Unicode
 words, source digests and license provenance. Runtime composition reuses existing
 Effect Unicode, allocation, captured-clock and string-representation services.
 Neither portable tests nor production require Python.
+
+## eyecite builtin token equality
+
+The native token owner's builtin value equality follows the dataclass comparison
+fields declared by Free Law Project eyecite 2.7.6 models.py at
+04d82c032ad5fd0f9ab72a61c87110c46ee8f52e, under the existing BSD-2-Clause notice.
+The independent producer `goals/citation-extraction-engine/ops/probe-token-equality.py`
+records actual source comparisons and merge histories with source, license and
+producer digests. Ordered edition comparisons reuse the previously captured frozen
+edition value classes and existing Effect collection operations. Dynamic subclass,
+external mutation, general UserString and process-hash protocols remain separate.

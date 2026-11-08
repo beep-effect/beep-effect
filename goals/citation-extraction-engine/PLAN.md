@@ -1831,6 +1831,12 @@ Two regressions reproduce incorrect extraction labels at the generic timing and 
 
 Reverse: Supersede if typed safety attribution or installed operation ownership changes.
 
+### Port builtin retained token value equality with existing Effect owners, 2026-11-08
+
+Add value equality to the existing token owner, distinct from group-based merge compatibility. Reuse schema-native storage equivalence, captured edition value classes, Effect findFirst, existing serialization and timing. Independent 1454 comparisons and three actual merge histories pass with constructor/merge/edition controls. No canonical event or complete retained capability is promoted; general hashing/UserString/subclass/mutation behavior remains open. See history/evidence/2026-11-08-builtin-token-equality.md.
+
+Reverse: Supersede if source dataclass fields or frozen edition equality contracts change.
+
 ### Preserve installed court operation in nested safety failures, 2026-11-08
 
 A regression reproduced hardcoded extraction labels in court lookup. Reuse existing Effect timing.failSafety and catchTag, pass the captured operation to Unicode and preserve existing deadlines. Eight tests pass including all 17156 independent lookup observations and four-stage Clock/context replacement controls. No event or universal law is promoted; exact-head hosted workflow acceptance remains pending. See history/evidence/2026-11-08-court-operation-capture.md.
