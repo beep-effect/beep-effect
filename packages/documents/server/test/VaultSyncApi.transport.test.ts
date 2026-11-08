@@ -46,6 +46,8 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
@@ -53,6 +55,7 @@ import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
+import * as Tracer from "effect/Tracer";
 import * as TestClock from "effect/testing/TestClock";
 
 const TOKEN = "launch-token-for-tests";
@@ -167,7 +170,11 @@ const register = Effect.gen(function* () {
   return { stream: own1.stream, version: own1.version };
 });
 
-const webApp = Effect.fn("webApp")(function* (kind: V.TransportKind, pause?: Effect.Effect<void>) {
+const webApp = Effect.fn("webApp")(function* (
+  kind: V.TransportKind,
+  pause?: Effect.Effect<void>,
+  tracer?: Tracer.Tracer
+) {
   const base = hosted(kind, pause);
   const context = yield* Layer.build(base);
   yield* register.pipe(Effect.provideContext(context));
@@ -178,7 +185,8 @@ const webApp = Effect.fn("webApp")(function* (kind: V.TransportKind, pause?: Eff
     Layer.provide(Layer.succeedContext(context)),
     Layer.provide(BunHttpPlatform.layer),
     Layer.provide(Etag.layer),
-    Layer.provide(cliPlatform)
+    Layer.provide(cliPlatform),
+    Layer.provide(P.isUndefined(tracer) ? Layer.empty : Layer.succeed(Tracer.Tracer, tracer))
   );
   const app = yield* Effect.acquireRelease(
     Effect.sync(() => HttpRouter.toWebHandler(routes, { disableLogger: true })),
@@ -485,6 +493,135 @@ describe("revocation barrier over real transports", () => {
         arguments: { target: own, input: { requestId: "x" } },
       }).pipe(Effect.exit);
       expect(commandTool._tag === "Failure" || commandTool.value.isError === true).toBe(true);
+    }).pipe(TestClock.withLive)
+  );
+});
+
+const encodeJsonBody = S.encodeEffect(S.fromJsonString(S.Unknown));
+
+// Records every span a runtime starts, in start order.
+const recordingTracer = () => {
+  const spans: Array<Tracer.NativeSpan> = [];
+  const tracer = Tracer.make({
+    span: (options) => {
+      const span = new Tracer.NativeSpan(options);
+      spans.push(span);
+      return span;
+    },
+  });
+  return { spans, tracer };
+};
+
+// Span ids from a span up to its root, following parents by id (kernel parents are external spans).
+const ancestorIds = (spans: ReadonlyArray<Tracer.NativeSpan>, span: Tracer.NativeSpan): ReadonlyArray<string> => {
+  const byId = R.fromEntries(A.map(spans, (each) => [each.spanId, each] as const));
+  const up = (current: Tracer.NativeSpan): ReadonlyArray<string> =>
+    O.match(
+      O.flatMap(current.parent, (parent) => R.get(byId, parent.spanId)),
+      { onNone: () => [], onSome: (parent) => [parent.spanId, ...up(parent)] }
+    );
+  return up(span);
+};
+
+describe("vault-sync boundary spans (D17)", () => {
+  it.effect("an HTTP command nests the kernel decide under VaultSyncApi.command with the request correlation id", () =>
+    Effect.gen(function* () {
+      const { spans, tracer } = recordingTracer();
+      const context = yield* Layer.build(hosted("http"));
+      yield* register.pipe(Effect.provideContext(context));
+      yield* grant("member").pipe(Effect.provideContext(context));
+      const routes = HttpApiBuilder.layer(VaultSyncHttp.api).pipe(
+        Layer.provide(VaultSyncHttp.layer),
+        Layer.provide(Layer.succeedContext(context)),
+        Layer.provide(BunHttpPlatform.layer),
+        Layer.provide(Etag.layer),
+        Layer.provide(cliPlatform),
+        Layer.provide(Layer.succeed(Tracer.Tracer, tracer))
+      );
+      const app = yield* Effect.acquireRelease(
+        Effect.sync(() => HttpRouter.toWebHandler(routes, { disableLogger: true })),
+        (app) => Effect.promise(() => app.dispose())
+      );
+      const body = yield* encodeJsonBody({ target: own, input: {} });
+      const response = yield* Effect.promise(() =>
+        app.handler(
+          new Request("http://test/PauseDestination", {
+            method: "POST",
+            headers: { ...bearer, "content-type": "application/json", "x-correlation-id": "corr-trace-1" },
+            body,
+          })
+        )
+      );
+      expect(response.status).toBe(200);
+      const command = yield* Effect.fromOption(A.findFirst(spans, (span) => span.name === "VaultSyncApi.command"));
+      expect(R.fromEntries(A.fromIterable(command.attributes))).toEqual({
+        "documents.vault_sync.command": "PauseDestination",
+        "documents.vault_sync.destination_id": own,
+        "documents.vault_sync.transport": "http",
+        "documents.vault_sync.request_correlation_id": "corr-trace-1",
+        "documents.vault_sync.outcome": "accepted",
+      });
+      const decide = yield* Effect.fromOption(
+        A.findFirst(spans, (span) => Str.startsWith("Domain.decide SyncDestination.PauseDestination")(span.name))
+      );
+      expect(decide.traceId).toBe(command.traceId);
+      expect(ancestorIds(spans, decide)).toContain(command.spanId);
+      // The Session runs inside the boundary span, so its spans are its descendants too.
+      const resolve = yield* Effect.fromOption(A.findFirst(spans, (span) => span.name === "VaultSyncSession.resolve"));
+      expect(ancestorIds(spans, resolve)).toContain(command.spanId);
+      expect(resolve.attributes.get("documents.vault_sync.transport")).toBe("http");
+    }).pipe(TestClock.withLive)
+  );
+
+  it.effect("a remote CLI command over the gated RPC endpoint opens exactly one VaultSyncApi.command span", () =>
+    Effect.gen(function* () {
+      const { spans, tracer } = recordingTracer();
+      const { context, fetch } = yield* webApp("cli", undefined, tracer);
+      yield* grant("member").pipe(Effect.provideContext(context));
+      const http = yield* Layer.build(
+        FetchHttpClient.layer.pipe(Layer.provide(Layer.succeed(FetchHttpClient.Fetch, fetch)))
+      );
+      // The generated remote CLI's protocol: the RPC client over the sidecar's gated endpoint.
+      const client = yield* VaultSyncApi.clientHttp(`http://test${VAULT_SYNC_RPC_PATH}`).pipe(
+        Effect.provideContext(http)
+      );
+      yield* client.PauseDestination(own, {}, { headers: { ...bearer, "x-correlation-id": "corr-remote-1" } });
+      const commands = A.filter(spans, (span) => span.name === "VaultSyncApi.command");
+      expect(A.map(commands, (span) => R.fromEntries(A.fromIterable(span.attributes)))).toEqual([
+        {
+          "documents.vault_sync.command": "PauseDestination",
+          "documents.vault_sync.destination_id": own,
+          "documents.vault_sync.transport": "cli",
+          "documents.vault_sync.request_correlation_id": "corr-remote-1",
+          "documents.vault_sync.outcome": "accepted",
+        },
+      ]);
+      const command = yield* Effect.fromOption(A.head(commands));
+      const decide = yield* Effect.fromOption(
+        A.findFirst(spans, (span) => Str.startsWith("Domain.decide SyncDestination.PauseDestination")(span.name))
+      );
+      expect(ancestorIds(spans, decide)).toContain(command.spanId);
+    }).pipe(TestClock.withLive)
+  );
+
+  it.effect("a denied View read records the read shape and a ScopeDenied outcome, never a foreign key", () =>
+    Effect.gen(function* () {
+      const { spans, tracer } = recordingTracer();
+      const context = yield* Layer.build(hosted("http"));
+      yield* register.pipe(Effect.provideContext(context));
+      const client = yield* VaultSyncApi.clientInProcess.pipe(Effect.provideContext(context));
+      const denied = yield* Effect.flip(
+        client.DestinationList.get(V.WorkspaceKey.make("2:2"), { headers: bearer }).pipe(Effect.withTracer(tracer))
+      );
+      expect(denied._tag).toBe("ScopeDenied");
+      const read = yield* Effect.fromOption(A.findFirst(spans, (span) => span.name === "VaultSyncApi.read"));
+      expect(R.fromEntries(A.fromIterable(read.attributes))).toEqual({
+        "documents.vault_sync.view": "DestinationList",
+        "documents.vault_sync.read_mode": "get",
+        "documents.vault_sync.transport": "http",
+        "documents.vault_sync.request_correlation_id": expect.any(String),
+        "documents.vault_sync.outcome": "ScopeDenied",
+      });
     }).pipe(TestClock.withLive)
   );
 });

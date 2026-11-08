@@ -1,21 +1,18 @@
 /** Original resolution-test parser calls and assertions from eyecite, BSD-2-Clause.
  * @internal @packageDocumentation @since 0.0.0
  */
-import { CitationOracleOperations } from "@beep/law-practice-use-cases/test";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Tuple from "effect/Tuple";
+import { readCitationCanonicalCaptures } from "./CitationCanonicalCaptures.fixtures.ts";
 import { makeCitationCanonicalExtractionReplay } from "./CitationCanonicalExtractionRuntime.fixtures.ts";
-import { readCitationOracleFixture } from "./CitationRegexWorker.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
 const site = "tests/test_ResolveTest.py:130:20:get_citations";
 const assertionSite = "tests/test_ResolveTest.py:131:12:caseDeclaration";
-const Capture = S.fromJsonString(S.Struct({ events: S.Array(S.Struct({ id: S.String, payload: S.String })) }));
 const One = S.Struct({ kind: S.tag("value"), value: S.tag(1) });
 const Criterion = S.fromJsonString(
   S.Struct({
@@ -27,24 +24,10 @@ const Criterion = S.fromJsonString(
     passed: S.tag(true),
   })
 );
-const Operations = S.fromJsonString(CitationOracleOperations);
 const JsonModels = S.Array(S.JsonObject);
 
-const readCaptures = Effect.fn("CanonicalParserTest.capture")(function* () {
-  const operations = yield* readCitationOracleFixture(
-    "operation-cases",
-    "ae441000ddc90537864e3fdd4a9dfc4aa81af37a65818b48ce9bf37d95d1eeb1"
-  ).pipe(Effect.flatMap(S.decodeEffect(Operations)));
-  const capture = yield* readCitationOracleFixture(
-    "assertion-cases",
-    "c7ea12ec5ba0d66257affc4c6e54e8b2fa2ffdd0d79f41c1b701000e0edaf33f"
-  ).pipe(Effect.flatMap(S.decodeEffect(Capture)));
-  const assertions = HashMap.fromIterable(A.map(capture.events, (row) => Tuple.make(row.id, row)));
-  return { operations, assertions };
-});
-
 const readRows = Effect.fn("CanonicalParserTest.read")(function* () {
-  const { operations, assertions } = yield* readCaptures();
+  const { operations, assertions } = yield* readCitationCanonicalCaptures();
   const selected = A.filter(operations.cases, (row) => row.operation === "get_citations" && row.sourceSiteId === site);
   expect(selected).toHaveLength(77);
   return yield* Effect.forEach(
@@ -75,7 +58,7 @@ const replayRows = Effect.fn("CanonicalParserTest.rows")(function* (
 ) {
   const replay = yield* makeCitationCanonicalExtractionReplay(kind);
   for (const row of rows) {
-    const result = yield* replay.extract(row.body.input.plain_text, "plain", row.models, row.id);
+    const result = yield* replay.extract(row.body.input.plain_text, "plain", row.models, row.id, null);
     expect(result.source.source.sourceText, row.id).toBe(row.body.stages.document.plainText);
   }
   yield* replay.assertRetired;
@@ -113,7 +96,7 @@ const CourtCriterion = S.fromJsonString(
 );
 const CourtModel = S.Struct({ fields: S.Struct({ metadata: S.Struct({ fields: S.Struct({ court: S.String }) }) }) });
 const readCourtRows = Effect.fn("CanonicalParserTest.courts")(function* () {
-  const { operations, assertions } = yield* readCaptures();
+  const { operations, assertions } = yield* readCitationCanonicalCaptures();
   const selected = A.filter(
     operations.cases,
     (row) => row.operation === "get_citations" && row.sourceSiteId === courtSite

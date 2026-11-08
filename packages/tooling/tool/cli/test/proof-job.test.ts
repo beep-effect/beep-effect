@@ -1526,7 +1526,14 @@ const commandCheckoutLayer = Layer.effectContext(
   Layer.provideMerge(
     Layer.merge(
       Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer),
-      Layer.succeed(MemoryStats, MemoryStats.of({ availableGib: Effect.succeed(50), totalGib: Effect.succeed(128) }))
+      Layer.succeed(
+        MemoryStats,
+        MemoryStats.of({
+          availableGib: Effect.succeed(50),
+          totalGib: Effect.succeed(128),
+          ceilingGib: Effect.succeed(128),
+        })
+      )
     )
   )
 );

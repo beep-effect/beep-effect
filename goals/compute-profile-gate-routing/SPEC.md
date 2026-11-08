@@ -119,6 +119,42 @@ lefthook skip: - run: on both catalog commands (LEFTHOOK_EXCLUDE interim in the 
 
 Reverse: Remove the lefthook skip conditions and the check.yml regeneration job
 
+### availableGib under a cgroup ceiling is min(MemAvailable, ceiling minus own RSS), 2026-11-08
+
+Bun and Node expose no cgroup memory.current, and the packet forbids parsing /sys/fs/cgroup by hand. Under a ceiling tighter than MemTotal, MemoryStats.availableGib is min(MemAvailable, ceilingGib - process RSS). Other members of the slice are invisible, so the value is an upper bound; documented on MemoryStatsShape. Uncapped processes are unchanged.
+
+Reverse: Drop the clamp so availableGib is MemAvailable again
+
+### computeProfile stays out of every proof digest and reuse key, 2026-11-08
+
+ProofInputDigest, ProofLedgerShadowRow and ProofShadowAttemptFacts record computeProfile as evidence beside envProfile, but proofInputKey still hashes only laneId, commandDigest, envProfile, inputDigest and epochDigest, and ProofLedger key equivalence is unchanged. Existing digests and reuse decisions are untouched; documented on ProofInputKeyComponents.
+
+Reverse: Add computeProfile to proofInputKey components and accept that every existing proof key changes
+
+### P0 records forceLocal on requests, tickets and leases; the receipt row lands in P1, 2026-11-08
+
+AdmissionRequest gains gateRoute and forceLocal (defaults none and false). Tickets and leases carry forceLocal (decoding default false) and computeProfile. A worker run bypasses the ticket queue, so its forceLocal evidence in P0 is the scheduler log line 'compute-profile=worker force-local=true'; the yeet final-check receipt that names forced and auto-skipped gates is P1 work. No caller sets gateRoute yet, so P0 changes no live behavior beyond the logged worker bypass.
+
+Reverse: Add a journal event for worker bypass runs that records forceLocal
+
+### The probe service is a Context.Reference named ComputeProfileProbe, 2026-11-08
+
+ComputeProfile is the LiteralKit; the service is ComputeProfileProbe, a Context.Reference whose default reads the live process (process.constrainedMemory, os.totalmem). A Reference keeps withQualityAdmission and every Yeet caller compiling with no new layer; tests provide makeComputeProfileProbe over an injected ComputeMemorySource instead of patching process. The shape is resolve (default 20 GiB envelope) plus resolveFor(envelopeGib) so a custom AdmissionConfig envelope is honored.
+
+Reverse: Turn ComputeProfileProbe into a required Context.Service and provide its live layer at every command and scheduler entry
+
+### The profile probe subcommand is beep compute profile, 2026-11-08
+
+New command group compute with subcommand profile: prints the profile, --is <profile> exits 0 or 1 silently through the CliReportedExit path, --json prints the encoded ComputeProfileResolution (Options as null). An invalid BEEP_COMPUTE_PROFILE exits 2 with ComputeProfileError. No repo scan or git; measured about 0.5 s wall.
+
+Reverse: Rename the compute command group and update the dispatch manifest and Root registration
+
+### The scheduler derives its compute profile from the MemoryStats ceiling, 2026-11-08
+
+withQualityAdmission resolves the profile with resolveComputeProfileForCeiling(min(MemTotal, ceilingGib), envelope), the same override rule as the probe, instead of calling the live probe. The refusal and the capacity view therefore never disagree, and scheduler tests stay deterministic on 16 GiB hosted runners where the live probe would say worker. Requests whose envProfile is hosted are never refused (D5).
+
+Reverse: Resolve the profile in withQualityAdmission through ComputeProfileProbe instead of resolveComputeProfileForCeiling
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

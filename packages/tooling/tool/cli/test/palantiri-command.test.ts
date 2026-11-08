@@ -239,7 +239,11 @@ describe("beep palantiri parcel account-headroom", () => {
           ),
           Effect.provideService(
             MemoryStats,
-            MemoryStats.of({ availableGib: Effect.succeed(40), totalGib: Effect.succeed(64) })
+            MemoryStats.of({
+              availableGib: Effect.succeed(40),
+              totalGib: Effect.succeed(64),
+              ceilingGib: Effect.succeed(64),
+            })
           ),
           withEnv({
             BEEP_ACCOUNTS_AUTH_DIR: path.join(root, "auth"),

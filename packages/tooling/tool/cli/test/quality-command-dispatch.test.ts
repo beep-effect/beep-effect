@@ -26,7 +26,7 @@ import type { ScriptResult } from "@beep/commands/ScriptedSpawner";
 
 const FixedMemoryStatsLayer = Layer.succeed(
   MemoryStats,
-  MemoryStats.of({ availableGib: Effect.succeed(64), totalGib: Effect.succeed(128) })
+  MemoryStats.of({ availableGib: Effect.succeed(64), totalGib: Effect.succeed(128), ceilingGib: Effect.succeed(128) })
 );
 const CommandTestLayer = Layer.mergeAll(
   NodeServices.layer,
