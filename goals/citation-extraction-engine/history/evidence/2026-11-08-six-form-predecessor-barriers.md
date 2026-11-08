@@ -63,3 +63,15 @@ review claim covers only those root-owned integration modules.
 The proof is the finite reviewed profile plus these independent regressions and
 resource controls. It is not a general recognizer-accuracy or deployment claim.
 Exact-head hosted acceptance and verified retained merge remain pending.
+
+## Schema inventory classification
+
+Canonical regeneration identified four fixed-regression test files as lacking
+schema-generated property tests: driver recognition, actual recognizer worker,
+strict local linking and extractor report. The schema policy explicitly permits
+inventory exceptions for intentional golden/regression coverage. Each entry
+records why generated values cannot replace its independent labels, physical
+process observations, genuine source capabilities or fixed policy/privacy
+controls. These entries classify existing proof; they do not claim generic
+codec property coverage or relax any runtime assertion. Unrelated generated
+document-sync advisories are excluded from this change.
