@@ -1,6 +1,7 @@
 import { CiCommandError, decideHeavyAdmission, HeavyAdmissionEvent } from "@beep/repo-cli/commands/Ci";
 import { it } from "@beep/test-runner";
 import { assert } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
@@ -16,6 +17,7 @@ const aggregateCases = A.flatMap(["success", "failure", "skipped", "cancelled"],
 );
 const passingStates = ["success:true:skipped", "success:false:success"];
 const decodeWorkflowSteps = S.decodeUnknownEffect(S.Array(S.Unknown));
+const isWorkflowText = S.is(S.String);
 
 it.effect(
   "executes the real aggregate scripts across classification and shard outcomes",
@@ -29,7 +31,8 @@ it.effect(
       { job: "lint", shard: "lint-shard" },
       { job: "test-unit", shard: "test-unit-shard" },
     ]) {
-      const script = yield* S.decodeUnknownEffect(S.String)(yamlAt(workflow, ["jobs", job, "steps", 0, "run"]));
+      const script = yamlAt(workflow, ["jobs", job, "steps", 0, "run"]);
+      assertTrue(isWorkflowText(script));
       for (const { classification, docs, result } of aggregateCases) {
         const command = pipe(
           script,
@@ -82,9 +85,8 @@ it.effect(
       const workflow = parseWorkflowYaml(source);
       assert.strictEqual(yamlAt(workflow, ["env", "BEEP_CI_PR_BASE_SHA"]), "${{ github.event.pull_request.base.sha }}");
       assert.strictEqual(yamlAt(workflow, ["env", "BEEP_CI_PR_HEAD_SHA"]), "${{ github.event.pull_request.head.sha }}");
-      const shortcut = yield* S.decodeUnknownEffect(S.String)(
-        yamlAt(workflow, ["jobs", "admission", "steps", caller.docsIndex, "if"])
-      );
+      const shortcut = yamlAt(workflow, ["jobs", "admission", "steps", caller.docsIndex, "if"]);
+      assertTrue(isWorkflowText(shortcut));
       assert.strictEqual(
         shortcut,
         `${caller.profile} == 'true' && github.event.pull_request.head.repo.full_name == github.repository`

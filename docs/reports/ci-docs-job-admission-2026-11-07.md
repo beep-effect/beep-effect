@@ -72,7 +72,7 @@ unmeasured until that acceptance run completes.
 ## Authoring preflight
 
 Package `--quick` runs Biome and the compiler. It does not replace root Oxlint,
-Effect Vitest, or Fallow checks on a changed test. In this change, direct checks
+Effect Vitest, schema-first, or Fallow checks on a changed test. In this change, direct checks
 caught test complexity, an unnecessary platform layer, and an inline schema
 compilation before publication. Keep those checks in the authoring loop so a
 small test issue does not require another full publication inventory run.
@@ -82,6 +82,7 @@ The direct commands verified here were:
 ```sh
 bun run beep quality package-verify @beep/repo-cli --quick
 bun run lint:oxlint
+bun run beep lint schema-first
 bun run beep ci workflow-lint
 bun run beep quality fallow audit --base origin/main --check --out .beep/fallow/authoring.json --quiet
 bunx --bun vitest run packages/tooling/tool/cli/test/ci-docs-job-admission.test.ts
@@ -92,3 +93,7 @@ The focused Effect Vitest check invoked the public
 project and `NodeCrypto.layer`; it returned no findings. The full
 `bun run beep lint effect-vitest` scan remains part of canonical publication.
 Do not update inventory baselines to clear an introduced authoring issue.
+
+Workflow scalar metadata is checked with named schema-derived guards and test
+assertions. These tests exercise workflow admission and real shell execution;
+they do not introduce a domain codec requiring artificial property coverage.
