@@ -4,13 +4,13 @@
     "id": "t3code-spill-routing",
     "packetId": "goal-packet/v1:65e98d16396d2b644cda38c75a21ed53c7aaea96004b9d10490dab62e3eec1ba",
     "title": "T3 Code Spill Routing",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-01",
-    "updated": "2026-11-01",
+    "updated": "2026-11-08",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/t3code-spill-routing",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Add an advisory rule to `orchestrate`: read DankStation host pressure before substantive work and, above baseline-derived thresholds, launch on the next host in spill order through T3.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -23,7 +23,14 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/goals_t3code-goals-closeout-e4eb8a5e9991/verdict.json",
+        "gating": true
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -65,12 +72,12 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -84,5 +91,9 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2985
+  }
 }

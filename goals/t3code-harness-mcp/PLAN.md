@@ -11,8 +11,8 @@ Status: `complete`
 | P0 Research | complete | Verify each harness's `mcp add`/login path against the current CLI `--help`; run the double-load check inside T3-launched Claude and Codex sessions. | Required facts and blockers are recorded. |
 | P1 Implement | complete | Register `t3-hub` in all five harnesses on DankStation, then on each live host; add the renewal reminder timer; write the recipe. | Acceptance criteria are met. |
 | P2 Verify | complete | One `t3_thread_read` per harness per host; a test fire of the reminder; receipts in `history/`. | Verification is green or blockers are documented. |
-| P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P3 Yeet: PR to mergeable | complete | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P4 Close | complete | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## Closeout Checklist
 

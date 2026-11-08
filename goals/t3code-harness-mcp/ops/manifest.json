@@ -4,13 +4,13 @@
     "id": "t3code-harness-mcp",
     "packetId": "goal-packet/v1:21ed511c85502baa0f65d12ba1c90f32ab306b0bdc101d6ffa4f128ce8f39a46",
     "title": "T3 Code Harness MCP",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-01",
-    "updated": "2026-11-01",
+    "updated": "2026-11-08",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/t3code-harness-mcp",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Register `t3-hub` (the DankStation T3 environment, Full-access OAuth) in every harness that runs outside T3 on every live host, prove T3-launched sessions do not double-load it, and remind before the 30-day grants and links expire.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -23,7 +23,14 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/goals_t3code-goals-closeout-e4eb8a5e9991/verdict.json",
+        "gating": true
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -65,12 +72,12 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -84,5 +91,9 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2985
+  }
 }
