@@ -11,7 +11,7 @@
   "packetPath": "goals/citation-extraction-engine",
   "lifecycle": "active",
   "mission": "Deliver bounded six-form citation extraction and document-local linking on supplied plain text, with schema-first semantic values, exact verified source anchors, explicit ambiguity and Effect-native resource boundaries.",
-  "statusNote": "PR #2966 is the prospective final six-form delivery. Hosted unit shards pass. The first coverage repair restored file-level gaps; fresh comparison then exposed independent server aggregate floors. The current repair consolidates the bounded writer, uses supplied Effect String.search/fromResult and test I/O/transport services, and adds startup, encoded-output and acquisition-cancellation controls. Seven focused suites pass 61 tests, including actual Bun/Node frozen-profile replay. The unchanged aggregate floors clear in diagnostic projection; exact final-head hosted proof remains pending. New file identities will use reviewed complete per-file counters and the canonical additions-only writer, preserving every existing package/file floor. Merge and retained lifecycle adoption remain pending; historical exhaustive obligations are superseded, not passed.",
+  "statusNote": "PR #2966 is the prospective final six-form delivery. Hosted unit shards pass. The first coverage repair restored file-level gaps; fresh comparison then exposed independent server aggregate floors. The current repair consolidates the bounded writer, uses supplied Effect String.search/fromResult and test I/O/transport services, and adds startup, encoded-output and acquisition-cancellation controls. Seven focused suites pass 61 tests, including actual Bun/Node frozen-profile replay. The unchanged aggregate floors clear in diagnostic projection; exact final-head hosted proof remains pending. Four reviewed new file identities were recorded from frozen-source complete per-file counters through the canonical additions-only writer; every existing package/file floor and uncovered count is unchanged. Merge and retained lifecycle adoption remain pending; historical exhaustive obligations are superseded, not passed.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -65,7 +65,8 @@
     "goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-public-layer.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-predecessor-barriers.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-coverage-repair.md",
-    "goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-aggregate-proof.md"
+    "goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-aggregate-proof.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-new-file-identities.md"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",
