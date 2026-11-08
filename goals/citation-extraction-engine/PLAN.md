@@ -1813,6 +1813,12 @@ All eight Bun/Node groups pass for the remaining 22 original annotation workflow
 
 Reverse: Reopen any exact binding on contrary source or runtime evidence; preserve every unfinished capability, fidelity law and accounting row.
 
+### Qualify original full-opinion long-diff workflow, 2026-11-08
+
+Both native configurations pass the full original standalone-clean/public-annotate workflow and independent complete output plus original membership predicate. Register actual cleaned native text as a genuine test-host source without claiming automatic derived-source proof from clean. This qualifies the final original test_AnnotateTest.py assertion; all 39 assertions in that cohort now have complete-case proof. Whole-capability and full-goal acceptance remain open.
+
+Reverse: Reopen exact bindings on contrary source or runtime evidence; preserve generic protocols, fidelity, safety and remaining exhaustive accounting.
+
 ### Qualify original style-tag predicates and integrate main replay repairs, 2026-11-08
 
 Replay the original four style prefix truth predicates and two counterexample equalities through the existing captured style balancer and native Unicode budget. Recompute original caller coordinates by literal search. Integrate main #2915 unit/integration repairs and test-policy change; refresh canonical fixture proof only after affected entry/range tests pass. Pure utility proof does not imply XML or worker-runtime qualification.

@@ -1430,6 +1430,73 @@
           }
         ]
       }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_long_diff::tests/test_AnnotateTest.py:305:8:caseDeclaration::1",
+          "observationSha256": "c66ccd19958cc38ab940e17c5cb1f6a28a707786f77dcc70cc41e84c54693856"
+        }
+      ],
+      "rationale": "Original full-opinion membership assertion recomputed through public standalone cleaning and annotation on Bun and Node. The actual cleaned native output is registered by the genuine test host; complete independent annotation output and original newline-spanning membership predicate both match. General derived-source, host/callback and safety/fidelity guarantees remain separate.",
+      "proof": {
+        "command": "bunx --bun vitest run test/CitationCanonicalLongDiff.test.ts --reporter=json --outputFile=../../../.beep/canonical-long-diff-final-results.json",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "annotate",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-original-long-diff-workflow.md",
+        "evidenceSha256": "867d7264a5a6bbedb437c973e8b89714c9495fd420bf40b3067c58fdd6d3b4b8",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalLongDiff.test.ts",
+            "name": "recomputes original full-opinion cleaning and annotation on",
+            "sha256": "8a77c8deb47a92e81bc65c29f21287a126c82940c8a875f7db28f56b32e23dbb"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalLongDiff.fixtures.ts",
+            "sha256": "0defe97528b736e131b74c6e49e1f0d8db11565767b3cc9257b92b67402f46bc"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalCaptures.fixtures.ts",
+            "sha256": "1ac4ab7ebd6c3751b5706d93b562c6625d6c5d3062ddbe4284a6ef274a89c4a8"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationDefaultConfiguration.fixtures.ts",
+            "sha256": "bd65007a9fdcfcf5daf71a33dfd31ec749bea2bcd852f39c2c9ce2ceb89adbff"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
+            "sha256": "c0e994ff1a280d229c91959e13b1e5adf17e283fc64036161927dc6af76b37ca"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
+            "sha256": "09b730c8f3bae99438224dafbe781988d76fa0013fd50b5c3ca53e4b45680fa8"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/CleanerOperation.ts",
+            "sha256": "c6d24e76612ed15065126f4b446a482bbf66cc30f075e4261905b6980bcafc88"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/CleanerPipeline.ts",
+            "sha256": "b6d7d153f95882ac947e4194f72634d14fc4c4a2faf4b59e121a60a001b3df33"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/AnnotationPreparation.ts",
+            "sha256": "6548cdfcf84ddf0457b3e01b7866cce79b47fa9e9bf73af13d9aa643349733b7"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/DiffKernel.ts",
+            "sha256": "2276be58e9dcfd5919c9746733d5ea763c1d7c5471fc8e370e563bcdf52a8997"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/NativeWasm.ts",
+            "sha256": "a308f2d5dab1371efcb01b212560dedd23159d2e6b5980ac62ce77bdd507c76d"
+          }
+        ]
+      }
     }
   ]
 }
