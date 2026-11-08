@@ -998,6 +998,7 @@
         "@beep/file-processing": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/mcp-kit": "workspace:^",
+        "@beep/observability": "workspace:^",
         "@beep/postgres": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/shared-domain": "workspace:^",
@@ -1008,6 +1009,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/memfs": "workspace:^",
         "@beep/pglite": "workspace:^",
         "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",

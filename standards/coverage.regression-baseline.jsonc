@@ -7,9 +7,9 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-11-07T21:04:03.757Z",
-  "git_sha": "5faa14d215d5fb0cb38af4075ec252b132b538c3",
-  "command": "bun run coverage -- --filter=@beep/professional-desktop --write-baseline --add-missing-files-only",
+  "generated_at": "2026-11-08T00:38:06.269Z",
+  "git_sha": "ff7568b1c236bea2bea58486879e71dc76ec6c0c",
+  "command": "bun run coverage -- --filter=@beep/documents-server --write-baseline --add-missing-files-only",
   "epsilon": 0.001,
   "minimum": {
     "lines": 70,
@@ -7599,6 +7599,18 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/documents/server/src/aggregates/Sync/VaultSync.instruments.ts": {
+          "lines": 97.29,
+          "statements": 97.5,
+          "branches": 100,
+          "functions": 93.33,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
           }
         }
       }

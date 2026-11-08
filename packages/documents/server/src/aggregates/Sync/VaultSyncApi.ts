@@ -15,10 +15,52 @@ import * as Headers from "effect/http/Headers";
 import * as HttpRouter from "effect/http/HttpRouter";
 import * as OpenApi from "effect/http-api/OpenApi";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as RpcSerialization from "effect/rpc/RpcSerialization";
 import * as RpcServer from "effect/rpc/RpcServer";
+import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
+import * as Str from "effect/String";
+import {
+  annotateVaultSyncOutcome,
+  VaultSyncApiCommand,
+  VaultSyncApiView,
+  VaultSyncAttribute,
+  VaultSyncReadMode,
+} from "./VaultSync.instruments.ts";
+
+// A call's destination, recorded only when its `target` or `key` is an opaque DestinationId:
+// a ReservationKey, ConflictId or WorkspaceKey never reaches the span.
+const destinationField = (field: "target" | "key") => (payload: unknown) =>
+  P.hasProperty(payload, field) ? O.liftPredicate(payload[field], S.is(V.DestinationId)) : O.none<V.DestinationId>();
+const destinationOf = (payload: unknown) =>
+  O.orElse(destinationField("target")(payload), () => destinationField("key")(payload));
+
+// The boundary span of one Api call: commands are `<Command>`, reads are `<View>.<mode>`. Only
+// known literals become attributes; the Session adds the transport and correlation id once resolved.
+const traceApiCall = <A, E, R>(self: Effect.Effect<A, E, R>, tag: string, payload: unknown) => {
+  const destination = R.getSomes({ [VaultSyncAttribute.destinationId]: destinationOf(payload) });
+  const [view, mode] = Str.split(".")(tag);
+  const traced = annotateVaultSyncOutcome(self);
+  return P.isUndefined(mode)
+    ? Effect.withSpan(traced, "VaultSyncApi.command", {
+        attributes: {
+          ...destination,
+          ...R.getSomes({ [VaultSyncAttribute.command]: O.liftPredicate(tag, S.is(VaultSyncApiCommand)) }),
+        },
+      })
+    : Effect.withSpan(traced, "VaultSyncApi.read", {
+        attributes: {
+          ...destination,
+          ...R.getSomes({
+            [VaultSyncAttribute.view]: O.liftPredicate(view, S.is(VaultSyncApiView)),
+            [VaultSyncAttribute.readMode]: O.liftPredicate(mode, S.is(VaultSyncReadMode)),
+          }),
+        },
+      });
+};
 
 /**
  * Resolve verified identity and preflight live scope before any RPC handler runs.
@@ -36,16 +78,23 @@ export const VaultSyncSessionLive = Layer.effect(
   Effect.gen(function* () {
     const resolver = yield* V.SessionResolver;
     return V.Session.of(
-      Effect.fnUntraced(function* (effect, { rpc, payload, headers }) {
-        const request = yield* resolver.resolve(headers);
-        return yield* V.authorizeVaultSync(rpc._tag, payload).pipe(
-          Effect.andThen(effect),
-          Effect.raceFirst(resolver.revoked(request)),
-          Effect.provideService(V.VaultSyncRequestContext, request),
-          Effect.provideService(V.SessionResolver, resolver),
-          Effect.provideService(Correlation, { id: request.correlationId })
-        );
-      })
+      Effect.fnUntraced(
+        function* (effect, { rpc, payload, headers }) {
+          const request = yield* resolver.resolve(headers);
+          yield* Effect.annotateCurrentSpan({
+            [VaultSyncAttribute.transport]: request.sourceKind,
+            [VaultSyncAttribute.requestCorrelationId]: request.correlationId,
+          });
+          return yield* V.authorizeVaultSync(rpc._tag, payload).pipe(
+            Effect.andThen(effect),
+            Effect.raceFirst(resolver.revoked(request)),
+            Effect.provideService(V.VaultSyncRequestContext, request),
+            Effect.provideService(V.SessionResolver, resolver),
+            Effect.provideService(Correlation, { id: request.correlationId })
+          );
+        },
+        (self, _effect, { rpc, payload }) => traceApiCall(self, rpc._tag, payload)
+      )
     );
   })
 );
@@ -70,11 +119,12 @@ const deliveryCheck = Effect.fn("VaultSync.deliveryCheck")(function* (
 ) {
   const resolver = yield* V.SessionResolver;
   const request = yield* resolver.resolve(Headers.fromInput(headers));
+  yield* Effect.annotateCurrentSpan(VaultSyncAttribute.transport, request.sourceKind);
   yield* V.authorizeVaultSync(rpc, { key }).pipe(
     Effect.provideService(V.VaultSyncRequestContext, request),
     Effect.provideService(V.SessionResolver, resolver)
   );
-});
+}, annotateVaultSyncOutcome);
 
 /**
  * Check each frame, including CaughtUp, after upstream buffering; end idle streams on revocation.
