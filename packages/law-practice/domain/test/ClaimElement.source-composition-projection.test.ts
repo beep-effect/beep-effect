@@ -9,6 +9,7 @@ import {
   ClaimSourceProofRef,
   ClaimSourceTokenOwnership,
   decomposePreparedClaimRoles,
+  inspectPreparedClaimRoles,
   prepareClaimInspection,
 } from "@beep/law-practice-domain/values/ClaimElement";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
@@ -60,7 +61,7 @@ const evidenceOf = (texts: ReadonlyArray<string>) =>
       }),
     })
   );
-const compile = Effect.fn("SourceCompositionProjectionTest.compile")(function* (
+const prepareTexts = Effect.fn("SourceCompositionProjectionTest.prepare")(function* (
   texts: A.NonEmptyReadonlyArray<string>
 ) {
   const prepared = yield* prepareClaimInspection(
@@ -76,6 +77,12 @@ const compile = Effect.fn("SourceCompositionProjectionTest.compile")(function* (
       ),
     })
   );
+  return prepared;
+});
+const compile = Effect.fn("SourceCompositionProjectionTest.compile")(function* (
+  texts: A.NonEmptyReadonlyArray<string>
+) {
+  const prepared = yield* prepareTexts(texts);
   return yield* decomposePreparedClaimRoles(prepared, evidenceOf(texts));
 });
 const parent =
@@ -93,11 +100,18 @@ const validates = (plan: ClaimSourceElementPlan): boolean => {
 describe("source composition public projection", () => {
   it.effect("keeps complete source ownership while grouping the public terms and descendant donor", () =>
     Effect.gen(function* () {
-      const result = yield* compile([parent, "The fixture of claim 1 wherein the bushing is rigid."]);
+      const texts = [parent, "The fixture of claim 1 wherein the bushing is rigid."] as const;
+      const prepared = yield* prepareTexts(texts);
+      const evidence = evidenceOf(texts);
+      const result = yield* decomposePreparedClaimRoles(prepared, evidence);
+      const report = yield* inspectPreparedClaimRoles(prepared, evidence);
+      const inspected = A.map(report.records, ({ decomposition }) => decomposition);
+      const detailed = O.getOrThrow(A.head(result.decompositions));
+      assert.strictEqual(detailed.status, "decomposed");
+      if (detailed.status !== "decomposed") return;
+      assert.strictEqual(detailed.tree.elements.length, 6);
       const bound = O.getOrThrow(A.findFirst(result.plans, ({ claimNumber }) => claimNumber === 1));
-      const root = O.getOrThrow(
-        A.findFirst(result.decompositions, (d) => d.status === "decomposed" && d.tree.claimNumber === 1)
-      );
+      const root = O.getOrThrow(A.findFirst(inspected, (d) => d.status === "decomposed" && d.tree.claimNumber === 1));
       assert.strictEqual(root.status, "decomposed");
       if (root.status !== "decomposed") return;
       assert.strictEqual(bound.sourcePlan.elements.length, 6);
@@ -127,7 +141,7 @@ describe("source composition public projection", () => {
       );
       assert.isFalse(A.some(root.tree.edges, (e) => e.kind === "part-of" && e.child === e.parent));
       const descendant = O.getOrThrow(
-        A.findFirst(result.decompositions, (d) => d.status === "decomposed" && d.tree.claimNumber === 2)
+        A.findFirst(inspected, (d) => d.status === "decomposed" && d.tree.claimNumber === 2)
       );
       assert.strictEqual(descendant.status, "decomposed");
       if (descendant.status !== "decomposed") return;
