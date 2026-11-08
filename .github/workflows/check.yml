@@ -94,21 +94,22 @@ jobs:
     outputs:
       verdict: ${{ steps.decide.outputs.verdict || steps.docs.outputs.verdict }}
       admitted: ${{ steps.decide.outputs.admitted || steps.docs.outputs.admitted }}
-      docs_only: ${{ needs.change-profile.outputs.docs_only }}
+      docs_only: ${{ steps.decide.outputs.docs_only || steps.docs.outputs.docs_only }}
       route_skips: ${{ steps.decide.outputs.route_skips }}
       route_receipt: ${{ steps.decide.outputs.route_receipt }}
-      legacy_coverage: ${{ needs.change-profile.outputs.docs_only == 'true' && 'false' || steps.coverage-rollout.outputs.legacy_coverage }}
+      legacy_coverage: ${{ steps.docs.outputs.verdict == 'skip-satisfied' && 'false' || steps.coverage-rollout.outputs.legacy_coverage }}
     steps:
       - name: Satisfy documentation-only admission
         id: docs
-        if: needs.change-profile.outputs.docs_only == 'true'
+        if: needs.change-profile.outputs.docs_only == 'true' && github.event.pull_request.head.repo.full_name == github.repository
         shell: bash
         run: |
           echo "verdict=skip-satisfied" >> "$GITHUB_OUTPUT"
           echo "admitted=false" >> "$GITHUB_OUTPUT"
+          echo "docs_only=true" >> "$GITHUB_OUTPUT"
           echo "Documentation-only diff: no dependency installation or heavy proof needed."
       - name: Checkout repository
-        if: needs.change-profile.outputs.docs_only != 'true'
+        if: steps.docs.outputs.verdict != 'skip-satisfied'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
@@ -116,19 +117,19 @@ jobs:
           persist-credentials: false
 
       - name: Fetch pull request base
-        if: needs.change-profile.outputs.docs_only != 'true' && github.event_name == 'pull_request'
+        if: steps.docs.outputs.verdict != 'skip-satisfied' && github.event_name == 'pull_request'
         shell: bash
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
       - name: Setup monorepo CI
-        if: needs.change-profile.outputs.docs_only != 'true'
+        if: steps.docs.outputs.verdict != 'skip-satisfied'
         uses: ./.github/actions/setup-monorepo-ci
         with:
           free-disk: "false"
 
       - name: Decide heavy admission
-        if: needs.change-profile.outputs.docs_only != 'true'
+        if: steps.docs.outputs.verdict != 'skip-satisfied'
         id: decide
         shell: bash
         run: bun run beep ci admission --github-output
@@ -136,7 +137,7 @@ jobs:
       # Inspect the reusable revision GitHub actually resolved for this run,
       # rather than this PR's edited workflow or a moving main branch.
       - name: Determine coverage rollout context
-        if: needs.change-profile.outputs.docs_only != 'true'
+        if: steps.docs.outputs.verdict != 'skip-satisfied'
         id: coverage-rollout
         shell: bash
         env:

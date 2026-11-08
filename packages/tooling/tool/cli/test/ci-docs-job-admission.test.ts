@@ -1,4 +1,4 @@
-import { CiCommandError } from "@beep/repo-cli/commands/Ci";
+import { CiCommandError, decideHeavyAdmission, HeavyAdmissionEvent } from "@beep/repo-cli/commands/Ci";
 import { it } from "@beep/test-runner";
 import { assert } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -51,5 +51,79 @@ it.effect(
     assert.isUndefined(yamlAt(workflow, ["jobs", "security", "if"]));
     assert.isUndefined(yamlAt(workflow, ["jobs", "secrets", "if"]));
     assert.isUndefined(yamlAt(workflow, ["jobs", "sast", "if"]));
+  })
+);
+
+it.effect(
+  "pins label classification and preserves normal fork admission when the docs shortcut is unavailable",
+  Effect.fnUntraced(function* () {
+    for (const caller of [
+      {
+        file: "check.yml",
+        docsIndex: 0,
+        setupIndex: 3,
+        decideIndex: 4,
+        profile: "needs.change-profile.outputs.docs_only",
+      },
+      {
+        file: "heavy-admit.yml",
+        docsIndex: 4,
+        setupIndex: 5,
+        decideIndex: 6,
+        profile: "steps.profile.outputs.docs_only",
+      },
+    ]) {
+      const source = yield* Effect.tryPromise({
+        try: () => Bun.file(new URL(`../../../../../.github/workflows/${caller.file}`, import.meta.url)).text(),
+        catch: CiCommandError.new("Unable to read the checked-in admission caller."),
+      });
+      const workflow = parseWorkflowYaml(source);
+      assert.strictEqual(yamlAt(workflow, ["env", "BEEP_CI_PR_BASE_SHA"]), "${{ github.event.pull_request.base.sha }}");
+      assert.strictEqual(yamlAt(workflow, ["env", "BEEP_CI_PR_HEAD_SHA"]), "${{ github.event.pull_request.head.sha }}");
+      const shortcut = yield* S.decodeUnknownEffect(S.String)(
+        yamlAt(workflow, ["jobs", "admission", "steps", caller.docsIndex, "if"])
+      );
+      assert.strictEqual(
+        shortcut,
+        `${caller.profile} == 'true' && github.event.pull_request.head.repo.full_name == github.repository`
+      );
+      for (const index of [caller.setupIndex, caller.decideIndex]) {
+        assert.strictEqual(
+          yamlAt(workflow, ["jobs", "admission", "steps", index, "if"]),
+          "steps.docs.outputs.verdict != 'skip-satisfied'"
+        );
+      }
+      for (const row of [
+        { docs: "true", head: "beep-effect/beep-effect", labels: [], paths: ["README.md"], verdict: "skip-satisfied" },
+        { docs: "true", head: "contributor/fork", labels: [], paths: ["README.md"], verdict: "hold" },
+        { docs: "true", head: "contributor/fork", labels: ["ready-for-heavy"], paths: ["README.md"], verdict: "hold" },
+        {
+          docs: "true",
+          head: "contributor/fork",
+          labels: ["ready-for-heavy", "ready-for-heavy-fork"],
+          paths: ["README.md"],
+          verdict: "run",
+        },
+        { docs: "false", head: "beep-effect/beep-effect", labels: [], paths: [], verdict: "hold" },
+        { docs: "false", head: "beep-effect/beep-effect", labels: ["ready-for-heavy"], paths: [], verdict: "run" },
+      ]) {
+        const rendered = pipe(
+          shortcut,
+          Str.replaceAll(caller.profile, `'${row.docs}'`),
+          Str.replaceAll("github.event.pull_request.head.repo.full_name", `'${row.head}'`),
+          Str.replaceAll("github.repository", "'beep-effect/beep-effect'")
+        );
+        const taken = Bun.spawnSync(["bash", "-c", `[[ ${rendered} ]]`], { stdout: "pipe", stderr: "pipe" });
+        const admission = decideHeavyAdmission(
+          HeavyAdmissionEvent.make({
+            eventName: "pull_request",
+            headRepository: row.head,
+            labels: row.labels,
+            changedPaths: row.paths,
+          })
+        );
+        assert.strictEqual(taken.exitCode === 0 ? "skip-satisfied" : admission.verdict, row.verdict);
+      }
+    }
   })
 );

@@ -25,7 +25,10 @@ Documentation-only changes skip the lint and unit matrices before runner
 allocation. Their required aggregate jobs explicitly accept only successful
 classification followed by skipped shards, or a non-documentation profile
 followed by successful shards. Heavy Admission and the label admission path
-avoid dependency installation for documentation-only changes.
+avoid dependency installation for same-repository documentation-only changes.
+Forks retain ordinary admission and require the existing explicit fork
+authorization before Heavy can run. Both callers bind classification to the
+PR event's base and head SHAs.
 
 Verification and heavy jobs use literal check names with singleton matrices
 and shared YAML step anchors. Literal names allow job-level skips to retain

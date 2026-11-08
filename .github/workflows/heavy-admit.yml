@@ -29,6 +29,10 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  BEEP_CI_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+  BEEP_CI_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+
 jobs:
   admission:
     name: Heavy Admission
@@ -40,7 +44,7 @@ jobs:
     outputs:
       verdict: ${{ steps.decide.outputs.verdict || steps.docs.outputs.verdict }}
       admitted: ${{ steps.decide.outputs.admitted || steps.docs.outputs.admitted }}
-      docs_only: ${{ steps.profile.outputs.docs_only }}
+      docs_only: ${{ steps.decide.outputs.docs_only || steps.docs.outputs.docs_only }}
       route_skips: ${{ steps.decide.outputs.route_skips }}
       route_receipt: ${{ steps.decide.outputs.route_receipt }}
     steps:
@@ -66,21 +70,22 @@ jobs:
 
       - name: Satisfy documentation-only admission
         id: docs
-        if: steps.profile.outputs.docs_only == 'true'
+        if: steps.profile.outputs.docs_only == 'true' && github.event.pull_request.head.repo.full_name == github.repository
         shell: bash
         run: |
           echo "verdict=skip-satisfied" >> "$GITHUB_OUTPUT"
           echo "admitted=false" >> "$GITHUB_OUTPUT"
+          echo "docs_only=true" >> "$GITHUB_OUTPUT"
           echo "Documentation-only diff: no dependency installation or heavy proof needed."
 
       - name: Setup monorepo CI
-        if: steps.profile.outputs.docs_only != 'true'
+        if: steps.docs.outputs.verdict != 'skip-satisfied'
         uses: ./.github/actions/setup-monorepo-ci
         with:
           free-disk: "false"
 
       - name: Decide heavy admission
-        if: steps.profile.outputs.docs_only != 'true'
+        if: steps.docs.outputs.verdict != 'skip-satisfied'
         id: decide
         shell: bash
         run: bun run beep ci admission --github-output
