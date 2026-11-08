@@ -176,6 +176,9 @@ jobs:
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
+      - name: Fetch beep CI binary
+        uses: ./.github/actions/fetch-beep-ci
+
       - name: Determine lane execution
         id: lane-gate
         shell: bash
@@ -205,7 +208,7 @@ jobs:
           fi
 
           should_run=true
-          eval "$(scripts/ci-change-profile.sh)"
+          eval "$(beep ci change-profile)"
           if [[ "$goals_only" == "true" ]]; then
             should_run=false
           fi
@@ -290,14 +293,9 @@ jobs:
           # session and reap the entire process group once the lane process
           # finishes, success and failure alike.
           run_lane() {
-            local -a lane_command=(bun run beep "$@")
-            # The reusable workflow runs from main, but older PR checkouts
-            # may not contain the optional measurement helper yet.
-            if [[ -f scripts/ci-runner-resources.sh ]]; then
-              lane_command=(bash scripts/ci-runner-resources.sh "${{ matrix.id }}" "${lane_command[@]}")
-            else
-              echo '::notice::Runner resource helper unavailable in this checkout; running the requested lane.'
-            fi
+            # The fetched CI binary measures host resources around the lane
+            # and preserves its exit status.
+            local -a lane_command=(beep ci runner-resources "${{ matrix.id }}" -- bun run beep "$@")
             setsid "${lane_command[@]}" < /dev/null &
             local pgid=$!
             local status=0
@@ -411,7 +409,7 @@ jobs:
 
       - name: Ensure native sandbox inspection dependency
         shell: bash
-        run: bash scripts/ci-cache-native-sandbox.sh
+        run: bun --no-env-file run beep ci cache-sandbox
 
       - name: Write bounded source inspection
         id: inspection
@@ -520,6 +518,9 @@ jobs:
           printf 'XDG_CACHE_HOME=%s/cache\n' "$build_root" >> "$GITHUB_ENV"
           printf 'CARGO_TARGET_DIR=%s/target\n' "$build_root" >> "$GITHUB_ENV"
 
+      - name: Fetch beep CI binary
+        uses: ./.github/actions/fetch-beep-ci
+
       - name: Ensure native build and ELF inspection prerequisites
         shell: bash
         run: |
@@ -534,7 +535,7 @@ jobs:
             if command -v dnf >/dev/null 2>&1; then
               "${privilege[@]}" dnf install -y gcc binutils make perl-core
             elif command -v apt-get >/dev/null 2>&1; then
-              bash scripts/ci-prune-apt-sources.sh
+              beep ci prune-apt
               "${privilege[@]}" apt-get update
               "${privilege[@]}" apt-get install -y --no-install-recommends gcc binutils make perl
             else
@@ -749,7 +750,7 @@ jobs:
 
       - name: Ensure native sandbox trial dependency
         shell: bash
-        run: bash scripts/ci-cache-native-sandbox.sh
+        run: bun --no-env-file run beep ci cache-sandbox
 
       - name: Download independently selected candidate
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
@@ -795,7 +796,7 @@ jobs:
       - name: Prepare fixed full-pilot inputs without credentials
         id: inputs
         shell: bash
-        run: bash scripts/ci-cache-pilot-inputs.sh signed
+        run: bun --no-env-file run beep ci cache-pilot-inputs signed
 
       - name: Install independently approved issuer only
         shell: bash
@@ -860,7 +861,7 @@ jobs:
           TRIAL_INPUTS: ${{ steps.inputs.outputs.source_inputs }}
           TRIAL_WORKTREE_A: ${{ steps.inputs.outputs.worktree_a }}
           TRIAL_WORKTREE_B: ${{ steps.inputs.outputs.worktree_b }}
-        run: bash scripts/ci-cache-pilot-cleanup.sh signed
+        run: bun --no-env-file run beep ci cache-pilot-cleanup signed
 
   local-pilot-observe:
     name: Observe local cache pilot
@@ -897,7 +898,7 @@ jobs:
 
       - name: Ensure native sandbox observation dependency
         shell: bash
-        run: bash scripts/ci-cache-native-sandbox.sh
+        run: bun --no-env-file run beep ci cache-sandbox
 
       - name: Allocate private observation scratch
         id: private
@@ -913,7 +914,7 @@ jobs:
       - name: Prepare fixed full-pilot inputs without credentials
         id: inputs
         shell: bash
-        run: bash scripts/ci-cache-pilot-inputs.sh local "$BEEP_CACHE_PILOT_COMPUTATION"
+        run: bun --no-env-file run beep ci cache-pilot-inputs local "$BEEP_CACHE_PILOT_COMPUTATION"
 
       - name: Observe the existing local pilot
         shell: bash
@@ -931,7 +932,7 @@ jobs:
         run: |
           set -euo pipefail
           output="$BEEP_CACHE_PRODUCER_PRIVATE_ROOT/publication/observation-summary.json"
-          /usr/bin/python3 -I -S -B scripts/ci-cache-local-summary.py \
+          bun --no-env-file run beep ci cache-local-summary \
             --report "$BEEP_CACHE_PRODUCER_PRIVATE_ROOT/local-observation.json" \
             --request .beep/cache/local-pilot-observation/request.json \
             --output "$output" --revision "$GITHUB_SHA" \
@@ -957,4 +958,4 @@ jobs:
           TRIAL_INPUTS: ${{ steps.inputs.outputs.source_inputs }}
           TRIAL_WORKTREE_A: ${{ steps.inputs.outputs.worktree_a }}
           TRIAL_WORKTREE_B: ${{ steps.inputs.outputs.worktree_b }}
-        run: bash scripts/ci-cache-pilot-cleanup.sh local
+        run: bun --no-env-file run beep ci cache-pilot-cleanup local

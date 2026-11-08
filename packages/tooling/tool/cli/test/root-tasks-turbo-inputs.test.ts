@@ -183,6 +183,7 @@ const trackedDiscoveryTasks = LiteralKit([
   "lint:entity-kit-freeze",
   "lint:retired-effect-paths",
   "lint:retired-iri-authorities",
+  "lint:tracked-shell-allowlist",
   "lint:markdown-fences",
 ]);
 const nonReusableTasks: ReadonlyArray<string> = [
@@ -215,6 +216,7 @@ const directInputs: Readonly<Record<string, string>> = {
   "lint:retired-effect-paths": "explorations/fixture/c3-probe.json",
   "lint:entity-kit-freeze": "packages/fixture/src/c3-entity-probe.tsx",
   "lint:retired-iri-authorities": "goals/fixture/c3-probe.ttl",
+  "lint:tracked-shell-allowlist": "tools/fixture/c3-probe.sh",
   "lint:schema-tag-idioms": "scratchpad/fixture/c3-probe.cts",
   "lint:holds": "hold-ledger/claims.jsonl",
   "lint:tsgo-rules": "tooling/c3-probe.cts",

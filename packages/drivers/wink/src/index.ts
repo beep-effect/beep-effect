@@ -40,6 +40,10 @@ export * from "./WinkCorpus.service.ts";
  * @category services
  */
 export { WinkEngineRef, WinkEngineRefLive } from "./WinkEngineRef.service.ts";
+/** @category errors @since 0.0.0 */
+export * from "./WinkIntrinsicNoun.errors.ts";
+/** @category models @since 0.0.0 */
+export * from "./WinkIntrinsicNoun.models.ts";
 /**
  * @since 0.0.0
  * @category observability

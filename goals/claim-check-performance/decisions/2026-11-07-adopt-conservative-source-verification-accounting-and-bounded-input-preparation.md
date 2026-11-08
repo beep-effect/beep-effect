@@ -1,0 +1,7 @@
+---
+title: "Adopt conservative source verification accounting and bounded input preparation"
+date: 2026-11-07
+reversal: "Revoke prospective input use if any inherited source or control pin, resource floor, coverage mapping, or independent review changes; retain every historical charge and unknown outcome."
+---
+
+Independent metadata review accepted the prospective cumulative accounting and exact closed input proposal with zero required findings. Adopt the full ancillary potential-liability reservation without claiming proved taxonomy, the separate 32 MiB aggregate audit/control reservation within the unchanged 4 GiB limit, and the additive known text floor within the unchanged 128 MiB limit. Preserve old 16 MiB and future QA 1 MiB reservations. Allocate at most 2 MiB inside the aggregate reserve for root adoption/input/authority controls, retaining the independent review bound and all remaining headroom. The maximum future JSON text does not fit, so only the existing bounded unknown-outcome attempt is admissible; no full-cohort guarantee, denominator narrowing or favorable inference from unfinished work. Adopt exact metadata input/catalogue in new records, preserving original proposals and inherited body hashes without recomputing source-body hashes. Actual source reading still requires a separate exact eligible-reader authority and new prospective mode-B clock. No runtime, labels, scorers, previous results or usefulness gates change.

@@ -291,7 +291,7 @@ describe("B8 heavy admission contracts", () => {
       ["packages/a/src/index.md.ts", false],
       ["README.md", true],
       [".github/workflows/check.yml", false],
-      ["scripts/ci-change-profile.sh", false],
+      ["scripts/cloud/bootstrap.sh", false],
       ["mydocs/file.ts", false],
     ];
     for (const [path, expected] of rows) {

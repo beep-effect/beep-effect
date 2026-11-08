@@ -154,10 +154,10 @@ Retire `scripts/cloud-session-setup.sh`, whose implementation is superseded. Upd
 | Existing path | Execution disposition |
 |---|---|
 | `packages/tooling/tool/cli/src/ChangesetChangelog.ts` | Retain required small CJS publication callback while dormant machinery needs it. |
-| `scripts/ci-change-profile.sh` | Port operational diff classification to Ci; preserve workflow evaluation and output contract. |
+| `ci-change-profile.sh` (retired; now `beep ci change-profile`) | Port operational diff classification to Ci; preserve workflow evaluation and output contract. |
 | `scripts/ci-job-env.mjs` | Port to Ci after runtime exists; preserve credential/event policy and safe `GITHUB_ENV` behavior. |
-| `scripts/ci-prune-apt-sources.sh` | Retain minimal pre-runtime adapter; test with synthetic filesystem fixtures. |
-| `scripts/ci-runner-resources.sh` | Port to Ci; preserve resource sampling, signal propagation, and nonzero exit status. |
+| `ci-prune-apt-sources.sh` (retired; now `beep ci prune-apt`) | Retain minimal pre-runtime adapter; test with synthetic filesystem fixtures. |
+| `ci-runner-resources.sh` (retired; now `beep ci runner-resources`) | Port to Ci; preserve resource sampling, signal propagation, and nonzero exit status. |
 | `scripts/cloud-session-setup.sh` | Retire superseded implementation and live wiring. |
 | `scripts/cloud/bootstrap.sh` | Retain pre-toolchain bootstrap; delegate post-runtime behavior where appropriate. |
 | `scripts/enable-turbo-remote-reads.sh` | Port to Cache; preserve dotenv references, duplicate handling, and idempotence. |

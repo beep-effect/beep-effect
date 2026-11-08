@@ -187,6 +187,7 @@
     "lint:entity-kit-freeze": "bun run beep laws entity-kit-freeze --check",
     "lint:retired-iri-authorities": "bun run beep laws retired-iri-authorities --check",
     "lint:schema-tag-idioms": "bun run beep laws schema-tag-idioms --check",
+    "lint:tracked-shell-allowlist": "bun run beep laws tracked-shell-allowlist --check",
     "lint:holds": "bun run beep holds lint",
     "lint:ecosystem-polarity": "bun run beep lint ecosystem-polarity",
     "goals:index-check": "bun run beep goals index --check",

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "claim-iprally-review-repair/v1",
+  "implementationDigest": "892aaadc3f2a854ac472d4e236059bf1814098c7cfa757834abc4a301481ab65",
+  "inputSha256": "3c357e6ed518741291b5729805d9940d03a6b49eb4db6999d74daef445f1054e",
+  "result": {
+    "status": "checked",
+    "basis": "non-US-non-gold",
+    "sourceId": "KR-100380121-B1",
+    "country": "KR",
+    "ipcCodes": "F15",
+    "tokens": 523,
+    "sourceCommit": "51ba1e69b471021f225fe6787100b0f69d78da24",
+    "archiveSha256": "35307451747a8ae65d4d359aed23cff2f0d8ce02dfc8b8e3bfe6db7cbdadab0a",
+    "claims": 1,
+    "trees": 1,
+    "findings": 78,
+    "undecomposed": 0,
+    "manualReviewPatterns": 16
+  },
+  "resultIdenticalToV19": true,
+  "structuralAccuracy": null,
+  "adjudicatedFalsePositiveRate": null,
+  "rawDataCommitted": false
+}

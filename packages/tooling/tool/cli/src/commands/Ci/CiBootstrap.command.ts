@@ -20,7 +20,9 @@ import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { CiCommandError } from "./Ci.errors.ts";
+import { cacheNativeSandboxDefaults, cleanupCachePilot, ensureCacheNativeSandbox } from "./CiCachePilotHost.ts";
 import { CiResourceLane } from "./CiOperational.schemas.ts";
 import { CiOperational, CiOperationalLive } from "./CiOperational.service.ts";
 
@@ -89,16 +91,39 @@ const runnerResourcesCommand = Command.make(
   Command.withDescription("Measure host resources around a command while preserving its status"),
   Command.provide(CiOperationalLive)
 );
+const cacheSandboxCommand = Command.make(
+  "cache-sandbox",
+  {
+    bwrap: Flag.String("bwrap").pipe(
+      Flag.withDefault(cacheNativeSandboxDefaults.bwrap),
+      Flag.withDescription("Sandbox executable to require (a fixture seam; hosted jobs keep the default)")
+    ),
+    aptSources: Flag.String("apt-sources").pipe(
+      Flag.withDefault(cacheNativeSandboxDefaults.aptSources),
+      Flag.withDescription("Apt source directory pruned before an apt install (a fixture seam)")
+    ),
+  },
+  ensureCacheNativeSandbox
+).pipe(
+  Command.withDescription("Install bubblewrap for the cache producer sandbox when the runner lacks it"),
+  Command.provide(CiOperationalLive)
+);
+const cachePilotCleanupCommand = Command.make(
+  "cache-pilot-cleanup",
+  { mode: Argument.String("mode").pipe(Argument.optional) },
+  // `${1:-signed}`: an absent or empty mode is the signed trial.
+  ({ mode }) => cleanupCachePilot(O.getOrElse(O.filter(mode, Str.isNonEmpty), () => "signed"))
+).pipe(Command.withDescription("Remove only the current job's cache pilot worktrees, inputs and private directory"));
 
 /**
  * The pre-toolchain `ci` subcommands, in their registration order.
  *
  * **Details**
  *
- * `patterns`, `change-profile`, `job-env`, `prune-apt` and `runner-resources`
- * need only the platform services (`FileSystem`, `Path`,
- * `ChildProcessSpawner`), so the compiled CI binary can run them before the
- * job installs its toolchain.
+ * `patterns`, `change-profile`, `job-env`, `prune-apt`, `runner-resources`,
+ * `cache-sandbox` and `cache-pilot-cleanup` need only the platform services
+ * (`FileSystem`, `Path`, `ChildProcessSpawner`), so the compiled CI binary
+ * can run them before the job installs its toolchain.
  *
  * **Example** (Register the bootstrap commands under a `ci` group)
  *
@@ -119,4 +144,6 @@ export const ciBootstrapCommands = [
   jobEnvironmentCommand,
   pruneAptCommand,
   runnerResourcesCommand,
+  cacheSandboxCommand,
+  cachePilotCleanupCommand,
 ] as const;

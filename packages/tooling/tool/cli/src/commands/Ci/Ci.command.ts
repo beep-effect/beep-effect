@@ -26,6 +26,8 @@ import * as S from "effect/Schema";
 import { CiCommandError, reportCiCommandError } from "./Ci.errors.ts";
 import { ciAdmissionCommand } from "./CiAdmission.ts";
 import { ciBootstrapCommands } from "./CiBootstrap.command.ts";
+import { writeCacheLocalSummary } from "./CiCacheLocalSummary.ts";
+import { runCachePilotInputs } from "./CiCachePilotInputs.ts";
 import { ciCompileBinaryCommand } from "./CiCompileBinary.ts";
 import { ciGovernanceCommands } from "./CiGovernance.ts";
 import { ciLaneCommand, ciLocalCommand } from "./CiLane.ts";
@@ -344,6 +346,33 @@ const appendTurboSummaryCommand = Command.make(
   Command.provide(CiRunnerOutputsLive)
 );
 
+// `${1:-default}`: an absent or empty positional takes the adapter's default.
+const positionalOr = (value: O.Option<string>, fallback: string) =>
+  O.getOrElse(O.filter(value, Str.isNonEmpty), () => fallback);
+
+const cachePilotInputsCommand = Command.make(
+  "cache-pilot-inputs",
+  {
+    mode: Argument.String("mode").pipe(Argument.optional),
+    computation: Argument.String("computation").pipe(Argument.optional),
+  },
+  ({ mode, computation }) =>
+    runCachePilotInputs(positionalOr(mode, "signed"), positionalOr(computation, "@beep/identity#lint"))
+).pipe(Command.withDescription("Prepare the fixed full-pilot inputs of a hosted cache pilot job, without credentials"));
+
+const cacheLocalSummaryCommand = Command.make(
+  "cache-local-summary",
+  {
+    report: Flag.String("report").pipe(Flag.withDescription("Private local observation receipt")),
+    request: Flag.String("request").pipe(Flag.withDescription("Local pilot request the receipt answers")),
+    output: Flag.String("output").pipe(Flag.withDescription("Public summary to create (refuses an existing file)")),
+    revision: Flag.String("revision").pipe(Flag.withDescription("Observed source commit")),
+    channel: Flag.String("channel").pipe(Flag.withDescription("Native client channel")),
+    computation: Flag.String("computation").pipe(Flag.withDescription("Observed lint computation")),
+  },
+  writeCacheLocalSummary
+).pipe(Command.withDescription("Project a private local cache observation onto bounded public digests and counts"));
+
 /**
  * CI helper command group.
  *
@@ -386,6 +415,8 @@ export const ciCommand = Command.make("ci", {}, () =>
   Command.withDescription("Continuous integration helper commands"),
   Command.withSubcommands([
     ...ciBootstrapCommands,
+    cacheLocalSummaryCommand,
+    cachePilotInputsCommand,
     ciCompileBinaryCommand,
     ...ciGovernanceCommands,
     ciAdmissionCommand,

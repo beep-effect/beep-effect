@@ -2512,6 +2512,9 @@
       ],
       "@beep/execution-authority-use-cases/server": [
         "./packages/execution-authority/use-cases/src/server.ts"
+      ],
+      "@beep/law-practice-server/ClaimInspection": [
+        "./packages/law-practice/server/src/ClaimInspection/index.ts"
       ]
     }
   }

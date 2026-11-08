@@ -1,0 +1,728 @@
+{
+  "schemaVersion": "claim-review-input-provenance/v1",
+  "reviewCommit": "df0f5f0519",
+  "allInputHashesVerified": true,
+  "privateScratchPathsResolvedToByteIdenticalPublicReceipts": true,
+  "inputs": [
+    {
+      "review": "reference-A-round1.json",
+      "input": "goals/claim-element-antecedent-check/research/AUTONOMOUS-ACCEPTANCE-v1.md",
+      "sha256": "fe1eee1637943d0554b13d69b221644afd927aeb44877325f2fa55ee86394e90",
+      "availableAt": "git:df0f5f0519:goals/claim-element-antecedent-check/research/AUTONOMOUS-ACCEPTANCE-v1.md"
+    },
+    {
+      "review": "reference-A-round1.json",
+      "input": "goals/claim-element-antecedent-check/research/LABEL-PROTOCOL.md",
+      "sha256": "317b87b6452f810ebb0f6526a5a76c508768080837ef335643415ff6985361b3",
+      "availableAt": "git:df0f5f0519:goals/claim-element-antecedent-check/research/LABEL-PROTOCOL.md"
+    },
+    {
+      "review": "reference-A-round1.json",
+      "input": "goals/claim-element-antecedent-check/history/attorney-review/index.html",
+      "sha256": "3137a07a0d4c316e1c9139c7c57e48f601fd5a361df62728262f354a59f889a6",
+      "availableAt": "git:df0f5f0519:goals/claim-element-antecedent-check/history/attorney-review/index.html"
+    },
+    {
+      "review": "reference-A-round1.json",
+      "input": "goals/claim-element-antecedent-check/history/attorney-review/packet.json",
+      "sha256": "0417c781fc706510a2200a5bb84b18eadf40acbdcdb289ea006d81d824caac96",
+      "availableAt": "git:df0f5f0519:goals/claim-element-antecedent-check/history/attorney-review/packet.json"
+    },
+    {
+      "review": "reference-A-round1.json",
+      "input": "goals/claim-element-antecedent-check/history/attorney-review/addendum.html",
+      "sha256": "f4762a3df511e409baa3fbd240d5e865b76d4189e653c9cd47ffe401bd251ba7",
+      "availableAt": "git:df0f5f0519:goals/claim-element-antecedent-check/history/attorney-review/addendum.html"
+    },
+    {
+      "review": "reference-A-round1.json",
+      "input": "goals/claim-element-antecedent-check/history/attorney-review/addendum.json",
+      "sha256": "ee7d67cfef9b72ab31956b503fd5c616b686b7a871af14211967cfaf51da7ccd",
+      "availableAt": "git:df0f5f0519:goals/claim-element-antecedent-check/history/attorney-review/addendum.json"
+    },
+    {
+      "review": "reference-A-round1.json",
+      "input": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.model.ts",
+      "sha256": "71a1c5c72b55dd973effeb277d4eda5f80ce349961440080fdac25d4beef9101",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/src/values/ClaimElement/ClaimElement.model.ts"
+    },
+    {
+      "review": "reference-A-round1.json",
+      "input": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.edge.model.ts",
+      "sha256": "7a3ad126fbeaf384971268b9dd75c1ff3ae520451232f1ade13a47755be1a550",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/src/values/ClaimElement/ClaimElement.edge.model.ts"
+    },
+    {
+      "review": "reference-A-round1.json",
+      "input": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.tree.model.ts",
+      "sha256": "4f2935d1f082ff5ab3082755d1de914bceb0e65afbee1dfbd9d73df61612973d",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/src/values/ClaimElement/ClaimElement.tree.model.ts"
+    },
+    {
+      "review": "reference-A-round2.json",
+      "input": "goals/claim-element-antecedent-check/research/AUTONOMOUS-ACCEPTANCE-v1.md",
+      "sha256": "fe1eee1637943d0554b13d69b221644afd927aeb44877325f2fa55ee86394e90",
+      "availableAt": "git:df0f5f0519:goals/claim-element-antecedent-check/research/AUTONOMOUS-ACCEPTANCE-v1.md"
+    },
+    {
+      "review": "reference-A-round2.json",
+      "input": "goals/claim-element-antecedent-check/research/LABEL-PROTOCOL.md",
+      "sha256": "317b87b6452f810ebb0f6526a5a76c508768080837ef335643415ff6985361b3",
+      "availableAt": "git:df0f5f0519:goals/claim-element-antecedent-check/research/LABEL-PROTOCOL.md"
+    },
+    {
+      "review": "reference-A-round2.json",
+      "input": "goals/claim-element-antecedent-check/history/attorney-review/index.html",
+      "sha256": "3137a07a0d4c316e1c9139c7c57e48f601fd5a361df62728262f354a59f889a6",
+      "availableAt": "git:df0f5f0519:goals/claim-element-antecedent-check/history/attorney-review/index.html"
+    },
+    {
+      "review": "reference-A-round2.json",
+      "input": "goals/claim-element-antecedent-check/history/attorney-review/packet.json",
+      "sha256": "0417c781fc706510a2200a5bb84b18eadf40acbdcdb289ea006d81d824caac96",
+      "availableAt": "git:df0f5f0519:goals/claim-element-antecedent-check/history/attorney-review/packet.json"
+    },
+    {
+      "review": "reference-A-round2.json",
+      "input": "goals/claim-element-antecedent-check/history/attorney-review/addendum.html",
+      "sha256": "f4762a3df511e409baa3fbd240d5e865b76d4189e653c9cd47ffe401bd251ba7",
+      "availableAt": "git:df0f5f0519:goals/claim-element-antecedent-check/history/attorney-review/addendum.html"
+    },
+    {
+      "review": "reference-A-round2.json",
+      "input": "goals/claim-element-antecedent-check/history/attorney-review/addendum.json",
+      "sha256": "ee7d67cfef9b72ab31956b503fd5c616b686b7a871af14211967cfaf51da7ccd",
+      "availableAt": "git:df0f5f0519:goals/claim-element-antecedent-check/history/attorney-review/addendum.json"
+    },
+    {
+      "review": "reference-A-round2.json",
+      "input": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.model.ts",
+      "sha256": "71a1c5c72b55dd973effeb277d4eda5f80ce349961440080fdac25d4beef9101",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/src/values/ClaimElement/ClaimElement.model.ts"
+    },
+    {
+      "review": "reference-A-round2.json",
+      "input": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.edge.model.ts",
+      "sha256": "7a3ad126fbeaf384971268b9dd75c1ff3ae520451232f1ade13a47755be1a550",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/src/values/ClaimElement/ClaimElement.edge.model.ts"
+    },
+    {
+      "review": "reference-A-round2.json",
+      "input": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.tree.model.ts",
+      "sha256": "4f2935d1f082ff5ab3082755d1de914bceb0e65afbee1dfbd9d73df61612973d",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/src/values/ClaimElement/ClaimElement.tree.model.ts"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "AGENTS.md",
+      "sha256": "787bcd8fd29efc7245146e803a8c7e851b83c901c1f68f94dae408a1c049a4c8",
+      "availableAt": "git:df0f5f0519:AGENTS.md"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "goals/claim-element-antecedent-check/research/AUTONOMOUS-ACCEPTANCE-v1.md",
+      "sha256": "fe1eee1637943d0554b13d69b221644afd927aeb44877325f2fa55ee86394e90",
+      "availableAt": "git:df0f5f0519:goals/claim-element-antecedent-check/research/AUTONOMOUS-ACCEPTANCE-v1.md"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "goals/claim-element-antecedent-check/research/LABEL-PROTOCOL.md",
+      "sha256": "317b87b6452f810ebb0f6526a5a76c508768080837ef335643415ff6985361b3",
+      "availableAt": "git:df0f5f0519:goals/claim-element-antecedent-check/research/LABEL-PROTOCOL.md"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "goals/claim-element-antecedent-check/history/attorney-review/index.html",
+      "sha256": "3137a07a0d4c316e1c9139c7c57e48f601fd5a361df62728262f354a59f889a6",
+      "availableAt": "git:df0f5f0519:goals/claim-element-antecedent-check/history/attorney-review/index.html"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "goals/claim-element-antecedent-check/history/attorney-review/packet.json",
+      "sha256": "0417c781fc706510a2200a5bb84b18eadf40acbdcdb289ea006d81d824caac96",
+      "availableAt": "git:df0f5f0519:goals/claim-element-antecedent-check/history/attorney-review/packet.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "goals/claim-element-antecedent-check/history/attorney-review/addendum.html",
+      "sha256": "f4762a3df511e409baa3fbd240d5e865b76d4189e653c9cd47ffe401bd251ba7",
+      "availableAt": "git:df0f5f0519:goals/claim-element-antecedent-check/history/attorney-review/addendum.html"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "goals/claim-element-antecedent-check/history/attorney-review/addendum.json",
+      "sha256": "ee7d67cfef9b72ab31956b503fd5c616b686b7a871af14211967cfaf51da7ccd",
+      "availableAt": "git:df0f5f0519:goals/claim-element-antecedent-check/history/attorney-review/addendum.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.model.ts",
+      "sha256": "71a1c5c72b55dd973effeb277d4eda5f80ce349961440080fdac25d4beef9101",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/src/values/ClaimElement/ClaimElement.model.ts"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.edge.model.ts",
+      "sha256": "7a3ad126fbeaf384971268b9dd75c1ff3ae520451232f1ade13a47755be1a550",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/src/values/ClaimElement/ClaimElement.edge.model.ts"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.tree.model.ts",
+      "sha256": "4f2935d1f082ff5ab3082755d1de914bceb0e65afbee1dfbd9d73df61612973d",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/src/values/ClaimElement/ClaimElement.tree.model.ts"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/claims.json",
+      "sha256": "75f7eb0437af4dda30291b4e349c08a31977bd6282e7ad37cede2557a8857e84",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/claims.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/expected.json",
+      "sha256": "c41e0ce112f056f30a29b91d5bfc321aefcb0fccb84cded02e46119e5f1554ba",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/expected.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/provenance.json",
+      "sha256": "9ea4929177cad102c1ac1ba06017c6c3f162a8b66f8f8569ae2ee7f1ff9c1702",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/provenance.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/source-audit.json",
+      "sha256": "85501384840483b75074503ed79070493b7d7be804c31b3de654ff8d15efe498",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/source-audit.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/source.claims.xml",
+      "sha256": "f85d043d70d8516106de0b96f9bb291c8f611adeef4c545ffcbff3eed3df5fbb",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/source.claims.xml"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/claims.json",
+      "sha256": "d052a8f3d3a62bcc24a07aa8465292062c9fed1aa5170bb398e63019f85e640d",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/claims.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/expected.json",
+      "sha256": "efa5602fcdce55b0d34505f386bb8f5f9a976500ac7a6e0833cbeadc916d5a81",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/expected.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/provenance.json",
+      "sha256": "5b56c3932d813fc7d1b61295acddac0cfd063230972cce434652d118115602f1",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/provenance.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/source-audit.json",
+      "sha256": "7d3019c49da3d5a4dac3461680b890fbcea8c6cec76fe13ab5a5f3a709914fd4",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/source-audit.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/source.claims.xml",
+      "sha256": "3699396cd783225323ecb7840391bd127d8765c12ca741961e701c6e047974d7",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/source.claims.xml"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/claims.json",
+      "sha256": "8be9e63dc590764c48856456ae52caca4f8a11e6d4b3ed52cc9660217786d9dd",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/claims.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/expected.json",
+      "sha256": "d8dfb9d9dbb32723fe41d85992738ef30c49bc5855bf4bd8e0fc201dda276dec",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/expected.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/provenance.json",
+      "sha256": "18005b207c05e724e24ca4c02aee5853fec02186111aa9b17ad704234deb5e0d",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/provenance.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/source-audit.json",
+      "sha256": "98c067db598ef13a29af42f341d7666a01b140d0b6fb02db59bf4b5866c32b73",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/source-audit.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/source.claims.xml",
+      "sha256": "bde97a2d6a8356446f76c37acffaa5ce8b91c080b5250f3c60c7baa87533d566",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/source.claims.xml"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/claims.json",
+      "sha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/claims.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/expected.json",
+      "sha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/expected.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/provenance.json",
+      "sha256": "b006eaffc69afa88c19db524dd08eb5decd90f19222c0ce0e4c5e2fda09622f8",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/provenance.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/source-audit.json",
+      "sha256": "a8fdd938a39eccdbe688f25d3254021ad86494f29b9f587617bff25b1a8ad645",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/source-audit.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/source.claims.xml",
+      "sha256": "249a28c94a5d6e0b4ef4c590743d3f7bd139afbe2203dcae9124cc8da0670acb",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/source.claims.xml"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/claims.json",
+      "sha256": "7bce7d446bdc1d9f6f78f893738e87edc62ed2ad0568e8a06a94edcb4745c96d",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/claims.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/expected.json",
+      "sha256": "866a91087b5adf1f94eaf0dfd821ef9d23a7d991ffb86a8881de953c1263715c",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/expected.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/provenance.json",
+      "sha256": "b05768cd1eeca9087d527bac91e3addec9dd5348eeffa45e0363af2a48362033",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/provenance.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/source-audit.json",
+      "sha256": "1bcde8a6cc1abbacfbe6aaed89be9f9fd616cf8c4891c525cd30a3beb6e61623",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/source-audit.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/source.claims.xml",
+      "sha256": "c75b0bb7254a5cdad49ead95d97b4d04b8ff1d78e1b9be46f0724fc313f2a146",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/source.claims.xml"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/claims.json",
+      "sha256": "2ee841eaea635a1bbcd4462adfead31cb0aad869f7614faa2981992991539c68",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/claims.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/expected.json",
+      "sha256": "1c6f8a9e6d2f955b6ac387b19eff98323256678fa8b8f5bfa98929d244f887db",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/expected.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/provenance.json",
+      "sha256": "820785f349d31b5b31fd0afb151132b8ce25d9da5cd0a8ad7558b8d77dc5e0ee",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/provenance.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/source-audit.json",
+      "sha256": "72ea659c832e2d30b4007a7b5c7a33bcf61446f312a6dfe9677fb27f5238fe1d",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/source-audit.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/source.claims.xml",
+      "sha256": "399d18d79cc889291a1a77caeeac14d34aac07438b7973fabe1026298fd942fd",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/source.claims.xml"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/claims.json",
+      "sha256": "f515dd518e402bb6ae9c3cbac662a3203ac1e1b236256d986953696f5ef7307c",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/claims.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/expected.json",
+      "sha256": "6077b7c4c31dcdb2ac1f867cea149174e35f555f82742805c27f2e467b98df11",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/expected.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/provenance.json",
+      "sha256": "b009a095f159d459c658e4173fc4137fdd6ffa072bc623393f55d33d658bea86",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/provenance.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/source-audit.json",
+      "sha256": "16277fbeb1c5ccd33c4a3fe12b86a7a3b492baac5946f33f76a06884f80cf5b5",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/source-audit.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/source.claims.xml",
+      "sha256": "de5b0f1bcc35b1f7247c380675a3be7982938f1696bf398b9e022e2612f0f5b3",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/source.claims.xml"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/claims.json",
+      "sha256": "73a860bc0b4e953d68579b91e7f118b75cea86732da371ebf2a08fa4b44b165d",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/claims.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/expected.json",
+      "sha256": "ba5a317888ff6aeac74731169e1d6fef8bfe813afb1d61a09a0aa3c6ff95f8d6",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/expected.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/provenance.json",
+      "sha256": "52c998170503ba2c91ace5db86fb375fa1f9953fbfe919b38009c1832acea53b",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/provenance.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/source-audit.json",
+      "sha256": "7558ba705fc7b924b75f374b140108115d6a07b1b634fca6df048ba3b50b3321",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/source-audit.json"
+    },
+    {
+      "review": "reference-B-round1.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/source.claims.xml",
+      "sha256": "58be59684d73d176ac902fd2f074c5b486002656ec3243e87ca1c5f54f7288aa",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/source.claims.xml"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "AGENTS.md",
+      "sha256": "787bcd8fd29efc7245146e803a8c7e851b83c901c1f68f94dae408a1c049a4c8",
+      "availableAt": "git:df0f5f0519:AGENTS.md"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "goals/claim-element-antecedent-check/research/AUTONOMOUS-ACCEPTANCE-v1.md",
+      "sha256": "fe1eee1637943d0554b13d69b221644afd927aeb44877325f2fa55ee86394e90",
+      "availableAt": "git:df0f5f0519:goals/claim-element-antecedent-check/research/AUTONOMOUS-ACCEPTANCE-v1.md"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "goals/claim-element-antecedent-check/research/LABEL-PROTOCOL.md",
+      "sha256": "317b87b6452f810ebb0f6526a5a76c508768080837ef335643415ff6985361b3",
+      "availableAt": "git:df0f5f0519:goals/claim-element-antecedent-check/research/LABEL-PROTOCOL.md"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "goals/claim-element-antecedent-check/history/attorney-review/index.html",
+      "sha256": "3137a07a0d4c316e1c9139c7c57e48f601fd5a361df62728262f354a59f889a6",
+      "availableAt": "git:df0f5f0519:goals/claim-element-antecedent-check/history/attorney-review/index.html"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "goals/claim-element-antecedent-check/history/attorney-review/packet.json",
+      "sha256": "0417c781fc706510a2200a5bb84b18eadf40acbdcdb289ea006d81d824caac96",
+      "availableAt": "git:df0f5f0519:goals/claim-element-antecedent-check/history/attorney-review/packet.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "goals/claim-element-antecedent-check/history/attorney-review/addendum.html",
+      "sha256": "f4762a3df511e409baa3fbd240d5e865b76d4189e653c9cd47ffe401bd251ba7",
+      "availableAt": "git:df0f5f0519:goals/claim-element-antecedent-check/history/attorney-review/addendum.html"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "goals/claim-element-antecedent-check/history/attorney-review/addendum.json",
+      "sha256": "ee7d67cfef9b72ab31956b503fd5c616b686b7a871af14211967cfaf51da7ccd",
+      "availableAt": "git:df0f5f0519:goals/claim-element-antecedent-check/history/attorney-review/addendum.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.model.ts",
+      "sha256": "71a1c5c72b55dd973effeb277d4eda5f80ce349961440080fdac25d4beef9101",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/src/values/ClaimElement/ClaimElement.model.ts"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.edge.model.ts",
+      "sha256": "7a3ad126fbeaf384971268b9dd75c1ff3ae520451232f1ade13a47755be1a550",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/src/values/ClaimElement/ClaimElement.edge.model.ts"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/src/values/ClaimElement/ClaimElement.tree.model.ts",
+      "sha256": "4f2935d1f082ff5ab3082755d1de914bceb0e65afbee1dfbd9d73df61612973d",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/src/values/ClaimElement/ClaimElement.tree.model.ts"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/claims.json",
+      "sha256": "75f7eb0437af4dda30291b4e349c08a31977bd6282e7ad37cede2557a8857e84",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/claims.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/expected.json",
+      "sha256": "c41e0ce112f056f30a29b91d5bfc321aefcb0fccb84cded02e46119e5f1554ba",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/expected.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/provenance.json",
+      "sha256": "9ea4929177cad102c1ac1ba06017c6c3f162a8b66f8f8569ae2ee7f1ff9c1702",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/provenance.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/source-audit.json",
+      "sha256": "85501384840483b75074503ed79070493b7d7be804c31b3de654ff8d15efe498",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/source-audit.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/source.claims.xml",
+      "sha256": "f85d043d70d8516106de0b96f9bb291c8f611adeef4c545ffcbff3eed3df5fbb",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14432872-root-5/source.claims.xml"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/claims.json",
+      "sha256": "d052a8f3d3a62bcc24a07aa8465292062c9fed1aa5170bb398e63019f85e640d",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/claims.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/expected.json",
+      "sha256": "efa5602fcdce55b0d34505f386bb8f5f9a976500ac7a6e0833cbeadc916d5a81",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/expected.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/provenance.json",
+      "sha256": "5b56c3932d813fc7d1b61295acddac0cfd063230972cce434652d118115602f1",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/provenance.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/source-audit.json",
+      "sha256": "7d3019c49da3d5a4dac3461680b890fbcea8c6cec76fe13ab5a5f3a709914fd4",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/source-audit.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/source.claims.xml",
+      "sha256": "3699396cd783225323ecb7840391bd127d8765c12ca741961e701c6e047974d7",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/13575735-root-1/source.claims.xml"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/claims.json",
+      "sha256": "8be9e63dc590764c48856456ae52caca4f8a11e6d4b3ed52cc9660217786d9dd",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/claims.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/expected.json",
+      "sha256": "d8dfb9d9dbb32723fe41d85992738ef30c49bc5855bf4bd8e0fc201dda276dec",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/expected.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/provenance.json",
+      "sha256": "18005b207c05e724e24ca4c02aee5853fec02186111aa9b17ad704234deb5e0d",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/provenance.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/source-audit.json",
+      "sha256": "98c067db598ef13a29af42f341d7666a01b140d0b6fb02db59bf4b5866c32b73",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/source-audit.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/source.claims.xml",
+      "sha256": "bde97a2d6a8356446f76c37acffaa5ce8b91c080b5250f3c60c7baa87533d566",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14970678-root-17/source.claims.xml"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/claims.json",
+      "sha256": "90b0e6f49d7d6e4c6a41d40e4f788eee1b4b90f88abba48e58761526816d070f",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/claims.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/expected.json",
+      "sha256": "f3e15a1bc4721b2dbbb3cb10713937bd5b2588553e0285def174aae6a5a1b2a4",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/expected.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/provenance.json",
+      "sha256": "b006eaffc69afa88c19db524dd08eb5decd90f19222c0ce0e4c5e2fda09622f8",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/provenance.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/source-audit.json",
+      "sha256": "a8fdd938a39eccdbe688f25d3254021ad86494f29b9f587617bff25b1a8ad645",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/source-audit.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/source.claims.xml",
+      "sha256": "249a28c94a5d6e0b4ef4c590743d3f7bd139afbe2203dcae9124cc8da0670acb",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/14659462-root-1/source.claims.xml"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/claims.json",
+      "sha256": "7bce7d446bdc1d9f6f78f893738e87edc62ed2ad0568e8a06a94edcb4745c96d",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/claims.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/expected.json",
+      "sha256": "866a91087b5adf1f94eaf0dfd821ef9d23a7d991ffb86a8881de953c1263715c",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/expected.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/provenance.json",
+      "sha256": "b05768cd1eeca9087d527bac91e3addec9dd5348eeffa45e0363af2a48362033",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/provenance.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/source-audit.json",
+      "sha256": "1bcde8a6cc1abbacfbe6aaed89be9f9fd616cf8c4891c525cd30a3beb6e61623",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/source-audit.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/source.claims.xml",
+      "sha256": "c75b0bb7254a5cdad49ead95d97b4d04b8ff1d78e1b9be46f0724fc313f2a146",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/11299450-root-1/source.claims.xml"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/claims.json",
+      "sha256": "2ee841eaea635a1bbcd4462adfead31cb0aad869f7614faa2981992991539c68",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/claims.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/expected.json",
+      "sha256": "1c6f8a9e6d2f955b6ac387b19eff98323256678fa8b8f5bfa98929d244f887db",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/expected.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/provenance.json",
+      "sha256": "820785f349d31b5b31fd0afb151132b8ce25d9da5cd0a8ad7558b8d77dc5e0ee",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/provenance.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/source-audit.json",
+      "sha256": "72ea659c832e2d30b4007a7b5c7a33bcf61446f312a6dfe9677fb27f5238fe1d",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/source-audit.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/source.claims.xml",
+      "sha256": "399d18d79cc889291a1a77caeeac14d34aac07438b7973fabe1026298fd942fd",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/13484431-root-19/source.claims.xml"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/claims.json",
+      "sha256": "f515dd518e402bb6ae9c3cbac662a3203ac1e1b236256d986953696f5ef7307c",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/claims.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/expected.json",
+      "sha256": "6077b7c4c31dcdb2ac1f867cea149174e35f555f82742805c27f2e467b98df11",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/expected.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/provenance.json",
+      "sha256": "b009a095f159d459c658e4173fc4137fdd6ffa072bc623393f55d33d658bea86",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/provenance.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/source-audit.json",
+      "sha256": "16277fbeb1c5ccd33c4a3fe12b86a7a3b492baac5946f33f76a06884f80cf5b5",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/source-audit.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/source.claims.xml",
+      "sha256": "de5b0f1bcc35b1f7247c380675a3be7982938f1696bf398b9e022e2612f0f5b3",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/17617663-root-1/source.claims.xml"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/claims.json",
+      "sha256": "73a860bc0b4e953d68579b91e7f118b75cea86732da371ebf2a08fa4b44b165d",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/claims.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/expected.json",
+      "sha256": "ba5a317888ff6aeac74731169e1d6fef8bfe813afb1d61a09a0aa3c6ff95f8d6",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/expected.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/provenance.json",
+      "sha256": "52c998170503ba2c91ace5db86fb375fa1f9953fbfe919b38009c1832acea53b",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/provenance.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/source-audit.json",
+      "sha256": "7558ba705fc7b924b75f374b140108115d6a07b1b634fca6df048ba3b50b3321",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/source-audit.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": "packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/source.claims.xml",
+      "sha256": "58be59684d73d176ac902fd2f074c5b486002656ec3243e87ca1c5f54f7288aa",
+      "availableAt": "git:df0f5f0519:packages/law-practice/domain/test/fixtures/claim-element/positive/16068637-root-11/source.claims.xml"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": ".beep/autonomous-reference-review-B.json",
+      "sha256": "b91a3f52c9bf45884bcb71c4d591d65798ab440d34616fb75f71d1b31dfc4cb6",
+      "availableAt": "goals/claim-element-antecedent-check/history/autonomous-review-v1/reference-B-round1.json"
+    },
+    {
+      "review": "reference-B-round2.json",
+      "input": ".beep/autonomous-reference-review-A.json",
+      "sha256": "cdf648947d7dc8c8b3b637d46a3d0566524d7fd3765e95d89de2071b2b619738",
+      "availableAt": "goals/claim-element-antecedent-check/history/autonomous-review-v1/reference-A-round1.json"
+    }
+  ]
+}

@@ -580,6 +580,7 @@
         "xstate": "catalog:",
       },
       "devDependencies": {
+        "@alchemy.run/domain": "catalog:",
         "@beep/memfs": "workspace:^",
         "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
@@ -3550,6 +3551,7 @@
         "@beep/tika": "workspace:^",
         "@beep/uspto": "workspace:^",
         "@beep/utils": "workspace:^",
+        "@beep/wink": "workspace:^",
         "@effect/platform-bun": "catalog:",
         "@effect/platform-node": "catalog:",
         "drizzle-orm": "catalog:",
@@ -3600,6 +3602,7 @@
         "@beep/law-practice-domain": "workspace:^",
         "@beep/mcp-kit": "workspace:^",
         "@beep/nlp": "workspace:^",
+        "@beep/nlp-processing": "workspace:^",
         "@beep/provenance": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/shared-domain": "workspace:^",

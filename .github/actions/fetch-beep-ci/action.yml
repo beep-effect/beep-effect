@@ -1,0 +1,50 @@
+name: Fetch beep CI binary
+description: >-
+  Download the checksum-pinned compiled beep CI binary from its main-built
+  release, verify it, and put it on PATH as `beep` before any toolchain exists.
+
+# The binary is the pre-toolchain `beep ci` surface (change-profile,
+# prune-apt, runner-resources, patterns, job-env) compiled from
+# packages/tooling/tool/cli/src/bin-ci.ts by .github/workflows/beep-ci-binary.yml
+# on main pushes. The release tag and its sha256 are pinned once, below; a pin
+# bump is its own pull request, so the binary that gates a pull request is
+# never built from that pull request's head (goals/scripts-to-beep-cli
+# decision 2026-11-07-ci-binary-release-asset).
+
+runs:
+  using: composite
+  steps:
+    - name: Fetch and verify the pinned beep CI binary
+      shell: bash
+      env:
+        BEEP_CI_RELEASE_TAG: beep-ci-d15ecf4ca610
+        BEEP_CI_SHA256: 91f0bb418966262151d62c8f34c64b3f5982cac9f0b4a4e8d98291f932f46ff0
+        BEEP_CI_REPOSITORY: ${{ github.repository }}
+      run: |
+        set -euo pipefail
+        if [[ "$BEEP_CI_RELEASE_TAG" == *PENDING* || ! "$BEEP_CI_SHA256" =~ ^[0-9a-f]{64}$ ]]; then
+          echo "::error::fetch-beep-ci: the release pin is not set (tag ${BEEP_CI_RELEASE_TAG}); pin a published beep-ci-<sha> release and its sha256 in .github/actions/fetch-beep-ci/action.yml."
+          exit 1
+        fi
+        if [[ "$RUNNER_OS" != "Linux" || "$RUNNER_ARCH" != "X64" ]]; then
+          echo "::error::fetch-beep-ci: only a linux-x64 binary is published; this runner is ${RUNNER_OS}/${RUNNER_ARCH}."
+          exit 1
+        fi
+        bin_dir="${RUNNER_TEMP}/beep-ci/bin"
+        binary="${bin_dir}/beep"
+        verify() { printf '%s  %s\n' "$BEEP_CI_SHA256" "$binary" | sha256sum --check --strict --quiet; }
+        # A job that already fetched this pin (an earlier step or composite) reuses it.
+        if [[ ! -f "$binary" ]] || ! verify; then
+          mkdir -p "$bin_dir"
+          rm -f "$binary"
+          curl --fail --silent --show-error --location --retry 3 --retry-all-errors --max-time 120 \
+            --output "$binary" \
+            "https://github.com/${BEEP_CI_REPOSITORY}/releases/download/${BEEP_CI_RELEASE_TAG}/beep-linux-x64"
+          if ! verify; then
+            rm -f "$binary"
+            echo "::error::fetch-beep-ci: ${BEEP_CI_RELEASE_TAG}/beep-linux-x64 does not match the pinned sha256."
+            exit 1
+          fi
+        fi
+        chmod 0755 "$binary"
+        echo "$bin_dir" >> "$GITHUB_PATH"

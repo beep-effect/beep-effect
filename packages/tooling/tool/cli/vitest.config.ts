@@ -110,6 +110,7 @@ const isolatedSuites = [
   "test/labs-list.test.ts",
   "test/laws-markdown-fences-command.test.ts",
   "test/laws-schema-tag-idioms-command.test.ts",
+  "test/laws-tracked-shell-allowlist.test.ts",
   "test/lint-command.test.ts",
   "test/lint-identity-registry.test.ts",
   "test/lint-program-assignment.test.ts",

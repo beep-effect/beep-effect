@@ -1,0 +1,631 @@
+{
+  "schemaVersion": "claim-antecedent-positive-source-freeze/v1",
+  "date": "2026-10-28",
+  "sourceRevision": 5,
+  "status": "source-qualified selection frozen; no semantic correctness or attorney agreement claim",
+  "familyCount": 60,
+  "selectedClaimCount": 538,
+  "quotas": {
+    "A": 9,
+    "B": 17,
+    "E": 2,
+    "F": 8,
+    "G": 14,
+    "H": 10
+  },
+  "digestRecipe": "SHA256 of selection serialized as UTF-8 JSON with sorted object keys, compact comma/colon separators and ASCII escaping; preserve array order",
+  "sourceSelectionDigest": "75c4dc3e3d4accf873b90f5fb2c757941a1d57ea97ad530a8700a4e19668388a",
+  "positiveBenchmarkPredictionsRun": false,
+  "selection": [
+    {
+      "familyId": "14432872-root-5",
+      "applicationNumber": "14432872",
+      "cpcSection": "A",
+      "claimNumbers": [5, 6, 7, 8],
+      "claimsXmlSha256": "f85d043d70d8516106de0b96f9bb291c8f611adeef4c545ffcbff3eed3df5fbb",
+      "publicationNumber": "US20160346041A1",
+      "officeActionDocumentIdentifiers": ["J2SZPL3ZRXEAPX2"],
+      "officeActionMailDate": "2017-05-19"
+    },
+    {
+      "familyId": "16052309-root-1",
+      "applicationNumber": "16052309",
+      "cpcSection": "A",
+      "claimNumbers": [1, 2, 3, 4, 5, 6],
+      "claimsXmlSha256": "84c8c1daf7b3301a5ee3b0c4192bb4b69d0fdb638b558e8f7aa19fed35490990",
+      "publicationNumber": "US20190038021A1",
+      "officeActionDocumentIdentifiers": ["JV5BLJF5RXEAPX3"],
+      "officeActionMailDate": "2019-05-03"
+    },
+    {
+      "familyId": "12360911-root-1",
+      "applicationNumber": "12360911",
+      "cpcSection": "A",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "claimsXmlSha256": "c6d77250fa54b66ca80a84615252de7791facfd15fcd16103e86506601a48918",
+      "publicationNumber": "US20090202035A1",
+      "officeActionDocumentIdentifiers": ["GMZ2D8MJPPOPPY5"],
+      "officeActionMailDate": "2011-04-28"
+    },
+    {
+      "familyId": "18734099-root-1",
+      "applicationNumber": "18734099",
+      "cpcSection": "A",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      "claimsXmlSha256": "8dce6843c712af3cc6de9a4baf17b490781df175ee76718645b675405cc27cbc",
+      "publicationNumber": "US20240398123A1",
+      "officeActionDocumentIdentifiers": ["MLTVF25AX117X14"],
+      "officeActionMailDate": "2026-02-20"
+    },
+    {
+      "familyId": "18409554-root-16",
+      "applicationNumber": "18409554",
+      "cpcSection": "A",
+      "claimNumbers": [16, 17, 18, 19, 20, 21, 22],
+      "claimsXmlSha256": "6398f1ee38e1c8976bbca72046bfb39463451aaf1769c71bc441bada5f43911f",
+      "publicationNumber": "US20240307121A1",
+      "officeActionDocumentIdentifiers": ["MKH1CRU6X118X94"],
+      "officeActionMailDate": "2026-01-20"
+    },
+    {
+      "familyId": "18018354-root-6",
+      "applicationNumber": "18018354",
+      "cpcSection": "A",
+      "claimNumbers": [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17],
+      "claimsXmlSha256": "7e6b0075712bfca5defb71a4032ef00ae5185c67f8a15db72e9e767ced157ee8",
+      "publicationNumber": "US20230354979A1",
+      "officeActionDocumentIdentifiers": ["MBF31JZIWFYBX95"],
+      "officeActionMailDate": "2025-06-03"
+    },
+    {
+      "familyId": "16628033-root-1",
+      "applicationNumber": "16628033",
+      "cpcSection": "A",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "claimsXmlSha256": "3f25838288dfa6cf3656be299299729ee233baceb2da782e7cd62846f4f825d4",
+      "publicationNumber": "US20200383794A1",
+      "officeActionDocumentIdentifiers": ["KMUHYPEFLDFLYX7"],
+      "officeActionMailDate": "2021-03-29"
+    },
+    {
+      "familyId": "13468456-root-1",
+      "applicationNumber": "13468456",
+      "cpcSection": "A",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      "claimsXmlSha256": "88043ab35ea67aebb158c152d1ee49bb9548e4f5d4c0713adae6213a4cc05112",
+      "publicationNumber": "US20120285386A1",
+      "officeActionDocumentIdentifiers": ["HQF9BZD8PXXIFW4"],
+      "officeActionMailDate": "2014-01-16"
+    },
+    {
+      "familyId": "11670278-root-61",
+      "applicationNumber": "11670278",
+      "cpcSection": "A",
+      "claimNumbers": [61, 62, 63, 64, 65, 67],
+      "claimsXmlSha256": "83fccdaba8704e1cac25d45f4f37d7ea2e9f02a3ec4cd32053d1bf646e4630f7",
+      "publicationNumber": "US20080186197A1",
+      "officeActionDocumentIdentifiers": ["FUEAL66WPPOPPY5"],
+      "officeActionMailDate": "2009-05-07"
+    },
+    {
+      "familyId": "13687596-root-1",
+      "applicationNumber": "13687596",
+      "cpcSection": "B",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+      "claimsXmlSha256": "6bc822b8639ea93b2b55ca9fba3e69b6089698a485d3cd27e79b9e4b34be5a0f",
+      "publicationNumber": "US20130136529A1",
+      "officeActionDocumentIdentifiers": ["I41GT52DPXXIFW4"],
+      "officeActionMailDate": "2014-12-26"
+    },
+    {
+      "familyId": "12838228-root-1",
+      "applicationNumber": "12838228",
+      "cpcSection": "B",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "claimsXmlSha256": "343afe495d288121b42bd5048e6c25b0505663e9ea51653731354145e1c4d0ba",
+      "publicationNumber": "US20110074901A1",
+      "officeActionDocumentIdentifiers": ["H2KCNOYDPXXIFW4"],
+      "officeActionMailDate": "2012-05-25"
+    },
+    {
+      "familyId": "14657939-root-1",
+      "applicationNumber": "14657939",
+      "cpcSection": "B",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "claimsXmlSha256": "9a0763a20098b088f6180c12eaca2a1219e69dd9f59651e6000b5e7b2b5cec12",
+      "publicationNumber": "US20150258604A1",
+      "officeActionDocumentIdentifiers": ["IS1UW83PRXEAPX3"],
+      "officeActionMailDate": "2016-08-19"
+    },
+    {
+      "familyId": "12447956-root-7",
+      "applicationNumber": "12447956",
+      "cpcSection": "B",
+      "claimNumbers": [7, 11, 12, 13, 14, 15, 16, 17, 18],
+      "claimsXmlSha256": "c19301baafcce2ade19dda970b28ea2f19ab830af045cb8e1c92fa857083bd56",
+      "publicationNumber": "US20100071148A1",
+      "officeActionDocumentIdentifiers": ["GSU9LW9JPPOPPY5"],
+      "officeActionMailDate": "2011-09-23"
+    },
+    {
+      "familyId": "15927789-root-6",
+      "applicationNumber": "15927789",
+      "cpcSection": "B",
+      "claimNumbers": [6, 7, 8, 9, 10],
+      "claimsXmlSha256": "a347e3ea155dda95dc35a17dd8d667e3b716754ea572d89ecf0be0af0155ccc5",
+      "publicationNumber": "US20180208423A1",
+      "officeActionDocumentIdentifiers": ["KGTL26UADFLYX10"],
+      "officeActionMailDate": "2020-10-30"
+    },
+    {
+      "familyId": "16068637-root-11",
+      "applicationNumber": "16068637",
+      "cpcSection": "B",
+      "claimNumbers": [11, 12, 13, 14, 15, 16],
+      "claimsXmlSha256": "58be59684d73d176ac902fd2f074c5b486002656ec3243e87ca1c5f54f7288aa",
+      "publicationNumber": "US20190039119A1",
+      "officeActionDocumentIdentifiers": ["K2XMF4F4RXEAPX2"],
+      "officeActionMailDate": "2019-11-14"
+    },
+    {
+      "familyId": "12536794-root-19",
+      "applicationNumber": "12536794",
+      "cpcSection": "B",
+      "claimNumbers": [19, 20, 21, 22, 23, 24],
+      "claimsXmlSha256": "0f303d9da433431d6561abf7bb2b87624c7dceca10e7e11fe3d949049fae3d05",
+      "publicationNumber": "US20110033254A1",
+      "officeActionDocumentIdentifiers": ["GXNAVEPVPXXIFW4"],
+      "officeActionMailDate": "2012-01-20"
+    },
+    {
+      "familyId": "15752303-root-1",
+      "applicationNumber": "15752303",
+      "cpcSection": "B",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+      "claimsXmlSha256": "cc7de7a785421b3f8a313731bc996d26256d6117cfee4eed38676b7d9bc272fb",
+      "publicationNumber": "US20190047783A1",
+      "officeActionDocumentIdentifiers": ["K6ASPVFPRXEAPX2"],
+      "officeActionMailDate": "2020-02-06"
+    },
+    {
+      "familyId": "16819424-root-10",
+      "applicationNumber": "16819424",
+      "cpcSection": "B",
+      "claimNumbers": [10, 11, 12, 13, 14, 15, 16, 17],
+      "claimsXmlSha256": "b7cd825b86b7e366f88e437bf386d0a12eb42b9ad9bd3196b9da728132654029",
+      "publicationNumber": "US20200215600A1",
+      "officeActionDocumentIdentifiers": ["KL0V9XK0DFLYX11"],
+      "officeActionMailDate": "2021-02-16"
+    },
+    {
+      "familyId": "18643465-root-1",
+      "applicationNumber": "18643465",
+      "cpcSection": "B",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+      "claimsXmlSha256": "8d7b2ee3bafd2dab852f470928256c778987b250d50ed7af1ea7ce7021545c86",
+      "publicationNumber": "US20240369068A1",
+      "officeActionDocumentIdentifiers": ["MKBBXLRP149X195"],
+      "officeActionMailDate": "2026-01-13"
+    },
+    {
+      "familyId": "12451999-root-15",
+      "applicationNumber": "12451999",
+      "cpcSection": "B",
+      "claimNumbers": [15, 16, 17, 18, 19, 20, 21],
+      "claimsXmlSha256": "b657f25012192ecd3cb6721a3f9cd49f8d29976b1633fa43e584822eea28386d",
+      "publicationNumber": "US20100101243A1",
+      "officeActionDocumentIdentifiers": ["HT7HN8AGPXXIFW4"],
+      "officeActionMailDate": "2014-03-27"
+    },
+    {
+      "familyId": "13575735-root-1",
+      "applicationNumber": "13575735",
+      "cpcSection": "B",
+      "claimNumbers": [1, 2, 3, 4, 5],
+      "claimsXmlSha256": "3699396cd783225323ecb7840391bd127d8765c12ca741961e701c6e047974d7",
+      "publicationNumber": "US20120294970A1",
+      "officeActionDocumentIdentifiers": ["I8A52WO0PXXIFW4"],
+      "officeActionMailDate": "2015-04-13"
+    },
+    {
+      "familyId": "12268372-root-10",
+      "applicationNumber": "12268372",
+      "cpcSection": "B",
+      "claimNumbers": [10, 11, 12, 13],
+      "claimsXmlSha256": "16c82072468044a1c67b1ae911d5170b42b5e30334f7b8e3e71fbfdc493f03e2",
+      "publicationNumber": "US20090127033A1",
+      "officeActionDocumentIdentifiers": ["GJOTJDQ8PPOPPY5"],
+      "officeActionMailDate": "2011-02-04"
+    },
+    {
+      "familyId": "13272881-root-1",
+      "applicationNumber": "13272881",
+      "cpcSection": "B",
+      "claimNumbers": [
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17
+      ],
+      "claimsXmlSha256": "04987cc18c70c2ae42e809ee05178c8acd42174a6a7cd22ad36ef3ff7fd8e37a",
+      "publicationNumber": "US20130094916A1",
+      "officeActionDocumentIdentifiers": ["HQ6R9XW9PXXIFW4"],
+      "officeActionMailDate": "2014-01-08"
+    },
+    {
+      "familyId": "17617663-root-1",
+      "applicationNumber": "17617663",
+      "cpcSection": "B",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "claimsXmlSha256": "de5b0f1bcc35b1f7247c380675a3be7982938f1696bf398b9e022e2612f0f5b3",
+      "publicationNumber": "US20220305549A1",
+      "officeActionDocumentIdentifiers": ["LG26KQHVGREENX3"],
+      "officeActionMailDate": "2023-04-06"
+    },
+    {
+      "familyId": "11246782-root-28",
+      "applicationNumber": "11246782",
+      "cpcSection": "B",
+      "claimNumbers": [28, 29, 30],
+      "claimsXmlSha256": "164ba7cdb3667ac85de10f85eabec98fccac77c5cb3eca7c1e2d9a8ab0165144",
+      "publicationNumber": "US20070080569A1",
+      "officeActionDocumentIdentifiers": ["FCKH00ECPPOPPY5"],
+      "officeActionMailDate": "2008-02-12"
+    },
+    {
+      "familyId": "12525441-root-1",
+      "applicationNumber": "12525441",
+      "cpcSection": "B",
+      "claimNumbers": [1, 2, 3, 4, 5],
+      "claimsXmlSha256": "733ddb383df84dc607b398b264940e2d370b2dc00f63e6209ccec7b7b34c4467",
+      "publicationNumber": "US20100175240A1",
+      "officeActionDocumentIdentifiers": ["H3NGHDGOPXXIFW4"],
+      "officeActionMailDate": "2012-06-20"
+    },
+    {
+      "familyId": "16963517-root-1",
+      "applicationNumber": "16963517",
+      "cpcSection": "E",
+      "claimNumbers": [1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12],
+      "claimsXmlSha256": "871e25b9ebd0a5056df764c0f022fa48293593231cf3186f4453d325133a4930",
+      "publicationNumber": "US20210047838A1",
+      "officeActionDocumentIdentifiers": ["KUD6JY03LDFLYX7"],
+      "officeActionMailDate": "2021-10-06"
+    },
+    {
+      "familyId": "14970678-root-17",
+      "applicationNumber": "14970678",
+      "cpcSection": "E",
+      "claimNumbers": [17, 18, 19, 20],
+      "claimsXmlSha256": "bde97a2d6a8356446f76c37acffaa5ce8b91c080b5250f3c60c7baa87533d566",
+      "publicationNumber": "US20160174707A1",
+      "officeActionDocumentIdentifiers": ["IRRSD7PYRXEAPX2"],
+      "officeActionMailDate": "2016-08-16"
+    },
+    {
+      "familyId": "15276859-root-19",
+      "applicationNumber": "15276859",
+      "cpcSection": "F",
+      "claimNumbers": [19, 20],
+      "claimsXmlSha256": "4b5e64336038051be088ecd401fa19fa6c62d565afbfa19c1985c81840640e4a",
+      "publicationNumber": "US20170101888A1",
+      "officeActionDocumentIdentifiers": ["JMQIZ4MERXEAPX3"],
+      "officeActionMailDate": "2018-10-01"
+    },
+    {
+      "familyId": "11575704-root-1",
+      "applicationNumber": "11575704",
+      "cpcSection": "F",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+      "claimsXmlSha256": "d665ccb73c27b7abde1d3d13fb5a273146402c7a39a55378d38d912c70ac9937",
+      "publicationNumber": "US20080062712A1",
+      "officeActionDocumentIdentifiers": ["FY3QPPF4PPOPPY5"],
+      "officeActionMailDate": "2009-08-10"
+    },
+    {
+      "familyId": "15958729-root-1",
+      "applicationNumber": "15958729",
+      "cpcSection": "F",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "claimsXmlSha256": "742cec6506f580056ddf47b067b3d7e421747abef13394d22bb3aec611a3ef10",
+      "publicationNumber": "US20180238379A1",
+      "officeActionDocumentIdentifiers": ["K226AAC7RXEAPX3"],
+      "officeActionMailDate": "2019-10-24"
+    },
+    {
+      "familyId": "11279554-root-25",
+      "applicationNumber": "11279554",
+      "cpcSection": "F",
+      "claimNumbers": [25, 26, 27, 28, 29, 30, 31, 32, 33, 34],
+      "claimsXmlSha256": "574a7e67dcbe0787ab3339416900cfcda6355d75262d1d9997cd011562d45e4b",
+      "publicationNumber": "US20060241924A1",
+      "officeActionDocumentIdentifiers": ["FRJR91A1PPOPPY5"],
+      "officeActionMailDate": "2009-02-23"
+    },
+    {
+      "familyId": "14971439-root-17",
+      "applicationNumber": "14971439",
+      "cpcSection": "F",
+      "claimNumbers": [17],
+      "claimsXmlSha256": "15257b174ff30cb7484cdb56e84beb5931acd39a5ce92261e2a908b3373d8ebf",
+      "publicationNumber": "US20160102789A1",
+      "officeActionDocumentIdentifiers": ["IXTEHR7ZRXEAPX2"],
+      "officeActionMailDate": "2017-01-11"
+    },
+    {
+      "familyId": "14813790-root-1",
+      "applicationNumber": "14813790",
+      "cpcSection": "F",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8],
+      "claimsXmlSha256": "1473a5396d2f959c80eec99ffbf6e83071064aa556a515b759d9e79ab7a70192",
+      "publicationNumber": "US20160061107A1",
+      "officeActionDocumentIdentifiers": ["J3W0F84RRXEAPX1"],
+      "officeActionMailDate": "2017-06-15"
+    },
+    {
+      "familyId": "11341804-root-1",
+      "applicationNumber": "11341804",
+      "cpcSection": "F",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "claimsXmlSha256": "f5fdd6c5f938fc2d4c77d249edd92179a6233cc29d55f4e1d52b4aa481f40d90",
+      "publicationNumber": "US20060119046A1",
+      "officeActionDocumentIdentifiers": ["G1CMQ2ADPPOPPY5"],
+      "officeActionMailDate": "2009-10-28"
+    },
+    {
+      "familyId": "14659462-root-1",
+      "applicationNumber": "14659462",
+      "cpcSection": "F",
+      "claimNumbers": [
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+      ],
+      "claimsXmlSha256": "249a28c94a5d6e0b4ef4c590743d3f7bd139afbe2203dcae9124cc8da0670acb",
+      "publicationNumber": "US20150192169A1",
+      "officeActionDocumentIdentifiers": ["IOAAT5U4RXEAPX4"],
+      "officeActionMailDate": "2016-05-17"
+    },
+    {
+      "familyId": "11457178-root-1",
+      "applicationNumber": "11457178",
+      "cpcSection": "G",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "claimsXmlSha256": "7fbb9123ce720029a6c7c988c769da93df48208d0fb53b6624856ad6b6630889",
+      "publicationNumber": "US20080016330A1",
+      "officeActionDocumentIdentifiers": ["FHXAJQBKPPOPPY5"],
+      "officeActionMailDate": "2008-06-26"
+    },
+    {
+      "familyId": "13846690-root-15",
+      "applicationNumber": "13846690",
+      "cpcSection": "G",
+      "claimNumbers": [15, 16, 17, 18, 19, 20, 21, 22, 23, 24],
+      "claimsXmlSha256": "a55481c541fe0642fac5a423cfd240432c919f3cbf81409173e95e43125a313e",
+      "publicationNumber": "US20130277286A1",
+      "officeActionDocumentIdentifiers": ["IW52IU0ORXEAPX1"],
+      "officeActionMailDate": "2016-12-02"
+    },
+    {
+      "familyId": "13275397-root-1",
+      "applicationNumber": "13275397",
+      "cpcSection": "G",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7],
+      "claimsXmlSha256": "140c2dea315258a5a42506040f0c037cbefc7cdf8e464f15d8c877cd8be4c400",
+      "publicationNumber": "US20130036818A1",
+      "officeActionDocumentIdentifiers": ["HN7G13DHPXXIFW4"],
+      "officeActionMailDate": "2013-10-25"
+    },
+    {
+      "familyId": "17139442-root-1",
+      "applicationNumber": "17139442",
+      "cpcSection": "G",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7],
+      "claimsXmlSha256": "16d32ec18f041fce2434c32b17cbe2f25c89bba04362db47bcd3d0960f7c2efb",
+      "publicationNumber": "US20210125715A1",
+      "officeActionDocumentIdentifiers": ["KWAUCLGMLDFLYX9"],
+      "officeActionMailDate": "2021-11-24"
+    },
+    {
+      "familyId": "16135952-root-20",
+      "applicationNumber": "16135952",
+      "cpcSection": "G",
+      "claimNumbers": [20, 21, 22, 23, 24, 25, 26, 27],
+      "claimsXmlSha256": "8a90a2eb3b68a640ce6272b2e69ab1541f278cfa075d0efd7b627663e5e03dcf",
+      "publicationNumber": "US20200088758A1",
+      "officeActionDocumentIdentifiers": ["K9CWMD05RXEAPX1"],
+      "officeActionMailDate": "2020-04-27"
+    },
+    {
+      "familyId": "14262251-root-1",
+      "applicationNumber": "14262251",
+      "cpcSection": "G",
+      "claimNumbers": [1, 2, 3, 4],
+      "claimsXmlSha256": "5261aca87821915f83c5818a1847f954410f70c93deafc9dfdfd8173fbd228b1",
+      "publicationNumber": "US20140232400A1",
+      "officeActionDocumentIdentifiers": ["IXRP377QRXEAPX5"],
+      "officeActionMailDate": "2017-01-12"
+    },
+    {
+      "familyId": "16778182-root-1",
+      "applicationNumber": "16778182",
+      "cpcSection": "G",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7],
+      "claimsXmlSha256": "71568d42f9f2666720d7e05ac2217639d15527f90dd3d1c86ed51d71763e2b7d",
+      "publicationNumber": "US20200250554A1",
+      "officeActionDocumentIdentifiers": ["L47DNZ32GREENX1"],
+      "officeActionMailDate": "2022-06-13"
+    },
+    {
+      "familyId": "12656234-root-1",
+      "applicationNumber": "12656234",
+      "cpcSection": "G",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "claimsXmlSha256": "d170c033eaed8c8abcc41ee7478140c5d6a6b43685ccd26ec9f3214f25195f3a",
+      "publicationNumber": "US20110178950A1",
+      "officeActionDocumentIdentifiers": ["H5WNMLJZPXXIFW4"],
+      "officeActionMailDate": "2012-08-17"
+    },
+    {
+      "familyId": "11910514-root-1",
+      "applicationNumber": "11910514",
+      "cpcSection": "G",
+      "claimNumbers": [
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+      ],
+      "claimsXmlSha256": "15048d81fa3b31fb7f1c83e91fcc7adb55ea66892756ec2ccebabb9912083239",
+      "publicationNumber": "US20080187096A1",
+      "officeActionDocumentIdentifiers": ["FX53M3KKPPOPPY5"],
+      "officeActionMailDate": "2009-07-15"
+    },
+    {
+      "familyId": "15803808-root-15",
+      "applicationNumber": "15803808",
+      "cpcSection": "G",
+      "claimNumbers": [15, 16, 17, 18, 19],
+      "claimsXmlSha256": "2426920929458a340ef2c506d08f5fd4f64851990fdf2ca49c5178ac9bd64fb2",
+      "publicationNumber": "US20180130207A1",
+      "officeActionDocumentIdentifiers": ["JOZUIATPRXEAPX1"],
+      "officeActionMailDate": "2018-11-29"
+    },
+    {
+      "familyId": "11299450-root-1",
+      "applicationNumber": "11299450",
+      "cpcSection": "G",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "claimsXmlSha256": "c75b0bb7254a5cdad49ead95d97b4d04b8ff1d78e1b9be46f0724fc313f2a146",
+      "publicationNumber": "US20070136415A1",
+      "officeActionDocumentIdentifiers": ["FMJAPNLLPPOPPY5"],
+      "officeActionMailDate": "2008-10-21"
+    },
+    {
+      "familyId": "18307241-root-1",
+      "applicationNumber": "18307241",
+      "cpcSection": "G",
+      "claimNumbers": [
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
+      ],
+      "claimsXmlSha256": "e8319938f7fb7d4881925209229d8626162091ff54dc3b1e27faeee9aee14a37",
+      "publicationNumber": "US20230288444A1",
+      "officeActionDocumentIdentifiers": ["LRP4L33UBLUEX11"],
+      "officeActionMailDate": "2024-01-24"
+    },
+    {
+      "familyId": "12117564-root-7",
+      "applicationNumber": "12117564",
+      "cpcSection": "G",
+      "claimNumbers": [7, 8],
+      "claimsXmlSha256": "85faad34d875631fd0800e319e660540ec53620e2cdeb7db1073be500e298908",
+      "publicationNumber": "US20080282800A1",
+      "officeActionDocumentIdentifiers": ["GJBJEV4HPPOPPY5"],
+      "officeActionMailDate": "2011-01-26"
+    },
+    {
+      "familyId": "13062032-root-1",
+      "applicationNumber": "13062032",
+      "cpcSection": "G",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+      "claimsXmlSha256": "2b33a6aabcd2936ff0644c943981d6dc7f04b9a7062d5979ee16ed9c3d8efdcb",
+      "publicationNumber": "US20110247417A1",
+      "officeActionDocumentIdentifiers": ["HGF9NI6ZPXXIFW4"],
+      "officeActionMailDate": "2013-05-09"
+    },
+    {
+      "familyId": "14260199-root-1",
+      "applicationNumber": "14260199",
+      "cpcSection": "H",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8],
+      "claimsXmlSha256": "5b2ce81b0552054f82bf832063dcf66a518267969ed212c5016d9b9b10c233e3",
+      "publicationNumber": "US20150311547A1",
+      "officeActionDocumentIdentifiers": ["IV12H9U5RXEAPX5"],
+      "officeActionMailDate": "2016-11-02"
+    },
+    {
+      "familyId": "13070851-root-1",
+      "applicationNumber": "13070851",
+      "cpcSection": "H",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7],
+      "claimsXmlSha256": "d0cfa17ca520ecf770cc83a16479773c803740d9a7e592c8883ad830a6180645",
+      "publicationNumber": "US20110274057A1",
+      "officeActionDocumentIdentifiers": ["HB9GFHSLPXXIFW4"],
+      "officeActionMailDate": "2013-01-02"
+    },
+    {
+      "familyId": "18087856-root-11",
+      "applicationNumber": "18087856",
+      "cpcSection": "H",
+      "claimNumbers": [11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
+      "claimsXmlSha256": "f616e9ce106d7cdac966b940ada9a7a4676fe5ca5ffc5ae445af4e25f253a0fb",
+      "publicationNumber": "US20230412427A1",
+      "officeActionDocumentIdentifiers": ["ME7NKC8P6X104X8"],
+      "officeActionMailDate": "2025-08-12"
+    },
+    {
+      "familyId": "18547866-root-1",
+      "applicationNumber": "18547866",
+      "cpcSection": "H",
+      "claimNumbers": [
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+      ],
+      "claimsXmlSha256": "125c14263b497f0fa383d0583a99418b03c9735f0292a6f181b4f57f3a772567",
+      "publicationNumber": "US20240128486A1",
+      "officeActionDocumentIdentifiers": ["MMNSZCKMX22X197"],
+      "officeActionMailDate": "2026-03-13"
+    },
+    {
+      "familyId": "13484431-root-19",
+      "applicationNumber": "13484431",
+      "cpcSection": "H",
+      "claimNumbers": [19, 20, 21, 22, 23, 24, 25],
+      "claimsXmlSha256": "399d18d79cc889291a1a77caeeac14d34aac07438b7973fabe1026298fd942fd",
+      "publicationNumber": "US20130025114A1",
+      "officeActionDocumentIdentifiers": ["HS1U3WJ9PXXIFW4"],
+      "officeActionMailDate": "2014-02-24"
+    },
+    {
+      "familyId": "13822885-root-1",
+      "applicationNumber": "13822885",
+      "cpcSection": "H",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+      "claimsXmlSha256": "48d2db856e0528556512d6a61440fd8c8dbd077bd2d8449187ed7b447ae12a2b",
+      "publicationNumber": "US20130183571A1",
+      "officeActionDocumentIdentifiers": ["IC3CHHCXPXXIFW4"],
+      "officeActionMailDate": "2015-07-16"
+    },
+    {
+      "familyId": "12749812-root-1",
+      "applicationNumber": "12749812",
+      "cpcSection": "H",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "claimsXmlSha256": "6b10f44cbce96b1d760664dae240868b26765fec95dd7460566a836427bf63b7",
+      "publicationNumber": "US20110243154A1",
+      "officeActionDocumentIdentifiers": ["HAWI94S0PXXIFW4"],
+      "officeActionMailDate": "2012-12-21"
+    },
+    {
+      "familyId": "12748625-root-1",
+      "applicationNumber": "12748625",
+      "cpcSection": "H",
+      "claimNumbers": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "claimsXmlSha256": "8354a47b43fd799ab2503318e98ab2b84a96b0c1877e06706887ebfc0c3f3b61",
+      "publicationNumber": "US20100254278A1",
+      "officeActionDocumentIdentifiers": ["HAY25ZNXPXXIFW4"],
+      "officeActionMailDate": "2012-12-24"
+    },
+    {
+      "familyId": "11973401-root-12",
+      "applicationNumber": "11973401",
+      "cpcSection": "H",
+      "claimNumbers": [12, 13, 14, 17],
+      "claimsXmlSha256": "ee9d0020be3a26eb34fa37a96422bda7d8fce0180266ede3dfd7a809cef8bf5b",
+      "publicationNumber": "US20080126506A1",
+      "officeActionDocumentIdentifiers": ["G202YQG3PPOPPY5"],
+      "officeActionMailDate": "2009-11-17"
+    },
+    {
+      "familyId": "11502512-root-11",
+      "applicationNumber": "11502512",
+      "cpcSection": "H",
+      "claimNumbers": [11, 12, 13, 14, 15, 16, 17],
+      "claimsXmlSha256": "9caf45b70f19cdf2d0809c67183878b1c008bc3ac668349d7cc001748cc84e91",
+      "publicationNumber": "US20080036867A1",
+      "officeActionDocumentIdentifiers": ["GQUZQBJDPPOPPY5"],
+      "officeActionMailDate": "2011-08-04"
+    }
+  ]
+}

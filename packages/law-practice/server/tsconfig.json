@@ -33,6 +33,9 @@
       "path": "../../drivers/uspto/tsconfig.json"
     },
     {
+      "path": "../../drivers/wink/tsconfig.json"
+    },
+    {
       "path": "../../epistemic/domain/tsconfig.json"
     },
     {

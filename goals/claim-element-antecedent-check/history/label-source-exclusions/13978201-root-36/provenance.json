@@ -1,0 +1,73 @@
+{
+  "applicationNumber": "13978201",
+  "publicationNumber": "US20130276306A1",
+  "publicationDate": "2013-10-24",
+  "nativeXmlSha256": "e6709e6e8e093e0cc52682db86ba976181ace668eb1c8f70abf2d56d906cb75e",
+  "claimsXmlSha256": "4ba89eb934ce1212848545636712e8b95eb86946552fd368081af34fd78b9df7",
+  "officeActionDocumentIdentifiers": [
+    "I7VYYE2LPXXIFW4"
+  ],
+  "officeActionMailDate": "2015-03-30",
+  "officeActionSection112Text": [
+    "claims 1-5,7,9-17,19,24-27 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention.\r\nclaim 1, line 4, “the use” lacks antecedent basis.\r\nclaim 3, line 2, “the position” lacks antecedent basis.\r\nclaim 7, line 3, “the positions” lacks antecedent basis.\r\nclaim 11, line 2, “the wheel cleats” lacks antecedent basis.\r\nclaim 13, line 2, the wheel hub” lacks antecedent basis.\r\nclaim 16, line 2, “the wheel handler” lacks antecedent basis.\r\nclaim 17, line 2, the ground” lacks antecedent basis.\r\nclaim 17, line 4, “the nut storage nest” lacks antecedent basis.\r\nclaim 19, line 4, “the wheel hub” lacks antecedent basis.\r\nclaim 19, line 5, “the wheel handler” lacks antecedent basis.\r\nclaim 26, line 2, the locations” lacks antecedent basis.\r\nclaim 26, line 3, “the wheel retaining nuts” lacks antecedent basis.\r\nclaim 26, line 6, “the plane” lacks antecedent basis.\r\nclaim 26, line 7, “the wheel rim” lacks antecedent basis.\r\nclaim 26, line 7, “the angular orientation” lacks antecedent basis."
+  ],
+  "originalClaimDocuments": [
+    {
+      "documentIdentifier": "HIOQHRMRPXXIFW3",
+      "officialDate": "2013-07-03T00:00:00.000-0400"
+    },
+    {
+      "documentIdentifier": "HIQ1V4H3PXXIFW4",
+      "officialDate": "2013-07-03T00:00:00.000-0400"
+    }
+  ],
+  "originalComparisons": [
+    {
+      "documentIdentifier": "HIOQHRMRPXXIFW3",
+      "officialDate": "2013-07-03T00:00:00.000-0400",
+      "sha256": "d01aa0033acf559be98bfb7b3c880417301b44ba4970fddf86018ab80a0490e7",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [
+        4,
+        7,
+        10,
+        11,
+        12,
+        14,
+        15,
+        16
+      ],
+      "sourceClaimCount": 24
+    },
+    {
+      "documentIdentifier": "HIQ1V4H3PXXIFW4",
+      "officialDate": "2013-07-03T00:00:00.000-0400",
+      "sha256": "82d7ce7a25962a524d4fb8309d6e512db1cf908b186f075d1e89039212316493",
+      "ocrCorroborationOnly": true,
+      "exactNonWhitespaceClaimNumbers": [
+        2,
+        9,
+        18,
+        20,
+        21,
+        26,
+        29,
+        30,
+        38,
+        40,
+        44
+      ],
+      "sourceClaimCount": 45
+    }
+  ],
+  "documentInventoryCount": 53,
+  "documentInventoryRows": 53,
+  "primaryCpc": "B60B  23/04",
+  "inForceEvidence": "Native A1 publication precedes office action. Complete document inventory shows only the original CLM date before rejection, with no intervening CLM amendment. Claim text is sourced exclusively from native publication XML; OCR originals corroborate only. Independent critic must verify family/rejection association and flag uncertainty.",
+  "sourceEndpoints": [
+    "https://api.uspto.gov/api/v1/patent/applications/13978201",
+    "https://api.uspto.gov/api/v1/patent/applications/13978201/documents",
+    "https://api.uspto.gov/api/v1/patent/oa/oa_actions/v1/records"
+  ],
+  "labelStatus": "extractor-pending; critic-and-attorney-pending"
+}

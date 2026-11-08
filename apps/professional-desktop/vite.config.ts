@@ -159,6 +159,11 @@ export default defineConfig({
         target: "http://127.0.0.1:3939",
         changeOrigin: true,
       },
+      // The sidecar's vault-sync Api (offline intents replay here, same origin and token).
+      "/vault-sync": {
+        target: "http://127.0.0.1:3939",
+        changeOrigin: true,
+      },
       // Same-origin OTLP for the webview's effect-native exporter (the client
       // observability global layer in @beep/agents-client). Vite proxies it to
       // the standard OTel collector so the browser needs no CORS setup; without

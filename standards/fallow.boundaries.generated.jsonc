@@ -3083,7 +3083,8 @@
           "@beep/test-utils",
           "@beep/tika",
           "@beep/uspto",
-          "@beep/utils"
+          "@beep/utils",
+          "@beep/wink"
         ],
         "allowTypeOnly": [
           "@beep/box",
@@ -3117,7 +3118,8 @@
           "@beep/test-utils",
           "@beep/tika",
           "@beep/uspto",
-          "@beep/utils"
+          "@beep/utils",
+          "@beep/wink"
         ]
       },
       {
@@ -3152,6 +3154,7 @@
           "@beep/law-practice-use-cases",
           "@beep/mcp-kit",
           "@beep/nlp",
+          "@beep/nlp-processing",
           "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
@@ -3170,6 +3173,7 @@
           "@beep/law-practice-use-cases",
           "@beep/mcp-kit",
           "@beep/nlp",
+          "@beep/nlp-processing",
           "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",

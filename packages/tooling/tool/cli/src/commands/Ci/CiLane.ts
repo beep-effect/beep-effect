@@ -537,7 +537,7 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     replay: "exact",
     flags: [],
     notes:
-      "Path filter, Rust toolchain setup, and the src-tauri cargo check + clippy steps (gated on desktop_rust_relevant from scripts/ci-change-profile.sh) stay in the workflow; the lane body builds the sidecar and runs the IPC proof.",
+      "Path filter, Rust toolchain setup, and the src-tauri cargo check + clippy steps (gated on desktop_rust_relevant from `beep ci change-profile`) stay in the workflow; the lane body builds the sidecar and runs the IPC proof.",
   }),
   CiLaneDescriptor.make({
     id: "fallow",

@@ -31,13 +31,14 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement — in progress (lane `beep-effect-worktrees/scripts-to-beep-cli`, branch `goals/scripts-to-beep-cli`). Two PRs: PR 1 lands every replacement command, the slim compiled `bin-ci` entry and the binary publisher; PR 2 pins the first published binary, switches the workflows, deletes the CI shell and adds the tracked-shell law. Commands stay in `@beep/repo-cli` until `goals/beep-cli-composition` moves them.
+P3 Yeet. Final PR #2921 (PR 3) deletes the seven transitional CI scripts now that #2906 (merged 5a842b4882) put the binary-calling heavy.yml on main. #2860 (d15ecf4ca61), #2902 (8224cf33a5) and #2906 are merged. `proposedCloseout` is `completed-retained` with `finalPullRequest` 2921; `initiative.status` stays `active` until completion evidence verifies after the merge.
 
 ## Latest Evidence
 
 - 2026-11-06 grill session decisions D10, D11, D15 in [`explorations/pulumi-to-alchemy/DECISIONS.md`](../../explorations/pulumi-to-alchemy/DECISIONS.md).
 - Consumer inventory of `scripts/` recorded in `SPEC.md` Target Surfaces.
 - 2026-11-07 P0: compile probe (full CLI fails on eager DuckDB, slim CiOperational entry bundles 672 modules / 110 MB) and five decisions under [`decisions/`](./decisions/).
+- 2026-11-07: #2860 merged (commands, policy data, bin-ci entry, publisher); #2902 merged (in-process coverage for the ten PR 1 files); #2906 opened (pinned binary cutover, CI shell deleted, #2850 cache-pilot scripts ported, tracked-shell-allowlist law, reflection `history/reflections/2026-11-07-claude.md`).
 
 ## Notes
 
