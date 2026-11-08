@@ -847,50 +847,6 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
           );
         }).pipe(TestClock.withLive)
       );
-
-      it.effect("budgets live status using its identity-fenced active reservation", () =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const { runtimeDir, tempRoot } = yield* admissionTemporaryRoot;
-          const observedWeights = yield* Ref.make<ReadonlyArray<number>>([]);
-          const stats = MemoryStats.of({
-            availableGib: Effect.succeed(80),
-            totalGib: Effect.succeed(128),
-            ceilingGib: Effect.succeed(128),
-            reservationCapacity: Effect.fn("MemoryStats.reservationCapacity")((leases) =>
-              Ref.set(
-                observedWeights,
-                A.map(leases, (lease) => lease.weightTokens)
-              ).pipe(Effect.as(8))
-            ),
-          });
-          yield* withQualityAdmission(
-            request(),
-            noAdmissionOriginGate,
-            Effect.gen(function* () {
-              const snapshot = yield* admissionStatus();
-              expect(snapshot.capacityTokens).toBe(8);
-              expect(snapshot.activeTokens).toBe(3);
-              expect(snapshot.leases).toHaveLength(1);
-              const identity = yield* processStartIdentityForPid(process.pid);
-              identity.pipe(O.isSome, assertTrue);
-              const procStart = yield* Effect.fromOption(identity).pipe(Effect.orDie);
-              assertSome(A.head(snapshot.leases).pipe(O.map((lease) => lease.procStart)), procStart);
-              const weights = yield* Ref.get(observedWeights);
-              expect(weights).toEqual([3]);
-            }),
-            fastConfig
-          ).pipe(
-            provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
-            Effect.provideService(MemoryStats, stats),
-            Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" }))
-          );
-          const remainingLeases = yield* fs.readDirectory(tempRoot.leases);
-          const remainingTickets = yield* fs.readDirectory(tempRoot.queue);
-          expect(remainingLeases).toEqual([]);
-          expect(remainingTickets).toEqual([]);
-        }).pipe(TestClock.withLive)
-      );
     });
 
     it.layer(MemoryStatsLive.pipe(Layer.provideMerge(NodeCrypto.layer)), { timeout: "5 seconds" })((it) => {
@@ -1092,76 +1048,64 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
       );
     });
 
-    it.effect("escalates a queued admission at two and ten minutes without repeating either warning", () => {
-      const ticket = YeetAdmissionTicket.make({
-        schemaVersion: "yeet-admission-ticket/v1",
-        pid: process.pid,
-        procStart: "test-start",
-        kind: "full-proof",
-        weightTokens: 3,
-        priority: "verify",
-        originKey: "origin-escalation",
-        checkoutRoot: "/repo/escalation",
-        branch: "feat/escalation",
-        enqueuedAtMillis: 0,
-        heartbeatAtMillis: 0,
-        blockedOnOriginAtMillis: 0,
-        nonce: "escalation-ticket",
-      });
+    const noteEscalationWait = (escalated: number, nowMillis: number) =>
+      noteAdmissionWaitForTesting(
+        request(),
+        YeetAdmissionTicket.make({
+          schemaVersion: "yeet-admission-ticket/v1",
+          pid: process.pid,
+          procStart: "test-start",
+          kind: "full-proof",
+          weightTokens: 3,
+          priority: "verify",
+          originKey: "origin-escalation",
+          checkoutRoot: "/repo/escalation",
+          branch: "feat/escalation",
+          enqueuedAtMillis: 0,
+          heartbeatAtMillis: 0,
+          blockedOnOriginAtMillis: 0,
+          nonce: "escalation-ticket",
+        }),
+        0,
+        { escalated, lastProgressMillis: 0 },
+        fastConfig,
+        {
+          availableGib: 10,
+          capacityTokens: 0,
+          nowMillis,
+          state: {
+            dead: [],
+            deadLeases: [],
+            deadTickets: [],
+            leases: [],
+            quarantined: [],
+            tickets: [],
+          },
+        }
+      );
 
-      const info = {
-        availableGib: 10,
-        capacityTokens: 0,
-        nowMillis: 120_000,
-        state: {
-          dead: [],
-          deadLeases: [],
-          deadTickets: [],
-          leases: [],
-          quarantined: [],
-          tickets: [],
-        },
-      };
-      return Effect.gen(function* () {
-        const progress = yield* noteAdmissionWaitForTesting(
-          request(),
-          ticket,
-          0,
-          { escalated: 0, lastProgressMillis: 0 },
-          fastConfig,
-          info
-        );
-        expect(progress.escalated).toBe(1);
-        expect(progress.lastProgressMillis).toBe(120_000);
-        const tenMinutes = Duration.toMillis(Duration.minutes(10));
-        const escalated = yield* noteAdmissionWaitForTesting(request(), ticket, 0, progress, fastConfig, {
-          ...info,
-          nowMillis: tenMinutes,
-        });
-        expect(escalated.escalated).toBe(2);
-        const warningLines = yield* TestConsole.logLines;
-        const warnings = pipe(
-          warningLines,
-          A.filter(S.is(S.String)),
-          A.filter(Str.includes("[yeet] admission: waited"))
-        );
-        expect(warnings).toHaveLength(2);
+    it.effect("escalates a queued admission after two minutes", () =>
+      noteEscalationWait(0, 120_000).pipe(
+        Effect.map((progress) => {
+          expect(progress.escalated).toBe(1);
+          expect(progress.lastProgressMillis).toBe(120_000);
+        })
+      )
+    );
+
+    it.effect("points a queued admission at the holders after ten minutes, once", () =>
+      Effect.gen(function* () {
+        const progress = yield* noteEscalationWait(1, 600_000);
+        expect(progress.escalated).toBe(2);
+        const repeated = yield* noteEscalationWait(2, 660_000);
+        expect(repeated.escalated).toBe(2);
+        const lines = yield* TestConsole.logLines;
+        const warnings = pipe(lines, A.filter(S.is(S.String)), A.filter(Str.includes("waited 10 minutes")));
+        expect(warnings).toHaveLength(1);
         expect(A.join(warnings, "\n")).toContain("quality scheduler status");
         expect(A.join(warnings, "\n")).toContain("quality scheduler reap");
-        const repeated = yield* noteAdmissionWaitForTesting(request(), ticket, 0, escalated, fastConfig, {
-          ...info,
-          nowMillis: tenMinutes + 1,
-        });
-        expect(repeated.escalated).toBe(2);
-        const repeatedLines = yield* TestConsole.logLines;
-        const afterRepeat = pipe(
-          repeatedLines,
-          A.filter(S.is(S.String)),
-          A.filter(Str.includes("[yeet] admission: waited"))
-        );
-        expect(afterRepeat).toEqual(warnings);
-      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make));
-    });
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
     it("pins the chartered token weights", () => {
       expect(admissionTokenWeight("full-proof")).toBe(3);
@@ -6596,6 +6540,49 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
       }).pipe(TestClock.withLive)
     );
 
+    it.effect("reports status capacity from the reservations of the live leases", () =>
+      Effect.gen(function* () {
+        const { runtimeDir, tempRoot } = yield* admissionTemporaryRoot;
+        const fs = yield* FileSystem.FileSystem;
+        const reserved = yield* Ref.make(A.empty<number>());
+        const stats = MemoryStats.of({
+          availableGib: Effect.succeed(1),
+          totalGib: Effect.succeed(128),
+          ceilingGib: Effect.succeed(128),
+          reservationCapacity: Effect.fn("MemoryStats.reservationCapacity")(function* (leases) {
+            yield* Ref.set(
+              reserved,
+              A.map(leases, (lease) => lease.weightTokens)
+            );
+            return 10;
+          }),
+        });
+        const snapshot = yield* withQualityAdmission(
+          request(),
+          noAdmissionOriginGate,
+          admissionStatus(fastConfig),
+          fastConfig
+        ).pipe(
+          provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
+          Effect.provideService(MemoryStats, stats)
+        );
+        expect(snapshot.capacityTokens).toBe(10);
+        expect(snapshot.activeTokens).toBe(3);
+        expect(snapshot.leases).toHaveLength(1);
+        const identity = yield* processStartIdentityForPid(process.pid);
+        identity.pipe(O.isSome, assertTrue);
+        const procStart = yield* Effect.fromOption(identity).pipe(Effect.orDie);
+        assertSome(A.head(snapshot.leases).pipe(O.map((lease) => lease.procStart)), procStart);
+        const remainingLeases = yield* fs.readDirectory(tempRoot.leases);
+        const remainingTickets = yield* fs.readDirectory(tempRoot.queue);
+        expect(remainingLeases).toEqual([]);
+        expect(remainingTickets).toEqual([]);
+        const weights = yield* Ref.get(reserved);
+        expect(weights).toEqual([request().weightTokens]);
+      }).pipe(TestClock.withLive)
+    );
+
     it.effect("keeps failed adoption on the caller budget and cleans a cancelled retry", () =>
       Effect.gen(function* () {
         const { runtimeDir, tempRoot } = yield* admissionTemporaryRoot;
@@ -6753,7 +6740,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               const rootMissing = isRoot && unavailableRoot;
               // The changing limit is evaluated only when the file is read.
               const limit = Effect.sync(
-                () => `${(isRoot && tightRoot ? 20 : suffix === "/shared/caller" ? 32 : liveAncestorGib) * GIB}`
+                () =>
+                  `${(isRoot && tightRoot ? 20 : suffix === "/shared/caller" ? (fault === "loose-caller" ? 64 : 32) : liveAncestorGib) * GIB}`
               );
               const current = Effect.sync(() => (fault === "current" ? "malformed" : "0"));
               const directory = `/sys/fs/cgroup${suffix}`;
@@ -6775,18 +6763,15 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
                 Effect.sync(() =>
                   fault === "mount"
                     ? "invalid"
-                    : `1 0 0:1 ${fault === "outside-root" ? "/unrelated" : fault === "subtree-root" ? "/shared" : "/"} /sys/fs/cgroup rw - cgroup2 cgroup rw`
+                    : `1 0 0:1 ${fault === "subtree-root" ? "/shared" : fault === "foreign-root" ? "/foreign" : "/"} /sys/fs/cgroup rw - cgroup2 cgroup rw`
                 )
               ),
               Tuple.make(
                 `/proc/${process.pid}/cgroup`,
                 Effect.sync(() => {
-                  callerReads++;
-                  return fault === "caller"
-                    ? "invalid"
-                    : fault === "migrated" && callerReads > 1
-                      ? "0::/moved\n"
-                      : "0::/shared/caller\n";
+                  callerReads += 1;
+                  if (fault === "caller") return "invalid";
+                  return fault === "moved-caller" && callerReads > 1 ? "0::/shared/moved\n" : "0::/shared/caller\n";
                 })
               ),
               Tuple.make(
@@ -6865,12 +6850,28 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
         expect(reading32).toBe(4);
         const reading33 = yield* capacity("/elsewhere", 80, 128, false, O.some("/execution"), "fresh");
         expect(reading33).toBe(2);
-        const outsideMount = yield* capacity("/elsewhere", 80, 128, false, O.none(), "outside-root");
-        expect(outsideMount).toBe(4);
+        // Without a fault this inspection reads 7 (reading16); each of these distrusts it and falls back to 4.
+        const reading34 = yield* capacity("/elsewhere", 80, 128, false, O.none(), "foreign-root");
+        expect(reading34).toBe(4);
+        const reading35 = yield* capacity("/elsewhere", 80, 128, false, O.none(), "moved-caller");
+        expect(reading35).toBe(4);
+        // The source's 32 GiB ceiling is tighter than every cgroup limit, so it decides. A prospective
+        // destination is judged by its own limits instead.
+        const reading36 = yield* capacity("/elsewhere", 80, 128, false, O.none(), "loose-caller");
+        expect(reading36).toBe(4);
+        const reading37 = yield* capacity("/elsewhere", 80, 128, false, O.some("/shared/caller"), "loose-caller");
+        expect(reading37).toBeGreaterThan(4);
         const runtimeCeiling = yield* capacity("/elsewhere", 80, 128, false, O.none(), "runtime-tight");
         expect(runtimeCeiling).toBe(2);
-        const migratedCaller = yield* capacity("/elsewhere", 80, 128, false, O.some("/execution"), "migrated");
-        expect(migratedCaller).toBe(4);
+        const migratedDestinationCaller = yield* capacity(
+          "/elsewhere",
+          80,
+          128,
+          false,
+          O.some("/execution"),
+          "moved-caller"
+        );
+        expect(migratedDestinationCaller).toBe(4);
       })
     );
 

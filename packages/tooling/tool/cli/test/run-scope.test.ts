@@ -68,6 +68,13 @@ describe("run scope", () => {
         )
       )
     );
+
+    it.effect("keeps the caller domain for admission without probing busctl", () =>
+      readPlannedRunScopeCgroup.pipe(
+        configured({ BEEP_YEET_JOB_UNIT: "beep-proof-job.service", PATH: "/not-present" }),
+        Effect.tap((destination) => Effect.sync(() => assertNone(destination)))
+      )
+    );
   });
 
   it.layer(NoProbeLayer, { timeout: "30 seconds" })((it) => {
@@ -76,13 +83,6 @@ describe("run scope", () => {
         configured({}),
         Effect.provideService(HostProcessPlatform, "darwin"),
         Effect.tap((support) => Effect.sync(() => expect(support).toBe("unsupported")))
-      )
-    );
-
-    it.effect("keeps a detached proof job in its service instead of planning a second scope", () =>
-      readPlannedRunScopeCgroup.pipe(
-        configured({ BEEP_YEET_JOB_UNIT: "beep-proof-job.service", PATH: "/not-present" }),
-        Effect.map(assertNone)
       )
     );
 
