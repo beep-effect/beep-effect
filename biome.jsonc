@@ -73,15 +73,9 @@
       "!packages/law-practice/server/test/fixtures/claim-element/positive-sampling.json",
       "!packages/law-practice/server/test/fixtures/claim-element/allowed-sampling.json",
       "!packages/law-practice/server/test/fixtures/claim-element/reference-freeze.json",
+      "!packages/law-practice/server/test/fixtures/claim-element/implementation-freeze.json",
+      "!packages/law-practice/server/test/fixtures/claim-element/positive-source-freeze.json",
       "!apps/labs/ciops/test/fixtures/retained-evidence/kpi-reading.json",
-      // Restored review pages are sha256-bound by preservation-freeze.json,
-      // autonomous-review-v1/preservation.json and the reference-input provenance
-      // records, so formatting them would break the seal.
-      "!goals/claim-element-antecedent-check/history/allowed-review-v1/index.html",
-      "!goals/claim-element-antecedent-check/history/allowed-review-v2/index.html",
-      "!goals/claim-element-antecedent-check/history/attorney-review/addendum.html",
-      "!goals/claim-element-antecedent-check/history/attorney-review/index.html",
-      "!goals/claim-element-antecedent-check/research/allowed-review.template.html",
       // Canonical Python payload bytes are hash-bound and deliberately retain
       // upstream text. ops/check-operations.ts validates this generated corpus.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/operation-cases.json",
@@ -343,14 +337,6 @@
         "goals/turborepo-task-qualification/research/**/*.json",
         // Claim references and prior rounds are byte-bound to critic/attorney receipts.
         "packages/law-practice/domain/test/fixtures/claim-element/positive/**/*.json",
-        "goals/claim-element-antecedent-check/history/label-conformance-drafts/**/*.json",
-        "goals/claim-element-antecedent-check/history/label-source-exclusions/**/*.json",
-        // Frozen measurement outputs retain the exact bytes recorded before later repairs.
-        "goals/claim-element-antecedent-check/history/*-evaluation.json",
-        "goals/claim-element-antecedent-check/history/*-results.json",
-        // Immutable automated reviewer receipts bind exact input/output bytes.
-        "goals/claim-element-antecedent-check/history/autonomous-review-v1/reference-*-round*.json",
-        "goals/claim-element-antecedent-check/history/autonomous-review-v1/allowed-*-round*.json",
         "packages/epistemic/server/test/fixtures/retention-calibration/protocol-v1.json",
         "packages/epistemic/server/test/fixtures/retention-calibration/fixture-v1.json",
         "goals/ciops-ontology-pipeline/research/kpi-reading.json",
