@@ -334,6 +334,40 @@ const makeMemoryStats = Effect.fnUntraced(function* (
 });
 
 /**
+ * Build a {@link MemoryStats} layer from an explicit memory source.
+ *
+ * **Details**
+ *
+ * `/proc/meminfo` supplies `MemAvailable` and `MemTotal`; the source supplies
+ * the cgroup ceiling and process RSS. Under a ceiling tighter than installed
+ * memory, `availableGib` is clamped to `ceilingGib - RSS` and `ceilingGib`
+ * reports the ceiling, otherwise `MemTotal`.
+ *
+ * **Example** (Build a layer for a 7 GiB slice)
+ *
+ * ```ts
+ * import { memoryStatsLayerFor } from "@beep/repo-cli/test/RepoRun"
+ * import * as Layer from "effect/Layer";
+ * const GIB = 1024 ** 3
+ * const layer = memoryStatsLayerFor({
+ *   constrainedMemoryBytes: () => 7 * GIB,
+ *   totalMemoryBytes: () => 15 * GIB,
+ *   residentBytes: () => 0,
+ * })
+ * console.log(Layer.isLayer(layer)) // true
+ * ```
+ *
+ * @param source - Cgroup ceiling, installed memory, and RSS readings.
+ * @returns A layer reading live meminfo through the given source.
+ * @category services
+ * @since 0.0.0
+ */
+export const memoryStatsLayerFor = (
+  source: ComputeMemorySource
+): Layer.Layer<MemoryStats, never, FileSystem.FileSystem> =>
+  Layer.effect(MemoryStats, Effect.map(makeMemoryStats(source), MemoryStats.of));
+
+/**
  * Production {@link MemoryStats} layer reading `/proc/meminfo` `MemAvailable`,
  * clamped by the process cgroup ceiling from `process.constrainedMemory()`.
  *
@@ -349,7 +383,7 @@ const makeMemoryStats = Effect.fnUntraced(function* (
  * @since 0.0.0
  */
 export const MemoryStatsLive: Layer.Layer<MemoryStats, never, SecureRandom.SecureRandom | FileSystem.FileSystem> =
-  Layer.effect(MemoryStats, Effect.map(makeMemoryStats(liveComputeMemorySource), MemoryStats.of));
+  memoryStatsLayerFor(liveComputeMemorySource);
 
 /**
  * Compute the admission capacity in tokens for one memory reading.

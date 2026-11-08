@@ -21,8 +21,10 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
+import * as Str from "effect/String";
 import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
 import { buildCitationDefaultEngineFixture, buildCitationEngineFixture } from "./CitationEngineLayer.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
@@ -145,6 +147,37 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
               });
               const missingFailure = yield* built.build(missing).pipe(Effect.flip);
               expect(missingFailure).toMatchObject({ _tag: "CitationInputError", operation: "extract" });
+              const valid = CitationEngineDefaultConfiguration.make({
+                ...built.configuration,
+                limits: { ...built.configuration.limits, cleanDeadline: Duration.millis(originalDeadline) },
+              });
+              const limited = CitationEngineDefaultConfiguration.make({
+                ...valid,
+                limits: { ...valid.limits, authorities: 4 },
+              });
+              const capacityFailure = yield* built.build(limited).pipe(Effect.flip);
+              expect(capacityFailure).toMatchObject({
+                _tag: "CitationSafetyLimitExceeded",
+                operation: "extract",
+                limit: "authorities",
+              });
+              const path = yield* Path.Path;
+              const htmlFailure = yield* built.build(valid).pipe(
+                Effect.provideService(Path.Path, {
+                  ...path,
+                  // Keep ordinary asset resolution intact; the HTML worker receives
+                  // the platform's real BadArgument for a non-file URL.
+                  fromFileUrl: Effect.fn("EngineLayerTest.htmlPath")((url: URL) =>
+                    path.fromFileUrl(
+                      Str.includes("/citation-html/")(url.pathname)
+                        ? new URL("https://example.invalid/not-a-file")
+                        : url
+                    )
+                  ),
+                }),
+                Effect.flip
+              );
+              expect(htmlFailure).toMatchObject({ _tag: "CitationInputError", operation: "extract" });
               const after = yield* setup.observed.snapshot;
               expect(after).toEqual(before);
               expect(sourceCalls).toBe(4);

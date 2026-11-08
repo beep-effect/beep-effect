@@ -140,6 +140,40 @@ listener (decision 2026-11-06). All steps run over the PC's key-auth SSH
 Rollback: `wsl --unregister t3-agent`, delete the `T3AgentWSL` task and
 `C:\WSL`, and delete the `tom-pc-1-wsl` node in the Tailscale admin console.
 
+## grok-bot host (the Grok Bot computer)
+
+The Grok Bot's persistent cloud computer is a Cursor-hosted Firecracker microVM
+(Debian 13, 8 cores, 15 GiB, user `box`) that the operator joined to the tailnet
+by hand. It became a fleet host on 2026-11-08 (decision
+`grok-bot-vm-in-scope` in `goals/t3code-fleet-rollout`), with three properties
+no other host has:
+
+- **It sleeps.** The hosting side hibernates the VM a few minutes after the
+  Grok Bot app's computer view closes, whatever SSH is doing. Keep the view
+  open while working there, or hand a Bot `/workspace/bootstrap/keepalive.sh`
+  as one long-running task (usage is metered per turn, not per minute). The
+  DankStation timer `grok-bot-ensure.timer` reconciles T3 only while the node
+  is online and posts one notification per sleep/wake transition.
+- **No systemd.** PID 1 is Cursor's supervisor, so `t3 service install` and
+  the pull timer do not apply. `/workspace/bootstrap/ensure-services.sh` runs
+  the fork pull (`t3-pull.sh`, the repo script minus its service steps),
+  starts `t3 serve --no-browser --host 127.0.0.1 --port 3773 /workspace` when
+  the port is dead, and keeps the tailnet-only Serve route on HTTPS 443 (the
+  `box` account is the Tailscale operator). `tailscaled` was started by hand,
+  so a true reboot needs `/workspace/bootstrap/boot.sh` from the Bot terminal.
+- **Only `/workspace` is documented as durable.** Every install is a re-runnable
+  script under `/workspace/bootstrap/`; home-directory state has survived so
+  far but may not survive an image rebuild.
+
+Access: Tailscale SSH as `box` (no sshd), wrapper `ssh-grok-bot`; `--admin`
+forwards the dedicated YubiKey agent for `pam_rssh` sudo (the image's
+passwordless sudo was replaced; the account password is the documented
+fallback and lives only in the operator's private state). The box's egress
+proxy refuses `deb.debian.org` pool downloads: list them with
+`apt-get install --print-uris`, fetch on DankStation, push over the tailnet,
+then `apt-get install ./*.deb`. Vendor repositories (Anthropic, OpenAI,
+1Password, GitHub, the hub mirror) work directly.
+
 ## tbk-worker (gated)
 
 Do not run these until the operator releases tbk-worker's protective-stop

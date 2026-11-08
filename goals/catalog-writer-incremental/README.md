@@ -6,6 +6,11 @@ Lifecycle: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
+Latest evidence (2026-11-08): PR #2924 makes the scoped schema-catalog writer splice per file;
+five-fixture run 5.31 GB / 15.3 s to 0.63 GB / 2.1 s with byte-identical shards
+(`research/2026-11-08-rss-measurements.md`). Proposed closeout `completed-retained`, final PR #2924;
+reflection `history/reflections/2026-11-08-claude.md`.
+
 ## Mission
 
 Per-file incremental shard splice for the lefthook catalog writers so a commit costs ~1 GB on any host (5.3 GB today for a repo-cli touch); graduated from `explorations/compute-profile-gate-routing` (D2, D7).
