@@ -12,11 +12,39 @@ import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import { resolveLawsPackageScope, scanLawsPackage } from "../Laws/LawsPackage.ts";
+import { TrackedShellAllowlistOptions } from "../Laws/TrackedShellAllowlist.model.ts";
+import { formatTrackedShellFinding, runTrackedShellAllowlist } from "../Laws/TrackedShellAllowlist.ts";
 import { resolveLintPackage } from "./internal/LintPackage.ts";
 
+// The repository-wide laws `lint laws` runs when no package is named.
+const repositoryLaws = Effect.gen(function* () {
+  const summary = yield* runTrackedShellAllowlist(
+    TrackedShellAllowlistOptions.make({ cwd: process.cwd(), strictCheck: true })
+  );
+  yield* Console.log(
+    `lint laws: tracked-shell-allowlist; tracked_shell_files=${summary.trackedShellFiles}; findings=${summary.findings.length}`
+  );
+  yield* Effect.forEach(
+    summary.findings,
+    (finding) => Console.log(`lint laws: ${formatTrackedShellFinding(finding)}`),
+    {
+      discard: true,
+    }
+  );
+  if (summary.strictFailure) return yield* failWithReportedExit("lint laws: tracked-shell-allowlist failed.");
+}).pipe(Effect.withSpan("Lint.repositoryLaws"));
+
 /**
- * Runs the package-scoped law checks for one workspace.
+ * Runs the package-scoped law checks for one workspace, or the repository-wide
+ * laws when no package is named.
+ *
+ * **Details**
+ *
+ * `--package <dir>` scans one workspace's TypeScript sources. Without it the
+ * command runs the repository-wide `tracked-shell-allowlist` law over the git
+ * index in check mode.
  *
  * **Example** (Inspect the subcommand name)
  *
@@ -32,9 +60,14 @@ import { resolveLintPackage } from "./internal/LintPackage.ts";
 export const lintLawsCommand = Command.make(
   "laws",
   {
-    package: Flag.String("package"),
+    package: Flag.String("package").pipe(
+      Flag.withDescription("Workspace directory to scan; omit it to run the repository-wide laws"),
+      Flag.optional
+    ),
   },
-  Effect.fn("Lint.laws")(function* ({ package: directory }) {
+  Effect.fn("Lint.laws")(function* ({ package: selected }) {
+    if (O.isNone(selected)) return yield* repositoryLaws;
+    const directory = selected.value;
     const root = yield* findRepoRoot();
     const prefix = yield* resolveLintPackage(root, directory);
     const scope = yield* resolveLawsPackageScope(root, prefix);
@@ -49,4 +82,4 @@ export const lintLawsCommand = Command.make(
       if (finding.strictFailure) return yield* failWithReportedExit(`lint laws: ${finding.law} failed.`);
     }
   })
-).pipe(Command.withDescription("Run the package-scoped law checks"));
+).pipe(Command.withDescription("Run the package-scoped law checks, or the repository-wide laws without --package"));

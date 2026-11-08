@@ -32,6 +32,7 @@ import { WinkLayerAllLive } from "./Wink.layer.ts";
 import { CustomEntityExample, EntityGroupName, WinkEngineCustomEntities } from "./Wink.models.ts";
 import { WinkEngine } from "./Wink.service.ts";
 import { CorpusManagerError, WinkCorpusManager } from "./WinkCorpus.service.ts";
+import { WinkIntrinsicNounActivationError } from "./WinkIntrinsicNoun.errors.ts";
 import { observeWinkTool, textLengthAttribute } from "./WinkObservability.ts";
 import { SimilarityError, WinkSimilarity } from "./WinkSimilarity.service.ts";
 import { WinkUtils, WinkUtilsError } from "./WinkUtils.service.ts";
@@ -342,6 +343,7 @@ const WinkNlpToolkitLiveError = S.Union([
   SimilarityError,
   VectorizerError,
   WinkEngineError,
+  WinkIntrinsicNounActivationError,
   WinkUtilsError,
 ]).pipe(
   S.toTaggedUnion("_tag"),

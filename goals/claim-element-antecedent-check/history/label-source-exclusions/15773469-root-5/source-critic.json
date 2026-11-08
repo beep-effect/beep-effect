@@ -1,0 +1,118 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "15773469-root-5",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.98,
+  "verdict": "unresolved",
+  "extractorSourceEligibleConclusionStands": false,
+  "extractorDispositionStands": true,
+  "reviewedClaimNumbers": [5, 6, 7, 8, 9, 10, 11],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20180317457", "A1", "20181108"],
+    "applicationReference": ["US", "15773469", "20160816"],
+    "officeActionDocumentIdentifiers": ["KJCUP25EDFLYX10"],
+    "officeActionMailDate": "2021-01-04"
+  },
+  "digestEvidence": [
+    {
+      "file": "15773469.publication.xml",
+      "sha256": "177e059570d7dda5a110162734ead5a982ea2ae4802e0b76002989ad26263c8b",
+      "matchesProvenance": true
+    },
+    {
+      "file": "15773469.claims.xml",
+      "sha256": "2fa540f5e056375e7b82d98f8a1f615b0fc2e0450fb3ec8384ae80dcea673b93",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "2fa540f5e056375e7b82d98f8a1f615b0fc2e0450fb3ec8384ae80dcea673b93",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "JGR0CBY0RXEAPX5",
+      "available": true,
+      "sha256": "1e216d0f8c1b6b05219706a3f428981bb5926b56f1871f75740fb33be5324219",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 36,
+    "actualRows": 36,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2018-05-03T00:00:00.000-0400",
+        "documentCode": "CLM",
+        "documentIdentifier": "JGR0CBY0RXEAPX5"
+      },
+      {
+        "officialDate": "2018-05-03T00:00:00.000-0400",
+        "documentCode": "A.PE",
+        "documentIdentifier": "JGR0CBY2RXEAPX5"
+      },
+      {
+        "officialDate": "2018-05-03T00:00:00.000-0400",
+        "documentCode": "REM",
+        "documentIdentifier": "JGR0CBY4RXEAPX5"
+      }
+    ]
+  },
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 5,
+      "examinerPhrase": "the sequential steps:",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the sequential steps:"
+    },
+    {
+      "claimNumber": 7,
+      "examinerPhrase": "the vertical displacement",
+      "retainedOfficeActionContainsPhraseIgnoringCase": true,
+      "exactNativePhrasePresent": true,
+      "nativeQuote": "the vertical displacement"
+    }
+  ],
+  "assessment": "Original PDF4 (printed23) explicitly shows [\u0394Dg] in claims10 and11, while raw native claims10/11 use [\u0394nG]. Thus earlier ADg OCR was delta+Dg, not delta+nG. Original9 also defines \u0394Dg. This confirms substantive variable spelling conflict requiring operative-version/source adjudication; it cannot be explained by correcting A to delta.",
+  "findings": [
+    {
+      "severity": "blocking",
+      "evidence": "Original PDF4 (printed23) explicitly shows [\u0394Dg] in claims10 and11, while raw native claims10/11 use [\u0394nG]. Thus earlier ADg OCR was delta+Dg, not delta+nG. Original9 also defines \u0394Dg. This confirms substantive variable spelling conflict requiring operative-version/source adjudication; it cannot be explained by correcting A to delta.",
+      "requiredAction": "Reconcile authoritative operative text against native source without changing source words to force a match."
+    }
+  ],
+  "limitations": [
+    "Cached public evidence only; original OCR corroboration only, never repaired into reference. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation inspected/performed.",
+  "officeActionGroundQuotes": [
+    "claims 1-11 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as failing to set forth the subject matter which the inventor or a joint inventor, or for applications subject to pre-aia 35 u.s.c. 112, the applicant regards as the invention."
+  ],
+  "previousRounds": [
+    {
+      "round": 1,
+      "verdict": "unresolved",
+      "confidence": 0.98,
+      "assessment": "Original10 has [ADg] (A low-confidence OCR), native10 [\u0394nG]; original11 also ADg versus \u0394nG. Correcting A to delta does not resolve D versus n. OA covers1-11 with detailed selected5/7-11 references.",
+      "findings": [
+        {
+          "severity": "blocking",
+          "evidence": "Original10 has [ADg] (A low-confidence OCR), native10 [\u0394nG]; original11 also ADg versus \u0394nG. Correcting A to delta does not resolve D versus n. OA covers1-11 with detailed selected5/7-11 references.",
+          "requiredAction": "Inspect authoritative rendered original10/11 and preliminary amendment to resolve variable spelling."
+        }
+      ]
+    }
+  ],
+  "pdfCorroboration": {
+    "documentIdentifier": "JGR0CBY0RXEAPX5",
+    "sha256": "96254fe192609c92307deed4759333c5bbbdcdabf865311789ba8ef36b542769",
+    "pdfPagesInspected": [4],
+    "printedPages": [23],
+    "purpose": "Independent visual corroboration only."
+  }
+}

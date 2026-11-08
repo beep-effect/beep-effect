@@ -40,10 +40,8 @@ import {
   ContradictionTriageServiceLive,
 } from "./ContradictionTriage/index.ts";
 import { EdgeAuthorityRepositoryDrizzle } from "./EdgeAuthority/index.ts";
-import { ExecutionLedgerDrizzle } from "./ExecutionLedger/index.ts";
 import { BoundedShaclValidationServiceLive } from "./ShaclValidation/index.ts";
 import type { EdgeAuthorityRepository } from "@beep/epistemic-use-cases/EdgeAuthority";
-import type { ExecutionLedger } from "@beep/epistemic-use-cases/ExecutionLedger";
 import type {
   ContradictionReviewer,
   ContradictionReviewScope,
@@ -97,8 +95,7 @@ export const EpistemicServerLive: Layer.Layer<
 
 /**
  * Drizzle-backed epistemic server layer: the live surface plus the bitemporal
- * edge authority and the append-only execution ledger, with dispositions
- * persisted rather than held in memory.
+ * edge authority, with dispositions persisted rather than held in memory.
  *
  * **Example** (Import Drizzle-backed layer)
  *
@@ -117,8 +114,7 @@ export const EpistemicServerDrizzleLive: Layer.Layer<
   | ClaimGateOutcomeResolver
   | ClaimTransition
   | ContradictionTriageRepository
-  | EdgeAuthorityRepository
-  | ExecutionLedger,
+  | EdgeAuthorityRepository,
   never,
   PostgresDrizzle
 > = Layer.mergeAll(
@@ -127,7 +123,6 @@ export const EpistemicServerDrizzleLive: Layer.Layer<
   ClaimDispositionRepositoryDrizzle,
   ContradictionTriageRepositoryDrizzle,
   EdgeAuthorityRepositoryDrizzle,
-  ExecutionLedgerDrizzle,
   ClaimGateOutcomeResolverLayer.pipe(
     Layer.provide(Layer.merge(ClaimTransitionLayer, ClaimDispositionRepositoryDrizzle))
   )

@@ -1,0 +1,315 @@
+{
+  "protocolVersion": "semantic-reference/v2",
+  "familyId": "15572618-root-22",
+  "role": "independent-source-critic",
+  "model": "gpt-6.1-sol",
+  "effort": "medium",
+  "round": 2,
+  "confidence": 0.98,
+  "verdict": "unresolved",
+  "extractorSourceEligibleConclusionStands": false,
+  "extractorDispositionStands": true,
+  "reviewedClaimNumbers": [22, 23, 24, 25, 26, 27, 28, 29, 30, 31],
+  "sourceIdentity": {
+    "publicationReference": ["US", "20180136250", "A1", "20180517"],
+    "applicationReference": ["US", "15572618", "20150508"],
+    "officeActionDocumentIdentifiers": ["JV2HG3JIRXEAPX2"],
+    "officeActionMailDate": "2019-05-01"
+  },
+  "digestEvidence": [
+    {
+      "file": "15572618.publication.xml",
+      "sha256": "9189a207425172ea86955ebb0111c3b770ec677e733c88eaea84f344c0569489",
+      "matchesProvenance": true
+    },
+    {
+      "file": "15572618.claims.xml",
+      "sha256": "9a9ac0f4064773dc5ed4abe8fe40fa1538c7945a97f84b74cf64c816e47b66bc",
+      "matchesProvenance": true
+    },
+    {
+      "file": "source.claims.xml",
+      "sha256": "9a9ac0f4064773dc5ed4abe8fe40fa1538c7945a97f84b74cf64c816e47b66bc",
+      "matchesProvenance": true
+    }
+  ],
+  "originalEvidence": [
+    {
+      "documentIdentifier": "J9RFFD6QRXEAPX3",
+      "xmlAvailable": true,
+      "sha256": "34caf2257786be079274451a307d03762499a7474673798b43b84017202bd2b7",
+      "matchesProvenance": true
+    },
+    {
+      "documentIdentifier": "J9RFFD6URXEAPX3",
+      "xmlAvailable": true,
+      "sha256": "959038a103f03477179714411b1a01b83b35f6180f9b713df89679456770a61c",
+      "matchesProvenance": true
+    },
+    {
+      "documentIdentifier": "J9S5JYATRXEAPX4",
+      "xmlAvailable": true,
+      "sha256": "c7bfc757d901d4df678287875419f6a2c1457e3b724545a62d22c727df5dc71c",
+      "matchesProvenance": true
+    }
+  ],
+  "inventoryEvidence": {
+    "declaredCount": 58,
+    "actualRows": 58,
+    "preOrOnActionClaimOrAmendmentRows": [
+      {
+        "officialDate": "2017-11-08T00:00:00.000-0500",
+        "documentCode": "CLM",
+        "documentIdentifier": "J9RFFD6QRXEAPX3"
+      },
+      {
+        "officialDate": "2017-11-08T00:00:00.000-0500",
+        "documentCode": "REM",
+        "documentIdentifier": "J9RFFD6TRXEAPX3"
+      },
+      {
+        "officialDate": "2017-11-08T00:00:00.000-0500",
+        "documentCode": "CLM",
+        "documentIdentifier": "J9RFFD6URXEAPX3"
+      },
+      {
+        "officialDate": "2017-11-08T00:00:00.000-0500",
+        "documentCode": "A.PE",
+        "documentIdentifier": "J9RFFD6WRXEAPX3"
+      },
+      {
+        "officialDate": "2017-11-08T00:00:00.000-0500",
+        "documentCode": "CLM",
+        "documentIdentifier": "J9S5JYATRXEAPX4"
+      }
+    ]
+  },
+  "officeActionGroundQuotes": [
+    "claims 16 and 22-31 are rejected under 35 u.s.c. 112(b) or 35 u.s.c. 112 (pre-aia ), second paragraph, as being indefinite for failing to particularly point out and distinctly claim the subject matter which the inventor or a joint inventor, or for pre-aia the applicant regards as the invention."
+  ],
+  "numberedPhraseEvidence": [
+    {
+      "claimNumber": 22,
+      "examinerPhrase": "the input portion",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the input portion"
+    },
+    {
+      "claimNumber": 22,
+      "examinerPhrase": "the first input direction",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the first input direction"
+    },
+    {
+      "claimNumber": 22,
+      "examinerPhrase": "the second input direction",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the second input direction"
+    },
+    {
+      "claimNumber": 22,
+      "examinerPhrase": "the third input direction",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the third input direction"
+    },
+    {
+      "claimNumber": 23,
+      "examinerPhrase": "the first input direction",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the first input direction"
+    },
+    {
+      "claimNumber": 23,
+      "examinerPhrase": "the second input direction",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the second input direction"
+    },
+    {
+      "claimNumber": 23,
+      "examinerPhrase": "the third input direction",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the third input direction"
+    },
+    {
+      "claimNumber": 25,
+      "examinerPhrase": "the transmission ratio",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the transmission ratio"
+    },
+    {
+      "claimNumber": 25,
+      "examinerPhrase": "the hydraulic transmission system",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the hydraulic transmission system"
+    },
+    {
+      "claimNumber": 25,
+      "examinerPhrase": "the first optical sensor",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the first optical sensor"
+    },
+    {
+      "claimNumber": 25,
+      "examinerPhrase": "the second and third optical sensors",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the second and third optical sensors"
+    },
+    {
+      "claimNumber": 26,
+      "examinerPhrase": "the transmission ratio",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the transmission ratio"
+    },
+    {
+      "claimNumber": 26,
+      "examinerPhrase": "the hydraulic transmission system",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the hydraulic transmission system"
+    },
+    {
+      "claimNumber": 26,
+      "examinerPhrase": "the first optical sensor",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the first optical sensor"
+    },
+    {
+      "claimNumber": 26,
+      "examinerPhrase": "the second and third optical sensors",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the second and third optical sensors"
+    },
+    {
+      "claimNumber": 29,
+      "examinerPhrase": "the hydraulic transmission system",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the hydraulic transmission system"
+    },
+    {
+      "claimNumber": 29,
+      "examinerPhrase": "the input portion",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the input portion"
+    },
+    {
+      "claimNumber": 29,
+      "examinerPhrase": "the output portion",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the output portion"
+    },
+    {
+      "claimNumber": 29,
+      "examinerPhrase": "the respective hydraulic transmission system",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the respective hydraulic transmission system"
+    },
+    {
+      "claimNumber": 30,
+      "examinerPhrase": "the hydraulic transmission system",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the hydraulic transmission system"
+    },
+    {
+      "claimNumber": 30,
+      "examinerPhrase": "the input portion",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the input portion"
+    },
+    {
+      "claimNumber": 30,
+      "examinerPhrase": "the output portion",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the output portion"
+    },
+    {
+      "claimNumber": 30,
+      "examinerPhrase": "the respective hydraulic transmission system",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the respective hydraulic transmission system"
+    },
+    {
+      "claimNumber": 31,
+      "examinerPhrase": "the hydraulic transmission system",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the hydraulic transmission system"
+    },
+    {
+      "claimNumber": 31,
+      "examinerPhrase": "the input portion",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the input portion"
+    },
+    {
+      "claimNumber": 31,
+      "examinerPhrase": "the output portion",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the output portion"
+    },
+    {
+      "claimNumber": 31,
+      "examinerPhrase": "the respective hydraulic transmission system",
+      "exactNativePhrasePresent": true,
+      "caseInsensitiveNativeSubstringPresent": true,
+      "nativeQuote": "the respective hydraulic transmission system"
+    }
+  ],
+  "assessment": "Original marked PDF4-7 (printed6-9) resolves substantive version choices:22 deletes references1-20;27/29-31 delete alternative ranges, may, and means alternatives;29-31 retain flows and dependency22. However native selected25 begins [[0]]The optical accelerometer while original25 shows deleted [[O]] then inserted The optical accelerometer. Raw native text therefore retains a deletion/OCR marker absent from accepted operative wording. This is a native source fidelity/normalization concern, not unresolved choice between clean and amended dependencies. Preserve exact native source and hold source acceptance pending adjudication of this artifact; do not silently delete it.",
+  "findings": [
+    {
+      "severity": "blocking",
+      "evidence": "Original marked PDF4-7 (printed6-9) resolves substantive version choices:22 deletes references1-20;27/29-31 delete alternative ranges, may, and means alternatives;29-31 retain flows and dependency22. However native selected25 begins [[0]]The optical accelerometer while original25 shows deleted [[O]] then inserted The optical accelerometer. Raw native text therefore retains a deletion/OCR marker absent from accepted operative wording. This is a native source fidelity/normalization concern, not unresolved choice between clean and amended dependencies. Preserve exact native source and hold source acceptance pending adjudication of this artifact; do not silently delete it.",
+      "requiredAction": "Resolve native25 deletion-marker fidelity before claiming exact operative source; preserve native text and report normalization failure separately if appropriate."
+    }
+  ],
+  "limitations": [
+    "Public cached evidence only. OCR/PDF corroboration never replaces or repairs native reference text. Agent confidence is not attorney agreement."
+  ],
+  "independence": "No production rules, predictions, structural expected files, network, secrets, git or delegation used.",
+  "previousRounds": [
+    {
+      "round": 1,
+      "verdict": "unresolved",
+      "confidence": 0.98,
+      "assessment": "Marked J9RFFD6URXEAPX3 Del/Ins reconciles major clean-original differences in22/27-31, including deleted alternative dependencies and may/means alternatives. Remaining bracketed deletions and clipped claim/or wording require authoritative rendering; native25 itself contains [[0]].",
+      "findings": [
+        {
+          "severity": "blocking",
+          "evidence": "Marked J9RFFD6URXEAPX3 Del/Ins reconciles major clean-original differences in22/27-31, including deleted alternative dependencies and may/means alternatives. Remaining bracketed deletions and clipped claim/or wording require authoritative rendering; native25 itself contains [[0]].",
+          "requiredAction": "Supply authoritative source evidence resolving this identified ground or operative-version gap; do not alter native source to force correspondence."
+        }
+      ]
+    }
+  ],
+  "pdfCorroboration": {
+    "documentIdentifier": "J9RFFD6URXEAPX3",
+    "sha256": "5ba724222a000c7bade81ac1562e630e28bfe4a8240418e844833e7219c1bb7f",
+    "pdfPagesInspected": [4, 5, 6, 7],
+    "printedPages": [6, 7, 8, 9],
+    "purpose": "Independent visual corroboration only."
+  }
+}

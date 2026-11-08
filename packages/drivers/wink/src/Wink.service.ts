@@ -5,7 +5,6 @@
  * @packageDocumentation
  */
 
-import * as NodeModule from "node:module";
 import { $WinkId } from "@beep/identity";
 import { A } from "@beep/utils";
 import * as Clock from "effect/Clock";
@@ -16,13 +15,15 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import { constructWinkWithIntrinsicOwner } from "./internal/WinkIntrinsicRuntime.ts";
 import { WinkEngineError, WinkEntityError, WinkTokenizationError } from "./Wink.errors.ts";
 import { WinkEngineCustomEntities } from "./Wink.models.ts";
 import { observeWinkWorkflow, textLengthAttribute } from "./WinkObservability.ts";
-import type { AsHelpers, ItemToken, ItsHelpers, Model, Document as WinkDocument, WinkMethods } from "wink-nlp";
+import type { AsHelpers, ItemToken, ItsHelpers, Document as WinkDocument, WinkMethods } from "wink-nlp";
+import type { WinkIntrinsicNounActivationError } from "./WinkIntrinsicNoun.errors.ts";
+import type { WinkIntrinsicNounShape } from "./WinkIntrinsicNoun.models.ts";
 
 const $I = $WinkId.create("Wink/WinkEngine");
-const require = NodeModule.createRequire(import.meta.url);
 
 type WinkEngineShape = {
   readonly as: Effect.Effect<AsHelpers, WinkEngineError>;
@@ -32,6 +33,7 @@ type WinkEngineShape = {
   readonly getWinkTokenCount: (text: string) => Effect.Effect<number, WinkTokenizationError>;
   readonly getCurrentCustomEntities: Effect.Effect<O.Option<WinkEngineCustomEntities>>;
   readonly its: Effect.Effect<ItsHelpers, WinkEngineError>;
+  readonly intrinsicNoun: Effect.Effect<WinkIntrinsicNounShape, WinkIntrinsicNounActivationError>;
   readonly learnCustomEntities: (customEntities: WinkEngineCustomEntities) => Effect.Effect<void, WinkEntityError>;
 };
 
@@ -151,11 +153,17 @@ export type WinkEngineRuntimeState = {
   readonly nlp: WinkMethods;
 };
 
-const loadWinkRuntime = (): WinkMethods => {
-  const winkNlp: typeof import("wink-nlp").default = require("wink-nlp");
-  const model: Model = require("wink-eng-lite-web-model");
-  return winkNlp(model);
-};
+// Literal imports keep the fixed assets discoverable to native bundlers while
+// loading only when this effect is initialized. Expected import/model failures
+// retain the existing typed engine error boundary.
+const initializationError = (cause: unknown): WinkEngineError => WinkEngineError.fromCause(cause, "initialize");
+const loadWinkRuntime = Effect.all(
+  [
+    Effect.tryPromise({ try: () => import("wink-nlp"), catch: initializationError }),
+    Effect.tryPromise({ try: () => import("wink-eng-lite-web-model"), catch: initializationError }),
+  ],
+  { concurrency: 2 }
+).pipe(Effect.flatMap(([engine, model]) => constructWinkWithIntrinsicOwner(engine.default, model.default)));
 
 const nextInstanceId = (nowMs: number, counter: number): InstanceId =>
   InstanceId.make(`wink-engine-${nowMs}-${counter}`);
@@ -200,10 +208,9 @@ const collectTokens = (state: WinkEngineRuntimeState, text: string): Array<ItemT
 };
 
 const makeWinkEngine = Effect.gen(function* () {
-  const nlp = yield* Effect.try({
-    try: loadWinkRuntime,
-    catch: (cause) => WinkEngineError.fromCause(cause, "initialize"),
-  });
+  const runtime = yield* Effect.acquireRelease(loadWinkRuntime, ({ owner }) => owner.release);
+  const nlp = runtime.nlp;
+  const intrinsicNoun = yield* Effect.cached(runtime.owner.activate);
   const instanceCounterRef = yield* Ref.make(0);
   const initialTimeMs = yield* Clock.currentTimeMillis;
   const stateRef = yield* Ref.make<WinkEngineRuntimeState>({
@@ -212,6 +219,7 @@ const makeWinkEngine = Effect.gen(function* () {
     nlp,
   });
 
+  runtime.owner.setCurrent(Ref.get(stateRef).pipe(Effect.map((state) => state.nlp === nlp)));
   const allocateInstanceId = pipe(
     Ref.updateAndGet(instanceCounterRef, (current) => current + 1),
     Effect.flatMap(
@@ -222,6 +230,7 @@ const makeWinkEngine = Effect.gen(function* () {
   );
 
   return WinkEngine.of({
+    intrinsicNoun,
     as: Ref.get(stateRef).pipe(Effect.map((state) => state.nlp.as)),
     getRef: Effect.succeed(stateRef),
     getWinkDoc: Effect.fn("Wink.WinkEngine.getWinkDoc")(function* (text: string) {

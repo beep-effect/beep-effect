@@ -1,0 +1,20 @@
+{
+  "previous": "921f97055f51a6e6117576e7929b872b7f1de1122ed7315b2083352a7aa7a119",
+  "review": {
+    "reviewer": "Codex claim-element-antecedent-check owner (self-review)",
+    "reason": "Record only the USPTO manifest input drift caused by two canonical generated doctest scripts. Existing task scripts and qualification scope/profile/epoch are unchanged; the new doctest remains unassessed. No cache qualification is granted.",
+    "basis": {
+      "path": "goals/claim-element-antecedent-check/research/cache-baseline-review-v23.md",
+      "sha256": "d75bad6f997274d19e3a2350cdf59ad9cab769412fe963ab4c4b7bc8e4523a23"
+    }
+  },
+  "subjects": ["@beep/uspto"],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint",
+    "@beep/fc-runs#lint",
+    "@beep/test-runner#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

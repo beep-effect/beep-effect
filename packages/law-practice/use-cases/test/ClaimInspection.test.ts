@@ -162,7 +162,7 @@ const failed = ClaimInspectionLive.pipe(
 );
 
 describe("ClaimInspection service and local tool", () => {
-  it.layer(localOnly)((it) => {
+  it.layer(localOnly, { timeout: "5 seconds" })((it) => {
     it.effect("runs actual local tool inspection without acquisition, retaining every mixed-source outcome", () =>
       Effect.gen(function* () {
         const report = yield* claimInspectInput(ClaimInspectionPageRequest.make({ input: mixed }));
@@ -338,7 +338,7 @@ describe("ClaimInspection service and local tool", () => {
     );
   });
 
-  it.layer(recorded)((it) => {
+  it.layer(recorded, { timeout: "5 seconds" })((it) => {
     it.effect("preserves exact publication, document identifier, source digest and input in a published report", () =>
       Effect.gen(function* () {
         const result = yield* (yield* ClaimInspection).inspectPublished(source);
@@ -365,7 +365,7 @@ describe("ClaimInspection service and local tool", () => {
     );
   });
 
-  it.layer(failed)((it) => {
+  it.layer(failed, { timeout: "5 seconds" })((it) => {
     it.effect("translates acquisition failures without mistaking them for an empty successful report", () =>
       Effect.gen(function* () {
         const error = yield* Effect.flip(ClaimInspection.use((service) => service.inspectPublished(source)));

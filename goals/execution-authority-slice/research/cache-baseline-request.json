@@ -1,0 +1,14 @@
+{
+  "previous": "f826f5bee62879bd33cd721c9efb19940e6e6db10324852f83dc961c31e42612",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (goals/execution-authority-slice P1)",
+    "reason": "Record the generated default computations of the five new @beep/execution-authority-* packages, and attribute the db-admin, epistemic-server and professional-desktop drift to their manifest dependency edges and the global drift to the renamed EXECUTION_AUTHORITY_* turbo env keys and the policy-fingerprint manifest list. No command, output, cache flag or qualification changes.",
+    "basis": {
+      "path": "goals/execution-authority-slice/research/cache-baseline-review.md",
+      "sha256": "65b312cb955716eb976cd1b5f8b789a38d73b6bbba0cfa707c12a29a5c7a1ba4"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

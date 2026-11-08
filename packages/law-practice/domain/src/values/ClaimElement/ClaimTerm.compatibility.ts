@@ -24,6 +24,12 @@ export const isSingleModifiedHead =
     Str.endsWith(` ${head}`)(candidate) &&
     !Str.includes(" ")(Str.slice(0, Str.length(candidate) - Str.length(head) - 1)(candidate));
 
+// The trailing parenthesised abbreviation, the text after it, and where it starts.
+const trailingAbbreviation = (candidate: string) =>
+  O.flatMap(Str.match(/\(([a-z][a-z0-9-]+)\)([^()]*)$/u)(candidate), (parts) =>
+    O.all([A.get(parts, 1), A.get(parts, 2), O.fromUndefinedOr(parts.index)])
+  );
+
 /**
  * Match only an abbreviation explicitly written in an introduction's parentheses.
  * **Example** (Match an Explicit Abbreviation)
@@ -36,15 +42,8 @@ export const isSingleModifiedHead =
  */
 export const isExplicitAbbreviatedHead =
   (head: string) =>
-  (candidate: string): boolean => {
-    const matched = Str.match(/\(([a-z][a-z0-9-]+)\)([^()]*)$/u)(candidate);
-    return O.exists(matched, (parts) =>
-      O.exists(
-        O.all([A.get(parts, 1), A.get(parts, 2)]),
-        ([abbreviation, tail]) => Str.trim(`${abbreviation}${tail}`) === head
-      )
-    );
-  };
+  (candidate: string): boolean =>
+    O.exists(trailingAbbreviation(candidate), ([abbreviation, tail]) => Str.trim(`${abbreviation}${tail}`) === head);
 
 const matchesCapturedHead =
   (pattern: RegExp) =>
@@ -112,3 +111,30 @@ export const isPluralityReferenceHead =
  */
 export const pluralityReferenceContent = (head: string): O.Option<string> =>
   O.flatMap(Str.match(/^plurality of (.+)$/u)(head), (match) => A.get(match, 1));
+
+/**
+ * Match an explicitly written acronym expansion while retaining a source prefix.
+ *
+ * **Example** (Retain the source prefix when matching an explicit acronym)
+ *
+ * ```ts
+ * import { isSourcePrefixAbbreviatedHead } from "../../src/values/ClaimElement/ClaimTerm.compatibility.ts"
+ *
+ * console.log(isSourcePrefixAbbreviatedHead("spatial mvl")("spatial motion vector list (mvl)")) // true
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isSourcePrefixAbbreviatedHead =
+  (head: string) =>
+  (candidate: string): boolean =>
+    O.exists(trailingAbbreviation(candidate), ([abbreviation, tail, index]) => {
+      const words = Str.split(Str.trim(Str.slice(0, index)(candidate)), " ");
+      const start = words.length - abbreviation.length;
+      return (
+        start >= 0 &&
+        A.join(A.map(A.drop(words, start), Str.slice(0, 1)), "") === abbreviation &&
+        Str.trim(`${A.join(A.take(words, start), " ")} ${abbreviation}${tail}`) === head
+      );
+    });

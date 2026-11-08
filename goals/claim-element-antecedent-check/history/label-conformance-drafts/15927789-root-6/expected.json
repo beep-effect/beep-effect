@@ -1,0 +1,248 @@
+[
+  {
+    "claimNumber": 6,
+    "producer": "rule",
+    "elements": [
+      {
+        "path": "6",
+        "anchor": {
+          "startChar": 0,
+          "endChar": 56,
+          "quote": "Driving control device of carrier unit, characterized by"
+        },
+        "kind": "preamble-subject",
+        "terms": []
+      },
+      {
+        "path": "6.a",
+        "anchor": {
+          "startChar": 68,
+          "endChar": 226,
+          "quote": "an operator, which is designed to be detachable from the distal end of the wire and the transport unit equipped with a location measurement module comprising:"
+        },
+        "kind": "limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 68,
+              "endChar": 79,
+              "quote": "an operator"
+            },
+            "determiner": "an",
+            "head": "operator"
+          },
+          {
+            "anchor": {
+              "startChar": 121,
+              "endChar": 135,
+              "quote": "the distal end"
+            },
+            "determiner": "the",
+            "head": "distal end"
+          },
+          {
+            "anchor": {
+              "startChar": 139,
+              "endChar": 147,
+              "quote": "the wire"
+            },
+            "determiner": "the",
+            "head": "wire"
+          },
+          {
+            "anchor": {
+              "startChar": 152,
+              "endChar": 170,
+              "quote": "the transport unit"
+            },
+            "determiner": "the",
+            "head": "transport unit"
+          },
+          {
+            "anchor": {
+              "startChar": 185,
+              "endChar": 214,
+              "quote": "a location measurement module"
+            },
+            "determiner": "a",
+            "head": "location measurement module"
+          }
+        ]
+      },
+      {
+        "path": "6.a.i",
+        "anchor": {
+          "startChar": 227,
+          "endChar": 268,
+          "quote": "a wire which is unwound by external force"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 227,
+              "endChar": 233,
+              "quote": "a wire"
+            },
+            "determiner": "a",
+            "head": "wire"
+          }
+        ]
+      },
+      {
+        "path": "6.a.ii",
+        "anchor": {
+          "startChar": 270,
+          "endChar": 339,
+          "quote": "a length calculation unit calculating an unwinding length of the wire"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 270,
+              "endChar": 295,
+              "quote": "a length calculation unit"
+            },
+            "determiner": "a",
+            "head": "length calculation unit"
+          },
+          {
+            "anchor": {
+              "startChar": 308,
+              "endChar": 327,
+              "quote": "an unwinding length"
+            },
+            "determiner": "an",
+            "head": "unwinding length"
+          },
+          {
+            "anchor": {
+              "startChar": 331,
+              "endChar": 339,
+              "quote": "the wire"
+            },
+            "determiner": "the",
+            "head": "wire"
+          }
+        ]
+      },
+      {
+        "path": "6.a.iii",
+        "anchor": {
+          "startChar": 345,
+          "endChar": 471,
+          "quote": "an angle calculation unit calculating an unwinding angle of the wire, and controls the travelling motion of the transport unit"
+        },
+        "kind": "sub-limitation",
+        "terms": [
+          {
+            "anchor": {
+              "startChar": 345,
+              "endChar": 370,
+              "quote": "an angle calculation unit"
+            },
+            "determiner": "an",
+            "head": "angle calculation unit"
+          },
+          {
+            "anchor": {
+              "startChar": 383,
+              "endChar": 401,
+              "quote": "an unwinding angle"
+            },
+            "determiner": "an",
+            "head": "unwinding angle"
+          },
+          {
+            "anchor": {
+              "startChar": 405,
+              "endChar": 413,
+              "quote": "the wire"
+            },
+            "determiner": "the",
+            "head": "wire"
+          },
+          {
+            "anchor": {
+              "startChar": 428,
+              "endChar": 449,
+              "quote": "the travelling motion"
+            },
+            "determiner": "the",
+            "head": "travelling motion"
+          },
+          {
+            "anchor": {
+              "startChar": 453,
+              "endChar": 471,
+              "quote": "the transport unit"
+            },
+            "determiner": "the",
+            "head": "transport unit"
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "kind": "part-of",
+        "child": "6.a",
+        "parent": "6"
+      },
+      {
+        "kind": "part-of",
+        "child": "6.a.i",
+        "parent": "6.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "6.a.ii",
+        "parent": "6.a"
+      },
+      {
+        "kind": "part-of",
+        "child": "6.a.iii",
+        "parent": "6.a"
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a.ii",
+          "anchor": {
+            "startChar": 331,
+            "endChar": 339,
+            "quote": "the wire"
+          }
+        },
+        "introducing": {
+          "path": "6.a.i",
+          "anchor": {
+            "startChar": 227,
+            "endChar": 233,
+            "quote": "a wire"
+          }
+        }
+      },
+      {
+        "kind": "antecedent",
+        "referring": {
+          "path": "6.a.iii",
+          "anchor": {
+            "startChar": 405,
+            "endChar": 413,
+            "quote": "the wire"
+          }
+        },
+        "introducing": {
+          "path": "6.a.i",
+          "anchor": {
+            "startChar": 227,
+            "endChar": 233,
+            "quote": "a wire"
+          }
+        }
+      }
+    ]
+  }
+]

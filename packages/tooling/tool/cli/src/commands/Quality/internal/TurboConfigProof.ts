@@ -81,6 +81,7 @@ const TURBO_CONFIG_PROOF_TASK_VALUES = [
   "//#lint:retired-effect-paths",
   "//#lint:entity-kit-freeze",
   "//#lint:retired-iri-authorities",
+  "//#lint:tracked-shell-allowlist",
   "//#lint:schema-tag-idioms",
   "//#lint:holds",
   "//#lint:ecosystem-polarity",

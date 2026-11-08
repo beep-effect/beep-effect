@@ -58,6 +58,13 @@ import { EditorProofPanel } from "./editor-proof/EditorProofPanel.tsx";
 import { DocumentIntakeTarget, VaultOnboardingGate } from "./intake/DocumentIntakeTarget.tsx";
 import { BrowserFailureSource, reportedBrowserFailureAtoms } from "./runtime/BrowserFailure.atoms.ts";
 import { professionalAtomRegistryAtom, professionalBrowserRuntime } from "./runtime/ProfessionalAtomRuntime.ts";
+import { vaultSyncIntentTransportLayerAtom } from "./sync/VaultSyncIntent.atoms.ts";
+import {
+  layerVaultSyncIntentTransportHttp,
+  resolveVaultSyncApiUrl,
+  VaultSyncApiConnection,
+  VaultSyncIntentTransportUnavailable,
+} from "./sync/VaultSyncIntent.transport.ts";
 import { VaultSyncPanel } from "./sync/VaultSyncPanel.tsx";
 import { makeDesktopHttpProtocolLive } from "./transport/DesktopHttpProtocol.ts";
 import { IpcChatProtocolLive } from "./transport/IpcChatClient.ts";
@@ -259,6 +266,18 @@ const protocolLayerBindingAtom = professionalBrowserRuntime.atom(
     );
     get.set(epistemicProtocolLayerAtom, protocolLayer);
     get.set(chatProtocolLayerAtom, protocolLayer);
+    // Vault-sync intents ride the sidecar's launch-token-gated Api over HTTP. An IPC sidecar
+    // serves no HTTP, so intents stay queued there instead of failing silently.
+    get.set(
+      vaultSyncIntentTransportLayerAtom,
+      transport.ipc
+        ? VaultSyncIntentTransportUnavailable
+        : O.match(sessionToken, {
+            onNone: () => VaultSyncIntentTransportUnavailable,
+            onSome: (token) =>
+              layerVaultSyncIntentTransportHttp(VaultSyncApiConnection.make({ url: resolveVaultSyncApiUrl(), token })),
+          })
+    );
   })
 );
 
