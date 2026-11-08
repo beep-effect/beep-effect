@@ -950,17 +950,6 @@ type FiniteRightListMemo =
   | typeof deniedRightListMemo
   | { readonly status: "found"; readonly source: O.Some<RawRightList> };
 
-// Operational control states contain no proof verdict and are never persisted.
-// Only the field on each fresh validation context can hold a Found classification.
-const unreadRightListMemo = { status: "unread" } as const;
-const noMatchRightListMemo = { status: "none" } as const;
-const deniedRightListMemo = { status: "denied" } as const;
-type FiniteRightListMemo =
-  | typeof unreadRightListMemo
-  | typeof noMatchRightListMemo
-  | typeof deniedRightListMemo
-  | { readonly status: "found"; readonly source: O.Some<RawRightList> };
-
 type FiniteProofValidationContext = {
   rightListMemo: FiniteRightListMemo;
   scopes: HashSet.HashSet<"preamble" | "body" | "transition">;
@@ -1316,99 +1305,6 @@ const finiteLabelBodyScope = (
   scope: O.Option<ClaimFiniteSourceProof>
 ): scope is O.Some<Extract<ClaimFiniteSourceProof, { readonly kind: "scope" }>> =>
   O.isSome(scope) && scope.value.kind === "scope" && scope.value.role === "body";
-const computeFiniteRightListSource = (context: FiniteProofValidationContext): O.Option<RawRightList> | false => {
-  // Eight prepaid setup slots: denial latch, forwarding closure, two captures,
-  // Found cell and its two fields, and the context publication.
-  if (!context.charge(8)) {
-    context.rightListMemo = deniedRightListMemo;
-    return false;
-  }
-  let denied = false;
-  const reserve = (amount: number): boolean => {
-    const paid = context.charge(amount);
-    if (!paid) denied = true;
-    return paid;
-  };
-  const source = readSourceRightParenthesisList(context.claim, context.tokens, reserve);
-  if (denied) {
-    context.rightListMemo = deniedRightListMemo;
-    return false;
-  }
-  context.rightListMemo = O.isSome(source) ? { status: "found", source } : noMatchRightListMemo;
-  return source;
-};
-const finiteRightListSource = (context: FiniteProofValidationContext): O.Option<RawRightList> | false => {
-  // State dispatch and returning the existing result reference; no hit allocation.
-  if (!context.charge(2)) {
-    context.rightListMemo = deniedRightListMemo;
-    return false;
-  }
-  const memo = context.rightListMemo;
-  if (memo.status === "unread") return computeFiniteRightListSource(context);
-  if (memo.status === "found") return memo.source;
-  return memo.status === "none" ? O.none() : false;
-};
-const validateFiniteLabelBoundary = (
-  context: FiniteProofValidationContext,
-  proof: Extract<ClaimFiniteSourceProof, { readonly kind: "label-boundary" }>
-): boolean => {
-  if (!context.charge(proof.markers.length * 16 + 32) || Result.isFailure(strictLabelBoundary(proof))) return false;
-  if (!finiteLabelOriginalAligned(context)) return false;
-  const source = finiteRightListSource(context);
-  if (source === false || O.isNone(source)) return false;
-  const scope = context.resolve(proof.scope);
-  if (!finiteLabelBodyScope(scope) || !finiteLabelCensus(proof, source.value)) return false;
-  return validateFiniteLabelSource(context, proof, source.value, scope.value);
-};
-
-const strictLabelBoundary = S.decodeUnknownResult(S.toType(ClaimFiniteSourceProof.cases["label-boundary"]), {
-  onExcessProperty: "error",
-});
-const finiteLabelTokenAt = (context: FiniteProofValidationContext, ref: ClaimSourceProofRef, index: number): boolean =>
-  O.exists(context.resolve(ref), (p) => p.kind === "token" && p.tokenOrdinal === index + 1);
-const finiteLabelMembers = (
-  context: FiniteProofValidationContext,
-  proof: Extract<ClaimFiniteSourceProof, { readonly kind: "label-boundary" }>,
-  source: RawRightList,
-  scope: Extract<ClaimFiniteSourceProof, { readonly kind: "scope" }>
-): boolean => {
-  for (let i = 0; i < proof.markers.length; i++) {
-    const raw = O.getOrThrow(A.get(source.markers, i));
-    const marker = O.getOrThrow(A.get(proof.markers, i));
-    if (
-      !finiteLabelTokenAt(context, marker.start, raw[0]) ||
-      !finiteLabelTokenAt(context, marker.close, raw[1] - 1) ||
-      !containsScope(scope.extent, O.getOrThrow(A.get(context.tokens, raw[0])).anchor) ||
-      !containsScope(scope.extent, O.getOrThrow(A.get(context.tokens, raw[1] - 1)).anchor)
-    )
-      return false;
-  }
-  return true;
-};
-const finiteLabelCensus = (
-  proof: Extract<ClaimFiniteSourceProof, { readonly kind: "label-boundary" }>,
-  source: RawRightList
-): boolean => proof.markers.length === source.markers.length && proof.item >= 0 && proof.item < proof.markers.length;
-const validateFiniteLabelSource = (
-  context: FiniteProofValidationContext,
-  proof: Extract<ClaimFiniteSourceProof, { readonly kind: "label-boundary" }>,
-  source: RawRightList,
-  scope: Extract<ClaimFiniteSourceProof, { readonly kind: "scope" }>
-): boolean => {
-  if (
-    !finiteLabelTokenAt(context, proof.governor, source.governor) ||
-    !finiteLabelTokenAt(context, proof.colon, source.colon)
-  )
-    return false;
-  if (!finiteLabelMembers(context, proof, source, scope)) return false;
-  return finiteLabelTokenAt(context, proof.token, O.getOrThrow(A.get(source.markers, proof.item))[1] - 1);
-};
-const finiteLabelOriginalAligned = (context: FiniteProofValidationContext): boolean =>
-  O.exists(context.originalInput, ClaimLexicalEvidence.guards.aligned);
-const finiteLabelBodyScope = (
-  scope: O.Option<ClaimFiniteSourceProof>
-): scope is O.Some<Extract<ClaimFiniteSourceProof, { readonly kind: "scope" }>> =>
-  isFiniteScopeProofOption(scope) && scope.value.role === "body";
 const computeFiniteRightListSource = (context: FiniteProofValidationContext): O.Option<RawRightList> | false => {
   // Eight prepaid setup slots: denial latch, forwarding closure, two captures,
   // Found cell and its two fields, and the context publication.
