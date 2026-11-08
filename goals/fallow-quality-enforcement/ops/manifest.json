@@ -74,21 +74,12 @@
     "grandfathered": false
   },
   "packetPath": "goals/fallow-quality-enforcement",
-  "researchReports": [
-    "research/README.md",
-    "research/audit.md",
-    "research/boundaries.md",
-    "research/dead-code.md",
-    "research/editor-mcp-hooks.md",
-    "research/feature-matrix.jsonc",
-    "research/feature-matrix.schema.json",
-    "research/fix-preview.md",
-    "research/flags.md",
-    "research/health.md",
-    "research/knip-parity.jsonc",
-    "research/knip-parity.schema.json",
-    "research/report-template.md",
-    "research/runtime-coverage.md",
-    "research/security.md"
-  ]
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/fallow-quality-enforcement",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "0f80c153b8f5493a9051d84c1dcc2037f9a53fca",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }

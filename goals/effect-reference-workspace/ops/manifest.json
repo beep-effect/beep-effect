@@ -34,13 +34,7 @@
     "goals/effect-reference-workspace/research/SOURCES.md",
     "goals/effect-reference-workspace/research/2026-09-25-00-aligned-design.md"
   ],
-  "researchReports": [
-    "research/2026-09-25-00-aligned-design.md",
-    "research/2026-09-25-01-current-state.md",
-    "research/2026-09-25-02-fleet-census.md",
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -83,5 +77,13 @@
     "history/2026-09-25-p2-p3-closeout.md",
     "history/reflections/2026-09-28-fable.md",
     "research/OPPORTUNITIES.md"
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/effect-reference-workspace",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "ba3f4f565aa13e2ff584d595e77002063ffe7118",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }

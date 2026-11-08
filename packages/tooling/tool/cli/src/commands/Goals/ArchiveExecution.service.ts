@@ -53,6 +53,7 @@ import type {
   ArchiveReceiptEntry,
   InboundLink,
 } from "./Archive.schemas.ts";
+import type { GoalOpsScript } from "./Goals.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Goals/ArchiveExecution.service");
 
@@ -789,6 +790,46 @@ const reprojectResearch = (manifestText: string, packetDir: string, keep: Readon
     () => manifestText
   );
 
+// A goal tombstone keeps no ops/ scripts, so opsScripts is narrowed to the kept files and dropped when none remain.
+const reprojectOpsScripts = (
+  manifestText: string,
+  opsScripts: ReadonlyArray<GoalOpsScript> | undefined,
+  packetDir: string,
+  keep: ReadonlyArray<string>
+): string => {
+  if (opsScripts === undefined) {
+    return manifestText;
+  }
+  const kept = HashSet.fromIterable(keep);
+  const retained = A.filter(opsScripts, (script) => HashSet.has(kept, `${packetDir}/${script.path}`));
+  return A.length(retained) === A.length(opsScripts)
+    ? manifestText
+    : applyJsoncModification(
+        JsoncModification.make({
+          content: manifestText,
+          path: ["opsScripts"],
+          value: A.isReadonlyArrayNonEmpty(retained) ? retained : undefined,
+        })
+      );
+};
+
+const reprojectGoalTombstone = Effect.fnUntraced(function* (
+  manifestText: string,
+  manifestValue: unknown,
+  entry: ArchivePlanEntry
+) {
+  const relative = packetPath(entry);
+  const manifest = yield* decodeGoalManifest(manifestValue).pipe(
+    Effect.mapError((error) => ArchiveError.new("tombstone-conflict", entry.slug, relative, error.message))
+  );
+  return reprojectOpsScripts(
+    reprojectResearch(manifestText, relative, entry.keep),
+    manifest.opsScripts,
+    relative,
+    entry.keep
+  );
+});
+
 const tombstoneEntry = Effect.fnUntraced(function* (
   workspace: ArchiveWorkspaceShape,
   entry: ArchivePlanEntry,
@@ -816,7 +857,8 @@ const tombstoneEntry = Effect.fnUntraced(function* (
   const withArchive = applyJsoncModification(
     JsoncModification.make({ content: manifestText, path: archivePath, value: encodedRecord })
   );
-  const nextManifest = entry.root === "goals" ? reprojectResearch(withArchive, relative, entry.keep) : withArchive;
+  const nextManifest =
+    entry.root === "goals" ? yield* reprojectGoalTombstone(withArchive, manifestValue, entry) : withArchive;
   yield* Effect.forEach(
     entry.remove,
     (file) =>

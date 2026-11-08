@@ -152,7 +152,7 @@ grounding verifies *any* quote against *any* source and is not legal-specific.
 `ip-law-knowledge-graph`, keeping citation/IP vocab out of epistemic/shared.
 (3) The **hosted lookup wrap** (if/when Q4's lane is built) lands in the existing
 `@beep/courtlistener` driver (deleted 2026-08-13; recreate from
-`goals/honest-repo-signal/research/FOLLOW-UPS.md` if the hosted lookup
+[goals/honest-repo-signal/research/FOLLOW-UPS.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/honest-repo-signal/research/FOLLOW-UPS.md) if the hosted lookup
 lane is pulled). All three **compose** `@beep/epistemic-domain`
 `EvidenceSpan` + `@beep/provenance` `TextAnchor` via public surface, never by
 forking.

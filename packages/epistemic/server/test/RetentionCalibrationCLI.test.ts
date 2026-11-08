@@ -48,7 +48,7 @@ const copyPacket = Effect.fn("CalibrationCLITest.copyPacket")(function* () {
   yield* fs.makeDirectory(path.join(packet, "ops"), { recursive: true });
   for (const file of ["fixture-v1.json", "protocol-v1.json", "dataset-v1.json"]) {
     yield* fs.copyFile(
-      path.join(repository, "goals/epistemic-retention-policy-calibration/ops", file),
+      path.join(repository, "packages/epistemic/server/test/fixtures/retention-calibration", file),
       path.join(packet, "ops", file)
     );
   }

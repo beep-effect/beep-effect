@@ -105,10 +105,7 @@ class AtlasArtifact extends S.Opaque<AtlasArtifact, { readonly brand: unique sym
 ) {}
 const decodeAtlasArtifactJson = S.decodeEffect(S.fromJsonString(AtlasArtifact));
 
-const atlasUrl = new URL(
-  "../../../../../goals/lexical-playground-capability-atlas/research/capability-atlas.json",
-  import.meta.url
-);
+const atlasUrl = new URL("./fixtures/capability-atlas.json", import.meta.url);
 
 const decodeKeyChord = S.decodeUnknownResult(KeyChordFromString);
 
