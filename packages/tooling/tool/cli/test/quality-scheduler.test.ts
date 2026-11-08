@@ -6669,6 +6669,7 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
           fault = ""
         ) {
           let liveAncestorGib = ancestorGib;
+          let callerReads = 0;
           const unavailableRoot = fault === "root-absent" || fault === "root-denied";
           const partialRoot = fault === "root-partial";
           const tightRoot = fault === "namespace-root" || fault === "subtree-root";
@@ -6685,7 +6686,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               const rootMissing = isRoot && unavailableRoot;
               // The changing limit is evaluated only when the file is read.
               const limit = Effect.sync(
-                () => `${(isRoot && tightRoot ? 20 : suffix === "/shared/caller" ? 32 : liveAncestorGib) * GIB}`
+                () =>
+                  `${(isRoot && tightRoot ? 20 : suffix === "/shared/caller" ? (fault === "loose-caller" ? 64 : 32) : liveAncestorGib) * GIB}`
               );
               const current = Effect.sync(() => (fault === "current" ? "malformed" : "0"));
               const directory = `/sys/fs/cgroup${suffix}`;
@@ -6707,12 +6709,16 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
                 Effect.sync(() =>
                   fault === "mount"
                     ? "invalid"
-                    : `1 0 0:1 ${fault === "subtree-root" ? "/shared" : "/"} /sys/fs/cgroup rw - cgroup2 cgroup rw`
+                    : `1 0 0:1 ${fault === "subtree-root" ? "/shared" : fault === "foreign-root" ? "/foreign" : "/"} /sys/fs/cgroup rw - cgroup2 cgroup rw`
                 )
               ),
               Tuple.make(
                 `/proc/${process.pid}/cgroup`,
-                Effect.sync(() => (fault === "caller" ? "invalid" : "0::/shared/caller\n"))
+                Effect.sync(() => {
+                  callerReads += 1;
+                  if (fault === "caller") return "invalid";
+                  return fault === "moved-caller" && callerReads > 1 ? "0::/shared/moved\n" : "0::/shared/caller\n";
+                })
               ),
               Tuple.make(
                 `/proc/${process.ppid}/cgroup`,
@@ -6790,6 +6796,17 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
         expect(reading32).toBe(4);
         const reading33 = yield* capacity("/elsewhere", 80, 128, false, O.some("/execution"), "fresh");
         expect(reading33).toBe(2);
+        // Without a fault this inspection reads 7 (reading16); each of these distrusts it and falls back to 4.
+        const reading34 = yield* capacity("/elsewhere", 80, 128, false, O.none(), "foreign-root");
+        expect(reading34).toBe(4);
+        const reading35 = yield* capacity("/elsewhere", 80, 128, false, O.none(), "moved-caller");
+        expect(reading35).toBe(4);
+        // The source's 32 GiB ceiling is tighter than every cgroup limit, so it decides. A prospective
+        // destination is judged by its own limits instead.
+        const reading36 = yield* capacity("/elsewhere", 80, 128, false, O.none(), "loose-caller");
+        expect(reading36).toBe(4);
+        const reading37 = yield* capacity("/elsewhere", 80, 128, false, O.some("/shared/caller"), "loose-caller");
+        expect(reading37).toBeGreaterThan(4);
       })
     );
 
