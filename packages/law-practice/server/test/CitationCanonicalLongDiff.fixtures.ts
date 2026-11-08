@@ -57,7 +57,7 @@ const readCase = Effect.fn("CanonicalLongDiffTest.read")(function* () {
   const annotation = annotate.payload.value;
   if (cleaner.outcome.kind !== "success" || annotation.outcome.kind !== "success")
     return yield* Effect.die("Expected successful original workflow");
-  const steps = yield* S.decodeUnknownEffect(S.Array(CitationBuiltinCleanerName))(cleaner.input.steps);
+  const steps = yield* S.decodeUnknownEffect(OriginalCleanerSteps)(cleaner.input.steps);
   expect(steps).toEqual(["all_whitespace"]);
   const options = yield* S.decodeUnknownEffect(Annotation)(annotation.input);
   const id = `${prefix}305:8:caseDeclaration::1`;
@@ -160,3 +160,5 @@ export const replayCitationCanonicalLongDiff = Effect.fn("CanonicalLongDiffTest.
   const counts = yield* installed.setup.observed.snapshot;
   expect(counts.confirmed).toBe(counts.spawned);
 });
+
+const OriginalCleanerSteps = S.Array(CitationBuiltinCleanerName);

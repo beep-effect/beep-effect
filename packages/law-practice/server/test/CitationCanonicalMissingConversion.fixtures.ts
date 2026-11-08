@@ -49,7 +49,7 @@ export const replayCitationCanonicalMissingConversion = Effect.fn("CanonicalMiss
   );
   expect(constructed.components.page).toEqual(O.none());
   const call = yield* readCitationCanonicalPlainExtraction(operations, `${prefix}166:20:get_citations::1`, "2 U.S. __");
-  const original = yield* S.decodeEffect(S.Array(S.JsonObject))(call.models);
+  const original = yield* S.decodeEffect(OriginalModels)(call.models);
   expect(original).toHaveLength(1);
   expect(A.getUnsafe(original, 0)).toEqual(A.getUnsafe(criteria, 1).context.values.citation2);
   const replay = yield* makeCitationCanonicalExtractionReplay(kind);
@@ -57,3 +57,5 @@ export const replayCitationCanonicalMissingConversion = Effect.fn("CanonicalMiss
   expect(A.getUnsafe(result.citations, 0).components.page).toEqual(O.none());
   yield* replay.assertRetired;
 });
+
+const OriginalModels = S.Array(S.JsonObject);

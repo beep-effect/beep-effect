@@ -37,7 +37,7 @@ const readRows = Effect.fn("CanonicalRemainingTest.read")(function* () {
   const operations = yield* readCitationOracleFixture(
     "operation-cases",
     "ae441000ddc90537864e3fdd4a9dfc4aa81af37a65818b48ce9bf37d95d1eeb1"
-  ).pipe(Effect.flatMap(S.decodeEffect(S.fromJsonString(CitationOracleOperations))));
+  ).pipe(Effect.flatMap(S.decodeEffect(OriginalOperations)));
   const remaining = A.filter(
     operations.cases,
     (row) => row.operation === "get_citations" && !HashSet.has(coveredSites, row.sourceSiteId) && row.id !== customId
@@ -83,3 +83,5 @@ export const replayCitationCanonicalRemainingExtraction = Effect.fn("CanonicalRe
   }
   yield* replay.assertRetired;
 });
+
+const OriginalOperations = S.fromJsonString(CitationOracleOperations);

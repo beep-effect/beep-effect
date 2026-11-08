@@ -1819,6 +1819,12 @@ Add source-attributed builtin debug formatting using existing Effect Unicode, ti
 
 Reverse: Supersede if the source workflow, native field ordering or captured ownership proof changes.
 
+### Hoist reusable replay schemas to preserve Effect parser caching, 2026-11-08
+
+Root lint reproduced seventeen no-inline-schema-compile sites missed by package-only checks. Move identical schemas to module bindings, preserving decode directions, inputs, expected values, assertions and deadlines. Rerun affected finite proofs before refreshing references; no completion event is promoted. See history/evidence/2026-11-08-cached-schema-fixtures.md.
+
+Reverse: Supersede if schema construction becomes dependent on invocation data.
+
 ### Qualify all original annotation workflows and full-span equalities, 2026-11-08
 
 All eight Bun/Node groups pass for the remaining 22 original annotation workflows, completing the original test_annotate cohort together with the separately qualified quote-cleaner case. Add a direct parser-to-verified-component replay for all thirteen original full_span equalities; qualify its binding only on matching final runtime results. General annotation utilities, host/model/callback protocols and exhaustive goal acceptance remain open.

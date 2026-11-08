@@ -58,7 +58,7 @@ const readRows = Effect.fn("CanonicalParsedEqualityTest.read")(function* () {
             },
             id
           ).toEqual({ steps: null, markup: "", ambiguous: false, tokenizer: "AhocorasickTokenizer" });
-          const original = yield* S.decodeEffect(S.Array(S.JsonObject))(body.outcome.value);
+          const original = yield* S.decodeEffect(OriginalModels)(body.outcome.value);
           expect(original, id).toHaveLength(1);
           return { id, raw: body.input.plain_text, models: original };
         })
@@ -134,3 +134,5 @@ export const replayCitationCanonicalParsedEquality = Effect.fn("CanonicalParsedE
   }
   yield* replay.assertRetired;
 });
+
+const OriginalModels = S.Array(S.JsonObject);

@@ -214,9 +214,7 @@ export const replayCitationCanonicalDefaultFactory = Effect.fn("CanonicalDefault
   const resourceId =
     "tests.test_ModelsTest.ModelsTest.test_persistent_hash::tests/test_ModelsTest.py:194:12:caseDeclaration::4";
   const resource = yield* read(resourceId);
-  const wrapper = yield* S.decodeUnknownEffect(
-    S.Struct({ fields: S.Struct({ citation: S.JsonObject }), pythonType: S.tag("eyecite.models.Resource") })
-  )(resource.context.values.citation);
+  const wrapper = yield* S.decodeUnknownEffect(OriginalSchema1)(resource.context.values.citation);
   const actual = yield* factory.create(profiles[0]);
   yield* compareCitationCanonicalModel(actual, wrapper.fields.citation, resourceId);
   const hashes = yield* factory.hash(actual);
@@ -237,13 +235,7 @@ export const replayCitationCanonicalFactoryReporters = Effect.fn("CanonicalDefau
     "factory-edition-lookup",
     "1928ebe541398558a262096d59ccc14ada65309e0d39fb34ced939bec36d2c91"
   );
-  const lookup = yield* S.decodeEffect(
-    S.Struct({
-      schemaVersion: S.tag("citation-factory-edition-lookup/v1"),
-      oracleCommit: S.tag("04d82c032ad5fd0f9ab72a61c87110c46ee8f52e"),
-      rows: S.Array(S.Struct({ reporter: S.String, editions: S.Array(CitationEditionRef) })),
-    }).pipe(S.fromJsonString)
-  )(lookupText);
+  const lookup = yield* S.decodeEffect(OriginalSchema2)(lookupText);
   const cohorts = [
     { name: "corrected_reporter", lines: [74, 75], reporters: ["U.S.", "U. S."], equal: true },
     { name: "different_reporter", lines: [122, 123], reporters: ["F. Supp.", "U. S."], equal: false },
@@ -258,9 +250,7 @@ export const replayCitationCanonicalFactoryReporters = Effect.fn("CanonicalDefau
       })
     );
     const equality = A.getUnsafe(events, 0);
-    const context = yield* S.decodeUnknownEffect(
-      S.Struct({ citations: S.Array(S.JsonObject).check(S.isBetweenLength(2, 2)) })
-    )(equality.context.values);
+    const context = yield* S.decodeUnknownEffect(OriginalSchema3)(equality.context.values);
     const models = yield* Effect.forEach(
       cohort.reporters,
       Effect.fnUntraced(function* (reporter) {
@@ -285,3 +275,14 @@ export const replayCitationCanonicalFactoryReporters = Effect.fn("CanonicalDefau
     expect(A.map(hashes, (hash) => hash.citationHash)).toEqual(expectedHashes);
   }
 });
+
+const OriginalSchema1 = S.Struct({
+  fields: S.Struct({ citation: S.JsonObject }),
+  pythonType: S.tag("eyecite.models.Resource"),
+});
+const OriginalSchema2 = S.Struct({
+  schemaVersion: S.tag("citation-factory-edition-lookup/v1"),
+  oracleCommit: S.tag("04d82c032ad5fd0f9ab72a61c87110c46ee8f52e"),
+  rows: S.Array(S.Struct({ reporter: S.String, editions: S.Array(CitationEditionRef) })),
+}).pipe(S.fromJsonString);
+const OriginalSchema3 = S.Struct({ citations: S.Array(S.JsonObject).check(S.isBetweenLength(2, 2)) });

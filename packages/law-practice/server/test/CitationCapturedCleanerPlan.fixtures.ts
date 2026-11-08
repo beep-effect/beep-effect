@@ -117,7 +117,7 @@ export const replayCitationCapturedCleanerPlan = Effect.fn("CapturedCleanerTest.
   const corpus = yield* readCitationOracleFixture(
     "operation-cases",
     "ae441000ddc90537864e3fdd4a9dfc4aa81af37a65818b48ce9bf37d95d1eeb1"
-  ).pipe(Effect.flatMap(S.decodeEffect(S.fromJsonString(CitationOracleOperations))));
+  ).pipe(Effect.flatMap(S.decodeEffect(OriginalOperations)));
   const id = "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:241:24:get_citations::16";
   const row = yield* Effect.fromOption(A.findFirst(corpus.cases, (row) => row.id === id));
   if (row.operation !== "get_citations") return yield* Effect.die("Expected original extraction");
@@ -238,3 +238,5 @@ export const replayCitationCapturedCleanerPlan = Effect.fn("CapturedCleanerTest.
   const state = yield* installed.setup.operation.snapshot;
   expect(state).toMatchObject({ active: 0, queued: 0 });
 });
+
+const OriginalOperations = S.fromJsonString(CitationOracleOperations);

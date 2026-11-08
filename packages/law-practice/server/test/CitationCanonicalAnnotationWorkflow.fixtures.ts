@@ -112,7 +112,7 @@ const readRows = Effect.fn("CanonicalWorkflowTest.read")(function* () {
       const steps = yield* S.decodeUnknownEffect(Steps)(body.input.clean_steps);
       expect(body.input.tokenizer.tokenizer, id).toBe("AhocorasickTokenizer");
       expect(body.input.remove_ambiguous, id).toBe(false);
-      const models = yield* S.decodeEffect(S.Array(S.JsonObject))(body.outcome.value);
+      const models = yield* S.decodeEffect(OriginalModels)(body.outcome.value);
       expect(models, id).toEqual(context.cites);
       expect(body.stages.document.plainText, id).toBe(context.document.fields.plain_text);
       const mode: "plain" | "html" = context.get_citations_args.markup_text === undefined ? "plain" : "html";
@@ -164,3 +164,5 @@ export const replayCitationCanonicalAnnotationWorkflows = Effect.fn("CanonicalWo
   yield* ordinary.assertRetired;
   yield* lower.assertRetired;
 });
+
+const OriginalModels = S.Array(S.JsonObject);

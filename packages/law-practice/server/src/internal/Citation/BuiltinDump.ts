@@ -42,9 +42,7 @@ const scalar = (value: CitationTokenSeed["groups"][string] | number): CitationDu
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationBuiltinDump = Effect.fn("Citation.makeBuiltinDump")(function* (policy: unknown, raw: unknown) {
-  const text = yield* S.decodeUnknownEffect(S.String.check(S.isMaxLength(32768)))(raw).pipe(
-    Effect.mapError(configuration)
-  );
+  const text = yield* S.decodeUnknownEffect(ProfileText)(raw).pipe(Effect.mapError(configuration));
   const digest = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(text)).pipe(
     Effect.mapError(configuration)
   );
@@ -102,3 +100,5 @@ export const makeCitationBuiltinDump = Effect.fn("Citation.makeBuiltinDump")(fun
     project;
   return { project: projectClosed };
 });
+
+const ProfileText = S.String.check(S.isMaxLength(32768));

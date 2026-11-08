@@ -56,7 +56,7 @@ const readRows = Effect.fn("CanonicalFullRenderingTest.read")(function* () {
         },
         row.id
       ).toEqual({ steps: null, markup: "", ambiguous: false, tokenizer: "AhocorasickTokenizer" });
-      const models = yield* S.decodeEffect(S.Array(S.JsonObject))(body.outcome.value);
+      const models = yield* S.decodeEffect(OriginalModels)(body.outcome.value);
       expect(models, row.id).toHaveLength(1);
       const journal = row.sourceSiteId === "tests/test_ModelsTest.py:209:27:get_citations";
       expect(journal || row.sourceSiteId === "tests/test_ModelsTest.py:217:29:get_citations", row.id).toBe(true);
@@ -108,7 +108,7 @@ export const replayCitationCanonicalFullRendering = Effect.fn("CanonicalFullRend
     const actual = yield* replay.extract(row.raw, "plain", row.models, row.id, null);
     const resource = yield* prepareCitationParsedResource(unicode, actual);
     const values = yield* renderingMetadata(A.getUnsafe(actual.citations, 0));
-    const fields = yield* S.decodeEffect(S.Record(S.String, Nullable))(values.fields);
+    const fields = yield* S.decodeEffect(OriginalRenderingFields)(values.fields);
     const pairs = yield* Effect.forEach(
       R.toEntries(fields),
       Effect.fnUntraced(function* ([key, value]) {
@@ -116,7 +116,7 @@ export const replayCitationCanonicalFullRendering = Effect.fn("CanonicalFullRend
         return Tuple.make(key, text);
       })
     );
-    const input = yield* S.decodeUnknownEffect(S.toType(CitationRenderingInput))({
+    const input = yield* S.decodeUnknownEffect(RenderingInputType)({
       ...resource,
       mode: values.mode,
       metadata: R.fromEntries(pairs),
@@ -127,3 +127,7 @@ export const replayCitationCanonicalFullRendering = Effect.fn("CanonicalFullRend
   }
   yield* replay.assertRetired;
 });
+
+const OriginalModels = S.Array(S.JsonObject);
+const OriginalRenderingFields = S.Record(S.String, Nullable);
+const RenderingInputType = S.toType(CitationRenderingInput);

@@ -55,12 +55,12 @@ const readRows = Effect.fn("CanonicalPinSpanTest.read")(function* () {
       const body = row.payload.value;
       if (body.outcome.kind !== "success") return yield* Effect.die("Expected original parser success");
       yield* S.decodeUnknownEffect(DefaultInput)(body.input);
-      const models = yield* S.decodeEffect(S.Array(S.JsonObject))(body.outcome.value);
+      const models = yield* S.decodeEffect(OriginalModels)(body.outcome.value);
       const cleaner = yield* Effect.fromOption(HashMap.get(byId, `${prefix}336:25:clean_text::${row.ordinal}`));
       if (cleaner.operation !== "clean_text") return yield* Effect.die("Expected original preceding cleaner call");
       const clean = cleaner.payload.value;
       if (clean.outcome.kind !== "success") return yield* Effect.die("Expected original cleaner success");
-      const steps = yield* S.decodeUnknownEffect(S.Array(CitationBuiltinCleanerName))(clean.input.steps);
+      const steps = yield* S.decodeUnknownEffect(OriginalCleanerSteps)(clean.input.steps);
       expect(steps).toEqual(["all_whitespace", "html"]);
       expect(clean.outcome.value, row.id).toBe(body.input.plain_text);
       const targets = yield* Effect.forEach(
@@ -112,3 +112,6 @@ export const replayCitationCanonicalPinSpan = Effect.fn("CanonicalPinSpanTest.re
   }
   yield* replay.assertRetired;
 });
+
+const OriginalModels = S.Array(S.JsonObject);
+const OriginalCleanerSteps = S.Array(CitationBuiltinCleanerName);

@@ -69,7 +69,7 @@ const readCalls = Effect.fn("CanonicalFullSpanTest.calls")(function* (
       const body = row.payload.value;
       if (body.outcome.kind !== "success") return yield* Effect.die("Expected original extraction success");
       yield* S.decodeUnknownEffect(OriginalInput)(body.input);
-      const models = yield* S.decodeEffect(S.Array(S.JsonObject))(body.outcome.value);
+      const models = yield* S.decodeEffect(OriginalModels)(body.outcome.value);
       const combined = row.sourceSiteId === "tests/test_FindTest.py:1161:20:get_citations";
       const simple = row.sourceSiteId === "tests/test_FindTest.py:1187:24:get_citations";
       const stopword = row.sourceSiteId === "tests/test_FindTest.py:1198:24:get_citations";
@@ -146,3 +146,5 @@ export const replayCitationCanonicalFullSpan = Effect.fn("CanonicalFullSpanTest.
   expect(checked).toBe(13);
   yield* replay.assertRetired;
 });
+
+const OriginalModels = S.Array(S.JsonObject);

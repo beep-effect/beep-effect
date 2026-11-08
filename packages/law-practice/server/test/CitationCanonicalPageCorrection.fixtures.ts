@@ -46,7 +46,7 @@ const readRows = Effect.fn("CanonicalPageCorrectionTest.read")(function* () {
       const body = row.payload.value;
       if (body.outcome.kind !== "success") return yield* Effect.die("Expected original parser success");
       yield* S.decodeUnknownEffect(OriginalInput)(body.input);
-      const models = yield* S.decodeEffect(S.Array(S.JsonObject))(body.outcome.value);
+      const models = yield* S.decodeEffect(OriginalModels)(body.outcome.value);
       expect(models, row.id).toHaveLength(1);
       const targets = yield* Effect.forEach(
         [246, 251],
@@ -95,3 +95,5 @@ export const replayCitationCanonicalPageCorrection = Effect.fn("CanonicalPageCor
   }
   yield* replay.assertRetired;
 });
+
+const OriginalModels = S.Array(S.JsonObject);
