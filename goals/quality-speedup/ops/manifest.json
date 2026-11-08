@@ -29,20 +29,6 @@
     "goals/quality-speedup/GOAL.md",
     "goals/quality-speedup/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/SOURCES.md",
-    "research/data/census-perfile.tsv",
-    "research/data/census-results.tsv",
-    "research/data/ci-lane-timings.tsv",
-    "research/data/fleet-lane-observations.tsv",
-    "research/data/fleet-turbo-task-timings.tsv",
-    "research/data/fleet-yeet-runs.tsv",
-    "research/data/tst-coverage-assessment.tsv",
-    "research/data/tstyche-surface-inventory-full.md",
-    "research/instantiation-census.md",
-    "research/quality-time-inventory.md",
-    "research/tstyche-inventory.md"
-  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -95,5 +81,13 @@
     "A workstream turns out to be owned by an active packet.",
     "A measurement instrument cannot be verified.",
     "Any change would touch public API, schemas, migrations, auth, infra, security behavior, dependencies, lockfiles, or generated files beyond what Workstream A explicitly requires."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/quality-speedup",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "e00db25034b288bcf012fa93cd71a81af02df464",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

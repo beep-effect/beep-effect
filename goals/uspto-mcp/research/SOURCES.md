@@ -9,8 +9,8 @@ scoped to the USPTO proving-host slice.
   [`explorations/mcp-auth-gated-registration/research/SOURCES.md`](../../../explorations/mcp-auth-gated-registration/research/SOURCES.md)
   (full corpus; this file reproduces only the entries this host implements
   against).
-- **Kit contract:** [`goals/mcp-kit/SPEC.md`](../../mcp-kit/SPEC.md) and its
-  ledger [`goals/mcp-kit/research/SOURCES.md`](../../mcp-kit/research/SOURCES.md)
+- **Kit contract:** [goals/mcp-kit/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/mcp-kit/SPEC.md) and its
+  ledger [goals/mcp-kit/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/mcp-kit/research/SOURCES.md)
   — this host is a consumer of the kit, not an independent implementation of
   the same patterns.
 
@@ -27,7 +27,7 @@ is wiring/composition, not re-porting the upstream shapes.
 
 ## 2. Upstream repositories & licenses
 
-See `goals/mcp-kit/research/SOURCES.md` §2 for the full license ledger — this
+See [goals/mcp-kit/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/mcp-kit/research/SOURCES.md) §2 for the full license ledger — this
 host does not port any upstream source directly; it composes the kit's
 already-ported deliverables.
 

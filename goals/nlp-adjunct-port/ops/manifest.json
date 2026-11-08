@@ -52,5 +52,13 @@
   "statusNote": "legacy status: DONE",
   "schemaVersion": "initiative-manifest/v2",
   "lifecycle": "completed-retained",
-  "packetPath": "goals/nlp-adjunct-port"
+  "packetPath": "goals/nlp-adjunct-port",
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/nlp-adjunct-port",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "3f363863025498a75924b7c2767435fdf351a0ca",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

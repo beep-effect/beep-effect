@@ -30,12 +30,7 @@
     "goals/practice-mail-tagging/GOAL.md",
     "goals/practice-mail-tagging/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md",
-    "research/adapters-cache-baseline-review.md",
-    "research/entrypoint-cache-baseline-review.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -93,5 +88,13 @@
     "The implementation would exceed named scope.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/practice-mail-tagging",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "4defe0a617ef9a4ce7cc399b20100e7170c301f6",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

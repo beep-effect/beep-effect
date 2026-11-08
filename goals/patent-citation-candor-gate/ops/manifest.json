@@ -33,12 +33,6 @@
     "goals/patent-citation-candor-gate/GOAL.md",
     "goals/patent-citation-candor-gate/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/01-gate-shape-check.md",
-    "research/02-surface-reverification.md",
-    "research/03-durability-lane.md",
-    "research/SOURCES.md"
-  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -88,5 +82,13 @@
     "The lawful cross-slice gate shape cannot be satisfied without violating standards/ARCHITECTURE.md.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/patent-citation-candor-gate",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "2f7006a97c46ad702cce3f3dbda46fbd67a57dd4",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

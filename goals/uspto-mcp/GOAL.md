@@ -17,8 +17,8 @@ contract:
 
 Read those first, then `AGENTS.md`, `CLAUDE.md`, and the standards named by
 `SPEC.md` (`standards/architecture/{02,03,07,09,12}`). Also read
-`goals/mcp-kit/SPEC.md` (the kit contract this host consumes) and the sibling
-`goals/mcp-host-retrofit/SPEC.md` (jointly discharges the kit's ≥2-consumer
+[goals/mcp-kit/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/mcp-kit/SPEC.md) (the kit contract this host consumes) and the sibling
+[goals/mcp-host-retrofit/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/mcp-host-retrofit/SPEC.md) (jointly discharges the kit's ≥2-consumer
 gate). Higher-priority repo standards outrank packet prose when they conflict.
 
 Scope:

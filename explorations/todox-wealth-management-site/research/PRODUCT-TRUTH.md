@@ -34,8 +34,8 @@ private notes, competitor language, and public-site copy candidates.
   missing node provenance, and degenerate joins that can look like real
   results. Do not transfer proposal-level graph claims into Todox marketing as
   shipped facts.
-  Sources: [`practice-kg-mcp PLAN`](../../../goals/practice-kg-mcp/PLAN.md),
-  [`P5 defect register`](../../../goals/practice-kg-mcp/history/p5/2026-07-30-defect-register.md).
+  Sources: [`practice-kg-mcp PLAN`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/practice-kg-mcp/PLAN.md),
+  [`P5 defect register`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/practice-kg-mcp/history/p5/2026-07-30-defect-register.md).
 
 ## Mechanism the site may explain
 

@@ -277,7 +277,7 @@ Same harness: `makeMcpClient` / `withHttpServer` imported from
 `:536`. Same first message as §2.2. Under G4 this entire PGlite authority
 suite fails before any tool dispatch.
 
-### 2.5 Live proof client — `goals/ontology-agent-surface/ops/live-mcp-client.ts`
+### 2.5 Live proof client — [goals/ontology-agent-surface/ops/live-mcp-client.ts](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ontology-agent-surface/ops/live-mcp-client.ts)
 
 `RpcClient.make(McpSchema.ClientRpcs)` (`:55`). First call (`:56-60`):
 

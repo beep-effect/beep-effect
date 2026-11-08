@@ -35,16 +35,7 @@
     "goals/practice-kg-mcp/GOAL.md",
     "goals/practice-kg-mcp/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md",
-    "research/acceptance-gauntlet.md",
-    "research/attorney-session.md",
-    "research/bundle-contract.md",
-    "research/install-manifest.json",
-    "research/install-runbook.md",
-    "research/matter-lookup-contract.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -128,5 +119,13 @@
     "Stop and report before any corpus content or PII lands in the repo.",
     "Stop and report before introducing a graph DB engine (intake SPEC D6 stands)."
   ],
-  "provides": ["law-practice/practice-kg-matter-lookup"]
+  "provides": ["law-practice/practice-kg-matter-lookup"],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/practice-kg-mcp",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "a9dc18571e7ad6a5fca1c481d41dbd80166adcc7",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

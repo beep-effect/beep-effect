@@ -47,14 +47,7 @@
     "goals/party-slice/GOAL.md",
     "goals/party-slice/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md",
-    "research/cache-baseline-request-2026-11-03.json",
-    "research/cache-baseline-review-2026-11-03.md",
-    "research/cache-policy-fingerprint-request-2026-11-03.json",
-    "research/cache-policy-fingerprint-review-2026-11-03.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -108,5 +101,13 @@
   "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2676
+  },
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/party-slice",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "b360bc408542ba8cc8bc9af0f7de3e0078bad58b",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
   }
 }

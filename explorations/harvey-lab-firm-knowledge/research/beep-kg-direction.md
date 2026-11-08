@@ -665,7 +665,7 @@ it exists at 2026-08-08 on branch `main`.
 **Goal packets**
 - `goals/agentic-professional-runtime/SPEC.md`
 - `goals/semantic-foundation/SPEC.md`, `goals/semantic-foundation/README.md`
-- `goals/practice-kg-mcp/SPEC.md`, `goals/practice-kg-mcp/README.md`
+- [goals/practice-kg-mcp/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/practice-kg-mcp/SPEC.md), `goals/practice-kg-mcp/README.md`
 - `goals/legal-document-intake/SPEC.md`, `goals/legal-document-intake/README.md`
 - `goals/citation-verified-span-substrate/README.md`
 - `goals/citation-extraction-engine/README.md`

@@ -2,7 +2,7 @@
 
 The `oip-practice` plugin (source `apps/practice-claude-mod`) adds
 plain-language practice-kg tool rows and Right / Wrong / Partly verdicts to
-Claude Code sessions. Design and decisions: `goals/practice-claude-mod/SPEC.md`.
+Claude Code sessions. Design and decisions: [goals/practice-claude-mod/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/practice-claude-mod/SPEC.md).
 
 ## Build and test
 

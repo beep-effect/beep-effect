@@ -8,7 +8,7 @@
 | Source | Title | Upstream (repo) | Location (`file:line`) | Theme | Disposition |
 |--------|-------|-----------------|------------------------|-------|-------------|
 | Workstream A slice 1 | App-only lane and mailbox write verbs | this repo, branch `feat/m365-write-lane` (commit `4b731ed08b`, unpublished on 2026-10-06) | `packages/drivers/m365/src/M365.service.ts`, `M365.config.ts`, `M365.auth.ts` | Auth lane, write-safe executor, event verbs | Reused as is |
-| Workstream A packet | Practice Docket Intake Spec | this repo, branch `docs/practice-docket-intake-packet` | `goals/practice-docket-intake/SPEC.md` | Constraints, non-goals (no send, no MCP exposure) | Honoured; the outbox is a separate server and registration |
+| Workstream A packet | Practice Docket Intake Spec | this repo, branch `docs/practice-docket-intake-packet` | [goals/practice-docket-intake/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/practice-docket-intake/SPEC.md) | Constraints, non-goals (no send, no MCP exposure) | Honoured; the outbox is a separate server and registration |
 | Workstream A runbook | Docket intake: Entra app registration | same branch | `docs/runbooks/docket-intake-entra-registration.md` | Certificate, Exchange RBAC scope, verification | Pattern copied; run in the same sitting |
 
 ## 2. Upstream repositories & licenses

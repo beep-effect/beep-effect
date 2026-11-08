@@ -82,5 +82,13 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "mission": "Graduate the first DOCX round-trip interop slice into a pure schema-first `@beep/pandoc-ast` foundation package. The package models Pandoc JSON, maps the supported Md-core profile to and from `@beep/md`, and records DOCX-origin gaps as structured compatibility issues."
+  "mission": "Graduate the first DOCX round-trip interop slice into a pure schema-first `@beep/pandoc-ast` foundation package. The package models Pandoc JSON, maps the supported Md-core profile to and from `@beep/md`, and records DOCX-origin gaps as structured compatibility issues.",
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/pandoc-ast-foundation",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "1d4c93221816684b62b23ebffc0357ac4402780b",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

@@ -39,5 +39,5 @@ Tests inject a deterministic fake `LanguageModel` and never use this live layer.
 ## Distribution
 
 Ships as an MCP Bundle (.mcpb) with a bun-compiled Windows binary plus DuckDB
-native sidecars (see `goals/practice-kg-mcp/history/p0/` packaging spike
+native sidecars (see [goals/practice-kg-mcp/history/p0/](https://github.com/beep-effect/beep-effect-goals-archive/tree/main/goals/practice-kg-mcp/history/p0) packaging spike
 evidence). PR-5 adds the packaging lane and install runbook.

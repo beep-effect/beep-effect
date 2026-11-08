@@ -76,7 +76,7 @@ What is missing:
   (readOnly/destructive/idempotent/openWorld) — none of which says whether the
   result was computed or generated.
 
-Why it matters here specifically: `goals/practice-kg-mcp/SPEC.md` D-2 **already
+Why it matters here specifically: [goals/practice-kg-mcp/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/practice-kg-mcp/SPEC.md) D-2 **already
 splits its data families on exactly this axis** — "(a) deterministic
 docket-family spine … **no LLM anywhere in this layer**; (b) OA span-grounded
 candidate claims … **with a real LanguageModel layer**". The split exists in
@@ -146,7 +146,7 @@ Nothing covers the retrieval engines:
   exact-literal + optional graph** ranked channels; the SPEC specifies fusion
   arithmetic, empty-channel renormalization, tie-breaking and contribution
   exposure, and says nothing about how a caller should *shape the query*.
-- `goals/practice-kg-mcp/SPEC.md` D-2(d) — "corpus full-text search over the
+- [goals/practice-kg-mcp/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/practice-kg-mcp/SPEC.md) D-2(d) — "corpus full-text search over the
   extracted text", no query contract.
 - `rg -rni "query transformation|synonym|stopword"` over `explorations/`,
   `goals/`, `docs/` returns only external-research notes (embedding bakeoffs,
@@ -268,7 +268,7 @@ type system *and* the database:
   hatch Graphnosis names ("save the user's confirmation, not the inference") is
   beep's `accepted` verdict: "Acceptance records the human-disposition verdict —
   one of seven independent typed verdicts … none implies another."
-- `goals/practice-kg-mcp/SPEC.md` D-4 already fences the layers **in tool
+- [goals/practice-kg-mcp/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/practice-kg-mcp/SPEC.md) D-4 already fences the layers **in tool
   output**: "Candidate claims are labeled `candidate — unreviewed` with their
   evidence span; spine rows are labeled derived-from-official-records." D-2(c)
   adds "confidence stated in tool output".

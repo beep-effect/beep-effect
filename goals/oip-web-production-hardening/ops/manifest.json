@@ -118,11 +118,12 @@
   "lifecycle": "completed-retained",
   "mergedPullRequest": 401,
   "packetPath": "goals/oip-web-production-hardening",
-  "researchReports": [
-    "research/aeo-seo-llms.md",
-    "research/cms-crm-contact-analytics.md",
-    "research/deployment-iac-vercel-cloudflare-pulumi.md",
-    "research/security-pwa-lighthouse.md",
-    "research/synthesis-and-decisions.md"
-  ]
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/oip-web-production-hardening",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "e2c2e865531cd4c7d37c3ebe9705166796f1d9e4",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

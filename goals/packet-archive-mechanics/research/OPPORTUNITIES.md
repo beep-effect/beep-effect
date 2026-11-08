@@ -81,3 +81,11 @@ stop also left two rewritten files and two unpushed archive commits, because inb
 atomic and the archive commit precedes them; both were undone by hand. A symlink in the fixture repo
 would have caught this before #2979 merged. A rewrite dry run over the whole plan before the archive
 commit would make this failure leave nothing behind.
+
+## 2026-11-08: Rewriting a citation can push a GOAL.md over its budget
+
+Batch 3's rewrite turned one code span into a link and took
+`goals/ontology-sidecar-stateless-identity/GOAL.md` from 3,992 to 4,112 characters, so `goals doctor`
+reported `goal-md-oversize` (hard maximum 4000). Each rewrite adds about 110 characters of archive URL.
+It was fixed by hand with a plain-text reference. The planner could report which budgeted documents a
+plan would push over the limit, so this shows up before the archive write.

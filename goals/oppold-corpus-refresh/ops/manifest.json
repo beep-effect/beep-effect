@@ -89,5 +89,12 @@
     "The same blocker repeats after reasonable investigation."
   ],
   "mission": "Consolidate the post-June exports/downloads from the user's data-home boundary into the existing governed corpus home at `<CORPUS_ROOT>`, append them under a new run-scoped raw subtree, catalog and dedupe them against prior runs, then archive-move the verified originals.",
-  "researchReports": ["research/README.md"]
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/oppold-corpus-refresh",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "44505e9021ff0e4723d967c867b5fb2c879e9b15",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

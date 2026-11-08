@@ -187,7 +187,7 @@ Gemini's grounding model and Perplexity's inline citations are the consumer refe
 
 Internal: `goals/agentic-professional-runtime/{SPEC.md, docs/product-vision-law-practice.md,
 docs/runtime-data-loop.md, docs/approval-and-autonomy-policy.md}` · the deleted
-`ip-law-knowledge-graph` packet SPEC (git history) · `goals/oppold-corpus-pipeline/SPEC.md` · `docs/BEEPGRAPH_ARCHITECTURE.md` · the
+`ip-law-knowledge-graph` packet SPEC (git history) · [goals/oppold-corpus-pipeline/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/oppold-corpus-pipeline/SPEC.md) · `docs/BEEPGRAPH_ARCHITECTURE.md` · the
 [Architecture Map](../PROSE_TO_PROOF_ARCHITECTURE_MAP.md).
 
 External (market context):

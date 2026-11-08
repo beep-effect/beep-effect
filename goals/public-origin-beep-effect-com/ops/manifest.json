@@ -40,12 +40,7 @@
     "standards/architecture/DECISIONS.md",
     "standards/ARCHITECTURE.md"
   ],
-  "researchReports": [
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md",
-    "research/retired-iri-authorities-baseline-request.json",
-    "research/retired-iri-authorities-baseline-review.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -107,5 +102,13 @@
   "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2319
+  },
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/public-origin-beep-effect-com",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "9fe2681942c3b9bfe2e69173cdd11952d5e1a192",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
   }
 }

@@ -174,6 +174,6 @@ Campaign-level decisions (phase shape, contradiction-cluster re-route,
 unblock milestone):
 [`../legal-patent-kg-deepening/DECISIONS.md`](../legal-patent-kg-deepening/DECISIONS.md),
 2026-08-04 entries. Sibling boundary: the graduated candor goal's SPEC
-(`goals/patent-citation-candor-gate/SPEC.md`) is a stable reference point per
+([goals/patent-citation-candor-gate/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/patent-citation-candor-gate/SPEC.md)) is a stable reference point per
 the unblock-milestone rationale — its event/disposition/gate shapes are
 composed against, never reopened from here.

@@ -182,7 +182,7 @@ except `uspto_search_applications` (`S.Array`).
 
 In-repo wire clients all send `initialize` with `protocolVersion: "2025-06-18"`: the sidecar
 harness (`RpcClient.make(McpSchema.ClientRpcs)` over `RpcClient.layerProtocolHttp` with the
-JSON-RPC codec), `goals/ontology-agent-surface/ops/live-mcp-client.ts`, and the m365 stdio test.
+JSON-RPC codec), [goals/ontology-agent-surface/ops/live-mcp-client.ts](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ontology-agent-surface/ops/live-mcp-client.ts), and the m365 stdio test.
 Public `McpSchema.ClientRpcs` still has `Initialize` and no `server/discover`; Effect's 2026
 client group is internal, so there is no public client to point harnesses at. The sidecar's CORS
 `allowedHeaders` omit `mcp-method` and `mcp-name`.

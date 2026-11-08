@@ -145,4 +145,4 @@ From `goals/agentic-professional-runtime/SPEC.md` and `standards/ARCHITECTURE.md
 - [BeepGraph Architecture](./BEEPGRAPH_ARCHITECTURE.md) — authority/projection/cache; EO spine + TG shell
 - `goals/agentic-professional-runtime/docs/architecture-map.md` — slice ownership & boundary rules
 - the deleted `ip-law-knowledge-graph` packet SPEC (git history) — the 7-ontology TBox and FalkorDB projection
-- `goals/oppold-corpus-pipeline/SPEC.md` — the corpus feeder
+- [goals/oppold-corpus-pipeline/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/oppold-corpus-pipeline/SPEC.md) — the corpus feeder

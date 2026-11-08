@@ -33,7 +33,7 @@ None yet. Upstream issue/PR links land here when D10 tasks are filed.
 - `packages/foundation/modeling/identity/src/Id.ts` — `annoteError`, `adoptDeclaredFieldsEquivalence`.
 - `packages/foundation/modeling/schema/src/Opaque.ts` — `Defect` wrapper.
 - `goals/effect-vitest-canon/DECISIONS.md` — D14 provide rule (FileSystemConformance exemption owner).
-- `goals/repo-crispening-orchestration/ops/prompts/` — prior discovery/remediation prompt shapes.
+- [goals/repo-crispening-orchestration/ops/prompts/](https://github.com/beep-effect/beep-effect-goals-archive/tree/main/goals/repo-crispening-orchestration/ops/prompts) — prior discovery/remediation prompt shapes.
 
 ## 5. Cross-links & provenance
 

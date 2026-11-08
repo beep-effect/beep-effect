@@ -290,14 +290,14 @@ Already present to compose against (verified via `rg`/`ls`, 2026-06-29):
   generic header-name kit above; `private, no-store` must be set explicitly on the
   response.
 - **NO `m365-document-ingest` goal directory.** NOT FOUND — referenced in
-  `goals/m365-driver/SPEC.md` Non-Goals but no such packet was inventoried;
+  [goals/m365-driver/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/m365-driver/SPEC.md) Non-Goals but no such packet was inventoried;
   confirm it does not later claim a serve-route.
 
 ## Constraints
 
 **Routing decision (provisional, from edge-route subtopic) — STAND ALONE.** The
 secure-download proxy should be its own thin, provider-agnostic capability packet,
-not attached: (a) `goals/m365-driver/SPEC.md` is a *read-only Graph driver* that
+not attached: (a) [goals/m365-driver/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/m365-driver/SPEC.md) is a *read-only Graph driver* that
 explicitly defers delivery ("No document-portal ingest wiring…that is the
 `m365-document-ingest` follow-on"); (b) [goals/file-processing-capability/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/file-processing-capability/SPEC.md)
 is an *extraction substrate* with zero download/serve scope; (c) burying the gate

@@ -43,23 +43,6 @@
     "goals/literal-kit-subset-algebra/GOAL.md",
     "goals/literal-kit-subset-algebra/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/2026-10-22-adhd-wide-set.md",
-    "research/2026-10-22-grill-rulings.md",
-    "research/2026-10-22-panel-synthesis.md",
-    "research/2026-10-22-performance.md",
-    "research/SOURCES.md",
-    "research/panel/astra.md",
-    "research/panel/fable-implementation-review.md",
-    "research/panel/grok.md",
-    "research/panel/muse.md",
-    "research/panel/prompt.md",
-    "research/probes/annotation-needs.probe.ts",
-    "research/probes/match-return-and-whenor.probe.ts",
-    "research/tools/dispatch-bench.ts",
-    "research/upstream/9821-literals-omit.md",
-    "research/upstream/9822-match-literals.md"
-  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -109,5 +92,13 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/literal-kit-subset-algebra",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "0780524e25672e8e229201ad4622954e6d8f2c22",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

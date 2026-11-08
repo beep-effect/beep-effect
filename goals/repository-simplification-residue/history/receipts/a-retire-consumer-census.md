@@ -162,13 +162,13 @@ are this receipt and the packet bookkeeping.
 | `goals/knowledge-surface-automation/research/SOURCES.md` | 2 | E | Left byte-identical. Goal research/data snapshot (research/). |
 | `goals/knowledge-surface-automation/research/prior-ritual-lessons.md` | 9 | E | Left byte-identical. Goal research/data snapshot (research/). |
 | `goals/knowledge-surface-automation/research/surface-inventory.md` | 2 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/quality-gate-ratchets/GOAL.md` | 1 | E | Left byte-identical. Completed-retained packet record (GOAL.md). |
+| [goals/quality-gate-ratchets/GOAL.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/quality-gate-ratchets/GOAL.md) | 1 | E | Left byte-identical. Completed-retained packet record (GOAL.md). |
 | `goals/quality-gate-ratchets/README.md` | 1 | E | Left byte-identical. Completed-retained packet record (README.md). |
-| `goals/quality-gate-ratchets/SPEC.md` | 1 | E | Left byte-identical. Completed-retained packet record (SPEC.md). |
+| [goals/quality-gate-ratchets/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/quality-gate-ratchets/SPEC.md) | 1 | E | Left byte-identical. Completed-retained packet record (SPEC.md). |
 | `goals/quality-gate-ratchets/ops/manifest.json` | 1 | E | Left byte-identical. Completed-retained packet record (ops/manifest.json). |
-| `goals/quality-gate-ratchets/research/SOURCES.md` | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/quality-speedup/research/data/fleet-lane-observations.tsv` | 2 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/quality-speedup/research/data/fleet-yeet-runs.tsv` | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/quality-gate-ratchets/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/quality-gate-ratchets/research/SOURCES.md) | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/quality-speedup/research/data/fleet-lane-observations.tsv](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/quality-speedup/research/data/fleet-lane-observations.tsv) | 2 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/quality-speedup/research/data/fleet-yeet-runs.tsv](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/quality-speedup/research/data/fleet-yeet-runs.tsv) | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
 | `goals/repo-cli-modularization/ops/discovery/audits.json` | 1 | E | Left byte-identical. Frozen discovery snapshot. |
 | `goals/repo-cli-modularization/ops/discovery/files/AgentEffectiveness.json` | 7 | E | Left byte-identical. Frozen discovery snapshot. |
 | `goals/repository-simplification-confidence/PLAN.md` | 3 | E | Left byte-identical. Completed-retained packet record (PLAN.md). |
@@ -248,11 +248,11 @@ are this receipt and the packet bookkeeping.
 | `goals/effect-vitest-canon/research/cli-property-boundaries-lineage.json` | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
 | `goals/knowledge-freshness-audit/research/existing-capabilities.md` | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
 | `goals/model-routing-sync/README.md` | 1 | E | Left byte-identical. Completed-retained packet record (README.md). |
-| `goals/model-routing-sync/SPEC.md` | 3 | E | Left byte-identical. Completed-retained packet record (SPEC.md). |
-| `goals/model-routing-sync/research/2026-09-22-00-aligned-design.md` | 3 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/model-routing-sync/research/2026-09-22-03-surface-census.md` | 3 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/model-routing-sync/research/2026-09-22-04-home-sweep.md` | 5 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/model-routing-sync/research/SOURCES.md` | 2 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/model-routing-sync/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/model-routing-sync/SPEC.md) | 3 | E | Left byte-identical. Completed-retained packet record (SPEC.md). |
+| [goals/model-routing-sync/research/2026-09-22-00-aligned-design.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/model-routing-sync/research/2026-09-22-00-aligned-design.md) | 3 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/model-routing-sync/research/2026-09-22-03-surface-census.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/model-routing-sync/research/2026-09-22-03-surface-census.md) | 3 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/model-routing-sync/research/2026-09-22-04-home-sweep.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/model-routing-sync/research/2026-09-22-04-home-sweep.md) | 5 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/model-routing-sync/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/model-routing-sync/research/SOURCES.md) | 2 | E | Left byte-identical. Goal research/data snapshot (research/). |
 | `goals/packet-convention-migration/research/OPPORTUNITIES.md` | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
 | `goals/repository-simplification-confidence/PLAN.md` | 7 | E | Left byte-identical. Completed-retained packet record (PLAN.md). |
 | `goals/repository-simplification-confidence/SPEC.md` | 7 | E | Left byte-identical. Completed-retained packet record (SPEC.md). |
@@ -322,7 +322,7 @@ are this receipt and the packet bookkeeping.
 | `goals/codex-security-findings-2026-07-08/findings/CSF-003.md` | 3 | E | Left byte-identical. Dated security findings record. |
 | `goals/codex-security-findings-2026-07-08/ops/triage.json` | 3 | E | Left byte-identical. Dated security findings record. |
 | `goals/knowledge-freshness-audit/research/SOURCES.md` | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/practice-claude-mod/SPEC.md` | 1 | N | Left untouched. The practice mod's own `dist/marketplace/.claude-plugin/marketplace.json`. |
+| [goals/practice-claude-mod/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/practice-claude-mod/SPEC.md) | 1 | N | Left untouched. The practice mod's own `dist/marketplace/.claude-plugin/marketplace.json`. |
 | `goals/repository-simplification-confidence/research/sweeps/2026-10-09/A-retire.md` | 3 | E | Left byte-identical. Goal research/data snapshot (research/). |
 | `goals/repository-simplification-residue/SPEC.md` | 1 | E | Left byte-identical. Dated #1851 context and the 2026-10-17 retirement Decision Log rows of this packet. |
 | `goals/unified-ai-toolchain/research/claude-web-source-map.md` | 4 | N | Left untouched. Vendor plugin manifest formats and the SchemaStore marketplace schema URL. |

@@ -36,7 +36,7 @@ It is a subcommand group under the `beep` CLI (`@beep/repo-cli`). The root comma
 | `enrich` | `enrichCorpus` | "Resolve corpus-derived patent and application numbers against the USPTO open data portal." Uses the `@beep/uspto` driver; rate-limited (`--lookup-delay-millis`, default 400), bounded by `--max-lookups`. |
 | `salvage` (verify) | `verifySalvage` | "Re-hash salvaged raw/ files against the provenance manifest." Note: this subcommand **verifies** an existing salvage; the original P0 salvage itself was done by a shell runner (`ops/run-salvage.sh` → `ops/salvage.sh`), not by this TS command — see below. |
 
-**Note on "salvage":** the in-repo `corpus salvage` subcommand is a re-hash **verifier** (`verifySalvage`), with `--sample-stride` to check every Nth record. The actual P0 file salvage (copy + SHA-256) was performed by a bash runner kept beside the data (`oppold-corpus/ops/run-salvage.sh` → `ops/salvage.sh`, per `goals/oppold-corpus-pipeline/history/outputs/2026-06-11-p0-salvage-report.md`). So the CLI's role across the pipeline is: verify-salvage → catalog → extract → organize → enrich.
+**Note on "salvage":** the in-repo `corpus salvage` subcommand is a re-hash **verifier** (`verifySalvage`), with `--sample-stride` to check every Nth record. The actual P0 file salvage (copy + SHA-256) was performed by a bash runner kept beside the data (`oppold-corpus/ops/run-salvage.sh` → `ops/salvage.sh`, per [goals/oppold-corpus-pipeline/history/outputs/2026-06-11-p0-salvage-report.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/oppold-corpus-pipeline/history/outputs/2026-06-11-p0-salvage-report.md)). So the CLI's role across the pipeline is: verify-salvage → catalog → extract → organize → enrich.
 
 ### Tech substrate the CLI leans on (verified imports in `Corpus.service.ts`)
 
@@ -65,7 +65,7 @@ flowchart LR
 
 ## The `oppold-corpus-pipeline` goal — recorded phases & outcomes
 
-> **GOAL-RECORDED.** Everything in this section is taken from the goal packet's own reports under `goals/oppold-corpus-pipeline/history/outputs/`. These describe **data that lives at `$HOME/data-home/oppold-corpus/` (outside the repo)**. The numbers are self-reported run evidence, not independently re-counted here (the data dir structure was confirmed on disk; per-row counts were not re-tallied).
+> **GOAL-RECORDED.** Everything in this section is taken from the goal packet's own reports under [goals/oppold-corpus-pipeline/history/outputs/](https://github.com/beep-effect/beep-effect-goals-archive/tree/main/goals/oppold-corpus-pipeline/history/outputs). These describe **data that lives at `$HOME/data-home/oppold-corpus/` (outside the repo)**. The numbers are self-reported run evidence, not independently re-counted here (the data dir structure was confirmed on disk; per-row counts were not re-tallied).
 
 Packet status: **`completed-retained`**, created/updated 2026-06-11 (`ops/manifest.json`). All six phases marked `completed`.
 

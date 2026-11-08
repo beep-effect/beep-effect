@@ -101,5 +101,13 @@
   "lifecycle": "completed-retained",
   "mergedPullRequest": 401,
   "reflectionRequired": true,
-  "statusNote": "Implementation complete; proof lane re-run 2026-07-14; FINISH disposition rides the portfolio-consolidation PR."
+  "statusNote": "Implementation complete; proof lane re-run 2026-07-14; FINISH disposition rides the portfolio-consolidation PR.",
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/oip-web-launch",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "368faccca6bd73afb7e412abed434ba6f7ed998f",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

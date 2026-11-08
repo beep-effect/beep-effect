@@ -22,7 +22,7 @@ claim.
 The rung-4 implementation lane's report is process evidence rather than packet
 content and is not carried here; its evidence is PR #848 (merged 2026-08-26,
 squash 80c5693d2a) and the rung-4 paragraph in
-[`goals/packet-control-plane-core/PLAN.md`](../../../../goals/packet-control-plane-core/PLAN.md).
+[goals/packet-control-plane-core/PLAN.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/packet-control-plane-core/PLAN.md).
 
 ## Citation baseline
 

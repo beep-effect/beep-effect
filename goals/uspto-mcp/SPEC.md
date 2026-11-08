@@ -29,7 +29,7 @@ normative contract). Named as the `uspto-mcp` candidate goal in
   gap blocks this goal, stop and report rather than growing the kit's surface
   unilaterally (the kit's SPEC is a separate, already-shipped contract).
 - No `nlp-mcp`/`m365-mcp` retrofit work (owned by sibling goal
-  [`mcp-host-retrofit`](../mcp-host-retrofit/SPEC.md)).
+  [`mcp-host-retrofit`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/mcp-host-retrofit/SPEC.md)).
 - No multi-tenant Bearer/team-key model (single-attorney local-first, per kit
   Q5).
 - No `Activity` table or persistence schema changes — any audit trail rides
@@ -53,7 +53,7 @@ normative contract). Named as the `uspto-mcp` candidate goal in
    `schema-first-development`, `effect-services`).
 3. Governing architecture standards: `standards/ARCHITECTURE.md`;
    `standards/architecture/{02-shared-kernel,03-driver-boundaries,07-non-slice-families,09-errors-across-boundaries,12-observability}.md`.
-4. `goals/mcp-kit/SPEC.md` — the kit contract this host consumes (must not be
+4. [goals/mcp-kit/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/mcp-kit/SPEC.md) — the kit contract this host consumes (must not be
    reopened by this goal).
 5. This `SPEC.md`.
 6. `PLAN.md`.
@@ -70,7 +70,7 @@ Higher sources outrank lower sources when they conflict.
 - Root workspace wiring for the new package via `bun run beep create-package`
   (workspace glob `packages/drivers/*` already covers the path; expect a SKIP,
   not a hand-edit, per the precedent in
-  `goals/mcp-kit/history/2026-07-01-p0-verification.md`).
+  [goals/mcp-kit/history/2026-07-01-p0-verification.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/mcp-kit/history/2026-07-01-p0-verification.md)).
 - No changes to `packages/drivers/uspto`, `packages/foundation/capability/mcp-kit`,
   `packages/drivers/nlp-mcp`, or `packages/drivers/m365-mcp` (retrofits are
   `mcp-host-retrofit`).
@@ -138,7 +138,7 @@ Back-links, not copies — rationale lives in the exploration:
 | Q5 `none\|soft\|hard` hybrid gating; USPTO is key-optional (Shape C) | same |
 | Q6 success-JSON `api_key_required` channel @ 2025-06-18 | same |
 | First Vertical Slice bullets 1–2 (USPTO degrade/work; `documentBag` reshape under ceiling) | [`MAP.md`](../../explorations/mcp-auth-gated-registration/MAP.md) |
-| `@beep/mcp-kit` deliverable contracts (`SourceAuth`, `ToolkitComposition`, `ApiKeyRequired`, `FieldTier`) | [`goals/mcp-kit/SPEC.md`](../mcp-kit/SPEC.md) |
+| `@beep/mcp-kit` deliverable contracts (`SourceAuth`, `ToolkitComposition`, `ApiKeyRequired`, `FieldTier`) | [goals/mcp-kit/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/mcp-kit/SPEC.md) |
 
 ## Acceptance Criteria
 
