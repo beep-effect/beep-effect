@@ -110,11 +110,13 @@ const Supra = S.Struct({ type: S.tag("supra"), ...common, partyName: optionalTex
   $I.annoteSchema("Supra", { description: "Raw supra party spelling and ranges, not a verified antecedent." })
 );
 const Statute = S.Struct({ type: S.tag("statute"), ...common, title: S.tag(35), section: SourceText }).pipe(
-  $I.annoteSchema("Statute", { description: "Raw explicit title35 statute locator, without legal authority identity." })
+  $I.annoteSchema("Statute", {
+    description: "Raw explicit title 35 statute locator, without legal authority identity.",
+  })
 );
 const Regulation = S.Struct({ type: S.tag("regulation"), ...common, title: S.tag(37), section: SourceText }).pipe(
   $I.annoteSchema("Regulation", {
-    description: "Raw explicit title37 regulation locator, without legal authority identity.",
+    description: "Raw explicit title 37 regulation locator, without legal authority identity.",
   })
 );
 /** Finite technical parser observations. Receiving product code owns semantics.
