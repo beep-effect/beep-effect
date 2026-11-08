@@ -31,7 +31,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3 Yeet — PR 2 #2906 open: it switches every workflow to the pinned `beep` binary but keeps the seven transitional scripts that `heavy.yml@main` still calls (decision `2026-11-07-heavy-at-main-three-prs`). PR 1 #2860 merged 2026-11-07 (d15ecf4ca61) and published release `beep-ci-d15ecf4ca610`, which #2906 pins. Coverage unblocker #2902 merged (8224cf33a5). PR 3, opened once #2906's `heavy.yml` is the `@main` copy, deletes the transitional scripts and their allowlist entries and is the goal's final PR carrying `proposedCloseout`; `initiative.status` stays `active` until then.
+P3 Yeet. Final PR #2921 (PR 3) deletes the seven transitional CI scripts now that #2906 (merged 5a842b4882) put the binary-calling heavy.yml on main. #2860 (d15ecf4ca61), #2902 (8224cf33a5) and #2906 are merged. `proposedCloseout` is `completed-retained` with `finalPullRequest` 2921; `initiative.status` stays `active` until completion evidence verifies after the merge.
 
 ## Latest Evidence
 
