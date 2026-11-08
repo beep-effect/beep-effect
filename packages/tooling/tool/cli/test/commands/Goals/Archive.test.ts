@@ -126,9 +126,10 @@ const FIXTURE: ReadonlyArray<readonly [string, string]> = [
   ["goals/done/history/reflections/2026-11-06-codex.md", REFLECTION("Cache the slow scan.")],
   ["goals/done/research/OPPORTUNITIES.md", "# Friction\n"],
   ["goals/done/research/notes.md", "notes\n"],
+  ["goals/old/ops/manifest.json", goalManifest("old", "superseded", { supersededBy: "done" })],
   [
-    "goals/old/ops/manifest.json",
-    goalManifest("old", "superseded", {
+    "goals/partial/ops/manifest.json",
+    goalManifest("partial", "superseded", {
       supersededBy: "done",
       opsScripts: [
         { path: "ops/manifest.json", purpose: "Stays in the tombstone." },
@@ -136,7 +137,7 @@ const FIXTURE: ReadonlyArray<readonly [string, string]> = [
       ],
     }),
   ],
-  ["goals/old/ops/drop.ts", "export {};\n"],
+  ["goals/partial/ops/drop.ts", "export {};\n"],
   [
     "goals/held/ops/manifest.json",
     goalManifest("held", "superseded", {
@@ -395,7 +396,7 @@ describe("goals archive", () => {
         );
         assert.deepStrictEqual(
           A.map(plan.entries, (entry) => `${entry.root}/${entry.slug}`),
-          ["goals/done", "goals/held", "goals/old", "explorations/gone"]
+          ["goals/done", "goals/held", "goals/old", "goals/partial", "explorations/gone"]
         );
         const partitions = A.map(plan.entries, (entry) => ({
           packet: `${entry.root}/${entry.slug}`,
@@ -407,7 +408,7 @@ describe("goals archive", () => {
           ),
         }));
         assert.deepStrictEqual(
-          A.filter(partitions, (partition) => partition.packet !== "goals/old" && partition.packet !== "goals/held"),
+          A.filter(partitions, (partition) => A.contains(["goals/done", "explorations/gone"], partition.packet)),
           [
             {
               packet: "goals/done",
@@ -601,6 +602,7 @@ describe("goals archive", () => {
             ["done", true],
             ["held", true],
             ["old", true],
+            ["partial", true],
             ["gone", true],
           ])
         );
@@ -668,7 +670,7 @@ describe("goals archive", () => {
         assert.deepStrictEqual(manifest.researchReports, ["research/OPPORTUNITIES.md"]);
         assert.strictEqual(manifest.opsScripts, undefined);
         const partialManifest = yield* decodeGoalManifest(
-          parseJson(yield* readText(root, "goals/old/ops/manifest.json"))
+          parseJson(yield* readText(root, "goals/partial/ops/manifest.json"))
         );
         assert.deepStrictEqual(
           A.map(partialManifest.opsScripts ?? [], (script) => script.path),
