@@ -9,6 +9,7 @@ import {
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -94,7 +95,7 @@ describe("source ownership trust boundaries", () => {
           }),
           ClaimPlannedElement.make({ ...element, nominals: [first, first], ownedTermRegions: [region, region] }),
         ];
-        for (const mutation of mutations) assert.isTrue(O.isNone(projectClaimRoleTerms(mutation, () => true)));
+        for (const mutation of mutations) assertNone(projectClaimRoleTerms(mutation, () => true));
       }
     })
   );
