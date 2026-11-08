@@ -200,8 +200,8 @@ describe("documents vault sync runtime", () => {
         const memberships = yield* sql`SELECT count(*)::int AS n FROM shared_membership`;
         expect(memberships).toEqual([{ n: 1 }]);
 
-        // The imported conflict is listed with its D14 numeric identities. The status joins two views
-        // that catch up independently, so wait for both the conflict count and the destination cursor.
+        // The imported conflict is listed with its D14 numeric identities. The
+        // cursor is projected by a separate pass, so wait for both before reading.
         const status = yield* eventually(
           client.GetVaultSyncStatus({ workspaceId, forceProbe: false }, auth),
           (current) => current.openConflicts === 1 && O.isSome(current.cursorPosition)
