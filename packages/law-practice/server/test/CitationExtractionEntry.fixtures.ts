@@ -75,6 +75,21 @@ export const replayCitationExtractionEntry = Effect.fn("ExtractionEntryTest.repl
   const limited = yield* install({ ...setup.limits, sourceUtf16: 3 });
   const refused = yield* limited.extract({ plain: "eyecite" }).pipe(Effect.flip);
   expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "sourceUtf16" });
+  const oversized = yield* limited.extract({ plain: "more than three units" }).pipe(Effect.flip);
+  expect(oversized).toMatchObject({
+    _tag: "CitationSafetyLimitExceeded",
+    operation: "extract",
+    limit: "sourceUtf16",
+  });
+  const unconfigured = yield* makeCitationExtractionEntry(setup.limits, setup.runtime, { invalid: true }).pipe(
+    Effect.provideContext(entryContext),
+    DateTime.withCurrentZoneOffset(0),
+    Effect.flip
+  );
+  expect(unconfigured).toMatchObject({ _tag: "CitationExtractionEntryFailure", reason: "invalid-configuration" });
+  // A plan selector needs the captured plan port, which this entry context does not install.
+  const unplanned = yield* stage.extract({ plain: "text", cleanSteps: { plan: "quotes/v1" } }).pipe(Effect.flip);
+  expect(unplanned).toMatchObject({ _tag: "CitationExtractionEntryFailure", reason: "invalid-input" });
   const empty = yield* stage.extract({}).pipe(Effect.flip);
   expect(empty).toMatchObject({
     _tag: "CitationDocumentInputFailure",
