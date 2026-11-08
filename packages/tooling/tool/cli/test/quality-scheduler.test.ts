@@ -6274,7 +6274,7 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             leaseDuringUse,
             fastConfig
           );
-          expect(lease.computeProfile).toStrictEqual(O.some("workstation"));
+          assertSome(lease.computeProfile, "workstation");
           expect(lease.forceLocal).toBe(true);
         }).pipe(
           provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
