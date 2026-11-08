@@ -972,7 +972,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/ExtractionEntry.ts",
-          "sha256": "82aa1b21eff52ae046de970aae0c9c06fc018d5afc375dab6c6f463afb4554f1"
+          "sha256": "e2497fb3364d46c01fb31d89637afc9c192a02edbebbca4f3d52113aa5a9c777"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/ExtractionShortcut.ts",
@@ -1012,7 +1012,7 @@
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/ExtractionChildren.ts",
-          "sha256": "be1dec02706dd787b009fb2e4754642fe238f5a2434bc83c9d43a978d4d763ee"
+          "sha256": "6938ba3eec86ff0c98faef0c83df89a227b91b2f38199e57d6fb749eb23da6ce"
         },
         {
           "path": "packages/law-practice/server/src/internal/Citation/TokenizedExtraction.ts",
@@ -1132,7 +1132,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationCanonicalSource.test.ts",
-          "sha256": "b6765774005db3902d6b7b93063839514a5e9876fc4cd116a4c0dd30759510b4"
+          "sha256": "6348ee4400b41eb51b922442d2192125d5e60e80dab7318e4cf2f23ca1bbdd50"
         },
         {
           "path": "packages/law-practice/server/test/CitationVerifiedExtraction.fixtures.ts",
@@ -1752,7 +1752,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/ops/ledger-proof-plan.json",
-          "sha256": "88e47cd4e56544469aa3985cf8a8bfdcc4a3fd468e708b945eff275967e4a984"
+          "sha256": "2a9573206ac8a9056fb505ae6169ac22ebbd845d179ea84b315533efbb8ad5fe"
         },
         {
           "path": "packages/law-practice/server/test/CitationCanonicalAnnotation.fixtures.ts",

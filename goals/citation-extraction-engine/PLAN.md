@@ -1533,6 +1533,12 @@ Lane `feat/citation-diff-kernel` · PR #2737
 
 Reverse: Revert optional table budget bindings and owner mappings together while retaining source table histories, capture controls and all acceptance duties.
 
+### Capture custom extraction cleaner plans through server ports, 2026-11-07
+
+Add a bounded schema plan selector and server-only use-case port resolving actual owned containers. Reuse the existing admitted Document cleaner and capture the port through extraction children. Expose explicit value-owner composition for coherent host Layers. Both native configurations recompute the original quote-cleaner case through public extraction and verified mention-derived annotation, including original final output. Refuse unknown and forged plans, retain callback error redaction and worker retirement, snapshot selectors, and commit plan names in derived source identities. One original annotation event advances from stage to complete-case proof; all other acceptance duties remain. Evidence: history/evidence/2026-11-07-captured-extraction-cleaner-plans.md.
+
+Reverse: Revisit the selector adaptation if the captured host container contract or verified derivation identity changes.
+
 ### Capture resolver admission policy and implementation identity, 2026-11-07
 
 Standalone registered resolution now captures normalized policy/artifact, Clock and shared admission. Four focused tests and twenty-seven regressions pass, with package lint/types/build/blocking laws and zero introduced Fallow findings. Queue time consumes the resolve deadline and cancellation returns capacity. Public raw-source service/Layer and all open acceptance duties remain. See history/evidence/2026-11-07-admitted-resolver-operation.md.

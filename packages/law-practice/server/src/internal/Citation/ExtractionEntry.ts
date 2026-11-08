@@ -5,7 +5,9 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationEngineAbsoluteMaxima,
+  CitationEngineCleanerPlan,
   CitationEngineExtractionOptions,
+  CitationExtractionCleanerPlans,
   CitationSafetyLimitExceeded,
   CitationTextBudget,
 } from "@beep/law-practice-use-cases/server";
@@ -100,7 +102,8 @@ const own = Effect.fn("Citation.ownExtractionEntry")(function* (
 ) {
   const document = yield* ownCitationDocumentExtraction(limits, configuration);
   const containers = yield* CitationDocumentStepContainers;
-  return { ...document, containers };
+  const plans = yield* Effect.serviceOption(CitationExtractionCleanerPlans);
+  return { ...document, containers, plans };
 });
 const issue = Effect.fn("Citation.issueRawExtractionSource")(function* (
   limits: CitationEngineLimits,
@@ -131,10 +134,16 @@ const prepare = Effect.fn("Citation.extractRawPrimitiveRequest")(function* (
   return yield* Effect.gen(function* () {
     const plain = yield* issue(limits, owned, request.plain);
     const markup = yield* issue(limits, owned, request.markup);
-    const steps =
-      request.cleanSteps === null
+    const selection = request.cleanSteps;
+    const steps = S.is(CitationEngineCleanerPlan)(selection)
+      ? yield* Effect.flatMap(
+          Effect.fromOption(owned.plans, () => fail("invalid-input")),
+          (plans) => plans.resolve(selection.plan)
+        )
+      : selection === null
         ? yield* owned.values.retainHost(null)
-        : yield* owned.containers.create({ kind: request.container, names: request.cleanSteps });
+        : yield* owned.containers.create({ kind: request.container, names: selection });
+    yield* owned.values.assertOwned(steps);
     const stage = yield* makeCitationDocumentExtraction(limits, runtime, owned.config);
     const result = yield* stage.extract({ plain, markup, steps, removeAmbiguous: request.removeAmbiguous });
     const validated = CitationExtractionEntryOutcome.cases.Document.make({ result });

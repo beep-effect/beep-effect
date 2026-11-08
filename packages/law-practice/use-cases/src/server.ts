@@ -27,6 +27,7 @@ export {
   CitationCleanerRun,
   CitationCleanerTextCharge,
   CitationCleanerWorkSnapshot,
+  CitationExtractionCleanerPlans,
   CitationLiveCleanerObject,
 } from "./CitationEngine/CitationEngine.cleaner.ts";
 /**
@@ -56,6 +57,7 @@ export {
 export {
   CitationBuiltinCleanerName,
   CitationCleanerContainerKind,
+  CitationEngineCleanerPlan,
   CitationEngineCleanInput,
   CitationEngineExtractionOptions,
   CitationEngineResolutionInput,
