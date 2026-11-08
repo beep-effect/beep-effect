@@ -4,6 +4,7 @@
 import { CitationDocumentStepContainers } from "@beep/law-practice-server/internal/Citation/DocumentCleanerProtocols";
 import { makeCitationExtractionEntry } from "@beep/law-practice-server/internal/Citation/ExtractionEntry";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
+import { CitationEngineCleanerPlan } from "@beep/law-practice-use-cases/server";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
@@ -75,6 +76,35 @@ export const replayCitationExtractionEntry = Effect.fn("ExtractionEntryTest.repl
   const limited = yield* install({ ...setup.limits, sourceUtf16: 3 });
   const refused = yield* limited.extract({ plain: "eyecite" }).pipe(Effect.flip);
   expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "sourceUtf16" });
+  const beforeRefusals = yield* setup.observed.snapshot;
+  const ordinaryOversized = yield* limited.extract({ plain: "ordinary source", markup: null }).pipe(Effect.flip);
+  expect(ordinaryOversized).toMatchObject({
+    _tag: "CitationSafetyLimitExceeded",
+    operation: "extract",
+    limit: "sourceUtf16",
+  });
+  expect(Reflect.getOwnPropertyDescriptor(ordinaryOversized, "cause")).toBeUndefined();
+  const missingPlans = yield* stage
+    .extract({
+      plain: "ordinary source",
+      markup: null,
+      cleanSteps: CitationEngineCleanerPlan.make({ plan: "missing" }),
+    })
+    .pipe(Effect.flip);
+  expect(missingPlans).toMatchObject({ _tag: "CitationExtractionEntryFailure", reason: "invalid-input" });
+  expect(Reflect.getOwnPropertyDescriptor(missingPlans, "cause")).toBeUndefined();
+  const invalidConfiguration = yield* makeCitationExtractionEntry(setup.limits, setup.runtime, null).pipe(
+    Effect.provideContext(entryContext),
+    DateTime.withCurrentZoneOffset(0),
+    Effect.flip
+  );
+  expect(invalidConfiguration).toMatchObject({
+    _tag: "CitationExtractionEntryFailure",
+    reason: "invalid-configuration",
+  });
+  expect(Reflect.getOwnPropertyDescriptor(invalidConfiguration, "cause")).toBeUndefined();
+  const afterRefusals = yield* setup.observed.snapshot;
+  expect(afterRefusals).toEqual(beforeRefusals);
   const empty = yield* stage.extract({}).pipe(Effect.flip);
   expect(empty).toMatchObject({
     _tag: "CitationDocumentInputFailure",

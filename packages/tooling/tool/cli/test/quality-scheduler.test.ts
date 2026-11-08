@@ -1008,7 +1008,7 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
       );
     });
 
-    it.effect("escalates a queued admission after two minutes", () => {
+    it.effect("escalates a queued admission at two and ten minutes without repeating either warning", () => {
       const ticket = YeetAdmissionTicket.make({
         schemaVersion: "yeet-admission-ticket/v1",
         pid: process.pid,
@@ -1025,7 +1025,7 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
         nonce: "escalation-ticket",
       });
 
-      return noteAdmissionWaitForTesting(request(), ticket, 0, { escalated: 0, lastProgressMillis: 0 }, fastConfig, {
+      const info = {
         availableGib: 10,
         capacityTokens: 0,
         nowMillis: 120_000,
@@ -1037,12 +1037,46 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
           quarantined: [],
           tickets: [],
         },
-      }).pipe(
-        Effect.map((progress) => {
-          expect(progress.escalated).toBe(1);
-          expect(progress.lastProgressMillis).toBe(120_000);
-        })
-      );
+      };
+      return Effect.gen(function* () {
+        const progress = yield* noteAdmissionWaitForTesting(
+          request(),
+          ticket,
+          0,
+          { escalated: 0, lastProgressMillis: 0 },
+          fastConfig,
+          info
+        );
+        expect(progress.escalated).toBe(1);
+        expect(progress.lastProgressMillis).toBe(120_000);
+        const tenMinutes = Duration.toMillis(Duration.minutes(10));
+        const escalated = yield* noteAdmissionWaitForTesting(request(), ticket, 0, progress, fastConfig, {
+          ...info,
+          nowMillis: tenMinutes,
+        });
+        expect(escalated.escalated).toBe(2);
+        const warningLines = yield* TestConsole.logLines;
+        const warnings = pipe(
+          warningLines,
+          A.filter(S.is(S.String)),
+          A.filter(Str.includes("[yeet] admission: waited"))
+        );
+        expect(warnings).toHaveLength(2);
+        expect(A.join(warnings, "\n")).toContain("quality scheduler status");
+        expect(A.join(warnings, "\n")).toContain("quality scheduler reap");
+        const repeated = yield* noteAdmissionWaitForTesting(request(), ticket, 0, escalated, fastConfig, {
+          ...info,
+          nowMillis: tenMinutes + 1,
+        });
+        expect(repeated.escalated).toBe(2);
+        const repeatedLines = yield* TestConsole.logLines;
+        const afterRepeat = pipe(
+          repeatedLines,
+          A.filter(S.is(S.String)),
+          A.filter(Str.includes("[yeet] admission: waited"))
+        );
+        expect(afterRepeat).toEqual(warnings);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make));
     });
 
     it("pins the chartered token weights", () => {
@@ -6618,6 +6652,7 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
           fault = ""
         ) {
           let liveAncestorGib = ancestorGib;
+          let callerReads = 0;
           const unavailableRoot = fault === "root-absent" || fault === "root-denied";
           const partialRoot = fault === "root-partial";
           const tightRoot = fault === "namespace-root" || fault === "subtree-root";
@@ -6656,12 +6691,19 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
                 Effect.sync(() =>
                   fault === "mount"
                     ? "invalid"
-                    : `1 0 0:1 ${fault === "subtree-root" ? "/shared" : "/"} /sys/fs/cgroup rw - cgroup2 cgroup rw`
+                    : `1 0 0:1 ${fault === "outside-root" ? "/unrelated" : fault === "subtree-root" ? "/shared" : "/"} /sys/fs/cgroup rw - cgroup2 cgroup rw`
                 )
               ),
               Tuple.make(
                 `/proc/${process.pid}/cgroup`,
-                Effect.sync(() => (fault === "caller" ? "invalid" : "0::/shared/caller\n"))
+                Effect.sync(() => {
+                  callerReads++;
+                  return fault === "caller"
+                    ? "invalid"
+                    : fault === "migrated" && callerReads > 1
+                      ? "0::/moved\n"
+                      : "0::/shared/caller\n";
+                })
               ),
               Tuple.make(
                 `/proc/${process.ppid}/cgroup`,
@@ -6680,7 +6722,7 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
           });
           const context = yield* Layer.build(
             memoryStatsLayerFor({
-              constrainedMemoryBytes: () => 32 * GIB,
+              constrainedMemoryBytes: () => (fault === "runtime-tight" ? 20 : 32) * GIB,
               totalMemoryBytes: () => 128 * GIB,
               residentBytes: () => 0,
             }).pipe(Layer.provide(Layer.succeed(FileSystem.FileSystem, mocked)))
@@ -6739,6 +6781,12 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
         expect(reading32).toBe(4);
         const reading33 = yield* capacity("/elsewhere", 80, 128, false, O.some("/execution"), "fresh");
         expect(reading33).toBe(2);
+        const outsideMount = yield* capacity("/elsewhere", 80, 128, false, O.none(), "outside-root");
+        expect(outsideMount).toBe(4);
+        const runtimeCeiling = yield* capacity("/elsewhere", 80, 128, false, O.none(), "runtime-tight");
+        expect(runtimeCeiling).toBe(2);
+        const migratedCaller = yield* capacity("/elsewhere", 80, 128, false, O.some("/execution"), "migrated");
+        expect(migratedCaller).toBe(4);
       })
     );
 
