@@ -5,7 +5,8 @@ import { optionalDefect } from "@beep/schema/SchemaUtils/optionalDefect";
 import { alwaysEquivalent } from "@beep/schema/SchemaUtils/toEquivalence";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertNone } from "@effect/vitest/utils";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -18,6 +19,35 @@ const decodeBoolKeySettingsEffect = S.decodeUnknownEffect(BoolKeySettings);
 const encodeBoolKeySettingsEffect = S.encodeEffect(BoolKeySettings);
 
 describe("BoolKeyDefaultFalse and BoolKeyDefaultTrue", () => {
+  it.effect.prop(
+    "round-trips schema-derived boolean settings without changing explicit values",
+    [Arbitrary.schema(BoolKeySettings)],
+    Effect.fnUntraced(function* ([settings]) {
+      const encoded = yield* encodeBoolKeySettingsEffect(settings);
+      expect(encoded).toEqual(settings);
+      const decoded = yield* decodeBoolKeySettingsEffect(encoded);
+      expect(decoded).toEqual(settings);
+      expect(BoolKeySettings.make(settings)).toEqual(settings);
+    })
+  );
+
+  it.effect.prop(
+    "defaults each omitted key while preserving the other schema-derived boolean",
+    [Arbitrary.schema(BoolKeySettings)],
+    Effect.fnUntraced(function* ([settings]) {
+      const missingVisible = { enabled: settings.enabled };
+      const expectedVisible = { visible: false, enabled: settings.enabled };
+      expect(BoolKeySettings.make(missingVisible)).toEqual(expectedVisible);
+      const decodedVisible = yield* decodeBoolKeySettingsEffect(missingVisible);
+      expect(decodedVisible).toEqual(expectedVisible);
+      const missingEnabled = { visible: settings.visible };
+      const expectedEnabled = { visible: settings.visible, enabled: true };
+      expect(BoolKeySettings.make(missingEnabled)).toEqual(expectedEnabled);
+      const decodedEnabled = yield* decodeBoolKeySettingsEffect(missingEnabled);
+      expect(decodedEnabled).toEqual(expectedEnabled);
+    })
+  );
+
   it("default omitted constructor input", () => {
     expect(BoolKeySettings.make({})).toEqual({ visible: false, enabled: true });
     expect(BoolKeySettings.make({ visible: true, enabled: false })).toEqual({ visible: true, enabled: false });
@@ -75,6 +105,23 @@ describe("optionalDefect", () => {
   const decode = S.decodeUnknownEffect(Failure);
   const encode = S.encodeEffect(Failure);
   const same = S.toEquivalence(Failure);
+
+  it.effect.prop(
+    "round-trips schema-derived failures while keeping defect details out of identity",
+    [Arbitrary.schema(Failure)],
+    Effect.fnUntraced(function* ([failure]) {
+      const encoded = yield* encode(failure);
+      const decoded = yield* decode(encoded);
+      expect(same(decoded, failure)).toBe(true);
+      assertTrue(O.isSome(decoded.cause) === O.isSome(failure.cause));
+      const otherCause = O.map(failure.cause, () => new Error("different driver failure"));
+      expect(same(failure, Failure.make({ code: failure.code, cause: otherCause }))).toBe(true);
+      const withoutCause = yield* decode({ code: failure.code });
+      assertNone(withoutCause.cause);
+      const encodedWithoutCause = yield* encode(withoutCause);
+      expect(encodedWithoutCause).toEqual({ code: failure.code });
+    })
+  );
 
   it.effect("defaults an omitted cause and omits None from the encoded error", () =>
     Effect.gen(function* () {
