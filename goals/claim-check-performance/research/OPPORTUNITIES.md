@@ -154,3 +154,19 @@ because a `goals/` prefix looks like a tracked repo path. Local package checks a
 cheap gates do not run that scan. Dropping the optional lane field and regenerating
 the block cleared it. The decisions tool could reject or differently render a lane
 value that resembles a repo path.
+
+## Quick package verify runs no tests
+
+While adding fallback kind tests, a script gated its commit on
+`quality package-verify --quick`, which runs only lint and check. It committed a
+failing test, caught by a separate test run moments later and amended before any
+push. Gate a commit on the package's tests as well as that command, or have the
+quick form say plainly that it ran no tests.
+
+## A follow-up lane's draft inherits an earlier PR's title
+
+A lane branched from #2975 kept that PR's commits in its history until main was
+merged, and `yeet open` took the draft title from the oldest branch commit. #2987
+therefore opened with #2975's title, which would have become its squash subject.
+Check the title after opening, or squash-merge the predecessor before opening the
+next draft.
