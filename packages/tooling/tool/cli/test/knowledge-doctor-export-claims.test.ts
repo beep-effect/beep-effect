@@ -50,6 +50,7 @@ describe("knowledge doctor proven package export context", () => {
           `${named}Use \`./Sub\`.`,
           `${named}\`./Missing\` package export.`,
           `${named}Also \`@beep/other\`.\n${claim}`,
+          "`@beep/demo` and `@beep/other` both name `./Sub` package export.",
           `The owner is \`@beep/wrong\`.\n${claim}`,
           `\`\`\`\n${named}\`\`\`\n${claim}`,
         ]) {

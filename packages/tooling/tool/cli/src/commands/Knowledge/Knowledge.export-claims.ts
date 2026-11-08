@@ -87,8 +87,9 @@ export const verifiedPackageExportColumns: {
           );
           if (!Str.startsWith("./")(inline.span) || O.isNone(affirmative) || negativePackageClaimPrefix(before))
             return O.none();
-          const suffix = Str.slice(Str.length(O.getOrElse(A.head(affirmative.value), () => "")))(after);
-          const cellSuffix = O.getOrElse(A.head(Str.split("|")(suffix)), () => suffix);
+          const matched = A.head(affirmative.value).pipe(O.getOrThrow);
+          const suffix = Str.slice(Str.length(matched))(after);
+          const cellSuffix = A.headNonEmpty(Str.split("|")(suffix));
           if (
             /\?|\b(?:not|never|if|whether|could|would|might|planned|proposed|removed|hypothetical)\b/iu.test(cellSuffix)
           )
