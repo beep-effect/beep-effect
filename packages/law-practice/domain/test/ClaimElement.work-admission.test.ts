@@ -33,10 +33,23 @@ const inputOf = (text: string) =>
     ],
   });
 
-describe("source compilation finite-work admission", () => {
-  for (const text of texts)
+// Each allowance recompiles until its budget runs out, so a full sweep is quadratic in the required work:
+// 32k compiles across these claims, which exceeded the 120 s watchdog on hosted coverage runs. The first and
+// last allowances stay exhaustive because off-by-one admission bugs live at those boundaries. The interior is
+// sampled, with a different offset per claim so the claims together visit different charge positions.
+const boundaryWindow = 64;
+const interiorStride = 8;
+const allowancesToDecline = (required: number, offset: number) =>
+  A.filter(
+    A.makeBy(required, (allowance) => allowance),
+    (allowance) =>
+      allowance < boundaryWindow || allowance >= required - boundaryWindow || allowance % interiorStride === offset
+  );
+
+describe("source compilation finite-work admission", { concurrent: false }, () => {
+  for (const { text, offset } of A.map(texts, (text, offset) => ({ text, offset })))
     it.effect(
-      `declines every insufficient structural allowance without publishing a partial plan: ${text}`,
+      `declines insufficient structural allowances without publishing a partial plan: ${text}`,
       () =>
         Effect.gen(function* () {
           const input = inputOf(text);
@@ -59,7 +72,7 @@ describe("source compilation finite-work admission", () => {
           // The fixed production cap is unchanged. The injected lexical provider declares
           // more already-spent work, leaving each possible allowance below the structural plan reservation once.
           // Term projection may require additional work after that structural reservation.
-          for (let allowance = 0; allowance < required; allowance++) {
+          for (const allowance of allowancesToDecline(required, offset)) {
             const charged = ClaimLexicalEvidence.cases.aligned.make({
               ...evidence,
               lexicalWorkConsumed: cap - allowance,
