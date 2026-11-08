@@ -143,6 +143,10 @@ const FIXTURE: ReadonlyArray<readonly [string, string]> = [
   ["explorations/gone/RESEARCH.md", "# Research\n"],
   ["explorations/open/ops/manifest.json", explorationManifest("open", "active")],
   ["docs/guide.md", GUIDE],
+  ["goals/done/assets/figure.md", "# Figure\n"],
+  ["docs/directories.md", "Figures in `goals/done/assets`.\nFriction stays in `goals/done/research`.\n"],
+  ["packages/demo/src/prompt.ts", "export const prompt = 'Read `goals/done/PLAN.md` first.';\n"],
+  ["packages/demo/data.json", '{ "note": "Read `goals/done/PLAN.md` first." }\n'],
   [
     "docs/citations.md",
     A.join(
@@ -431,7 +435,12 @@ describe("goals archive", () => {
                 "goals/done/ops/manifest.json",
                 "goals/done/research/OPPORTUNITIES.md",
               ],
-              remove: ["goals/done/PLAN.md", "goals/done/SPEC.md", "goals/done/research/notes.md"],
+              remove: [
+                "goals/done/PLAN.md",
+                "goals/done/SPEC.md",
+                "goals/done/assets/figure.md",
+                "goals/done/research/notes.md",
+              ],
               links: [
                 [
                   "docs/citations.md",
@@ -456,6 +465,12 @@ describe("goals archive", () => {
                   2,
                   "goals/done/SPEC.md",
                   `https://github.com/${REPO}/blob/main/goals/done/SPEC.md`,
+                ],
+                [
+                  "docs/directories.md",
+                  1,
+                  "goals/done/assets",
+                  `https://github.com/${REPO}/tree/main/goals/done/assets`,
                 ],
                 [
                   "docs/guide.md",
