@@ -190,17 +190,17 @@ const coreIndex = (
   plan: ClaimSourceElementPlan,
   anchor: TextAnchor,
   charge: (amount: number) => boolean
-): O.Option<number> => {
+): O.Option<number> | false => {
   let lower = 0;
   let upper = plan.nominals.length;
   while (lower < upper) {
-    if (!charge(2)) return O.none();
+    if (!charge(2)) return false;
     const index = Math.floor((lower + upper) / 2);
     const candidate = O.getOrThrow(A.get(plan.nominals, index)).core;
     if (candidate.startChar < anchor.startChar) lower = index + 1;
     else upper = index;
   }
-  if (!charge(anchor.quote.length + 1)) return O.none();
+  if (!charge(anchor.quote.length + 1)) return false;
   return O.map(
     O.filter(A.get(plan.nominals, lower), (n) => sameAnchor(n.core, anchor)),
     () => lower
@@ -276,7 +276,7 @@ const frameCore = (
   charge: (amount: number) => boolean
 ): boolean => {
   const index = coreIndex(plan, anchor, charge);
-  if (O.isNone(index)) return false;
+  if (index === false || O.isNone(index)) return false;
   const owner = O.getOrElse(A.get(owners, index.value), () => 0);
   if (!charge(frame.nominals.length + 1)) return false;
   if (owner === frame.publicOwner && frameContains(frame, anchor, false)) return true;
@@ -333,8 +333,10 @@ const localFrameNominal = (
   nominal: TextAnchor,
   owners: ReadonlyArray<number>,
   charge: (amount: number) => boolean
-): boolean =>
-  O.exists(coreIndex(plan, nominal, charge), (index) => O.contains(A.get(owners, index), frame.publicOwner));
+): boolean => {
+  const index = coreIndex(plan, nominal, charge);
+  return index !== false && O.exists(index, (i) => O.contains(A.get(owners, i), frame.publicOwner));
+};
 const inheritedSubjectGeometry = (frame: ClaimSourceFrame, inherited: ClaimFrameSubjectInheritance): boolean =>
   O.contains(frame.parent, inherited.fromFrame) &&
   (frame.attachment === "relative" || frame.attachment === "complement") &&
@@ -437,6 +439,11 @@ const bindingRawAdjunct = (plan: ClaimSourceElementPlan, token: ClaimSourceProof
       p.kind === "token" &&
       (p.token.pos === "ADV" || HashSet.has(HashSet.make("not", "n't"), Str.toLowerCase(p.token.anchor.quote)))
   );
+const bindingModeSourceMatches = (
+  plan: ClaimSourceElementPlan,
+  op: Extract<ClaimFiniteSourceProof, { readonly kind: "operator" }>,
+  charge: (amount: number) => boolean
+): boolean => op.mode !== "distributive" || distributiveSourcePredicate(plan, op, charge);
 const bindingMemberRole = (
   plan: ClaimSourceElementPlan,
   slot: Exclude<ClaimSourceOperatorBinding["slots"][number], { readonly kind: "gap" }>,
@@ -444,6 +451,7 @@ const bindingMemberRole = (
   charge: (amount: number) => boolean
 ): boolean => {
   if (!charge(op.lexical.length + plan.roles.predicates.length + 4)) return false;
+  if (!bindingModeSourceMatches(plan, op, charge)) return false;
   const direct = A.some(op.lexical, (r) => r.ordinal === slot.token.ordinal);
   if (slot.kind === "lexical" && !direct) return false;
   const licensedAdjunct = A.some(plan.roles.predicates, (p) => p.kind === "adjunct" && contains(p.anchor, slot.extent));
@@ -479,7 +487,10 @@ const validateBindingHead = (
       O.contains(eligible, head.certificate.ordinal) &&
       O.exists(
         proofAt(plan, head.certificate),
-        (p) => p.kind === "operator" && p.head.token.ordinal === head.token.ordinal
+        (p) =>
+          p.kind === "operator" &&
+          p.head.token.ordinal === head.token.ordinal &&
+          (p.head.kind !== "distributive-direct" || head.rule === "single-operator")
       ) &&
       A.some(
         binding.slots,
@@ -945,10 +956,17 @@ const storedHeaderMembership = (
   );
 };
 const validateHeaderMemberships = (plan: ClaimSourceElementPlan, charge: (amount: number) => boolean): boolean => {
-  if (!charge(plan.frames.length + plan.headerMemberships.length * (plan.frames.length + 2) + 2)) return false;
+  if (!charge(plan.frames.length + plan.headerMemberships.length * (plan.frames.length + 2) + 5)) return false;
+  let available = true;
+  const reserve = (amount: number): boolean => {
+    const paid = charge(amount);
+    if (!paid) available = false;
+    return paid;
+  };
   let count = 0;
   for (const frame of plan.frames) {
-    const derived = qualifiedHeaderMembership(plan, frame, charge);
+    const derived = qualifiedHeaderMembership(plan, frame, reserve);
+    if (!available) return false;
     const stored = A.filter(plan.headerMemberships, (record) => record.frame === frame.ordinal);
     if (!storedHeaderMembership(plan, derived, stored, charge)) return false;
     count += stored.length;
@@ -1200,6 +1218,7 @@ class CandidateCommitValidator {
   }
   private candidate(state: CandidateState): boolean {
     const index = coreIndex(this.plan, state.nominal.anchor, this.charge);
+    if (index === false) return false;
     if (state.kind === "unproved") return this.excluded(state) && O.isNone(index);
     const proof = proofAt(this.plan, state.proof);
     if (!candidateProofMatches(state, proof)) return false;
@@ -1476,10 +1495,12 @@ const tokenControlMatches = (
         proofAt(plan, e.proof),
         (p) =>
           p.kind === "operator" &&
-          p.mode === "infinitive" &&
           O.exists(p.position, ref) &&
-          token.token.anchor.quote === "to" &&
-          token.token.pos === "PART"
+          ((p.mode === "infinitive" && token.token.anchor.quote === "to" && token.token.pos === "PART") ||
+            (p.mode === "distributive" &&
+              p.head.kind === "distributive-direct" &&
+              p.head.each.ordinal === token.ordinal &&
+              Str.toLowerCase(token.token.anchor.quote) === "each"))
       ),
     "operator-adjunct": (e) =>
       O.exists(
@@ -1838,6 +1859,13 @@ class SourceTokenOwnershipBuilder {
     return true;
   }
   private operatorPositionControl(proof: Extract<ClaimFiniteSourceProof, { readonly kind: "operator" }>): boolean {
+    if (proof.mode === "distributive" && proof.head.kind === "distributive-direct")
+      return this.control(
+        proof.head.each,
+        ClaimSourceControlEvidence.cases["operator-position"].make({
+          proof: ClaimSourceProofRef.make({ ordinal: proof.ordinal, slot: "operator" }),
+        })
+      );
     if (proof.mode !== "infinitive" || O.isNone(proof.position)) return true;
     const token = proofAt(this.plan, proof.position.value);
     if (!O.exists(token, (p) => p.kind === "token" && p.token.anchor.quote === "to" && p.token.pos === "PART"))
@@ -2409,11 +2437,17 @@ const validateSourceTokenOwnership = (
   return validateLedgerOperators(plan, charge);
 };
 
-const validateCommittedSourceFacts = (plan: ClaimSourceElementPlan, charge: (amount: number) => boolean): boolean => {
+type SourceValidationFacts = { distributive: boolean };
+const validateCommittedSourceFacts = (
+  plan: ClaimSourceElementPlan,
+  charge: (amount: number) => boolean,
+  facts: SourceValidationFacts
+): boolean => {
   if (plan.roles.certificates.length === 0) return true;
   const original = plan.roles.originalLexicalInput;
   if (O.isSome(original)) {
-    if (!charge(plan.qualifiedText.length + 4)) return false;
+    if (!charge(plan.qualifiedText.length + plan.roles.certificates.length + 5)) return false;
+    facts.distributive = A.some(plan.roles.certificates, (p) => p.kind === "operator" && p.mode === "distributive");
     const claim = plan.roles.qualifiedClaim;
     return (
       O.isSome(claim) &&
@@ -2430,21 +2464,160 @@ const validateCommittedSourceFacts = (plan: ClaimSourceElementPlan, charge: (amo
   if (!charge(plan.roles.certificates.length * 3 + plan.qualifiedText.length + 4)) return false;
   const claim = plan.roles.qualifiedClaim;
   if (O.isNone(claim) || claim.value.claimText !== plan.qualifiedText) return false;
-  const tokens = A.flatMap(plan.roles.certificates, (proof) => (proof.kind === "token" ? [proof.token] : []));
+  // The existing prepaid 3N map covers the two discriminator checks and output cells.
+  // Collect the operational census in this same visit, without another registry scan.
+  const tokens = A.flatMap(plan.roles.certificates, (proof) => {
+    if (proof.kind === "operator" && proof.mode === "distributive") facts.distributive = true;
+    return proof.kind === "token" ? [proof.token] : [];
+  });
   return validateClaimFiniteSourceProofs(claim.value, tokens, plan.roles.certificates, plan.roles.proofs, charge);
+};
+const validateDistributivePredicate = (
+  plan: ClaimSourceElementPlan,
+  predicate: ClaimSourceElementPlan["roles"]["predicates"][number],
+  charge: (amount: number) => boolean
+): boolean => {
+  if (!charge(plan.roles.certificates.length + predicate.anchor.quote.length + 4)) return false;
+  let matching = 0;
+  for (const proof of plan.roles.certificates)
+    if (proof.kind === "operator" && proof.mode === "distributive" && sameAnchor(proof.extent, predicate.anchor))
+      matching++;
+  return matching === 1;
+};
+const distributiveFrameCores = (
+  plan: ClaimSourceElementPlan,
+  proof: Extract<ClaimFiniteSourceProof, { readonly kind: "operator" }>
+) => {
+  if (proof.head.kind !== "distributive-direct" || O.isNone(proof.subject))
+    return O.none<{
+      subject: TextAnchor;
+      object: TextAnchor;
+      position: TextAnchor;
+    }>();
+  return O.all({
+    subject: O.map(
+      O.filter(
+        proofAt(plan, proof.subject.value),
+        (p): p is Extract<ClaimFiniteSourceProof, { readonly kind: "head" }> => p.kind === "head"
+      ),
+      (p) => p.core
+    ),
+    object: O.map(
+      O.filter(
+        proofAt(plan, proof.head.direct),
+        (p): p is Extract<ClaimFiniteSourceProof, { readonly kind: "head" }> => p.kind === "head"
+      ),
+      (p) => p.core
+    ),
+    position: O.map(O.filter(proofAt(plan, proof.head.each), rawTokenProof), (p) => p.token.anchor),
+  });
+};
+const distributiveArgumentMatches = (
+  frame: ClaimSourceFrame,
+  role: "subject" | "object",
+  nominal: TextAnchor,
+  operator: TextAnchor
+): boolean =>
+  A.some(
+    frame.arguments,
+    (a) => a.role === role && sameAnchor(a.nominal, nominal) && O.exists(a.predicate, (p) => sameAnchor(p, operator))
+  );
+const distributiveFrameMatches = (
+  frame: ClaimSourceFrame,
+  subject: TextAnchor,
+  object: TextAnchor,
+  operator: TextAnchor
+): boolean =>
+  O.exists(frame.subject, (s) => sameAnchor(s, subject)) &&
+  distributiveArgumentMatches(frame, "subject", subject, operator) &&
+  distributiveArgumentMatches(frame, "object", object, operator);
+const distributiveSourcePredicate = (
+  plan: ClaimSourceElementPlan,
+  op: Extract<ClaimFiniteSourceProof, { readonly kind: "operator" }>,
+  charge: (amount: number) => boolean
+): boolean =>
+  charge(plan.roles.predicates.length + op.extent.quote.length + 2) &&
+  A.some(plan.roles.predicates, (p) => p.kind === "distributive" && sameAnchor(p.anchor, op.extent));
+const validateDistributiveFrame = (
+  frame: ClaimSourceFrame,
+  proof: Extract<ClaimFiniteSourceProof, { readonly kind: "operator" }>,
+  cores: O.Option.Value<ReturnType<typeof distributiveFrameCores>>,
+  charge: (amount: number) => boolean
+): number => {
+  if (
+    !charge(
+      frame.predicates.length +
+        frame.arguments.length * 3 +
+        cores.subject.quote.length +
+        cores.object.quote.length +
+        proof.extent.quote.length +
+        8
+    )
+  )
+    return -1;
+  if (!A.some(frame.predicates, (p) => sameAnchor(p, proof.extent))) return 0;
+  return distributiveFrameMatches(frame, cores.subject, cores.object, proof.extent) ? 1 : -1;
+};
+const validateDistributiveOperatorFrames = (
+  plan: ClaimSourceElementPlan,
+  proof: Extract<ClaimFiniteSourceProof, { readonly kind: "operator" }>,
+  charge: (amount: number) => boolean
+): boolean => {
+  if (
+    !distributiveSourcePredicate(plan, proof, charge) ||
+    !charge(plan.frames.length * 3 + plan.roles.nominals.length * 2 + 32)
+  )
+    return false;
+  const cores = distributiveFrameCores(plan, proof);
+  if (O.isNone(cores)) return false;
+  const { position } = cores.value;
+  if (A.some(plan.roles.nominals, (n) => overlaps(n.anchor, proof.extent) || overlaps(n.anchor, position)))
+    return false;
+  let found = false;
+  for (const frame of plan.frames) {
+    const result = validateDistributiveFrame(frame, proof, cores.value, charge);
+    if (result < 0) return false;
+    found = found || result > 0;
+  }
+  return found;
+};
+const validateDistributiveFrames = (
+  plan: ClaimSourceElementPlan,
+  charge: (amount: number) => boolean,
+  facts: SourceValidationFacts
+): boolean => {
+  if (!charge(plan.roles.predicates.length + 1)) return false;
+  if (!facts.distributive && !A.some(plan.roles.predicates, (p) => p.kind === "distributive")) return true;
+  if (!charge(plan.roles.certificates.length)) return false;
+  return (
+    A.every(
+      plan.roles.predicates,
+      (p) => p.kind !== "distributive" || validateDistributivePredicate(plan, p, charge)
+    ) &&
+    A.every(
+      plan.roles.certificates,
+      (p) => p.kind !== "operator" || p.mode !== "distributive" || validateDistributiveOperatorFrames(plan, p, charge)
+    )
+  );
 };
 const validateSourcePlanComponents = (
   plan: ClaimSourceElementPlan,
   owners: Array<number>,
   charge: (amount: number) => boolean
-): boolean =>
-  validateCommittedSourceFacts(plan, charge) &&
-  validateSourceLabelDeclarations(plan, charge) &&
-  validateAttached(plan, charge) &&
-  validateCandidateCommit(plan, charge) &&
-  validatePrivateAndOperators(plan, charge) &&
-  validateHeaderMemberships(plan, charge) &&
-  validateOwners(plan, owners, charge);
+): boolean => {
+  if (!charge(1)) return false;
+  const facts: SourceValidationFacts = { distributive: false };
+  return (
+    validateCommittedSourceFacts(plan, charge, facts) &&
+    validateDistributiveFrames(plan, charge, facts) &&
+    validateSourceLabelDeclarations(plan, charge) &&
+    validateAttached(plan, charge) &&
+    validateCandidateCommit(plan, charge) &&
+    validatePrivateAndOperators(plan, charge) &&
+    validateHeaderMemberships(plan, charge) &&
+    validateOwners(plan, owners, charge)
+  );
+};
 const validateSourcePlanCompletion = (
   plan: ClaimSourceElementPlan,
   owners: Array<number>,

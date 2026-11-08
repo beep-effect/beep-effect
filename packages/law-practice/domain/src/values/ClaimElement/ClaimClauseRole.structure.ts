@@ -270,6 +270,27 @@ class SourcePlanner {
     if (modifier) return O.none();
     return subject ? first : predicate;
   };
+  private certificateHeadAnchor = (ref: ClaimSourceProofRef): O.Option<TextAnchor> =>
+    O.map(
+      O.filter(
+        A.get(this.roles.certificates, ref.ordinal - 1),
+        (p): p is Extract<ClaimFiniteSourceProof, { readonly kind: "head" }> => p.kind === "head"
+      ),
+      (p) => p.core
+    );
+  private distributiveArguments = (predicate: ClaimPredicateSpan): O.Option<readonly [TextAnchor, TextAnchor]> => {
+    if (!this.charge(this.roles.certificates.length + 12)) return O.none();
+    const proof = A.findFirst(
+      this.roles.certificates,
+      (p) => p.kind === "operator" && p.mode === "distributive" && p.extent.startChar === predicate.anchor.startChar
+    );
+    if (O.isNone(proof) || proof.value.kind !== "operator") return O.none();
+    if (proof.value.head.kind !== "distributive-direct" || O.isNone(proof.value.subject)) return O.none();
+    return O.all([
+      this.certificateHeadAnchor(proof.value.subject.value),
+      this.certificateHeadAnchor(proof.value.head.direct),
+    ]);
+  };
   private argumentPlan = (
     span: TextAnchor,
     nominals: ReadonlyArray<ClaimNominalSpan>,
@@ -283,13 +304,18 @@ class SourcePlanner {
     const predicates = this.predicates(span);
     const first = A.findFirst(
       predicates,
-      (p) => p.kind === "finite" || p.kind === "auxiliary-head" || p.kind === "possession"
+      (p) => p.kind === "finite" || p.kind === "auxiliary-head" || p.kind === "possession" || p.kind === "distributive"
+    );
+    const witnessed = O.flatMap(first, (p) =>
+      p.kind === "distributive" ? this.distributiveArguments(p) : O.none<readonly [TextAnchor, TextAnchor]>()
     );
     const subject = O.flatMap(first, (p) =>
-      O.map(
-        A.findLast(nominals, (n) => n.anchor.endChar <= p.anchor.startChar),
-        (n) => n.anchor
-      )
+      p.kind === "distributive"
+        ? O.map(witnessed, ([owner]) => owner)
+        : O.map(
+            A.findLast(nominals, (n) => n.anchor.endChar <= p.anchor.startChar),
+            (n) => n.anchor
+          )
     );
     if (!this.charge(nominals.length * (this.roles.opaqueSelections.length + 3)))
       return { subject: O.none(), arguments: [] };
@@ -341,9 +367,15 @@ class SourcePlanner {
               O.exists(operator, (right) => left.startChar === right.startChar && left.endChar === right.endChar)
             )
         );
-      const role = coordinatedPP
-        ? "prepositional-complement"
-        : this.argumentRole(isSubject, modifier, prep, O.isSome(predicate));
+      const witnessedDirect = O.exists(
+        witnessed,
+        ([, direct]) => direct.startChar === n.anchor.startChar && direct.endChar === n.anchor.endChar
+      );
+      const role = witnessedDirect
+        ? "object"
+        : coordinatedPP
+          ? "prepositional-complement"
+          : this.argumentRole(isSubject, modifier, prep, O.isSome(predicate));
       const argument = ClaimFrameArgument.make({
         role,
         nominal: n.anchor,
@@ -2882,6 +2914,15 @@ class SourcePlanner {
     }
     return token.anchor.endChar;
   }
+  private operatorBindingRule = (
+    proof: Extract<ClaimFiniteSourceProof, { readonly kind: "operator" }>,
+    parts: number
+  ) => {
+    if (proof.head.kind === "distributive-direct") return "single-operator";
+    if (proof.head.kind === "scalar") return "scalar-participle";
+    if (proof.head.kind === "reduced") return "reduced-modifier";
+    return parts === 1 ? "single-operator" : "auxiliary-complement";
+  };
   private operatorBindingHead(
     parts: ReadonlyArray<readonly [ClaimFiniteSourceProof & { readonly kind: "operator" }, ClaimSourceProofRef]>
   ): ClaimSourceOperatorBinding["head"] {
@@ -2890,14 +2931,7 @@ class SourcePlanner {
     return O.map(candidate, ([proof, certificate]) => ({
       token: proof.head.token,
       certificate,
-      rule:
-        proof.head.kind === "scalar"
-          ? ("scalar-participle" as const)
-          : proof.head.kind === "reduced"
-            ? ("reduced-modifier" as const)
-            : parts.length === 1
-              ? ("single-operator" as const)
-              : ("auxiliary-complement" as const),
+      rule: this.operatorBindingRule(proof, parts.length),
     }));
   }
   private finishOperatorBinding(
