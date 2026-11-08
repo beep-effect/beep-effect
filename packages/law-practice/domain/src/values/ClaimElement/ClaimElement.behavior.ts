@@ -42,7 +42,6 @@ import {
   isCountedHead,
   isDesignatedHead,
   isExplicitAbbreviatedHead,
-  isPluralityReferenceHead,
   isSingleModifiedHead,
   isSourcePrefixAbbreviatedHead,
   pluralityReferenceContent,
@@ -229,6 +228,8 @@ class ColonScopeState extends S.Opaque<ColonScopeState, { readonly brand: unique
 type EncodedTerm = typeof ClaimTerm.Encoded;
 type EncodedElement = typeof ClaimElement.Encoded;
 type EncodedEdge = typeof ClaimElementEdge.Encoded;
+
+const encodedAnchorEquivalence = S.toEquivalence(S.toEncoded(TextAnchor));
 
 const sliceSpan = (span: Span, from: number, to = Str.length(span.text)): Span => ({
   start: span.start + from,
@@ -2042,7 +2043,9 @@ const decomposeInContext = Effect.fn("ClaimElement.decomposeClaim")(function* (
             isIntroducingDeterminer(term.determiner) &&
             O.isSome(Str.match(/\b(?:portion|surface|edge|end|region|area|section|side)$/u)(term.head)) &&
             Str.trim(Str.slice(term.anchor.endChar, edge.referring.anchor.startChar)(claim.claimText)) === "of";
-          if (term.anchor.startChar !== edge.referring.anchor.startChar && !partOwner) return false;
+          if (!partOwner && !encodedAnchorEquivalence(term.anchor, edge.referring.anchor)) return false;
+          // Reuse the selected antecedent's identity; a narrower second head
+          // comparison would discard references the resolver already proved.
           return A.some(
             ancestors,
             (ancestor) =>
@@ -2050,9 +2053,8 @@ const decomposeInContext = Effect.fn("ClaimElement.decomposeClaim")(function* (
               A.some(
                 ancestor.terms,
                 (introduced) =>
-                  introduced.anchor.startChar === edge.introducing.anchor.startChar &&
-                  isIntroducingDeterminer(introduced.determiner) &&
-                  (partOwner || introduced.head === term.head || isPluralityReferenceHead(term.head)(introduced.head))
+                  encodedAnchorEquivalence(introduced.anchor, edge.introducing.anchor) &&
+                  isIntroducingDeterminer(introduced.determiner)
               )
           );
         })
