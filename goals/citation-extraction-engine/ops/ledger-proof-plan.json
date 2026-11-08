@@ -5,10 +5,6 @@
       "workflowState": "ready",
       "cases": [
         {
-          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::1",
-          "observationSha256": "c6dff8d7a9d66b376ecf0762902c765854f93ad32c44a04c2819e94aa4a52e1f"
-        },
-        {
           "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::2",
           "observationSha256": "b313048322570644e5d8479edb3be9f1aea8e0c15757402e17a5a1184e9fe8c4"
         },
@@ -41,36 +37,12 @@
           "observationSha256": "738ec3f68d4617c1869ab2763e5afd4a1f8d3ad6bda8e5a9c787c41a1cae6250"
         },
         {
-          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::10",
-          "observationSha256": "4e6a3539d9dd2de67632bacc1cf7f7cb76da14ed873b762a81c1374636dec479"
-        },
-        {
-          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::11",
-          "observationSha256": "e35ad3d5ff61138e9f71b4627fb854b50bde7528daa461efe7e4dd740e532af4"
-        },
-        {
-          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::12",
-          "observationSha256": "a434791e870768275986ba6eb03becd36b5b932d68ae8bddd6d8a0f13da20999"
-        },
-        {
           "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::13",
           "observationSha256": "91c753a13b85c5a45ad9cd6adc8a398b9763aeb1e3d5df1577869395c685bdb9"
         },
         {
-          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::14",
-          "observationSha256": "2a553682f613fca202c8e04aa228929655fd4972612f8c0357466e53560a4ca6"
-        },
-        {
           "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::15",
           "observationSha256": "ecc4b9384838dff87f34556ceb738ab39288cdb8bbfbf3329abb2e8f98d908ba"
-        },
-        {
-          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::17",
-          "observationSha256": "5054906659d3a45301ab4914183fc5fda9e3294334b7e7d58f4eed0fc91f6fb9"
-        },
-        {
-          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::18",
-          "observationSha256": "39be3e99eabc9da341309726db11878983c30431cbfdea89336f64918481849d"
         },
         {
           "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::19",
@@ -606,12 +578,12 @@
       ],
       "rationale": "Complete local public-engine replay of these exact original reference-order and overlap-filtering assertions on both runtimes. Other original inputs and parent capabilities remain separate.",
       "proof": {
-        "command": "bunx --bun vitest run test/CitationCanonicalRemainingExtraction.test.ts test/CitationCanonicalParserOperations.test.ts test/CitationCanonicalCourts.test.ts test/CitationCanonicalReferenceMarkup.test.ts --reporter=json --outputFile=../../../.beep/remaining-extraction-results.json",
+        "command": "bunx --bun vitest run test/CitationCanonicalAnnotationWorkflow.test.ts test/CitationCanonicalParserOperations.test.ts test/CitationCanonicalCourts.test.ts test/CitationCanonicalReferenceMarkup.test.ts test/CitationCanonicalRemainingExtraction.test.ts --reporter=json --outputFile=../../../.beep/annotation-workflows-results.json",
         "result": "passed",
         "scope": "complete-case",
         "operation": "extract",
-        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-remaining-extraction-inputs.md",
-        "evidenceSha256": "c8b4e4e2b7a4dea5cf02ffc70d013289fa59fc5e0cb60cfbd838e1ec74ebc352",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-original-annotation-workflows.md",
+        "evidenceSha256": "9c2455b80c73c5f76bbe55e52d6c3895553dda8a595d9f231bd697e122f639c4",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalReferenceMarkup.test.ts",
@@ -646,7 +618,7 @@
           },
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtractionRuntime.fixtures.ts",
-            "sha256": "eac40362076e5d4825be8800df084ffe5304ae645ba804c63cc6c77bbf81a5c6"
+            "sha256": "4e0c808677aaf5d08aca4d6cbf21b11e484fa84a25346fef5c472a363827084e"
           }
         ]
       }
@@ -919,12 +891,12 @@
       ],
       "rationale": "Seven original single-citation assertions joined to exact independent raw parser observations and replayed through the default public engine on both runtimes. Full 77-fragment hosted replay, alternate tokenizer interfaces and general native model protocols remain separate.",
       "proof": {
-        "command": "bunx --bun vitest run test/CitationCanonicalRemainingExtraction.test.ts test/CitationCanonicalParserOperations.test.ts test/CitationCanonicalCourts.test.ts test/CitationCanonicalReferenceMarkup.test.ts --reporter=json --outputFile=../../../.beep/remaining-extraction-results.json",
+        "command": "bunx --bun vitest run test/CitationCanonicalAnnotationWorkflow.test.ts test/CitationCanonicalParserOperations.test.ts test/CitationCanonicalCourts.test.ts --reporter=json --outputFile=../../../.beep/annotation-workflows-final-results.json",
         "result": "passed",
         "scope": "complete-case",
         "operation": "extract",
-        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-remaining-extraction-inputs.md",
-        "evidenceSha256": "c8b4e4e2b7a4dea5cf02ffc70d013289fa59fc5e0cb60cfbd838e1ec74ebc352",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-original-annotation-workflows.md",
+        "evidenceSha256": "9c2455b80c73c5f76bbe55e52d6c3895553dda8a595d9f231bd697e122f639c4",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalParserOperations.test.ts",
@@ -939,11 +911,11 @@
           },
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtractionRuntime.fixtures.ts",
-            "sha256": "eac40362076e5d4825be8800df084ffe5304ae645ba804c63cc6c77bbf81a5c6"
+            "sha256": "4e0c808677aaf5d08aca4d6cbf21b11e484fa84a25346fef5c472a363827084e"
           },
           {
             "path": "packages/law-practice/server/test/CitationCanonicalParserOperations.fixtures.ts",
-            "sha256": "d158f88295424a2426a973d7b0d5edc191eab406f81f06d83130c9fa67f48f4b"
+            "sha256": "a6a6f60a2e6621ede2db1b8e7d4232dc4ed74f4066b73e9f9df7ee8cf5f18ca9"
           },
           {
             "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
@@ -956,6 +928,10 @@
           {
             "path": "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
             "sha256": "09b730c8f3bae99438224dafbe781988d76fa0013fd50b5c3ca53e4b45680fa8"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalCaptures.fixtures.ts",
+            "sha256": "1ac4ab7ebd6c3751b5706d93b562c6625d6c5d3062ddbe4284a6ef274a89c4a8"
           }
         ]
       }
@@ -986,12 +962,12 @@
       ],
       "rationale": "Five original court equality assertions replayed from their raw independently captured inputs through the default public engine on both native configurations. Full 29-court hosted replay, alternate tokenizers and general model protocols remain separate.",
       "proof": {
-        "command": "bunx --bun vitest run test/CitationCanonicalRemainingExtraction.test.ts test/CitationCanonicalParserOperations.test.ts test/CitationCanonicalCourts.test.ts test/CitationCanonicalReferenceMarkup.test.ts --reporter=json --outputFile=../../../.beep/remaining-extraction-results.json",
+        "command": "bunx --bun vitest run test/CitationCanonicalAnnotationWorkflow.test.ts test/CitationCanonicalParserOperations.test.ts test/CitationCanonicalCourts.test.ts --reporter=json --outputFile=../../../.beep/annotation-workflows-final-results.json",
         "result": "passed",
         "scope": "complete-case",
         "operation": "extract",
-        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-07-remaining-extraction-inputs.md",
-        "evidenceSha256": "c8b4e4e2b7a4dea5cf02ffc70d013289fa59fc5e0cb60cfbd838e1ec74ebc352",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-original-annotation-workflows.md",
+        "evidenceSha256": "9c2455b80c73c5f76bbe55e52d6c3895553dda8a595d9f231bd697e122f639c4",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalCourts.test.ts",
@@ -1002,11 +978,11 @@
         "references": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalParserOperations.fixtures.ts",
-            "sha256": "d158f88295424a2426a973d7b0d5edc191eab406f81f06d83130c9fa67f48f4b"
+            "sha256": "a6a6f60a2e6621ede2db1b8e7d4232dc4ed74f4066b73e9f9df7ee8cf5f18ca9"
           },
           {
             "path": "packages/law-practice/server/test/CitationCanonicalExtractionRuntime.fixtures.ts",
-            "sha256": "eac40362076e5d4825be8800df084ffe5304ae645ba804c63cc6c77bbf81a5c6"
+            "sha256": "4e0c808677aaf5d08aca4d6cbf21b11e484fa84a25346fef5c472a363827084e"
           },
           {
             "path": "packages/law-practice/server/test/CitationCanonicalModel.fixtures.ts",
@@ -1023,6 +999,10 @@
           {
             "path": "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
             "sha256": "09b730c8f3bae99438224dafbe781988d76fa0013fd50b5c3ca53e4b45680fa8"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalCaptures.fixtures.ts",
+            "sha256": "1ac4ab7ebd6c3751b5706d93b562c6625d6c5d3062ddbe4284a6ef274a89c4a8"
           }
         ]
       }
@@ -1114,6 +1094,97 @@
           {
             "path": "packages/law-practice/server/src/internal/Citation/NativeWasm.ts",
             "sha256": "a308f2d5dab1371efcb01b212560dedd23159d2e6b5980ac62ce77bdd507c76d"
+          }
+        ]
+      }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::1",
+          "observationSha256": "c6dff8d7a9d66b376ecf0762902c765854f93ad32c44a04c2819e94aa4a52e1f"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::10",
+          "observationSha256": "4e6a3539d9dd2de67632bacc1cf7f7cb76da14ed873b762a81c1374636dec479"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::11",
+          "observationSha256": "e35ad3d5ff61138e9f71b4627fb854b50bde7528daa461efe7e4dd740e532af4"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::12",
+          "observationSha256": "a434791e870768275986ba6eb03becd36b5b932d68ae8bddd6d8a0f13da20999"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::14",
+          "observationSha256": "2a553682f613fca202c8e04aa228929655fd4972612f8c0357466e53560a4ca6"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::17",
+          "observationSha256": "5054906659d3a45301ab4914183fc5fda9e3294334b7e7d58f4eed0fc91f6fb9"
+        },
+        {
+          "id": "tests.test_AnnotateTest.AnnotateTest.test_annotate::tests/test_AnnotateTest.py:261:16:caseDeclaration::18",
+          "observationSha256": "39be3e99eabc9da341309726db11878983c30431cbfdea89336f64918481849d"
+        }
+      ],
+      "rationale": "Exact original annotation equalities recomputed from raw source through actual cleaning, extraction, verified mention-derived replacement positions and independent final rendered text on both native configurations. Generic host/callback and Unicode fidelity remain separate.",
+      "proof": {
+        "command": "bunx --bun vitest run test/CitationCanonicalAnnotationWorkflow.test.ts test/CitationCanonicalParserOperations.test.ts test/CitationCanonicalCourts.test.ts --reporter=json --outputFile=../../../.beep/annotation-workflows-final-results.json",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "annotate",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-original-annotation-workflows.md",
+        "evidenceSha256": "9c2455b80c73c5f76bbe55e52d6c3895553dda8a595d9f231bd697e122f639c4",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalAnnotationWorkflow.test.ts",
+            "name": "recomputes seven original annotation workflows from raw input on",
+            "sha256": "6ca93424b92d01102b75e01a1bc0abb3fc57a4e502f48906bb09c1f367d85a11"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalAnnotationWorkflow.fixtures.ts",
+            "sha256": "a2dcdcfc0f1f0cef68a9f517706161009f6a2a24469fa4cdea369e467bd0bda5"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalCaptures.fixtures.ts",
+            "sha256": "1ac4ab7ebd6c3751b5706d93b562c6625d6c5d3062ddbe4284a6ef274a89c4a8"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtractionRuntime.fixtures.ts",
+            "sha256": "4e0c808677aaf5d08aca4d6cbf21b11e484fa84a25346fef5c472a363827084e"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalModel.fixtures.ts",
+            "sha256": "b47778caf58e758edf2c3c9f65464d82fb1ca9ce58dff25a2e90117eb8756177"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
+            "sha256": "09b730c8f3bae99438224dafbe781988d76fa0013fd50b5c3ca53e4b45680fa8"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
+            "sha256": "c0e994ff1a280d229c91959e13b1e5adf17e283fc64036161927dc6af76b37ca"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationDefaultConfiguration.fixtures.ts",
+            "sha256": "bd65007a9fdcfcf5daf71a33dfd31ec749bea2bcd852f39c2c9ce2ceb89adbff"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/AnnotationCallback.ts",
+            "sha256": "b3366f254c6664f554a3004ff21c90551275620449138933bc3c672c131ce7d3"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/AnnotationBudget.ts",
+            "sha256": "0ef4e9ea8ae883e3715afd06d7e69a5ee28481700e196bc939707832c0d6195c"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/PythonUnicode.ts",
+            "sha256": "891782d0c121914ac1704211716e128297713476e752ff2060f1eb8bfd2ba813"
           }
         ]
       }
