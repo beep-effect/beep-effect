@@ -471,6 +471,8 @@ const proseSpans = (
  * @param documentPath - Repository-relative path of the scanned document.
  * @param text - Decoded document text.
  * @param gitRefNames - Exact ref spellings that are never read as paths.
+ * @param packages - Workspace export facts from the scanned tree, when available.
+ * @param entries - Tracked entries used to prove the export targets.
  * @returns Source-ordered spans plus every historical marker in the document.
  * @category parsing
  * @since 0.0.0
