@@ -1,0 +1,1080 @@
+{
+  "schemaVersion": "six-form-selection-draft/v1",
+  "status": "frozen-before-selection-run",
+  "purpose": "Finite selection screen, not representative accuracy or performance certification.",
+  "rangePolicy": "Full-case locator excludes pin; short and Id include pin; supra starts at supra with antecedent separate; laws include written subsection and preserve base section plus pin metadata. All quotes slice supplied plain-text UTF-16.",
+  "sourceNote": "Public excerpts transcribed from rendered primary-source text; no PDF/HTML raw-coordinate claim. Existing-screen rows are regression evidence; controlled rows are synthetic. No donor outputs used to set new expected labels.",
+  "cases": [
+    {
+      "id": "public-full-doe",
+      "origin": "public-excerpt",
+      "sourceUrl": "https://www.supremecourt.gov/opinions/boundvolumes/505bv.pdf",
+      "text": "Doe v. Bolton, 410 U. S. 179, 198 (1973)",
+      "expected": [
+        {
+          "form": "full-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "page": "179",
+            "pinCite": "198"
+          },
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          },
+          "pin": {
+            "start": 30,
+            "end": 33,
+            "quote": "198"
+          },
+          "anchor": {
+            "start": 15,
+            "end": 28,
+            "quote": "410 U. S. 179"
+          },
+          "antecedent": null,
+          "lexicalCore": null
+        }
+      ],
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar."
+    },
+    {
+      "id": "public-short-roe",
+      "origin": "public-excerpt",
+      "sourceUrl": "https://www.supremecourt.gov/opinions/boundvolumes/505bv.pdf",
+      "text": "410 U. S., at 154–155",
+      "expected": [
+        {
+          "form": "short-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "pinCite": "154–155"
+          },
+          "link": {
+            "status": "Unresolved"
+          },
+          "pin": {
+            "start": 14,
+            "end": 21,
+            "quote": "154–155"
+          },
+          "anchor": {
+            "start": 0,
+            "end": 21,
+            "quote": "410 U. S., at 154–155"
+          },
+          "antecedent": null,
+          "lexicalCore": null
+        }
+      ],
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar."
+    },
+    {
+      "id": "public-supra-roe",
+      "origin": "public-excerpt",
+      "sourceUrl": "https://www.supremecourt.gov/opinions/boundvolumes/505bv.pdf",
+      "text": "Roe, supra, at 162.",
+      "expected": [
+        {
+          "form": "supra",
+          "fields": {
+            "antecedent": "Roe",
+            "pinCite": "162"
+          },
+          "link": {
+            "status": "Unresolved"
+          },
+          "pin": {
+            "start": 15,
+            "end": 18,
+            "quote": "162"
+          },
+          "anchor": {
+            "start": 5,
+            "end": 18,
+            "quote": "supra, at 162"
+          },
+          "antecedent": {
+            "start": 0,
+            "end": 3,
+            "quote": "Roe"
+          },
+          "lexicalCore": {
+            "start": 5,
+            "end": 10,
+            "quote": "supra"
+          }
+        }
+      ],
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar."
+    },
+    {
+      "id": "public-id-orphan",
+      "origin": "public-excerpt",
+      "sourceUrl": "https://www.supremecourt.gov/opinions/boundvolumes/505bv.pdf",
+      "text": "Id., at 163.",
+      "expected": [
+        {
+          "form": "id",
+          "fields": {
+            "pinCite": "163"
+          },
+          "link": {
+            "status": "Unresolved"
+          },
+          "pin": {
+            "start": 8,
+            "end": 11,
+            "quote": "163"
+          },
+          "anchor": {
+            "start": 0,
+            "end": 11,
+            "quote": "Id., at 163"
+          },
+          "antecedent": null,
+          "lexicalCore": {
+            "start": 0,
+            "end": 3,
+            "quote": "Id."
+          }
+        }
+      ],
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar.",
+      "sourceLocation": {
+        "pdfPageIndex": 901,
+        "printedPage": 876,
+        "receipt": "Bound volume505 text line27492 ends with Id., at163.; root independently confirmed primary-source text after label review."
+      }
+    },
+    {
+      "id": "public-usc-context",
+      "origin": "public-excerpt",
+      "sourceUrl": "https://www.uspto.gov/web/offices/pac/mpep/s704.html",
+      "text": "Comments on information of record which raises a question of whether the inventor derived the invention from another under 35 U.S.C. 101 and 115, and pre-AIA 35 U.S.C. 102(f).",
+      "expected": [
+        {
+          "form": "usc",
+          "fields": {
+            "title": "35",
+            "section": "101",
+            "pinCite": null
+          },
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          },
+          "pin": null,
+          "anchor": {
+            "start": 123,
+            "end": 136,
+            "quote": "35 U.S.C. 101"
+          },
+          "antecedent": null,
+          "lexicalCore": null
+        },
+        {
+          "form": "usc",
+          "fields": {
+            "title": "35",
+            "section": "102",
+            "pinCite": "(f)"
+          },
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 1
+          },
+          "pin": {
+            "start": 171,
+            "end": 174,
+            "quote": "(f)"
+          },
+          "anchor": {
+            "start": 158,
+            "end": 174,
+            "quote": "35 U.S.C. 102(f)"
+          },
+          "antecedent": null,
+          "lexicalCore": null
+        }
+      ],
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar.",
+      "allowedOutsideProfileOccurrences": [
+        {
+          "anchor": {
+            "start": 141,
+            "end": 144,
+            "quote": "115"
+          },
+          "form": "inherited-usc-section",
+          "fields": {
+            "title": "35",
+            "section": "115"
+          },
+          "reason": "Valid recognition permitted but not required; not a false positive."
+        }
+      ]
+    },
+    {
+      "id": "public-cfr-context",
+      "origin": "public-excerpt",
+      "sourceUrl": "https://www.uspto.gov/web/offices/pac/mpep/s704.html",
+      "text": "The duty of candor and good faith under 37 CFR 1.56 applies to the applicant’s reply to a requirement for information under 37 CFR 1.105",
+      "expected": [
+        {
+          "form": "cfr",
+          "fields": {
+            "title": "37",
+            "section": "1.56",
+            "pinCite": null
+          },
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          },
+          "pin": null,
+          "anchor": {
+            "start": 40,
+            "end": 51,
+            "quote": "37 CFR 1.56"
+          },
+          "antecedent": null,
+          "lexicalCore": null
+        },
+        {
+          "form": "cfr",
+          "fields": {
+            "title": "37",
+            "section": "1.105",
+            "pinCite": null
+          },
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 1
+          },
+          "pin": null,
+          "anchor": {
+            "start": 124,
+            "end": 136,
+            "quote": "37 CFR 1.105"
+          },
+          "antecedent": null,
+          "lexicalCore": null
+        }
+      ],
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar."
+    },
+    {
+      "id": "regression-full",
+      "origin": "existing-screen",
+      "sourceUrl": null,
+      "text": "Roe v. Wade, 410 U.S. 113, 120 (1973).",
+      "expected": [
+        {
+          "form": "full-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "page": "113",
+            "pinCite": "120"
+          },
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          },
+          "pin": {
+            "start": 27,
+            "end": 30,
+            "quote": "120"
+          },
+          "anchor": {
+            "start": 13,
+            "end": 25,
+            "quote": "410 U.S. 113"
+          },
+          "antecedent": null,
+          "lexicalCore": null
+        }
+      ],
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar."
+    },
+    {
+      "id": "regression-short",
+      "origin": "existing-screen",
+      "sourceUrl": null,
+      "text": "See 410 U.S. at 120.",
+      "expected": [
+        {
+          "form": "short-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "pinCite": "120"
+          },
+          "link": {
+            "status": "Unresolved"
+          },
+          "pin": {
+            "start": 16,
+            "end": 19,
+            "quote": "120"
+          },
+          "anchor": {
+            "start": 4,
+            "end": 19,
+            "quote": "410 U.S. at 120"
+          },
+          "antecedent": null,
+          "lexicalCore": null
+        }
+      ],
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar."
+    },
+    {
+      "id": "regression-id",
+      "origin": "existing-screen",
+      "sourceUrl": null,
+      "text": "Id. at 120.",
+      "expected": [
+        {
+          "form": "id",
+          "fields": {
+            "pinCite": "120"
+          },
+          "link": {
+            "status": "Unresolved"
+          },
+          "pin": {
+            "start": 7,
+            "end": 10,
+            "quote": "120"
+          },
+          "anchor": {
+            "start": 0,
+            "end": 10,
+            "quote": "Id. at 120"
+          },
+          "antecedent": null,
+          "lexicalCore": {
+            "start": 0,
+            "end": 3,
+            "quote": "Id."
+          }
+        }
+      ],
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar."
+    },
+    {
+      "id": "regression-supra",
+      "origin": "existing-screen",
+      "sourceUrl": null,
+      "text": "Smith, supra, at 3.",
+      "expected": [
+        {
+          "form": "supra",
+          "fields": {
+            "antecedent": "Smith",
+            "pinCite": "3"
+          },
+          "link": {
+            "status": "Unresolved"
+          },
+          "pin": {
+            "start": 17,
+            "end": 18,
+            "quote": "3"
+          },
+          "anchor": {
+            "start": 7,
+            "end": 18,
+            "quote": "supra, at 3"
+          },
+          "antecedent": {
+            "start": 0,
+            "end": 5,
+            "quote": "Smith"
+          },
+          "lexicalCore": {
+            "start": 7,
+            "end": 12,
+            "quote": "supra"
+          }
+        }
+      ],
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar."
+    },
+    {
+      "id": "regression-usc",
+      "origin": "existing-screen",
+      "sourceUrl": null,
+      "text": "35 U.S.C. § 101.",
+      "expected": [
+        {
+          "form": "usc",
+          "fields": {
+            "title": "35",
+            "section": "101",
+            "pinCite": null
+          },
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          },
+          "pin": null,
+          "anchor": {
+            "start": 0,
+            "end": 15,
+            "quote": "35 U.S.C. § 101"
+          },
+          "antecedent": null,
+          "lexicalCore": null
+        }
+      ],
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar."
+    },
+    {
+      "id": "regression-cfr",
+      "origin": "existing-screen",
+      "sourceUrl": null,
+      "text": "37 C.F.R. § 1.56.",
+      "expected": [
+        {
+          "form": "cfr",
+          "fields": {
+            "title": "37",
+            "section": "1.56",
+            "pinCite": null
+          },
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          },
+          "pin": null,
+          "anchor": {
+            "start": 0,
+            "end": 16,
+            "quote": "37 C.F.R. § 1.56"
+          },
+          "antecedent": null,
+          "lexicalCore": null
+        }
+      ],
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar."
+    },
+    {
+      "id": "astral-prefix",
+      "origin": "controlled",
+      "sourceUrl": null,
+      "text": "😀 See 410 U.S. 113 (1973).",
+      "expected": [
+        {
+          "form": "full-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "page": "113",
+            "pinCite": null
+          },
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          },
+          "pin": null,
+          "anchor": {
+            "start": 7,
+            "end": 19,
+            "quote": "410 U.S. 113"
+          },
+          "antecedent": null,
+          "lexicalCore": null
+        }
+      ],
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar."
+    },
+    {
+      "id": "combining-prefix",
+      "origin": "controlled",
+      "sourceUrl": null,
+      "text": "Café cites 410 U.S. 113 (1973).",
+      "expected": [
+        {
+          "form": "full-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "page": "113",
+            "pinCite": null
+          },
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          },
+          "pin": null,
+          "anchor": {
+            "start": 12,
+            "end": 24,
+            "quote": "410 U.S. 113"
+          },
+          "antecedent": null,
+          "lexicalCore": null
+        }
+      ],
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar."
+    },
+    {
+      "id": "usc-subsection",
+      "origin": "controlled",
+      "sourceUrl": null,
+      "text": "Under 35 U.S.C. § 112(a), the applicant replies.",
+      "expected": [
+        {
+          "form": "usc",
+          "fields": {
+            "title": "35",
+            "section": "112",
+            "pinCite": "(a)"
+          },
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          },
+          "pin": {
+            "start": 21,
+            "end": 24,
+            "quote": "(a)"
+          },
+          "anchor": {
+            "start": 6,
+            "end": 24,
+            "quote": "35 U.S.C. § 112(a)"
+          },
+          "antecedent": null,
+          "lexicalCore": null
+        }
+      ],
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar."
+    },
+    {
+      "id": "usc-nested-subsection",
+      "origin": "controlled",
+      "sourceUrl": null,
+      "text": "35 U.S.C. § 102(a)(1).",
+      "expected": [
+        {
+          "form": "usc",
+          "fields": {
+            "title": "35",
+            "section": "102",
+            "pinCite": "(a)(1)"
+          },
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          },
+          "pin": {
+            "start": 15,
+            "end": 21,
+            "quote": "(a)(1)"
+          },
+          "anchor": {
+            "start": 0,
+            "end": 21,
+            "quote": "35 U.S.C. § 102(a)(1)"
+          },
+          "antecedent": null,
+          "lexicalCore": null
+        }
+      ],
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar."
+    },
+    {
+      "id": "cfr-subsection",
+      "origin": "controlled",
+      "sourceUrl": null,
+      "text": "Apply 37 C.F.R. § 1.56(c).",
+      "expected": [
+        {
+          "form": "cfr",
+          "fields": {
+            "title": "37",
+            "section": "1.56",
+            "pinCite": "(c)"
+          },
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          },
+          "pin": {
+            "start": 22,
+            "end": 25,
+            "quote": "(c)"
+          },
+          "anchor": {
+            "start": 6,
+            "end": 25,
+            "quote": "37 C.F.R. § 1.56(c)"
+          },
+          "antecedent": null,
+          "lexicalCore": null
+        }
+      ],
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar."
+    },
+    {
+      "id": "duplicate-cfr",
+      "origin": "controlled",
+      "sourceUrl": null,
+      "text": "37 CFR 1.56; 37 CFR 1.56.",
+      "expected": [
+        {
+          "form": "cfr",
+          "fields": {
+            "title": "37",
+            "section": "1.56",
+            "pinCite": null
+          },
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          },
+          "pin": null,
+          "anchor": {
+            "start": 0,
+            "end": 11,
+            "quote": "37 CFR 1.56"
+          },
+          "antecedent": null,
+          "lexicalCore": null
+        },
+        {
+          "form": "cfr",
+          "fields": {
+            "title": "37",
+            "section": "1.56",
+            "pinCite": null
+          },
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          },
+          "pin": null,
+          "anchor": {
+            "start": 13,
+            "end": 24,
+            "quote": "37 CFR 1.56"
+          },
+          "antecedent": null,
+          "lexicalCore": null
+        }
+      ],
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar."
+    },
+    {
+      "id": "negative-empty",
+      "origin": "controlled",
+      "sourceUrl": null,
+      "text": "",
+      "expected": [],
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar."
+    },
+    {
+      "id": "negative-prose",
+      "origin": "controlled",
+      "sourceUrl": null,
+      "text": "The ordinary document has no legal citation.",
+      "expected": [],
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar."
+    },
+    {
+      "id": "negative-numbers",
+      "origin": "controlled",
+      "sourceUrl": null,
+      "text": "The order contains 410 items, 113 pages and 120 dates.",
+      "expected": [],
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar."
+    },
+    {
+      "id": "negative-section",
+      "origin": "controlled",
+      "sourceUrl": null,
+      "text": "See section 101 of this report.",
+      "expected": [],
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar."
+    },
+    {
+      "id": "outside-usc-title",
+      "origin": "controlled",
+      "sourceUrl": null,
+      "text": "42 U.S.C. § 1983.",
+      "expected": [],
+      "allowRecognizedOutsideProfile": true,
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar."
+    },
+    {
+      "id": "outside-journal",
+      "origin": "controlled",
+      "sourceUrl": null,
+      "text": "123 Harv. L. Rev. 456.",
+      "expected": [],
+      "allowRecognizedOutsideProfile": true,
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar."
+    },
+    {
+      "id": "local-id",
+      "origin": "controlled",
+      "sourceUrl": null,
+      "text": "Roe v. Wade, 410 U.S. 113 (1973). Id. at 120.",
+      "expected": [
+        {
+          "form": "full-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "page": "113",
+            "pinCite": null
+          },
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          },
+          "pin": null,
+          "anchor": {
+            "start": 13,
+            "end": 25,
+            "quote": "410 U.S. 113"
+          },
+          "antecedent": null,
+          "lexicalCore": null
+        },
+        {
+          "form": "id",
+          "fields": {
+            "pinCite": "120"
+          },
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          },
+          "pin": {
+            "start": 41,
+            "end": 44,
+            "quote": "120"
+          },
+          "anchor": {
+            "start": 34,
+            "end": 44,
+            "quote": "Id. at 120"
+          },
+          "antecedent": null,
+          "lexicalCore": {
+            "start": 34,
+            "end": 37,
+            "quote": "Id."
+          }
+        }
+      ],
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar."
+    },
+    {
+      "id": "local-short",
+      "origin": "controlled",
+      "sourceUrl": null,
+      "text": "Roe v. Wade, 410 U.S. 113 (1973). 410 U.S. at 120.",
+      "expected": [
+        {
+          "form": "full-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "page": "113",
+            "pinCite": null
+          },
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          },
+          "pin": null,
+          "anchor": {
+            "start": 13,
+            "end": 25,
+            "quote": "410 U.S. 113"
+          },
+          "antecedent": null,
+          "lexicalCore": null
+        },
+        {
+          "form": "short-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "pinCite": "120"
+          },
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          },
+          "pin": {
+            "start": 46,
+            "end": 49,
+            "quote": "120"
+          },
+          "anchor": {
+            "start": 34,
+            "end": 49,
+            "quote": "410 U.S. at 120"
+          },
+          "antecedent": null,
+          "lexicalCore": null
+        }
+      ],
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar."
+    },
+    {
+      "id": "local-supra",
+      "origin": "controlled",
+      "sourceUrl": null,
+      "text": "Roe v. Wade, 410 U.S. 113 (1973). Roe, supra, at 162.",
+      "expected": [
+        {
+          "form": "full-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "page": "113",
+            "pinCite": null
+          },
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          },
+          "pin": null,
+          "anchor": {
+            "start": 13,
+            "end": 25,
+            "quote": "410 U.S. 113"
+          },
+          "antecedent": null,
+          "lexicalCore": null
+        },
+        {
+          "form": "supra",
+          "fields": {
+            "antecedent": "Roe",
+            "pinCite": "162"
+          },
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          },
+          "pin": {
+            "start": 49,
+            "end": 52,
+            "quote": "162"
+          },
+          "anchor": {
+            "start": 39,
+            "end": 52,
+            "quote": "supra, at 162"
+          },
+          "antecedent": {
+            "start": 34,
+            "end": 37,
+            "quote": "Roe"
+          },
+          "lexicalCore": {
+            "start": 39,
+            "end": 44,
+            "quote": "supra"
+          }
+        }
+      ],
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar."
+    },
+    {
+      "id": "ambiguous-short",
+      "origin": "controlled",
+      "sourceUrl": null,
+      "text": "Alpha v. Beta, 410 U.S. 113 (1973). Alpha v. Gamma, 410 U.S. 114 (1973). 410 U.S. at 120.",
+      "expected": [
+        {
+          "form": "full-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "page": "113",
+            "pinCite": null
+          },
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          },
+          "pin": null,
+          "anchor": {
+            "start": 15,
+            "end": 27,
+            "quote": "410 U.S. 113"
+          },
+          "antecedent": null,
+          "lexicalCore": null
+        },
+        {
+          "form": "full-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "page": "114",
+            "pinCite": null
+          },
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 1
+          },
+          "pin": null,
+          "anchor": {
+            "start": 52,
+            "end": 64,
+            "quote": "410 U.S. 114"
+          },
+          "antecedent": null,
+          "lexicalCore": null
+        },
+        {
+          "form": "short-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "pinCite": "120"
+          },
+          "link": {
+            "status": "Ambiguous",
+            "candidateAuthorities": [
+              0,
+              1
+            ]
+          },
+          "pin": {
+            "start": 85,
+            "end": 88,
+            "quote": "120"
+          },
+          "anchor": {
+            "start": 73,
+            "end": 88,
+            "quote": "410 U.S. at 120"
+          },
+          "antecedent": null,
+          "lexicalCore": null
+        }
+      ],
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar."
+    },
+    {
+      "id": "ambiguous-supra",
+      "origin": "controlled",
+      "sourceUrl": null,
+      "text": "Alpha v. Beta, 410 U.S. 113 (1973). Alpha v. Gamma, 410 U.S. 114 (1973). Alpha, supra, at 120.",
+      "expected": [
+        {
+          "form": "full-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "page": "113",
+            "pinCite": null
+          },
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          },
+          "pin": null,
+          "anchor": {
+            "start": 15,
+            "end": 27,
+            "quote": "410 U.S. 113"
+          },
+          "antecedent": null,
+          "lexicalCore": null
+        },
+        {
+          "form": "full-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "page": "114",
+            "pinCite": null
+          },
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 1
+          },
+          "pin": null,
+          "anchor": {
+            "start": 52,
+            "end": 64,
+            "quote": "410 U.S. 114"
+          },
+          "antecedent": null,
+          "lexicalCore": null
+        },
+        {
+          "form": "supra",
+          "fields": {
+            "antecedent": "Alpha",
+            "pinCite": "120"
+          },
+          "link": {
+            "status": "Ambiguous",
+            "candidateAuthorities": [
+              0,
+              1
+            ]
+          },
+          "pin": {
+            "start": 90,
+            "end": 93,
+            "quote": "120"
+          },
+          "anchor": {
+            "start": 80,
+            "end": 93,
+            "quote": "supra, at 120"
+          },
+          "antecedent": {
+            "start": 73,
+            "end": 78,
+            "quote": "Alpha"
+          },
+          "lexicalCore": {
+            "start": 80,
+            "end": 85,
+            "quote": "supra"
+          }
+        }
+      ],
+      "profileGrammar": "Fully-qualified law locators only; inherited bare section lists are outside the scored grammar."
+    }
+  ],
+  "resourceControls": [
+    "source-limit",
+    "candidate-limit",
+    "deadline",
+    "cancellation",
+    "physical-retirement"
+  ],
+  "frozenAt": "2026-11-08T09:42:09.331627+00:00",
+  "review": "GPT-6.1-Sol candidate-neutral review; model review, not human annotation. Corrections applied before this selection run. Prior-screen rows remain explicitly marked as regressions.",
+  "localLinkRules": {
+    "full": "Own authority by case volume/canonical reporter/first page, or law title/base section; identical locators share authority.",
+    "id": "Inherit the immediately preceding mention only if uniquely resolved; preserve its ambiguity, or unresolved/orphan status.",
+    "short": "All preceding full case authorities with exact volume/canonical reporter; exactly one resolves, multiple remain ambiguous.",
+    "supra": "All preceding full case authorities with exact supplied party token; exactly one resolves, multiple remain ambiguous; no fuzzy/nearest tie break."
+  },
+  "pinPolicy": "Full-case fields explicitly distinguish absent pin from present pin. Pin ranges cover written values, excluding at/commas; law pins include parentheses. Supra antecedent and Id/supra lexical core are separate verified ranges.",
+  "grammarLimitations": [
+    "Each law mention requires its own explicit title/code/section; bare inherited section115 is permitted as an outside-profile extra, not scored as a miss or false positive.",
+    "Other titles/journals may be detected and reported outside profile; no whole-document citation-absence claim.",
+    "Public inputs are short transcribed excerpts, not a representative corpus or PDF/HTML coordinate proof."
+  ]
+}

@@ -6,10 +6,10 @@ The old P0-P5 exhaustive phases are superseded, not complete. Preserve their
 records; do not continue Python compatibility/accounting work from an older
 checkpoint. Baseline packet: git commit 7dc8c2d443d.
 
-- P6 Scope and evidence rebaseline: Status: in-progress; Exit evidence: Coherent
+- P6 Scope and evidence rebaseline: Status: complete; Exit evidence: Coherent
   launcher/spec/manifest, decision and retained research published
 
-- P7 Finite implementation selection: Status: pending; Exit evidence: Frozen
+- P7 Finite implementation selection: Status: in-progress; Exit evidence: Frozen
   reviewed profile, actual-Layer/candidate comparison, decision
 
 - P8 Bounded implementation and owned repairs: Status: pending; Exit evidence:
@@ -44,7 +44,10 @@ the operator after quota, and Kimi's saved report preceded its quota. [Research
 assessment](research/2026-11-08-re-grounding.md) records findings and
 uncertainties. The [nine-case
 smoke](history/evidence/2026-11-08-six-form-smoke/README.md) is operability
-evidence, not accuracy or safety. No parser has been selected.
+evidence, not accuracy or safety. No parser has been selected. The frozen
+29-input selection receipt records actual donor captures; native, exact
+field/range/link and resource comparison
+remain open.
 
 PR #2927 is merged at f849b3b901e. The baseline integration receipt identifies
 InputDocument reservation accounting and the full Bun diff-corpus watchdog as

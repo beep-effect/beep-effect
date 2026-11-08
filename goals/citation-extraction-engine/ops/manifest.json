@@ -11,7 +11,7 @@
   "packetPath": "goals/citation-extraction-engine",
   "lifecycle": "active",
   "mission": "Deliver bounded six-form citation extraction and document-local linking on supplied plain text, with schema-first semantic values, exact verified source anchors, explicit ambiguity and Effect-native resource boundaries.",
-  "statusNote": "Operator approved six-form scope replacement on 2026-11-08. Old exhaustive P0-P5 and ledger closure are superseded, not complete. Independent research, adversarial corrections and a nine-case donor operability screen are retained. No parser or production dependency has been selected. Freeze reviewed outputs, compare the existing actual Layer and pinned candidates, retain existing safety ceilings, resolve owned CI failures and finish hosted proof/retention. PR #2927 is merged; this rebaseline does not claim the two recorded integration repairs or goal completion.",
+  "statusNote": "The operator-approved six-form scope rebaseline is published in PR #2966. Old exhaustive P0-P5 are superseded, not complete. P7 has a candidate-neutral model-reviewed frozen29-input/33-occurrence screen and actual pinned donor captures. eyecite-ts has no recognition-count disagreements; official Python eyecite and eyecite-js miss three bare USC/CFR rows, and Python rejects empty input. These are finite diagnostic observations, not accuracy, field/span/link/safety or performance proof. The actual native Layer has not run on this profile; no parser or production dependency is selected. Existing owned CI repairs remain open. Hosted attempts on2966 fail during shared HTTP504 tool downloads; no passing hosted acceptance or completed-retained claim.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -97,12 +97,12 @@
     {
       "id": "P6",
       "name": "Approved six-form scope and evidence rebaseline",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P7",
       "name": "Finite reviewed implementation selection",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P8",

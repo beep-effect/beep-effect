@@ -158,3 +158,18 @@ pin](https://github.com/beshkenadze/eyecite-js/tree/53a49f2412da668aaf262e5f9258
 and the [eyecite paper](https://free.law/pdf/eyecite-whitepaper.pdf). Earlier
 licenses and donor suite receipts remain in [SOURCES](SOURCES.md) and the
 historical evidence directory. Own-suite passes are not product accuracy.
+
+## First approved-scope selection run
+
+After the scope ruling, an independently model-reviewed 29-input profile was
+frozen before this selection run. Its 33 expected occurrences include public
+excerpts, known regressions, negative/unsupported inputs, Unicode and local
+ambiguity controls. Model review is not human annotation.
+
+The [selection receipt](../history/evidence/2026-11-08-six-form-selection/README.md)
+records actual runs of the three pinned donors. eyecite-ts had no required
+recognition-count disagreements. Official eyecite and eyecite-js missed the
+plain USPTO-style USC/CFR references on two public excerpt rows and one
+controlled repeated-CFR row. These observations are not an accuracy score or
+a field/range/link/safety pass. The native public Layer comparison and the
+implementation decision remain open. Labels were not edited after results.

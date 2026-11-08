@@ -1,0 +1,64 @@
+[
+  {
+    "lane": "python",
+    "rows": 29,
+    "countDisagreements": [
+      {
+        "id": "public-usc-context",
+        "expectedOccurrences": 2,
+        "actualOccurrences": 0,
+        "error": null
+      },
+      {
+        "id": "public-cfr-context",
+        "expectedOccurrences": 2,
+        "actualOccurrences": 0,
+        "error": null
+      },
+      {
+        "id": "duplicate-cfr",
+        "expectedOccurrences": 2,
+        "actualOccurrences": 0,
+        "error": null
+      },
+      {
+        "id": "negative-empty",
+        "expectedOccurrences": 0,
+        "actualOccurrences": 0,
+        "error": "Both `markup_text` and `plain_text` are empty"
+      }
+    ],
+    "scope": "Recognition count only; no field/span/link/safety pass inferred."
+  },
+  {
+    "lane": "ts",
+    "rows": 29,
+    "countDisagreements": [],
+    "scope": "Recognition count only; no field/span/link/safety pass inferred."
+  },
+  {
+    "lane": "js",
+    "rows": 29,
+    "countDisagreements": [
+      {
+        "id": "public-usc-context",
+        "expectedOccurrences": 2,
+        "actualOccurrences": 0,
+        "error": null
+      },
+      {
+        "id": "public-cfr-context",
+        "expectedOccurrences": 2,
+        "actualOccurrences": 0,
+        "error": null
+      },
+      {
+        "id": "duplicate-cfr",
+        "expectedOccurrences": 2,
+        "actualOccurrences": 0,
+        "error": null
+      }
+    ],
+    "scope": "Recognition count only; no field/span/link/safety pass inferred."
+  }
+]
