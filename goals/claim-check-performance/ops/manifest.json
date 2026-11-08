@@ -46,6 +46,7 @@
     "research/census-components.py",
     "research/clause-dependency-metadata-admission-002.json",
     "research/composition-candidate-measurement-001.json",
+    "research/composition-candidate-measurement-002.json",
     "research/coverage-runtime-replay-001.json",
     "research/dependency-metadata-admission-001.json",
     "research/diagnose-structures.py",
