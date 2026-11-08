@@ -14,9 +14,11 @@ import * as Str from "effect/String";
 import {
   claimFiniteSourceProofSlot,
   clauseNominalHead,
+  readSourceRightParenthesisList,
   validateClaimCitationWitness,
   validateClaimFiniteSourceProofs,
   validateClaimFiniteSourceProofsFromOriginalInput,
+  validateSourceRightLabelActionToken,
 } from "./ClaimClauseRole.behavior.ts";
 import {
   ClaimFrameArgument,
@@ -1270,7 +1272,13 @@ const frameIntroducerLicensed = (
     A.some(
       plan.declarationPlans,
       (declaration) =>
-        declaration.frame === frame.ordinal && declaration.owner === frame.publicOwner && declaration.kind === "action"
+        declaration.frame === frame.ordinal &&
+        declaration.owner === frame.publicOwner &&
+        (declaration.kind === "action" ||
+          (declaration.kind === "labelled" &&
+            charge(intro.quote.length * 2 + 2) &&
+            O.isSome(Str.match(/ the steps of:$/u)(intro.quote)) &&
+            rightParenthesisDeclaration(plan, declaration, charge)))
     )
   );
 };
@@ -1692,8 +1700,14 @@ class SourceTokenOwnershipBuilder {
     this.charge = charge;
     this.raw = raw;
   }
+  private exhausted = false;
+  private readonly reserve = (amount: number): boolean => {
+    const accepted = this.charge(amount);
+    if (!accepted) this.exhausted = true;
+    return accepted;
+  };
   run(): O.Option<ReadonlyArray<ClaimSourceTokenOwnership>> {
-    if (!this.charge(this.raw.length * 4 + 1)) return O.none();
+    if (!this.reserve(this.raw.length * 4 + 1)) return O.none();
     for (let i = 0; i < this.raw.length; i++)
       this.positions = HashMap.set(this.positions, O.getOrThrow(A.get(this.raw, i)).token.anchor.startChar, i);
     if (!this.leadingControls() || !this.trailingControls()) return O.none();
@@ -1718,18 +1732,19 @@ class SourceTokenOwnershipBuilder {
     );
   }
   private readonly positiveExclusion = (ordinal: number): boolean => {
-    if (!this.charge(3)) return false;
+    if (!this.reserve(3)) return false;
     const prior = HashMap.get(this.checkedExclusions, ordinal);
     if (O.isSome(prior)) return prior.value;
+    if (!this.reserve(2)) return false;
     const candidate = A.get(this.plan.sourceExclusions, ordinal - 1);
-    const valid = O.exists(candidate, (e) => positiveCandidateExclusion(this.plan, e, this.charge));
-    if (!this.charge(2)) return false;
-    this.checkedExclusions = HashMap.set(this.checkedExclusions, ordinal, valid);
-    return valid;
+    const valid = O.exists(candidate, (e) => positiveCandidateExclusion(this.plan, e, this.reserve));
+    if (!valid) return false;
+    this.checkedExclusions = HashMap.set(this.checkedExclusions, ordinal, true);
+    return true;
   };
 
   private readonly control = (ref: ClaimSourceProofRef, evidence: ClaimSourceControlEvidence): boolean => {
-    if (!this.charge(6)) return false;
+    if (!this.reserve(6)) return false;
     const token = proofAt(this.plan, ref);
     if (O.isNone(token) || token.value.kind !== "token") return false;
     if (!HashMap.has(this.controls, token.value.ordinal))
@@ -1738,11 +1753,11 @@ class SourceTokenOwnershipBuilder {
   };
 
   private lowerBound(startChar: number): number {
-    return sourceLowerBound(this.raw, startChar, rawTokenSourceStart, this.charge);
+    return sourceLowerBound(this.raw, startChar, rawTokenSourceStart, this.reserve);
   }
   private intervalFrom(start: number, extent: TextAnchor, evidence: ClaimSourceControlEvidence): boolean {
     for (let i = start; i < this.raw.length; i++) {
-      if (!this.charge(3)) return false;
+      if (!this.reserve(3)) return false;
       const token = O.getOrThrow(A.get(this.raw, i));
       if (token.token.anchor.startChar >= extent.endChar) break;
       if (
@@ -1754,7 +1769,7 @@ class SourceTokenOwnershipBuilder {
     return true;
   }
   private readonly interval = (extent: TextAnchor, evidence: ClaimSourceControlEvidence): boolean => {
-    if (!this.charge(3)) return false;
+    if (!this.reserve(3)) return false;
     const exact = HashMap.get(this.positions, extent.startChar);
     let start = O.getOrElse(exact, () => 0);
     if (O.isNone(exact)) start = this.lowerBound(extent.startChar);
@@ -1764,7 +1779,7 @@ class SourceTokenOwnershipBuilder {
 
   private collectOwners(): boolean {
     for (const element of this.plan.elements) {
-      if (!this.charge(element.ownedTermRegions.length * 5 + 1)) return false;
+      if (!this.reserve(element.ownedTermRegions.length * 5 + 1)) return false;
       for (const region of element.ownedTermRegions)
         this.owners = HashMap.set(this.owners, region.core, element.ordinal);
     }
@@ -1773,7 +1788,7 @@ class SourceTokenOwnershipBuilder {
 
   private proofs(): boolean {
     for (const proof of this.plan.roles.certificates) {
-      if (!this.charge(2) || !this.proofControl(proof)) return false;
+      if (!this.reserve(2) || !this.proofControl(proof)) return false;
     }
     return true;
   }
@@ -1834,7 +1849,7 @@ class SourceTokenOwnershipBuilder {
     const first = proofAt(this.plan, proof.token);
     const last = O.flatMap(proof.successor, (r) => proofAt(this.plan, r));
     if (O.isNone(first) || first.value.kind !== "token" || O.isNone(last) || last.value.kind !== "token") return false;
-    if (!this.charge(last.value.tokenOrdinal - first.value.tokenOrdinal + 1)) return false;
+    if (!this.reserve(last.value.tokenOrdinal - first.value.tokenOrdinal + 1)) return false;
     for (let i = first.value.tokenOrdinal; i <= last.value.tokenOrdinal; i++) {
       const token = A.get(this.raw, i - 1);
       if (
@@ -1854,7 +1869,7 @@ class SourceTokenOwnershipBuilder {
   }
   private selectionControl(proof: Extract<ClaimFiniteSourceProof, { readonly kind: "selection" }>): boolean {
     const evidence = this.argumentEvidence(proof);
-    if (!this.charge(proof.selector.length + 1) || !this.control(proof.linkage, evidence)) return false;
+    if (!this.reserve(proof.selector.length + 1) || !this.control(proof.linkage, evidence)) return false;
     for (const ref of proof.selector) if (!this.control(ref, evidence)) return false;
     return true;
   }
@@ -1884,7 +1899,7 @@ class SourceTokenOwnershipBuilder {
     slot: (typeof binding.slots)[number]
   ): boolean {
     if (slot.kind === "gap") return true;
-    if (!this.charge(5)) return false;
+    if (!this.reserve(5)) return false;
     if (slot.kind === "adjunct")
       return this.control(
         slot.token,
@@ -1907,7 +1922,7 @@ class SourceTokenOwnershipBuilder {
   private operatorSlots(): boolean {
     for (let i = 0; i < this.plan.operatorBindings.length; i++) {
       const binding = O.getOrThrow(A.get(this.plan.operatorBindings, i));
-      if (!this.charge(binding.slots.length + 1)) return false;
+      if (!this.reserve(binding.slots.length + 1)) return false;
       for (const slot of binding.slots) if (!this.operatorSlot(binding, i, slot)) return false;
     }
     return true;
@@ -1923,10 +1938,10 @@ class SourceTokenOwnershipBuilder {
     return O.filter(token, (p) => HashSet.has(HashSet.make("and", "or"), Str.toLowerCase(p.token.anchor.quote)));
   }
   private operatorCoordinate(index: number, right: ClaimSourceOperatorBinding): boolean {
-    if (!this.charge(4)) return false;
+    if (!this.reserve(4)) return false;
     const token = this.coordinateBefore(right.operator, 1);
     if (O.isNone(token)) return true;
-    if (!this.charge(this.plan.operatorBindings.length + 2)) return false;
+    if (!this.reserve(this.plan.operatorBindings.length + 2)) return false;
     const left = A.findLastIndex(
       this.plan.operatorBindings,
       (b) => b.frame === right.frame && b.operator.startChar < right.operator.startChar
@@ -1947,13 +1962,13 @@ class SourceTokenOwnershipBuilder {
   }
 
   private frameCoordinate(right: ClaimSourceFrame): boolean {
-    if (!this.charge(4)) return false;
+    if (!this.reserve(4)) return false;
     if (O.isNone(right.parent) || O.isNone(right.introducer) || Str.toLowerCase(right.introducer.value.quote) !== "to")
       return true;
     const token = this.coordinateBefore(right.extent, 2);
     if (O.isNone(token)) return true;
     const previous = O.getOrThrow(A.get(this.raw, token.value.tokenOrdinal - 2));
-    if (!this.charge(this.plan.frames.length + 2)) return false;
+    if (!this.reserve(this.plan.frames.length + 2)) return false;
     const left = A.filter(
       this.plan.frames,
       (frame) =>
@@ -2010,13 +2025,13 @@ class SourceTokenOwnershipBuilder {
     return Str.toLowerCase(token.token.anchor.quote) !== "response" || this.responseAdjunct(position.value, evidence);
   }
   private roleAdjuncts(): boolean {
-    if (!this.charge(this.plan.roles.predicates.length * 4 + this.plan.elements.length + 2)) return false;
+    if (!this.reserve(this.plan.roles.predicates.length * 4 + this.plan.elements.length + 2)) return false;
     for (let i = 0; i < this.plan.roles.predicates.length; i++) if (!this.roleAdjunct(i)) return false;
     return true;
   }
   private elementCoordinate(right: ClaimPlannedElement): boolean {
     if (right.grouping !== "independent-coordinate") return true;
-    if (!this.charge(this.plan.elements.length + 2)) return false;
+    if (!this.reserve(this.plan.elements.length + 2)) return false;
     const start = HashMap.get(this.positions, right.extent.startChar);
     const left = A.findLast(
       this.plan.elements,
@@ -2042,7 +2057,7 @@ class SourceTokenOwnershipBuilder {
     if (argument.role !== "object" || O.isNone(argument.predicate)) return true;
     const token = this.coordinateBefore(argument.nominal, 1);
     if (O.isNone(token)) return true;
-    if (!this.charge(frame.arguments.length + 2)) return false;
+    if (!this.reserve(frame.arguments.length + 2)) return false;
     const left = A.findLastIndex(
       frame.arguments,
       (a, ordinal) =>
@@ -2076,39 +2091,47 @@ class SourceTokenOwnershipBuilder {
     );
   }
   private frameArgumentControls(frame: ClaimSourceFrame): boolean {
-    if (!this.charge(frame.arguments.length * 6 + 1)) return false;
+    if (!this.reserve(frame.arguments.length * 6 + 1)) return false;
     for (let index = 0; index < frame.arguments.length; index++) {
       const argument = O.getOrThrow(A.get(frame.arguments, index));
       if (!this.objectCoordinate(frame, index, argument) || !this.argumentIntroducer(frame, index, argument))
         return false;
     }
+    return this.frameIntroducerControl(frame);
+  }
+  private frameIntroducerControl(frame: ClaimSourceFrame): boolean {
     if (O.isNone(frame.introducer)) return true;
+    const licensed = frameIntroducerLicensed(this.plan, frame, this.reserve);
+    if (this.exhausted) return false;
     if (
-      frameIntroducerLicensed(this.plan, frame, this.charge) &&
+      licensed &&
       !this.interval(
         frame.introducer.value,
         ClaimSourceControlEvidence.cases["frame-introducer"].make({ frame: frame.ordinal })
       )
     )
       return false;
-    return this.charge(0);
+    return this.reserve(0);
   }
   private frameArguments(): boolean {
-    if (!this.charge(this.plan.frames.length + this.plan.sourceExclusions.length + 1)) return false;
+    if (!this.reserve(this.plan.frames.length + this.plan.sourceExclusions.length + 1)) return false;
     for (const frame of this.plan.frames) if (!this.frameArgumentControls(frame)) return false;
     return true;
   }
 
+  private exclusionControl(exclusion: ClaimSourceExclusion, ordinal: number): boolean {
+    if (exclusion.kind === "quoted-protection") return true;
+    const positive = this.positiveExclusion(ordinal);
+    if (this.exhausted) return false;
+    return (
+      !positive ||
+      this.interval(exclusion.extent, ClaimSourceControlEvidence.cases.exclusion.make({ exclusion: ordinal }))
+    );
+  }
   private exclusions(): boolean {
     for (let i = 0; i < this.plan.sourceExclusions.length; i++) {
       const exclusion = O.getOrThrow(A.get(this.plan.sourceExclusions, i));
-      if (
-        exclusion.kind !== "quoted-protection" &&
-        this.positiveExclusion(i + 1) &&
-        !this.interval(exclusion.extent, ClaimSourceControlEvidence.cases.exclusion.make({ exclusion: i + 1 }))
-      )
-        return false;
-      if (!this.charge(1)) return false;
+      if (!this.exclusionControl(exclusion, i + 1) || !this.reserve(1)) return false;
     }
     return true;
   }
@@ -2133,7 +2156,7 @@ class SourceTokenOwnershipBuilder {
     const lower = this.lowerBound(start);
     if (lower < 0) return false;
     for (let k = lower; k < this.raw.length; k++) {
-      if (!this.charge(3)) return false;
+      if (!this.reserve(3)) return false;
       const token = O.getOrThrow(A.get(this.raw, k));
       if (token.token.anchor.startChar >= end) break;
       if (!this.declarationGapToken(token, end, declaration, left)) return false;
@@ -2143,7 +2166,7 @@ class SourceTokenOwnershipBuilder {
   private declarations(): boolean {
     for (let i = 0; i < this.plan.declarationPlans.length; i++) {
       const declaration = O.getOrThrow(A.get(this.plan.declarationPlans, i));
-      if (!this.charge(declaration.items.length + 1)) return false;
+      if (!this.reserve(declaration.items.length + 1)) return false;
       for (let j = 1; j < declaration.items.length; j++) {
         const left = O.getOrThrow(A.get(declaration.items, j - 1));
         const right = O.getOrThrow(A.get(declaration.items, j));
@@ -2160,7 +2183,7 @@ class SourceTokenOwnershipBuilder {
       this.publicCursor < this.plan.nominals.length &&
       O.getOrThrow(A.get(this.plan.nominals, this.publicCursor)).core.endChar <= extent.startChar
     ) {
-      if (!this.charge(2)) return false;
+      if (!this.reserve(2)) return false;
       this.publicCursor++;
     }
     return true;
@@ -2170,7 +2193,7 @@ class SourceTokenOwnershipBuilder {
       this.privateCursor < this.plan.roles.privateCandidates.length &&
       O.getOrThrow(A.get(this.plan.roles.privateCandidates, this.privateCursor)).core.endChar <= extent.startChar
     ) {
-      if (!this.charge(2)) return false;
+      if (!this.reserve(2)) return false;
       this.privateCursor++;
     }
     return true;
@@ -2205,7 +2228,7 @@ class SourceTokenOwnershipBuilder {
       evidence = O.some(ClaimSourceControlEvidence.cases.punctuation.make({}));
     if (
       O.isNone(evidence) ||
-      !tokenControlMatches(this.plan, token, evidence.value, this.positiveExclusion, this.charge)
+      !tokenControlMatches(this.plan, token, evidence.value, this.positiveExclusion, this.reserve)
     )
       return O.none();
     return O.some(
@@ -2239,7 +2262,7 @@ class SourceTokenOwnershipBuilder {
     token: Extract<ClaimFiniteSourceProof, { readonly kind: "token" }>
   ): O.Option<ClaimSourceTokenOwnership> {
     // The extracted row stage adds one transient Option result per token.
-    if (!this.charge(9)) return O.none();
+    if (!this.reserve(9)) return O.none();
     const ref = ClaimSourceProofRef.make({ ordinal: token.ordinal, slot: "token" });
     if (!this.advancePublic(token.token.anchor)) return O.none();
     const nominal = A.get(this.plan.nominals, this.publicCursor);
@@ -2267,9 +2290,8 @@ const sourceTokenOwnership = (
     return O.none();
   const raw = A.filter(plan.roles.certificates, (p) => p.kind === "token");
   if (raw.length === 0) return O.some([]);
-  // The builder adds one bounded source-local state object; stage work and its
-  // short-circuit order retain the original charged traversal sequence.
-  if (!charge(1)) return O.none();
+  // Reserve the builder plus its exhaustion flag and forwarding reservation closure.
+  if (!charge(3)) return O.none();
   return new SourceTokenOwnershipBuilder(plan, charge, raw).run();
 };
 
@@ -2423,11 +2445,12 @@ const validateSourceTokenOwnership = (
     if (!charge(3)) return false;
     const previous = HashMap.get(checkedExclusions, ordinal);
     if (O.isSome(previous)) return previous.value;
+    if (!charge(2)) return false;
     const exclusion = A.get(plan.sourceExclusions, ordinal - 1);
     const valid = O.exists(exclusion, (e) => positiveCandidateExclusion(plan, e, charge));
-    if (!charge(2)) return false;
-    checkedExclusions = HashMap.set(checkedExclusions, ordinal, valid);
-    return valid;
+    if (!valid) return false;
+    checkedExclusions = HashMap.set(checkedExclusions, ordinal, true);
+    return true;
   };
   let cursor = 0;
   for (let index = 0; index < raw.length; index++) {
@@ -2437,7 +2460,16 @@ const validateSourceTokenOwnership = (
   return validateLedgerOperators(plan, charge);
 };
 
-type SourceValidationFacts = { distributive: boolean };
+type SourceValidationFacts = { distributive: boolean; rightLabels: boolean };
+const collectSourceValidationFacts = (
+  proofs: ReadonlyArray<ClaimFiniteSourceProof>,
+  facts: SourceValidationFacts
+): void => {
+  for (const proof of proofs) {
+    if (proof.kind === "operator" && proof.mode === "distributive") facts.distributive = true;
+    if (proof.kind === "label-boundary") facts.rightLabels = true;
+  }
+};
 const validateCommittedSourceFacts = (
   plan: ClaimSourceElementPlan,
   charge: (amount: number) => boolean,
@@ -2446,8 +2478,8 @@ const validateCommittedSourceFacts = (
   if (plan.roles.certificates.length === 0) return true;
   const original = plan.roles.originalLexicalInput;
   if (O.isSome(original)) {
-    if (!charge(plan.qualifiedText.length + plan.roles.certificates.length + 5)) return false;
-    facts.distributive = A.some(plan.roles.certificates, (p) => p.kind === "operator" && p.mode === "distributive");
+    if (!charge(plan.qualifiedText.length + plan.roles.certificates.length * 2 + 6)) return false;
+    collectSourceValidationFacts(plan.roles.certificates, facts);
     const claim = plan.roles.qualifiedClaim;
     return (
       O.isSome(claim) &&
@@ -2606,11 +2638,11 @@ const validateSourcePlanComponents = (
   charge: (amount: number) => boolean
 ): boolean => {
   if (!charge(1)) return false;
-  const facts: SourceValidationFacts = { distributive: false };
+  const facts: SourceValidationFacts = { distributive: false, rightLabels: false };
   return (
     validateCommittedSourceFacts(plan, charge, facts) &&
     validateDistributiveFrames(plan, charge, facts) &&
-    validateSourceLabelDeclarations(plan, charge) &&
+    validateSourceLabelDeclarations(plan, charge, facts.rightLabels) &&
     validateAttached(plan, charge) &&
     validateCandidateCommit(plan, charge) &&
     validatePrivateAndOperators(plan, charge) &&
@@ -2792,7 +2824,7 @@ const sourceLabelListMatches = (
   return true;
 };
 // Operational source-local validation cache; never persisted as evidence.
-type SourceLabelValidation = { labelled: number; raw: O.Option<ReadonlyArray<SourceLabelToken>> };
+type SourceLabelValidation = { labelled: number; right: number; raw: O.Option<ReadonlyArray<SourceLabelToken>> };
 const parenthesizedSourceLabelPattern =
   /^\(\s*(?:[a-z]|(?=[ivxlcdm]+\s*\)$)m*(?:cm|cd|d?c{0,3})(?:xc|xl|l?x{0,3})(?:ix|iv|v?i{0,3}))\s*\)$/u;
 const parenthesizedSourceLabel = (
@@ -2813,6 +2845,141 @@ const sourceLabelRawTokens = (
   state.raw = O.some(A.filter(plan.roles.certificates, (p): p is SourceLabelToken => p.kind === "token"));
   return true;
 };
+type RightDeclarationContext = {
+  readonly plan: ClaimSourceElementPlan;
+  readonly declaration: SourceLabelDeclaration;
+  readonly tokens: ReadonlyArray<import("./ClaimLexicalEvidence.model.ts").ClaimLexicalToken>;
+  readonly markers: ReadonlyArray<readonly [number, number]>;
+  readonly certificates: ReadonlyArray<ClaimFiniteSourceProof>;
+  readonly charge: (n: number) => boolean;
+  readonly procedural: boolean;
+  readonly governor: TextAnchor;
+};
+const rightLabelShape = (label: TextAnchor, start: TextAnchor, close: TextAnchor, index: number): boolean =>
+  label.startChar === start.startChar &&
+  label.endChar === close.endChar &&
+  label.quote.length === 2 &&
+  Str.endsWith(")")(label.quote) &&
+  O.contains(Str.charCodeAt(0)(label.quote), 97 + index);
+const rightChildActionRequired = (context: RightDeclarationContext, item: SourceLabelItem): boolean =>
+  context.procedural ||
+  A.some(context.plan.roles.predicates, (p) => p.kind === "gerund" && p.anchor.startChar === item.extent.startChar);
+const rightDeclaredAction = (context: RightDeclarationContext, item: SourceLabelItem, index: number): boolean => {
+  const { plan, charge } = context;
+  if (!charge(plan.roles.predicates.length + 1)) return false;
+  if (!rightChildActionRequired(context, item)) return true;
+  const marker = O.getOrThrow(A.get(context.markers, index));
+  const token = A.get(context.tokens, marker[1]);
+  if (
+    O.isNone(token) ||
+    token.value.anchor.startChar !== item.extent.startChar ||
+    !validateSourceRightLabelActionToken(token.value, charge)
+  )
+    return false;
+  if (!charge(plan.roles.proofs.length * (plan.roles.predicates.length + 1) + 4)) return false;
+  return A.some(
+    plan.roles.proofs,
+    (p) =>
+      p.kind === "action" &&
+      sameAnchor(p.governor, context.governor) &&
+      p.operator.startChar === item.extent.startChar &&
+      contains(item.extent, p.object) &&
+      A.some(plan.roles.predicates, (q) => q.kind === "gerund" && sameAnchor(q.anchor, p.operator))
+  );
+};
+const rightDeclarationItem = (context: RightDeclarationContext, i: number, previousEnd: number): boolean => {
+  const { plan, declaration, tokens, markers, certificates, charge } = context;
+  const item = O.getOrThrow(A.get(declaration.items, i));
+  const marker = O.getOrThrow(A.get(markers, i));
+  const start = O.getOrThrow(A.get(tokens, marker[0])).anchor;
+  const close = O.getOrThrow(A.get(tokens, marker[1] - 1)).anchor;
+  if (
+    !rightLabelShape(item.label, start, close, i) ||
+    !sourceAnchor(plan, item.label, charge) ||
+    !A.some(certificates, (p) => p.kind === "label-boundary" && p.item === i) ||
+    !dottedChildMatches(plan, declaration.owner, item) ||
+    !rightDeclaredAction(context, item, i) ||
+    !dottedSourceGap(plan, previousEnd, item.label.startChar, i === 0, charge) ||
+    item.extent.startChar <= item.label.endChar ||
+    !dottedSourceGap(plan, item.label.endChar, item.extent.startChar, true, charge)
+  )
+    return false;
+  return true;
+};
+const rightDeclarationFrame = (
+  frame: ClaimSourceFrame,
+  declaration: SourceLabelDeclaration,
+  governor: TextAnchor,
+  colon: TextAnchor,
+  end: number
+): boolean =>
+  O.isNone(frame.parent) &&
+  frame.attachment === "main" &&
+  frame.extent.endChar === end &&
+  declaration.anchor.startChar === governor.startChar &&
+  declaration.anchor.endChar === colon.endChar;
+const sourceRightInputs = (
+  plan: ClaimSourceElementPlan,
+  declaration: SourceLabelDeclaration,
+  charge: (n: number) => boolean
+) => {
+  const claim = plan.roles.qualifiedClaim;
+  const input = plan.roles.originalLexicalInput;
+  if (O.isNone(claim) || O.isNone(input) || input.value.status !== "aligned") return O.none();
+  const source = readSourceRightParenthesisList(claim.value, input.value.tokens, charge);
+  if (O.isNone(source) || declaration.owner !== 1 || declaration.items.length !== source.value.markers.length)
+    return O.none();
+  return O.some({ tokens: input.value.tokens, source: source.value });
+};
+const rightDeclarationItems = (context: RightDeclarationContext, start: number, end: number): boolean => {
+  const { declaration, certificates, charge } = context;
+  let previousEnd = start;
+  for (let i = 0; i < declaration.items.length; i++) {
+    if (!charge(certificates.length + 6)) return false;
+    const item = O.getOrThrow(A.get(declaration.items, i));
+    if (!rightDeclarationItem(context, i, previousEnd)) return false;
+    previousEnd = item.extent.endChar;
+  }
+  return previousEnd === end;
+};
+const rightParenthesisDeclaration = (
+  plan: ClaimSourceElementPlan,
+  declaration: SourceLabelDeclaration,
+  charge: (amount: number) => boolean
+): boolean => {
+  const inputs = sourceRightInputs(plan, declaration, charge);
+  if (O.isNone(inputs)) return false;
+  const source = inputs.value.source;
+  if (!charge(plan.roles.certificates.length * 2 + source.markers.length * 8 + 8)) return false;
+  const certificates = A.filter(plan.roles.certificates, (p) => p.kind === "label-boundary");
+  if (certificates.length !== declaration.items.length) return false;
+  const frame = dottedDeclarationFrame(plan, declaration, charge);
+  if (O.isNone(frame)) return false;
+  const tokens = inputs.value.tokens;
+  const governor = O.getOrThrow(A.get(tokens, source.governor)).anchor;
+  const colon = O.getOrThrow(A.get(tokens, source.colon)).anchor;
+  if (
+    !rightDeclarationFrame(
+      frame.value,
+      declaration,
+      governor,
+      colon,
+      O.getOrThrow(A.get(tokens, source.end - 1)).anchor.endChar
+    )
+  )
+    return false;
+  const context: RightDeclarationContext = {
+    plan,
+    declaration,
+    tokens,
+    markers: source.markers,
+    certificates,
+    charge,
+    procedural: source.colon - source.governor === 4,
+    governor,
+  };
+  return rightDeclarationItems(context, colon.endChar, frame.value.extent.endChar);
+};
 const validateSourceLabelDeclaration = (
   plan: ClaimSourceElementPlan,
   declaration: SourceLabelDeclaration,
@@ -2822,6 +2989,12 @@ const validateSourceLabelDeclaration = (
   if (!charge(declaration.items.length * 3 + 2)) return false;
   const list = A.get(plan.declarations, state.labelled++);
   if (O.isNone(list) || !sourceLabelListMatches(declaration, list.value, charge)) return false;
+  if (
+    A.some(declaration.items, (item) => Str.endsWith(")")(item.label.quote) && !Str.startsWith("(")(item.label.quote))
+  ) {
+    state.right++;
+    return rightParenthesisDeclaration(plan, declaration, charge);
+  }
   const dotted = A.some(declaration.items, (item) => sourceDottedLabelRank(item.label.quote) >= 0);
   if (!dotted) return A.every(declaration.items, (item) => parenthesizedSourceLabel(plan, item.label, charge));
   return (
@@ -2829,17 +3002,23 @@ const validateSourceLabelDeclaration = (
     dottedDeclarationItems(plan, declaration, O.getOrThrow(state.raw), charge)
   );
 };
+const sourceLabelCensusMatches = (
+  plan: ClaimSourceElementPlan,
+  state: SourceLabelValidation,
+  rightLabels: boolean
+): boolean => state.labelled === plan.declarations.length && state.right === (rightLabels ? 1 : 0);
 const validateSourceLabelDeclarations = (
   plan: ClaimSourceElementPlan,
-  charge: (amount: number) => boolean
+  charge: (amount: number) => boolean,
+  rightLabels: boolean
 ): boolean => {
-  if (!charge(plan.declarationPlans.length + plan.declarations.length + 1) || !charge(3)) return false;
-  const state: SourceLabelValidation = { labelled: 0, raw: O.none() };
+  if (!charge(plan.declarationPlans.length + plan.declarations.length + 1) || !charge(4)) return false;
+  const state: SourceLabelValidation = { labelled: 0, right: 0, raw: O.none() };
   for (const declaration of plan.declarationPlans) {
     if (declaration.kind !== "labelled") continue;
     if (!validateSourceLabelDeclaration(plan, declaration, state, charge)) return false;
   }
-  return state.labelled === plan.declarations.length;
+  return sourceLabelCensusMatches(plan, state, rightLabels);
 };
 
 const validateOwnership = (plan: ClaimSourceElementPlan, charge: (amount: number) => boolean): boolean => {
