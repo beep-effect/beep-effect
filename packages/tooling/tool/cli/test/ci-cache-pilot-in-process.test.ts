@@ -83,21 +83,6 @@ const provideSpawnerWith =
       )
     ).pipe(provideSpawner(spawner));
 
-// `process.geteuid` replaced for one effect, restored afterwards.
-const withGeteuid = <A, E, R>(geteuid: (() => number) | undefined, effect: Effect.Effect<A, E, R>) =>
-  Effect.acquireUseRelease(
-    Effect.sync(() => {
-      const previous = Object.getOwnPropertyDescriptor(process, "geteuid");
-      Object.defineProperty(process, "geteuid", { value: geteuid, configurable: true, writable: true });
-      return previous;
-    }),
-    () => effect,
-    (previous) =>
-      Effect.sync(() =>
-        Object.defineProperty(process, "geteuid", previous ?? { value: undefined, configurable: true, writable: true })
-      )
-  );
-
 const reportedExit = (failure: unknown) =>
   P.hasProperty(failure, "exitCode") && P.hasProperty(failure, "message")
     ? { exitCode: failure.exitCode, message: `${failure.message}` }
@@ -190,15 +175,24 @@ it.layer(platform, { timeout: "60 seconds" })("cache pilot host commands in proc
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const { bin, apt, bwrap } = yield* makeTools(["dnf"]);
+      // `process.geteuid` is replaced per case and restored when the test ends.
+      const previous = Object.getOwnPropertyDescriptor(process, "geteuid");
+      yield* Effect.addFinalizer(() =>
+        Effect.sync(() =>
+          Object.defineProperty(
+            process,
+            "geteuid",
+            previous ?? { value: undefined, configurable: true, writable: true }
+          )
+        )
+      );
       const firstSpawn = Effect.fnUntraced(function* (geteuid: (() => number) | undefined) {
         const installing = ScriptedSpawner.make(() => ({}));
         yield* fs.remove(bwrap, { force: true });
-        yield* withGeteuid(
-          geteuid,
-          sandbox({ bwrap, aptSources: apt }).pipe(
-            withPath(bin),
-            provideSpawnerWith(installing, installBwrap(fs, bwrap))
-          )
+        Object.defineProperty(process, "geteuid", { value: geteuid, configurable: true, writable: true });
+        yield* sandbox({ bwrap, aptSources: apt }).pipe(
+          withPath(bin),
+          provideSpawnerWith(installing, installBwrap(fs, bwrap))
         );
         return A.head(spawnLines(installing));
       });
