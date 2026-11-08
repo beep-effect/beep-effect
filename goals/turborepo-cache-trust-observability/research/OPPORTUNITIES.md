@@ -19,6 +19,16 @@ the race, plus unrelated creation failure. No local suite was run under the
 operator's hosted-first instruction. Keep failures attributable; do not retry
 the same run or pre-create the fixture directory to hide the race.
 
+The first hosted unit-c run on this repair exposed an older generic-failure
+fixture that manufactured its cause by creating an already-existing root.
+That is specifically `AlreadyExists`, which now correctly triggers no-follow
+reinspection; its synthetic parent was never created. Inject an explicit
+`PermissionDenied` for the intended directory instead, preserving the original
+cause-identity and refusal assertions. Add a separate absent-parent collision
+case so swallowing `AlreadyExists` can never turn a missing parent into success.
+Keep the original failed job and obtain fresh hosted proof on the changed
+source; no local suite or unchanged-source rerun is used.
+
 ## 2026-11-03: hosted policy must cover the new mask tests
 
 PR #2691's current hosted policy log found one introduced Effect Vitest

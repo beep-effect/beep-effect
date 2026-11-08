@@ -128,6 +128,23 @@ describe("cli/FsGuards contained writes", () => {
       );
     }
 
+    it.effect("refuses an AlreadyExists collision when the parent is absent on reinspection", () =>
+      Effect.gen(function* () {
+        const { fs, path, root } = yield* makeRoot;
+        const mkdir = vi
+          .spyOn(fs, "makeDirectory")
+          .mockImplementationOnce((entry) => Effect.fail(systemError("makeDirectory", entry, "AlreadyExists")));
+        yield* restoreOnExit(mkdir);
+
+        const error = yield* appendContainedFileString(root, "inbox/failures.ndjson", "row\n").pipe(Effect.flip);
+
+        expect(error.reason).toBe("parent-not-directory");
+        expect(error.path).toBe(path.join(root, "inbox"));
+        const written = yield* fs.exists(path.join(root, "inbox", "failures.ndjson"));
+        expect(written).toBe(false);
+      })
+    );
+
     it.effect("preserves a parent creation failure other than AlreadyExists", () =>
       Effect.gen(function* () {
         const { fs, path, root } = yield* makeRoot;
