@@ -7,8 +7,8 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-11-08T16:48:18.627Z",
-  "git_sha": "61bd4347b371a34b51b5bba2797dbb82868cdb9c",
+  "generated_at": "2026-11-08T16:35:47.519Z",
+  "git_sha": "cd9653f803d25d26dc880008b8df8db1a381a1e4",
   "command": "bun run coverage -- --filter=@beep/law-practice-server --write-baseline --add-missing-files-only",
   "epsilon": 0.001,
   "minimum": {
@@ -21759,6 +21759,54 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/BuiltinDump.ts": {
+          "lines": 100,
+          "statements": 96,
+          "branches": 88.88,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 2,
+            "branches": 2,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/Dump.ts": {
+          "lines": 99.11,
+          "statements": 99.21,
+          "branches": 100,
+          "functions": 97.36,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/NativeRendering.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/PythonRepr.ts": {
+          "lines": 100,
+          "statements": 98.11,
+          "branches": 96,
+          "functions": 92.85,
+          "uncovered": {
+            "lines": 0,
+            "statements": 2,
+            "branches": 2,
+            "functions": 1
           }
         },
         "packages/law-practice/server/src/CitationExtractor/CitationExtractor.layer.ts": {

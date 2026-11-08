@@ -88,6 +88,12 @@ export const replayCitationExtractionEntry = Effect.fn("ExtractionEntryTest.repl
     _tag: "CitationExtractionEntryFailure",
     reason: "invalid-configuration",
   });
+  const unconfigured = yield* makeCitationExtractionEntry(setup.limits, setup.runtime, { invalid: true }).pipe(
+    Effect.provideContext(entryContext),
+    DateTime.withCurrentZoneOffset(0),
+    Effect.flip
+  );
+  expect(unconfigured).toMatchObject({ _tag: "CitationExtractionEntryFailure", reason: "invalid-configuration" });
   const empty = yield* stage.extract({}).pipe(Effect.flip);
   expect(empty).toMatchObject({
     _tag: "CitationDocumentInputFailure",
