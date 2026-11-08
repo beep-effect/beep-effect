@@ -84,4 +84,12 @@ Lane `feat/packet-archive-batch-2b`
 
 Reverse: Revert the batch 2 tombstone PR to restore the packets on main; the archive commits stay public
 
+### Batch 3 archived and verified on the public archive, 2026-11-08
+
+Plan a11eb819 archived 50 goal packets from b628348e0d. Archive commits 2323b2c and 68b4d99 are on the remote, and all 50 manifest content hashes matched the remote trees. This was the first batch through the code-span rewriter: knowledge semantic-delta reported 0 introduced and 54 resolved on the committed tree. 41 goals and 79 explorations remain.
+
+Lane `feat/packet-archive-batch-3`
+
+Reverse: Revert the batch 3 tombstone PR to restore the packets on main; the archive commits stay public
+
 <!-- beep:decisions:end -->
