@@ -5,14 +5,12 @@
  * @since 0.0.0
  */
 
-import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as Graph from "effect/Graph";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
-import * as MutableRef from "effect/MutableRef";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -45,7 +43,7 @@ import {
 } from "./ClaimLexicalEvidence.model.ts";
 import type { PatentClaim } from "../PatentDocument/PatentDocument.model.ts";
 import type { ClaimCitationWitness, ClaimNominalPolicyRole } from "./ClaimClauseRole.model.ts";
-import type { ClaimElement, ClaimTerm, ClaimTermDeterminer } from "./ClaimElement.model.ts";
+import type { ClaimTermDeterminer } from "./ClaimElement.model.ts";
 import type { ClaimLexicalToken } from "./ClaimLexicalEvidence.model.ts";
 
 /**
@@ -2840,48 +2838,8 @@ export const readSourceRightParenthesisList: {
   ): O.Option<RawRightList>;
 } = dual(3, readRightParenthesisList);
 
-const $I = $LawPracticeDomainId.create("values/ClaimElement/ClaimClauseRole.behavior");
-class PrivateReducedCertificateStudy extends S.Opaque<
-  PrivateReducedCertificateStudy,
-  { readonly brand: unique symbol }
->()(
-  S.Struct({
-    objectHead: ClaimSourceProofRef,
-    complementHead: ClaimSourceProofRef,
-    governorOperator: ClaimSourceProofRef,
-    subjectHead: S.OptionFromNullOr(ClaimSourceProofRef),
-    certificates: S.Array(ClaimFiniteSourceProof),
-    sourceProofs: S.Array(ClaimSourceProof),
-    originalInput: ClaimLexicalEvidence,
-    frontier: S.tag("unknown-remainder"),
-    disposition: S.tag("not-admitted"),
-    remainingWork: S.Int,
-  }).pipe(
-    $I.annoteSchema("PrivateReducedCertificateStudy", {
-      description: "Uncommitted original-source certificate graph; no unique attachment or public ownership.",
-    })
-  )
-) {}
-const PrivateReducedCertificateResult = S.TaggedUnion({
-  certified: { study: PrivateReducedCertificateStudy },
-  declined: { phase: S.NonEmptyString, remainingWork: S.Int },
-}).pipe(
-  $I.annoteSchema("PrivateReducedCertificateResult", {
-    description: "Private source-certificate outcome, without public admission.",
-  })
-);
-type PrivateReducedCertificateResult = typeof PrivateReducedCertificateResult.Type;
-
 class RoleCompiler {
-  private readonly allowance: MutableRef.MutableRef<number>;
-  private readonly captureFallback: boolean;
-  private privateFallbackStudy = O.none<PrivateReducedCertificateStudy>();
-  private get remaining(): number {
-    return MutableRef.get(this.allowance);
-  }
-  private set remaining(value: number) {
-    MutableRef.set(this.allowance, value);
-  }
+  private remaining = 262_144;
   private quotes: ReadonlyArray<boolean> = [];
   private brackets = HashSet.empty<number>();
   private predicateIndexes = HashSet.empty<number>();
@@ -2916,22 +2874,16 @@ class RoleCompiler {
   constructor(
     claim: PatentClaim,
     tokens: ReadonlyArray<ClaimLexicalToken>,
-    originalInput: O.Option<ClaimLexicalEvidence> = O.none(),
-    sharedAllowance?: MutableRef.MutableRef<number>,
-    captureFallback = false
+    originalInput: O.Option<ClaimLexicalEvidence> = O.none()
   ) {
     this.claim = claim;
     this.tokens = tokens;
     this.originalInput = originalInput;
-    this.captureFallback = captureFallback;
-    this.allowance =
-      sharedAllowance ??
-      MutableRef.make(
-        262_144 -
-          O.getOrElse(
-            O.map(O.filter(originalInput, ClaimLexicalEvidence.guards.aligned), (input) => input.lexicalWorkConsumed),
-            () => 0
-          )
+    this.remaining =
+      262_144 -
+      O.getOrElse(
+        O.map(O.filter(originalInput, ClaimLexicalEvidence.guards.aligned), (input) => input.lexicalWorkConsumed),
+        () => 0
       );
   }
   private tokenCertificates: Array<ClaimSourceProofRef> = [];
@@ -4638,395 +4590,6 @@ class RoleCompiler {
     (tagAt(this.tokens, index) === "ADJ" || this.regularParticiple(index)) &&
     tagAt(this.tokens, index + 1) === "ADP" &&
     !HashSet.has(this.predicateIndexes, index);
-  private privateCertificateFork = (): O.Option<RoleCompiler> => {
-    // Prepay every native array copy and operational fork before allocation.
-    if (
-      !this.charge(
-        this.certificates.length * 4 +
-          this.tokenCertificates.length * 2 +
-          this.predicates.length * 2 +
-          this.proofs.length * 4 +
-          this.nominals.length * 2 +
-          O.getOrElse(
-            O.map(this.distributiveCandidates, (entries) => entries.length * 2),
-            () => 0
-          ) +
-          96
-      )
-    )
-      return O.none();
-    const fork = new RoleCompiler(this.claim, this.tokens, this.originalInput, this.allowance);
-    fork.certificates.push(...this.certificates);
-    fork.tokenCertificates = A.copy(this.tokenCertificates);
-    fork.predicates = A.copy(this.predicates);
-    fork.nominals = A.copy(this.nominals);
-    fork.distributiveCandidates = O.map(this.distributiveCandidates, (entries) => A.copy(entries));
-    fork.opaqueGroupAt = this.opaqueGroupAt;
-    fork.proofs.push(...this.proofs);
-    // Effect maps/sets and schema facts below are immutable. Writes replace
-    // fork fields; no mutable native array is shared with the parent registry.
-    fork.scopeCertificates = this.scopeCertificates;
-    fork.boundaryCertificates = this.boundaryCertificates;
-    fork.headCertificates = this.headCertificates;
-    fork.operatorCertificates = this.operatorCertificates;
-    fork.tokenPositions = this.tokenPositions;
-    fork.endPositions = this.endPositions;
-    fork.sourceFactsReady = this.sourceFactsReady;
-    fork.quotes = this.quotes;
-    fork.brackets = this.brackets;
-    fork.predicateIndexes = this.predicateIndexes;
-    fork.adjunctIndexes = this.adjunctIndexes;
-    fork.names = this.names;
-    fork.firstAction = this.firstAction;
-    fork.directActionStarts = this.directActionStarts;
-    fork.previousActionObjectEnd = this.previousActionObjectEnd;
-    fork.rightList = this.rightList;
-    fork.rightLabelIndexes = this.rightLabelIndexes;
-    fork.rightActionItems = this.rightActionItems;
-    fork.supported = this.supported;
-    fork.intrinsicFactsProduced = this.intrinsicFactsProduced;
-    fork.distributiveFactsProduced = this.distributiveFactsProduced;
-    return O.some(fork);
-  };
-  private privateNominalMatches = (before: number, parsedEnd: number, end: number): boolean =>
-    this.remaining >= 0 && this.supported && parsedEnd === end && this.nominals.length === before + 1;
-  private privateLocalHead = (start: number, end: number): O.Option<ClaimSourceProofRef> => {
-    if (!this.charge(12) || start < 0 || end <= start || end > this.tokens.length) return O.none();
-    const before = this.nominals.length;
-    const parsedEnd = this.readNominalAt(start);
-    if (!this.privateNominalMatches(before, parsedEnd, end)) return O.none();
-    const nominal = O.getOrThrow(A.last(this.nominals));
-    const first = O.getOrThrow(at(this.tokens, start));
-    const last = O.getOrThrow(at(this.tokens, end - 1));
-    if (nominal.anchor.startChar !== first.anchor.startChar || nominal.anchor.endChar !== last.anchor.endChar)
-      return O.none();
-    return this.certifyHead(nominal);
-  };
-  private privateGovernorSubject = (predicate: ClaimPredicateSpan, index: number): O.Option<ClaimSourceProofRef> => {
-    let before = this.skipAdjuncts(index - 1, -1);
-    if (this.remaining < 0) return O.none();
-    if (HashSet.has(HashSet.make("that", "which"), wordAt(this.tokens, before))) before--;
-    const start = this.reducedStart(before + 1);
-    if (O.isNone(start)) return O.none();
-    const head = this.privateLocalHead(start.value, before + 1);
-    if (O.isNone(head)) return O.none();
-    // The existing seedSubject independently reconstructs the allowed gap and
-    // returns the actual head reference; no governor reservation is an opening.
-    const seeded = this.seedSubject(predicate);
-    return O.exists(seeded, (ref) => ref.ordinal === head.value.ordinal) ? head : O.none();
-  };
-  private privateStudyPrecondition = (start: number, index: number): boolean =>
-    !(
-      !this.charge(this.predicates.length * 4 + 24) ||
-      !this.sourceFactsReady ||
-      O.isNone(this.originalInput) ||
-      this.originalInput.value.status !== "aligned" ||
-      this.originalInput.value.tokens !== this.tokens ||
-      tagAt(this.tokens, index) !== "VERB" ||
-      !this.regularParticiple(index) ||
-      tagAt(this.tokens, start - 1) !== "VERB" ||
-      tagAt(this.tokens, index + 1) !== "ADP"
-    );
-  private privateReducedCertificateStudy = (
-    start: number,
-    index: number,
-    end: number
-  ): PrivateReducedCertificateResult => {
-    const decline = (phase: string): PrivateReducedCertificateResult => ({
-      _tag: "declined",
-      phase,
-      remainingWork: this.remaining,
-    });
-    if (!this.privateStudyPrecondition(start, index)) return decline("precondition");
-    const previous = at(this.tokens, start - 1);
-    if (O.isNone(previous)) return decline("governor-source");
-    const governors = A.filter(
-      this.predicates,
-      (p) => (p.kind === "finite" || p.kind === "gerund") && sourceAnchorEqual(p.anchor, previous.value.anchor)
-    );
-    if (governors.length !== 1) return decline("governor-not-unique");
-    const governor = O.getOrThrow(A.head(governors));
-    const privateCompiler = this.privateCertificateFork();
-    if (O.isNone(privateCompiler)) return decline("private-copy-reserve");
-    const fork = privateCompiler.value;
-    return this.privateStudySeed(fork, governor, start, index, end);
-  };
-  private privateStudySeed = (
-    fork: RoleCompiler,
-    governor: ClaimPredicateSpan,
-    start: number,
-    index: number,
-    end: number
-  ): PrivateReducedCertificateResult => {
-    const decline = (phase: string): PrivateReducedCertificateResult => ({
-      _tag: "declined",
-      phase,
-      remainingWork: this.remaining,
-    });
-    let subject = O.none<ClaimSourceProofRef>();
-    if (governor.kind === "finite") {
-      subject = fork.privateGovernorSubject(governor, start - 1);
-      if (O.isNone(subject)) return decline("subject-head");
-    }
-    const object = fork.privateLocalHead(start, index);
-    if (O.isNone(object)) return decline("object-head");
-    const complement = fork.privateLocalHead(index + 2, end);
-    if (O.isNone(complement)) return decline("complement-head");
-    const operator = fork.certifyOperator(governor);
-    if (O.isNone(operator)) return decline("governor-operator");
-    return this.privateStudyFinish(
-      fork,
-      governor,
-      start,
-      index,
-      end,
-      object.value,
-      complement.value,
-      operator.value,
-      subject
-    );
-  };
-  private privateStudyFinish = (
-    fork: RoleCompiler,
-    governor: ClaimPredicateSpan,
-    start: number,
-    index: number,
-    end: number,
-    object: ClaimSourceProofRef,
-    complement: ClaimSourceProofRef,
-    operator: ClaimSourceProofRef,
-    subject: O.Option<ClaimSourceProofRef>
-  ): PrivateReducedCertificateResult => {
-    const decline = (phase: string): PrivateReducedCertificateResult => ({
-      _tag: "declined",
-      phase,
-      remainingWork: this.remaining,
-    });
-    if (!fork.charge(16)) return decline("scope-reserve");
-    const objectScope = fork.sourceScope(fork.tokenSpan(start, index));
-    const complementScope = fork.sourceScope(fork.tokenSpan(index + 2, end));
-    const governorScope = fork.sourceScope(governor.anchor);
-    if (
-      O.isNone(objectScope) ||
-      O.isNone(complementScope) ||
-      O.isNone(governorScope) ||
-      objectScope.value.ordinal !== complementScope.value.ordinal ||
-      objectScope.value.ordinal !== governorScope.value.ordinal
-    )
-      return decline("scope-join");
-    if (
-      !validateFiniteProofRegistry(
-        fork.claim,
-        fork.tokens,
-        fork.certificates,
-        fork.proofs,
-        fork.charge,
-        fork.originalInput
-      )
-    )
-      return decline("registry-validation");
-    if (!fork.charge(fork.certificates.length * 4 + fork.proofs.length * 4 + 32)) return decline("result-copy-reserve");
-    return {
-      _tag: "certified",
-      study: PrivateReducedCertificateStudy.make({
-        objectHead: object,
-        complementHead: complement,
-        governorOperator: operator,
-        subjectHead: subject,
-        certificates: A.copy(fork.certificates),
-        sourceProofs: A.copy(fork.proofs),
-        originalInput: O.getOrThrow(this.originalInput),
-        remainingWork: this.remaining,
-      }),
-    };
-  };
-  private fallbackCertificate = (study: PrivateReducedCertificateStudy, ref: ClaimSourceProofRef) =>
-    O.filter(
-      A.get(study.certificates, ref.ordinal - 1),
-      (proof) => proof.ordinal === ref.ordinal && finiteProofSlot(proof) === ref.slot
-    );
-  private fallbackHead = (study: PrivateReducedCertificateStudy): O.Option<FiniteHeadProof> =>
-    O.filter(
-      this.fallbackCertificate(study, study.objectHead),
-      (proof): proof is FiniteHeadProof => proof.kind === "head"
-    );
-  private fallbackBoundary = (study: PrivateReducedCertificateStudy, head: FiniteHeadProof) => {
-    const opening = this.fallbackCertificate(study, head.opening);
-    const closure = this.fallbackCertificate(study, head.closure);
-    if (O.isNone(opening) || opening.value.kind !== "opening")
-      return O.none<Extract<ClaimFiniteSourceProof, { readonly kind: "boundary" }>>();
-    if (O.isNone(closure) || closure.value.kind !== "closure")
-      return O.none<Extract<ClaimFiniteSourceProof, { readonly kind: "boundary" }>>();
-    if (opening.value.scope.ordinal !== closure.value.scope.ordinal)
-      return O.none<Extract<ClaimFiniteSourceProof, { readonly kind: "boundary" }>>();
-    const closureScope = closure.value.scope;
-    const scope = this.fallbackCertificate(study, closureScope);
-    if (!O.exists(scope, (proof) => proof.kind === "scope" && proof.role === "body"))
-      return O.none<Extract<ClaimFiniteSourceProof, { readonly kind: "boundary" }>>();
-    return O.filter(
-      O.flatMap(closure.value.boundary, (ref) => this.fallbackCertificate(study, ref)),
-      (proof): proof is Extract<ClaimFiniteSourceProof, { readonly kind: "boundary" }> =>
-        proof.kind === "boundary" && proof.mode === "reduced" && proof.scope.ordinal === closureScope.ordinal
-    );
-  };
-  private fallbackToken = (study: PrivateReducedCertificateStudy, head: FiniteHeadProof): O.Option<FiniteTokenProof> =>
-    O.flatMap(this.fallbackBoundary(study, head), (boundary) =>
-      O.filter(
-        this.fallbackCertificate(study, boundary.token),
-        (proof): proof is FiniteTokenProof =>
-          proof.kind === "token" &&
-          this.regularParticiple(proof.tokenOrdinal - 1) &&
-          O.exists(at(this.tokens, proof.tokenOrdinal - 1), (original) =>
-            sourceAnchorEqual(proof.token.anchor, original.anchor)
-          )
-      )
-    );
-  private fallbackTermMatches = (
-    term: typeof ClaimTerm.Encoded,
-    head: FiniteHeadProof,
-    token: FiniteTokenProof
-  ): boolean =>
-    term.anchor.startChar === head.core.startChar &&
-    term.anchor.endChar === token.token.anchor.endChar &&
-    head.core.endChar < term.anchor.endChar &&
-    term.anchor.quote === Str.slice(term.anchor.startChar, term.anchor.endChar)(this.claim.claimText) &&
-    O.isSome(Str.match(/^\s+$/u)(Str.slice(head.core.endChar, token.token.anchor.startChar)(this.claim.claimText))) &&
-    term.head === normalized(Str.slice(head.head.startChar, token.token.anchor.endChar)(this.claim.claimText));
-  private fallbackOwnerMatches = (owner: typeof ClaimElement.Encoded, term: typeof ClaimTerm.Encoded): boolean =>
-    owner.anchor.startChar <= term.anchor.startChar &&
-    term.anchor.endChar <= owner.anchor.endChar &&
-    owner.anchor.quote === Str.slice(owner.anchor.startChar, owner.anchor.endChar)(this.claim.claimText);
-  private fallbackIdentityMatches = (
-    study: PrivateReducedCertificateStudy,
-    original: Extract<ClaimLexicalEvidence, { readonly status: "aligned" }>
-  ): boolean =>
-    !(
-      original.tokens !== this.tokens ||
-      study.originalInput.status !== "aligned" ||
-      study.originalInput.provider !== original.provider ||
-      study.originalInput.assetDigest !== original.assetDigest ||
-      study.originalInput.lexicalWorkConsumed !== original.lexicalWorkConsumed ||
-      study.originalInput.sourceKey !== original.sourceKey ||
-      study.originalInput.sourceOrdinal !== original.sourceOrdinal ||
-      study.originalInput.qualifiedText !== this.claim.claimText
-    );
-  private fallbackSelection = (
-    elements: ReadonlyArray<typeof ClaimElement.Encoded>,
-    head: FiniteHeadProof,
-    token: FiniteTokenProof
-  ) => {
-    const count = A.reduce(elements, 0, (sum, owner) => sum + owner.terms.length);
-    if (!this.charge(count * 16 + elements.length * 8 + 32)) return O.none();
-    const sourceSize = A.reduce(elements, 0, (sum, owner) => sum + owner.anchor.quote.length + owner.path.length);
-    if (!this.charge(sourceSize * 2 + elements.length * 8)) return O.none();
-    const root = `${this.claim.claimNumber}`;
-    if (
-      !A.every(
-        elements,
-        (owner) =>
-          (owner.path === root || Str.startsWith(`${root}.`)(owner.path)) &&
-          owner.anchor.quote === Str.slice(owner.anchor.startChar, owner.anchor.endChar)(this.claim.claimText)
-      )
-    )
-      return O.none();
-    const mentions = A.flatMap(elements, (owner, elementIndex) =>
-      A.map(owner.terms, (term, termIndex) => ({ owner, term, elementIndex, termIndex }))
-    );
-    const matching = A.filter(mentions, (mention) => mention.term.anchor.startChar === head.core.startChar);
-    if (matching.length !== 1) return O.none();
-    const selected = O.getOrThrow(A.head(matching));
-    if (!this.charge(selected.term.anchor.quote.length * 4 + selected.owner.anchor.quote.length * 2 + 64))
-      return O.none();
-    if (
-      !this.fallbackTermMatches(selected.term, head, token) ||
-      !this.fallbackOwnerMatches(selected.owner, selected.term)
-    )
-      return O.none();
-    if (
-      A.some(
-        mentions,
-        (other) =>
-          other !== selected &&
-          other.term.anchor.startChar < selected.term.anchor.endChar &&
-          selected.term.anchor.startChar < other.term.anchor.endChar
-      )
-    )
-      return O.none();
-    return O.some(selected);
-  };
-  private fallbackReserveRebuild = (elements: ReadonlyArray<typeof ClaimElement.Encoded>): boolean => {
-    // Reserve the downstream local edge rebuild before allocating the refined
-    // input. Its bounded pair scans and source/head copies share this ledger.
-    const count = A.reduce(elements, 0, (sum, owner) => sum + owner.terms.length);
-    const headSize = A.reduce(
-      elements,
-      0,
-      (sum, owner) => sum + A.reduce(owner.terms, 0, (n, term) => n + term.head.length)
-    );
-    const sourceSize = A.reduce(elements, 0, (sum, owner) => sum + owner.anchor.quote.length + owner.path.length);
-    return this.charge(
-      count * count * (elements.length * 4 + 16) +
-        count * headSize * 8 +
-        sourceSize * (count + (this.claim.claimType === "dependent" ? this.claim.claimReferences.length : 0) + 4) +
-        64
-    );
-  };
-  private takeFallbackStudy = (): O.Option<PrivateReducedCertificateStudy> => {
-    const study = this.privateFallbackStudy;
-    this.privateFallbackStudy = O.none();
-    if (O.isNone(study) || O.isNone(this.originalInput) || this.originalInput.value.status !== "aligned")
-      return O.none();
-    if (!this.fallbackIdentityMatches(study.value, this.originalInput.value)) return O.none();
-    if (
-      !validateFiniteProofRegistry(
-        this.claim,
-        this.tokens,
-        study.value.certificates,
-        study.value.sourceProofs,
-        this.charge,
-        this.originalInput
-      )
-    )
-      return O.none();
-    return study;
-  };
-  /** One private capability use; the caller caches the immutable input per claim. */
-  refineFallback = (
-    elements: ReadonlyArray<typeof ClaimElement.Encoded>
-  ): ReadonlyArray<typeof ClaimElement.Encoded> => {
-    const study = this.takeFallbackStudy();
-    if (O.isNone(study)) return elements;
-    const head = this.fallbackHead(study.value);
-    if (O.isNone(head)) return elements;
-    const token = this.fallbackToken(study.value, head.value);
-    if (O.isNone(token) || !this.charge(elements.length * 2 + 8)) return elements;
-    const selection = this.fallbackSelection(elements, head.value, token.value);
-    if (O.isNone(selection) || !this.fallbackReserveRebuild(elements)) return elements;
-    const selected = selection.value;
-    // The positive head/closure proof supplies the core. Neither unknown
-    // attachment alternatives nor a provisional relative frame enter here.
-    return A.map(elements, (owner, elementIndex) =>
-      elementIndex !== selected.elementIndex
-        ? owner
-        : {
-            ...owner,
-            terms: A.map(owner.terms, (term, termIndex) =>
-              termIndex !== selected.termIndex
-                ? term
-                : {
-                    ...term,
-                    anchor: head.value.core,
-                    head: normalized(head.value.head.quote),
-                  }
-            ),
-          }
-    );
-  };
-  private capturePrivateFallback = (start: number, index: number, end: number): void => {
-    if (!this.captureFallback) return;
-    const result = this.privateReducedCertificateStudy(start, index, end);
-    if (result._tag === "certified") this.privateFallbackStudy = O.some(result.study);
-  };
   private reducedAt = (index: number): boolean => {
     const token = O.getOrThrow(at(this.tokens, index));
     if (!this.reducedCandidate(index)) return true;
@@ -5036,10 +4599,7 @@ class RoleCompiler {
     if (O.isNone(end)) return false;
     if (!this.charge(this.predicates.length + 5)) return false;
     const governor = this.reducedGovernor(start.value);
-    if (O.isNone(governor)) {
-      this.capturePrivateFallback(start.value, index, end.value);
-      return false;
-    }
+    if (O.isNone(governor)) return false;
     this.markPredicate(index, index + 1, "adjectival");
     const fields = {
       operator: token.anchor,
@@ -5864,70 +5424,14 @@ class RoleCompiler {
     );
   };
 }
-const roleCompilerFor = (
-  claim: PatentClaim,
-  evidence: ClaimLexicalEvidence,
-  captureFallback = false
-): O.Option<RoleCompiler> => {
+const compileRoles = (claim: PatentClaim, evidence: ClaimLexicalEvidence): O.Option<ClaimClauseRolePlan> => {
   if (evidence.status !== "aligned" || evidence.qualifiedText !== claim.claimText) return O.none();
   if (claim.claimText.length > 32_768 || evidence.tokens.length > 8_192) return O.none();
   // Reserve the initial source/token work before validating any provider span.
   if (evidence.tokens.length * 32 + claim.claimText.length > 262_144 - evidence.lexicalWorkConsumed) return O.none();
   if (!validClaimLexicalTokens(claim.claimText, evidence.tokens)) return O.none();
-  return O.some(new RoleCompiler(claim, evidence.tokens, O.some(evidence), undefined, captureFallback));
+  return new RoleCompiler(claim, evidence.tokens, O.some(evidence)).run();
 };
-const compileRoles = (claim: PatentClaim, evidence: ClaimLexicalEvidence): O.Option<ClaimClauseRolePlan> =>
-  O.flatMap(roleCompilerFor(claim, evidence), (compiler) => compiler.run());
-interface PrivateFallbackCompilation {
-  readonly plan: O.Option<ClaimClauseRolePlan>;
-  readonly refine: <T>(
-    elements: ReadonlyArray<typeof ClaimElement.Encoded>,
-    unchanged: T,
-    rebuild: (elements: ReadonlyArray<typeof ClaimElement.Encoded>) => T
-  ) => T;
-}
-/**
- * Internal source-bound capability for one cached fallback construction.
- *
- * **Example** (Keep public role compilation separate)
- *
- * ```ts
- * console.log(typeof compileClaimClauseRolesForFallback) // function
- * ```
- *
- * @internal
- * @category parsing
- * @since 0.0.0
- */
-const compileRolesForFallback = (claim: PatentClaim, evidence: ClaimLexicalEvidence): PrivateFallbackCompilation => {
-  const compiler = roleCompilerFor(claim, evidence, true);
-  if (O.isNone(compiler)) return { plan: O.none(), refine: (_elements, unchanged) => unchanged };
-  const plan = compiler.value.run();
-  return {
-    plan,
-    refine: (elements, unchanged, rebuild) => {
-      const refined = O.isNone(plan) ? compiler.value.refineFallback(elements) : elements;
-      return refined === elements ? unchanged : rebuild(refined);
-    },
-  };
-};
-/**
- * Internal source-bound fallback capability with a single shared work ledger.
- *
- * **Example** (Keep the capability private to the fallback consumer)
- *
- * ```ts
- * console.log(typeof compileClaimClauseRolesForFallback) // function
- * ```
- *
- * @internal
- * @category parsing
- * @since 0.0.0
- */
-export const compileClaimClauseRolesForFallback: {
-  (evidence: ClaimLexicalEvidence): (claim: PatentClaim) => PrivateFallbackCompilation;
-  (claim: PatentClaim, evidence: ClaimLexicalEvidence): PrivateFallbackCompilation;
-} = dual(2, compileRolesForFallback);
 /**
  * Normalize an anchored nominal's lexical head without inventing source.
  *

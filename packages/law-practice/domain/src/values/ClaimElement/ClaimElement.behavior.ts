@@ -29,7 +29,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { PatentClaim } from "../PatentDocument/PatentDocument.model.ts";
 import { qualifyClaimInput } from "../PatentDocument/PatentDocument.normalizer.ts";
-import { compileClaimClauseRolesForFallback } from "./ClaimClauseRole.behavior.ts";
+import { compileClaimClauseRoles } from "./ClaimClauseRole.behavior.ts";
 import { ClaimBoundRolePlan, ClaimRoleDecomposition } from "./ClaimClauseRole.model.ts";
 import { projectClaimRoleTerms } from "./ClaimClauseRole.projection.ts";
 import { compileClaimSourceElements } from "./ClaimClauseRole.structure.ts";
@@ -2500,8 +2500,6 @@ export const decomposePreparedClaimRoles = Effect.fn("ClaimElement.decomposePrep
     { readonly input: ReturnType<typeof inspectionTreeInput>; readonly opaqueNonDonors: HashSet.HashSet<string> }
   >();
   const plans = A.empty<ClaimBoundRolePlan>();
-  let fallbackCompilations = HashMap.empty<number, ReturnType<typeof compileClaimClauseRolesForFallback>>();
-  let fallbackInputs = HashMap.empty<number, ReturnType<typeof inspectionTreeInput>>();
   const boundedEvidence = boundedSourceEvidence(prepared, evidence);
   for (const qualification of prepared.qualifications) {
     if (!ClaimInputQualification.guards["context-ready"](qualification)) continue;
@@ -2513,15 +2511,8 @@ export const decomposePreparedClaimRoles = Effect.fn("ClaimElement.decomposePrep
         fact.sourceOrdinal === qualification.record.sourceOrdinal &&
         fact.qualifiedText === claim.claimText
     );
-    const compilation = O.map(facts.length === 1 ? A.head(facts) : O.none(), (fact) =>
-      compileClaimClauseRolesForFallback(claim, fact)
-    );
-    const plan = O.flatMap(compilation, (value) => value.plan);
-    O.map(
-      O.filter(compilation, (value) => O.isNone(value.plan)),
-      (value) => {
-        fallbackCompilations = HashMap.set(fallbackCompilations, claim.claimNumber, value);
-      }
+    const plan = O.flatMap(facts.length === 1 ? A.head(facts) : O.none(), (fact) =>
+      compileClaimClauseRoles(claim, fact)
     );
     const structure = O.flatMap(plan, (value) =>
       O.flatMap(A.head(facts), (fact) =>
@@ -2539,29 +2530,11 @@ export const decomposePreparedClaimRoles = Effect.fn("ClaimElement.decomposePrep
       })
     );
   }
-  const construct: typeof inspectionTreeInput = (claim, parts) => {
-    const enhanced = HashMap.get(inputs, claim.claimNumber);
-    if (O.isSome(enhanced)) return enhanced.value.input;
-    const cached = HashMap.get(fallbackInputs, claim.claimNumber);
-    if (O.isSome(cached)) return cached.value;
-    const original = inspectionTreeInput(claim, parts);
-    const compilation = HashMap.get(fallbackCompilations, claim.claimNumber);
-    const refined = O.isSome(compilation)
-      ? compilation.value.refine<ReturnType<typeof inspectionTreeInput>>(original.elements, original, (elements) => {
-          const copied = A.copy(elements);
-          return A.isArrayNonEmpty(copied)
-            ? assembleTree(
-                claim,
-                copied,
-                A.filter(original.edges, (edge) => edge.kind === "part-of")
-              )
-            : original;
-        })
-      : original;
-    fallbackInputs = HashMap.set(fallbackInputs, claim.claimNumber, refined);
-    fallbackCompilations = HashMap.remove(fallbackCompilations, claim.claimNumber);
-    return refined;
-  };
+  const construct: typeof inspectionTreeInput = (claim, parts) =>
+    O.getOrElse(
+      O.map(HashMap.get(inputs, claim.claimNumber), (projected) => projected.input),
+      () => inspectionTreeInput(claim, parts)
+    );
   const enhancedRoots = HashSet.fromIterable(A.map(plans, ({ claimNumber }) => `${claimNumber}`));
   const sourceAbbreviation: typeof isExplicitAbbreviatedHead = (head) => (candidate) =>
     isExplicitAbbreviatedHead(head)(candidate) || isSourcePrefixAbbreviatedHead(head)(candidate);

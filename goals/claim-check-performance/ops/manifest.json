@@ -121,6 +121,7 @@
     "research/runtime-nominal-replay-001.json",
     "research/runtime-parent-replay-001.json",
     "research/runtime-provider-lifetime-admission-001.json",
+    "research/source-certified-fallback-measurement-001.json",
     "research/test_census_components.py",
     "research/test_evaluation_coverage.py",
     "research/test_preservation.py",

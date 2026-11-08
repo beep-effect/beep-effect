@@ -8,18 +8,7 @@
 
 export * from "./Antecedent.policy.ts";
 export * from "./AntecedentFinding.model.ts";
-export {
-  claimCitationIntroducers,
-  claimFiniteSourceProofSlot,
-  clauseNominalHead,
-  compileClaimClauseRoles,
-  readSourceRightParenthesisList,
-  validateClaimCitationWitness,
-  validateClaimFiniteSourceProofs,
-  validateClaimFiniteSourceProofsFromOriginalInput,
-  validateSourceRightLabelActionToken,
-  validClaimLexicalTokens,
-} from "./ClaimClauseRole.behavior.ts";
+export * from "./ClaimClauseRole.behavior.ts";
 export * from "./ClaimClauseRole.model.ts";
 export * from "./ClaimElement.behavior.ts";
 export * from "./ClaimElement.edge.model.ts";
