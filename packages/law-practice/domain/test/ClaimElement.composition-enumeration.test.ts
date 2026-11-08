@@ -33,10 +33,22 @@ const inspect = Effect.fn("CompositionEnumerationTest.inspect")(function* (texts
 describe("closed flat composition enumerations in inspection", () => {
   it.effect("retains a two-object enumeration as a limitation with exact existing mentions", () =>
     Effect.gen(function* () {
-      for (const clause of [
-        "the module includes a bracket and a bushing",
-        "the module includes a bracket (2) and a bushing (3)",
-        "said module further comprises an axle [2a] and a bushing [3]",
+      for (const { clause, determiners, quotes } of [
+        {
+          clause: "the module includes a bracket and a bushing",
+          determiners: ["the", "a", "a"],
+          quotes: ["the module", "a bracket", "a bushing"],
+        },
+        {
+          clause: "the module includes a bracket (2) and a bushing (3)",
+          determiners: ["the", "a", "a"],
+          quotes: ["the module", "a bracket", "a bushing"],
+        },
+        {
+          clause: "said module further comprises an axle [2a] and a bushing [3]",
+          determiners: ["said", "an", "a"],
+          quotes: ["said module", "an axle", "a bushing"],
+        },
       ]) {
         const text = `A fixture comprising a module; ${clause}.`;
         const trees = yield* inspect([text]);
@@ -46,16 +58,12 @@ describe("closed flat composition enumerations in inspection", () => {
         assert.strictEqual(element.anchor.quote, clause);
         assert.deepStrictEqual(
           A.map(element.terms, ({ determiner }) => determiner),
-          [Str.startsWith("said")(clause) ? "said" : "the", Str.includes("an axle")(clause) ? "an" : "a", "a"]
+          determiners
         );
         assert.strictEqual(element.terms.length, 3);
         assert.deepStrictEqual(
           A.map(element.terms, ({ anchor }) => anchor.quote),
-          [
-            Str.startsWith("said")(clause) ? "said module" : "the module",
-            Str.includes("an axle")(clause) ? "an axle" : "a bracket",
-            "a bushing",
-          ]
+          quotes
         );
         for (const term of element.terms) {
           assert.strictEqual(Str.slice(term.anchor.startChar, term.anchor.endChar)(text), term.anchor.quote);

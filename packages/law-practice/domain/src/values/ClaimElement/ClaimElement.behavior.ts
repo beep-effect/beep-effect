@@ -1205,6 +1205,9 @@ const normalizeReferenceGap = flow(
   Str.toLowerCase,
   Str.trim
 );
+const sourceAlignedCompositionSubject = (span: Span, subject: EncodedTerm): boolean =>
+  subject.anchor.startChar === span.start && (subject.determiner === "the" || subject.determiner === "said");
+const indefiniteCompositionObject = (term: EncodedTerm): boolean => term.determiner === "a" || term.determiner === "an";
 const closedCompositionEnumeration = (
   span: Span,
   terms: ReadonlyArray<EncodedTerm>,
@@ -1217,10 +1220,9 @@ const closedCompositionEnumeration = (
       const gap = (from: number, to: number): string =>
         normalizeReferenceGap(Str.slice(from - span.start, to - span.start)(span.text));
       return (
-        subject.anchor.startChar === span.start &&
-        (subject.determiner === "the" || subject.determiner === "said") &&
-        (first.determiner === "a" || first.determiner === "an") &&
-        (second.determiner === "a" || second.determiner === "an") &&
+        sourceAlignedCompositionSubject(span, subject) &&
+        indefiniteCompositionObject(first) &&
+        indefiniteCompositionObject(second) &&
         O.isSome(
           Str.match(/^(?:further )?(?:includes|comprises)$/u)(gap(subject.anchor.endChar, first.anchor.startChar))
         ) &&
