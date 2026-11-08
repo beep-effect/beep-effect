@@ -69,6 +69,20 @@ versioned source belongs to Beep; each target checkout supplies its own rules.
    Beep's Yeet workflow for Beep publication; pushing, mergeability and merging
    are separate states.
 
+## What a worker lane may run
+
+`bun run beep compute profile` detects the `worker` profile from the memory
+ceiling; dankserver's slice resolves to it. On `worker`, only
+`expectation-rewrite`, package-scoped `lint` and `repo-sanity` run locally.
+Every other gate is hosted-only: the scheduler refuses it and
+`yeet final-check` skips it as `compute-profile=worker`. Publish with
+`bun run beep yeet open --body-file <md>`; `yeet publish` redirects to the
+same posture and labels the PR `compute-profile-worker`. Both catalog
+pre-commit hooks are skipped, and the hosted `Catalog Regeneration` job
+rewrites the shards while the PR is a draft. `--force-local` runs a
+hosted-only gate anyway, and the receipt records it. Per-host table:
+`docs/runbooks/agent-pools.md` "Compute profiles".
+
 ## Credentials and recovery
 
 All three worker accounts can read every item in `BEEP_SECRETS` through their

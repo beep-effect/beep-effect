@@ -241,17 +241,21 @@ needed only for the escalation list below.
   on-demand. Never wait on a queued local full proof to publish. One push per
   fully addressed wave, never per file or comment (push-first-publish D1–D11).
 - When local compute is constrained (operator 2026-10-24), push straight to
-  hosted CI instead of queueing: if scheduler admission or a local gate has
-  waited 10 minutes, stop that local run, keep the package-scoped checks that
-  already passed (`quality package-verify`, or lint and check of the touched
-  packages), and run `bun run beep yeet open --body-file <md>` on the
-  committed HEAD. It pushes and opens the draft with `ready-for-heavy`, the
-  provenance footer and the readiness monitor, and runs no local gate. Flip it
-  with `bun run beep yeet ready` at content-final as usual. Hosted CI is the
-  proof; the body file records which local checks ran and which were skipped.
-  Never open a PR with raw `gh pr create` or replace a body with
-  `gh pr edit --body*`: both drop the Yeet provenance footer. Use
-  `bun run beep yeet gh pr body <n> --body-file <md>`, which keeps it.
+  hosted CI instead of queueing. The 10-minute rule is the `workstation`
+  profile's; on the `worker` profile (`bun run beep compute profile`) the
+  scheduler refuses hosted-only gates and `yeet publish` takes the `yeet open`
+  posture, so a worker lane never queues local proof. On a workstation, if
+  scheduler admission or a local gate has waited 10 minutes, stop that local
+  run, keep the package-scoped checks that already passed (`quality
+  package-verify`, or lint and check of the touched packages), and run `bun run
+  beep yeet open --body-file <md>` on the committed HEAD. It pushes and opens
+  the draft with `ready-for-heavy`, the provenance footer and the readiness
+  monitor, and runs no local gate. Flip it with `bun run beep yeet ready` at
+  content-final as usual. Hosted CI is the proof; the body file records which
+  local checks ran and which were skipped. Never open a PR with raw `gh pr
+  create` or replace a body with `gh pr edit --body*`: both drop the Yeet
+  provenance footer. Use `bun run beep yeet gh pr body <n> --body-file <md>`,
+  which keeps it.
 - Draft means only "the owner is still pushing". "Final" means the pushed
   head passed `bun run beep yeet final-check`: the scoped local replay of
   every hosted gate the cheap tier skips (Lint Policy, Lint, Effect

@@ -14,6 +14,7 @@
  */
 import { $PalantiriId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { Freshness } from "./Freshness.ts";
 
@@ -219,14 +220,51 @@ export const PressureSourceInput = S.TaggedUnion({
 export type PressureSourceInput = typeof PressureSourceInput.Type;
 
 /**
- * Available and installed memory, in GiB.
+ * Memory class of the host a reading came from: a full `workstation` or a
+ * sub-envelope `worker` (goal compute-profile-gate-routing).
+ *
+ * **Example** (Recognize the worker profile)
+ *
+ * ```ts
+ * import { HostComputeProfile } from "@beep/palantiri/HostPressure.models"
+ *
+ * console.log(HostComputeProfile.is.worker("worker")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HostComputeProfile = LiteralKit(["workstation", "worker"]).pipe(
+  $I.annoteSchema("HostComputeProfile", {
+    description: "Memory class of the host: a full workstation or a sub-envelope worker.",
+  })
+);
+
+/**
+ * Memory class of the host a reading came from.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HostComputeProfile = typeof HostComputeProfile.Type;
+
+/**
+ * Available and installed memory, in GiB, with the process memory ceiling
+ * and the compute profile it resolves to when the reader knows them.
  *
  * **Example** (Make a memory reading)
  *
  * ```ts
  * import { HostMemoryInput } from "@beep/palantiri/HostPressure.models"
+ * import * as O from "effect/Option"
  *
- * console.log(HostMemoryInput.make({ availableGib: 40, totalGib: 64 }).totalGib) // 64
+ * const reading = HostMemoryInput.make({
+ *   availableGib: 40,
+ *   totalGib: 64,
+ *   ceilingGib: O.some(64),
+ *   computeProfile: O.some("workstation")
+ * })
+ * console.log(reading.totalGib) // 64
  * ```
  *
  * @category models
@@ -236,7 +274,16 @@ export class HostMemoryInput extends S.Opaque<HostMemoryInput, { readonly brand:
   S.Struct({
     availableGib: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
     totalGib: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
-  }).pipe($I.annoteSchema("HostMemoryInput", { description: "Available and installed memory in GiB." }))
+    ceilingGib: S.Finite.check(S.isGreaterThanOrEqualTo(0)).pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    computeProfile: HostComputeProfile.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+  }).pipe(
+    $I.annoteSchema("HostMemoryInput", {
+      description: "Available and installed memory in GiB, with the process ceiling and compute profile when known.",
+    })
+  )
 ) {}
 
 /**
@@ -366,9 +413,15 @@ export class HostMemory extends S.Opaque<HostMemory, { readonly brand: unique sy
   S.TaggedStruct("HostMemory", {
     availableGib: S.Finite,
     totalGib: S.Finite,
+    ceilingGib: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    computeProfile: HostComputeProfile.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     asOf: S.DateTimeUtcFromString,
     freshness: Freshness,
-  }).pipe($I.annoteSchema("HostMemory", { description: "Available and installed memory in GiB." }))
+  }).pipe(
+    $I.annoteSchema("HostMemory", {
+      description: "Available and installed memory in GiB, with the process ceiling and compute profile when known.",
+    })
+  )
 ) {}
 
 /**

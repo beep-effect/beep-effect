@@ -64,4 +64,12 @@ Lane `goals/compute-profile-gate-routing-p1`
 
 Reverse: Revert the P1 commit; P0's probe, routing table and scheduler refusal stand alone.
 
+### P2 hosted regeneration + docs implemented, 2026-11-08
+
+Catalog Regeneration job in check.yml, AGENTS.md amendment, agent-pools Compute profiles section, remote-development-agents and yeet skill updates, Palantiri memory line with ceiling and profile. Evidence: research/2026-11-08-p2-hosted-regeneration.md.
+
+Lane `goals/compute-profile-gate-routing-p2`
+
+Reverse: Revert the P2 commit
+
 <!-- beep:decisions:end -->

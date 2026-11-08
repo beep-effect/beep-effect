@@ -35,7 +35,7 @@ Higher sources outrank lower sources when they conflict.
 - `packages/tooling/tool/cli/src/internal/repo-run/` (ComputeProfile service, MemoryStats ceiling, GateRoute table, QualityScheduler refusal, facts carrying the profile).
 - `packages/tooling/tool/cli/src/commands/Yeet/**` (publish→open posture, final-check auto-skips, ready accepting hosted green), and a NET-NEW profile probe subcommand of the repo CLI (name fixed in P0).
 - `lefthook.yml` (`skip: - run:` on `schema-catalog` and `instrumentation-catalog`).
-- `.github/workflows/check.yml` (draft-only hosted shard regeneration job, relock push pattern).
+- `.github/workflows/catalog-regeneration.yml` (draft-only hosted shard regeneration job keyed on the `compute-profile-worker` label, relock push pattern; moved out of `check.yml` so it fires on `labeled`).
 - `AGENTS.md` Quality Operator, `docs/runbooks/agent-pools.md`, `.claude/skills/remote-development-agents/SKILL.md`, `.claude/skills/yeet/references/gates-and-proof.md`, Palantiri host-pressure parcel.
 
 ## Constraints
@@ -133,6 +133,12 @@ Bun and Node expose no cgroup memory.current, and the packet forbids parsing /sy
 
 Reverse: Drop the clamp so availableGib is MemAvailable again
 
+### Catalog regeneration runs in its own workflow so it fires on the labeled event, 2026-11-08
+
+yeet open pushes the head, creates the PR and then applies compute-profile-worker; check.yml listens to the default pull_request types (opened, synchronize, reopened), so the job would first run on the lane's next push. catalog-regeneration.yml adds labeled; the if guard keeps every other PR a skipped run.
+
+Reverse: Move the regenerate-catalogs job back into check.yml and accept that a single-push worker PR gets no regeneration
+
 ### computeProfile stays out of every proof digest and reuse key, 2026-11-08
 
 ProofInputDigest, ProofLedgerShadowRow and ProofShadowAttemptFacts record computeProfile as evidence beside envProfile, but proofInputKey still hashes only laneId, commandDigest, envProfile, inputDigest and epochDigest, and ProofLedger key equivalence is unchanged. Existing digests and reuse decisions are untouched; documented on ProofInputKeyComponents.
@@ -153,6 +159,22 @@ AdmissionRequest gains gateRoute and forceLocal (defaults none and false). Ticke
 
 Reverse: Add a journal event for worker bypass runs that records forceLocal
 
+### Palantiri carries its own HostComputeProfile literal and optional ceiling and profile keys, 2026-11-08
+
+`@beep/palantiri` is a library that `@beep/repo-cli` depends on, so it cannot import repo-cli's `ComputeProfile`. A two-value `LiteralKit` in the library keeps the dependency direction; the repo-cli value is assignable to it. Both keys are optional with a `None` default so recorded parcel envelopes without them still decode.
+
+Lane `goals/compute-profile-gate-routing-p2`
+
+Reverse: Make the keys required, or move the literal domain into a shared package both import
+
+### The catalog regeneration job keys on the pull_request default event types and the compute-profile-worker label, 2026-11-08
+
+Adding `labeled` to Check's `pull_request` types would re-run every tier-1 lane on each label change, which ruling 51 (time-to-certainty B8) forbids. The job therefore starts with the first push after `yeet open` labels the draft. The label, not a receipt or a body marker, is the trigger because it is visible in the event payload with no extra API call.
+
+Lane `goals/compute-profile-gate-routing-p2`
+
+Reverse: Add labeled to check.yml pull_request types, or delete the regenerate-catalogs job
+
 ### The probe service is a Context.Reference named ComputeProfileProbe, 2026-11-08
 
 ComputeProfile is the LiteralKit; the service is ComputeProfileProbe, a Context.Reference whose default reads the live process (process.constrainedMemory, os.totalmem). A Reference keeps withQualityAdmission and every Yeet caller compiling with no new layer; tests provide makeComputeProfileProbe over an injected ComputeMemorySource instead of patching process. The shape is resolve (default 20 GiB envelope) plus resolveFor(envelopeGib) so a custom AdmissionConfig envelope is honored.
@@ -164,6 +186,14 @@ Reverse: Turn ComputeProfileProbe into a required Context.Service and provide it
 New command group compute with subcommand profile: prints the profile, --is <profile> exits 0 or 1 silently through the CliReportedExit path, --json prints the encoded ComputeProfileResolution (Options as null). An invalid BEEP_COMPUTE_PROFILE exits 2 with ComputeProfileError. No repo scan or git; measured about 0.5 s wall.
 
 Reverse: Rename the compute command group and update the dispatch manifest and Root registration
+
+### The regeneration push uses BEEP_SKILLS_TRAIN_TOKEN with the github.token fallback, 2026-11-08
+
+A push with `github.token` does not start new workflow runs, so hosted CI would never prove the regenerated head. The skills train token already has contents write on this repo and is used on an explicit URL only, never in git config. `github.token` stays as the fallback so a missing secret degrades to an unproven push instead of a failed job.
+
+Lane `goals/compute-profile-gate-routing-p2`
+
+Reverse: Swap the PUSH_TOKEN expression in the regenerate-catalogs job
 
 ### The scheduler derives its compute profile from the MemoryStats ceiling, 2026-11-08
 
