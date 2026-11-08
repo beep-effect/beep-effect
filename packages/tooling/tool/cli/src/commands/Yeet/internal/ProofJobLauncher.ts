@@ -30,7 +30,6 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { GITHUB_TOKEN_REF_ENV } from "../../../internal/github/index.ts";
 import { acquireJournalFileLock, releaseJournalFileLock } from "../../../internal/repo-run/AdmissionJournal.ts";
 import {
   appendProofJobAttemptTerminated,
@@ -50,6 +49,7 @@ import {
   isTerminalProofJobPhase,
   needsProofJobPublication,
   PROOF_JOB_RETENTION_BUDGET,
+  PROOF_JOB_SECRET_REFERENCE_ENV_NAMES,
   PROOF_JOB_SLICE,
   ProofJobCancelOutcome,
   ProofJobCommandEnd,
@@ -311,9 +311,13 @@ const proofJobEnvironment = Effect.fn("ProofJob.environment")(function* () {
     segments: ReadonlyArray<string>
   ): Effect.fn.Return<ReadonlyArray<readonly [string, string]>, YeetCommandError> {
     const name = A.join(segments, "_");
-    // The walk reaches names segment by segment: the GitHub token reference (and its prefixes, such as
-    // `BEEP_GH_TOKEN`) is loaded so `forwardedProofJobEnvironment` can admit an `op://` value.
-    if (isDeniedProofJobEnvName(name) && !Str.startsWith(name)(GITHUB_TOKEN_REF_ENV)) return [];
+    // The walk reaches names segment by segment: the GitHub reference names (and their prefixes, such as
+    // `BEEP_GH_TOKEN`) are loaded so `forwardedProofJobEnvironment` can admit an `op://` value.
+    if (
+      isDeniedProofJobEnvName(name) &&
+      !A.some(PROOF_JOB_SECRET_REFERENCE_ENV_NAMES, (reference) => Str.startsWith(name)(reference))
+    )
+      return [];
     const node = yield* provider
       .load(segments)
       .pipe(Effect.mapError(YeetCommandError.new("Failed to read job environment.")));

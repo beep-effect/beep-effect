@@ -22,7 +22,7 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { GITHUB_TOKEN_REF_ENV } from "../../../internal/github/index.ts";
+import { GITHUB_APP_ENV, GITHUB_TOKEN_REF_ENV } from "../../../internal/github/index.ts";
 import { YeetRunMode } from "./Planner.schemas.ts";
 import { YeetOutcome } from "./Verdict.ts";
 
@@ -261,10 +261,30 @@ const DeniedEnvName = S.String.check(S.isPattern(/^(?:OP_)|TOKEN|SECRET|KEY|PASS
  */
 export const isDeniedProofJobEnvName: (name: string) => boolean = S.is(DeniedEnvName);
 
-// The one credential-shaped name a job may carry: the GitHub token reference. Its value is a
-// 1Password `op://` pointer the job resolves itself, never the token; any other value stays denied.
+/**
+ * The credential-shaped names a detached job may carry: the GitHub token
+ * reference and the GitHub App private-key reference. Their values are
+ * 1Password `op://` pointers the job resolves itself, never the secrets; any
+ * other value under these names stays denied.
+ *
+ * **Example** (List the forwardable reference names)
+ *
+ * ```ts
+ * import { PROOF_JOB_SECRET_REFERENCE_ENV_NAMES } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(PROOF_JOB_SECRET_REFERENCE_ENV_NAMES) // [ "BEEP_GH_TOKEN_REF", "BEEP_GH_APP_KEY_REF" ]
+ * ```
+ *
+ * @category environment
+ * @since 0.0.0
+ */
+export const PROOF_JOB_SECRET_REFERENCE_ENV_NAMES: ReadonlyArray<string> = [
+  GITHUB_TOKEN_REF_ENV,
+  GITHUB_APP_ENV.privateKeyRef,
+];
+
 const isForwardableSecretReference = (name: string, value: string): boolean =>
-  name === GITHUB_TOKEN_REF_ENV && Str.startsWith("op://")(value);
+  A.contains(PROOF_JOB_SECRET_REFERENCE_ENV_NAMES, name) && Str.startsWith("op://")(value);
 
 /**
  * Lifecycle phase of one job record (ruling 36).

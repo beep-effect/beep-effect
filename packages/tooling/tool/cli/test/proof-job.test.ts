@@ -466,6 +466,19 @@ describe("proof job schemas", () => {
       BEEP_GH_TOKEN_REF: "op://vault/item/token",
     });
     expect(Job.forwardedProofJobEnvironment({ BEEP_GH_TOKEN_REF: "ghp_raw_token" })).toEqual({});
+    // The GitHub App's key reference travels with its id and installation, or the job sees a partial App.
+    expect(
+      Job.forwardedProofJobEnvironment({
+        BEEP_GH_APP_ID: "1",
+        BEEP_GH_APP_INSTALLATION_ID: "2",
+        BEEP_GH_APP_KEY_REF: "op://vault/item/private-key",
+      })
+    ).toEqual({
+      BEEP_GH_APP_ID: "1",
+      BEEP_GH_APP_INSTALLATION_ID: "2",
+      BEEP_GH_APP_KEY_REF: "op://vault/item/private-key",
+    });
+    expect(Job.forwardedProofJobEnvironment({ BEEP_GH_APP_KEY_REF: "-----BEGIN PRIVATE KEY-----" })).toEqual({});
   });
 });
 
