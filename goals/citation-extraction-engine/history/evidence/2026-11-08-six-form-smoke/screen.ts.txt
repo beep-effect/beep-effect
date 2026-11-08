@@ -1,0 +1,8 @@
+const root='/home/elpresidank/.cache/beep/citation-extraction-engine/';
+const lane=process.argv[2];
+const cases=await Bun.file(new URL('./cases.json',import.meta.url)).json();
+const t=performance.now();
+const m=await import(root+(lane==='ts'?'eyecite-ts':'eyecite-js')+'/src/index.ts');
+const imported=performance.now();
+const results=cases.map((c:any)=>{const start=performance.now();try{const raw=lane==='ts'?m.extractCitations(c.text):m.getCitations(c.text);return {id:c.id,text:c.text,elapsedMs:performance.now()-start,citations:raw.map((x:any)=>({kind:x.type??x.constructor.name,text:x.matchedText??x.token?.data??null,span:typeof x.span==='function'?x.span():x.span,raw:x}))}}catch(e){return{id:c.id,error:String(e)}}});
+console.log(JSON.stringify({lane,importMs:imported-t,results},null,2));

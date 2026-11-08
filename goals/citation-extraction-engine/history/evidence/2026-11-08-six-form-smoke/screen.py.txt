@@ -1,0 +1,13 @@
+import json,time,pathlib,sys
+start=time.perf_counter()
+from eyecite import get_citations
+imported=time.perf_counter()
+cases=json.loads((pathlib.Path(__file__).parent/'cases.json').read_text())
+out=[]
+for c in cases:
+ t=time.perf_counter()
+ try:
+  raw=get_citations(c['text'])
+  out.append(dict(id=c['id'],text=c['text'],elapsedMs=(time.perf_counter()-t)*1000,citations=[dict(kind=type(x).__name__,text=x.matched_text(),spanCodePoints=x.span(),spanUtf16=[len(c['text'][:i].encode('utf-16-le'))//2 for i in x.span()]) for x in raw]))
+ except Exception as e:out.append(dict(id=c['id'],error=str(e)))
+print(json.dumps(dict(lane='python',importMs=(imported-start)*1000,results=out),indent=2))

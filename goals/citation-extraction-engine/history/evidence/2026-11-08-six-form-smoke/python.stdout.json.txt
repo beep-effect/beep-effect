@@ -1,0 +1,176 @@
+{
+  "lane": "python",
+  "importMs": 223.84865100320894,
+  "results": [
+    {
+      "id": "full",
+      "text": "Roe v. Wade, 410 U.S. 113, 120 (1973).",
+      "elapsedMs": 8.808519000012893,
+      "citations": [
+        {
+          "kind": "FullCaseCitation",
+          "text": "410 U.S. 113",
+          "spanCodePoints": [
+            13,
+            25
+          ],
+          "spanUtf16": [
+            13,
+            25
+          ]
+        }
+      ]
+    },
+    {
+      "id": "short",
+      "text": "See 410 U.S. at 120.",
+      "elapsedMs": 3.025438003533054,
+      "citations": [
+        {
+          "kind": "ShortCaseCitation",
+          "text": "410 U.S. at 120",
+          "spanCodePoints": [
+            4,
+            19
+          ],
+          "spanUtf16": [
+            4,
+            19
+          ]
+        }
+      ]
+    },
+    {
+      "id": "id",
+      "text": "Id. at 120.",
+      "elapsedMs": 0.18555599672254175,
+      "citations": [
+        {
+          "kind": "IdCitation",
+          "text": "Id.",
+          "spanCodePoints": [
+            0,
+            10
+          ],
+          "spanUtf16": [
+            0,
+            10
+          ]
+        }
+      ]
+    },
+    {
+      "id": "supra",
+      "text": "Smith, supra, at 3.",
+      "elapsedMs": 0.872864002303686,
+      "citations": [
+        {
+          "kind": "SupraCitation",
+          "text": "supra,",
+          "spanCodePoints": [
+            7,
+            18
+          ],
+          "spanUtf16": [
+            7,
+            18
+          ]
+        }
+      ]
+    },
+    {
+      "id": "usc",
+      "text": "35 U.S.C. \u00a7 101.",
+      "elapsedMs": 3.44765699992422,
+      "citations": [
+        {
+          "kind": "FullLawCitation",
+          "text": "35 U.S.C. \u00a7 101",
+          "spanCodePoints": [
+            0,
+            15
+          ],
+          "spanUtf16": [
+            0,
+            15
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cfr",
+      "text": "37 C.F.R. \u00a7 1.56.",
+      "elapsedMs": 1.0973690004902892,
+      "citations": [
+        {
+          "kind": "FullLawCitation",
+          "text": "37 C.F.R. \u00a7 1.56",
+          "spanCodePoints": [
+            0,
+            16
+          ],
+          "spanUtf16": [
+            0,
+            16
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unicode",
+      "text": "\ud83d\ude00 See 410 U.S. 113 (1973).",
+      "elapsedMs": 1.5325790009228513,
+      "citations": [
+        {
+          "kind": "FullCaseCitation",
+          "text": "410 U.S. 113",
+          "spanCodePoints": [
+            6,
+            18
+          ],
+          "spanUtf16": [
+            7,
+            19
+          ]
+        }
+      ]
+    },
+    {
+      "id": "negative",
+      "text": "The ordinary document has no legal citation.",
+      "elapsedMs": 0.03478400321910158,
+      "citations": []
+    },
+    {
+      "id": "context",
+      "text": "Roe v. Wade, 410 U.S. 113 (1973). Id. at 120.",
+      "elapsedMs": 0.35143099376000464,
+      "citations": [
+        {
+          "kind": "FullCaseCitation",
+          "text": "410 U.S. 113",
+          "spanCodePoints": [
+            13,
+            25
+          ],
+          "spanUtf16": [
+            13,
+            25
+          ]
+        },
+        {
+          "kind": "IdCitation",
+          "text": "Id.",
+          "spanCodePoints": [
+            34,
+            44
+          ],
+          "spanUtf16": [
+            34,
+            44
+          ]
+        }
+      ]
+    }
+  ]
+}

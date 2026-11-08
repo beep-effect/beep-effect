@@ -1,0 +1,295 @@
+# Citation extraction re-grounding: finite first-pass report
+
+Date: 2026-11-08  
+Status: independent first pass, read-only, no implementation or test execution  
+Decision requested: stop the current exhaustive parity program and authorize, at most, one bounded reduced-product evaluation
+
+## Decision
+
+Stop the current exhaustive eyecite 2.7.6 observable-parity port. Do not continue adding CPython emulation, native workers, donor-extension accounting, or parity fixtures.
+
+Continue only with a smaller citation-grounding product:
+
+1. Preserve the candidate/source verification gate and exact raw anchors.
+2. Run one bounded adapter evaluation over `eyecite-ts@0.34.2`, pinned to commit `34133d03143ea65861f48a5ed0eb32c931581666`.
+3. Limit extraction to full and short case citations, `Id.`, `supra`, 35 U.S.C., and 37 C.F.R. This is the completion scope, not the first slice of exhaustive parity.
+4. Require an independent, human-adjudicated corpus and explicit ambiguity, failure, and performance gates before adoption.
+5. Permit one remediation round. If the adapter still fails, do not resume the native port. Either ship candidate-only grounding or make a separate explicit decision to allow a Python `eyecite` process wrapper.
+
+This changes the original `PORT/REIMPLEMENT NOW` decision. It does not silently permit `eyecite-js`, Python, hosted parsing, or production deployment. The existing prohibition on `eyecite-js` should remain. A Python wrapper is a technically credible fallback only after a separate constraint change.
+
+The strongest counterargument is that the repository has already invested in a working native engine, and Python eyecite is more mature than either TypeScript port. That is correct. The response is not to discard evidence or claim the existing code is worthless. Preserve its useful schemas, fixtures, and focused proofs. Stop treating sunk implementation cost as a reason to extend a 100-minute verification lane and a public contract shaped by Python runtime internals. If Python is operationally acceptable, official eyecite is the better extraction engine to evaluate instead of a young TypeScript dependency.
+
+## Evidence boundary and model record
+
+I read the requested goal, specification, plan, decision history, selected prior research, current public contracts, implementation composition, evidence receipts, and primary project sources. I did not inspect other panels or ADHD output. I ran no installs, test suites, git mutations, production commands, authenticated operations, or paid endpoint calls.
+
+The coordinator reports launch configuration `--model kimi-code/k3.1-pro` and `KIMI_MODEL_THINKING_EFFORT=max`. This is requested/forced CLI configuration evidence, not provider attestation. The earlier `model-effort.md` remains unchanged and records that the runtime itself did not expose an exact resolved model or effort.
+
+Current repository size is from a targeted tracked-file and line count, not a test or build:
+
+- `packages/law-practice/domain/src/values/Citation`: 12 files, 2,100 lines.
+- `packages/law-practice/use-cases/src/CitationEngine`: 13 files, 1,747 lines.
+- `packages/law-practice/server/src/internal/Citation`: 190 files, 35,123 lines.
+- `packages/law-practice/server/src/CitationEngine`: one file, 217 lines.
+- `packages/law-practice/use-cases/test/fixtures/eyecite`: 115 files, 1,401,393 lines.
+
+These counts describe implementation and evidence weight, not correctness or value delivered.
+
+## Why the current goal is no longer a sound product target
+
+### The scope expanded beyond citation grounding
+
+`goals/citation-extraction-engine/GOAL.md:1-5` requires exhaustive observable parity with eyecite 2.7.6. `GOAL.md:26-54` requires every upstream case, every TypeScript export disposition, lawful transforms, closed failures, exhaustive resource proof, and one delivery lifecycle. `GOAL.md:70-72` says to stop rather than weaken that scope.
+
+The specification covers all four public eyecite operations, including arbitrary cleaning/tokenizer behavior and HTML annotation (`goals/citation-extraction-engine/SPEC.md:93-116`). It also requires a disposition for every TypeScript-port behavior (`SPEC.md:118-151`), exact transformation laws (`SPEC.md:263-309`), extensive resource and regex proof (`SPEC.md:344-386`), and full case-level accounting (`SPEC.md:410-445`). Those are research-program requirements, not a minimal grounding product.
+
+The original exploration had already chosen a smaller boundary: verified-span-first (`explorations/citation-grounding-hallucination-guard/DECISIONS.md:296-318`), no hosted parser in v1 (`DECISIONS.md:320-343`), and full/short case, `Id.`, `supra`, 35 U.S.C., and 37 C.F.R. as v1 (`DECISIONS.md:419-435`). The later parity decision superseded that narrow completion scope. The user has now explicitly authorized challenging that expansion.
+
+### The implementation now exposes the parity program's complexity
+
+The current service still exposes `clean`, `extract`, `resolve`, and `annotate` (`packages/law-practice/use-cases/src/CitationEngine/CitationEngine.service.ts:37-52`). Its request model includes list/tuple/generator cleaner containers and Python-inspired `None` distinctions (`CitationEngine.input.ts:47-69,132-161`). Results expose `CitationPythonUnicodeStorage` and live cleaner objects (`CitationEngine.result.ts:10-14,152-183`). The default Layer requires regex, HTML, XML, and diff runtime configuration (`packages/law-practice/server/src/CitationEngine/CitationEngine.layer.ts:142-217`).
+
+Those are not necessary concerns for a caller that wants to know which citation strings occur at which verified source offsets. They also make the current public contract a poor compatibility boundary for a smaller product.
+
+### Verification cost is high and independent product accuracy remains unknown
+
+The plan reports that Test Integration needed about 100 minutes and was moved to 120 minutes, with two deterministic failures still present (`goals/citation-extraction-engine/PLAN.md:1496-1518`). A same-day checkpoint reports 182 complete canonical events and 15,316 unfinished accounting rows (`PLAN.md:1852-1855`). Other same-day checkpoints contain different totals, so these figures demonstrate scale and churn, not a reliable completion percentage.
+
+Focused public-engine evidence is useful but narrow. Seven original documents across eight families passed in 86.89 seconds, while independent expected-group equality and full metadata comparison remained open (`goals/citation-extraction-engine/history/evidence/2026-11-07-public-engine-corpus.md:11-41`). Another replay schedules 130 original tokenizer inputs, but its full hosted result was not established by that receipt (`history/evidence/2026-11-07-canonical-extraction-corpus.md:1-36`). These are differential implementation fixtures. They are not independent measurements of extraction precision, recall, or grounding value.
+
+The right conclusion is not that the engine cannot eventually reach parity. It is that exhaustive parity is the wrong finite commitment for the requested product.
+
+## Primary-source findings
+
+### Official eyecite
+
+Current primary metadata reports eyecite 2.7.8, Production/Stable, BSD-2-Clause, Python >=3.10, and dependencies on courts-db, fast-diff-match-patch, lxml, pyahocorasick, regex, and reporters-db ([`pyproject.toml` at current inspected commit](https://github.com/freelawproject/eyecite/blob/b70a146d20f70b366baf150a1cc9e82229ef5a0d/pyproject.toml#L9-L45), [PyPI JSON](https://pypi.org/pypi/eyecite/json)). The inspected main commit is [`b70a146d20f70b366baf150a1cc9e82229ef5a0d`](https://github.com/freelawproject/eyecite/commit/b70a146d20f70b366baf150a1cc9e82229ef5a0d), dated 2026-10-05. [Repository metadata](https://api.github.com/repos/freelawproject/eyecite) confirms the BSD license and active project.
+
+The previous goal's pinned 2.7.6 baseline was executed and recorded in this repository: 52 official methods passed (`goals/citation-extraction-engine/history/evidence/2026-10-28-source-baselines.md:11-16`). I did not execute 2.7.8.
+
+Assessment: strongest maturity and behavioral coverage. A local Python process wrapper would also provide a natural kill boundary for hostile regex input. Costs are Python packaging and deployment, a serialization contract, Python-code-point to UTF-16 conversion, native dependency management, and an explicit reversal of the no-Python runtime rule. It is the best technical fallback when those costs are acceptable.
+
+The JOSS paper's approximately 10 MB/s figure is an author estimate associated with the Python/Hyperscan path, not a promise for a wrapper or TypeScript port. The same paper warns that extraction and annotation lack worst-case performance guarantees ([JOSS paper](https://www.theoj.org/joss-papers/joss.03617/10.21105.joss.03617.pdf)). No current latency claim is made here.
+
+### eyecite-ts
+
+The inspected package is `eyecite-ts@0.34.2`, MIT, zero runtime dependencies, Node >=22, with ESM and CommonJS exports ([`package.json`](https://github.com/medelman17/eyecite-ts/blob/34133d03143ea65861f48a5ed0eb32c931581666/package.json), [npm registry metadata](https://registry.npmjs.org/eyecite-ts)). Npm reports 87 published versions and a 0.34.2 publication date of 2026-06-16. The repository was created in February 2026; the inspected main commit is [`34133d03143ea65861f48a5ed0eb32c931581666`](https://github.com/medelman17/eyecite-ts/commit/34133d03143ea65861f48a5ed0eb32c931581666), dated 2026-07-04. [Repository metadata](https://api.github.com/repos/medelman17/eyecite-ts) reports six stars, no forks, and 35 open issues. Those are adoption signals, not correctness measures.
+
+The pinned suite previously passed 4,844 tests with 10 skipped and 8 todo in an isolated donor run (`goals/citation-extraction-engine/history/evidence/2026-10-28-source-baselines.md:17-20`). This is useful maturity evidence, but it is not independent accuracy evidence.
+
+Important findings for an adapter:
+
+- It explicitly says it "started as a port and has diverged" and that Python eyecite has broader statute coverage and a more mature ecosystem ([README lines 447-477](https://github.com/medelman17/eyecite-ts/blob/34133d03143ea65861f48a5ed0eb32c931581666/README.md#L447-L477)).
+- It carries clean and original UTF-16-style JavaScript offsets ([`src/types/span.ts` lines 18-26](https://github.com/medelman17/eyecite-ts/blob/34133d03143ea65861f48a5ed0eb32c931581666/src/types/span.ts#L18-L26)). An adapter must still verify every original span against source text.
+- Fuzzy party matching defaults to true ([`DocumentResolver.ts` line 151](https://github.com/medelman17/eyecite-ts/blob/34133d03143ea65861f48a5ed0eb32c931581666/src/resolve/DocumentResolver.ts#L151)). Disable it.
+- Resolution has positional fields, stable IDs, free-form warnings, and heuristic confidence ([`src/resolve/types.ts`](https://github.com/medelman17/eyecite-ts/blob/34133d03143ea65861f48a5ed0eb32c931581666/src/resolve/types.ts)). Use only a validated `resolvedToId`/`resolvedTo` pair as a resolution. Never mistake `antecedentId` fallback chaining for a resolved authority. Drop donor confidence from product truth.
+- Its real-opinion corpus is explicitly a snapshot regression net, "Non-goals: measuring accuracy" ([real-opinion corpus design, sections 1-3](https://github.com/medelman17/eyecite-ts/blob/34133d03143ea65861f48a5ed0eb32c931581666/docs/superpowers/specs/2026-06-07-real-opinion-corpus-design.md)). Do not cite that corpus as proof of recall or correctness.
+- It bundles reporters-db-shaped data and lazy-loads it ([`src/data/reporters.ts`](https://github.com/medelman17/eyecite-ts/blob/34133d03143ea65861f48a5ed0eb32c931581666/src/data/reporters.ts)). The generator embeds `data/reporters.json` into `src/data/reporters.gen.ts` ([`scripts/generate-reporters-data.ts`](https://github.com/medelman17/eyecite-ts/blob/34133d03143ea65861f48a5ed0eb32c931581666/scripts/generate-reporters-data.ts)). Its own license is [MIT](https://github.com/medelman17/eyecite-ts/blob/34133d03143ea65861f48a5ed0eb32c931581666/LICENSE), but adoption must audit and preserve applicable reporters-db BSD notices. "Zero dependencies" does not remove data attribution duties.
+
+Assessment: best candidate for a small TypeScript adapter because it avoids a second runtime and already models the required forms and spans. It is not a drop-in grounding engine and not an eyecite-parity engine. Adoption remains conditional on independent correctness, ambiguity, license, and performance gates.
+
+### eyecite-js
+
+The inspected source is `2.7.6-alpha.28`, BSD-2-Clause, with five HTML/diff runtime dependencies and a Bun engine declaration ([`package.json` lines 3, 26, 74-90](https://github.com/beshkenadze/eyecite-js/blob/53a49f2412da668aaf262e5f92584c2c3781043b/package.json#L3-L90)). Its type declaration build ignores TypeScript failure with `|| true` at line 26. The inspected main commit is [`53a49f2412da668aaf262e5f92584c2c3781043b`](https://github.com/beshkenadze/eyecite-js/commit/53a49f2412da668aaf262e5f92584c2c3781043b), dated 2025-08-21.
+
+The README says "Complete Feature Parity" at lines 59-61 but "Core Python library port (95% complete)" at line 393 ([README](https://github.com/beshkenadze/eyecite-js/blob/53a49f2412da668aaf262e5f92584c2c3781043b/README.md#L59-L61)). Npm `latest` is 2.7.6 with a different `gitHead` (`4d0bd74402d8e63d953a607b5ae5bea454c22d54`), while npm `alpha` and the inspected source are alpha.28 ([npm registry metadata](https://registry.npmjs.org/@beshkenadze%2feyecite)). The pinned suite previously passed 423 tests (`goals/citation-extraction-engine/history/evidence/2026-10-28-source-baselines.md:21-23`). Its license includes both Free Law Project and the TypeScript port author ([LICENSE](https://github.com/beshkenadze/eyecite-js/blob/53a49f2412da668aaf262e5f92584c2c3781043b/LICENSE)).
+
+Assessment: do not adopt. The stale main branch, conflicting completeness statements, Bun-specific declaration, ignored type-build failures, and unclear stable-versus-source provenance create avoidable supply-chain and maintenance risk. Retain it only as a historical differential reference.
+
+### CiteURL
+
+CiteURL 12.0.4 is MIT, Production/Stable, Python, and requires PyYAML ([`setup.py` lines 8-29](https://github.com/raindrum/citeurl/blob/faaf372837dd32b97051c8ce8a32a4cbcbb87eb5/setup.py#L8-L29), [PyPI JSON](https://pypi.org/pypi/citeurl/json), [LICENSE.md](https://github.com/raindrum/citeurl/blob/faaf372837dd32b97051c8ce8a32a4cbcbb87eb5/LICENSE.md)). The inspected main commit is [`faaf372837dd32b97051c8ce8a32a4cbcbb87eb5`](https://github.com/raindrum/citeurl/commit/faaf372837dd32b97051c8ce8a32a4cbcbb87eb5), dated 2026-09-25. Its citation object retains exact match text, source text, match span, and parent ([`citeurl/citation.py` lines 56-60](https://github.com/raindrum/citeurl/blob/faaf372837dd32b97051c8ce8a32a4cbcbb87eb5/citeurl/citation.py#L56-L60)). Its primary product is citation parsing and hyperlink generation across 130-plus U.S. sources ([README](https://github.com/raindrum/citeurl/blob/faaf372837dd32b97051c8ce8a32a4cbcbb87eb5/README.md)).
+
+Assessment: credible if hyperlink generation is the product and Python is accepted. It is not the smallest fit for an Effect-native, typed ambiguity and verified-anchor contract. Do not port its YAML template program merely to reproduce the reduced scope.
+
+### Other alternatives, deliberately bounded
+
+- `unitedstates/citation` is JavaScript and CC0, but its repository's last push was in 2020 and court-opinion support is optional and limited ([repository metadata](https://api.github.com/repos/unitedstates/citation), [README](https://raw.githubusercontent.com/unitedstates/citation/master/README.md)). Not a candidate for the required case and short-form contract.
+- LexNLP is AGPL-3.0 and its repository's last push was in 2024 ([repository metadata](https://api.github.com/repos/LexPredict/lexpredict-lexnlp), [LICENSE](https://raw.githubusercontent.com/LexPredict/lexpredict-lexnlp/master/LICENSE)). Its broader contract-NLP scope and license make it a poor fit here.
+
+This is not an exhaustive survey. No claim is made about candidates not inspected.
+
+## Option comparison
+
+| Option | What it buys | Main cost or risk | Decision |
+|---|---|---|---|
+| Continue custom native parity | Maximum control and use of existing work | Python-runtime emulation, 100-minute verification lane, unresolved independent accuracy, no finite product boundary | Stop |
+| Reduce custom native to six forms | Keeps current implementation and avoids a new dependency | Still inherits complex native code and proves only implementation fixtures; hard to justify over an adapter | Do not choose by default |
+| `eyecite-ts` adapter | TypeScript-only, zero runtime dependencies, required forms and spans | Young project, divergent behavior, fuzzy defaults, heuristic scores, bundled-data notices, unknown independent accuracy | One bounded evaluation |
+| Official eyecite process wrapper | Mature extraction and natural process isolation | Reverses no-Python rule, deployment and serialization burden, native dependencies | Explicit fallback only |
+| `eyecite-js` adoption | Near-source TypeScript port and BSD license | Stale/inconsistent releases, Bun declaration, ignored type errors, five runtime dependencies | Reject |
+| CiteURL wrapper | Stable MIT parser and link generation | Python, different product semantics | Reject for this product |
+| Candidate-only grounding | Smallest trust boundary, no parser recall problem | Does not discover citations automatically | Valid fallback and first deliverable |
+
+## Minimal useful product contract
+
+### Public operations
+
+Keep three operations. Do not expose a public cleaning or annotation operation.
+
+```text
+verifyCandidate(source, quote, optionalSpan)
+  -> Verified(anchor) | NotFound | Ambiguous | Stale | InvalidInput
+
+extractCitations(source, limits)
+  -> { mentions, rejectedCandidates, report }
+
+resolveReferences(source, mentions)
+  -> { decisions }
+```
+
+`verifyCandidate` is the smallest useful product and should ship first. It handles caller/model-supplied candidates without pretending to discover every citation. `extractCitations` adds discovery only after the adoption gates pass. `resolveReferences` means document-local short-form resolution, not external authority lookup.
+
+### Mention shape
+
+Each accepted mention contains:
+
+- document-local `mentionId`;
+- source identity and content version/digest;
+- half-open UTF-16 `startChar`/`endChar` and exact `rawText`;
+- one of the six supported semantic forms, with only source-backed legal fields;
+- optional component anchors when independently verified;
+- finite warnings, without raw-text logging.
+
+Do not include extraction confidence, Python storage, cleaner containers, callback handles, array-index references, persisted `LawPractice.CitationId`, support scores, or good-law flags.
+
+Supported semantics are full case, short case, `Id.`, `supra`, 35 U.S.C., and 37 C.F.R. Plain text is the only extraction input. Unsupported citation families and HTML extraction are out of scope. Parallel/string-citation merging, subsequent history, footnotes, general journal/reference/unknown forms, MPEP, Bluebook rendering, arbitrary cleaners/tokenizers, and custom callbacks are also out of scope.
+
+### Verification and failure semantics
+
+- For any supplied or emitted anchor, require `source.slice(start, end) === rawText` and bind it to the expected source identity and digest.
+- Whitespace and curly-quote normalization may locate a candidate. The emitted quote must always be the exact raw source slice. No case folding or fuzzy verification.
+- A locator that finds multiple occurrences returns `Ambiguous`; it never picks the first. Source drift returns `Stale`. An unverified parser span becomes a rejected candidate with a finite reason, not a verified mention.
+- Operation failures are a small closed union: `InvalidInput`, `SourceChanged`, `LimitExceeded`, and `DependencyUnavailable`. They carry no raw source text.
+- Unsupported, unparsed, and rejected-span candidates are per-candidate data with counts and finite reasons. Processing other candidates may continue. No silent drops.
+- Reference decisions are `Resolved(authorityId)`, `Ambiguous(candidateAuthorityIds)`, or `Unresolved(reason)`, reusing the useful distinction already present in `packages/law-practice/domain/src/values/Citation/Citation.resolution.ts:54-126`.
+- Disable fuzzy party matching. Never turn a warning, positional fallback, similarity score, or confidence value into a resolved authority.
+- Exceeding input or candidate caps returns `LimitExceeded` for the operation. Never truncate a result and call it complete.
+
+### Five concepts that must remain separate
+
+1. **Extraction** finds and parses citation mentions in the supplied document. It does not establish that the cited authority exists.
+2. **Resolution** links a short-form mention to a document-local authority or records ambiguity/non-resolution. It does not fetch or validate an external authority.
+3. **Source text verification** proves that an exact quote occurs at a verified location in a named source artifact. It does not prove that the authority is real or that the quote supports a claim.
+4. **Support/entailment** evaluates whether an anchored authority passage supports, refutes, or leaves uncertain a particular claim in its speaker and legal context. This needs claim/passage evidence and evaluator provenance. Citation signals and parser confidence cannot supply it.
+5. **Good-law status** is time- and jurisdiction-dependent citator information about subsequent treatment. It needs an external, dated source and an `unknown` state. It is never inferred from extraction, resolution, quotation, or support.
+
+The existing research already warns against collapsing argument roles into a citation-level support flag (`goals/citation-extraction-engine/research/2026-07-25-academia-corpus-mining-note.md:78-106`). LegalCiteBench measures closed-book citation recovery and verification behavior, not entailment or good-law status ([paper](https://arxiv.org/abs/2605.10186)). Its poor generation results justify grounding, not a claim that verification solves legal reasoning.
+
+## Independent evaluation and proposed acceptance gates
+
+### Corpus construction
+
+Build one frozen evaluation set before tuning:
+
+- 50 public documents, including court/brief material and public USPTO material with 35 U.S.C. and 37 C.F.R.
+- At least 300 in-scope mentions across the six forms, plus at least 100 hard negatives and near-matches.
+- At least 25 duplicate-locator cases, 20 genuinely ambiguous short-form cases, and orphan `Id.` cases.
+- Court, era, OCR/text-quality, whitespace, Unicode, and document-length strata.
+- Human-labelled raw spans and semantic fields from source documents, not from current-engine output.
+- A second reviewer for all ambiguity examples and at least 20% of the remainder; adjudicate disagreements and report agreement.
+- A document-disjoint final holdout of at least 40% of documents. Check source IDs/hashes against retained donor fixtures where possible. No tuning on the holdout.
+
+Run a manual or independent second-pass recall review over the raw text. A candidate list generated by the implementation cannot define the gold set. Official eyecite and the current native engine may run as diagnostic comparators, never as unquestioned gold.
+
+LegalCiteBench is useful independent task evidence: approximately 24,000 instances from 1,000 real opinions, with closed-book recovery below 7/100 and high misleading-answer rates ([paper](https://arxiv.org/abs/2605.10186), [repository metadata](https://api.github.com/repos/Sijia711/LegalCiteBench)). It is not a span-extraction gold corpus for this contract, and its data/redistribution terms were not established in this pass.
+
+CLERC is relevant to retrieval and generation ([ACL Anthology](https://aclanthology.org/2025.findings-naacl.441/)), but its construction pipeline uses eyecite ([CLERC README](https://raw.githubusercontent.com/bohanhou14/CLERC/main/README.md)). It therefore cannot be the sole independent extraction truth. Its fetched [dataset card](https://huggingface.co/datasets/jhu-clsp/CLERC/raw/main/README.md) has no license field in the displayed front matter. Review data terms before reuse. Do not relabel CLERC retrieval pairs as entailment truth without legal annotation.
+
+### Gates for candidate-only grounding
+
+1. Every `Verified` result reproduces the exact raw slice and expected source identity: 100%.
+2. False acceptance on the hallucinated/near-match verification set: zero.
+3. Duplicate, stale, ambiguous, and absent candidate outcomes: 100% correct on the designed set.
+4. No fuzzy or case-folded acceptance in negative controls.
+
+### Gates for extraction adoption
+
+5. Overall span-level precision >=0.98 and recall >=0.90 on the untouched holdout, with exact denominators and 95% intervals. Full-case recall >=0.95; each smaller family recall >=0.80, with small-sample limitations reported rather than hidden.
+6. Every emitted mention passes raw-slice verification: 100%. Invalid donor spans may only become rejected candidates.
+7. Resolved short-form precision >=0.98, with coverage reported. Every designed ambiguity remains `Ambiguous`; every orphan remains `Unresolved`. No forced resolutions.
+8. All 35 U.S.C. and 37 C.F.R. holdout examples have correct family, title/code, section, and exact span. Other statutes/regulations are explicitly unsupported rather than partially normalized.
+
+### Gates for safety and operation
+
+9. Use a documented Node >=22 runtime and a bounded worker/process for parser execution. A same-thread Effect timeout is not accepted as regex interruption. Proposed product targets are p95 <=2 seconds for 100,000 UTF-16 units and p95 <=20 seconds for one million units on named CI hardware, with memory <=512 MiB. Also retain the existing no-more-than-3.5x median-time increase for two consecutive input doublings as a catastrophic-growth check.
+10. Hard cap one million UTF-16 units and 2,000 emitted candidates per operation, with typed non-partial failure. The adapter's own focused CI lane should finish within five minutes; the 100-minute parity replay is not an acceptance requirement.
+11. Preserve MIT and applicable reporters-db BSD notices, record the exact dependency commit/version and lockfile, and inspect the published artifact. Any unresolved attribution or provenance mismatch blocks adoption.
+12. Standard focused package tests, schema checks, type checks, and documentation checks pass. No claim of eyecite parity, legal correctness, entailment, authority existence, or good-law status appears in product documentation.
+
+These are proposed pilot gates, not measured results. The latency and recall thresholds are product targets to validate, not current claims.
+
+## Salvage plan
+
+### Retain and simplify
+
+- The verified-span/source identity contracts and raw UTF-16 law. `CitationMention` already composes semantic citations with genuine verified anchors and separates structural receipts from runtime proof (`packages/law-practice/domain/src/values/Citation/Citation.mention.ts:190-265`). Preserve that distinction, but expose only fields needed by the new contract.
+- The tagged `Resolved | Ambiguous | Unresolved` model (`Citation.resolution.ts:54-126`). Remove or ignore heuristic confidence unless a later calibrated assertion needs it.
+- The useful semantic subsets from the current case/law schemas. Do not retain Python hash, mutable resource, token, or callback semantics merely because they share files.
+- The closed-error principle in `CitationEngine.errors.ts:26-115`, reduced to the four operation failures above.
+- Selected source-bound fixtures for regression and hostile Unicode/span behavior, with their provenance. The prior baseline receipt is valuable because it records exact pins and donor results (`history/evidence/2026-10-28-source-baselines.md:11-27`).
+- The existing notices discipline in `THIRD_PARTY_NOTICES.md:1-27,89-101,283-344`. Attribution must follow retained code, patterns, data, and fixtures.
+
+### Freeze or retire from the reduced runtime
+
+- CPython dictionary/set/hash emulation, native Unicode storage and `repr`, mutable resource/callback protocols, and retained host-object identity.
+- HTML/XML/diff WASM assets and per-primitive process machinery.
+- Custom cleaner/tokenizer/generator/container protocols and public clean/annotate operations.
+- Bluebook transforms, extension-by-extension donor accounting, exhaustive regex-family qualification, and the full one-million-line fixture gate.
+- The existing public service and Layer as compatibility boundaries. Their native-runtime and Python-storage configuration should not leak into the new adapter.
+
+Do not delete historical evidence. Quarantine the old runtime from new consumers and remove it from the runtime only after the replacement passes, with a fresh consumer scan and attribution review. The old scan in `SCHEMA_DISPOSITION.md:15-33` is not proof of current consumers. Conversely, do not keep the old engine behind a feature flag as a second long-term citation hierarchy.
+
+## Explicit original-constraint changes
+
+| Original constraint | Proposed disposition |
+|---|---|
+| Exhaustive observable parity with eyecite 2.7.6 (`GOAL.md:1-5`) | Replace with the six-form product contract and independent quality gates. Make no parity claim. |
+| `PORT/REIMPLEMENT NOW`, no `eyecite-js` dependency (`DECISIONS.md:239-268`) | Reverse the reimplementation mandate only enough to evaluate `eyecite-ts@0.34.2`. Keep the `eyecite-js` rejection. |
+| No runtime `eyecite-ts`/`eyecite-js` (`SPEC.md:153-159`) | Permit one pinned `eyecite-ts` adapter after gates. No donor API types cross the product boundary. |
+| No Python runtime (`SPEC.md:468-478`) | Retain for the recommended path. A Python wrapper requires a new explicit decision. |
+| Four public operations including clean and annotate (`SPEC.md:93-116`) | Reduce to verify, extract, and document-local reference resolution. Cleaning is internal; annotation is deferred. |
+| Every canonical case and every TypeScript behavior must have a terminal disposition (`SPEC.md:114-151`) | Only adapter-exercised behavior is in scope. Unexercised donor capabilities are excluded by product scope, not individually reimplemented or audited. |
+| Custom callable cleaners/tokenizers and general host protocols | Exclude. No function-valued request fields and no arbitrary host-object emulation. |
+| HTML/XML cleaning, markup references, balancing, and long diffs | Exclude from extraction. Plain text only. |
+| Bluebook transforms and their two-axis laws (`SPEC.md:263-309`) | Remove from this goal. No formatter is required for grounding. |
+| Stable reporter/court identities for every authority | Keep document-local semantic keys and optional unambiguous vocabulary IDs. Unknown/unmapped identities remain data; no global entity-resolution claim. |
+| Exact verified raw UTF-16 anchors and ambiguity as data | Retain unchanged. This is the core product guarantee. |
+| Native worker/CPython fidelity and exhaustive regex-family proof | Replace with one bounded parser worker and product-level scaling/limit gates. Do not reproduce Python runtime internals. |
+| One all-encompassing parity PR and completion lifecycle | Supersede with a short replacement spec and small gated deliverables: candidate gate, adapter evaluation, then adoption or stop. |
+| Existing service and schema migration obligations (`SPEC.md:153-261`) | Treat current public shapes as provisional evidence, not compatibility constraints. Perform a fresh consumer scan before removal. |
+
+The old goal should be marked superseded by a new reduced decision, not completed. Its acceptance checkboxes must not be silently rewritten to look satisfied.
+
+## Stop/continue criteria
+
+Continue candidate-only grounding only if a real consumer will use verified anchors. If no consumer exists, stop; verified-span work already owns the generic mechanics.
+
+Continue the `eyecite-ts` adapter only if all extraction, ambiguity, license, and safety gates pass on the independent holdout. Permit one bounded remediation PR and one re-evaluation. Do not broaden patterns or add fallback heuristics to force recall upward.
+
+Stop the adapter and ship candidate-only grounding if any of these occurs:
+
+- exact source spans cannot be guaranteed;
+- ambiguous cases are silently resolved or positional fallbacks become truth;
+- required recall remains below gate after one remediation;
+- attribution/provenance remains unclear;
+- parser execution cannot be bounded within the stated resource targets;
+- evaluation depends only on upstream or implementation-generated fixtures;
+- the product request expands to entailment, external authority truth, good-law computation, HTML annotation, or exhaustive eyecite parity.
+
+If Python becomes acceptable, evaluate official eyecite 2.7.8 behind the same product schema and independent corpus. Choose it on measured correctness and operational cost, not on language preference. If neither dependency route passes, stop automatic extraction rather than reviving the native parity program. A future custom engine would require a new product case, a finite budget, and evidence that both adoption routes cannot meet the contract.
+
+## Uncertainties
+
+- I did not execute the current native engine, either TypeScript donor, official eyecite 2.7.8, CiteURL, or any benchmark. Green donor results cited above are repository receipts, not fresh independent runs.
+- `eyecite-ts` correctness, resolver ambiguity behavior, published-artifact contents, and performance remain unproven for this product. Its own real-opinion corpus does not measure accuracy.
+- Npm metadata was inspected, but package tarballs were not downloaded or compared with source commits. The `eyecite-js` stable/source mismatch remains unresolved and is one reason to reject it.
+- Reporters-db provenance and notices inside the exact `eyecite-ts` published artifact need a focused license review before adoption.
+- Current production consumers of the existing engine were not exhaustively scanned in this pass.
+- Evaluation dataset licensing and redistribution terms need review before importing LegalCiteBench or CLERC material.
+- No legal opinion is offered on licensing or citation sufficiency. No current accuracy, latency, production readiness, or provider-model attestation is claimed.
+
+## Bottom line
+
+The feasible product is verified citation evidence with conservative short-form resolution, not a Python-runtime clone. Ship candidate verification first. Give `eyecite-ts` one chance to meet a small independent contract. Keep official eyecite as the explicit Python fallback. End the exhaustive native port now, and end automatic extraction if the bounded adoption routes fail.
