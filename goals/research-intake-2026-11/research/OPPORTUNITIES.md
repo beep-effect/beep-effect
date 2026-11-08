@@ -100,3 +100,9 @@ private-archive content.
 - **Would have prevented it:** an append-only receipt journal folded into the
   catalog in batches, and content-addressed history deltas instead of full
   copies.
+
+## Closeout friction (2026-11-07 and 2026-11-08)
+
+- **Goal final merged before readiness.** #2892 and #2912 both merged before an until-ready monitor printed merge-ready on their final head, so `goals completion refresh` returned `unsatisfied` and `unknown`. A merge gate that refuses a packet's declared final PR without a recorded readiness result would have prevented both.
+- **Retire deleted the gating evidence.** #2904's lane was retired before its refresh ran. The verdict and monitor status lived only in that lane's ignored yeet runs directory, so the refresh returned `unknown` (error text: "No head-bound Yeet verdict inferred"). `yeet sweep --retire` refusing while a packet's final PR is unverified, or the verdict moving to the shared receipt store, would have prevented it.
+
