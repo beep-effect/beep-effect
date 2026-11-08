@@ -1825,6 +1825,12 @@ Replay the original four style prefix truth predicates and two counterexample eq
 
 Reverse: Reopen exact bindings on contrary original-source or runtime evidence; retain XML, general protocol and safety/fidelity obligations.
 
+### Recompute corrected-full presentation after actual parsing, 2026-11-08
+
+Replay two original journal/case corrected_citation_full equalities from raw inputs through actual public extraction and the existing renderer. Share actual-model resource adaptation and owner-capturing service setup with page correction; qualify only after both runtimes and the moved-helper page regression pass. Heavy hosted lanes remain queued, not accepted. Keep full scope and all remaining laws, accounting and lifecycle obligations.
+
+Reverse: Reopen exact bindings on contrary original-source or runtime evidence; preserve general presentation, model protocols and all transformation laws.
+
 ### Recompute original annotation workflows from raw input, 2026-11-08
 
 Schedule the remaining 22 original annotation workflows on Bun and Node using exact original cleaner modes, actual verified mention-derived positions, independent expected output and the existing captured annotation callback service. Initial twelve selected tests pass. Final proof accounting advances only exact workflows with matching runtime evidence; full integration, general host protocols, representation/fidelity laws and exhaustive qualification remain open.

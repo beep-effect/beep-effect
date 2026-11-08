@@ -1,27 +1,19 @@
 /** Original parsed page-correction assertions from eyecite 2.7.6, BSD-2-Clause.
  * @internal @packageDocumentation @since 0.0.0
  */
-import {
-  CitationFrozenEditions,
-  makeCitationFrozenEditions,
-} from "@beep/law-practice-server/internal/Citation/FrozenEditions";
-import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
-import {
-  CitationResourceCitationCorrectionInput,
-  makeCitationResourceCorrection,
-} from "@beep/law-practice-server/internal/Citation/ResourceCorrection";
+import { makeCitationResourceCorrection } from "@beep/law-practice-server/internal/Citation/ResourceCorrection";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { readCitationCanonicalCaptures } from "./CitationCanonicalCaptures.fixtures.ts";
-import { makeCitationCanonicalExtractionReplay } from "./CitationCanonicalExtractionRuntime.fixtures.ts";
-import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
+import {
+  installCitationParsedResourceReplay,
+  prepareCitationParsedResource,
+} from "./CitationParsedResource.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
-import type { CitationEngineExtractionResult } from "@beep/law-practice-use-cases/server";
 
 const prefix = "tests.test_ModelsTest.ModelsTest.test_page_correction::tests/test_ModelsTest.py:";
 const Value = S.Struct({ kind: S.tag("value"), value: S.NullOr(S.String) });
@@ -77,34 +69,6 @@ const readRows = Effect.fn("CanonicalPageCorrectionTest.read")(function* () {
   );
 });
 
-type Unicode = Effect.Success<ReturnType<typeof makeCitationPythonUnicode>>;
-const nativeGroup = Effect.fn("CanonicalPageCorrectionTest.group")(function* (
-  unicode: Unicode,
-  value: O.Option<string> | undefined
-) {
-  if (value === undefined) return undefined;
-  if (O.isNone(value)) return null;
-  return (yield* unicode.fromText(value.value)).storage;
-});
-const prepareCorrection = Effect.fn("CanonicalPageCorrectionTest.prepare")(function* (
-  unicode: Unicode,
-  actual: CitationEngineExtractionResult
-) {
-  const citation = A.getUnsafe(actual.citations, 0);
-  const mention = A.getUnsafe(actual.document.mentions, 0);
-  const anchor = mention.anchor.anchor;
-  const matched = yield* unicode.fromText(Str.slice(anchor.startChar, anchor.endChar)(actual.source.source.sourceText));
-  const reporter = yield* nativeGroup(unicode, citation.components.reporter);
-  const page = yield* nativeGroup(unicode, citation.components.page);
-  const editionGuess = "publication" in citation ? O.getOrNull(citation.publication.selectedEdition) : null;
-  return CitationResourceCitationCorrectionInput.make({
-    ...(reporter === undefined ? {} : { reporter }),
-    ...(page === undefined ? {} : { page }),
-    editionGuess,
-    matchedText: matched.storage,
-  });
-});
-
 /** Recompute parsing and the original correction methods with actual model data.
  * Frozen edition lookup consumes the actual selected reference; no observed
  * corrected string or normalized original model is supplied as correction input.
@@ -114,16 +78,14 @@ export const replayCitationCanonicalPageCorrection = Effect.fn("CanonicalPageCor
   kind: CitationNativeRuntimeKind
 ) {
   const rows = yield* readRows();
-  const replay = yield* makeCitationCanonicalExtractionReplay(kind);
-  const { bundle } = yield* loadCitationFrozenEditionFixtures();
-  const owner = yield* makeCitationFrozenEditions(bundle);
-  const correction = yield* makeCitationResourceCorrection(replay.limits).pipe(
-    Effect.provideService(CitationFrozenEditions, owner)
-  );
-  const unicode = yield* makeCitationPythonUnicode(replay.limits);
+  const {
+    replay,
+    unicode,
+    service: correction,
+  } = yield* installCitationParsedResourceReplay(kind, makeCitationResourceCorrection);
   for (const row of rows) {
     const actual = yield* replay.extract(row.raw, "plain", row.models, row.id, null);
-    const input = yield* prepareCorrection(unicode, actual);
+    const input = yield* prepareCitationParsedResource(unicode, actual);
     const corrected = yield* correction.citation(input);
     const correctedText = yield* unicode.fromStorage(corrected);
     const correctedPage = yield* correction.page(input);
