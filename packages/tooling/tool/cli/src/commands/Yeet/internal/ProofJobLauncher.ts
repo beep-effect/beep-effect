@@ -49,6 +49,7 @@ import {
   isTerminalProofJobPhase,
   needsProofJobPublication,
   PROOF_JOB_RETENTION_BUDGET,
+  PROOF_JOB_SECRET_REFERENCE_ENV_NAMES,
   PROOF_JOB_SLICE,
   ProofJobCancelOutcome,
   ProofJobCommandEnd,
@@ -310,7 +311,13 @@ const proofJobEnvironment = Effect.fn("ProofJob.environment")(function* () {
     segments: ReadonlyArray<string>
   ): Effect.fn.Return<ReadonlyArray<readonly [string, string]>, YeetCommandError> {
     const name = A.join(segments, "_");
-    if (isDeniedProofJobEnvName(name)) return [];
+    // The walk reaches names segment by segment: the GitHub reference names (and their prefixes, such as
+    // `BEEP_GH_TOKEN`) are loaded so `forwardedProofJobEnvironment` can admit an `op://` value.
+    if (
+      isDeniedProofJobEnvName(name) &&
+      !A.some(PROOF_JOB_SECRET_REFERENCE_ENV_NAMES, (reference) => Str.startsWith(name)(reference))
+    )
+      return [];
     const node = yield* provider
       .load(segments)
       .pipe(Effect.mapError(YeetCommandError.new("Failed to read job environment.")));
