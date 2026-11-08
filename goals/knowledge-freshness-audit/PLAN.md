@@ -260,6 +260,14 @@ Reverse: Revert this checkpoint and its two coverage example corrections if clas
 
 Reverse: Restore grouped cases only after they fit the unchanged timeout under package verification
 
+### Make the slow-winner cache fixture publish atomically, 2026-11-07
+
+A local final-check coverage run exposed ProviderCacheCorrupt in the Semantica healthy slow-winner fixture. The same source passed in a parallel run. The fixture wrote JSON directly to its published path, while the production writer stages and atomically renames. A controlled pause in that direct-write window reproduced the same schema decode failure. The fixture now stages its bytes and renames after the write; the retained observer asserts that lookup sees no entry during the incomplete staging write. All 22 provider-cache tests pass, while the direct-write negative control fails. Production cache code, corruption handling, retry schedule, 30-second test deadline and four-second watchdog are unchanged. The original failing run did not capture the partial bytes, so this validates and repairs the fixture race without claiming it is the exclusive cause of every historical failure. The touched fixture now builds its runtime through it.layer and uses the explicitly provided test clock that the bounded retry driver advances. Native test-policy analysis resolves two existing findings (14 to 12) with zero introduced findings and no baseline changes. Full package verification passes after that harness change (lint and audit; app docgen is not applicable), and package coverage passes all 140 tests across 16 files. Hosted proof remains pending. PM and ADHD holds are separate; no cloud admission or spending.
+
+Lane `codex/audit-semantica-winner`
+
+Reverse: Revert the fixture-only commit; production cache behavior is unchanged.
+
 ### Qualify the retired-module guide's deliberate exceptions, 2026-11-07
 
 Parent review revalidated T52 kfa-t52-001 against its frozen file, blob and line hashes. Reject a contradiction inferred solely from the historical fingerprint exemption: the current fingerprint file has no literal retired prefix. Confirm the narrower omission against the actual retirement law: its implementation, model and regression fixtures deliberately retain retired strings and are explicitly allowlisted. Describe the guide as the canonical mapping and include those existing exceptions. Preserve the allowlist, vendor patches, historical fingerprints and dated migration facts. Twenty open PRs had no target overlap. This is bounded documentation reconciliation, not full T52/P4 acceptance or runtime proof; PM and ADHD remain separately held, and no spending is admitted.
