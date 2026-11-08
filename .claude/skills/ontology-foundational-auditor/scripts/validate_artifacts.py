@@ -2860,7 +2860,7 @@ def self_test():
     expect_err("identifier pad fires at any length", check_ic, ic_full, "self:pad_ic")
     b = copy.deepcopy(ic_full)
     b["identity"]["identity_criterion"] = ("sameness is the enrollment relationship "
-                                            "itself; the registrar number is evidence, "
+                                            "itself; the identifier field is evidence, "
                                             "never the criterion")
     b["identity"]["supplies_identity"] = True
     check_ic(b, "self:negation_ic")
