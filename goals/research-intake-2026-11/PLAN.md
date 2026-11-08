@@ -58,4 +58,20 @@ Lane `feat/research-intake-2026-11`
 
 Reverse: If routes lands a different CLI surface, re-plan acquisition against goals/research-library-routes/history/intake-handoff.md
 
+### goals-only re-final after #2892 merged before merge-ready, 2026-11-07
+
+#2892 merged at 2026-11-07T20:46:58Z as 774ac7b7bc while its until-ready readiness monitor still reported not merge-ready, with Heavy Check, Docgen, Doctest and Test Integration pending and no final line posted. `goals completion refresh --slug research-intake-2026-11` therefore returns unsatisfied for #2892. This goals-only re-final PR becomes the final pull request, #2892 becomes supporting, and the gating yeet verdict moves to this branch. The PR is held for `merge-ready: yes` from its own until-ready monitor and merged through the strict merge gate. The three uncovered new files #2892 left on main (Library.mine.ts, Library.mine.runner.ts, Library.mine.text.ts) are covered in the separate unblocks-main research-library coverage PR together with the seven #2868 files.
+
+Reverse: Point proposedCloseout.finalPullRequest back at #2892 and drop this checkpoint
+
+### second goals-only re-final: the #2904 gating verdict was retired with its lane, 2026-11-07
+
+#2904 merged on a merge-ready until-ready monitor (job 08aa6339) at eedcff79d9, but its lane was retired with `yeet sweep --retire` before `goals completion refresh` ran. The gating yeet verdict and the monitor's canonical status.json lived only in that lane's ignored yeet runs directory, so the refresh cannot read a head-bound verdict and reports unknown. This second re-final becomes the final pull request, with #2892 and #2904 as supporting. Its lane stays in place until the refresh prints verified.
+
+Recovery for this re-final: record the full until-ready monitor job UUID outside the PR (the orchestrator thread and the PR's final comment), let that job print merge-ready before the merge, and after the merge run `bun run beep goals completion refresh --slug research-intake-2026-11 --readiness-job <uuid>` from this retained lane until it prints verified.
+
+PR #2904
+
+Reverse: Point proposedCloseout.finalPullRequest back at #2904 and drop this checkpoint
+
 <!-- beep:decisions:end -->

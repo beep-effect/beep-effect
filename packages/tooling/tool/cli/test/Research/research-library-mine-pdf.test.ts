@@ -5,6 +5,7 @@ import {
   LibraryCapture,
   LibraryCatalog,
   LibraryDocument,
+  LibraryError,
   LibraryIntake,
   LibraryIntakeFile,
   LibraryIntakeRoot,
@@ -12,12 +13,14 @@ import {
   LibraryMineOptions,
   LibraryMineReceipt,
   LibraryMineRunner,
+  LibraryMineUnreadError,
   LibraryOccurrence,
   LibraryReadingRecord,
   LibrarySource,
   LibraryTriageRecord,
   loadCatalog,
   mineLibraryRead,
+  mineLibrarySynthesize,
   mineLibraryTriage,
   saveImmutable,
   verifyLibrary,
@@ -35,13 +38,14 @@ import {
   LibraryBoxFileMetadata,
   libraryBoxSha1,
   planLibraryMine,
+  readLibraryMineDerivedTextBody,
 } from "@beep/repo-cli/test/ResearchLibrary";
 import { ShaclValidationRequest, ShaclValidationService } from "@beep/semantic-web/services/shacl-validation";
 import { ShaclValidationServiceLive } from "@beep/shacl";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
-import { assertTrue, strictEqual } from "@effect/vitest/utils";
+import { assertInstanceOf, assertTrue, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
@@ -598,6 +602,122 @@ it.layer(services, { timeout: "30 seconds" })("research library mine PDFs", (it)
       expect([paper.outcome, paper.errorTag]).toStrictEqual(["rejected", "LibraryMineSpanError"]);
       const catalog = yield* loadCatalog(root);
       assertTrue(!A.some(catalog.findings, (finding) => finding.captureId === "capture-paper"));
+    })
+  );
+});
+
+const unavailableTools = (pdf: PdfToolsService) =>
+  PdfTools.of({
+    ...pdf,
+    inspect: Effect.fn("TestPdfTools.unavailable")(() =>
+      Effect.fail(PdfToolsError.make({ reason: "tool-unavailable", message: "fixture extractor unavailable" }))
+    ),
+  });
+
+const synthesisOfPaper = Effect.fn("test.synthesisOfPaper")(function* (root: string, repo: string, id: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const catalog = yield* loadCatalog(root);
+  const sourceId = O.getOrThrow(A.findFirst(catalog.captures, (capture) => capture.id === "capture-paper")).sourceId;
+  const file = path.join(repo, `${id}.json`);
+  const text = yield* encodeJson({
+    id,
+    author: { model: "claude-fable-5-1", effort: "medium", route: "claude-code", argv: ["claude"] },
+    findings: [
+      {
+        sourceId,
+        captureId: "capture-paper",
+        citoRelation: "citesAsEvidence",
+        span: "keep valid time and transaction time apart.",
+        summary: "audit",
+        topicIds: ["goals/demo-memory"],
+      },
+    ],
+  });
+  yield* fs.writeFileString(file, text);
+  return file;
+});
+
+it.layer(services, { timeout: "30 seconds" })("research library mine PDF provenance", (it) => {
+  it.effect("plans a PDF capture of a private source as a private job", () =>
+    Effect.gen(function* () {
+      const { root, shas } = yield* fixture;
+      yield* withCatalog(root, (catalog) =>
+        Effect.succeed(
+          LibraryCatalog.make({
+            ...catalog,
+            sources: A.map(catalog.sources, (source) => LibrarySource.make({ ...source, accessClass: "private" })),
+          })
+        )
+      );
+      const plan = yield* planLibraryMine(root, "2026-11-06");
+      const paper = A.filter(plan, (job) => job.artifact.sha256 === shas.paper);
+      expect(A.map(paper, (job) => [job.kind, job.textSource, job.accessClass])).toStrictEqual([
+        ["source", "pdf", "private"],
+      ]);
+    })
+  );
+
+  it.effect("synthesize binds a PDF capture only through text a tier run derived", () =>
+    Effect.gen(function* () {
+      const { root, repo, shas } = yield* fixture;
+      const file = yield* synthesisOfPaper(root, repo, "t3-paper");
+      const underived = yield* Effect.flip(mineLibrarySynthesize(root, file, O.some(repo), false));
+      assertInstanceOf(underived, LibraryMineUnreadError);
+      strictEqual(underived.message, "Capture capture-paper is a PDF without derived text; run mine triage first.");
+      const pdf = yield* fakePdfTools();
+      yield* deriveLibraryMinePdfText(root, shas.paper).pipe(Effect.provideService(PdfTools, pdf.service));
+      const imported = yield* mineLibrarySynthesize(root, file, O.some(repo), false);
+      expect(imported).toStrictEqual({ findings: 1 });
+      const catalog = yield* loadCatalog(root);
+      const finding = O.getOrThrow(A.findFirst(catalog.findings, (entry) => entry.modelRunId === "mine:t3:t3-paper"));
+      // The span crossed a PDF line break: it resolves to the verbatim slice of the derived text.
+      expect([finding.captureId, finding.span, finding.topicIds]).toStrictEqual([
+        "capture-paper",
+        "keep valid time\nand transaction time apart.",
+        ["goals/demo-memory"],
+      ]);
+    })
+  );
+
+  it.effect("synthesize rejects a PDF capture whose derived text is empty", () =>
+    Effect.gen(function* () {
+      const { root, repo, shas } = yield* fixture;
+      const pdf = yield* fakePdfTools();
+      const receipt = yield* deriveLibraryMinePdfText(root, shas.paper).pipe(
+        Effect.provideService(PdfTools, unavailableTools(pdf.service))
+      );
+      strictEqual(receipt.outcome, "no-text");
+      const file = yield* synthesisOfPaper(root, repo, "t3-scan");
+      const error = yield* Effect.flip(mineLibrarySynthesize(root, file, O.some(repo), false));
+      assertInstanceOf(error, LibraryMineUnreadError);
+      strictEqual(error.message, "Capture capture-paper is a PDF without extractable text.");
+    })
+  );
+
+  it.effect("refuses PDF bytes and derived text that are missing or differ from their digest", () =>
+    Effect.gen(function* () {
+      const { root, fs, path, shas } = yield* fixture;
+      const pdf = yield* fakePdfTools();
+      const object = (sha256: string) => path.join(root, "objects/sha256", sha256);
+      const derive = (sha256: string) =>
+        deriveLibraryMinePdfText(root, sha256).pipe(Effect.provideService(PdfTools, pdf.service));
+      const local = yield* derive(shas.local);
+      strictEqual(local.outcome, "text");
+      yield* fs.remove(object(local.textSha256));
+      yield* fs.writeFileString(object(local.textSha256), "rewritten text");
+      const rewritten = yield* Effect.flip(readLibraryMineDerivedTextBody(root, local));
+      assertInstanceOf(rewritten, LibraryError);
+      strictEqual(rewritten.message, "Derived PDF text differs from its digest.");
+      yield* fs.remove(object(shas.paper));
+      const missing = yield* Effect.flip(derive(shas.paper));
+      strictEqual(missing.message, "Cannot read the PDF to derive its text.");
+      yield* fs.remove(object(shas.scan));
+      yield* fs.writeFileString(object(shas.scan), "%PDF-1.7 replaced");
+      const tampered = yield* Effect.flip(derive(shas.scan));
+      strictEqual(tampered.message, "PDF bytes differ from their digest.");
+      const inspected = yield* Ref.get(pdf.inspected);
+      strictEqual(inspected, 1);
     })
   );
 });

@@ -62,7 +62,7 @@ Grounding facts gathered before the grill (orchestrator, read-only):
   `packages/drivers/gov-legal-mcp`, `packages/law-practice/server` (run by `apps/practice-kg-mcp`),
   and the HTTP sidecar `apps/professional-desktop/server/OntologyMcpTransport.ts`.
 - `packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts` reads `McpServerClient` and the
-  `mcp-session-id` header to build `McpCallerIdentity`; `packages/epistemic/server/src/GovernedTierGate/GovernedTierGate.gate.ts`
+  `mcp-session-id` header to build `McpCallerIdentity`; `packages/execution-authority/server/src/GovernedTierGate/GovernedTierGate.gate.ts`
   keys per-session grant state and hash chains on that session id. The 2026-07-28 adapter creates
   no session id; `McpRequestContext` carries `clientId`, `protocolVersion`, `clientCapabilities`,
   `clientInfo`, `requestMetadata`, `inputResponses`, and `requestState`.
@@ -72,3 +72,10 @@ Grounding facts gathered before the grill (orchestrator, read-only):
 - The nightly research routine tracked #7265 from 2026-08-31 (`research/2026-08-31` through
   `research/2026-09-13` claims), with a standing action to smoke-test `server/discover`,
   `structuredContent`, and MRTR `InputRequired` once a published RC carries the adapter.
+
+## 2026-11-07
+
+- Path rewrite: the 2026-09-16 entry originally cited the governed tier gate in
+  `@beep/epistemic-server`. `goals/execution-authority-slice` P1 (#2853) moved it to
+  `@beep/execution-authority-server`, and the entry's path was updated in place because the
+  knowledge refs gate rejects broken tracked paths in live exploration docs.

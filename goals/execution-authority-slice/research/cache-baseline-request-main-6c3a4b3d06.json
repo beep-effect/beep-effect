@@ -1,0 +1,25 @@
+{
+  "previous": "fa053f6048cc89d72bb850f33e52ea415778773027552da507fa9a25319d1485",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (steward lane for #2853, launched by the orchestrator)",
+    "reason": "Re-record the execution-authority slice move on top of main baseline: five new packages, three dependency-edge drifts and the root turbo.json globalEnv rename and fingerprint manifest list; no command, output, cache flag or qualification change.",
+    "basis": {
+      "path": "goals/execution-authority-slice/research/cache-baseline-review-main-6c3a4b3d06.md",
+      "sha256": "7064e796cfbf19ceafa97a5fbd915fd91203689a1572b7969739fec50a4a4e58"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "subjects": [
+    "//",
+    "@beep/db-admin",
+    "@beep/epistemic-server",
+    "@beep/execution-authority-config",
+    "@beep/execution-authority-domain",
+    "@beep/execution-authority-server",
+    "@beep/execution-authority-tables",
+    "@beep/execution-authority-use-cases",
+    "@beep/professional-desktop"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

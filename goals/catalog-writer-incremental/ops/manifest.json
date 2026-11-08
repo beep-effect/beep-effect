@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "catalog-writer-incremental",
+    "packetId": "goal-packet/v1:82493d71d0b0d3e4f00abd509933f5fdcac410418c5fbd82c7d51450747659b9",
+    "title": "Incremental Catalog Writer",
+    "status": "active",
+    "created": "2026-11-07",
+    "updated": "2026-11-07",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/catalog-writer-incremental",
+  "lifecycle": "active",
+  "mission": "Per-file incremental shard splice for the lefthook catalog writers so a commit costs ~1 GB on any host.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/compute-profile-gate-routing",
+    "graduated": "2026-11-07"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/catalog-writer-incremental/README.md",
+    "goals/catalog-writer-incremental/SPEC.md",
+    "goals/catalog-writer-incremental/PLAN.md",
+    "goals/catalog-writer-incremental/GOAL.md",
+    "goals/catalog-writer-incremental/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/catalog-writer-incremental/GOAL.md"
+    }
+  ],
+  "provides": ["tooling/catalog-writer-incremental"],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/catalog-writer-incremental/GOAL.md)\" -le 4000",
+    "jq . goals/catalog-writer-incremental/ops/manifest.json",
+    "rg -n \"catalog-writer-incremental|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/catalog-writer-incremental",
+    "git diff --check -- goals/catalog-writer-incremental",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

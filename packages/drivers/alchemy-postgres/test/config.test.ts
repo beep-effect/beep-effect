@@ -20,6 +20,7 @@ describe("AlchemyPostgresConfig", () => {
       expect(config.tablePrefix).toBe("alchemy_");
       expect(config.pollMillis).toBe(250);
       expect(config.deliveryBatchSize).toBe(100);
+      expect(config.leaseMillis).toBe(30_000);
       assertNone(config.provenance);
       expect(config.provenanceMappings).toEqual([]);
     })
