@@ -31,35 +31,7 @@
     "goals/lint-policy-oxlint-type-aware/GOAL.md",
     "goals/lint-policy-oxlint-type-aware/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/OPPORTUNITIES.md",
-    "research/REPRODUCE.md",
-    "research/SOURCES.md",
-    "research/baseline-profile.mjs.txt",
-    "research/cache-baseline-request-2026-10-14.json",
-    "research/cache-baseline-review-2026-10-14.md",
-    "research/candidate-profile.json.txt",
-    "research/candidate-projects.json",
-    "research/config-project-owners.json",
-    "research/corpus-parity-resume.json",
-    "research/corpus-parity.json",
-    "research/coverage-inventory.json",
-    "research/coverage-resume.json",
-    "research/coverage-summary.txt",
-    "research/final-verification-summary.json",
-    "research/frozen-runtime-inputs.json",
-    "research/gate-results-resume.json",
-    "research/library-eslint.json",
-    "research/parent-13-eslint.json",
-    "research/results.json",
-    "research/root-fallback.patch.txt",
-    "research/triage-2026-10-14.md",
-    "research/verification-resume.jsonl",
-    "research/verification.jsonl",
-    "research/versions-final.json",
-    "research/xml-entity-decoder-issue.md",
-    "research/xml-parser-parity.mjs.txt"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -128,5 +100,13 @@
       "rationale": "38 uncached shards cover all 5200 typed subjects; local cold4-thread wall60.54s RSS12308852KiB; hosted cold scan 71s wall, 20:06:46Z–20:07:57Z, --threads=4, job116063131680 head9aa802c5bb, no deprecated vendor API usage found; no RSS logged/no OOM; lane F owns memory sizing."
     }
   ],
-  "statusNote": "Lane-owned implementation and all 26 package proofs pass. Full policy completes with inherited JSDoc-only red; orchestrator owns consolidated main repair, publication. Hosted cold scan 71s wall passes <=150s; rollback trigger evaluated and not triggered; no RSS logged/no OOM, lane F owns memory sizing."
+  "statusNote": "Lane-owned implementation and all 26 package proofs pass. Full policy completes with inherited JSDoc-only red; orchestrator owns consolidated main repair, publication. Hosted cold scan 71s wall passes <=150s; rollback trigger evaluated and not triggered; no RSS logged/no OOM, lane F owns memory sizing.",
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/lint-policy-oxlint-type-aware",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "1d675419db35c8874d9d73069cb2ae11ff4dd4a7",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }

@@ -1672,13 +1672,13 @@ export const EffectVitestPrimitiveGraphPath = "standards/effect-vitest.primitive
  * ```ts
  * import { EffectVitestCensusPath } from "@beep/repo-cli/commands/Lint"
  *
- * console.log(EffectVitestCensusPath) // "goals/effect-vitest-canon/ops/inventory/test-files.json"
+ * console.log(EffectVitestCensusPath) // "standards/effect-vitest.census.json"
  * ```
  *
  * @category configuration
  * @since 0.0.0
  */
-export const EffectVitestCensusPath = "goals/effect-vitest-canon/ops/inventory/test-files.json";
+export const EffectVitestCensusPath = "standards/effect-vitest.census.json";
 
 const EffectVitestTestFilePath = S.String.check(
   S.isPattern(/\.(?:test|spec)\.(?:ts|tsx|js|jsx|mts|cts|mjs|cjs)$/u)

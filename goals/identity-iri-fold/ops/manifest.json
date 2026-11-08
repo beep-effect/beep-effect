@@ -40,10 +40,6 @@
     "explorations/identity-as-iri/MAP.md",
     "explorations/identity-as-iri/DECISIONS.md"
   ],
-  "researchReports": [
-    "research/2026-07-25-academia-corpus-mining-note.md",
-    "research/SOURCES.md"
-  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -93,5 +89,13 @@
     "../../explorations/identity-as-iri/research/20-repo-mining-synthesis.md",
     "../../explorations/identity-as-iri/research/21-synthesis-adversarial-review.md",
     "../../explorations/identity-as-iri/research/SOURCES.md"
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/identity-iri-fold",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "0490e61c1381e3e285ef097948b70f10c9fe8351",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }

@@ -41,19 +41,7 @@
     "goals/lab-apps-lifecycle/GOAL.md",
     "goals/lab-apps-lifecycle/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/01-create-package-anatomy.md",
-    "research/02-registration-blast-radius.md",
-    "research/03-apps-anatomy-variants.md",
-    "research/04-governance-gates.md",
-    "research/05-deletion-prior-art.md",
-    "research/06-goals-packet-conventions.md",
-    "research/10-p0-census-ratification.md",
-    "research/11-registration-geometry-design.md",
-    "research/12-p0-gate-scoping-ratified.md",
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -118,5 +106,13 @@
     "The same blocker repeats after reasonable investigation."
   ],
   "mergedPullRequest": 756,
-  "researchReferences": ["goals/speed-loop/research/r3-package-deletions.md"]
+  "researchReferences": ["goals/speed-loop/research/r3-package-deletions.md"],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/lab-apps-lifecycle",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "12bae7b4c4bef57bb59a079773911a0742e33d20",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }

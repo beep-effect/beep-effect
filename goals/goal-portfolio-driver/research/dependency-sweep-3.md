@@ -57,14 +57,14 @@
 ## `gov-legal-mcp`
 
 - **Slug:** `gov-legal-mcp`
-- **Remaining phases:** P0 Contract and naming audit, P1 Implement thin host, P2 Verify, and P3 Close, all pending ([PLAN.md](../../gov-legal-mcp/PLAN.md#L7-L14)).
-- **Proposed PR units (3):** (1) P0 live-export/auth/naming/collision contract; (2) P1 bounded read-only stdio host and deterministic collision-report implementation; (3) P2 regeneration/auth/schema/span proof plus P3 closeout/mergeability ([PLAN.md](../../gov-legal-mcp/PLAN.md#L11-L14)).
-- **Frontend:** no. The only new target is `packages/drivers/gov-legal-mcp`, consuming existing driver/kit/transport exports; no `apps/**`, `packages/**/ui/**`, or `.tsx` surface is named ([SPEC.md](../../gov-legal-mcp/SPEC.md#L39-L46)).
+- **Remaining phases:** P0 Contract and naming audit, P1 Implement thin host, P2 Verify, and P3 Close, all pending ([PLAN.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/gov-legal-mcp/PLAN.md#L7-L14)).
+- **Proposed PR units (3):** (1) P0 live-export/auth/naming/collision contract; (2) P1 bounded read-only stdio host and deterministic collision-report implementation; (3) P2 regeneration/auth/schema/span proof plus P3 closeout/mergeability ([PLAN.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/gov-legal-mcp/PLAN.md#L11-L14)).
+- **Frontend:** no. The only new target is `packages/drivers/gov-legal-mcp`, consuming existing driver/kit/transport exports; no `apps/**`, `packages/**/ui/**`, or `.tsx` surface is named ([SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/gov-legal-mcp/SPEC.md#L39-L46)).
 - **dependsOn:** `gov-legal-data-driver-codegen`, `mcp-kit`.
 
   > “\"dependencies\": [\"goals/gov-legal-data-driver-codegen\", \"goals/mcp-kit\"]” ([ops/manifest.json](../../gov-legal-mcp/ops/manifest.json#L21-L22)).
 
-- **Special execution notes:** Use live public exports during P0, not the exploration snapshot ([PLAN.md](../../gov-legal-mcp/PLAN.md#L23-L28)). This is an offline-tested stdio host: eCFR is keyless, GovInfo is a hard gate that disappears without its optional secret, and tests inject configuration without real credentials ([SPEC.md](../../gov-legal-mcp/SPEC.md#L50-L72)). Stop if a proven driver lacks a stable public operation surface, collision safety becomes unstable/order-dependent, scope expands into delivery/write persistence/general generation, or installed MCP contracts invalidate the shipped kit conventions ([SPEC.md](../../gov-legal-mcp/SPEC.md#L101-L109)).
+- **Special execution notes:** Use live public exports during P0, not the exploration snapshot ([PLAN.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/gov-legal-mcp/PLAN.md#L23-L28)). This is an offline-tested stdio host: eCFR is keyless, GovInfo is a hard gate that disappears without its optional secret, and tests inject configuration without real credentials ([SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/gov-legal-mcp/SPEC.md#L50-L72)). Stop if a proven driver lacks a stable public operation surface, collision safety becomes unstable/order-dependent, scope expands into delivery/write persistence/general generation, or installed MCP contracts invalidate the shipped kit conventions ([SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/gov-legal-mcp/SPEC.md#L101-L109)).
 
 ## Summary
 

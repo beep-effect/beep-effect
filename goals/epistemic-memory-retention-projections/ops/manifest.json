@@ -39,7 +39,7 @@
     "explorations/agent-memory-tiers-bitemporal-edges/MAP.md",
     "explorations/agent-memory-tiers-bitemporal-edges/DECISIONS.md"
   ],
-  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -92,5 +92,13 @@
     "../../explorations/agent-memory-tiers-bitemporal-edges/research/SOURCES.md",
     "../../explorations/agent-memory-tiers-bitemporal-edges/research/memory-tier-decay-and-eviction.md",
     "../../explorations/agent-memory-tiers-bitemporal-edges/research/rrf-retrieval-layer-consumption.md"
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/epistemic-memory-retention-projections",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "4fdb8587e83bfabb90c48d7526f1827eb1bab929",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }

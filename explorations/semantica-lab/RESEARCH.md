@@ -22,7 +22,7 @@ lifecycle, typed inference explanations, declarative pipeline DAG).
 ### beep-effect labs doctrine ([`research/grounding-beep-labs.md`](./research/grounding-beep-labs.md))
 
 Lab creation is `bun run beep create-package semantica --type app --app-kind tauri --lab`
-(never mkdir); doctrine `standards/architecture/15-lab-apps.md` + `goals/lab-apps-lifecycle/SPEC.md`
+(never mkdir); doctrine `standards/architecture/15-lab-apps.md` + [goals/lab-apps-lifecycle/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/lab-apps-lifecycle/SPEC.md)
 (D1–D14; `semantica` is a named first-wave source in `research/SOURCES.md:37` there). Labs obey
 full code law, skip ceremony, zero root-config churn, promotion = extraction + doctor-clean
 deletion. Tauri precedent: `apps/professional-desktop` (Rust shell + compiled Bun sidecar

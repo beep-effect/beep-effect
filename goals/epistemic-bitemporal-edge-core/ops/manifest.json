@@ -38,11 +38,6 @@
     "explorations/agent-memory-tiers-bitemporal-edges/MAP.md",
     "explorations/agent-memory-tiers-bitemporal-edges/DECISIONS.md"
   ],
-  "researchReports": [
-    "research/2026-07-25-academia-corpus-mining-note.md",
-    "research/2026-08-17-academia-wave2-reentry.md",
-    "research/SOURCES.md"
-  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -92,5 +87,13 @@
     "The implementation would enter a non-goal, add a donor runtime dependency, or weaken the product-authority/operator-memory boundary.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/epistemic-bitemporal-edge-core",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "075128ebcf32d09c1a85606d3edb3f87b5ad940a",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }
