@@ -34,6 +34,7 @@ const lexicon = HashMap.fromIterable<string, string>([
   ["including", "VERB"],
   ["detects", "VERB"],
   ["stores", "VERB"],
+  ["supplies", "VERB"],
   ["reaches", "VERB"],
   ["echo", "VERB"],
   ["erasing", "VERB"],
@@ -206,6 +207,32 @@ describe("part-of-speech boundary rules", () => {
   );
 });
 
+describe("part-of-speech element kinds", () => {
+  const kindOf = (tree: ClaimElementTree, quote: string) =>
+    O.map(
+      A.findFirst(tree.elements, ({ anchor }) => anchor.quote === quote),
+      ({ kind }) => kind
+    );
+
+  it.effect("classifies an element with a tagged finite verb as functional", () =>
+    Effect.gen(function* () {
+      const tree = yield* treeOf(refused("the module supplies power"), true);
+      const evidenceFree = yield* treeOf(refused("the module supplies power"), false);
+      assert.deepStrictEqual(kindOf(tree, "the module supplies power"), O.some("functional-relation"));
+      assert.deepStrictEqual(kindOf(evidenceFree, "the module supplies power"), O.some("limitation"));
+    })
+  );
+
+  it.effect("keeps a noun phrase with a participial modifier or a mistagged compound as a limitation", () =>
+    Effect.gen(function* () {
+      const participial = yield* treeOf(refused("an erasing plate"), true);
+      const compound = yield* treeOf(refused("a pulse echo signal"), true);
+      assert.deepStrictEqual(kindOf(participial, "an erasing plate"), O.some("limitation"));
+      assert.deepStrictEqual(kindOf(compound, "a pulse echo signal"), O.some("limitation"));
+    })
+  );
+});
+
 describe("parallel coordinate fallback elements", () => {
   it.effect("splits parallel items but not an inner list or an absolute clause", () =>
     Effect.gen(function* () {
@@ -223,6 +250,66 @@ describe("parallel coordinate fallback elements", () => {
       const tree = yield* treeOf(refused("removing a plate, drilling a hole"), true);
       assert.deepStrictEqual(spansOf(tree), ["removing a plate", "drilling a hole", "stores the signal"]);
       assert.strictEqual(O.getOrThrow(A.get(tree.elements, 1)).kind, "functional-relation");
+    })
+  );
+
+  it.effect("nests a composed list of three or more items under its subject", () =>
+    Effect.gen(function* () {
+      const text = refused("the rod comprises a plate, a cover (2), and a base");
+      const tree = yield* treeOf(text, true);
+      const kindOf = (quote: string) =>
+        O.map(
+          A.findFirst(tree.elements, ({ anchor }) => anchor.quote === quote),
+          ({ kind }) => kind
+        );
+      assert.deepStrictEqual(spansOf(tree), [
+        "the rod comprises a plate, a cover (2), and a base",
+        "a plate",
+        "a cover (2)",
+        "a base",
+        "stores the signal",
+      ]);
+      assert.deepStrictEqual(kindOf("the rod comprises a plate, a cover (2), and a base"), O.some("limitation"));
+      const edges = A.filter(tree.edges, ({ kind }) => kind === "part-of");
+      assert.deepStrictEqual(
+        A.map(edges, (edge) => (edge.kind === "part-of" ? edge.parent : "")),
+        ["1", "1.a", "1.a", "1.a", "1"]
+      );
+    })
+  );
+
+  it.effect("does not split list items at a comma inside parentheses", () =>
+    Effect.gen(function* () {
+      const tree = yield* treeOf(refused("the rod comprises a plate (a tab, a pin), a cover, and a base"), true);
+      assert.deepStrictEqual(A.drop(spansOf(tree), 1), [
+        "a plate (a tab, a pin)",
+        "a cover",
+        "a base",
+        "stores the signal",
+      ]);
+    })
+  );
+
+  it.effect("keeps a two-object composition flat and does not nest without evidence", () =>
+    Effect.gen(function* () {
+      const twoObjects = refused("the rod comprises a plate and a cover");
+      const threeObjects = refused("the rod comprises a plate, a cover, and a base");
+      const flat = yield* treeOf(twoObjects, true);
+      const evidenceFree = yield* treeOf(threeObjects, false);
+      assert.deepStrictEqual(spansOf(flat), ["the rod comprises a plate and a cover", "stores the signal"]);
+      assert.deepStrictEqual(spansOf(evidenceFree), [
+        "the rod comprises a plate, a cover, and a base",
+        "stores the signal",
+      ]);
+    })
+  );
+
+  it.effect("does not nest when the subject holds a comma or an item lacks a determiner", () =>
+    Effect.gen(function* () {
+      const commaSubject = yield* treeOf(refused("the rod, as built, comprises a plate, a cover, and a base"), true);
+      const bareItem = yield* treeOf(refused("the rod comprises a plate, covers, and a base"), true);
+      assert.isFalse(A.contains(spansOf(commaSubject), "a cover"));
+      assert.isFalse(A.contains(spansOf(bareItem), "a plate"));
     })
   );
 

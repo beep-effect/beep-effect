@@ -1983,12 +1983,79 @@ const scopedElementOf =
         }
       : element;
   };
+const compositionVerbPattern =
+  /\b(?:further\s+)?(?:comprises|comprise|comprising|includes|include|including|has|have|having)\s+(?=(?:an?|at least one|one or more)\s)/giu;
+const enumerationItemPattern = /^(?:and\s+)?(?:an?|at least one|one or more)\s/iu;
+const enumerationMarkPattern =
+  /[()[\]]|,\s+and\s+(?=(?:an?|at least one|one or more)\s)|,\s+(?=(?:an?|at least one|one or more)\s)|\s+and\s+(?=(?:an?|at least one|one or more)\s)/giu;
+// An item boundary is a top-level comma, or "and", directly before a determiner-led item.
+const enumerationItems = (list: Span): ReadonlyArray<Span> => {
+  const split = A.reduce(
+    matchesIn(enumerationMarkPattern)(list),
+    { depth: 0, from: 0, items: A.empty<Span>() },
+    (state, mark) => {
+      if (mark.text === "(" || mark.text === "[") return { ...state, depth: state.depth + 1 };
+      if (mark.text === ")" || mark.text === "]") return { ...state, depth: state.depth - 1 };
+      if (state.depth > 0) return state;
+      const at = mark.start - list.start;
+      return {
+        ...state,
+        from: at + Str.length(mark.text),
+        items: A.append(state.items, sliceSpan(list, state.from, at)),
+      };
+    }
+  );
+  return A.append(split.items, sliceSpan(list, split.from));
+};
+// A subject that composes three or more determiner-led items is a container of those items.
+const expandEnumeration = (node: ColonScopeNode): ReadonlyArray<ColonScopeNode> => {
+  const text = node.header.text;
+  if (node.group || O.isSome(node.label)) return [node];
+  return O.getOrElse(
+    O.flatMap(A.head(matchesIn(compositionVerbPattern)(node.header)), (verb) => {
+      const at = verb.start - node.header.start;
+      const listStart = at + Str.length(verb.text);
+      if (Str.includes(",")(Str.slice(0, at)(text))) return O.none();
+      const items = enumerationItems(sliceSpan(node.header, listStart));
+      if (
+        items.length < 3 ||
+        !A.every(items, ({ text: item }) => O.isSome(Str.match(enumerationItemPattern)(`${item} `)))
+      )
+        return O.none();
+      const parent = ColonScopeNode.make({
+        ...node,
+        group: true,
+        header: ColonHeaderSpan.make(sliceSpan(node.header, 0, listStart)),
+      });
+      return O.some(
+        A.prepend(
+          A.map(items, (item, index) =>
+            ColonScopeNode.make({
+              path: `${node.path}.${romanSegment(index + 1)}`,
+              parent: node.path,
+              header: ColonHeaderSpan.make(trimSpan(item)),
+              endChar: item.start + Str.length(item.text),
+              group: false,
+              label: O.none(),
+            })
+          ),
+          parent
+        )
+      );
+    }),
+    () => [node]
+  );
+};
 const inspectionTreeInputFor =
-  (grammar: LexicalGrammar, split: (body: Span) => ReadonlyArray<Span> = splitInspectionBody): typeof treeInput =>
+  (
+    grammar: LexicalGrammar,
+    split: (body: Span) => ReadonlyArray<Span> = splitInspectionBody,
+    expand: (node: ColonScopeNode) => ReadonlyArray<ColonScopeNode> = A.of
+  ): typeof treeInput =>
   (claim, parts) => {
     const root = `${claim.claimNumber}`;
     const segments = A.filter(bodySegments(claim, parts.body, split), (span) => !transparentColonFrame(span));
-    const nodes = colonNodesOf(root, segments);
+    const nodes = A.flatMap(colonNodesOf(root, segments), expand);
     const elements = A.prepend(
       A.map(nodes, scopedElementOf(claim.claimText, root, grammar)),
       elementOf(
@@ -2084,7 +2151,17 @@ const sourcePartOfSpeechGrammar = (facts: ReadonlyArray<ClaimLexicalToken>): Lex
     ...inspectionLexicalGrammar,
     functionalAt: (span) => {
       const tokens = tokensIn(span);
-      return tagged(tokens, 0, HashSet.make("VERB")) && Str.endsWith("ing")(tokenWordAt(tokens, 0));
+      return (
+        (tagged(tokens, 0, HashSet.make("VERB")) && Str.endsWith("ing")(tokenWordAt(tokens, 0))) ||
+        A.some(
+          tokens,
+          (_, index) =>
+            tagged(tokens, index, HashSet.make("VERB", "AUX")) &&
+            !participleAt(tokens, index) &&
+            (!nominalAt(tokens, index + 1) ||
+              (nominalAt(tokens, index - 1) && Str.endsWith("s")(tokenWordAt(tokens, index))))
+        )
+      );
     },
     boundBareHead: (tokens, index, end) => {
       const bounded = boundedEnd(tokens, index, end);
@@ -2598,7 +2675,11 @@ const sourceFallbackTree =
     O.match(HashMap.get(aligned, claim.claimNumber), {
       onNone: () => inspectionTreeInput(claim, parts),
       onSome: (facts) =>
-        inspectionTreeInputFor(sourcePartOfSpeechGrammar(facts), splitParallelInspectionBody)(claim, parts),
+        inspectionTreeInputFor(
+          sourcePartOfSpeechGrammar(facts),
+          splitParallelInspectionBody,
+          expandEnumeration
+        )(claim, parts),
     });
 const boundedSourceEvidence = (
   prepared: PreparedClaimInspection,
