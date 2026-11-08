@@ -24,6 +24,7 @@ import * as Flag from "effect/cli/Flag";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { flow, pipe } from "effect/Function";
 import * as Match from "effect/Match";
 import * as Path from "effect/Path";
@@ -35,6 +36,7 @@ import { runRepoCommandCapture } from "../../internal/repo-run/RepoRun.executor.
 import { WorktreeRemovalServiceLive } from "../Worktree/Worktree.service.ts";
 import { yeetGhCommand } from "./Gh.command.ts";
 import { writeYeetAckReceipt, YeetAckObservedResolution, YeetAckReceipt } from "./internal/Ack.ts";
+import { readYeetComputeProfile } from "./internal/ComputeProfileRead.ts";
 import { runYeetEconomicsCommand } from "./internal/Economics.ts";
 import { runYeetFallowFeedback } from "./internal/FallowFeedback.ts";
 import { YeetFinalCheckOptions } from "./internal/FinalCheck.schemas.ts";
@@ -48,7 +50,14 @@ import { renderYeetPrWaveLine } from "./internal/InboxView.ts";
 import { MergeGateCommandOptions, runYeetMergeGate } from "./internal/MergeGate.ts";
 import { YEET_SETTLE_TIMEOUT_DEFAULT_MILLIS, YeetUntilReadyPolicy } from "./internal/MonitorPolicy.ts";
 import { DEFAULT_YEET_PACKET_DIR } from "./internal/Planner.schemas.ts";
-import { YeetProofTier } from "./internal/Planner.ts";
+import {
+  YeetProofTier,
+  YeetPublishOwnRouteFlags,
+  YeetPublishPostureInput,
+  yeetPublishKeepsOwnRoute,
+  yeetPublishPostureFor,
+  yeetWorkerPublishBody,
+} from "./internal/Planner.ts";
 import {
   rejectYeetUntilEventPairing,
   rejectYeetUntilReadyPairing,
@@ -472,6 +481,12 @@ const publishFlags = {
   stagedOnly: stagedOnlyFlag,
   stateRoot: yeetStateRootFlag,
   summary: summaryFlag,
+  forceLocal: Flag.Boolean("force-local").pipe(
+    Flag.withDefault(false),
+    Flag.withDescription(
+      "On a worker compute profile, keep the local push-first publish instead of the yeet open posture; recorded on the attempt"
+    )
+  ),
 } as const;
 
 // `yeet open` takes no proof, commit or detach flags: it pushes the committed
@@ -623,6 +638,10 @@ class SharedOptions extends S.Opaque<SharedOptions, { readonly brand: unique sym
       S.withConstructorDefault(Effect.succeed("")),
       S.withDecodingDefaultTypeKey(Effect.succeed(""))
     ),
+    forceLocal: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
     bots: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("greptile")),
       S.withDecodingDefaultTypeKey(Effect.succeed("greptile"))
@@ -733,6 +752,7 @@ const runYeetMode = (mode: YeetRunMode, options: SharedOptionsInput & { readonly
       allowStaleBase: sharedOptions.allowStaleBase,
       amend: sharedOptions.amend,
       bodyFile: sharedOptions.bodyFile,
+      forceLocal: sharedOptions.forceLocal,
       bots: sharedOptions.bots,
       ciParity: sharedOptions.ciParity,
       collectAll: sharedOptions.collectAll || sharedOptions.noFailFast,
@@ -760,6 +780,54 @@ const runYeetMode = (mode: YeetRunMode, options: SharedOptionsInput & { readonly
     })
   ).pipe(Effect.asVoid);
 };
+
+const writeSynthesizedWorkerBody = Effect.fnUntraced(function* (message: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const file = yield* fs
+    .makeTempFileScoped({ prefix: "yeet-worker-body-", suffix: ".md" })
+    .pipe(Effect.mapError(YeetCommandError.new("yeet publish could not write the synthesized PR body.")));
+  yield* fs
+    .writeFileString(file, yeetWorkerPublishBody(message))
+    .pipe(Effect.mapError(YeetCommandError.new("yeet publish could not write the synthesized PR body.")));
+  return file;
+});
+
+// An explicit --body-file wins; otherwise the redirected publish synthesizes one.
+const workerPublishBodyFile = (bodyFile: string, message: string) =>
+  Str.isNonEmpty(Str.trim(bodyFile)) ? Effect.succeed(bodyFile) : writeSynthesizedWorkerBody(message);
+
+// `yeet publish` on a worker compute profile takes the `yeet open` posture
+// (goal compute-profile-gate-routing P1): the cheap gates it would run are
+// hosted-only there, so it pushes the committed HEAD and lets hosted CI prove
+// them. `--force-local` and the commit-reusing flags keep the local publish.
+const runYeetPublish = Effect.fnUntraced(function* (options: SharedOptionsInput & { readonly message: string }) {
+  const shared = SharedOptions.make(options);
+  const profile = yield* readYeetComputeProfile("yeet publish");
+  const posture = yeetPublishPostureFor(
+    YeetPublishPostureInput.make({
+      profile,
+      mode: "publish",
+      forceLocal: shared.forceLocal,
+      keepsOwnRoute: yeetPublishKeepsOwnRoute(
+        YeetPublishOwnRouteFlags.make({
+          detach: shared.detach,
+          proveFirst: shared.proveFirst,
+          pushOnly: shared.pushOnly,
+          reuseVerified: shared.reuseVerified,
+          amend: shared.amend,
+          noEdit: shared.noEdit,
+          stagedOnly: shared.stagedOnly,
+        })
+      ),
+    })
+  );
+  if (posture === "publish") return yield* runYeetMode("publish", options);
+  yield* Console.log(
+    "[yeet] compute-profile=worker: publish takes the yeet open posture (push the committed HEAD, draft PR, no local proof; hosted CI is the proof). Pass --force-local to run the local publish."
+  );
+  const bodyFile = yield* workerPublishBodyFile(shared.bodyFile, options.message);
+  return yield* runYeetMode("publish", { ...options, bodyFile, hostedProof: true, pr: true });
+}, Effect.scoped);
 
 const jobIdArgument = Argument.String("jobId").pipe(Argument.withSchema(UUID));
 const decodeDuration = S.decodeEffect(S.DurationFromString);
@@ -1034,7 +1102,7 @@ const yeetRepairCommand = Command.make("repair", { ...sharedFlags, ...detachedFl
 ).pipe(Command.withDescription("Run deterministic fixers and artifact generators, then affected feedback"));
 
 const yeetPublishCommand = Command.make("publish", publishFlags, ({ stateRoot, ...options }) =>
-  provideYeetStateRoot(runYeetMode("publish", options), stateRoot)
+  provideYeetStateRoot(runYeetPublish(options), stateRoot)
 ).pipe(
   Command.withDescription(
     "Commit reviewed staged changes, run cheap-gates, push to a draft PR, and submit the detached readiness monitor"
@@ -1342,6 +1410,12 @@ const yeetFinalCheckCommand = Command.make(
       Flag.withDefault(false),
       Flag.withDescription("Reuse completed steps only when source, base, command and environment still match")
     ),
+    forceLocal: Flag.Boolean("force-local").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription(
+        "Run hosted-only gates locally even on a worker compute profile; the receipt records forceLocal: true"
+      )
+    ),
   },
   (options) => runYeetFinalCheck(YeetFinalCheckOptions.make(options)).pipe(Effect.asVoid)
 ).pipe(
@@ -1500,7 +1574,7 @@ const yeetEconomicsCommand = Command.make(
  * @since 0.0.0
  */
 export const yeetCommand = Command.make("yeet", publishFlags, ({ stateRoot, ...options }) =>
-  provideYeetStateRoot(runYeetMode("publish", options), stateRoot)
+  provideYeetStateRoot(runYeetPublish(options), stateRoot)
 ).pipe(
   Command.withDescription("Repair, verify, or publish repository work with canonical quality proof"),
   Command.withSubcommands([

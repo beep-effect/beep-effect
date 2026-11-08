@@ -4,7 +4,9 @@ import { YeetCommandError, yeetCommand, yeetMonitorCommandRoute } from "@beep/re
 import { CommandJsonOutput, printCommandJson } from "@beep/repo-cli/test/Cli";
 import { QualityTaskLaneRun, QualityTaskLaneRunReport } from "@beep/repo-cli/test/Quality";
 import {
+  ComputeProfileProbe,
   MemoryStats,
+  makeComputeProfileProbe,
   provideRuntimeRootForTesting,
   RepoPlanStep,
   RepoRunPlan,
@@ -73,6 +75,19 @@ import { offlineGithubLayer } from "./support/YeetGithub.ts";
 import type { YeetExecutedStep, YeetPrBodyRequest, YeetVerdictExtrasForTesting } from "@beep/repo-cli/test/Yeet";
 
 const runYeetCommand = Command.runWith(yeetCommand, { version: "0.0.0" });
+
+// Pinned compute profiles: a 7 GiB cgroup ceiling resolves to worker, an
+// unconstrained 125 GiB host to workstation.
+const WIRING_GIB = 1024 ** 3;
+const profileProbeWithCeiling = (constrainedGib: number) =>
+  makeComputeProfileProbe({
+    constrainedMemoryBytes: () => constrainedGib * WIRING_GIB,
+    totalMemoryBytes: () => 125 * WIRING_GIB,
+    residentBytes: () => 0,
+  });
+const workerProfileProbe = profileProbeWithCeiling(7);
+const workstationProfileProbe = profileProbeWithCeiling(0);
+const WORKER_REDIRECT_PREFIX = "[yeet] compute-profile=worker: publish takes the yeet open posture";
 
 const commandTestLayer = Layer.provideMerge(
   Git.layer,
@@ -366,6 +381,15 @@ describe("yeet merge-loop command wiring", () => {
             })
           );
         });
+        const linesOf = Effect.fn("YeetCommandWiringTest.linesOf")(function* (args: ReadonlyArray<string>) {
+          const before = yield* TestConsole.logLines;
+          const logged = A.length(before);
+          yield* runYeetCommand(args);
+          const after = yield* TestConsole.logLines;
+          return A.drop(after, logged);
+        });
+        const isPlanLine = (line: unknown) =>
+          line === "yeet plan" || (S.is(S.String)(line) && Str.startsWith("[yeet] sweep ")(line));
         yield* Effect.forEach(
           [
             ["--plan"],
@@ -378,20 +402,37 @@ describe("yeet merge-loop command wiring", () => {
             ["sweep"],
           ],
           Effect.fnUntraced(function* (args) {
-            const logLines7 = yield* TestConsole.logLines;
-            const logged = A.length(logLines7);
-            yield* runYeetCommand(args);
-            const logLines8 = yield* TestConsole.logLines;
-            const lines = A.drop(logLines8, logged);
-            expect(
-              A.some(
-                lines,
-                (line) => line === "yeet plan" || (S.is(S.String)(line) && Str.startsWith("[yeet] sweep ")(line))
-              )
-            ).toBe(true);
+            const lines = yield* linesOf(args);
+            expect(A.some(lines, isPlanLine)).toBe(true);
           }),
           { discard: true, concurrency: 1 }
-        ).pipe(Effect.provideServiceEffect(Git, Git.make), provideSpawner(spawner));
+        ).pipe(
+          Effect.provideServiceEffect(Git, Git.make),
+          provideSpawner(spawner),
+          Effect.provideService(ComputeProfileProbe, workstationProfileProbe)
+        );
+        // compute-profile-gate-routing P1: on a worker a plain publish takes the
+        // yeet open posture, synthesizing a PR body unless --body-file names one.
+        yield* fs.writeFileString(`${root}/worker-body.md`, "operator body\n");
+        yield* Effect.forEach(
+          [
+            ["--plan", "--message", "feat: worker publish"],
+            ["--plan", "--body-file", `${root}/worker-body.md`],
+            ["--plan", "--force-local"],
+          ],
+          Effect.fnUntraced(function* (args) {
+            const lines = yield* linesOf(args);
+            expect(A.some(lines, isPlanLine)).toBe(true);
+            expect(A.some(lines, (line) => S.is(S.String)(line) && Str.startsWith(WORKER_REDIRECT_PREFIX)(line))).toBe(
+              !A.contains(args, "--force-local")
+            );
+          }),
+          { discard: true, concurrency: 1 }
+        ).pipe(
+          Effect.provideServiceEffect(Git, Git.make),
+          provideSpawner(spawner),
+          Effect.provideService(ComputeProfileProbe, workerProfileProbe)
+        );
       }).pipe(
         Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})),
         Effect.provideServiceEffect(Console.Console, TestConsole.make)

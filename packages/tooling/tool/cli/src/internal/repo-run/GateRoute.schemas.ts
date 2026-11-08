@@ -193,3 +193,108 @@ export const gateRouteFor: {
       (modes) => modes[profile]
     )
 );
+
+/**
+ * The reason `yeet final-check` records for a gate it skipped because the
+ * gate is hosted-only on the resolved compute profile.
+ *
+ * **Details**
+ *
+ * `yeet ready` treats a skip carrying exactly this reason as deferred to
+ * hosted CI and checks the gate's hosted context; any other reason is an
+ * operator skip it only names.
+ *
+ * **Example** (Recognize a profile skip)
+ *
+ * ```ts
+ * import { COMPUTE_PROFILE_WORKER_SKIP_REASON } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(COMPUTE_PROFILE_WORKER_SKIP_REASON) // "compute-profile=worker"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const COMPUTE_PROFILE_WORKER_SKIP_REASON = "compute-profile=worker" as const;
+
+/**
+ * The pull request label `yeet open` adds on a `worker` host.
+ *
+ * **Details**
+ *
+ * The hosted catalog regeneration job keys on it: a worker host skips both
+ * catalog pre-commit writers, so hosted CI regenerates the shards instead.
+ * Adding a label through the REST issues endpoint creates it when missing.
+ *
+ * **Example** (Read the label name)
+ *
+ * ```ts
+ * import { COMPUTE_PROFILE_WORKER_LABEL } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(COMPUTE_PROFILE_WORKER_LABEL) // "compute-profile-worker"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const COMPUTE_PROFILE_WORKER_LABEL = "compute-profile-worker" as const;
+
+// Check-run names exactly as hosted CI reports them (verified 2026-11-08
+// against the check runs of origin/main 0c1b780e564 and merged PR heads).
+// Only gates that are hosted-only on some profile need a row; both catalog
+// hooks are proven by the catalog checks inside Repo Sanity.
+const gateHostedContextEntries: ReadonlyArray<readonly [GateRouteId, string]> = [
+  ["cheap-gates", "Repo Sanity"],
+  ["lint-policy", "Heavy / Lint Policy"],
+  ["check", "Heavy / Check"],
+  ["docgen", "Heavy / Docgen"],
+  ["fallow", "Fallow Advisory Envelopes"],
+  ["coverage", "Heavy / Coverage Regression"],
+  ["hook:schema-catalog", "Repo Sanity"],
+  ["hook:instrumentation-catalog", "Repo Sanity"],
+];
+
+/**
+ * The hosted check run that proves each hosted-only gate.
+ *
+ * **Details**
+ *
+ * `yeet ready` reads the latest run of this name on the pull request head to
+ * accept a gate `yeet final-check` deferred with
+ * {@link COMPUTE_PROFILE_WORKER_SKIP_REASON}. Every gate that is hosted-only
+ * on `worker` has a row.
+ *
+ * **Example** (Read the check gate's hosted context)
+ *
+ * ```ts
+ * import { gateHostedContextTable } from "@beep/repo-cli/test/RepoRun"
+ * import * as HashMap from "effect/HashMap"
+ *
+ * console.log(HashMap.get(gateHostedContextTable, "check")) // { _id: 'Option', _tag: 'Some', value: 'Heavy / Check' }
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const gateHostedContextTable: HashMap.HashMap<GateRouteId, string> =
+  HashMap.fromIterable(gateHostedContextEntries);
+
+/**
+ * The hosted check run that proves one gate, when it has one.
+ *
+ * **Example** (Look up the docgen context)
+ *
+ * ```ts
+ * import { gateHostedContextFor } from "@beep/repo-cli/test/RepoRun"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.getOrNull(gateHostedContextFor("docgen"))) // "Heavy / Docgen"
+ * console.log(O.isNone(gateHostedContextFor("lint"))) // true
+ * ```
+ *
+ * @param gate - The gate family or hook.
+ * @returns The hosted check-run name, or none for a gate that always runs locally.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const gateHostedContextFor = (gate: GateRouteId): O.Option<string> => HashMap.get(gateHostedContextTable, gate);
