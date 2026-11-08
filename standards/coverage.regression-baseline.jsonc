@@ -7,9 +7,9 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-11-07T23:40:52.407Z",
-  "git_sha": "bc1d8715ecaf2c0241d1de428fb43699a16e12d9",
-  "command": "bun run coverage:baseline:write",
+  "generated_at": "2026-11-08T05:53:05.520Z",
+  "git_sha": "9ac2f194e68b3ef35ab3c331ac2f7f6d2f1c3122",
+  "command": "bun run coverage -- --filter=@beep/documents-use-cases --write-baseline --add-missing-files-only",
   "epsilon": 0.001,
   "minimum": {
     "lines": 70,
@@ -7600,6 +7600,18 @@
             "branches": 0,
             "functions": 0
           }
+        },
+        "packages/documents/server/src/aggregates/Sync/VaultSync.instruments.ts": {
+          "lines": 97.29,
+          "statements": 97.5,
+          "branches": 100,
+          "functions": 93.33,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
         }
       }
     },
@@ -8184,6 +8196,18 @@
           }
         },
         "packages/documents/use-cases/src/aggregates/VaultSync/VaultSyncRequests.policy.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/documents/use-cases/src/aggregates/VaultSync/VaultSync.instruments.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

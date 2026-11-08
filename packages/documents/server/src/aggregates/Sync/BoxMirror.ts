@@ -21,7 +21,9 @@ import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
 import * as SqlClient from "effect/sql/SqlClient";
 import { makeVaultSyncFileStore } from "./VaultSync.file-store.ts";
+import { annotateVaultSyncOutcome, VaultSyncAttribute, vaultSyncBoxFailureOf } from "./VaultSync.instruments.ts";
 import type { MirrorFailureStage } from "@beep/documents-use-cases/aggregates/VaultSync";
+import type { VaultSyncBoxOperation } from "./VaultSync.instruments.ts";
 
 const $I = $DocumentsServerId.create("aggregates/Sync/BoxMirror");
 const Receipt = S.Struct({ remoteId: V.RemoteItemId, name: S.String, parentRemoteId: S.NullOr(V.RemoteItemId) }).pipe(
@@ -45,6 +47,21 @@ const unavailable = (operation: V.MirrorOperation, stage: MirrorFailureStage | n
     operation,
     stage,
   });
+// One client span per adapter operation, under the kernel's `Domain.external` span. It records the
+// operation and, on failure, only where the call stopped: never arguments, paths or Box text.
+const boxCall =
+  (operation: VaultSyncBoxOperation) =>
+  <A, R>(self: Effect.Effect<A, BoxMirrorUnavailable, R>) =>
+    self.pipe(
+      Effect.tapError((failure) =>
+        Effect.annotateCurrentSpan(VaultSyncAttribute.boxFailure, vaultSyncBoxFailureOf(failure))
+      ),
+      annotateVaultSyncOutcome,
+      Effect.withSpan("BoxMirror.call", {
+        kind: "client",
+        attributes: { [VaultSyncAttribute.boxOperation]: operation },
+      })
+    );
 /**
  * Resolves the authorized local vault root for a destination at call time.
  *
@@ -204,8 +221,9 @@ export const BoxMirrorLive = BoxMirror.toLayer(
       return yield* mutation(verb, args.operationId, args.generation, encoded, call);
     });
     const implementation: Context.Service.Shape<typeof BoxMirror> = {
-      probe: () => Effect.map(availability.refresh, (result) => ({ connected: result.connected })),
-      resolveRoot: () => Effect.map(rootId, (remoteId) => ({ remoteId })),
+      probe: () =>
+        Effect.map(availability.refresh, (result) => ({ connected: result.connected })).pipe(boxCall("probe")),
+      resolveRoot: () => Effect.map(rootId, (remoteId) => ({ remoteId })).pipe(boxCall("resolveRoot")),
       ensureFolder: Effect.fnUntraced(function* (args) {
         const parentRemoteId = yield* parent(args.parentRemoteId);
         return yield* run(
@@ -218,7 +236,7 @@ export const BoxMirrorLive = BoxMirror.toLayer(
             })
           )
         );
-      }),
+      }, boxCall("ensureFolder")),
       uploadFile: Effect.fnUntraced(function* (args) {
         const parentRemoteId = yield* parent(args.parentRemoteId);
         const call = Effect.gen(function* () {
@@ -228,7 +246,7 @@ export const BoxMirrorLive = BoxMirror.toLayer(
           );
         });
         return yield* run("uploadFile", args, call);
-      }),
+      }, boxCall("uploadFile")),
       uploadFileVersion: (args) =>
         run(
           "uploadFileVersion",
@@ -243,7 +261,7 @@ export const BoxMirrorLive = BoxMirror.toLayer(
               })
             );
           })
-        ),
+        ).pipe(boxCall("uploadFileVersion")),
       moveItem: Effect.fnUntraced(function* (args) {
         const newParentRemoteId = yield* parent(args.parentRemoteId);
         return yield* run(
@@ -257,7 +275,7 @@ export const BoxMirrorLive = BoxMirror.toLayer(
             })
           )
         );
-      }),
+      }, boxCall("moveItem")),
       renameItem: (args) =>
         run(
           "renameItem",
@@ -269,7 +287,7 @@ export const BoxMirrorLive = BoxMirror.toLayer(
               newName: args.name,
             })
           )
-        ),
+        ).pipe(boxCall("renameItem")),
       pollEvents: Effect.fnUntraced(function* (args) {
         const page = yield* mirror
           .pollEvents(
@@ -298,7 +316,7 @@ export const BoxMirrorLive = BoxMirror.toLayer(
             evidence: V.RemoteEvidence.make(Str.takeLeft(event.eventType, 100)),
           })),
         };
-      }),
+      }, boxCall("pollEvents")),
     };
     return implementation;
   })

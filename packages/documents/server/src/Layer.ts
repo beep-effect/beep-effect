@@ -113,7 +113,8 @@ export const VaultSyncMirrorRootLayer = Layer.effect(
   )
 );
 
-// Genesis sends carry their import principal in this request context; the driver stamps it on events.
+// Genesis sends carry their import principal in this request context, and Session-gated sends carry
+// the v1 request context (D17 F8); the driver stamps whichever is present on each event row.
 const platformConfig = AlchemyPostgresConfig.make({
   provenance: O.some(
     ProvenanceMapping.make({
@@ -122,6 +123,13 @@ const platformConfig = AlchemyPostgresConfig.make({
       sourceKindField: "source",
     })
   ),
+  provenanceMappings: [
+    ProvenanceMapping.make({
+      contextKey: V.VaultSyncRequestContext.key,
+      principalField: "principalKey",
+      sourceKindField: "sourceKind",
+    }),
+  ],
 });
 
 const ModelHost = VaultSyncPassModel.layer(

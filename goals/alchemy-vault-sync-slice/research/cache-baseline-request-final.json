@@ -1,0 +1,14 @@
+{
+  "previous": "a1ce9027d618144297411f28af5038e65c2d5eb77877bf848608d75c94c83535",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (goals/vault-sync-observability, #2933)",
+    "reason": "Record the @beep/observability dependency edges added to @beep/documents-server and @beep/documents-use-cases for their declared instruments, and the test-only @beep/memfs edge; no command, input, output, env or cache flag changes, and no qualification is granted.",
+    "basis": {
+      "path": "goals/alchemy-vault-sync-slice/research/cache-baseline-review-final.md",
+      "sha256": "2400576c4ee5f8bff01263462c481035dec307efc648b3dd97dfc3fb056242a9"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}
