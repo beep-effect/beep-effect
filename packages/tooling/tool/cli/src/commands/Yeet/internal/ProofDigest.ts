@@ -113,6 +113,11 @@ const readPin = Effect.fn("Yeet.ProofDigest.readPin")(function* (
 /**
  * Fields from {@link ProofInputDigest} that form its tier-independent key.
  *
+ * **Details**
+ *
+ * `computeProfile` is deliberately absent: it is recorded on the digest row
+ * as evidence but never hashed, so adding it left every existing key intact.
+ *
  * @category type-level
  * @since 0.0.0
  */

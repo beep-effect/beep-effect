@@ -332,7 +332,10 @@ it.layer(
     NodeTestLayer,
     FetchHttpClient.layer,
     FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
-    Layer.succeed(MemoryStats, MemoryStats.of({ availableGib: Effect.succeed(64), totalGib: Effect.succeed(64) }))
+    Layer.succeed(
+      MemoryStats,
+      MemoryStats.of({ availableGib: Effect.succeed(64), totalGib: Effect.succeed(64), ceilingGib: Effect.succeed(64) })
+    )
   ),
   { timeout: "30 seconds" }
 )("producer workflow source identity", (it) => {

@@ -6,7 +6,7 @@
     "title": "Alchemy Vault-Sync Slice",
     "status": "active",
     "created": "2026-11-05",
-    "updated": "2026-11-06",
+    "updated": "2026-11-08",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/alchemy-vault-sync-slice",
@@ -23,7 +23,80 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/docs_alchemy-vault-sync-refinal-f8fff805ea7a/verdict.json",
+        "gating": true
+      }
+    ],
+    "pullRequests": [
+      {
+        "number": 2810,
+        "role": "supporting"
+      },
+      {
+        "number": 2825,
+        "role": "supporting"
+      },
+      {
+        "number": 2861,
+        "role": "supporting"
+      },
+      {
+        "number": 2863,
+        "role": "supporting"
+      },
+      {
+        "number": 2886,
+        "role": "supporting"
+      },
+      {
+        "number": 2889,
+        "role": "supporting"
+      },
+      {
+        "number": 2894,
+        "role": "supporting"
+      },
+      {
+        "number": 2898,
+        "role": "supporting"
+      },
+      {
+        "number": 2899,
+        "role": "supporting"
+      },
+      {
+        "number": 2903,
+        "role": "supporting"
+      },
+      {
+        "number": 2907,
+        "role": "supporting"
+      },
+      {
+        "number": 2911,
+        "role": "supporting"
+      },
+      {
+        "number": 2914,
+        "role": "supporting"
+      },
+      {
+        "number": 2916,
+        "role": "supporting"
+      },
+      {
+        "number": 2933,
+        "role": "supporting"
+      },
+      {
+        "number": 2962,
+        "role": "final"
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -48,8 +121,10 @@
     "research/10-pr3c-handoff.md",
     "research/11-observability-plan.md",
     "research/12-pr4-frontend-handoff.md",
+    "research/13-observability-implementation.md",
     "research/OPPORTUNITIES.md",
     "research/SOURCES.md",
+    "research/cache-baseline-request-final.json",
     "research/cache-baseline-request-observability.json",
     "research/cache-baseline-request-pr2a.json",
     "research/cache-baseline-request-pr2b-main.json",
@@ -66,6 +141,7 @@
     "research/cache-baseline-request-pr3c-saga.json",
     "research/cache-baseline-request-pr3c.json",
     "research/cache-baseline-request.json",
+    "research/cache-baseline-review-final.md",
     "research/cache-baseline-review-observability.md",
     "research/cache-baseline-review-pr2a.md",
     "research/cache-baseline-review-pr2b-main.md",
@@ -104,22 +180,22 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -138,5 +214,10 @@
     "../../explorations/alchemy-domain-adoption/research/01-astra-source-analysis.md",
     "../../explorations/alchemy-domain-adoption/research/02-muse-deep-research.md",
     "../../explorations/alchemy-domain-adoption/research/03-grok-deep-research.md"
-  ]
+  ],
+  "retentionReason": "Documents a live system: the documents vault-sync slice on @alchemy.run/domain (aggregates, sagas, policies, Views and the Box ExternalSystem), the @beep/alchemy-postgres Platform driver, the Session-gated VaultSyncApi over HTTP, CLI and views-only MCP, the desktop offline-intents client, the single-writer cutover with its reversal, and the D17 span catalog and PII audit.",
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 2962
+  }
 }

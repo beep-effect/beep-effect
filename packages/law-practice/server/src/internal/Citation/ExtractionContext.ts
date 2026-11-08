@@ -32,7 +32,13 @@ export class CitationTokenExtractionInput extends S.Opaque<
 ) {}
 const sameNative = S.toEquivalence(CitationTokenSeed.fields.data);
 const sameGroups = S.toEquivalence(CitationTokenSeed.fields.groups);
-const isMissingPage = Effect.fn("Citation.isMissingModelPage")(function* (storage: CitationPythonUnicodeStorage) {
+/** Evaluate the source constructor's missing-page predicate on owned native text.
+ * This value predicate neither creates token identities nor verifies coordinates.
+ * @internal @category operations @since 0.0.0
+ */
+export const isMissingCitationModelPage = Effect.fn("Citation.isMissingModelPage")(function* (
+  storage: CitationPythonUnicodeStorage
+) {
   const length = storage.bytes.length / storage.width;
   if (length === 0) return false;
   const end = citationPythonPointAt(storage, length - 1) === 10 ? length - 1 : length;
@@ -53,7 +59,7 @@ export const normalizeCitationModelPage = Effect.fn("Citation.normalizeModelPage
 ) {
   const page = O.getOrNull(R.get(token.groups, "page"));
   if (page === null) return token;
-  const missing = yield* isMissingPage(CitationPythonUnicodeStorage.make(page));
+  const missing = yield* isMissingCitationModelPage(CitationPythonUnicodeStorage.make(page));
   return missing ? CitationTokenSeed.make({ ...token, groups: { ...token.groups, page: null } }) : token;
 });
 /** Reject conflicting representations before metadata or a native child starts.

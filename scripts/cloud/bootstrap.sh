@@ -26,7 +26,7 @@
 #   claude  CLAUDE_CODE_REMOTE=true   (Claude cloud sessions set it on the VM)
 #   codex   CODEX_ENV_* or CODEX_PROXY_CERT (codex-universal image markers);
 #           the Codex setup script also passes BEEP_CLOUD_VENDOR=codex explicitly
-#   cursor  .cursor/install.sh passes BEEP_CLOUD_VENDOR=cursor
+#   cursor  CURSOR_AGENT is set, or .cursor/install.sh passes BEEP_CLOUD_VENDOR=cursor
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"

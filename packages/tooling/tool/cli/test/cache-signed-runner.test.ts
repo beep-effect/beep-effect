@@ -346,7 +346,10 @@ it.layer(
     ),
     NodeCrypto.layer,
     FetchHttpClient.layer,
-    Layer.succeed(MemoryStats, MemoryStats.of({ availableGib: Effect.succeed(64), totalGib: Effect.succeed(64) }))
+    Layer.succeed(
+      MemoryStats,
+      MemoryStats.of({ availableGib: Effect.succeed(64), totalGib: Effect.succeed(64), ceilingGib: Effect.succeed(64) })
+    )
   ),
   { timeout: "30 seconds" }
 )("signed pilot supervisor", (it) => {
@@ -850,7 +853,10 @@ it.layer(
     NodeFileSystem.layer,
     NodePath.layer,
     NodeCrypto.layer,
-    Layer.succeed(MemoryStats, MemoryStats.of({ availableGib: Effect.succeed(64), totalGib: Effect.succeed(64) })),
+    Layer.succeed(
+      MemoryStats,
+      MemoryStats.of({ availableGib: Effect.succeed(64), totalGib: Effect.succeed(64), ceilingGib: Effect.succeed(64) })
+    ),
     Layer.succeed(
       ChildProcessSpawner.ChildProcessSpawner,
       ChildProcessSpawner.make(() => Effect.die("Unexpected native process"))

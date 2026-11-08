@@ -112,7 +112,7 @@ describe("run scope", () => {
           const capturePath = path.join(root, "busctl.argv");
           yield* writeExecutable(
             path.join(root, "busctl"),
-            `#!/bin/sh\nprintf '%s\\n' "$@" >> '${capturePath}'\nfor argument do\n  [ "$argument" = "GetUnitByPID" ] && printf 'o "/org/freedesktop/systemd1/unit/agent_2drun_2dticket_2dwith_2dspaces_2escope"\\n'\ndone\nexit 0\n`
+            `#!/bin/sh\nprintf '%s\\n' "$@" >> '${capturePath}'\nfor argument do\n  [ "$argument" = "StartTransientUnit" ] && : > '${capturePath}.started'\ndone\nfor argument do\n  [ "$argument" = "GetUnitByPID" ] && [ -f '${capturePath}.started' ] && printf 'o "/org/freedesktop/systemd1/unit/agent_2drun_2dticket_2dwith_2dspaces_2escope"\\n'\ndone\nexit 0\n`
           );
 
           const record = yield* enterRunScope("ticket with spaces", root).pipe(configured({ PATH: root }));

@@ -17,7 +17,6 @@
  * @since 0.0.0
  */
 
-import * as NodeOS from "node:os";
 import { $RepoCliId } from "@beep/identity/packages";
 import * as OptionUtils from "@beep/utils/Option";
 import * as A from "effect/Array";
@@ -35,7 +34,6 @@ import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import { constant, dual, flow, pipe } from "effect/Function";
 import * as HS from "effect/HashSet";
-import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -62,6 +60,9 @@ import {
   writeAdmissionProtocol,
 } from "./AdmissionJournal.ts";
 import { appendSchedulerAttemptTerminated } from "./AttemptTerminationJournal.ts";
+import { computeEnvelopeGib, resolveComputeProfileForCeiling } from "./ComputeProfile.ts";
+import { gateRouteFor } from "./GateRoute.schemas.ts";
+import { admissionCapacityTokensFor, MemoryStats, parseMeminfoFieldGib } from "./MemoryStats.service.ts";
 import { isProcessIdentityAlive, processStartIdentityForPid } from "./ProcessIdentity.ts";
 import {
   AdmissionClaimSinkState,
@@ -74,6 +75,7 @@ import {
   AdmissionRequest,
   AdmissionSnapshot,
   AdmissionTicketReapClaim,
+  ComputeProfileRefusal,
   DeadLeaseScopePlan,
   QualitySchedulerError,
   YeetAdmissionLease,
@@ -86,7 +88,13 @@ import {
   RunScopeSupport,
   RunScopeTelemetry,
 } from "./RunScope.schemas.ts";
-import { enterRunScope, readRunScopeTelemetry, runScopeUnitName, stopRunScopeForReap } from "./RunScope.ts";
+import {
+  enterRunScope,
+  readPlannedRunScopeCgroup,
+  readRunScopeTelemetry,
+  runScopeUnitName,
+  stopRunScopeForReap,
+} from "./RunScope.ts";
 import { admissionRootFor, perUserRuntimeRoot } from "./RuntimeRoot.ts";
 import type { UUID } from "@beep/repo-cli-kit/schema/Uuid";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -231,123 +239,19 @@ const encodeReapClaim = S.encodeUnknownEffect(S.fromJsonString(AdmissionReapClai
 const decodePromotionTransition = S.decodeUnknownEffect(S.fromJsonString(AdmissionPromotionTransition));
 const encodePromotionTransition = S.encodeUnknownEffect(S.fromJsonString(AdmissionPromotionTransition));
 
-const GIB = 1024 * 1024 * 1024;
-const MEMINFO_PATH = "/proc/meminfo";
 const recoveryRecordSettlementWindow = Duration.seconds(5);
 const recoveryRecordSettlementPollInterval = Duration.millis(25);
 const textEncoder = new TextEncoder();
 
-/**
- * Shape of the {@link MemoryStats} service.
- *
- * @category services
- * @since 0.0.0
- */
-export interface MemoryStatsShape {
-  /** Currently available memory in GiB, re-read on every evaluation. */
-  readonly availableGib: Effect.Effect<number>;
-  /** Installed physical memory in GiB. */
-  readonly totalGib: Effect.Effect<number>;
-}
-
-/**
- * Service reporting live machine memory availability for admission decisions.
- *
- * **Example** (Provide a fixed reading in tests)
- *
- * ```ts
- * import { MemoryStats } from "@beep/repo-cli/test/RepoRun"
- * import * as Effect from "effect/Effect";
- * import * as Layer from "effect/Layer";
- * const fixed = Layer.succeed(
- *   MemoryStats,
- *   MemoryStats.of({ availableGib: Effect.succeed(50), totalGib: Effect.succeed(128) })
- * )
- * console.log(Layer.isLayer(fixed)) // true
- * ```
- *
- * @category services
- * @since 0.0.0
- */
-export class MemoryStats extends Context.Service<MemoryStats, MemoryStatsShape>()($I`MemoryStats`) {}
-
-const parseMeminfoFieldGib = (meminfo: string, field: string): O.Option<number> =>
-  pipe(
-    Str.split(meminfo, "\n"),
-    A.findFirst(Str.startsWith(field)),
-    O.flatMap((line) => A.get(A.filter(Str.split(line, /\s+/), Str.isNonEmpty), 1)),
-    O.map(Number),
-    O.filter((kib) => !Number.isNaN(kib)),
-    O.map((kib) => (kib * 1024) / GIB)
-  );
-
-const makeMemoryStats = Effect.fnUntraced(function* (): Effect.fn.Return<
-  MemoryStatsShape,
-  never,
-  FileSystem.FileSystem
-> {
-  const fs = yield* FileSystem.FileSystem;
-  const meminfoFieldGib = (field: string, fallback: () => number) =>
-    fs.readFileString(MEMINFO_PATH).pipe(
-      Effect.map((meminfo) => parseMeminfoFieldGib(meminfo, field)),
-      Effect.orElseSucceed(O.none<number>),
-      Effect.map(O.getOrElse(fallback))
-    );
-  return {
-    // Non-Linux fallback: NodeOS.freemem() under-reports (no reclaimable cache), which
-    // only makes admission more conservative.
-    availableGib: meminfoFieldGib("MemAvailable:", () => NodeOS.freemem() / GIB),
-    totalGib: meminfoFieldGib("MemTotal:", () => NodeOS.totalmem() / GIB),
-  };
-});
-
-/**
- * Production {@link MemoryStats} layer reading `/proc/meminfo` `MemAvailable`.
- *
- * **Example** (Reference the live layer)
- *
- * ```ts
- * import { MemoryStatsLive } from "@beep/repo-cli/test/RepoRun"
- * import * as Layer from "effect/Layer";
- * console.log(Layer.isLayer(MemoryStatsLive)) // true
- * ```
- *
- * @category services
- * @since 0.0.0
- */
-export const MemoryStatsLive: Layer.Layer<MemoryStats, never, SecureRandom.SecureRandom | FileSystem.FileSystem> =
-  Layer.effect(MemoryStats, Effect.map(makeMemoryStats(), MemoryStats.of));
-
-/**
- * Compute the admission capacity in tokens for one memory reading.
- *
- * Chartered formula (SPEC D1): `min(capacityMax, floor((available − reserve) / slot))`,
- * with a hard zero below the admission floor.
- *
- * **Example** (Capacity at 50 GiB available)
- *
- * ```ts
- * import { AdmissionConfig, admissionCapacityTokensFor } from "@beep/repo-cli/test/RepoRun"
- *
- * console.log(admissionCapacityTokensFor(50, AdmissionConfig.make({}))) // 8
- * ```
- *
- * @param availableGib - Live `MemAvailable` reading in GiB.
- * @param config - Admission policy knobs.
- * @returns Whole token capacity, never negative.
- * @category admission
- * @since 0.0.0
- */
-export const admissionCapacityTokensFor: {
-  (availableGib: number, config: AdmissionConfig): number;
-  (config: AdmissionConfig): (availableGib: number) => number;
-} = dual(2, (availableGib: number, config: AdmissionConfig): number => {
-  if (availableGib < config.hardFloorGib) {
-    return 0;
-  }
-  const raw = Math.floor((availableGib - config.reserveGib) / config.slotSizeGib);
-  return Math.max(0, Math.min(config.capacityMaxTokens, raw));
-});
+// Preserve the scheduler's existing import surface while the memory service
+// has a cohesive private owner; there is one Context token and implementation.
+export {
+  admissionCapacityTokensFor,
+  MemoryStats,
+  MemoryStatsLive,
+  memoryStatsLayerFor,
+} from "./MemoryStats.service.ts";
+export type { MemoryStatsShape } from "./MemoryStats.service.ts";
 
 interface AdmissionDirectories {
   readonly claims: string;
@@ -1820,6 +1724,7 @@ export const isOvershootLoserForTesting: {
 interface AdmissionAttempt<OriginLease> {
   readonly admitted: O.Option<AdmittedState<OriginLease>>;
   readonly originBusy: boolean;
+  readonly scopeUnavailable: boolean;
 }
 
 const tryAdmitSelf = Effect.fnUntraced(function* <OriginLease, GateError, GateRequirements>(
@@ -1841,7 +1746,7 @@ const tryAdmitSelf = Effect.fnUntraced(function* <OriginLease, GateError, GateRe
 > {
   const originLease = yield* gate.tryAcquire;
   if (O.isNone(originLease)) {
-    return { admitted: O.none(), originBusy: true };
+    return { admitted: O.none(), originBusy: true, scopeUnavailable: false };
   }
   // From here the origin lease is owned: any failure before ownership hands
   // over to the admitted-state finalizer must release it (both review bots
@@ -1850,18 +1755,19 @@ const tryAdmitSelf = Effect.fnUntraced(function* <OriginLease, GateError, GateRe
   const selfLease = yield* stageSelfLease(directories, request, ticket, config).pipe(
     Effect.onError(() => gate.release(originLease.value).pipe(Effect.ignore))
   );
-  if (O.isNone(selfLease)) {
+  if (O.isNone(selfLease[0])) {
     yield* gate.release(originLease.value);
-    return { admitted: O.none(), originBusy: false };
+    return { admitted: O.none(), originBusy: false, scopeUnavailable: selfLease[1] };
   }
   return {
     admitted: O.some({
-      leasePath: selfLease.value.leasePath,
-      lease: selfLease.value.lease,
+      leasePath: selfLease[0].value.leasePath,
+      lease: selfLease[0].value.lease,
       originLease: originLease.value,
-      promotionPath: selfLease.value.promotionPath,
+      promotionPath: selfLease[0].value.promotionPath,
     }),
     originBusy: false,
+    scopeUnavailable: selfLease[1],
   };
 });
 
@@ -1871,7 +1777,10 @@ const stageSelfLease = Effect.fnUntraced(function* (
   ticket: YeetAdmissionTicket,
   config: AdmissionConfig
 ): Effect.fn.Return<
-  O.Option<{ readonly lease: YeetAdmissionLease; readonly leasePath: string; readonly promotionPath: string }>,
+  readonly [
+    O.Option<{ readonly lease: YeetAdmissionLease; readonly leasePath: string; readonly promotionPath: string }>,
+    boolean,
+  ],
   QualitySchedulerError,
   | SecureRandom.SecureRandom
   | FileSystem.FileSystem
@@ -1904,7 +1813,9 @@ const stageSelfLease = Effect.fnUntraced(function* (
     diffFingerprint: ticket.diffFingerprint,
     proofTier: ticket.proofTier,
     envProfile: ticket.envProfile,
+    computeProfile: ticket.computeProfile,
     stage: ticket.stage,
+    forceLocal: ticket.forceLocal,
   });
   const leasePath = path.join(directories.leases, `${ticket.nonce}-${ticket.pid}.lease.json`);
   const promotionPath = promotionTransitionPath(path, directories, ticket.nonce);
@@ -1935,27 +1846,34 @@ const stageSelfLease = Effect.fnUntraced(function* (
       message: `Admission lease ${leasePath} already exists for this ticket; remove it and retry.`,
     });
   }
-  const rescanned = yield* scanAdmissionState(directories, false);
-  const stats = yield* MemoryStats;
-  const availableGib7 = yield* stats.availableGib;
-  const capacityNow = admissionCapacityTokensFor(availableGib7, config);
-  if (isOvershootLoser(rescanned, capacityNow, lease)) {
-    const fs = yield* FileSystem.FileSystem;
-    yield* fs.remove(leasePath, { force: true }).pipe(Effect.ignore);
-    yield* fs.remove(promotionPath, { force: true }).pipe(Effect.ignore);
-    return O.none();
-  }
   const scopedLease = YeetAdmissionLease.make({
     ...lease,
     runScope: yield* enterRunScope(ticket.nonce, directories.root),
   });
+  const scopeUnavailable = !RunScopeSupport.is.active(scopedLease.runScope?.support ?? "failed");
+  const rescanned = yield* scanAdmissionState(directories, false);
+  const stats = yield* MemoryStats;
+  const availableGib7 = yield* stats.availableGib;
+  const capacityNow = admissionCapacityTokensFor(availableGib7, config);
+  const prefix = A.filter(
+    A.map(rescanned.leases, ({ lease }) => lease),
+    (candidate) => admissionInstantOrder(candidate, lease) < 0
+  );
+  const scopedCapacity =
+    stats.reservationCapacity === undefined ? capacityNow : yield* stats.reservationCapacity(prefix, config);
+  if (A.reduce(prefix, lease.weightTokens, (total, candidate) => total + candidate.weightTokens) > scopedCapacity) {
+    const fs = yield* FileSystem.FileSystem;
+    yield* fs.remove(leasePath, { force: true }).pipe(Effect.ignore);
+    yield* fs.remove(promotionPath, { force: true }).pipe(Effect.ignore);
+    return [O.none(), scopeUnavailable];
+  }
   const encodedLeaseText = yield* encodeLeaseText(scopedLease);
   yield* refreshHeartbeat(leasePath, encodedLeaseText);
   yield* persistPromotionTransition(
     promotionPath,
     AdmissionPromotionTransition.make({ ...prepared, lease: scopedLease, phase: "lease-published" })
   );
-  return O.some({ lease: scopedLease, leasePath, promotionPath });
+  return [O.some({ lease: scopedLease, leasePath, promotionPath }), scopeUnavailable];
 });
 
 const heartbeatLoop = Effect.fnUntraced(function* (
@@ -1986,6 +1904,7 @@ interface PromotionTick<OriginLease> {
   readonly admitted: O.Option<AdmittedState<OriginLease>>;
   readonly info: PromotionTickInfo;
   readonly originBusy: boolean;
+  readonly scopeUnavailable: boolean;
 }
 
 const tryPromoteTicket = Effect.fnUntraced(function* <OriginLease, GateError, GateRequirements>(
@@ -1993,7 +1912,8 @@ const tryPromoteTicket = Effect.fnUntraced(function* <OriginLease, GateError, Ga
   request: AdmissionRequest,
   ticket: YeetAdmissionTicket,
   gate: AdmissionOriginGate<OriginLease, GateError, GateRequirements>,
-  config: AdmissionConfig
+  config: AdmissionConfig,
+  destination: O.Option<string>
 ): Effect.fn.Return<
   PromotionTick<OriginLease>,
   QualitySchedulerError | GateError,
@@ -2012,20 +1932,27 @@ const tryPromoteTicket = Effect.fnUntraced(function* <OriginLease, GateError, Ga
   const state = yield* scanAdmissionState(directories, true);
   const stats = yield* MemoryStats;
   const availableGib = yield* stats.availableGib;
-  const capacityTokens = admissionCapacityTokensFor(availableGib, config);
+  const capacityTokens =
+    stats.reservationCapacity === undefined
+      ? admissionCapacityTokensFor(availableGib, config)
+      : yield* stats.reservationCapacity(
+          A.map(state.leases, ({ lease }) => lease),
+          config,
+          destination
+        );
   const info: PromotionTickInfo = { availableGib, capacityTokens, nowMillis, state };
   if (!selfMayAttempt(state, capacityTokens, nowMillis, config, ticket)) {
-    return { admitted: O.none(), info, originBusy: hasLegacySameOriginOwner(state, ticket) };
+    return { admitted: O.none(), info, originBusy: hasLegacySameOriginOwner(state, ticket), scopeUnavailable: false };
   }
   const attempt = yield* tryAdmitSelf(directories, request, ticket, gate, config);
   if (O.isNone(attempt.admitted)) {
-    return { admitted: O.none(), info, originBusy: attempt.originBusy };
+    return { admitted: O.none(), info, originBusy: attempt.originBusy, scopeUnavailable: attempt.scopeUnavailable };
   }
   const admitted = attempt.admitted.value;
   yield* processPromotionTransition(directories, admitted.promotionPath, ticket.nonce).pipe(
     Effect.onError(() => gate.release(admitted.originLease).pipe(Effect.ignore))
   );
-  return { admitted: attempt.admitted, info, originBusy: false };
+  return { admitted: attempt.admitted, info, originBusy: false, scopeUnavailable: attempt.scopeUnavailable };
 });
 
 interface AdmissionWaitProgress {
@@ -2116,6 +2043,7 @@ const waitForAdmission = Effect.fnUntraced(function* <OriginLease, GateError, Ga
   | GateRequirements
   | Digest.Digest
 > {
+  let destination = yield* readPlannedRunScopeCgroup;
   const startMillis = yield* Clock.currentTimeMillis;
   let ticket = initialTicket;
   // Back-dated so the first loop iteration prints the queue position immediately.
@@ -2124,7 +2052,8 @@ const waitForAdmission = Effect.fnUntraced(function* <OriginLease, GateError, Ga
     escalated: 0,
   };
   while (true) {
-    const tick = yield* tryPromoteTicket(directories, request, ticket, gate, config);
+    const tick = yield* tryPromoteTicket(directories, request, ticket, gate, config, destination);
+    if (tick.scopeUnavailable) destination = O.none();
     if (O.isSome(tick.admitted)) {
       return tick.admitted.value;
     }
@@ -2244,6 +2173,31 @@ const finalizeAdmissionTicket = Effect.fnUntraced(function* (
   ).pipe(Effect.catch(warnAdmissionJournalError));
 });
 
+// On a worker host a hosted-only gate is refused unless the caller forced a
+// local run or the request carries the hosted posture (hosted runners are
+// posture `hosted`, never refused, D5). Pure, so the admission entry stays flat.
+const workerProfileRefusal = (
+  request: AdmissionRequest,
+  ceilingGib: number,
+  envelopeGib: number
+): O.Option<ComputeProfileRefusal> => {
+  const hostedPosture = O.exists(request.envProfile, (profile) => profile === "hosted");
+  if (request.forceLocal || hostedPosture) return O.none();
+  return O.filter(request.gateRoute, (gate) => gateRouteFor(gate, "worker") === "hosted-only").pipe(
+    O.map((gate) =>
+      ComputeProfileRefusal.make({
+        gate,
+        ceilingGib,
+        envelopeGib,
+        message: `[yeet] admission: ${gate} is hosted-only on compute-profile=worker (ceiling ${Num.round(ceilingGib, 1)} GiB < envelope ${envelopeGib} GiB). Push first and let hosted CI prove it: bun run beep yeet open --body-file <md>. Pass --force-local to run it here anyway.`,
+      })
+    )
+  );
+};
+
+const workerBypassLine = (request: AdmissionRequest): string =>
+  `[yeet] admission: compute-profile=worker${request.forceLocal ? " force-local=true" : ""}; coordinating ${request.kind} through the origin gate only`;
+
 /**
  * Run one unit of heavy repository work under machine-wide weighted admission.
  *
@@ -2298,16 +2252,46 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
   const resolved = config ?? AdmissionConfig.make({});
   const path = yield* Path.Path;
   const stats = yield* MemoryStats;
-  // Machines whose installed memory can never reach the requested weight must
+  // Machines whose memory ceiling can never reach the requested weight must
   // not wait forever: clamp the weight to the machine ceiling, or fall back to
   // origin-gate-only coordination (the pre-scheduler behavior) when even one
-  // token can never be admitted.
+  // token can never be admitted. A cgroup ceiling below MemTotal (a 7 GiB
+  // slice on a 15 GiB host) is what the work can actually use.
   const totalGib = yield* stats.totalGib;
-  const machineCeiling = admissionCapacityTokensFor(totalGib, AdmissionConfig.make({ ...resolved, hardFloorGib: 0 }));
+  const ceilingGib = yield* stats.ceilingGib;
+  const schedulableGib = Math.min(totalGib, ceilingGib);
+  const machineCeiling = admissionCapacityTokensFor(
+    schedulableGib,
+    AdmissionConfig.make({ ...resolved, hardFloorGib: 0 })
+  );
   // A host must be able to hold the hard floor PLUS one slot of available
   // memory; kernel and resident overhead keep MemAvailable well below the
   // installed total, so a total near the floor can never admit anything.
-  const floorAttainable = totalGib >= resolved.hardFloorGib + resolved.slotSizeGib;
+  const envelopeGib = computeEnvelopeGib(resolved);
+  const floorAttainable = schedulableGib >= envelopeGib;
+  // The profile is derived from the same ceiling MemoryStats reports, so the
+  // refusal and the capacity view can never disagree.
+  const computeProfile = yield* resolveComputeProfileForCeiling(O.some(schedulableGib), envelopeGib).pipe(
+    Effect.mapError((cause) => QualitySchedulerError.make({ message: cause.message, cause }))
+  );
+  if (computeProfile.profile === "worker") {
+    const refusal = workerProfileRefusal(
+      request,
+      O.getOrElse(computeProfile.ceilingGib, () => schedulableGib),
+      envelopeGib
+    );
+    if (O.isSome(refusal)) {
+      return yield* QualitySchedulerError.make({
+        message: refusal.value.message,
+        reason: "compute-profile-refusal",
+        refusal: refusal.value,
+      });
+    }
+    yield* Console.log(workerBypassLine(request));
+    return yield* bypassAdmission(gate, use, resolved);
+  }
+  // Defensive fallback: a workstation profile below the envelope is impossible
+  // unless the probe and MemoryStats disagree; keep the pre-profile bypass.
   if (machineCeiling <= 0 || !floorAttainable) {
     yield* Console.log(
       `[yeet] admission: installed memory is below the scheduling envelope; coordinating ${request.kind} through the origin gate only`
@@ -2344,7 +2328,9 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
     diffFingerprint: admittedRequest.diffFingerprint,
     proofTier: admittedRequest.proofTier,
     envProfile: admittedRequest.envProfile,
+    computeProfile: O.some(computeProfile.profile),
     stage: admittedRequest.stage,
+    forceLocal: admittedRequest.forceLocal,
   });
   const ticketPath = path.join(directories.queue, `${ticket.nonce}-${ticket.pid}.ticket.json`);
   return yield* Effect.uninterruptibleMask((restore) =>
@@ -2496,8 +2482,15 @@ const snapshotAdmissionState = Effect.fnUntraced(function* (
   const persistedQuarantine = yield* fs
     .readDirectory(directories.quarantine)
     .pipe(Effect.map(A.map((name) => path.join(directories.quarantine, name))), Effect.orElseSucceed(A.empty<string>));
+  const capacityTokens =
+    stats.reservationCapacity === undefined
+      ? admissionCapacityTokensFor(availableGib, config)
+      : yield* stats.reservationCapacity(
+          A.map(state.leases, ({ lease }) => lease),
+          config
+        );
   return AdmissionSnapshot.make({
-    capacityTokens: admissionCapacityTokensFor(availableGib, config),
+    capacityTokens,
     activeTokens: activeTokenTotal(state),
     memAvailableGib: availableGib,
     hardFloorEngaged: availableGib < config.hardFloorGib,

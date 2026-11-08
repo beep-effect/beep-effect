@@ -448,6 +448,44 @@ Commit an operation intent before calling Box and the acknowledgement before ret
 
 Reverse: Use verified provider idempotency while retaining receipt identities
 
+### Boundary spans open in the Session middleware; deploy-time provenance and enrichment stay with the host, 2026-11-08
+
+The observability plan (`research/11-observability-plan.md` §6) assigned its steps to PRs 3a, 3b1, 3c, 3b2 and the driver PR. Those merged before several steps were done. `research/13-observability-implementation.md` audits all 23 steps against `main` and records what the final PR implemented.
+
+Decisions:
+
+- `VaultSyncApi.command` and `VaultSyncApi.read` open in the Session middleware (`VaultSyncSessionLive`), not in the delivery client as the plan said. The middleware is the one point every transport passes through (HTTP, RPC, MCP, in-process and remote CLI), and the transport and request correlation id are known there. The span opens before the Session resolves the caller, so the Session spans and the kernel `Domain.send` / `Domain.decide` spans nest under it. A tracer test asserts that nesting for an HTTP command.
+- Spans declared at `shape-only` list only `shape-only` keys. The catalog check rejects a `shape-only` span carrying a `standard` key, so identifiers (`destination_id`, `operation_id`, `request_correlation_id`) are declared at `standard` and named in the span description.
+- The production host mounts both provenance mappings: genesis first, then the v1 request context (`principalKey`, `sourceKind`) through `AlchemyPostgresConfig.provenanceMappings`.
+- Mounting `layerCatalogEnrichment` and naming the `POST /vault-sync/rpc` protocol span are host composition in `apps/professional-desktop`. They apply to every slice the sidecar serves, not only vault sync, so they are left to that host and recorded in doc 13 §3.
+
+Reverse: Move VaultSyncApi.command and .read into the delivery client and drop the Session-level spans
+
+### ep47: the runtime status test waits for both views it joins, 2026-11-08
+
+ep47: hosted `Test Unit (unit-d)` failed on #2923 in `VaultSyncRuntime.pglite.test.ts > model writer > admits once at startup and serves the desktop RPCs over the projected tables` (job 128591945570). `assertSome(status.cursorPosition, "0")` received `None`.
+
+Cause: `GetVaultSyncStatus` (`VaultSyncRpcs.api.ts`, `statusOf`) joins two views that catch up independently. `openConflicts` comes from `OpenConflicts`, and `cursorPosition` comes from the destination in `VaultSyncStatus`. The test's `eventually` waited only for `openConflicts === 1`, so under load it could read before the destination view held the cursor. Locally on `main` 0c1b780e56 the test passed 6/6 on bun and 6/6 on node; with 16 concurrent bun runs it failed 3/16 with the hosted assertion.
+
+Decision: the test waits for `openConflicts === 1 && O.isSome(cursorPosition)`. This is test-only. Briefly reading a conflict count ahead of the cursor is the intended eventual consistency of two Views, not a product defect. After the fix: 16/16 concurrent bun runs and 6/6 node runs pass. The fix rides in the observability final PR, as the orchestrator agreed.
+
+Reverse: Revert the VaultSyncRuntime.pglite.test.ts wait condition to openConflicts === 1 only
+
+### Goals-only re-final after #2933 was hand-merged without its merge-ready line, 2026-11-08
+
+#2933 was the packet's STRICT final. It was hand-merged at 08:26:29Z (6bff7a839b) while held on ep58, an inherited law-practice-server integration red: its local verify could not pass, so it had no publish verdict, and hosted Test Integration was still pending.
+
+`goals completion refresh --slug alchemy-vault-sync-slice` therefore reports `unsatisfied`:
+
+- gating `hosted-required-checks`: the merge-push rule suite failed required status checks, with 0 required reds at the accepted head;
+- gating `yeet-verdict`: unknown, because the declared verdict is not a publish result.
+
+The work itself is on `main`, so nothing is reverted. A goals-only PR takes over as the final PR: `proposedCloseout.finalPullRequest` and the gate's final entry move to it, its branch's verdict becomes the gating evidence, and #2933 becomes supporting. It stays a draft until its last step and merges only on `merge-ready: yes`.
+
+This PR's first publish was refused on six `lint:effect-vitest` findings inherited from `main` (ep59, ep61), so its publish waited until both were off `main` (#2965, #2960). A goals-only final needs only the cheap gates, so ep58 does not hold it.
+
+Reverse: Restore proposedCloseout.finalPullRequest and the final gate entry to #2933
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

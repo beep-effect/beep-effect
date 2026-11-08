@@ -95,7 +95,10 @@ const TemplateSpawnFailureLayer = CatalogUsageSourceLive.pipe(
 // The quality command tree also declares the repo-utils and memory services its other subcommands use.
 const QualityCommandTestLayer = Layer.mergeAll(
   FsUtilsLive.pipe(Layer.provide(NodeCommandTestLayer)),
-  Layer.succeed(MemoryStats, MemoryStats.of({ availableGib: Effect.succeed(64), totalGib: Effect.succeed(128) }))
+  Layer.succeed(
+    MemoryStats,
+    MemoryStats.of({ availableGib: Effect.succeed(64), totalGib: Effect.succeed(128), ceilingGib: Effect.succeed(128) })
+  )
 );
 
 const findingKeys = (snapshot: CatalogUsageSnapshot): ReadonlyArray<string> =>

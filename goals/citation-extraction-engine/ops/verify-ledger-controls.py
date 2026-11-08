@@ -66,7 +66,7 @@ def main():
     if not baseline_plan["bindings"]:
         raise SystemExit("proof controls need an actual qualified binding")
     proof_controls = {
-        "stage-promoted-to-complete": lambda p: p["bindings"][0].update(workflowState="complete"),
+        "stage-promoted-to-complete": lambda p: (p["bindings"][0]["proof"].update(scope="stage"), p["bindings"][0].update(workflowState="complete")),
         "wrong-proof-evidence": lambda p: p["bindings"][0]["proof"].update(evidenceSha256="a" * 64),
         "wrong-target-source": lambda p: p["bindings"][0]["proof"]["targetTests"][0].update(sha256="a" * 64),
         "absent-target-label": lambda p: p["bindings"][0]["proof"]["targetTests"][0].update(name="missing-test-label"),

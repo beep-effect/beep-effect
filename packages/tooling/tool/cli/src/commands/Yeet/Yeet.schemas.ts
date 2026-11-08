@@ -397,6 +397,9 @@ export class YeetRunOptions extends S.Opaque<YeetRunOptions, { readonly brand: u
     collectAll: S.Boolean,
     head: S.String,
     hostedProof: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+    // `--force-local` on a worker compute profile: keep the push-first publish
+    // instead of the `yeet open` posture. Recorded on the attempt fact.
+    forceLocal: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     json: S.Boolean,
     merged: S.Boolean,
     message: S.String,

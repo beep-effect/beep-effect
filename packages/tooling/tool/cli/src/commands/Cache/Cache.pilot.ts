@@ -829,7 +829,7 @@ const runPilot = Effect.fn("CachePilot.run")(
           "usr/lib",
           "/lib",
           "--symlink",
-          "usr/lib",
+          "usr/lib64",
           "/lib64",
           "--symlink",
           "usr/bin",
@@ -915,7 +915,9 @@ const runPilot = Effect.fn("CachePilot.run")(
           })(role);
           const observed = yield* invoke(firstRoot, "/fixture", ["/usr/bin/ldd", "--", executable]);
           if (observed.exitCode !== 0 || observed.truncated || Str.trim(observed.stderr) !== "") {
-            return yield* CacheCommandError.new(`Sandbox ${role} library discovery failed.`);
+            return yield* CacheCommandError.new(
+              `Sandbox ${role} library discovery failed (exit=${observed.exitCode}; truncated=${observed.truncated}; stderrEmpty=${Str.isEmpty(Str.trim(observed.stderr))}).`
+            );
           }
           const paths = yield* parseCacheLinkerOutput(observed.stdout);
           const expectedFiles = CacheLinkerResolution.match(runtimeLinker.executables[role], {

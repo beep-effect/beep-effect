@@ -26,8 +26,10 @@ import * as Activity from "effect/workflow/Activity";
 import { VaultSyncRoot } from "./BoxMirror.ts";
 import { EchoClass, echoClassForEvent, echoClassForOperation } from "./VaultPush.model.ts";
 import { makeVaultSyncFileStore } from "./VaultSync.file-store.ts";
+import { annotateVaultSyncOutcome, VaultSyncAttribute } from "./VaultSync.instruments.ts";
 import type { BoxMirrorUnavailable } from "@beep/documents-use-cases/aggregates/VaultSync";
 import type * as WorkflowEngine from "effect/workflow/WorkflowEngine";
+import type { VaultSyncPassStep } from "./VaultSync.instruments.ts";
 
 const $I = $DocumentsServerId.create("aggregates/Sync/VaultSyncPass.saga-handlers");
 const stable = (value: string) => bytesToHex(sha256(new TextEncoder().encode(value)));
@@ -116,6 +118,15 @@ const duplicateEcho = (echoes: ReadonlyArray<typeof Echo.Type>, event: RemoteEve
     )
   );
 };
+// One static span inside each activity: the activity's own span is named by its durable,
+// partly hashed name, which the catalog cannot list.
+const passStep =
+  (step: VaultSyncPassStep, attributes: Readonly<Record<string, string>> = {}) =>
+  <A, E, R>(execute: Effect.Effect<A, E, R>) =>
+    execute.pipe(
+      annotateVaultSyncOutcome,
+      Effect.withSpan("VaultSyncPass.step", { attributes: { [VaultSyncAttribute.passStep]: step, ...attributes } })
+    );
 const lastEventIdOf = (events: ReadonlyArray<RemoteEvent>) =>
   O.getOrElse(
     O.map(A.last(events), (event) => ({ lastEventId: event.remoteEventId })),
@@ -175,7 +186,7 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
     const files = yield* makeVaultSyncFileStore();
     const checkpoint = yield* VaultSyncCheckpoint;
 
-    return Effect.fn("Documents.VaultSyncPass")(function* ({
+    return Effect.fn("VaultSyncPass.run")(function* ({
       key,
       destinationId,
       probeOnly,
@@ -188,10 +199,14 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
       never,
       WorkflowEngine.WorkflowEngine | WorkflowEngine.WorkflowInstance
     > {
+      yield* Effect.annotateCurrentSpan({
+        [VaultSyncAttribute.destinationId]: destinationId,
+        [VaultSyncAttribute.probeOnly]: probeOnly === true,
+      });
       if (probeOnly === true) {
         yield* Activity.make({
           name: "refresh-probe",
-          execute: mirror.probe({ destinationId }).pipe(Effect.orDie),
+          execute: mirror.probe({ destinationId }).pipe(Effect.orDie, passStep("refreshProbe")),
         });
         return { operationsSucceeded: 0, conflicts: 0 };
       }
@@ -242,7 +257,9 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
         const configured = yield* roots.resolve(destinationId);
         const root = yield* fs.realPath(configured);
         const found = yield* files.scan(root);
-        for (const entry of observedEntries(found)) yield* observeEntry(destination, entry);
+        const entries = observedEntries(found);
+        yield* Effect.annotateCurrentSpan(VaultSyncAttribute.itemsObserved, A.length(entries));
+        for (const entry of entries) yield* observeEntry(destination, entry);
       });
       const slotsOf = Effect.fnUntraced(function* (itemId: V.ItemId, kind: V.SyncItemKind) {
         const item = yield* items.state(itemId);
@@ -513,23 +530,37 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
       });
       yield* Activity.make({
         name: "probe",
-        execute: active.pipe(Effect.flatMap(O.match({ onNone: () => Effect.void, onSome: probe })), Effect.orDie),
+        execute: active.pipe(
+          Effect.flatMap(O.match({ onNone: () => Effect.void, onSome: probe })),
+          Effect.orDie,
+          passStep("probe")
+        ),
       });
       yield* Activity.make({
         name: "scan",
-        execute: active.pipe(Effect.flatMap(O.match({ onNone: () => Effect.void, onSome: scan })), Effect.orDie),
+        execute: active.pipe(
+          Effect.flatMap(O.match({ onNone: () => Effect.void, onSome: scan })),
+          Effect.orDie,
+          passStep("scan")
+        ),
       });
       const plan = yield* Activity.make({
         name: "pump-plan",
         success: S.Array(S.Struct({ itemId: V.ItemId, operationId: V.OperationId })),
-        execute: active.pipe(Effect.flatMap(O.match({ onNone: () => Effect.succeed([]), onSome: planPump }))),
+        execute: active.pipe(
+          Effect.flatMap(O.match({ onNone: () => Effect.succeed([]), onSome: planPump })),
+          passStep("plan")
+        ),
       });
       const echoes: Array<typeof Echo.Type> = [];
       for (const { itemId, operationId } of plan) {
         const echo = yield* Activity.make({
           name: `pump/${operationId}`,
           success: S.NullOr(Echo),
-          execute: pumpOne(itemId, operationId).pipe(Effect.orDie),
+          execute: pumpOne(itemId, operationId).pipe(
+            Effect.orDie,
+            passStep("pump", { [VaultSyncAttribute.operationId]: operationId })
+          ),
         });
         if (echo !== null) echoes.push(echo);
       }
@@ -539,17 +570,22 @@ export const VaultSyncPassLive = VaultSyncPass.toLayer<
         success: S.NullOr(S.String),
         execute: Effect.map(destinations.state(destinationId), (state) =>
           state._tag === "Registered" ? state.cursor : null
-        ),
+        ).pipe(passStep("pollStart")),
       });
       const conflicts = yield* Activity.make({
         name: "poll",
         success: S.Int,
         execute: active.pipe(
           Effect.flatMap(O.match({ onNone: () => Effect.succeed(0), onSome: (d) => poll(d, initialCursor, echoes) })),
-          Effect.orDie
+          Effect.orDie,
+          passStep("poll")
         ),
       });
+      yield* Effect.annotateCurrentSpan({
+        [VaultSyncAttribute.operationsSucceeded]: A.length(echoes),
+        [VaultSyncAttribute.conflicts]: conflicts,
+      });
       return { operationsSucceeded: A.length(echoes), conflicts };
-    });
+    }, annotateVaultSyncOutcome);
   })
 );

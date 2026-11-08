@@ -2,8 +2,8 @@
 
 ## Status
 
-Status: `active`
-Lifecycle: `active`
+Status: `paused`
+Lifecycle: `paused`
 
 Launched for the early handoff required by task qualification, under the
 operator's delegated blocker-resolution authority. Initial work landed in PRs
@@ -26,7 +26,17 @@ categories without retaining exception details. Hosted regression proof and
 primary acceptance must precede fresh bound observations; do not repeat the
 unchanged source. Both goals and all whole-goal criteria remain incomplete.
 
-## Phases
+## Paused checkpoint: 2026-11-08
+
+The [operational scope amendment](../turborepo-quality-cache-adoption/OPERATIONAL-SCOPE.md) replaces the exhaustive finish line.
+Finish and preserve the current PRs, then archive the owned worktrees. Resume
+only on a new operator instruction, starting with the six-gate evidence audit.
+No acceptance criterion or representative window is declared complete.
+The historical phase table and checkpoints below are retained for provenance;
+they are suspended, not the automatic next-work queue. The amendment governs
+conflicts with those earlier instructions and the old P6 checklist.
+
+## Phases (historical assurance plan, suspended)
 
 | Phase | Status | Work | Exit criteria |
 | --- | --- | --- | --- |
@@ -1574,6 +1584,12 @@ Reverse: After a fresh matching pair for the changed profile, add its source-bou
 The authored completionGate.statement retained same-PR lifecycle wording after PR2926 corrected the launcher and acceptance audit. Follow the existing SPEC and Agent Guide: final evidence, reflection and proposedCloseout land with implementation while status stays active or paused; after merge, completion refresh verifies the proposal and a separate packet-state PR adopts completed-retained. That PR must merge and origin/main must show matching closeout and initiative statuses. Preserve all behavioral, hosted-proof and observation requirements; this records no completion or runtime activation.
 
 Reverse: Revert this wording alignment if the canonical lifecycle changes; never claim completion from an unmerged adoption.
+
+### Preserve the read-only 64-bit library path in every native sandbox, 2026-11-08
+
+Run42452673520 passed input preparation and then refused sandbox Bun library discovery. All three sandbox constructors redirected lib64 to usr/lib, hiding a separate usr/lib64 tree. Use usr/lib64 inside the existing read-only usr mount, preserving hosts where that path aliases usr/lib. Keep the ldd exit, stderr, truncation, resolved-path and digest checks, namespace isolation and resource caps. Add only fixed-role numeric and boolean failure metadata and a synthetic private-stderr refusal control. The original log does not prove the mapping was its sole cause; a fresh accepted-source hosted observation is still required. No local quality suite, same-source retry, credential or signing activation is authorized by this checkpoint.
+
+Reverse: Restore the former mapping through a PR if accepted-source evidence contradicts it; retain all failed observations and keep qualification closed.
 
 <!-- beep:decisions:end -->
 

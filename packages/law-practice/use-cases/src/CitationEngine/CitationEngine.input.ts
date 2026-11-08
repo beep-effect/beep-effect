@@ -112,6 +112,23 @@ export class CitationEngineSourceInput extends S.Opaque<CitationEngineSourceInpu
     })
   )
 ) {}
+/** Select an installed server cleaner plan without serializing its callbacks.
+ * **Example** (Choose captured server behavior)
+ * ```ts
+ * import { CitationEngineCleanerPlan } from "@beep/law-practice-use-cases/server"
+ * const selection = CitationEngineCleanerPlan.make({ plan: "quotes/v1" })
+ * console.log(selection.plan)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class CitationEngineCleanerPlan extends S.Opaque<CitationEngineCleanerPlan, { readonly brand: unique symbol }>()(
+  S.Struct({ plan: S.NonEmptyString.check(S.isMaxLength(4096)) }).pipe(
+    $I.annoteSchema("CitationEngineCleanerPlan", {
+      description: "A bounded installed plan selector; live cleaner containers and callbacks remain server-owned.",
+    })
+  )
+) {}
 /** Named extraction modes. None and an empty cleaner list remain distinct;
  * callable cleaners and tokenizer implementations are captured server ports.
  * **Example** (Decode normal defaults)
@@ -129,14 +146,16 @@ export class CitationEngineExtractionOptions extends S.Opaque<
   { readonly brand: unique symbol }
 >()(
   S.Struct({
-    cleanSteps: S.Array(CitationBuiltinCleanerName)
-      .check(S.isMaxLength(CitationEngineAbsoluteMaxima.resolutionIterations))
-      .pipe(S.NullOr, S.withDecodingDefaultKey(Effect.succeed(null))),
+    cleanSteps: S.Union([
+      S.Array(CitationBuiltinCleanerName).check(S.isMaxLength(CitationEngineAbsoluteMaxima.resolutionIterations)),
+      CitationEngineCleanerPlan,
+    ]).pipe(S.NullOr, S.withDecodingDefaultKey(Effect.succeed(null))),
     container: CitationCleanerContainerKind.pipe(S.withDecodingDefaultKey(Effect.succeed<"list">("list"))),
     removeAmbiguous: S.Boolean.pipe(S.withDecodingDefaultKey(Effect.succeed(false))),
   }).pipe(
     $I.annoteSchema("CitationEngineExtractionOptions", {
-      description: "Schema-owned named options with original None/list distinction and no executable fields.",
+      description:
+        "Schema-owned builtin or captured-plan selection with original None/list distinction and no executable fields.",
     })
   )
 ) {}

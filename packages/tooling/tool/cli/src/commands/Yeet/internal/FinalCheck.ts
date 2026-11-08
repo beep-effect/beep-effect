@@ -45,6 +45,7 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { COMPUTE_PROFILE_WORKER_SKIP_REASON, gateRouteFor } from "../../../internal/repo-run/GateRoute.schemas.ts";
 import { CiLocalStepPlan, ciLaneDispatchStep } from "../../Ci/CiLane.ts";
 import { ChangeAtomKind, RouteSentinel } from "../../Ci/Route.schemas.ts";
 import { ChangeClassifier, ClassifyInput } from "../../Ci/Route.service.ts";
@@ -60,6 +61,7 @@ import { resolveLintPolicyScope } from "../../Quality/internal/LintPolicyScope.t
 import { GithubCheckLaneSpec } from "../../Quality/Quality.schemas.ts";
 import { readLintPolicySweeps } from "../../Quality/Tasks.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
+import { readYeetComputeProfile } from "./ComputeProfileRead.ts";
 import { collectExpectationRewrites, verifyExpectationRewrites } from "./ExpectationRewrite.ts";
 import {
   FinalCheckGate,
@@ -86,6 +88,7 @@ import {
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type { ComputeProfile } from "../../../internal/repo-run/ComputeProfile.schemas.ts";
 import type { CiLaneId } from "../../Ci/CiLane.ts";
 import type { ChangeAtom } from "../../Ci/Route.schemas.ts";
 import type { LaneProofSession } from "../../Quality/internal/LaneProofReuse.ts";
@@ -448,6 +451,175 @@ export const parseFinalCheckSkips = Effect.fn("Yeet.parseFinalCheckSkips")(funct
         );
   });
 });
+
+/**
+ * The skips the compute profile adds to a final-check run.
+ *
+ * **Details**
+ *
+ * Every requested gate that is hosted-only on `profile` and has no operator
+ * `--skip` is skipped with reason `compute-profile=worker`; an operator skip
+ * for the same gate wins and keeps its own reason. `forceLocal` adds nothing,
+ * so the hosted-only gates run here.
+ *
+ * **Example** (Defer check on a worker)
+ *
+ * ```ts
+ * import { computeProfileFinalCheckSkips } from "@beep/repo-cli/test/Yeet"
+ *
+ * const skips = computeProfileFinalCheckSkips({ gates: ["lint", "check"], operatorSkips: [], profile: "worker", forceLocal: false })
+ * console.log(skips.map((skip) => `${skip.gate}=${skip.reason}`)) // [ "check=compute-profile=worker" ]
+ * ```
+ *
+ * @param input - The planned gates, the parsed `--skip` values, the resolved
+ *   profile and whether `--force-local` keeps every gate local.
+ * @returns The profile skips, in gate order.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const computeProfileFinalCheckSkips = ({
+  gates,
+  operatorSkips,
+  profile,
+  forceLocal,
+}: {
+  readonly gates: ReadonlyArray<FinalCheckGate>;
+  readonly operatorSkips: ReadonlyArray<FinalCheckSkip>;
+  readonly profile: ComputeProfile;
+  readonly forceLocal: boolean;
+}): ReadonlyArray<FinalCheckSkip> =>
+  forceLocal
+    ? []
+    : pipe(
+        gates,
+        A.filter(
+          (gate) =>
+            gateRouteFor(gate, profile) === "hosted-only" && !A.some(operatorSkips, (skip) => skip.gate === gate)
+        ),
+        A.map((gate) => FinalCheckSkip.make({ gate, reason: COMPUTE_PROFILE_WORKER_SKIP_REASON }))
+      );
+
+/**
+ * Narrow the planned steps to what the compute profile may run locally.
+ *
+ * **Details**
+ *
+ * The `repo-sanity` lane opens with the whole-repo schema catalog scan, which
+ * holds about 5 GB on a host whose worker slice is capped at 7 GiB. On `worker`
+ * the gate therefore runs only its changeset status check (D6) and hosted Repo
+ * Sanity proves the rest. The decision lives here rather than in `beep ci lane`
+ * because hosted runners execute that same lane and must keep the full scan.
+ * `workstation` and `--force-local` keep the full lane.
+ *
+ * **Example** (Narrow repo-sanity on a worker)
+ *
+ * ```ts
+ * import { planFinalCheckSteps, routeFinalCheckStepsForProfile } from "@beep/repo-cli/test/Yeet"
+ * import * as A from "effect/Array"
+ * import * as O from "effect/Option"
+ *
+ * const planned = routeFinalCheckStepsForProfile({
+ *   planned: planFinalCheckSteps("/repo", "abc123", []),
+ *   profile: "worker",
+ *   forceLocal: false,
+ * })
+ * const step = A.findFirst(planned, (entry) => entry.gate === "repo-sanity")
+ * console.log(O.map(step, (entry) => entry.step.args.join(" "))) // Some("run beep quality changeset-status --since origin/main")
+ * ```
+ *
+ * @param input - The planned steps, the resolved profile and whether
+ *   `--force-local` keeps every gate local.
+ * @returns The steps to run on this host, in plan order.
+ * @category policies
+ * @since 0.0.0
+ */
+export const routeFinalCheckStepsForProfile = ({
+  planned,
+  profile,
+  forceLocal,
+}: {
+  readonly planned: ReadonlyArray<FinalCheckPlannedStep>;
+  readonly profile: ComputeProfile;
+  readonly forceLocal: boolean;
+}): ReadonlyArray<FinalCheckPlannedStep> =>
+  forceLocal || profile !== "worker"
+    ? planned
+    : A.map(planned, (entry) =>
+        entry.gate === "repo-sanity"
+          ? FinalCheckPlannedStep.make({
+              ...entry,
+              step: QualityTaskStep.make({
+                label: entry.step.label,
+                command: "bun",
+                args: ["run", "beep", "quality", "changeset-status", "--since", "origin/main"],
+                cwd: entry.step.cwd,
+              }),
+            })
+          : entry
+      );
+
+/**
+ * The line `yeet final-check` prints when the profile deferred gates to hosted CI.
+ *
+ * **Example** (Print the route line)
+ *
+ * ```ts
+ * import { FINAL_CHECK_WORKER_ROUTE_LINE } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(FINAL_CHECK_WORKER_ROUTE_LINE.startsWith("worker profile")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const FINAL_CHECK_WORKER_ROUTE_LINE =
+  "worker profile: hosted-only gates deferred; publish with `bun run beep yeet open --body-file <md>` and let hosted CI prove them";
+
+/**
+ * Resolve the compute profile and the skips it adds to a final-check run.
+ *
+ * **Details**
+ *
+ * Reads `ComputeProfileProbe` once; an unreadable
+ * `BEEP_COMPUTE_PROFILE` override fails the run (exit 2) instead of silently
+ * running hosted-only gates.
+ *
+ * **Example** (Build the resolution effect)
+ *
+ * ```ts
+ * import { resolveFinalCheckProfileSkips } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(resolveFinalCheckProfileSkips(["check"], [], false))) // true
+ * ```
+ *
+ * @param gates - The gates the run plans.
+ * @param operatorSkips - The parsed `--skip` values.
+ * @param forceLocal - Whether `--force-local` keeps every gate local.
+ * @returns The resolved profile and the skips it adds.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const resolveFinalCheckProfileSkips = Effect.fn("Yeet.resolveFinalCheckProfileSkips")(function* (
+  gates: ReadonlyArray<FinalCheckGate>,
+  operatorSkips: ReadonlyArray<FinalCheckSkip>,
+  forceLocal: boolean
+) {
+  const computeProfile = yield* readYeetComputeProfile("yeet final-check");
+  return {
+    computeProfile,
+    profileSkips: computeProfileFinalCheckSkips({ gates, operatorSkips, profile: computeProfile, forceLocal }),
+  };
+});
+
+const renderProfileSkips = (skips: ReadonlyArray<FinalCheckSkip>): string =>
+  `[yeet] final-check deferred to hosted CI (${COMPUTE_PROFILE_WORKER_SKIP_REASON}): ${A.join(
+    A.map(skips, (skip) => skip.gate),
+    ", "
+  )}\n[yeet] ${FINAL_CHECK_WORKER_ROUTE_LINE}`;
+
+const printProfileSkips = (skips: ReadonlyArray<FinalCheckSkip>) =>
+  A.isReadonlyArrayEmpty(skips) ? Effect.void : Console.log(renderProfileSkips(skips));
 
 /**
  * Decide whether a receipt admits the draft-to-ready flip of a head.
@@ -978,7 +1150,14 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
 > {
   const repoRoot = yield* findRepoRoot().pipe(Effect.mapError(YeetCommandError.new("Failed to locate repo root.")));
   const gates = yield* parseFinalCheckGates(options.gates);
-  const skips = yield* parseFinalCheckSkips(options.skip);
+  const operatorSkips = yield* parseFinalCheckSkips(options.skip);
+  // Resolved once per run: the profile decides which gates defer to hosted CI.
+  const { computeProfile, profileSkips } = yield* resolveFinalCheckProfileSkips(
+    gates,
+    operatorSkips,
+    options.forceLocal
+  );
+  const skips = A.appendAll(operatorSkips, profileSkips);
   const headSha = yield* resolveYeetRev(repoRoot, "HEAD");
   const mergeBase = yield* resolveYeetMergeBase(repoRoot, options.base, "HEAD");
   const changedFiles = yield* changedYeetPaths(
@@ -999,7 +1178,11 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
   const run: FinalCheckRun = {
     repoRoot,
     mergeBase,
-    planned: planFinalCheckSteps(repoRoot, mergeBase, changedFiles, O.getOrUndefined(fullPolicySweeps)),
+    planned: routeFinalCheckStepsForProfile({
+      planned: planFinalCheckSteps(repoRoot, mergeBase, changedFiles, O.getOrUndefined(fullPolicySweeps)),
+      profile: computeProfile,
+      forceLocal: options.forceLocal,
+    }),
     skips,
     resume: options.resume,
     route,
@@ -1011,6 +1194,7 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
       `[yeet] final-check plan for ${Str.slice(0, 12)(headSha)} (merge base ${Str.slice(0, 12)(mergeBase)}):`
     );
     yield* Effect.forEach(gates, (gate) => printGatePlan(run, gate), { discard: true });
+    yield* printProfileSkips(profileSkips);
     return O.none();
   }
 
@@ -1031,9 +1215,12 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
     steps,
     expectationRewrites: verdicts,
     route: FinalCheckRoute.make({ ...route, shadowMisses }),
+    computeProfile,
+    forceLocal: options.forceLocal,
   });
   const file = yield* writeReceipt(repoRoot, receipt);
   yield* Console.log(renderSummary(receipt));
+  yield* printProfileSkips(profileSkips);
   yield* Console.log(`[yeet] final-check receipt: ${file}`);
   if (receipt.verdict === "fail") {
     return yield* YeetCommandError.make({
