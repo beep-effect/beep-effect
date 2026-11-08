@@ -11,7 +11,7 @@
   "packetPath": "goals/citation-extraction-engine",
   "lifecycle": "active",
   "mission": "Deliver bounded six-form citation extraction and document-local linking on supplied plain text, with schema-first semantic values, exact verified source anchors, explicit ambiguity and Effect-native resource boundaries.",
-  "statusNote": "The operator-approved six-form scope and frozen29-input/33-occurrence selection screen are published in PR #2966. Actual native Layer diagnostics show bare-USC/CFR misses, empty-input failure and an ambiguous-supra mislink. A TypeScript-parser prototype matches the finite field/range/link labels using existing schemas and verified source/mention constructors; this is not general accuracy or resource qualification. Strict local-linking and a narrow Effect Socket process-stream adapter are implemented with25 focused tests passing, including supplied RPC/SchemaBinary round trips, EOF, deadline/cancellation and physical retirement. Production recognizer dependency/adoption, actual service integration, full resource proof and retained delivery remain open. Main is regularly merged; current hosted proof remains pending.",
+  "statusNote": "PR #2966 publishes the approved six-form scope, frozen29-input/33-occurrence comparison and strict local-link/Effect transport work. The exact distributed eyecite-ts0.34.2 artifact matches all frozen field/range/link labels through the existing verified adapter. A recorded decision adopts its pinned recognizer in a product-neutral driver; package verification, three driver tests and zero-finding driver laws pass. Existing25 transport/resolver/ownership tests pass. New workspace tasks remain uncached, without qualification expansion. The production engine has not switched: actual recognizer-worker/service integration, warning-to-refusal behavior, resource/privacy and metadata proof, hosted acceptance and retained delivery remain open.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -41,7 +41,9 @@
     "goals/citation-extraction-engine/research/SOURCES.md",
     "goals/citation-extraction-engine/history/evidence/prerequisite-compatibility.md",
     "goals/citation-verified-span-substrate/README.md",
-    "goals/court-reporter-vocabulary/README.md"
+    "goals/court-reporter-vocabulary/README.md",
+    "goals/citation-extraction-engine/decisions/2026-11-08-select-typescript-recognizer.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-08-typescript-artifact.json"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",
@@ -102,7 +104,7 @@
     {
       "id": "P7",
       "name": "Finite reviewed implementation selection",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P8",

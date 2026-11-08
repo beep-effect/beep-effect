@@ -9,7 +9,7 @@ checkpoint. Baseline packet: git commit 7dc8c2d443d.
 - P6 Scope and evidence rebaseline: Status: complete; Exit evidence: Coherent
   launcher/spec/manifest, decision and retained research published
 
-- P7 Finite implementation selection: Status: in-progress; Exit evidence: Frozen
+- P7 Finite implementation selection: Status: complete; Exit evidence: Frozen
   reviewed profile, actual-Layer/candidate comparison, decision
 
 - P8 Bounded implementation and owned repairs: Status: in-progress; Exit evidence:
@@ -20,8 +20,9 @@ checkpoint. Baseline packet: git commit 7dc8c2d443d.
 
 ## Next actions
 
-1. Record the production recognizer choice and pin/attribution decision from the
-   frozen selection evidence; qualify the distributed artifact before adoption.
+1. Integrate the selected pinned TypeScript driver into an owned recognizer
+   child. The recorded decision and distributed-artifact comparison are retained;
+   do not mistake selection for actual service acceptance.
 2. Connect recognizer discovery, verified original ranges and the strict local
    resolver to the actual service without another public citation hierarchy.
 3. Use the supplied Effect socket RPC protocol, stdio server and SchemaBinary
@@ -47,8 +48,9 @@ occurrences through existing schemas, source proofs and local resolver.
 Strict party matching, ambiguity propagation and a provided-Effect transport
 adapter now have focused tests in the
 [implementation receipt](history/evidence/2026-11-08-six-form-link-transport.md).
-Production adoption, actual parser/service integration and complete resource
-qualification remain open.
+The selected exact npm artifact and driver now pass their finite comparison
+and package qualification. Actual parser/service integration, warning-to-refusal
+behavior and complete resource qualification remain open.
 
 PR #2927 is merged at f849b3b901e. The baseline integration receipt identifies
 InputDocument reservation accounting and the full Bun diff-corpus watchdog as

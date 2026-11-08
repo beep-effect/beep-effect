@@ -252,7 +252,8 @@ const generatedComposers = $I.compose(
   "execution-authority-use-cases",
   "execution-authority-tables",
   "execution-authority-server",
-  "execution-authority-config"
+  "execution-authority-config",
+  "eyecite"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -3734,3 +3735,20 @@ export const $ExecutionAuthorityServerId: Identity.IdentityComposer<"@beep/execu
  */
 export const $ExecutionAuthorityConfigId: Identity.IdentityComposer<"@beep/execution-authority-config"> =
   composers.$ExecutionAuthorityConfigId;
+
+/**
+ * Identity composer for `@beep/eyecite`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $EyeciteId } from "@beep/identity/packages"
+ *
+ * const id = $EyeciteId.make("Eyecite")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $EyeciteId: Identity.IdentityComposer<"@beep/eyecite"> = composers.$EyeciteId;

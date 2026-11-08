@@ -19,9 +19,11 @@ The frozen selection screen and actual native/TypeScript adapter comparison are
 retained in history. A strict local-linking path and supplied-Effect process
 transport adapter now have focused tests; see the
 [implementation receipt](history/evidence/2026-11-08-six-form-link-transport.md).
-No production recognizer dependency or Python runtime has been selected.
-Next: record the recognizer choice, connect the actual isolated service, and
-prove its source/link/resource contract through hosted CI.
+The [selection decision](decisions/2026-11-08-select-typescript-recognizer.md)
+adopts exact eyecite-ts0.34.2 behind a technical driver; its distributed-artifact
+comparison and package checks pass. No Python runtime change. The production
+engine has not switched. Next: connect the actual isolated service and prove its
+source/link/resource contract through hosted CI.
 
 The original packet remains recoverable at git commit 7dc8c2d443d. Original
 corpora, decision/checkpoint records and ledgers remain in this packet for

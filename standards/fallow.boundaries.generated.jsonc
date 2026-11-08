@@ -372,6 +372,12 @@
         ]
       },
       {
+        "name": "@beep/eyecite",
+        "patterns": [
+          "packages/drivers/eyecite/src/**"
+        ]
+      },
+      {
         "name": "@beep/fc-runs",
         "patterns": [
           "packages/tooling/test-kit/fc-runs/src/**"
@@ -2604,6 +2610,19 @@
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/eyecite",
+        "allow": [
+          "@beep/eyecite",
+          "@beep/identity",
+          "@beep/schema"
+        ],
+        "allowTypeOnly": [
+          "@beep/eyecite",
+          "@beep/identity",
+          "@beep/schema"
         ]
       },
       {

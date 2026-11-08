@@ -1,0 +1,32 @@
+{
+  "scope": "Distributed-artifact finite selection and driver qualification, not actual public Layer or parser-process safety acceptance.",
+  "artifact": {
+    "name": "eyecite-ts",
+    "version": "0.34.2",
+    "license": "MIT",
+    "tarball": "https://registry.npmjs.org/eyecite-ts/-/eyecite-ts-0.34.2.tgz",
+    "integrity": "sha512-QPTLaIX32YDsD666fjJjODQ7qHIbwEx1I1Lko98Ps5ssPtK7Wy2/WuHqi1V0CwsIw6DqaVF5EXLs8/yE6MdShg==",
+    "sha1": "46cc83afe584410eab090e9ba32e7071a808b3ed",
+    "unpackedSize": 5220130,
+    "fileCount": 48,
+    "gitHead": null,
+    "runtimeDependencies": {},
+    "engines": {
+      "node": ">=22.0.0"
+    }
+  },
+  "profileSha256": "3cc6263c77bdb1f9d7b546b97dc0f503faf8644fcc2136ac5a1cbbebd4c8e65b",
+  "observedSha256": "9124c56a8c42b2ff67ba78186bc2669857ff14c75ec7cb096bd1c1ed39f282b0",
+  "inputs": 29,
+  "occurrences": 33,
+  "errors": 0,
+  "fieldRangeLinkDisagreements": 0,
+  "installation": "Exact registry version and matching SHA-512 in bun.lock; lifecycle scripts disabled during installation.",
+  "qualification": "package-verify passes lint/audit(build and check)/docgen; driver law scan has zero findings; three focused tests pass. Actual worker/service/resource acceptance remains open.",
+  "cache": "Eight new workspace tasks are explicitly uncached; cache audit has zero blocking findings and no qualification/baseline expansion.",
+  "retainedComparison": {
+    "path": "history/evidence/2026-11-08-six-form-adapter/typed-prototype.observed.json",
+    "perRowDataEqual": true,
+    "note": "Comparison of all structured per-row observations, not a claim of byte-identical library builds."
+  }
+}

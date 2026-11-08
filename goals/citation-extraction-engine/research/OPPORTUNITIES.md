@@ -1,5 +1,19 @@
 # Citation engine friction receipts
 
+## 2026-11-08 — recognizer dependency and transport limits need separate proof
+
+- Work: adopt the measured TypeScript recognizer through a technical driver.
+- Evidence: its tokenizer catches pattern errors, warns and continues. Supplied
+  Effect SchemaBinary RPC maxFrameSize configures receive parsing; its encoder
+  does not enforce an outbound size ceiling. Neither behavior proves a complete
+  successful result under the service's captured resource contract.
+- Required integration: refuse unexpected worker diagnostics, enforce outbound
+  byte ceilings at provided Socket/Stdio boundaries, and keep independent process
+  retirement. Retain Effect's codec/framing; do not build another frame protocol.
+- Prevention: test both traffic directions and swallowed-error signals on the
+  actual parser process before switching the public Layer. Driver package proof
+  and a generic transport fixture are separate from that acceptance.
+
 ## 2026-11-08 — encoded transport data is not a runtime proof
 
 - Work: replace historical native framing with supplied Effect RPC facilities.
