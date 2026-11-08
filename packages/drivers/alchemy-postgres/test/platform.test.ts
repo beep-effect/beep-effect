@@ -220,7 +220,7 @@ describe("AlchemyPostgresPlatform", () => {
   });
 });
 
-// A short lease, so a delivery a crashed host still holds comes back within the test's budget.
+// A short lease for this host's own claims; the crashed host's lease below is set explicitly.
 const shortLease = Unit.layer(CardAuditLive).pipe(
   Layer.provideMerge(AlchemyPostgresPlatform.layer(AlchemyPostgresConfig.make({ leaseMillis: 1_000 }))),
   Layer.provideMerge(PgliteTestLayer)
@@ -238,13 +238,19 @@ describe("AlchemyPostgresPlatform delivery lease", () => {
           Effect.repeat({ until: (runs) => runs === 1, schedule: Schedule.spaced(Duration.millis(20)) }),
           Effect.timeout(Duration.seconds(10))
         );
-        // A host that claimed the row and then died: pending, and leased to it for one lease.
+        // A host that claimed the row and then died: pending, and leased to it well past the checks below,
+        // so a slow runner cannot let the lease lapse before the "not before" assertion (ep55).
         const leasedAt = yield* Clock.currentTimeMillis;
         yield* sql`UPDATE alchemy_delivery
-          SET status = 'pending', locked_until = ${leasedAt + 1_000}, claimed_by = 'dead-host'
+          SET status = 'pending', locked_until = ${leasedAt + 60_000}, claimed_by = 'dead-host'
           WHERE model = 'Unit' AND source = ${`Card/${id}`}`;
-        yield* Effect.sleep(Duration.millis(500));
+        // Several worker polls (250 ms each by default) pass while the dead host's lease holds.
+        yield* Effect.sleep(Duration.millis(1_000));
         deepStrictEqual(auditsOf(id), 1);
+        // The lease lapses: the next poll may claim the row again.
+        const lapsedAt = yield* Clock.currentTimeMillis;
+        yield* sql`UPDATE alchemy_delivery SET locked_until = ${lapsedAt - 1}
+          WHERE model = 'Unit' AND source = ${`Card/${id}`}`;
         const runs = yield* Effect.sync(() => auditsOf(id)).pipe(
           Effect.repeat({ until: (count) => count === 2, schedule: Schedule.spaced(Duration.millis(20)) }),
           Effect.timeout(Duration.seconds(10))

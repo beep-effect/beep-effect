@@ -351,4 +351,36 @@ Lane `codex/audit-p4-delivery-record`
 
 Reverse: Remove this checkpoint and delivery addendum if its source pins or proof distinctions are disproved; retain all original private receipts.
 
+### Reject a missing validator repository operand before artifact validation, 2026-11-08
+
+Parent review of T37 confirms a trailing --repo raises IndexError at the CLI boundary. Add the existing usage exit-2 convention without changing valid argument dispatch. A synthetic extracted-main regression stops at a stubbed validation boundary; no ontology artifacts or validator functions execute. The old source fails that regression and the repaired source passes. P4 remains partial; PM, ADHD provenance and private teaching holds remain separate.
+
+Lane `codex/audit-validator-cli`
+
+Reverse: Revert this checkpoint and the three-line guard with its focused regression; retain private original audit evidence.
+
+### Escape validator diagnostic output and qualify helper contracts, 2026-11-08
+
+The local omission review found raw violation strings and unreadable-manifest exceptions reaching terminal output. Reuse safe_text at both final boundaries, preserving ordinary text and already-escaped evidence. An isolated rendering probe fails its safety assertions on the previous source and passes on the candidate; it compiles only the existing pure formatter and output statements with inert printing, without importing or running artifact validation. Qualify the skey and identity_expectation docstrings to name their actual caller and validated-domain scope. Malformed-record rejection remains the responsibility of the existing record checks. Original audit records and historical receipts remain unchanged. The superseded exact-head proof was stopped only after its process ancestry and groups were verified; partial results are retained and are not a passing final receipt. This new head requires fresh local checks and hosted review before content-final. P4 remains partial and no lifecycle or operator acceptance is claimed.
+
+Lane `codex/audit-validator-cli` · PR #2948
+
+Reverse: Revert this diagnostic-output wave and its isolated boundary regression together.
+
+### Escape control characters at the final flag output boundary, 2026-11-08
+
+Parent review validates that needed-evidence strings enter flags raw and the final CLI loop prints them raw, contrary to the existing safe_text flag-output contract. Reuse safe_text once at the final print boundary, preserving ordinary text and already-escaped text. A focused permanent CLI-boundary regression executes only the extracted pure formatter and output loop with an inert print sink; it passes after the fix and fails against the original rendering line. No full validator module, artifact-validation function, self-test suite or ontology artifacts were invoked. The argument-boundary regression also passes. P4 remains partial, with PM and ADHD held separately.
+
+Lane `codex/audit-validator-cli`
+
+Reverse: Revert the final print formatting call and its focused rendering regression if the boundary evidence is disproved; preserve all original reports and private counterfactual receipts.
+
+### Make the negation fixture exercise the identifier guard, 2026-11-08
+
+Parent review validates that the existing positive negation-context criterion lacks the identifier token needed to enter the guarded branch. Strengthen that fixture sentence without changing validator logic. An isolated actual-condition probe with an inert diagnostic confirms the old fixture is unchanged when the negation exemption is deleted, while the revised fixture detects that mutation. The actual branch AST is unchanged; no validator function, ontology record, full module or self-test was executed by this probe. Whole self-test and integration coverage remain unproved; P4 stays partial and PM/ADHD holds stay separate.
+
+Lane `codex/audit-validator-cli`
+
+Reverse: Restore the prior fixture sentence and remove this checkpoint if the branch-witness evidence is disproved; retain original reports and counterfactual receipts privately.
+
 <!-- beep:decisions:end -->
