@@ -1806,6 +1806,109 @@
           }
         ]
       }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_ModelsTest.ModelsTest.test_citation_comparison::tests/test_ModelsTest.py:24:12:caseDeclaration::1",
+          "observationSha256": "a32af0f3e7efd68580f14876c9a4cc8b18199a4f6bd7bd41783c83b84fe67281"
+        },
+        {
+          "id": "tests.test_ModelsTest.ModelsTest.test_citation_comparison::tests/test_ModelsTest.py:25:12:caseDeclaration::1",
+          "observationSha256": "bd525d0f1e50cfa86e08e7cf0fee1d272ff40a8ab1c7e8e93cdf9d6edf5410e6"
+        },
+        {
+          "id": "tests.test_ModelsTest.ModelsTest.test_citation_comparison::tests/test_ModelsTest.py:24:12:caseDeclaration::2",
+          "observationSha256": "37e336866459c3510735dcd6bd622c7dc7c01608c0f9c94eeb64c8452b8d50d0"
+        },
+        {
+          "id": "tests.test_ModelsTest.ModelsTest.test_citation_comparison::tests/test_ModelsTest.py:25:12:caseDeclaration::2",
+          "observationSha256": "0762d593c271c64541440e6389aeddb2110671970e9c02d5da24db7d757fee31"
+        },
+        {
+          "id": "tests.test_ModelsTest.ModelsTest.test_citation_comparison::tests/test_ModelsTest.py:24:12:caseDeclaration::3",
+          "observationSha256": "44ec9eb9b909fb30d6ac42a458ee0a0c649754556a165371726d064aa186e805"
+        },
+        {
+          "id": "tests.test_ModelsTest.ModelsTest.test_citation_comparison::tests/test_ModelsTest.py:25:12:caseDeclaration::3",
+          "observationSha256": "242178ebc4cf76593ca783430b6fd0424107a373a249753f6303f2d59cb7c882"
+        },
+        {
+          "id": "tests.test_ModelsTest.ModelsTest.test_persistent_hash::tests/test_ModelsTest.py:194:12:caseDeclaration::1",
+          "observationSha256": "e2ff003186459d054d52809e7835021ced4e65111d81ce6011f48dbe02488903"
+        },
+        {
+          "id": "tests.test_ModelsTest.ModelsTest.test_persistent_hash::tests/test_ModelsTest.py:194:12:caseDeclaration::2",
+          "observationSha256": "ea9f132334ddbd9f32580f99405a672578785c3108b169befe51ac42056a8973"
+        },
+        {
+          "id": "tests.test_ModelsTest.ModelsTest.test_persistent_hash::tests/test_ModelsTest.py:194:12:caseDeclaration::3",
+          "observationSha256": "72e68c204faf09f2a634cbca7dc13178e323c9d8eec4190f0575e675acbb1175"
+        },
+        {
+          "id": "tests.test_ModelsTest.ModelsTest.test_persistent_hash::tests/test_ModelsTest.py:194:12:caseDeclaration::4",
+          "observationSha256": "73cd8bdd15467ffac571b4fb958bca4fd0cf75c242ddfa2119fe7a61788cf1e6"
+        }
+      ],
+      "rationale": "Ten original zero-argument model equality/hash and persistent-integer assertions recomputed from pinned semantic defaults, independently authenticated unique edition choices and schema-owned fresh models. Actual groups/metadata/publications are checked before existing exact hash production. Fabricated token coordinates, general factory overrides and retained identity/resource protocols stay separate.",
+      "proof": {
+        "command": "bunx --bun vitest run test/CitationCanonicalDefaultFactory.test.ts --reporter=json --outputFile=../../../.beep/canonical-default-factory-results.json",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "resolve",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-original-default-factory-hashes.md",
+        "evidenceSha256": "0666f5e836d0fb4805cbfaca859ae2aa88861091552fac4ca24715b084ecf29c",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalDefaultFactory.test.ts",
+            "name": "recomputes all ten default model equality and persistent-hash assertions",
+            "sha256": "4d4c4f7859ccdef830b53ab31abcbdb93f159ff57a41f51cdd2fb5707f1e099c"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalDefaultFactory.fixtures.ts",
+            "sha256": "f43e27a9687eac81900eb64aa39311aae223353bb9ac718e2a4b49908f459834"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalCaptures.fixtures.ts",
+            "sha256": "1ac4ab7ebd6c3751b5706d93b562c6625d6c5d3062ddbe4284a6ef274a89c4a8"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalModel.fixtures.ts",
+            "sha256": "b47778caf58e758edf2c3c9f65464d82fb1ca9ce58dff25a2e90117eb8756177"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationFrozenEditions.fixtures.ts",
+            "sha256": "d5f7903a33c9f5715592de35f66423b6cd87dcae9177d00d7e76f25eb2b74fea"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/CaseResourceHash.ts",
+            "sha256": "57e103a8a19e141ec6bba44d43534fbfd9c2aaf6df0f38acc39591f05f1a1b9a"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/PublicationResourceHash.ts",
+            "sha256": "3726816c0d08f05cb707fa2a8887001ef499fb03e75630be41dc7b7bed45fd11"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/RuntimeHashEncoding.ts",
+            "sha256": "71d866bfbf2a7a849eb0a3cba23ae6c18ec1e3657ae01ad3a7078cec2a2aa6c7"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/FrozenEditions.ts",
+            "sha256": "5a75fd7614cb807528b3b8c097cb9be8b010f0635a5c4c7430f163bb7c8a152f"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/SemanticVocabulary.ts",
+            "sha256": "f83031765b77d68cf78cdaa40c56d2ccaea8581d5e73b1bc360c49f99430e3f9"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/AuthorityIdentity.ts",
+            "sha256": "2ded893d4d8caef79a4f32719b12f30839bcff23763fbc01e0b518c6d190f5c4"
+          }
+        ]
+      }
     }
   ]
 }

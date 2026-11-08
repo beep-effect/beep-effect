@@ -1813,6 +1813,12 @@ All eight Bun/Node groups pass for the remaining 22 original annotation workflow
 
 Reverse: Reopen any exact binding on contrary source or runtime evidence; preserve every unfinished capability, fidelity law and accounting row.
 
+### Qualify original default factory equality and persistent hashes, 2026-11-08
+
+Reconstruct the three zero-argument semantic factory profiles from pinned source defaults and independently authenticated unique edition choices. Check actual groups/metadata/editions, then replay six comparison/hash assertions and four exact persistent integers through existing hash implementations. Keep fake token positions outside verified evidence and retain arbitrary factory, alias, mutation, identity and resource-wrapper obligations.
+
+Reverse: Reopen exact bindings on contrary source or runtime evidence; preserve factory overrides, native token/resource protocols and all remaining laws.
+
 ### Qualify original full-opinion long-diff workflow, 2026-11-08
 
 Both native configurations pass the full original standalone-clean/public-annotate workflow and independent complete output plus original membership predicate. Register actual cleaned native text as a genuine test-host source without claiming automatic derived-source proof from clean. This qualifies the final original test_AnnotateTest.py assertion; all 39 assertions in that cohort now have complete-case proof. Whole-capability and full-goal acceptance remain open.
