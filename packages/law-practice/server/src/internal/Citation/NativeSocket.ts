@@ -25,12 +25,16 @@ const writeFailed = () => Socket.SocketError.make({ reason: Socket.SocketWriteEr
  * Connect Effect RPC's supplied socket protocol to an owned process. A single
  * scoped writer preserves stdin across messages and applies bounded queue
  * backpressure; write failures also fail reads so pending calls cannot hang.
+ * The optional captured byte ceiling rejects each encoded chunk before queuing.
  * This adapter neither starts nor kills the child and supplies no exit receipt.
  * @internal
  * @category operations
  * @since 0.0.0
  */
-export const makeCitationNativeSocket = Effect.fn("Citation.makeNativeSocket")(function* (child: ChildProcessHandle) {
+export const makeCitationNativeSocket = Effect.fn("Citation.makeNativeSocket")(function* (
+  child: ChildProcessHandle,
+  maximumBytes?: number
+) {
   const failed = yield* Deferred.make<never, Socket.SocketError>();
   const failure = Deferred.await(failed);
   const healthy = Deferred.isDone(failed).pipe(Effect.flatMap((done) => (done ? failure : Effect.void)));
@@ -63,6 +67,7 @@ export const makeCitationNativeSocket = Effect.fn("Citation.makeNativeSocket")(f
           return;
         }
         const bytes = P.isString(chunk) ? encoder.encode(chunk) : chunk;
+        if (maximumBytes !== undefined && bytes.byteLength > maximumBytes) return yield* writeFailed();
         const offered = yield* Queue.offer(queue, bytes).pipe(Effect.raceFirst(failure));
         if (!offered) return yield* closed();
         yield* healthy;

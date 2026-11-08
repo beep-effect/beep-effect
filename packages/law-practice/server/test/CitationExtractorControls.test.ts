@@ -239,6 +239,37 @@ it.layer(testLayer, { excludeTestServices: true })("public extractor refusal con
       yield* expectPhysical(control.snapshot, 1);
     })
   );
+  it.effect("refuses a schema-valid child observation outside the canonical source after physical retirement", () =>
+    Effect.gen(function* () {
+      const control = yield* fixture("Id.", {
+        entry: new URL("./CitationRecognizerFailure.entry.ts", import.meta.url),
+      });
+      const failure = yield* control.extractor.extract(control.input).pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "CitationRecognitionError", reason: "invalid-observation" });
+      expect(failure).not.toHaveProperty("cause");
+      expect(failure).not.toHaveProperty("input");
+      yield* expectPrivateFailure(failure, control.cwd);
+      yield* expectPhysical(control.snapshot, 1);
+    })
+  );
+  it.effect("preserves a backend source-limit refusal for an admitted request without publishing a result", () =>
+    Effect.gen(function* () {
+      const control = yield* fixture("PRIVATE-BACKEND-SOURCE-LIMIT", {
+        entry: new URL("./CitationRecognizerFailure.entry.ts", import.meta.url),
+      });
+      const failure = yield* control.extractor.extract(control.input).pipe(Effect.flip);
+      expect(failure).toMatchObject({
+        _tag: "CitationSafetyLimitExceeded",
+        operation: "extract",
+        limit: "sourceUtf16",
+      });
+      expect(failure).not.toHaveProperty("document");
+      expect(failure).not.toHaveProperty("report");
+      expect(failure).not.toHaveProperty("cause");
+      yield* expectPrivateFailure(failure, control.cwd);
+      yield* expectPhysical(control.snapshot, 1);
+    })
+  );
   it.effect("maps a real late worker diagnostic to a source-free public refusal after retirement", () =>
     Effect.gen(function* () {
       const control = yield* fixture("35 U.S.C. 101", {

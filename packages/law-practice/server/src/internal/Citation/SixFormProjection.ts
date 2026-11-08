@@ -16,7 +16,6 @@ import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { makeCitationMention } from "./Mention.ts";
@@ -114,11 +113,10 @@ const supraRanges = Effect.fnUntraced(function* (
   text: string,
   token: Extract<EyeciteRecognition, { readonly type: "supra" }>
 ) {
-  const matches = A.fromIterable(Str.matchAll(/\bsupra\b/gi)(read(text, token.range)));
-  if (A.length(matches) !== 1) return yield* invalid();
-  const match = A.getUnsafe(matches, 0);
-  if (match.index === undefined) return yield* invalid();
-  const start = token.range.start + match.index;
+  const local = read(text, token.range);
+  const at = yield* Effect.fromOption(Str.search(local, /\bsupra\b/i), invalid);
+  if (O.isSome(Str.search(Str.slice(at + 5)(local), /\bsupra\b/i))) return yield* invalid();
+  const start = token.range.start + at;
   const party = yield* partyRange(text, token, start);
   return {
     primary: EyeciteRawRange.make({ start, end: token.range.end }),
@@ -179,10 +177,7 @@ export const makeCitationSixFormProjection = Effect.fn("Citation.makeSixFormProj
   const digest = yield* Digest.Digest;
   const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
     CitationSafetyLimitExceeded.make({ operation: "extract", limit });
-  const artifact = yield* Result.match(CourtReporterArtifact, {
-    onSuccess: Effect.succeed,
-    onFailure: () => Effect.fail(invalid()),
-  });
+  const artifact = yield* Effect.fromResult(CourtReporterArtifact).pipe(Effect.mapError(invalid));
   const project = Effect.fn("Citation.projectSixForms")(
     function* (source: VerifiedSourceText, engineArtifact: Sha256Hex, raw: unknown) {
       const { output } = yield* S.decodeUnknownEffect(Input)({ output: raw }).pipe(Effect.mapError(invalid));

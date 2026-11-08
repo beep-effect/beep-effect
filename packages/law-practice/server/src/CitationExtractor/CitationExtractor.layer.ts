@@ -58,6 +58,7 @@ export class CitationExtractorConfiguration extends S.Opaque<
 ) {}
 const Configuration = S.toType(CitationExtractorConfiguration);
 const ConfigurationJson = CitationExtractorConfiguration.pipe(S.toCodecJson, S.fromJsonString);
+const invalidObservation = () => CitationRecognitionError.make({ reason: "invalid-observation" });
 const isFailure = S.is(CitationExtractorFailure);
 const normalize = Effect.fnUntraced(function* (cause: Cause.Cause<unknown>) {
   if (Cause.hasInterrupts(cause)) return yield* Effect.interrupt;
@@ -95,13 +96,7 @@ const make = Effect.fn("Citation.makeExtractor")(function* (raw: unknown) {
       );
       const { mentions, excludedAnchors } = yield* projection
         .project(source, engineArtifact, output)
-        .pipe(
-          Effect.mapError((error) =>
-            S.is(CitationSafetyLimitExceeded)(error)
-              ? error
-              : CitationRecognitionError.make({ reason: "invalid-observation" })
-          )
-        );
+        .pipe(Effect.mapError((error) => (S.is(CitationSafetyLimitExceeded)(error) ? error : invalidObservation())));
       const document = yield* resolveSixFormCitationMentions({
         verifiedSource: source,
         engineArtifact,
@@ -114,7 +109,7 @@ const make = Effect.fn("Citation.makeExtractor")(function* (raw: unknown) {
         Effect.mapError((error) =>
           error.reason === "limit-exceeded" && error.limit !== undefined
             ? CitationSafetyLimitExceeded.make({ operation: "extract", limit: error.limit })
-            : CitationRecognitionError.make({ reason: "invalid-observation" })
+            : invalidObservation()
         )
       );
       const report = CitationExtractorReport.make({
@@ -125,7 +120,7 @@ const make = Effect.fn("Citation.makeExtractor")(function* (raw: unknown) {
         outsideProfile: output.outsideProfile,
       });
       return yield* S.decodeUnknownEffect(S.toType(CitationExtractorResult))({ source, document, report }).pipe(
-        Effect.mapError(() => CitationRecognitionError.make({ reason: "invalid-observation" }))
+        Effect.mapError(invalidObservation)
       );
     }).pipe(timing.timed);
     return operation.run("extract", body).pipe(Effect.catchCause(normalize));

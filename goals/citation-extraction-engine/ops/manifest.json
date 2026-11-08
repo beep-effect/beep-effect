@@ -11,7 +11,7 @@
   "packetPath": "goals/citation-extraction-engine",
   "lifecycle": "active",
   "mission": "Deliver bounded six-form citation extraction and document-local linking on supplied plain text, with schema-first semantic values, exact verified source anchors, explicit ambiguity and Effect-native resource boundaries.",
-  "statusNote": "PR #2966 is the prospective final six-form delivery. The actual public Layer passes the frozen 29-input/33-occurrence profile on Bun and Node. Hosted unit shards passed, then Coverage Regression exposed owned existing-row and new-model gaps. The repair adds source/transport/error controls and fixes a real post-close dropped-write defect by checking Effect Queue.offer's boolean result. Four parent-boundary suites pass 48 tests, seven retained/input/artifact suites pass 50 tests, and five model tests pass; these are scoped runs, not complete package coverage. Existing floors remain unchanged. Fresh hosted comparison and measured new-row review, merge and retained lifecycle adoption remain pending; no historical exhaustive row is promoted.",
+  "statusNote": "PR #2966 is the prospective final six-form delivery. Hosted unit shards pass. The first coverage repair restored file-level gaps; fresh comparison then exposed independent server aggregate floors. The current repair consolidates the bounded writer, uses supplied Effect String.search/fromResult and test I/O/transport services, and adds startup, encoded-output and acquisition-cancellation controls. Seven focused suites pass 61 tests, including actual Bun/Node frozen-profile replay. The unchanged aggregate floors clear in diagnostic projection; exact final-head hosted proof remains pending. New file identities will use reviewed complete per-file counters and the canonical additions-only writer, preserving every existing package/file floor. Merge and retained lifecycle adoption remain pending; historical exhaustive obligations are superseded, not passed.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -64,7 +64,8 @@
     "goals/citation-extraction-engine/history/evidence/2026-11-08-typescript-artifact.json",
     "goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-public-layer.md",
     "goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-predecessor-barriers.md",
-    "goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-coverage-repair.md"
+    "goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-coverage-repair.md",
+    "goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-aggregate-proof.md"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",

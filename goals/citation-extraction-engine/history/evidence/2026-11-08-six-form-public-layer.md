@@ -17,7 +17,7 @@ inputs and local authority relationships. Every quote is produced through the
 published genuine source/anchor verifier, not decoded from a receipt. This is a
 finite reviewed-profile result, not a general accuracy claim.
 
-`CitationExtractorControls.test.ts` has sixteen passing controls. Caller/source
+The initial public control qualification had sixteen passing controls. Caller/source
 mismatch and source prerequisite failure refuse before parser spawn. Real parser
 candidate, mention, authority and aggregate quoted-text exhaustion refuse the
 whole result after independently observed physical retirement. A diagnostic
@@ -27,17 +27,27 @@ the method is statically R = never. Captured TestClock still controls the
 deadline when a caller supplies a never-sleep Clock. Deadline and two successive
 cancellations acknowledge three physical retirements and allow capacity reuse.
 
-Only late-warning and synchronous-block controls use purpose-built child
-fixtures. The block runs after a real direct recognizer call; it demonstrates
+The initial qualification used purpose-built child fixtures only for the
+late-warning and synchronous-block controls. The later coverage repair also
+uses a narrow typed-parser-failure fixture to qualify error transport. The block
+runs after a real direct recognizer call; it demonstrates
 supervisor responsiveness and retirement, not a measured pathological donor
 regex. All discovery/profile calls use the real pinned recognizer.
 
-The current six-suite server run passes 61 tests, including both runtime profile
+The earlier six-suite server run passed 61 tests, including both runtime profile
 checks, 16 public controls, actual worker/strict/retained resolver and callback
 session regressions. The driver passes five tests. Earlier artifact and
 report/error qualification is retained; no broad coverage percentage is claimed.
 The [predecessor repair](2026-11-08-six-form-predecessor-barriers.md) records the
 controlled mixed-profile counterexample and source-verified ordering repair.
+The later [coverage repair](2026-11-08-six-form-coverage-repair.md) increases
+public controls to 19 and adds projection, transport and error-closure controls.
+Its separate focused runs pass 48 parent-boundary tests, 50 retained/input/artifact
+tests and five model tests; these counts do not replace complete hosted proof.
+The subsequent [aggregate repair](2026-11-08-six-form-aggregate-proof.md) has
+21 public controls and a separate seven-suite run of 61 tests. It preserves
+actual child isolation proof while qualifying the program's standard I/O
+boundary through supplied Effect test services.
 
 ## Identity, prerequisites and installation
 

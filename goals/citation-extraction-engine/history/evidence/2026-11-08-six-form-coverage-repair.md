@@ -60,3 +60,11 @@ These findings support reviewing measured new rows, not lowering existing
 floors or calling the hosted comparison green. The fresh complete hosted merge
 must establish the current measurement before canonical additions-only adoption.
 No baseline is changed in this repair batch.
+
+The [aggregate repair](2026-11-08-six-form-aggregate-proof.md) supersedes this
+receipt's requirement for a separate complete hosted cycle before new-file
+identity recording. It preserves all existing floors and final hosted
+acceptance, while allowing reviewed complete per-file local measurements after
+source is committed and frozen. The earlier child-only program instrumentation
+rationale is also narrowed: direct program tests now qualify its real stdio/RPC
+behavior; physical isolation remains proved separately by actual children.

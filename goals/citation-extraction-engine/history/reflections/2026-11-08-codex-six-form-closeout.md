@@ -64,3 +64,19 @@ controls or a precise invariant/interface rationale. New measured row review
 must use canonical complete evidence; it never authorizes lowering an existing
 floor. This remains a prospective reflection while hosted acceptance and
 retention are open.
+
+## Aggregate gates and meaningful program controls
+
+Reviewed new-file identities do not waive the package aggregate gate. The
+fresh hosted result restored earlier file-level gaps but still rejected the
+aggregate. Rather than lower that floor or expand old donor parity tests, this
+repair removes the duplicate bounded writer and exercises real startup,
+encoded-output refusal and acquisition cancellation in the new path. Supplied
+Stdio.layerTest and Socket/RPC/SchemaBinary services run the actual program and
+parser; separate physical-child tests remain the isolation proof.
+
+The earlier requirement for a separate complete hosted cycle before recording
+new identities was self-imposed. Policy permits reviewed complete per-file
+local counters after source is frozen, through the additions-only writer that
+holds all existing rows. That is not complete package proof. Final exact-head
+hosted acceptance still governs merge and retained completion.

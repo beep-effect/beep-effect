@@ -14,7 +14,6 @@ import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as RpcClient from "effect/rpc/RpcClient";
 import * as RpcSerialization from "effect/rpc/RpcSerialization";
@@ -62,7 +61,6 @@ const invalid = () => fail("invalid-runtime");
 const isFailure = S.is(CitationRecognizerFailure);
 const isSafety = S.is(CitationSafetyLimitExceeded);
 const isDriverFailure = S.is(EyeciteFailure);
-const encoder = new TextEncoder();
 /** Capture policy, Clock, runtime, shared admission and physical owner. Returned
  * recognition has R=never. Only confirmed retirement releases native capacity;
  * unexpected stderr refuses the complete result instead of hiding SDK skips.
@@ -126,36 +124,14 @@ export const makeCitationRecognizerWorker = Effect.fn("Citation.makeRecognizerWo
             );
             const output = yield* Effect.scoped(
               Effect.gen(function* () {
-                const socket = yield* makeCitationNativeSocket(child);
-                const writer = socket.writer.pipe(
-                  Effect.map((writer) => {
-                    const write: Socket.Writer["write"] = (chunk) => {
-                      if (Socket.isCloseEvent(chunk)) return writer.write(chunk);
-                      const bytes = P.isString(chunk) ? encoder.encode(chunk) : chunk;
-                      return bytes.byteLength <= limits.processMessageBytes
-                        ? writer.write(bytes)
-                        : Effect.fail(
-                            Socket.SocketError.make({ reason: Socket.SocketWriteError.make({ cause: undefined }) })
-                          );
-                    };
-                    return {
-                      write,
-                      writeAll: Effect.fnUntraced(function* (chunks: ReadonlyArray<Uint8Array | string>) {
-                        yield* Effect.forEach(chunks, write, { concurrency: 1, discard: true });
-                      }),
-                    };
-                  })
-                );
+                const socket = yield* makeCitationNativeSocket(child, limits.processMessageBytes);
                 const context = yield* Layer.build(serialization);
                 const protocol = yield* RpcClient.makeProtocolSocket({
                   retryPolicy: Schedule.recurs(0),
                   retryTransientErrors: false,
                   pingInterval: Duration.times(timing.deadline, 2),
                   pingTimeout: timing.deadline,
-                }).pipe(
-                  Effect.provideService(Socket.Socket, Socket.make({ reader: socket.reader, writer })),
-                  Effect.provideContext(context)
-                );
+                }).pipe(Effect.provideService(Socket.Socket, socket), Effect.provideContext(context));
                 const rpc = yield* RpcClient.make(EyeciteRpcs, { disableTracing: true }).pipe(
                   Effect.provideService(RpcClient.Protocol, protocol)
                 );

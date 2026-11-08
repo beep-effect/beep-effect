@@ -156,6 +156,27 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned process with s
       expect(failure.reason._tag).toBe("SocketCloseError");
     })
   );
+  it.effect("bounds encoded strings and batches before queueing while allowing exact bytes and close", () =>
+    Effect.gen(function* () {
+      const spawner = yield* ChildProcessSpawner;
+      const childCommand = yield* command();
+      const child = yield* spawner.spawn(childCommand);
+      const completed = yield* Deferred.make<ReadonlyArray<Uint8Array>>();
+      const stdin = Sink.collect<Uint8Array>().pipe(
+        Sink.mapEffect((chunks) => Deferred.succeed(completed, chunks).pipe(Effect.asVoid))
+      );
+      const socket = yield* makeCitationNativeSocket({ ...child, stdin }, 4);
+      const writer = yield* socket.writer;
+      for (const write of [writer.write("😀x"), writer.writeAll([new Uint8Array(5)])]) {
+        const failure = yield* write.pipe(Effect.flip);
+        expect(failure.reason._tag).toBe("SocketWriteError");
+      }
+      yield* writer.writeAll(["😀", new Uint8Array([1, 2, 3, 4])]);
+      yield* writer.write(new Socket.CloseEvent());
+      const chunks = yield* Deferred.await(completed);
+      expect(A.map(chunks, (chunk) => chunk.byteLength)).toEqual([4, 4]);
+    })
+  );
   it.effect("keeps stdin failure sticky for a subsequent direct write", () =>
     Effect.gen(function* () {
       const spawner = yield* ChildProcessSpawner;
