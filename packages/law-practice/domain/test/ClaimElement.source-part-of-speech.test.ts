@@ -278,6 +278,18 @@ describe("parallel coordinate fallback elements", () => {
     })
   );
 
+  it.effect("does not split list items at a comma inside parentheses", () =>
+    Effect.gen(function* () {
+      const tree = yield* treeOf(refused("the rod comprises a plate (a tab, a pin), a cover, and a base"), true);
+      assert.deepStrictEqual(A.drop(spansOf(tree), 1), [
+        "a plate (a tab, a pin)",
+        "a cover",
+        "a base",
+        "stores the signal",
+      ]);
+    })
+  );
+
   it.effect("keeps a two-object composition flat and does not nest without evidence", () =>
     Effect.gen(function* () {
       const twoObjects = refused("the rod comprises a plate and a cover");

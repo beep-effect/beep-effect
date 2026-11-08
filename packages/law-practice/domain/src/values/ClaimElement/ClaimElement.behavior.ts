@@ -1984,7 +1984,7 @@ const scopedElementOf =
       : element;
   };
 const compositionVerbPattern =
-  /\b(?:further\s+)?(?:comprises|comprise|comprising|includes|include|including|has|have|having)\s+(?=(?:an?|at least one|one or more)\s)/iu;
+  /\b(?:further\s+)?(?:comprises|comprise|comprising|includes|include|including|has|have|having)\s+(?=(?:an?|at least one|one or more)\s)/giu;
 const enumerationItemPattern = /^(?:and\s+)?(?:an?|at least one|one or more)\s/iu;
 const enumerationMarkPattern =
   /[()[\]]|,\s+and\s+(?=(?:an?|at least one|one or more)\s)|,\s+(?=(?:an?|at least one|one or more)\s)|\s+and\s+(?=(?:an?|at least one|one or more)\s)/giu;
@@ -2012,9 +2012,9 @@ const expandEnumeration = (node: ColonScopeNode): ReadonlyArray<ColonScopeNode> 
   const text = node.header.text;
   if (node.group || O.isSome(node.label)) return [node];
   return O.getOrElse(
-    O.flatMap(Str.match(compositionVerbPattern)(text), (match) => {
-      const at = O.getOrElse(O.fromUndefinedOr(match.index), () => 0);
-      const listStart = at + Str.length(match[0]);
+    O.flatMap(A.head(matchesIn(compositionVerbPattern)(node.header)), (verb) => {
+      const at = verb.start - node.header.start;
+      const listStart = at + Str.length(verb.text);
       if (Str.includes(",")(Str.slice(0, at)(text))) return O.none();
       const items = enumerationItems(sliceSpan(node.header, listStart));
       if (
