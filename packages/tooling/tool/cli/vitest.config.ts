@@ -147,6 +147,11 @@ const isolatedSuites = [
   "test/yeet-sweep-retire.test.ts",
 ];
 
+// Yeet pins this on its proof lanes. Tests build temporary repositories that lack the pinned SHA, so
+// an inherited value fails their nested lanes. It must be unset, not empty: the reader falls back
+// with `??`. Workers inherit this process's environment, and a test that needs it sets its own.
+Reflect.deleteProperty(process.env, "BEEP_YEET_PROOF_BASE");
+
 // Doctest mode collects `src/**` through `includeSource` and the property sweep resolves its own
 // include list, so both keep the single isolated project; splitting would run doctests twice.
 const splitProjects = !vitestDoctestActive && !fcDeepSweepActive;

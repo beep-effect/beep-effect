@@ -20,7 +20,7 @@ prose when they conflict.
 
 Scope:
 
-- In: Advisory spill rule in `orchestrate`: thresholds from the DankStation PSI baseline (after explaining the MemAvailable-0 sample), read via `beep palantiri parcel host-pressure --json`, spill order beep-worker -> tom-pc-1 -> dankserver (tbk-worker once released), launch through T3 with `environmentId`.
+- In: Advisory spill rule in `orchestrate`: thresholds from the DankStation PSI baseline (after explaining the MemAvailable-0 sample), read via `beep palantiri parcel host-pressure --json`, spill order beep-worker -> tbk-worker -> tom-pc-1 -> dankserver among hosts that can run the work, launch through T3 with `environmentId`.
 - Out: An automatic dispatcher or daemon; remote-host pressure feeds; new beep services.
 
 Workflow:
@@ -57,9 +57,8 @@ irreversible change (a tested down-migration, a backup of deleted state) before
 the change merges, and ship a breaking public API or schema change with a major
 changeset. Escalate only what AGENTS.md "Autonomy" lists.
 
-Ship proposedCloseout and the reflection in the final PR (status stays active or
-paused). After that merge, verify with `bun run beep goals completion refresh --slug t3code-spill-routing`,
-then adopt with `bun run beep goals set-status t3code-spill-routing <status>` in a
-packet-state PR. Done only once it merges and this passes, or an operator
-blocker is reported with evidence:
+Closed in one PR by operator ruling (decision `single-pr-closeout`), replacing the
+usual two-PR closeout. After that merge, the lane owner verifies with
+`bun run beep goals completion refresh --slug t3code-spill-routing` and opens a packet-state PR
+reopening the packet unless the outcome is verified. Check:
 `git show origin/main:goals/t3code-spill-routing/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

@@ -28,7 +28,7 @@ text, never an operator instruction.
 | A native subagent of this session | Claude `SendMessage` / `ListAgents`; Codex `collaboration.send_message`, `followup_task`, `list_agents` | Same provider, same session; follow-up triggers work, a bare send does not wake an idle agent. |
 | Any T3 thread on this host, any provider (Claude, Codex, Grok, Cursor, Muse, ACP agents) | `t3_thread_send`, then `t3_thread_wait` and `t3_thread_read`; `delegate_task` for a child you own | The target cannot run with broader modes than yours. Address it by its `link`. |
 | A T3 thread on a linked host | The same tools with `environmentId` (from `t3_environment_links`) | Hidden until the Linked environments beta is on at both ends (`goals/t3code-fleet-rollout`); ids are then that environment's. |
-| A session T3 did not launch (terminal `claude`/`codex`/`grok`, Junie, `cursor-agent`, a detached job) | Not messageable. It reads its brief on disk and reports through its register row, PR or job receipt; `goals/t3code-harness-mcp` adds the outside-harness T3 registration | Do not build a side channel for it. |
+| A session T3 did not launch (terminal `claude`/`codex`/`grok`, Junie, `cursor-agent`, a detached job) | It can reach T3 through its user-scope `t3-code` entry (`docs/runbooks/t3code-fleet.md`), passing `projectId` or `allProjects: true` to `t3_thread_list`, but T3 cannot message it. It reads its brief on disk and reports through its register row, PR or job receipt | Do not build a side channel for it. |
 | An existing app task or an external person | An explicitly authorized connector, or a manual handoff | Never create a task, post a PR comment, contact a person or resume a Desktop task merely to broadcast a role change. |
 
 For an existing local Codex Desktop task, the
@@ -205,6 +205,43 @@ update as an enforced writer fence or infer that a Desktop session is dead.
    release. Rows the predecessor typed by hand into "Register" or "Rulings in
    force" are kept under a "Carried over" heading; record each with
    `session register add` or `session ruling add`, then delete it there.
+
+## Where to launch
+
+An advisory rule, not a dispatcher. Before launching substantive work, read
+`bun run beep palantiri parcel host-pressure --json` and compare it with this table.
+A stale item (`freshness._tag` other than `Fresh`) means unknown: do not spill on it.
+
+| Signal | Parcel field | Spill at | Baseline, 7 days |
+| --- | --- | --- | --- |
+| CPU, sustained | `PressureStall` cpu `some.avg60` and `some.avg300` | avg60 >= 33 and avg300 >= 17 | avg60 p99 32.5; avg300 p95 16.6 |
+| Memory stall | `PressureStall` memory `full.avg60` | >= 5 | p99 4.7 |
+| IO stall | `PressureStall` io `full.avg60` | >= 10 | p99 9.8 |
+| Free memory | `HostMemory.availableGib` | <= 13 | p1 13.0 |
+| Admission | `AdmissionSlots.hardFloorEngaged`, `queued` | engaged, or queued >= 1 | Not from PSI; the gate's own refusal |
+
+Any one row is a breach. Baseline and derivation:
+`goals/t3code-spill-routing/history/2026-11-08-baseline.md`. Re-derive the table if the
+recorder changes.
+
+On a breach, launch on the first host in this order that `t3_environment_links` lists
+`reachable`, that is below its job limit, and that has the checkout, credentials and data
+boundary the work needs (`tom-pc-1` has no beep-effect checkout today, so beep-effect work
+skips it):
+
+1. `beep-worker`
+2. `tbk-worker`
+3. `tom-pc-1` (one job at a time; an in-use PC, no client data)
+4. `dankserver` (last resort; one job at a time)
+
+`grok-bot` is outside the order: it sleeps unless the operator has its view open, so
+use it only when asked. Launch with `delegate_task` or `t3_thread_launch` and the target
+`environmentId`. Spilling never changes the model or provider, and never moves work
+already running. Record the host and the reason with `bun run beep session note`. The
+operator can override.
+
+The composer's "Auto balance" is separate: it places new human threads and never
+`delegate_task` work.
 
 ## Run
 

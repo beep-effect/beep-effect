@@ -35,7 +35,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ExplorationManifest } from "../Explore/Atlas.ts";
-import { knowledgeLinkDestinations } from "../Knowledge/Knowledge.refs.ts";
+import { knowledgeInlineSpans, knowledgeLinkDestinations } from "../Knowledge/Knowledge.refs.ts";
 import { decodeReflectionFrontmatterText, reflectionFileNameIsArtifact } from "../Lint/ReflectionArtifact.ts";
 import { ArchiveIndexRow, ArchiveRecord, ArchiveRepoRef, TombstoneKeep } from "./Archive.schemas.ts";
 import { ArchiveError } from "./Goals.errors.ts";
@@ -680,7 +680,7 @@ export const renderTombstoneReadme = (stub: TombstoneStub): string => {
           "",
           "## Provides",
           "",
-          ...(A.isReadonlyArrayEmpty(stub.provides) ? ["None."] : A.map(stub.provides, (slug) => `- \`${slug}\``)),
+          ...(A.isReadonlyArrayEmpty(stub.provides) ? ["None."] : A.map(stub.provides, (slug) => `- ${slug}`)),
           "",
           "## Headline finding",
           "",
@@ -949,26 +949,57 @@ export const makeTombstoneWriter = Effect.map(captureContext, (context) =>
  */
 export const TombstoneWriterLive = Layer.effect(TombstoneWriter, makeTombstoneWriter);
 
-// One link's line, rewritten at the parsed column of its destination; `None` when the line no longer
-// carries that destination (the file changed after the plan was computed).
+const rewriteLinkDestination = (line: string, link: InboundLink): O.Option<string> =>
+  O.map(
+    A.findFirst(knowledgeLinkDestinations(line), (candidate) => candidate.destination === link.destination),
+    (match) => {
+      const start = match.column - 1;
+      return `${Str.slice(0, start)(line)}${link.rewrittenTo}${Str.slice(start + Str.length(link.destination))(line)}`;
+    }
+  );
+
+const OPEN_LINK_TEXT = /\[[^\]]*$/u;
+const CLOSE_LINK_TEXT = /^[^[\]]*\]\(/u;
+const OPENING_BACKTICKS = /^`+/u;
+
+// The knowledge doctor reads an inline code span even inside link text, so a citation leaves as plain
+// text: wrapped in a new link, or only unquoted when it already sits inside one.
+const rewriteCodeSpan = (line: string, link: InboundLink): O.Option<string> =>
+  O.flatMap(
+    A.findFirst(knowledgeInlineSpans(line), (candidate) => candidate.span === link.destination),
+    (match) => {
+      const start = match.column - 1;
+      const opening = Str.slice(start)(line);
+      const delimiter = O.getOrElse(
+        O.flatMap(Str.match(OPENING_BACKTICKS)(opening), (run) => O.fromUndefinedOr(run[0])),
+        () => "`"
+      );
+      const contentStart = Str.length(delimiter);
+      return O.map(Str.indexOf(delimiter)(Str.slice(contentStart)(opening)), (closing) => {
+        const before = Str.slice(0, start)(line);
+        const after = Str.slice(contentStart + closing + contentStart)(opening);
+        const insideLinkText =
+          O.isSome(Str.match(OPEN_LINK_TEXT)(before)) && O.isSome(Str.match(CLOSE_LINK_TEXT)(after));
+        return insideLinkText
+          ? `${before}${link.destination}${after}`
+          : `${before}[${link.destination}](${link.rewrittenTo})${after}`;
+      });
+    }
+  );
+
+// One reference's line, rewritten at its parsed column; `None` when the line no longer carries that
+// reference (the file changed after the plan was computed).
 const rewriteLine = (lines: ReadonlyArray<string>, link: InboundLink): O.Option<ReadonlyArray<string>> =>
   pipe(
     A.get(lines, link.line - 1),
-    O.flatMap((line) =>
-      O.map(
-        A.findFirst(knowledgeLinkDestinations(line), (candidate) => candidate.destination === link.destination),
-        (match) => {
-          const start = match.column - 1;
-          return `${Str.slice(0, start)(line)}${link.rewrittenTo}${Str.slice(start + Str.length(link.destination))(line)}`;
-        }
-      )
-    ),
+    O.flatMap((line) => (link.form === "link" ? rewriteLinkDestination(line, link) : rewriteCodeSpan(line, link))),
     O.flatMap((next) => A.replace(lines, link.line - 1, next))
   );
 
 /**
- * Rewrite the inbound links of one document's text, line-exact, by replacing
- * each link destination at its parsed column.
+ * Rewrite the inbound references of one document's text, line-exact: a link
+ * destination is replaced at its parsed column, and a code-span citation
+ * becomes plain link text.
  *
  * **Example** (Rewrite one link)
  *
@@ -977,7 +1008,7 @@ const rewriteLine = (lines: ReadonlyArray<string>, link: InboundLink): O.Option<
  * import { rewriteLinksInText } from "@beep/repo-cli/commands/Goals/ArchiveExecution.service"
  * import * as Result from "effect/Result"
  *
- * const link = InboundLink.make({ file: "a.md", line: 1, destination: "x.md", rewrittenTo: "https://e/x.md" })
+ * const link = InboundLink.make({ file: "a.md", line: 1, destination: "x.md", form: "link", rewrittenTo: "https://e/x.md" })
  * console.log(Result.getOrThrow(rewriteLinksInText("see [x](x.md)", [link]))) // "see [x](https://e/x.md)"
  * ```
  *
@@ -1021,7 +1052,7 @@ const rewriteFile = Effect.fnUntraced(function* (
         "tombstone-conflict",
         null,
         file,
-        `line ${link.line} no longer links ${link.destination}; recompute the plan`
+        `line ${link.line} no longer references ${link.destination}; recompute the plan`
       )
     )
   );

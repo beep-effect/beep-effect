@@ -292,6 +292,12 @@ Feasibility adjudication 002 asked for one component census and then paired comp
 
 Reverse: Revert the fallback commit and remove sourcePartOfSpeechGrammar; the census receipt stays as retained evidence.
 
+### Nest composed lists of three or more items and classify finite verbs by tag, 2026-11-08
+
+Gold keeps a composition verb's list nested about as often as flat (41 against 46), so a blanket split is unjustified. Two-object lists stay flat and only three or more determiner-led items nest. Separately, element kind is part of node identity, and the known predicate word list missed many finite verbs, so a tagged finite verb or auxiliary now makes an element functional. A noun following the verb keeps the mistagged-compound exception, except for an -s verb directly after a nominal, following subject agreement. Development replay moves 47 to 48 of 538 with all 46 identities retained, matched elements 867 to 910 and matched edges 2330 to 2490. A dot-label strip was measured and rejected because it breaks deliberate negative controls. No label, scorer, fixture, denominator or gate changed, the replay is not a frozen gate measurement, and every usefulness gate still fails.
+
+Reverse: Remove expandEnumeration and the tagged verb branch of functionalAt; the replay receipt stays as retained evidence.
+
 ### Compare independently source-certified fallback term refinement, 2026-11-08
 
 Continue the operator-authorized performance repair with one focused source-certified fallback-term candidate, based on the retained 48/538 implementation. Preserve the earlier census/composition decision and every label, scorer, source selection, result and mandatory passing identity. The real five-family diagnostic certified one local three-head/governor registry while all five report payloads remained byte-identical; this establishes a narrow implementation lead, not performance or complete attachment semantics.
