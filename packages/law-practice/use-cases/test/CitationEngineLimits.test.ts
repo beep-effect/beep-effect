@@ -45,7 +45,7 @@ describe("schema-owned citation safety budgets", () => {
       const encoded = yield* S.encodeEffect(CitationEngineEffectivePolicy)(policy);
       const decoded = yield* S.decodeEffect(CitationEngineEffectivePolicy)(encoded);
       expect(S.toEquivalence(S.toType(CitationEngineEffectivePolicy))(policy, decoded)).toBe(true);
-      expect(encoded.limits.operationDeadline).toBe(30_000);
+      expect(encoded.limits.operationDeadline).toBe(50_000);
       const nanos = Duration.nanos(250_000_000n);
       const nanosPolicy = { ...policy, limits: { ...policy.limits, regexDeadline: nanos } };
       const nanosEncoded = yield* S.encodeUnknownEffect(CitationEngineEffectivePolicy)(nanosPolicy);

@@ -467,14 +467,17 @@ describe("CI lane partitions", () => {
       { id: "repo-cli-4", packages: 1, weightSeconds: 402 },
       { id: "repo-cli-5", packages: 1, weightSeconds: 402 },
       { id: "repo-cli-6", packages: 1, weightSeconds: 402 },
+      { id: "law-practice-1", packages: 1, weightSeconds: 990 },
+      { id: "law-practice-2", packages: 1, weightSeconds: 990 },
+      { id: "law-practice-3", packages: 1, weightSeconds: 990 },
       { id: "unit-a", packages: 46, weightSeconds: 749 },
       { id: "unit-b", packages: 46, weightSeconds: 750 },
       { id: "unit-c", packages: 46, weightSeconds: 749 },
-      { id: "unit-d", packages: 47, weightSeconds: 749 },
+      { id: "unit-d", packages: 46, weightSeconds: 651 },
     ]);
   });
 
-  it("pins the repo-cli Vitest shard split and keeps every other bin unsharded", () => {
+  it("pins the repo-cli and law-practice-server Vitest shard splits and keeps every other bin unsharded", () => {
     expect(A.map(CI_LANE_PARTITIONS, (partition) => ({ id: partition.id, shard: partition.shard }))).toEqual([
       { id: "lint-a", shard: undefined },
       { id: "lint-b", shard: undefined },
@@ -484,6 +487,9 @@ describe("CI lane partitions", () => {
       { id: "repo-cli-4", shard: CiLanePartitionShard.make({ index: 4, total: 6 }) },
       { id: "repo-cli-5", shard: CiLanePartitionShard.make({ index: 5, total: 6 }) },
       { id: "repo-cli-6", shard: CiLanePartitionShard.make({ index: 6, total: 6 }) },
+      { id: "law-practice-1", shard: CiLanePartitionShard.make({ index: 1, total: 3 }) },
+      { id: "law-practice-2", shard: CiLanePartitionShard.make({ index: 2, total: 3 }) },
+      { id: "law-practice-3", shard: CiLanePartitionShard.make({ index: 3, total: 3 }) },
       { id: "unit-a", shard: undefined },
       { id: "unit-b", shard: undefined },
       { id: "unit-c", shard: undefined },
@@ -491,6 +497,9 @@ describe("CI lane partitions", () => {
     ]);
     for (const id of ["repo-cli-1", "repo-cli-2", "repo-cli-3", "repo-cli-4", "repo-cli-5", "repo-cli-6"] as const) {
       expect(partitionPackages(id)).toEqual(["@beep/repo-cli"]);
+    }
+    for (const id of ["law-practice-1", "law-practice-2", "law-practice-3"] as const) {
+      expect(partitionPackages(id)).toEqual(["@beep/law-practice-server"]);
     }
   });
 

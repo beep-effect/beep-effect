@@ -164,7 +164,8 @@ const isReviewedRegistryUrl = (url: string) =>
   O.match(Str.match(UrlParts)(url), {
     onNone: () => false,
     onSome: (parts) =>
-      Str.toLowerCase(parts[1] ?? "") === "https" &&
+      // Groups 1 and 2 always participate in a match.
+      Str.toLowerCase(`${parts[1]}`) === "https" &&
       parts[2] === "registry.npmjs.org" &&
       Str.isEmpty(parts[3] ?? "") &&
       Str.isEmpty(parts[4] ?? ""),
@@ -553,9 +554,5 @@ export const runCachePilotInputs = Effect.fn("Ci.runCachePilotInputs")(function*
     Effect.sync(() => process.umask(0o077)),
     () => program,
     (previous) => Effect.sync(() => process.umask(previous))
-  ).pipe(
-    Effect.catchIf(P.not(isReportedExit), (error) =>
-      refuse(`${COMMAND}: ${P.hasProperty(error, "message") ? String(error.message) : "failed"}`)
-    )
-  );
+  ).pipe(Effect.catchIf(P.not(isReportedExit), (error) => refuse(`${COMMAND}: ${error.message}`)));
 });

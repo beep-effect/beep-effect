@@ -268,6 +268,9 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
         "repo-cli-4",
         "repo-cli-5",
         "repo-cli-6",
+        "law-practice-1",
+        "law-practice-2",
+        "law-practice-3",
         "unit-a",
         "unit-b",
         "unit-c",
@@ -275,7 +278,7 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
         "labs",
       ]);
       const sixths = A.map(A.take(input.expectedPartitions, 6), (partition) => partition.packages[0]?.shard);
-      const lab = input.expectedPartitions[10]?.packages[0];
+      const lab = input.expectedPartitions[13]?.packages[0];
       assertDefined(lab);
       expect(sixths).toEqual(A.map(A.range(1, 6), (index) => ({ index, total: 6 })));
       expect(lab.packageName).toBe("@beep/ciops");

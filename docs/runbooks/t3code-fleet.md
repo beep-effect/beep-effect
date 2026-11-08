@@ -9,7 +9,8 @@ DankStation publishes after each fork sync. Packet:
 
 | Piece | Where | What it does |
 | --- | --- | --- |
-| `update-t3code-source` | DankStation `$HOME/.local/bin` (out of repo) | Daily timer: merge upstream into the fork, stamp one fork version, build the hub AppImage, publish the CLI archive, push the fork, install the hub build. `T3CODE_SYNC_FORCE=1` rebuilds the current commit. |
+| `update-t3code-source` | DankStation `$HOME/.local/bin` (out of repo) | Timer at login (+4 min) and daily at 08:00: merge upstream into the fork, stamp one fork version, build the hub AppImage, publish the CLI archive, push the fork, install the hub build. The fork is `beep-effect/t3code`, the only fork of upstream in use. The primary checkout's `main` is fast-forwarded when it is clean. `T3CODE_SYNC_FORCE=1` rebuilds the current commit. Logs: `$HOME/.local/state/t3code-sync/`. |
+| `t3code-restart-prompt` | DankStation `$HOME/.local/bin` (out of repo) | Launched detached by the sync when the hub app is open (it starts before the login timer fires): a Plasma notification offers "Restart T3 Code now"; on click it stops only the hub's Electron main, waits up to 30 s, and relaunches `t3code` with the old session environment. |
 | `t3code-fork-publish` | DankStation `$HOME/.local/bin`; source `ops/t3code-fork-publish.sh` | Builds the resource monitor, the server single-executable and the Linux x64 CLI archive; writes `v<version>/{archive,SHA256SUMS}` and `latest.json` under `$HOME/.local/opt/t3code/publish`; serves that directory tailnet-only with Tailscale Serve (no Funnel). |
 | `t3code-fork-pull` | each host `$HOME/.local/bin`; source `ops/t3code-fork-pull.sh` + timer units | Every 30 min: read `latest.json`; when the version differs from the service's `activeVersion`, run `t3 update <version> --yes`, which verifies `SHA256SUMS`, trials the runtime, rolls back on failure and restarts the service. |
 | `$HOME/.config/t3code-fork/pull.env` | each host, mode 600, never committed | `T3CODE_FORK_MIRROR=https://<hub>.<tailnet>.ts.net:<port>` |
@@ -204,7 +205,10 @@ not Tailscale Serve.
 - Never run `t3 update` without the mirror pinned: with `T3CODE_RELEASE_BASE_URL`
   unset it resolves the public GitHub release and would replace the fork build.
 - The hub AppImage is built without a GitHub publish config, so the desktop
-  updater has no feed; restart T3 Code after a sync to pick up the new build.
+  updater has no feed; the sync posts a restart prompt when the app is open,
+  and a build installed while the app is closed runs on the next launch.
+- Fork freshness is judged on `beep-effect/t3code` and the sync log
+  (`$HOME/.local/state/t3code-sync/`), not on upstream's commit count.
 - WSL terminates a distro once its last `wsl.exe` session ends, even with
   systemd running inside it; the T3 service on tom-pc-1 survives only while the
   `T3AgentWSL` keep-alive task holds a session open.

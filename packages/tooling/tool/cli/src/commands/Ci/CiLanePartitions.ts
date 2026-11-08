@@ -98,6 +98,9 @@ export const CiLanePartitionId = LiteralKit([
   "repo-cli-4",
   "repo-cli-5",
   "repo-cli-6",
+  "law-practice-1",
+  "law-practice-2",
+  "law-practice-3",
   "unit-a",
   "unit-b",
   "unit-c",
@@ -437,6 +440,31 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
     packages: ["@beep/repo-cli"],
     shard: CiLanePartitionShard.make({ index: 6, total: 6 }),
   }),
+  // @beep/law-practice-server grew from 98 s (2026-11-02) to about 2,970 s of
+  // Bun/Istanbul wall time once #2847 registered the canonical citation
+  // corpora; unit-d then overran its 60-minute job. Three Vitest shards keep
+  // each body near the other unit bins.
+  CiLanePartition.make({
+    id: "law-practice-1",
+    lane: "test-unit",
+    weightSeconds: 990,
+    packages: ["@beep/law-practice-server"],
+    shard: CiLanePartitionShard.make({ index: 1, total: 3 }),
+  }),
+  CiLanePartition.make({
+    id: "law-practice-2",
+    lane: "test-unit",
+    weightSeconds: 990,
+    packages: ["@beep/law-practice-server"],
+    shard: CiLanePartitionShard.make({ index: 2, total: 3 }),
+  }),
+  CiLanePartition.make({
+    id: "law-practice-3",
+    lane: "test-unit",
+    weightSeconds: 990,
+    packages: ["@beep/law-practice-server"],
+    shard: CiLanePartitionShard.make({ index: 3, total: 3 }),
+  }),
   // Four unit bins, LPT over per-package wall seconds measured 2026-11-02 from attempt-one hosted runs
   // 41247317827 (unit-a 32.5 min, unit-b 27.8 min, both serial at one package at a time); every package the
   // default placer had been hashing into unit-a/unit-b since September is curated here. The weight is the
@@ -604,10 +632,9 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
   CiLanePartition.make({
     id: "unit-d",
     lane: "test-unit",
-    weightSeconds: 749,
+    weightSeconds: 651,
     packages: [
       "@beep/test-utils",
-      "@beep/law-practice-server",
       "@beep/md",
       "@beep/epistemic-server",
       "@beep/execution-authority-server",
