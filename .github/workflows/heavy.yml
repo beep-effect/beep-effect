@@ -133,7 +133,11 @@ jobs:
             install_typos: "false"
           - id: test-integration
             name: Test Integration
-            timeout_minutes: 40
+            # law-practice-server's integration suite measured 168 min of
+            # file time on the 8-vCPU pool at two vitest workers (main run
+            # 42444900312 finished 43 of 48 files in 90 min). 120 lets the
+            # lane report its real failures instead of a cancellation.
+            timeout_minutes: 120
             uses_turbo: "true"
             install_typos: "false"
           - id: docgen
@@ -921,6 +925,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          umask 077
           timeout --signal=TERM --kill-after=30s 15m \
             bun --no-env-file run beep cache pilot \
             --request .beep/cache/local-pilot-observation/request.json \

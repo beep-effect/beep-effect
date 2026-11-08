@@ -22,7 +22,8 @@ warehouse, and scheduling roadmap remains with that initiative.
 ## Launch and resume conditions
 
 Continue from the current manifest and the
-[November execution record](./history/2026-11-06-reviewed-local-repairs.md).
+[November execution record](./history/2026-11-06-reviewed-local-repairs.md) and
+[November 8 delivery revalidation](./history/2026-11-08-local-p4-delivery-revalidation.md).
 Audited-content mutation requires its concrete report and recorded false-positive
 review. No paid pilot, purchase, new endpoint or resumed promotional cloud work
 is admitted. PM's missing original and ADHD provenance remain separate holds.

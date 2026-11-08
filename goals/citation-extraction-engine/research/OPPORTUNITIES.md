@@ -466,3 +466,20 @@ history/evidence/2026-11-03-edition-inference.md.
   extraction, not a verification vulnerability fix.
 - Prevention: run the focused baseline before diagnosing reference ownership;
   inspect canonical constructor/verifier behavior instead of assuming aliasing.
+
+## 2026-11-08 — the Test Integration timeout hid two real integration failures
+
+- Work: make `main` green again from `@slop/11-6-26` (PR #2915) after the
+  canonical corpora pushed law-practice-server past the 40-minute lane.
+- Evidence: `heavy.yml@main` pins the lane budget, so the 90-minute change
+  cannot prove itself on the PR; a local run of `bun run beep:test:integration`
+  with four vitest workers (64 cores) took 38 minutes and failed
+  `CitationInputDocument` (reservedUnits 0, expected cleanerTextUtf16 5, both
+  runtimes, identical with the old 30 s deadline) and the `CitationDiffWorker`
+  1005-source-map bun replay at its 600 s watchdog. Neither had ever been
+  reached on hosted CI since #2847.
+- Resolution: keep two workers, land the budget through main, attribute the
+  lane as inherited under S11, and leave both failures with this packet.
+- Prevention: when a new corpus is registered for hosted integration, record
+  the measured lane time with the decision; a lane that times out reports
+  "cancelled", not the tests behind it.

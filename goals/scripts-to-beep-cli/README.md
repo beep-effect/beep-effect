@@ -31,7 +31,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3 Yeet. Final PR #2921 (PR 3) deletes the seven transitional CI scripts now that #2906 (merged 5a842b4882) put the binary-calling heavy.yml on main. #2860 (d15ecf4ca61), #2902 (8224cf33a5) and #2906 are merged. `proposedCloseout` is `completed-retained` with `finalPullRequest` 2921; `initiative.status` stays `active` until completion evidence verifies after the merge.
+P3 Yeet. Re-final PR #2922 (goals-only) carries `proposedCloseout`; #2921 (PR 3, merged 17472a68ce) deleted the seven transitional CI scripts now that #2906 (merged 5a842b4882) put the binary-calling heavy.yml on main. #2860 (d15ecf4ca61), #2902 (8224cf33a5) and #2906 are merged. `proposedCloseout` is `completed-retained` with `finalPullRequest` 2922 because #2921 merged inside its review window (decision `2026-11-08-refinal-after-early-merge`); `initiative.status` stays `active` until completion evidence verifies after the merge.
 
 ## Latest Evidence
 
