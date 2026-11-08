@@ -22,8 +22,8 @@ import { decomposeFiniteSourceFixture } from "./ClaimElementFiniteSource.ts";
 import type { ClaimRoleDecomposition } from "@beep/law-practice-domain/values/ClaimElement";
 
 const activated = S.Struct({
-  schemaVersion: S.Literal("right-parenthesis-synthetic-source-activation/v1"),
-  historicalCase: S.Literal("bare-label-deferred"),
+  schemaVersion: S.tag("right-parenthesis-synthetic-source-activation/v1"),
+  historicalCase: S.tag("bare-label-deferred"),
   historicalFixtureSha256: S.NonEmptyString,
   historicalParsedJsonSha256: S.NonEmptyString,
   historicalCaseSha256: S.NonEmptyString,

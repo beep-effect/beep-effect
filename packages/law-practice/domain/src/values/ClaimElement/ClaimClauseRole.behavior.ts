@@ -1312,16 +1312,9 @@ const finiteRightListSource = (context: FiniteProofValidationContext): O.Option<
     return false;
   }
   const memo = context.rightListMemo;
-  switch (memo.status) {
-    case "unread":
-      return computeFiniteRightListSource(context);
-    case "none":
-      return O.none();
-    case "found":
-      return memo.source;
-    case "denied":
-      return false;
-  }
+  if (memo.status === "unread") return computeFiniteRightListSource(context);
+  if (memo.status === "found") return memo.source;
+  return memo.status === "none" ? O.none() : false;
 };
 const validateFiniteLabelBoundary = (
   context: FiniteProofValidationContext,
