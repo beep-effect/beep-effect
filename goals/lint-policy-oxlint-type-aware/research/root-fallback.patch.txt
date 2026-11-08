@@ -1,5 +1,0 @@
---- tsconfig.json (baseline)
-+++ tsconfig.json (experimental)
-@@ include @@
-   "include": [
-+    "./packages/_internal/db-admin/drizzle.config.ts",

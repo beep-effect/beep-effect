@@ -102,7 +102,7 @@ seed's grounded rows, now superseded by the lane file where they differ):
 
 - **Graduated goal (2026-08-06):**
   [`goals/legal-position-relator-runtime`](../../../goals/legal-position-relator-runtime/README.md)
-  — its [`research/SOURCES.md`](../../../goals/legal-position-relator-runtime/research/SOURCES.md)
+  — its [`research/SOURCES.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/legal-position-relator-runtime/research/SOURCES.md)
   reproduces this corpus for implementation convenience; **this file stays the
   primary copy** and the reproduction must not drift ahead of it.
 - Parent packet: [`../../legal-patent-kg-deepening/README.md`](../../legal-patent-kg-deepening/README.md)

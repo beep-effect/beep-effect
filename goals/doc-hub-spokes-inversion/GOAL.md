@@ -20,7 +20,7 @@ prose when they conflict.
 
 Scope:
 
-- In: `packages/foundation/modeling/{md->doc,markdown,html}`, import sites across apps and packages, `scratchpad/temp`, `goals/effected-promotion/SPEC.md` (one amendment row), changesets, cache baseline request.
+- In: `packages/foundation/modeling/{md->doc,markdown,html}`, import sites across apps and packages, `scratchpad/temp`, [goals/effected-promotion/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/effected-promotion/SPEC.md) (one amendment row), changesets, cache baseline request.
 - Out: lexical and pandoc behaviour, the persisted `Doc.Document` JSON encoding, any HTML string parser, one-tree convergence.
 
 Workflow:

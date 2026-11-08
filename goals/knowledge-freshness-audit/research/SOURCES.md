@@ -14,11 +14,11 @@ from an exploration packet. Do not invent exploration lineage.
 | [Non-slice families](../../../standards/architecture/07-non-slice-families.md) | Tooling and driver ownership |
 | [Driver boundaries](../../../standards/architecture/03-driver-boundaries.md) | External API wrapper placement |
 | [Goals standard](../../../goals/README.md) and [template](../../../goals/_template/) | Packet shape, lifecycle, launcher, reflection |
-| [Parent SPEC](../../knowledge-surface-automation/SPEC.md) | Inherited workstream doctrine |
+| [Parent SPEC](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/knowledge-surface-automation/SPEC.md) | Inherited workstream doctrine |
 | [Parent manifest](../../knowledge-surface-automation/ops/manifest.json) | Recorded parent state, distinct from potentially stale prose |
-| [Parent decisions](../../knowledge-surface-automation/research/p2-grill-decisions.md) | Ratified provenance, gate, and report decisions |
-| [Report approvals](../../knowledge-surface-automation/research/p1-fp-eyeball-verdicts.md) | Scope of prior operator false-positive reviews |
-| [Bootstrap report](../../knowledge-surface-automation/research/p1-report-bootstrap-adopt-plan.md) | Plan-only compiler proof |
+| [Parent decisions](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/knowledge-surface-automation/research/p2-grill-decisions.md) | Ratified provenance, gate, and report decisions |
+| [Report approvals](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/knowledge-surface-automation/research/p1-fp-eyeball-verdicts.md) | Scope of prior operator false-positive reviews |
+| [Bootstrap report](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/knowledge-surface-automation/research/p1-report-bootstrap-adopt-plan.md) | Plan-only compiler proof |
 | [Research ownership](../../../research/README.md) | Immutable merged research and single-writer ledger |
 | [Docs ownership](../../../docs/README.md) | Authored, generated, and private documentation |
 | [Generated standards policy](../../../standards/generated-artifacts.policy.md) | Dedicated whole-repo refresh PRs |

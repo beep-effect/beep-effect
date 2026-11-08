@@ -37,12 +37,7 @@
     "goals/effect-string-migration/GOAL.md",
     "goals/effect-string-migration/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md",
-    "research/census-2026-10-21.md",
-    "research/census-2026-10-22.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -96,5 +91,13 @@
   "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2324
+  },
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/effect-string-migration",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "a67e8ad428be5a11b23cffc9021323034035323e",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
   }
 }

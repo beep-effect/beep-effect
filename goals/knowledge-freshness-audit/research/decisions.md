@@ -17,16 +17,16 @@ initiative's ratified architecture.
 
 ## Inherited decisions
 
-The parent's [SPEC](../../knowledge-surface-automation/SPEC.md),
-[P2 decisions](../../knowledge-surface-automation/research/p2-grill-decisions.md),
-and [execution decisions](../../knowledge-surface-automation/research/p1-execution-decisions.md)
+The parent's [SPEC](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/knowledge-surface-automation/SPEC.md),
+[P2 decisions](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/knowledge-surface-automation/research/p2-grill-decisions.md),
+and [execution decisions](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/knowledge-surface-automation/research/p1-execution-decisions.md)
 already establish report-before-mutation, patch-first provenance, initial
 customization-purpose review, permanent deterministic gates, and source
 resolution against tracked Git trees. This campaign adds semantic claim coverage
 and finite remediation accounting.
 
 Parent report approvals are scoped to their actual reports. The
-[false-positive verdicts](../../knowledge-surface-automation/research/p1-fp-eyeball-verdicts.md)
+[false-positive verdicts](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/knowledge-surface-automation/research/p1-fp-eyeball-verdicts.md)
 record B/D/C and A approval; they do not approve a newly built semantic fleet
 classifier or this campaign's extraction behavior. The bootstrap plan compiler
 is implemented, but a generic materializer is not part of this delivery.
