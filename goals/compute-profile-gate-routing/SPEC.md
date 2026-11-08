@@ -33,7 +33,7 @@ Higher sources outrank lower sources when they conflict.
 ## Target Surfaces
 
 - `packages/tooling/tool/cli/src/internal/repo-run/` (ComputeProfile service, MemoryStats ceiling, GateRoute table, QualityScheduler refusal, facts carrying the profile).
-- `packages/tooling/tool/cli/src/commands/Yeet/**` (publish→open posture, final-check auto-skips, ready accepting hosted green), a `beep compute profile` command.
+- `packages/tooling/tool/cli/src/commands/Yeet/**` (publish→open posture, final-check auto-skips, ready accepting hosted green), and a NET-NEW profile probe subcommand of the repo CLI (name fixed in P0).
 - `lefthook.yml` (`skip: - run:` on `schema-catalog` and `instrumentation-catalog`).
 - `.github/workflows/check.yml` (draft-only hosted shard regeneration job, relock push pattern).
 - `AGENTS.md` Quality Operator, `docs/runbooks/agent-pools.md`, `.claude/skills/remote-development-agents/SKILL.md`, `.claude/skills/yeet/references/gates-and-proof.md`, Palantiri host-pressure parcel.
@@ -50,7 +50,7 @@ Higher sources outrank lower sources when they conflict.
 
 ## Acceptance Criteria
 
-- [ ] `bun run beep compute profile` prints `worker` inside dankserver's worker slice and `workstation` on DankStation; `--is worker` exits 0/1 in under a second.
+- [ ] The profile probe subcommand prints `worker` inside dankserver's worker slice and `workstation` on DankStation, and its `--is worker` form exits 0/1 in under a second.
 - [ ] On a worker host `yeet final-check` refuses hosted-only gates and prints the `yeet open` route; `--force-local` runs them and the receipt records it.
 - [ ] A worker-profile lane completes edit → commit (hooks skipped by profile) → `yeet open` → hosted regeneration commit → hosted green → `yeet ready` with no local process above 1.5 GB RSS.
 - [ ] A workstation commit still runs both catalog hooks (no behavior change on `workstation`).
@@ -65,8 +65,8 @@ Higher sources outrank lower sources when they conflict.
 | Packet launcher size | `test "$(wc -m < goals/compute-profile-gate-routing/GOAL.md)" -le 4000` | Passes |
 | Manifest JSON | `jq . goals/compute-profile-gate-routing/ops/manifest.json` | Passes |
 | Whitespace | `git diff --check -- goals/compute-profile-gate-routing` | Passes |
-| Profile on a capped scope | `systemd-run --user --scope -q -p MemoryHigh=2G bun run beep compute profile` | prints `worker` |
-| Profile on the workstation | `bun run beep compute profile` | prints `workstation` |
+| Profile on a capped scope | the profile probe subcommand under `systemd-run --user --scope -q -p MemoryHigh=2G` | prints `worker` |
+| Profile on the workstation | the profile probe subcommand on DankStation | prints `workstation` |
 | Package verify | `bun run beep quality package-verify @beep/repo-cli` | Passes |
 | Hook skip | `LEFTHOOK_VERBOSE=1 git commit` on a worker host | both catalog commands reported skipped |
 

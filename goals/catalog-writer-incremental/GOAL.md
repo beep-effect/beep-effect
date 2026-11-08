@@ -20,7 +20,7 @@ prose when they conflict.
 
 Scope:
 
-- In: `packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts`, the instrumentation-catalog command, `packages/tooling/tool/cli-kit` `ShardScope`, the `lefthook.yml` cost comment.
+- In: `packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts`, the instrumentation-catalog command, `packages/tooling/library/repo-cli-kit` `ShardScope`, the `lefthook.yml` cost comment.
 - Out: shard format and entry schema, hook skipping by profile, hosted regeneration, full-repo run semantics.
 
 Workflow:

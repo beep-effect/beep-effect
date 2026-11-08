@@ -30,7 +30,7 @@ Higher sources outrank lower sources when they conflict.
 ## Target Surfaces
 
 - `packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts` and the instrumentation-catalog command.
-- `packages/tooling/tool/cli-kit/**` `ShardScope` (per-file scope in addition to per-package scope).
+- `packages/tooling/library/repo-cli-kit/**` `ShardScope` (per-file scope in addition to per-package scope).
 - The `lefthook.yml` comment describing the hook's cost.
 
 ## Constraints
