@@ -53,6 +53,16 @@ native cleanup. Mark completed-retained only after P0-P4 truly pass.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug claim-check-performance`; add a `kind: checkpoint` file there, never edit this block._
 
+### Preserve closed compositions through accepted POS fallback integration, 2026-11-08
+
+Accepted main aa2e0f4eb1f adds aligned part-of-speech fallback boundaries. Merge it ordinarily, retain both decision histories and regenerate the research projection. Source review found that the closed-composition guard depended on inspection grammar object identity, while the accepted POS grammar returns a spread copy. Replace only that identity condition with an internal inspection capability: strict false, inspection true, POS inspection inherits true. Keep every exact three-term composition guard, source anchor and exclusion unchanged. Add a public aligned-POS fallback regression and preserve the strict legacy control.
+
+The unchanged frozen evaluation at 1fbb06f96237 scores 49/538 with all prior48 passing identities retained and one additional strict claim. All60 source collections and all1219 full-context qualification ledgers are unchanged. Parsed remains537 and abstained538; this does not meet usefulness gates. Preserve the new49 identities for every later comparison. Original1213 bindings and2382 historical artifact files across26 groups verify unchanged. No label, scorer, denominator, asset, work limit or gate changes are admitted. The separate synthetic method-step prototype produced no actual local change and remains private, rejected and sealed.
+
+Lane `feat/claim-check-census-composition` · PR #2980
+
+Reverse: Return to the retained 48/538 implementation while preserving both measurements, the rejected private prototype and every reference; never weaken paired retention.
+
 ### Preserve measured runtime through citation coverage repair, 2026-11-08
 
 The hosted coverage job at PR head 74c1f259bc2 identified uncovered citation dump/repr paths and package coverage below unchanged floors. Add focused public-surface tests and replace only the unreachable finite-integer encoder error mapper with Effect.orDie before parts.literal. The raw Input decoder validates and owns S.Int fields; malformed raw input retains invalid-input, and literal budget failures retain their error channel. Independent source review qualified this invariant. The initially proposed synchronous encoder failed TS377130 before commit and its failed check remains retained; the final form uses encodeEffect.
