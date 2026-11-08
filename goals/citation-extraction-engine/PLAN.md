@@ -12,7 +12,7 @@ checkpoint. Baseline packet: git commit 7dc8c2d443d.
 - P7 Finite implementation selection: Status: in-progress; Exit evidence: Frozen
   reviewed profile, actual-Layer/candidate comparison, decision
 
-- P8 Bounded implementation and owned repairs: Status: pending; Exit evidence:
+- P8 Bounded implementation and owned repairs: Status: in-progress; Exit evidence:
   Six-form Layer, source/link/resource controls, consumer-safe retirement
 
 - P9 Hosted proof and retention: Status: pending; Exit evidence: Scoped checks,
@@ -20,22 +20,17 @@ checkpoint. Baseline packet: git commit 7dc8c2d443d.
 
 ## Next actions
 
-1. Publish the approved scope rebaseline on a linked follow-up from current
-   main.
-2. Define exact ranges/fields and local-link rules; freeze a small public set
-   with all six forms, negative, Unicode, ambiguous/orphan and refusal cases.
-   Recheck the published prerequisite contracts. Do not add a large corpus or
-   uncalibrated accuracy/latency gates as a substitute for this selection.
-3. Run the existing native public Layer and pinned TypeScript candidates on
-   identical inputs; use official eyecite diagnostically. Do not prune/rewrite
-   native before measuring it. Keep source regressions distinct from new
-   excerpts. Report limits of the small screen.
-4. Select by demonstrated behavior and ownership cost; record any production
-   dependency decision. Use existing Effect primitives and configured levers.
-5. Fix measured in-scope failures and owned CI defects, checking existing
-   consumer/API reachability before retiring code or compatibility tests.
-6. Publish ready work with hosted CI, resolve review findings, and complete
-   focused evidence, reflection and verified retention. Keep the goal active.
+1. Record the production recognizer choice and pin/attribution decision from the
+   frozen selection evidence; qualify the distributed artifact before adoption.
+2. Connect recognizer discovery, verified original ranges and the strict local
+   resolver to the actual service without another public citation hierarchy.
+3. Use the supplied Effect socket RPC protocol, stdio server and SchemaBinary
+   framing, with the narrow process-stream adapter and existing physical owner.
+   Prove parser limits/privacy and runtime packaging on that actual path.
+4. Check consumers before retiring old APIs or parity-only infrastructure. Keep
+   historical evidence distinct from the bounded release requirements.
+5. Publish ready changes with hosted CI, fix owned failures and review findings,
+   and finish reflection, merge retention and lifecycle. Keep the goal active.
 
 ## Current evidence and ownership
 
@@ -49,7 +44,10 @@ evidence, not accuracy or safety. No parser has been selected. The frozen
 [adapter experiment](history/evidence/2026-11-08-six-form-adapter/README.md)
 records actual native failures and a TypeScript adapter matching all 33 labeled
 occurrences through existing schemas, source proofs and local resolver.
-Production adoption, strict party matching, isolated transport and resource
+Strict party matching, ambiguity propagation and a provided-Effect transport
+adapter now have focused tests in the
+[implementation receipt](history/evidence/2026-11-08-six-form-link-transport.md).
+Production adoption, actual parser/service integration and complete resource
 qualification remain open.
 
 PR #2927 is merged at f849b3b901e. The baseline integration receipt identifies

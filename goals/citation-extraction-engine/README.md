@@ -15,11 +15,13 @@ Start with [GOAL.md](GOAL.md), [SPEC.md](SPEC.md), [PLAN.md](PLAN.md), and the
 [research assessment](research/2026-11-08-re-grounding.md) explains the strategy
 change; the [source ledger](research/SOURCES.md) retains earlier provenance.
 
-Next: freeze a small reviewed public profile, compare the current public Layer
-and pinned TypeScript candidates with official eyecite as a diagnostic, then
-record the least costly passing implementation. No production dependency or
-Python runtime has been selected. Keep resource ceilings and use Effect's
-provided primitives before introducing custom infrastructure.
+The frozen selection screen and actual native/TypeScript adapter comparison are
+retained in history. A strict local-linking path and supplied-Effect process
+transport adapter now have focused tests; see the
+[implementation receipt](history/evidence/2026-11-08-six-form-link-transport.md).
+No production recognizer dependency or Python runtime has been selected.
+Next: record the recognizer choice, connect the actual isolated service, and
+prove its source/link/resource contract through hosted CI.
 
 The original packet remains recoverable at git commit 7dc8c2d443d. Original
 corpora, decision/checkpoint records and ledgers remain in this packet for

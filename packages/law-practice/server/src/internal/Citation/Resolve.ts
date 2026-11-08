@@ -29,6 +29,7 @@ import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as RegExp from "effect/RegExp";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
@@ -95,22 +96,18 @@ const invalid = () => CitationResolveFailure.make({ reason: "invalid-input" });
 const exceeded = (limit: CitationSafetyBudget) => CitationResolveFailure.make({ reason: "limit-exceeded", limit });
 const isFull = S.is(FullCitation);
 const idsOf = (entries: ReadonlyArray<typeof Entry.Type>) => A.dedupe(A.map(entries, (entry) => entry.authorityId));
-const matchesParty = (entry: typeof Entry.Type, name: string): boolean =>
+const ResolutionProfile = LiteralKit(["eyecite", "six-form"]).pipe(
+  $I.annoteSchema("ResolutionProfile", {
+    description: "Internal selection between retained donor behavior and the approved strict local-link rules.",
+  })
+);
+const matchesParty = (entry: typeof Entry.Type, matches: (party: string) => boolean): boolean =>
   entry.citation.type === "case" &&
-  (O.exists(entry.citation.metadata.defendant, (value) => Str.isNonEmpty(value) && Str.includes(name)(value)) ||
-    O.exists(entry.citation.metadata.plaintiff, (value) => Str.isNonEmpty(value) && Str.includes(name)(value)));
+  (O.exists(entry.citation.metadata.defendant, matches) || O.exists(entry.citation.metadata.plaintiff, matches));
 
-/**
- * Resolve a verified ordered mention sequence with the pinned default rules.
- * Source verification is supplied once by the caller. Semantic/assertion data
- * is snapshotted and every mention reverified before grouping. Custom resource
- * ports, full runtime deadlines/isolation and the final service are separate.
- * @internal
- * @category operations
- * @since 0.0.0
- */
-export const resolveCitationMentions = Effect.fn("Citation.resolveMentions")(function* (
-  input: unknown
+const resolveMentions = Effect.fn("Citation.resolveMentions")(function* (
+  input: unknown,
+  profile: typeof ResolutionProfile.Type
 ): Effect.fn.Return<CitationDocument, CitationResolveFailure, Digest.Digest> {
   const snapshot = yield* prepareCitationResolution(input).pipe(
     Effect.mapError((error) =>
@@ -128,6 +125,7 @@ export const resolveCitationMentions = Effect.fn("Citation.resolveMentions")(fun
   let resolutions = Chunk.empty<CitationResolution>();
   let representatives = HashMap.empty<CitationAuthorityId, FullCitation>();
   let last: O.Option<CitationAuthorityId> = O.none();
+  let previous: O.Option<CitationResolution> = O.none();
   let iterations = 0;
   let edges = 0;
   const step = Effect.suspend(() => {
@@ -194,6 +192,12 @@ export const resolveCitationMentions = Effect.fn("Citation.resolveMentions")(fun
     return CitationResolved.make({ mentionId: mention.id, authorityId: id, confidence: O.none() });
   });
   const resolveId = Effect.fn("Citation.resolveIdMention")(function* (mention: CitationMention, citation: IdCitation) {
+    if (profile === "six-form" && O.isSome(previous) && previous.value.status === "Ambiguous") {
+      const candidates = previous.value.candidateAuthorityIds;
+      if (edges + A.length(candidates) > limits.resolutionEdges) return yield* exceeded("resolutionEdges");
+      edges += A.length(candidates);
+      return CitationAmbiguous.make({ mentionId: mention.id, candidateAuthorityIds: candidates, confidence: O.none() });
+    }
     if (O.isNone(last)) return CitationUnresolved.make({ mentionId: mention.id, reason: "no-previous-authority" });
     const full = yield* Effect.fromOption(HashMap.get(representatives, last.value), invalid);
     const invalidPin = yield* hasInvalidCitationPinCite({ fullCitation: full, idCitation: citation }).pipe(
@@ -208,10 +212,20 @@ export const resolveCitationMentions = Effect.fn("Citation.resolveMentions")(fun
     entries: Chunk.Chunk<typeof Entry.Type>,
     guess: string
   ) {
+    if (profile === "six-form" && Str.isEmpty(guess)) return Chunk.empty<typeof Entry.Type>();
+    // Escape the literal antecedent; Unicode token edges exclude substring and
+    // combining-mark matches without fuzzy or nearest-authority tie breaking.
+    const pattern = new RegExp.RegExp(
+      `(?:^|[^\\p{L}\\p{M}\\p{N}_])${RegExp.escape(guess)}(?=$|[^\\p{L}\\p{M}\\p{N}_])`,
+      "u"
+    );
+    const matches = (party: string) =>
+      Str.isNonEmpty(party) &&
+      (profile === "six-form" ? O.isSome(Str.match(pattern)(party)) : Str.includes(guess)(party));
     let found = Chunk.empty<typeof Entry.Type>();
     for (const entry of entries) {
       yield* step;
-      if (matchesParty(entry, guess)) found = Chunk.append(found, entry);
+      if (matchesParty(entry, matches)) found = Chunk.append(found, entry);
     }
     return found;
   });
@@ -261,7 +275,7 @@ export const resolveCitationMentions = Effect.fn("Citation.resolveMentions")(fun
       )
         candidates = Chunk.append(candidates, entry);
     }
-    candidates = yield* refineShortCandidates(candidates, citation);
+    if (profile === "eyecite") candidates = yield* refineShortCandidates(candidates, citation);
     return yield* select(A.fromIterable(candidates), mention);
   });
   const missingAntecedent = Effect.fn("Citation.missingResolutionAntecedent")(function* (mention: CitationMention) {
@@ -306,6 +320,7 @@ export const resolveCitationMentions = Effect.fn("Citation.resolveMentions")(fun
     yield* step;
     const resolution = yield* resolveOne(mention);
     last = resolution.status === "Resolved" ? O.some(resolution.authorityId) : O.none();
+    previous = O.some(resolution);
     resolutions = Chunk.append(resolutions, resolution);
   }
   return yield* S.decodeUnknownEffect(CitationDocumentType)({
@@ -336,3 +351,28 @@ export const resolveCitationMentions = Effect.fn("Citation.resolveMentions")(fun
     ),
   }).pipe(Effect.mapError(invalid));
 });
+
+/**
+ * Retained donor-compatible resolver for existing diagnostic consumers.
+ * Source and mention proofs, identities and resource accounting are shared with
+ * the strict profile; historical substring and short-name refinement remain.
+ * @internal
+ * @category operations
+ * @since 0.0.0
+ */
+export const resolveCitationMentions = Effect.fn("Citation.resolveDonorMentions")((input: unknown) =>
+  resolveMentions(input, "eyecite")
+);
+
+/**
+ * Resolve verified mentions under the approved six-form local-link rules.
+ * Short forms retain every prior authority with the same publication locator;
+ * supra requires a literal complete party token and Id. preserves ambiguity.
+ * This selects linking behavior, not discovery or a source-proof shortcut.
+ * @internal
+ * @category operations
+ * @since 0.0.0
+ */
+export const resolveSixFormCitationMentions = Effect.fn("Citation.resolveSixFormMentions")((input: unknown) =>
+  resolveMentions(input, "six-form")
+);
