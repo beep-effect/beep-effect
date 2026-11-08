@@ -188,17 +188,17 @@ const coreIndex = (
   plan: ClaimSourceElementPlan,
   anchor: TextAnchor,
   charge: (amount: number) => boolean
-): O.Option<number> => {
+): O.Option<number> | false => {
   let lower = 0;
   let upper = plan.nominals.length;
   while (lower < upper) {
-    if (!charge(2)) return O.none();
+    if (!charge(2)) return false;
     const index = Math.floor((lower + upper) / 2);
     const candidate = O.getOrThrow(A.get(plan.nominals, index)).core;
     if (candidate.startChar < anchor.startChar) lower = index + 1;
     else upper = index;
   }
-  if (!charge(anchor.quote.length + 1)) return O.none();
+  if (!charge(anchor.quote.length + 1)) return false;
   return O.map(
     O.filter(A.get(plan.nominals, lower), (n) => sameAnchor(n.core, anchor)),
     () => lower
@@ -212,8 +212,11 @@ const nextInheritedFrame = (
   child: number,
   depth: number,
   charge: (amount: number) => boolean
-): O.Option<ClaimSourceFrame> =>
-  depth <= 128 && charge(2) ? O.filter(A.get(plan.frames, ordinal - 1), (f) => f.ordinal < child) : O.none();
+): O.Option<ClaimSourceFrame> | false => {
+  if (depth > 128) return O.none();
+  if (!charge(2)) return false;
+  return O.filter(A.get(plan.frames, ordinal - 1), (f) => f.ordinal < child);
+};
 const inheritedFrameStep = (
   plan: ClaimSourceElementPlan,
   frame: ClaimSourceFrame,
@@ -222,12 +225,12 @@ const inheritedFrameStep = (
   parent: number,
   depth: number,
   charge: (amount: number) => boolean
-): O.Option<readonly [ClaimSourceFrame, boolean]> => {
+): O.Option<readonly [ClaimSourceFrame, boolean]> | false => {
   const candidate = nextInheritedFrame(plan, parent, frame.ordinal, depth, charge);
+  if (candidate === false) return false;
   if (O.isNone(candidate)) return O.none();
   const ancestor = candidate.value;
-  if (!charge((predicate ? ancestor.predicates.length : ancestor.nominals.length) + anchor.quote.length))
-    return O.none();
+  if (!charge((predicate ? ancestor.predicates.length : ancestor.nominals.length) + anchor.quote.length)) return false;
   return O.some([ancestor, frameContains(ancestor, anchor, predicate)]);
 };
 const inheritedFrameReference = (
@@ -236,17 +239,18 @@ const inheritedFrameReference = (
   anchor: TextAnchor,
   predicate: boolean,
   charge: (amount: number) => boolean
-): boolean => {
+): O.Option<boolean> => {
   let parent = frame.parent;
   let depth = 0;
   while (O.isSome(parent)) {
     const step = inheritedFrameStep(plan, frame, anchor, predicate, parent.value, ++depth, charge);
-    if (O.isNone(step)) return false;
+    if (step === false) return O.none();
+    if (O.isNone(step)) return O.some(false);
     const [ancestor, matches] = step.value;
-    if (matches) return true;
+    if (matches) return O.some(true);
     parent = ancestor.parent;
   }
-  return false;
+  return O.some(false);
 };
 const declaredCoreReference = (
   plan: ClaimSourceElementPlan,
@@ -274,13 +278,12 @@ const frameCore = (
   charge: (amount: number) => boolean
 ): boolean => {
   const index = coreIndex(plan, anchor, charge);
-  if (O.isNone(index)) return false;
+  if (index === false || O.isNone(index)) return false;
   const owner = O.getOrElse(A.get(owners, index.value), () => 0);
   if (!charge(frame.nominals.length + 1)) return false;
   if (owner === frame.publicOwner && frameContains(frame, anchor, false)) return true;
-  return (
-    inheritedFrameReference(plan, frame, anchor, false, charge) || declaredCoreReference(plan, frame, owner, charge)
-  );
+  const inherited = inheritedFrameReference(plan, frame, anchor, false, charge);
+  return O.isSome(inherited) && (inherited.value || declaredCoreReference(plan, frame, owner, charge));
 };
 const validFrameParent = (plan: ClaimSourceElementPlan, frame: ClaimSourceFrame): boolean =>
   O.match(frame.parent, {
@@ -319,7 +322,7 @@ const validFrameArgument = (
   if (
     O.exists(
       argument.predicate,
-      (p) => !frameContains(frame, p, true) && !inheritedFrameReference(plan, frame, p, true, charge)
+      (p) => !frameContains(frame, p, true) && !O.contains(inheritedFrameReference(plan, frame, p, true, charge), true)
     )
   )
     return false;
@@ -331,8 +334,10 @@ const localFrameNominal = (
   nominal: TextAnchor,
   owners: ReadonlyArray<number>,
   charge: (amount: number) => boolean
-): boolean =>
-  O.exists(coreIndex(plan, nominal, charge), (index) => O.contains(A.get(owners, index), frame.publicOwner));
+): boolean => {
+  const index = coreIndex(plan, nominal, charge);
+  return index !== false && O.exists(index, (i) => O.contains(A.get(owners, i), frame.publicOwner));
+};
 const inheritedSubjectGeometry = (frame: ClaimSourceFrame, inherited: ClaimFrameSubjectInheritance): boolean =>
   O.contains(frame.parent, inherited.fromFrame) &&
   (frame.attachment === "relative" || frame.attachment === "complement") &&
@@ -943,10 +948,17 @@ const storedHeaderMembership = (
   );
 };
 const validateHeaderMemberships = (plan: ClaimSourceElementPlan, charge: (amount: number) => boolean): boolean => {
-  if (!charge(plan.frames.length + plan.headerMemberships.length * (plan.frames.length + 2) + 2)) return false;
+  if (!charge(plan.frames.length + plan.headerMemberships.length * (plan.frames.length + 2) + 5)) return false;
+  let available = true;
+  const reserve = (amount: number): boolean => {
+    const paid = charge(amount);
+    if (!paid) available = false;
+    return paid;
+  };
   let count = 0;
   for (const frame of plan.frames) {
-    const derived = qualifiedHeaderMembership(plan, frame, charge);
+    const derived = qualifiedHeaderMembership(plan, frame, reserve);
+    if (!available) return false;
     const stored = A.filter(plan.headerMemberships, (record) => record.frame === frame.ordinal);
     if (!storedHeaderMembership(plan, derived, stored, charge)) return false;
     count += stored.length;
@@ -1198,6 +1210,7 @@ class CandidateCommitValidator {
   }
   private candidate(state: CandidateState): boolean {
     const index = coreIndex(this.plan, state.nominal.anchor, this.charge);
+    if (index === false) return false;
     if (state.kind === "unproved") return this.excluded(state) && O.isNone(index);
     const proof = proofAt(this.plan, state.proof);
     if (!candidateProofMatches(state, proof)) return false;
@@ -2393,11 +2406,12 @@ const validateSourceTokenOwnership = (
     if (!charge(3)) return false;
     const previous = HashMap.get(checkedExclusions, ordinal);
     if (O.isSome(previous)) return previous.value;
+    if (!charge(2)) return false;
     const exclusion = A.get(plan.sourceExclusions, ordinal - 1);
     const valid = O.exists(exclusion, (e) => positiveCandidateExclusion(plan, e, charge));
-    if (!charge(2)) return false;
-    checkedExclusions = HashMap.set(checkedExclusions, ordinal, valid);
-    return valid;
+    if (!valid) return false;
+    checkedExclusions = HashMap.set(checkedExclusions, ordinal, true);
+    return true;
   };
   let cursor = 0;
   for (let index = 0; index < raw.length; index++) {
