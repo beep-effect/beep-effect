@@ -1813,6 +1813,12 @@ A private CPython 3.11.15 builtin string repr primitive now reuses existing Unic
 
 Reverse: Reopen the primitive proof if frozen printability, source quote/escape rules, native storage, reservation or captured timing behavior changes.
 
+### Compose original builtin dump output from actual native parser models, 2026-11-08
+
+Add source-attributed builtin debug formatting using existing Effect Unicode, timing, allocation and Python repr services. Independently freeze 803 output observations and recompute the original UtilsTest assertion on Bun and Node, preserving semantic comparisons and genuine primary/full/pin-inclusive source ranges. General retained hooks, unbounded integers and mutation protocols remain open; exhaustive goal scope is unchanged. See history/evidence/2026-11-08-original-builtin-dump.md.
+
+Reverse: Supersede if the source workflow, native field ordering or captured ownership proof changes.
+
 ### Qualify all original annotation workflows and full-span equalities, 2026-11-08
 
 All eight Bun/Node groups pass for the remaining 22 original annotation workflows, completing the original test_annotate cohort together with the separately qualified quote-cleaner case. Add a direct parser-to-verified-component replay for all thirteen original full_span equalities; qualify its binding only on matching final runtime results. General annotation utilities, host/model/callback protocols and exhaustive goal acceptance remain open.

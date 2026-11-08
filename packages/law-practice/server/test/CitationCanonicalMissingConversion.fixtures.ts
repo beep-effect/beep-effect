@@ -7,7 +7,10 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { readCitationCanonicalCaptures } from "./CitationCanonicalCaptures.fixtures.ts";
-import { readCitationCanonicalAssertionPayloads } from "./CitationCanonicalCriteria.fixtures.ts";
+import {
+  readCitationCanonicalAssertionPayloads,
+  readCitationCanonicalPlainExtraction,
+} from "./CitationCanonicalCriteria.fixtures.ts";
 import { installCitationCanonicalFactory } from "./CitationCanonicalDefaultFactory.fixtures.ts";
 import { makeCitationCanonicalExtractionReplay } from "./CitationCanonicalExtractionRuntime.fixtures.ts";
 import { compareCitationCanonicalModel } from "./CitationCanonicalModel.fixtures.ts";
@@ -45,31 +48,12 @@ export const replayCitationCanonicalMissingConversion = Effect.fn("CanonicalMiss
     "constructor missing page"
   );
   expect(constructed.components.page).toEqual(O.none());
-  const call = yield* Effect.fromOption(
-    A.findFirst(operations.cases, (row) => row.id === `${prefix}166:20:get_citations::1`)
-  );
-  if (call.operation !== "get_citations")
-    return yield* Effect.die("Expected original successful missing-page parser call");
-  const body = call.payload.value;
-  if (body.outcome.kind !== "success") return yield* Effect.die("Expected original successful missing-page outcome");
-  expect({
-    raw: body.input.plain_text,
-    markup: body.input.markup_text,
-    steps: body.input.clean_steps,
-    ambiguous: body.input.remove_ambiguous,
-    tokenizer: body.input.tokenizer.tokenizer,
-  }).toEqual({
-    raw: "2 U.S. __",
-    markup: "",
-    steps: null,
-    ambiguous: false,
-    tokenizer: "AhocorasickTokenizer",
-  });
-  const original = yield* S.decodeEffect(S.Array(S.JsonObject))(body.outcome.value);
+  const call = yield* readCitationCanonicalPlainExtraction(operations, `${prefix}166:20:get_citations::1`, "2 U.S. __");
+  const original = yield* S.decodeEffect(S.Array(S.JsonObject))(call.models);
   expect(original).toHaveLength(1);
   expect(A.getUnsafe(original, 0)).toEqual(A.getUnsafe(criteria, 1).context.values.citation2);
   const replay = yield* makeCitationCanonicalExtractionReplay(kind);
-  const result = yield* replay.extract(body.input.plain_text, "plain", original, call.id);
+  const result = yield* replay.extract(call.input.plain_text, "plain", original, call.id);
   expect(A.getUnsafe(result.citations, 0).components.page).toEqual(O.none());
   yield* replay.assertRetired;
 });

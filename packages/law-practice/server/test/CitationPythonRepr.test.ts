@@ -2,7 +2,6 @@ import { makeCitationPythonRepr } from "@beep/law-practice-server/internal/Citat
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
 import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
-import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
@@ -11,10 +10,12 @@ import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
-import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
-import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import {
+  authenticateCitationRenderingProducer,
+  readCitationNativeRenderingAsset,
+} from "./CitationNativeRendering.fixtures.ts";
 import { makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
 import { readCitationOracleFixture } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
@@ -28,12 +29,7 @@ const Corpus = S.Struct({
   tableSha256: S.tag("7cadfc9b8203c031be8f1460ce19e4f10b1e5d04f65a5041a62ca6afd9cf0719"),
   cases: S.Array(S.Struct({ input: Native, output: Native })).check(S.isBetweenLength(3113, 3113)),
 }).pipe(S.fromJsonString);
-const table = Effect.gen(function* () {
-  const path = yield* Path.Path;
-  const fs = yield* FileSystem.FileSystem;
-  const location = yield* path.fromFileUrl(new URL("../assets/citation/python-printability.data", import.meta.url));
-  return yield* fs.readFileString(location);
-});
+const table = readCitationNativeRenderingAsset("python-printability");
 
 it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true })(
   "native Python string repr",
@@ -50,14 +46,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
             "078f625b97d636e72ce566a836db5e1e3726b4222ef71edb79b57faa53e88ed5"
           );
           const corpus = yield* S.decodeEffect(Corpus)(corpusText);
-          const path = yield* Path.Path;
-          const fs = yield* FileSystem.FileSystem;
-          const producerPath = yield* path.fromFileUrl(
-            new URL("../../../../goals/citation-extraction-engine/ops/probe-python-repr.py", import.meta.url)
-          );
-          const producerBytes = yield* fs.readFile(producerPath);
-          const producerDigest = yield* S.decodeEffect(Sha256HexFromBytes)(producerBytes);
-          expect(producerDigest).toBe(corpus.producerSha256);
+          yield* authenticateCitationRenderingProducer("probe-python-repr.py", corpus.producerSha256);
           for (const [i, row] of corpus.cases.entries()) {
             const actual = yield* repr.text({ width: row.input.width, bytes: row.input.hex });
             expect(actual, `native repr case ${i}`).toEqual({ width: row.output.width, bytes: row.output.hex });

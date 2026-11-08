@@ -953,3 +953,15 @@ Unicode 14.0.0 printability facts and independent native string observations
 from pinned CPython 3.11.15. The packed printability asset includes source,
 producer, version and license provenance. Neither the engine nor its portable
 tests require a runtime Python installation.
+
+## eyecite builtin citation debug output
+
+The private citation Dump.ts and BuiltinDump.ts adapt dump_citations from
+Free Law Project eyecite 2.7.6 utils.py and the builtin model dump methods in
+models.py at 04d82c032ad5fd0f9ab72a61c87110c46ee8f52e. The existing complete
+BSD-2-Clause notice applies. The maintainer producer
+`goals/citation-extraction-engine/ops/probe-dump.py` captures original dataclass
+field ordering and independent output observations, preserving native Unicode
+words, source digests and license provenance. Runtime composition reuses existing
+Effect Unicode, allocation, captured-clock and string-representation services.
+Neither portable tests nor production require Python.

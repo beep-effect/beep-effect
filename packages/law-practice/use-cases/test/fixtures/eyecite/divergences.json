@@ -512,7 +512,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationDiffWorker.test.ts",
-          "sha256": "4e1d8227cea7261e13619b7f488d69d8accb86a6608409a1b952f812a7af0bdc"
+          "sha256": "46967f4681c4f4a055956a50a4ab629842a8ff1cf65e88995829eb7e623a149d"
         },
         {
           "path": "packages/law-practice/server/test/CitationDiffWorkerProtocol.test.ts",
@@ -1652,7 +1652,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationEngineLayer.test.ts",
-          "sha256": "e6aa5aad094a982a8582b4c139e4c9a6ed6a35adca5c4abd64e3ce91582fecfa"
+          "sha256": "8d3a1ed1ed94a6cf2a9bd20ef1f2bcdf985fc819adfa7ce0631ec231e79ba740"
         },
         {
           "path": "packages/law-practice/server/test/CitationSourceCleaning.test.ts",
@@ -1752,7 +1752,7 @@
         },
         {
           "path": "goals/citation-extraction-engine/ops/ledger-proof-plan.json",
-          "sha256": "18947873ed6f2da3829f7824eb7016d5f20f2f85702ed0e16eb63bffd3fee0cd"
+          "sha256": "7fcdd0bfa11cc0e0be07dea82cca38984746310179d3586d66bc31abf3500115"
         },
         {
           "path": "packages/law-practice/server/test/CitationCanonicalAnnotation.fixtures.ts",
@@ -2549,7 +2549,7 @@
         },
         {
           "path": "packages/law-practice/use-cases/test/CitationOracleArtifact.test.ts",
-          "sha256": "fbc0c1687ecad0a9991e17e0f0ad55b2bced7b3b1dc104c2fec8118524dc0080"
+          "sha256": "e615aabed2762d59e5a422b89a7b8a8b6b78388d0ca481242d72261b7529050e"
         },
         {
           "path": "goals/citation-extraction-engine/history/evidence/2026-11-02-hosted-quality-repair.md",
@@ -2581,7 +2581,7 @@
         },
         {
           "path": "packages/law-practice/server/test/CitationEngineLayer.test.ts",
-          "sha256": "e6aa5aad094a982a8582b4c139e4c9a6ed6a35adca5c4abd64e3ce91582fecfa"
+          "sha256": "8d3a1ed1ed94a6cf2a9bd20ef1f2bcdf985fc819adfa7ce0631ec231e79ba740"
         }
       ],
       "workflowState": "audit",
