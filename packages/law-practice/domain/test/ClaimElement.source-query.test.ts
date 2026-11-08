@@ -1,3 +1,4 @@
+import { sourceLowerBound, sourceSelectionFrameMember } from "@beep/law-practice-domain/test";
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
@@ -5,10 +6,6 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
-import {
-  sourceLowerBound,
-  sourceSelectionFrameMember,
-} from "../src/values/ClaimElement/ClaimClauseRole.sourceQuery.ts";
 import controls from "./fixtures/claim-element/finite-clause-source-plans.json" with { type: "json" };
 import { decomposeFiniteSourceFixture } from "./helpers/ClaimElementFiniteSource.ts";
 
