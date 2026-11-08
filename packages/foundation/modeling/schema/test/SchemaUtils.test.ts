@@ -6,6 +6,7 @@ import { alwaysEquivalent } from "@beep/schema/SchemaUtils/toEquivalence";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -18,6 +19,16 @@ const decodeBoolKeySettingsEffect = S.decodeUnknownEffect(BoolKeySettings);
 const encodeBoolKeySettingsEffect = S.encodeEffect(BoolKeySettings);
 
 describe("BoolKeyDefaultFalse and BoolKeyDefaultTrue", () => {
+  it.effect.prop(
+    "round-trips schema-derived settings through encode and decode",
+    [Arbitrary.schema(BoolKeySettings)],
+    Effect.fnUntraced(function* ([settings]) {
+      const encoded = yield* encodeBoolKeySettingsEffect(settings);
+      const decoded = yield* decodeBoolKeySettingsEffect(encoded);
+      expect(decoded).toEqual(settings);
+    })
+  );
+
   it("default omitted constructor input", () => {
     expect(BoolKeySettings.make({})).toEqual({ visible: false, enabled: true });
     expect(BoolKeySettings.make({ visible: true, enabled: false })).toEqual({ visible: true, enabled: false });
