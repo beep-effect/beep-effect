@@ -20,6 +20,10 @@ const decodeBoolKeySettingsEffect = S.decodeUnknownEffect(BoolKeySettings);
 const encodeBoolKeySettingsEffect = S.encodeEffect(BoolKeySettings);
 
 describe("BoolKeyDefaultFalse and BoolKeyDefaultTrue", () => {
+  it("round-trips schema-derived arbitraries through decode and encode", () => {
+    assertSchemaArbitraryDecodesToSelf(BoolKeySettings);
+  });
+
   it("default omitted constructor input", () => {
     expect(BoolKeySettings.make({})).toEqual({ visible: false, enabled: true });
     expect(BoolKeySettings.make({ visible: true, enabled: false })).toEqual({ visible: true, enabled: false });
