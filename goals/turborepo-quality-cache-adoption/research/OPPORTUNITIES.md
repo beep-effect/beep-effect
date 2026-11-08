@@ -1479,3 +1479,16 @@ assertion in `test_cargo_review_integrity.py` checks that binding. Refresh AC-09
 and the digests, preserve the original evidence source revision, and explicitly
 limit the amendment to requirement navigation. All eighteen acceptance statuses
 stay unproven. No runtime test or goal completion is inferred. Owner: PR #2926.
+
+### Manifest completion contract drift, 2026-11-08
+
+After PR #2926 aligned both goal launchers and completion audits with the
+two-PR closeout lifecycle, each `ops/manifest.json` still required final
+same-PR reflection/lifecycle. That machine-readable completion statement
+contradicted SPEC acceptance and the Agent Guide. Align both authored
+statements with implementation evidence, reflection and proposal first,
+then verified adoption in a separate merged packet-state PR. A lifecycle
+amendment should review the manifest statement alongside the launcher,
+audit and specification. Preserve active status, all eighteen unproven
+criteria and every behavioral and observation requirement. No local
+quality suite or runtime activation accompanies this metadata repair.

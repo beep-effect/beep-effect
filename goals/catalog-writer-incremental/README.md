@@ -2,13 +2,13 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
-Latest evidence (2026-11-08): PR #2924 makes the scoped schema-catalog writer splice per file;
+Latest evidence (2026-11-08): closeout `completed-retained` adopted after re-final #2940 verified (b30f73300e1). PR #2924 makes the scoped schema-catalog writer splice per file;
 five-fixture run 5.31 GB / 15.3 s to 0.63 GB / 2.1 s with byte-identical shards
-(`research/2026-11-08-rss-measurements.md`). Proposed closeout `completed-retained`, final PR #2924;
+(`research/2026-11-08-rss-measurements.md`). Proposed closeout `completed-retained`; #2924 merged 2026-11-08 as 1f682563312 (S11 over an inherited coverage red), the goals-only re-final #2940 carries the completion gate;
 reflection `history/reflections/2026-11-08-claude.md`.
 
 ## Mission
