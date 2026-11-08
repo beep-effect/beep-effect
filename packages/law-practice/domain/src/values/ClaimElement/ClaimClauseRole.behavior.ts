@@ -4647,13 +4647,17 @@ class RoleCompiler {
     if (!this.charge(2)) return O.none();
     return O.some([O.getOrThrow(A.head(owners)), O.getOrThrow(A.head(objects))]);
   };
-  private distributiveRawRefs = (index: number, token: ClaimLexicalToken) =>
-    O.all({
-      scope: this.sourceScope(token.anchor),
-      boundary: this.rawBoundary(index - 1),
-      raw: this.rawToken(index + 1),
-      position: this.rawToken(index),
-    });
+  private distributiveRawRefs = (index: number, token: ClaimLexicalToken) => {
+    const scope = this.sourceScope(token.anchor);
+    if (O.isNone(scope)) return O.none();
+    const boundary = this.rawBoundary(index - 1);
+    if (O.isNone(boundary)) return O.none();
+    const raw = this.rawToken(index + 1);
+    if (O.isNone(raw)) return O.none();
+    const position = this.rawToken(index);
+    if (O.isNone(position)) return O.none();
+    return O.some({ scope: scope.value, boundary: boundary.value, raw: raw.value, position: position.value });
+  };
   private distributiveOperator = (
     index: number,
     token: ClaimLexicalToken,
@@ -4713,8 +4717,11 @@ class RoleCompiler {
     const certificate = this.distributiveOperator(index, token, owner.value, direct.value);
     if (O.isNone(certificate)) return this.remaining >= 0;
     if (!this.charge(4)) return false;
+    // Preserve the singleton tokenSpan debit before committing any distributive state.
+    if (!this.charge(token.anchor.endChar - token.anchor.startChar + 2)) return false;
     this.operatorCertificates = HashMap.set(this.operatorCertificates, token.anchor.startChar, certificate.value);
-    this.markPredicate(index + 1, index + 2, "distributive");
+    this.predicates.push(ClaimPredicateSpan.make({ anchor: token.anchor, kind: "distributive" }));
+    this.predicateIndexes = HashSet.add(this.predicateIndexes, index + 1);
     this.distributiveFactsProduced = true;
     return true;
   };
