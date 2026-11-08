@@ -1144,7 +1144,10 @@ const finiteAuxiliaryBoundary = (token: ClaimLexicalToken): boolean =>
 const finiteDeterminerBoundary = (token: ClaimLexicalToken): boolean =>
   token.pos === "DET" || HashSet.has(articleWords, word(token));
 const finiteTerminalBoundary = (token: ClaimLexicalToken): boolean => token.pos === "PUNCT" && word(token) === ".";
-type FiniteSimpleBoundaryMode = Exclude<FiniteBoundaryProof["mode"], "finite" | "reduced" | "adjunct" | "relative">;
+type FiniteSimpleBoundaryMode = Exclude<
+  FiniteBoundaryProof["mode"],
+  "finite" | "reduced" | "adjunct" | "relative" | "qualified-end"
+>;
 const validateFiniteSimpleBoundary = (
   tokens: ReadonlyArray<ClaimLexicalToken>,
   mode: FiniteSimpleBoundaryMode,
@@ -1169,10 +1172,7 @@ const validateFiniteSimpleBoundary = (
   if (mode === "separator") {
     return HashSet.has(HashSet.make(",", ";", ":", "and", "or", "and/or"), word(token));
   }
-  if (mode === "terminal") {
-    return finiteTerminalBoundary(token);
-  }
-  return true;
+  return finiteTerminalBoundary(token);
 };
 const validateFiniteBoundaryMode = (
   context: FiniteProofValidationContext,
@@ -1182,6 +1182,7 @@ const validateFiniteBoundaryMode = (
 ): boolean => {
   const token = raw.token;
   const index = raw.tokenOrdinal - 1;
+  if (proof.mode === "qualified-end") return context.charge(2) && token.anchor.endChar === scopeEnd;
   if (proof.mode === "finite") {
     return finiteVerbBoundary(context.tokens, token, index);
   }
@@ -1405,6 +1406,15 @@ const validateFiniteOpeningProof = (context: FiniteProofValidationContext, proof
 };
 
 type FiniteClosureProof = Extract<ClaimFiniteSourceProof, { readonly kind: "closure" }>;
+const finiteBoundaryClosingPosition = (
+  context: FiniteProofValidationContext,
+  boundary: Extract<ClaimFiniteSourceProof, { readonly kind: "boundary" | "citation-boundary" | "verbal-boundary" }>,
+  token: FiniteTokenProof,
+  scopeEnd: number
+): number => {
+  if (boundary.kind !== "boundary" || boundary.mode !== "qualified-end") return token.token.anchor.startChar;
+  return context.charge(2) ? scopeEnd : -1;
+};
 const finiteClosureBoundaryStart = (
   context: FiniteProofValidationContext,
   proof: FiniteClosureProof,
@@ -1422,7 +1432,7 @@ const finiteClosureBoundaryStart = (
     return -1;
   const token = context.resolve(boundary.value.token);
   if (O.isNone(token) || token.value.kind !== "token") return -1;
-  return token.value.token.anchor.startChar;
+  return finiteBoundaryClosingPosition(context, boundary.value, token.value, scopeEnd);
 };
 const validateFiniteClosureGap = (
   context: FiniteProofValidationContext,
