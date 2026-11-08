@@ -1,0 +1,60 @@
+name: Setup Bun
+description: >-
+  Install the Bun pinned in .bun-version through oven-sh/setup-bun, falling back
+  to the npm registry tarball when GitHub release downloads are unavailable.
+
+# setup-bun downloads from github.com/oven-sh/bun/releases and gives up after
+# about 30 seconds. A release-download outage on 2026-11-08 therefore failed
+# every job in the matrix, including the workflow that re-runs lost jobs, while
+# the npm registry kept serving the same build. The fallback verifies the
+# tarball against the integrity value the registry publishes for that version.
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Bun from GitHub releases
+      id: release
+      continue-on-error: true
+      uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      with:
+        bun-version-file: .bun-version
+        # The fleet is heterogeneous (GitHub-hosted + owned beep-ec2 workers):
+        # setup-bun's cross-job cache stores absolute paths from the SAVING
+        # runner's home, which poisons restores on runners with a different
+        # layout (fleet run 31245263696: "Cache restored successfully" followed
+        # by bun missing at $HOME/.bun). A fresh ~2s download is deterministic.
+        no-cache: "true"
+
+    - name: Setup Bun from the npm registry
+      if: ${{ steps.release.outcome == 'failure' }}
+      shell: bash
+      run: |
+        set -euo pipefail
+        echo "::warning::setup-bun: the GitHub release download failed; using the npm registry tarball."
+        if [[ "${RUNNER_OS}/${RUNNER_ARCH}" != "Linux/X64" ]]; then
+          echo "::error::setup-bun: the npm fallback only covers Linux/X64; this runner is ${RUNNER_OS}/${RUNNER_ARCH}."
+          exit 1
+        fi
+        version="$(tr -d '[:space:]' < .bun-version)"
+        install_dir="${RUNNER_TEMP}/bun-npm"
+        rm -rf "$install_dir"
+        mkdir -p "$install_dir/bin"
+        fetch() {
+          curl --fail --silent --show-error --location --retry 3 --retry-all-errors --max-time 120 "$@"
+        }
+        metadata="$(fetch "https://registry.npmjs.org/@oven/bun-linux-x64/${version}")"
+        tarball_url="$(jq --exit-status --raw-output '.dist.tarball' <<< "$metadata")"
+        integrity="$(jq --exit-status --raw-output '.dist.integrity' <<< "$metadata")"
+        tarball="${install_dir}/bun.tgz"
+        fetch --output "$tarball" "$tarball_url"
+        actual="sha512-$(openssl dgst -sha512 -binary "$tarball" | base64 --wrap=0)"
+        if [[ "$actual" != "$integrity" ]]; then
+          echo "::error::setup-bun: the npm tarball for ${version} does not match its registry integrity."
+          exit 1
+        fi
+        tar --extract --gzip --file "$tarball" --directory "$install_dir/bin" --strip-components=2 package/bin/bun
+        rm -f "$tarball"
+        chmod 0755 "$install_dir/bin/bun"
+        ln -sf bun "$install_dir/bin/bunx"
+        "$install_dir/bin/bun" --version
+        echo "$install_dir/bin" >> "$GITHUB_PATH"
