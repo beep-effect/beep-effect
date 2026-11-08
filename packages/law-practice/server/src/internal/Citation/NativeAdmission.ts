@@ -10,7 +10,12 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as TxRef from "effect/TxRef";
-import { CitationAdmissionFailure, prepareCitationAdmissionPolicy } from "./Admission.ts";
+import {
+  CitationAdmissionFailure,
+  CitationOperationAdmission,
+  makeCitationOperationAdmission,
+  prepareCitationAdmissionPolicy,
+} from "./Admission.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/NativeAdmission");
 // Native ownership is external to a caller's retryable work. Public operations
@@ -219,4 +224,15 @@ export const makeCitationNativeProcessAdmission = Effect.fn("Citation.makeNative
       outsideCallerTransaction
     ),
   });
+});
+
+/** Install coherent operation and physical-process owners in the current Scope.
+ * Both retained and six-form services share this lifetime assembly; operation
+ * admission never acknowledges physical retirement on the native owner's behalf.
+ * @internal @category constructors @since 0.0.0
+ */
+export const makeCitationAdmissionOwners = Effect.fn("Citation.makeAdmissionOwners")(function* (policy: unknown) {
+  const operation = yield* makeCitationOperationAdmission(policy);
+  const native = yield* makeCitationNativeProcessAdmission(policy);
+  return Context.make(CitationOperationAdmission, operation).pipe(Context.add(CitationNativeProcessAdmission, native));
 });

@@ -47,12 +47,11 @@ const forms = {
 const fixture = Effect.fnUntraced(function* (kind: CitationNativeRuntimeKind) {
   const fs = yield* FileSystem.FileSystem;
   const cwd = yield* fs.makeTempDirectoryScoped({ prefix: `citation-recognizer-${kind}-` });
-  const entry = kind === "bun" ? "RecognizerWorker.entry.ts" : "RecognizerWorker.node.entry.ts";
-  const runtime = yield* makeCitationBundledTestRuntime(
-    kind,
-    NodeURL.fileURLToPath(new URL(`../src/internal/Citation/${entry}`, import.meta.url)),
-    cwd
-  );
+  const entry =
+    kind === "bun"
+      ? new URL("../src/internal/Citation/RecognizerWorker.entry.ts", import.meta.url)
+      : new URL("../src/internal/Citation/RecognizerWorker.node.entry.ts", import.meta.url);
+  const runtime = yield* makeCitationBundledTestRuntime(kind, NodeURL.fileURLToPath(entry), cwd);
   return { fs, runtime };
 });
 it.layer(BunServices.layer, { excludeTestServices: true })("actual pinned recognizer process", (it) => {
@@ -267,18 +266,14 @@ it.layer(BunServices.layer, { excludeTestServices: true })("actual pinned recogn
     );
   });
   for (const [entry, reason] of [
-    Tuple.make("CitationRecognizerAbnormal.entry.ts", "channel-failed"),
-    Tuple.make("CitationRecognizerLateWarning.entry.ts", "worker-diagnostic"),
+    Tuple.make(new URL("./CitationRecognizerAbnormal.entry.ts", import.meta.url), "channel-failed"),
+    Tuple.make(new URL("./CitationRecognizerLateWarning.entry.ts", import.meta.url), "worker-diagnostic"),
   ]) {
     it.effect(`${entry} refuses a delivered result until terminal checks pass`, () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "citation-recognizer-terminal-" });
-        const runtime = yield* makeCitationBundledTestRuntime(
-          "bun",
-          NodeURL.fileURLToPath(new URL(`./${entry}`, import.meta.url)),
-          cwd
-        );
+        const runtime = yield* makeCitationBundledTestRuntime("bun", NodeURL.fileURLToPath(entry), cwd);
         const { limits } = yield* defaultCitationEnginePolicy;
         const observed = yield* makeCitationObservedSpawner();
         let lastExit = O.none<number>();
@@ -312,7 +307,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("actual pinned recogn
         const failure = yield* worker.recognize("35 U.S.C. 101").pipe(Effect.flip);
         expect(failure).toMatchObject({ _tag: "CitationRecognizerFailure", reason });
         expect(responseBytes).toBeGreaterThan(0);
-        if (entry === "CitationRecognizerAbnormal.entry.ts") expect(O.getOrThrow(lastExit)).toBe(7);
+        if (reason === "channel-failed") expect(O.getOrThrow(lastExit)).toBe(7);
         if (!S.is(CitationRecognizerFailure)(failure)) return yield* Effect.die("Expected terminal refusal");
         const json = yield* S.encodeEffect(S.fromJsonString(CitationRecognizerFailure))(failure);
         expect(json).not.toContain("PRIVATE-LATE-WORKER-SENTINEL");

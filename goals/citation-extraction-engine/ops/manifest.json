@@ -11,7 +11,7 @@
   "packetPath": "goals/citation-extraction-engine",
   "lifecycle": "active",
   "mission": "Deliver bounded six-form citation extraction and document-local linking on supplied plain text, with schema-first semantic values, exact verified source anchors, explicit ambiguity and Effect-native resource boundaries.",
-  "statusNote": "PR #2966 publishes the approved six-form scope, frozen29-input/33-occurrence comparison and strict local-link/Effect transport work. The exact distributed eyecite-ts0.34.2 artifact matches all frozen field/range/link labels through the existing verified adapter. A recorded decision adopts its pinned recognizer in a product-neutral driver; package verification, three driver tests and zero-finding driver laws pass. Existing25 transport/resolver/ownership tests pass. New workspace tasks remain uncached, without qualification expansion. The production engine has not switched: actual recognizer-worker/service integration, warning-to-refusal behavior, resource/privacy and metadata proof, hosted acceptance and retained delivery remain open.",
+  "statusNote": "PR #2966 carries the approved six-form contract and pinned eyecite-ts0.34.2 driver. The actual CitationExtractorLive now passes all29 frozen inputs/33 occurrences on Bun and Node with verified source/component anchors and strict local links. Nine public controls cover source/prerequisite refusal, candidate/mention/authority/quoted-text budgets, late diagnostics, captured services, deadlines and cancellation with independent retirement. Legacy APIs remain available. Focused types/tests/laws/JSDoc and zero-finding Fallow audit/health pass; hosted exact-head proof, review, reflection closeout and retained merge remain open. No historical exhaustive row is promoted.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -43,7 +43,8 @@
     "goals/citation-verified-span-substrate/README.md",
     "goals/court-reporter-vocabulary/README.md",
     "goals/citation-extraction-engine/decisions/2026-11-08-select-typescript-recognizer.md",
-    "goals/citation-extraction-engine/history/evidence/2026-11-08-typescript-artifact.json"
+    "goals/citation-extraction-engine/history/evidence/2026-11-08-typescript-artifact.json",
+    "goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-public-layer.md"
   ],
   "researchReports": [
     "research/2026-07-25-academia-corpus-mining-note.md",

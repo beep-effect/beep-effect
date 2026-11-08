@@ -125,6 +125,25 @@ export {
   CitationTokenizerResult,
   CitationTokenSeed,
 } from "./CitationEngine/CitationEngine.tokenizer.ts";
+/** Closed six-form extraction failures without source or private causes.
+ * @category errors
+ * @since 0.0.0
+ */
+export { CitationExtractorFailure, CitationRecognitionError } from "./CitationExtractor/CitationExtractor.errors.ts";
+/** Verified plain-text six-form request, result and truthful recognizer report.
+ * @category models
+ * @since 0.0.0
+ */
+export {
+  CitationExtractorInput,
+  CitationExtractorReport,
+  CitationExtractorResult,
+} from "./CitationExtractor/CitationExtractor.models.ts";
+/** Captured six-form server extraction service, separate from the legacy engine.
+ * @category services
+ * @since 0.0.0
+ */
+export { CitationExtractor } from "./CitationExtractor/CitationExtractor.service.ts";
 /**
  * Local failure-preserving source inspection tool.
  * @category tools

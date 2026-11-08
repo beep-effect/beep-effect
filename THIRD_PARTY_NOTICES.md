@@ -314,7 +314,7 @@ SOFTWARE.
 Upstream: <https://github.com/beshkenadze/eyecite-js>
 
 Pinned commit: `53a49f2412da668aaf262e5f92584c2c3781043b`.
-Affected material: citation-engine donor baseline logs. The bounded recognizer driver at `packages/drivers/eyecite` also uses the exact npm runtime dependency `eyecite-ts@0.34.2`. Its registry SHA-512 integrity is pinned in `bun.lock` and recorded with the distributed-artifact selection receipt. The npm artifact has no gitHead metadata; this does not assert a reproducible build from the reference source commit. Domain citation identities, verified source anchors and local linking remain repository-owned.
+Affected material: citation-engine donor baseline logs.
 
 BSD 2-Clause License
 

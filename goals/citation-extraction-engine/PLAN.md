@@ -20,18 +20,12 @@ checkpoint. Baseline packet: git commit 7dc8c2d443d.
 
 ## Next actions
 
-1. Qualify the isolated pinned recognizer in the actual public service. The worker
-   and its focused runtime/refusal controls are implemented; do not mistake raw
-   worker acceptance for verified semantic/source service acceptance.
-2. Connect recognizer discovery, verified original ranges and the strict local
-   resolver to the actual service without another public citation hierarchy.
-3. Use the supplied Effect socket RPC protocol, stdio server and SchemaBinary
-   framing, with the narrow process-stream adapter and existing physical owner.
-   Prove parser limits/privacy and runtime packaging on that actual path.
-4. Check consumers before retiring old APIs or parity-only infrastructure. Keep
-   historical evidence distinct from the bounded release requirements.
-5. Publish ready changes with hosted CI, fix owned failures and review findings,
-   and finish reflection, merge retention and lifecycle. Keep the goal active.
+1. Publish the actual six-form public Layer and its reviewed source/link/resource
+   evidence. The legacy service remains available; no API retirement is needed.
+2. Resolve exact-head hosted checks and review findings. Keep finite-profile
+   acceptance separate from general accuracy and deployment attestation.
+3. Verify retained merge, finish reflection/lifecycle evidence and complete the
+   bounded goal only when those delivery requirements are proven.
 
 ## Current evidence and ownership
 
@@ -53,7 +47,9 @@ The selected exact npm artifact and driver now pass their finite comparison
 and package qualification. The
 [isolated worker receipt](history/evidence/2026-11-08-recognizer-worker.md)
 records actual Bun/Node execution and terminal warning/exit refusal controls.
-Verified semantic/source adaptation and actual public Layer acceptance remain open.
+The [public Layer receipt](history/evidence/2026-11-08-six-form-public-layer.md)
+records actual Bun/Node frozen-profile acceptance and public resource controls.
+Exact-head hosted proof, review and retained delivery remain open.
 
 PR #2927 is merged at f849b3b901e. The baseline integration receipt identifies
 InputDocument reservation accounting and the full Bun diff-corpus watchdog as

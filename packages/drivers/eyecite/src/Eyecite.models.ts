@@ -15,10 +15,12 @@ const SourceText = S.fromJsonString(S.String.check(S.isMaxLength(1_048_576))).pi
   })
 );
 /** Untrusted original-source offsets, with no verification capability.
- * @example
+ * **Example** (Inspect the recognition contract)
+ * ```ts
  * import { EyeciteRawRange } from "@beep/eyecite"
  * const range = EyeciteRawRange.make({ start: 0, end: 3 })
  * console.log(range.end) // 3
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -33,9 +35,11 @@ export class EyeciteRawRange extends S.Opaque<EyeciteRawRange, { readonly brand:
   )
 ) {}
 /** Source component names retained from the technical parser.
- * @example
+ * **Example** (Inspect the recognition contract)
+ * ```ts
  * import { EyeciteComponentName } from "@beep/eyecite"
  * console.log(EyeciteComponentName.is("plaintiff")) // true
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -64,9 +68,11 @@ export const EyeciteComponentName = LiteralKit([
  */
 export type EyeciteComponentName = typeof EyeciteComponentName.Type;
 /** Raw component range, requiring independent receiving-side verification.
- * @example
+ * **Example** (Inspect the recognition contract)
+ * ```ts
  * import { EyeciteComponent } from "@beep/eyecite"
  * console.log(EyeciteComponent.fields.name !== undefined) // true
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -112,9 +118,11 @@ const Regulation = S.Struct({ type: S.tag("regulation"), ...common, title: S.tag
   })
 );
 /** Finite technical parser observations. Receiving product code owns semantics.
- * @example
+ * **Example** (Inspect the recognition contract)
+ * ```ts
  * import { EyeciteRecognition } from "@beep/eyecite"
  * console.log(EyeciteRecognition.members.length) // 6
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -131,9 +139,11 @@ export const EyeciteRecognition = S.Union([Case, Short, Id, Supra, Statute, Regu
  */
 export type EyeciteRecognition = typeof EyeciteRecognition.Type;
 /** Captured source and candidate ceilings for one isolated recognition request.
- * @example
+ * **Example** (Inspect the recognition contract)
+ * ```ts
  * import { EyeciteRecognizeInput } from "@beep/eyecite"
  * console.log(EyeciteRecognizeInput.fields.source !== undefined) // true
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -149,9 +159,11 @@ export class EyeciteRecognizeInput extends S.Opaque<EyeciteRecognizeInput, { rea
   )
 ) {}
 /** Small bounded raw response, explicitly distinguishing omitted forms.
- * @example
+ * **Example** (Inspect the recognition contract)
+ * ```ts
  * import { EyeciteRecognizeOutput } from "@beep/eyecite"
  * console.log(EyeciteRecognizeOutput.fields.tokens !== undefined) // true
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -163,9 +175,11 @@ export class EyeciteRecognizeOutput extends S.Opaque<EyeciteRecognizeOutput, { r
   )
 ) {}
 /** Source-free driver failure, without parser messages, paths or nested causes.
- * @example
+ * **Example** (Inspect the recognition contract)
+ * ```ts
  * import { EyeciteFailure } from "@beep/eyecite"
  * console.log(EyeciteFailure.make({ reason: "source-limit" }).reason)
+ * ```
  * @category errors
  * @since 0.0.0
  */

@@ -94,10 +94,12 @@ const project = (token: Citation) =>
  * Validate and project one pinned recognizer invocation inside an owned child.
  * No donor pointer, confidence, publication graph or default resolution escapes.
  * This operation provides no isolation by itself; the caller owns that boundary.
- * @example
+ * **Example** (Inspect the recognition contract)
+ * ```ts
  * import { recognizeEyecite } from "@beep/eyecite/recognize"
  * const operation = recognizeEyecite({ source: "35 U.S.C. 101", sourceUtf16: 100, candidates: 10 })
  * void operation // Execute only in an owned RPC child, never its supervisor.
+ * ```
  * @category parsing
  * @since 0.0.0
  */

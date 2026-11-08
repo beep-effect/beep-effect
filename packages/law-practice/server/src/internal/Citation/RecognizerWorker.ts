@@ -12,6 +12,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
@@ -85,17 +86,18 @@ export const makeCitationRecognizerWorker = Effect.fn("Citation.makeRecognizerWo
     maxFrameSize: limits.processMessageBytes,
     fingerprintPayloads: true,
   });
+  const driverFailure = (error: EyeciteFailure) =>
+    Match.value(error.reason).pipe(
+      Match.when("source-limit", () => safety("sourceUtf16")),
+      Match.when("candidate-limit", () => safety("candidates")),
+      Match.orElse(fail)
+    );
   const normalize = Effect.fnUntraced(function* (cause: Cause.Cause<unknown>) {
     if (Cause.hasInterrupts(cause)) return yield* Effect.interrupt;
     const error = Cause.findErrorOption(cause);
-    if (O.isSome(error)) {
-      if (isSafety(error.value) || isFailure(error.value)) return yield* error.value;
-      if (isDriverFailure(error.value)) {
-        if (error.value.reason === "source-limit") return yield* safety("sourceUtf16");
-        if (error.value.reason === "candidate-limit") return yield* safety("candidates");
-        return yield* fail(error.value.reason);
-      }
-    }
+    if (O.isNone(error)) return yield* fail("channel-failed");
+    if (isSafety(error.value) || isFailure(error.value)) return yield* error.value;
+    if (isDriverFailure(error.value)) return yield* driverFailure(error.value);
     return yield* fail("channel-failed");
   });
   const recognize = Effect.fn("Citation.recognizeProcess")((raw: unknown) =>
