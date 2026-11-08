@@ -16,6 +16,7 @@ import {
   FinalCheckRefreshRefused,
   FinalCheckStepResult,
   flipPullRequestReady,
+  MergeGateCheckRun,
   ProofJobRecord,
   ProofJobRequest,
   ProofJobSubmitter,
@@ -700,6 +701,103 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         expect(printed).toContain("coverage (no reason)");
         const got12 = yield* Ref.get(calls);
         expect(got12).toEqual([["ready", "42"]]);
+      })
+    );
+
+    // Worker-profile final-check (compute-profile-gate-routing P1): a gate the
+    // receipt deferred with reason compute-profile=worker is accepted only on
+    // a green hosted run of its mapped context.
+    const deferredCheckReceipt = (reason: string) => (_context: RepoRunContext, head: string) =>
+      Effect.map(
+        passingFinalCheck(_context, head),
+        O.map((receipt) =>
+          FinalCheckReceipt.make({
+            ...receipt,
+            steps: [
+              FinalCheckStepResult.make({
+                gate: "check",
+                label: "final-check:check",
+                hostedContext: "Heavy / Check",
+                command: "(skipped)",
+                status: "skipped",
+                durationMs: 0,
+                reason,
+              }),
+            ],
+          })
+        )
+      );
+    const hostedCheck =
+      (conclusion: string | null, status = "completed") =>
+      () =>
+        Effect.succeed([
+          MergeGateCheckRun.make({ id: 1, name: "Heavy / Check", status: "completed", conclusion: "failure" }),
+          MergeGateCheckRun.make({ id: 2, name: "Heavy / Check", status, conclusion }),
+        ]);
+    const runDeferred = (
+      calls: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>,
+      reason: string,
+      hostedChecks: ReturnType<typeof hostedCheck>
+    ) =>
+      runYeetReadyGate(context, {
+        finalCheck: deferredCheckReceipt(reason),
+        hostedChecks,
+        squashCommitlint: passingSquashCommitlint,
+        recordInherited: () => Effect.void,
+        read: () => Effect.succeed(prView()),
+        markReady: recordingMarkReady(calls),
+        requestReview: stubReviewerRequest,
+        findMonitor: () => Effect.succeedNone,
+      });
+
+    it.effect("accepts hosted green for a gate the worker profile deferred and names it", () =>
+      Effect.gen(function* () {
+        const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+        const decision = yield* runDeferred(calls, "compute-profile=worker", hostedCheck("success"));
+        expect(decision._tag).toBe("flip");
+        const lines = yield* TestConsole.logLines;
+        const printed = A.join(A.map(lines, String), "\n");
+        expect(printed).toContain("hosted green stands in for check");
+        expect(printed).toContain("hosted-green check");
+        const flips = yield* Ref.get(calls);
+        expect(flips).toEqual([["ready", "42"]]);
+      })
+    );
+
+    it.effect("refuses while the deferred gate's hosted run is pending", () =>
+      Effect.gen(function* () {
+        const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+        const refused = yield* runDeferred(calls, "compute-profile=worker", hostedCheck(null, "in_progress")).pipe(
+          Effect.flip
+        );
+        expect(refused).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "final-check" });
+        expect(refused.message).toContain("wait for hosted Heavy / Check (worker profile defers check)");
+        const flips = yield* Ref.get(calls);
+        expect(flips).toEqual([]);
+      })
+    );
+
+    it.effect("refuses naming the red when the deferred gate's hosted run failed", () =>
+      Effect.gen(function* () {
+        const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+        const refused = yield* runDeferred(calls, "compute-profile=worker", hostedCheck("failure")).pipe(Effect.flip);
+        expect(refused).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "final-check" });
+        expect(refused.message).toContain("hosted Heavy / Check is red (failure)");
+        const flips = yield* Ref.get(calls);
+        expect(flips).toEqual([]);
+      })
+    );
+
+    it.effect("names an operator skip for the PR body and never reads hosted checks", () =>
+      Effect.gen(function* () {
+        const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+        const decision = yield* runDeferred(calls, "admission waited 10 minutes", () =>
+          Effect.die("hosted checks must not be read for an operator skip")
+        );
+        expect(decision._tag).toBe("flip");
+        const lines = yield* TestConsole.logLines;
+        const printed = A.join(A.map(lines, String), "\n");
+        expect(printed).toContain("check (admission waited 10 minutes); name them in the PR body");
       })
     );
 

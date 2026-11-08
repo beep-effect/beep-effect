@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
@@ -14,6 +15,7 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { ComputeProfile } from "../../../internal/repo-run/ComputeProfile.schemas.ts";
 import { YeetProofTier } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
 import {
   byRepoPlanStepAscending,
@@ -1075,3 +1077,95 @@ export const yeetPlanPhases = (plan: RepoRunPlan): ReadonlyArray<RepoPlanStep["p
     A.dedupe,
     A.sort(Order.mapInput(Order.Number, phaseOrderValue))
   );
+
+/**
+ * Which route a `yeet publish` takes: the push-first publish, or the
+ * `yeet open` posture (push the committed HEAD, no local gate).
+ *
+ * **Example** (Recognize the open posture)
+ *
+ * ```ts
+ * import { YeetPublishPosture } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(YeetPublishPosture.is.open("open")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const YeetPublishPosture = LiteralKit(["publish", "open"]).pipe(
+  $I.annoteSchema("YeetPublishPosture", {
+    description: "Whether a yeet publish runs the push-first publish or takes the yeet open posture.",
+  })
+);
+
+/**
+ * Which route a `yeet publish` takes.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type YeetPublishPosture = typeof YeetPublishPosture.Type;
+
+/**
+ * Inputs of {@link yeetPublishPostureFor}.
+ *
+ * **Example** (Describe a plain publish on a worker)
+ *
+ * ```ts
+ * import { YeetPublishPostureInput } from "@beep/repo-cli/test/Yeet"
+ *
+ * const input = YeetPublishPostureInput.make({ profile: "worker", mode: "publish" })
+ * console.log(input.forceLocal) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class YeetPublishPostureInput extends S.Opaque<YeetPublishPostureInput, { readonly brand: unique symbol }>()(
+  S.Struct({
+    profile: ComputeProfile,
+    mode: YeetRunMode,
+    forceLocal: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+    // A publish that reuses or amends an existing commit (`--push-only`,
+    // `--reuse-verified`, `--amend`, `--no-edit`, `--prove-first`,
+    // `--staged-only`) or a detached job keeps its own route: `yeet open`
+    // rejects those flags.
+    keepsOwnRoute: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+  }).pipe(
+    $I.annoteSchema("YeetPublishPostureInput", {
+      description: "Compute profile, run mode and flags that decide the yeet publish posture.",
+    })
+  )
+) {}
+
+/**
+ * Decide whether a `yeet publish` takes the `yeet open` posture.
+ *
+ * **Details**
+ *
+ * A plain `publish` on the `worker` compute profile takes `open`: the cheap
+ * gates it would run locally are hosted-only there, so it pushes and lets
+ * hosted CI prove them. `--force-local`, any other mode, the `workstation`
+ * profile, and a publish that reuses or amends a commit keep `publish`.
+ *
+ * **Example** (Redirect a worker publish)
+ *
+ * ```ts
+ * import { YeetPublishPostureInput, yeetPublishPostureFor } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(yeetPublishPostureFor(YeetPublishPostureInput.make({ profile: "worker", mode: "publish" }))) // "open"
+ * console.log(
+ *   yeetPublishPostureFor(YeetPublishPostureInput.make({ profile: "worker", mode: "publish", forceLocal: true }))
+ * ) // "publish"
+ * ```
+ *
+ * @param input - Profile, mode and flags.
+ * @returns The posture the publish takes.
+ * @category policies
+ * @since 0.0.0
+ */
+export const yeetPublishPostureFor = (input: YeetPublishPostureInput): YeetPublishPosture =>
+  input.mode === "publish" && input.profile === "worker" && !input.forceLocal && !input.keepsOwnRoute
+    ? "open"
+    : "publish";

@@ -4,10 +4,13 @@ import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { LenientManifest } from "@beep/package-json/LenientManifest";
 import { ChangeAtom, ChangeClassifier, ChangeSet, RouteError } from "@beep/repo-cli/commands/Ci";
 import { LintPolicySweeps } from "@beep/repo-cli/commands/Quality/Quality.schemas";
+import { ComputeProfileProbe, makeComputeProfileProbe } from "@beep/repo-cli/test/RepoRun";
 import { configStringOption } from "@beep/repo-cli/test/SharedInternals";
 import {
+  COMPUTE_PROFILE_WORKER_SKIP_REASON,
   collectExpectationRewrites,
   collectFinalCheckRoute,
+  computeProfileFinalCheckSkips,
   EXPECTATION_DIFF_OVERFLOW,
   ExpectationRewrite,
   FINAL_CHECK_RECEIPT_DIR,
@@ -22,11 +25,14 @@ import {
   planFinalCheckRoute,
   planFinalCheckSteps,
   readFinalCheckReceipt,
+  resolveFinalCheckProfileSkips,
   rewrittenTestFiles,
   runFinalCheckGatesForTesting,
   verifyExpectationRewrites,
   vitestReplayArgs,
   YeetInboxRowJson,
+  YeetPublishPostureInput,
+  yeetPublishPostureFor,
 } from "@beep/repo-cli/test/Yeet";
 import { QualityTaskStep } from "@beep/repo-cli-kit/process/index";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -947,5 +953,99 @@ describe("final-check verification routing", () => {
         ).toEqual(["selected", "selected"]);
       })
     );
+  });
+});
+
+// compute-profile-gate-routing P1: final-check auto-skips hosted-only gates on
+// a worker host, and a plain publish there takes the yeet open posture.
+const PROFILE_GIB = 1024 ** 3;
+const probeWithCeiling = (constrainedGib: number) =>
+  makeComputeProfileProbe({
+    constrainedMemoryBytes: () => constrainedGib * PROFILE_GIB,
+    totalMemoryBytes: () => 125 * PROFILE_GIB,
+    residentBytes: () => 0,
+  });
+const workerProbe = probeWithCeiling(7);
+const workstationProbe = probeWithCeiling(0);
+const skipLines = (skips: ReadonlyArray<{ readonly gate: string; readonly reason: string }>) =>
+  A.map(skips, (skip) => `${skip.gate}=${skip.reason}`);
+
+describe("final-check compute-profile skips", () => {
+  it.effect("auto-skips every hosted-only gate on a worker and keeps the local gates planned", () =>
+    Effect.gen(function* () {
+      const { computeProfile, profileSkips } = yield* resolveFinalCheckProfileSkips(FinalCheckGate.literals, [], false);
+      expect(computeProfile).toBe("worker");
+      expect(skipLines(profileSkips)).toStrictEqual(
+        A.map(
+          ["cheap-gates", "lint-policy", "check", "docgen", "fallow", "coverage"],
+          (gate) => `${gate}=${COMPUTE_PROFILE_WORKER_SKIP_REASON}`
+        )
+      );
+    }).pipe(Effect.provideService(ComputeProfileProbe, workerProbe))
+  );
+
+  it.effect("adds nothing under --force-local", () =>
+    Effect.gen(function* () {
+      const { profileSkips } = yield* resolveFinalCheckProfileSkips(FinalCheckGate.literals, [], true);
+      expect(profileSkips).toStrictEqual([]);
+    }).pipe(Effect.provideService(ComputeProfileProbe, workerProbe))
+  );
+
+  it.effect("leaves the workstation plan unchanged", () =>
+    Effect.gen(function* () {
+      const { computeProfile, profileSkips } = yield* resolveFinalCheckProfileSkips(FinalCheckGate.literals, [], false);
+      expect(computeProfile).toBe("workstation");
+      expect(profileSkips).toStrictEqual([]);
+    }).pipe(Effect.provideService(ComputeProfileProbe, workstationProbe))
+  );
+
+  it.effect("lets an operator --skip win over the auto-skip for the same gate", () =>
+    Effect.gen(function* () {
+      const operator = yield* parseFinalCheckSkips(["coverage=admission waited 10 minutes"]);
+      const profileSkips = computeProfileFinalCheckSkips({
+        gates: ["check", "coverage"],
+        operatorSkips: operator,
+        profile: "worker",
+        forceLocal: false,
+      });
+      expect(skipLines(profileSkips)).toStrictEqual([`check=${COMPUTE_PROFILE_WORKER_SKIP_REASON}`]);
+      const coverage = A.filter(A.appendAll(operator, profileSkips), (skip) => skip.gate === "coverage");
+      expect(skipLines(coverage)).toStrictEqual(["coverage=admission waited 10 minutes"]);
+    })
+  );
+
+  it.effect("decodes a receipt written before computeProfile and forceLocal existed", () =>
+    Effect.gen(function* () {
+      const receipt = yield* S.decodeEffect(FinalCheckReceipt)({
+        schemaVersion: "yeet-final-check/v1",
+        headSha: "a",
+        mergeBase: "b",
+        base: "origin/main",
+        complete: true,
+        verdict: "pass",
+        startedAt: "2026-11-08T00:00:00.000Z",
+        finishedAt: "2026-11-08T00:01:00.000Z",
+        steps: [],
+        expectationRewrites: [],
+      });
+      expect(receipt.computeProfile).toBeUndefined();
+      expect(receipt.forceLocal).toBeUndefined();
+    })
+  );
+});
+
+describe("yeet publish posture", () => {
+  const posture = (input: Parameters<typeof YeetPublishPostureInput.make>[0]) =>
+    yeetPublishPostureFor(YeetPublishPostureInput.make(input));
+
+  it("takes the open posture for a plain publish on a worker", () => {
+    expect(posture({ profile: "worker", mode: "publish" })).toBe("open");
+  });
+
+  it("keeps publish under --force-local, on a workstation, for other modes and commit-reusing flags", () => {
+    expect(posture({ profile: "worker", mode: "publish", forceLocal: true })).toBe("publish");
+    expect(posture({ profile: "workstation", mode: "publish" })).toBe("publish");
+    expect(posture({ profile: "worker", mode: "verify" })).toBe("publish");
+    expect(posture({ profile: "worker", mode: "publish", keepsOwnRoute: true })).toBe("publish");
   });
 });
