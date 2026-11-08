@@ -4,7 +4,7 @@ import * as Layer from "effect/Layer";
 import { replayCitationCanonicalParserOperations } from "./CitationCanonicalParserOperations.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
-it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true })(
+it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true, concurrent: false })(
   "original resolver parser fragments",
   (it) => {
     for (const kind of ["bun", "node"] as const) {

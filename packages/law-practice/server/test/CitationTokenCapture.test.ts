@@ -20,6 +20,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import { loadCitationTokenObjectsControls } from "./CitationTokenObjects.fixtures.ts";
 import type { CitationTokenCaptureObservation } from "./CitationTokenObjects.fixtures.ts";
 
@@ -194,7 +195,14 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
         const citationResult6 = yield* objects.snapshot(0).pipe(Effect.flip);
         expect(citationResult6).toMatchObject({ reason: "host-failed" });
         const denied = CitationSafetyLimitExceeded.make({ operation: "extract", limit: "producedTextUtf16" });
-        const refuse = Effect.fn("CaptureTest.refuse")(() => Effect.fail(denied));
+        const callerCause = new Error("synthetic caller diagnostic");
+        expect(Reflect.defineProperty(denied, "cause", { value: callerCause })).toBe(true);
+        let refusals = 0;
+        const refuse = Effect.fn("CaptureTest.refuse")(() =>
+          Effect.sync(() => {
+            refusals++;
+          }).pipe(Effect.andThen(Effect.fail(denied)))
+        );
         const larger = { ...limits, producedTextUtf16: 100 };
         const permitted = yield* makeCitationTokenObjects(larger, controls.editionBindings);
         const rejected = yield* makeCitationTokenCapture(larger, row.bindings).pipe(
@@ -204,7 +212,14 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
           )
         );
         const citationResult7 = yield* rejected.build(0, { kind: "Token" }).pipe(Effect.flip);
-        expect(citationResult7).toBe(denied);
+        expect(refusals).toBe(1);
+        expect(S.is(CitationSafetyLimitExceeded)(citationResult7)).toBe(true);
+        expect(citationResult7).toMatchObject({
+          _tag: denied._tag,
+          operation: denied.operation,
+          limit: denied.limit,
+        });
+        expect(Reflect.getOwnPropertyDescriptor(citationResult7, "cause")).toBeUndefined();
         const single = yield* makeCitationTokenObjects({ ...larger, candidates: 1 }, controls.editionBindings);
         approvals = 0;
         const parallel = yield* makeCitationTokenCapture(larger, row.bindings).pipe(

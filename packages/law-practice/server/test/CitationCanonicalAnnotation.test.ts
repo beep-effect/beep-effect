@@ -48,7 +48,7 @@ const lower = CitationAnnotationAnnotator.of({
     });
   }),
 });
-it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true })(
+it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true, concurrent: false })(
   "canonical assertion annotation stage",
   (it) => {
     for (const kind of ["bun", "node"] as const) {

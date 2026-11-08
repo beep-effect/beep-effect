@@ -9,7 +9,7 @@ import {
   parsePatentSections,
 } from "@beep/law-practice-domain";
 import { assert, describe, it } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
@@ -66,9 +66,9 @@ describe("patent content metadata", () => {
     assert.strictEqual(extractPatentAbstract(content), abstract);
     const all = parsePatentSections({ content, requestedSections: ["all"] });
     assertSome(all.abstract, abstract);
-    assert.isTrue(O.isSome(all.description));
-    assert.isTrue(O.isSome(all.drawings));
-    assert.isTrue(O.isSome(all.citations));
+    all.description.pipe(O.isSome, assertTrue);
+    all.drawings.pipe(O.isSome, assertTrue);
+    all.citations.pipe(O.isSome, assertTrue);
     const claims = parsePatentSections({ content, requestedSections: ["claims"], maxCharsPerSection: 20 });
     assertNone(claims.abstract);
     assertNone(claims.description);

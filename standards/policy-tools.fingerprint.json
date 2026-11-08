@@ -390,6 +390,8 @@
     "packages/tooling/tool/cli/src/internal/repo-run/ComputeProfile.ts",
     "packages/tooling/tool/cli/src/internal/repo-run/GateRoute.schemas.ts",
     "packages/tooling/tool/cli/src/internal/repo-run/JournalFile.ts",
+    "packages/tooling/tool/cli/src/internal/repo-run/MemoryStats.schemas.ts",
+    "packages/tooling/tool/cli/src/internal/repo-run/MemoryStats.service.ts",
     "packages/tooling/tool/cli/src/internal/repo-run/ProcessIdentity.ts",
     "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts",
     "packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts",
