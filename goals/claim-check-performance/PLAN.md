@@ -46,3 +46,20 @@ native cleanup. Mark completed-retained only after P0-P4 truly pass.
 2. Diagnostics: node kind/boundary differences in281 claims; term differences275; dependency edges210; antecedent edges436. These overlap.
 3. Completed: record-based numerical evaluator and ten anti-silence/unknown/retention tests. Independent provenance remains separate.
 4. Reference grammar repair complete; next: broad hierarchy/term rules and independently qualified fresh source cohorts.
+
+## Checkpoints
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug claim-check-performance`; add a `kind: checkpoint` file there, never edit this block._
+
+### Preserve measured runtime through citation coverage repair, 2026-11-08
+
+The hosted coverage job at PR head 74c1f259bc2 identified uncovered citation dump/repr paths and package coverage below unchanged floors. Add focused public-surface tests and replace only the unreachable finite-integer encoder error mapper with Effect.orDie before parts.literal. The raw Input decoder validates and owns S.Int fields; malformed raw input retains invalid-input, and literal budget failures retain their error channel. Independent source review qualified this invariant. The initially proposed synchronous encoder failed TS377130 before commit and its failed check remains retained; the final form uses encodeEffect.
+
+This is a CI behavior-preservation repair, not a numerical performance candidate. Before publication, commit the exact reviewed source/tests, capture a fresh runtime closure against the retained 48/538 freeze, require exactly the intended Dump.ts source change with unchanged inputs/assets/Bun/caps, run decoder rejection controls and the unchanged full538 replay in exclusive directories, require all48 identities and all60 canonical report payloads unchanged, then retain/seal every result. Do not change any reference, scorer, historical result, coverage floor, baseline, suppression or dependency. Package/full hosted coverage is still required; local coverage overlay is a projection only. No local audit/full-root queue, fresh source QA or new acquisition is authorized.
+
+Lane `feat/claim-check-census-composition` · PR #2980
+
+Reverse: Revert the scoped CI repair while retaining every test, failed check, archived source and replay result.
+
+<!-- beep:decisions:end -->
