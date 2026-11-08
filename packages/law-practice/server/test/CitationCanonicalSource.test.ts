@@ -20,7 +20,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("canonical t
       const original = yield* unicode.fromText(parent.sourceText);
       const changed = yield* unicode.fromText("Visible 😀");
       const modes = { role: "markup", cleanSteps: ["html"], container: "list" };
-      const derive = (native: unknown, invocation = modes, engineArtifact = artifact) =>
+      const derive = (native: unknown, invocation: unknown = modes, engineArtifact = artifact) =>
         deriveCitationCanonicalSource(setup.limits, engineArtifact, parent, native, invocation).pipe(
           Effect.provideContext(setup.provided),
           Effect.provideService(CitationTextBudget, setup.budget)
@@ -42,6 +42,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("canonical t
       const changedMode = yield* derive(changed.storage, { ...modes, container: "tuple" });
       expect(changedMode.source.source.textDigest).toBe(first.source.source.textDigest);
       expect(changedMode.source.source.extractor.version).not.toBe(first.source.source.extractor.version);
+      const planOne = yield* derive(changed.storage, { ...modes, cleanSteps: { plan: "quotes/v1" } });
+      const planTwo = yield* derive(changed.storage, { ...modes, cleanSteps: { plan: "quotes/v2" } });
+      expect(planOne.source.source.textDigest).toBe(planTwo.source.source.textDigest);
+      expect(planOne.source.source.extractor.version).not.toBe(planTwo.source.source.extractor.version);
       const changedVersion = yield* derive(changed.storage, modes, Sha256Hex.make(Str.repeat(64)("b")));
       expect(changedVersion.source.source.extractor.version).not.toBe(first.source.source.extractor.version);
       const companion = yield* citationFixtureSourceProof("Visible 😀");

@@ -285,20 +285,23 @@ const ensureParentDirectory = Effect.fnUntraced(function* (
   if (!createMissing) {
     return false;
   }
-  yield* fs
-    .makeDirectory(directory)
-    .pipe(
-      Effect.mapError((cause) =>
-        fsGuardError(
-          prepared.root,
-          prepared.target,
-          directory,
-          "filesystem-failure",
-          `Failed to create contained directory "${directory}".`,
-          cause
-        )
+  yield* fs.makeDirectory(directory).pipe(
+    // Another guarded writer may have created it after our inspection. The
+    // no-follow directory check below still rejects a file or symlink winner.
+    Effect.catchTag("PlatformError", (cause) =>
+      Eq.equals(cause.reason._tag, "AlreadyExists") ? Effect.void : Effect.fail(cause)
+    ),
+    Effect.mapError((cause) =>
+      fsGuardError(
+        prepared.root,
+        prepared.target,
+        directory,
+        "filesystem-failure",
+        `Failed to create contained directory "${directory}".`,
+        cause
       )
-    );
+    )
+  );
   yield* requireDirectory(fs, prepared.root, prepared.target, directory, "parent-not-directory");
   return true;
 });

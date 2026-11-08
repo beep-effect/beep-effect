@@ -2,7 +2,7 @@
   "schemaVersion": "citation-policy-contract-proof/v1",
   "durationEncoding": "whole-milliseconds",
   "schemaSourceSha256": "7fcc5b70ea27edd8c92fefacc8cca60e5a634e7d7abcf36d79dd1f5569ad4971",
-  "fixtureSourceSha256": "649aa94f50df809f5c4ae848d88ecc2c3ebcab01b780138e6c1f6530daf7b33f",
+  "fixtureSourceSha256": "ff0e4af8151baf2e37d2a94af18b2acb7bb4dac4e74ca933abe4f2ebc41780a6",
   "absoluteCeilings": {
     "sourceUtf16": 1000000,
     "tokens": 1000000,
@@ -63,7 +63,7 @@
       "extractDeadline": 10000,
       "resolveDeadline": 10000,
       "annotateDeadline": 10000,
-      "operationDeadline": 30000,
+      "operationDeadline": 50000,
       "regexDeadline": 250,
       "queueDeadline": 1000,
       "cleanupDeadline": 1000

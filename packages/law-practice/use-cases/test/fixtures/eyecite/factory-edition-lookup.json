@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "citation-factory-edition-lookup/v1",
+  "oracleCommit": "04d82c032ad5fd0f9ab72a61c87110c46ee8f52e",
+  "oracleTree": "a35a58fac03400f71a93a93485b77f1d56f2b02f",
+  "python": "3.11.15",
+  "versions": {
+    "eyecite": "2.7.6",
+    "reporters-db": "3.2.53",
+    "courts-db": "0.10.22"
+  },
+  "license": "BSD-2-Clause",
+  "licenseSha256": "db2c3c974a69bd9141257a10daee138116cd04ec354cd5239d0af52bc5025772",
+  "lockSha256": "864cf7a1ef7ebafe8159b9691a42a2dfe980cf0e609b5fd1899bcc5703b91e9a",
+  "producerSha256": "c6cd5342a175589b5e9c38dcecb8a482c3a3cd5d5e8c6237999247e73e5d1ec6",
+  "normalizerSha256": "9a8176ca6d55de38ff94731a1c532b9d4788651bcdd497c8d308b8520bae15e8",
+  "sources": {
+    "tokenizers.py": "de2d345fe0211aa4f48d633035567ec941f113e48c41990b0b036db63d984a01",
+    "test_factories.py": "6ce47cbbc600416c1f67233f76381aff8bbf46f3a246af96e45d2c4322415744"
+  },
+  "scope": "Ordered immutable lookup inputs only; object identity and dynamic lookup protocols remain open.",
+  "rows": [
+    {
+      "reporter": "U.S.",
+      "editions": [
+        "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+        "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+      ]
+    },
+    {
+      "reporter": "U. S.",
+      "editions": [
+        "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+        "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+      ]
+    },
+    {
+      "reporter": "F. Supp.",
+      "editions": [
+        "4d1920b4c91a45f01bbb216514748880137debc7841ee7614f9421c026ede857"
+      ]
+    }
+  ]
+}

@@ -22,7 +22,7 @@ import * as SqlError from "effect/sql/SqlError";
 import * as Tracer from "effect/Tracer";
 import * as Tuple from "effect/Tuple";
 import { AlchemyPostgresError } from "../AlchemyPostgres.errors.ts";
-import { TargetKindAttribute, TargetNameAttribute } from "../AlchemyPostgres.instruments.ts";
+import { JobRoleAttribute, TargetKindAttribute, TargetNameAttribute } from "../AlchemyPostgres.instruments.ts";
 import { DeliveryRow, encodeJson } from "../AlchemyPostgres.schema.ts";
 import type * as DomainPlatform from "@alchemy.run/domain/Platform";
 import type * as Scope from "effect/Scope";
@@ -394,7 +394,14 @@ export const makeContext = (deps: HostDeps) => {
         const exit = yield* O.match(jobRunner(address), {
           // A role no longer in the model: nothing to run.
           onNone: () => Effect.exit(Effect.void),
-          onSome: (runJob) => Effect.exit(runJob(job_id)),
+          onSome: (runJob) =>
+            Effect.exit(
+              runJob(job_id).pipe(
+                Effect.withSpan("AlchemyPostgres.Backfill.runJob", {
+                  attributes: { [JobRoleAttribute]: roleOf(address) },
+                })
+              )
+            ),
         });
         if (Exit.isSuccess(exit)) {
           yield* sql`DELETE FROM ${sql(tables.backfillJob)} WHERE ${where} AND revision = ${revision}`;

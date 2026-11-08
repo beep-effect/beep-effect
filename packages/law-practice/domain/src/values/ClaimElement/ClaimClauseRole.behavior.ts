@@ -510,6 +510,13 @@ const finiteProofReferences = (proof: ClaimFiniteSourceProof): ReadonlyArray<Cla
     "intrinsic-noun": () => [],
     boundary: (p) => [p.token, p.scope, ...O.toArray(p.successor)],
     "citation-boundary": (p) => [p.token, p.scope, p.witness.keyword, ...p.witness.tokens],
+    "label-boundary": (p) => [
+      p.token,
+      p.scope,
+      p.governor,
+      p.colon,
+      ...A.flatMap(p.markers, (m) => [m.start, m.close]),
+    ],
     "verbal-boundary": (p) => [p.token, p.governor, p.scope],
     opening: (p) => [p.scope, ...p.evidence],
     closure: (p) => [p.scope, ...O.toArray(p.boundary)],
@@ -526,7 +533,13 @@ const finiteProofReferences = (proof: ClaimFiniteSourceProof): ReadonlyArray<Cla
             ...p.terminalEvidence.nonfiniteModifiers,
             ...p.terminalEvidence.orderedModifiers,
           ],
-    operator: (p) => [p.head.token, ...p.lexical, ...O.toArray(p.subject), ...O.toArray(p.position)],
+    operator: (p) => [
+      p.head.token,
+      ...p.lexical,
+      ...O.toArray(p.subject),
+      ...O.toArray(p.position),
+      ...(p.head.kind === "distributive-direct" ? [p.head.scope, p.head.comma, p.head.each, p.head.direct] : []),
+    ],
     "ordered-arguments": (p) => [
       p.operator,
       p.adposition,
@@ -549,6 +562,7 @@ const finiteProofReferenceCount = (proof: ClaimFiniteSourceProof): number =>
     "intrinsic-noun": () => 0,
     "citation-boundary": (p) => p.witness.tokens.length + 3,
     "verbal-boundary": () => 3,
+    "label-boundary": (p) => p.markers.length * 2 + 4,
     boundary: () => 3,
     opening: (p) => p.evidence.length + 1,
     closure: () => 2,
@@ -558,7 +572,7 @@ const finiteProofReferenceCount = (proof: ClaimFiniteSourceProof): number =>
       (p.terminalEvidence.kind === "lexical-terminal"
         ? 0
         : p.terminalEvidence.nonfiniteModifiers.length + p.terminalEvidence.orderedModifiers.length + 2),
-    operator: (p) => p.lexical.length + 3,
+    operator: (p) => p.lexical.length + 3 + (p.head.kind === "distributive-direct" ? 4 : 0),
     "ordered-arguments": (p) => p.coverage.length + 8,
     description: () => 3,
     selection: (p) => p.selector.length + p.branches.length + 3,
@@ -574,6 +588,7 @@ const finiteProofSlot = (proof: ClaimFiniteSourceProof): ClaimSourceProofRef["sl
     opening: () => ClaimSourceProofSlot.Enum.opening,
     "citation-boundary": () => ClaimSourceProofSlot.Enum.boundary,
     "verbal-boundary": () => ClaimSourceProofSlot.Enum.boundary,
+    "label-boundary": () => ClaimSourceProofSlot.Enum.boundary,
     closure: () => ClaimSourceProofSlot.Enum.closure,
     head: () => ClaimSourceProofSlot.Enum.core,
     operator: () => ClaimSourceProofSlot.Enum.operator,
@@ -591,6 +606,7 @@ const finiteProofRank = (proof: ClaimFiniteSourceProof): number =>
     boundary: () => -2,
     "citation-boundary": () => -2,
     "verbal-boundary": () => -2,
+    "label-boundary": () => -2,
     opening: () => -1,
     closure: () => -1,
     head: () => 0,
@@ -906,7 +922,19 @@ export const validateClaimCitationWitness: {
   ): boolean;
 } = dual(6, completeClaimCitationWitness);
 
+// Operational control states contain no proof verdict and are never persisted.
+// Only the field on each fresh validation context can hold a Found classification.
+const unreadRightListMemo = { status: "unread" } as const;
+const noMatchRightListMemo = { status: "none" } as const;
+const deniedRightListMemo = { status: "denied" } as const;
+type FiniteRightListMemo =
+  | typeof unreadRightListMemo
+  | typeof noMatchRightListMemo
+  | typeof deniedRightListMemo
+  | { readonly status: "found"; readonly source: O.Some<RawRightList> };
+
 type FiniteProofValidationContext = {
+  rightListMemo: FiniteRightListMemo;
   scopes: HashSet.HashSet<"preamble" | "body" | "transition">;
   readonly claim: PatentClaim;
   readonly tokens: ReadonlyArray<ClaimLexicalToken>;
@@ -1208,6 +1236,99 @@ const validateFiniteBoundaryProof = (context: FiniteProofValidationContext, proo
   return validateFiniteBoundaryMode(context, proof, raw.value, scope.value.extent.endChar);
 };
 
+const strictLabelBoundary = S.decodeUnknownResult(S.toType(ClaimFiniteSourceProof.cases["label-boundary"]), {
+  onExcessProperty: "error",
+});
+const finiteLabelTokenAt = (context: FiniteProofValidationContext, ref: ClaimSourceProofRef, index: number): boolean =>
+  O.exists(context.resolve(ref), (p) => p.kind === "token" && p.tokenOrdinal === index + 1);
+const finiteLabelMembers = (
+  context: FiniteProofValidationContext,
+  proof: Extract<ClaimFiniteSourceProof, { readonly kind: "label-boundary" }>,
+  source: RawRightList,
+  scope: Extract<ClaimFiniteSourceProof, { readonly kind: "scope" }>
+): boolean => {
+  for (let i = 0; i < proof.markers.length; i++) {
+    const raw = O.getOrThrow(A.get(source.markers, i));
+    const marker = O.getOrThrow(A.get(proof.markers, i));
+    if (
+      !finiteLabelTokenAt(context, marker.start, raw[0]) ||
+      !finiteLabelTokenAt(context, marker.close, raw[1] - 1) ||
+      !containsScope(scope.extent, O.getOrThrow(A.get(context.tokens, raw[0])).anchor) ||
+      !containsScope(scope.extent, O.getOrThrow(A.get(context.tokens, raw[1] - 1)).anchor)
+    )
+      return false;
+  }
+  return true;
+};
+const finiteLabelCensus = (
+  proof: Extract<ClaimFiniteSourceProof, { readonly kind: "label-boundary" }>,
+  source: RawRightList
+): boolean => proof.markers.length === source.markers.length && proof.item >= 0 && proof.item < proof.markers.length;
+const validateFiniteLabelSource = (
+  context: FiniteProofValidationContext,
+  proof: Extract<ClaimFiniteSourceProof, { readonly kind: "label-boundary" }>,
+  source: RawRightList,
+  scope: Extract<ClaimFiniteSourceProof, { readonly kind: "scope" }>
+): boolean => {
+  if (
+    !finiteLabelTokenAt(context, proof.governor, source.governor) ||
+    !finiteLabelTokenAt(context, proof.colon, source.colon)
+  )
+    return false;
+  if (!finiteLabelMembers(context, proof, source, scope)) return false;
+  return finiteLabelTokenAt(context, proof.token, O.getOrThrow(A.get(source.markers, proof.item))[1] - 1);
+};
+const finiteLabelOriginalAligned = (context: FiniteProofValidationContext): boolean =>
+  O.exists(context.originalInput, ClaimLexicalEvidence.guards.aligned);
+const finiteLabelBodyScope = (
+  scope: O.Option<ClaimFiniteSourceProof>
+): scope is O.Some<Extract<ClaimFiniteSourceProof, { readonly kind: "scope" }>> =>
+  isFiniteScopeProofOption(scope) && scope.value.role === "body";
+const computeFiniteRightListSource = (context: FiniteProofValidationContext): O.Option<RawRightList> | false => {
+  // Eight prepaid setup slots: denial latch, forwarding closure, two captures,
+  // Found cell and its two fields, and the context publication.
+  if (!context.charge(8)) {
+    context.rightListMemo = deniedRightListMemo;
+    return false;
+  }
+  let denied = false;
+  const reserve = (amount: number): boolean => {
+    const paid = context.charge(amount);
+    if (!paid) denied = true;
+    return paid;
+  };
+  const source = readSourceRightParenthesisList(context.claim, context.tokens, reserve);
+  if (denied) {
+    context.rightListMemo = deniedRightListMemo;
+    return false;
+  }
+  context.rightListMemo = O.isSome(source) ? { status: "found", source } : noMatchRightListMemo;
+  return source;
+};
+const finiteRightListSource = (context: FiniteProofValidationContext): O.Option<RawRightList> | false => {
+  // State dispatch and returning the existing result reference; no hit allocation.
+  if (!context.charge(2)) {
+    context.rightListMemo = deniedRightListMemo;
+    return false;
+  }
+  const memo = context.rightListMemo;
+  if (memo.status === "unread") return computeFiniteRightListSource(context);
+  if (memo.status === "found") return memo.source;
+  return memo.status === "none" ? O.none() : false;
+};
+const validateFiniteLabelBoundary = (
+  context: FiniteProofValidationContext,
+  proof: Extract<ClaimFiniteSourceProof, { readonly kind: "label-boundary" }>
+): boolean => {
+  if (!context.charge(proof.markers.length * 16 + 32) || Result.isFailure(strictLabelBoundary(proof))) return false;
+  if (!finiteLabelOriginalAligned(context)) return false;
+  const source = finiteRightListSource(context);
+  if (source === false || O.isNone(source)) return false;
+  const scope = context.resolve(proof.scope);
+  if (!finiteLabelBodyScope(scope) || !finiteLabelCensus(proof, source.value)) return false;
+  return validateFiniteLabelSource(context, proof, source.value, scope.value);
+};
+
 type FiniteVerbalBoundaryProof = Extract<ClaimFiniteSourceProof, { readonly kind: "verbal-boundary" }>;
 type FiniteScopeProof = Extract<ClaimFiniteSourceProof, { readonly kind: "scope" }>;
 const isFiniteTokenProofOption = (proof: O.Option<ClaimFiniteSourceProof>): proof is O.Some<FiniteTokenProof> =>
@@ -1320,6 +1441,7 @@ type FiniteOpeningProof = Extract<ClaimFiniteSourceProof, { readonly kind: "open
 const finiteAdjunctAt = (tokens: ReadonlyArray<ClaimLexicalToken>, index: number): boolean =>
   tagAt(tokens, index) === "ADV" || HashSet.has(HashSet.make("not", "n't"), wordAt(tokens, index));
 const finiteOpeningBoundaryMatches = (mode: "lexical-object" | "list-item", proof: ClaimFiniteSourceProof): boolean => {
+  if (proof.kind === "label-boundary") return mode === "list-item";
   if (proof.kind === "boundary") {
     if (mode === "list-item") return proof.mode === "separator";
     return proof.mode === "finite" || proof.mode === "auxiliary";
@@ -1374,6 +1496,34 @@ const finiteOpeningTokenMatches = (proof: FiniteOpeningProof, first: O.Option<Cl
         ? p.token.pos === "ADP" && p.token.anchor.endChar < proof.coreStart
         : p.token.anchor.startChar === proof.coreStart)
   );
+const finiteLabelOpening = (
+  context: FiniteProofValidationContext,
+  proof: FiniteOpeningProof,
+  first: O.Option<ClaimFiniteSourceProof>
+): boolean => {
+  const raw = O.flatMap(first, (p) => (p.kind === "label-boundary" ? context.resolve(p.token) : O.none()));
+  return (
+    O.exists(
+      raw,
+      (p) =>
+        p.kind === "token" &&
+        O.exists(A.get(context.tokens, p.tokenOrdinal), (t) => t.anchor.startChar === proof.coreStart)
+    ) && proof.evidence.length === 1
+  );
+};
+const validateFinitePositionOpening = (
+  context: FiniteProofValidationContext,
+  proof: FiniteOpeningProof,
+  first: O.Option<ClaimFiniteSourceProof>
+): boolean => {
+  if (proof.mode !== "lexical-object" && proof.mode !== "list-item") return false;
+  const mode = proof.mode;
+  if (!O.exists(first, (p) => finiteOpeningBoundaryMatches(mode, p))) return false;
+  if (proof.mode === "lexical-object") return validateFiniteLexicalOpening(context, proof, first);
+  if (O.exists(first, (p) => p.kind === "label-boundary")) return finiteLabelOpening(context, proof, first);
+
+  return true;
+};
 const validateFiniteOpeningMode = (
   context: FiniteProofValidationContext,
   proof: FiniteOpeningProof,
@@ -1382,12 +1532,8 @@ const validateFiniteOpeningMode = (
 ): boolean => {
   if (proof.mode === "qualified-start")
     return proof.coreStart === scope.extent.startChar && O.exists(first, (p) => p.ordinal === scope.ordinal);
-  if (proof.mode === "lexical-object" || proof.mode === "list-item") {
-    const mode = proof.mode;
-    if (!O.exists(first, (p) => finiteOpeningBoundaryMatches(mode, p))) return false;
-    if (proof.mode === "lexical-object") return validateFiniteLexicalOpening(context, proof, first);
-    return true;
-  }
+  if (proof.mode === "lexical-object" || proof.mode === "list-item")
+    return validateFinitePositionOpening(context, proof, first);
   return finiteOpeningTokenMatches(proof, first);
 };
 const validateFiniteOpeningProof = (context: FiniteProofValidationContext, proof: FiniteOpeningProof): boolean => {
@@ -1726,7 +1872,10 @@ const validateFiniteHeadProof = (context: FiniteProofValidationContext, proof: F
 };
 
 type FiniteOperatorProof = Extract<ClaimFiniteSourceProof, { readonly kind: "operator" }>;
-type FiniteDerivedOperatorHead = Exclude<ClaimOperatorHeadWitness, { readonly kind: "singleton" }>;
+type FiniteDerivedOperatorHead = Exclude<
+  ClaimOperatorHeadWitness,
+  { readonly kind: "singleton" | "distributive-direct" }
+>;
 const finiteOperatorLexicalSpan = (head: FiniteDerivedOperatorHead, proof: ClaimSourceProof): O.Option<TextAnchor> => {
   if (head.kind === "finite-pp") {
     return proof.kind === "finite-pp" ? O.some(proof.lexicalPredicate) : O.none();
@@ -1767,11 +1916,199 @@ const validateFiniteDerivedOperatorHead = (
   if (O.isNone(span)) return false;
   return finiteOperatorSpanAgrees(source.value, proof.extent, span.value, lexicalHead.token.anchor);
 };
+type DistributiveHead = Extract<ClaimOperatorHeadWitness, { readonly kind: "distributive-direct" }>;
+type DistributiveContext = Pick<FiniteProofValidationContext, "claim" | "tokens" | "proofs" | "charge" | "resolve">;
+const strictDistributiveHead = S.decodeUnknownResult(S.toType(ClaimOperatorHeadWitness.cases["distributive-direct"]), {
+  onExcessProperty: "error",
+});
+const distributiveGap = (context: DistributiveContext, start: number, end: number, separated = false): boolean => {
+  if (end < start || (separated && end === start) || !context.charge((end - start) * 2 + 2)) return false;
+  return Str.trim(Str.slice(start, end)(context.claim.claimText)) === "";
+};
+const distributiveBracket = (stack: Array<string>, spelling: string): boolean => {
+  if (HashSet.has(HashSet.make('"', "“", "”", "‘", "’"), spelling)) return false;
+  if (spelling === "(" || spelling === "[") stack.push(spelling);
+  if (spelling === ")" || spelling === "]") return stack.pop() === (spelling === ")" ? "(" : "[");
+  return true;
+};
+const distributiveProtectedStep = (
+  stack: Array<string>,
+  spelling: string,
+  inside: boolean,
+  quoted: boolean
+): boolean => {
+  if (quoted) return !inside;
+  return distributiveBracket(stack, spelling) && (!inside || stack.length === 0);
+};
+const distributiveUnprotected = (context: DistributiveContext, start: number, end: number): boolean => {
+  if (!context.charge(context.claim.claimText.length * 2 + context.tokens.length * 3 + 2)) return false;
+  const ranges = quoteRanges(context.claim.claimText);
+  if (!context.charge(context.tokens.length * (ranges.length + 3) + 2)) return false;
+  const quoted = protectedTokens(ranges, context.tokens);
+  const stack: Array<string> = [];
+  for (let i = 0; i < context.tokens.length; i++) {
+    const token = O.getOrThrow(at(context.tokens, i));
+    if (token.anchor.startChar >= end) break;
+    const inside = token.anchor.endChar > start;
+    if (
+      !distributiveProtectedStep(
+        stack,
+        token.anchor.quote,
+        inside,
+        O.getOrElse(A.get(quoted, i), () => true)
+      )
+    )
+      return false;
+  }
+  return stack.length === 0;
+};
+const distributiveHeadScope = (
+  context: DistributiveContext,
+  head: FiniteHeadProof,
+  scope: ClaimSourceProofRef
+): boolean => {
+  const opening = context.resolve(head.opening);
+  const closure = context.resolve(head.closure);
+  return (
+    O.exists(opening, (p) => p.kind === "opening" && p.scope.ordinal === scope.ordinal) &&
+    O.exists(closure, (p) => p.kind === "closure" && p.scope.ordinal === scope.ordinal)
+  );
+};
+const distributiveRecordShape = (proof: FiniteOperatorProof, head: DistributiveHead): boolean =>
+  proof.mode === "distributive" &&
+  proof.headRole === "predicate" &&
+  O.isSome(proof.subject) &&
+  O.exists(proof.position, (p) => p.ordinal === head.each.ordinal && p.slot === "token") &&
+  proof.lexical.length === 1 &&
+  O.getOrThrow(A.head(proof.lexical)).ordinal === head.token.ordinal;
+const distributiveFacts = (context: DistributiveContext, proof: FiniteOperatorProof, head: DistributiveHead) =>
+  O.all({
+    owner: O.filter(O.flatMap(proof.subject, context.resolve), ClaimFiniteSourceProof.guards.head),
+    object: O.filter(context.resolve(head.direct), ClaimFiniteSourceProof.guards.head),
+    scope: O.filter(context.resolve(head.scope), ClaimFiniteSourceProof.guards.scope),
+    comma: O.filter(context.resolve(head.comma), ClaimFiniteSourceProof.guards.boundary),
+    each: O.filter(context.resolve(head.each), ClaimFiniteSourceProof.guards.token),
+    verb: O.filter(context.resolve(head.token), ClaimFiniteSourceProof.guards.token),
+  });
+type DistributiveFacts = O.Option.Value<ReturnType<typeof distributiveFacts>>;
+const distributiveEnds = (context: DistributiveContext, facts: DistributiveFacts) =>
+  O.all({
+    separator: O.filter(context.resolve(facts.comma.token), ClaimFiniteSourceProof.guards.token),
+    ownerFirst: O.filter(O.flatMap(A.head(facts.owner.tokens), context.resolve), ClaimFiniteSourceProof.guards.token),
+    ownerEnd: O.filter(O.flatMap(A.last(facts.owner.tokens), context.resolve), ClaimFiniteSourceProof.guards.token),
+    objectStart: O.filter(O.flatMap(A.head(facts.object.tokens), context.resolve), ClaimFiniteSourceProof.guards.token),
+    closed: O.filter(context.resolve(facts.owner.closure), ClaimFiniteSourceProof.guards.closure),
+    opened: O.filter(context.resolve(facts.object.opening), ClaimFiniteSourceProof.guards.opening),
+  });
+type DistributiveEnds = O.Option.Value<ReturnType<typeof distributiveEnds>>;
+const distributiveClosureMatches = (head: DistributiveHead, ends: DistributiveEnds): boolean =>
+  ends.separator.token.anchor.quote === "," &&
+  O.exists(ends.closed.boundary, (p) => p.ordinal === head.comma.ordinal && p.slot === "boundary") &&
+  HashSet.has(HashSet.make("determiner", "quantity"), ends.opened.mode);
+const distributiveOrderMatches = (facts: DistributiveFacts, ends: DistributiveEnds): boolean =>
+  ends.separator.tokenOrdinal === ends.ownerEnd.tokenOrdinal + 1 &&
+  facts.each.tokenOrdinal === ends.separator.tokenOrdinal + 1 &&
+  facts.verb.tokenOrdinal === facts.each.tokenOrdinal + 1 &&
+  ends.objectStart.tokenOrdinal === facts.verb.tokenOrdinal + 1;
+const distributiveOwnerUnique = (context: DistributiveContext, facts: DistributiveFacts): boolean => {
+  let owners = 0;
+  for (const candidate of context.proofs) {
+    if (candidate.kind !== "head") continue;
+    if (candidate.core.endChar === facts.owner.core.endChar) owners++;
+    if (!distributiveCoreOutside(candidate.core, facts)) return false;
+  }
+  return owners === 1;
+};
+const distributiveNominalOutside = (core: TextAnchor, each: TextAnchor, verb: TextAnchor): boolean =>
+  !(core.startChar < verb.endChar && verb.startChar < core.endChar) &&
+  !(core.startChar < each.endChar && each.startChar < core.endChar);
+const distributiveCoreOutside = (core: TextAnchor, facts: DistributiveFacts): boolean =>
+  distributiveNominalOutside(core, facts.each.token.anchor, facts.verb.token.anchor);
+const distributiveScopeMatches = (
+  context: DistributiveContext,
+  head: DistributiveHead,
+  facts: DistributiveFacts
+): boolean =>
+  facts.scope.role === "body" &&
+  facts.comma.mode === "separator" &&
+  facts.comma.scope.ordinal === head.scope.ordinal &&
+  distributiveHeadScope(context, facts.owner, head.scope) &&
+  distributiveHeadScope(context, facts.object, head.scope) &&
+  containsScope(facts.scope.extent, facts.owner.core) &&
+  containsScope(facts.scope.extent, facts.object.core);
+const distributiveLexicalMatches = (
+  context: DistributiveContext,
+  proof: FiniteOperatorProof,
+  facts: DistributiveFacts
+): boolean => {
+  if (
+    !context.charge(
+      facts.verb.token.anchor.quote.length * 4 +
+        O.getOrElse(
+          O.map(facts.verb.token.lemma, (l) => l.length),
+          () => 0
+        ) *
+          4 +
+        12
+    )
+  )
+    return false;
+  return (
+    rawRegularParticiple(facts.verb.token) &&
+    word(facts.each.token) === "each" &&
+    sourceAnchorEqual(proof.extent, facts.verb.token.anchor)
+  );
+};
+const distributiveUncoordinatedOwner = (context: DistributiveContext, ends: DistributiveEnds): boolean =>
+  !O.exists(
+    at(context.tokens, ends.ownerFirst.tokenOrdinal - 2),
+    (t) => t.anchor.quote.length <= 6 && HashSet.has(HashSet.make("and", "or", "and/or"), word(t))
+  );
+const distributiveSourceGaps = (
+  context: DistributiveContext,
+  facts: DistributiveFacts,
+  ends: DistributiveEnds
+): boolean =>
+  distributiveGap(context, facts.owner.core.endChar, ends.separator.token.anchor.startChar) &&
+  distributiveGap(context, ends.separator.token.anchor.endChar, facts.each.token.anchor.startChar) &&
+  distributiveGap(context, facts.each.token.anchor.endChar, facts.verb.token.anchor.startChar, true) &&
+  distributiveGap(context, facts.verb.token.anchor.endChar, facts.object.core.startChar, true) &&
+  distributiveUnprotected(context, facts.owner.core.startChar, facts.object.core.endChar);
+const distributiveJoinedFacts = (
+  context: DistributiveContext,
+  head: DistributiveHead,
+  facts: DistributiveFacts,
+  ends: DistributiveEnds
+): boolean =>
+  distributiveClosureMatches(head, ends) &&
+  distributiveOrderMatches(facts, ends) &&
+  distributiveScopeMatches(context, head, facts) &&
+  distributiveUncoordinatedOwner(context, ends) &&
+  distributiveOwnerUnique(context, facts) &&
+  distributiveSourceGaps(context, facts, ends);
+const validateDistributiveHead = (
+  context: DistributiveContext,
+  proof: FiniteOperatorProof,
+  head: DistributiveHead
+): boolean => {
+  // Reserve all original proof visits, joined operational records and strict decoding before allocation.
+  if (
+    !context.charge(context.proofs.length * 4 + 64) ||
+    Result.isFailure(strictDistributiveHead(head)) ||
+    !distributiveRecordShape(proof, head)
+  )
+    return false;
+  const facts = distributiveFacts(context, proof, head);
+  if (O.isNone(facts) || !distributiveLexicalMatches(context, proof, facts.value)) return false;
+  const ends = distributiveEnds(context, facts.value);
+  return O.isSome(ends) && distributiveJoinedFacts(context, head, facts.value, ends.value);
+};
 const validateFiniteOperatorHead = (
   context: FiniteProofValidationContext,
   proof: FiniteOperatorProof,
   lexicalHead: FiniteTokenProof
 ): boolean => {
+  if (proof.head.kind === "distributive-direct") return validateDistributiveHead(context, proof, proof.head);
   if (proof.head.kind === "singleton")
     return proof.lexical.length === 1 && sourceAnchorEqual(lexicalHead.token.anchor, proof.extent);
   return validateFiniteDerivedOperatorHead(context, proof, proof.head, lexicalHead);
@@ -1803,15 +2140,49 @@ const finiteOperatorTransitionMatches = (
   return false;
 };
 const validateFiniteOperatorMode = (context: FiniteProofValidationContext, proof: FiniteOperatorProof): boolean => {
+  if (proof.mode === "distributive" && proof.head.kind !== "distributive-direct") return false;
   if (proof.mode === "finite" && O.isNone(proof.subject)) return false;
   if (proof.mode === "qualified-transition") return finiteOperatorTransitionMatches(context, proof);
   return true;
+};
+const rightOperatorSourceList = (
+  context: FiniteProofValidationContext,
+  head: FiniteTokenProof
+): O.Option<RawRightList> | false => {
+  if (!context.charge(6)) return false;
+  const before = A.get(context.tokens, head.tokenOrdinal - 2);
+  if (O.isNone(before) || !Str.endsWith(")")(before.value.anchor.quote)) return O.none();
+  return finiteRightListSource(context);
+};
+const rightOperatorPosition = (
+  context: FiniteProofValidationContext,
+  proof: FiniteOperatorProof,
+  head: FiniteTokenProof
+): boolean => {
+  if (!context.charge(3)) return false;
+  return O.exists(proof.position, (ref) =>
+    O.exists(context.resolve(ref), (p) => p.kind === "token" && p.tokenOrdinal === head.tokenOrdinal - 1)
+  );
+};
+const validateRightLabelOperator = (
+  context: FiniteProofValidationContext,
+  proof: FiniteOperatorProof,
+  head: FiniteTokenProof
+): boolean => {
+  if (O.isNone(context.originalInput)) return true;
+  const source = rightOperatorSourceList(context, head);
+  if (source === false) return false;
+  if (O.isNone(source)) return true;
+  if (!context.charge(source.value.markers.length + 1)) return false;
+  if (!A.some(source.value.markers, (m) => m[1] === head.tokenOrdinal - 1)) return true;
+  return rightOperatorPosition(context, proof, head) && validateSourceRightLabelActionToken(head.token, context.charge);
 };
 const validateFiniteOperatorProof = (context: FiniteProofValidationContext, proof: FiniteOperatorProof): boolean => {
   if (proof.lexical.length === 0 || !A.some(proof.lexical, (ref) => ref.ordinal === proof.head.token.ordinal))
     return false;
   const lexicalHead = context.resolve(proof.head.token);
   if (O.isNone(lexicalHead) || lexicalHead.value.kind !== "token") return false;
+  if (!validateRightLabelOperator(context, proof, lexicalHead.value)) return false;
   if (!validateFiniteOperatorHead(context, proof, lexicalHead.value)) return false;
   if (!validateFiniteOperatorTokens(context, proof)) return false;
   return validateFiniteOperatorMode(context, proof);
@@ -2033,6 +2404,7 @@ const validateFiniteRawRecord = (context: FiniteProofValidationContext, proof: F
 };
 const validateFiniteProofRecord = (context: FiniteProofValidationContext, proof: ClaimFiniteSourceProof): boolean => {
   if (isFiniteRawRecord(proof)) return validateFiniteRawRecord(context, proof);
+  if (proof.kind === "label-boundary") return validateFiniteLabelBoundary(context, proof);
   if (proof.kind === "boundary") {
     return validateFiniteBoundaryProof(context, proof);
   }
@@ -2157,13 +2529,14 @@ const validateFiniteProofRegistry = (
       A.get(proofs, ref.ordinal - 1),
       (proof) => proof.ordinal === ref.ordinal && finiteProofSlot(proof) === ref.slot
     );
-  // The extracted validator context is one new source-local allocation.
-  if (!charge(1)) return false;
+  // Prepay the context allocation plus its fresh memo slot before either is published.
+  if (!charge(2)) return false;
   const originalScopes = O.isSome(originalInput)
     ? originalQualifiedScopes(claim, charge)
     : O.none<ClaimOriginalQualifiedScopes>();
   if (!originalScopeAvailable(originalInput, originalScopes)) return false;
   const context: FiniteProofValidationContext = {
+    rightListMemo: unreadRightListMemo,
     claim,
     tokens,
     proofs,
@@ -2236,6 +2609,209 @@ const isAlignedLexicalInput = (
   O.isSome(input) && input.value.status === "aligned";
 // Operational parser state owns one source and one shared reservation. It is not
 // persisted domain data; emitted data is constructed through the schemas above.
+const sourceGerundForm = (token: ClaimLexicalToken): boolean =>
+  O.exists(token.lemma, (lemma) => {
+    const base = normalized(lemma);
+    return word(token) === `${base}ing` || (Str.endsWith("e")(base) && word(token) === `${Str.slice(0, -1)(base)}ing`);
+  });
+/**
+ * Recheck the original lexical action premise for a witnessed right-parenthesis child.
+ *
+ * **Example** (Inspect the source-only action guard)
+ *
+ * ```ts
+ * import { validateSourceRightLabelActionToken } from "@beep/law-practice-domain/values/ClaimElement"
+ * console.log(typeof validateSourceRightLabelActionToken) // "function"
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const validateSourceRightLabelActionToken: {
+  (charge: (amount: number) => boolean): (token: ClaimLexicalToken) => boolean;
+  (token: ClaimLexicalToken, charge: (amount: number) => boolean): boolean;
+} = dual(
+  2,
+  (token: ClaimLexicalToken, charge: (amount: number) => boolean): boolean =>
+    charge(token.anchor.quote.length * 4 + (O.isSome(token.lemma) ? token.lemma.value.length : 0) * 4 + 8) &&
+    token.pos === "VERB" &&
+    sourceGerundForm(token)
+);
+
+type RawRightLabel = readonly [number, number];
+type RawRightList = {
+  readonly governor: number;
+  readonly colon: number;
+  readonly end: number;
+  readonly markers: ReadonlyArray<RawRightLabel>;
+};
+const rawRightMarker = (tokens: ReadonlyArray<ClaimLexicalToken>, index: number): O.Option<RawRightLabel> => {
+  const first = at(tokens, index);
+  if (O.isNone(first)) return O.none();
+  if (O.isSome(Str.match(/^[a-z]\)$/u)(first.value.anchor.quote))) return O.some([index, index + 1]);
+  const next = at(tokens, index + 1);
+  return first.value.anchor.quote.length === 1 &&
+    O.isSome(Str.match(/^[a-z]$/u)(first.value.anchor.quote)) &&
+    O.exists(next, (t) => t.anchor.quote === ")" && t.anchor.startChar === first.value.anchor.endChar)
+    ? O.some([index, index + 2])
+    : O.none();
+};
+type RightListScan = {
+  readonly markers: Array<RawRightLabel>;
+  readonly stack: Array<string>;
+  expect: number;
+  separatorEnd: number;
+  bodyStart: number;
+};
+const rightListHeader = (
+  claim: PatentClaim,
+  tokens: ReadonlyArray<ClaimLexicalToken>,
+  charge: (n: number) => boolean
+): O.Option<readonly [number, number]> => {
+  const transition = rawClaimTransitionScope(claim, charge);
+  if (O.isNone(transition)) return O.none();
+  const governor = A.findFirstIndex(tokens, (t) => sourceAnchorEqual(t.anchor, transition.value));
+  if (O.isNone(governor)) return O.none();
+  if (
+    !HashSet.has(
+      HashSet.make("comprising", "including", "comprises", "includes", "having"),
+      wordAt(tokens, governor.value)
+    )
+  )
+    return O.none();
+  let colon = governor.value + 1;
+  if (surface(tokens, colon, "the steps of")) colon += 3;
+  if (wordAt(tokens, colon) !== ":") return O.none();
+  const gap = Str.slice(transition.value.endChar, O.getOrThrow(at(tokens, colon)).anchor.startChar)(claim.claimText);
+  return O.isSome(Str.match(/^\s*(?:the\s+steps\s+of\s*)?$/u)(gap)) ? O.some([governor.value, colon]) : O.none();
+};
+const rightMarkerGaps = (
+  text: string,
+  first: TextAnchor,
+  last: TextAnchor,
+  next: TextAnchor,
+  scan: RightListScan
+): boolean => {
+  if (next.startChar <= last.endChar || Str.trim(Str.slice(last.endChar, next.startChar)(text)) !== "") return false;
+  const before = Str.slice(scan.separatorEnd, first.startChar)(text);
+  return O.isSome(Str.match(scan.markers.length === 0 ? /^\s*$/u : /^\s*(?:(?:and|or)\s+)?$/u)(before));
+};
+const rightAcceptMarker = (
+  claim: PatentClaim,
+  tokens: ReadonlyArray<ClaimLexicalToken>,
+  marker: RawRightLabel,
+  quoted: boolean,
+  scan: RightListScan
+): boolean => {
+  if (scan.stack.length !== 0 || quoted || marker[0] !== scan.expect) return false;
+  const first = O.getOrThrow(at(tokens, marker[0]));
+  const last = O.getOrThrow(at(tokens, marker[1] - 1));
+  const next = at(tokens, marker[1]);
+  if (!O.contains(Str.charCodeAt(0)(first.anchor.quote), 97 + scan.markers.length) || O.isNone(next)) return false;
+  if (!rightMarkerGaps(claim.claimText, first.anchor, last.anchor, next.value.anchor, scan)) return false;
+  scan.markers.push(marker);
+  scan.bodyStart = marker[1];
+  scan.expect = -1;
+  return true;
+};
+const rightListSeparator = (tokens: ReadonlyArray<ClaimLexicalToken>, index: number, scan: RightListScan): boolean => {
+  if (scan.expect >= 0 || scan.markers.length === 0 || index <= scan.bodyStart) return false;
+  scan.separatorEnd = O.getOrThrow(at(tokens, index)).anchor.endChar;
+  scan.expect = index + 1;
+  if (HashSet.has(HashSet.make("and", "or"), wordAt(tokens, scan.expect))) scan.expect++;
+  return true;
+};
+const rightListBracket = (spelling: string, scan: RightListScan): boolean => {
+  if (spelling === "(" || spelling === "[") {
+    scan.stack.push(spelling);
+    return scan.stack.length <= 128;
+  }
+  if (spelling === ")" || spelling === "]") return scan.stack.pop() === (spelling === ")" ? "(" : "[");
+  return true;
+};
+const rightListStep = (
+  claim: PatentClaim,
+  tokens: ReadonlyArray<ClaimLexicalToken>,
+  index: number,
+  quoted: boolean,
+  scan: RightListScan
+): number => {
+  const marker = rawRightMarker(tokens, index);
+  if (O.isSome(marker)) return rightAcceptMarker(claim, tokens, marker.value, quoted, scan) ? marker.value[1] : -1;
+  if (quoted) return index + 1;
+  const spelling = wordAt(tokens, index);
+  if (spelling === ":" || !rightListBracket(spelling, scan)) return -1;
+  if (scan.stack.length === 0 && spelling === ";" && !rightListSeparator(tokens, index, scan)) return -1;
+  return index + 1;
+};
+const readRightParenthesisList = (
+  claim: PatentClaim,
+  tokens: ReadonlyArray<ClaimLexicalToken>,
+  charge: (amount: number) => boolean
+): O.Option<RawRightList> => {
+  if (!charge(tokens.length * 24 + claim.claimText.length * 4 + 64)) return O.none();
+  const header = rightListHeader(claim, tokens, charge);
+  if (O.isNone(header)) return O.none();
+  const ranges = quoteRanges(claim.claimText);
+  if (!charge(tokens.length * (ranges.length + 1))) return O.none();
+  const quoted = protectedTokens(ranges, tokens);
+  return scanRightList(claim, tokens, header.value, quoted);
+};
+const scanRightList = (
+  claim: PatentClaim,
+  tokens: ReadonlyArray<ClaimLexicalToken>,
+  header: readonly [number, number],
+  quoted: ReadonlyArray<boolean>
+): O.Option<RawRightList> => {
+  const [governor, colon] = header;
+  const scan: RightListScan = {
+    markers: [],
+    stack: [],
+    expect: colon + 1,
+    separatorEnd: O.getOrThrow(at(tokens, colon)).anchor.endChar,
+    bodyStart: -1,
+  };
+  const end = wordAt(tokens, tokens.length - 1) === "." ? tokens.length - 1 : tokens.length;
+  for (let i = colon + 1; i < end; ) {
+    i = rightListStep(
+      claim,
+      tokens,
+      i,
+      O.getOrElse(A.get(quoted, i), () => false),
+      scan
+    );
+    if (i < 0) return O.none();
+  }
+  return scan.markers.length >= 2 && scan.stack.length === 0 && scan.expect === -1 && end > scan.bodyStart
+    ? O.some({ governor, colon, end, markers: scan.markers })
+    : O.none();
+};
+
+/**
+ * Read a complete root source declaration before granting label punctuation any role.
+ *
+ * **Example** (Read a complete source declaration)
+ *
+ * ```ts
+ * import { readSourceRightParenthesisList } from "@beep/law-practice-domain/values/ClaimElement"
+ *
+ * console.log(typeof readSourceRightParenthesisList) // "function"
+ * ```
+ * @category parsing
+ * @since 0.0.0
+ */
+export const readSourceRightParenthesisList: {
+  (
+    tokens: ReadonlyArray<ClaimLexicalToken>,
+    charge: (amount: number) => boolean
+  ): (claim: PatentClaim) => O.Option<RawRightList>;
+  (
+    claim: PatentClaim,
+    tokens: ReadonlyArray<ClaimLexicalToken>,
+    charge: (amount: number) => boolean
+  ): O.Option<RawRightList>;
+} = dual(3, readRightParenthesisList);
+
 class RoleCompiler {
   private remaining = 262_144;
   private quotes: ReadonlyArray<boolean> = [];
@@ -2264,6 +2840,11 @@ class RoleCompiler {
   private readonly tokens: ReadonlyArray<ClaimLexicalToken>;
   private readonly originalInput: O.Option<ClaimLexicalEvidence>;
   private intrinsicFactsProduced = false;
+  private distributiveFactsProduced = false;
+  private distributiveCandidates = O.none<Array<number>>();
+  private rightList = O.none<RawRightList>();
+  private rightLabelIndexes = HashSet.empty<number>();
+  private rightActionItems = HashMap.empty<number, number>();
   constructor(
     claim: PatentClaim,
     tokens: ReadonlyArray<ClaimLexicalToken>,
@@ -2369,6 +2950,60 @@ class RoleCompiler {
     this.sourceFactsReady = true;
     return true;
   };
+  private certifyRightLabels = (): boolean => {
+    if (O.isNone(this.rightList)) return true;
+    const list = this.rightList.value;
+    if (!this.charge(list.markers.length * 8 + 16)) return false;
+    const governor = this.rawToken(list.governor);
+    if (O.isNone(governor)) return false;
+    const colon = this.rawToken(list.colon);
+    if (O.isNone(colon)) return false;
+    const markers = this.rightMarkerReferences(list);
+    if (O.isNone(markers)) return false;
+    for (let item = 0; item < markers.value.length; item++)
+      if (!this.certifyRightLabel(list, markers.value, governor.value, colon.value, item)) return false;
+    return true;
+  };
+  private rightMarkerReferences = (
+    list: RawRightList
+  ): O.Option<Extract<ClaimFiniteSourceProof, { readonly kind: "label-boundary" }>["markers"]> => {
+    const markers: Array<{ start: ClaimSourceProofRef; close: ClaimSourceProofRef }> = [];
+    for (const [start, end] of list.markers) {
+      const first = this.rawToken(start);
+      if (O.isNone(first)) return O.none();
+      const close = this.rawToken(end - 1);
+      if (O.isNone(close)) return O.none();
+      markers.push({ start: first.value, close: close.value });
+    }
+    return O.some(markers);
+  };
+  private certifyRightLabel = (
+    list: RawRightList,
+    markers: Extract<ClaimFiniteSourceProof, { readonly kind: "label-boundary" }>["markers"],
+    governor: ClaimSourceProofRef,
+    colon: ClaimSourceProofRef,
+    item: number
+  ): boolean => {
+    const marker = O.getOrThrow(A.get(markers, item));
+    const closeIndex = O.getOrThrow(A.get(list.markers, item))[1] - 1;
+    const scope = this.sourceScope(O.getOrThrow(at(this.tokens, closeIndex)).anchor);
+    if (O.isNone(scope)) return false;
+    const certificate = this.certificate("boundary", markers.length * 2 + 10, (ordinal) =>
+      ClaimFiniteSourceProof.cases["label-boundary"].make({
+        ordinal,
+        token: marker.close,
+        scope: scope.value,
+        governor,
+        colon,
+        markers,
+        item,
+      })
+    );
+    if (O.isNone(certificate) || !this.charge(2)) return false;
+    this.boundaryCertificates = HashMap.set(this.boundaryCertificates, closeIndex, certificate.value);
+    return true;
+  };
+
   private verbalBoundaryProof(
     mode: "auxiliary-complement" | "infinitive-complement" | "infinitive-introducer",
     governor: number,
@@ -2587,6 +3222,7 @@ class RoleCompiler {
     if (tagAt(this.tokens, start - 1) === "ADP")
       return this.issueOpening("preposition-object", O.toArray(this.rawToken(start - 1)), core, scope);
     if (
+      HashSet.has(this.rightLabelIndexes, start - 1) ||
       HashSet.has(connectors, wordAt(this.tokens, start - 1)) ||
       HashSet.has(HashSet.make(",", ";"), wordAt(this.tokens, start - 1))
     )
@@ -2951,18 +3587,33 @@ class RoleCompiler {
   };
   private certifyOperator = (predicate: ClaimPredicateSpan): O.Option<ClaimSourceProofRef> => {
     if (!this.charge(5)) return O.none();
+    if (predicate.kind === "distributive") return HashMap.get(this.operatorCertificates, predicate.anchor.startChar);
+    return this.certifyLexicalOperator(predicate);
+  };
+  private certifyLexicalOperator = (predicate: ClaimPredicateSpan): O.Option<ClaimSourceProofRef> => {
     const start = HashMap.get(this.tokenPositions, predicate.anchor.startChar);
     const end = HashMap.get(this.endPositions, predicate.anchor.endChar);
     if (!this.operatorRangeReserved(start, end)) return O.none();
     const first = O.getOrThrow(start);
     const last = O.getOrThrow(end);
     let mode = this.operatorLicense(predicate, first);
+    if (this.remaining < 0) return O.none();
     const subject =
       mode === "finite" || mode === "auxiliary" ? this.seedSubject(predicate) : O.none<ClaimSourceProofRef>();
+    if (this.remaining < 0) return O.none();
     // The qualified transition is the one positive source exception to a local subject.
     if (this.isQualifiedTransitionOperator(predicate)) mode = "qualified-transition";
     const completedMode = this.continuedOperatorLicense(mode, subject, first);
     if (completedMode === false) return O.none();
+    return this.certifyOperatorFields(predicate, first, last, completedMode, subject);
+  };
+  private certifyOperatorFields = (
+    predicate: ClaimPredicateSpan,
+    first: number,
+    last: number,
+    completedMode: import("./ClaimClauseRole.model.ts").ClaimOperatorLicense,
+    subject: O.Option<ClaimSourceProofRef>
+  ): O.Option<ClaimSourceProofRef> => {
     const lexical = A.map(A.range(first, last - 1), (i) => O.getOrThrow(this.rawToken(i)));
     const position = this.rawToken(first - 1);
     const head = this.operatorHead(predicate, first, last);
@@ -3518,7 +4169,8 @@ class RoleCompiler {
     return this.remaining >= 0;
   };
   private quoted = (index: number): boolean => O.getOrElse(A.get(this.quotes, index), () => false);
-  private protected = (index: number): boolean => this.quoted(index) || HashSet.has(this.brackets, index);
+  private protected = (index: number): boolean =>
+    this.quoted(index) || HashSet.has(this.brackets, index) || HashSet.has(this.rightLabelIndexes, index);
   private readQuotes = (): boolean => {
     const ranges = quoteRanges(this.claim.claimText);
     if (!this.charge(this.tokens.length * (ranges.length + 1))) return false;
@@ -3532,10 +4184,34 @@ class RoleCompiler {
     const stack: Array<string> = [];
     for (let index = 0; index < this.tokens.length; index++) {
       if (!this.charge(1)) return false;
-      if (this.quoted(index)) continue;
-      if (!this.bracketToken(index, stack)) return false;
+      if (!this.readBracketAt(index, stack)) return false;
     }
     return stack.length === 0;
+  };
+  private readBracketAt = (index: number, stack: Array<string>): boolean => {
+    if (this.quoted(index)) return true;
+    if (
+      stack.length === 0 &&
+      (wordAt(this.tokens, index) === ")" || O.isSome(Str.match(/^[a-z]\)$/u)(wordAt(this.tokens, index))))
+    ) {
+      if (!this.prepareRightLabels()) return false;
+    }
+    if (HashSet.has(this.rightLabelIndexes, index)) return true;
+    if (!this.bracketToken(index, stack)) return false;
+    return true;
+  };
+  private prepareRightLabels = (): boolean => {
+    if (O.isSome(this.rightList)) return true;
+    const list = readSourceRightParenthesisList(this.claim, this.tokens, this.charge);
+    if (O.isNone(list)) return false;
+    if (!this.charge(list.value.markers.length * 4 + 4)) return false;
+    for (let ordinal = 0; ordinal < list.value.markers.length; ordinal++) {
+      const [start, end] = O.getOrThrow(A.get(list.value.markers, ordinal));
+      for (let i = start; i < end; i++) this.rightLabelIndexes = HashSet.add(this.rightLabelIndexes, i);
+      this.rightActionItems = HashMap.set(this.rightActionItems, end, ordinal);
+    }
+    this.rightList = list;
+    return true;
   };
   private bracketToken = (index: number, stack: Array<string>): boolean => {
     const spelling = wordAt(this.tokens, index);
@@ -3547,16 +4223,25 @@ class RoleCompiler {
     if (spelling !== ")" && spelling !== "]") return true;
     return stack.pop() === (spelling === ")" ? "(" : "[");
   };
+  private rightLabelActionStart = (index: number): boolean => {
+    if (O.isNone(this.rightList)) return false;
+    if (!this.charge(2)) return false;
+    return HashMap.has(this.rightActionItems, index) && this.lexicalAction(index);
+  };
+  private readPredicateAt = (index: number): boolean => {
+    if (this.protected(index) || HashSet.has(this.predicateIndexes, index)) return true;
+    if (this.rightLabelActionStart(index)) return true;
+    if (this.remaining < 0) return false;
+    O.map(predicateKind(this.tokens, index), (kind) => {
+      if (kind === "finite" && !this.independentSubjectSlot(index)) return;
+      this.predicates.push(ClaimPredicateSpan.make({ anchor: O.getOrThrow(at(this.tokens, index)).anchor, kind }));
+      this.predicateIndexes = HashSet.add(this.predicateIndexes, index);
+    });
+    return this.remaining >= 0;
+  };
   private readPredicates = (): boolean => {
-    for (let index = 0; index < this.tokens.length; index++) {
-      if (!this.charge(1)) return false;
-      if (this.protected(index) || HashSet.has(this.predicateIndexes, index)) continue;
-      O.map(predicateKind(this.tokens, index), (kind) => {
-        if (kind === "finite" && !this.independentSubjectSlot(index)) return;
-        this.predicates.push(ClaimPredicateSpan.make({ anchor: O.getOrThrow(at(this.tokens, index)).anchor, kind }));
-        this.predicateIndexes = HashSet.add(this.predicateIndexes, index);
-      });
-    }
+    for (let index = 0; index < this.tokens.length; index++)
+      if (!this.charge(1) || !this.readPredicateAt(index)) return false;
     return true;
   };
   private compositionDeclaration = (index: number): boolean =>
@@ -3704,7 +4389,14 @@ class RoleCompiler {
     }
     return true;
   };
+  private rightActionItem = (index: number): O.Option<number> => {
+    if (O.isNone(this.rightList)) return O.none();
+    if (!this.charge(1)) return O.none();
+    return HashMap.get(this.rightActionItems, index);
+  };
   private actionGovernor = (index: number): O.Option<TextAnchor> => {
+    const labelled = this.rightActionItem(index);
+    if (O.isSome(labelled)) return O.map(at(this.tokens, O.getOrThrow(this.rightList).governor), (t) => t.anchor);
     let cursor = index - 1;
     if (wordAt(this.tokens, cursor) === ":") cursor--;
     if (surface(this.tokens, cursor - 2, "the steps of")) cursor -= 3;
@@ -3725,8 +4417,26 @@ class RoleCompiler {
     O.isSome(this.firstAction) && index - 1 === this.previousActionObjectEnd;
   private unknownAction = (token: ClaimLexicalToken): boolean =>
     token.pos === "NOUN" && Str.endsWith("ing")(word(token)) && token.anchor.quote === word(token);
+  private labelledActionSlot = (ordinal: number, lexical: boolean): O.Option<"first" | "declaration"> => {
+    if (!lexical) return O.none();
+    if (ordinal === 0) return O.some("first");
+    const marker = O.getOrThrow(A.get(O.getOrThrow(this.rightList).markers, ordinal));
+    let separator = marker[0] - 1;
+    if (HashSet.has(connectors, wordAt(this.tokens, separator))) separator--;
+    return O.isSome(this.firstAction) &&
+      wordAt(this.tokens, separator) === ";" &&
+      this.previousActionObjectEnd === separator
+      ? O.some("declaration")
+      : O.none();
+  };
   private actionSlot = (index: number): O.Option<"first" | "coordinate" | "declaration"> => {
     const lexical = this.lexicalAction(index);
+    const labelled = this.rightActionItem(index);
+    if (this.remaining < 0) return O.none();
+    if (O.isSome(labelled)) return this.labelledActionSlot(labelled.value, lexical);
+    return this.ordinaryActionSlot(index, lexical);
+  };
+  private ordinaryActionSlot = (index: number, lexical: boolean): O.Option<"first" | "coordinate" | "declaration"> => {
     if (lexical && O.isSome(this.actionGovernor(index))) return O.some("first");
     if (!this.actionContinuation(index)) return O.none();
     const before = wordAt(this.tokens, index - 1);
@@ -3737,33 +4447,39 @@ class RoleCompiler {
     return lexical || unknown ? O.some("coordinate") : O.none();
   };
   private firstActionProof = (index: number, end: number): boolean => {
-    const governor = O.getOrThrow(this.actionGovernor(index));
+    const governed = this.actionGovernor(index);
+    if (O.isNone(governed)) return false;
+    const governor = governed.value;
     if (!this.charge(this.tokens.length + index + 1)) return false;
     const governorIndex = A.findFirstIndex(this.tokens, (token) => token.anchor.startChar === governor.startChar);
     if (O.isSome(governorIndex) && surface(this.tokens, governorIndex.value + 1, "the steps of"))
       for (let cursor = governorIndex.value + 1; cursor < index; cursor++)
         this.adjunctIndexes = HashSet.add(this.adjunctIndexes, cursor);
+    const object = this.tokenSpan(
+      O.getOrElse(HashMap.get(this.directActionStarts, index), () => index + 1),
+      end
+    );
+    if (this.remaining < 0) return false;
     const proof = ClaimSourceProof.cases.action.make({
       operator: O.getOrThrow(at(this.tokens, index)).anchor,
       governor,
-      object: this.tokenSpan(
-        O.getOrElse(HashMap.get(this.directActionStarts, index), () => index + 1),
-        end
-      ),
+      object,
     });
     this.proofs.push(proof);
     this.firstAction = O.some(proof);
     return true;
   };
-  private continuedActionProof = (index: number, end: number, declaration: boolean): void => {
+  private continuedActionProof = (index: number, end: number, declaration: boolean): boolean => {
     const first = O.getOrThrow(this.firstAction);
+    const object = this.tokenSpan(
+      O.getOrElse(HashMap.get(this.directActionStarts, index), () => index + 1),
+      end
+    );
+    if (this.remaining < 0) return false;
     const fields = {
       operator: O.getOrThrow(at(this.tokens, index)).anchor,
       governor: first.governor,
-      object: this.tokenSpan(
-        O.getOrElse(HashMap.get(this.directActionStarts, index), () => index + 1),
-        end
-      ),
+      object,
     };
     this.proofs.push(
       declaration
@@ -3774,11 +4490,11 @@ class RoleCompiler {
             coordinator: O.getOrThrow(at(this.tokens, index - 1)).anchor,
           })
     );
+    return true;
   };
   private recordActionProof = (index: number, end: number, slot: "first" | "coordinate" | "declaration"): boolean => {
     if (slot === "first") return this.firstActionProof(index, end);
-    this.continuedActionProof(index, end, slot === "declaration");
-    return true;
+    return this.continuedActionProof(index, end, slot === "declaration");
   };
   private actionObject = (index: number): O.Option<readonly [number, number]> => {
     let start = index + 1;
@@ -3791,15 +4507,22 @@ class RoleCompiler {
     if (!HashSet.has(articleWords, wordAt(this.tokens, start))) return O.none();
     return O.map(this.headedComplement(start), (end) => [start, end]);
   };
+  private markActionPredicate = (index: number): boolean => {
+    const token = O.getOrThrow(at(this.tokens, index));
+    if (!this.charge(token.anchor.endChar - token.anchor.startChar + 2)) return false;
+    this.predicates.push(ClaimPredicateSpan.make({ anchor: token.anchor, kind: "gerund" }));
+    this.predicateIndexes = HashSet.add(this.predicateIndexes, index);
+    return true;
+  };
   private readActionAt = (index: number): boolean => {
     const slot = this.actionSlot(index);
-    if (O.isNone(slot)) return true;
+    if (O.isNone(slot)) return this.remaining >= 0;
     const object = this.actionObject(index);
     if (O.isNone(object)) return this.remaining >= 0;
     const [start, end] = object.value;
     if (!this.charge(5)) return false;
     this.directActionStarts = HashMap.set(this.directActionStarts, index, start);
-    if (!HashSet.has(this.predicateIndexes, index)) this.markPredicate(index, index + 1, "gerund");
+    if (!HashSet.has(this.predicateIndexes, index) && !this.markActionPredicate(index)) return false;
     if (!this.recordActionProof(index, end, slot.value)) return false;
     this.previousActionObjectEnd = end;
     return true;
@@ -3891,13 +4614,7 @@ class RoleCompiler {
     }
     return true;
   };
-  private gerundForm = (token: ClaimLexicalToken): boolean =>
-    O.exists(token.lemma, (lemma) => {
-      const base = normalized(lemma);
-      return (
-        word(token) === `${base}ing` || (Str.endsWith("e")(base) && word(token) === `${Str.slice(0, -1)(base)}ing`)
-      );
-    });
+  private gerundForm = sourceGerundForm;
   private adjunctSlot = (index: number): boolean =>
     tagAt(this.tokens, index) === "ADV" || HashSet.has(HashSet.make("not", "n't"), wordAt(this.tokens, index));
   private skipAdjuncts = (index: number, step: -1 | 1): number => {
@@ -4356,6 +5073,18 @@ class RoleCompiler {
     this.validateQuantityReference(reference, initialEnd.value);
     return this.finishNominal(index, initialEnd.value, [kind, width, headWidth], shared, reference);
   };
+  private rememberDistributiveOpening = (
+    index: number,
+    settings: readonly [ClaimTermDeterminer, number, number]
+  ): boolean => {
+    if (settings[0] !== "bare" || settings[1] !== 1) return true;
+    if (!this.charge(12)) return false;
+    if (wordAt(this.tokens, index) !== "each") return true;
+    if (!this.charge(4)) return false;
+    if (O.isNone(this.distributiveCandidates)) this.distributiveCandidates = O.some([]);
+    O.getOrThrow(this.distributiveCandidates).push(index);
+    return true;
+  };
   private readNominalAt = (index: number): number => {
     if (!this.charge(1)) return index + 1;
     const opaque = HashMap.get(this.opaqueGroupAt, index);
@@ -4365,6 +5094,7 @@ class RoleCompiler {
     }
     const settings = determiner(this.tokens, index);
     if (this.protected(index) && !this.quoted(index)) return index + 1;
+    if (!this.rememberDistributiveOpening(index, settings)) return index + 1;
     if (settings[1] === 0 && this.nominalBarrier(index)) return index + 1;
     return this.nominalCandidate(index, settings);
   };
@@ -4392,8 +5122,150 @@ class RoleCompiler {
     for (let index = 0; index < this.tokens.length; ) {
       if (!this.charge(1)) return false;
       index = this.readNominalAt(index);
+      if (this.remaining < 0) return false;
     }
     return this.remaining >= 0 && this.supported;
+  };
+  private distributiveLexical = (index: number, token: ClaimLexicalToken): boolean => {
+    if (
+      !this.charge(
+        token.anchor.quote.length * 4 +
+          O.getOrElse(
+            O.map(token.lemma, (l) => l.length),
+            () => 0
+          ) *
+            4 +
+          this.nominals.length * 6 +
+          24
+      )
+    )
+      return false;
+    return rawRegularParticiple(token) && !this.protected(index + 1) && !this.protected(index - 1);
+  };
+  private distributiveNominals = (
+    index: number,
+    token: ClaimLexicalToken,
+    each: ClaimLexicalToken,
+    after: ClaimLexicalToken
+  ): O.Option<readonly [ClaimNominalSpan, ClaimNominalSpan]> => {
+    const owners = A.filter(this.nominals, (n) =>
+      O.contains(HashMap.get(this.endPositions, n.anchor.endChar), index - 1)
+    );
+    const objects = A.filter(this.nominals, (n) => n.anchor.startChar === after.anchor.startChar);
+    if (
+      owners.length !== 1 ||
+      objects.length !== 1 ||
+      A.some(this.nominals, (n) => !distributiveNominalOutside(n.anchor, each.anchor, token.anchor))
+    )
+      return O.none();
+    if (!this.charge(2)) return O.none();
+    return O.some([O.getOrThrow(A.head(owners)), O.getOrThrow(A.head(objects))]);
+  };
+  private distributiveRawRefs = (index: number, token: ClaimLexicalToken) => {
+    const scope = this.sourceScope(token.anchor);
+    if (O.isNone(scope)) return O.none();
+    const boundary = this.rawBoundary(index - 1);
+    if (O.isNone(boundary)) return O.none();
+    const raw = this.rawToken(index + 1);
+    if (O.isNone(raw)) return O.none();
+    const position = this.rawToken(index);
+    if (O.isNone(position)) return O.none();
+    return O.some({ scope: scope.value, boundary: boundary.value, raw: raw.value, position: position.value });
+  };
+  private distributiveOperator = (
+    index: number,
+    token: ClaimLexicalToken,
+    owner: ClaimSourceProofRef,
+    direct: ClaimSourceProofRef
+  ): O.Option<ClaimSourceProofRef> => {
+    // Raw-ref record, witness, provisional operator, context and certificate closure are all prepaid.
+    if (!this.charge(40)) return O.none();
+    const refs = this.distributiveRawRefs(index, token);
+    if (O.isNone(refs)) return O.none();
+    const head = ClaimOperatorHeadWitness.cases["distributive-direct"].make({
+      token: refs.value.raw,
+      scope: refs.value.scope,
+      comma: refs.value.boundary,
+      each: refs.value.position,
+      direct,
+    });
+    const fields = {
+      mode: "distributive" as const,
+      extent: token.anchor,
+      head,
+      headRole: "predicate" as const,
+      lexical: [refs.value.raw],
+      subject: O.some(owner),
+      position: O.some(refs.value.position),
+    };
+    const provisional = ClaimFiniteSourceProof.cases.operator.make({
+      ordinal: ClaimSourceProofOrdinal.make(this.certificates.length + 1),
+      ...fields,
+    });
+    const resolve = (ref: ClaimSourceProofRef) =>
+      O.filter(
+        A.get(this.certificates, ref.ordinal - 1),
+        (p) => p.ordinal === ref.ordinal && finiteProofSlot(p) === ref.slot
+      );
+    if (
+      !validateDistributiveHead(
+        { claim: this.claim, tokens: this.tokens, proofs: this.certificates, charge: this.charge, resolve },
+        provisional,
+        head
+      )
+    )
+      return O.none();
+    return this.certificate("operator", 12, (ordinal) =>
+      ClaimFiniteSourceProof.cases.operator.make({ ordinal, ...fields })
+    );
+  };
+  private certifyDistributive = (
+    index: number,
+    token: ClaimLexicalToken,
+    nominals: readonly [ClaimNominalSpan, ClaimNominalSpan]
+  ): boolean => {
+    const owner = this.certifyHead(nominals[0]);
+    if (O.isNone(owner)) return this.remaining >= 0;
+    const direct = this.certifyHead(nominals[1]);
+    if (O.isNone(direct)) return this.remaining >= 0;
+    const certificate = this.distributiveOperator(index, token, owner.value, direct.value);
+    if (O.isNone(certificate)) return this.remaining >= 0;
+    if (!this.charge(4)) return false;
+    // Preserve the singleton tokenSpan debit before committing any distributive state.
+    if (!this.charge(token.anchor.endChar - token.anchor.startChar + 2)) return false;
+    this.operatorCertificates = HashMap.set(this.operatorCertificates, token.anchor.startChar, certificate.value);
+    this.predicates.push(ClaimPredicateSpan.make({ anchor: token.anchor, kind: "distributive" }));
+    this.predicateIndexes = HashSet.add(this.predicateIndexes, index + 1);
+    this.distributiveFactsProduced = true;
+    return true;
+  };
+  private distributiveCandidate = (index: number): boolean => {
+    const each = O.getOrThrow(at(this.tokens, index));
+    if (!this.charge(12)) return false;
+    if (word(each) !== "each" || this.protected(index) || HashSet.has(this.predicateIndexes, index + 1)) return true;
+    const token = at(this.tokens, index + 1);
+    const comma = at(this.tokens, index - 1);
+    const after = at(this.tokens, index + 2);
+    if (O.isNone(token) || O.isNone(comma) || comma.value.anchor.quote !== "," || O.isNone(after)) return true;
+    return this.distributiveContent(index, token.value, each, after.value);
+  };
+  private distributiveContent = (
+    index: number,
+    token: ClaimLexicalToken,
+    each: ClaimLexicalToken,
+    after: ClaimLexicalToken
+  ): boolean => {
+    if (!this.distributiveLexical(index, token)) return this.remaining >= 0;
+    const nominals = this.distributiveNominals(index, token, each, after);
+    return O.isNone(nominals) ? this.remaining >= 0 : this.certifyDistributive(index, token, nominals.value);
+  };
+  private readDistributiveDirect = (): boolean => {
+    if (!this.charge(1)) return false;
+    if (O.isNone(this.distributiveCandidates)) return true;
+    for (const index of this.distributiveCandidates.value) {
+      if (!this.charge(1) || !this.distributiveCandidate(index)) return false;
+    }
+    return true;
   };
   private lexicalPossession = (predicate: ClaimPredicateSpan): boolean => {
     if (!HashSet.has(HashSet.make("has", "have", "had"), Str.toLowerCase(predicate.anchor.quote))) return false;
@@ -4483,6 +5355,7 @@ class RoleCompiler {
       this.readQuotes,
       this.readBrackets,
       this.readSourceFacts,
+      this.certifyRightLabels,
       this.readQualifiedTransition,
       this.readScalars,
       this.readPredicates,
@@ -4497,6 +5370,7 @@ class RoleCompiler {
       this.readNominals,
       this.readDescriptions,
       this.readPossession,
+      this.readDistributiveDirect,
       this.readClauses,
       this.certifySource,
     ];
@@ -4506,7 +5380,10 @@ class RoleCompiler {
       ClaimClauseRolePlan.make({
         qualifiedText: this.claim.claimText,
         qualifiedClaim: O.some(this.claim),
-        originalLexicalInput: this.intrinsicFactsProduced ? this.originalInput : O.none(),
+        originalLexicalInput:
+          this.intrinsicFactsProduced || this.distributiveFactsProduced || O.isSome(this.rightList)
+            ? this.originalInput
+            : O.none(),
         stage: "candidates",
         remainingWork: this.remaining,
         nominals: this.nominals,
