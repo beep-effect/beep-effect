@@ -1825,6 +1825,12 @@ Root lint reproduced seventeen no-inline-schema-compile sites missed by package-
 
 Reverse: Supersede if schema construction becomes dependent on invocation data.
 
+### Preserve installed court operation in nested safety failures, 2026-11-08
+
+A regression reproduced hardcoded extraction labels in court lookup. Reuse existing Effect timing.failSafety and catchTag, pass the captured operation to Unicode and preserve existing deadlines. Eight tests pass including all 17156 independent lookup observations and four-stage Clock/context replacement controls. No event or universal law is promoted; exact-head hosted workflow acceptance remains pending. See history/evidence/2026-11-08-court-operation-capture.md.
+
+Reverse: Supersede if trusted operation timing or nested safety ownership changes.
+
 ### Qualify all original annotation workflows and full-span equalities, 2026-11-08
 
 All eight Bun/Node groups pass for the remaining 22 original annotation workflows, completing the original test_annotate cohort together with the separately qualified quote-cleaner case. Add a direct parser-to-verified-component replay for all thirteen original full_span equalities; qualify its binding only on matching final runtime results. General annotation utilities, host/model/callback protocols and exhaustive goal acceptance remain open.

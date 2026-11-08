@@ -87,7 +87,7 @@ export const makeCitationCourtLookup = Effect.fn("Citation.makeCourtLookup")(fun
   const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-policy"));
   const table = yield* authenticateTable(payload);
   const timing = yield* makeCitationRegexTiming(limits, true);
-  const unicode = yield* makeCitationPythonUnicode({ ...limits, cleanDeadline: timing.deadline });
+  const unicode = yield* makeCitationPythonUnicode(limits, timing.operation);
   const lower = yield* makeCitationPythonLower({ ...limits, cleanDeadline: timing.deadline });
   const { word } = yield* makeCitationRegexPointSets("python-regex-v0");
   const starts = [...A.map(word, (row) => row.start), 0x110000];
@@ -111,7 +111,7 @@ export const makeCitationCourtLookup = Effect.fn("Citation.makeCourtLookup")(fun
       const budget = O.isSome(enclosing) ? enclosing.value : yield* makeCitationTextBudget(limits);
       const source = yield* unicode.fromStorageReserved(raw, (units) =>
         units > limits.sourceUtf16
-          ? Effect.fail(CitationSafetyLimitExceeded.make({ operation: "extract", limit: "sourceUtf16" }))
+          ? Effect.fail(CitationSafetyLimitExceeded.make({ operation: timing.operation, limit: "sourceUtf16" }))
           : budget.reserve(units)
       );
       const filtered = yield* filterCitationPythonStorage(source.storage, keep, (layout) =>
@@ -128,9 +128,10 @@ export const makeCitationCourtLookup = Effect.fn("Citation.makeCourtLookup")(fun
     },
     (body) =>
       body.pipe(
+        Effect.catchTag("CitationSafetyLimitExceeded", timing.failSafety),
         Effect.mapError((failure) =>
           failure._tag === "CitationPythonUnicodeFailure" && failure.reason === "deadline-exceeded"
-            ? CitationSafetyLimitExceeded.make({ operation: "extract", limit: timing.deadlineLimit })
+            ? CitationSafetyLimitExceeded.make({ operation: timing.operation, limit: timing.deadlineLimit })
             : failure
         ),
         timing.timed

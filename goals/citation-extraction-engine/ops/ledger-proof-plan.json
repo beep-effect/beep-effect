@@ -2460,7 +2460,7 @@
           },
           {
             "path": "packages/law-practice/server/src/internal/Citation/CourtLookup.ts",
-            "sha256": "f5cb37d958b997bf9ed31334598ca4c060ab23641ea7f3a5d2579a1dc6b58a6b"
+            "sha256": "28d7e12a052467563d46a648a5fb4dce2ac5f845bda2250bf0707208a5a0725c"
           },
           {
             "path": "packages/law-practice/server/src/internal/Citation/SemanticExtraction.ts",
@@ -2469,6 +2469,14 @@
           {
             "path": "packages/law-practice/server/src/internal/Citation/OccurrenceProjection.ts",
             "sha256": "9d7e9c224612935517acc5f8227aa5fe23d583ed1031bc4dfe42a7367b8cab9d"
+          },
+          {
+            "path": "goals/citation-extraction-engine/history/evidence/2026-11-08-court-operation-capture.md",
+            "sha256": "c0f3a015cca3cef9d971e9c0fc17be9d27f768306137c71e083099a9178f307b"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCourtLookup.test.ts",
+            "sha256": "6db8f6ff8ccd6e65846244f6c82db74b5fde98f611faf298e7754241551e3127"
           }
         ]
       }
