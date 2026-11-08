@@ -1110,7 +1110,7 @@
         "scope": "complete-case",
         "operation": "annotate",
         "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-annotation-and-full-span-qualification.md",
-        "evidenceSha256": "0850714bd99030e92441c614256d7f5f6c11e39437c55c7193b3b400b937c493",
+        "evidenceSha256": "319387b24edd707fc853928ebf5cafdc443a955a5aca84ef6dc56c19fcdfb821",
         "targetTests": [
           {
             "path": "packages/law-practice/server/test/integration/CitationCanonicalAnnotationWorkflow.test.ts",
@@ -1158,6 +1158,109 @@
           {
             "path": "packages/law-practice/server/src/internal/Citation/PythonUnicode.ts",
             "sha256": "891782d0c121914ac1704211716e128297713476e752ff2060f1eb8bfd2ba813"
+          }
+        ]
+      }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_FindTest.FindTest.test_citation_fullspan::tests/test_FindTest.py:1165:12:caseDeclaration::1",
+          "observationSha256": "3d9aac0fb8cb33dfdbbfa239644a2aa0d03b9473c8ee58f4891c2785800edcc3"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_citation_fullspan::tests/test_FindTest.py:1170:12:caseDeclaration::1",
+          "observationSha256": "fa5edbaab01d70ccaa4ecd6929657f005b80f61b0aecefcb06395fc094c9619d"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_citation_fullspan::tests/test_FindTest.py:1165:12:caseDeclaration::2",
+          "observationSha256": "55ff36feef982a9796e5e4a0a0a567cd105783151da517178ec4c301a60f4722"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_citation_fullspan::tests/test_FindTest.py:1170:12:caseDeclaration::2",
+          "observationSha256": "9fa22ab80c3a6c530d73d8108b03d33e9a194c507fe131cd0de83c19aa14c2ff"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_citation_fullspan::tests/test_FindTest.py:1189:12:caseDeclaration::1",
+          "observationSha256": "ce0d5b0549841a44412d43e180ab4fea673da17c4f9b4e91c3fa7b2ec2db4e2f"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_citation_fullspan::tests/test_FindTest.py:1189:12:caseDeclaration::2",
+          "observationSha256": "357f08cebbc08a430a730628c27a7eb1c4581e03125ad3545efadd228bea3885"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_citation_fullspan::tests/test_FindTest.py:1189:12:caseDeclaration::3",
+          "observationSha256": "4c2e0662fb61e67eb8f3fdf25d32abeb77e83ec2f3956dbe01bcc65b53074b04"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_citation_fullspan::tests/test_FindTest.py:1189:12:caseDeclaration::4",
+          "observationSha256": "3547512661affdb36490a7a9d269fe3d4b23bfc913948708b95e53fd8661931b"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_citation_fullspan::tests/test_FindTest.py:1189:12:caseDeclaration::5",
+          "observationSha256": "7bfabb98f825db01259d3b787f12c6d7d86c7b0c3c1e4601996ca54f7427b760"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_citation_fullspan::tests/test_FindTest.py:1189:12:caseDeclaration::6",
+          "observationSha256": "53518da4716c8dbd8df1787a37a387cc6a44ca487e4345d9e756bac3ad2be183"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_citation_fullspan::tests/test_FindTest.py:1189:12:caseDeclaration::7",
+          "observationSha256": "8a63e423deb737fb590716dcd661f8ea11427d04891d07585fab23896fe1c441"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_citation_fullspan::tests/test_FindTest.py:1200:12:caseDeclaration::1",
+          "observationSha256": "20721ae93d47906c63d4667b142dac02edbab88c32e6ee840096e9d466916b90"
+        },
+        {
+          "id": "tests.test_FindTest.FindTest.test_citation_fullspan::tests/test_FindTest.py:1200:12:caseDeclaration::2",
+          "observationSha256": "501feda548df95e78c12b645f5bf1e94a4935f7f7ce05ca10f25233599588f16"
+        }
+      ],
+      "rationale": "All thirteen original full_span equalities recomputed from ten original default parser inputs on Bun and Node; actual verified fullSpan component coordinates match independently captured original assertion operands and model contexts. Generic model protocols and full safety/scaling qualification remain separate.",
+      "proof": {
+        "command": "bunx --bun vitest run test/CitationCanonicalFullSpan.test.ts --reporter=json --outputFile=../../../.beep/full-span-retained-results.json",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "extract",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-annotation-and-full-span-qualification.md",
+        "evidenceSha256": "319387b24edd707fc853928ebf5cafdc443a955a5aca84ef6dc56c19fcdfb821",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalFullSpan.test.ts",
+            "name": "recomputes all thirteen original full-span equalities on",
+            "sha256": "7ff53acfab73b1d50013788837610e765512074119b6877c5c31aa838b7037ae"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalFullSpan.fixtures.ts",
+            "sha256": "e43fb9bb8bac07fde0709d8ce2c7a10454d08f70ee7be0d355ddda33561415e9"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalCaptures.fixtures.ts",
+            "sha256": "1ac4ab7ebd6c3751b5706d93b562c6625d6c5d3062ddbe4284a6ef274a89c4a8"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtractionRuntime.fixtures.ts",
+            "sha256": "4e0c808677aaf5d08aca4d6cbf21b11e484fa84a25346fef5c472a363827084e"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalModel.fixtures.ts",
+            "sha256": "b47778caf58e758edf2c3c9f65464d82fb1ca9ce58dff25a2e90117eb8756177"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
+            "sha256": "09b730c8f3bae99438224dafbe781988d76fa0013fd50b5c3ca53e4b45680fa8"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
+            "sha256": "c0e994ff1a280d229c91959e13b1e5adf17e283fc64036161927dc6af76b37ca"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationDefaultConfiguration.fixtures.ts",
+            "sha256": "bd65007a9fdcfcf5daf71a33dfd31ec749bea2bcd852f39c2c9ce2ceb89adbff"
           }
         ]
       }
