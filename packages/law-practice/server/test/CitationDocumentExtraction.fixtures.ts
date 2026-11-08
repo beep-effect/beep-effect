@@ -25,6 +25,7 @@ import {
   installCitationTokenizedExtractionFixture,
 } from "./CitationTokenizedExtraction.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+import type { setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
 
 type Installed = Effect.Success<ReturnType<typeof installCitationTokenizedExtractionFixture>>;
 const documentRequest = Effect.fn("DocumentExtractionTest.request")(function* (
@@ -38,12 +39,27 @@ const documentRequest = Effect.fn("DocumentExtractionTest.request")(function* (
   const steps = yield* adapter.create({ kind: "list", names: hasMarkup ? ["html"] : [] });
   return { plain, markup, steps, source: hasMarkup ? markup : plain, removeAmbiguous: row.removeAmbiguous };
 });
-/** Install original live input services with the complete authenticated catalog. */
-export const installCitationDocumentExtractionFixture = Effect.fn("DocumentExtractionTest.install")(function* (
-  kind: CitationNativeRuntimeKind
+/** Prepare caller-scoped document runtimes and services without constructing replay stages.
+ *
+ * **Example** (Preparing services for an existing runtime)
+ * ```ts
+ * import * as Effect from "effect/Effect";
+ * import { installCitationDocumentRuntimeFixture } from "./CitationDocumentExtraction.fixtures.ts";
+ * import { setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
+ *
+ * const prepared = Effect.gen(function* () {
+ *   const setup = yield* setupCitationMetadataRuntime("bun");
+ *   return yield* installCitationDocumentRuntimeFixture("bun", setup);
+ * });
+ * ```
+ * @internal @category testing @since 0.0.0
+ */
+export const installCitationDocumentRuntimeFixture = Effect.fn("DocumentExtractionTest.runtime")(function* <Services>(
+  kind: CitationNativeRuntimeKind,
+  setup: Pick<Effect.Success<ReturnType<typeof setupCitationMetadataRuntime>>, "limits"> & {
+    readonly provided: Context.Context<Services>;
+  }
 ) {
-  const { corpus, setup, configuration, translated, discovery } =
-    yield* installCitationTokenizedExtractionFixture(kind);
   const fs = yield* FileSystem.FileSystem;
   const directory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-extract-document-" });
   const diffRuntime = yield* makeCitationDiffTestRuntime(kind, directory);
@@ -53,8 +69,16 @@ export const installCitationDocumentExtractionFixture = Effect.fn("DocumentExtra
     Effect.provideContext(setup.provided),
     Effect.provideService(CitationCleanerProtocols, citationPrimitiveCleanerProtocols)
   );
-  const adapter = services.adapter;
   const provided = Context.merge(setup.provided, services.context);
+  return { diffRuntime, provided, adapter: services.adapter, values: services.values };
+});
+/** Install original live input services with the complete authenticated catalog. */
+export const installCitationDocumentExtractionFixture = Effect.fn("DocumentExtractionTest.install")(function* (
+  kind: CitationNativeRuntimeKind
+) {
+  const { corpus, setup, configuration, translated, discovery } =
+    yield* installCitationTokenizedExtractionFixture(kind);
+  const { diffRuntime, provided, adapter, values } = yield* installCitationDocumentRuntimeFixture(kind, setup);
   const documentConfiguration = CitationDocumentExtractionConfiguration.make({
     document: { discovery, diffRuntime },
     extraction: configuration,
@@ -70,7 +94,7 @@ export const installCitationDocumentExtractionFixture = Effect.fn("DocumentExtra
     translated,
     provided,
     adapter,
-    values: services.values,
+    values,
     stage,
   };
 });

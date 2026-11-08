@@ -18,7 +18,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
-import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
+import { installCitationSourceDocumentConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
@@ -34,7 +34,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
         `extracts, groups and restores a raw verified source on ${kind}`,
         () =>
           Effect.gen(function* () {
-            const installed = yield* installCitationDefaultConfigurationFixture(kind);
+            const installed = yield* installCitationSourceDocumentConfigurationFixture(kind);
             const { setup, provided, defaultConfiguration, engineArtifact } = installed;
             const text = "Foo v. Bar, 1 U.S. 1 (2000). Id. at 2.";
             const proof = yield* citationFixtureSourceProof(text);
@@ -141,7 +141,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
       "preserves the original extraction shortcut without native children and retains unverified semantics",
       () =>
         Effect.gen(function* () {
-          const installed = yield* installCitationDefaultConfigurationFixture("bun");
+          const installed = yield* installCitationSourceDocumentConfigurationFixture("bun");
           const { setup, provided, defaultConfiguration, engineArtifact } = installed;
           const proof = yield* citationFixtureSourceProof("eyecite");
           const resolver = SourceTextResolver.of({

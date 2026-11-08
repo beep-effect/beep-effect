@@ -17,7 +17,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { compareCitationCanonicalModel } from "./CitationCanonicalModel.fixtures.ts";
-import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
+import { installCitationSourceDocumentConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
 import { buildCitationDefaultEngineFixture } from "./CitationEngineLayer.fixtures.ts";
 import { assertCitationMentionRanges, citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
@@ -37,7 +37,7 @@ export const makeCitationCanonicalExtractionReplay = Effect.fn("CanonicalExtract
   kind: CitationNativeRuntimeKind,
   annotator?: (limits: CitationEngineLimits) => CitationAnnotationAnnotator["Service"]
 ) {
-  const installed = yield* installCitationDefaultConfigurationFixture(kind);
+  const installed = yield* installCitationSourceDocumentConfigurationFixture(kind);
   const initial = yield* citationFixtureSourceProof("initial");
   const current = yield* Ref.make<ReadonlyArray<typeof initial>>([initial]);
   const resolver = SourceTextResolver.of({

@@ -20,7 +20,7 @@ import * as S from "effect/Schema";
 import { projectCitationSemanticMetadata } from "./CitationSemanticExtraction.fixtures.ts";
 import type { FullCitation, ShortFormCaseCitation } from "@beep/law-practice-domain/values";
 import type { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
-import type { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
+import type { installCitationSourceDocumentConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
 
 const Fields = S.Record(S.String, S.NullOr(S.String));
 const Attributes = S.Struct({
@@ -137,12 +137,26 @@ export const readCitationCanonicalAttributeLinks = Effect.fn("CanonicalAttribute
 /** Reuse source-derived correction/year kernels on actual public semantic data.
  * No expected model is passed to those kernels; scalar results are compared
  * with the independent original assertion operand.
+ *
+ * **Example** (Preparing a fresh canonical replay dependency)
+ * ```ts
+ * import * as Effect from "effect/Effect";
+ * import { installCitationSourceDocumentConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
+ * import { makeCitationCanonicalAttributeAssertion } from "./CitationCanonicalAttributes.fixtures.ts";
+ * const assertion = Effect.gen(function* () {
+ *   const installed = yield* installCitationSourceDocumentConfigurationFixture("bun");
+ *   return yield* makeCitationCanonicalAttributeAssertion(installed);
+ * });
+ * ```
  * @internal
  * @category testing
  * @since 0.0.0
  */
 export const makeCitationCanonicalAttributeAssertion = Effect.fn("CanonicalAttributesTest.make")(function* (
-  installed: Effect.Success<ReturnType<typeof installCitationDefaultConfigurationFixture>>
+  installed: Pick<
+    Effect.Success<ReturnType<typeof installCitationSourceDocumentConfigurationFixture>>,
+    "setup" | "provided" | "defaultConfiguration"
+  >
 ) {
   const { setup, provided, defaultConfiguration } = installed;
   const unicode = yield* makeCitationPythonUnicode(setup.limits);
