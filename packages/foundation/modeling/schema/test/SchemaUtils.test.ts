@@ -6,6 +6,7 @@ import { alwaysEquivalent } from "@beep/schema/SchemaUtils/toEquivalence";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -75,6 +76,17 @@ describe("optionalDefect", () => {
   const decode = S.decodeUnknownEffect(Failure);
   const encode = S.encodeEffect(Failure);
   const same = S.toEquivalence(Failure);
+
+  it.effect.prop(
+    "round-trips schema-derived diagnostic identity and optional cause presence",
+    [Arbitrary.schema(Failure)],
+    Effect.fnUntraced(function* ([failure]) {
+      const encoded = yield* encode(failure);
+      const decoded = yield* decode(encoded);
+      expect(same(decoded, failure)).toBe(true);
+      if (O.isNone(failure.cause)) expect(encoded).toEqual({ code: failure.code });
+    })
+  );
 
   it.effect("defaults an omitted cause and omits None from the encoded error", () =>
     Effect.gen(function* () {
