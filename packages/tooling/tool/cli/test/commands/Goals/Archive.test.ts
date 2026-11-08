@@ -420,7 +420,7 @@ describe("goals archive", () => {
       assert.strictEqual(rewrite("[`x.md`](https://old/x.md)"), "[x.md](https://old/x.md)");
       assert.strictEqual(rewrite("[see `x.md` here](https://old/x.md)"), "[see x.md here](https://old/x.md)");
       assert.strictEqual(rewrite("[a](b) `x.md` [c](d)"), "[a](b) [x.md](https://e/x.md) [c](d)");
-      assert.isTrue(Result.isFailure(rewriteLinksInText("no citation", [span("x.md")])));
+      assertTrue(Result.isFailure(rewriteLinksInText("no citation", [span("x.md")])));
     });
 
     it.effect("plans terminal packets in index order with keep/remove partitions and inbound links", () =>
