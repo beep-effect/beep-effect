@@ -2744,3 +2744,15 @@ remove that field, refresh a stale receipt, or bypass exact preview equivalence.
 No public summary was produced and owned cleanup passed. The workflow repair
 and real-shell mask regression belong to PR #2926; hosted proof and a new
 accepted-source observation remain pending.
+
+## 2026-11-08: codec regressions crossed the property-coverage threshold
+
+Hosted Lint Policy job 128642129299 at PR #2937 reported
+`SchemaUtils.test.ts :: schema-codec-tests`: four codec assertions without
+schema-derived property coverage. The fixed examples passed, but did not
+meet the schema-first property requirement. Add a property derived from
+the owning optional-defect schema that round-trips diagnostic identity
+and cause presence, with absent causes omitted from encoding. Preserve
+the existing regression examples and leave the inventory unchanged.
+Consider the file-level property obligation whenever adding codec tests.
+No local test or quality suite ran; hosted execution must prove the repair.
