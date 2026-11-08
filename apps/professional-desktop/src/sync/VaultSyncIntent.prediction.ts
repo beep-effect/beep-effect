@@ -102,6 +102,24 @@ class VaultSyncPredictedIntent extends S.Opaque<VaultSyncPredictedIntent, { read
 /**
  * The server state with every queued intent applied, as the panel renders it before confirmation.
  *
+ * **Example** (Fold an empty queue)
+ *
+ * ```ts
+ * import * as V from "@beep/documents-domain/aggregates/VaultSync"
+ * import * as DateTime from "effect/DateTime"
+ * import * as H from "effect/HashMap"
+ * import { foldIntents, VaultSyncServerState } from "@/sync/VaultSyncIntent.prediction"
+ * import type { VaultSyncPrediction } from "@/sync/VaultSyncIntent.prediction"
+ *
+ * const server = VaultSyncServerState.make({
+ *   destinationId: V.DestinationId.make("documents_sync_destination_avault"),
+ *   destination: { _tag: "Unregistered" },
+ *   conflicts: H.empty(),
+ * })
+ * const prediction: VaultSyncPrediction = foldIntents(server, [], DateTime.makeUnsafe(0))
+ * console.log(prediction.destination._tag) // "Unregistered"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

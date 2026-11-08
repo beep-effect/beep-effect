@@ -38,6 +38,14 @@ const $I = $ProfessionalDesktopId.create("sync/VaultSyncIntent.transport");
  * Mirrors `VAULT_SYNC_RPC_PATH` in `@beep/documents-server`, which the renderer must not import.
  * A test pins the two together.
  *
+ * **Example** (Read the Api path)
+ *
+ * ```ts
+ * import { VAULT_SYNC_API_PATH } from "@/sync/VaultSyncIntent.transport"
+ *
+ * console.log(VAULT_SYNC_API_PATH) // "/vault-sync/rpc"
+ * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -64,6 +72,14 @@ const DESKTOP_VAULT_SYNC_ORG_ID = 1;
  * A write may have committed before the answer was lost; the replay resends the same command id
  * and the server returns the first receipt instead of deciding again.
  *
+ * **Example** (Build the unknown-outcome error)
+ *
+ * ```ts
+ * import { VaultSyncUnreachable } from "@/sync/VaultSyncIntent.transport"
+ *
+ * console.log(VaultSyncUnreachable.make({})._tag) // "VaultSyncUnreachable"
+ * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -79,6 +95,18 @@ export class VaultSyncUnreachable extends S.TaggedError<VaultSyncUnreachable, { 
 
 /**
  * The sidecar refused the call with a typed rejection or session denial.
+ *
+ * **Example** (Wrap a rule violation)
+ *
+ * ```ts
+ * import * as V from "@beep/documents-domain/aggregates/VaultSync"
+ * import { VaultSyncRefused } from "@/sync/VaultSyncIntent.transport"
+ *
+ * const refused = VaultSyncRefused.make({
+ *   reason: V.SyncRuleViolation.make({ rule: "destination-paused", evidence: "destination state" }),
+ * })
+ * console.log(refused.reason._tag) // "SyncRuleViolation"
+ * ```
  *
  * @category errors
  * @since 0.0.0
@@ -252,6 +280,15 @@ export const layerVaultSyncIntentTransportHttp = (options: VaultSyncApiConnectio
 /**
  * The vault-sync Api transport over an already provided Api client, for in-process hosts.
  *
+ * **Example** (Inspect the in-process layer)
+ *
+ * ```ts
+ * import * as Layer from "effect/Layer"
+ * import { layerVaultSyncIntentTransport } from "@/sync/VaultSyncIntent.transport"
+ *
+ * console.log(Layer.isLayer(layerVaultSyncIntentTransport)) // true
+ * ```
+ *
  * @category layers
  * @since 0.0.0
  */
@@ -259,6 +296,19 @@ export const layerVaultSyncIntentTransport = Layer.effect(VaultSyncIntentTranspo
 
 /**
  * A transport for sessions without desktop RPC access: every call is unreachable.
+ *
+ * **Example** (Every read is unreachable)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { VaultSyncIntentTransport, VaultSyncIntentTransportUnavailable } from "@/sync/VaultSyncIntent.transport"
+ *
+ * const error = Effect.gen(function* () {
+ *   const transport = yield* VaultSyncIntentTransport
+ *   return yield* Effect.flip(transport.read(1))
+ * }).pipe(Effect.provide(VaultSyncIntentTransportUnavailable), Effect.runSync)
+ * console.log(error._tag) // "VaultSyncUnreachable"
+ * ```
  *
  * @category layers
  * @since 0.0.0

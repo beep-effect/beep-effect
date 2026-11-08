@@ -37,6 +37,14 @@ const $I = $ProfessionalDesktopId.create("sync/VaultSyncIntent.atoms");
 /**
  * localStorage key of the persisted intent queue.
  *
+ * **Example** (Read the storage key)
+ *
+ * ```ts
+ * import { VAULT_SYNC_INTENT_QUEUE_KEY } from "@/sync/VaultSyncIntent.atoms"
+ *
+ * console.log(VAULT_SYNC_INTENT_QUEUE_KEY) // "vault-sync:intent-queue:v1"
+ * ```
+ *
  * @category configuration
  * @since 0.0.0
  */
@@ -170,6 +178,15 @@ const slimSnapshot = (state: VaultSyncServerState) =>
  * It is a cache, never an authority: every successful read replaces it, and the panel labels a
  * prediction built on it as last known.
  *
+ * **Example** (Snapshot atom for a workspace)
+ *
+ * ```ts
+ * import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace"
+ * import { vaultSyncSnapshotAtom } from "@/sync/VaultSyncIntent.atoms"
+ *
+ * console.log(typeof vaultSyncSnapshotAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID) === "object") // true
+ * ```
+ *
  * @category atoms
  * @since 0.0.0
  */
@@ -190,6 +207,16 @@ const initialLink = (): VaultSyncLink => (typeof navigator === "undefined" || na
 /**
  * Whether the last vault-sync call reached the sidecar.
  *
+ * **Example** (Read the link state)
+ *
+ * ```ts
+ * import * as AtomRegistry from "effect/reactivity/AtomRegistry"
+ * import { vaultSyncLinkAtom } from "@/sync/VaultSyncIntent.atoms"
+ *
+ * const link = AtomRegistry.make().get(vaultSyncLinkAtom)
+ * console.log(link === "online" || link === "offline") // true
+ * ```
+ *
  * @category atoms
  * @since 0.0.0
  */
@@ -197,6 +224,15 @@ export const vaultSyncLinkAtom = Atom.make<VaultSyncLink>(initialLink()).pipe(At
 
 /**
  * Refused intents, newest last, until the operator dismisses them.
+ *
+ * **Example** (Start with no refusals)
+ *
+ * ```ts
+ * import * as AtomRegistry from "effect/reactivity/AtomRegistry"
+ * import { vaultSyncRefusalsAtom } from "@/sync/VaultSyncIntent.atoms"
+ *
+ * console.log(AtomRegistry.make().get(vaultSyncRefusalsAtom).length) // 0
+ * ```
  *
  * @category atoms
  * @since 0.0.0
@@ -248,6 +284,15 @@ const reflected = (server: VaultSyncServerState, intent: VaultSyncIntent, now: D
  * but the prediction keeps folding them until a server read shows their effect. Without this the
  * panel would flash back to the stale server state between the answer and the projected View.
  *
+ * **Example** (Start with nothing awaiting confirmation)
+ *
+ * ```ts
+ * import * as AtomRegistry from "effect/reactivity/AtomRegistry"
+ * import { vaultSyncConfirmingAtom } from "@/sync/VaultSyncIntent.atoms"
+ *
+ * console.log(AtomRegistry.make().get(vaultSyncConfirmingAtom).length) // 0
+ * ```
+ *
  * @category atoms
  * @since 0.0.0
  */
@@ -269,10 +314,10 @@ export const vaultSyncConfirmingAtom = Atom.make<ReadonlyArray<VaultSyncConfirmi
  * @since 0.0.0
  */
 export const vaultSyncServerStateAtom = Atom.family((workspaceId: WorkspaceIdentity.WorkspaceId) =>
-  vaultSyncIntentRuntime.atom((get) => {
-    // Tracked: an accepted intent re-reads the server until the read shows its effect.
-    const confirming = get(vaultSyncConfirmingAtom);
-    return Effect.gen(function* () {
+  vaultSyncIntentRuntime.atom(
+    Effect.fnUntraced(function* (get) {
+      // Tracked: an accepted intent re-reads the server until the read shows its effect.
+      const confirming = get(vaultSyncConfirmingAtom);
       const transport = yield* VaultSyncIntentTransport;
       const registry = yield* AtomRegistry.AtomRegistry;
       // A re-read after one that did not show the effect yet gives the projection a moment.
@@ -306,8 +351,8 @@ export const vaultSyncServerStateAtom = Atom.family((workspaceId: WorkspaceIdent
         );
       }
       return state;
-    });
-  })
+    })
+  )
 );
 
 /**
@@ -317,6 +362,15 @@ export const vaultSyncServerStateAtom = Atom.family((workspaceId: WorkspaceIdent
  *
  * A failed refresh keeps the last server state, so queued intents stay predicted while the sidecar
  * is unreachable. `None` means no destination is registered for the workspace yet.
+ *
+ * **Example** (Prediction atom for a workspace)
+ *
+ * ```ts
+ * import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace"
+ * import { vaultSyncPredictionAtom } from "@/sync/VaultSyncIntent.atoms"
+ *
+ * console.log(typeof vaultSyncPredictionAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID) === "object") // true
+ * ```
  *
  * @category atoms
  * @since 0.0.0
@@ -539,6 +593,17 @@ export const vaultSyncSubmitAtom = Atom.family((workspaceId: WorkspaceIdentity.W
 /**
  * Dismiss one refusal notice.
  *
+ * **Example** (Dismiss a refusal by command id)
+ *
+ * ```ts
+ * import * as AtomRegistry from "effect/reactivity/AtomRegistry"
+ * import { vaultSyncDismissRefusalAtom, vaultSyncRefusalsAtom } from "@/sync/VaultSyncIntent.atoms"
+ *
+ * const registry = AtomRegistry.make()
+ * registry.set(vaultSyncDismissRefusalAtom, "vault-sync_1")
+ * console.log(registry.get(vaultSyncRefusalsAtom).length) // 0
+ * ```
+ *
  * @category atoms
  * @since 0.0.0
  */
@@ -572,6 +637,15 @@ const browserLinkEvents = (onOnline: () => void, onOffline: () => void) =>
  * The browser `offline` event marks the link offline without dropping anything; `online` starts a
  * replay, which confirms the link only when the sidecar actually answers. The replay is driven
  * through the registry, not from an atom read, so a flush is never torn down by its own trigger.
+ *
+ * **Example** (Replay atom for a workspace)
+ *
+ * ```ts
+ * import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace"
+ * import { vaultSyncReplayOnReconnectAtom } from "@/sync/VaultSyncIntent.atoms"
+ *
+ * console.log(typeof vaultSyncReplayOnReconnectAtom(DEFAULT_PROFESSIONAL_WORKSPACE_ID) === "object") // true
+ * ```
  *
  * @category atoms
  * @since 0.0.0

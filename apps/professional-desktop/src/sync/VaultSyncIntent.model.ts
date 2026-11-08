@@ -16,6 +16,14 @@ const $I = $ProfessionalDesktopId.create("sync/VaultSyncIntent.model");
 /**
  * The operator asked the destination to run one sync pass.
  *
+ * **Example** (Build a sync request)
+ *
+ * ```ts
+ * import { RequestSyncAction } from "@/sync/VaultSyncIntent.model"
+ *
+ * console.log(RequestSyncAction.make({}).kind) // "request-sync"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -30,6 +38,14 @@ export class RequestSyncAction extends S.Opaque<RequestSyncAction, { readonly br
 
 /**
  * The operator asked the destination to probe its Box connection again.
+ *
+ * **Example** (Build a connection probe)
+ *
+ * ```ts
+ * import { ProbeAction } from "@/sync/VaultSyncIntent.model"
+ *
+ * console.log(ProbeAction.make({}).kind) // "probe"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -46,6 +62,14 @@ export class ProbeAction extends S.Opaque<ProbeAction, { readonly brand: unique 
 /**
  * The operator asked the destination to stop starting sync passes.
  *
+ * **Example** (Build a pause)
+ *
+ * ```ts
+ * import { PauseAction } from "@/sync/VaultSyncIntent.model"
+ *
+ * console.log(PauseAction.make({}).kind) // "pause"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -61,6 +85,14 @@ export class PauseAction extends S.Opaque<PauseAction, { readonly brand: unique 
 /**
  * The operator asked a paused destination to accept sync passes again.
  *
+ * **Example** (Build a resume)
+ *
+ * ```ts
+ * import { ResumeAction } from "@/sync/VaultSyncIntent.model"
+ *
+ * console.log(ResumeAction.make({}).kind) // "resume"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -75,6 +107,21 @@ export class ResumeAction extends S.Opaque<ResumeAction, { readonly brand: uniqu
 
 /**
  * The operator marked one open drift conflict as reviewed.
+ *
+ * **Example** (Mark a conflict reviewed)
+ *
+ * ```ts
+ * import * as V from "@beep/documents-domain/aggregates/VaultSync"
+ * import { ReviewConflictAction } from "@/sync/VaultSyncIntent.model"
+ *
+ * const review = ReviewConflictAction.make({
+ *   conflictId: V.ConflictId.make("documents_sync_conflict_a1"),
+ *   remoteEventId: "event1",
+ *   workspaceId: 1,
+ *   healOperationId: V.OperationId.make("documents_sync_operation_a1"),
+ * })
+ * console.log(review.kind) // "review-conflict"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -249,6 +296,17 @@ type VaultSyncRefusalSource = typeof VaultSyncRefusalSource.Type;
 
 /**
  * The typed reason an intent was refused: a domain rule or a session denial.
+ *
+ * **Example** (Recognize a rule violation)
+ *
+ * ```ts
+ * import * as V from "@beep/documents-domain/aggregates/VaultSync"
+ * import * as S from "effect/Schema"
+ * import { VaultSyncRefusalReason } from "@/sync/VaultSyncIntent.model"
+ *
+ * const reason = V.SyncRuleViolation.make({ rule: "destination-paused", evidence: "destination state" })
+ * console.log(S.is(VaultSyncRefusalReason)(reason)) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
