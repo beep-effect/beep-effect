@@ -75,6 +75,7 @@
     "@beep/epistemic-server": "workspace:^",
     "@beep/epistemic-tables": "workspace:^",
     "@beep/epistemic-use-cases": "workspace:^",
+    "@beep/eyecite": "workspace:*",
     "@beep/file-processing": "workspace:^",
     "@beep/identity": "workspace:^",
     "@beep/langextract": "workspace:^",

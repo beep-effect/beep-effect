@@ -20,9 +20,9 @@ checkpoint. Baseline packet: git commit 7dc8c2d443d.
 
 ## Next actions
 
-1. Integrate the selected pinned TypeScript driver into an owned recognizer
-   child. The recorded decision and distributed-artifact comparison are retained;
-   do not mistake selection for actual service acceptance.
+1. Qualify the isolated pinned recognizer in the actual public service. The worker
+   and its focused runtime/refusal controls are implemented; do not mistake raw
+   worker acceptance for verified semantic/source service acceptance.
 2. Connect recognizer discovery, verified original ranges and the strict local
    resolver to the actual service without another public citation hierarchy.
 3. Use the supplied Effect socket RPC protocol, stdio server and SchemaBinary
@@ -40,7 +40,8 @@ the operator after quota, and Kimi's saved report preceded its quota. [Research
 assessment](research/2026-11-08-re-grounding.md) records findings and
 uncertainties. The [nine-case
 smoke](history/evidence/2026-11-08-six-form-smoke/README.md) is operability
-evidence, not accuracy or safety. No parser has been selected. The frozen
+evidence, not accuracy or safety. The pinned TypeScript driver is selected. The
+frozen
 29-input selection receipt records actual donor captures. The
 [adapter experiment](history/evidence/2026-11-08-six-form-adapter/README.md)
 records actual native failures and a TypeScript adapter matching all 33 labeled
@@ -49,8 +50,10 @@ Strict party matching, ambiguity propagation and a provided-Effect transport
 adapter now have focused tests in the
 [implementation receipt](history/evidence/2026-11-08-six-form-link-transport.md).
 The selected exact npm artifact and driver now pass their finite comparison
-and package qualification. Actual parser/service integration, warning-to-refusal
-behavior and complete resource qualification remain open.
+and package qualification. The
+[isolated worker receipt](history/evidence/2026-11-08-recognizer-worker.md)
+records actual Bun/Node execution and terminal warning/exit refusal controls.
+Verified semantic/source adaptation and actual public Layer acceptance remain open.
 
 PR #2927 is merged at f849b3b901e. The baseline integration receipt identifies
 InputDocument reservation accounting and the full Bun diff-corpus watchdog as
@@ -59,8 +62,8 @@ fixture preparation/refusal work; inspect published state and preserve their
 changes rather than duplicating an inherited-red repair. Current main is
 integrated at this follow-up's branch creation; merge it regularly thereafter.
 
-There is no measured delivery ETA. The next progress milestone is a completed
-selection record, not closure of the historical exhaustive ledger.
+There is no measured delivery ETA. The next milestone is the verified six-form
+public Layer, followed by hosted proof and retained merge.
 
 ## Checkpoints
 

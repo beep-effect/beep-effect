@@ -1,0 +1,15 @@
+{
+  "previous": "d14f9e948ee5f2734d9ed5dadd679d6c7b0554f85939e7d6a5cb0dcf28a44867",
+  "review": {
+    "reviewer": "Codex GPT-6.1-Sol medium, citation-extraction-engine",
+    "reason": "Record the five audited server dependency/reference drifts plus review-only root/new-driver source drift from the selected recognizer workspace. The eight new driver tasks are explicitly uncached. Existing commands, cache flags, outputs, environment, epoch and qualification scope are unchanged; no qualification or exception is granted.",
+    "basis": {
+      "path": "goals/citation-extraction-engine/research/2026-11-08-recognizer-cache-review.md",
+      "sha256": "770f93cf963f77ff4e482337d1c0d188fa4ee1d074fca7a03f3aff08c606f60d"
+    }
+  },
+  "subjects": ["//", "@beep/eyecite", "@beep/law-practice-server"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}
