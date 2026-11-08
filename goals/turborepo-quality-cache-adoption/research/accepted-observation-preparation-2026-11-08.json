@@ -47,7 +47,7 @@
     "url": "https://github.com/beep-effect/beep-effect/actions/runs/42440013986",
     "channel": "stable",
     "computation": "@beep/types#lint",
-    "status": "dispatched-result-pending",
+    "status": "failed-before-comparison",
     "bounds": {
       "runnerJobsAtOnce": 1,
       "jobMinutes": 20,
@@ -58,7 +58,27 @@
     "protectedEnvironment": false,
     "cacheIssuerApplicationCredentials": false,
     "signingActivation": false,
-    "qualificationGranted": false
+    "qualificationGranted": false,
+    "result": {
+      "conclusion": "failure",
+      "jobId": 128607026394,
+      "jobExecutionSeconds": 373,
+      "checkoutSeconds": 20,
+      "toolchainSetupSeconds": 21,
+      "sandboxSetupSeconds": 58,
+      "inputPreparationSeconds": 233,
+      "pilotRefusalSeconds": 31,
+      "cleanupSeconds": 7,
+      "failure": "The pilot activation preview is stale.",
+      "publicSummaryArtifacts": 0,
+      "cleanup": "passed",
+      "repair": "Align local pilot execution with the preparation creation mask 077; keep exact preview equivalence and mask hashing. Hosted regression and a fresh accepted-source observation remain required.",
+      "privateLog": {
+        "bytes": 203011,
+        "sha256": "d2c3ae207dd2ebeb7ff34f94d37fd1180327133db3944876b164bad46d396529"
+      },
+      "diagnosis": "Source inspection found an unpinned execution creation-mask boundary. The failed run retained no private fingerprints, so this is a concrete boundary repair, not proof that the mask was the only differing field."
+    }
   },
   "limits": [
     "The former shell and Python adapters have moved to the reviewed Effect CLI implementation on accepted main.",
