@@ -32,6 +32,7 @@ push through the `gh` credential, approved by the operator, also failed with
 `403 Permission ... denied`: that token reads the archive repo but cannot write
 it. A first snapshot taken earlier went stale while it waited, because #2860
 edited `effect-reference-workspace` on `main`; the batch was re-run from main
-`19c9aa06b0` (plan `2fc4f570…`, archive commit `87fc463`, still unpushed). Running the
+`19c9aa06b0` (plan `2fc4f570…`, archive commit `87fc463`). Once the operator granted
+write access the push landed on 2026-11-08 and all 50 tree hashes verified. Running the
 sweep from a host whose credential covers the archive repo, or adding the
 archive repo to the helper, would prevent this.

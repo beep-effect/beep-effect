@@ -73,7 +73,7 @@
       "promotionStatus": "blocking",
       "promotionCriteria": {
         "requiredCommands": [
-          "bun goals/fallow-quality-enforcement/ops/validate-fallow-audit-baseline.ts",
+          "bun run fallow:audit -- --base origin/main --gate new-only",
           "bun run audit:github pre-push"
         ],
         "requiredEvidenceRefs": ["research/audit.md"],
@@ -86,7 +86,7 @@
       "runtimeScope": "static-only",
       "owner": "@beep-team",
       "acceptanceCommands": [
-        "bun goals/fallow-quality-enforcement/ops/validate-fallow-audit-baseline.ts"
+        "bun run fallow:audit -- --base origin/main --gate new-only"
       ],
       "rollbackNotes": "Restore ciMode to advisory-artifact and promotionStatus to advisory to demote the pre-push gate.",
       "evidenceRefs": [
@@ -169,9 +169,7 @@
       },
       "runtimeScope": "static-only",
       "owner": "@beep-team",
-      "acceptanceCommands": [
-        "bun goals/fallow-quality-enforcement/ops/validate-packet.ts"
-      ],
+      "acceptanceCommands": ["bun run fallow:dead-code:json -- --summary"],
       "rollbackNotes": "Keep Knip as the reference analyzer and parity gate; remove dead-code from Fallow advisory packets.",
       "evidenceRefs": [
         "standards/fallow.dead-code.regression-baseline.jsonc",
