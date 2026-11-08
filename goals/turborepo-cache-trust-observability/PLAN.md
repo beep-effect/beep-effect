@@ -2,8 +2,8 @@
 
 ## Status
 
-Status: `active`
-Lifecycle: `active`
+Status: `paused`
+Lifecycle: `paused`
 
 Launched for the early handoff required by task qualification, under the
 operator's delegated blocker-resolution authority. Initial work landed in PRs
@@ -26,7 +26,17 @@ categories without retaining exception details. Hosted regression proof and
 primary acceptance must precede fresh bound observations; do not repeat the
 unchanged source. Both goals and all whole-goal criteria remain incomplete.
 
-## Phases
+## Paused checkpoint: 2026-11-08
+
+The [operational scope amendment](../turborepo-quality-cache-adoption/OPERATIONAL-SCOPE.md) replaces the exhaustive finish line.
+Finish and preserve the current PRs, then archive the owned worktrees. Resume
+only on a new operator instruction, starting with the six-gate evidence audit.
+No acceptance criterion or representative window is declared complete.
+The historical phase table and checkpoints below are retained for provenance;
+they are suspended, not the automatic next-work queue. The amendment governs
+conflicts with those earlier instructions and the old P6 checklist.
+
+## Phases (historical assurance plan, suspended)
 
 | Phase | Status | Work | Exit criteria |
 | --- | --- | --- | --- |
