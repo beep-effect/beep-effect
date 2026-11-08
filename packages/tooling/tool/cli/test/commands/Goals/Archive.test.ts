@@ -736,16 +736,14 @@ describe("goals archive", () => {
         assert.strictEqual(manifest.archive?.path, "goals/done");
         assert.deepStrictEqual(manifest.researchReports, ["research/OPPORTUNITIES.md"]);
         assert.strictEqual(manifest.opsScripts, undefined);
-        const partialManifest = yield* decodeGoalManifest(
-          parseJson(yield* readText(root, "goals/partial/ops/manifest.json"))
-        );
+        const partialText = yield* readText(root, "goals/partial/ops/manifest.json");
+        const partialManifest = yield* decodeGoalManifest(parseJson(partialText));
         assert.deepStrictEqual(
           A.map(partialManifest.opsScripts ?? [], (script) => script.path),
           ["ops/manifest.json"]
         );
-        const retainedManifest = yield* decodeGoalManifest(
-          parseJson(yield* readText(root, "goals/held/ops/manifest.json"))
-        );
+        const retainedText = yield* readText(root, "goals/held/ops/manifest.json");
+        const retainedManifest = yield* decodeGoalManifest(parseJson(retainedText));
         assert.deepStrictEqual(
           A.map(retainedManifest.opsScripts ?? [], (script) => script.path),
           ["ops/manifest.json"]
