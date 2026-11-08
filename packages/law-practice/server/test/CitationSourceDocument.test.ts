@@ -26,7 +26,7 @@ import type { CitationEngineFailure } from "@beep/law-practice-use-cases/server"
 
 const ExtractionResultType = S.toType(CitationEngineExtractionResult);
 
-it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true })(
+it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true, concurrent: false })(
   "connected verified citation document",
   (it) => {
     for (const kind of ["bun", "node"] as const) {
