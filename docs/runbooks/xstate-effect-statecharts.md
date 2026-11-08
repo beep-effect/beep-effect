@@ -14,7 +14,7 @@ the `@beep/xstate` driver in `packages/drivers/xstate`.
 | `@xstate/effect` | `1.0.0-beta.0` | Peers `effect ^4.0.0` and `xstate ^6.0.0-beta.0`. npm `latest` still points at an alpha, so pin the beta explicitly. |
 | `@xstate/test` | `2.0.0-beta.0` | Model-based testing. Declares Vitest 3 or 4 as an optional peer. |
 | `@statelyai/sdk` | `0.46.0` | Inspector client. `@statelyai/inspect` peers xstate v5 and is not used. |
-| `statelyai` | `0.21.1` | CLI, root dev dependency. |
+| `statelyai` | `0.21.2` | CLI, root dev dependency. |
 
 All five are catalog entries in the root `package.json`. Keep this table in sync when updating the catalog.
 

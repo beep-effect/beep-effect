@@ -4,13 +4,13 @@
     "id": "catalog-writer-incremental",
     "packetId": "goal-packet/v1:82493d71d0b0d3e4f00abd509933f5fdcac410418c5fbd82c7d51450747659b9",
     "title": "Incremental Catalog Writer",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-07",
     "updated": "2026-11-08",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/catalog-writer-incremental",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Per-file incremental shard splice for the lefthook catalog writers so a commit costs ~1 GB on any host.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -105,8 +105,9 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "proposedCloseout": {
+  "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2940
-  }
+  },
+  "retentionReason": "Retained: the splice writer and its RSS evidence stay the reference for the catalog hooks and for goals/compute-profile-gate-routing P1/P2."
 }
