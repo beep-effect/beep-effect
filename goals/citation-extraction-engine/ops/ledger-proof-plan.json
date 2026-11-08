@@ -2313,6 +2313,165 @@
           }
         ]
       }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::2",
+          "observationSha256": "3972b58941cc8a09fcfa82ec14fd6dbb82392e74c9feb01edd35b2aaebc3d7e0"
+        },
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::3",
+          "observationSha256": "6e8c9db6e9b69c25047c75843b8c7036d86b573fd19ac675961738bfb049881e"
+        },
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::4",
+          "observationSha256": "91c34827875de32cfac6468ba10994548692e97f173b62a42b6f0964152a10fa"
+        },
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::5",
+          "observationSha256": "97fff9386e0decf43d5860423b6d14fa551ac13160d771cbc1d5806eaaadf7c7"
+        },
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::6",
+          "observationSha256": "1b8965659b518316c0edd17fa5d63ee854783aeb7117cb1f0165142c274134c7"
+        },
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::7",
+          "observationSha256": "1abb4a96b40e423cd267af0fbd4048873b336aa7c9e26915332b3b724fdcbf6a"
+        },
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::8",
+          "observationSha256": "59bac6dc2cb0d3bcd4525960ed276c5ae05824afff579f13e16bab3c8a0e8510"
+        },
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::9",
+          "observationSha256": "6048bf41cd519cbeb4301be2c6cba952bc6fc904f7254c6e0bb7e8a4a3cec1b8"
+        },
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::10",
+          "observationSha256": "b4a8363c50ce9dbfbe6a5cfe2cbfcf888af71ef0b01742716b66c4331efe6155"
+        },
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::11",
+          "observationSha256": "a87526c0e5d273eb79e53f62185676922214ed5d36b864347e1ee524df8ccb6a"
+        },
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::14",
+          "observationSha256": "34a1417d79c56c9b0c619c520f3713415412ece7e85ae232682911f48a210a25"
+        },
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::15",
+          "observationSha256": "ac8b9a9516d31eba987224ea02ae2abf8c2c5088c67251071da634ee030c272c"
+        },
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::16",
+          "observationSha256": "c820fe189821b6a0c1f554fabf8e6b58eb75c63271c7318d6bff0a1fd3973779"
+        },
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::17",
+          "observationSha256": "c7cf2f0a0c0fed0a5a086fe5b916d9d0903527767e9a574511198928b61a4ef2"
+        },
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::18",
+          "observationSha256": "fe729677c4a691b9a16364c3dbfa8165affb461b05acb40f3b9f3e652cde68c2"
+        },
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::20",
+          "observationSha256": "863045df87477df7c6d1c475aadf269812c1eb03b0f32c9578ffc9313888c36d"
+        },
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::21",
+          "observationSha256": "d67e3ff9998ce5b3de29249041b70ec73c21fe6cba61c01e08310014a8ca037f"
+        },
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::22",
+          "observationSha256": "1dfadd1b46d0847d38c2d33227f314f48d7c02e21c9a7fd41774c502c822efa8"
+        },
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::23",
+          "observationSha256": "825f8ea9099c2d1587588c5c00c1953de7de0f7d835a871ade5f060f695baca2"
+        },
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::24",
+          "observationSha256": "6183b5aaada8bde88c6da5fdb4764b82aec6bf392b13363fc4cac7f08bae73a6"
+        },
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::25",
+          "observationSha256": "4cde6e267d5a545097727ad32f598a37e33294957ba294e44a69ce090daed48a"
+        },
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::26",
+          "observationSha256": "e0bec0c36c3656d773b9731556b41f888bd657a65e9b3f36056dde3656cc8e3c"
+        },
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::27",
+          "observationSha256": "ed3766c7323509955b93ff0426ceba35cc3ef0e9a812a7f5ebfbe691491533e9"
+        },
+        {
+          "id": "tests.test_CourtsTest.RegexesTest.test_parenthetical_court_parser::tests/test_CourtsTest.py:42:12:caseDeclaration::28",
+          "observationSha256": "fdba5b0675265bffacdabb041695c0ef8560cc412d0003f04ebc6d8369e93107"
+        }
+      ],
+      "rationale": "All remaining 24 original parenthetical-court equality assertions pass from raw source through actual default public extraction on Bun and Node, with independent complete model/edition comparisons, genuine primary/full/pin-inclusive verified ranges and physical worker retirement. Together with the prior five independent bindings this qualifies the finite 29-assertion original cohort. Alternate tokenizer interfaces, arbitrary court syntax and generic retained protocols remain separate.",
+      "proof": {
+        "command": "bunx --bun vitest run test/integration/CitationCanonicalCourts.test.ts --reporter=json --outputFile=../../../.beep/canonical-courts-full-results.json",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "extract",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-complete-original-court-cohort.md",
+        "evidenceSha256": "92dcbebcb819e24d66a59f43c4691b5955b08d7770c583c5c8fea93b38e51bcd",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/integration/CitationCanonicalCourts.test.ts",
+            "name": "replays original court assertion group",
+            "sha256": "d116a0fd51a90258a95e48147ae7779227d3f05d0c9251aa1109a214019117ac"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalParserOperations.fixtures.ts",
+            "sha256": "a6a6f60a2e6621ede2db1b8e7d4232dc4ed74f4066b73e9f9df7ee8cf5f18ca9"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtractionRuntime.fixtures.ts",
+            "sha256": "4e0c808677aaf5d08aca4d6cbf21b11e484fa84a25346fef5c472a363827084e"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalModel.fixtures.ts",
+            "sha256": "b47778caf58e758edf2c3c9f65464d82fb1ca9ce58dff25a2e90117eb8756177"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationDefaultConfiguration.fixtures.ts",
+            "sha256": "bd65007a9fdcfcf5daf71a33dfd31ec749bea2bcd852f39c2c9ce2ceb89adbff"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
+            "sha256": "c0e994ff1a280d229c91959e13b1e5adf17e283fc64036161927dc6af76b37ca"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
+            "sha256": "09b730c8f3bae99438224dafbe781988d76fa0013fd50b5c3ca53e4b45680fa8"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalCaptures.fixtures.ts",
+            "sha256": "1ac4ab7ebd6c3751b5706d93b562c6625d6c5d3062ddbe4284a6ef274a89c4a8"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/CourtLookup.ts",
+            "sha256": "f5cb37d958b997bf9ed31334598ca4c060ab23641ea7f3a5d2579a1dc6b58a6b"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/SemanticExtraction.ts",
+            "sha256": "09d7fc75576d65ebe090a70b69c204d2c94f10077cceb1a137757076a1c77f9e"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/OccurrenceProjection.ts",
+            "sha256": "9d7e9c224612935517acc5f8227aa5fe23d583ed1031bc4dfe42a7367b8cab9d"
+          }
+        ]
+      }
     }
   ]
 }

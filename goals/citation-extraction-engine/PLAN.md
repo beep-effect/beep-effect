@@ -1831,6 +1831,12 @@ All eight Bun/Node groups pass for the remaining 22 original annotation workflow
 
 Reverse: Reopen any exact binding on contrary source or runtime evidence; preserve every unfinished capability, fidelity law and accounting row.
 
+### Qualify every original parenthetical court assertion on both native runtimes, 2026-11-08
+
+All six existing bounded integration groups pass, covering all 29 original court equalities on Bun and Node through actual default public extraction, independent semantic/edition comparison, genuine source ranges and physical child retirement. Bind only the remaining 24 events: 182 complete canonical events and 15316 unfinished accounting rows. General court syntax, tokenizer protocols and exhaustive acceptance remain open. See history/evidence/2026-11-08-complete-original-court-cohort.md.
+
+Reverse: Supersede the bindings if source inputs, criteria or implementation dependencies change.
+
 ### Qualify original default factory equality and persistent hashes, 2026-11-08
 
 Reconstruct the three zero-argument semantic factory profiles from pinned source defaults and independently authenticated unique edition choices. Check actual groups/metadata/editions, then replay six comparison/hash assertions and four exact persistent integers through existing hash implementations. Keep fake token positions outside verified evidence and retain arbitrary factory, alias, mutation, identity and resource-wrapper obligations.
