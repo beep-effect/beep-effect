@@ -30,7 +30,13 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ExplorationManifest, ExplorationStatus } from "../Explore/Atlas.ts";
-import { knowledgeDocumentLines, knowledgeLinkDestinations } from "../Knowledge/Knowledge.refs.ts";
+import {
+  isKnowledgeCommandSpan,
+  knowledgeDocumentLines,
+  knowledgeInlineSpans,
+  knowledgeLinkDestinations,
+  normalizeKnowledgeRepoPath,
+} from "../Knowledge/Knowledge.refs.ts";
 import { ArchivePlan, ArchivePlanEntry, ArchiveRepoRef, InboundLink, tombstoneKeeps } from "./Archive.schemas.ts";
 import { ArchiveError } from "./Goals.errors.ts";
 import { decodeGoalManifest, GoalStatus } from "./Goals.schemas.ts";
@@ -40,6 +46,7 @@ import { PacketRoot } from "./PacketCore/PacketCore.schemas.ts";
 import { canonicalJsonText, sha256Hex } from "./PacketCore/PacketDigest.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type { KnowledgeDocumentLine } from "../Knowledge/Knowledge.refs.ts";
+import type { InboundLinkForm } from "./Archive.schemas.ts";
 import type { GoalManifest } from "./Goals.schemas.ts";
 import type { GoalPacketRecord } from "./Inventory.ts";
 
@@ -278,8 +285,28 @@ type ScannedLink = {
   readonly file: string;
   readonly line: number;
   readonly destination: string;
+  readonly form: InboundLinkForm;
   readonly target: string;
 };
+
+// The code spans the knowledge doctor reads as tracked paths, so the plan repoints what the doctor would flag.
+const scanLineCodeSpans = (file: string, line: KnowledgeDocumentLine): ReadonlyArray<ScannedLink> =>
+  A.getSomes(
+    A.map(
+      A.filter(knowledgeInlineSpans(line.text), (inline) => !isKnowledgeCommandSpan(inline.span)),
+      (inline) =>
+        O.map(
+          normalizeKnowledgeRepoPath(file, inline.span),
+          (target): ScannedLink => ({
+            file,
+            line: line.number,
+            destination: inline.span,
+            form: "code-span",
+            target,
+          })
+        )
+    )
+  );
 
 const scanFileLinks = Effect.fnUntraced(function* (repoRoot: string, file: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -292,10 +319,21 @@ const scanFileLinks = Effect.fnUntraced(function* (repoRoot: string, file: strin
   const resolved = yield* Effect.forEach(candidates, (candidate) =>
     Effect.map(
       resolveLinkDestination(file, candidate.destination),
-      O.map((target): ScannedLink => ({ file, line: candidate.line, destination: candidate.destination, target }))
+      O.map(
+        (target): ScannedLink => ({
+          file,
+          line: candidate.line,
+          destination: candidate.destination,
+          form: "link",
+          target,
+        })
+      )
     )
   );
-  return A.getSomes(resolved);
+  return A.appendAll(
+    A.getSomes(resolved),
+    A.flatMap(proseLines, (line) => scanLineCodeSpans(file, line))
+  );
 });
 
 const scanInboundLinks = Effect.fnUntraced(function* (repoRoot: string) {
@@ -336,6 +374,7 @@ const planEntry = Effect.fnUntraced(function* (
         file: link.file,
         line: link.line,
         destination: link.destination,
+        form: link.form,
         rewrittenTo: `https://github.com/${options.repo}/blob/main/${link.target}${fragmentOf(link.destination)}`,
       })
   );
