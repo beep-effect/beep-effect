@@ -175,6 +175,27 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
         expect(text).toContain("    * no=False");
       })
     );
+    it.effect("clamps spans past the text and trims whitespace runs longer than one yield interval", () =>
+      Effect.gen(function* () {
+        const policy = yield* defaultCitationEnginePolicy;
+        const printability = yield* readCitationNativeRenderingAsset("python-printability");
+        const dump = yield* makeCitationDump(policy.limits, printability);
+        const encoder = new TextEncoder();
+        const row = (span: readonly [number, number]) => ({ kind: "IdCitation", span, fields: [] });
+        const clamped = yield* dump.render({
+          text: { width: 1, bytes: encoder.encode("abc") },
+          citations: [row([-100, 100])],
+        });
+        expect(new TextDecoder().decode(clamped.bytes)).toContain("abc");
+        const padding = new TextDecoder().decode(new Uint8Array(5000).fill(32));
+        const padded = yield* dump.render({
+          text: { width: 1, bytes: encoder.encode(`${padding}match${padding}`) },
+          citations: [row([5000, 5005])],
+          contextChars: 6000,
+        });
+        expect(new TextDecoder().decode(padded.bytes)).toContain("match");
+      })
+    );
     it.effect("refuses an enclosing budget larger than the policy allows", () =>
       Effect.gen(function* () {
         const policy = yield* defaultCitationEnginePolicy;
