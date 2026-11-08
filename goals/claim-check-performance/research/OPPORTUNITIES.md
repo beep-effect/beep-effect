@@ -165,8 +165,9 @@ quick form say plainly that it ran no tests.
 
 ## A follow-up lane's draft inherits an earlier PR's title
 
-A lane branched from #2975 kept that PR's commits in its history until main was
-merged, and `yeet open` took the draft title from the oldest branch commit. #2987
-therefore opened with #2975's title, which would have become its squash subject.
-Check the title after opening, or squash-merge the predecessor before opening the
-next draft.
+A lane branched from #2975 before that PR was squashed. Its commits stay in the
+lane's history even after merging main, and `yeet open` took the draft title from
+the oldest branch commit. #2987 therefore opened with #2975's title, which would
+have become its squash subject. Check the title after opening. Branching follow-up
+work from main after the squash would avoid it, or the tool could warn when the
+oldest commit's subject matches a merged pull request.
