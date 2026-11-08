@@ -6384,24 +6384,25 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
     );
 
     const GIB = 1024 * 1024 * 1024;
-    const readMemoryStats = (constrained: number | undefined, total: number, resident: number) =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          const services = yield* Layer.build(
-            memoryStatsLayerFor({
-              constrainedMemoryBytes: () => constrained,
-              totalMemoryBytes: () => total,
-              residentBytes: () => resident,
-            })
-          );
-          const stats = Context.get(services, MemoryStats);
-          return {
-            available: yield* stats.availableGib,
-            ceiling: yield* stats.ceilingGib,
-            total: yield* stats.totalGib,
-          };
+    const readMemoryStats = Effect.fn("readMemoryStats")(function* (
+      constrained: number | undefined,
+      total: number,
+      resident: number
+    ) {
+      const services = yield* Layer.build(
+        memoryStatsLayerFor({
+          constrainedMemoryBytes: () => constrained,
+          totalMemoryBytes: () => total,
+          residentBytes: () => resident,
         })
       );
+      const stats = Context.get(services, MemoryStats);
+      return {
+        available: yield* stats.availableGib,
+        ceiling: yield* stats.ceilingGib,
+        total: yield* stats.totalGib,
+      };
+    });
 
     it.effect("reports the cgroup ceiling and clamps available memory to ceiling minus RSS", () =>
       Effect.gen(function* () {
