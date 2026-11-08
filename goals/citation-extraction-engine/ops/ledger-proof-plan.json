@@ -1711,6 +1711,101 @@
           }
         ]
       }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_ModelsTest.ModelsTest.test_citation_comparison_with_nominative_reporter::tests/test_ModelsTest.py:107:8:caseDeclaration::1",
+          "observationSha256": "c5d9616bbaa994f70ae06169af65636363a7c920c4dccde6985a5c69bece058b"
+        },
+        {
+          "id": "tests.test_ModelsTest.ModelsTest.test_citation_comparison_with_nominative_reporter::tests/test_ModelsTest.py:108:8:caseDeclaration::1",
+          "observationSha256": "380f0207211b6255bba18ed73cf587bbc5e97e8878169f4dbc9ab0daaf6a436e"
+        },
+        {
+          "id": "tests.test_ModelsTest.ModelsTest.test_tax_court_citation_comparison::tests/test_ModelsTest.py:135:8:caseDeclaration::1",
+          "observationSha256": "4be95413f45a31e55947c9b7b292fad325ab9e3dc80d867e3bb5c2287f8bad06"
+        },
+        {
+          "id": "tests.test_ModelsTest.ModelsTest.test_tax_court_citation_comparison::tests/test_ModelsTest.py:136:8:caseDeclaration::1",
+          "observationSha256": "ca99e461f4b2ab34f9edbe8bdb4f8103b84098a6a064974f1ebebd2cdda77092"
+        }
+      ],
+      "rationale": "Four original nominative/tax-court model equality and hash assertions recomputed from original raw parser pairs on both native configurations. Actual selected edition references drive authenticated names and existing exact hash production; actual integer hashes match independent source operands and satisfy the original hash-based equality predicate. Factory-built, identity-backed and general model protocols remain separate.",
+      "proof": {
+        "command": "bunx --bun vitest run test/CitationCanonicalParsedEquality.test.ts --reporter=json --outputFile=../../../.beep/canonical-parsed-equality-results.json",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "extract",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-original-parsed-model-equality.md",
+        "evidenceSha256": "0e0a7514c6f450b7ddacdd60935aefc2c761bfcc5b699a591d3e50c838f921f2",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalParsedEquality.test.ts",
+            "name": "recomputes all four original parsed equality and hash assertions on",
+            "sha256": "0e99d17a9644741d3aa8ee2d7e69e1fb22373e08d3071acb7d5abbe42fa2bec3"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalParsedEquality.fixtures.ts",
+            "sha256": "7d25ab9ba9292effc0e4aca79656e46208ea53108944255ff3faae54870bff40"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationParsedResource.fixtures.ts",
+            "sha256": "4113182cc59f9b3dff1225881ad411524ef4e4ca496307dd922ef8981a98a7bc"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalCaptures.fixtures.ts",
+            "sha256": "1ac4ab7ebd6c3751b5706d93b562c6625d6c5d3062ddbe4284a6ef274a89c4a8"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalExtractionRuntime.fixtures.ts",
+            "sha256": "4e0c808677aaf5d08aca4d6cbf21b11e484fa84a25346fef5c472a363827084e"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalModel.fixtures.ts",
+            "sha256": "b47778caf58e758edf2c3c9f65464d82fb1ca9ce58dff25a2e90117eb8756177"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts",
+            "sha256": "09b730c8f3bae99438224dafbe781988d76fa0013fd50b5c3ca53e4b45680fa8"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationDefaultConfiguration.fixtures.ts",
+            "sha256": "bd65007a9fdcfcf5daf71a33dfd31ec749bea2bcd852f39c2c9ce2ceb89adbff"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationEngineLayer.fixtures.ts",
+            "sha256": "c0e994ff1a280d229c91959e13b1e5adf17e283fc64036161927dc6af76b37ca"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationFrozenEditions.fixtures.ts",
+            "sha256": "d5f7903a33c9f5715592de35f66423b6cd87dcae9177d00d7e76f25eb2b74fea"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/CaseResourceHash.ts",
+            "sha256": "57e103a8a19e141ec6bba44d43534fbfd9c2aaf6df0f38acc39591f05f1a1b9a"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/RuntimeHashEncoding.ts",
+            "sha256": "71d866bfbf2a7a849eb0a3cba23ae6c18ec1e3657ae01ad3a7078cec2a2aa6c7"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/ResourceComponents.ts",
+            "sha256": "11cb8566ac24f04bab342740fd726ab32590fbaa82409671b8d499358b071484"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/FrozenEditions.ts",
+            "sha256": "5a75fd7614cb807528b3b8c097cb9be8b010f0635a5c4c7430f163bb7c8a152f"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/AuthorityIdentity.ts",
+            "sha256": "2ded893d4d8caef79a4f32719b12f30839bcff23763fbc01e0b518c6d190f5c4"
+          }
+        ]
+      }
     }
   ]
 }

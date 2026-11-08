@@ -1849,6 +1849,12 @@ Join five authenticated standalone-cleaner/parser operation pairs to all nine or
 
 Reverse: Reopen exact bindings on contrary original-source or runtime evidence; preserve all broader retained protocol and fidelity obligations.
 
+### Recompute parsed model equality with exact source hashes, 2026-11-08
+
+Replay original nominative and tax-court parser pairs, compare actual exact integer hashes with independent source operands, and execute CitationBase hash-based equality instead of structural equality. Actual selected edition references drive authenticated short-name lookup. Qualify only on both native runtimes; no identity hashes are manufactured and remaining model/law/safety/accounting duties stay open.
+
+Reverse: Reopen exact bindings on contrary source or runtime evidence; retain factory, identity-backed, resource and general protocol obligations.
+
 ### Schedule remaining original extraction calls with exact cleaner choices, 2026-11-08
 
 Schedule the remaining 69 original nonhelper extraction calls on both native configurations. Decode every recorded cleaner choice; preserve None, empty lists, plain HTML/whitespace cleaning and markup cleaning. The previously qualified custom callable remains in its dedicated full workflow. Ten focused cleaner-profile/parser/court/reference tests pass. Refresh fourteen existing assertion references after the applicable reruns without promoting operation snapshots to canonical assertion completion. Full hosted replay, alternate tokenizer interfaces and exhaustive acceptance remain required. Evidence: history/evidence/2026-11-07-remaining-extraction-inputs.md.
