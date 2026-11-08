@@ -25,7 +25,7 @@ hangs everything else on.
 placement at that reopened shape gate.
 
 **Trail (2026-08-13):** `@beep/courtlistener` was deleted as a VERSION-only
-stub. Recreate it from `goals/honest-repo-signal/research/FOLLOW-UPS.md` when
+stub. Recreate it from [goals/honest-repo-signal/research/FOLLOW-UPS.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/honest-repo-signal/research/FOLLOW-UPS.md) when
 this packet's citation-lookup wrap is pulled. Do not search a missing driver
 tree.
 

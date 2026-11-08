@@ -100,20 +100,6 @@
       "note": "Capability is consumed in production by the office-action extraction rung (PR #265, merged 2026-06-18); packet closed retroactively 2026-07-11."
     }
   ],
-  "researchReports": [
-    "research/README.md",
-    "research/SOURCES.md",
-    "research/gold-intake-anti-inference-prompt-mode.md",
-    "research/reports/architecture-boundaries.md",
-    "research/reports/effect-v3-reference.md",
-    "research/reports/effect-v4-migration.md",
-    "research/reports/extraction-alignment.md",
-    "research/reports/nlp-fit-audit.md",
-    "research/reports/proposal-review-round-1.md",
-    "research/reports/repo-reuse-audit.md",
-    "research/reports/testing-quality.md",
-    "research/synthesis.md"
-  ],
   "proposalReviewReports": ["research/reports/proposal-review-round-1.md"],
   "proposalReviewLoop": {
     "zeroGate": "zero required improvement items",
@@ -155,5 +141,13 @@
     "Provider-specific runtime work starts entering the foundation package.",
     "Research proves the foundation capability route needs a standards decision."
   ],
-  "mission": "Deliver a canonical research-first execution packet for `@beep/langextract`, an Effect v4-native foundation capability for LLM-powered structured extraction with source-grounded character spans."
+  "mission": "Deliver a canonical research-first execution packet for `@beep/langextract`, an Effect v4-native foundation capability for LLM-powered structured extraction with source-grounded character spans.",
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/langextract-capability",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "2aabf686dfffc21b1cf3eaeb83d148e03eaddd14",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }

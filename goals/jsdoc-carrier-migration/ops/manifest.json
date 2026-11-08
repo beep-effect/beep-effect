@@ -37,12 +37,7 @@
     "goals/jsdoc-carrier-migration/research/decisions-locked.md",
     "goals/jsdoc-carrier-migration/research/corpus-census.md"
   ],
-  "researchReports": [
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md",
-    "research/corpus-census.md",
-    "research/decisions-locked.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -85,5 +80,13 @@
     }
   ],
   "provides": ["jsdoc/carrier-retirement"],
-  "requires": []
+  "requires": [],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/jsdoc-carrier-migration",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "d532abb43940c17db30bea0df718e93b5fd4999d",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }

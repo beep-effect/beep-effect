@@ -844,7 +844,7 @@ the approved model policy. Evidence: `stage-3-f-before-measurement.md` and
 
 ### 2026-11-02 — operator ruling batch for the thirteen rsc follow-up issues
 
-On 2026-11-02 the operator accepted one batch of rulings that unblocks the thirteen `rsc follow-up` issues this packet owns. The orchestrator posted each ruling on its issue as a comment headed with the line quoted in the Reason column and closed #1852 and #1875 on their rulings. Each row quotes the ruling verbatim (the Decision column is the comment body between its header and footer lines) and names its reversal path. The companion rows for the issues `repository-simplification-residue` also lists (#1854, #1858, #1862, #1865, #1868, #1875) are mirrored in that packet's Decision Log; the #1875 amendment of D4 is recorded in `goals/effect-vitest-canon/SPEC.md`.
+On 2026-11-02 the operator accepted one batch of rulings that unblocks the thirteen `rsc follow-up` issues this packet owns. The orchestrator posted each ruling on its issue as a comment headed with the line quoted in the Reason column and closed #1852 and #1875 on their rulings. Each row quotes the ruling verbatim (the Decision column is the comment body between its header and footer lines) and names its reversal path. The companion rows for the issues `repository-simplification-residue` also lists (#1854, #1858, #1862, #1865, #1868, #1875) are mirrored in that packet's Decision Log; the #1875 amendment of D4 is recorded in [goals/effect-vitest-canon/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/effect-vitest-canon/SPEC.md).
 
 | Date | Decision | Reason | How to reverse |
 | --- | --- | --- | --- |

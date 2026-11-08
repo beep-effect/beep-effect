@@ -317,7 +317,7 @@ tsconfig adopts a value a TypeScript bump introduces (a new `target`, an
 `esnext.*` lib), add it to the matching literal set in the same PR. Otherwise
 the sync, and with it `create-package` and the cheap gates, fails with
 `Failed to parse JSONC in "<file>"` naming the field. Decision record:
-`goals/effected-promotion/SPEC.md` (3-A7 row).
+[goals/effected-promotion/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/effected-promotion/SPEC.md) (3-A7 row).
 
 ## Programmatic access
 

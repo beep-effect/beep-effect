@@ -33,26 +33,6 @@
     "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts",
     "packages/tooling/policy-pack/repo-configs/src/eslint/DeprecatedApisESLintConfig.ts"
   ],
-  "researchReports": [
-    "research/00-evidence-brief.md",
-    "research/01-engine-swap.md",
-    "research/02-inplace-optimization.md",
-    "research/03-lane-orchestration.md",
-    "research/04-pr-scoping-deferred.md",
-    "research/05-long-tail.md",
-    "research/SOURCES.md",
-    "research/p2-artifacts/README.md",
-    "research/p2-artifacts/fixtures/alias-reexport.ts.txt",
-    "research/p2-artifacts/fixtures/api.ts.txt",
-    "research/p2-artifacts/fixtures/direct-member-overload.ts.txt",
-    "research/p2-artifacts/fixtures/engagement-canary.ts.txt",
-    "research/p2-artifacts/fixtures/jsx.tsx.txt",
-    "research/p2-artifacts/fixtures/out-of-project.ts.txt",
-    "research/p2-artifacts/fixtures/parity-package-tsconfig.json.txt",
-    "research/p2-artifacts/fixtures/reexport.ts.txt",
-    "research/p2-artifacts/fixtures/type-only.ts.txt",
-    "research/p2-artifacts/oxlintrc-deprecated-apis.jsonc"
-  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -186,5 +166,13 @@
     "Any change would make hosted and local `beep ci lane lint-policy` run different commands: stop; the parity invariant binds.",
     "Preserve unrelated user/worktree changes; never stage or commit files outside this packet and the named target surfaces."
   ],
-  "statusNote": "Closed 2026-08-13. Delivered: hosted Lint Policy ~20 min -> 10m32s (P1, PR #678) -> 9m24s OBSERVED at outer concurrency 3 (closeout PR #683, job 94503214889) \u2014 single digits at full scope. Engine swap disproven with a gate-driven NO-GO spike (artifacts preserved in research/p2-artifacts/); shards remain the endgame. Open backlog: P2b re-spike precondition, docgen ownership move (next lever if the lane creeps), PR changed-scope (deferred by decision, design in research/04)."
+  "statusNote": "Closed 2026-08-13. Delivered: hosted Lint Policy ~20 min -> 10m32s (P1, PR #678) -> 9m24s OBSERVED at outer concurrency 3 (closeout PR #683, job 94503214889) \u2014 single digits at full scope. Engine swap disproven with a gate-driven NO-GO spike (artifacts preserved in research/p2-artifacts/); shards remain the endgame. Open backlog: P2b re-spike precondition, docgen ownership move (next lever if the lane creeps), PR changed-scope (deferred by decision, design in research/04).",
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/lint-policy-single-digit",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "6d148664f0a4ea5c215e1e1271b18974a9ebc353",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }

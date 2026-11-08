@@ -1,0 +1,8 @@
+---
+title: "Relocate batch 2 live inputs before archive and reproject tombstone opsScripts"
+date: 2026-11-07
+lane: "feat/packet-archive-batch-2"
+reversal: "Restore the previous locators and delete the seven relocated copies once another retained owner exists; the archived packets keep their originals"
+---
+
+A consumer scan of batch 2 found five live surfaces inside packets the batch deletes: the retention-calibration fixture, protocol and dataset that RetentionCalibrationCLI.test.ts copies; the capability atlas the editor capability-catalog test reads; the Fallow feature matrix that quality github-checks plan-contract-check and quality-tasks.test.ts read; the effect-vitest census that lint effect-vitest --census writes; and the effect-schema-inventory prompt root that --prompt writes and the drift check reads. Following the 2026-11-07 fixture decision, each moves byte-for-byte (git hash-object equals the HEAD blob) to an owner home before the archive write: packages/epistemic/server/test/fixtures/retention-calibration/, packages/foundation/ui-system/editor/test/fixtures/capability-atlas.json, standards/fallow.feature-matrix.jsonc, standards/effect-vitest.census.json and standards/effect-schema-inventory/prompts/. Their locators, biome.jsonc entries, the regenerated biome.identity.jsonc and the gitleaks allowlist path follow them. Prose and provenance strings stay historical. The batch also showed that a goal tombstone kept opsScripts naming archived ops/ scripts, which goals doctor blocks as ops-script-missing. TombstoneWriter now narrows opsScripts to kept files and drops the key when none remain (regression in Archive.test.ts), and effected-promotion's manifest was reprojected.

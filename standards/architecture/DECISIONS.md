@@ -2208,7 +2208,7 @@ single-column writes keep their predicates and still add
 same transaction inserted. In-memory adapters implement the same contract.
 Repositories stay on the Drizzle query builder; `@beep/effect-drizzle`
 `makeRepository` is not adopted, and upstream `SqlModel` soft delete is not
-used. Decision log and write-path inventory: `goals/entity-optimistic-concurrency/SPEC.md`
+used. Decision log and write-path inventory: [goals/entity-optimistic-concurrency/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/entity-optimistic-concurrency/SPEC.md)
 (D1 to D4) and its `PLAN.md`.
 
 Rationale:
@@ -2359,7 +2359,7 @@ identity paths, because TypeScript cannot declare a class over a generic base
 (258 checked), and the party slice binds the same factories to its own ids. The
 `Claim<P>` envelope (`makeClaimEnvelope`) follows the same contract. Reverse by
 moving the shared-domain id brands into foundation and collapsing the builders
-back into concrete schemas. Record: `goals/epistemics-foundation-extraction/SPEC.md`
+back into concrete schemas. Record: [goals/epistemics-foundation-extraction/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/epistemics-foundation-extraction/SPEC.md)
 "P1b factory contract".
 
 ## 2026-10-22: Upstream-First Census Amendments

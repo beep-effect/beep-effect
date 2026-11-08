@@ -99,5 +99,12 @@
     "The same blocker repeats after reasonable investigation."
   ],
   "mission": "Make root lint advisory output actionable by eliminating the current nonfatal backlog, hardening false-positive-prone checks, and promoting root lint warnings/advisories to failures in local and PR quality paths.",
-  "researchReports": ["research/current-lint-advisory-inventory.md"]
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/lint-advisory-hardening",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "f27469d6c50a81fe4cf7323fcc95504a38e8b08e",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }

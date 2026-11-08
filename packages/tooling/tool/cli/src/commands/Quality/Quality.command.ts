@@ -3535,7 +3535,7 @@ const githubChecksPlanContractCheckCommand = Command.make(
       Flag.withDescription("Assert that every matrix-promoted Fallow lane is wired into the selected GitHub check mode")
     ),
     featureMatrix: Flag.String("feature-matrix").pipe(
-      Flag.withDefault("goals/fallow-quality-enforcement/research/feature-matrix.jsonc"),
+      Flag.withDefault("standards/fallow.feature-matrix.jsonc"),
       Flag.withDescription("Fallow feature matrix JSONC path")
     ),
     mode: Flag.ChoiceWithValue("mode", githubCheckModeFlagChoices).pipe(

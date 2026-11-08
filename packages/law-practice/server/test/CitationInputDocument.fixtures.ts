@@ -272,7 +272,13 @@ const checkSuccess = Effect.fn("InputDocumentTest.checkSuccess")(function* (
   expect(result.plain === plain).toBe(row.plainIsPlainInput);
   expect(result.steps).toBe(steps);
   expect(O.isSome(result.geometry)).toBe(row.hasForward && row.hasBackward);
-  if (O.isNone(result.geometry)) expect(result.reservedUnits).toBe(result.cleanerTextUtf16);
+  if (row.stepsKind === "generator-empty") {
+    // A truthy plan with no steps returns the issued input. Its text is settled in the
+    // cleaner ledger only, because the enclosing operation owns the source reservation.
+    const native = yield* h.values.getUnicode(result.plain);
+    expect(result.cleanerTextUtf16).toBe(O.getOrThrow(native).utf16Units);
+    expect(result.reservedUnits).toBe(0);
+  } else if (O.isNone(result.geometry)) expect(result.reservedUnits).toBe(result.cleanerTextUtf16);
   else expect(result.reservedUnits).toBeGreaterThanOrEqual(result.cleanerTextUtf16);
   if (O.isSome(result.geometry)) expect(result.geometry.value.tags).toEqual(row.emphasis);
 });
@@ -298,7 +304,9 @@ const checkCase = Effect.fn("InputDocumentTest.check")(function* (
   if (row.stepsAfter.kind === "list" || row.stepsAfter.kind === "tuple")
     expect(state.tokens).toEqual(row.stepsAfter.items);
 });
-/** Full source replay is hosted; smoke retains ordinary failures, None output and actual geometry. */
+/** Full source replay is hosted; smoke retains ordinary failures, None output, the zero-step
+ * cleaner ledger split and actual geometry.
+ */
 export const replayCitationInputDocument = Effect.fn("InputDocumentTest.replay")(function* (
   full: boolean,
   kind: CitationNativeRuntimeKind = "bun"
@@ -317,8 +325,8 @@ export const replayCitationInputDocument = Effect.fn("InputDocumentTest.replay")
       full ||
       A.contains(
         [
-          0, 14, 15, 16, 23, 24, 27, 28, 29, 30, 32, 34, 35, 36, 39, 40, 41, 42, 43, 49, 53, 54, 56, 57, 70, 79, 84, 86,
-          93, 107,
+          0, 14, 15, 16, 21, 23, 24, 27, 28, 29, 30, 32, 34, 35, 36, 39, 40, 41, 42, 43, 49, 53, 54, 56, 57, 70, 79, 84,
+          86, 93, 107,
         ],
         row.id
       )
@@ -327,7 +335,7 @@ export const replayCitationInputDocument = Effect.fn("InputDocumentTest.replay")
     const fixture = yield* makeCase(row, setup, diffRuntime, htmlRuntime, discovery.configuration);
     yield* checkCase(row, fixture);
   }
-  expect(rows).toHaveLength(full ? 112 : 30);
+  expect(rows).toHaveLength(full ? 112 : 31);
   const exits = yield* setup.observed.snapshot;
   expect(exits).toEqual({ spawned: full ? 55 : 20, confirmed: full ? 55 : 20 });
   const native = yield* setup.admission.snapshot;

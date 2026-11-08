@@ -40,11 +40,7 @@
     "goals/honest-repo-signal/research/SOURCES.md",
     "goals/honest-repo-signal/research/FOLLOW-UPS.md"
   ],
-  "researchReports": [
-    "research/FOLLOW-UPS.md",
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -96,5 +92,13 @@
     "The implementation would exceed the one-night cut list in SPEC.md.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/honest-repo-signal",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "aaf4eb9e53a999ce607c8c7e6802882b420c36b7",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }

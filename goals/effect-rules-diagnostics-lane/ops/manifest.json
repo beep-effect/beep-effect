@@ -30,24 +30,7 @@
     "goals/effect-rules-diagnostics-lane/GOAL.md",
     "goals/effect-rules-diagnostics-lane/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md",
-    "research/additional-project-findings.md",
-    "research/cache-baseline-request-1b-final.json",
-    "research/cache-baseline-request-1b.json",
-    "research/cache-baseline-request-performance.json",
-    "research/cache-baseline-review-1b-final.md",
-    "research/cache-baseline-review-1b.md",
-    "research/cache-baseline-review-performance.md",
-    "research/effect-vitest-inventory-review.md",
-    "research/import-style-census.md",
-    "research/new-findings.json",
-    "research/performance-wave.md",
-    "research/review-wave-1.md",
-    "research/review-wave-1b.md",
-    "research/rule-delta.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -111,5 +94,13 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/effect-rules-diagnostics-lane",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "a0a4c872a0d153646cc13a776378faf3a0f233d7",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }

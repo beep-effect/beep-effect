@@ -2,11 +2,11 @@
 useDefault = true
 
 [[allowlists]]
-description = "Frozen retention calibration v1 uses these 104 public synthetic edge identity digests. Match only logicalKey, these exact values, these three immutable files and this detector; other fields and values remain scanned."
+description = "Frozen retention calibration v1 uses these 104 public synthetic edge identity digests. Match only logicalKey, these exact values, this immutable fixture and this detector; other fields and values remain scanned."
 targetRules = ["generic-api-key"]
 condition = "AND"
 regexTarget = "match"
-paths = ['''^(?:/repo/)?goals/epistemic-retention-policy-calibration/(?:ops/fixture-v1|history/results/(?:attempt-2-before-review|calibration-v1))\.json$''']
+paths = ['''^(?:/repo/)?packages/epistemic/server/test/fixtures/retention-calibration/fixture-v1\.json$''']
 regexes = [
   '''^logicalKey"\s*:\s*"00af633e301797e3c2d4f054e288a57348c32de264342c09088e6e5886eb1fa7"$''',
   '''^logicalKey"\s*:\s*"012a5d11c8c8edcdc3ef56003fa71dd314ca5960386f93dd243e188f2da55a28"$''',

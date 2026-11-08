@@ -55,13 +55,13 @@ export const EffectSchemaInventoryReferencePath = ".repos/effect";
  * ```ts
  * import { EffectSchemaInventoryPromptRoot } from "@beep/repo-cli/commands/Lint"
  *
- * console.log(EffectSchemaInventoryPromptRoot) // "goals/effect-schema-parity/ops/prompts"
+ * console.log(EffectSchemaInventoryPromptRoot) // "standards/effect-schema-inventory/prompts"
  * ```
  *
  * @category configuration
  * @since 0.0.0
  */
-export const EffectSchemaInventoryPromptRoot = "goals/effect-schema-parity/ops/prompts";
+export const EffectSchemaInventoryPromptRoot = "standards/effect-schema-inventory/prompts";
 
 /**
  * Full 40-character Effect commit sha read from the root catalog or release provenance (`inventoryPin`).
@@ -608,7 +608,7 @@ export class EffectSchemaInventoryCheckReport extends S.Opaque<
  *
  * const receipt = EffectSchemaInventoryPromptReceipt.make({
  *   module: "effect/SchemaIssue",
- *   target: "goals/effect-schema-parity/ops/prompts/effect-SchemaIssue.md",
+ *   target: "standards/effect-schema-inventory/prompts/effect-SchemaIssue.md",
  *   rows: 65
  * })
  * console.log(receipt.rows) // 65

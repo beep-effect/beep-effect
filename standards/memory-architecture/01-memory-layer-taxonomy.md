@@ -40,7 +40,7 @@ This document defines the four memory layers required by the project's agent mem
 - **Exact episodic records** -- append-only, immutable session/event records. OUTSIDE the theorem (exact records, no semantic retrieval); pruned only by explicit retention policy, never to manage interference.
 - **Prunable semantic/session projections** -- consolidated, clustered, compressed views derived from those records. INSIDE the theorem; every pruning, windowing, and compression lever below applies to these projections. They stay rebuildable only while their source records are retained; when retention policy removes source records, dependent projections must expire with them rather than persist as memory whose provenance no longer exists.
 
-"Old sessions drop off" means the projections drop off; the exact records that produced them are governed by retention policy alone. Evidence: the memory-bitemporal cluster of `explorations/academia-corpus-mining` ([`research/t3-memory-bitemporal.md`](../../explorations/academia-corpus-mining/research/t3-memory-bitemporal.md)) and the dispatch note in `goals/epistemic-bitemporal-edge-core/research/`.
+"Old sessions drop off" means the projections drop off; the exact records that produced them are governed by retention policy alone. Evidence: the memory-bitemporal cluster of `explorations/academia-corpus-mining` ([`research/t3-memory-bitemporal.md`](../../explorations/academia-corpus-mining/research/t3-memory-bitemporal.md)) and the dispatch note in [goals/epistemic-bitemporal-edge-core/research/](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/epistemic-bitemporal-edge-core/research/).
 
 **Theorem status:** INSIDE for semantic retrieval (the projection store), but manageable through:
 

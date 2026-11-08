@@ -57,5 +57,5 @@ from several families but owns none of their truth or disposition semantics.
 
 This follows the triage constraint that semantic stance must never double as
 anchor fidelity, source authority, or disposition
-([`epistemic-contradiction-triage/SPEC.md:62-78`](../../../goals/epistemic-contradiction-triage/SPEC.md#L62)).
+([`epistemic-contradiction-triage/SPEC.md:62-78`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/epistemic-contradiction-triage/SPEC.md#L62)).
 

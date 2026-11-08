@@ -108,5 +108,13 @@
     "Do not encode architecture meaning in Fallow config before doctrine.",
     "Do not promote lanes with unresolved false positives or doctrine gaps."
   ],
-  "mission": "Implement the next phase after Fallow Quality Enforcement: selected advisory lanes become narrow, policy-backed ratchets where new debt fails, while inherited baselines, false positives, and doctrine gaps remain explicit."
+  "mission": "Implement the next phase after Fallow Quality Enforcement: selected advisory lanes become narrow, policy-backed ratchets where new debt fails, while inherited baselines, false positives, and doctrine gaps remain explicit.",
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/fallow-advisory-ratchets",
+    "commit": "87fc463dbb64c1c0fa0450cfbcf803c02c85328d",
+    "contentHash": "3d76205ce7f0964507cd434a054ef878bb711c8f",
+    "archivedAt": "2026-11-07T21:40:58.412Z",
+    "sourceCommit": "19c9aa06b045d4fcca728d9704aa8cdb3a039745"
+  }
 }

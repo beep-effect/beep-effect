@@ -21,5 +21,5 @@ None yet.
 - Discovered from
   [`goals/harness-evidence-ledger`](../../../goals/harness-evidence-ledger/README.md).
 - Evidence:
-  [`history/p4-rerun/FINDINGS.md`](../../../goals/harness-evidence-ledger/history/p4-rerun/FINDINGS.md).
+  [`history/p4-rerun/FINDINGS.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/harness-evidence-ledger/history/p4-rerun/FINDINGS.md).
 - This packet's [`DECISIONS.md`](../DECISIONS.md).
