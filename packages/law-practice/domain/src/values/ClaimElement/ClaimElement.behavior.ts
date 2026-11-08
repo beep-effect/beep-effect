@@ -1199,15 +1199,69 @@ const termsIn =
     );
   };
 
+const normalizeReferenceGap = flow(
+  Str.replace(/\(\s*\d+[a-z]?\s*\)|\[\s*\d+[a-z]?\s*\]/giu, " "),
+  Str.replace(/\s+/gu, " "),
+  Str.toLowerCase,
+  Str.trim
+);
+const closedCompositionEnumeration = (
+  span: Span,
+  terms: ReadonlyArray<EncodedTerm>,
+  tokens: ReadonlyArray<Span>
+): boolean =>
+  terms.length === 3 &&
+  O.exists(
+    O.all({ subject: A.get(terms, 0), first: A.get(terms, 1), second: A.get(terms, 2) }),
+    ({ subject, first, second }) => {
+      const gap = (from: number, to: number): string =>
+        normalizeReferenceGap(Str.slice(from - span.start, to - span.start)(span.text));
+      return (
+        subject.anchor.startChar === span.start &&
+        (subject.determiner === "the" || subject.determiner === "said") &&
+        (first.determiner === "a" || first.determiner === "an") &&
+        (second.determiner === "a" || second.determiner === "an") &&
+        O.isSome(
+          Str.match(/^(?:further )?(?:includes|comprises)$/u)(gap(subject.anchor.endChar, first.anchor.startChar))
+        ) &&
+        gap(first.anchor.endChar, second.anchor.startChar) === "and" &&
+        O.isSome(Str.match(/^[.,;:!?]*$/u)(gap(second.anchor.endChar, span.start + span.text.length))) &&
+        !A.some(terms, (term) => O.isSome(Str.match(/\bof\b/iu)(term.anchor.quote))) &&
+        !A.some(
+          tokens,
+          (token, index) =>
+            isPredicateToken(tokens, index) && !O.isSome(Str.match(/^(?:includes|comprises)$/iu)(token.text))
+        )
+      );
+    }
+  );
+
 const elementOf =
   (claimText: string, kind: ClaimElementKind, grammar: LexicalGrammar = strictLexicalGrammar) =>
   (path: string, span: Span): EncodedElement => {
     const tokens = tokensIn(span);
+    const terms = termsIn(
+      claimText,
+      grammar
+    )(
+      kind === "preamble-subject"
+        ? O.match(
+            Str.match(
+              /\b(?:according to|in accordance with|as (?:set forth|recited|claimed) in|of)\s+(?:the\s+|any(?:\s+one)?\s+of\s+)?claims?\b/iu
+            )(span.text),
+            {
+              onNone: () => span,
+              onSome: (match) => sliceSpan(span, 0, O.getOrElse(O.fromUndefinedOr(match.index), constant(0))),
+            }
+          )
+        : span
+    );
     return {
       path,
       anchor: anchorOf(span),
       kind:
         kind !== "preamble-subject" &&
+        !(grammar === inspectionLexicalGrammar && closedCompositionEnumeration(span, terms, tokens)) &&
         (grammar.functionalAt(span) ||
           A.some(tokens, (_, index) => isPredicateToken(tokens, index)) ||
           O.isSome(
@@ -1217,22 +1271,7 @@ const elementOf =
           ))
           ? "functional-relation"
           : kind,
-      terms: termsIn(
-        claimText,
-        grammar
-      )(
-        kind === "preamble-subject"
-          ? O.match(
-              Str.match(
-                /\b(?:according to|in accordance with|as (?:set forth|recited|claimed) in|of)\s+(?:the\s+|any(?:\s+one)?\s+of\s+)?claims?\b/iu
-              )(span.text),
-              {
-                onNone: () => span,
-                onSome: (match) => sliceSpan(span, 0, O.getOrElse(O.fromUndefinedOr(match.index), constant(0))),
-              }
-            )
-          : span
-      ),
+      terms,
     };
   };
 
@@ -1396,10 +1435,7 @@ const ownerBridge = (element: EncodedElement, left: EncodedTerm, right: EncodedT
       left.anchor.endChar - element.anchor.startChar,
       right.anchor.startChar - element.anchor.startChar
     )(element.anchor.quote),
-    Str.replace(/\(\s*\d+[a-z]?\s*\)|\[\s*\d+[a-z]?\s*\]/giu, " "),
-    Str.replace(/\s+/gu, " "),
-    Str.toLowerCase,
-    Str.trim
+    normalizeReferenceGap
   );
 const isSpatialPartHead = (head: string): boolean =>
   O.isSome(Str.match(/\b(?:portions?|surfaces?|edges?|ends?|regions?|areas?|sections?|sides?|bases?)$/u)(head));
