@@ -27,13 +27,17 @@
     "pullRequests": [
       {
         "number": 2924,
+        "role": "supporting"
+      },
+      {
+        "number": 2940,
         "role": "final"
       }
     ],
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/goals_catalog-writer-incremental-7514b7622658/verdict.json",
+        "ref": ".beep/yeet/runs/goals_catalog-writer-incremental-refinal-a1faf730481b/verdict.json",
         "gating": true
       }
     ]
@@ -103,6 +107,6 @@
   ],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2924
+    "finalPullRequest": 2940
   }
 }

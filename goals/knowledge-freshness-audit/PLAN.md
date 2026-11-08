@@ -327,6 +327,14 @@ Reverse: Revert the example and its regression, regenerate packet projections, a
 
 Reverse: Restore the prior paragraph only if both service renderers add the documented wait
 
+### Invalidate preparation before a bootstrap reinstall, 2026-11-08
+
+A supplemental T43 finding exposed an install/prepare stamp ordering gap. In a synthetic cache with a current prepare stamp and a missing install stamp, the old source can finish reinstalling and publish the install stamp, then stop before invalidating preparation. The next run can skip both steps. Invalidate the prepare stamp before starting reinstall so interruption or failure cannot preserve that stale success. The existing hermetic bootstrap suite now has a cache-reinstall regression with a failing late-cleanup stub: the original source fails it and the repaired source passes all 30 tests. Package lint and check pass; bash syntax passes. ShellCheck is unavailable locally (command not found), so no ShellCheck success is claimed. This does not prove actual VM frequency, installed compiler correctness or campaign completion. PM and ADHD remain separate, source records stay private, and no cloud work or spending is admitted.
+
+Lane `codex/audit-bootstrap-stamp`
+
+Reverse: Revert the stamp ordering and its regression together; preserve the private original and counterexample receipts.
+
 ### Preserve published history after generated-artifact refreshes, 2026-11-08
 
 Parent review found an unqualified rebase instruction in the generated-artifact refresh policy. The workflow applies to in-flight feature PRs, while Yeet prohibits rebasing published branches. Replace that instruction with merging accepted origin/main after the dedicated refresh PR lands. Preserve the dedicated-refresh rule, scoped catalog exception, ratchet behavior and historical evidence. Ten open PR file lists and 131 existing registered checkouts showed no competing target edit before this change. This is a documentation repair; no artifact regeneration, baseline change, git-history rewrite or service action is performed. P4 remains partial, PM and ADHD stay separate, and no spending is admitted.
