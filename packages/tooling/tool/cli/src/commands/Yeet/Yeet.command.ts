@@ -793,14 +793,14 @@ const writeSynthesizedWorkerBody = Effect.fnUntraced(function* (message: string)
 });
 
 // An explicit --body-file wins; otherwise the redirected publish synthesizes one.
-const workerPublishBodyFile = (bodyFile: string, message: string | undefined) =>
-  Str.isNonEmpty(Str.trim(bodyFile)) ? Effect.succeed(bodyFile) : writeSynthesizedWorkerBody(message ?? "");
+const workerPublishBodyFile = (bodyFile: string, message: string) =>
+  Str.isNonEmpty(Str.trim(bodyFile)) ? Effect.succeed(bodyFile) : writeSynthesizedWorkerBody(message);
 
 // `yeet publish` on a worker compute profile takes the `yeet open` posture
 // (goal compute-profile-gate-routing P1): the cheap gates it would run are
 // hosted-only there, so it pushes the committed HEAD and lets hosted CI prove
 // them. `--force-local` and the commit-reusing flags keep the local publish.
-const runYeetPublish = Effect.fnUntraced(function* (options: SharedOptionsInput & { readonly message?: string }) {
+const runYeetPublish = Effect.fnUntraced(function* (options: SharedOptionsInput & { readonly message: string }) {
   const shared = SharedOptions.make(options);
   const profile = yield* readYeetComputeProfile("yeet publish");
   const posture = yeetPublishPostureFor(
