@@ -286,6 +286,12 @@ Lane `feat/claim-check-dotted-labels` · PR #2928
 
 Reverse: Reject the candidate and retain the measured baseline; preserve this census, every result, all labels and mandatory passing identities.
 
+### Measure components first and bound the fallback with aligned part-of-speech, 2026-11-08
+
+Feasibility adjudication 002 asked for one component census and then paired comparison before any architecture choice. The census over all 538 exposed legacy claims reconciles with the unchanged scorer and shows the enhanced source plan reaches 61 of 538 selected claims and 0 of 60 independent claims; the rest use the word-scanner fallback, which ignored the aligned part-of-speech evidence already computed for them. Removing the most frequent planner refusal gained no strict claim, so loosening single guards is not the route and the guard stays. The adopted repair uses aligned facts only inside the fallback: it cuts clear nominal overruns, keeps premodifiers with their head, drops non-nominal bare mentions and opens elements at gated parallel coordinates. Development replay moves 46 to 47 of 538 with all 46 identities retained, matched elements 752 to 867 and matched edges 2141 to 2330. Three parity tests now assert that a declined plan keeps the record outcome and partial coverage instead of byte equality with the evidence-free tree, because fallback terms now differ by design. No label, scorer, fixture, denominator or gate changed, the replay is not a frozen gate measurement, and every usefulness gate still fails. Evidence: research/component-census-001.json.
+
+Reverse: Revert the fallback commit and remove sourcePartOfSpeechGrammar; the census receipt stays as retained evidence.
+
 ### Compare independently source-certified fallback term refinement, 2026-11-08
 
 Continue the operator-authorized performance repair with one focused source-certified fallback-term candidate, based on the retained 48/538 implementation. Preserve the earlier census/composition decision and every label, scorer, source selection, result and mandatory passing identity. The real five-family diagnostic certified one local three-head/governor registry while all five report payloads remained byte-identical; this establishes a narrow implementation lead, not performance or complete attachment semantics.

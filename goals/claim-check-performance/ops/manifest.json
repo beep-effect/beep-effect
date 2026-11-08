@@ -46,6 +46,8 @@
     "research/census-components.py",
     "research/citation-dump-ci-preservation-001.json",
     "research/clause-dependency-metadata-admission-002.json",
+    "research/component-census-001.json",
+    "research/component-census-001.script.ts.txt",
     "research/composition-candidate-measurement-001.json",
     "research/composition-candidate-measurement-002.json",
     "research/coverage-runtime-replay-001.json",

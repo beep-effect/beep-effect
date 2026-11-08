@@ -1,6 +1,6 @@
 # Claim Checker Performance Plan
 
-Status: active. The measured composed nominal/predicate/policy/ownership candidate retains 43/538 exact structures, parses 537/538 and abstains on 453/538. All original 37 and every prior 41 pass remain; two owner-context gains are in one family. Accepted main metadata is admitted prospectively with exact old bytes archived; all 1,213 original artifacts verify. Full 24-family/567-claim source frame remains fixed, with 572 context nodes; independent source-context assessments are underway, new structural references/truth remain unaccepted. Broader clause-role implementation is separate and unmeasured. Every usefulness and final delivery gate remains required.
+Status: active. Last measured with a frozen runtime closure: 46/538 strict at b8ef2bb2cff (not 43: the 43 figure was the earlier owner-integrated replay), 537 parsed, 538 abstained, all mandatory identities retained. Current development replay at 348d3d6e181, not a gate measurement: 47/538 with all 46 retained, 537 parsed, 538 abstained. The component census (research/component-census-001.json) shows only 61/538 selected claims and 0/60 independent claims receive an enhanced source plan; the rest use the word-scanner fallback. All original 37 and accepted main evidence remain unchanged. Every usefulness and final delivery gate still fails and remains required; the frozen closure needs a bun.lock metadata admission before the next gate measurement.
 
 ## P0 — Baseline and evaluation integrity
 
@@ -46,6 +46,7 @@ native cleanup. Mark completed-retained only after P0-P4 truly pass.
 2. Diagnostics: node kind/boundary differences in281 claims; term differences275; dependency edges210; antecedent edges436. These overlap.
 3. Completed: record-based numerical evaluator and ten anti-silence/unknown/retention tests. Independent provenance remains separate.
 4. Reference grammar repair complete; next: broad hierarchy/term rules and independently qualified fresh source cohorts.
+5. Component census complete. Compare each repair with a paired 538-claim replay and reject any retained-identity loss. Next layers by measured weight: nested enumeration containers and root-claim segmentation (307/432 failed dependents reference a missing gold ancestor node), then source-plan coverage for independent claims, which the abstention gate also requires.
 
 ## Checkpoints
 
