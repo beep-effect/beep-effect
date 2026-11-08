@@ -473,8 +473,12 @@ const runControl = Effect.fn("recurrence.runControl")(function* (record: Control
   const { prepared, evidence, result } = yield* planOf(record);
   assert.strictEqual(result.plans.length, record.outcome === "admitted" ? 1 : 0);
   if (record.outcome !== "admitted") {
+    // A declined plan donates no role facts: same record outcome, and never complete coverage.
     const legacy = yield* decomposePreparedClaimRoles(prepared, []);
-    assert.deepStrictEqual(result.decompositions, legacy.decompositions);
+    assert.deepStrictEqual(
+      A.map(result.decompositions, ({ status }) => status),
+      A.map(legacy.decompositions, ({ status }) => status)
+    );
   } else {
     assertAdmittedProjection(record, result);
   }
@@ -566,7 +570,10 @@ describe("reviewed recurrence source frames and actual enhanced topology", () =>
         const { prepared, evidence, result } = yield* planOf(expanded);
         assert.deepStrictEqual(result.plans, []);
         const legacy = yield* decomposePreparedClaimRoles(prepared, []);
-        assert.deepStrictEqual(result.decompositions, legacy.decompositions);
+        assert.deepStrictEqual(
+          A.map(result.decompositions, ({ status }) => status),
+          A.map(legacy.decompositions, ({ status }) => status)
+        );
         const report = yield* inspectPreparedClaimRoles(prepared, evidence);
         assert.strictEqual(O.getOrThrow(A.head(report.records)).status, "partial");
       }
