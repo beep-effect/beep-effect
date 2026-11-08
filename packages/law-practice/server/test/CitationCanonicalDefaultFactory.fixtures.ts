@@ -60,7 +60,10 @@ const Integer = S.Struct({ integer: S.BigIntFromString });
 const EditionName = S.Struct({ fields: S.Struct({ short_name: S.String }) }).pipe(S.fromJsonString);
 const common = { pinCite: null, parenthetical: null, year: null, month: null, day: null };
 
-const installFactory = Effect.fn("CanonicalDefaultFactoryTest.install")(function* () {
+/** Install source-derived semantic factory inputs and existing exact hash services.
+ * @internal @category testing @since 0.0.0
+ */
+export const installCitationCanonicalFactory = Effect.fn("CanonicalDefaultFactoryTest.install")(function* () {
   const { bundle } = yield* loadCitationFrozenEditionFixtures();
   const owner = yield* makeCitationFrozenEditions(bundle);
   const fs = yield* FileSystem.FileSystem;
@@ -152,7 +155,7 @@ const installFactory = Effect.fn("CanonicalDefaultFactoryTest.install")(function
       })
     );
   });
-  return { create, hash };
+  return { create, hash, owner };
 });
 const integerOperands = Effect.fn("CanonicalDefaultFactoryTest.integers")(function* (criterion: typeof Criterion.Type) {
   return yield* Effect.forEach(
@@ -170,7 +173,7 @@ const integerOperands = Effect.fn("CanonicalDefaultFactoryTest.integers")(functi
  */
 export const replayCitationCanonicalDefaultFactory = Effect.fn("CanonicalDefaultFactoryTest.replay")(function* () {
   const { assertions } = yield* readCitationCanonicalCaptures();
-  const factory = yield* installFactory();
+  const factory = yield* installCitationCanonicalFactory();
   const read = Effect.fn("CanonicalDefaultFactoryTest.read")(function* (id: string) {
     const event = yield* Effect.fromOption(HashMap.get(assertions, id));
     const criterion = yield* S.decodeEffect(Criterion)(event.payload);
@@ -222,7 +225,7 @@ export const replayCitationCanonicalDefaultFactory = Effect.fn("CanonicalDefault
  */
 export const replayCitationCanonicalFactoryReporters = Effect.fn("CanonicalDefaultFactoryTest.reporters")(function* () {
   const { assertions } = yield* readCitationCanonicalCaptures();
-  const factory = yield* installFactory();
+  const factory = yield* installCitationCanonicalFactory();
   const lookupText = yield* readCitationOracleFixture(
     "factory-edition-lookup",
     "1928ebe541398558a262096d59ccc14ada65309e0d39fb34ced939bec36d2c91"

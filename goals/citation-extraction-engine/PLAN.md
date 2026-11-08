@@ -1825,6 +1825,12 @@ Both native configurations pass the full original standalone-clean/public-annota
 
 Reverse: Reopen exact bindings on contrary source or runtime evidence; preserve generic protocols, fidelity, safety and remaining exhaustive accounting.
 
+### Qualify original Resource comparisons through the existing owned registry, 2026-11-08
+
+The two original known-page Resource comparison assertions now execute the existing CitationResourceObjects registry with detached semantic references, actual equality and exact hashes. The already counted fourth persistent Resource assertion moves to actual owned-handle proof without double counting. Three focused tests, package lint/types and Fallow new-only pass. Total 155 complete canonical events; general retained host/model/token, identity, safety, fidelity and exhaustive reconciliation remain open.
+
+Reverse: Reopen these bindings if live registry, source semantic reconstruction, exact hash behavior or authenticated edition ownership changes.
+
 ### Qualify original style-tag predicates and integrate main replay repairs, 2026-11-08
 
 Replay the original four style prefix truth predicates and two counterexample equalities through the existing captured style balancer and native Unicode budget. Recompute original caller coordinates by literal search. Integrate main #2915 unit/integration repairs and test-policy change; refresh canonical fixture proof only after affected entry/range tests pass. Pure utility proof does not imply XML or worker-runtime qualification.

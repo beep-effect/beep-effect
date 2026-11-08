@@ -1845,13 +1845,9 @@
         {
           "id": "tests.test_ModelsTest.ModelsTest.test_persistent_hash::tests/test_ModelsTest.py:194:12:caseDeclaration::3",
           "observationSha256": "72e68c204faf09f2a634cbca7dc13178e323c9d8eec4190f0575e675acbb1175"
-        },
-        {
-          "id": "tests.test_ModelsTest.ModelsTest.test_persistent_hash::tests/test_ModelsTest.py:194:12:caseDeclaration::4",
-          "observationSha256": "73cd8bdd15467ffac571b4fb958bca4fd0cf75c242ddfa2119fe7a61788cf1e6"
         }
       ],
-      "rationale": "Ten original zero-argument model equality/hash and persistent-integer assertions recomputed from pinned semantic defaults, independently authenticated unique edition choices and schema-owned fresh models. Actual groups/metadata/publications are checked before existing exact hash production. Fabricated token coordinates, general factory overrides and retained identity/resource protocols stay separate.",
+      "rationale": "Ten original zero-argument model equality/hash and persistent-integer assertions recomputed from pinned semantic defaults, independently authenticated unique edition choices and schema-owned fresh models. Actual groups/metadata/publications are checked before existing exact hash production. Fabricated token coordinates, general factory overrides and retained identity/resource protocols stay separate. The fourth persistent Resource assertion is now bound separately to the real owned-resource registry replay.",
       "proof": {
         "command": "bunx --bun vitest run test/CitationCanonicalDefaultFactory.test.ts --reporter=json --outputFile=../../../.beep/canonical-default-factory-results.json",
         "result": "passed",
@@ -1869,7 +1865,7 @@
         "references": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalDefaultFactory.fixtures.ts",
-            "sha256": "117d29f9cd5d8d32a2718f0d8691a49fc50ba942ee11ac849d661f0f97eb96c4"
+            "sha256": "3833a52fe27b5ceac767a29d4eb4495cd2fd3e971477ca741d229d2dd616f7a9"
           },
           {
             "path": "packages/law-practice/server/test/CitationCanonicalCaptures.fixtures.ts",
@@ -1948,7 +1944,7 @@
         "references": [
           {
             "path": "packages/law-practice/server/test/CitationCanonicalDefaultFactory.fixtures.ts",
-            "sha256": "117d29f9cd5d8d32a2718f0d8691a49fc50ba942ee11ac849d661f0f97eb96c4"
+            "sha256": "3833a52fe27b5ceac767a29d4eb4495cd2fd3e971477ca741d229d2dd616f7a9"
           },
           {
             "path": "packages/law-practice/server/test/CitationCanonicalCaptures.fixtures.ts",
@@ -1993,6 +1989,81 @@
           {
             "path": "packages/law-practice/use-cases/test/fixtures/eyecite/factory-edition-lookup.json",
             "sha256": "1928ebe541398558a262096d59ccc14ada65309e0d39fb34ced939bec36d2c91"
+          }
+        ]
+      }
+    },
+    {
+      "workflowState": "complete",
+      "cases": [
+        {
+          "id": "tests.test_ModelsTest.ModelsTest.test_persistent_hash::tests/test_ModelsTest.py:194:12:caseDeclaration::4",
+          "observationSha256": "73cd8bdd15467ffac571b4fb958bca4fd0cf75c242ddfa2119fe7a61788cf1e6"
+        },
+        {
+          "id": "tests.test_ModelsTest.ModelsTest.test_resource_comparison::tests/test_ModelsTest.py:36:8:caseDeclaration::1",
+          "observationSha256": "8d5ff1b61d4440a6f07d3870a16a14292db32c91532643cfd1af7749fab0018f"
+        },
+        {
+          "id": "tests.test_ModelsTest.ModelsTest.test_resource_comparison::tests/test_ModelsTest.py:37:8:caseDeclaration::1",
+          "observationSha256": "85f21a46bc9b02ac22caaa58c39326f772b60bc665862ed4b9cc00a5ffaffe16"
+        }
+      ],
+      "rationale": "Two original canonical Resource equality/hash assertions and the previously counted fourth persistent-hash assertion recomputed through the existing owned live resource registry, independent semantic factory arguments and authenticated frozen editions. Actual semantic snapshots, separate handles, current hashes, equality and retained references are checked; no expected operands configure production. General host/token/model and identity protocols remain open.",
+      "proof": {
+        "command": "bunx --bun vitest run test/CitationCanonicalDefaultFactory.test.ts test/CitationCanonicalResourceComparison.test.ts --reporter=json --outputFile=../../../.beep/canonical-resource-results.json",
+        "result": "passed",
+        "scope": "complete-case",
+        "operation": "resolve",
+        "evidencePath": "goals/citation-extraction-engine/history/evidence/2026-11-08-original-owned-resource-comparison.md",
+        "evidenceSha256": "28e92f3532e0d06e8feff9da5e77496e608d0a7186a9707aa854a5a40aef712a",
+        "targetTests": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalResourceComparison.test.ts",
+            "name": "recomputes original Resource equality, exact hash and persistent hash assertions",
+            "sha256": "687d2e164cbd1a13f3b8e51f48122572ab95b10c71b103f7c2dc6a466fca31a8"
+          }
+        ],
+        "references": [
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalResourceComparison.fixtures.ts",
+            "sha256": "7d45c05c56096f68525a77b5b59d0115d34f05ba26a790fc9036513f377a1302"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalDefaultFactory.fixtures.ts",
+            "sha256": "3833a52fe27b5ceac767a29d4eb4495cd2fd3e971477ca741d229d2dd616f7a9"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalCaptures.fixtures.ts",
+            "sha256": "1ac4ab7ebd6c3751b5706d93b562c6625d6c5d3062ddbe4284a6ef274a89c4a8"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationCanonicalModel.fixtures.ts",
+            "sha256": "b47778caf58e758edf2c3c9f65464d82fb1ca9ce58dff25a2e90117eb8756177"
+          },
+          {
+            "path": "packages/law-practice/server/test/CitationFrozenEditions.fixtures.ts",
+            "sha256": "d5f7903a33c9f5715592de35f66423b6cd87dcae9177d00d7e76f25eb2b74fea"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/ResourceObjects.ts",
+            "sha256": "45a9ca5a3c05e9ca1d8d3a239ba0578c2dd02e106752dac2fa60267054d3e725"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/CaseResourceHash.ts",
+            "sha256": "57e103a8a19e141ec6bba44d43534fbfd9c2aaf6df0f38acc39591f05f1a1b9a"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/PublicationResourceHash.ts",
+            "sha256": "3726816c0d08f05cb707fa2a8887001ef499fb03e75630be41dc7b7bed45fd11"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/FrozenEditions.ts",
+            "sha256": "5a75fd7614cb807528b3b8c097cb9be8b010f0635a5c4c7430f163bb7c8a152f"
+          },
+          {
+            "path": "packages/law-practice/server/src/internal/Citation/RuntimeHashEncoding.ts",
+            "sha256": "71d866bfbf2a7a849eb0a3cba23ae6c18ec1e3657ae01ad3a7078cec2a2aa6c7"
           }
         ]
       }
