@@ -348,7 +348,10 @@ jobs:
     name: Test Integration
     if: ${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}
     runs-on: beep-ec2-heavy
-    timeout-minutes: 90
+    # law-practice-server's integration suite measured 168 min of file time
+    # on the 8-vCPU pool at two vitest workers. Main run 42444900312 finished
+    # 43 of 48 files in 90 min; preserve main's budget to expose real failures.
+    timeout-minutes: 120
     environment: ${{ github.event_name == 'push' && inputs.admitted && 'turbo-cache-write' || null }}
     permissions:
       contents: read

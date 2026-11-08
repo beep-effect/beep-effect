@@ -19,7 +19,7 @@ const heavyLaneContracts = [
     job: "test-integration",
     id: "test-integration",
     name: "Test Integration",
-    timeout: 90,
+    timeout: 120,
     docgen: "3",
     typos: "false",
     guard: heavyGuard,
