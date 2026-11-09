@@ -42,7 +42,7 @@ and land the launch-keyed tests.
 
 ## Latest Evidence
 
-Not started. Governance identity evidence: `explorations/effect-mcp-2026-07-28/research/22-r3-governance-identity.md`;
+Not started. Governance identity evidence: [explorations/effect-mcp-2026-07-28/research/22-r3-governance-identity.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/effect-mcp-2026-07-28/research/22-r3-governance-identity.md);
 HTTP security: `24-r5-http-security-observability.md`.
 
 ## Notes

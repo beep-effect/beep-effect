@@ -73,7 +73,7 @@ fence shared with `yeet sweep --retire`), `worktree restore-material`,
 `worktree reap`, `quality residue-reap` and `tmpfs-reap`. `yeet` owns commit,
 push, PR, review threads and merge; `main` is PR-only.
 
-`explorations/fleet-coordination/research/T1-prior-art.md` already classified
+[explorations/fleet-coordination/research/T1-prior-art.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/fleet-coordination/research/T1-prior-art.md) already classified
 Worktrunk (with uzi, gwq, amux, agentree) as "worktree lifecycle managers:
 pure ergonomics, not coordination". That classification stands.
 

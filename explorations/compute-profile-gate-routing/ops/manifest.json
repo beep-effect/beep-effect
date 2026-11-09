@@ -16,6 +16,14 @@
       "supersededBy": null
     },
     "created": "2026-11-07",
-    "updated": "2026-11-07"
+    "updated": "2026-11-07",
+    "archive": {
+      "repo": "beep-effect/beep-effect-goals-archive",
+      "path": "explorations/compute-profile-gate-routing",
+      "commit": "28c4a59943cf5392c4a85d3b4fa8815373b36aaf",
+      "contentHash": "47782ab8649a3c961078a02d7c363a8bfdedb10a",
+      "archivedAt": "2026-11-09T06:36:23.435Z",
+      "sourceCommit": "deb7d0c5efd56b6b073ab43be6ec5a6f6074fdd6"
+    }
   }
 }

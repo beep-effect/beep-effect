@@ -22,6 +22,14 @@
       "supersededBy": null
     },
     "created": "2026-08-11",
-    "updated": "2026-08-13"
+    "updated": "2026-08-13",
+    "archive": {
+      "repo": "beep-effect/beep-effect-goals-archive",
+      "path": "explorations/document-structure-ontologies",
+      "commit": "28c4a59943cf5392c4a85d3b4fa8815373b36aaf",
+      "contentHash": "fa14f3bd8bd83d0c6232ba984df5fa7701ddbf59",
+      "archivedAt": "2026-11-09T06:36:23.435Z",
+      "sourceCommit": "deb7d0c5efd56b6b073ab43be6ec5a6f6074fdd6"
+    }
   }
 }

@@ -1,6 +1,6 @@
 # tracked-changes-ingest-wedge — inherited source corpus
 
-Primary ledger: `explorations/harvey-lab-firm-knowledge/research/SOURCES.md`.
+Primary ledger: [explorations/harvey-lab-firm-knowledge/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/harvey-lab-firm-knowledge/research/SOURCES.md).
 This file reproduces the graduation-time corpus for implementation convenience;
 the exploration ledger remains the primary copy.
 
@@ -11,7 +11,7 @@ the exploration ledger remains the primary copy.
   `~/YeeBois/research/harvey-labs` mined by an opus-5 workflow (map → mine →
   verify), reports under `research/`.
 - **Provenance:** scraped post at
-  [`../assets/x-post-itsjuliopereyra-2085772997944803682.md`](../../../explorations/harvey-lab-firm-knowledge/assets/x-post-itsjuliopereyra-2085772997944803682.md);
+  [`../assets/x-post-itsjuliopereyra-2085772997944803682.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/harvey-lab-firm-knowledge/assets/x-post-itsjuliopereyra-2085772997944803682.md);
   workflow map/mine/verify reports land in this directory.
 
 ## 1. Mined source corpus
@@ -41,7 +41,7 @@ in the repo, so that pattern is reconstructed from docs + rendered output.
 - Julio Pereyra, "We are open-sourcing our next LAB expansion…" X post,
   2026-08-07 — https://x.com/ItsJulioPereyra/status/2085772997944803682
   (scraped copy:
-  [`../assets/x-post-itsjuliopereyra-2085772997944803682.md`](../../../explorations/harvey-lab-firm-knowledge/assets/x-post-itsjuliopereyra-2085772997944803682.md))
+  [`../assets/x-post-itsjuliopereyra-2085772997944803682.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/harvey-lab-firm-knowledge/assets/x-post-itsjuliopereyra-2085772997944803682.md))
 - Harvey, "Introducing Harvey's Legal Agent Benchmark" —
   https://www.harvey.ai/blog/introducing-harveys-legal-agent-benchmark
   (linked from repo README; not yet scraped)
@@ -67,8 +67,8 @@ with rg/ls at mining time):
 
 ## 5. Cross-links & provenance
 
-- This packet: [`../RESEARCH.md`](../../../explorations/harvey-lab-firm-knowledge/RESEARCH.md) (synthesis),
-  [`../CAPTURE.md`](../../../explorations/harvey-lab-firm-knowledge/CAPTURE.md) (raw recon),
+- This packet: [`../RESEARCH.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/harvey-lab-firm-knowledge/RESEARCH.md) (synthesis),
+  [`../CAPTURE.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/harvey-lab-firm-knowledge/CAPTURE.md) (raw recon),
   [`../DECISIONS.md`](../../../explorations/harvey-lab-firm-knowledge/DECISIONS.md) (standing-test-asset;
   eval-as-reference).
 - Mining-run reports (2026-08-08, 12 opus-5 agents): maps `map-harness.md`,

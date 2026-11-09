@@ -418,7 +418,7 @@ host-side. Every hook on a permission event (`preToolUse`, `beforeShellExecution
 is malformed JSON and **blocks the tool**. The adapter prints `{"permission":"allow"}`, the lowest
 priority, so a deny from another hook (yeet-inbox P0) still wins; exit 2 denies.
 
-Artifacts: `explorations/cursor-agent-pool/ops/hooks-smoke/`.
+Artifacts: [explorations/cursor-agent-pool/ops/hooks-smoke/](https://github.com/beep-effect/beep-effect-goals-archive/tree/main/explorations/cursor-agent-pool/ops/hooks-smoke).
 
 ## Sandbox notes
 

@@ -1,9 +1,9 @@
 # Hold Ledger — Sources & Provenance
 
 - **Source exploration:** `explorations/expiring-repo-facts` — primary ledger:
-  [`explorations/expiring-repo-facts/research/SOURCES.md`](../../../explorations/expiring-repo-facts/research/SOURCES.md).
+  [explorations/expiring-repo-facts/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/expiring-repo-facts/research/SOURCES.md).
   The full cited report is
-  [`research/prior-art-report-2026-10-22.md`](../../../explorations/expiring-repo-facts/research/prior-art-report-2026-10-22.md).
+  [`research/prior-art-report-2026-10-22.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/expiring-repo-facts/research/prior-art-report-2026-10-22.md).
 
 ## 1. Mined source corpus
 
@@ -35,5 +35,5 @@ new external sources at graduation.
 - Exploration: [`explorations/expiring-repo-facts`](../../../explorations/expiring-repo-facts/README.md)
   ([`BRIEF.md`](../../../explorations/expiring-repo-facts/BRIEF.md),
   [`DECISIONS.md`](../../../explorations/expiring-repo-facts/DECISIONS.md),
-  [`MAP.md`](../../../explorations/expiring-repo-facts/MAP.md)).
+  [`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/expiring-repo-facts/MAP.md)).
 - Sibling goal: [`goals/wake-service`](../../wake-service/README.md).

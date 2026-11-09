@@ -71,7 +71,9 @@ function recordsEqual(a: { readonly [x: PropertyKey]: unknown }, b: { readonly [
 // a SINGLE pass. Both fixed; ids removed from this ledger.
 // Round 3 preserves tagged empty scalar separators (WZ62) and alias-key
 // separators (X38W). WZ62 now converges too; both have regressions below.
-const KNOWN_NON_IDEMPOTENT: ReadonlyArray<string> = ["M2N8/00", "M2N8/01", "T26H", "T4YY"];
+// M2N8/00 and M2N8/01 converged once a compact explicit key stopped losing its
+// mapping's start marker and a `? k: v` key stopped absorbing its own `:` value.
+const KNOWN_NON_IDEMPOTENT: ReadonlyArray<string> = ["T26H", "T4YY"];
 
 // F6MC and R4YG now preserve meaning; keep them outside the defect ratchet.
 const KNOWN_MEANING_CHANGES: ReadonlyArray<string> = ["T26H", "T4YY", "ZWK4"];

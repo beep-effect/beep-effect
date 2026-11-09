@@ -38,7 +38,7 @@ Provenance: graduated 2026-08-26 from
 3. Governing architecture, lab-app, schema-first, and Effect-first standards.
 4. The source exploration's
    [`BRIEF.md`](../../explorations/lejeune-bolt-agentic-demo/BRIEF.md) and
-   [`MAP.md`](../../explorations/lejeune-bolt-agentic-demo/MAP.md).
+   [`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lejeune-bolt-agentic-demo/MAP.md).
 5. This `SPEC.md`.
 6. `PLAN.md`.
 7. `GOAL.md`.
@@ -101,11 +101,11 @@ and exact source evidence. The fixed checks are:
 
 1. Matched-assembly requirements for the applicable structural-bolt cases, grounded in the
    exploration's
-   [assembly research](../../explorations/lejeune-bolt-agentic-demo/research/03-fastener-distribution-process.md#21-why-a-bolt-assembly-needs-matched-nuts-washers-dtis).
+   [assembly research](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lejeune-bolt-agentic-demo/research/03-fastener-distribution-process.md#21-why-a-bolt-assembly-needs-matched-nuts-washers-dtis).
 2. ASTM F959 DTI strength matching to the bolt strength, grounded in the same
-   [DTI section](../../explorations/lejeune-bolt-agentic-demo/research/03-fastener-distribution-process.md#21-why-a-bolt-assembly-needs-matched-nuts-washers-dtis).
+   [DTI section](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lejeune-bolt-agentic-demo/research/03-fastener-distribution-process.md#21-why-a-bolt-assembly-needs-matched-nuts-washers-dtis).
 3. Refusal to silently hot-dip galvanize A490, grounded in the
-   [coating-compatibility research](../../explorations/lejeune-bolt-agentic-demo/research/03-fastener-distribution-process.md#27-galvanizing--coating-compatibility).
+   [coating-compatibility research](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lejeune-bolt-agentic-demo/research/03-fastener-distribution-process.md#27-galvanizing--coating-compatibility).
 
 The checks are advisory citations, not engineering approval. A substitution or ambiguous case
 must stop for an RFI or qualified human decision.

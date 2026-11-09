@@ -1,7 +1,7 @@
 # Doc Hub and Spokes Inversion — Sources & Provenance
 
 - **Source exploration:** `explorations/doc-hub-spokes` — primary ledger:
-  [`explorations/doc-hub-spokes/research/SOURCES.md`](../../../explorations/doc-hub-spokes/research/SOURCES.md).
+  [explorations/doc-hub-spokes/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/doc-hub-spokes/research/SOURCES.md).
 
 ## 1. Mined source corpus
 
@@ -15,7 +15,7 @@ None new. `effect` (MIT) is already a dependency.
 
 | Source | Why it matters here |
 |--------|---------------------|
-| Lens theory (Boomerang; quotient and symmetric lenses), cited in `explorations/doc-hub-spokes/research/notes/positioned_codecs.md` | the formal shape of the fold with a loss ledger; the lens laws are the property tests for the `Doc.Document -> Root` projection |
+| Lens theory (Boomerang; quotient and symmetric lenses), cited in [explorations/doc-hub-spokes/research/notes/positioned_codecs.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/doc-hub-spokes/research/notes/positioned_codecs.md) | the formal shape of the fold with a loss ledger; the lens laws are the property tests for the `Doc.Document -> Root` projection |
 | Pandoc as a hub-and-spokes precedent (same note) | the pattern this goal completes; losses typed here, not logged |
 | FHIR validation locations (model path over XPath), `notes/document_rule_oracles.md` | the hub's source-map contract must serve path-addressed findings (D-08) |
 

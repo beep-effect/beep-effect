@@ -3,14 +3,14 @@
   "initiative": {
     "id": "attributed-multi-claim-span",
     "title": "Attributed Multi-Claim Span",
-    "status": "paused",
+    "status": "superseded",
     "created": "2026-08-13",
-    "updated": "2026-09-12",
+    "updated": "2026-11-09",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/attributed-multi-claim-span",
-  "lifecycle": "paused",
-  "statusNote": "2026-09-12: paused at the roadmap re-eval (graduated 2026-08-13, zero execution, flagged stale-active by goals doctor). Resumes when goals/citation-verified-span-substrate closes and a Lane 2 slot pulls the LangExtract-to-ClaimGate proof; see the docs/ROADMAP.md parked table.",
+  "lifecycle": "superseded",
+  "statusNote": "2026-09-12: paused at the roadmap re-eval (graduated 2026-08-13, zero execution). 2026-11-09: superseded by goals/text-knowledge-stack-rebuild; it does not resume. Its attributed-span aggregate and LangExtract-to-ClaimGate proof are delivered by that packet's P3 and P4; see supersededNote.",
   "mission": "Ship attributed, supersedable multi-claim annotations over TextAnchor/EvidenceSpan and prove the LangExtract-to-ClaimGate loop.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -58,10 +58,26 @@
       "name": "Seam and competency-question audit",
       "status": "pending"
     },
-    { "id": "P1", "name": "Annotation slice", "status": "pending" },
-    { "id": "P2", "name": "Verify", "status": "pending" },
-    { "id": "P3", "name": "Yeet: PR to mergeable", "status": "pending" },
-    { "id": "P4", "name": "Close", "status": "pending" }
+    {
+      "id": "P1",
+      "name": "Annotation slice",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
   ],
   "verificationCommands": [
     "test \"$(wc -m < goals/attributed-multi-claim-span/GOAL.md)\" -le 4000",
@@ -80,5 +96,8 @@
     "../../explorations/lynx-lkg-ontology-grounding/research/04-beep-effect-grounding.md",
     "../../explorations/lynx-lkg-ontology-grounding/research/05-value-assessment.md",
     "../../explorations/lynx-lkg-ontology-grounding/research/SOURCES.md"
-  ]
+  ],
+  "supersededBy": "text-knowledge-stack-rebuild",
+  "supersededNote": "2026-11-09: superseded by goals/text-knowledge-stack-rebuild. Its L2 and L4 phases replace the attributed annotation aggregate over TextAnchor/EvidenceSpan and the LangExtract-to-ClaimGate proof; the per-claim distinct-confidence acceptance is withdrawn in favour of Absent{reason} signals with no default algebra (see that packet's SPEC.md Relationships).",
+  "retentionReason": "Retained on main as the record of the attributed-span and LangExtract-to-ClaimGate requirements that goals/text-knowledge-stack-rebuild absorbs; archive only after that packet's P4 acceptance item ClaimGate.two-claims-one-occurrence.test.ts (two claims on one verified occurrence through the claim gate with accepted and rejected evidence retained per claim) is green on main, which demonstrates the replacement."
 }

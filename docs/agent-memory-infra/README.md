@@ -45,7 +45,7 @@ surface incl. MCP, license, self-host story, maturity); a Role-A assessment; a R
 assessment; contradictions found against the repo's prior assessments
 (`standards/memory-architecture/03-saas-landscape-assessment.md`,
 `05-context-graph-capability-assessment.md`,
-`explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md`); and a
+[explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md)); and a
 References section citing exact file paths (clone lanes) or URLs (docs lanes) for every
 material claim.
 

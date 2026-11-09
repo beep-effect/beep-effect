@@ -1,0 +1,42 @@
+// "Retrieval proposes, logic proves" made formal: every stage is a prov:Activity, every
+// record carries an epistemic stance (DEC worlds only on export), and the attorney's
+// admission is scoped approval with a grounding witness, not DEC's settle. Blue = the one place confidence becomes provenance.
+// Render: dot -Tsvg <file>.dot > <file>.svg (Nimbus Sans)
+digraph boundary {
+  graph [rankdir=TB, bgcolor=white, pad=0.04, nodesep=0.20, ranksep=0.24, fontname="Nimbus Sans", compound=true];
+  node  [shape=box, style="rounded,filled", fontname="Nimbus Sans", fontsize=8, color="#8C8C8C",
+         fillcolor=white, fontcolor=black, penwidth=0.6, margin="0.08,0.04"];
+  edge  [fontname="Nimbus Sans", fontsize=7, color="#5C5C5C", fontcolor="#444444", penwidth=0.6, arrowsize=0.55];
+
+  Expr   [label="Expression (verified source text)"];
+  subgraph cluster_verbatim {
+    label="verbatim: what the source says"; fontname="Nimbus Sans"; fontsize=7.5; fontcolor="#595959";
+    style="rounded,dashed"; color="#B3B3B3";
+    Struct [label="structure annotations\ndoco:Section · nif:Sentence"];
+    Ment   [label="mention annotations\nspan + class IRI · verified anchor"];
+  }
+  subgraph cluster_conj {
+    label="proposed: what the machine proposes"; fontname="Nimbus Sans"; fontsize=7.5; fontcolor="#595959";
+    style="rounded,dashed"; color="#B3B3B3";
+    Prop   [label="Claim<P>, stance = proposed\nsupport = verified occurrences\nsignals kept apart; Absent stays"];
+    Chal   [label="challenge edges\ncontradiction · refutation"];
+  }
+  subgraph cluster_epi {
+    label="admitted: approved for a use, matter-authorized"; fontname="Nimbus Sans"; fontsize=7.5; fontcolor="#595959";
+    style="rounded,dashed"; color="#B3B3B3";
+    Fact   [label="Claim<P>, stance = admitted\nadmission bound to actor · action · revision\nvalid time · knowledge time"];
+    Proj   [label="projections (disposable)\nRDF/JSON-LD · MCP · editor", color="#B3B3B3", fillcolor="#F5F5F5", fontcolor="#595959"];
+  }
+
+  node [shape=ellipse, style="filled", fillcolor="#F5F5F5", color="#B3B3B3", fontcolor="#595959", fontsize=7.5];
+  A1 [label="prov:Activity\nparse · segment"];
+  A2 [label="prov:Activity\nextract · align · model pin"];
+  A3 [label="prov:Activity\nattorney review · scoped admission", color="#0072B2", fontcolor="#0072B2", penwidth=0.9];
+
+  Expr  -> A1;  A1 -> Struct;  A1 -> Ment;
+  Ment  -> A2;  A2 -> Prop;    A2 -> Chal;
+  Prop  -> A3;
+  A3    -> Fact [label="admit: grounding witness + human token", color="#0072B2", fontcolor="#0072B2", penwidth=0.9];
+  Fact  -> Proj [style=dotted];
+  Fact  -> Ment [label="anchor", style=dashed, constraint=false];
+}

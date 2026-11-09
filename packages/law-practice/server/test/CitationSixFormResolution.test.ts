@@ -15,6 +15,8 @@ import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { CitationResolutionContext, prepareCitationResolutionContext } from "./CitationResolve.fixtures.ts";
 
+const decodeResolutionContext = S.decodeUnknownEffect(S.toType(CitationResolutionContext));
+
 const publication = {
   vocabularyVersion: Result.getOrThrow(CourtReporterArtifact).artifactVersion,
   editions: [],
@@ -70,7 +72,7 @@ const context = Effect.fnUntraced(function* (citations: ReadonlyArray<Citation>)
     start = end + 2;
     return mention;
   });
-  const row = yield* S.decodeUnknownEffect(S.toType(CitationResolutionContext))({
+  const row = yield* decodeResolutionContext({
     name: "strict-six-form-links",
     text: A.join(quotes, "; "),
     editions: [],

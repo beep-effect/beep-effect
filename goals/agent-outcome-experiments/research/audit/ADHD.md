@@ -107,4 +107,4 @@ Attach a compact outcome record to completed or abandoned work: intent category,
 
 What if the main dashboard showed only three questions—**What useful work was accepted? What made it harder? What evidence are we missing?**—and every trace existed to explain one of those answers?
 
-The adopted [brief](../../../../explorations/agent-observability-rebuild/BRIEF.md) combines the shortlisted ideas; [MAP.md](../../../../explorations/agent-observability-rebuild/MAP.md) turns them into three bounded implementation packets.
+The adopted [brief](../../../../explorations/agent-observability-rebuild/BRIEF.md) combines the shortlisted ideas; [MAP.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/agent-observability-rebuild/MAP.md) turns them into three bounded implementation packets.

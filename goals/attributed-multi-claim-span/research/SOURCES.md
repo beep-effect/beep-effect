@@ -1,6 +1,6 @@
 # attributed-multi-claim-span — inherited source corpus
 
-Primary ledger: `explorations/lynx-lkg-ontology-grounding/research/SOURCES.md`.
+Primary ledger: [explorations/lynx-lkg-ontology-grounding/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lynx-lkg-ontology-grounding/research/SOURCES.md).
 This file reproduces the graduation-time corpus for implementation convenience;
 the exploration ledger remains the primary copy.
 
@@ -17,15 +17,15 @@ permissive (MIT/Apache/BSD/CC-BY) => port WITH attribution; missing/unverified
 
 - **Date:** 2026-08-06
 - **Cluster / origin:** four research sweeps run for this packet —
-  [`01-lynx-project-overview.md`](../../../explorations/lynx-lkg-ontology-grounding/research/01-lynx-project-overview.md),
-  [`02-lkg-ontology-deep-dive.md`](../../../explorations/lynx-lkg-ontology-grounding/research/02-lkg-ontology-deep-dive.md),
-  [`03-reference-ontologies-sweep.md`](../../../explorations/lynx-lkg-ontology-grounding/research/03-reference-ontologies-sweep.md),
-  [`04-beep-effect-grounding.md`](../../../explorations/lynx-lkg-ontology-grounding/research/04-beep-effect-grounding.md) — synthesised in
-  [`05-value-assessment.md`](../../../explorations/lynx-lkg-ontology-grounding/research/05-value-assessment.md).
+  [`01-lynx-project-overview.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lynx-lkg-ontology-grounding/research/01-lynx-project-overview.md),
+  [`02-lkg-ontology-deep-dive.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lynx-lkg-ontology-grounding/research/02-lkg-ontology-deep-dive.md),
+  [`03-reference-ontologies-sweep.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lynx-lkg-ontology-grounding/research/03-reference-ontologies-sweep.md),
+  [`04-beep-effect-grounding.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lynx-lkg-ontology-grounding/research/04-beep-effect-grounding.md) — synthesised in
+  [`05-value-assessment.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lynx-lkg-ontology-grounding/research/05-value-assessment.md).
 - **Provenance:** the packet exists because
   `explorations/legal-ontology-landscape/research/00-source-brief.md:169` carried
   Lynx as a single reference-only citation and nothing deeper existed anywhere in
-  `explorations/` or `goals/` (see [`../CAPTURE.md`](../../../explorations/lynx-lkg-ontology-grounding/CAPTURE.md)).
+  `explorations/` or `goals/` (see [`../CAPTURE.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lynx-lkg-ontology-grounding/CAPTURE.md)).
 - **Verification note:** rows marked **[verified 2026-08-06]** were probed live
   (HTTP/DNS/SPARQL) or read from the artifact itself during the sweeps. Rows
   marked *(from wave-1 manifest)* are reproduced from
@@ -156,7 +156,7 @@ licence table above is authoritative for disposition.
 ## 4. In-repo capability references
 
 The `@beep/*` bricks this packet composes. Sourced from
-[report 04](../../../explorations/lynx-lkg-ontology-grounding/research/04-beep-effect-grounding.md); rows marked **[read 2026-08-06]**
+[report 04](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lynx-lkg-ontology-grounding/research/04-beep-effect-grounding.md); rows marked **[read 2026-08-06]**
 were opened directly during the assessment.
 
 | Brick | Path | Role in this packet | Disposition |
@@ -183,9 +183,9 @@ were opened directly during the assessment.
 ## 5. Cross-links & provenance
 
 **This packet**
-- [`../CAPTURE.md`](../../../explorations/lynx-lkg-ontology-grounding/CAPTURE.md) — stage 0 raw dump (2026-08-06)
-- [`../RESEARCH.md`](../../../explorations/lynx-lkg-ontology-grounding/RESEARCH.md) — stage 1 executive layer
-- [`05-value-assessment.md`](../../../explorations/lynx-lkg-ontology-grounding/research/05-value-assessment.md) — the assessment (verdicts + shortlist)
+- [`../CAPTURE.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lynx-lkg-ontology-grounding/CAPTURE.md) — stage 0 raw dump (2026-08-06)
+- [`../RESEARCH.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lynx-lkg-ontology-grounding/RESEARCH.md) — stage 1 executive layer
+- [`05-value-assessment.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lynx-lkg-ontology-grounding/research/05-value-assessment.md) — the assessment (verdicts + shortlist)
 - [`../ops/manifest.json`](../../../explorations/lynx-lkg-ontology-grounding/ops/manifest.json) — machine state; this file is registered as `exploration.sources`
 
 **Upstream packets whose decisions bind this one**
@@ -212,7 +212,7 @@ were opened directly during the assessment.
   verified CC BY 4.0 `LICENSE` (report 03 §2.4). The *dead namespace IRI* half of
   the wave-1 demotion stands; the *unmaintained* half does not.
 - Lynx's reference-ontologies table has **no licence column**;
-  [report 03 §4](../../../explorations/lynx-lkg-ontology-grounding/research/03-reference-ontologies-sweep.md) supplies one, read from each
+  [report 03 §4](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lynx-lkg-ontology-grounding/research/03-reference-ontologies-sweep.md) supplies one, read from each
   artifact. That table is the most reusable single artifact this packet produced.
 
 **No codex review** exists for this packet (`reviews/` not present as of

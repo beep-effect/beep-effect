@@ -162,7 +162,7 @@ limits are in the refresh note. No new upstream implementation was vendored.
 | O-08 | [Speed Loop opportunities](../../speed-loop/research/OPPORTUNITIES.md) | Cache key, shared cache, proof hash, tsbuildinfo, and coverage hypotheses |
 | O-09 | [`ci-fleet-endgame`](../../ci-fleet-endgame/README.md) | Incumbent asymmetric cache design and historical activation authority |
 | O-10 | [`beep-ci-operational-ontology`](../../../explorations/beep-ci-operational-ontology/README.md) | Current KPI/planner ontology owner |
-| O-11 | [Graphnosis prior-art opportunities](../../../explorations/graphnosis-prior-art/research/OPPORTUNITIES.md) | Historical cold-PR memory failure and read-only-cache hypothesis |
+| O-11 | [Graphnosis prior-art opportunities](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/graphnosis-prior-art/research/OPPORTUNITIES.md) | Historical cold-PR memory failure and read-only-cache hypothesis |
 
 Historical timing, task count, and configuration claims are not copied forward
 unless reverified. [`opportunity-disposition.md`](../../../explorations/turborepo-quality-cache/research/opportunity-disposition.md)

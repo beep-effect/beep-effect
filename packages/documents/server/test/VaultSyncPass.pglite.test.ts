@@ -1,5 +1,5 @@
 import * as Domain from "@alchemy.run/domain";
-import { AlchemyPostgres } from "@beep/alchemy-postgres";
+import { AlchemyPostgres, AlchemyPostgresConfig } from "@beep/alchemy-postgres";
 import * as V from "@beep/documents-domain/aggregates/VaultSync";
 import {
   BoxMirrorEvidence,
@@ -47,6 +47,10 @@ class PassScenario extends Domain.Model("VaultSync", {
   sagas: [VaultSyncPass],
 }) {}
 const infrastructure = Layer.mergeAll(PgliteTestLayer, BunServices.layer);
+// A restart interrupts the delivery worker, and whatever batch it had just claimed stays leased until the lease
+// lapses. At the driver's 30-second default, that wait plus the old runtime's 15-second close outlasts the per-test
+// budget. A short lease lets the fresh runtime reclaim those deliveries, as in VaultSyncCrash.child.ts.
+const config = AlchemyPostgresConfig.make({ leaseMillis: 1_000 });
 describe("VaultSyncPass SQL durability", () => {
   layer(infrastructure, { timeout: "60 seconds", excludeTestServices: true, concurrent: false })("restart", (it) => {
     for (const phase of ["before-poll", "item-acknowledged"]) {
@@ -78,7 +82,7 @@ describe("VaultSyncPass SQL durability", () => {
             PassScenario.layer(Layer.mergeAll(VaultSyncPolicies, VaultSyncPassLive)).pipe(
               Layer.provide(adapters),
               Layer.provide(rootLayer),
-              Layer.provide(AlchemyPostgres.layer())
+              Layer.provide(AlchemyPostgres.layer(config))
             )
           );
           const oldScope = yield* Scope.make();
@@ -204,7 +208,7 @@ describe("VaultSyncPass SQL durability", () => {
         const runtime = yield* PassScenario.layer(Layer.mergeAll(VaultSyncPolicies, VaultSyncPassLive)).pipe(
           Layer.provide(adapters),
           Layer.provide(rootLayer),
-          Layer.provide(AlchemyPostgres.layer()),
+          Layer.provide(AlchemyPostgres.layer(config)),
           Layer.fresh,
           Layer.build
         );

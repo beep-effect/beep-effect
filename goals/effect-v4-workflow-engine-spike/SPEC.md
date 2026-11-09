@@ -32,7 +32,7 @@ behavioral proof guard that reruns whenever Effect is upgraded.
 5. `PLAN.md`.
 6. `GOAL.md`.
 7. The exploration [`DECISIONS.md`](../../explorations/effect-orchestration-patterns/DECISIONS.md),
-   [`MAP.md`](../../explorations/effect-orchestration-patterns/MAP.md), and
+   [`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/effect-orchestration-patterns/MAP.md), and
    supporting `research/`, `ops/`, and `history/` artifacts.
 
 Higher sources outrank lower sources when they conflict.

@@ -1,0 +1,37 @@
+// The anchored-annotation data model (layers L1, L2, L4). Boxes are schema objects; an arrow
+// from child to parent is a typed reference (a foreign key in the acset sense), labelled with
+// the field name. Blue = content-addressed identity. Render: dot -Tsvg <file>.dot > <file>.svg (Nimbus Sans)
+digraph model {
+  graph [rankdir=TB, bgcolor=white, pad=0.04, nodesep=0.12, ranksep=0.28, fontname="Nimbus Sans"];
+  node  [shape=box, style="rounded,filled", fontname="Nimbus Sans", fontsize=7.5, color="#8C8C8C",
+         fillcolor=white, fontcolor=black, penwidth=0.6, margin="0.07,0.04"];
+  edge  [fontname="Nimbus Sans", fontsize=6.5, color="#5C5C5C", fontcolor="#444444", penwidth=0.6, arrowsize=0.55];
+
+  Work          [label="Work (optional profile)\nslice-supplied kind · official ids"];
+  Expression    [label="text capture: SourceTextIdentity\ntextDigest · extractor · normalization", color="#0072B2", penwidth=0.9];
+  Selector      [label="Selector (tagged union)\nPosition{unit, start, end}\nQuote{exact, prefix, suffix}\nFragment · Refined · Range"];
+  Manifestation [label="Manifestation\nartifactDigest · locator\nextractor"];
+  Anchored      [label="Anchored (occurrence)\nid = hash(scope, text, range, quote)\nlaw: slice(text, range) = quote", color="#0072B2", penwidth=0.9];
+  Annotation    [label="Annotation<K>\nid = hash(sorted targets, kind, body)\nattribution kept in a separate map", color="#0072B2", penwidth=0.9];
+  Layer         [label="kinds (layers)\nSentence · Word · Paragraph\nSection · Mention{class}\nbound to NIF/DoCO IRIs", color="#B3B3B3", fillcolor="#F5F5F5", fontcolor="#595959"];
+  Claim         [label="Claim<P> core (immutable)\nslice-owned proposition · support\nvalid · knowledgeStart · agent\nchallenges, admissions: own records", color="#0072B2", penwidth=0.9];
+  World         [label="stance (metadata)\nverbatim · proposed · admitted\nDEC worlds only on export", color="#B3B3B3", fillcolor="#F5F5F5", fontcolor="#595959"];
+  Activity      [label="prov:Activity\nused · generated\nwasAssociatedWith"];
+
+  // parent -> child, drawn with the arrowhead at the parent
+  Work       -> Expression    [dir=back, label="realizes"];
+  Expression -> Manifestation [dir=back, label="embodies"];
+  Expression -> Anchored      [dir=back, label="expression"];
+  Selector   -> Anchored      [dir=back, label="selector"];
+  Anchored   -> Annotation    [dir=back, label="targets (1..n)"];
+  Annotation -> Layer         [label="kind", style=dotted, arrowhead=none, color="#B3B3B3"];
+  Annotation -> Claim         [dir=back, label="supportedBy"];
+  Claim      -> World         [label="stance", style=dotted, arrowhead=none, color="#B3B3B3"];
+  Annotation -> Activity      [label="generatedBy"];
+  Claim      -> Activity      [label="generatedBy"];
+
+  { rank=same; Expression; Selector; }
+  { rank=same; Manifestation; Anchored; }
+  { rank=same; Annotation; Layer; }
+  { rank=same; Claim; World; }
+}

@@ -3,7 +3,7 @@
 - **Source exploration:**
   [`explorations/full-document-editor`](../../../explorations/full-document-editor/README.md)
 - **Primary ledger:**
-  [`explorations/full-document-editor/research/SOURCES.md`](../../../explorations/full-document-editor/research/SOURCES.md)
+  [explorations/full-document-editor/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/full-document-editor/research/SOURCES.md)
 - **Decision authority:**
   [`explorations/full-document-editor/DECISIONS.md`](../../../explorations/full-document-editor/DECISIONS.md)
 - **Prerequisite contract:**
@@ -19,10 +19,10 @@ will become the direct P0 input after its completion gate is satisfied.
 
 | Source | Title | Upstream | Location | Theme | Disposition |
 | --- | --- | --- | --- | --- | --- |
-| `lexical-live-2026-08-04` | Lexical Playground live audit | `playground.lexical.dev` | [`LEXICAL-PLAYGROUND-LIVE-AUDIT.md`](../../../explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md) | visible behavior, keybindings, screenshots, accessibility | behavioral reference |
-| `lexical-source-a933222` | Lexical Playground source audit | `facebook/lexical` | [`LEXICAL-PLAYGROUND-SOURCE-AUDIT.md`](../../../explorations/full-document-editor/research/LEXICAL-PLAYGROUND-SOURCE-AUDIT.md) | node/plugin/settings/transformer completeness | port with attribution |
-| `lexical-capability-reference` | Reconciled human-readable capability index | derived from the two pinned audits | [`CAPABILITY-REFERENCE.md`](../../../explorations/full-document-editor/research/CAPABILITY-REFERENCE.md) | nodes, surfaces, activation paths, dispositions, named gaps | Goal A normalization input |
-| `beep-editor-context` | Full Doc Editor context audit | beep-effect10 | [`RESEARCH.md`](../../../explorations/full-document-editor/RESEARCH.md#2026-08-04--in-repo-capability-inventory) | ownership and collision map | compose existing bricks |
+| `lexical-live-2026-08-04` | Lexical Playground live audit | `playground.lexical.dev` | [`LEXICAL-PLAYGROUND-LIVE-AUDIT.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/full-document-editor/research/LEXICAL-PLAYGROUND-LIVE-AUDIT.md) | visible behavior, keybindings, screenshots, accessibility | behavioral reference |
+| `lexical-source-a933222` | Lexical Playground source audit | `facebook/lexical` | [`LEXICAL-PLAYGROUND-SOURCE-AUDIT.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/full-document-editor/research/LEXICAL-PLAYGROUND-SOURCE-AUDIT.md) | node/plugin/settings/transformer completeness | port with attribution |
+| `lexical-capability-reference` | Reconciled human-readable capability index | derived from the two pinned audits | [`CAPABILITY-REFERENCE.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/full-document-editor/research/CAPABILITY-REFERENCE.md) | nodes, surfaces, activation paths, dispositions, named gaps | Goal A normalization input |
+| `beep-editor-context` | Full Doc Editor context audit | beep-effect10 | [`RESEARCH.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/full-document-editor/RESEARCH.md#2026-08-04--in-repo-capability-inventory) | ownership and collision map | compose existing bricks |
 
 The live audit defines observable behavior. The pinned source audit closes
 hidden and conditional feature coverage. The repo inventory decides ownership
@@ -96,7 +96,7 @@ evidence.
 ## 5. Cross-links and provenance
 
 - Primary exploration ledger:
-  [`explorations/full-document-editor/research/SOURCES.md`](../../../explorations/full-document-editor/research/SOURCES.md).
+  [explorations/full-document-editor/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/full-document-editor/research/SOURCES.md).
 - Binding decisions:
   [`explorations/full-document-editor/DECISIONS.md`](../../../explorations/full-document-editor/DECISIONS.md).
 - Goal A prerequisite:

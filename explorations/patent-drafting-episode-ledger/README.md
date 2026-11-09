@@ -42,7 +42,7 @@ benchmark gate in [`MAP.md`](./MAP.md) fires.
 2. [`CAPTURE.md`](./CAPTURE.md) - raw dump (stage 0): the merged cluster row (primary + absorbed first rung), eleven nuggets, grounding, resolved grill boundaries, cautions.
 3. [`DECISIONS.md`](./DECISIONS.md) - pre-seeded wedge decisions: research lanes, dependency posture, orchestration, PR staging.
 4. [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger.
-5. Parent packet: [`../legal-patent-kg-deepening/ROUTING-SEED.md`](../legal-patent-kg-deepening/ROUTING-SEED.md) / [`DECISIONS.md`](../legal-patent-kg-deepening/DECISIONS.md) - the routing matrix and campaign grill log.
+5. Parent packet: [../legal-patent-kg-deepening/ROUTING-SEED.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/legal-patent-kg-deepening/ROUTING-SEED.md) / [`DECISIONS.md`](../legal-patent-kg-deepening/DECISIONS.md) - the routing matrix and campaign grill log.
 6. [`BRIEF.md`](./BRIEF.md) - operator-ratified shaped contract.
 7. [`MAP.md`](./MAP.md) - ratified rung 1 and deferred benchmark sequencing.
 

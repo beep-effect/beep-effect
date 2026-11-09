@@ -19,6 +19,9 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const encodeRecognitionErrorJson = S.encodeEffect(S.fromJsonString(CitationRecognitionError));
+const decodeExtractorResult = S.decodeUnknownEffect(S.toType(CitationExtractorResult));
+
 const Type = S.toType(CitationExtractorReport);
 const Json = CitationExtractorReport.pipe(S.toCodecJson, S.fromJsonString);
 
@@ -84,7 +87,7 @@ it.effect("serializes only finite recognition reasons and leaves legacy failures
       cause: "PRIVATE-RUNTIME-PATH",
     };
     const decoded = yield* S.decodeUnknownEffect(CitationRecognitionError)(privateObservation);
-    const encoded = yield* S.encodeEffect(S.fromJsonString(CitationRecognitionError))(decoded);
+    const encoded = yield* encodeRecognitionErrorJson(decoded);
     expect(encoded).not.toContain("PRIVATE-");
     expect(encoded).not.toContain("cause");
     expect(S.is(CitationExtractorFailure)(decoded)).toBe(true);
@@ -122,8 +125,7 @@ it.layer(TestCrypto)("six-form result identity and accounting", (it) => {
         outsideProfile: 1,
       });
       const valid = { source: verifiedSource, document, report };
-      const decode = S.decodeUnknownEffect(S.toType(CitationExtractorResult));
-      const accepted = yield* decode(valid);
+      const accepted = yield* decodeExtractorResult(valid);
       expect(accepted.source).toBe(verifiedSource);
       for (const invalid of [
         { ...valid, source: other.verifiedSource },
@@ -132,7 +134,7 @@ it.layer(TestCrypto)("six-form result identity and accounting", (it) => {
         { ...valid, report: { ...report, limits: { ...limits, sourceUtf16: 1 } } },
         { ...valid, report: { ...report, recognizedMentions: 1 } },
       ]) {
-        const failure = yield* decode(invalid).pipe(Effect.flip);
+        const failure = yield* decodeExtractorResult(invalid).pipe(Effect.flip);
         expect(failure._tag).toBe("SchemaError");
       }
     })

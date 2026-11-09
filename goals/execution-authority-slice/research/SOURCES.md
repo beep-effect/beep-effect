@@ -1,7 +1,7 @@
 # Execution Authority Slice — Sources & Provenance
 
 - **Source exploration:** `explorations/execution-authority-home` — primary ledger:
-  `explorations/execution-authority-home/research/SOURCES.md`.
+  [explorations/execution-authority-home/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/execution-authority-home/research/SOURCES.md).
 
 ## 1. Mined source corpus
 
@@ -23,7 +23,7 @@
 | RFC 6962 Certificate Transparency §2.1 | https://datatracker.ietf.org/doc/html/rfc6962 | reference: domain-separation prefixes are part of the hash contract (frames the `epistemic-*/v1` prefixes) |
 
 Deep-research report (2026-11-07), primary copy in the exploration:
-[`research/provenance-placement-ddd.md`](../../../explorations/execution-authority-home/research/provenance-placement-ddd.md).
+[`research/provenance-placement-ddd.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/execution-authority-home/research/provenance-placement-ddd.md).
 It cites Evans's DDD Reference, Young's CQRS Documents, Fowler's Audit Log and
 Temporal Property, W3C PROV-DM and PROV-AQ, PaperTrail, django-auditlog,
 Hibernate Envers, supa_audit, pgaudit, Heap and GitLab on jsonb, Marten,

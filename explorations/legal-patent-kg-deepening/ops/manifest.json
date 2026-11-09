@@ -16,6 +16,14 @@
       "supersededBy": null
     },
     "created": "2026-08-01",
-    "updated": "2026-09-09"
+    "updated": "2026-09-09",
+    "archive": {
+      "repo": "beep-effect/beep-effect-goals-archive",
+      "path": "explorations/legal-patent-kg-deepening",
+      "commit": "28c4a59943cf5392c4a85d3b4fa8815373b36aaf",
+      "contentHash": "e5277bfd9e858a8ce0c31fb7ad74573248830feb",
+      "archivedAt": "2026-11-09T06:36:23.435Z",
+      "sourceCommit": "deb7d0c5efd56b6b073ab43be6ec5a6f6074fdd6"
+    }
   }
 }

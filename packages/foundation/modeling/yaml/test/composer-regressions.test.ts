@@ -29,6 +29,49 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+/** A node's structure with scalars reduced to their values and map pairs kept in order, since keys may be collections. */
+function shapeOf(node: unknown): unknown {
+  if (S.is(YamlMap)(node)) return { map: A.map(node.items, (pair) => [shapeOf(pair.key), shapeOf(pair.value)]) };
+  if (S.is(YamlSeq)(node)) return A.map(node.items, (item) => shapeOf(item));
+  return S.is(YamlScalar)(node) ? node.value : node;
+}
+
+describe("explicit keys holding a compact collection", () => {
+  // Expected shapes authored against yaml@2.9.1 `parseDocument`, whose `toJS`
+  // spelled these keys as `{ k: v }` and `[ k ]`.
+  const entry = (key: unknown, value: unknown) => ({ map: [[key, value]] });
+  const kv = entry("k", "v");
+  const cases: ReadonlyArray<readonly [name: string, input: string, expected: unknown]> = [
+    ["a compact mapping key in a sequence item", "- ? k: v\n", [entry(kv, null)]],
+    ["a compact sequence key in a sequence item", "- ? - k\n", [entry(["k"], null)]],
+    ["a compact sequence key with a value", "- ? - k\n  : v\n", [entry(["k"], "v")]],
+    ["a compact mapping key with a value", "? k: v\n: w\n", entry(kv, "w")],
+    ["a nested explicit key", "? ? k\n  : v\n: w\n", entry(kv, "w")],
+    ["a compact mapping key with an empty key", "? : v\n: w\n", entry(entry(null, "v"), "w")],
+    [
+      "a two-entry mapping key with a mapping value",
+      "? a: 1\n  b: 2\n: c: 3\n",
+      entry(
+        {
+          map: [
+            ["a", 1],
+            ["b", 2],
+          ],
+        },
+        entry("c", 3)
+      ),
+    ],
+  ];
+
+  for (const [name, input, expected] of cases) {
+    it(`composes ${name}`, () => {
+      const document = composeFirstDocument(input);
+      assert.deepStrictEqual(document.errors, []);
+      assert.deepStrictEqual(shapeOf(document.contents), expected);
+    });
+  }
+});
+
 describe("composer review regressions", () => {
   it("resolves a scalar with two arguments", () => {
     assert.strictEqual(resolveScalar("123", ["plain"]), 123);

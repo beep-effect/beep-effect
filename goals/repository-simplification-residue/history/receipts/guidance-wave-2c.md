@@ -79,7 +79,7 @@ Every liveness experiment rewrote the directive token on its exact line to an in
   with lcov twice, base and stripped, and the uncovered lines, branches and functions were
   diffed and attributed. `@beep/repo-cli`'s one hint was checked with the full suite and
   `--coverage.include=src/internal/cli/Stdin.ts`. The five hints in
-  `explorations/identity-as-iri/assets/ontology-prototype` have no package, runner or
+  [explorations/identity-as-iri/assets/ontology-prototype](https://github.com/beep-effect/beep-effect-goals-archive/tree/main/explorations/identity-as-iri/assets/ontology-prototype) have no package, runner or
   coverage run.
 - **`noqa`.** Ruff runs only on `packages/tooling/tool/cli/python/photo-face`
   (`beep:lint:python`, ruff 0.12.12, default rule set). `ruff check --extend-select RUF100`
@@ -274,11 +274,11 @@ digest-pinned `noqa` and the Semgrep fixture's `biome-ignore-all`, whose reasons
 | `scratchpad/test/github-actions/ambientReads.test.ts` | 237 | biome-ignore `lint/suspicious/noTemplateCurlyInString` | stale | Biome excludes `scratchpad` (`files.includes` `!scratchpad`); no lane runs Biome on this path |
 | `scratchpad/test/workspaces/SourceBoundary.test.ts` | 2 | biome-ignore `lint/suspicious/noTemplateCurlyInString` | stale | Biome excludes `scratchpad` (`files.includes` `!scratchpad`); no lane runs Biome on this path |
 | `scratchpad/test/workspaces/e2e/PackedInstall.e2e.test.ts` | 2 | biome-ignore `lint/suspicious/noTemplateCurlyInString` | stale | Biome excludes `scratchpad` (`files.includes` `!scratchpad`); no lane runs Biome on this path |
-| `explorations/identity-as-iri/assets/ontology-prototype/src/annotations.ts` | 270 | coverage `istanbul ignore next` | stale | the prototype has no package, test runner or coverage run |
-| `explorations/identity-as-iri/assets/ontology-prototype/src/annotations.ts` | 337 | coverage `istanbul ignore next` | stale | the prototype has no package, test runner or coverage run |
-| `explorations/identity-as-iri/assets/ontology-prototype/src/model.ts` | 50 | coverage `istanbul ignore else` | stale | the prototype has no package, test runner or coverage run |
-| `explorations/identity-as-iri/assets/ontology-prototype/src/model.ts` | 55 | coverage `istanbul ignore next` | stale | the prototype has no package, test runner or coverage run |
-| `explorations/identity-as-iri/assets/ontology-prototype/src/references.ts` | 54 | coverage `istanbul ignore next` | stale | the prototype has no package, test runner or coverage run |
+| [explorations/identity-as-iri/assets/ontology-prototype/src/annotations.ts](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/identity-as-iri/assets/ontology-prototype/src/annotations.ts) | 270 | coverage `istanbul ignore next` | stale | the prototype has no package, test runner or coverage run |
+| [explorations/identity-as-iri/assets/ontology-prototype/src/annotations.ts](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/identity-as-iri/assets/ontology-prototype/src/annotations.ts) | 337 | coverage `istanbul ignore next` | stale | the prototype has no package, test runner or coverage run |
+| [explorations/identity-as-iri/assets/ontology-prototype/src/model.ts](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/identity-as-iri/assets/ontology-prototype/src/model.ts) | 50 | coverage `istanbul ignore else` | stale | the prototype has no package, test runner or coverage run |
+| [explorations/identity-as-iri/assets/ontology-prototype/src/model.ts](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/identity-as-iri/assets/ontology-prototype/src/model.ts) | 55 | coverage `istanbul ignore next` | stale | the prototype has no package, test runner or coverage run |
+| [explorations/identity-as-iri/assets/ontology-prototype/src/references.ts](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/identity-as-iri/assets/ontology-prototype/src/references.ts) | 54 | coverage `istanbul ignore next` | stale | the prototype has no package, test runner or coverage run |
 | `goals/effected-promotion/history/port-reviews/jsonc/round-1/sol.log` | 1061 | coverage | not a directive | quoted in an immutable effected-promotion review log |
 | `goals/effected-promotion/history/port-reviews/jsonc/round-2/sol.log` | 8464 | coverage | not a directive | quoted in an immutable effected-promotion review log |
 | `goals/effected-promotion/history/port-reviews/jsonc/round-3/sol.log` | 1520 | coverage | not a directive | quoted in an immutable effected-promotion review log |
@@ -316,10 +316,10 @@ digest-pinned `noqa` and the Semgrep fixture's `biome-ignore-all`, whose reasons
 | `apps/professional-desktop/src-tauri/web-extension/youtube_referrer_test.c` | 1 | cspell `cspell:words` | stale | cspell is not installed, configured or run; the spell gate is `typos` (`_typos.toml`) |
 | `apps/professional-desktop/src/runtime/Pglite.ts` | 4 | cspell `cspell:words` | stale | cspell is not installed, configured or run; the spell gate is `typos` (`_typos.toml`) |
 | `apps/professional-desktop/src/transport/TauriIpcSocket.ts` | 4 | cspell `cspell:words` | stale | cspell is not installed, configured or run; the spell gate is `typos` (`_typos.toml`) |
-| `explorations/identity-as-iri/assets/ontology-prototype/src/model.ts` | 16 | cspell `cspell:words` | stale | cspell is not installed, configured or run; the spell gate is `typos` (`_typos.toml`) |
-| `explorations/identity-as-iri/assets/ontology-prototype/src/projections/jsonld.ts` | 1 | cspell `cspell:words` | stale | cspell is not installed, configured or run; the spell gate is `typos` (`_typos.toml`) |
-| `explorations/identity-as-iri/assets/ontology-prototype/src/projections/jsonld.ts` | 3 | cspell `cspell:words` | stale | cspell is not installed, configured or run; the spell gate is `typos` (`_typos.toml`) |
-| `explorations/identity-as-iri/assets/ontology-prototype/src/projections/turtle.ts` | 1 | cspell `cspell:words` | stale | cspell is not installed, configured or run; the spell gate is `typos` (`_typos.toml`) |
+| [explorations/identity-as-iri/assets/ontology-prototype/src/model.ts](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/identity-as-iri/assets/ontology-prototype/src/model.ts) | 16 | cspell `cspell:words` | stale | cspell is not installed, configured or run; the spell gate is `typos` (`_typos.toml`) |
+| [explorations/identity-as-iri/assets/ontology-prototype/src/projections/jsonld.ts](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/identity-as-iri/assets/ontology-prototype/src/projections/jsonld.ts) | 1 | cspell `cspell:words` | stale | cspell is not installed, configured or run; the spell gate is `typos` (`_typos.toml`) |
+| [explorations/identity-as-iri/assets/ontology-prototype/src/projections/jsonld.ts](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/identity-as-iri/assets/ontology-prototype/src/projections/jsonld.ts) | 3 | cspell `cspell:words` | stale | cspell is not installed, configured or run; the spell gate is `typos` (`_typos.toml`) |
+| [explorations/identity-as-iri/assets/ontology-prototype/src/projections/turtle.ts](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/identity-as-iri/assets/ontology-prototype/src/projections/turtle.ts) | 1 | cspell `cspell:words` | stale | cspell is not installed, configured or run; the spell gate is `typos` (`_typos.toml`) |
 | `goals/effected-promotion/history/port-reviews/jsonc/round-1/sol.log` | 12513 | cspell `cspell:ignore` | not a directive | quoted in an immutable effected-promotion review log |
 | `goals/effected-promotion/history/port-reviews/jsonc/round-2/sol.log` | 3842 | cspell `cspell:ignore` | not a directive | quoted in an immutable effected-promotion review log |
 | `goals/effected-promotion/history/port-reviews/jsonl/round-1/sol.log` | 14966 | cspell `cspell:ignore` | not a directive | quoted in an immutable effected-promotion review log |

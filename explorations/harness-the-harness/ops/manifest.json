@@ -13,6 +13,14 @@
       "supersededBy": null
     },
     "created": "2026-10-14",
-    "updated": "2026-10-14"
+    "updated": "2026-10-14",
+    "archive": {
+      "repo": "beep-effect/beep-effect-goals-archive",
+      "path": "explorations/harness-the-harness",
+      "commit": "28c4a59943cf5392c4a85d3b4fa8815373b36aaf",
+      "contentHash": "e94f566d9e1d989e8a0d3276bd963a0e9d3ecec6",
+      "archivedAt": "2026-11-09T06:36:23.435Z",
+      "sourceCommit": "deb7d0c5efd56b6b073ab43be6ec5a6f6074fdd6"
+    }
   }
 }

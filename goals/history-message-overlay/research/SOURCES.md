@@ -1,7 +1,7 @@
 # History Message Overlay — Sources & Provenance
 
 - **Source exploration:** `explorations/git-history-rewrite` — primary ledger:
-  [`explorations/git-history-rewrite/research/SOURCES.md`](../../../explorations/git-history-rewrite/research/SOURCES.md).
+  [explorations/git-history-rewrite/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/git-history-rewrite/research/SOURCES.md).
   This copy reproduces the corpus an implementer needs; the exploration ledger wins on conflict.
 
 ## 1. Mined source corpus
@@ -32,6 +32,6 @@
 
 ## 5. Cross-links & provenance
 
-- Exploration: [`BRIEF.md`](../../../explorations/git-history-rewrite/BRIEF.md), [`DECISIONS.md`](../../../explorations/git-history-rewrite/DECISIONS.md), [`RESEARCH.md`](../../../explorations/git-history-rewrite/RESEARCH.md), [`MAP.md`](../../../explorations/git-history-rewrite/MAP.md)
+- Exploration: [`BRIEF.md`](../../../explorations/git-history-rewrite/BRIEF.md), [`DECISIONS.md`](../../../explorations/git-history-rewrite/DECISIONS.md), [`RESEARCH.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/git-history-rewrite/RESEARCH.md), [`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/git-history-rewrite/MAP.md)
 - `goals/honest-repo-signal` D6 (no filter-repo) — confirmed, not superseded.
 - `goals/legacy-drain/SPEC.md:5` — cutover folder archive line, satisfied by slice 4.

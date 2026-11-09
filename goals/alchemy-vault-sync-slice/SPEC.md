@@ -4,7 +4,7 @@
 
 Migrate the `documents` vault-sync bounded context onto `@alchemy.run/domain` end to end: a Postgres Platform driver with the Effect Cluster workflow engine, aggregates/sagas/policies/views for destinations, sync operations and conflicts with Box as External System, one Api (HTTP + OpenAPI, CLI, MCP limited to Views) behind Session middleware, an optimistic + offline-intents client, legacy tables rebuilt as Projections after a single-writer cutover, and the doctrine amendments that let every later slice follow.
 
-Graduated from `explorations/alchemy-domain-adoption` (brief: `explorations/alchemy-domain-adoption/BRIEF.md`; decisions D0–D17: `explorations/alchemy-domain-adoption/DECISIONS.md`). This is the first vertical slice of the alchemy adoption program and the proving ground for the migration recipe, the driver and the conformance suite that the queued slices in `explorations/alchemy-domain-adoption/MAP.md` reuse.
+Graduated from `explorations/alchemy-domain-adoption` (brief: `explorations/alchemy-domain-adoption/BRIEF.md`; decisions D0–D17: `explorations/alchemy-domain-adoption/DECISIONS.md`). This is the first vertical slice of the alchemy adoption program and the proving ground for the migration recipe, the driver and the conformance suite that the queued slices in [explorations/alchemy-domain-adoption/MAP.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/alchemy-domain-adoption/MAP.md) reuse.
 
 ## Non-Goals
 

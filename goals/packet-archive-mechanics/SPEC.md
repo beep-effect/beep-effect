@@ -155,6 +155,14 @@ Lane `fix/packet-archive-citation-rewrite` · PR #2979
 
 Reverse: Revert #2979; plans return to exact removed-file link destinations, and later batches repair code-span citations by hand
 
+### Retain beep-ci-operational-ontology and legal-ontology-landscape before batch 5, 2026-11-09
+
+Batch 5's scan found two explorations still read live: apps/labs/ciops reads and hash-pins the ontology packet's 10,465 files, and SemanticFoundation.test decodes the legal ontology asset manifest. Both stay on main with a retentionReason. Provenance strings in the editor capability atlas and the lejeune-bolt bundle are citations that nothing opens, so those packets are archived. From this batch on the archive push comes last, after every gate, so a packet found to be live can be retained without leaving a copy in the public archive.
+
+Lane `feat/packet-archive-batch-5`
+
+Reverse: Remove each retentionReason after moving what apps/labs/ciops and SemanticFoundation.test read
+
 ### Retain semantica-canary, schema-opaque-default and speed-loop after batch 4 hosted reds, 2026-11-09
 
 Batch 4 first moved the sealed Semantica C2 report into a test fixture and archived schema-opaque-default. It also moved the speed-loop runner-burst script to scripts/. Hosted CI then failed: Secret Scanning on two digests in the moved report, the retired IRI law on its IRIs, fallow on @typescript/typescript6 losing its last consumer, and the tracked-shell law on the moved script. All three packets stay on main with a retentionReason, because a sweep batch should not add shell scripts. The archive commits were already public, so the archive repo still holds copies of them; those copies are harmless and inbound references rewritten to them still resolve. The batch landed from a new branch so the report never appears in the PR's commit range; nothing was force-pushed.
