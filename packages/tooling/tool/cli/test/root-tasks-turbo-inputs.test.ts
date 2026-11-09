@@ -366,12 +366,17 @@ const closureInputs = [
   "tsdoc.json",
   "packages/tooling/tool/cli/src/bin-main.ts",
 ];
+// A seal input without its root prefix; a negated glob keeps its leading `!`.
+const sealInput = (input: string): string =>
+  Str.startsWith("!")(input)
+    ? `!${Str.slice(1 + Str.length(turboRoot))(input)}`
+    : Str.slice(Str.length(turboRoot))(input);
 // Every root-relative input a seal chain declares.
 const chainInputs = (seals: Readonly<Record<string, SealTask>>, id: string): ReadonlyArray<string> =>
   O.match(R.get(seals, id), {
     onNone: A.empty<string>,
     onSome: (seal) => [
-      ...A.map(seal.inputs, Str.slice(Str.length(turboRoot))),
+      ...A.map(seal.inputs, sealInput),
       ...A.flatMap(seal.dependsOn, (parent) => chainInputs(seals, parent)),
     ],
   });
@@ -500,7 +505,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           ),
           Tuple.make(
             "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
-            "f7175e1870f0c6c0eb0660b1384f52b3a3763684694191180823441430d11863"
+            "7c1426fad4c8c2867812526cb9ce499253c966e0dbae9e8d6ac7a9112cb27c96"
           ),
           Tuple.make(
             "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
@@ -512,7 +517,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           ),
           Tuple.make(
             "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-            "45a81fdece8d90f8290b56c602fbbff4e10c68d9c92deca53f70b8fac4f1df56"
+            "b8d56784fa50ee216c3b951ee5e0894a3867172e38cec432d909970b17eaa19f"
           ),
           Tuple.make(
             "packages/tooling/library/repo-cli-kit/src/tsmorph/ProjectFactory.ts",
@@ -671,7 +676,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
         });
         const digest = yield* Digest.Digest;
         const bytes = yield* digest.digest(Digest.sha256, new TextEncoder().encode(encoded));
-        expect(Hex.encode(bytes)).toBe("cd35596d72214abd4a62d52a751b6f60163337701fcc9a5c31eb8cdcf605b4a0");
+        expect(Hex.encode(bytes)).toBe("e2786912b42e37f0ec1bcc66decc329cb39c2ce280c14dfa5848c1393e59814b");
       })
     );
   });
@@ -745,7 +750,6 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           "//#lint:allowlist",
           "//#lint:schema-first",
           "//#lint:schema-catalog",
-          "//#lint:effect-imports",
           "//#lint:tsgo-rules",
         ];
         const ids = A.map(
@@ -770,6 +774,79 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
             expect(R.has(rowFor(changed, id).inputs, file), `${id}: ${file}`).toBe(false);
           }
         }
+      }),
+      { timeout: 60_000 }
+    );
+
+    it.effect(
+      "ignores gitignored Vitest runtime residue in the tasks whose scanners skip it",
+      Effect.fnUntraced(function* () {
+        const { root, binary } = yield* fixture();
+        // `Vitest.runtime.test.ts` creates `.runtime-<mode>-*` under this fixture directory and
+        // leaves it behind when killed before its scoped finalizer runs. The repository ignores
+        // the family; every task below reads git-visible files, walks without entering dot
+        // directories, prunes `test`, or (Fallow) ignores `**/test/fixtures/**`.
+        const residueRoot = "packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation";
+        yield* writeFile(root, ".gitignore", `node_modules\n.turbo\n/${residueRoot}/.runtime-*/\n`);
+        const negated = [
+          "//#fallow:boundaries:advisory",
+          "//#fallow:boundaries:config-check",
+          "//#fallow:dead-code:check",
+          "//#fallow:fix-preview:advisory",
+          "//#fallow:flags:advisory",
+          "//#fallow:health:advisory",
+          "//#fallow:health:check",
+          "//#fallow:security:advisory",
+          "//#jsdoc:inventory:check",
+          "//#lint:allowlist",
+          "//#lint:deprecated-imports",
+          "//#lint:effect-imports",
+          "//#lint:effect-imports-markdown",
+          "//#lint:identity-registry",
+          "//#lint:jsdoc-module-tags",
+          "//#lint:jsdoc:root",
+          "//#lint:schema-catalog",
+          "//#lint:schema-first",
+          "//#lint:schema-tag-idioms",
+          "//#lint:tsgo-rules",
+        ];
+        // `lint:effect-vitest` keeps hashing the residue (its inputs are pinned to the scanner's
+        // own globs), which proves the planted files are real input candidates.
+        const control = "//#lint:effect-vitest";
+        const ids = A.append(negated, control);
+        const baseline = yield* dryRun(root, binary, ids, false);
+        const residue = A.map(
+          ["runtime.test.ts", "diagnostic-reporter.ts", "result.json"],
+          (name) => `${residueRoot}/.runtime-probe-killed/${name}`
+        );
+        yield* Effect.forEach(residue, (file) => writeFile(root, file, "export const residue = 1;\n"));
+        const changed = yield* dryRun(root, binary, ids, false);
+        for (const id of negated) {
+          expect(rowFor(changed, id).hash, id).toBe(rowFor(baseline, id).hash);
+          for (const file of residue) {
+            expect(R.has(rowFor(changed, id).inputs, file), `${id}: ${file}`).toBe(false);
+          }
+        }
+        expect(R.has(rowFor(changed, control).inputs, residue[0] ?? "")).toBe(true);
+        expect(rowFor(changed, control).hash).not.toBe(rowFor(baseline, control).hash);
+      }),
+      { timeout: 60_000 }
+    );
+
+    it.effect(
+      "keeps .turbo trees out of the typos inputs",
+      Effect.fnUntraced(function* () {
+        const { root, binary } = yield* fixture();
+        // typos honors `.gitignore` and skips hidden directories, so `.turbo` churn must not
+        // put the uncached task back into the affected set.
+        const id = "//#lint:typos";
+        const control = "packages/fixture/c3-typos-probe.md";
+        const planted = ["packages/fixture/.turbo/x.md", ".turbo/x.md"];
+        yield* Effect.forEach([control, ...planted], (file) => writeFile(root, file, "typo probe\n"));
+        const rows = yield* dryRun(root, binary, [id], false);
+        const row = rowFor(rows, id);
+        expect(R.has(row.inputs, control)).toBe(true);
+        for (const file of planted) expect(R.has(row.inputs, file), file).toBe(false);
       }),
       { timeout: 60_000 }
     );

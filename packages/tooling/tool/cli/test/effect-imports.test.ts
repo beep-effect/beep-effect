@@ -223,6 +223,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
             "infra/lambda/demo/build",
             "vendor",
             "packages/demo/.repos",
+            "packages/demo/coverage",
+            "apps/x/storybook-static",
           ]) {
             yield* writeProjectFile(`${directory}/ignored.ts`, demoSource);
             yield* writeProjectFile(`${directory}/ignored.md`, '```ts\nimport { Effect } from "effect";\n```\n');

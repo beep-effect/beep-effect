@@ -126,7 +126,30 @@ const readOptionalPackageName = Effect.fn("PackageTestImports.readOptionalPackag
   );
 });
 
-const collectPackageSourceRoots = Effect.fn("PackageTestImports.collectPackageSourceRoots")(function* (
+/**
+ * Span name of the workspace-manifest walk, also the policy fingerprint's route marker.
+ *
+ * **Details**
+ *
+ * `POLICY_ROOT_FILE_ROUTES` imports this constant, so a seal whose command
+ * reaches the walk keeps hashing every workspace `package.json` after a rename.
+ * The literal must stay unique to this module: the fingerprint routes the
+ * manifest family to every module whose code contains it.
+ *
+ * **Example** (Read the marker)
+ *
+ * ```ts
+ * import { WORKSPACE_MANIFEST_WALK } from "@beep/repo-cli/commands/Lint/PackageTestImports"
+ *
+ * console.log(WORKSPACE_MANIFEST_WALK)
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const WORKSPACE_MANIFEST_WALK = "PackageTestImports.collectPackageSourceRoots";
+
+const collectPackageSourceRoots = Effect.fn(WORKSPACE_MANIFEST_WALK)(function* (
   packagesRoot: string
 ): Effect.fn.Return<ReadonlyArray<PackageSourceRoot>, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
@@ -137,6 +160,7 @@ const collectPackageSourceRoots = Effect.fn("PackageTestImports.collectPackageSo
     return A.empty<PackageSourceRoot>();
   }
 
+  // Literal on purpose: the instrumentation catalog rejects interpolated span names.
   const walk = Effect.fn("PackageTestImports.collectPackageSourceRoots.walk")(function* (
     currentPath: string
   ): Effect.fn.Return<ReadonlyArray<PackageSourceRoot>, never, FileSystem.FileSystem | Path.Path> {

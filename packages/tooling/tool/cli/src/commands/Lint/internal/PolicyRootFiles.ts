@@ -16,6 +16,16 @@
  * over-match only costs a replay. The CLI shell's dispatch manifest names the
  * `fallow` command group, so the Fallow family stays a shared input.
  *
+ * A family may be a glob with negations: a negated file (`!…`) excludes
+ * matches of the family's globs, and renders as `!$TURBO_ROOT$/…`. The
+ * workspace-manifest family is one: the package test-import walk reads every
+ * `packages/**` manifest, outside generated artifact trees. Its marker is the
+ * walk's span name, since `package.json` alone appears in modules every seal
+ * shares. The manifests travel with the seal rather than with each consuming
+ * package task because Turbo expands an input glob once per task before it
+ * runs anything; a dependency's hash folds into its dependents, so one
+ * expansion on the seal invalidates every consumer the same way.
+ *
  * `turbo.json` has no tool marker: a command that runs Turbo is a quality
  * runner, which the fingerprint refuses as a policy script (`usesFastPath`),
  * and every root task already hashes the root `turbo.json` itself.
@@ -31,6 +41,7 @@ import { dual } from "effect/Function";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as Order from "effect/Order";
 import { ts } from "ts-morph";
+import { WORKSPACE_MANIFEST_WALK } from "../PackageTestImports.ts";
 import { PolicyRootFileRoute } from "../PolicyFingerprint.schemas.ts";
 import { OXLINT_CIRCULAR_CONFIG, OXLINT_DEPRECATED_APIS_CONFIG } from "./LintPackage.ts";
 import type { PolicyClosure, PolicyFingerprintError } from "../PolicyFingerprint.schemas.ts";
@@ -53,7 +64,8 @@ export const POLICY_SHARED_ROOT_FILES: ReadonlyArray<string> = ["package.json", 
  *
  * Oxlint loads the `@beep/lint-rules` JS plugins, and their TSDoc rule reads
  * `tsdoc.json`, so `tsdoc.json` travels with the Oxlint family. Fallow reads
- * the manual-tools plugin its `.fallowrc.jsonc` names.
+ * the manual-tools plugin its `.fallowrc.jsonc` names. The package
+ * test-import walk reads every workspace manifest under `packages/`.
  *
  * @internal
  * @category constants
@@ -85,6 +97,21 @@ export const POLICY_ROOT_FILE_ROUTES: ReadonlyArray<PolicyRootFileRoute> = [
     tools: [],
   }),
   PolicyRootFileRoute.make({ files: ["turbo.json"], names: ["turbo.json"], tools: [] }),
+  PolicyRootFileRoute.make({
+    files: [
+      "packages/**/package.json",
+      "!**/node_modules/**/package.json",
+      "!**/dist/**/package.json",
+      "!**/build/**/package.json",
+      "!**/.next/**/package.json",
+      "!**/coverage/**/package.json",
+      "!**/storybook-static/**/package.json",
+      "!**/.turbo/**/package.json",
+      "!**/.beep/**/package.json",
+    ],
+    names: [WORKSPACE_MANIFEST_WALK],
+    tools: [],
+  }),
 ];
 
 const TYPESCRIPT_SOURCE = /\.(?:ts|tsx|mts|cts)$/;

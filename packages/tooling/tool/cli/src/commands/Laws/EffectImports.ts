@@ -358,12 +358,19 @@ const NESTED_WORKTREE_SEGMENT = "/.claude/worktrees/";
 // repository tracks no file under any directory of that name (`git ls-files | grep -c
 // '/build/'` is 0), so it is excluded beside `dist`.
 const GENERATED_OR_VENDOR_SEGMENTS = ["/.repos/", "/node_modules/", "/dist/", "/build/", "/vendor/"] as const;
+// `coverage` and `storybook-static` hold test-coverage reports (lcov HTML plus its `prettify.js`
+// and `sorter.js`) and static Storybook bundles: gitignored output that the repository never
+// tracks (`git ls-files | grep -cE '(^|/)(coverage|storybook-static)/'` is 0). A coverage run
+// rewrites hundreds of timestamped report files, so walking them made a local report fail or
+// re-run the law; the Turbo inputs of `//#lint:effect-imports*` negate the same trees.
 const EXCLUDED_DIRECTORY_GLOBS = [
   "**/.repos",
   "**/node_modules",
   "**/dist",
   "**/build",
   "**/vendor",
+  "**/coverage",
+  "**/storybook-static",
   "**/.claude/worktrees",
 ] as const;
 const CODE_EXCLUSION_GLOBS = A.flatMap(EXCLUDED_DIRECTORY_GLOBS, (directory) => [directory, `${directory}/**`]);
@@ -378,13 +385,16 @@ const MARKDOWN_EXCLUSION_GLOBS = A.appendAll(
 // `worktrees`: a populated `.claude/worktrees/<lane>` is a whole checkout that the
 // `**/.claude/worktrees` exclusion would otherwise walk before discarding. The
 // repository tracks no other directory of that name (`git ls-files | grep -c
-// '/worktrees/'` is 0), so the pruned set equals the excluded set over the tree.
+// '/worktrees/'` is 0), so the pruned set equals the excluded set over the tree. `coverage`
+// and `storybook-static` are name-shaped exclusions like `dist`, so they are pruned too.
 const PRUNED_DIRECTORY_NAMES = [
   ".repos",
   "node_modules",
   "dist",
   "build",
   "vendor",
+  "coverage",
+  "storybook-static",
   ".git",
   ".beep",
   "worktrees",
@@ -1761,7 +1771,8 @@ const listGitVisiblePaths = Effect.fn("EffectImports.listGitVisiblePaths")(funct
  * family by default, or the explicit paths and prefixes) plus the foundation
  * `src` files the mapping phase resolves exports from; in `markdown` mode only
  * the foundation files remain. Generated and vendored directories
- * (`.repos`, `node_modules`, `dist`, `vendor`, any `worktrees` directory, so
+ * (`.repos`, `node_modules`, `dist`, `build`, `vendor`, `coverage`,
+ * `storybook-static`, any `worktrees` directory, so
  * nested `.claude/worktrees` checkouts above all) are excluded, dot directories
  * are not entered, symbolic links are skipped and an unreadable entry is skipped. Paths are POSIX, deduplicated and sorted;
  * the per-run scope filter (`excludePaths`, deliberate exclusions, prefixes)
