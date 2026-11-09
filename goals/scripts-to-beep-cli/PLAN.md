@@ -66,6 +66,14 @@ Lane `scripts-to-beep-cli-p3`
 
 Reverse: Close the re-final PR and keep #2922 as the final PR
 
+### Fifth goals-only re-final: #3022 accepted head had no publish verdict, 2026-11-09
+
+#3022 merged at 2026-11-09T21:03:08Z (main 490332acbc) after its until-ready monitor printed merge-ready: yes on accepted head e0e3eb3250 at 21:01:10Z, so the merge order was right this time. The orchestrator pushed e0e3eb3250 (the fix for a beep-reviewer thread on the decision frontmatter key) with a plain git push instead of yeet publish, so no publish verdict exists for that head. goals completion refresh --slug scripts-to-beep-cli --readiness-job 45767ed0-ece0-40d7-b634-8b61b6f83adc now verifies hosted-required-checks (the gate workstation token reads ruleset history and rule suites, which clears #3023) but reports yeet-verdict unknown, because readiness recovery requires a successful publish verdict at the accepted head. This fifth re-final re-binds proposedCloseout to itself and keeps #3022 as a supporting PR. Every push on this branch goes through yeet publish, and final-check, the until-ready monitor, merge-gate and completion refresh all run from the gate workstation.
+
+Lane `goals/scripts-to-beep-cli-refinal5`
+
+Reverse: Close this re-final and point proposedCloseout back at #3022
+
 ### Fourth goals-only re-final after #2961 was hand-merged seven seconds after its ready flip, 2026-11-09
 
 #2961 merged at 11:35:12Z (main 031fa9d4af), seven seconds after it was flipped ready at 11:35:05Z, by hand from the operator account, with all 45 of its checks green. `goals completion refresh --slug scripts-to-beep-cli` on tbk-worker returned unknown: the review window was open at merge, no until-ready job ran on accepted head e8fa214954, the gating yeet-verdict file lives on the publishing workstation, and this guest's fine-grained token gets 403 on the ruleset-history and rule-suite endpoints the merge-time required-check inventory needs. This fourth re-final re-binds `proposedCloseout` to itself and keeps #2961 as a supporting PR. It stays a draft. The strict route (flip ready, `yeet monitor --until-ready` to merge-ready: yes, merge, `goals completion refresh --readiness-job <id>`) has to run from one workstation whose token reads rulesets, and the PR must not be hand-merged before the merge-ready line, which is what unbound the three previous finals.
