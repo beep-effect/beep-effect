@@ -563,10 +563,10 @@ required any successor to start as a fresh exploration with its own decision
 here first. That exploration ran machine-locally on 2026-11-06..08: three
 deep-research reports (ChatGPT 6 Pro, Opus 5.5 xhigh, Grok 4.7 xhigh) over
 the agent-memory packet, reconciled and then tested by nine pre-registered
-spikes in a throwaway repository (`~/YeeBois/workstation-apps/memory-spikes`;
-scoreboard
-`~/YeeBois/knowledge/11-6-26-agent-memory/research/2026-11-08-SCOREBOARD.md`)
-against real corpora: this repository's `goals/**` history, the operator's
+spikes in a throwaway repository on the operator workstation (the
+machine-local `memory-spikes` repository; scoreboard
+`2026-11-08-SCOREBOARD.md` in the agent-memory knowledge folder's research
+directory) against real corpora: this repository's `goals/**` history, the operator's
 Claude auto-memory notes and twenty session transcripts. The measurements
 that decide this entry:
 
