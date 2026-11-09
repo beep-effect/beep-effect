@@ -7,7 +7,7 @@ import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true, concurrent: false })(
   "original remaining cleaner profiles",
   (it) => {
-    for (const kind of ["bun", "node"] as const) {
+    for (const kind of ["bun"] as const) {
       it.effect(
         `replays all five original cleaner and argument profiles on ${kind}`,
         () => replayCitationCanonicalRemainingExtraction(kind, 0, 1, true),

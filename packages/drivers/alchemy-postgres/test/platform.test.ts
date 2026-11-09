@@ -18,14 +18,17 @@ import { deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
+import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
+import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
 
@@ -256,6 +259,44 @@ describe("AlchemyPostgresPlatform delivery lease", () => {
           Effect.timeout(Duration.seconds(10))
         );
         deepStrictEqual(runs, 2);
+      })
+    );
+  });
+});
+
+/** Delivery starts by card id; each run then holds until its host closes. */
+const holds = MutableHashMap.empty<string, number>();
+const holdsOf = (id: string) => O.getOrElse(MutableHashMap.get(holds, id), () => 0);
+class CardHold extends Domain.Policy("CardHold", { from: Card, on: [CardIssued] }) {}
+const CardHoldLive = CardHold.toLayer(
+  Effect.succeed(
+    Effect.fn(function* ({ source }) {
+      MutableHashMap.set(holds, source.id, holdsOf(source.id) + 1);
+      return yield* Effect.never;
+    })
+  )
+);
+class Holding extends Domain.Model("Holding", { aggregates: [Card], policies: [CardHold] }) {}
+// The driver's default 30-second lease, so a row the closing host keeps is visibly still leased.
+const holding = Holding.layer(CardHoldLive).pipe(Layer.provideMerge(AlchemyPostgresPlatform.layer()));
+
+describe("AlchemyPostgresPlatform delivery lease on close", () => {
+  layer(PgliteTestLayer, { timeout: "60 seconds", excludeTestServices: true })("on PGlite", (it) => {
+    it.effect("frees the row it was delivering when the host closes, without counting an attempt", () =>
+      Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const id = CardId.make("closing-host");
+        const scope = yield* Scope.make();
+        const context = yield* Layer.buildWithScope(holding, scope);
+        yield* Context.get(context, Card).send(id, IssueCard.make({ holder: "lee" }));
+        yield* Effect.sync(() => holdsOf(id)).pipe(
+          Effect.repeat({ until: (runs) => runs === 1, schedule: Schedule.spaced(Duration.millis(20)) }),
+          Effect.timeout(Duration.seconds(10))
+        );
+        yield* Scope.close(scope, Exit.void);
+        const rows = yield* sql`SELECT status, attempts, locked_until FROM alchemy_delivery
+          WHERE model = 'Holding' AND source = ${`Card/${id}`}`.pipe(Effect.flatMap(decodeOutboxRows));
+        deepStrictEqual(rows, [{ status: "pending", attempts: 0, locked_until: 0 }]);
       })
     );
   });

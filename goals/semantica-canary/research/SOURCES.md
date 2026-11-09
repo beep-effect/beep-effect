@@ -3,15 +3,15 @@
 - **Source exploration:**
   [`explorations/semantica-lab`](../../../explorations/semantica-lab/README.md)
 - **Primary ledger:**
-  [`explorations/semantica-lab/research/SOURCES.md`](../../../explorations/semantica-lab/research/SOURCES.md)
+  [explorations/semantica-lab/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/SOURCES.md)
   — this file is the goal-side mirror; when the two disagree, the exploration
   ledger wins and this copy is corrected.
 - **Decision authority:**
   [`explorations/semantica-lab/DECISIONS.md`](../../../explorations/semantica-lab/DECISIONS.md)
 - **Contracts in force:**
-  [`shared-schema.md`](../../../explorations/semantica-lab/research/shared-schema.md)
+  [`shared-schema.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/shared-schema.md)
   v1.3,
-  [`workload-contract.md`](../../../explorations/semantica-lab/research/workload-contract.md)
+  [`workload-contract.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/workload-contract.md)
   v1.3
 - **Carry-forward date:** 2026-08-24
 
@@ -25,7 +25,7 @@ Mined at symbol granularity by the D5 extraction pipeline:
 [`scratchpad/semantica-ir`](../../../scratchpad/semantica-ir) emits a
 schema-validated JSONL IR over the semantica repository (6,105 records, 354
 files, SHA-256-stamped; stats in
-[`ir-extraction-report.md`](../../../explorations/semantica-lab/research/ir-extraction-report.md)).
+[`ir-extraction-report.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/ir-extraction-report.md)).
 The IR output itself is gitignored; the extractor, schema, and report are
 committed. The IR pipeline's SHA-256 discipline is the determinism model for
 `EvalReport`s (workload contract §Determinism).
@@ -37,8 +37,8 @@ committed. The IR pipeline's SHA-256 discipline is the determinism model for
 | unpdf (npm `unpdf` ^1.8.1, root dep; used by `@beep/doc-text`) https://github.com/unjs/unpdf | MIT (`unpdf/package.json` in `node_modules`) | reuse as dependency | PDF text extraction (`getDocumentProxy`, `extractText`, `extractTextItems`); the first PDF probe is `@beep/doc-text` over it (M1) |
 | PDF.js (Mozilla) https://github.com/mozilla/pdf.js | Apache-2.0 upstream; **vendored inside `unpdf/dist/pdfjs.mjs` (6.1.200) with no license header and no `pdfjs-dist` package in this repo** | reference via unpdf | text items, the `disableNormalization` switch, NFKC behaviour (the breaker's single retry, M1) |
 | `semantica-agi/semantica` (out-of-repo workstation clone, `danklocal` branch at `add1c006`) | MIT (Hawksight AI, verified in its `LICENSE`) | port-with-attribution (ideas ported schema-first, not vendored code) | concepts: provenance events, storage capability families, ContextGraph, ontology lifecycle, typed inference explanations, pipeline DAG contract |
-| `beep-effect-logos` (out-of-repo archived v3 beep-effect) | Apache-2.0 (verified in its LICENSE) | salvage with Apache-2.0 attribution/NOTICE for copied code and tests; re-derived patterns need none | `rete` SALVAGE (network topology + behavioral test oracle) enters at the reasoning spike, not C2; `rules`/`logos` PATTERN — per [`grounding-v3-logos.md`](../../../explorations/semantica-lab/research/grounding-v3-logos.md) §5 |
-| [`scratchpad/effect-ontology`](../../../scratchpad/effect-ontology) (in-repo quarantined experiment) | in-repo; upstream was MIT per its ledger | reference + pattern; explicitly non-importable, promotion unauthorized | borrow-shape only: `ProviderMetadata` dimension invariant, `QuadDelta` (C1 rebuild-identity witness), `Timeline`, `ProvenanceUri` — per [`effect-ontology-map.md`](../../../explorations/semantica-lab/research/effect-ontology-map.md) |
+| `beep-effect-logos` (out-of-repo archived v3 beep-effect) | Apache-2.0 (verified in its LICENSE) | salvage with Apache-2.0 attribution/NOTICE for copied code and tests; re-derived patterns need none | `rete` SALVAGE (network topology + behavioral test oracle) enters at the reasoning spike, not C2; `rules`/`logos` PATTERN — per [`grounding-v3-logos.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/grounding-v3-logos.md) §5 |
+| [`scratchpad/effect-ontology`](../../../scratchpad/effect-ontology) (in-repo quarantined experiment) | in-repo; upstream was MIT per its ledger | reference + pattern; explicitly non-importable, promotion unauthorized | borrow-shape only: `ProviderMetadata` dimension invariant, `QuadDelta` (C1 rebuild-identity witness), `Timeline`, `ProvenanceUri` — per [`effect-ontology-map.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/effect-ontology-map.md) |
 | EYE (https://github.com/eyereasoner/eye) and eye-js (npm `eyereasoner`, https://github.com/eyereasoner/eye-js) | MIT | reuse as a test-time dependency once C2 wires it; not yet a dependency | gold conclusions and proofs for `G-entailment/rdfs`; spot-check oracle, never the runtime (G3/G5, S8) |
 
 **pdfjs-vendored-in-unpdf attribution note.** `unpdf` ships PDF.js compiled
@@ -65,20 +65,20 @@ Titles and URLs as they appear in the exploration ledger; nothing added.
   (identifier withheld; find it via Notion search). Atlas writes from this
   packet are final park/drop values only (B1).
 - Bake-off candidate URLs: fetch-verified in
-  [`docs-url-census.md`](../../../explorations/semantica-lab/research/docs-url-census.md)
+  [`docs-url-census.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/docs-url-census.md)
   and in each family sheet's Sources appendix (the exploration's
   `bakeoff-*.md` files).
 - Upstream tracker sweep (2026-08-24):
-  [`upstream-tracker-mining.md`](../../../explorations/semantica-lab/research/upstream-tracker-mining.md),
+  [`upstream-tracker-mining.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/upstream-tracker-mining.md),
   verified by
-  [`reviews/2026-08-24-tracker-mining-review.md`](../../../explorations/semantica-lab/research/reviews/2026-08-24-tracker-mining-review.md);
+  [`reviews/2026-08-24-tracker-mining-review.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/reviews/2026-08-24-tracker-mining-review.md);
   classified inventory
-  [`tracker/inventory.jsonl`](../../../explorations/semantica-lab/research/tracker/inventory.jsonl).
+  [`tracker/inventory.jsonl`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/tracker/inventory.jsonl).
   Every cited item is addressable as
   https://github.com/semantica-agi/semantica/issues/N or /pull/N. Standing T2
   rule: never wait on overlapping upstream PRs.
 - Benchmarks vocabulary skim (T3):
-  [`benchmarks-vocab.md`](../../../explorations/semantica-lab/research/benchmarks-vocab.md).
+  [`benchmarks-vocab.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/benchmarks-vocab.md).
   The relocated `semantica-benchmarks` sidecar is not fetchable (404); license
   UNVERIFIED, reference-only, nothing vendored. `EvalReport` metric names are
   borrowed from upstream issue #574 only.
@@ -135,7 +135,7 @@ Bricks the canary composes, with the stage that first touches them.
 | RDF projection | [`packages/drivers/oxigraph`](../../../packages/drivers/oxigraph) (`Oxigraph.sparql.ts`, `Oxigraph.errors.ts`), `@beep/semantic-web` ([`packages/foundation/capability/semantic-web`](../../../packages/foundation/capability/semantic-web)) | C1 | reuse; every call under an Effect-level timeout |
 | Ontology slice (shared spine, D13) | [`packages/ontology`](../../../packages/ontology); SKOS schemes from [`goals/semantic-foundation`](../../semantic-foundation/README.md) | C2 | reuse/extend |
 | Reasoning oracle (test-time) | none in `packages/drivers` ([`n3`](../../../packages/drivers/n3), [`oxigraph`](../../../packages/drivers/oxigraph), [`shacl`](../../../packages/drivers/shacl), [`rdf-canonize`](../../../packages/drivers/rdf-canonize) exist; no EYE) | C2 | NET-NEW wiring: EYE WASM decode for gold proofs |
-| Runtime reasoner | v3 `rete` audit vocabulary as seed ([`grounding-v3-logos.md`](../../../explorations/semantica-lab/research/grounding-v3-logos.md)) | C2 | NET-NEW (small): ρdf closure as `RdfsRule` values |
+| Runtime reasoner | v3 `rete` audit vocabulary as seed ([`grounding-v3-logos.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/grounding-v3-logos.md)) | C2 | NET-NEW (small): ρdf closure as `RdfsRule` values |
 | Local practice-KG precedent | [`apps/practice-kg-mcp`](../../../apps/practice-kg-mcp) (PGlite + DuckDB + read-only MCP) | — | pattern |
 | Charter counterpart | [`apps/labs/trustgraph-workbench`](../../../apps/labs/trustgraph-workbench) | — | boundary per D13 |
 | Lab doctrine precedent | [`goals/lab-apps-lifecycle`](../../lab-apps-lifecycle/README.md) (D13 names `semantica` a first-wave lab source) | — | doctrine |
@@ -143,20 +143,20 @@ Bricks the canary composes, with the stage that first touches them.
 ## 5. Cross-links and provenance
 
 - Primary exploration ledger:
-  [`explorations/semantica-lab/research/SOURCES.md`](../../../explorations/semantica-lab/research/SOURCES.md).
+  [explorations/semantica-lab/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/SOURCES.md).
 - Binding decisions:
   [`explorations/semantica-lab/DECISIONS.md`](../../../explorations/semantica-lab/DECISIONS.md)
   (Current law table; M1-M6).
 - Exploration packet files:
-  [`CAPTURE.md`](../../../explorations/semantica-lab/CAPTURE.md),
-  [`RESEARCH.md`](../../../explorations/semantica-lab/RESEARCH.md),
-  [`OPPORTUNITIES.md`](../../../explorations/semantica-lab/research/OPPORTUNITIES.md)
+  [`CAPTURE.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/CAPTURE.md),
+  [`RESEARCH.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/RESEARCH.md),
+  [`OPPORTUNITIES.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/OPPORTUNITIES.md)
   (friction ledger; record at the moment it happens).
 - Grounding files:
-  [`grounding-semantica-repo.md`](../../../explorations/semantica-lab/research/grounding-semantica-repo.md),
-  [`grounding-beep-labs.md`](../../../explorations/semantica-lab/research/grounding-beep-labs.md),
-  [`grounding-notion-semantica.md`](../../../explorations/semantica-lab/research/grounding-notion-semantica.md),
-  [`grounding-v3-logos.md`](../../../explorations/semantica-lab/research/grounding-v3-logos.md).
+  [`grounding-semantica-repo.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/grounding-semantica-repo.md),
+  [`grounding-beep-labs.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/grounding-beep-labs.md),
+  [`grounding-notion-semantica.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/grounding-notion-semantica.md),
+  [`grounding-v3-logos.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/grounding-v3-logos.md).
 - Sibling packet: the `openai-driver` goal (C1 embeddings Layer; graduated in
   the same ceremony, M5).
 - This packet's decision log: [`SPEC.md`](../SPEC.md#decision-log).

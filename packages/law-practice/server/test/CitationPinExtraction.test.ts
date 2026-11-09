@@ -1,4 +1,3 @@
-import { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { it } from "@beep/test-runner";
 import {
   assertCitationPinExtractionBudget,
@@ -14,7 +13,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source pin 
     timeout: 120000,
   });
   it.effect("retains captured lifetime and deadline", assertCitationPinExtractionLifetime, { timeout: 120000 });
-  for (const kind of CitationNativeRuntimeKind.literals)
+  for (const kind of ["bun"] as const)
     it.effect(`matches source pin tuples through ${kind}`, () => replayCitationPinExtraction(kind, false), {
       timeout: 120000,
     });

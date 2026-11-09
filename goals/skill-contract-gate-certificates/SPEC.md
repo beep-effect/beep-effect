@@ -36,7 +36,7 @@ Higher sources outrank lower sources when they conflict.
 
 ## Constraints
 
-Binding inputs from `explorations/typed-agent-skill-contracts/MAP.md` §Amendment J
+Binding inputs from [explorations/typed-agent-skill-contracts/MAP.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/typed-agent-skill-contracts/MAP.md) §Amendment J
 re-entry (ruled 2026-10-14, recorded in that exploration's `DECISIONS.md`):
 
 - Envelope: a digest-bound in-toto Statement shape (subject digests plus predicate),

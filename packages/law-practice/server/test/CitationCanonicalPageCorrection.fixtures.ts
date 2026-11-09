@@ -38,7 +38,7 @@ const OriginalInput = S.Struct({
 const readRows = Effect.fn("CanonicalPageCorrectionTest.read")(function* () {
   const { operations, assertions } = yield* readCitationCanonicalCaptures();
   const rows = A.filter(operations.cases, (row) => Str.startsWith(prefix)(row.id));
-  expect(rows).toHaveLength(6);
+  expect(rows).toHaveLength(citationCanonicalPageCorrectionCalls);
   return yield* Effect.forEach(
     rows,
     Effect.fnUntraced(function* (row) {
@@ -69,15 +69,20 @@ const readRows = Effect.fn("CanonicalPageCorrectionTest.read")(function* () {
   );
 });
 
-/** Recompute parsing and the original correction methods with actual model data.
+/** Original parser calls in the page-correction cohort; replay slices must cover every call. */
+export const citationCanonicalPageCorrectionCalls = 6;
+/** Recompute parsing and the original correction methods with actual model data for one slice.
  * Frozen edition lookup consumes the actual selected reference; no observed
  * corrected string or normalized original model is supplied as correction input.
  * @internal @category testing @since 0.0.0
  */
 export const replayCitationCanonicalPageCorrection = Effect.fn("CanonicalPageCorrectionTest.replay")(function* (
-  kind: CitationNativeRuntimeKind
+  kind: CitationNativeRuntimeKind,
+  from: number,
+  count: number
 ) {
-  const rows = yield* readRows();
+  const all = yield* readRows();
+  const rows = A.take(A.drop(all, from), count);
   const {
     replay,
     unicode,

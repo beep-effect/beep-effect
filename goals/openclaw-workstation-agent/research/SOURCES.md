@@ -18,7 +18,7 @@ RULES
 
 - **Source exploration:** `explorations/openclaw-deployment-platform` —
   primary ledger:
-  [`explorations/openclaw-deployment-platform/research/SOURCES.md`](../../../explorations/openclaw-deployment-platform/research/SOURCES.md).
+  [explorations/openclaw-deployment-platform/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/openclaw-deployment-platform/research/SOURCES.md).
 - **Provenance:** research legs live in the exploration's `research/`
   directory (oss-landscape, x-com field notes, config-internals dive,
   adversarial review); synthesis in its `RESEARCH.md`. GATE C (2026-07-25)
@@ -29,8 +29,8 @@ RULES
 
 | Source | Title | Upstream (repo) | Location (`file:line`) | Theme | Disposition |
 |--------|-------|-----------------|------------------------|-------|-------------|
-| `config-internals` | Config load/write/state mechanics, writer inventory, HOLDS-WITH-CONDITIONS verdict | `openclaw/openclaw` @ `663c4fba` | ~90 `file:line` citations in [`openclaw-config-internals.md`](../../../explorations/openclaw-deployment-platform/research/openclaw-config-internals.md); 3 load-bearing ones independently re-verified (write-guard call in `src/config/io.write.ts:83`, strict Zod root in `src/config/zod-schema.root-shape.ts:35`, probe map in `src/gateway/server-http.ts:140`) | config ownership | reference (MIT upstream; facts, no vendored code) |
-| `adversarial-review` | 12 source-grounded findings (2 CRITICAL: in-process guard ≠ filesystem immutability; SQLite migration stamps strand rollbacks) that produced the OS-enforcement + generation design | `openclaw/openclaw` clone evidence | [`adversarial-review.md`](../../../explorations/openclaw-deployment-platform/research/adversarial-review.md) | design gating | binding via exploration DECISIONS |
+| `config-internals` | Config load/write/state mechanics, writer inventory, HOLDS-WITH-CONDITIONS verdict | `openclaw/openclaw` @ `663c4fba` | ~90 `file:line` citations in [`openclaw-config-internals.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/openclaw-deployment-platform/research/openclaw-config-internals.md); 3 load-bearing ones independently re-verified (write-guard call in `src/config/io.write.ts:83`, strict Zod root in `src/config/zod-schema.root-shape.ts:35`, probe map in `src/gateway/server-http.ts:140`) | config ownership | reference (MIT upstream; facts, no vendored code) |
+| `adversarial-review` | 12 source-grounded findings (2 CRITICAL: in-process guard ≠ filesystem immutability; SQLite migration stamps strand rollbacks) that produced the OS-enforcement + generation design | `openclaw/openclaw` clone evidence | [`adversarial-review.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/openclaw-deployment-platform/research/adversarial-review.md) | design gating | binding via exploration DECISIONS |
 
 **How these inform implementation:** the driver renders canonical JSON only
 and validates with the pinned candidate binary; the generation engine
@@ -61,12 +61,12 @@ verified in the exploration ledger:
 The full cited list (OpenClaw docs index survey of ~28 pages, OSS sweep
 URLs, ~30 X post citations) lives in the exploration's ledger and legs:
 
-- [`research/SOURCES.md` §3](../../../explorations/openclaw-deployment-platform/research/SOURCES.md)
+- [`research/SOURCES.md` §3](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/openclaw-deployment-platform/research/SOURCES.md)
   — docs.openclaw.ai pages (1password, secrets/config CLI, health, doctor,
   install/nix, SOUL.md, skills, sandbox/tool policy, local models, otel).
-- [`oss-landscape.md`](../../../explorations/openclaw-deployment-platform/research/oss-landscape.md)
+- [`oss-landscape.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/openclaw-deployment-platform/research/oss-landscape.md)
   — codex OSS/web sweep with inline URLs.
-- [`x-com-field-notes.md`](../../../explorations/openclaw-deployment-platform/research/x-com-field-notes.md)
+- [`x-com-field-notes.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/openclaw-deployment-platform/research/x-com-field-notes.md)
   — Grok x_search leg (community config-pain evidence).
 
 ## 4. In-repo capability references
@@ -93,7 +93,7 @@ URLs, ~30 X post citations) lives in the exploration's ledger and legs:
 - Source exploration:
   [`README.md`](../../../explorations/openclaw-deployment-platform/README.md),
   [`BRIEF.md`](../../../explorations/openclaw-deployment-platform/BRIEF.md),
-  [`MAP.md`](../../../explorations/openclaw-deployment-platform/MAP.md),
+  [`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/openclaw-deployment-platform/MAP.md),
   [`DECISIONS.md`](../../../explorations/openclaw-deployment-platform/DECISIONS.md)
   (29 dated entries through GATE C).
 - Related goal context:

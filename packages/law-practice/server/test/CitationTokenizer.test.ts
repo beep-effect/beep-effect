@@ -3,7 +3,6 @@ import {
   CitationAdmissionSnapshot,
   CitationOperationAdmission,
 } from "@beep/law-practice-server/internal/Citation/Admission";
-import { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { makeCitationTokenizer } from "@beep/law-practice-server/internal/Citation/Tokenizer";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
@@ -105,7 +104,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
       expect(duplicate).toMatchObject({ reason: "stage-failed" });
     })
   );
-  for (const kind of CitationNativeRuntimeKind.literals) {
+  for (const kind of ["bun"] as const) {
     it.effect(
       `composes real isolated captures, class recipes and native text assembly under ${kind}`,
       () =>

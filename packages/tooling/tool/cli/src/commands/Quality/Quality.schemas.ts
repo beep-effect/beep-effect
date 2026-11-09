@@ -478,9 +478,9 @@ export type QualityHardwareProfile = typeof QualityHardwareProfile.Type;
  * `turboConcurrency` bounds the root `build`, `check`, `test` and `lint`
  * Turbo graphs; `policyLintConcurrency` bounds each lint-policy phase graph;
  * `cheapGateConcurrency` and `prePushLaneConcurrency` are the lanes one wave
- * of the matching local proof tier runs at once; `oxlintThreads` is the
- * type-aware deprecated-API sweep's worker count. The `ci` profile carries the
- * hosted values verbatim.
+ * of the matching local proof tier runs at once; `oxlintThreads` is the worker
+ * count of the type-aware deprecated-API sweep and of the root documentation
+ * oxlint pass. The `ci` profile carries the hosted values verbatim.
  *
  * **Example** (Construct a quality profile config)
  *

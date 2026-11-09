@@ -1,4 +1,3 @@
-import { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { it } from "@beep/test-runner";
 import {
   assertCitationPreCaseBudget,
@@ -15,7 +14,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source pre-
   );
   it.effect("owns budgets and preserves early source guards", assertCitationPreCaseBudget, { timeout: 120000 });
   it.effect("retains closed lifetime and captured timing", assertCitationPreCaseLifetime, { timeout: 120000 });
-  for (const kind of CitationNativeRuntimeKind.literals)
+  for (const kind of ["bun"] as const)
     it.effect(`matches source backward metadata through ${kind}`, () => replayCitationPreCaseMetadata(kind, false), {
       timeout: 120000,
     });

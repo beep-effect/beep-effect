@@ -2221,7 +2221,31 @@ const coverageBaselineChangeSetFromBase = Effect.fn("CoverageRegression.coverage
   return yield* coverageBaselineChangeSetFromChangedFiles(repoRoot, changedFiles, baseDescription);
 });
 
-const originMainMergeBase = Effect.fn("CoverageRegression.originMainMergeBase")(function* (
+/**
+ * Resolve the `origin/main` merge base of `HEAD`, or `None` when either side is missing.
+ *
+ * **Details**
+ *
+ * A checkout without an `origin/main` ref (a bare clone, a detached proof
+ * tree) and a history with no common ancestor both read as `None` rather than
+ * as a failure, so callers can fall back to a full measurement and say why.
+ * The local coverage default and the ratchet comparison share this one rule.
+ *
+ * **Example** (Fall back when no merge base resolves)
+ *
+ * ```ts
+ * import { originMainMergeBase } from "@beep/repo-cli/test/Quality"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(originMainMergeBase("/repo"))) // true
+ * ```
+ *
+ * @param repoRoot - Repository root directory.
+ * @returns The merge-base commit, or `None` when it cannot be resolved.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const originMainMergeBase = Effect.fn("CoverageRegression.originMainMergeBase")(function* (
   repoRoot: string
 ): Effect.fn.Return<
   O.Option<string>,

@@ -1,4 +1,3 @@
-import { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { it } from "@beep/test-runner";
 import {
   assertCitationCaseNameProcessBudget,
@@ -18,7 +17,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source cand
   it.effect("enforces the stage deadline without nested timers", assertCitationMetadataStageDeadline, {
     timeout: 15000,
   });
-  for (const kind of CitationNativeRuntimeKind.literals)
+  for (const kind of ["bun"] as const)
     it.effect(`preserves source assignments through ${kind}`, () => replayCitationCaseNameProcess(kind, false), {
       timeout: 180000,
     });

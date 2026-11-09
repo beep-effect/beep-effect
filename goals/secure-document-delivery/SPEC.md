@@ -32,7 +32,7 @@ raw origin URL, business identifier, serving key, or persisted PDF bytes.
 5. `PLAN.md`.
 6. `GOAL.md`.
 7. The exploration [`DECISIONS.md`](../../explorations/secure-document-download-proxy/DECISIONS.md),
-   [`MAP.md`](../../explorations/secure-document-download-proxy/MAP.md), and
+   [`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/secure-document-download-proxy/MAP.md), and
    supporting `research/`, `ops/`, and `history/` files.
 
 Higher sources outrank lower sources when they conflict.

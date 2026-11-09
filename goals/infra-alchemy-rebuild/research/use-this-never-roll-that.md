@@ -187,7 +187,7 @@ apply. Each `read` returns plain attributes (silent adopt) and `delete` is a no-
   `packages/github/src/services/{actions,apps}.ts`.
 - `~/YeeBois/references/effect/t3code/infra/relay`, `infra/task-cache` (via T3).
 - This worktree: `goals/infra-alchemy-rebuild/SPEC.md` (Target Surfaces),
-  `explorations/pulumi-to-alchemy/DECISIONS.md` (D1–D16), `explorations/pulumi-to-alchemy/RESEARCH.md`
+  `explorations/pulumi-to-alchemy/DECISIONS.md` (D1–D16), [explorations/pulumi-to-alchemy/RESEARCH.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/pulumi-to-alchemy/RESEARCH.md)
   ("2026-11-02" coverage matrix), `infra/src/{CiFleetController,CiRunners,AIMetrics,OipWeb}.ts`,
   `apps/beep-effect-web/alchemy.run.ts`, `docs/ops/beep-reviewer-app.md`, `.github/workflows/`.
 - Primary clone branch `@chore/deps-update-11-6-26` (`scratchpad/turbo-cache-r2`, commit `830341baeb`).

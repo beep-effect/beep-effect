@@ -547,6 +547,12 @@ const secretReferenceProbe = Effect.fn("EnvConfig.secretReferenceProbe")(functio
   return exitCode === 0;
 });
 
+// Width of the isolated per-reference `op run` probes. Each probe is a short,
+// network-bound child process, so 16 in flight replays a 50-reference `.env`
+// in 1.4-1.6 s instead of 5.2 s at width 4, with the same failing names and
+// unchanged CPU.
+const environmentHealthProbeConcurrency = 16;
+
 const turboEnvironmentHealthVerdicts = MutableHashMap.empty<string, ReadonlyArray<TurboEnvironmentHealthWarning>>();
 
 /**
@@ -630,7 +636,7 @@ export const turboEnvironmentHealthWarnings = Effect.fn("EnvConfig.turboEnvironm
       secretReferenceProbe(repoRoot, { ...secretFreeEnvironment, [variableName]: reference }).pipe(
         Effect.map((usable) => (usable ? O.none() : O.some(TurboEnvironmentHealthWarning.make({ variableName }))))
       ),
-    { concurrency: 4 }
+    { concurrency: environmentHealthProbeConcurrency }
   );
   const warnings = A.getSomes(isolated);
   MutableHashMap.set(turboEnvironmentHealthVerdicts, repoRoot, warnings);

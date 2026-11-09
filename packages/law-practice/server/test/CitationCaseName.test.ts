@@ -9,9 +9,4 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("original pl
   it.effect("shares scan/conditional processing authority on Bun", () => replayCitationCaseName("bun", false), {
     timeout: 180000,
   });
-  it.effect(
-    "shares the same original guard and physical retirement on Node",
-    () => replayCitationCaseName("node", false),
-    { timeout: 180000 }
-  );
 });

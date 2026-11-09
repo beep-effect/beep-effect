@@ -555,3 +555,80 @@ editor; Effect API questions read the `.repos/effect` checkout directly.
 `graft build`. Machine-local residue (the installed
 `beep-graft-deep-refresh` units, `$HOME/.config/beep-graft/env`, `graft/`
 caches in clones and reference members) is cleaned outside the repo.
+
+## 2026-11-09: The Agent Memory Store Is a Fact Log With Projections; No CRDT on Agent Write Paths
+
+**Context:** The 2026-08-29 entry removed the external memory plane and
+required any successor to start as a fresh exploration with its own decision
+here first. That exploration ran machine-locally on 2026-11-06..08: three
+deep-research reports (ChatGPT 6 Pro, Opus 5.5 xhigh, Grok 4.7 xhigh) over
+the agent-memory packet, reconciled and then tested by nine pre-registered
+spikes in a throwaway repository on the operator workstation (the
+machine-local `memory-spikes` repository; scoreboard
+`2026-11-08-SCOREBOARD.md` in the agent-memory knowledge folder's research
+directory) against real corpora: this repository's `goals/**` history, the operator's
+Claude auto-memory notes and twenty session transcripts. The measurements
+that decide this entry:
+
+- Raw-slice Markdown projection held byte identity in 5168/5168 replays and
+  read 0/2618 concurrent insertions as deletions (S1).
+- Per-node compare-and-set with three-way merge held every contested node
+  (70/70) with zero silent loss over 100 adversarial runs; the Loro CRDT arm
+  mashed 48/70 of the same nodes, and its shallow snapshots drop provenance
+  by design (S14, S15). Real two-sided merges were 2/70 in this repository's
+  own history.
+- Prevalence counts in retrieval rank or gate cost 53 and 62 points of
+  update adoption at N=8, and 65% of nodes with count ≥2 lost half their
+  count once reads were excluded (S9). Exact-hash deduplication removed 73%
+  of duplicates with 1.8% false suppression (S10).
+- A separate relevance stage added nothing over cross-encoder plus
+  admissibility gate; the gate with a typed identity lookup closed the
+  renamed-claim stratum from 10/57 to 0/57 (S7).
+- The paper's ~120-competitor attention cliff was question truncation at
+  4096 tokens; there is no cliff to 1000 competitors at ~41k tokens (S5).
+
+**Decision (operator, grilled 2026-11-09):**
+
+1. **The agent memory store's sole authority is a set-union log of
+   immutable node events.** Markdown memory files, any CRDT document and
+   every index (full-text, vector, cross-encoder cache) are projections,
+   rebuildable from the log. In `01-memory-layer-taxonomy.md` the log is
+   Layer 2's exact episodic records, the indexes are its prunable
+   projections, and the memory-note files are the Layer 1 projection. This
+   refines the 2026-04-15 "Semantic Memory = Managed Cache" entry (the log
+   is the source, the indexes are the cache) and keeps the 2026-08-29 entry:
+   file memory remains the memory layer each agent reads; the store projects
+   to it.
+2. **No CRDT merge on agent write paths.** Agent edits to memory files are
+   captured as operations against the exported base and admitted
+   store-side: per-node compare-and-set, three-way merge on disjoint nodes,
+   contested nodes held with both texts, clean operations landing while a
+   node waits. Zero silent loss is the bar; a bounded held rate (about 9%
+   on the upper-bound trace, S14b) is the budget; 95% automatic merge is not
+   a reachable target for free text and is not the bar. A CRDT, if used at
+   all, serves human editing and is sequenced through the durable replica.
+   Agent writes reach Layer 1 only through this admission; curation is
+   operator review of the log and of held conflicts, not pre-approval.
+3. **Prevalence is an observation log, never a ranking or gating
+   feature.** Reads, writes, restatements and updates are recorded as typed
+   events. Retrieval rank and the admissibility gate never read counts.
+   Consolidation and promotion may read distinct-lineage counts from the
+   log, never naive occurrence counts.
+
+**Not decided here** (goal-packet acceptance criteria, changeable on
+evidence): retrieval order (BM25-leaning fusion, cross-encoder, typed-finding
+gate), near-duplicate policy, symbol-liveness semantics (SCIP identity, span
+hash as re-verify), node granularity and identity tiers. Node identity: the
+store mints its own NodeId at admission; span anchoring in the Markdown
+projection is expressed as the occurrence preimage of the
+`text-knowledge-stack-rebuild` packet (source identity, unit, range, quote)
+so the two schemes do not diverge, and the packet adopts `@beep/text` once
+that rename lands. The build is a new goal packet whose P0 adopts the
+scoreboard as research and decides the package home by specific-home-first;
+it is operator agent-memory, keyless and local, reusing the epistemic and
+ontology kernels where they fit.
+
+**Reversal:** the log is append-only and every projection is rebuildable, so
+reversal is deleting the projector and archiving the log; the memory files
+stay as they are. The spikes record the measurements that would have to
+change first.

@@ -3,20 +3,20 @@
 - **Source exploration:**
   [`explorations/semantica-lab`](../../../explorations/semantica-lab/README.md)
 - **Primary ledger:**
-  [`explorations/semantica-lab/research/SOURCES.md`](../../../explorations/semantica-lab/research/SOURCES.md)
+  [explorations/semantica-lab/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/SOURCES.md)
   — this file is the goal-side mirror; when the two disagree, the exploration
   ledger wins and this copy is corrected.
 - **Decision authority:**
   [`explorations/semantica-lab/DECISIONS.md`](../../../explorations/semantica-lab/DECISIONS.md)
   (Current law table; 2026-09-03 ratification grill R0.a, R1.g, R2.a–R2.g).
 - **Design sources:**
-  [`MAP.md` §R](../../../explorations/semantica-lab/MAP.md#r-semantica-reasoning-spike--the-fixture-is-the-spikes-first-slice-not-its-gate)
+  [`MAP.md` §R](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/MAP.md#r-semantica-reasoning-spike--the-fixture-is-the-spikes-first-slice-not-its-gate)
   v1.1;
-  [`research/adhd-reasoning.md`](../../../explorations/semantica-lab/research/adhd-reasoning.md)
+  [`research/adhd-reasoning.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/adhd-reasoning.md)
   (D15 opportunity space, §Focus 1–3);
-  [`research/grounding-v3-logos.md`](../../../explorations/semantica-lab/research/grounding-v3-logos.md)
+  [`research/grounding-v3-logos.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/grounding-v3-logos.md)
   (v3 salvage verdict); adversarial review
-  [`reviews/2026-09-03-sol-reentry-review.md`](../../../explorations/semantica-lab/research/reviews/2026-09-03-sol-reentry-review.md).
+  [`reviews/2026-09-03-sol-reentry-review.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/reviews/2026-09-03-sol-reentry-review.md).
 - **Carry-forward date:** 2026-09-03
 
 The tables below reproduce the rows of the exploration's corpus this spike
@@ -25,8 +25,8 @@ composes. Machine-local paths are rendered as out-of-repo locations by name.
 ## 1. Mined source corpus
 
 The D5 extraction IR is not on this spike's path. The upstream tracker sweep
-([`upstream-tracker-mining.md`](../../../explorations/semantica-lab/research/upstream-tracker-mining.md),
-[`tracker/inventory.jsonl`](../../../explorations/semantica-lab/research/tracker/inventory.jsonl))
+([`upstream-tracker-mining.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/upstream-tracker-mining.md),
+[`tracker/inventory.jsonl`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/tracker/inventory.jsonl))
 recorded the STRENGTHENED demand for proof-bearing, LLM-free reasoning that
 keeps the O4 `reasoning-package` gate alive; T2 forbids waiting on the
 overlapping upstream RETE PR #1077 and its catalog twins.
@@ -35,7 +35,7 @@ overlapping upstream RETE PR #1077 and its catalog twins.
 
 | Repo | License | Port discipline | What this spike takes |
 | --- | --- | --- | --- |
-| `beep-effect-logos` (out-of-repo archived v3 beep-effect, recorded under a workstation projects root) | Apache-2.0 (verified in its LICENSE on 2026-08-24). **Absent from the recorded path on 2026-09-03; reference-only until relocated — locating it is the P3 entry condition (R2.g)** | salvage with Apache-2.0 attribution/NOTICE for copied code and tests; re-derived patterns need none | `rete` SALVAGE (network topology + the 46 behavioural tests as the match-semantics oracle), `rules` PATTERN (operator taxonomy), `logos` PATTERN (rule-AST + validator semantics) — per [`grounding-v3-logos.md` §5](../../../explorations/semantica-lab/research/grounding-v3-logos.md#5-verdict-for-the-new-lab) |
+| `beep-effect-logos` (out-of-repo archived v3 beep-effect, recorded under a workstation projects root) | Apache-2.0 (verified in its LICENSE on 2026-08-24). **Absent from the recorded path on 2026-09-03; reference-only until relocated — locating it is the P3 entry condition (R2.g)** | salvage with Apache-2.0 attribution/NOTICE for copied code and tests; re-derived patterns need none | `rete` SALVAGE (network topology + the 46 behavioural tests as the match-semantics oracle), `rules` PATTERN (operator taxonomy), `logos` PATTERN (rule-AST + validator semantics) — per [`grounding-v3-logos.md` §5](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/grounding-v3-logos.md#5-verdict-for-the-new-lab) |
 | EYE (`eyereasoner/eye`) https://github.com/eyereasoner/eye and eye-js (npm `eyereasoner`) https://github.com/eyereasoner/eye-js | MIT | reuse as test-time dependency, pinned (EYE 11.24.5 via `eyereasoner` 21.1.18, catalog-enforced) | the restricted oracle behind every gold case; never the runtime |
 | `semantica-agi/semantica` (out-of-repo workstation clone, `danklocal` at `add1c006`) | MIT (Hawksight AI, verified) | port-with-attribution, schema-first | typed inference explanations as a concept only |
 

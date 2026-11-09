@@ -59,7 +59,7 @@ Local clones referenced (reference/pattern study, not vendoring):
 - `~/YeeBois/dev/LemmaScript` — proof-fiber system (lane 06).
 - `~/YeeBois/dev/effect-website` — API page generation pipeline (lane 05).
 - `~/YeeBois/dev/mykg` — MIT; Markdown→KG pipeline; dispositions recorded in
-  `explorations/packet-system-redesign/research/2026-08-25-ontology-tooling-recon.md`.
+  [explorations/packet-system-redesign/research/2026-08-25-ontology-tooling-recon.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/packet-system-redesign/research/2026-08-25-ontology-tooling-recon.md).
 
 Named in conversation, not fetched (reference only — no URLs recorded to
 avoid fabrication):

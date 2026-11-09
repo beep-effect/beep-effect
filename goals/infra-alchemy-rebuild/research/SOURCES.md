@@ -42,7 +42,7 @@ deep-research lanes under `alchemy-blog/`).
   `Secrets.DotEnv`/`ProcessEnv`, `adopt(true)`).
 - `apps/beep-effect-web/alchemy.run.ts` and `goals/beep-effect-web-alchemy` (first live stack in
   this repo, Cloudflare state store lessons).
-- `explorations/pulumi-to-alchemy/RESEARCH.md` (2026-11-02 coverage matrix, G1–G9).
+- [explorations/pulumi-to-alchemy/RESEARCH.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/pulumi-to-alchemy/RESEARCH.md) (2026-11-02 coverage matrix, G1–G9).
 
 ## t3code patches
 

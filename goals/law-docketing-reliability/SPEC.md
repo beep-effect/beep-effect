@@ -29,7 +29,7 @@ backfill/reconciliation report before heartbeats resume.
 6. `GOAL.md`.
 7. The patent spine's lifecycle/records contract, then the exploration
    [`DECISIONS.md`](../../explorations/solo-firm-docketing/DECISIONS.md),
-   [`MAP.md`](../../explorations/solo-firm-docketing/MAP.md), and supporting
+   [`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/solo-firm-docketing/MAP.md), and supporting
    `research/`, `ops/`, and `history/` files.
 
 Higher sources outrank lower sources when they conflict.

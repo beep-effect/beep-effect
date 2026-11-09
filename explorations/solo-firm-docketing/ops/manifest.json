@@ -21,6 +21,14 @@
     },
     "created": "2026-06-18",
     "updated": "2026-08-13",
-    "sources": ["research/SOURCES.md"]
+    "sources": ["research/SOURCES.md"],
+    "archive": {
+      "repo": "beep-effect/beep-effect-goals-archive",
+      "path": "explorations/solo-firm-docketing",
+      "commit": "1604d5144ca9118523ea2de34057d06a2f478bb6",
+      "contentHash": "6e3f4c16f0c849fa08d78258f69845f3241b169d",
+      "archivedAt": "2026-11-09T08:44:38.484Z",
+      "sourceCommit": "0b459d8674f24af3a7267e31f78050835dda3f65"
+    }
   }
 }

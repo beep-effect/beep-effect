@@ -1,6 +1,6 @@
 # patent-drafting-episode-ledger — inherited source corpus
 
-Primary ledger: `explorations/patent-drafting-episode-ledger/research/SOURCES.md`.
+Primary ledger: [explorations/patent-drafting-episode-ledger/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/patent-drafting-episode-ledger/research/SOURCES.md).
 This file reproduces the graduation-time corpus for implementation convenience;
 the exploration ledger remains the primary copy.
 
@@ -35,11 +35,11 @@ RULES
 
 Inherited by reference from the parent campaign — the nuggets' distillates
 live in [explorations/legal-patent-kg-deepening/research/mined/](https://github.com/beep-effect/beep-effect-goals-archive/tree/main/explorations/legal-patent-kg-deepening/research/mined) (see each
-nugget's distillate list in [`CAPTURE.md`](../../../explorations/patent-drafting-episode-ledger/CAPTURE.md)). No new corpus is
+nugget's distillate list in [`CAPTURE.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/patent-drafting-episode-ledger/CAPTURE.md)). No new corpus is
 mined for this wedge; links, not copies. The two deepened plays (`ADHD-2`,
 `ADHD-3`) are not verified findings — research Lane B re-grounded their
 boundary language against the primary public sources 2026-08-06
-([`02-drafting-episode-frame.md`](../../../explorations/patent-drafting-episode-ledger/research/02-drafting-episode-frame.md)).
+([`02-drafting-episode-frame.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/patent-drafting-episode-ledger/research/02-drafting-episode-frame.md)).
 Catalog hygiene found by Lane B (§11): the wedge draws on 18 parent-catalog
 paper rows representing 16 distinct works because P002/P003 are one HSNKB
 work and P018/P019 are one SAT-Graph work. This
@@ -66,7 +66,7 @@ records:
   ledger. Its 377-row/metric figures are currently distillate-carried
   (the publisher endpoint served a consent page); a license check and a
   full-text retry come before any SPEC quotes those tables
-  ([`02-drafting-episode-frame.md`](../../../explorations/patent-drafting-episode-ledger/research/02-drafting-episode-frame.md) §12).
+  ([`02-drafting-episode-frame.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/patent-drafting-episode-ledger/research/02-drafting-episode-frame.md) §12).
 
 Any future code donor enters here with its license discipline (copyleft ⇒
 clean-room only; permissive ⇒ port-with-attribution; missing/unverified ⇒
@@ -75,7 +75,7 @@ reference only) before any adoption.
 ## 3. External research sources
 
 Populated 2026-08-06 by Lane B — the full per-URL ledger with access dates
-is [`02-drafting-episode-frame.md`](../../../explorations/patent-drafting-episode-ledger/research/02-drafting-episode-frame.md) §11
+is [`02-drafting-episode-frame.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/patent-drafting-episode-ledger/research/02-drafting-episode-frame.md) §11
 (Sources), with failed/unverifiable fetches recorded in §12 (NOT FOUND /
 NOT VERIFIED) rather than papered over. Source families: the primary legal
 texts (35 U.S.C. § 112 and § 132; MPEP § 2163 and subsections; MPEP
@@ -91,7 +91,7 @@ paper (§12).
 
 ## 4. In-repo capability references
 
-Populated 2026-08-06 by Lane A ([`01-repo-surfaces.md`](../../../explorations/patent-drafting-episode-ledger/research/01-repo-surfaces.md))
+Populated 2026-08-06 by Lane A ([`01-repo-surfaces.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/patent-drafting-episode-ledger/research/01-repo-surfaces.md))
 — grounded file:line map of all composed surfaces, net-new re-confirmation
 (§9, all eight symbols at zero source occurrences), nugget reconciliation
 (§10), and an explicit corrections ledger (§ Corrections to inherited
@@ -156,4 +156,4 @@ the lane file where they differ):
   Cognee to basic-memory + codegraph with the operator/product boundary
   explicitly unchanged).
 - This packet's decision log: [`../DECISIONS.md`](../../../explorations/patent-drafting-episode-ledger/DECISIONS.md); capture:
-  [`../CAPTURE.md`](../../../explorations/patent-drafting-episode-ledger/CAPTURE.md).
+  [`../CAPTURE.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/patent-drafting-episode-ledger/CAPTURE.md).

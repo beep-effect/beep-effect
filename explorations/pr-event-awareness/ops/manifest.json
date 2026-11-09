@@ -13,6 +13,14 @@
       "supersededBy": null
     },
     "created": "2026-09-12",
-    "updated": "2026-09-25"
+    "updated": "2026-09-25",
+    "archive": {
+      "repo": "beep-effect/beep-effect-goals-archive",
+      "path": "explorations/pr-event-awareness",
+      "commit": "1604d5144ca9118523ea2de34057d06a2f478bb6",
+      "contentHash": "205630a8bd4acffa53b37823f4777da0883ae0c6",
+      "archivedAt": "2026-11-09T08:44:38.484Z",
+      "sourceCommit": "0b459d8674f24af3a7267e31f78050835dda3f65"
+    }
   }
 }

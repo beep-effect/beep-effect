@@ -68,7 +68,7 @@ const checkCase = Effect.fn("NullableTest.checkCase")(function* (
     );
   }
 });
-/** Replay complete controls on hosted CI, or a small actual-child smoke locally. */
+/** Replay every nullable profile through a small actual-child smoke (the full replay retired 2026-11-09). */
 export const replayCitationRegexNullable = Effect.fn("NullableTest.replay")(function* (
   kind: CitationNativeRuntimeKind,
   full: boolean

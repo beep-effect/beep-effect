@@ -5,19 +5,19 @@ exploration. The exploration ledger remains the primary copy.
 
 ## Inherited at graduation
 
-- [Parent source ledger](../../../explorations/oppold-corpus-overhaul/research/SOURCES.md)
+- [Parent source ledger](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/oppold-corpus-overhaul/research/SOURCES.md)
   - primary provenance for the exploration.
 - [BRIEF](../../../explorations/oppold-corpus-overhaul/BRIEF.md) - ratified
   problem, appetite, G1 sketch, rabbit holes, and no-gos.
-- [MAP](../../../explorations/oppold-corpus-overhaul/MAP.md) - ratified G1
+- [MAP](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/oppold-corpus-overhaul/MAP.md) - ratified G1
   mission, sequence, first vertical slice, capability citations, and gated
   re-entry candidates.
 - [DECISIONS](../../../explorations/oppold-corpus-overhaul/DECISIONS.md) -
   bar v2, scope discipline, and the three operator-ratified 2026-08-24
   graduation decisions.
-- [Corrected restoration census](../../../explorations/oppold-corpus-overhaul/research/2026-08-17-restoration-census.md)
+- [Corrected restoration census](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/oppold-corpus-overhaul/research/2026-08-17-restoration-census.md)
   - aggregate preservation and transformation denominators.
-- [Graduation dossier](../../../explorations/oppold-corpus-overhaul/research/2026-08-24-graduation-dossier.md)
+- [Graduation dossier](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/oppold-corpus-overhaul/research/2026-08-24-graduation-dossier.md)
   - GPT-5.6 Sol xhigh synthesis of the four adversarial reports used for the
   final align, shape, and decompose decisions.
 
@@ -32,7 +32,7 @@ exploration. The exploration ledger remains the primary copy.
 ## Parent ledger entries reproduced
 
 - **Origin:** operator roadmap notes, 2026-08-17, in the parent
-  [`CAPTURE.md`](../../../explorations/oppold-corpus-overhaul/CAPTURE.md).
+  [`CAPTURE.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/oppold-corpus-overhaul/CAPTURE.md).
 - **Salvage source:** the machine-local T7 archive, which remains out of repo.
   Only the parent's aggregate census and ledgers may enter evidence.
 - **Composition targets:** `goals/semantic-foundation`,

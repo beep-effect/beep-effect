@@ -139,6 +139,10 @@ export const resolveCommandTarget = (argv: ReadonlyArray<string>): DispatchTarge
  * group. The caller still parses the task invocation and falls back to
  * {@link resolveCommandTarget} when it does not parse.
  *
+ * A root flag keeps argv off the quality-task route, so `beep lint --log-level debug`
+ * resolves to the lint group with no subcommand. That group's handler exits 1
+ * and points to `bun run lint` rather than reporting a sweep that never ran.
+ *
  * @param argv - Process arguments after the bin path.
  * @returns The dispatch target.
  * @internal

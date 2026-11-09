@@ -13,6 +13,14 @@
       "supersededBy": null
     },
     "created": "2026-07-24",
-    "updated": "2026-07-25"
+    "updated": "2026-07-25",
+    "archive": {
+      "repo": "beep-effect/beep-effect-goals-archive",
+      "path": "explorations/openclaw-deployment-platform",
+      "commit": "1604d5144ca9118523ea2de34057d06a2f478bb6",
+      "contentHash": "fda8cb9bc3703f1c7c7d15e7f5be6229be8ab27e",
+      "archivedAt": "2026-11-09T08:44:38.484Z",
+      "sourceCommit": "0b459d8674f24af3a7267e31f78050835dda3f65"
+    }
   }
 }

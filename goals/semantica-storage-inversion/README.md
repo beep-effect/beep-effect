@@ -41,12 +41,12 @@ Use this command for execution-capable sessions:
 5. [`research/SOURCES.md`](./research/SOURCES.md) - goal-side mirror of the
    exploration's provenance ledger.
 6. Exploration contracts in force:
-   [`MAP.md` §S](../../explorations/semantica-lab/MAP.md#s-semantica-storage-inversion--what-delete-and-compaction-must-mean)
+   [`MAP.md` §S](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/MAP.md#s-semantica-storage-inversion--what-delete-and-compaction-must-mean)
    v1.1,
    [`DECISIONS.md`](../../explorations/semantica-lab/DECISIONS.md) (Current
    law table + the 2026-09-03 ratification grill),
    [`BRIEF.md`](../../explorations/semantica-lab/BRIEF.md) v1.1,
-   [`research/shared-schema.md`](../../explorations/semantica-lab/research/shared-schema.md)
+   [`research/shared-schema.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/shared-schema.md)
    v1.4.
 7. [goals/semantica-canary/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/SPEC.md) - the
    lab's standing constraints and the C2 evidence this spike replays.

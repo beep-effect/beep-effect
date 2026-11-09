@@ -171,6 +171,14 @@ Lane `feat/packet-archive-batch-4b`
 
 Reverse: Remove each retentionReason; for semantica-canary first replace the sealed witness test, for schema-opaque-default first remove the codemod dependency, and for speed-loop first retire its security test
 
+### Retain turborepo-quality-cache before the last exploration batch, 2026-11-09
+
+Cache.conformance reads this packet's corpus plan and backend rubric with pinned SHA-256s, and standards/cache-conformance/conformance-corpus.json records the plan's path. Evidence strings in Corpus Preservation.ts are citations nothing opens, the harvest ledger stays because exploration tombstones keep it, and the research library reads only manifests, so those packets are archived.
+
+Lane `feat/packet-archive-batch-6`
+
+Reverse: Remove the retentionReason after moving the plan and rubric and regenerating the conformance corpus
+
 ### Retain turborepo-task-qualification because the cache ledger verifies its files, 2026-11-09
 
 standards/cache-qualification.json verifies four research reviews in this packet by path and SHA-256, including in its history entries. Rewriting those paths would alter an append-only ledger, so the packet stays on main with a retentionReason, as citation-extraction-engine and catalog-writer-incremental already do. Live inputs of five other batch 4 packets moved to standards/, scripts/, .semgrep/ and a test fixture.

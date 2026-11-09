@@ -14,7 +14,7 @@ Read these as the contract:
 - `goals/semantica-storage-inversion/{README,SPEC,PLAN}.md`
 - `goals/semantica-storage-inversion/ops/manifest.json`
 - `goals/semantica-storage-inversion/research/SOURCES.md`
-- `explorations/semantica-lab/MAP.md` §S (v1.1) and `DECISIONS.md` (Current
+- `explorations/semantica-lab/README.md` (archived MAP §S, v1.1) and `DECISIONS.md` (Current
   law table, then the 2026-09-03 ratification grill R0.a, R1.a–R1.i; the
   table wins over prose)
 - `goals/semantica-canary/SPEC.md` (the lab's standing constraints)

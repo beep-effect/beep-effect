@@ -221,7 +221,14 @@ zero seconds. Three decisions follow:
   (`package-test-typecheck`) is uncached by tripwire ruling, and since 2026-11-02 the
   lint-policy plan is its only owner: root `bun run check` no longer runs it a second
   time. The root documentation
-  program (`lint:jsdoc`) runs oxlint with `.oxlintrc.docs.json` and no persistent result cache.
+  program (`lint:jsdoc`) runs oxlint with no persistent result cache, the prebuilt
+  documentation config (below) and the concurrency plan's oxlint thread count. `bun run lint`
+  builds that config only when its policy stages run, as `beep lint policy` does.
+  The full sweep's tail runs `lint:jsdoc`, `lint:deprecated-apis` and `quality:test-tsgo`
+  abreast in one stage, since they share no inputs or outputs; the stage still prints their
+  outputs in that order. The Turbo deprecated-API rollback sweep
+  (`standards/lint-policy.sweeps.jsonc`) keeps a stage of its own because it takes the whole
+  policy width.
   Turbo owns package and non-workspace documentation caching: inputs include the docs config,
   `tsdoc.json` and `@beep/lint-rules` source. The documentation input digest includes the
   dependency lock and plugin manifest. Deprecated-API shards use the dedicated oxlint
@@ -361,9 +368,13 @@ conceal files the scanner still checks.
 `bun run check` first runs Turbo's package check/build graph. An unscoped
 invocation then runs `quality:tsgo-smoke` as a separate CLI step. The graph's
 `FULL TURBO` result does not cover that step. The repo-wide test-typecheck
-step (`quality:test-tsgo`) runs once, at the end of the lint-policy plan
+step (`quality:test-tsgo`) runs once, in the tail of the lint-policy plan
 (`bun run lint`, `bun run beep lint policy`, the `quality:lint-policy` pre-push
-lane and hosted Lint Policy); a check-only session that wants it runs
+lane and hosted Lint Policy): the last stage, or, under the Turbo deprecated-API
+rollback (`standards/lint-policy.sweeps.jsonc`), the stage before that sweep. In
+the full sweep its stage also runs the root documentation lint abreast of it, and
+the oxlint deprecated-API sweep as well unless the rollback is on. A check-only
+session that wants it runs
 `bun run beep quality test-tsgo` directly. Until 2026-11-02 root check ran it
 too, so `audit packages` and a check-then-lint session walked the test files
 twice against an uncached task.

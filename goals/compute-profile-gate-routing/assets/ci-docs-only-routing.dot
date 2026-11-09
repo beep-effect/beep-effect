@@ -1,0 +1,11 @@
+digraph DocumentationRouting {
+  rankdir=LR;
+  node [shape=box];
+  folders [label="docs / goals / explorations / research"];
+  profile [label="Pinned PR change profile"];
+  skips [label="No unit or lint shards\nNo heavy verification execution"];
+  retained [label="Security + documentation integrity\nRequired aggregate contexts"];
+  folders -> profile;
+  profile -> skips;
+  profile -> retained;
+}

@@ -1,8 +1,8 @@
 # Research
 
-[Independent admission](../research-corpus-synthesis/research/ADMISSION-REVIEW.md)
+[Independent admission](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/research-corpus-synthesis/research/ADMISSION-REVIEW.md)
 read the retained normative SEP sections and current schema/host frontiers. The
-[corpus findings](../research-corpus-synthesis/research/ROUTING.md) route
+[corpus findings](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/research-corpus-synthesis/research/ROUTING.md) route
 R0-013/014, R1-242, R2-059 and R3-018 here.
 
 The completed SkillContract kernel supplies schemas and unsigned evidence receipts;

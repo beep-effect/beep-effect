@@ -60,7 +60,7 @@ Not started.
   (BRIEF solution sketch point 3; an explicit appetite carve-out — the raw
   PSTs need no corpus processing).
 - The mechanics authority is
-  [`r2-purview-pst-import.md`](../../explorations/practice-office-provisioning/research/r2-purview-pst-import.md),
+  [`r2-purview-pst-import.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/practice-office-provisioning/research/r2-purview-pst-import.md),
   including the AzCopy staging/mapping-CSV pairing and the nested-PST
   flat-upload caveat landed through PR review.
 - Mapping CSVs, PST inventories, and filenames are client-identifying and

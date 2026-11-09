@@ -1,6 +1,6 @@
 # Research intake: unknown send outcomes
 
-Investigation I-01 in [research-corpus-synthesis](../../../explorations/research-corpus-synthesis/research/INVESTIGATIONS.md)
+Investigation I-01 in [research-corpus-synthesis](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/research-corpus-synthesis/research/INVESTIGATIONS.md)
 started from a concrete contradiction: the workflow-boundary paper separates
 physical effect from observed outcome, while this SPEC formerly inferred a send
 from disappearance of a draft. The actual Grok Build `/deep-research` workflow
@@ -57,7 +57,7 @@ Independent source-bound amendment review accepted the amendment (then D-12, now
 Its four refinements are retained in SPEC: allow later reconciliation rows,
 preserve known 202 acceptance after a missing read, retain intent-without-outcome
 as unresolved, and bind mailbox/immutable ID/fingerprint/observed state. See the
-[review receipt](../../../explorations/research-corpus-synthesis/research/OUTBOX-REVIEW.md).
+[review receipt](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/research-corpus-synthesis/research/OUTBOX-REVIEW.md).
 
 ## Fresh-main integration
 

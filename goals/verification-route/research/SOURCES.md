@@ -1,7 +1,7 @@
 # Verification Route — Sources & Provenance
 
 - **Source exploration:** `explorations/verification-route` — primary ledger:
-  `explorations/verification-route/research/SOURCES.md`.
+  [explorations/verification-route/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/verification-route/research/SOURCES.md).
 
 ## 1. Mined source corpus
 
@@ -29,7 +29,7 @@ Claude Code team's code review (the review-lane analogue; outside this goal).
 
 ## 4. In-repo capability references
 
-The capability check table in `explorations/verification-route/MAP.md`
+The capability check table in [explorations/verification-route/MAP.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/verification-route/MAP.md)
 (verified `file:line` at main, 2026-10-27/28): `CiLaneId` and `ciLaneStep`,
 `FinalCheck` receipt and skips, `WaveOrder`, `HeavyAdmission`, turbo dry-run
 package graph, prepare-phase writers, `capture_hosted` and the hosted-runs

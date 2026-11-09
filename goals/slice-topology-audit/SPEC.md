@@ -20,7 +20,7 @@ Operation = <Concept>/contracts/[<Group>/]<Op>.contract.ts           -- Payload,
             <Concept>/handlers/[<Group>/]<Op>.handler.ts             -- Handler, typed from Contract
 ```
 
-Three PRs, in order (exploration [`MAP.md` §Sequencing](../../explorations/v3-consistency-audit/MAP.md)):
+Three PRs, in order (exploration [`MAP.md` §Sequencing](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/v3-consistency-audit/MAP.md)):
 
 1. **Amendments PR.** One `standards/architecture/DECISIONS.md` entry per
    locked decision below, then the text edits in `standards/ARCHITECTURE.md`
