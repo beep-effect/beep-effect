@@ -373,6 +373,14 @@ Lane `claude/amazing-fermi-223c68`
 
 Reverse: git revert the deletion PR, then restore the previous @beep/law-practice-server rows in standards/coverage.regression-baseline.jsonc from the parent commit (or rerun bun run coverage -- --filter=@beep/law-practice-server --write-baseline on the reverted tree).
 
+### Hosted integration partitions run one Vitest worker and are sized on measured 4-vCPU walls, 2026-11-09
+
+Measured on PR #3005 run 42600820554 (ubuntu-24.04, 4 vCPU, two Vitest workers, fifteen partitions sized from the 8-vCPU heavy timings): bodies ran 10.3 to 27.1 minutes. Single-file partitions took 1.12 to 1.49 times their 8-vCPU file seconds (1120 s -> 27.1 min, 844 s -> 15.8 min, 823 s -> 20.4 min); four-file partitions at two workers took 1.0 to 1.5 times their file-second sum (715 s -> 18.1 min, 708 s -> 11.8 min), so two workers on four cores gave almost no parallel gain, about one third of the heavy runner's throughput. Ten partitions failed: six on the 600 s per-test timeout of long single replays (SemanticExtraction, EngineCorpus, VerifiedExtraction, TokenizedExtraction, DocumentExtraction, ExtractionEntry, which the deletion lane removes or halves) and four on production operationDeadline / extractDeadline refusals from native replays (CanonicalExtraction ranges, Courts, ReferenceMarkup, CaseName, CaseNameScan) contending with a second worker; every single-file partition passed. The integration shards therefore pass --maxWorkers=1 to Vitest (CiLane.ts) so deadlines hold, and partitions are sized at about 350 to 400 8-vCPU file seconds (about 1.3x gives an 8-minute body plus about 1.1 minutes of setup), with every single test under about 200 s of 8-vCPU time. The canonical replay is split into four range files (6/6/5/5 shards) instead of three. The fifteen-bin interim plan stays until the deletion lane merges; the rebalance then targets about eleven partitions.
+
+Lane `claude/integration-hosted-partitions-ba7e3b` · PR #3005
+
+Reverse: Drop --maxWorkers=1 from the integration shard passthrough in CiLane.ts once a hosted runner class with more cores is measured to keep the native deadlines at two workers.
+
 ### Keep the 8 effect-vitest exceptions PR 2994 adds as reviewed PR 2966 debt, 2026-11-09
 
 PR 2994, the `unblocks-main` PR for episode ep70, adds 8 rows to `standards/effect-vitest.inventory.jsonc` for findings that PR 2966 introduced. S31 counts that as inventory growth. The rows stay as reviewed exceptions because none of them is a defect in the test code:
@@ -386,6 +394,32 @@ Clearing them from the test code would mean either changing what the tests prove
 Lane `@chore/deps-update-11-8-26` · PR #2994
 
 Reverse: Delete the 8 rows from standards/effect-vitest.inventory.jsonc once EV004 and EV010 accept these tests or the tests are rewritten, then run bun run beep lint effect-vitest.
+
+### Run the law-practice-server integration suite as hosted partitions that report Heavy / Test Integration, 2026-11-09
+
+'Heavy / Test Integration' is reported by a hosted aggregate job that needs every integration partition and fails on failure, cancellation or skip; integration partitions run on GitHub-hosted runners on every non-docs PR.
+
+Mechanism. The required context used to be the reusable heavy.yml job (called from check.yml's Heavy job, so GitHub named it Heavy / Test Integration). check.yml now runs Test Integration (lps-int-N) on ubuntu-24.04, one Vitest --shard of @beep/law-practice-server's integration suite each, placed by the LPT plan in packages/law-practice/server/vitest.integration.shards.json (per-file seconds of main run 42554761567), plus Test Integration (int-rest), the root integration lane with the sharded package filtered out for every other package. The aggregate job is literally named 'Heavy / Test Integration', the same way Coverage Regression took its context over, so standards/branch-protection-contexts.json and ruleset 10240248 are unchanged; while the resolved heavy.yml@main still declares its Test Integration job the aggregate takes the migration name 'Test Integration Partitions' (admission output legacy_integration), and after this change merges the heavy job is gone and the aggregate owns the context. The lane leaves Heavy Admission (heavyRouteLanes no longer lists test-integration), so the two-instance beep-ec2-heavy pool no longer queues it; the remaining heavy lanes keep admission. Pull requests keep --affected, so a PR that does not touch an integration owner runs the partition proof only.
+
+Assumption to measure. Partition weights come from 8-vCPU heavy timings; the first hosted run measures whether 4-vCPU per-file times match (the plan projected 8-10 minutes per partition at about 450-760 s of file time with two workers). Partitions are rebalanced from the measured run and again after the deletion lane merges.
+
+Lane `claude/integration-hosted-partitions-ba7e3b`
+
+Reverse: Restore the test-integration job in heavy.yml and in the heavy route lanes, remove the check.yml partition matrix and aggregate, and drop the test-integration partitions from CiLanePartitions.ts and the sequencer plan from the package.
+
+### Split integration replay files into row-range chunks, 2026-11-09
+
+Integration replay files may be split into row-range chunks computed from the fixture row list; a guard test asserts the union equals the full set.
+
+The canonical corpus replay (test/integration/CitationCanonicalExtraction.test.ts, 1096.8 s of file time on the 8-vCPU heavy runner) is the first split: the 22-shard table is chunked into three contiguous ranges (8/7/7 shards), one file each (CitationCanonicalExtraction.test.ts, CitationCanonicalExtractionRange2.test.ts, CitationCanonicalExtractionRange3.test.ts), every row still replaying with full=true. test/CitationCanonicalExtractionRanges.test.ts asserts the ranges are disjoint, that their concatenation is the whole shard table, and that exactly one integration file replays each range. CitationCanonicalParserOperations and CitationCanonicalRemainingExtraction receive the same treatment once the deletion lane (bun-only full replays) has merged, so that no integration file exceeds about 400 s. No single-runner arrangement gets Heavy / Test Integration under ten minutes while one file alone takes 1097 s; the split is what lets hosted partitions be sized under the budget.
+
+Lane `claude/integration-hosted-partitions-ba7e3b`
+
+Reverse: Merge the range files back into one CitationCanonicalExtraction.test.ts and drop the range exports from the fixture; the guard test then asserts a single range.
+
+### Two-runtime integration replays may be split into one file per runtime, 2026-11-09
+
+Reverse: Merge the node twin back into the bun file's runtime loop and drop the shared fixture's kind parameter; regenerate vitest.integration.shards.json.
 
 <!-- beep:decisions:end -->
 <!-- markdownlint-enable MD013 MD034 -->

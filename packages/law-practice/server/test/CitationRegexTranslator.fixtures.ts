@@ -18,7 +18,7 @@ import {
   citationBunTestExecutable,
   makeCitationNodeTestRuntime,
   makeCitationObservedSpawner,
-} from "../CitationNativeSpawner.fixtures.ts";
+} from "./CitationNativeSpawner.fixtures.ts";
 
 const $I = $LawPracticeServerId.create("test/CitationRegexTranslator");
 const Reply = S.fromJsonString(
