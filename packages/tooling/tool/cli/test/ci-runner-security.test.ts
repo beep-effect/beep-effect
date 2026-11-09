@@ -1595,10 +1595,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assert.deepStrictEqual(cacheSaveSteps(checkJobs), []);
       assert.deepStrictEqual(
         cacheSaveSteps(heavyJobs),
-        A.map(
-          ["verify", "check", "test-integration", "docgen", "doctest", "build"],
-          (job) => `${job}/Save main Docgen Turbo cache`
-        )
+        A.map(["verify", "check", "docgen", "doctest", "build"], (job) => `${job}/Save main Docgen Turbo cache`)
       );
       assert.deepStrictEqual(cacheSaveSteps(storybookJobs), ["storybook/Save Playwright Chromium cache"]);
       assert.include(
@@ -1628,7 +1625,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assertNone(A.findFirst(heavyLaneParameters17, (lane) => A.contains(lane.ids, "labs")));
       assert.notInclude(heavyWorkflowText, "run_lane ci lane effect-diagnostics");
       assert.notInclude(heavyWorkflowText, "commands/Quality/EffectDiagnostics.ts");
-      assert.include(heavyWorkflowText, "check|test-integration|build)");
+      // Test Integration runs as hosted check.yml partitions since 2026-11-09, never on this pool.
+      assert.include(heavyWorkflowText, "check|build)");
+      assert.notInclude(heavyWorkflowText, "BEEP_CI_LANE_ID: test-integration");
     })
   );
 
@@ -1931,7 +1930,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "check.yml:Heavy",
         "check.yml:Lint (${{ matrix.partition }})",
         "check.yml:Test Unit (${{ matrix.partition }})",
+        "check.yml:Test Integration (${{ matrix.partition }})",
         "check.yml:Coverage Artifact Migration",
+        "check.yml:Test Integration Partitions",
         "cache-warm.yml:Warm Turbo cache",
         // Manual source inspection is operational evidence, not a required quality lane.
         "cache-local-observe.yml:Observe local cache pilot",
@@ -2857,7 +2858,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         yield* fs.writeFileString(
           fixture,
           legacy
-            ? "on: push\njobs:\n  verify:\n    name: ${{ matrix.name }}\n    strategy:\n      matrix:\n        include:\n          - id: coverage\n            name: Coverage Regression\n"
+            ? "on: push\njobs:\n  verify:\n    name: ${{ matrix.name }}\n    strategy:\n      matrix:\n        include:\n          - id: coverage\n            name: Coverage Regression\n  test-integration:\n    name: Test Integration\n"
             : "on: push\njobs:\n  verify:\n    name: Check\n"
         );
         yield* fs.writeFileString(output, "");
@@ -2880,7 +2881,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         expect(result.stderr.toString()).toBe("");
         expect(result.exitCode).toBe(0);
         const readFileString36 = yield* fs.readFileString(output);
-        expect(readFileString36).toBe(`legacy_coverage=${legacy}\n`);
+        expect(readFileString36).toBe(`legacy_coverage=${legacy}\nlegacy_integration=${legacy}\n`);
       }
       yield* fs.writeFileString(output, "");
       const failed = Bun.spawnSync(["bash", "-c", script], {

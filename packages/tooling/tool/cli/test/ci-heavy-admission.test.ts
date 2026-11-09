@@ -730,7 +730,7 @@ it.layer(platform, { timeout: "30 seconds" })("hosted admission route", (layerIt
             } else if (row.failed) {
               expect(route.receipt).toBe("route-unavailable");
             } else {
-              expect(route.lanes).toHaveLength(6);
+              expect(route.lanes).toHaveLength(5);
               if (row.revoked)
                 expect(A.filter(route.lanes, (lane) => lane.decision === "shadow-skipped")).toHaveLength(2);
               if (row.skips !== "") {

@@ -9,6 +9,7 @@ import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
+import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import {
@@ -223,3 +224,37 @@ export const citationCanonicalExtractionShards = [
     )
   ),
 ];
+
+/**
+ * Integration files the canonical replay is spread over, so no single file
+ * exceeds a hosted integration partition's budget.
+ * @internal @category testing @since 0.0.0
+ */
+export const CITATION_CANONICAL_EXTRACTION_RANGE_COUNT = 3;
+
+/**
+ * Contiguous, disjoint shard ranges whose concatenation is
+ * `citationCanonicalExtractionShards`. One integration file replays one range
+ * (`test/integration/CitationCanonicalExtraction*.test.ts`);
+ * `test/CitationCanonicalExtractionRanges.test.ts` guards the union and the
+ * file census, so a row is never dropped when the table grows.
+ * @internal @category testing @since 0.0.0
+ */
+export const citationCanonicalExtractionShardRanges = A.chunksOf(
+  citationCanonicalExtractionShards,
+  Math.ceil(A.length(citationCanonicalExtractionShards) / CITATION_CANONICAL_EXTRACTION_RANGE_COUNT)
+);
+
+/**
+ * One shard range by zero-based index; throws when no such range exists so a
+ * stale range file fails at collection instead of replaying nothing.
+ * @internal @category testing @since 0.0.0
+ */
+export const citationCanonicalExtractionShardRange = (index: number) =>
+  O.getOrThrowWith(
+    A.get(citationCanonicalExtractionShardRanges, index),
+    () =>
+      new Error(
+        `Canonical shard range ${index} does not exist; the table has ${A.length(citationCanonicalExtractionShardRanges)} ranges.`
+      )
+  );
