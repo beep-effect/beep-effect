@@ -10,7 +10,7 @@
   },
   "packetPath": "goals/attributed-multi-claim-span",
   "lifecycle": "superseded",
-  "statusNote": "2026-09-12: paused at the roadmap re-eval (graduated 2026-08-13, zero execution, flagged stale-active by goals doctor). Resumes when goals/citation-verified-span-substrate closes and a Lane 2 slot pulls the LangExtract-to-ClaimGate proof; see the docs/ROADMAP.md parked table.",
+  "statusNote": "2026-09-12: paused at the roadmap re-eval (graduated 2026-08-13, zero execution). 2026-11-09: superseded by goals/text-knowledge-stack-rebuild; it does not resume. Its attributed-span aggregate and LangExtract-to-ClaimGate proof are delivered by that packet's P3 and P4; see supersededNote.",
   "mission": "Ship attributed, supersedable multi-claim annotations over TextAnchor/EvidenceSpan and prove the LangExtract-to-ClaimGate loop.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -99,5 +99,5 @@
   ],
   "supersededBy": "text-knowledge-stack-rebuild",
   "supersededNote": "2026-11-09: superseded by goals/text-knowledge-stack-rebuild. Its L2 and L4 phases replace the attributed annotation aggregate over TextAnchor/EvidenceSpan and the LangExtract-to-ClaimGate proof; the per-claim distinct-confidence acceptance is withdrawn in favour of Absent{reason} signals with no default algebra (see that packet's SPEC.md Relationships).",
-  "retentionReason": "Retained on main until goals/text-knowledge-stack-rebuild lands its L2 and L4 phases, as the record of the attributed-span and LangExtract-to-ClaimGate requirements they absorb; archive after that packet's P3 PR merges."
+  "retentionReason": "Retained on main as the record of the attributed-span and LangExtract-to-ClaimGate requirements that goals/text-knowledge-stack-rebuild absorbs; archive after both of that packet's P3 (L2) and P4 (L4) delivery PRs merge."
 }

@@ -204,7 +204,7 @@ Only packets that directly feed Lane 1:
   (4/4) — the span-provenance substrate whose close unblocks the dormant
   consumers `citation-extraction-engine` and `law-doc-structure-oa-slice`
   (independent of each other; the OA slice excludes citation parsing) and
-  the paused `attributed-multi-claim-span`; the cheapest Lane 1 unlock in the
+  `attributed-multi-claim-span` (superseded 2026-11-09 by `text-knowledge-stack-rebuild`); the cheapest Lane 1 unlock in the
   portfolio (added 2026-09-12).
 - [`patent-document-schema`](../goals/patent-document-schema/README.md) (5/5)
   — closes to unblock `document-ast-pattern-classification` →
@@ -401,7 +401,7 @@ renders their current local status view.
 | [`voice-composer-slice`](../goals/voice-composer-slice/README.md) | Voice capture re-enters the product bet. |
 | [`belief-view-engine`](../goals/belief-view-engine/README.md) | Scaffolded paused 2026-08-17 (queue goal, adversarially reviewed spec); a lane slot frees or an epistemic consumer pulls it. |
 | [`model-arrangement-admission-core`](../goals/model-arrangement-admission-core/README.md) | Scaffolded paused 2026-08-17 (queue goal, adversarially reviewed spec); a lane slot frees or the approval-gate consumer pulls it. |
-| [`attributed-multi-claim-span`](../goals/attributed-multi-claim-span/README.md) | Paused 2026-09-12 (graduated 2026-08-13, zero execution, no blocker recorded). Resumes when `citation-verified-span-substrate` closes and a Lane 2 slot pulls the LangExtract-to-ClaimGate proof. |
+| [`attributed-multi-claim-span`](../goals/attributed-multi-claim-span/README.md) | Superseded 2026-11-09 by [`text-knowledge-stack-rebuild`](../goals/text-knowledge-stack-rebuild/README.md), whose L2 and L4 phases deliver the attributed-span aggregate and the LangExtract-to-ClaimGate proof; it does not resume (paused 2026-09-12, graduated 2026-08-13, zero execution). |
 | [`effect-native-legal-eval`](../goals/effect-native-legal-eval/README.md) | Paused 2026-09-12 (graduated 2026-08-13, zero execution). Resumes when a Lane 2 slot pulls the C&H baseline; `tracked-changes-ingest-wedge` is blockedBy it and waits with it. |
 | [`patent-drafting-episode-ledger`](../goals/patent-drafting-episode-ledger/README.md) | Paused 2026-09-12 (graduated 2026-08-13, zero execution). Resumes after practice-kg-mcp P8 hands off and `agentic-professional-runtime` closes; also needs `citation-verified-span-substrate`. |
 | [`time-to-certainty`](../goals/time-to-certainty/README.md) | Paused 2026-09-28 on ruling 80 (P0, P1, P3 complete; P2 complete except C4.2). Resumes when `bun run beep yeet proof-report --since <ruling-83 merge instant>` in the owning clone reads ready (200 attempts, 10 branches, 0 disagreements, counting only rows recorded after that merge) with `malformed rows: 0` on the sample, every C5 fixture green (ruling 82 closed the ruling-69 root-input gap); the flip PR turns reuse on, retires the legacy stores and closes the packet. |

@@ -6,18 +6,16 @@ below are repo-relative.
 
 Outcome: the foundation text-knowledge stack (identity, text anchoring,
 annotation, taxonomy, claims, operations, RDF interchange, agent surface) is
-eight layers in a dependency DAG joined by lawful codecs: one occurrence
-identity, one annotation model with content and attribution apart, typed
-signals with no algebra, scoped admission with a grounding witness, declared
-term IRIs, every law-catalogue row a named test, legacy carriers deleted,
-`@beep/text` and `@beep/annotation` in place and `@beep/nlp` retired.
+eight lawful layers in a dependency DAG: one occurrence identity, one
+annotation model with content and attribution apart, typed signals with no
+algebra, scoped admission, declared term IRIs, every law row a named test,
+legacy carriers deleted, `@beep/text` and `@beep/annotation` in place,
+`@beep/nlp` retired.
 
 This is a compact `/goal` launcher. Treat the packet files as the detailed
 contract:
 
-- `goals/text-knowledge-stack-rebuild/README.md`
-- `goals/text-knowledge-stack-rebuild/SPEC.md`
-- `goals/text-knowledge-stack-rebuild/PLAN.md`
+- `goals/text-knowledge-stack-rebuild/{README,SPEC,PLAN}.md`
 - `goals/text-knowledge-stack-rebuild/ops/manifest.json`
 - `goals/text-knowledge-stack-rebuild/research/law-test-plan.md`
 
@@ -52,17 +50,18 @@ Workflow:
    and a row in `research/consumer-census.md`.
 7. One PR or stack per phase through `bun run beep yeet` (`final-check` before
    `ready`); at most three open; `quality package-verify <pkg>` before every
-   handoff; the office-action tests stay green from P3 on.
+   handoff; the office-action standing list (SPEC Verification Matrix) stays
+   green from P3 on, starting with the flow test P3 creates.
 8. In the final PR (P8), write the closeout reflection via `/reflect`;
    `bun run beep lint reflection-artifacts` must pass.
 
 Acceptance:
 
 - [ ] `SPEC.md` acceptance criteria are satisfied.
-- [ ] Verification commands pass, or unrelated failures are recorded.
+- [ ] Verification passes, or unrelated failures are recorded.
 - [ ] No unrelated refactors or formatting churn.
 
-Verification:
+Verification (packet-health subset; completion is `SPEC.md` Verification Matrix):
 
 ```sh
 test "$(wc -m < goals/text-knowledge-stack-rebuild/GOAL.md)" -le 4000

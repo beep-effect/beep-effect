@@ -8,13 +8,12 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Mission
 
-Redesign and rewrite the foundation text-knowledge stack (identity, text anchoring, annotation, taxonomy, claims, processing, RDF interchange, agent surface) as eight lawful layers in a dependency DAG: repair the lossy boundaries first, decide package folds by facet census.
+Redesign and rewrite the foundation text-knowledge stack (identity, text anchoring, annotation, taxonomy, claims, operations, RDF interchange, agent surface) as eight lawful layers in a dependency DAG: design first, rewrite the layers bottom-up and cut consumers over as each lands, retire what they replace.
 
-The sentence above is the manifest mission as bootstrapped. After the
-operator's 2026-11-09 ruling that breaking changes are acceptable, the program
-rewrites the layers bottom-up and cuts consumers over as each lands; the
-consumer census is P0's work list rather than a late gate, and the office-action
-flow is the standing acceptance test from P3 on. `SPEC.md` is normative.
+The program took this shape after the operator's 2026-11-09 ruling that
+breaking changes are acceptable: the consumer census is P0's work list rather
+than a late gate, and the office-action flow is the standing acceptance test
+from P3 on. `SPEC.md` is normative.
 
 Authored directly on 2026-11-08 from the operator's request to challenge
 `@beep/identity`, `@beep/provenance`, `@beep/rdf`, `@beep/epistemics`,
@@ -44,8 +43,8 @@ Use this command for execution-capable sessions:
 2. [`SPEC.md`](./SPEC.md) - normative source of truth: objective, relationships
    to neighbouring packets, constraints, the resolved questions P0 confirms,
    acceptance per layer, the verification matrix.
-3. [`PLAN.md`](./PLAN.md) - active execution plan: design, seven layer phases,
-   cut-over, close, with observable exit criteria.
+3. [`PLAN.md`](./PLAN.md) - active execution plan: design, six layer phases,
+   cut-over, yeet, close, with observable exit criteria.
 4. [`decisions/`](./decisions/) - the program shape, the breaking-changes
    ruling and the resolved questions, projected into `SPEC.md`.
 5. [`ops/manifest.json`](./ops/manifest.json) - machine-readable routing; its

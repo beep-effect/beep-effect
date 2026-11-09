@@ -24,7 +24,7 @@ cites as precedent (`reference`). Line numbers are as read on 2026-11-08.
 
 | Source | Title | Upstream (repo) | Location (`file:line`) | Theme | Disposition |
 |--------|-------|-----------------|------------------------|-------|-------------|
-| `cm1` | Citation mention occurrence id: scope, source ref, locator, both digests, UTF-16 range, quote | beep-effect | `packages/law-practice/server/src/internal/Citation/MentionIdentity.ts:111-145` | L1 occurrence identity | generalize |
+| `cm1` | Citation mention occurrence id, preimage in encoding order: `citation-mention/v1`, `engineArtifact`, `semanticKind`, `scopeRef`, `sourceRef`, `locator`, `sourceDigest`, `textDigest`, `extractor.name`, `extractor.version`, `normalizationVersion`, `startChar`, `endChar`, `quote` | beep-effect | `packages/law-practice/server/src/internal/Citation/MentionIdentity.ts:111-145` | L1 occurrence identity | generalize |
 | `ca1` | Citation authority id kept separate from the occurrence | beep-effect | `packages/law-practice/server/src/internal/Citation/AuthorityIdentity.ts:126-169` | L1 identity regimes | generalize |
 | `vta` | `VerifiedTextAnchor`: proof issued and verified | beep-effect | `packages/foundation/modeling/provenance/src/VerifiedTextAnchor.ts:354,396-401,639-659` | L1 anchors | generalize |
 | `sti` | `SourceTextIdentity`: artifact digest, text digest, extractor, normalization | beep-effect | `packages/foundation/modeling/provenance/src/SourceTextIdentity.ts:125-145` | L1 text capture | generalize |
@@ -48,11 +48,12 @@ cites as precedent (`reference`). Line numbers are as read on 2026-11-08.
 | `lifecycle` | `ClaimLifecycle.advance` in the epistemic slice | beep-effect | `packages/epistemic/use-cases/src/ClaimLifecycle/ClaimLifecycle.service.ts:121-129` | L4 status | reference |
 | `prompt` | Prompt prose beside the schema it describes | beep-effect | `packages/foundation/capability/langextract/src/Service/Service.prompt.ts:19-83` | L7 agent surface | repair |
 | `so` | `schema-org` facets: typed graph, `NodeRef`, serialization, conformance | beep-effect | `packages/foundation/modeling/schema-org/src/index.ts:1-11,38-52` | L6 census | reference |
-| `theory` | `THEORY.md` naming a deleted owner | beep-effect | `packages/foundation/modeling/nlp/THEORY.md:72,141,193` | L8 docs | repair |
+| `theory` | `THEORY.md` names the deleted `ip-law-knowledge-graph` owner at lines 141 and 193 and cites a module in another package at line 72 | beep-effect | `packages/foundation/modeling/nlp/THEORY.md:72,141,193` | docs | repair |
 
 **How these inform implementation:** `cm1`/`ca1`, `vta` and `sti` are the
 house style: the rebuild generalizes their preimage discipline into
-`OccurrenceId` and keeps their persisted bytes. `claim` already has the
+`OccurrenceId`, re-mints their records by migration (2026-11-09 ruling) and
+keeps the `TextAnchor` and `VerifiedTextAnchor` shapes. `claim` already has the
 signals the design needs; the work is the immutable-core split and the
 separate records. `oa`, `evid`, `prov` and `fold` are the codec and vocabulary
 material the arrows are built from. Every `repair` row is an acceptance test
@@ -118,18 +119,18 @@ reading.
 | Brick | Path | Role in this goal |
 |-------|------|-------------------|
 | `@beep/identity` | `packages/foundation/modeling/identity` | extend (L0: registry, `TermBinding`, `ContentHash`, `ActivityId`, canonical JSON) |
-| `@beep/provenance` | `packages/foundation/modeling/provenance` | extend (L1: `Selector`, `OccurrenceId`, `Resolution`, `Reanchoring`, unit conversion) |
+| `@beep/provenance` | `packages/foundation/modeling/provenance` | retire in P2; L1 (`Selector`, `OccurrenceId`, `Resolution`, `Reanchoring`, unit conversion, `TextAnchor`, `VerifiedTextAnchor`) lives in `@beep/text` |
 | `@beep/rdf` | `packages/foundation/modeling/rdf` | extend (L6: `Dataset` quotient, `Literal` cases, `TextAnchor <-> oa:`, registry-backed namespaces) |
 | `@beep/epistemics` | `packages/foundation/modeling/epistemics` | extend (L4: immutable core, `Stance`, `Admission`, `Assessments<K>`, `epistemics/rdf`) |
 | `@beep/ontology` | `packages/foundation/modeling/ontology` | extend and move out (L3: SSSOM, `fold -> Dataset`; seeds and DTOs leave) |
 | `@beep/nlp` | `packages/foundation/modeling/nlp` | retire in P7 after L2 and L5 absorb it |
-| `@beep/md`, `@beep/pandoc-ast`, `@beep/lexical`, `@beep/html` | `packages/foundation/modeling/{md,pandoc-ast,lexical,html}` | extend (AST source maps into `provenance`) |
+| `@beep/md`, `@beep/pandoc-ast`, `@beep/lexical`, `@beep/html` | `packages/foundation/modeling/{md,pandoc-ast,lexical,html}` | extend (AST source maps into `@beep/text`) |
 | `@beep/langextract` | `packages/foundation/capability/langextract` | repair (lossless handoff; unit conversion moves down to L1) |
 | `@beep/schema` (`LiteralKit`) | `packages/foundation/modeling/schema` | reuse |
 | `@beep/schema-org` | `packages/foundation/modeling/schema-org` | every facet rehomed or deleted in P7 per the consumer census |
 | `mcp-kit` (`S.toJsonSchemaDocument`) | `packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts` | reuse (L7: tool schemas are the Effect schemas) |
 | law-practice citation identity | `packages/law-practice/server/src/internal/Citation`, `packages/law-practice/domain/src/values/Citation` | reuse as precedent; the `cm1:` preimage becomes the occurrence preimage and records are re-minted by a P2 migration with the `citation-extraction-engine` lane |
-| law-practice office action, docket, IrToLaw | `packages/law-practice/use-cases/src/{OfficeActionReview,DocketIntake,IrToLaw}` | repair (defaults, absent-attachment check, handoff consumer) |
+| law-practice office action, docket, IrToLaw | `packages/law-practice/use-cases/src/{OfficeActionReview,DocketIntake,IrToLaw}` | repair (defaults, the unavailable-document-text docket check, handoff consumer) |
 | semantica lab | `apps/labs/semantica` | repair (projection loss declared; `1` default removed; gold fixture migrated) |
 | `@beep/annotation` | NET-NEW in P3 via `bun run beep create-package` after the P0 routing decision | L2 home |
 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` (existing) | extend (L5 home: absorbs `nlp/Operations` and `nlp/Algebra`) |

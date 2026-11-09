@@ -11,7 +11,7 @@
   },
   "packetPath": "goals/text-knowledge-stack-rebuild",
   "lifecycle": "active",
-  "mission": "Redesign and rewrite the foundation text-knowledge stack (identity, text anchoring, annotation, taxonomy, claims, processing, RDF interchange, agent surface) as eight lawful layers in a dependency DAG: repair the lossy boundaries first, decide package folds by facet census.",
+  "mission": "Redesign and rewrite the foundation text-knowledge stack (identity, text anchoring, annotation, taxonomy, claims, operations, RDF interchange, agent surface) as eight lawful layers in a dependency DAG: design first, rewrite the layers bottom-up and cut consumers over as each lands, retire what they replace.",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {

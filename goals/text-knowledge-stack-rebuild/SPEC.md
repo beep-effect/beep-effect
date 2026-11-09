@@ -39,8 +39,9 @@ ruling of 2026-11-09, recorded in `decisions/`). The final state is observable:
    scope), owner-declared `Assessments<K>` coordinates with caller-supplied
    value schemas, and the existing five typed signals with `Absent{reason}`
    and no default algebra. The invented certainty (`1` at the lab boundary,
-   `0.9` in the office-action spike, the passing absent-attachment docket
-   check) is gone and guarded by named tests.
+   `0.9` in the office-action spike, the docket citation check that passes when
+   an attached document's text is unavailable) is gone and guarded by named
+   tests.
 5. Term IRIs declared in the registry, never derived from code paths: a
    `TermBinding` table and a stability snapshot that only a deprecation record
    may change; the registry expands every namespace the repo speaks (`prov:`,
@@ -79,14 +80,22 @@ ruling of 2026-11-09, recorded in `decisions/`). The final state is observable:
 
 ## Relationships
 
-- `goals/attributed-multi-claim-span` (paused since 2026-09-12) is superseded
-  by this packet: L2 and L4 replace its attributed annotation aggregate and its
+- `goals/attributed-multi-claim-span` (superseded; paused 2026-09-12 until this
+  packet superseded it on 2026-11-09): L2 and L4 replace its attributed annotation aggregate and its
   LangExtract-to-ClaimGate proof, and its "preserve distinct confidence per
   claim" acceptance is withdrawn in favour of `Absent{reason}` and no default
   signal algebra. Its manifest records `supersededBy: text-knowledge-stack-rebuild`.
+  Its lexicog competency question (OntoLex `lexicog` as a mention-class
+  vocabulary) is absorbed into P0's registry census as a candidate external
+  vocabulary under the adapter rule, with no commitment to adopt it.
 - `goals/belief-view-engine` (paused) stays the selection policy over
   contention sets and becomes a downstream consumer of L4; triage policies
   here never cross an admission gate and never write authority.
+- `explorations/citation-grounding-hallucination-guard` (parked) carries
+  alignment question Q7, where a qualifier-aware stance layer lives and the
+  minimum qualifiers before two claims may be compared. L4 `Stance` here is the
+  admission workflow (`verbatim | proposed | admitted`) and does not decide
+  Q7; that question reopens with that exploration's guard gate.
 - `goals/citation-extraction-engine` (active) remains the owner of the
   citation identity module; P2 changes its preimage to the occurrence form and
   migrates its records in one PR with that lane's review.
@@ -141,6 +150,7 @@ ruling of 2026-11-09, recorded in `decisions/`). The final state is observable:
    `standards/architecture/GLOSSARY.md`,
    `standards/architecture/11-evolution-and-deprecation.md`,
    `standards/architecture/08-testing.md`,
+   `standards/architecture/09-errors-across-boundaries.md`,
    `standards/architecture/12-observability.md`,
    `standards/schema-first-development-prompt.md`,
    `standards/effect-first-development.md`.
@@ -154,8 +164,9 @@ ruling of 2026-11-09, recorded in `decisions/`). The final state is observable:
 Higher sources outrank lower sources when they conflict. The report is design
 input, not doctrine: where it and a standard disagree, the standard wins and
 the disagreement becomes a decision file. Where the report and this `SPEC.md`
-differ (its section 9.4 lists four questions; the resolved five are in
-`decisions/`), this file is normative.
+differ (its section 9.4 lists four questions and its section 7 path keeps the
+critics' repair-first order; the resolved five questions are in `decisions/`
+and the phase order is `PLAN.md`), this file is normative.
 
 ## Target Surfaces
 
@@ -192,7 +203,7 @@ differ (its section 9.4 lists four questions; the resolved five are in
 - `packages/foundation/capability/langextract/src/Handoff` (verified receipts
   first, lossless handoff), `apps/labs/semantica/src/layers` (projection and
   the `1` default), `packages/law-practice/use-cases` (`OfficeActionReview`
-  `0.9`, `DocketIntake/DocketReview.policy.ts` absent-attachment check,
+  `0.9`, `DocketIntake/DocketReview.policy.ts` unavailable-text check,
   `IrToLaw` ports), `packages/law-practice/server/src/internal/Citation` and
   `packages/law-practice/domain/src/values/Citation` (the `cm1:` preimage and
   its migration), the law-practice asset pack that receives the legal seeds.
@@ -201,8 +212,8 @@ differ (its section 9.4 lists four questions; the resolved five are in
 - `standards/architecture/` (new knowledge-stack chapter, `DECISIONS.md`
   entries including the scoped chapter-11 amendment, `GLOSSARY.md` entries),
   `docs/PROSE_TO_PROOF_VISION.md` (local-first posture, BeepGraph status),
-  `packages/foundation/modeling/nlp/THEORY.md` (rewritten, then retired with
-  the package), `standards/instrumentation-catalog/` shards for every package
+  `packages/foundation/modeling/nlp/THEORY.md` (its narrative moves into the
+  chapter, then the file is retired with the package), `standards/instrumentation-catalog/` shards for every package
   that gains spans.
 
 ## Constraints
@@ -224,15 +235,24 @@ differ (its section 9.4 lists four questions; the resolved five are in
   the specific-home-first decision and the capability negative-gate clauses
   recorded before `create-package` runs.
 - Identity: one digest format (`sha256:<64 hex>`) with one brand per domain
-  and a versioned domain tag in every preimage; the public authority is
+  and a versioned domain tag in every preimage; canonical JSON (RFC 8785) sorts
+  object keys only, so every set-valued field (`HashSet` targets, members,
+  `supportAtCreation`) is sorted on the preimage before hashing and `L0-2`
+  tests that two orderings of one set hash alike; the public authority is
   `https://beep-effect.com/ns/`; a changed preimage re-mints existing records
   by a migration in the same PR, never by a parallel encoding.
 - Upstream first with a facet census before any local construct. Retirement
   follows `standards/architecture/11-evolution-and-deprecation.md` per facet,
-  with the consumer migration in the same PR; the persisted-bytes clause is
-  amended for this program by a scoped `DECISIONS.md` entry drafted in P0
-  (migration in the same PR replaces byte preservation). S31: no exception
-  inventory grows.
+  with the consumer migration in the same PR. The persisted-bytes clause of
+  chapter 11 is amended for this program by a scoped `DECISIONS.md` entry that
+  P0 drafts and that must be merged and effective on `origin/main` before the
+  first dependent PR (P2) opens; until it merges the exception is proposed and
+  the current chapter applies; chapter 11's promoted-contract (V2) protection
+  stays operative unless separately amended. S31 (the standing ruling that the
+  repo's exception inventories and allowlists never grow): for every inventory
+  or allowlist named in `research/consumer-census.md`, the entry count at a
+  phase head is at or below its count at the P0 base commit, with moved
+  packages carrying entries by rename only.
 - Evidence: `Absent{reason}` is information and never coerces to a number;
   no signal has a default; rankings are named, versioned triage policies
   tested on unknowns and ties that never cross an admission gate; an admission
@@ -246,14 +266,18 @@ differ (its section 9.4 lists four questions; the resolved five are in
 - External vocabularies (OA, PROV-O, NIF, DoCO, SKOS, gUFO, LKIF, ELI) enter
   as registry entries with source pin, license and digest, and as adapters;
   internal kinds stay repo-stable.
-- Every structural claim in a README or `THEORY.md` links the law test that
-  falsifies it; a law without a named bug is deleted, not kept.
+- Every structural claim in a README or chapter links the law test that
+  falsifies it; a law without a named bug is deleted, not kept. Tests use
+  `@effect/vitest` (`it.prop` and `it.effect.prop` for law rows), import package
+  source through `@beep/*` aliases, and never run under `bun test`.
 - Observability: every package that gains spans names them `Concept(.Sub)*.action`
   per `standards/architecture/12-observability.md` and regenerates its
   instrumentation shard (`bun run beep observability catalog --write`); every
-  `Operation` run emits a `prov:Activity`.
+  `Operation` run emits a `prov:Activity`; span attributes carry ids, digests
+  and counts, never quote or matter text.
 - Error boundaries: `resolve` and `reanchor` return typed results
-  (`Ambiguous`, `NotFound`, `Unmapped` are values, not errors); driver and
+  (`Ambiguous`, `NotFound`, `Unmapped`, a refused admission and a failed
+  re-verification are values, not errors); driver and
   internal errors die in adapters, port errors in use-cases, with dropped
   technical detail logged at the translation boundary.
 - Delivery: at most three concurrently open PRs for this packet; each phase
@@ -268,7 +292,11 @@ differ (its section 9.4 lists four questions; the resolved five are in
 The five open questions of the first revision are resolved in
 `decisions/2026-11-09-open-questions-1-5-resolved-toward-the-clean-core-p0-confirms-or-reverses.md`;
 P0 confirms or reverses each by a decision file before the dependent phase.
-P0 also settles, in the `tsrs`-checked design module and the law-test ledger:
+P0 also settles, in the `tsrs`-checked design module (at
+`goals/text-knowledge-stack-rebuild/ops/design/`, registered in the manifest's
+`opsScripts` and checked by `bunx tsrs -p goals/tsconfig.ops.json --noEmit`; if
+`@beep/*` aliases do not resolve there, P0 records the alternative home by
+decision file) and the law-test ledger:
 
 1. The `cm1:` to `OccurrenceId` relation: the full citation tuple, which
    fields are occurrence identity and which are retained detection metadata,
@@ -285,6 +313,32 @@ P0 also settles, in the `tsrs`-checked design module and the law-test ledger:
    whether `restrict` keeps dependency closure, drops dependents, or refuses.
 5. The routing decision for `@beep/annotation` and the law-practice asset
    pack, with consumers named.
+6. `Generation` identity: the run entity is derived deterministically from the
+   content id and the activity (its own brand, distinct from `AnnotationId`);
+   generation time is canonical per `(content, activity)` pair; attribution
+   uniqueness is by pair, not whole-record equality; merging two records for
+   one pair with different times is a typed refusal; the join laws are stated
+   over compatible documents.
+7. The OA profile: the classes and properties the codec supports, which
+   unknown triples are preserved, how an imported activity's identity and time
+   are retained, and the imported-input law as equivalence to the normalized
+   input (`decode(encode s) = normalize(s)`), carried into ledger row `L2-6`
+   and its tests.
+8. Where the runtime `IRI` schema lives: today only in
+   `packages/foundation/modeling/rdf/src/Iri.ts`, while `identity` must stay
+   rdf-free and `@beep/schema` depends on `identity`; P0 moves it (into
+   `identity` or a dependency-free home) before L0 and L1 compile.
+9. `Anchored` is an L1 `S.Opaque` of range, quote and the powerless
+   `TextAnchorVerificationReceipt` (never a `VerifiedTextAnchor`, so decoding a
+   stored document grants no proof); the `anchors` table checks that each key
+   equals the occurrence hash of its value; `Instant` is
+   `S.DateTimeUtcFromMillis` or P0 records why not.
+10. `derivedFrom`: whether it lives in the hashed core or a separate record;
+    `L4-3` is restated over that graph plus the admitted-support relation, or
+    its support half is deleted.
+11. The matter wall: `research/consumer-census.md` maps each of the seven
+    access paths in Constraints to its owning code and test layer, and P6's
+    authorization work is scoped from that map.
 
 ## Acceptance Criteria
 
@@ -294,9 +348,17 @@ P0 also settles, in the `tsrs`-checked design module and the law-test ledger:
       correct discriminator constructors, `LiteralKit` without `as const`);
       `research/law-test-plan.md` lists every catalogue row with id, kind,
       owning package and planned test; `research/consumer-census.md` lists
-      every consumer of each facet the program moves, renames or deletes; the
-      routing decision for `@beep/annotation` is recorded; the knowledge-stack
-      chapter, the nine rulings and the chapter-11 amendment are drafted.
+      every facet the program moves, renames or deletes with the chapter-11 row
+      schema (facet; consumed surface; upstream coverage that survives
+      derivation; covered and uncovered consumer-line sums; neutral construction
+      counts; lines and files per facet for large retirements; disposition
+      retire, adapt or keep; a semantic-loss row where meaning changes), and
+      each retire or adapt disposition with both sums is recorded in a decision
+      file before its dependent PR opens; the routing decision for
+      `@beep/annotation` is recorded; the knowledge-stack chapter and the nine
+      rulings are drafted; the scoped chapter-11 amendment is merged on
+      `origin/main` (in P0's PR or its own) before P2 opens, and P2 to P7 hold
+      until it is.
 - [ ] L0: `TermBinding` and the term-stability snapshot exist; a test renames
       a module and proves no published IRI changes; the registry expands and
       contracts `prov:`, `oa:`, `nif:`, `xsd:` and `gufo:` CURIEs; one
@@ -319,51 +381,68 @@ P0 also settles, in the `tsrs`-checked design module and the law-test ledger:
       records; the handoff's `Entity`, `Relation` and `Provenance` types are
       deleted; `IrToLaw` and the semantica projection read the annotation
       document; the OA/NIF adapter round-trips the declared profile and
-      attributes unattributed input to the import activity; `L2-1` to `L2-6`
-      are green.
+      attributes unattributed input to the import activity; P3 creates
+      `packages/law-practice/use-cases/test/OfficeActionReview/OfficeActionReview.flow.test.ts`
+      over the annotation document on synthetic fixtures (P4 adds the signal
+      assertions, P6 the law-owned structure, assessment profiles and
+      admission); `L2-1` to `L2-6` are green.
 - [ ] L4: `makeClaimCore`, `Stance`, `Challenge`, `Admission` and
       `Assessments<K>` exist; the `1` and `0.9` defaults are deleted and
       guarded by `packages/law-practice/use-cases/test/OfficeActionReview/OfficeActionReview.signals.test.ts`
       and `apps/labs/semantica/test/Extractor.signals.test.ts`; the docket
-      absent-attachment check returns unknown while urgent tentative entries
-      stay visible, guarded by
-      `packages/law-practice/use-cases/test/DocketIntake/DocketReview.absent-attachment.test.ts`;
+      citation check no longer passes when a document is attached but its text
+      is unavailable: `DeterministicCheck` gains a three-valued result, the
+      review gate treats unknown as not passed without hiding urgent tentative
+      entries, the existing assertion in `DocketReview.policy.test.ts` is
+      rewritten, and the guard is
+      `packages/law-practice/use-cases/test/DocketIntake/DocketReview.unavailable-document-text.test.ts`;
+      the nanopub adapter round-trips in
+      `packages/foundation/modeling/epistemics/test/NanopubAdapter.test.ts`;
       the status census names each of the seven vocabularies as coordinate,
-      duplicate or projection; the nanopub adapter round-trips; `L4-1` to
-      `L4-7` are green.
+      duplicate or projection; `L4-1` to `L4-7` are green.
 - [ ] L3 and L6: legal seeds and FOLIO DTOs are out of `@beep/ontology` with
       IRIs and approval metadata preserved and every consumer migrated;
       `fold -> Dataset` is the only serialization path; `Dataset` equality is a
       quotient with a canonical digest and the semantica gold fixture is
       regenerated; `Literal` has three cases; `rdf` no longer imports `md`;
-      `MappingSet` has a coherence check; every external namespace in the
-      registry carries license and digest; `L3-1` to `L3-4` and `L6-1` to
-      `L6-2` are green.
+      `MappingSet` has a coherence check; `SourceTextIdentity` projects to
+      `prov:Entity` through `rdf/src/Prov.ts` with a round-trip test; the
+      registry test asserts license and digest on every external namespace;
+      `L3-1` to `L3-4` and `L6-1` to `L6-2` are green.
 - [ ] L5 and L7: `@beep/nlp-processing` holds `Operation` with
       `withActivity`, Kleisli laws hold under the declared observation, every
       run emits a `prov:Activity` and the package's instrumentation shard is
       regenerated; MCP tool schemas are the Effect schemas and write tools
-      emit `proposed` records only; the office-action flow passes end to end
-      on synthetic fixtures in
-      `packages/law-practice/use-cases/test/OfficeActionReview/OfficeActionReview.flow.test.ts`;
-      the two-matter adversarial fixture
-      (`packages/law-practice/use-cases/test/MatterWall.two-matter.test.ts`,
-      identical bytes in two matters, one assertion per access path listed in
-      Constraints) passes; `L5-1` to `L5-3` are green.
+      emit `proposed` records only, proven by a test in the package that hosts
+      the write tools (named in P0); the office-action flow test created in P3
+      is complete (law-owned claim structure, assessment profiles, attorney
+      admission) and green; the two-matter adversarial fixture
+      (`packages/law-practice/server/test/MatterWall.two-matter.test.ts`,
+      composing the real server layer, identical bytes in two matters, one
+      assertion per access path listed in Constraints) passes and P6's goal
+      includes the authorization work the P0 access-path map scopes; `L5-1` to
+      `L5-3` are green.
 - [ ] Cut-over: `@beep/nlp` is retired and every `@beep/schema-org` facet is
       rehomed or deleted through the retirement procedure with consumers
       migrated in the same PR; `research/consumer-census.md` records each
-      disposition; no package exists that `bun run beep create-package` did
-      not create; S31 inventories are unchanged.
+      disposition; every package under `packages/foundation/modeling` and
+      `packages/foundation/capability` passes `bun run beep lint package-scripts`
+      and `bun run beep lint identity-registry` (the create-package contract);
+      no S31 inventory grew, by the Constraints definition, checked per file
+      against the P0 base commit.
 - [ ] Doctrine: the knowledge-stack chapter, the nine rulings, the chapter-11
-      amendment, the glossary entries and the rewritten `THEORY.md` are
-      merged; the vision document no longer states the local-first posture as
-      architecture.
+      amendment (merged before P2 and confirmed in force), the glossary entries
+      and the chapter section that absorbs the `THEORY.md` narrative are merged on
+      `origin/main`; `rg -n "local-first|on-device" docs/PROSE_TO_PROOF_VISION.md`
+      returns no sentence stating it as architecture.
 - [ ] Every row of `research/law-test-plan.md` is `green` with a test file
       and test name, or `deleted` with its reason.
 - [ ] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
+
+The manifest's `verificationCommands` and the PLAN command block are the
+packet-health subset; this matrix is the completion proof.
 
 | Check | Command or evidence | Required result |
 | --- | --- | --- |
@@ -377,8 +456,8 @@ P0 also settles, in the `tsrs`-checked design module and the law-test ledger:
 | Schema laws | `bun run beep lint schema-first`, `bun run beep lint identity-registry`, `bun run beep lint laws --package packages/<family>/<kind>/<pkg>` (a workspace directory; the `@beep/<pkg>` alias scans nothing and exits green) | Passes |
 | Law catalogue | for every non-deleted id in `research/law-test-plan.md`: `rg -n "<id>" <owning package>/test` finds a test and that package's vitest run is green | Green, or the row is `deleted` with a reason |
 | Regression guards | the three named signal tests in the L4 acceptance row | Green |
-| Office-action flow | `OfficeActionReview.flow.test.ts` (from P6) and the existing office-action tests under `packages/law-practice/use-cases/test` at every phase exit from P3 | Green |
-| Matter wall | `MatterWall.two-matter.test.ts` | Green |
+| Office-action flow | `OfficeActionReview.flow.test.ts` (created in P3, complete at P6) plus the existing `packages/law-practice/server/test/LawPracticeServer.test.ts`, `server/test/OfficeActionStructure.test.ts`, `use-cases/test/OfficeActionStructure.test.ts` and `use-cases/test/OfficeActionFixtures.test.ts`, run with each package's `bun run test`, at every phase exit from P3 | Green |
+| Matter wall | `packages/law-practice/server/test/MatterWall.two-matter.test.ts` | Green |
 | Observability | `bun run beep observability catalog --check` | Current for every package that gained spans |
 | Docs | `bun run docgen:local` | Passes |
 | Reflection | `bun run beep lint reflection-artifacts` | Passes at close |
@@ -408,6 +487,9 @@ _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions wr
 ### Program shape: one packet, design first, layers bottom-up, folds by census, 2026-11-08
 
 The operator read the reader audits and critic reviews behind the 2026-11-08 rebuild report and asked for a careful redesign and rewrite of the text-knowledge stack as a goal packet, rather than re-scoping the empty explorations/nlp-annotation-family packet. This packet is that program. Its shape follows the report's section 7 path, reordered against the dependency DAG: a design-and-grill phase that resolves the five open questions in SPEC.md, then the layers bottom-up (L0 identity, L1 text, L2 annotation, L4 claims, L3 and L6, L5 and L7), then a per-facet census that decides every fold and rename. The lossy boundaries (handoff, invented confidence, array-order ids, auditless projection) are repaired before any package is renamed, so the product keeps its evidence intact even if the census declines every fold. One packet per path step was considered and deferred to Open Question 5, decided by the three-PR rule in P0.
+
+
+Amended 2026-11-09: the repair-before-rename sequencing and the late census in this decision are superseded by `2026-11-09-breaking-changes-accepted-the-best-core-outranks-compatibility.md` and `2026-11-09-open-questions-1-5-resolved-toward-the-clean-core-p0-confirms-or-reverses.md`; the program now rewrites the layers bottom-up and cuts consumers over as each lands, with the consumer census as P0's work list. The one-packet shape and the three-PR decomposition rule stand.
 
 Lane `goals/text-knowledge-stack-rebuild`
 
