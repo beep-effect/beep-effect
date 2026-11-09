@@ -65,6 +65,28 @@ export const CI_SHARDED_PARTITION_FILE_BUDGET_SECONDS = 480;
  */
 export const CI_UNIT_BIN_SERIAL_BUDGET_SECONDS = 720;
 
+/**
+ * Measured wall from which a Test Unit bin package is listed in its bin's `startFirst`, in seconds.
+ *
+ * **Details**
+ *
+ * A bin starts its `startFirst` packages before the rest, heaviest first, so none of them runs
+ * alone at the end of the two-at-a-time schedule. Below 30 s the order no longer moves a body by
+ * more than a package's own start-up, and a short list keeps the table readable.
+ *
+ * **Example** (Decide whether a package leads its bin)
+ *
+ * ```ts
+ * import { CI_UNIT_BIN_START_FIRST_SECONDS } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(309 >= CI_UNIT_BIN_START_FIRST_SECONDS) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const CI_UNIT_BIN_START_FIRST_SECONDS = 30;
+
 const FileMilliseconds = S.Record(S.String, S.Finite);
 const ShardFiles = S.Array(S.String);
 
