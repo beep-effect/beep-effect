@@ -19,8 +19,8 @@ RULES
 -->
 
 - **Source exploration:** `explorations/agent-fleet-layout` — primary ledger:
-  `explorations/agent-fleet-layout/research/SOURCES.md`.
-- **Provenance:** `explorations/agent-fleet-layout/RESEARCH.md`, `DECISIONS.md`, `research/fleet-census-2026-10-05.md`.
+  [explorations/agent-fleet-layout/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/agent-fleet-layout/research/SOURCES.md).
+- **Provenance:** [explorations/agent-fleet-layout/RESEARCH.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/agent-fleet-layout/RESEARCH.md), `DECISIONS.md`, `research/fleet-census-2026-10-05.md`.
 
 ## 1. Mined source corpus
 

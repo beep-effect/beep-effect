@@ -44,7 +44,7 @@ P0 Lab and screen scaffold — not started. Start only on Benjamin's signal.
 ## Latest Evidence
 
 The source exploration passed shape review and decompose on 2026-08-26. Its
-[`MAP.md`](../../explorations/lejeune-bolt-agentic-demo/MAP.md) fixes the scenario, walking
+[`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lejeune-bolt-agentic-demo/MAP.md) fixes the scenario, walking
 skeleton, fallback rules, and dependency on the deterministic bundle packet.
 
 ## Notes

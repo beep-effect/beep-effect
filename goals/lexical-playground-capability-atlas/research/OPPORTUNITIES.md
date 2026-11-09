@@ -102,7 +102,7 @@ contrary to D25.
 
 **What would have prevented it:** a verifier or goals-doctor check that requires
 each Exception Ledger owner to resolve to either `goals/<slug>` or a named
-`explorations/full-document-editor/MAP.md` row.
+[explorations/full-document-editor/MAP.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/full-document-editor/MAP.md) row.
 
 ## 2026-08-25 — The touch table has no scaffold path for a `ui-system` concept module
 

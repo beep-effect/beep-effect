@@ -110,7 +110,7 @@ Census figures come from [pipeline Q1][pipe-q1] to [pipeline Q8][pipe-q8].
 | Desktop sidecar | `@beep/professional-desktop` | `apps/professional-desktop/scripts/build-sidecar.ts:46` | `bun build --compile server/main.ts`. | Reuse: release lane. |
 | Ecosystem-package standard | standards | `standards/architecture/14-ecosystem-packages.md:108,143` | `sideEffects: false` + pure annotations + CI bundle probe. | Reuse: defines the publishable tier. |
 | SchemaCompiler ruling | effect-schema-parity packet | `explorations/effect-schema-parity/DECISIONS.md:611` | 2026-09-28 DEFER with three re-entry triggers. | Constraint, not a brick. |
-| Compiler spike | effect-schema-parity packet | `explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md` | Source of the 3.7x / 1.2x to 1.5x numbers. | Evidence. |
+| Compiler spike | effect-schema-parity packet | [explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md) | Source of the 3.7x / 1.2x to 1.5x numbers. | Evidence. |
 | Changesets | repo root | `.changeset/config.json:10` | `"access": "restricted"`; nothing published. | Context for tiering. |
 | Shared build-kit | (proposed) | `packages/tooling/library/build-kit`: **NOT FOUND** | Does not exist. | NET-NEW. |
 

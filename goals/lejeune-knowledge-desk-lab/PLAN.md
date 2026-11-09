@@ -22,7 +22,7 @@ Phase ids and titles match `ops/manifest.json`.
 ## Five-Day Walking-Skeleton Schedule
 
 The split is ratified in the exploration
-[`MAP.md`](../../explorations/lejeune-bolt-agentic-demo/MAP.md#five-day-schedule). The sibling
+[`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lejeune-bolt-agentic-demo/MAP.md#five-day-schedule). The sibling
 packet owns data outcomes on days 1-3; this packet owns the screen from day 1.
 
 | Day | This packet owns | Bundle dependency |

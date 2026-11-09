@@ -17,7 +17,7 @@ and revision invalidation without replacing any existing profile or acceptance g
 
 Graduated from [`explorations/doc-hub-spokes`](../../explorations/doc-hub-spokes/README.md)
 on 2026-10-28. Its [`BRIEF.md`](../../explorations/doc-hub-spokes/BRIEF.md),
-[`MAP.md`](../../explorations/doc-hub-spokes/MAP.md) and
+[`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/doc-hub-spokes/MAP.md) and
 [`DECISIONS.md`](../../explorations/doc-hub-spokes/DECISIONS.md) (D-01..D-12) are the
 provenance; they are linked, not copied.
 The later D-13 amendment clarifies unresolved obligations and request identity for this
@@ -68,7 +68,7 @@ Higher sources outrank lower sources when they conflict.
   `@beep/law-practice-use-cases` (the `ClaimSelfCheck` finding stream),
   `packages/agents/server/src/AssistantTurn/BlockRepair.ts` (as the JSON Patch baseline),
   and the `@beep/shacl`, `@beep/n3`, `@beep/oxigraph` drivers if obligations are reached.
-- `explorations/doc-hub-spokes/research/OPPORTUNITIES.md` for friction receipts.
+- [explorations/doc-hub-spokes/research/OPPORTUNITIES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/doc-hub-spokes/research/OPPORTUNITIES.md) for friction receipts.
 - This packet's `history/` for run evidence, and `SPEC.md` Decision Log.
 
 ## Constraints

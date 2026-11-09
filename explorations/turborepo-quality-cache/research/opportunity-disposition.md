@@ -67,4 +67,4 @@ before optimizing hit rates.
 - [`goals/ci-lane-economics/research/OPPORTUNITIES.md`](../../../goals/ci-lane-economics/research/OPPORTUNITIES.md)
 - [`goals/ship-velocity/research/OPPORTUNITIES.md`](../../../goals/ship-velocity/research/OPPORTUNITIES.md)
 - [goals/ship-velocity/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ship-velocity/SPEC.md)
-- [`explorations/graphnosis-prior-art/research/OPPORTUNITIES.md`](../../graphnosis-prior-art/research/OPPORTUNITIES.md)
+- [explorations/graphnosis-prior-art/research/OPPORTUNITIES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/graphnosis-prior-art/research/OPPORTUNITIES.md)

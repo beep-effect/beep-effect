@@ -23,7 +23,7 @@ confidence, principal/model identity, time, provenance, and gate disposition.
 1. The 2026-08-13 operator sign-off and ceremony request.
 2. Repo instructions and required skills.
 3. [`BRIEF.md`](../../explorations/lynx-lkg-ontology-grounding/BRIEF.md),
-   [`MAP.md`](../../explorations/lynx-lkg-ontology-grounding/MAP.md), and
+   [`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lynx-lkg-ontology-grounding/MAP.md), and
    [`DECISIONS.md`](../../explorations/lynx-lkg-ontology-grounding/DECISIONS.md).
 4. This `SPEC.md`, then `PLAN.md` and `GOAL.md`.
 

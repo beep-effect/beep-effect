@@ -44,5 +44,5 @@ Not started.
 
 ## Notes
 
-- Baseline table (seven variants) in `explorations/compute-profile-gate-routing/RESEARCH.md`; reuse the same five fixture files for before/after.
+- Baseline table (seven variants) in [explorations/compute-profile-gate-routing/RESEARCH.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/compute-profile-gate-routing/RESEARCH.md); reuse the same five fixture files for before/after.
 - Sibling goal `compute-profile-gate-routing` skips these hooks on worker hosts until this lands; its MAP.md gated re-entry removes the skip once a dankserver commit measures ≤ 1.5 GB.

@@ -1,7 +1,7 @@
 # Compute-Profile Gate Routing — Sources & Provenance
 
 - **Source exploration:** `explorations/compute-profile-gate-routing` — primary ledger:
-  `explorations/compute-profile-gate-routing/research/SOURCES.md`.
+  [explorations/compute-profile-gate-routing/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/compute-profile-gate-routing/research/SOURCES.md).
 
 ## 1. Mined source corpus
 

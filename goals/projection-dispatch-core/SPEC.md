@@ -35,7 +35,7 @@ converge to the durable version.
 4. This `SPEC.md`.
 5. `PLAN.md`, then `GOAL.md`.
 6. Exploration [`DECISIONS.md`](../../explorations/local-first-projection-sync/DECISIONS.md),
-   [`MAP.md`](../../explorations/local-first-projection-sync/MAP.md), and research.
+   [`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/local-first-projection-sync/MAP.md), and research.
 
 Higher sources outrank lower sources when they conflict.
 

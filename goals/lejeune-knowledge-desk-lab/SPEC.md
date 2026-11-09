@@ -48,7 +48,7 @@ These are the source brief's no-gos and excluded rabbit holes.
 3. Governing architecture, lab-app, UI, schema-first, Effect-first, and browser-QA standards.
 4. The source exploration's
    [`BRIEF.md`](../../explorations/lejeune-bolt-agentic-demo/BRIEF.md) and
-   [`MAP.md`](../../explorations/lejeune-bolt-agentic-demo/MAP.md).
+   [`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lejeune-bolt-agentic-demo/MAP.md).
 5. The sibling bundle packet's
    [`SPEC.md`](../lejeune-demo-corpus-and-ontology/SPEC.md).
 6. This `SPEC.md`.

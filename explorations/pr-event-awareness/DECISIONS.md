@@ -266,7 +266,7 @@ fallthrough, poll cadence, top-level comment rows.
   `crossSessionInbound: accept` can be set only in user, managed or
   `--settings`; the fleet runs long-lived bypass sessions; the detached monitor
   is a systemd unit, not the session's child, and does not know the receiver's
-  socket (`explorations/fleet-coordination/research/T6-cross-session-messaging.md`
+  socket ([explorations/fleet-coordination/research/T6-cross-session-messaging.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/fleet-coordination/research/T6-cross-session-messaging.md)
   §5; `RESEARCH.md` §4).
 - **Answer.** The already-wired SessionStart hook spawns a small child that
   watches the checkout inbox (D8: same checkout as the monitor) and posts one

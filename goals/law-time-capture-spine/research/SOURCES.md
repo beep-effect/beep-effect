@@ -3,7 +3,7 @@
 <!-- markdownlint-disable MD034 -- Provenance ledger preserves cited URLs verbatim. -->
 
 - **Primary ledger:**
-  [`explorations/ip-attorney-time-tracking/research/SOURCES.md`](../../../explorations/ip-attorney-time-tracking/research/SOURCES.md).
+  [explorations/ip-attorney-time-tracking/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/ip-attorney-time-tracking/research/SOURCES.md).
   The relevant implementation corpus below is reproduced from that exploration;
   provenance corrections begin there and are then synchronized here.
 - **Origin:** 2026-06-18 external landscape, three focused research tracks, and
@@ -109,8 +109,8 @@ unknowns is implementation scope or acceptance evidence for this packet.
 ## 5. Cross-links & provenance
 
 - Primary provenance surface:
-  `explorations/ip-attorney-time-tracking/research/SOURCES.md`.
-- Synthesis: `explorations/ip-attorney-time-tracking/RESEARCH.md`.
+  [explorations/ip-attorney-time-tracking/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/ip-attorney-time-tracking/research/SOURCES.md).
+- Synthesis: [explorations/ip-attorney-time-tracking/RESEARCH.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/ip-attorney-time-tracking/RESEARCH.md).
 - Ratified contract:
   `explorations/ip-attorney-time-tracking/{DECISIONS,BRIEF,MAP}.md`.
 - Product doctrine: `docs/product/ip-attorney-time-tracking.md`.

@@ -1,7 +1,7 @@
 # SkillOpt Training Pilot — Sources & Provenance
 
 - **Cluster / origin:** Successor-initiative planning (grill-with-docs 2026-07-06) + codex recon for that session + inherited SkillOpt corpus from `explorations/agent-pipeline-velocity`.
-- **Provenance:** predecessor ledger `explorations/agent-pipeline-velocity/research/SOURCES.md` (primary for SkillOpt); approved plan (session-local `~/.claude/plans/ok-so-i-only-starry-planet.md`).
+- **Provenance:** predecessor ledger [explorations/agent-pipeline-velocity/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/agent-pipeline-velocity/research/SOURCES.md) (primary for SkillOpt); approved plan (session-local `~/.claude/plans/ok-so-i-only-starry-planet.md`).
 
 ## 1. Mined source corpus
 
@@ -16,7 +16,7 @@ Not applicable — no upstream code is mined; SkillOpt is consumed as a pip tool
 ## 3. External research sources
 
 - [microsoft/SkillOpt repo](https://github.com/microsoft/SkillOpt) · [MSR blog](https://www.microsoft.com/en-us/research/blog/skillopt-agent-skills-as-trainable-parameters/) · [docs/reproduction guide](https://microsoft.github.io/SkillOpt/docs/guideline.html) — inherited, verified 2026-07-05.
-- `explorations/agent-pipeline-velocity/research/deep-research-report.json` — instruction/skill-economy findings contextualizing the 300–2,000-token band.
+- [explorations/agent-pipeline-velocity/research/deep-research-report.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/agent-pipeline-velocity/research/deep-research-report.json) — instruction/skill-economy findings contextualizing the 300–2,000-token band.
 
 ## 4. In-repo capability references
 

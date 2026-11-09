@@ -69,7 +69,7 @@ the primary exploration ledger; none authorizes a new dependency in this goal.
 - Candidate fan-out and capability check:
   `explorations/secure-document-download-proxy/MAP.md`.
 - Credential-crypto fence and guarded-fetch gate:
-  `explorations/ingestion-security-secret-governance/MAP.md` and
+  [explorations/ingestion-security-secret-governance/MAP.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/ingestion-security-secret-governance/MAP.md) and
   `DECISIONS.md`.
 - First consumer authorization spine:
   `goals/law-docketing-patent-spine`.

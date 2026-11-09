@@ -301,7 +301,7 @@ re-read. Full tables with roles are in
   Any change to that receiver is a CI-availability decision, not a side project.
 - [`explorations/fleet-coordination`](../../fleet-coordination/README.md) —
   routing and lease laws for sibling checkouts, and — in
-  [`research/T3-delivery-vector.md`](../../fleet-coordination/research/T3-delivery-vector.md)
+  [`research/T3-delivery-vector.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/fleet-coordination/research/T3-delivery-vector.md)
   and `research/T6-cross-session-messaging.md` — the measured answer to this
   packet's idle-wake gap: `asyncRewake` exit 2 wakes an idle session but is
   unreachable before a session's first tool call and cannot interrupt an

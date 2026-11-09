@@ -15,10 +15,10 @@ home.
 Graduated from [`explorations/execution-authority-home`](../../explorations/execution-authority-home/README.md):
 
 - brief: [`BRIEF.md`](../../explorations/execution-authority-home/BRIEF.md)
-- map: [`MAP.md`](../../explorations/execution-authority-home/MAP.md)
+- map: [`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/execution-authority-home/MAP.md)
 - decisions: [`DECISIONS.md`](../../explorations/execution-authority-home/DECISIONS.md)
-- research: [`RESEARCH.md`](../../explorations/execution-authority-home/RESEARCH.md) and
-  [`research/provenance-placement-ddd.md`](../../explorations/execution-authority-home/research/provenance-placement-ddd.md)
+- research: [`RESEARCH.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/execution-authority-home/RESEARCH.md) and
+  [`research/provenance-placement-ddd.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/execution-authority-home/research/provenance-placement-ddd.md)
 
 ## Non-Goals
 

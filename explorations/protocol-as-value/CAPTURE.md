@@ -93,7 +93,7 @@ in the workspace attaches meaning as sections via `$I.annote`; Curie/Vocab
 codecs make path/CURIE/IRI literal-typed encodings of one value; interpolation
 ban keeps every identity grep-harvestable without executing code. The
 fibration handoff (locked 2026-07-01 — BEFORE foldlab existed):
-`explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md` —
+[explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md) —
 "the identity path and the IRI become two literal-typed encodings of the same
 value; annotations become sections over the base category $I mints; retrieval
 becomes dereference." Grothendieck-fibration kit (base of literal tags,
