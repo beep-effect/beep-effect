@@ -3,7 +3,7 @@ title: "Fourth goals-only re-final after #2961 was hand-merged seven seconds aft
 date: 2026-11-09
 kind: checkpoint
 lane: "scripts-to-beep-cli-refinal4"
-pr: 3022
+pullRequest: 3022
 reversal: "Close this re-final and keep #2961 as the final PR"
 ---
 
