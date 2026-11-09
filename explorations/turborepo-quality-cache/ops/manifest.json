@@ -18,6 +18,7 @@
       "supersededBy": null
     },
     "created": "2026-09-04",
-    "updated": "2026-09-08"
+    "updated": "2026-09-08",
+    "retentionReason": "Retained: Cache.conformance reads its corpus plan and backend rubric with pinned SHA-256s, and the committed conformance corpus records the plan's path."
   }
 }
