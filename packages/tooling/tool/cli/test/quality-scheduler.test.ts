@@ -6671,18 +6671,20 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
           const running = yield* Effect.forkChild(
             withQualityAdmission(request(), noAdmissionOriginGate, Ref.set(used, true), fastConfig)
           );
-          // Loaded runners can delay the second capacity poll past a fixed sleep, so wait
-          // for the poll count on the live clock and fail loudly if it never arrives.
+          // Call 1 is the tick poll, call 2 the publish-time poll that rolls the lease back,
+          // and call 3 happens only once the rollback has returned to the wait loop; an
+          // admitted run stops polling, so waiting for it is deterministic and a regression
+          // dies at the deadline instead of racing a fixed sleep.
           const reading14 = yield* Effect.repeat(Ref.get(calls), {
-            until: (count) => count >= 2,
+            until: (count) => count >= 3,
             schedule: Schedule.spaced(Duration.millis(10)),
           }).pipe(
             Effect.timeoutOrElse({
               duration: Duration.seconds(5),
-              orElse: () => Effect.die(new Error("reservationCapacity was not polled twice within 5 seconds")),
+              orElse: () => Effect.die(new Error("reservationCapacity was not polled three times within 5 seconds")),
             })
           );
-          expect(reading14).toBeGreaterThanOrEqual(2);
+          expect(reading14).toBeGreaterThanOrEqual(3);
           const reading15 = yield* Ref.get(used);
           expect(reading15).toBe(false);
           yield* Fiber.interrupt(running);
