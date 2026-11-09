@@ -22,7 +22,16 @@ could outlive a change to the selection.
 This note reviews the declared configuration change only. It is not evidence
 that any computation is newly qualified or that a quality gate has passed.
 
-Current `turbo.json` SHA-256: `5ec1246aea595fff147318b8f8a4470b58c357c313c9c3a2b9c704e4f98744f6`.
+Current `turbo.json` SHA-256: `eed05443dede5eb60a3fccb30ee38469376b5af5e47204bcb917d55c8ff439f2`.
+
+## Main merge
+
+The lane merged `origin/main` at `fda98a2c4b` (which carries #3028, #3013, #3026
+and #3032). The only conflict was `standards/cache-qualification-baseline.json`.
+It was resolved to `main`'s version, which keeps every other record exactly as
+`main` has it, and this request was submitted again on the merged tree. The
+audit names the same 86 computations; the SHA-256 above is the merged
+`turbo.json`.
 
 ## Drifted tasks
 

@@ -66,7 +66,7 @@ Measured on main run 42677073526 and five pull-request runs of 2026-11-09: one C
 
 **Not changed.** Main-branch Check runs share one concurrency group without cancel-in-progress. GitHub keeps one pending run per group, so a later merge cancels the run that was waiting: 82 of the last 100 push runs on main (2026-11-08 02:09Z to 2026-11-09 21:51Z) were cancelled, and nine of twelve sampled had started no job. Giving each main commit its own group would let every commit finish, at the price of overlapping runs that each ask for about 70 hosted jobs; that trade needs runner-capacity evidence and is left for its own decision.
 
-Lane `practical-poincare`
+Lane practical-poincare
 
 Reverse: Put the two ALL_* partition lists back into the shard matrices in check.yml and delete the Test Plan job, the --planned-partitions arguments and the plan terms of both aggregates; remove the runner block from vitest.shared.ts to return to file-level sweep selection; fold the two Property Laws slices back into one job. No baseline rows or shard plans change.
 
@@ -112,7 +112,7 @@ Main run 42677073526, the first on the 11/12/7 layout, ran every Test Unit shard
 
 The rerun of PR #3007's last head (42669948388) could not be folded: GitHub returns 502 for its jobs listing.
 
-Lane `perf/unit-bins-fold-main-run`
+Lane perf/unit-bins-fold-main-run
 
 Reverse: Remove the startFirst lists from the unit bins in CiLanePartitions.ts and the ciLaneStartOrder call in CiCoverage.ts; steps then run in name order again. Undo the split by moving the tests of research-library-evidence.test.ts back into research-library-views.test.ts and pruning the plan.
 
