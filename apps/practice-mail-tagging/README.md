@@ -91,6 +91,11 @@ bun run coverage
 bun run lint
 ```
 
+From the repo root, a bare `bun run coverage` measures only the packages the
+merge base says changed (the same affected plan `yeet final-check` runs) and
+prints the scope it chose; `bun run coverage -- --full` is the sharded
+whole-workspace proof, and hosted Test Unit stays the proof of record.
+
 Tests use an in-memory filesystem, a fake mailbox, and stub drivers. Nothing
 in them reaches Microsoft 365, Box, or a real knowledge-graph bundle.
 

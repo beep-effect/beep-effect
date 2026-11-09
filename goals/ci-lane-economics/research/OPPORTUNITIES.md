@@ -1185,3 +1185,25 @@ evidence, what would have prevented it). Redact for the public repo.
   replay could only pass by relaxing them, so it proved floors and arithmetic
   rather than a clean lane pass.
 
+
+## 2026-11-09 — a stale lane install turned final-check's full coverage red
+
+- **Doing:** `yeet final-check` for the tier-1 coverage efficiency PR (local
+  `--affected` default, refreshed shard weights). The affected planner
+  escalated to the full sharded path because the coverage tooling under
+  `packages/tooling/tool/cli/src/commands/Quality/` is a global coverage input,
+  so the gate ran all ten shards: 37 minutes under load about 45.
+- **Evidence:** nine shards green; shard-4 red on exactly one test,
+  `packages/tooling/policy-pack/repo-configs/test/EffectTsgoEffectFnPolicy.test.ts`
+  (`tsrs --version ... expected ... to contain '+effect-tsgo.0.67.5'`). The
+  worktree had merged `origin/main` with the #2994 dependency bump but its
+  `node_modules` still held `@effect/tsgo` 0.67.4; `bun install
+  --frozen-lockfile` and a scoped `bun run coverage --
+  --filter=@beep/repo-configs` were green in under three minutes. The red cost
+  one 37-minute full run and a `--skip coverage` on the receipt instead of a
+  passing gate.
+- **Would have prevented it:** a merge-main step that re-installs when the
+  lockfile changed (or a final-check preflight that compares the lockfile's
+  pinned toolchain versions against the installed binaries before launching
+  a 30-minute coverage replay), and a version-pin test that reads the pin
+  from the lockfile instead of asserting a literal.

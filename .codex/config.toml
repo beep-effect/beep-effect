@@ -15,6 +15,10 @@
 [skills]
   include_instructions = true
   [[skills.config]]
+    name = "auth-environments"
+    enabled = true
+
+  [[skills.config]]
     name = "remote-development-agents"
     enabled = true
 

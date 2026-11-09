@@ -7,6 +7,7 @@
 
 import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
@@ -126,162 +127,218 @@ const COVERAGE_REPOSITORY_FIXTURE_OWNER_PREFIXES: ReadonlyArray<readonly [string
   ),
 ];
 
-// Seconds observed in the correctness-green Coverage Regression run for PR
-// #707 (run 31766791221, job 94664247028). These measured long poles account
-// for roughly 60% of the package test time and override the older profile
-// below; retaining the older map for the tail avoids replacing evidence with
-// estimates for packages whose live duration remained small.
-const COVERAGE_LIVE_TASK_WEIGHT_SECONDS: Readonly<Record<string, number>> = {
-  "@beep/db-admin": 88.16,
-  "@beep/dock": 66.52,
-  "@beep/documents-server": 69.82,
-  "@beep/editor": 57.06,
-  "@beep/epistemic-server": 47.49,
-  "@beep/epistemic-use-cases": 48.28,
-  "@beep/law-practice-server": 103.9,
-  "@beep/lexical-schema": 87.89,
-  "@beep/lint-rules": 42.2,
-  "@beep/nlp": 49.24,
-  "@beep/nlp-processing": 48.09,
-  "@beep/observability": 85.07,
-  "@beep/ontology-client": 54.64,
-  "@beep/professional-desktop": 279.09,
-  "@beep/repo-ai-metrics": 79.94,
-  "@beep/repo-cli": 720.62,
-  "@beep/repo-utils": 605.03,
-  "@beep/schema": 83.53,
-  "@beep/test-utils": 49.55,
-  "@beep/wink": 48.1,
-} as const;
-
-// Seconds observed in the accepted zero-cache Coverage Regression run for
-// PR #684 (run 31727475076, job 94539333691). Unlisted packages use the
-// conservative default below. The weights influence placement only; every
-// current coverage owner is still assigned exactly once.
+// Sequential coverage-task seconds measured locally on 2026-11-09 (HEAD
+// 33b9f1cb31, 64-thread workstation, load average 48-59 with another
+// worktree's Vitest running, so every value is an upper bound). The full
+// sharded path ran under the production topology (one Vitest worker per mixed
+// shard, two for @beep/repo-cli), so these are the exact tasks the shards
+// execute. No hosted run exposes per-task coverage durations any more: hosted
+// coverage is produced inside the Test Unit partitions (`ci lane test-unit
+// --coverage-output`), whose Turbo summaries hold only the prebuild, and the
+// Heavy / Coverage Regression job is the comparator. `@beep/law-practice-server`
+// never finished inside the baseline (its shard shared one worker with 24
+// other packages for more than 1778 s), so its value is one solo run on the
+// same host at the same one-worker topology (2026-11-09, HEAD 0c57c1acf5,
+// `coverage -- --filter=@beep/law-practice-server` = `--maxWorkers=1`): the
+// coverage task took 2679.9 s wall (279 test files, 4692.7 s user + 543.9 s
+// system, load average 28 rising to 61 with three other lanes running
+// coverage). The weights influence placement only; every current coverage
+// owner is still assigned exactly once, and the two long poles land alone.
+// Previous profiles: PR #684 (run 31727475076) and PR #707 (run 31766791221),
+// which weighed law-practice-server at 51.7 and 103.9 s and made it the
+// critical path of the full run.
 const COVERAGE_TASK_WEIGHT_SECONDS: Readonly<Record<string, number>> = {
-  "@beep/acp": 13.4,
-  "@beep/agents-client": 22.8,
-  "@beep/agents-domain": 9.29,
-  "@beep/agents-server": 22.7,
-  "@beep/agents-tables": 12.4,
-  "@beep/agents-use-cases": 11.5,
-  "@beep/ai-provider-cli": 11.9,
-  "@beep/ai-sync": 9.82,
-  "@beep/anthropic": 9.37,
-  "@beep/api-transport": 8.11,
-  "@beep/architecture-lab-client": 7.88,
-  "@beep/architecture-lab-config": 7.62,
-  "@beep/architecture-lab-domain": 9.52,
-  "@beep/architecture-lab-proof": 15.7,
-  "@beep/architecture-lab-server": 11.3,
-  "@beep/architecture-lab-tables": 7.91,
-  "@beep/architecture-lab-ui": 8.82,
-  "@beep/architecture-lab-use-cases": 9.13,
-  "@beep/box": 10.8,
-  "@beep/chalk": 7.54,
-  "@beep/colors": 14.5,
-  "@beep/cosmos": 7.45,
-  "@beep/data": 3.02,
-  "@beep/db-admin": 35,
-  "@beep/discord": 7.24,
-  "@beep/doc-text": 13,
-  "@beep/dock": 25.1,
-  "@beep/dock-react": 21.6,
-  "@beep/documents-domain": 12,
-  "@beep/documents-server": 28.2,
-  "@beep/documents-tables": 17.6,
-  "@beep/documents-use-cases": 17.6,
-  "@beep/drizzle": 7.93,
-  "@beep/duckdb": 8.85,
-  "@beep/ecfr": 7.99,
-  "@beep/editor": 34.2,
-  "@beep/effect-drizzle": 4.78,
-  "@beep/epistemic-client": 10.1,
-  "@beep/execution-authority-config": 13,
-  "@beep/execution-authority-domain": 13,
-  "@beep/execution-authority-server": 15,
-  "@beep/execution-authority-tables": 10,
-  "@beep/execution-authority-use-cases": 10,
-  "@beep/epistemic-domain": 13.8,
-  "@beep/epistemic-server": 20.2,
-  "@beep/epistemic-tables": 13.8,
-  "@beep/epistemic-ui": 15.8,
-  "@beep/epistemic-use-cases": 18.5,
-  "@beep/exiftool": 14.3,
-  "@beep/fc-runs": 1.13,
-  "@beep/ffmpeg": 11.6,
-  "@beep/file-processing": 13.1,
-  "@beep/gov-legal-mcp": 13.4,
-  "@beep/govinfo": 8.45,
-  "@beep/html": 44.5,
-  "@beep/hubspot": 9.95,
-  "@beep/identity": 3.63,
-  "@beep/langextract": 17.2,
-  "@beep/law-practice-domain": 16.5,
-  "@beep/law-practice-server": 51.7,
-  "@beep/law-practice-tables": 18.4,
-  "@beep/law-practice-use-cases": 15.8,
-  "@beep/lexical-schema": 126,
-  "@beep/libpff": 14.4,
-  "@beep/lint-rules": 23.1,
-  "@beep/m365": 8.88,
-  "@beep/m365-mcp": 8.15,
-  "@beep/mcp-kit": 12.8,
-  "@beep/md": 20.3,
-  "@beep/n3": 7.87,
-  "@beep/nlp": 16.1,
-  "@beep/nlp-mcp": 13.8,
-  "@beep/nlp-processing": 22.7,
-  "@beep/obs": 11.6,
-  "@beep/observability": 34.7,
-  "@beep/oip-web": 15.4,
-  "@beep/onepassword-cli": 8.1,
-  "@beep/ontology": 11,
-  "@beep/ontology-client": 19.8,
-  "@beep/ontology-config": 1.45,
-  "@beep/ontology-domain": 1.95,
-  "@beep/ontology-server": 19.5,
-  "@beep/ontology-ui": 13.8,
-  "@beep/ontology-use-cases": 18.8,
-  "@beep/openai-compat": 19.1,
-  "@beep/openclaw": 12.5,
-  "@beep/oxigraph": 9.67,
-  "@beep/pacer": 17.1,
-  "@beep/pandoc-ast": 14.3,
-  "@beep/pglite": 15.5,
-  "@beep/phoenix": 8.15,
-  "@beep/postgres": 12.1,
-  "@beep/pretext": 10.8,
-  "@beep/repo-cli": 768,
-  "@beep/professional-desktop": 88,
-  "@beep/provenance": 7.63,
-  "@beep/qa-capture": 19.6,
-  "@beep/rdf": 8.34,
-  "@beep/rdf-canonize": 8.72,
-  "@beep/repo-ai-metrics": 41.6,
-  "@beep/repo-configs": 20.6,
-  "@beep/repo-docgen": 16.1,
-  "@beep/repo-utils": 449,
-  "@beep/runpod": 24.2,
-  "@beep/sanity": 8.68,
-  "@beep/schema": 27.2,
-  "@beep/semantic-web": 14.2,
-  "@beep/shacl": 9.83,
-  "@beep/shared-domain": 15.8,
-  "@beep/shared-tables": 7.63,
-  "@beep/tailscale": 9.75,
-  "@beep/test-utils": 33.2,
-  "@beep/tika": 16.6,
-  "@beep/types": 0.888,
-  "@beep/ui": 15.9,
-  "@beep/uspto": 7.63,
-  "@beep/uspto-mcp": 10.8,
-  "@beep/utils": 2.97,
-  "@beep/wink": 27.9,
-  "@beep/workspace-domain": 10.3,
-  "@beep/workspace-server": 20.3,
-  "@beep/workspace-tables": 13.3,
-  "@beep/workspace-use-cases": 14,
+  "@beep/agents-client": 4.4,
+  "@beep/agents-domain": 3.2,
+  "@beep/agents-server": 9.1,
+  "@beep/agents-tables": 3.1,
+  "@beep/agents-use-cases": 3.5,
+  "@beep/ai-provider-cli": 2.6,
+  "@beep/ai-sync": 3.4,
+  "@beep/alchemy-postgres": 26.7,
+  "@beep/anthropic": 2.8,
+  "@beep/api-docs": 2.8,
+  "@beep/api-transport": 2.8,
+  "@beep/architecture-lab-client": 5,
+  "@beep/architecture-lab-config": 2.5,
+  "@beep/architecture-lab-domain": 2.6,
+  "@beep/architecture-lab-proof": 2.7,
+  "@beep/architecture-lab-server": 3.8,
+  "@beep/architecture-lab-tables": 2.5,
+  "@beep/architecture-lab-ui": 2.6,
+  "@beep/architecture-lab-use-cases": 3.2,
+  "@beep/beep-effect-web": 1.6,
+  "@beep/box": 3,
+  "@beep/box-provisioning": 29,
+  "@beep/brand": 4,
+  "@beep/chalk": 2.1,
+  "@beep/ciops": 7,
+  "@beep/cli-kit": 20.9,
+  "@beep/codegen-kit": 3.8,
+  "@beep/colors": 3.5,
+  "@beep/commands": 3.3,
+  "@beep/config-file": 7.2,
+  "@beep/cosmos": 3.4,
+  "@beep/data": 1.7,
+  "@beep/db-admin": 21.4,
+  "@beep/doc-text": 29.6,
+  "@beep/dock": 3.2,
+  "@beep/dock-react": 4.4,
+  "@beep/docket-intake": 8.6,
+  "@beep/documents-domain": 5,
+  "@beep/documents-server": 78.2,
+  "@beep/documents-tables": 3.9,
+  "@beep/documents-use-cases": 12.9,
+  "@beep/drizzle": 2.6,
+  "@beep/duckdb": 79.7,
+  "@beep/ecfr": 2.8,
+  "@beep/editor": 25.3,
+  "@beep/effect-drizzle": 3.8,
+  "@beep/epistemic-client": 3.1,
+  "@beep/epistemic-domain": 4.5,
+  "@beep/epistemic-server": 23.4,
+  "@beep/epistemic-tables": 5.8,
+  "@beep/epistemic-ui": 11.1,
+  "@beep/epistemic-use-cases": 6.7,
+  "@beep/epistemics": 2.9,
+  "@beep/execution-authority-config": 3,
+  "@beep/execution-authority-domain": 2.3,
+  "@beep/execution-authority-server": 3.6,
+  "@beep/execution-authority-tables": 2.2,
+  "@beep/execution-authority-use-cases": 2.4,
+  "@beep/eyecite": 2.5,
+  "@beep/fc-runs": 1.2,
+  "@beep/ffmpeg": 2.7,
+  "@beep/file-processing": 4.4,
+  "@beep/freshbooks": 2.5,
+  "@beep/git": 7.3,
+  "@beep/github": 8,
+  "@beep/github-actions": 10.4,
+  "@beep/github-commands": 4.4,
+  "@beep/github-references": 1.7,
+  "@beep/github-reporting": 6,
+  "@beep/glob": 30,
+  "@beep/gov-legal-mcp": 5.1,
+  "@beep/govinfo": 3.3,
+  "@beep/graph-3d": 1.9,
+  "@beep/html": 10.1,
+  "@beep/hubspot": 2.5,
+  "@beep/identity": 6.7,
+  "@beep/infra": 8.4,
+  "@beep/jsonc": 4.9,
+  "@beep/jsonl": 3.9,
+  "@beep/langextract": 5.1,
+  "@beep/law-practice-domain": 157.8,
+  "@beep/law-practice-server": 2679.9,
+  "@beep/law-practice-tables": 5,
+  "@beep/law-practice-use-cases": 11.9,
+  "@beep/lejeune-bolt-workbench": 16.1,
+  "@beep/lexical-schema": 3.9,
+  "@beep/libpff": 5.1,
+  "@beep/lint-rules": 44.7,
+  "@beep/lockfiles": 12.1,
+  "@beep/m365": 3.1,
+  "@beep/m365-mcp": 3.8,
+  "@beep/managed-section": 4.3,
+  "@beep/markdown": 124.8,
+  "@beep/mcp-kit": 2.8,
+  "@beep/mcpb-kit": 2.8,
+  "@beep/md": 33.6,
+  "@beep/memfs": 4.2,
+  "@beep/n3": 2.6,
+  "@beep/nlp": 3.4,
+  "@beep/nlp-mcp": 3.3,
+  "@beep/nlp-processing": 4,
+  "@beep/npm-spec": 4.1,
+  "@beep/obs": 2.2,
+  "@beep/observability": 9,
+  "@beep/occt": 15.2,
+  "@beep/oip-web": 5.6,
+  "@beep/onepassword-cli": 2.7,
+  "@beep/ontology": 3.4,
+  "@beep/ontology-client": 15,
+  "@beep/ontology-config": 1.4,
+  "@beep/ontology-domain": 1.6,
+  "@beep/ontology-server": 18.9,
+  "@beep/ontology-ui": 6.2,
+  "@beep/ontology-use-cases": 6.6,
+  "@beep/openai": 4.6,
+  "@beep/openai-compat": 5.2,
+  "@beep/openclaw": 3.2,
+  "@beep/oxigraph": 2.5,
+  "@beep/pacer": 3.4,
+  "@beep/package-json": 6.9,
+  "@beep/palantiri": 3.2,
+  "@beep/pandoc-ast": 8.9,
+  "@beep/party-domain": 3,
+  "@beep/party-server": 3.4,
+  "@beep/party-use-cases": 2.3,
+  "@beep/pdf-tools": 2.5,
+  "@beep/pglite": 4.5,
+  "@beep/phoenix": 2.4,
+  "@beep/poppler": 2.5,
+  "@beep/postgres": 2.7,
+  "@beep/practice-claude-mod": 6.6,
+  "@beep/practice-gateway": 11,
+  "@beep/practice-identify": 4.1,
+  "@beep/practice-kg-mcp": 19.1,
+  "@beep/practice-m365-contacts": 5.1,
+  "@beep/practice-mail-tagging": 8.2,
+  "@beep/practice-review-hub": 6,
+  "@beep/practice-setup": 3,
+  "@beep/pretext": 2.6,
+  "@beep/professional-desktop": 110.9,
+  "@beep/provenance": 2.5,
+  "@beep/public-site": 1.2,
+  "@beep/qa-capture": 3.6,
+  "@beep/rdf": 7.1,
+  "@beep/rdf-canonize": 5.1,
+  "@beep/repo-ai-metrics": 148.4,
+  "@beep/repo-cli": 1191.7,
+  "@beep/repo-cli-kit": 37.3,
+  "@beep/repo-configs": 3.9,
+  "@beep/repo-docgen": 12.3,
+  "@beep/repo-utils": 9.6,
+  "@beep/repo-workspaces": 75.2,
+  "@beep/runpod": 2.8,
+  "@beep/runtime-env": 4.8,
+  "@beep/sanity": 2.4,
+  "@beep/sbom": 4,
+  "@beep/schema": 5.1,
+  "@beep/schema-org": 3,
+  "@beep/semantic-web": 2.5,
+  "@beep/semantica": 23,
+  "@beep/semver": 5.7,
+  "@beep/shacl": 3,
+  "@beep/shared-domain": 4.1,
+  "@beep/shared-tables": 3.3,
+  "@beep/shared-use-cases": 4.2,
+  "@beep/spdx": 2.1,
+  "@beep/tailscale": 2.3,
+  "@beep/technical-drawing": 18,
+  "@beep/tesseract": 3.2,
+  "@beep/test-runner": 1.5,
+  "@beep/test-utils": 49.2,
+  "@beep/tika": 3.6,
+  "@beep/todox": 3.2,
+  "@beep/toml": 11.5,
+  "@beep/trustgraph-workbench": 2.5,
+  "@beep/tsconfig": 3.2,
+  "@beep/types": 1.2,
+  "@beep/ui": 5,
+  "@beep/uspto": 2.6,
+  "@beep/uspto-mcp": 3.5,
+  "@beep/utils": 6.7,
+  "@beep/walker": 4.9,
+  "@beep/windows-secrets": 2.6,
+  "@beep/wink": 14,
+  "@beep/workspace-domain": 4.4,
+  "@beep/workspace-server": 5.4,
+  "@beep/workspace-tables": 3,
+  "@beep/workspace-use-cases": 3.9,
+  "@beep/xdg": 4.1,
+  "@beep/xstate": 2.6,
+  "@beep/yaml": 32,
 } as const;
 
 const DEFAULT_COVERAGE_TASK_WEIGHT_SECONDS = 15;
@@ -493,7 +550,55 @@ export const CoverageAffectedScope = S.Union([CoverageFullScope, CoverageSelecte
 export type CoverageAffectedScope = typeof CoverageAffectedScope.Type;
 
 /**
- * One stable full-run coverage shard and its estimated hosted weight.
+ * How a root `coverage` invocation chose its scope.
+ *
+ * **Details**
+ *
+ * `explicit` means the caller pinned the scope with `--filter`, `--since`,
+ * `--affected`, or a baseline-writing flag, and the resolver honours those
+ * arguments as written. `full` is the sharded whole-workspace proof: the
+ * default under CI and the `--full` opt-in locally. `affected` is the local
+ * default: a bare run plans against the merge base exactly as
+ * `yeet final-check` does, so a local coverage run is no longer a full proof
+ * unless it says so. Hosted Test Unit remains the proof of record.
+ *
+ * **Example** (Read the mode a bare local run resolves to)
+ *
+ * ```ts
+ * import { CoverageScopeMode } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(CoverageScopeMode.is.affected("affected")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const CoverageScopeMode = LiteralKit(["affected", "full", "explicit"]).pipe(
+  $I.annoteSchema("CoverageScopeMode", {
+    description:
+      "Scope a root coverage invocation resolved: caller-pinned, the full sharded proof, or the affected merge-base plan.",
+  })
+);
+
+/**
+ * Scope mode a root coverage invocation resolved.
+ *
+ * **Example** (Type a mode)
+ *
+ * ```ts
+ * import type { CoverageScopeMode } from "@beep/repo-cli/test/Quality"
+ *
+ * const mode: CoverageScopeMode = "full"
+ * console.log(mode)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CoverageScopeMode = typeof CoverageScopeMode.Type;
+
+/**
+ * One stable full-run coverage shard and its estimated sequential weight.
  *
  * **Example** (Inspect a shard)
  *
@@ -514,7 +619,7 @@ export class CoverageFullShard extends S.Opaque<CoverageFullShard, { readonly br
     weightSeconds: S.Finite,
   }).pipe(
     $I.annoteSchema("CoverageFullShard", {
-      description: "Deterministic least-loaded coverage shard derived from hosted task weights.",
+      description: "Deterministic least-loaded coverage shard derived from measured task weights.",
     })
   )
 ) {}
@@ -527,8 +632,7 @@ type MutableCoverageShard = {
 
 const coverageTaskWeightSeconds = (packageName: string): number =>
   pipe(
-    O.fromUndefinedOr(COVERAGE_LIVE_TASK_WEIGHT_SECONDS[packageName]),
-    O.orElse(() => O.fromUndefinedOr(COVERAGE_TASK_WEIGHT_SECONDS[packageName])),
+    O.fromUndefinedOr(COVERAGE_TASK_WEIGHT_SECONDS[packageName]),
     O.getOrElse(() => DEFAULT_COVERAGE_TASK_WEIGHT_SECONDS)
   );
 
@@ -827,7 +931,7 @@ export const workspaceDependentOwners: {
 );
 
 /**
- * Sum the hosted task weights of the given coverage owners.
+ * Sum the measured task weights of the given coverage owners.
  *
  * **Details**
  *

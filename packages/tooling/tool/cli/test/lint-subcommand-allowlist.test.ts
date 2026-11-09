@@ -150,19 +150,44 @@ it.layer(CommandTestLayer, { timeout: "5 seconds" })((it) => {
       expect(LintPolicySubcommand.literals).toContain("policy-fingerprint");
     });
 
+    // `beep lint --log-level=<level>` misses the quality-task route and lands on
+    // this group with no subcommand. It once printed the index and exited 0, a
+    // green sweep that never ran (P61). Every bare invocation must fail instead.
     it.effect(
-      "lists every registered subcommand in the lint help index",
+      "fails a bare lint group invocation with a pointer to the sweep and the full subcommand index",
       Effect.fnUntraced(function* () {
-        yield* runLintCommand([]);
-        const lines = yield* TestConsole.logLines;
+        const errorsBefore = yield* TestConsole.errorLines;
+        const logsBefore = yield* TestConsole.logLines;
+        const failure = yield* runLintCommand(["--log-level=debug"]).pipe(Effect.flip);
+        const errorsAfter = yield* TestConsole.errorLines;
+        const logsAfter = yield* TestConsole.logLines;
+        const errors = A.drop(errorsAfter, A.length(errorsBefore));
+        const logs = A.drop(logsAfter, A.length(logsBefore));
         const registered = pipe(
           lintCommand.subcommands,
           A.flatMap((group) => group.commands),
           A.map((command) => `- bun run beep lint ${command.name}`)
         );
 
+        expect(failure).toMatchObject({
+          _tag: "CliReportedExit",
+          exitCode: 1,
+          message: "beep lint: nothing ran; a root flag such as --log-level skips the lint sweep.",
+        });
+        expect(errors).toContain("Run the sweep with `bun run lint`, or one policy check:");
         for (const line of registered) {
-          expect(lines).toContain(line);
+          expect(errors).toContain(line);
+        }
+        expect(logs).toEqual([]);
+      })
+    );
+
+    it.effect(
+      "exits non-zero for every bare lint group invocation, flagged or not",
+      Effect.fnUntraced(function* () {
+        for (const argv of [[], ["--log-level", "info"], ["--log-level=warn"]]) {
+          const failure = yield* runLintCommand(argv).pipe(Effect.flip);
+          expect(failure, A.join(argv, " ")).toMatchObject({ _tag: "CliReportedExit", exitCode: 1 });
         }
       })
     );
