@@ -55,15 +55,15 @@ required-green and main-verdict report` (MEAS-01 slice 1, M).
 | Component | Existing capability (path) or NET-NEW |
 | --- | --- |
 | Head-level scorecard | NET-NEW command `ci certainty`, composed from `commands/Ci/LaneTimings.ts` (hosted job and step reads), `standards/branch-protection-contexts.json` (required contexts), `commands/Yeet/internal/Economics.ts` (local attempts); nightly workflow follows `.github/workflows/knowledge-baseline-mint.yml` |
-| Journal retention and fleet roots | `internal/.../ResidueReap.ts`, `commands/Worktree` archive path, `docs/runbooks/fleet-roots-and-registry.md` (`roots.json`); NET-NEW: export on retire, seat and host fields on `AttemptJournal.ts` rows |
+| Journal retention and fleet roots | `commands/Worktree/internal/ResidueReap.ts`, the `commands/Worktree` archive path, `docs/runbooks/fleet-roots-and-registry.md` (`roots.json`); NET-NEW: export on retire, seat and host fields on `AttemptJournal.ts` rows |
 | Route corpus partition mapping | `commands/Ci/RouteCorpus.ts`, `RouteCensus.ts`; NET-NEW: partition job name mapping and per-lane outcome fields |
 | Goal-data consumer census | `commands/Ci/CiOperational.schemas.ts` and `CiOperational.patterns.json`; NET-NEW: generated census test over `goals/` reads, spawns, imports and `turbo.json` inputs |
-| Docs-policy hosted job | `commands/Lint/*` knowledge gates (`knowledge:semantic-delta`, `knowledge:refs-check`), `commands/Ci/CiLane.ts`; NET-NEW: one check.yml job and a CiLane id |
+| Docs-policy hosted job | `commands/Knowledge/*` (the `knowledge:semantic-delta` and `knowledge:refs-check` root tasks), `commands/Ci/CiLane.ts`; NET-NEW: one check.yml job and a CiLane id |
 | Setup-closure test key | `turbo.json` `dependsOn` and the root-tasks input tests (`packages/tooling/tool/cli/test/root-tasks-turbo-inputs.test.ts`); no new code |
 | Bare-coverage self-judge | `commands/Quality/internal/CoverageRegression.ts` (`base` parameter exists, unused on this path), `commands/Quality/Tasks.ts`; no new code |
 | Final-check obligation registry | `commands/Yeet/internal/FinalCheck.schemas.ts`, `FinalCheck.ts`, `ReadyGate.ts`; NET-NEW: versioned receipt digest and registry schema |
 | Node 22 local coverage | `check.yml` coverage runtime pin, `commands/Quality/internal/CoverageEnvironment.ts`; NET-NEW: shared pin source and drift test |
-| Main throughput layout and per-SHA groups | `check.yml` concurrency, `commands/Ci/RerunRunnerLoss.ts` (re-dispatch pattern); NET-NEW: main layout and missing-verdict re-dispatch |
+| Main throughput layout and per-SHA groups | `check.yml` concurrency, `commands/Ci/CiRerunRunnerLoss.ts` and `.github/workflows/rerun-runner-loss.yml` (re-dispatch pattern); NET-NEW: main layout and missing-verdict re-dispatch |
 | JSDoc inventory `noResolve` | `commands/Quality/internal/JSDocDocumentationInventory.ts`; small option |
 | Lint Policy plan and widths | `commands/Quality/Tasks.ts`, `commands/Quality/internal/LintPolicyScope.ts`; no new code |
 | Heavy Admission on the binary | `commands/Ci/HeavyAdmission.ts`, `CiBinary.ts`, `.github/workflows/beep-ci-binary.yml`, `.github/actions/fetch-beep-ci`; NET-NEW: closure-digest release trigger and pin-bump PRs |
@@ -71,7 +71,7 @@ required-green and main-verdict report` (MEAS-01 slice 1, M).
 | Property file split and census | `packages/tooling/test-kit/fc-runs`, `vitest.shared.ts` property markers; NET-NEW: census tripwire |
 | Hosted job folds and install removals | `check.yml`, `.github/actions/setup-monorepo-ci`; `trustedDependencies` is a Bun manifest field |
 | Partition plan-only mode | `commands/Ci/CiLanePartitions.ts`, `CiLane.ts`; NET-NEW flag |
-| Admission units and weights | `internal/repo-run/QualityScheduler.ts`, `QualityScheduler.schemas.ts`, `withQualityAdmission`; NET-NEW: `AdmissionUnit` schema and resizable lease |
+| Admission units and weights | `internal/repo-run/QualityScheduler.ts`, `QualityScheduler.schemas.ts`, the `withQualityAdmission` wrappers in `commands/Yeet/internal/Handler.ts`; NET-NEW: `AdmissionUnit` schema and resizable lease |
 | Advisory direct-owner coverage | `commands/Quality/internal/CoverageScope.ts` (`changedCoverageOwners`), `commands/Quality/Tasks.ts`; NET-NEW: `--direct` scope mode and the publish step |
 | Local partitions in shadow | `commands/Ci/CiLane.ts` test-unit partitions and coverage consumer; NET-NEW: local producer/consumer wiring under admission |
 | Monitor cadence and reuse | `commands/Yeet/internal/MonitorLoop.ts`, `MonitorPolicy.ts`, `ProofJobLauncher.ts`; small changes |

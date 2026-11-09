@@ -28,6 +28,7 @@ decision file per relevant ruling through `bun run beep goals decisions add`; `r
 carried over; manifests cross-linked), flip this packet to `graduated`, then open the three ready
 implementation PRs (ROUT-03, TURB-01, MEAS-01) from their goal lanes. Brief and map were approved on
 2026-11-09 (D20, D21); no open questions remain.
+
 ## Read This First
 
 1. [`ops/manifest.json`](./ops/manifest.json) - machine state: stage, status, open questions.

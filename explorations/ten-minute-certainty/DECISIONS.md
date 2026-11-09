@@ -2,8 +2,9 @@
 
 <!--
 Stage 2 log. Dated entries, newest first: Question / Answer / Rationale, with
-rejected options named. Pre-seeded on 2026-11-09 with the rulings the operator
-gave at the phase 1 closeout; the align round proper opens after phase 2 lands.
+rejected options named. D1 to D4 were the operator's phase 1 closeout rulings;
+D5 to D19 closed the align frontier in four grill rounds on 2026-11-09; D20 to
+D22 approved the brief, the map and the landing order.
 -->
 
 ## 2026-11-09 — shape and decompose review
