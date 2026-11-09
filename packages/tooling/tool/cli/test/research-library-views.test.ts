@@ -22,8 +22,10 @@ import {
   ShaclValidationService,
   ShaclValidationViolation,
 } from "@beep/semantic-web/services/shacl-validation";
+import { fcRuns } from "@beep/test-utils";
 import { expect, it } from "@effect/vitest";
 import { assertTrue, strictEqual } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Console from "effect/Console";
@@ -514,3 +516,15 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
     })
   );
 });
+
+it.effect.prop(
+  "property: schema-generated probe evidence survives a JSON round trip",
+  { value: Arbitrary.schema(LibraryProbeEvidence) },
+  ({ value }) =>
+    Effect.gen(function* () {
+      const encoded = yield* S.encodeEffect(LibraryProbeEvidenceJson)(value);
+      const decoded = yield* S.decodeEffect(LibraryProbeEvidenceJson)(encoded);
+      expect(decoded).toEqual(value);
+    }),
+  { arbitrary: fcRuns(32) }
+);
