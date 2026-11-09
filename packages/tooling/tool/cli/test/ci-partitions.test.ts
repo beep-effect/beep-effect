@@ -68,10 +68,10 @@ describe("hosted Test Unit log parsing", () => {
   });
 
   it("maps shard job names onto table partitions and ignores other jobs", () => {
-    assertSome(testUnitJobPartition("Test Unit (law-practice-11)"), "law-practice-11");
+    assertSome(testUnitJobPartition("Test Unit (law-practice-12)"), "law-practice-12");
     assertNone(testUnitJobPartition("Test Unit"));
     assertNone(testUnitJobPartition("Lint (lint-a)"));
-    assertNone(testUnitJobPartition("Test Unit (law-practice-12)"));
+    assertNone(testUnitJobPartition("Test Unit (law-practice-13)"));
   });
 });
 
@@ -149,10 +149,10 @@ describe("partition table shape", () => {
     const sharded = A.filter(CI_LANE_PARTITIONS, (partition) => P.isNotUndefined(partition.shard));
     const ids = HashSet.fromIterable(A.map(sharded, (partition) => partition.id));
     expect(HashSet.size(ids)).toBe(A.length(sharded));
-    expect(A.length(A.filter(sharded, (partition) => A.contains(partition.packages, "@beep/repo-cli")))).toBe(8);
+    expect(A.length(A.filter(sharded, (partition) => A.contains(partition.packages, "@beep/repo-cli")))).toBe(9);
     expect(
       A.length(A.filter(sharded, (partition) => A.contains(partition.packages, "@beep/law-practice-server")))
-    ).toBe(11);
+    ).toBe(12);
     assertSome(
       O.map(
         A.findFirst(CI_LANE_PARTITIONS, (partition) => partition.id === "unit-g"),

@@ -253,7 +253,7 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
     })
   );
 
-  it.effect("compares all twenty-six unit partitions and selected Labs without running a producer", () =>
+  it.effect("compares all twenty-eight unit partitions and selected Labs without running a producer", () =>
     Effect.gen(function* () {
       const entries = [owner(), owner("@beep/ciops", "apps/labs/ciops")];
       const { root } = yield* fixture(entries);
@@ -270,6 +270,7 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
         "repo-cli-6",
         "repo-cli-7",
         "repo-cli-8",
+        "repo-cli-9",
         "law-practice-1",
         "law-practice-2",
         "law-practice-3",
@@ -281,6 +282,7 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
         "law-practice-9",
         "law-practice-10",
         "law-practice-11",
+        "law-practice-12",
         "unit-a",
         "unit-b",
         "unit-c",
@@ -290,10 +292,10 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
         "unit-g",
         "labs",
       ]);
-      const eighths = A.map(A.take(input.expectedPartitions, 8), (partition) => partition.packages[0]?.shard);
-      const lab = input.expectedPartitions[26]?.packages[0];
+      const ninths = A.map(A.take(input.expectedPartitions, 9), (partition) => partition.packages[0]?.shard);
+      const lab = input.expectedPartitions[28]?.packages[0];
       assertDefined(lab);
-      expect(eighths).toEqual(A.map(A.range(1, 8), (index) => ({ index, total: 8 })));
+      expect(ninths).toEqual(A.map(A.range(1, 9), (index) => ({ index, total: 9 })));
       expect(lab.packageName).toBe("@beep/ciops");
       expect(mocks.run).not.toHaveBeenCalled();
       expect(mocks.write).not.toHaveBeenCalled();
@@ -539,7 +541,7 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
           artifactRoot: ".beep/downloaded",
           expectedPartitions: expect.arrayContaining([
             expect.objectContaining({
-              // The curated seven-bin table (LPT over run 42554761567) places @beep/mcpb-kit in unit-c.
+              // The curated seven-bin table (LPT over run 42607991192) places @beep/mcpb-kit in unit-c.
               partitionId: "unit-c",
               packages: [expect.objectContaining({ packageName: "@beep/mcpb-kit" })],
             }),
