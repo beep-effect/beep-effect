@@ -3,6 +3,7 @@ title: "Fifth goals-only re-final: #3022 accepted head had no publish verdict"
 date: 2026-11-09
 kind: checkpoint
 lane: "goals/scripts-to-beep-cli-refinal5"
+pullRequest: 3027
 reversal: "Close this re-final and point proposedCloseout back at #3022"
 ---
 

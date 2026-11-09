@@ -51,6 +51,10 @@
       },
       {
         "number": 3022,
+        "role": "supporting"
+      },
+      {
+        "number": 3027,
         "role": "final"
       }
     ],
@@ -132,6 +136,6 @@
   ],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 3022
+    "finalPullRequest": 3027
   }
 }
