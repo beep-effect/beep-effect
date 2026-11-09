@@ -1,11 +1,26 @@
 # Documentation-only CI routing acceptance
 
 This acceptance exercises the folder policy introduced by PR #2999 against
-hosted CI. It includes this report plus Graphviz source and an SVG under a goal
+hosted CI. It includes this report plus Graphviz source, an accessible SVG and
+a temporary rendering helper under a goal
 packet's asset directory. Those goal figures reproduce the file formats that
 caused PR #2993 to be classified as product work.
 
 ![Documentation routing](../../goals/compute-profile-gate-routing/assets/ci-docs-only-routing.svg)
+
+## Regenerate the diagram
+
+With Graphviz, Python and the repository dependencies installed:
+
+```sh
+python goals/compute-profile-gate-routing/assets/render-ci-docs-only-routing.py
+```
+
+The helper uses inline SVG output, adds an accessible root title and applies the
+repository SVG checks. This avoids Graphviz XML declarations that the SVG lint
+parser does not accept. With the same installed tool versions, regeneration is
+byte-for-byte deterministic. This temporary packet helper also exercises the
+policy that goal helpers do not trigger product verification.
 
 ## Why allocation matters
 
