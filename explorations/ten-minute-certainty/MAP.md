@@ -85,6 +85,26 @@ required-green and main-verdict report` (MEAS-01 slice 1, M).
 - The ~60 concurrent hosted job ceiling is documented, not measured; the heavy pool stays at cap 2.
 - Fleet and T3 local figures are censored until journal retention and roots land.
 
+### Reviewer constraints (CodeRabbit on #3017, 2026-11-09)
+
+Carried into the owning packets as lever constraints; the seat reports they annotate stay verbatim as
+research records.
+
+- **HOST-09 (fold PR Size Label into Change Profile), packet 5:** the label write must never sit on the
+  `Change Profile -> Test Unit / Heavy Admission` dependency path. Keep it a separate non-blocking step or
+  job that fails open, so a label API failure cannot hold required checks.
+- **PERIH-01 (Heavy Admission on the pinned binary, deleting the coverage-rollout probe), packet 4:**
+  `check.yml` derives both `legacy_coverage` and `legacy_integration` from that step. The slice must set
+  both outputs explicitly or remove their consumers in the same PR; hard-coding the coverage job name alone
+  leaves `legacy_coverage` empty and fails the comparator's boolean check on non-docs runs.
+- **PERIH-04 (job-level lane-relevance skips), packet 5:** Labs is excluded from the gate. On non-docs PRs
+  Labs produces coverage for transitive dependents or an empty manifest that Coverage Regression requires
+  from a successful producer; skipping the job would leave the comparator without it.
+- **PERIL-01 (fold Fallow envelopes into Labs), packet 5:** fork PR tokens are read-only and Labs has
+  `contents: read` only, so the folded step cannot publish a commit status for fork runs, and commit
+  statuses have no `skipped` state. The fold needs a publication path that works for forks (or keeps the
+  existing job for them) before the standalone Fallow job is removed.
+
 ## Gated candidates (re-entry points, not goals)
 
 | Candidate | Gate that reopens it |
