@@ -31,7 +31,18 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3 Yeet. Re-final PR #2922 (goals-only) carries `proposedCloseout`; #2921 (PR 3, merged 17472a68ce) deleted the seven transitional CI scripts now that #2906 (merged 5a842b4882) put the binary-calling heavy.yml on main. #2860 (d15ecf4ca61), #2902 (8224cf33a5) and #2906 are merged. `proposedCloseout` is `completed-retained` with `finalPullRequest` 2922 because #2921 merged inside its review window (decision `2026-11-08-refinal-after-early-merge`); `initiative.status` stays `active` until completion evidence verifies after the merge.
+P3 Yeet. Fifth goals-only re-final (branch `goals/scripts-to-beep-cli-refinal5`) carries
+`proposedCloseout`. #3022 (fourth re-final, merged 490332acbc) merged after its until-ready
+monitor printed merge-ready, but its accepted head e0e3eb3250 was pushed with a plain git push,
+so no publish verdict binds to it and `goals completion refresh --slug scripts-to-beep-cli`
+returns unknown on the yeet-verdict evidence (checkpoint
+`2026-11-09-fifth-refinal-after-raw-push`). Hosted required checks now verify from the gate
+workstation, whose token reads ruleset history and rule suites. #2860 (d15ecf4ca61), #2902
+(8224cf33a5), #2906 (5a842b4882), #2921 (17472a68ce), #2922 (2398f39133), #2961 (031fa9d4af) and
+#3022 are merged supporting PRs; the code work is complete. Every push on this branch goes
+through `yeet publish`, and the session that runs `yeet monitor --until-ready` merges it only on
+the merge-ready line. `initiative.status` stays `active` until completion evidence verifies after
+the merge.
 
 ## Latest Evidence
 

@@ -36,6 +36,14 @@ const repository = Effect.fnUntraced(function* (files: Readonly<Record<string, s
   return root;
 });
 
+describe("tsmorph/ProjectFactory", () => {
+  it("keeps default compiler options unless the caller passes some", () => {
+    expect(createInMemoryTsMorphProject().getCompilerOptions().noResolve).toBeUndefined();
+    const project = createInMemoryTsMorphProject({ compilerOptions: { noResolve: true } });
+    expect(project.getCompilerOptions().noResolve).toBe(true);
+  });
+});
+
 describe("tsmorph/JsDoc", () => {
   it("reads the last leading JSDoc block and ignores line and block comments", () => {
     const project = createInMemoryTsMorphProject();

@@ -116,6 +116,7 @@ export {
   effectVitestTestCallbacks,
   enclosingLayerBlock,
   enclosingTest,
+  indexIdentifiersByName,
   isHarnessMethodCall,
   isProvenanceCall,
   isProvenanceExpression,

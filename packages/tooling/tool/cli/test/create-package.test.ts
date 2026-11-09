@@ -104,7 +104,7 @@ const FoundationPackageMetadata = S.Struct({
 const ToolingPackageMetadata = S.Struct({
   beep: S.Struct({
     family: S.tag("tooling"),
-    kind: S.Literals(["library", "tool", "policy-pack", "test-kit"] as const),
+    kind: S.Literals(["library", "tool", "policy-pack", "test-kit", "infra"] as const),
   }),
   scripts: S.Record(S.String, S.String),
 });
@@ -1383,6 +1383,63 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
               const syncpackConfig = yield* fs.readFileString(path.join(rootDir, "syncpack.config.ts"));
               expect(syncpackConfig).toContain(`"packages/tooling/library/repo-utils/package.json"`);
               expect(syncpackConfig).not.toContain(`"packages/tooling/*/*/package.json"`);
+            })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      CreatePackageTestTimeoutMs
+    );
+
+    it.effect(
+      "creates infra packages under packages/tooling/infra with the infra kind",
+      () =>
+        withBootstrappedRootConfig(
+          {
+            workspaces: ["packages/foundation/*/*"],
+            references: ["packages/foundation/modeling/identity"],
+            paths: {
+              "@beep/identity": ["./packages/foundation/modeling/identity/src/index.ts"],
+              "@beep/identity/*": ["./packages/foundation/modeling/identity/src/*"],
+            },
+            syncpackSources: ["package.json", "packages/foundation/*/*/package.json"],
+          },
+          ({ fs, path, rootDir }) =>
+            Effect.gen(function* () {
+              yield* bootstrapIdentityWorkspace(rootDir);
+
+              yield* runCreatePackageCommand([
+                "infra-turbo-cache",
+                "--family",
+                "tooling",
+                "--kind",
+                "infra",
+                "--description",
+                "Turbo cache stack",
+              ]);
+
+              const rootPackageJson = yield* readJsonFile(path.join(rootDir, "package.json"));
+              const rootPackage = yield* decodeRootPackage(rootPackageJson);
+              expect(rootPackage.workspaces).toEqual([
+                "packages/foundation/*/*",
+                "packages/tooling/infra/infra-turbo-cache",
+              ]);
+
+              const generatedPackageJson = yield* readJsonFile(
+                path.join(rootDir, "packages", "tooling", "infra", "infra-turbo-cache", "package.json")
+              );
+              const generatedPackage = yield* decodeToolingPackageMetadata(generatedPackageJson);
+              expect(generatedPackage.beep).toEqual({
+                family: "tooling",
+                kind: "infra",
+              });
+
+              const tsconfigPackages = yield* readJsoncFile(path.join(rootDir, "tsconfig.packages.json"));
+              const packageRefs = yield* decodeTsconfigReferences(tsconfigPackages);
+              expect(A.map(packageRefs.references, (entry) => entry.path)).toEqual([
+                "packages/foundation/modeling/identity",
+                "packages/tooling/infra/infra-turbo-cache",
+              ]);
+
+              const syncpackConfig = yield* fs.readFileString(path.join(rootDir, "syncpack.config.ts"));
+              expect(syncpackConfig).toContain(`"packages/tooling/infra/infra-turbo-cache/package.json"`);
             })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       CreatePackageTestTimeoutMs

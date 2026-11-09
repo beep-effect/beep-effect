@@ -14,10 +14,12 @@ import { LawPracticeSequencer } from "./vitest.integration.sequencer.ts";
  * through `makeCitationNativeManualClock` / `makeCitationNativeSleepClock`
  * (`test/CitationTokenizer.fixtures.ts`) or spawns nothing, so it runs at Vitest's default width.
  *
- * Integration files: all of them. The canonical replays substitute `regexDeadline` only; their
- * `extractDeadline` and `operationDeadline` run on the real clock, and PR #3007's first heavy run at
- * Vitest's default width (seven workers plus native children on the 8-vCPU runner) failed them with
- * `CitationSafetyLimitExceeded`. The integration lane therefore keeps its proven two-worker shape.
+ * Integration files: all of them. The canonical replays hold `regexDeadline` and `extractDeadline`
+ * on the manual clock and give `operationDeadline` the `test/CitationReplayBudget.ts` wall-clock
+ * budget; their clean, resolve, queue and cleanup deadlines still run on the real clock, and PR
+ * #3007's first heavy run at Vitest's default width (seven workers plus native children on the
+ * 8-vCPU runner) failed them with `CitationSafetyLimitExceeded`. The integration lane therefore
+ * keeps its proven two-worker shape.
  *
  * Membership of the unit entries is mechanical (`test/vitest-shards-plan.test.ts` re-derives it).
  */
