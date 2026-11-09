@@ -15,8 +15,16 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
+import * as ChildProcess from "effect/process/ChildProcess";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
-import { makeCitationDiffWorkerFixture, replayCitationDiffWorker } from "./CitationDiffWorker.fixtures.ts";
+import * as Str from "effect/String";
+import {
+  makeCitationDiffTestRuntime,
+  makeCitationDiffWorkerFixture,
+  replayCitationDiffWorker,
+} from "./CitationDiffWorker.fixtures.ts";
 import {
   makeCitationNativeAcknowledgementSpawner,
   makeCitationNativeManualClock,
@@ -104,6 +112,49 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned defau
       { timeout: 60000 }
     );
   for (const kind of CitationNativeRuntimeKind.literals) {
+    it.effect(
+      `prepares isolated ${kind} output with the actual runtime and scoped retirement`,
+      () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const spawner = yield* ChildProcessSpawner;
+          const prepare = Effect.gen(function* () {
+            const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "citation-diff-runtime-control-" });
+            const runtime = yield* makeCitationDiffTestRuntime(kind, cwd);
+            expect(runtime.kind).toBe(kind);
+            expect(path.dirname(runtime.workerFile)).toBe(cwd);
+            const exists = yield* fs.exists(runtime.workerFile);
+            expect(exists).toBe(true);
+            const actual = yield* spawner.string(
+              ChildProcess.make(
+                runtime.executable,
+                ["-p", 'process.versions.bun ? "bun:"+process.versions.bun : "node:"+process.versions.node'],
+                { env: {}, extendEnv: false }
+              )
+            );
+            expect(Str.startsWith(`${kind}:`)(Str.trim(actual))).toBe(true);
+            yield* Effect.logInfo("Diff fixture executable identity", { kind, actual: Str.trim(actual) });
+            return runtime;
+          });
+          const first = yield* Effect.scoped(
+            Effect.gen(function* () {
+              const first = yield* prepare;
+              const second = yield* Effect.scoped(prepare);
+              expect(first.cwd).not.toBe(second.cwd);
+              expect(first.workerFile).not.toBe(second.workerFile);
+              const secondAlive = yield* fs.exists(second.cwd);
+              const firstAlive = yield* fs.exists(first.workerFile);
+              expect(secondAlive).toBe(false);
+              expect(firstAlive).toBe(true);
+              return first;
+            })
+          );
+          const exists = yield* fs.exists(first.cwd);
+          expect(exists).toBe(false);
+        }),
+      { timeout: 60000 }
+    );
     it.effect(`returns the closed ${kind} native step refusal only after confirmed retirement`, () =>
       Effect.gen(function* () {
         const limits = (yield* defaultCitationEnginePolicy).limits;
