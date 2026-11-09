@@ -25,7 +25,7 @@ No machine configuration was changed and no admission guard was bypassed.
 ## 2026-10-09 — Knowledge refs inherits a main-owned gated literal
 
 The committed-HEAD refs check exited 1 on exactly one live gated observation
-in `goals/repository-simplification-confidence/SPEC.md`, line 374, classified
+in [goals/repository-simplification-confidence/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/SPEC.md), line 374, classified
 external-mirror-reference. The path-literal example at that line was confirmed
 unchanged in merged base `36027982f2`. No lane document was a gated finding.
 Attribution: inherited, outside this lane's ownership. Prevention: the owning

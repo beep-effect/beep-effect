@@ -67,7 +67,7 @@ These are composition references, not implementation claims.
 - `packages/_internal/db-admin/src/migrations/EpistemicEdge.ts` — in-repo composition/design reference.
 - `packages/epistemic/domain/src/entities/EdgeVersion/EdgeVersion.model.ts` — in-repo composition/design reference.
 - `goals/legal-document-intake/SPEC.md` — in-repo composition/design reference.
-- `goals/semantic-foundation/PLAN.md` — in-repo composition/design reference.
+- [goals/semantic-foundation/PLAN.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantic-foundation/PLAN.md) — in-repo composition/design reference.
 - `goals/epistemic-claim-lifecycle-gate/SPEC.md` — in-repo composition/design reference.
 - `explorations/ingestion-security-secret-governance/research/secret-pii-scrub-and-audit.md` — in-repo composition/design reference.
 - `explorations/gpu-document-ocr/RESEARCH.md` — in-repo composition/design reference.

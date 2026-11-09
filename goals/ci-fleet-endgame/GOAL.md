@@ -13,7 +13,7 @@ Read first:
 - `goals/ci-fleet-endgame/SPEC.md`
 - `goals/ci-fleet-endgame/PLAN.md`
 - `goals/ci-fleet-endgame/research/runner-endgame-decision-record.md`
-- `goals/speed-loop/research/GRILL-DECISIONS.md` decisions 57–63
+- [goals/speed-loop/research/GRILL-DECISIONS.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/speed-loop/research/GRILL-DECISIONS.md) decisions 57–63
 - `goals/ci-fleet-endgame/ops/manifest.json`
 
 Binding architecture: adopt then wrap

@@ -38,7 +38,7 @@
     "explorations/pr-event-awareness/RESEARCH.md",
     "explorations/pr-event-awareness/research/SOURCES.md"
   ],
-  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -146,5 +146,13 @@
   "researchReferences": [
     "../../explorations/pr-event-awareness/RESEARCH.md",
     "../../explorations/pr-event-awareness/research/SOURCES.md"
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/yeet-pr-events",
+    "commit": "94b8d15cd23bd07a95f6f1ab0680d24b94c5103b",
+    "contentHash": "50dd9ac5300aeaa368b13c00bcd0ccb07be7b7e9",
+    "archivedAt": "2026-11-09T03:19:32.081Z",
+    "sourceCommit": "e3a763cad8722d5f47587c44530cf7bf44e5bc52"
+  }
 }

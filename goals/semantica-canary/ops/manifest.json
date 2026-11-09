@@ -94,5 +94,6 @@
     "Verification requires credentials, cost, destructive side effects, or policy approval not named in SPEC.md.",
     "An adopt or pick-one value would be written to the Notion atlas before its canary stage passes.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "retentionReason": "Retained: CanaryC2Report.test seals its committed C2 witness, and the active semantica-storage-inversion goal must equal that digest. The report cannot move: its exact bytes are sealed, and they hold IRIs and digests only allowed under goals/."
 }

@@ -75,7 +75,7 @@ const COVERAGE_NOOP_PREFIXES = [".changeset/", "docs/", "explorations/", "goals/
 const COVERAGE_REPOSITORY_FIXTURE_OWNER_FILES: ReadonlyArray<readonly [string, string]> = [
   ["standards/fallow.feature-matrix.jsonc", "@beep/repo-cli"],
   ["packages/foundation/ui-system/editor/test/fixtures/capability-atlas.json", "@beep/editor"],
-  ["goals/ship-velocity/research/branch-protection-contexts.json", "@beep/repo-cli"],
+  ["standards/branch-protection-contexts.json", "@beep/repo-cli"],
   ["goals/*/ops/manifest.json", "@beep/repo-cli"],
   ["standards/schema-crispening.policy.jsonc", "@beep/repo-cli"],
   // Generated governance data is consumed by tooling, not by every runtime package.

@@ -1,6 +1,6 @@
 # Live-clone residue pass under the 2026-11-02 archive-only ruling
 
-Refs #1854. The operator ruled on 2026-11-02 (relayed verbatim by the orchestrator on the issue) that the archive-only ruling extends to live clones: each held row is archived to `~/.cache/beep/residue/<clone>/` once its clone has had no `.beep` operational write for 7 days, the existing `CHECKOUT_LIVE_DAYS` fence of `residue-reap`. This receipt records the first pass under that ruling. It continues `goals/repository-simplification-confidence/history/receipts/stage-3-a-local-residue.md` (#2420), which holds the census and the 2026-10-31 archive of six idle `.serena` directories.
+Refs #1854. The operator ruled on 2026-11-02 (relayed verbatim by the orchestrator on the issue) that the archive-only ruling extends to live clones: each held row is archived to `~/.cache/beep/residue/<clone>/` once its clone has had no `.beep` operational write for 7 days, the existing `CHECKOUT_LIVE_DAYS` fence of `residue-reap`. This receipt records the first pass under that ruling. It continues [goals/repository-simplification-confidence/history/receipts/stage-3-a-local-residue.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-3-a-local-residue.md) (#2420), which holds the census and the 2026-10-31 archive of six idle `.serena` directories.
 
 ## Pass
 

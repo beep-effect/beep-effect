@@ -5,7 +5,7 @@ Refs #1852. The dormant-route decision resolves #1859 when published.
 
 ## Retained tools and desktop release
 
-The [retained-tools receipt](../../../repository-simplification-confidence/history/receipts/2026-10-23-retained-tools-witness.md#ci-pinned-spelling-re-witness-s44)
+The [retained-tools receipt](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/2026-10-23-retained-tools-witness.md#ci-pinned-spelling-re-witness-s44)
 records an exit-0 run with typos-cli 1.50.3 and its binary hash.
 The [Decision Log](../../SPEC.md#decision-log) selects the dormant desktop
 release route with its reason and reversal, meeting #1859's documented-route

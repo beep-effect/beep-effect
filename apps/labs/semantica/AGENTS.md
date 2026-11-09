@@ -13,7 +13,7 @@ reusable.
 - Keep app internals app-local through `@/*`.
 - This app publishes no `@beep/semantica` source exports. Do not add a package root export or docgen surface.
 
-- Contract: `goals/semantica-canary/SPEC.md`; law table: `explorations/semantica-lab/DECISIONS.md`.
+- Contract: [goals/semantica-canary/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/SPEC.md); law table: `explorations/semantica-lab/DECISIONS.md`.
 
 ## Laws
 

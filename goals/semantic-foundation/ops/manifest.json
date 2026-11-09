@@ -42,17 +42,7 @@
     "explorations/legal-ontology-landscape/BRIEF.md",
     "explorations/legal-ontology-landscape/MAP.md"
   ],
-  "researchReports": [
-    "research/2026-07-25-academia-corpus-mining-note.md",
-    "research/2026-10-09-m2-classification-contract.md",
-    "research/2026-10-09-m2-licence-ledger.md",
-    "research/2026-10-09-m3-adversarial-review.md",
-    "research/2026-10-09-m3-blinded-category-review.md",
-    "research/2026-10-09-m3-kind-role-audit.md",
-    "research/2026-10-09-m3-vocabulary-contract.md",
-    "research/OPPORTUNITIES.md",
-    "research/README.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -113,5 +103,13 @@
     "../../explorations/legal-ontology-landscape/research/",
     "../../explorations/legal-ontology-landscape/research/01-direction-grounding.md",
     "../../explorations/legal-ontology-landscape/research/README.md"
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/semantic-foundation",
+    "commit": "94b8d15cd23bd07a95f6f1ab0680d24b94c5103b",
+    "contentHash": "449e080324beacd9f9dffb2bc9d76a2d624c5eeb",
+    "archivedAt": "2026-11-09T03:19:32.081Z",
+    "sourceCommit": "e3a763cad8722d5f47587c44530cf7bf44e5bc52"
+  }
 }

@@ -2,7 +2,7 @@
 
 Lane `residue-detectors` wave 3, branch `feat/residue-detectors-wave3`, on `main`
 `b76e8cac0c` (which includes wave 2, #2041). The class definitions are rows FP-2 and FP-6
-of `goals/repository-simplification-confidence/research/sweeps/2026-10-09/B-detector-false-positives.md`.
+of [goals/repository-simplification-confidence/research/sweeps/2026-10-09/B-detector-false-positives.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/research/sweeps/2026-10-09/B-detector-false-positives.md).
 The measured recommendations are in `detectors-wave-2.md`. EV010 is untouched: PR #2039 owns
 it.
 

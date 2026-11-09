@@ -104,3 +104,23 @@ Repointing a path inside `program` in two evaluation runners changed each row's 
 hosted `lint:effect-vitest` reported new findings with unchanged ids. A full `--write` also rewrites about
 300 unrelated drifted rows, so only the two rows were refreshed. A command to refresh named rows, and a
 new-finding line that prints the id, would have made this quick to read.
+
+## 2026-11-09: Evidence stores read packet files by path and hash
+
+Batch 4's plan would have removed `goals/turborepo-task-qualification/research/*-review.md`, which
+`standards/cache-qualification.json` verifies by path and SHA-256, so cache qualification would fail at
+runtime. A literal scan lists these as text in a JSON file, easy to take for a citation. The packet now
+carries a `retentionReason`. `beep goals archive --plan` could refuse a file that a known evidence store
+references. The same scan also skipped hidden paths such as `.github`, because `rg` does by default; a
+re-check found only comments and historical allowlist entries, and later scans use `--hidden`.
+
+## 2026-11-09: Moving a file out of goals/ loses the exemptions it had there
+
+Batch 4's first attempt moved a 1.9 MB sealed report and a shell script out of `goals/`. Hosted CI then
+failed Secret Scanning, `retired-iri-authorities` and `tracked-shell-allowlist`, and archiving a codemod
+failed fallow's unused-dependency check. None showed locally: the gitleaks gate pins its ignore file to
+the base ref, so a local scan with the new entries passed, and worker `final-check` runs none of the
+others. Secret Scanning reads commits, so deleting the file was not enough and the batch was recommitted
+on a new branch. Before a batch PR, run `gitleaks detect --log-opts=origin/main..HEAD` with the base
+`.gitleaksignore`, `bun run lint:retired-iri-authorities`, the tracked-shell law, and
+`quality fallow dead-code --check`.

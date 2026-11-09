@@ -2,7 +2,7 @@
 
 Lane `residue-patch-proofs`, branch `test/residue-patch-proofs` off `main`
 `e3ee18dfd7`, 2026-10-17. Source evidence: the predecessor's
-[retained patches section](../../../repository-simplification-confidence/history/receipts/stage-5-acceptance.md#retained-patches),
+[retained patches section](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-5-acceptance.md#retained-patches),
 which left all five fail-unpatched/pass-patched proofs pending.
 
 ## Patch census

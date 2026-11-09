@@ -631,7 +631,7 @@ const withClient = Effect.fn("CiGovernance.withClient")(function* <V, E, R>(
     Effect.flatMap(makeClient(root), (client) => effect.pipe(Effect.provideService(GithubPolicyClient, client)))
   );
 });
-const snapshotPath = "goals/ship-velocity/research/branch-protection-contexts.json";
+const snapshotPath = "standards/branch-protection-contexts.json";
 const ciRulesetCommand = Command.make(
   "ruleset",
   {

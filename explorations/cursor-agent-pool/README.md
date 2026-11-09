@@ -33,7 +33,7 @@ The packet reopens at `decompose` if a MAP gate fires.
 
 ## Prior art
 
-- [`goals/tsgo-045-effect-idiom-sweep/DECISIONS.md`](../../goals/tsgo-045-effect-idiom-sweep/DECISIONS.md)
+- [goals/tsgo-045-effect-idiom-sweep/DECISIONS.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/tsgo-045-effect-idiom-sweep/DECISIONS.md)
   D13 admitted Cursor as a headless Bash lane; the smoke test is in that packet's
   `history/2026-09-12-cursor-smoke.md` and the recipe in `ops/prompts/50-cursor-lane.md`.
 - `explorations/INBOX.md` bullet **agent-config-canonicalization** (2026-08-29) covers the

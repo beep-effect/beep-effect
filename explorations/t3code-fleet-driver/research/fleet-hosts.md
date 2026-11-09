@@ -209,7 +209,7 @@ Source units (probed 2026-11-01):
   containment that avoids per-process smaps scans after a kernel fault, and it
   runs a small Python sampler from `~/workstation-diagnostics/2026-09-15/pressure-recorder-containment/`.
 - **Live output**: `~/.local/state/beep-psi/safe-pressure.jsonl` since 2026-11-08, in a
-  14-day ring (`goals/t3code-spill-routing/history/2026-11-08-baseline.md`). At this probe it
+  14-day ring ([goals/t3code-spill-routing/history/2026-11-08-baseline.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/t3code-spill-routing/history/2026-11-08-baseline.md)). At this probe it
   was `.../pressure-recorder-containment/safe-pressure.jsonl`, append-only with no rotation:
   109,415 lines, about 73 MiB, growing about 2,880 lines a day. One JSON object per tick:
 

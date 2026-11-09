@@ -287,7 +287,7 @@ Over-reporting is currently unmeasured in `beep qa` — which matters because
 `requiredCount == 0` is the exit gate, so an over-eager judge costs a fix round
 every time. `forbiddenPatterns` proves beep already models "assert nothing
 outside the set" deterministically
-(`goals/skillopt-training-pilot/corpus/tasks/sfv4-null-return-001.json`); the
+([goals/skillopt-training-pilot/corpus/tasks/sfv4-null-return-001.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/skillopt-training-pilot/corpus/tasks/sfv4-null-return-001.json)); the
 port is carrying it into the judged lane.
 
 **Lands in.** `Inventory.schemas.ts` (neutral band on `QaCriterion`; a

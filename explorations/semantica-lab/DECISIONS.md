@@ -28,7 +28,7 @@ holds now; when a log entry disagrees with it, the table wins.
 | Canary | staged C0 then C1 then C2 (G1), each stage bounded by the probe breaker (S1), no calendar; code lives in the lab after graduation; every stage pass includes the full W1 + F1 run, live and replay, with equal digests and zero unexpected typed-degraded document failures (F1 malformed specimens decode to their declared degraded states; any W1 paper degrading fails the gate) (R2); C1 checks `G-projection` before rebuild identity (R3) | B2's monolithic offline run; G1 "C0 (days)" |
 | Budgets | Tier-L hard bar: cold start <5s, p95 <100ms; 16GB bundle-RSS alarm, not a park; laptop-class numbers are Tier-D telemetry in the per-run `EvalRunTelemetry` sidecar, never in the report digest (R1) | B5/A8 2GB/250MB/600MB as gates |
 | Offline | replay-offline, hosted-live: cache every provider result content-addressed; re-run must reproduce the `EvalReport` digest with network off; Tier-L/Tier-D numbers live in a per-run `EvalRunTelemetry` sidecar outside the digest (R1) | A8's fully-offline M1; "byte-identical EvalReports" |
-| Atlas writes | final `park` values written 2026-09-02 (six rows; `goals/semantica-canary/history/p5-atlas-sync.md`); no `drop` warranted; row-level `adopt`/`adapt`/`already-have` are unblocked by the passed canary and belong to `semantica-atlas-sync` (O3/M4) | B1 "only final park/drop today"; D3 columns as live verdicts |
+| Atlas writes | final `park` values written 2026-09-02 (six rows; [goals/semantica-canary/history/p5-atlas-sync.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/history/p5-atlas-sync.md)); no `drop` warranted; row-level `adopt`/`adapt`/`already-have` are unblocked by the passed canary and belong to `semantica-atlas-sync` (O3/M4) | B1 "only final park/drop today"; D3 columns as live verdicts |
 | Atlas backlog | O3 verbatim (M4): template exemplars, IR row-fill and the 27 module analyses are async codex batches off the critical path, not a goal and not gated; `semantica-atlas-sync` = the D5 render/diff sync pipeline only, re-entry = semantica 0.6.7+ or atlas-edit need | MAP v0.1 "gate = C0 pass" |
 | Repo defects | O1 exception (M2): the `@beep/nlp` Handoff mention/span drop is fixed now in its own PR (`nlp-ir/1.1`, required `mentions`); the relation drop stays repo-issues Draft 2, cleanup-on-touch | O1 "fixes ride cleanup-on-touch" for this one defect |
 | Graduation | M5/M6: three PRs — fix → docs-only ceremony → lab mint; both packets graduate in one ceremony; `openai-driver` scaffolds `active` with no dependency edge; `docs/ROADMAP.md` funnel policy gains a lab-canary slot-free clause and a Labs line. 2026-09-03 (R4.a): the three re-entry packets graduate in one docs-only ceremony at their own weights — `semantica-atlas-sync` at template weight with the facts lane as a gated P2, the two spikes carrying their probes as phases — all `active`, with the capability edge `semantica/tombstone-law` provided by the storage spike and required by the reasoning spike | G2 "graduate this week"; 2026-09-02 "no successor packet was scaffolded" |
@@ -504,7 +504,7 @@ Explorer/UI milestone shape (decided inside `semantica-canary` SPEC per D16).
 
 ## 2026-08-24 (PR #802 review closeout) — R1–R3, review amendments
 
-Source: three P1 findings from the Codex review of PR #802 on `goals/semantica-canary/SPEC.md`,
+Source: three P1 findings from the Codex review of PR #802 on [goals/semantica-canary/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/SPEC.md),
 each a loophole in the ratified acceptance wording rather than a new decision.
 
 - **R1 (report digest vs telemetry; amends G4, G7 and S1's "telemetry in every EvalReport" / "byte-stably" wording).** "Byte-identical `EvalReport`s" could not hold while the
@@ -525,7 +525,7 @@ each a loophole in the ratified acceptance wording rather than a new decision.
 ## 2026-08-26 (C0 probe breaker) — Extraction parks; re-enter at decompose
 
 Source:
-[`goals/semantica-canary/history/p2-c0-probe-breaker.md`](../../goals/semantica-canary/history/p2-c0-probe-breaker.md).
+[goals/semantica-canary/history/p2-c0-probe-breaker.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/history/p2-c0-probe-breaker.md).
 
 - The first hosted hybrid candidate appeared to pass live/offline identity and
   non-zero relation coverage on the first two frozen G-relation papers, then
@@ -667,7 +667,7 @@ Decisions, grilled and locked 2026-08-27:
 ## 2026-08-30 (C0 pass) — Input and Extraction verdicts
 
 Source:
-[`goals/semantica-canary/history/p2-c0-r2.md`](../../goals/semantica-canary/history/p2-c0-r2.md).
+[goals/semantica-canary/history/p2-c0-r2.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/history/p2-c0-r2.md).
 
 - **Input: `pick-one`.** The first-probe C0 stack parsed every F1 fixture and
   all 25 W1 papers through its declared media path. The full live and replay
@@ -687,7 +687,7 @@ Source:
 ## 2026-08-31 (C1 pass) — Storage and Embeddings verdicts
 
 Source:
-[`goals/semantica-canary/history/p3-c1-r2.md`](../../goals/semantica-canary/history/p3-c1-r2.md).
+[goals/semantica-canary/history/p3-c1-r2.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/history/p3-c1-r2.md).
 
 - **Storage: `bundle`.** The authoritative file-backed PGlite ledger rebuilt
   into dimension-keyed DuckDB exact-vector tables and a fresh Oxigraph RDF
@@ -711,7 +711,7 @@ Source:
 ## 2026-08-31 (C2 pass) — Reasoning verdict
 
 Source:
-[`goals/semantica-canary/history/p4-c2-r2.md`](../../goals/semantica-canary/history/p4-c2-r2.md).
+[goals/semantica-canary/history/p4-c2-r2.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/history/p4-c2-r2.md).
 
 - **Reasoning: `pick-one`.** The selected C2 boundary is the lab-local
   declarative rho-df fixpoint with content-addressed `InferenceEvent` proof
@@ -753,7 +753,7 @@ Source:
 - Final atlas values: six catalog rows (`sqlite-vec`, `PgVector`, `Apache AGE`, `BGE`,
   `DoclingParser`, `ml`) were set to `park` in the Notion atlas after the verdicts were
   confirmed; no `drop` was warranted. Evidence and the not-written list live in
-  `goals/semantica-canary/history/p5-atlas-sync.md`. Row-level `adopt`/`adapt`/`already-have`
+  [goals/semantica-canary/history/p5-atlas-sync.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/history/p5-atlas-sync.md). Row-level `adopt`/`adapt`/`already-have`
   values are unblocked by the passed canary and remain with `semantica-atlas-sync` (O3/M4).
 - Those unblocked positive row values are the "atlas-edit need" that O3/M4 name as
   the `semantica-atlas-sync` re-entry trigger, so that gate joins the two spikes as

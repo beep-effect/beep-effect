@@ -2,7 +2,7 @@
 
 Lane `residue-detectors`, branch `feat/residue-detectors-ev010` off `main`
 `b7712d0aed`. Source evidence:
-`goals/repository-simplification-confidence/history/receipts/stage-4-detectors.md`,
+[goals/repository-simplification-confidence/history/receipts/stage-4-detectors.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-4-detectors.md),
 `history/receipts/packet-opening-verification.md` (the three F-S31-EV010 findings)
 and `history/receipts/vitest-canon-wave-1.md` (the EV010 coordination note with
 #1875). The detector is the EV010 `platform-resource-provenance-review` class in

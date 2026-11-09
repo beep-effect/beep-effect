@@ -14,7 +14,7 @@
 # coverage; `--error` is what makes any finding actually fail the lane.
 #
 # Every rule needs a `ruleid:` and an `ok:` case in
-# goals/repository-simplification-confidence/history/outputs/semgrep/first-party.ts;
+# .semgrep/first-party.ts;
 # the SAST lane runs them with `semgrep --test` before scanning.
 #
 # Escape hatches for legitimate matches: a `// nosemgrep: <rule-id>` line

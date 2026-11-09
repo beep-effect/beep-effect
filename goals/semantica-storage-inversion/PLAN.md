@@ -30,7 +30,7 @@ probe (R0.a); a second failure parks the family.
    under `history/`.
 2. Run the lab's `canary` entry at C2 with `--offline` over the full W1
    manifest + F1; compare the report digest with the archived C2 digest in
-   [`goals/semantica-canary/history/c2/`](../semantica-canary/history/c2/)
+   [goals/semantica-canary/history/c2/](../semantica-canary/history/c2/)
    (`SHA256SUMS`, `full-w1.replay.eval-report.json`).
 3. Record the ledger's event count and table row counts; this is the fixture
    every later probe replays. No reproduction: stop and report (R1.f); the

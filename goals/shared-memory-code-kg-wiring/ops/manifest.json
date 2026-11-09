@@ -31,7 +31,6 @@
     "goals/shared-memory-code-kg-wiring/GOAL.md",
     "goals/shared-memory-code-kg-wiring/research/SOURCES.md"
   ],
-  "researchReports": ["research/P0-inventory.md", "research/SOURCES.md"],
   "phases": [
     {
       "id": "P0",
@@ -72,5 +71,13 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The machine-local codebase-graph/memory bake-off evidence is unavailable and a decision depends on it.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/shared-memory-code-kg-wiring",
+    "commit": "94b8d15cd23bd07a95f6f1ab0680d24b94c5103b",
+    "contentHash": "48e372efc241ef17a606aad91b289a3c9e633bfe",
+    "archivedAt": "2026-11-09T03:19:32.081Z",
+    "sourceCommit": "e3a763cad8722d5f47587c44530cf7bf44e5bc52"
+  }
 }

@@ -1464,7 +1464,7 @@ lint that demands the hook teaches every new error class the wrong thing and
 hides the derived law behind a ritual. The 60-seed by 400-run measurement on
 `packages/drivers/doc-text` that motivated the hook (682/24,000 unequal on
 rc.109 without it) reports 0/24,000 on rc.113 with the hook deleted
-(`goals/tsgo-045-effect-idiom-sweep/history/2026-09-12-annote-error-proof.md`).
+([goals/tsgo-045-effect-idiom-sweep/history/2026-09-12-annote-error-proof.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/tsgo-045-effect-idiom-sweep/history/2026-09-12-annote-error-proof.md)).
 
 ## 2026-08-24: Tagged Errors Declare Diagnostic Equivalence
 
@@ -1736,7 +1736,7 @@ both layers. GitHub also rejected a direct base edit while the top pull request 
 stack. The workflow is real, but mapping a multi-head unit onto Yeet's single-head artifacts would
 either weaken proof or multiply CI cost. Both trial pull requests were closed and their branches
 deleted without merging; the detailed receipt is in
-`goals/ship-velocity/research/stacked-pr-trial.md`.
+[goals/ship-velocity/research/stacked-pr-trial.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ship-velocity/research/stacked-pr-trial.md).
 
 ## 2026-08-27: Merge Queue Stays Off Until the Recorded Reliability Gate
 
@@ -2125,7 +2125,7 @@ as publish-enabled and requires the existing published-deletion override; all
 152 live workspaces explicitly declare private true in the reset census.
 
 The external-contract census precedes retirement in
-`goals/repository-simplification-confidence/history/receipts/stage-2-policy.md`.
+[goals/repository-simplification-confidence/history/receipts/stage-2-policy.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-2-policy.md).
 `standards/changesets.reset-baseline.json` records the parent and original tree
 for recovery. Versions and package changelogs remain historical records.
 The live `@beep/ontology` workspace is removed from the retired-name registry;
@@ -2164,7 +2164,7 @@ exception in `standards/schema-first.inventory.jsonc`.
 `bun run beep lint schema-first` reports a new plain-data `S.Class`, and
 `schemaClassMissingBrand` becomes an error at the `@effect/tsgo` 0.52 bump.
 The migration, its codemod, and the decisions behind each case are in
-`goals/schema-opaque-default/SPEC.md`, D1 to D8.
+[goals/schema-opaque-default/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/schema-opaque-default/SPEC.md), D1 to D8.
 
 Rationale:
 

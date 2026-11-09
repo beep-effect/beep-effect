@@ -65,8 +65,8 @@ the Actions runs and jobs for 2026-10-05; PR timelines for #1433 and #1442;
 
 ## 5. Cross-links & provenance
 
-- E7/E8 trial and decisions: `goals/ship-velocity/research/stacked-pr-trial.md`,
-  `goals/ship-velocity/research/merge-queue-evaluation.md`.
+- E7/E8 trial and decisions: [goals/ship-velocity/research/stacked-pr-trial.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ship-velocity/research/stacked-pr-trial.md),
+  [goals/ship-velocity/research/merge-queue-evaluation.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ship-velocity/research/merge-queue-evaluation.md).
 - Earlier rulings: `explorations/agent-pipeline-velocity/DECISIONS.md`
   (pr-topology), `explorations/beep-ci-operational-ontology/DECISIONS.md`
   (Ruling 21).

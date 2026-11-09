@@ -2,7 +2,7 @@
 
 Third A-train PR (#1851/#1860), branch `chore/residue-a-train-3` off `main`
 `4a9e6aacdc`. Source evidence: the H1 receipt
-`goals/repository-simplification-confidence/history/receipts/stage-4-h1-catalog.md`
+[goals/repository-simplification-confidence/history/receipts/stage-4-h1-catalog.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-4-h1-catalog.md)
 (13 original candidates, the derived `pdfjs-dist`, the inert jaeger override and
 the Fallow detection gap).
 

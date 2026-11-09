@@ -34,43 +34,7 @@
     "goals/repository-simplification-confidence/history/receipts/final-program-report.md",
     "goals/repository-simplification-confidence/history/receipts/stage-5-panel.md"
   ],
-  "researchReports": [
-    "research/BRIEF-2026-10-09.md",
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md",
-    "research/baseline-2026-10-09.md",
-    "research/cache-baseline-request-2026-11-02-derived-completion.json",
-    "research/cache-baseline-review-2026-11-02-derived-completion.md",
-    "research/f-before-measurement.py",
-    "research/f-config-fingerprint.py",
-    "research/f-grok-header-probe.py",
-    "research/knip-findings-2026-10-09.md",
-    "research/knip-fresh-rows-e62411d63f.tsv",
-    "research/knowledge-coverage-owner-attestation-20261014.json",
-    "research/knowledge-coverage-producer-20261014.json",
-    "research/panel-acceptance-2026-10-09.md",
-    "research/sweeps/2026-10-09/A-knip-dispositions.md",
-    "research/sweeps/2026-10-09/A-patches.md",
-    "research/sweeps/2026-10-09/A-retained-tools.md",
-    "research/sweeps/2026-10-09/A-retire.md",
-    "research/sweeps/2026-10-09/B-detector-false-positives.md",
-    "research/sweeps/2026-10-09/B-inline-suppressions.md",
-    "research/sweeps/2026-10-09/B-skills-stale-api.md",
-    "research/sweeps/2026-10-09/B-standards.md",
-    "research/sweeps/2026-10-09/C-ownership-facts.md",
-    "research/sweeps/2026-10-09/C-scripts.md",
-    "research/sweeps/2026-10-09/D-changesets.md",
-    "research/sweeps/2026-10-09/E-github.md",
-    "research/sweeps/2026-10-09/H1-catalog.md",
-    "research/sweeps/2026-10-09/H1-override-evidence.md",
-    "research/sweeps/2026-10-09/H1-syncpack-held-back.md",
-    "research/sweeps/2026-10-09/H2-goal-completion.md",
-    "research/sweeps/2026-10-09/H2-timeline-and-inherited-reds.md",
-    "research/sweeps/2026-10-09/INDEX.md",
-    "research/sweeps/2026-10-09/README.md",
-    "research/sweeps/2026-10-09/V-other-worktrees-and-detector-delta.md",
-    "research/sweeps/2026-10-09/V-vitest-canon.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -120,5 +84,13 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/repository-simplification-confidence",
+    "commit": "94b8d15cd23bd07a95f6f1ab0680d24b94c5103b",
+    "contentHash": "3ccedd278d28ddfa65e887a2f08e9b391a8e6fba",
+    "archivedAt": "2026-11-09T03:19:32.081Z",
+    "sourceCommit": "e3a763cad8722d5f47587c44530cf7bf44e5bc52"
+  }
 }

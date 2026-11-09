@@ -81,7 +81,7 @@ No worktree satisfied the retirement conditions. No `worktree remove` command wa
 
 All 33 worktrees and all 22 remote branches remain. The table records the exact retained heads and individual reasons. Existing archive refs, preservation exports, staged files and working files remain in place. Future retirement requires resolving the recorded blockers under an explicit preservation and ancestry policy; this receipt does not authorize bypassing them.
 
-The RDF/Pacer preservation follow-up #1911 is MERGED; its landed export work does not make these old source heads ancestors of main. See [Stage 4 reconciliation and preservation hashes](../../../repository-simplification-confidence/history/receipts/stage-4-vitest-reconciliation.md#preservation).
+The RDF/Pacer preservation follow-up #1911 is MERGED; its landed export work does not make these old source heads ancestors of main. See [Stage 4 reconciliation and preservation hashes](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-4-vitest-reconciliation.md#preservation).
 
 ## Left open
 

@@ -335,7 +335,7 @@ ratifies.
   relation text that exactly sliced the `@beep/doc-text` canonical string. The retry copied
   source wording more closely, yet still normalized PDF line boundaries, punctuation, or
   phrasing. Both runs therefore failed the typed non-zero relation gate instead of fabricating
-  spans. Evidence: `goals/semantica-canary/history/p2-c0-probe-breaker.md`. Prevention: model a
+  spans. Evidence: [goals/semantica-canary/history/p2-c0-probe-breaker.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/history/p2-c0-probe-breaker.md). Prevention: model a
   relation's semantic value separately from an independently selected verbatim evidence quote,
   or prove a bounded chunk-scoped candidate at `decompose`; do not overload generated relation
   prose as its `TextAnchor`.

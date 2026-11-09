@@ -129,7 +129,7 @@ limits are in the refresh note. No new upstream implementation was vendored.
 | O-04 | [Lane Economics opportunities](../../../goals/ci-lane-economics/research/OPPORTUNITIES.md) | Required metadata drift, proof fixture flake, coverage concurrency collision |
 | O-05 | [`ship-velocity`](../../../goals/ship-velocity/README.md) | Completed historical remote-cache and Yeet evidence |
 | O-06 | [Ship Velocity opportunities](../../../goals/ship-velocity/research/OPPORTUNITIES.md) | `403` rendered as apparent misses |
-| O-07 | [Ship Velocity spec](../../../goals/ship-velocity/SPEC.md) | Historical fallback-cache account, explicitly superseded by HEAD |
+| O-07 | [Ship Velocity spec](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ship-velocity/SPEC.md) | Historical fallback-cache account, explicitly superseded by HEAD |
 | O-08 | [Speed Loop opportunities](../../../goals/speed-loop/research/OPPORTUNITIES.md) | Cache key, shared cache, proof hash, tsbuildinfo, and coverage hypotheses |
 | O-09 | [`ci-fleet-endgame`](../../../goals/ci-fleet-endgame/README.md) | Incumbent asymmetric cache design and historical activation authority |
 | O-10 | [`beep-ci-operational-ontology`](../../beep-ci-operational-ontology/README.md) | Current KPI/planner ontology owner |

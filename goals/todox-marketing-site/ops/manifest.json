@@ -38,7 +38,6 @@
     "explorations/todox-wealth-management-site/research/DEMO-SCRIPT.md",
     "explorations/todox-wealth-management-site/research/ASSET-PLAN.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -90,5 +89,13 @@
     "No yeet publish or PR until Benjamin explicitly green-lights publication (deferred 2026-08-27, repo contention).",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/todox-marketing-site",
+    "commit": "94b8d15cd23bd07a95f6f1ab0680d24b94c5103b",
+    "contentHash": "9cc0fdb36f33da1c0e2edf10d78d8c783d430be8",
+    "archivedAt": "2026-11-09T03:19:32.081Z",
+    "sourceCommit": "e3a763cad8722d5f47587c44530cf7bf44e5bc52"
+  }
 }

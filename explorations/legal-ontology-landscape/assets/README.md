@@ -74,6 +74,6 @@ checks the archive before unpacking, rejects symlink members and escaped member
 paths, and writes only under vendor/. `--verify-only` checks recorded archive
 bytes and safe membership without unpacking. Source reuse evidence and
 attribution are in the packet
-[M2 licence ledger](../../../goals/semantic-foundation/research/2026-10-09-m2-licence-ledger.md).
+[M2 licence ledger](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantic-foundation/research/2026-10-09-m2-licence-ledger.md).
 CPC is the R2 facts-only projection: symbols, parent hierarchy and titles;
 definitions, notes, references and warnings are never exposed by the loader.

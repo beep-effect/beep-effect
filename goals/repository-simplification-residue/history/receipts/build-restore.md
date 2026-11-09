@@ -3,9 +3,9 @@
 Lane `residue-build-restore`, branch `fix/residue-build-restore` off `main`
 `4ff36bacc8`, 2026-10-18. Route: ruling S39/S41, a Claude-originated residue lane
 worked by a `claude-opus-5-5` child. Source evidence: the
-[G storage handoff](../../../repository-simplification-confidence/history/handoffs/rsc-g-storage-2026-10-09.md)
+[G storage handoff](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/handoffs/rsc-g-storage-2026-10-09.md)
 and its
-[output-health attribution](../../../repository-simplification-confidence/history/receipts/stage-5-cache.md#output-health-attribution-and-clean-cache-rerun).
+[output-health attribution](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-5-cache.md#output-health-attribution-and-clean-cache-rerun).
 
 ## Representative set
 
@@ -90,7 +90,7 @@ the state describes still exist. The base tsconfig kept that state in
 state behind. That covers `rm -rf dist`, a harness fixture, and a CI or Vercel cache
 that restores `node_modules` but not `dist`. The next uncached build then trusts state
 whose outputs are gone. The Vercel failure recorded in
-`goals/todox-marketing-site/PLAN.md` (P3, "`babel: dist does not exist`") is the same
+[goals/todox-marketing-site/PLAN.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/todox-marketing-site/PLAN.md) (P3, "`babel: dist does not exist`") is the same
 class. `apps/todox/vercel.json` purges those files before its build to work around it.
 
 ## Fix

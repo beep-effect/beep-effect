@@ -13,7 +13,7 @@ None yet.
   noise measurement, step export, and ledger recorder. Reuse.
 - `packages/tooling/tool/cli/src/commands/AgentEffectiveness/` — the
   sandboxed eval scorer. Reuse.
-- `goals/skillopt-training-pilot/corpus/` — the current 8 train / 4
+- [goals/skillopt-training-pilot/corpus/](https://github.com/beep-effect/beep-effect-goals-archive/tree/main/goals/skillopt-training-pilot/corpus) — the current 8 train / 4
   validation corpus. Extend or replace.
 
 ## 5. Cross-links & provenance

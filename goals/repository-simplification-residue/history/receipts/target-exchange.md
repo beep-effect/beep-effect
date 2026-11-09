@@ -4,7 +4,7 @@ Lane `residue-target-exchange`, branch `feat/residue-target-exchange` off `main`
 `426d494b34`, 2026-10-20. Route: ruling S39/S41, a Claude-originated residue lane
 worked by a `claude-opus-5-5` child (wave 8, first of #1879, #1880, #1881). Source
 evidence: finding F3-F2 in the predecessor
-[F-R3 fix wave](../../../repository-simplification-confidence/SPEC.md#f-r3-bounded-shell-links--panel-round-3-fix-wave-2026-10-15).
+[F-R3 fix wave](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/SPEC.md#f-r3-bounded-shell-links--panel-round-3-fix-wave-2026-10-15).
 
 ## Problem
 

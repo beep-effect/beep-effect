@@ -354,8 +354,8 @@ Agent workflow change (skill text, no code):
 ## In-Repo Capability Inventory
 
 - Prior trial and decision: `goals/ship-velocity/PLAN.md:140-147`;
-  `goals/ship-velocity/research/stacked-pr-trial.md` (E7, `gh stack` v0.1.0,
-  #859/#860, deferral at :44-54); `goals/ship-velocity/research/merge-queue-evaluation.md`
+  [goals/ship-velocity/research/stacked-pr-trial.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ship-velocity/research/stacked-pr-trial.md) (E7, `gh stack` v0.1.0,
+  #859/#860, deferral at :44-54); [goals/ship-velocity/research/merge-queue-evaluation.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ship-velocity/research/merge-queue-evaluation.md)
   (E8 80% gate at :9, decision at :56-60).
 - Earlier rejections, each now partly obsolete:
   - `explorations/agent-pipeline-velocity/DECISIONS.md:12-16` and

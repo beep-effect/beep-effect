@@ -415,7 +415,7 @@ def run(options):
         raise ValueError("Adapter executable does not match the reviewed digest")
     pins = json.loads(
         (
-            root / "goals/turborepo-cache-conformance/research/pins-2026-10-23.json"
+            root / "standards/cache-conformance/pins-2026-10-23.json"
         ).read_text()
     )
     fixture = StorageFixture()

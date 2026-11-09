@@ -281,7 +281,7 @@ path would have prevented this second validation gap.
 ### 2026-10-09: an unrelated reference gate blocks a scoped parity check
 
 The required `CI=true bun run beep knowledge refs --check` exits 1 on one inherited
-external-mirror reference in `goals/repository-simplification-confidence/SPEC.md`.
+external-mirror reference in [goals/repository-simplification-confidence/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/SPEC.md).
 The file is unchanged and has the same blob on HEAD and origin/main. This lane's
 reference changes introduce no gated finding. A consolidated main repair, owned
 by the orchestrator, prevents repeated unrelated remediation across workers.

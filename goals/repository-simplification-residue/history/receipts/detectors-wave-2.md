@@ -2,7 +2,7 @@
 
 Lane `residue-detectors`, branch `feat/residue-detectors-wave2`, fast-forwarded to
 `main` `74d3625ad0` (which includes wave 1, #1998, and #2027). Class definitions come
-from `goals/repository-simplification-confidence/research/sweeps/2026-10-09/B-detector-false-positives.md`
+from [goals/repository-simplification-confidence/research/sweeps/2026-10-09/B-detector-false-positives.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/research/sweeps/2026-10-09/B-detector-false-positives.md)
 section 2. FP-7 was closed as removed in `stage-4-detectors.md`. Detectors:
 `packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestDetectors.ts` and
 `Lint/internal/SchemaFirstArbitraryCoverage.ts`.

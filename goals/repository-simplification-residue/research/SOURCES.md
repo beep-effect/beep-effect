@@ -7,10 +7,10 @@ records its plan ID and generated-seed digests. No manifest was hand-created.
 
 ## Predecessor evidence
 
-- [Closeout acceptance](../../repository-simplification-confidence/history/receipts/stage-6-closeout-acceptance.md).
-- [Final program report](../../repository-simplification-confidence/history/receipts/final-program-report.md).
-- [SPEC and RSC-F rulings](../../repository-simplification-confidence/SPEC.md).
-- [Bounded final panel disposition](../../repository-simplification-confidence/history/receipts/stage-5-panel.md).
+- [Closeout acceptance](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-6-closeout-acceptance.md).
+- [Final program report](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/final-program-report.md).
+- [SPEC and RSC-F rulings](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/SPEC.md).
+- [Bounded final panel disposition](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-5-panel.md).
 
 ## Owned issue sources
 

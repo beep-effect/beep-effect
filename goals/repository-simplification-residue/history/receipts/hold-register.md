@@ -9,8 +9,8 @@
 
 Lane `residue-hold-exits`, branch `chore/residue-hold-exits` off `main`
 `e3ee18dfd7`, census taken on 2026-10-17. Source evidence: the H1 receipt
-`goals/repository-simplification-confidence/history/receipts/stage-4-h1-catalog.md`
-and the H1 sweep `goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md`.
+[goals/repository-simplification-confidence/history/receipts/stage-4-h1-catalog.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-4-h1-catalog.md)
+and the H1 sweep [goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/research/sweeps/2026-10-09/H1-catalog.md).
 A-train 3 (#1903, `catalog-removals-record.md`) had already removed the
 `pdfjs-dist` and jaeger overrides.
 
@@ -128,7 +128,7 @@ js-yaml 3), `@beep/doc-text` (docx nanoid 6), `@beep/infra` (Pulumi js-yaml 4),
 
 ## Patches (retained; proofs owned by #1853)
 
-Exit conditions come from `goals/repository-simplification-confidence/research/sweeps/2026-10-09/A-patches.md`. #1853 owns the
+Exit conditions come from [goals/repository-simplification-confidence/research/sweeps/2026-10-09/A-patches.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/research/sweeps/2026-10-09/A-patches.md). #1853 owns the
 fail-unpatched/pass-patched proofs and their retirement.
 
 | Patch | Pinned / latest | Failure prevented | Exit |

@@ -6,12 +6,12 @@ Facts verified on the workstation and in this checkout; paths are repo-relative 
 
 ### What already exists
 
-- **Cursor lane admitted.** `goals/tsgo-045-effect-idiom-sweep/DECISIONS.md` D13 (2026-09-12) admits
+- **Cursor lane admitted.** [goals/tsgo-045-effect-idiom-sweep/DECISIONS.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/tsgo-045-effect-idiom-sweep/DECISIONS.md) D13 (2026-09-12) admits
   `cursor-agent` as a headless Bash lane, second volume pool beside Codex. Recipe:
-  `goals/tsgo-045-effect-idiom-sweep/ops/prompts/50-cursor-lane.md`
+  [goals/tsgo-045-effect-idiom-sweep/ops/prompts/50-cursor-lane.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/tsgo-045-effect-idiom-sweep/ops/prompts/50-cursor-lane.md)
   (`cursor-agent -p --trust --force --sandbox enabled --model <id> --output-format stream-json
   "<prompt>" </dev/null`, no-git rule verified from transcript `"command":` values). Smoke test passed
-  in 25.9 s: `goals/tsgo-045-effect-idiom-sweep/history/2026-09-12-cursor-smoke.md`.
+  in 25.9 s: [goals/tsgo-045-effect-idiom-sweep/history/2026-09-12-cursor-smoke.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/tsgo-045-effect-idiom-sweep/history/2026-09-12-cursor-smoke.md).
 - **CLI state.** `cursor-agent` 2026.09.10-fd3934a at `$HOME/.local/bin` (alias `agent`), logged in.
   `~/.cursor/cli-config.json`: `approvalMode: allowlist`, `permissions.allow: ["Shell(ls)"]`,
   `sandbox.mode: disabled` globally (lanes override with `--sandbox enabled`), default model

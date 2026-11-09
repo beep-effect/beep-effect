@@ -92,5 +92,6 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "2026-10-15: closed. #1758 landed the codemod and its output; #1776 cleared the 0.52 preferEffectArray sites and the apps/labs fallout; #1783 and #1798 fixed the main reds #1758 caused. The closing PR arms schemaClassMissingBrand at error in standards/effect-diagnostics.profile.json (the @effect/tsgo 0.53 Effect diagnostics lane from #1810; tsc-rs 0.6.0 does not know the rule) and adds lint:opaque-roundtrips."
+  "statusNote": "2026-10-15: closed. #1758 landed the codemod and its output; #1776 cleared the 0.52 preferEffectArray sites and the apps/labs fallout; #1783 and #1798 fixed the main reds #1758 caused. The closing PR arms schemaClassMissingBrand at error in standards/effect-diagnostics.profile.json (the @effect/tsgo 0.53 Effect diagnostics lane from #1810; tsc-rs 0.6.0 does not know the rule) and adds lint:opaque-roundtrips.",
+  "retentionReason": "Retained: its codemod is the last consumer of @typescript/typescript6 through the fallow plugin, and schema-first inventory rows cite its keep-class allowlist as their authority."
 }

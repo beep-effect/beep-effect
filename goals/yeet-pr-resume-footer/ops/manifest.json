@@ -30,12 +30,7 @@
     "goals/yeet-pr-resume-footer/GOAL.md",
     "goals/yeet-pr-resume-footer/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/2026-09-03-design-panel.md",
-    "research/2026-09-03-exploration.md",
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -87,5 +82,13 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "PR #975 drove to merge-ready on 2026-09-03; PR 2 surfaces are listed in PLAN.md."
+  "statusNote": "PR #975 drove to merge-ready on 2026-09-03; PR 2 surfaces are listed in PLAN.md.",
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/yeet-pr-resume-footer",
+    "commit": "94b8d15cd23bd07a95f6f1ab0680d24b94c5103b",
+    "contentHash": "b3cb5a591b6391b8433d9bb4aff19d08b7580319",
+    "archivedAt": "2026-11-09T03:19:32.081Z",
+    "sourceCommit": "e3a763cad8722d5f47587c44530cf7bf44e5bc52"
+  }
 }
