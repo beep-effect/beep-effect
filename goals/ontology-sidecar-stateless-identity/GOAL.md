@@ -32,7 +32,7 @@ Scope:
   `packages/ontology/server` (`OntologyChangeActor`),
   `packages/ontology/config/src/McpConfig.ts`,
   `packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts` (the
-  `mcp-session-id` read only), `goals/ontology-agent-surface/ops/live-mcp-client.ts`,
+  `mcp-session-id` read only), the archived ontology-agent-surface live MCP client,
   `goals/agent-execution-authority/SPEC.md` (decision 10 wording), this packet.
 - Out: bearer/launch vocabulary in kit schemas, stdio hosts, a client-echoed
   run token, `requestState` HMAC, MRTR approval, browser-origin clients,

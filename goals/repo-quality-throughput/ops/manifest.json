@@ -183,27 +183,12 @@
     "The same blocker repeats after reasonable investigation."
   ],
   "statusNote": "legacy status: complete",
-  "researchReports": [
-    "research/README.md",
-    "research/batch-01-config-inventory.md",
-    "research/batch-01-docgen-cost-model.md",
-    "research/batch-01-duplicate-proof-work.md",
-    "research/batch-01-quality-command-map.md",
-    "research/batch-01-timing-baseline.md",
-    "research/batch-01-turbo-dag-cache.md",
-    "research/batch-02-check-test-coverage.md",
-    "research/batch-02-ci-nix-storybook-data-sync.md",
-    "research/batch-02-lint-fix-biome-eslint.md",
-    "research/batch-02-metadata-release-sidecars.md",
-    "research/batch-02-repo-cli-orchestration.md",
-    "research/batch-02-security-audit-sast.md",
-    "research/batch-03-docgen-selectivity-shadow.md",
-    "research/batch-03-effect-v4-tools.md",
-    "research/batch-03-scoped-config-design.md",
-    "research/batch-03-synthesis.md",
-    "research/batch-03-tooling-candidates.md",
-    "research/batch-03-yeet-fast-monitor.md",
-    "research/known-findings.md",
-    "research/repo-exports-sharding-design.md"
-  ]
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/repo-quality-throughput",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "042e16b4f27a091544fa6c65250e98bd31049e17",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

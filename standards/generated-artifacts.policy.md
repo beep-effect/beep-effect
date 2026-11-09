@@ -82,6 +82,6 @@ observability standard's generated section no longer carries span counts.
 
 Regen *tooling* (a single `beep quality regen-generated` operator command) was
 evaluated and deliberately deferred: `goals/one-round-loop` C5 is `wont_fix`
-until median PR CI round-trips exceed one (`goals/one-round-loop/ops/progress.json`).
+until median PR CI round-trips exceed one ([goals/one-round-loop/ops/progress.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/one-round-loop/ops/progress.json)).
 A changed-files-scoped `jsdoc-inventory` refresh is the wished-for improvement
 recorded in the reflection; adopt it there if that packet reopens.

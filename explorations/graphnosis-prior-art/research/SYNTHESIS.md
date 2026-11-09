@@ -507,7 +507,7 @@ no field evidence it helps a calling model.
 - **No tool anywhere declares determinism.** `rg -rni "determinism tier|non-deterministic|approximate tool"`
   → only the graphnosis CAPTURE.
 - The split already exists one layer up and does not reach the agent:
-  `goals/practice-kg-mcp/SPEC.md` D-2 splits its data families on exactly this axis — "(a)
+  [goals/practice-kg-mcp/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/practice-kg-mcp/SPEC.md) D-2 splits its data families on exactly this axis — "(a)
   deterministic docket-family spine… **no LLM anywhere in this layer**; (b) OA span-grounded
   candidate claims… with a real LanguageModel layer."
 
@@ -934,7 +934,7 @@ plus the challenge refutations.
 | **Layered claims / "none implies another"** (`gai-format:gai-08`) | `approval-and-autonomy-policy.md:34-38` — seven independent typed verdicts. A lattice beats the donor's ladder |
 | **Errata placement** (`craft:gcr-06`) | `explorations/academia-corpus-mining/DECISIONS.md:142-149` reasons explicitly about errata *placement* and deviates deliberately from an audit recommendation because line-number citations would shift. Better-reasoned than the donor's |
 | **CI-gate provenance comments** (`craft:gcr-14` half A) | beep cites incidents **plus the packet and PR that fixed them** — `check.yml:661-673` (why gitleaks pins to the base branch: "a PR could broaden the allowlist in the SAME change"), `:715-726` (CSF-022, "never silently FAIL OPEN"), `release.yml:61-63`, `storybook.yml:31-33` |
-| **Determinism-justified single implementation** (`craft:gcr-03`) | Already the product thesis (`docs/ROADMAP.md:64-66`) with binding rules in `goals/practice-kg-mcp/research/bundle-contract.md` §5 |
+| **Determinism-justified single implementation** (`craft:gcr-03`) | Already the product thesis (`docs/ROADMAP.md:64-66`) with binding rules in [goals/practice-kg-mcp/research/bundle-contract.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/practice-kg-mcp/research/bundle-contract.md) §5 |
 | **Chronocept's whole temporal object** (cc-07/08/09/11) | Strictly below on every axis: one relative axis vs two absolute; unimodality forbids lapse→revival→renewal, which beep's disjoint-interval model handles natively (patent lapse and revival, maintenance-fee windows, term extensions, restored priority, reinstatement after appeal); `Option.none` says "holds indefinitely" where their curve always decays to zero; and their released JSON has **no character spans at all** (concatenated substring copies, irreversible axis-to-parent mapping) where beep has `EvidenceSpan` with `startChar`/`endChar`/`quote` and a width check |
 | **RAPTOR's provenance story** | The paper never evaluates provenance and reports 4% summary hallucination (a fabricated *relation*). beep's verbatim firewall (`docs/product/citation-grounding.md:34-53` — *"Normalization may locate; it may not speak for the source"*) dominates it |
 | **Benchmark hygiene** (RAPTOR Appendix H) | Pre-empted by `explorations/academia-corpus-mining/research/t3-retrieval-citation-grounding.md:60-66` — "Do not use KF1, perplexity, or overlap as an acceptance gate." Corroboration, not a gap |

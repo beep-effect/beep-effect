@@ -34,14 +34,6 @@
     "goals/one-round-loop/research/SOURCES.md",
     "goals/one-round-loop/research/decisions-locked.md"
   ],
-  "researchReports": [
-    "research/SOURCES.md",
-    "research/ci-lane-parity.md",
-    "research/decisions-locked.md",
-    "research/local-verdict-parity-fixtures.md",
-    "research/p1-numruns-inventory.md",
-    "research/research-facts.md"
-  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -95,5 +87,13 @@
     "A required-check context name would change without a same-change ruleset 10240248 update.",
     "A property-lane sweep failure requires a wire-shape change to fix (file it, seed-exclude with a ledger note, continue).",
     "Any SPEC Non-Goals fence would be violated to make progress."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/one-round-loop",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "ddad0631f3683b62f01c48fcfe1555fa191c3315",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

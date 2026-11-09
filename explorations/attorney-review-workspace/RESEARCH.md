@@ -29,9 +29,9 @@ synthesis §2, each tied to a cited packet, decision or session record. The ones
 - **R1 One surface.** Every attempt that failed spread across several apps, or used a long deck of
   questions. The quickest exchange happened in the app the attorney already uses.
 - **R2 Machine first, few items, one at a time.** Ruling S15 retired the sitting app; agents
-  evaluate and only unresolved items reach the attorney (`goals/practice-kg-mcp/SPEC.md` D-29).
+  evaluate and only unresolved items reach the attorney ([goals/practice-kg-mcp/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/practice-kg-mcp/SPEC.md) D-29).
   Identification review is capped at about 20 hard cases
-  (`goals/practice-document-identification/SPEC.md` D8, D16).
+  ([goals/practice-document-identification/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/practice-document-identification/SPEC.md) D8, D16).
 - **R4 The answer first, then only the sources needed, with the passage highlighted.** Box links
   must open for this viewer.
 - **R7 Capture the verdict where the item lives.** It must be structured, append-only and lockable,

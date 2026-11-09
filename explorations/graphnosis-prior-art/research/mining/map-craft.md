@@ -82,7 +82,7 @@ restatement.
   `docs/ROADMAP.md:64-66` — "The MCP surface is thesis, not shim: Claude Desktop is client #1;
   Word/Outlook/cron/background agents are the same consumer."
 - Binding determinism rules for the shipped bundle:
-  `goals/practice-kg-mcp/research/bundle-contract.md` §5 — "every INSERT batch ordered by full natural
+  [goals/practice-kg-mcp/research/bundle-contract.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/practice-kg-mcp/research/bundle-contract.md) §5 — "every INSERT batch ordered by full natural
   key; no wall-clock values in any row (build time lives only in `kg_build` / manifest); IRIs from
   natural keys only; email parse order = `(archive_digest, folder_path, message_ord)`".
 - Byte-for-byte proof oracle: `packages/tooling/tool/cli/src/commands/Architecture/internal/AcceptedProofManifest.ts`
@@ -219,7 +219,7 @@ the other way). Two of 316 pending changesets are `major`; two mention "breaking
 `goals/practice-kg-mcp` (active, 5/9, Lane 1 live front) ships a **portable bundle of an IP practice's
 corpus** to a foreign host:
 
-`goals/practice-kg-mcp/research/bundle-contract.md` §4 —
+[goals/practice-kg-mcp/research/bundle-contract.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/practice-kg-mcp/research/bundle-contract.md) §4 —
 ```
 practice-kg-bundle/
   bundle.manifest.json
@@ -418,7 +418,7 @@ Desktop, and its verification story is not written.
 - `release.yml:61-63` — "@changesets/changelog-github resolves PR/author links via the GitHub API and
   hard-fails without a token (**main-red cause, fixed 2026-07-05, goals/agent-pipeline-velocity B3**)."
 - `check.yml:199-203` — "Lane bodies live in the beep CLI (one-round-loop P0 inversion; same-SHA
-  parity proof recorded in `goals/one-round-loop/history/p0-parity-evidence.md`)."
+  parity proof recorded in [goals/one-round-loop/history/p0-parity-evidence.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/one-round-loop/history/p0-parity-evidence.md))."
 - `check.yml:309-312` — the property-law lane's non-required status and the P4 close criterion for
   flipping it.
 - `check.yml:661-673` — why gitleaks is pinned to the **base branch** config: "a PR could broaden the

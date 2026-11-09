@@ -2106,7 +2106,7 @@
       "line": 55,
       "endLine": 185,
       "symbol": "program",
-      "occurrence": "v2:c39fb4e92be38e73c02cd7f97821c0a65d0597024cec549067ddb387d024ac9f",
+      "occurrence": "v2:fda458703660bb9afe5338b87e87e5c9f58011dfde07fe1a086c308b4c30a2fc",
       "class": "resource-wrapper",
       "evidence": "function* () { const fs = yield* FileSystem.FileSystem; const digestService = yield* Digest.Digest; const output = yield* Config.String(\"CLAIM_ALLOWED_OUTPUT\"); const implementationFile = yield* Confi",
       "replacement": {
@@ -2127,9 +2127,9 @@
       "line": 86,
       "endLine": 262,
       "symbol": "program",
-      "occurrence": "v2:fbe6620e25a7976de1e150ee635052f617342640a7b33f30699a44327a4c7bef",
+      "occurrence": "v2:46d9bbc9794ad16284562e589302bf941a82ab42b34aa7f6410f4a98d693bb48",
       "class": "resource-wrapper",
-      "evidence": "function* () { const fs = yield* FileSystem.FileSystem; const digest = yield* Digest.Digest; const output = yield* Config.String(\"CLAIM_EVALUATION_OUTPUT\"); const packet = \"goals/claim-element-anteced",
+      "evidence": "function* () { const fs = yield* FileSystem.FileSystem; const digest = yield* Digest.Digest; const output = yield* Config.String(\"CLAIM_EVALUATION_OUTPUT\"); const packet = \"packages/law-practice/serve",
       "replacement": {
         "primitive": "it.layer",
         "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."

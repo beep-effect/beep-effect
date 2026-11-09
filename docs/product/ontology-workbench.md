@@ -28,7 +28,7 @@ Local P6 proof adds:
 - an ontoauthor-mat t1-t6 competency status suite through Turtle parse,
   Oxigraph ASK, bounded structural inference, and SHACL validation;
 - a repeatable node-side graph projection benchmark under
-  `goals/ontology-workbench/ops/benchmark-projection.ts`.
+  [goals/ontology-workbench/ops/benchmark-projection.ts](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ontology-workbench/ops/benchmark-projection.ts).
 
 Host-side proof still needs Protégé or ROBOT validation, running
 professional-desktop browser/Tauri acceptance, `/reflect`, and Yeet closeout.

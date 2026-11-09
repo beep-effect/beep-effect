@@ -33,7 +33,6 @@
     "goals/mcp-host-retrofit/research/SOURCES.md",
     "goals/mcp-kit/SPEC.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
   "links": {
     "goals": ["mcp-kit", "uspto-mcp"]
   },
@@ -92,5 +91,13 @@
   "researchReferences": [
     "../../explorations/mcp-auth-gated-registration/research/SOURCES.md",
     "../../explorations/mcp-auth-gated-registration/reviews/2026-07-01-codex-verification.md"
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/mcp-host-retrofit",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "e30e7ef6b7968d3e146d0ab429b93feca85111cb",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

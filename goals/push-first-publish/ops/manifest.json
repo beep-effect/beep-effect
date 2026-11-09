@@ -31,11 +31,7 @@
     "goals/push-first-publish/GOAL.md",
     "goals/push-first-publish/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md",
-    "research/draft-reviewers.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -90,5 +86,13 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "P0-P2 complete and closeout reflection written 2026-10-05; P3 is the live publish of this packet through the new push-first path (draft PR, ready-pending-flip, yeet ready, merge-ready: yes). Lifecycle flipped in the same PR per the same-PR packet-state rule."
+  "statusNote": "P0-P2 complete and closeout reflection written 2026-10-05; P3 is the live publish of this packet through the new push-first path (draft PR, ready-pending-flip, yeet ready, merge-ready: yes). Lifecycle flipped in the same PR per the same-PR packet-state rule.",
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/push-first-publish",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "643c2e813212abb4758d10b7942c8742ada1c833",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

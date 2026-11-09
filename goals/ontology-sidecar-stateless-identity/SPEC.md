@@ -32,7 +32,7 @@ rulings in `DECISIONS.md` cited as `(D-name)`; the Gate D amendments dated 2026-
 3. `goals/agent-execution-authority/SPEC.md` (decision 10 and PR 5 findings);
    `explorations/effect-mcp-2026-07-28/RESEARCH.md` §3.3–3.4 with the lane reports `research/22-r3-governance-identity.md`
    and `24-r5-http-security-observability.md` for `file:line` evidence.
-4. `goals/mcp-stateless-kit-and-drivers/SPEC.md` for the anchor, client and dual-read contract this goal consumes.
+4. [goals/mcp-stateless-kit-and-drivers/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/mcp-stateless-kit-and-drivers/SPEC.md) for the anchor, client and dual-read contract this goal consumes.
 5. The installed Effect source (`node_modules/effect/dist/ai/**`, `http/**`).
 6. This `SPEC.md`, then `PLAN.md`, then `GOAL.md`.
 
@@ -57,7 +57,7 @@ rulings in `DECISIONS.md` cited as `(D-name)`; the Gate D amendments dated 2026-
 - `apps/professional-desktop/test/integration/ontology-mcp-http.test.ts` and
   `support/ontology-mcp-harness.ts` — harness on the 2026 wire via `@beep/mcp-kit/client`; the
   cases named in the matrix.
-- `goals/ontology-agent-surface/ops/live-mcp-client.ts` — on the kit client; no `initialize`.
+- [goals/ontology-agent-surface/ops/live-mcp-client.ts](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ontology-agent-surface/ops/live-mcp-client.ts) — on the kit client; no `initialize`.
 - `goals/agent-execution-authority/SPEC.md` — decision 10 wording; `packages/epistemic/server`
   docs.
 

@@ -17,5 +17,5 @@ Rules that bind here:
   workstation and shipped out-of-band.
 - The stdio MCP server `bin.ts` lands with PR-3 (tool declarations in
   `law-practice/use-cases`, handlers in `law-practice/server`).
-- Follow `goals/practice-kg-mcp/SPEC.md` for decisions and
-  `goals/practice-kg-mcp/research/bundle-contract.md` for the data contract.
+- Follow [goals/practice-kg-mcp/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/practice-kg-mcp/SPEC.md) for decisions and
+  [goals/practice-kg-mcp/research/bundle-contract.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/practice-kg-mcp/research/bundle-contract.md) for the data contract.

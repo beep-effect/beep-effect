@@ -22,7 +22,7 @@ For 25 years my father, **Tom Oppold**, has done intellectual-property law — d
 
 The structure of this is unusually clean, and it is the heart of the product:
 
-- **The corpus is his 25 years.** The already-salvaged, deduplicated, USPTO-enriched Oppold corpus — 8,438 files — is the seed data (`goals/oppold-corpus-pipeline/SPEC.md`). His past work *is* the training ground.
+- **The corpus is his 25 years.** The already-salvaged, deduplicated, USPTO-enriched Oppold corpus — 8,438 files — is the seed data ([goals/oppold-corpus-pipeline/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/oppold-corpus-pipeline/SPEC.md)). His past work *is* the training ground.
 - **The first user is him.** Not a persona. A real attorney with real matters and real deadlines.
 - **His use makes it smarter.** Every claim he approves, every draft he edits into his own voice, every correction he makes teaches the system his standard.
 

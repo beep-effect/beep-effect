@@ -49,7 +49,7 @@ later 41-finding census; the 73 above remains the original 2026-07-07 record.
 ## Fences (hard constraints)
 
 The nine crispening fences apply verbatim
-(`goals/repo-crispening-orchestration/ops/prompts/remediation.agent.md`,
+([goals/repo-crispening-orchestration/ops/prompts/remediation.agent.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repo-crispening-orchestration/ops/prompts/remediation.agent.md),
 "The nine fences") **with one amendment**: fence 1 (service-contract carve-out)
 and fence 7 (no native-collection migration) are *suspended where a locked
 ruling in `research/decisions.md` says so* — this initiative's P7 explicitly

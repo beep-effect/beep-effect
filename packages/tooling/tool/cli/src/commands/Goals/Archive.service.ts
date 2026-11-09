@@ -37,7 +37,14 @@ import {
   knowledgeLinkDestinations,
   normalizeKnowledgeRepoPath,
 } from "../Knowledge/Knowledge.refs.ts";
-import { ArchivePlan, ArchivePlanEntry, ArchiveRepoRef, InboundLink, tombstoneKeeps } from "./Archive.schemas.ts";
+import {
+  ArchivePlan,
+  ArchivePlanEntry,
+  ArchiveRepoRef,
+  InboundLink,
+  tombstoneKeeps,
+  wrappedLinkDestination,
+} from "./Archive.schemas.ts";
 import { ArchiveError } from "./Goals.errors.ts";
 import { decodeGoalManifest, GoalStatus } from "./Goals.schemas.ts";
 import { isTerminalPacketStatus } from "./Harvest.service.ts";
@@ -316,7 +323,10 @@ const scanFileLinks = Effect.fnUntraced(function* (repoRoot: string, file: strin
   const text = yield* fs.readFileString(path.join(repoRoot, file)).pipe(Effect.orElseSucceed(() => ""));
   const proseLines: ReadonlyArray<KnowledgeDocumentLine> = A.filter(knowledgeDocumentLines(text), (line) => line.prose);
   const candidates = A.flatMap(proseLines, (line) =>
-    A.map(knowledgeLinkDestinations(line.text), (link) => ({ line: line.number, destination: link.destination }))
+    A.map(
+      A.appendAll(knowledgeLinkDestinations(line.text), wrappedLinkDestination(line.text).pipe(O.toArray)),
+      (link) => ({ line: line.number, destination: link.destination })
+    )
   );
   const resolved = yield* Effect.forEach(candidates, (candidate) =>
     Effect.map(
@@ -338,10 +348,22 @@ const scanFileLinks = Effect.fnUntraced(function* (repoRoot: string, file: strin
   return A.appendAll(A.getSomes(resolved), codeSpans);
 });
 
+const GIT_SYMLINK_MODE = "120000";
+
+// A tracked symlink has no text of its own: its target is scanned and rewritten once, under its own path.
 const scanInboundLinks = Effect.fnUntraced(function* (repoRoot: string) {
-  const tracked = yield* trackedPaths(repoRoot, INBOUND_LINK_ROOTS);
-  const documents = A.filter(tracked, (file) =>
-    A.some(INBOUND_LINK_EXTENSIONS, (extension) => Str.endsWith(extension)(file))
+  const git = yield* Git;
+  const tracked = yield* git
+    .lsFiles(repoRoot, { pathspec: INBOUND_LINK_ROOTS })
+    .pipe(Effect.mapError(gitFailed(repoRoot)));
+  const documents = A.dedupe(
+    A.filter(
+      A.map(
+        A.filter(tracked, (entry) => entry.mode !== GIT_SYMLINK_MODE),
+        (entry) => entry.path
+      ),
+      (file) => A.some(INBOUND_LINK_EXTENSIONS, (extension) => Str.endsWith(extension)(file))
+    )
   );
   const links = yield* Effect.forEach(documents, (file) => scanFileLinks(repoRoot, file), { concurrency: 16 });
   return A.flatten(links);

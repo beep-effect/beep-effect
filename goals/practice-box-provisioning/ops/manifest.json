@@ -36,12 +36,7 @@
     "goals/practice-box-provisioning/GOAL.md",
     "goals/practice-box-provisioning/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/2026-09-02-box-api-semantics-grok.md",
-    "research/2026-09-02-preapply-review-codex.md",
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -92,5 +87,13 @@
     "The @beep/box type-instantiation budget cannot absorb a required manager family.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/practice-box-provisioning",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "d0ffd13dbc58563a63aaf26afa63fb51830a9cdf",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

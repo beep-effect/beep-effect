@@ -47,7 +47,7 @@ projection views in `src/policies/`, and identifiers, keys, propositions and ids
 in `src/values/`. Import the root subpath, never the folder.
 
 The package has no storage or source-reader dependencies. See the
-[slice specification](../../../goals/party-slice/SPEC.md) for the canonical-key
+[slice specification](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/party-slice/SPEC.md) for the canonical-key
 byte contract and complete resolution scenarios.
 
 ## Development

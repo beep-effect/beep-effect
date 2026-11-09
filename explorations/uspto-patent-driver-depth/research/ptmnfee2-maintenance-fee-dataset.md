@@ -25,7 +25,7 @@ follows directly from USPTO's statement that every weekly file is cumulative and
 the repo's generate-first/checksum/drift convention. [Federal catalog
 metadata](https://catalog.data.gov/dataset/patent-maintenance-fee-events-1981-present)
 and [`gov-legal-data-driver-codegen` determinism
-contract](../../../goals/gov-legal-data-driver-codegen/SPEC.md#constraints)
+contract](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/gov-legal-data-driver-codegen/SPEC.md#constraints)
 
 ## 1. Format, cadence, and replacement semantics
 
@@ -211,7 +211,7 @@ seal terms](https://www.uspto.gov/terms-use-uspto-websites)
    stages output before atomic replacement. This follows the repo rule that
    downloads happen only during codegen and committed generated artifacts make
    build/check network-free. [`gov-legal-data-driver-codegen`
-   constraints](../../../goals/gov-legal-data-driver-codegen/SPEC.md#constraints)
+   constraints](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/gov-legal-data-driver-codegen/SPEC.md#constraints)
 2. Schema-first parsing of raw fields; lossless preservation of raw event codes;
    generated native code/description vocabulary; duplicate handling; ordering;
    and explicit unknown-code/schema-drift failures. The driver owns faithful

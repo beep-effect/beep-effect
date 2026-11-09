@@ -4,7 +4,7 @@
   `ontology-agent-surface` exploration, read from the live
   `feat/explore-ontology-agent-surface` checkout on 2026-07-10.
 - **Provenance:** capture at `explorations/ontology-agent-surface/CAPTURE.md`;
-  governing predecessor constraints at `goals/ontology-workbench/SPEC.md`;
+  governing predecessor constraints at [goals/ontology-workbench/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ontology-workbench/SPEC.md);
   findings at `explorations/ontology-agent-surface/RESEARCH.md`.
 - **Scope discipline:** repository source, barrels, package metadata, and tests
   only. No external web sources were used in this half of research.
@@ -33,7 +33,7 @@
 | `@beep/agents-client` | `packages/agents/client/src/Chat.atoms.ts` | HTTP/IPC `AtomRpc.Service` client and shared protocol selector used by Ontology. |
 | `@beep/professional-desktop` orchestration | `apps/professional-desktop/src/ontology/OntologyOrchestrator.ts`; `apps/professional-desktop/src/chat/ChatOrchestrator.ts`; `apps/professional-desktop/src/runtime/Layer.ts`; `apps/professional-desktop/src/App.tsx` | Handler adaptation, runtime Layer composition, Chat comparison, and client transport selection. |
 | `@beep/professional-desktop` sidecar | `apps/professional-desktop/server/{main,RpcSessionAuth,IpcStdoutGuard.prelude}.ts`; `apps/professional-desktop/src-tauri/src/lib.rs`; `apps/professional-desktop/test/ontology-sidecar-registration.test.ts`; `apps/professional-desktop/test/integration/sidecar-ipc-stdio.test.ts` | Existing Effect RPC HTTP/stdio hosting, bearer-token boundary, stdio collision evidence, directional IPC framing bounds, and sidecar registration proof. |
-| Ontology workbench predecessor packet | `goals/ontology-workbench/{GOAL,PLAN,SPEC}.md`; `goals/ontology-workbench/history/2026-07-09-p4-sparql-reasoning.md` | Normative definitions of derived partitions, invalidation discipline, agent-ready deltas/query safeguards, and bounded reasoner intent. |
+| Ontology workbench predecessor packet | `goals/ontology-workbench/{GOAL,PLAN,SPEC}.md`; [goals/ontology-workbench/history/2026-07-09-p4-sparql-reasoning.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ontology-workbench/history/2026-07-09-p4-sparql-reasoning.md) | Normative definitions of derived partitions, invalidation discipline, agent-ready deltas/query safeguards, and bounded reasoner intent. |
 | Repo-local skill directory | `.claude/skills/` | Audited requested location. **NOT FOUND:** any `ontology-*` skill directory in this checkout. |
 
 ## 2. External research sources
@@ -62,7 +62,7 @@ recorded here.
 - Capture (append-only): `explorations/ontology-agent-surface/CAPTURE.md`.
 - In-repo findings: `explorations/ontology-agent-surface/RESEARCH.md`, section
   “2026-07-10 — In-repo capability inventory (codex)”.
-- Predecessor implementation contract: `goals/ontology-workbench/SPEC.md`,
+- Predecessor implementation contract: [goals/ontology-workbench/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ontology-workbench/SPEC.md),
   Constraints 13–17.
 - External landscape: `explorations/ontology-agent-surface/RESEARCH.md`,
   section "2026-07-10 — External landscape (claude, web)"; sources in

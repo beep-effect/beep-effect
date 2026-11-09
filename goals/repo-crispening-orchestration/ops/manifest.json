@@ -34,11 +34,6 @@
     "goals/repo-crispening-orchestration/research/decisions-locked.md",
     "goals/repo-crispening-orchestration/research/prompt-2026-07-05.md"
   ],
-  "researchReports": [
-    "research/SOURCES.md",
-    "research/decisions-locked.md",
-    "research/prompt-2026-07-05.md"
-  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -101,5 +96,13 @@
     "The SFV4-getsomes-struct sweep is reached before the Law 20/47 amendment has merged (D5 ordering).",
     "Required source files are missing or materially contradictory, the work would exceed named scope, verification requires unnamed credentials/cost/destructive side effects/policy approval, or the same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "legacy status: complete"
+  "statusNote": "legacy status: complete",
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/repo-crispening-orchestration",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "8d8b39ac8b6e1d0088feca356bcb24d162631efe",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

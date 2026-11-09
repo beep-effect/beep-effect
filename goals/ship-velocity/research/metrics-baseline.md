@@ -117,7 +117,7 @@ Baseline: **concurrency 1 is the only safe setting, and nothing enforces it mach
 - One full verify: lanes run serially (`collectStreamingStepFailures` hard-codes concurrency 1).
   Historical magnitude anchor: mean **1,022 s** with a 20% failure rate — but the timed
   subsample is only 39 of 101 observed `full:pre-push` runs, spanning 2026-06-15 → 2026-08-01
-  (`goals/quality-speedup/research/data/fleet-lane-observations.tsv`), entirely pre-#668
+  ([goals/quality-speedup/research/data/fleet-lane-observations.tsv](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/quality-speedup/research/data/fleet-lane-observations.tsv)), entirely pre-#668
   (2026-08-11 typecheck cost changes). Treat it as order-of-magnitude context; the first
   instrumented per-lane `durationMs` runs re-anchor wall time before any throughput comparison.
 - Estimated single-verify peak **30-45 GiB** (lint nested shards dominate); two unrestricted

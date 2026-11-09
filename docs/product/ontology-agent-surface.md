@@ -146,12 +146,12 @@ an undeclared cache behind the stateless v1 contract.
 
 ## Evidence
 
-- [`goals/ontology-agent-surface/history/2026-07-11-p1-toolkit.md`](../../goals/ontology-agent-surface/history/2026-07-11-p1-toolkit.md)
+- [goals/ontology-agent-surface/history/2026-07-11-p1-toolkit.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ontology-agent-surface/history/2026-07-11-p1-toolkit.md)
   records the schema, CAS, budget, real-delta, and real-engine tool proof.
-- [`goals/ontology-agent-surface/history/2026-07-11-p2-transport.md`](../../goals/ontology-agent-surface/history/2026-07-11-p2-transport.md)
+- [goals/ontology-agent-surface/history/2026-07-11-p2-transport.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ontology-agent-surface/history/2026-07-11-p2-transport.md)
   records auth, Origin policy, TierGate, attribution, and HTTP proof.
-- [`goals/ontology-agent-surface/history/2026-07-11-p2-live-client.log`](../../goals/ontology-agent-surface/history/2026-07-11-p2-live-client.log)
+- [goals/ontology-agent-surface/history/2026-07-11-p2-live-client.log](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ontology-agent-surface/history/2026-07-11-p2-live-client.log)
   records the launched-sidecar client conversation without bearer data.
-- [`goals/ontology-agent-surface/history/2026-07-11-p3-harden-close.md`](../../goals/ontology-agent-surface/history/2026-07-11-p3-harden-close.md)
+- [goals/ontology-agent-surface/history/2026-07-11-p3-harden-close.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ontology-agent-surface/history/2026-07-11-p3-harden-close.md)
   records benchmarks, the criterion-by-criterion acceptance sweep, local
   gates, and remaining host commands.

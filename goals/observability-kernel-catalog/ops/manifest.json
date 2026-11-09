@@ -34,13 +34,6 @@
     "goals/observability-kernel-catalog/GOAL.md",
     "goals/observability-kernel-catalog/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/SOURCES.md",
-    "research/cache-baseline-request-ai-metrics-catalog.json",
-    "research/cache-baseline-review-ai-metrics-catalog.md",
-    "research/catalog-design.md",
-    "research/p2b-design.md"
-  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -98,5 +91,13 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/observability-kernel-catalog",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "2d9b64e1f99bdac23eb6cd0cbafdc2901e574e26",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

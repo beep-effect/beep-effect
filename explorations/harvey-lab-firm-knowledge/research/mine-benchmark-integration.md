@@ -37,7 +37,7 @@ Three facts make this the right call rather than a research indulgence:
    client → docket_family → document spine. This is a re-parameterization, not a rewrite.
 3. **`goals/practice-kg-mcp` P5 is blocked on acceptance evidence that cannot be shared.**
    Its current gauntlet is five hand-graded questions against Tom's confidential corpus
-   (`goals/practice-kg-mcp/PLAN.md`, P5 row; `AC-2 not met`). C&H is MIT-licensed, public,
+   ([goals/practice-kg-mcp/PLAN.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/practice-kg-mcp/PLAN.md), P5 row; `AC-2 not met`). C&H is MIT-licensed, public,
    and comes with 3,098 rubric criteria and published frontier baselines. It converts a
    one-shot unshareable judgement call into a repeatable, CI-able, publishable number.
 
@@ -337,7 +337,7 @@ generator; `index/README.md` agent manual.
 **Why rank 1:** it is the only opportunity that produces an *external* number, and it
 unblocks `goals/practice-kg-mcp` P5, whose current acceptance evidence is five hand-graded
 questions on a corpus that can never be shared or regression-tested
-(`goals/practice-kg-mcp/PLAN.md`, P5 row). It also directly discharges the standing-test-asset
+([goals/practice-kg-mcp/PLAN.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/practice-kg-mcp/PLAN.md), P5 row). It also directly discharges the standing-test-asset
 decision (`DECISIONS.md`, 2026-08-08).
 
 **Evidence gate:** all-pass and criterion-pass for three conditions (no-index / index /

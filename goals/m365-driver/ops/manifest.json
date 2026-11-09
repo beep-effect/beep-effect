@@ -83,5 +83,12 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "researchReports": ["research/README.md"]
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/m365-driver",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "466218a50c1f613c060a177c457440ec171e19d0",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

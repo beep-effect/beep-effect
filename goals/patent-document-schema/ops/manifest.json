@@ -39,7 +39,7 @@
     "explorations/document-structure-ontologies/MAP.md",
     "explorations/document-structure-ontologies/DECISIONS.md"
   ],
-  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -90,5 +90,13 @@
   ],
   "researchReferences": [
     "../../explorations/document-structure-ontologies/research/SOURCES.md"
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/patent-document-schema",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "f1637ee84bcf88f3abe0f29e483f13249e81b883",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

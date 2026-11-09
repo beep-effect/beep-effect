@@ -358,7 +358,7 @@ JSDoc block.
 
 ### 5.1 `PracticeKgQuery` target shape
 
-`goals/practice-kg-mcp/SPEC.md` — mission `:6-12` (read-only, local-first
+[goals/practice-kg-mcp/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/practice-kg-mcp/SPEC.md) — mission `:6-12` (read-only, local-first
 stdio MCP server plus a portable data bundle); D-2 `:33` (deterministic
 docket-family spine "no LLM anywhere in this layer" + OA span-grounded
 candidate claims + email correspondence edges + corpus FTS); D-4 `:35`

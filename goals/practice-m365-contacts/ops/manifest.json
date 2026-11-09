@@ -36,12 +36,7 @@
     "goals/practice-m365-contacts/GOAL.md",
     "goals/practice-m365-contacts/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md",
-    "research/cache-baseline-request.json",
-    "research/cache-baseline-review.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -92,5 +87,13 @@
     "Required source files are missing or materially contradictory.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/practice-m365-contacts",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "10b4dbed81e208205f1e5a1d82d7c82be7f3f356",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

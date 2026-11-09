@@ -120,7 +120,7 @@ whose restore token has gone stale records an entirely black video that every
 downstream step accepts (deleting the `beep-qa` scene does NOT delete the
 input, so `CreateInput` never re-runs and no picker appears — remove the INPUT
 to force a fresh pick). Both failure modes are recorded as SYS-01/SYS-02 in
-`goals/recorded-qa-acceptance/ledgers/findings.md`.
+[goals/recorded-qa-acceptance/ledgers/findings.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/recorded-qa-acceptance/ledgers/findings.md).
 
 **Replacement: Lane C (Xvfb + XTEST), not yet productionized.** `Xvfb` +
 headed Chrome (`--ozone-platform=x11`) + `xdotool` XTEST input + `ffmpeg

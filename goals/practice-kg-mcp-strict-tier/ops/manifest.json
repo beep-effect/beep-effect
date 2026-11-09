@@ -34,13 +34,6 @@
     "goals/practice-kg-mcp-strict-tier/GOAL.md",
     "goals/practice-kg-mcp-strict-tier/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/SOURCES.md",
-    "research/cache-baseline-request-strict-tier-p1.json",
-    "research/cache-baseline-review-strict-tier-p1.md",
-    "research/source-survey.md",
-    "research/strict-tier-design.md"
-  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -95,5 +88,13 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/practice-kg-mcp-strict-tier",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "009973a758bd5ffc541842e5c04c0d03aa8d6435",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }
