@@ -1,0 +1,260 @@
+{
+  "schemaVersion": "claim-composition-measurement/v1",
+  "isolatedPair": {
+    "schemaVersion": "claim-focused-candidate-comparison/v1",
+    "baselineHead": "d12346471279e8ba71724efe676f36bb9e7355b5",
+    "candidateHead": "d8f489b81eabc5afcaad07830a8ead133338bdc8",
+    "baselineDigest": "78bad6122b09cd94a82aad6bb57e614c68eee7cee1626d0d88c27e09782e648d",
+    "candidateDigest": "141c026ebf212c0fa79b8ca2ce0847b2780a0534d74e8a50e5d7e93ea7c60d46",
+    "selected": 538,
+    "families": 60,
+    "beforeStrict": 46,
+    "afterStrict": 48,
+    "gained": ["16628033-root-1:5", "16628033-root-1:7"],
+    "lostMandatory46": [],
+    "retained46": 46,
+    "parsed": 537,
+    "abstained": 538,
+    "allSelectionsOrdinalsAndDigestsPreserved": true,
+    "candidateResultsSha256": "0d6410a950089406ad83f4cd60f7d7f5a264bee63e51a97d864d6c8e01876abd",
+    "changedSelectedScoreRows": 9,
+    "candidateDirectionAdmitted": true,
+    "goalComplete": false
+  },
+  "afterAcceptedMainIntegration": {
+    "sourceHead": "1df2c1775bb6c20986562e54471fa72d3f20aaf6",
+    "implementationDigest": "a72cf6a0d85364c092c72c2848a0dd21d239f396c15d60875320886b21ff6f95",
+    "selected": 538,
+    "families": 60,
+    "strict": 48,
+    "retainedMandatory48": 48,
+    "lostMandatory48": [],
+    "newComparedWithIsolatedCandidate": [],
+    "parsed": 537,
+    "abstained": 538,
+    "changedSelectedScoreRows": 0,
+    "sourceInputLedgersUnchanged": 60,
+    "resultsSha256": "8ff7f65c52da03ac898176fca35a4b035c8277f891a6f1a840c06c5b83bb0569",
+    "goalComplete": false
+  },
+  "passingClaimsNowMandatory": [
+    {
+      "familyId": "11575704-root-1",
+      "claimNumber": 9
+    },
+    {
+      "familyId": "11575704-root-1",
+      "claimNumber": 10
+    },
+    {
+      "familyId": "11575704-root-1",
+      "claimNumber": 11
+    },
+    {
+      "familyId": "12360911-root-1",
+      "claimNumber": 9
+    },
+    {
+      "familyId": "12447956-root-7",
+      "claimNumber": 13
+    },
+    {
+      "familyId": "12749812-root-1",
+      "claimNumber": 3
+    },
+    {
+      "familyId": "12749812-root-1",
+      "claimNumber": 4
+    },
+    {
+      "familyId": "12749812-root-1",
+      "claimNumber": 5
+    },
+    {
+      "familyId": "12749812-root-1",
+      "claimNumber": 6
+    },
+    {
+      "familyId": "12749812-root-1",
+      "claimNumber": 7
+    },
+    {
+      "familyId": "12749812-root-1",
+      "claimNumber": 10
+    },
+    {
+      "familyId": "12838228-root-1",
+      "claimNumber": 4
+    },
+    {
+      "familyId": "12838228-root-1",
+      "claimNumber": 9
+    },
+    {
+      "familyId": "12838228-root-1",
+      "claimNumber": 10
+    },
+    {
+      "familyId": "13062032-root-1",
+      "claimNumber": 3
+    },
+    {
+      "familyId": "13062032-root-1",
+      "claimNumber": 10
+    },
+    {
+      "familyId": "13062032-root-1",
+      "claimNumber": 11
+    },
+    {
+      "familyId": "13062032-root-1",
+      "claimNumber": 12
+    },
+    {
+      "familyId": "13070851-root-1",
+      "claimNumber": 1
+    },
+    {
+      "familyId": "13070851-root-1",
+      "claimNumber": 2
+    },
+    {
+      "familyId": "13070851-root-1",
+      "claimNumber": 3
+    },
+    {
+      "familyId": "13070851-root-1",
+      "claimNumber": 4
+    },
+    {
+      "familyId": "13070851-root-1",
+      "claimNumber": 5
+    },
+    {
+      "familyId": "13070851-root-1",
+      "claimNumber": 6
+    },
+    {
+      "familyId": "13070851-root-1",
+      "claimNumber": 7
+    },
+    {
+      "familyId": "13275397-root-1",
+      "claimNumber": 3
+    },
+    {
+      "familyId": "13275397-root-1",
+      "claimNumber": 4
+    },
+    {
+      "familyId": "13275397-root-1",
+      "claimNumber": 5
+    },
+    {
+      "familyId": "13275397-root-1",
+      "claimNumber": 6
+    },
+    {
+      "familyId": "13468456-root-1",
+      "claimNumber": 6
+    },
+    {
+      "familyId": "13484431-root-19",
+      "claimNumber": 23
+    },
+    {
+      "familyId": "13822885-root-1",
+      "claimNumber": 5
+    },
+    {
+      "familyId": "13822885-root-1",
+      "claimNumber": 9
+    },
+    {
+      "familyId": "13822885-root-1",
+      "claimNumber": 14
+    },
+    {
+      "familyId": "14262251-root-1",
+      "claimNumber": 3
+    },
+    {
+      "familyId": "14659462-root-1",
+      "claimNumber": 4
+    },
+    {
+      "familyId": "14659462-root-1",
+      "claimNumber": 11
+    },
+    {
+      "familyId": "14659462-root-1",
+      "claimNumber": 12
+    },
+    {
+      "familyId": "14659462-root-1",
+      "claimNumber": 17
+    },
+    {
+      "familyId": "15752303-root-1",
+      "claimNumber": 6
+    },
+    {
+      "familyId": "15958729-root-1",
+      "claimNumber": 3
+    },
+    {
+      "familyId": "15958729-root-1",
+      "claimNumber": 4
+    },
+    {
+      "familyId": "15958729-root-1",
+      "claimNumber": 5
+    },
+    {
+      "familyId": "15958729-root-1",
+      "claimNumber": 6
+    },
+    {
+      "familyId": "16135952-root-20",
+      "claimNumber": 23
+    },
+    {
+      "familyId": "16628033-root-1",
+      "claimNumber": 5
+    },
+    {
+      "familyId": "16628033-root-1",
+      "claimNumber": 7
+    },
+    {
+      "familyId": "18547866-root-1",
+      "claimNumber": 20
+    }
+  ],
+  "unitTests": {
+    "beforeIntegration": 838,
+    "afterIntegration": 977
+  },
+  "originalBindingsPreserved": 1213,
+  "previousOutputFilesPreservedBeforeIntegratedSeal": 968,
+  "numericalUsefulnessPassed": false,
+  "goalComplete": false,
+  "fullIndependentCohortQualified": false,
+  "alertDefectControlTruthQualified": false,
+  "runtimeBoundsAssetsAndScorerUnchanged": true,
+  "sourceReviews": [
+    {
+      "path": "/home/elpresidank/.cache/beep/claim-check-performance/composition-candidate-source-review-001.md",
+      "sha256": "70d56ae353a09447d00134fab633995cf638669ad617037f5e4abe77242177ba"
+    },
+    {
+      "path": "/home/elpresidank/.cache/beep/claim-check-performance/composition-candidate-closure-review-001.json",
+      "sha256": "c8c7b2714d921d285802f7bf64021f82875ecc0ec5b70c2cc73f2cfca5f54348"
+    },
+    {
+      "path": "/home/elpresidank/.cache/beep/claim-check-performance/composition-integrated-closure-review-001.json",
+      "sha256": "c5a5eee05a1be24027aecd6a3f056e09b7929f184af4371c0bb18f667973f596"
+    }
+  ],
+  "sourceOutputPreservation": "All60completeinput/source/qualificationledgers agree; priorresultsretained; verify-preservation.py passes1213originalbindings. Newoutputssealedseparately."
+}

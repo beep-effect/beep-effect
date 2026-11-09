@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "claim-source-body-first-return-observation/v1",
+  "diagnosticOnly": true,
+  "productGateCredit": false,
+  "sourceHead": "74c1f259bc2057c9a0e44945504ecd012053c184",
+  "shadowDigest": "73308d24666e96c43510aef5658ac377ca00fdbe70b07a79bc9f8df5e8cd83c2",
+  "families": 2,
+  "records": 22,
+  "inspectionCalls": 2,
+  "acquisitionCalls": 0,
+  "failedSourcePlanJoins": 14,
+  "successfulSourcePlanJoinsWithoutFailure": 2,
+  "roleUnavailableJoinsWithoutFailure": 6,
+  "canonicalReportPayloadsByteIdentical": 2,
+  "firstRejectingCalls": {
+    "function-unowned": 9,
+    "leaf-nominal-gap": 2,
+    "leaf-attachments": 1,
+    "leaf-predicate-attachments": 1,
+    "leaf-auxiliary-pp": 1
+  },
+  "targets": [
+    {
+      "familyId": "14262251-root-1",
+      "claimNumber": 1,
+      "sourceOrdinal": 1,
+      "strict": false,
+      "guard": "function-unowned",
+      "tokenOrdinal": 50,
+      "remainingWork": 234974
+    },
+    {
+      "familyId": "11575704-root-1",
+      "claimNumber": 1,
+      "sourceOrdinal": 1,
+      "strict": false,
+      "guard": "leaf-attachments",
+      "remainingWork": 225916
+    },
+    {
+      "familyId": "11575704-root-1",
+      "claimNumber": 11,
+      "sourceOrdinal": 11,
+      "strict": true,
+      "guard": "function-unowned",
+      "tokenOrdinal": 17,
+      "remainingWork": 254269
+    }
+  ],
+  "syntheticAttributionAssertions": 53,
+  "validatorControls": {
+    "positive": 1,
+    "negative": 17
+  },
+  "observerControls": {
+    "accepted": 1,
+    "rejected": 8
+  },
+  "independentPrelaunchAndActualReviewsPassed": true,
+  "runtimeFilePins": 1845,
+  "unchangedAssetPins": 94,
+  "bunVersion": "1.4.4",
+  "workCapsChanged": false,
+  "productionEdits": false,
+  "sourceContractProvedWrong": false,
+  "newCohortScore": false,
+  "goalComplete": false
+}

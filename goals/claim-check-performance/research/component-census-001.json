@@ -342,70 +342,30 @@
       "matchedElements": 867,
       "matchedEdges": 2330,
       "decision": "adopted: contract fix from review; roughly neutral, matched terms 7286 to 7285 and predicted terms 8604 to 8614"
-    },
-    {
-      "id": "e1",
-      "change": "a subject composing three or more determiner-led items becomes a container with one child per item; two-object lists stay flat",
-      "strict": 47,
-      "lost": 0,
-      "gained": 0,
-      "matchedElements": 901,
-      "matchedEdges": 2408,
-      "decision": "adopted"
-    },
-    {
-      "id": "e2",
-      "change": "strip dot labels such as a. from fallback element spans",
-      "strict": 47,
-      "lost": 0,
-      "gained": 0,
-      "matchedElements": 903,
-      "matchedEdges": 2422,
-      "decision": "rejected: breaks deliberate negatives such as names and out-of-sequence labels; would need proof of a complete consecutive series"
-    },
-    {
-      "id": "k1",
-      "change": "an element with a tagged finite verb or auxiliary is functional",
-      "strict": 48,
-      "lost": 0,
-      "gained": 1,
-      "matchedElements": 910,
-      "matchedEdges": 2487,
-      "decision": "adopted"
-    },
-    {
-      "id": "k2",
-      "change": "k1 plus an -s verb directly after a nominal counts even before a noun",
-      "strict": 48,
-      "lost": 0,
-      "gained": 0,
-      "matchedElements": 910,
-      "matchedEdges": 2490,
-      "decision": "adopted"
     }
   ],
   "adoptedReplay": {
-    "sourceCommit": "2eaee38e926",
+    "sourceCommit": "348d3d6e181",
     "kind": "development replay without a runtime-closure freeze; not a gate measurement",
-    "strict": 48,
+    "strict": 47,
     "parsed": 537,
     "abstained": 538,
     "complete": 0,
     "all46Retained": true,
-    "gained": ["14659462-root-1/6", "18547866-root-1/7"],
+    "gained": ["14659462-root-1/6"],
     "usefulnessGatesPassed": false,
     "evaluateGatesExit": 1,
     "planned": 61,
     "strictPlanned": 16,
-    "strictFallback": 32,
+    "strictFallback": 31,
     "components": {
       "strict": 47,
       "failed": 491,
       "predictionMissing": 1,
       "segmentation": {
-        "failedSpansNonExact": 250,
-        "failedSpansExact": 239,
-        "failedNodeExact": 216
+        "failedSpansNonExact": 249,
+        "failedSpansExact": 241,
+        "failedNodeExact": 199
       },
       "failedExactNodesAndTerms": 86,
       "termIdentity": {
@@ -413,15 +373,15 @@
         "anyFailedHeadOrDet": 36
       },
       "anySignature": {
-        "edge:antecedent": 465,
-        "edge:functional": 387,
+        "edge:antecedent": 467,
+        "edge:functional": 393,
         "term-anchor": 345,
-        "edge:part-of": 273,
-        "span": 250,
+        "edge:part-of": 291,
+        "span": 249,
         "edge:depends-on-element": 246,
+        "kind": 42,
         "head": 36,
-        "kind": 23,
-        "term-owner": 5
+        "term-owner": 3
       },
       "singleDefectFailures": {
         "edge:antecedent": 24,
@@ -430,8 +390,8 @@
       "edgeTotals": {
         "part-of": {
           "gold": 1437,
-          "pred": 1364,
-          "matched": 627
+          "pred": 1281,
+          "matched": 572
         },
         "depends-on-element": {
           "gold": 693,
@@ -441,12 +401,12 @@
         "antecedent": {
           "gold": 3545,
           "pred": 2973,
-          "matched": 1007
+          "matched": 913
         },
         "functional": {
           "gold": 1230,
-          "pred": 1152,
-          "matched": 409
+          "pred": 1086,
+          "matched": 398
         }
       },
       "termTotals": {
@@ -456,8 +416,8 @@
       },
       "elementTotals": {
         "gold": 1976,
-        "pred": 1901,
-        "spanMatched": 1328
+        "pred": 1818,
+        "spanMatched": 1292
       },
       "bySubgroup": {
         "dependent": {
@@ -492,11 +452,11 @@
         }
       },
       "kindConfusion": {
-        "limitation->functional-relation": 31,
-        "functional-relation->limitation": 21,
-        "sub-limitation->functional-relation": 6,
-        "functional-relation->sub-limitation": 4,
-        "sub-limitation->limitation": 3
+        "functional-relation->limitation": 39,
+        "limitation->functional-relation": 38,
+        "functional-relation->sub-limitation": 9,
+        "sub-limitation->limitation": 3,
+        "sub-limitation->functional-relation": 2
       }
     }
   },
@@ -524,13 +484,5 @@
         ]
       }
     ]
-  },
-  "wherein": {
-    "note": "Gold usually excludes wherein from spans. 67 selected claims include it and no discriminator is known; no same-family minimal pair was found, so this is not shown to be an information limit. Always excluding caps legacy strict at 471, above the 270 gate.",
-    "claimsIncluding": 67,
-    "claimsExcluding": 285
-  },
-  "compositionLists": {
-    "note": "Gold elements with a composition verb and a list: 41 nested, 46 flat, so a blanket split is unjustified."
   }
 }

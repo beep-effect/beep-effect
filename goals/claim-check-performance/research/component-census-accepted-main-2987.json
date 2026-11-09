@@ -1,0 +1,536 @@
+{
+  "schemaVersion": "claim-performance-component-census/v1",
+  "diagnosticOnly": true,
+  "roleGoldAvailable": false,
+  "policyGoldAvailable": false,
+  "note": "Observational development evidence over the exposed legacy cohort. Component counts overlap and are not causal attribution, recovered strict accuracy or an achievable ceiling. No claim text is recorded.",
+  "method": "research/component-census-001.script.ts.txt; recomputes unchanged scorer identities from one replay directory and frozen expected.json.",
+  "replayReconciliation": {
+    "selected": 538,
+    "strictAgreesWithRunner": true,
+    "strictRowsWithAnyDifference": 0,
+    "failedRowsWithNoDifference": 0
+  },
+  "baselineReplay": {
+    "sourceCommit": "8b09903d451",
+    "runner": "packages/law-practice/server/test/evaluation/inspection-tool.main.ts",
+    "kind": "development replay without a runtime-closure freeze",
+    "strict": 46,
+    "parsed": 537,
+    "abstained": 538,
+    "sameIdentitiesAs": "product-memo-coordinator-001 (b8ef2bb2cff)",
+    "lost": 0,
+    "gained": 0,
+    "seconds": 59
+  },
+  "baselineComponents": {
+    "strict": 46,
+    "failed": 492,
+    "predictionMissing": 1,
+    "segmentation": {
+      "failedSpansNonExact": 250,
+      "failedSpansExact": 241,
+      "failedNodeExact": 195
+    },
+    "failedExactNodesAndTerms": 55,
+    "termIdentity": {
+      "failedExactNodeAnchorsWithHeadOrDet": 1,
+      "anyFailedHeadOrDet": 34
+    },
+    "anySignature": {
+      "edge:antecedent": 466,
+      "edge:functional": 431,
+      "term-anchor": 402,
+      "edge:part-of": 296,
+      "span": 250,
+      "edge:depends-on-element": 241,
+      "kind": 46,
+      "head": 34,
+      "term-owner": 4
+    },
+    "singleDefectFailures": {
+      "edge:antecedent": 14,
+      "edge:depends-on-element": 14
+    },
+    "edgeTotals": {
+      "part-of": {
+        "gold": 1437,
+        "pred": 1247,
+        "matched": 541
+      },
+      "depends-on-element": {
+        "gold": 693,
+        "pred": 607,
+        "matched": 442
+      },
+      "antecedent": {
+        "gold": 3545,
+        "pred": 2924,
+        "matched": 869
+      },
+      "functional": {
+        "gold": 1230,
+        "pred": 1058,
+        "matched": 289
+      }
+    },
+    "termTotals": {
+      "gold": 8161,
+      "pred": 9244,
+      "matched": 7107
+    },
+    "elementTotals": {
+      "gold": 1976,
+      "pred": 1784,
+      "spanMatched": 1261
+    },
+    "bySubgroup": {
+      "dependent": {
+        "n": 478,
+        "strict": 45
+      },
+      "independent": {
+        "n": 60,
+        "strict": 1
+      }
+    },
+    "abstention": {
+      "status": {
+        "partial": 537,
+        "unchecked": 1
+      },
+      "coverageKindsAnyClaim": {
+        "policy-uncovered": 537,
+        "global-index-incomplete": 42,
+        "record-unavailable": 1
+      },
+      "findingRules": {
+        "pattern-not-covered/unsupported-determiner": 1741,
+        "pattern-not-covered/chain-work-limit": 1570,
+        "missing-antecedent/definite-without-introduction": 1521,
+        "pattern-not-covered/source-role-unresolved": 324,
+        "antecedent-outside-chain/outside-chain": 137,
+        "ambiguous-antecedent/multiple-introductions": 137,
+        "pattern-not-covered/source-index-incomplete": 70,
+        "number-mismatch/determiner-number-mismatch": 21,
+        "ambiguous-antecedent/ordinal-variants": 12
+      }
+    },
+    "kindConfusion": {
+      "functional-relation->limitation": 45,
+      "limitation->functional-relation": 39,
+      "functional-relation->sub-limitation": 11,
+      "sub-limitation->functional-relation": 2
+    }
+  },
+  "termShapeOnFailedClaims": {
+    "predOnlyDet": {
+      "bare": 1490,
+      "the": 423,
+      "a": 152,
+      "an": 31,
+      "said": 29,
+      "at-least-one": 11,
+      "plurality-of": 1
+    },
+    "goldOnlyDet": {
+      "the": 450,
+      "bare": 369,
+      "a": 159,
+      "an": 35,
+      "said": 32,
+      "at-least-one": 8,
+      "plurality-of": 1
+    },
+    "predOnlyWords": {
+      "1w": 871,
+      "4+w": 489,
+      "2w": 472,
+      "3w": 305
+    },
+    "goldOnlyWords": {
+      "4+w": 401,
+      "1w": 120,
+      "2w": 272,
+      "3w": 261
+    },
+    "predOnlyShape": {
+      "bare:isolated": 966,
+      "bare:sameEnd-otherLonger": 261,
+      "the:sameStart-otherShorter": 255,
+      "the:sameStart-otherLonger": 157,
+      "bare:sameEnd-otherShorter": 128,
+      "a:sameStart-otherShorter": 104,
+      "bare:overlap": 74,
+      "a:sameStart-otherLonger": 44,
+      "bare:sameStart-otherLonger": 31,
+      "bare:sameStart-otherShorter": 30,
+      "said:sameStart-otherShorter": 25,
+      "an:sameStart-otherShorter": 22,
+      "the:isolated": 10,
+      "an:sameStart-otherLonger": 9,
+      "at-least-one:sameStart-otherShorter": 6,
+      "a:sameEnd-otherLonger": 4
+    },
+    "goldOnlyShape": {
+      "the:sameStart-otherLonger": 255,
+      "bare:sameEnd-otherLonger": 195,
+      "the:sameStart-otherShorter": 157,
+      "a:sameStart-otherLonger": 104,
+      "bare:sameEnd-otherShorter": 49,
+      "a:sameStart-otherShorter": 44,
+      "bare:overlap": 38,
+      "bare:sameStart-otherShorter": 31,
+      "bare:sameStart-otherLonger": 30,
+      "bare:isolated": 26,
+      "said:sameStart-otherLonger": 25,
+      "the:isolated": 22,
+      "an:sameStart-otherLonger": 22,
+      "the:sameEnd-otherShorter": 15,
+      "an:sameStart-otherShorter": 9,
+      "at-least-one:sameStart-otherLonger": 6
+    },
+    "claimTermCause": {
+      "both": 315,
+      "only-extra-bare": 81,
+      "terms-exact": 89,
+      "only-extra-mixed": 2,
+      "only-missing": 4
+    }
+  },
+  "ancestorPropagation": {
+    "failedDependents": 432,
+    "localNodesExact": 185,
+    "localNodesAndTermsExact": 54,
+    "allLocalExact": 52,
+    "allLocalExactAndGoldAncestorNodeMissing": 33,
+    "allLocalExactNoMissingAncestor": 19,
+    "anyGoldAncestorNodeMissing": 307,
+    "noGoldAncestorNodeMissing": 125
+  },
+  "rootClaims": {
+    "n": 60,
+    "strict": 1,
+    "allElementsMatched": 11,
+    "medianElementRecall": 0.5,
+    "medianGoldEls": 7
+  },
+  "sourcePlanCoverage": {
+    "selected": 538,
+    "planned": 61,
+    "rolesCompiledWithoutPlan": 286,
+    "rolesNotCompiled": 191,
+    "independentClaimsPlanned": 0,
+    "independentClaims": 60,
+    "strictPlanned": 16,
+    "strictFallback": 30,
+    "probe": "development probe rebuilding lexical evidence with the production formula; decomposePreparedClaimRoles reports plans"
+  },
+  "firstRefusal": {
+    "method": "load-time source trace; first frame of the last unbroken refusal chain; heuristic, line numbers at 8b09903d451",
+    "plannerRefused": {
+      "structure:2026": 143,
+      "structure:3177": 57,
+      "structure:243": 20,
+      "structure:2084": 14,
+      "structure:689": 9,
+      "structure:1166": 8,
+      "structure:2123": 8,
+      "structure:1335": 7,
+      "structure:2196": 5,
+      "structure:1257": 4,
+      "structure:3179": 3,
+      "structure:246": 2,
+      "structure:2014": 2,
+      "structure:2665": 2,
+      "structure:1033": 1,
+      "structure:250": 1
+    },
+    "roleCompilationRefused": {
+      "behavior:212": 71,
+      "behavior:4419": 42,
+      "behavior:171": 21,
+      "behavior:2698": 11,
+      "behavior:4662": 10,
+      "behavior:3520": 9,
+      "behavior:2707": 7,
+      "behavior:5403": 7,
+      "behavior:3331": 5,
+      "behavior:2970": 3,
+      "behavior:2700": 2,
+      "behavior:2732": 1,
+      "behavior:2710": 1
+    }
+  },
+  "pairedCandidates": [
+    {
+      "id": "x1",
+      "change": "unowned VERB no longer refuses the source plan",
+      "strict": 46,
+      "lost": 0,
+      "gained": 0,
+      "matchedElements": 753,
+      "matchedEdges": 2143,
+      "decision": "rejected: no gain, claims stop at the next guard; the guard stays"
+    },
+    {
+      "id": "c1a",
+      "change": "POS walker replaces the historical nominal boundary",
+      "strict": 25,
+      "lost": 22,
+      "gained": 1,
+      "matchedElements": 776,
+      "matchedEdges": 2137,
+      "decision": "rejected: retention loss from provider mistags and abbreviations"
+    },
+    {
+      "id": "c1b",
+      "change": "POS only cuts overruns and extends headless nominals",
+      "strict": 46,
+      "lost": 1,
+      "gained": 1,
+      "matchedElements": 828,
+      "matchedEdges": 2212,
+      "decision": "superseded by agreement rule"
+    },
+    {
+      "id": "c2a",
+      "change": "c1b plus unrestricted parallel comma split",
+      "strict": 40,
+      "lost": 7,
+      "gained": 1,
+      "matchedElements": 877,
+      "matchedEdges": 2257,
+      "decision": "rejected: over-splits inner lists, retention loss"
+    },
+    {
+      "id": "c3a",
+      "change": "gated parallel split and agreement rule",
+      "strict": 44,
+      "lost": 3,
+      "gained": 1,
+      "matchedElements": 869,
+      "matchedEdges": 2315,
+      "decision": "superseded"
+    },
+    {
+      "id": "c3c",
+      "change": "unresolved-comma and absolute-clause gates, gerund functional kind",
+      "strict": 47,
+      "lost": 0,
+      "gained": 1,
+      "matchedElements": 858,
+      "matchedEdges": 2317,
+      "decision": "adopted, then revised by c4 after it cut correct mentions"
+    },
+    {
+      "id": "c4",
+      "change": "cut a trailing adjective only before ADP or PART; a word before a parenthetical reference numeral is nominal",
+      "strict": 47,
+      "lost": 0,
+      "gained": 0,
+      "matchedElements": 866,
+      "matchedEdges": 2331,
+      "decision": "adopted"
+    },
+    {
+      "id": "c5",
+      "change": "a part-of-speech fact applies only when both source offsets match",
+      "strict": 47,
+      "lost": 0,
+      "gained": 0,
+      "matchedElements": 867,
+      "matchedEdges": 2330,
+      "decision": "adopted: contract fix from review; roughly neutral, matched terms 7286 to 7285 and predicted terms 8604 to 8614"
+    },
+    {
+      "id": "e1",
+      "change": "a subject composing three or more determiner-led items becomes a container with one child per item; two-object lists stay flat",
+      "strict": 47,
+      "lost": 0,
+      "gained": 0,
+      "matchedElements": 901,
+      "matchedEdges": 2408,
+      "decision": "adopted"
+    },
+    {
+      "id": "e2",
+      "change": "strip dot labels such as a. from fallback element spans",
+      "strict": 47,
+      "lost": 0,
+      "gained": 0,
+      "matchedElements": 903,
+      "matchedEdges": 2422,
+      "decision": "rejected: breaks deliberate negatives such as names and out-of-sequence labels; would need proof of a complete consecutive series"
+    },
+    {
+      "id": "k1",
+      "change": "an element with a tagged finite verb or auxiliary is functional",
+      "strict": 48,
+      "lost": 0,
+      "gained": 1,
+      "matchedElements": 910,
+      "matchedEdges": 2487,
+      "decision": "adopted"
+    },
+    {
+      "id": "k2",
+      "change": "k1 plus an -s verb directly after a nominal counts even before a noun",
+      "strict": 48,
+      "lost": 0,
+      "gained": 0,
+      "matchedElements": 910,
+      "matchedEdges": 2490,
+      "decision": "adopted"
+    }
+  ],
+  "adoptedReplay": {
+    "sourceCommit": "2eaee38e926",
+    "kind": "development replay without a runtime-closure freeze; not a gate measurement",
+    "strict": 48,
+    "parsed": 537,
+    "abstained": 538,
+    "complete": 0,
+    "all46Retained": true,
+    "gained": ["14659462-root-1/6", "18547866-root-1/7"],
+    "usefulnessGatesPassed": false,
+    "evaluateGatesExit": 1,
+    "planned": 61,
+    "strictPlanned": 16,
+    "strictFallback": 32,
+    "components": {
+      "strict": 47,
+      "failed": 491,
+      "predictionMissing": 1,
+      "segmentation": {
+        "failedSpansNonExact": 250,
+        "failedSpansExact": 239,
+        "failedNodeExact": 216
+      },
+      "failedExactNodesAndTerms": 86,
+      "termIdentity": {
+        "failedExactNodeAnchorsWithHeadOrDet": 3,
+        "anyFailedHeadOrDet": 36
+      },
+      "anySignature": {
+        "edge:antecedent": 465,
+        "edge:functional": 387,
+        "term-anchor": 345,
+        "edge:part-of": 273,
+        "span": 250,
+        "edge:depends-on-element": 246,
+        "head": 36,
+        "kind": 23,
+        "term-owner": 5
+      },
+      "singleDefectFailures": {
+        "edge:antecedent": 24,
+        "edge:depends-on-element": 11
+      },
+      "edgeTotals": {
+        "part-of": {
+          "gold": 1437,
+          "pred": 1364,
+          "matched": 627
+        },
+        "depends-on-element": {
+          "gold": 693,
+          "pred": 614,
+          "matched": 447
+        },
+        "antecedent": {
+          "gold": 3545,
+          "pred": 2973,
+          "matched": 1007
+        },
+        "functional": {
+          "gold": 1230,
+          "pred": 1152,
+          "matched": 409
+        }
+      },
+      "termTotals": {
+        "gold": 8161,
+        "pred": 8614,
+        "matched": 7285
+      },
+      "elementTotals": {
+        "gold": 1976,
+        "pred": 1901,
+        "spanMatched": 1328
+      },
+      "bySubgroup": {
+        "dependent": {
+          "n": 478,
+          "strict": 46
+        },
+        "independent": {
+          "n": 60,
+          "strict": 1
+        }
+      },
+      "abstention": {
+        "status": {
+          "partial": 537,
+          "unchecked": 1
+        },
+        "coverageKindsAnyClaim": {
+          "policy-uncovered": 537,
+          "global-index-incomplete": 42,
+          "record-unavailable": 1
+        },
+        "findingRules": {
+          "missing-antecedent/definite-without-introduction": 1455,
+          "pattern-not-covered/chain-work-limit": 1394,
+          "pattern-not-covered/unsupported-determiner": 1258,
+          "pattern-not-covered/source-role-unresolved": 320,
+          "antecedent-outside-chain/outside-chain": 144,
+          "ambiguous-antecedent/multiple-introductions": 143,
+          "pattern-not-covered/source-index-incomplete": 68,
+          "number-mismatch/determiner-number-mismatch": 26,
+          "ambiguous-antecedent/ordinal-variants": 19
+        }
+      },
+      "kindConfusion": {
+        "limitation->functional-relation": 31,
+        "functional-relation->limitation": 21,
+        "sub-limitation->functional-relation": 6,
+        "functional-relation->sub-limitation": 4,
+        "sub-limitation->limitation": 3
+      }
+    }
+  },
+  "frozenClosureBlocker": "freeze-runtime-closure.py refuses the last admitted baseline because bun.lock changed on accepted main; a metadata admission is owed before any frozen measurement.",
+  "usefulnessEstablished": false,
+  "independentCorrectnessEstablished": false,
+  "siblingCombination": {
+    "pullRequest": 2980,
+    "kind": "development replay of this code plus the behavior change from #2980 at ac116008f23; not a gate measurement",
+    "results": [
+      {
+        "change": "#2980 unchanged on the first head of this PR",
+        "strict": 47,
+        "lost": 0,
+        "note": "its enumeration rule has no effect here"
+      },
+      {
+        "change": "#2980 with its grammar guard widened to any non-strict grammar, on 348d3d6e181",
+        "strict": 49,
+        "lostFrom46": 0,
+        "gained": [
+          "14659462-root-1/6",
+          "16628033-root-1/5",
+          "16628033-root-1/7"
+        ]
+      }
+    ]
+  },
+  "wherein": {
+    "note": "Gold usually excludes wherein from spans. 67 selected claims include it and no discriminator is known; no same-family minimal pair was found, so this is not shown to be an information limit. Always excluding caps legacy strict at 471, above the 270 gate.",
+    "claimsIncluding": 67,
+    "claimsExcluding": 285
+  },
+  "compositionLists": {
+    "note": "Gold elements with a composition verb and a list: 41 nested, 46 flat, so a blanket split is unjustified."
+  }
+}
