@@ -192,7 +192,7 @@ export class AlchemyPostgresConfig extends S.Opaque<AlchemyPostgresConfig, { rea
       S.withConstructorDefault(Effect.succeed(30_000)),
       S.annotateKey({
         description:
-          "How long a claimed outbox row or backfill job stays leased to the host running it; a host that closes frees its claims at once, and a crashed host's are retried once the lease lapses.",
+          "How long a claimed outbox row or backfill job stays leased to the host running it; a host that closes frees the outbox rows it claimed at once, and anything else is retried once the lease lapses.",
       })
     ),
     deliveryBatchSize: S.Int.check(S.isGreaterThan(0)).pipe(

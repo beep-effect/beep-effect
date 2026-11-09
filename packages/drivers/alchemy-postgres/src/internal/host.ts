@@ -72,7 +72,7 @@ const retryCeilingMillis = Duration.toMillis(Duration.minutes(1));
 const retryExponentCap = 30;
 /** How long a failed backfill job waits before it runs again. */
 const jobRetryMillis = Duration.toMillis(Duration.seconds(1));
-/** How long an interrupted pass spends freeing its claims before it leaves them to lapse with their lease. */
+/** How long an interrupted delivery pass spends freeing its rows before it leaves them to lapse with their lease. */
 const claimReleaseBudget = Duration.seconds(5);
 const byPosition = Order.mapInput(Order.Number, (row: DeliveryRow) => row.position);
 
@@ -378,29 +378,10 @@ export const makeContext = (deps: HostDeps) => {
     ]);
   };
 
-  /**
-   * Free what an interrupted pass claimed, as on host close, instead of making the next host wait up to
-   * `leaseMillis` for it. An interruption is not a failed run, so attempts and due times stay as they were.
-   * The release is bounded so an unreachable database cannot hold up close; the lease remains the fallback.
-   */
-  const releaseOnInterrupt = <A, E>(exit: Exit.Exit<A, E>, free: Effect.Effect<void, SqlError.SqlError>) =>
-    Exit.hasInterrupts(exit)
-      ? free.pipe(
-          Effect.interruptible,
-          Effect.timeoutOption(claimReleaseBudget),
-          Effect.asVoid,
-          Effect.catchCause(logFailure("claim release"))
-        )
-      : Effect.void;
-
-  /**
-   * Claim due jobs, run each, and drop a job only when no newer request came in while it ran. A job row has no
-   * owner column, so the claim's own `locked_until` marks it as this pass's when it is released.
-   */
+  /** Claim due jobs, run each, and drop a job only when no newer request came in while it ran. */
   const jobPass = Effect.gen(function* () {
     const at = yield* now;
-    const lockedUntil = at + config.leaseMillis;
-    const claimJobs = sql`UPDATE ${sql(tables.backfillJob)} SET locked_until = ${lockedUntil}
+    const claimed = yield* sql`UPDATE ${sql(tables.backfillJob)} SET locked_until = ${at + config.leaseMillis}
       WHERE (model, address, job_id) IN (
         SELECT model, address, job_id FROM ${sql(tables.backfillJob)}
         WHERE model = ${modelName} AND due_at <= ${at} AND locked_until <= ${at}
@@ -408,48 +389,37 @@ export const makeContext = (deps: HostDeps) => {
         FOR UPDATE SKIP LOCKED
       )
       RETURNING address, job_id, revision`.pipe(Effect.flatMap(decodeJobRefs));
-    const runJobs = (claimed: ReadonlyArray<typeof JobRef.Type>) =>
-      Effect.forEach(
-        claimed,
-        Effect.fnUntraced(function* ({ address, job_id, revision }) {
-          const where = sql`model = ${modelName} AND address = ${address} AND job_id = ${job_id}`;
-          const exit = yield* O.match(jobRunner(address), {
-            // A role no longer in the model: nothing to run.
-            onNone: () => Effect.exit(Effect.void),
-            onSome: (runJob) =>
-              Effect.exit(
-                runJob(job_id).pipe(
-                  Effect.withSpan("AlchemyPostgres.Backfill.runJob", {
-                    attributes: { [JobRoleAttribute]: roleOf(address) },
-                  })
-                )
-              ),
-          });
-          if (Exit.isSuccess(exit)) {
-            yield* sql`DELETE FROM ${sql(tables.backfillJob)} WHERE ${where} AND revision = ${revision}`;
-            yield* sql`UPDATE ${sql(tables.backfillJob)} SET locked_until = 0 WHERE ${where}`;
-            return;
-          }
-          yield* Effect.logError(`alchemy-postgres ${modelName} backfill job failed`).pipe(
-            Effect.annotateLogs({ model: modelName, role: roleOf(address), failure: causeTagOf(exit.cause) })
-          );
-          const later = yield* now;
-          yield* sql`UPDATE ${sql(tables.backfillJob)} SET locked_until = 0, due_at = ${later + jobRetryMillis}
-              WHERE ${where}`;
-        }),
-        { discard: true }
-      ).pipe(Effect.as(A.isReadonlyArrayNonEmpty(claimed)));
-    const releaseJobs = (claimed: ReadonlyArray<typeof JobRef.Type>) =>
-      Effect.forEach(
-        claimed,
-        ({ address, job_id }) => sql`UPDATE ${sql(tables.backfillJob)} SET locked_until = 0
-          WHERE model = ${modelName} AND address = ${address} AND job_id = ${job_id} AND locked_until = ${lockedUntil}`,
-        { discard: true }
-      );
-    // The claim is uninterruptible, so an interrupted pass always knows which jobs it holds.
-    return yield* Effect.acquireUseRelease(claimJobs, runJobs, (claimed, exit) =>
-      releaseOnInterrupt(exit, releaseJobs(claimed))
+    yield* Effect.forEach(
+      claimed,
+      Effect.fnUntraced(function* ({ address, job_id, revision }) {
+        const where = sql`model = ${modelName} AND address = ${address} AND job_id = ${job_id}`;
+        const exit = yield* O.match(jobRunner(address), {
+          // A role no longer in the model: nothing to run.
+          onNone: () => Effect.exit(Effect.void),
+          onSome: (runJob) =>
+            Effect.exit(
+              runJob(job_id).pipe(
+                Effect.withSpan("AlchemyPostgres.Backfill.runJob", {
+                  attributes: { [JobRoleAttribute]: roleOf(address) },
+                })
+              )
+            ),
+        });
+        if (Exit.isSuccess(exit)) {
+          yield* sql`DELETE FROM ${sql(tables.backfillJob)} WHERE ${where} AND revision = ${revision}`;
+          yield* sql`UPDATE ${sql(tables.backfillJob)} SET locked_until = 0 WHERE ${where}`;
+          return;
+        }
+        yield* Effect.logError(`alchemy-postgres ${modelName} backfill job failed`).pipe(
+          Effect.annotateLogs({ model: modelName, role: roleOf(address), failure: causeTagOf(exit.cause) })
+        );
+        const later = yield* now;
+        yield* sql`UPDATE ${sql(tables.backfillJob)} SET locked_until = 0, due_at = ${later + jobRetryMillis}
+            WHERE ${where}`;
+      }),
+      { discard: true }
     );
+    return A.isReadonlyArrayNonEmpty(claimed);
   }).pipe(orDieAs("backfill")(tables.backfillJob));
 
   /** Rows after a cursor, then every page committed later: a live tail polled at `pollMillis`. */
@@ -641,19 +611,31 @@ export const makeContext = (deps: HostDeps) => {
         ),
     });
 
+  /**
+   * Free the rows an interrupted pass claimed, as on host close, instead of making the next host wait up to
+   * `leaseMillis` for them. An interruption is not a failed attempt, so attempts and retry times stay as they
+   * were. The release is bounded so an unreachable database cannot hold up close; the lease remains the fallback.
+   */
+  const releaseOnInterrupt = (rows: ReadonlyArray<DeliveryRow>, exit: Exit.Exit<boolean, SqlError.SqlError>) =>
+    Exit.hasInterrupts(exit)
+      ? release(rows).pipe(
+          Effect.interruptible,
+          Effect.timeoutOption(claimReleaseBudget),
+          Effect.asVoid,
+          Effect.catchCause(logFailure("delivery release"))
+        )
+      : Effect.void;
+
   /** One pass: claim, deliver; another pass follows while every claimed row was delivered. */
   const deliveryPass = Effect.gen(function* () {
     const at = yield* now;
-    return yield* A.match(A.fromIterable(MutableHashMap.keys(delivers)), {
-      onEmpty: () => Effect.succeed(false),
-      // The claim is uninterruptible, so an interrupted pass always knows which rows it holds.
-      onNonEmpty: (hosted) =>
-        Effect.acquireUseRelease(
-          claim(at, hosted),
-          (rows) => Effect.map(deliverAll(rows), (completed) => completed && A.isReadonlyArrayNonEmpty(rows)),
-          (rows, exit) => releaseOnInterrupt(exit, release(rows))
-        ),
-    });
+    const hosted = A.fromIterable(MutableHashMap.keys(delivers));
+    // The claim is uninterruptible, so an interrupted pass always knows which rows it holds.
+    return yield* Effect.acquireUseRelease(
+      A.isReadonlyArrayNonEmpty(hosted) ? claim(at, hosted) : Effect.succeed(A.empty<DeliveryRow>()),
+      (rows) => Effect.map(deliverAll(rows), (completed) => completed && A.isReadonlyArrayNonEmpty(rows)),
+      releaseOnInterrupt
+    );
   }).pipe(orDieAs("deliver")(tables.delivery));
 
   /** Log a background failure; the next pass, poll or wake runs the work again. */
