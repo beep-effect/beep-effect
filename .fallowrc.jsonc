@@ -354,9 +354,9 @@
     "maxCyclomatic": 20,
     "maxCrap": 30,
     "maxUnitSize": 60,
-    // The manual TS6-bridge tools (goal codemod, JSDoc census) entered discovery
-    // only so dead-code analysis sees the bridge's consumers; complexity scope
-    // stays as on main, where both paths were never health-scored.
+    // The archived schema-opaque goal codemod enters discovery only so dead-code
+    // analysis sees its ts-morph consumer; complexity scope stays as on main,
+    // where it was never health-scored.
     "ignore": [
       ".claude/skills/shadcn/**",
       // Preserve the existing generated-source renderer scoring scope.
