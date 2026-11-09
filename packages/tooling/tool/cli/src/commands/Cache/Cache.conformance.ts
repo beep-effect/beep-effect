@@ -440,8 +440,7 @@ export const runCacheConformance = Effect.fn("CacheConformance.run")(function* (
  * @category constants
  * @since 0.0.0
  */
-export const cacheConformanceLoadEnvelopePath =
-  "goals/turborepo-cache-conformance/research/load-envelope-2026-10-23.json";
+export const cacheConformanceLoadEnvelopePath = "standards/cache-conformance/load-envelope-2026-10-23.json";
 
 /**
  * Read and decode the measured load envelope.

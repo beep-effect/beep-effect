@@ -94,5 +94,6 @@
     "The stop rule fires: two consecutive cycles' best probe-gated candidates each under ~30s full-sweep saving.",
     "The loop's own research cost exceeds its measured wins for a full cycle.",
     "A cycle would ship a new always-on quality gate without a cost-vs-catch case."
-  ]
+  ],
+  "retentionReason": "Retained: ci-runner-security.test reads ops/runner-burst to prove the retired launcher stays retired, and its shell script stays under the tracked-shell law only inside goals/."
 }

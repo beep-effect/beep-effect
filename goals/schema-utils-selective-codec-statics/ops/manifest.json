@@ -37,22 +37,7 @@
     "goals/schema-utils-selective-codec-statics/research/SOURCES.md",
     "goals/schema-utils-selective-codec-statics/research/OPPORTUNITIES.md"
   ],
-  "researchReports": [
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md",
-    "research/closing-attachment-inventory.json",
-    "research/closing-census.json",
-    "research/full-consumer-attachment-inventory.json",
-    "research/migration-inventory.json",
-    "research/scratchpad-closing-attachment-inventory.json",
-    "research/scratchpad-migration-inventory.json",
-    "research/scripts/closing-census.ts",
-    "research/scripts/inventory.ts",
-    "research/scripts/migrate-legacy-static-reads.ts",
-    "research/scripts/migrate-unknown-json.ts",
-    "research/scripts/migrate.ts",
-    "research/scripts/remove-unused-migration-imports.ts"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -116,5 +101,13 @@
     "The implementation would exceed named scope.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/schema-utils-selective-codec-statics",
+    "commit": "94b8d15cd23bd07a95f6f1ab0680d24b94c5103b",
+    "contentHash": "10c461b1d9851e88a97c435c380281bbcaf71c85",
+    "archivedAt": "2026-11-09T03:19:32.081Z",
+    "sourceCommit": "e3a763cad8722d5f47587c44530cf7bf44e5bc52"
+  }
 }

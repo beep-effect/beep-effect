@@ -6,7 +6,7 @@ S36 assigns the fifteen size-only unmet predecessor outcomes to this active,
 executable successor. Finish each issue's acceptance without inventory growth
 (S31) or parking executable work (S23). Opening the packet is not source completion.
 The predecessor remains completed-retained after #1884 (merge e4d6f44aa8).
-Its [acceptance receipt](../repository-simplification-confidence/history/receipts/stage-6-closeout-acceptance.md)
+Its [acceptance receipt](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-6-closeout-acceptance.md)
 retains the original unmet outcomes and evidence limits.
 
 The fifteen workstreams below are the complete owned scope. The eighteen
@@ -30,10 +30,10 @@ not authorize a live native apply.
 | repair-decision-3 | Six open PRs maximum across the entire repository, including drafts and other programs; usually one or two residue lanes fit. Recount before admission. | Assigned dispatch / fleet admission ruling |
 
 RSC-F scope rulings remain binding on #1855, #1869 and #1879/#1880/#1881:
-[RSC-F-S31](../repository-simplification-confidence/SPEC.md#rsc-f-s31-2026-10-15-zero-inventory-growth)
+[RSC-F-S31](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/SPEC.md#rsc-f-s31-2026-10-15-zero-inventory-growth)
 puts F-S31-EV010 in detector work, never new exceptions.
 RSC-F-BOUNDARY, RSC-F-ROUTING, RSC-F-WRITER and RSC-F-DISPATCH in the
-[predecessor SPEC](../repository-simplification-confidence/SPEC.md) preserve frozen
+[predecessor SPEC](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/SPEC.md) preserve frozen
 provenance, current model-manifest ownership and lane-only authority. Owned spans
 must preserve both non-owned parsed fields and bytes, permissions, links and
 backup/journal recovery. RSC-F-SHELL-CHECK-ONLY keeps shell targets read-only until
@@ -55,7 +55,7 @@ Every workstream follows S11/S23/S30/S31/S34/S36 and the admission cap above.
 
 Lane: `residue-a-retire`. Owner of record: rsc-a-retire / program driver.
 Issue: [#1851](https://github.com/beep-effect/beep-effect/issues/1851).
-Source evidence: `goals/repository-simplification-confidence/history/handoffs/rsc-a-retire-2026-10-14.md` ([read](../repository-simplification-confidence/history/handoffs/rsc-a-retire-2026-10-14.md)).
+Source evidence: [goals/repository-simplification-confidence/history/handoffs/rsc-a-retire-2026-10-14.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/handoffs/rsc-a-retire-2026-10-14.md) ([read](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/handoffs/rsc-a-retire-2026-10-14.md)).
 
 Context: tools/skillopt (54 files), three plugin bundles (136 files), repository Impeccable (303 Claude/GitHub skill files), SST wiring and remaining exclusions still exist at main 040c69d557. #1584 closes Knip only. The empty .ai/mcp file and ledger exposure are handled in closeout.
 
@@ -69,7 +69,7 @@ Status: complete. The closeout census at `35faa4a00d` classifies all 194 tracked
 
 Lane: `residue-patch-proofs`. Owner of record: rsc-a-retire with dependency owners.
 Issue: [#1853](https://github.com/beep-effect/beep-effect/issues/1853).
-Source evidence: `goals/repository-simplification-confidence/history/receipts/stage-5-acceptance.md#retained-patches` ([read](../repository-simplification-confidence/history/receipts/stage-5-acceptance.md#retained-patches)).
+Source evidence: [goals/repository-simplification-confidence/history/receipts/stage-5-acceptance.md#retained-patches](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-5-acceptance.md#retained-patches) ([read](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-5-acceptance.md#retained-patches)).
 
 Context: All five fail-unpatched/pass-patched proofs remain pending. C moved ONNX testing; that does not establish the five-way counterfactual proof.
 
@@ -83,7 +83,7 @@ Status: complete in the `residue-patch-proofs` PR. Record: `history/receipts/pat
 
 Lane: `residue-detectors`. Owner of record: rsc-b-standards with V cohort owners.
 Issue: [#1855](https://github.com/beep-effect/beep-effect/issues/1855).
-Source evidence: `goals/repository-simplification-confidence/history/receipts/stage-4-detectors.md` ([read](../repository-simplification-confidence/history/receipts/stage-4-detectors.md)).
+Source evidence: [goals/repository-simplification-confidence/history/receipts/stage-4-detectors.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-4-detectors.md) ([read](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-4-detectors.md)).
 
 Context: The refresh #1738 and codec repairs #1616 do not close FP-1..FP-7, source law debt, inline directives or individual exception provenance. Main snapshot has 751 open Vitest rows and 1189 exception rows; schema-first has 324 entries.
 
@@ -105,7 +105,7 @@ Closeout (`history/receipts/detectors-closeout.md`): `lint roadmap-refs` takes a
 
 Lane: `residue-guidance`. Owner of record: rsc-b-standards with canonical document owners.
 Issue: [#1856](https://github.com/beep-effect/beep-effect/issues/1856).
-Source evidence: `goals/repository-simplification-confidence/history/handoffs/rsc-b-standards-2026-10-14.md` ([read](../repository-simplification-confidence/history/handoffs/rsc-b-standards-2026-10-14.md)).
+Source evidence: [goals/repository-simplification-confidence/history/handoffs/rsc-b-standards-2026-10-14.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/handoffs/rsc-b-standards-2026-10-14.md) ([read](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/handoffs/rsc-b-standards-2026-10-14.md)).
 
 Context: stage-4-standards-docs.md is absent. Forty-four guidance previews and 457 inline directive proposals remain private/unapplied; the checked-in JSDoc snapshot is not a current zero scan.
 
@@ -119,7 +119,7 @@ Status: complete. Wave 1 classified all 342 guidance artifacts at `e3ee18dfd7` (
 
 Lane: `residue-catalog`. Owner of record: rsc-h1-catalog.
 Issue: [#1860](https://github.com/beep-effect/beep-effect/issues/1860).
-Source evidence: `goals/repository-simplification-confidence/history/receipts/stage-4-h1-catalog.md` ([read](../repository-simplification-confidence/history/receipts/stage-4-h1-catalog.md)).
+Source evidence: [goals/repository-simplification-confidence/history/receipts/stage-4-h1-catalog.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-4-h1-catalog.md) ([read](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-4-h1-catalog.md)).
 
 Context: #1562 only renews OSV exceptions. Thirteen original removal candidates plus derived pdfjs-dist, inert jaeger override, and the detection gap remain in the H1 receipt.
 
@@ -133,7 +133,7 @@ Status: complete in the third A-train PR. Record: `history/receipts/catalog-remo
 
 Lane: `residue-hold-exits`. Owner of record: rsc-h1-catalog with dependency owners.
 Issue: [#1861](https://github.com/beep-effect/beep-effect/issues/1861).
-Source evidence: `goals/repository-simplification-confidence/history/receipts/stage-4-h1-catalog.md` ([read](../repository-simplification-confidence/history/receipts/stage-4-h1-catalog.md)).
+Source evidence: [goals/repository-simplification-confidence/history/receipts/stage-4-h1-catalog.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-4-h1-catalog.md) ([read](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-4-h1-catalog.md)).
 
 Context: The comprehensive override/patch hold register and met-exit compatibility wave are pending. OSV renewals end 2026-10-30; do not silently renew indefinitely. The historical tsgo bump target is stale against current main.
 
@@ -149,7 +149,7 @@ Status: complete in the `residue-hold-exits` PR. Record: `history/receipts/hold-
 
 Lane: `residue-telemetry-completeness`. Owner of record: repo-ai-metrics / H3 owner.
 Issue: [#1869](https://github.com/beep-effect/beep-effect/issues/1869).
-Source evidence: `goals/repository-simplification-confidence/history/handoffs/rsc-h3-telemetry-2026-10-15.md` ([read](../repository-simplification-confidence/history/handoffs/rsc-h3-telemetry-2026-10-15.md)).
+Source evidence: [goals/repository-simplification-confidence/history/handoffs/rsc-h3-telemetry-2026-10-15.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/handoffs/rsc-h3-telemetry-2026-10-15.md) ([read](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/handoffs/rsc-h3-telemetry-2026-10-15.md)).
 
 Context: H3-R3-001 remains a tracked P2 in the round-3 handoff; current storage completeness may be conflated with whether a retained stamp qualifies.
 
@@ -163,7 +163,7 @@ Status: complete in the `residue-telemetry-completeness` PR. Record: `history/re
 
 Lane: `residue-build-restore`. Owner of record: shared build/cache owners.
 Issue: [#1874](https://github.com/beep-effect/beep-effect/issues/1874).
-Source evidence: `goals/repository-simplification-confidence/history/handoffs/rsc-g-storage-2026-10-09.md` ([read](../repository-simplification-confidence/history/handoffs/rsc-g-storage-2026-10-09.md)).
+Source evidence: [goals/repository-simplification-confidence/history/handoffs/rsc-g-storage-2026-10-09.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/handoffs/rsc-g-storage-2026-10-09.md) ([read](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/handoffs/rsc-g-storage-2026-10-09.md)).
 
 Context: G cold fixture required clearing its owned incremental state as well as dist; earlier incomplete artifact remains quarantined. Shared generated-script/output coupling is unresolved.
 
@@ -182,7 +182,7 @@ manifest for `@beep/types` and `@beep/fc-runs`. Record: `history/receipts/build-
 
 Lane: `residue-vitest-canon`. Owner of record: effect-vitest-canon / lane V owner.
 Issue: [#1875](https://github.com/beep-effect/beep-effect/issues/1875).
-Source evidence: `goals/repository-simplification-confidence/history/receipts/stage-4-vitest-reconciliation.md` ([read](../repository-simplification-confidence/history/receipts/stage-4-vitest-reconciliation.md)).
+Source evidence: [goals/repository-simplification-confidence/history/receipts/stage-4-vitest-reconciliation.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-4-vitest-reconciliation.md) ([read](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-4-vitest-reconciliation.md)).
 
 Context: #1575 integrates and preserves work; R102 still requires the canon goal to reach completed-retained. Current snapshot has 751 open rows.
 
@@ -207,7 +207,7 @@ takes the resource-lifetime families (`history/receipts/vitest-canon-wave-4.md`)
 
 Lane: `residue-rdf-pacer`. Owner of record: lane V with RDF/Pacer package owners.
 Issue: [#1876](https://github.com/beep-effect/beep-effect/issues/1876).
-Source evidence: `goals/repository-simplification-confidence/history/receipts/stage-4-vitest-reconciliation.md#r105-review-and-repair-preview` ([read](../repository-simplification-confidence/history/receipts/stage-4-vitest-reconciliation.md#r105-review-and-repair-preview)).
+Source evidence: [goals/repository-simplification-confidence/history/receipts/stage-4-vitest-reconciliation.md#r105-review-and-repair-preview](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-4-vitest-reconciliation.md#r105-review-and-repair-preview) ([read](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-4-vitest-reconciliation.md#r105-review-and-repair-preview)).
 
 Context: R105 preview and original patches are retained but full runtime/Fallow/terminal review is unqualified in the reconciliation receipt.
 
@@ -225,7 +225,7 @@ patches are unchanged. Record: `history/receipts/rdf-pacer-ports.md`.
 
 Lane: `residue-completion-evidence`. Owner of record: Goals completion evidence owner.
 Issue: [#1878](https://github.com/beep-effect/beep-effect/issues/1878).
-Source evidence: `goals/repository-simplification-confidence/history/receipts/stage-4-completion-receipts.md` ([read](../repository-simplification-confidence/history/receipts/stage-4-completion-receipts.md)).
+Source evidence: [goals/repository-simplification-confidence/history/receipts/stage-4-completion-receipts.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-4-completion-receipts.md) ([read](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-4-completion-receipts.md)).
 
 Context: #1574/#1744 intentionally return unknown for incomplete historical ruleset inventories; three advisories are reconciled without fabricating green completion. Proof-fact/packet-history providers remain unknown.
 
@@ -244,7 +244,7 @@ merge-time evidence can verify, and each is listed with its reason. Record:
 
 Lane: `residue-target-exchange`. Owner of record: ModelsApply / F owner.
 Issue: [#1879](https://github.com/beep-effect/beep-effect/issues/1879).
-Source evidence: `goals/repository-simplification-confidence/SPEC.md#f-r3-bounded-shell-links--panel-round-3-fix-wave-2026-10-15` ([read](../repository-simplification-confidence/SPEC.md#f-r3-bounded-shell-links--panel-round-3-fix-wave-2026-10-15)).
+Source evidence: [goals/repository-simplification-confidence/SPEC.md#f-r3-bounded-shell-links--panel-round-3-fix-wave-2026-10-15](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/SPEC.md#f-r3-bounded-shell-links--panel-round-3-fix-wave-2026-10-15) ([read](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/SPEC.md#f-r3-bounded-shell-links--panel-round-3-fix-wave-2026-10-15)).
 
 Context: F3-F2 remains an advisory protocol follow-up: service-wide capability caching does not prove target filesystem exchange support.
 
@@ -267,7 +267,7 @@ Race and rollback regressions are unchanged. Record:
 
 Lane: `residue-exchange-recovery`. Owner of record: ModelsApply / F owner.
 Issue: [#1880](https://github.com/beep-effect/beep-effect/issues/1880).
-Source evidence: `goals/repository-simplification-confidence/SPEC.md#f-r3-bounded-shell-links--panel-round-3-fix-wave-2026-10-15` ([read](../repository-simplification-confidence/SPEC.md#f-r3-bounded-shell-links--panel-round-3-fix-wave-2026-10-15)).
+Source evidence: [goals/repository-simplification-confidence/SPEC.md#f-r3-bounded-shell-links--panel-round-3-fix-wave-2026-10-15](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/SPEC.md#f-r3-bounded-shell-links--panel-round-3-fix-wave-2026-10-15) ([read](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/SPEC.md#f-r3-bounded-shell-links--panel-round-3-fix-wave-2026-10-15)).
 
 Context: R3-GROK-01 remains an advisory: crash-state journaling and restart fixtures were not part of the bounded P1 repairs.
 
@@ -290,7 +290,7 @@ staged content. A real SIGKILL matrix covers every crash point. Record:
 
 Lane: `residue-skill-publication`. Owner of record: Skills projection owner / F.
 Issue: [#1881](https://github.com/beep-effect/beep-effect/issues/1881).
-Source evidence: `goals/repository-simplification-confidence/SPEC.md#f-r3-bounded-shell-links--panel-round-3-fix-wave-2026-10-15` ([read](../repository-simplification-confidence/SPEC.md#f-r3-bounded-shell-links--panel-round-3-fix-wave-2026-10-15)).
+Source evidence: [goals/repository-simplification-confidence/SPEC.md#f-r3-bounded-shell-links--panel-round-3-fix-wave-2026-10-15](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/SPEC.md#f-r3-bounded-shell-links--panel-round-3-fix-wave-2026-10-15) ([read](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/SPEC.md#f-r3-bounded-shell-links--panel-round-3-fix-wave-2026-10-15)).
 
 Context: R3-GROK-03 remains an advisory: file/directory skill publication retains the documented POSIX rename-window limitation.
 
@@ -314,7 +314,7 @@ crash point for both kinds. Record: `history/receipts/skill-publication.md`.
 
 Lane: `residue-dependency-review`. Owner of record: CI governance / consolidated burn-down owner.
 Issue: [#1882](https://github.com/beep-effect/beep-effect/issues/1882).
-Source evidence: `goals/repository-simplification-confidence/history/handoffs/rsc-burndown-2026-10-09.md` ([read](../repository-simplification-confidence/history/handoffs/rsc-burndown-2026-10-09.md)).
+Source evidence: [goals/repository-simplification-confidence/history/handoffs/rsc-burndown-2026-10-09.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/handoffs/rsc-burndown-2026-10-09.md) ([read](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/handoffs/rsc-burndown-2026-10-09.md)).
 
 Context: RSC-BD-REVIEW-01 / burn-down item 12 remains open: pinned dependency-review v5 has no manifest-path exclusion or arbitrary comparison input.
 

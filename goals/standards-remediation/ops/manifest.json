@@ -33,7 +33,6 @@
     "goals/standards-remediation/GOAL.md",
     "goals/standards-remediation/research/decisions.md"
   ],
-  "researchReports": ["research/decisions.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -109,5 +108,13 @@
     "Verification requires unnamed credentials, cost, or destructive side effects.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "legacy status: complete"
+  "statusNote": "legacy status: complete",
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/standards-remediation",
+    "commit": "94b8d15cd23bd07a95f6f1ab0680d24b94c5103b",
+    "contentHash": "6c5f5f12a919357477ad91989c53ab685ea3f788",
+    "archivedAt": "2026-11-09T03:19:32.081Z",
+    "sourceCommit": "e3a763cad8722d5f47587c44530cf7bf44e5bc52"
+  }
 }

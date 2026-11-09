@@ -78,8 +78,12 @@
     "The same blocker repeats after reasonable investigation.",
     "PGlite cannot run the existing migration doctrine (extension or type gap)."
   ],
-  "researchReports": [
-    "research/SOURCES.md",
-    "research/gold-intake-conversation-branching.md"
-  ]
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/workspace-thread-domain",
+    "commit": "94b8d15cd23bd07a95f6f1ab0680d24b94c5103b",
+    "contentHash": "0696dda5069cbf8b20678183496df2814bbe0189",
+    "archivedAt": "2026-11-09T03:19:32.081Z",
+    "sourceCommit": "e3a763cad8722d5f47587c44530cf7bf44e5bc52"
+  }
 }

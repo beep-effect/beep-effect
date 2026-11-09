@@ -3,7 +3,7 @@
 Lane `residue-rdf-pacer`, branch `test/residue-rdf-pacer` off `main` `18e322389b`,
 2026-10-18. Route: ruling S39, a Claude-originated residue lane worked by a
 `claude-opus-5-5` child. Source evidence: the predecessor's
-[R105 review and repair preview](../../../repository-simplification-confidence/history/receipts/stage-4-vitest-reconciliation.md#r105-review-and-repair-preview)
+[R105 review and repair preview](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-4-vitest-reconciliation.md#r105-review-and-repair-preview)
 and its Gap-19 RDF and Pacer rows.
 
 ## Inputs and digests

@@ -45,7 +45,7 @@ node_modules/.bin/tsrs     -> tsrs/bin/tsrs  (tsrs's JS launcher; execs the patc
 (`tsrs -p tsconfig.check.json`), `beep:check:tests`
 (`tsrs -p tsconfig.test.json --noEmit`), the root `check:configs` and infra's
 `tsrs -b tsconfig.json` all run the Rust compiler. Measured on 2026-10-26
-against tsc-rs 0.8.0 (`goals/tsrs-gates/research/measurements-2026-10-26.md`):
+against tsc-rs 0.8.0 ([goals/tsrs-gates/research/measurements-2026-10-26.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/tsrs-gates/research/measurements-2026-10-26.md)):
 identical diagnostics on all 181 check projects and infra's `-b` build, serial
 wall 21.3 s against 26.4 s at a higher peak RSS per project, and every rule of
 the standalone profile known to the compiler (tsc-rs printed eleven TS377134

@@ -53,7 +53,7 @@ unambiguous in current files, byte-faithful regeneration.
 | Telemetry under-freezes (2/5 files, no corpus commit, no digest procedure) | FIXED — all five digests + corpus_commit + digest command + origin-main materialization rule |
 | Completion gate had no executable carrier | FIXED — `validate_packet.py` committed to the packet (known-limits documented); `--s4-lane` extension named |
 | LEDGER schema-less; candidates could skip S5 disposition | FIXED — entry schema + claim normalization + CANDIDATES/FACTS merged outputs; S5 completion covers candidates+facts+issues |
-| Source manifest vagueness (bare filenames, unnamed design record) | FIXED — full paths incl. `goals/ship-velocity/research/d1-admission-scheduler.md` |
+| Source manifest vagueness (bare filenames, unnamed design record) | FIXED — full paths incl. [goals/ship-velocity/research/d1-admission-scheduler.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ship-velocity/research/d1-admission-scheduler.md) |
 | Runner/model provenance contradiction | FIXED — `-m gpt-5.6-sol` explicit in the prescribed command |
 | ORSD glossary census regressed (41 vs 46) | FIXED |
 

@@ -98,7 +98,7 @@ The cluster supports the current bounded direction: `semantic-foundation` M1 sho
 
 - The prior synthesis’s “one schema is the source of truth for types, persistence, and ontology” is too broad for plural, purpose-relative legal conceptualizations. Schema-first modeling remains appropriate, but exact records, semantic assertions, alternative mappings, interpretation acts, and task-specific projections require distinct schema-governed artifacts rather than one canonical meaning graph.
 
-- The prior implementation roadmap is superseded by live repo state: it described an unbuilt ontology package and an Oxigraph-to-FalkorDB source-of-truth pipeline, whereas current `goals/semantic-foundation/SPEC.md` says `@beep/ontology` already has a bounded FOLIO-model surface, application graph state projects to Postgres/PGlite, and M1 excludes graph-store and SPARQL wiring. This report follows the current SPEC.
+- The prior implementation roadmap is superseded by live repo state: it described an unbuilt ontology package and an Oxigraph-to-FalkorDB source-of-truth pipeline, whereas current [goals/semantic-foundation/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantic-foundation/SPEC.md) says `@beep/ontology` already has a bounded FOLIO-model surface, application graph state projects to Postgres/PGlite, and M1 excludes graph-store and SPARQL wiring. This report follows the current SPEC.
 
 - The prior recommendation to use `skos:exactMatch` as a straightforward outward bridge needs tightening. This cluster requires scope, source, version, interpretation, confidence, and reversible review on equivalence-like mappings.
 

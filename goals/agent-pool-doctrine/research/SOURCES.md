@@ -7,8 +7,8 @@ this copy reproduces the corpus for implementation. Lane reports live in the exp
 
 | Brick | Path | Disposition |
 | --- | --- | --- |
-| Cursor lane recipe (D13) | `goals/tsgo-045-effect-idiom-sweep/ops/prompts/50-cursor-lane.md` | promote to `docs/runbooks/agent-pools.md` |
-| Cursor smoke test record | `goals/tsgo-045-effect-idiom-sweep/history/2026-09-12-cursor-smoke.md` | cite as admission proof |
+| Cursor lane recipe (D13) | [goals/tsgo-045-effect-idiom-sweep/ops/prompts/50-cursor-lane.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/tsgo-045-effect-idiom-sweep/ops/prompts/50-cursor-lane.md) | promote to `docs/runbooks/agent-pools.md` |
+| Cursor smoke test record | [goals/tsgo-045-effect-idiom-sweep/history/2026-09-12-cursor-smoke.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/tsgo-045-effect-idiom-sweep/history/2026-09-12-cursor-smoke.md) | cite as admission proof |
 | Claude hooks | `.claude/settings.json`, `.claude/hooks/*.sh` | parity target |
 | Codex hooks + subagents | `.codex/hooks.json`, `.codex/agents/*.toml` | parity target, mirror into `.cursor/` |
 | AI metrics forwarder | `packages/tooling/tool/cli/src/commands/AIMetrics/` | Cursor lanes must be visible here |

@@ -8,7 +8,7 @@
 #
 # Every listener binds loopback. Tokens are generated per run into a 0600 env
 # file under the state root; no production credential, bucket or endpoint is
-# read or reachable. Pins live in goals/turborepo-cache-conformance/research/pins-2026-10-23.json.
+# read or reachable. Pins live in standards/cache-conformance/pins-2026-10-23.json.
 set -euo pipefail
 umask 077
 

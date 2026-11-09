@@ -48,11 +48,11 @@ const $I = $RepoCliId.create("commands/Cache/Cache.conformance.corpus");
  * @since 0.0.0
  */
 export const CacheConformancePaths = {
-  openapi: "goals/turborepo-cache-conformance/research/remote-cache-openapi.json",
+  openapi: "standards/cache-conformance/remote-cache-openapi.json",
   specGitBlob: "4938812fcc199b66bbbe15c2e9c29fc9c84f5dbe",
   specSha256: "1080314512226dc48535fe24648fc0abb10c1cd405c1fd74eacfdc95e22d70b8",
   plan: "explorations/turborepo-quality-cache/research/conformance-corpus-plan.json",
-  corpus: "goals/turborepo-cache-conformance/research/conformance-corpus.json",
+  corpus: "standards/cache-conformance/conformance-corpus.json",
 } as const;
 
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);

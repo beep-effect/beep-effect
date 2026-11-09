@@ -315,7 +315,7 @@ one redesigned candidate, a second failure parks the family.
 
 **What actually fired.** The passed canary unblocked positive row values. P5 wrote six `park` rows
 and explicitly declined four rows that need positive vocabulary — `Oxigraph (embedded)`,
-embedding-model `OpenAI`, `pattern`, `llm` (`goals/semantica-canary/history/p5-atlas-sync.md`,
+embedding-model `OpenAI`, `pattern`, `llm` ([goals/semantica-canary/history/p5-atlas-sync.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/history/p5-atlas-sync.md),
 "Not written"). That is the atlas-edit need. It is *decision* data (A9: the repo is the single
 writer of decision facts), not IR facts, so the Python extractor is not on its path at all. The
 Current-law Atlas-writes row already says these values are unblocked; the Verdict map's "today
@@ -342,7 +342,7 @@ re-entry: a pinned out-of-repo tool clone under `~/.cache/beep/` is the AGENTS-c
 | Contract | Live brick (verified 2026-09-03) | NET-NEW | Tripwire |
 | --- | --- | --- | --- |
 | Notion read/write | Claude Notion plugin (present in this session's tool roster, not exercised) + Codex Notion MCP (`codex mcp login notion` after the 2026-09-02 revocation; writes need `--approve-for-me`) — **not live-verified this session**; P5 proves the method and the previous writes, not current authentication | — | check `codex mcp list` auth before delegating; one canary write before any batch |
-| Sync method | `goals/semantica-canary/history/p5-atlas-sync.md` (proposal → inventory → canary write → apply → read-back) | render/diff script (small TS; recommended home `apps/labs/semantica/scripts/`, beside `generate-*.ts`) | never adds rows or schema |
+| Sync method | [goals/semantica-canary/history/p5-atlas-sync.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/history/p5-atlas-sync.md) (proposal → inventory → canary write → apply → read-back) | render/diff script (small TS; recommended home `apps/labs/semantica/scripts/`, beside `generate-*.ts`) | never adds rows or schema |
 | Verdict domain | D3 column values; `@beep/schema` `LiteralKit` | `atlas-verdicts/v1` schema + `verdicts.json` | family vocabulary is never an atlas value (Verdict map) |
 | Tracked evidence data in a packet | `research/tracker/inventory.jsonl` precedent (725 rows) | — | redact Notion ids and home paths (review-loop law, 2026-08-24) |
 | IR extractor (facts lane) | git history `fd560ca8e5:scratchpad/semantica-ir/{extract.py,ir-schema.json,README.md}` (all three verified present) | home decision | fails closed on any parse failure; output SHA-256 recorded in `research/ir-extraction-report.md` |

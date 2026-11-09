@@ -169,7 +169,7 @@ For every app and route variant, retain timestamp, app/CLI versions, fixture
 ID, chosen mode, before/after effective tuple, exact probe command, marker
 result, transport used, segment list and verdict. Store private raw evidence
 outside the public packet, then commit a sanitized row to
-`goals/repository-simplification-confidence/history/receipts/stage-5-acceptance.md#permission-continuity`.
+[goals/repository-simplification-confidence/history/receipts/stage-5-acceptance.md#permission-continuity](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-5-acceptance.md#permission-continuity).
 A verified safe alternative needs the same evidence as the failing route.
 
 If a downgrade is locally repairable, hand the owned field to F's writer,

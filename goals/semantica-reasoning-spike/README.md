@@ -53,7 +53,7 @@ Use this command for execution-capable sessions:
    §5.
 7. [`goals/semantica-storage-inversion/SPEC.md`](../semantica-storage-inversion/SPEC.md)
    - the tombstone law R-c and P4 inherit;
-   [`goals/semantica-canary/SPEC.md`](../semantica-canary/SPEC.md) - the
+   [goals/semantica-canary/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/SPEC.md) - the
    lab's standing constraints and the C2 runtime this spike must not replace
    before ablation.
 8. [`history/`](./history/) - fixture provenance, probe evidence and the

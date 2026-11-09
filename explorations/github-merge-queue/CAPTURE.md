@@ -25,7 +25,7 @@ dated heading at the bottom.
   group (one pending slot, no FIFO).
 - Standing rule in `goals/time-to-certainty/GOAL.md` and `SPEC.md`
   ("Explicitly rejected"): no merge queue before the recorded flip condition
-  (ship-velocity E8). `goals/ship-velocity/research/merge-queue-evaluation.md`
+  (ship-velocity E8). [goals/ship-velocity/research/merge-queue-evaluation.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ship-velocity/research/merge-queue-evaluation.md)
   (2026-08-27) measured `main` full-gauntlet success at 65.4% of non-cancelled
   terminal runs over 14 days against an 80% gate, with no `merge_group`
   coverage in any workflow; queue stayed off, strict required checks stayed

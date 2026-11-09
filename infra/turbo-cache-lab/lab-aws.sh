@@ -8,7 +8,7 @@
 #   lab-aws.sh inventory <epoch>   list anything still tagged for this lab (must be empty after destroy)
 #
 # Spending subcommands refuse to run unless BEEP_TCL_APPROVED_CEILING_USD names
-# the operator-approved ceiling (see goals/turborepo-cache-conformance/research/lab-deployment-preview.md).
+# the operator-approved ceiling (see standards/cache-conformance/lab-deployment-preview.md).
 # Secret values are generated in-process and passed to AWS on stdin-free
 # arguments only through a 0600 temporary file; nothing is printed.
 set -euo pipefail

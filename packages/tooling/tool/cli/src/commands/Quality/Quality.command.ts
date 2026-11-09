@@ -1429,8 +1429,7 @@ const runSecurityScan = Effect.fn("QualityScriptCommands.runSecurityScan")(funct
 });
 
 // Paired `ruleid:`/`ok:` cases for every rule in .semgrep/first-party.yml.
-const firstPartySemgrepFixturePath =
-  "goals/repository-simplification-confidence/history/outputs/semgrep/first-party.ts";
+const firstPartySemgrepFixturePath = ".semgrep/first-party.ts";
 
 const SAST_CHANGED_FILES_RANGE = {
   base: "origin/main",

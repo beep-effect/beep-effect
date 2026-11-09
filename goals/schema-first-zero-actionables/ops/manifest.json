@@ -99,5 +99,12 @@
   "statusNote": "legacy status: complete",
   "supersededNote": "remaining exception ledger to zero entries (2026-07-07)",
   "mission": "Drive repo schema-first governance to zero actionable findings and publish the result as a mergeable PR. Actionable means every non-exception candidate and active advisory is either remediated, eliminated by detector improvements, or reclassified with a durable non-actionable rationale.",
-  "researchReports": ["research/baseline-2026-06-11.md"]
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/schema-first-zero-actionables",
+    "commit": "94b8d15cd23bd07a95f6f1ab0680d24b94c5103b",
+    "contentHash": "c011922a8f801d6a87d5566caae5bd043f1effcd",
+    "archivedAt": "2026-11-09T03:19:32.081Z",
+    "sourceCommit": "e3a763cad8722d5f47587c44530cf7bf44e5bc52"
+  }
 }

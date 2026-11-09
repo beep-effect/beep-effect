@@ -89,5 +89,12 @@
   ],
   "statusNote": "legacy status: complete",
   "mission": "Move Storybook hosting out of `@beep/ui` into a single executable app workspace, `@beep/storybook` at `apps/storybook`, while keeping package-local stories in foundation UI-system packages.",
-  "researchReports": ["research/grill-with-docs-findings.md"]
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/storybook-app",
+    "commit": "94b8d15cd23bd07a95f6f1ab0680d24b94c5103b",
+    "contentHash": "6630520cf23f24ee0e170385aba5a9f271aba105",
+    "archivedAt": "2026-11-09T03:19:32.081Z",
+    "sourceCommit": "e3a763cad8722d5f47587c44530cf7bf44e5bc52"
+  }
 }

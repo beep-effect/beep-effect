@@ -155,6 +155,22 @@ Lane `fix/packet-archive-citation-rewrite` · PR #2979
 
 Reverse: Revert #2979; plans return to exact removed-file link destinations, and later batches repair code-span citations by hand
 
+### Retain semantica-canary, schema-opaque-default and speed-loop after batch 4 hosted reds, 2026-11-09
+
+Batch 4 first moved the sealed Semantica C2 report into a test fixture and archived schema-opaque-default. It also moved the speed-loop runner-burst script to scripts/. Hosted CI then failed: Secret Scanning on two digests in the moved report, the retired IRI law on its IRIs, fallow on @typescript/typescript6 losing its last consumer, and the tracked-shell law on the moved script. All three packets stay on main with a retentionReason, because a sweep batch should not add shell scripts. The archive commits were already public, so the archive repo still holds copies of them; those copies are harmless and inbound references rewritten to them still resolve. The batch landed from a new branch so the report never appears in the PR's commit range; nothing was force-pushed.
+
+Lane `feat/packet-archive-batch-4b`
+
+Reverse: Remove each retentionReason; for semantica-canary first replace the sealed witness test, for schema-opaque-default first remove the codemod dependency, and for speed-loop first retire its security test
+
+### Retain turborepo-task-qualification because the cache ledger verifies its files, 2026-11-09
+
+standards/cache-qualification.json verifies four research reviews in this packet by path and SHA-256, including in its history entries. Rewriting those paths would alter an append-only ledger, so the packet stays on main with a retentionReason, as citation-extraction-engine and catalog-writer-incremental already do. Live inputs of five other batch 4 packets moved to standards/, scripts/, .semgrep/ and a test fixture.
+
+Lane `feat/packet-archive-batch-4`
+
+Reverse: Remove the retentionReason and archive the packet after moving the four reviews and rewriting the ledger paths
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

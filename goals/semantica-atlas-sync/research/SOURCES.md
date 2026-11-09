@@ -57,7 +57,7 @@ the gated facts lane (P2). The verdict lane (P1) reads no IR.
 
 | Brick | Path | Mark |
 | --- | --- | --- |
-| Sync method | `goals/semantica-canary/history/p5-atlas-sync.md` (proposal → inventory → canary write → apply → read-back) | reuse verbatim |
+| Sync method | [goals/semantica-canary/history/p5-atlas-sync.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/history/p5-atlas-sync.md) (proposal → inventory → canary write → apply → read-back) | reuse verbatim |
 | Verdict domain | D3 column values; `@beep/schema` `LiteralKit` | NET-NEW `atlas-verdicts/v1` schema + `verdicts.json` |
 | Tracked evidence data in a packet | `explorations/semantica-lab/research/tracker/inventory.jsonl` (725 rows) | precedent; redaction law applies |
 | Notion read/write | the operating session's Notion connection (Claude Notion plugin); Codex Notion MCP after re-login (`codex mcp login notion`; writes need `--approve-for-me`) | not live-verified on 2026-09-03; one-catalog read first |

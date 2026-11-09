@@ -1338,7 +1338,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it.effect("scans changed ignored paths through root discovery instead of explicit targets", () =>
       Effect.gen(function* () {
-        const ignored = "goals/repository-simplification-confidence/history/outputs/semgrep/first-party.ts";
+        const ignored = ".semgrep/first-party.ts";
         const changed = "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts";
         const spawner = sastSpawner(`${ignored}\0${changed}\0`);
         yield* runGithubChecks("sast").pipe(
@@ -1409,7 +1409,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         assertSome(O.map(ruleTests, A.takeRight(3)), [
           "--config",
           "/src/.semgrep/first-party.yml",
-          "/src/goals/repository-simplification-confidence/history/outputs/semgrep/first-party.ts",
+          "/src/.semgrep/first-party.ts",
         ]);
         // No changed JavaScript/TypeScript files: the scan is skipped, the rule tests are not.
         expect(A.filter(commands, (args) => A.contains(args, "scan"))).toEqual([]);
@@ -1422,9 +1422,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         const read = (relative: string) =>
           fs.readFileString(NodeURL.fileURLToPath(new URL(`../../../../../${relative}`, import.meta.url)));
         const rules = yield* read(".semgrep/first-party.yml");
-        const fixture = yield* read(
-          "goals/repository-simplification-confidence/history/outputs/semgrep/first-party.ts"
-        );
+        const fixture = yield* read(".semgrep/first-party.ts");
         const ruleIds = pipe(
           Str.split(rules, "\n"),
           A.map(Str.trim),

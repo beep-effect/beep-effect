@@ -50,7 +50,7 @@ all bindings are preserved. Names-only GitHub secret listings still contain:
 
 The retained environment copy is the operational writer recovery source, as
 established by successful main deployments in the predecessor
-[hosted-probes receipt](../../../repository-simplification-confidence/history/receipts/2026-10-22-hosted-probes.md).
+[hosted-probes receipt](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/2026-10-22-hosted-probes.md).
 GitHub secret names cannot recover their values. No untested 1Password writer
 reference is asserted as working, and no value was requested from GitHub.
 A separately verified source would be needed to reconstruct a lost environment

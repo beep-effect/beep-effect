@@ -34,7 +34,7 @@ Turbo cache and lockfile-keyed baked AMI remain repo-owned performance work.
 ## Source hierarchy
 
 1. Operator charter and decisions 57–63 in
-   `goals/speed-loop/research/GRILL-DECISIONS.md`.
+   [goals/speed-loop/research/GRILL-DECISIONS.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/speed-loop/research/GRILL-DECISIONS.md).
 2. `AGENTS.md`, `CLAUDE.md`, and required skills.
 3. Governing infrastructure, security, and package standards.
 4. This `SPEC.md`.

@@ -34,7 +34,7 @@ Scope is defined by reference, not restated:
   claim of
   [`BRIEF.md` rabbit hole 10](../../explorations/semantica-lab/BRIEF.md#rabbit-holes)
   and
-  [`goals/semantica-canary/SPEC.md` constraint 10](../semantica-canary/SPEC.md#constraints);
+  [goals/semantica-canary/SPEC.md constraint 10](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/SPEC.md#constraints);
   delete and compaction were explicitly left to this spike.
 
 Provenance: graduated 2026-09-03 from
@@ -46,7 +46,7 @@ Provenance: graduated 2026-09-03 from
 Every item of
 [`BRIEF.md` §No-Gos](../../explorations/semantica-lab/BRIEF.md#no-gos) holds
 as listed in
-[`goals/semantica-canary/SPEC.md` §Non-Goals](../semantica-canary/SPEC.md#non-goals).
+[goals/semantica-canary/SPEC.md §Non-Goals](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/SPEC.md#non-goals).
 This spike adds:
 
 - No change to the `ProvenanceEvent` id preimage `(prev, body)`; redacted ids
@@ -83,7 +83,7 @@ This spike adds:
    [`MAP.md`](../../explorations/semantica-lab/MAP.md) v1.1 §S,
    [`research/shared-schema.md`](../../explorations/semantica-lab/research/shared-schema.md)
    v1.4.
-5. [`goals/semantica-canary/SPEC.md`](../semantica-canary/SPEC.md): the lab's
+5. [goals/semantica-canary/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/SPEC.md): the lab's
    standing constraints and the C2 evidence this spike replays.
 6. This `SPEC.md`.
 7. `PLAN.md`.
@@ -164,7 +164,7 @@ Each line cites the sub-decision or law it inherits.
 10. **One tombstone law.** P-S1 lands before the reasoning spike's R-c class
     and its P2–P4 (R1.g).
 11. **Inherited canary constraints** hold by reference
-    ([`goals/semantica-canary/SPEC.md` §Constraints](../semantica-canary/SPEC.md#constraints)):
+    ([goals/semantica-canary/SPEC.md §Constraints](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/SPEC.md#constraints)):
     5 (the provider cache is the determinism), 8 (Oxigraph under an
     Effect-level timeout), 10 (crash injection definition), 14 (no id
     truncation, no DDL dimension).

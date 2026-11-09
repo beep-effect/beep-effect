@@ -68,7 +68,6 @@
     "goals/skillopt-training-pilot/GOAL.md",
     "goals/skillopt-training-pilot/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md", "research/p23-contract.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -129,5 +128,13 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "researchReferences": ["explorations/skillopt-training-pilot/RESEARCH.md"]
+  "researchReferences": ["explorations/skillopt-training-pilot/RESEARCH.md"],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/skillopt-training-pilot",
+    "commit": "94b8d15cd23bd07a95f6f1ab0680d24b94c5103b",
+    "contentHash": "2bbf35369589e6b6580f16a9a008bf7387354d52",
+    "archivedAt": "2026-11-09T03:19:32.081Z",
+    "sourceCommit": "e3a763cad8722d5f47587c44530cf7bf44e5bc52"
+  }
 }

@@ -263,9 +263,12 @@
   ],
   "nextAction": "No active implementation; reopen V2.1 only after a real agent-config drift incident.",
   "statusNote": "Portfolio closeout recorded 2026-07-14: V1 is the retained deliverable; all ten V2/V3 phases are wont-do until a real agent-config drift incident. Known drift for claude-code-settings, rulesync-config, and rulesync-mcp remains documented as-is.",
-  "researchReports": [
-    "research/claude-web-source-map.md",
-    "research/codegen-and-drift-architecture.md",
-    "research/sources-of-truth.md"
-  ]
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/unified-ai-toolchain",
+    "commit": "94b8d15cd23bd07a95f6f1ab0680d24b94c5103b",
+    "contentHash": "2b8a0c1ede86e84a4a8c16a382b61444eb8f8b5d",
+    "archivedAt": "2026-11-09T03:19:32.081Z",
+    "sourceCommit": "e3a763cad8722d5f47587c44530cf7bf44e5bc52"
+  }
 }
