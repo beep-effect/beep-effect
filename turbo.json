@@ -5257,7 +5257,6 @@
         "$TURBO_ROOT$/tools/tsgo-shim/tsgo.js",
         "$TURBO_ROOT$/tools/tsgo-shim/package.json",
         "$TURBO_ROOT$/vitest.shared.ts",
-        "$TURBO_ROOT$/vitest.sequencer.ts",
         "$TURBO_ROOT$/vite.shared.ts",
         "$TURBO_ROOT$/vitest.aliases.generated.json"
       ],
@@ -5323,7 +5322,6 @@
         "$TURBO_ROOT$/tools/tsgo-shim/tsgo.js",
         "$TURBO_ROOT$/tools/tsgo-shim/package.json",
         "$TURBO_ROOT$/vitest.shared.ts",
-        "$TURBO_ROOT$/vitest.sequencer.ts",
         "$TURBO_ROOT$/vite.shared.ts",
         "$TURBO_ROOT$/vitest.aliases.generated.json"
       ],
