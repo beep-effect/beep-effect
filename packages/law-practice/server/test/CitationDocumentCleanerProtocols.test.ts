@@ -127,6 +127,45 @@ it.effect("delegates host containers without inspection and preserves plan lazin
   })
 );
 
+it.effect("refuses an owned opaque host container when no host Document protocol was captured", () =>
+  Effect.gen(function* () {
+    const { h, adapter } = yield* setup();
+    const value = yield* h.values.retainHost(Symbol("opaque host container"));
+    const before = yield* h.values.snapshot;
+    const truth = yield* adapter.document.truth(value).pipe(Effect.flip);
+    const membership = yield* adapter.document.containsHtml(value).pipe(Effect.flip);
+    const insertion = yield* adapter.document.insertSourceHtml(value).pipe(Effect.flip);
+    const plan = yield* adapter.document.plan(value).pipe(Effect.flip);
+    expect(truth).toMatchObject({
+      _tag: "CitationDocumentInputFailure",
+      reason: "source-protocol",
+      sourceError: "TypeError",
+    });
+    expect(membership).toMatchObject({ reason: "source-protocol", sourceError: "TypeError" });
+    expect(insertion).toMatchObject({ reason: "source-protocol", sourceError: "AttributeError" });
+    expect(plan).toMatchObject({ reason: "source-protocol", sourceError: "TypeError" });
+    expect(Reflect.getOwnPropertyDescriptor(truth, "cause")).toBeUndefined();
+    yield* adapter.document.warnHtmlAdded;
+    const after = yield* h.values.snapshot;
+    expect(after).toEqual(before);
+    const calls = yield* h.calls;
+    expect(calls).toEqual([]);
+  })
+);
+
+it.effect("consumes non-HTML generator members before closing membership without changing generator truth", () =>
+  Effect.gen(function* () {
+    const { adapter } = yield* setup();
+    const steps = yield* adapter.create({ kind: "generator", names: ["underscores"] });
+    const found = yield* adapter.document.containsHtml(steps);
+    expect(found).toBe(false);
+    const closed = yield* adapter.inspect(steps);
+    expect(O.getOrThrow(O.getOrThrow(closed).generator)).toEqual({ position: 1, state: "GEN_CLOSED" });
+    const truth = yield* adapter.document.truth(steps);
+    expect(truth).toBe(true);
+  })
+);
+
 it.effect("invalidates issued containers when the capturing scope closes", () =>
   Effect.gen(function* () {
     const { h, policy } = yield* setup();

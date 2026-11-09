@@ -7,6 +7,7 @@ import {
   runScopeCleanupHint,
 } from "@beep/repo-cli/test/RepoRun";
 import { it } from "@beep/test-runner";
+import { HostProcessPlatform } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
@@ -77,6 +78,14 @@ describe("run scope", () => {
   });
 
   it.layer(NoProbeLayer, { timeout: "30 seconds" })((it) => {
+    it.effect("keeps non-Linux work in the caller without probing a user manager", () =>
+      detectRunScopeSupport().pipe(
+        configured({}),
+        Effect.provideService(HostProcessPlatform, "darwin"),
+        Effect.tap((support) => Effect.sync(() => expect(support).toBe("unsupported")))
+      )
+    );
+
     it.effect("reports disabled without probing when BEEP_RUN_SCOPES is 0", () =>
       detectRunScopeSupport().pipe(
         configured({ BEEP_RUN_SCOPES: "0" }),
