@@ -2,9 +2,9 @@
 
 - **Source exploration:** `explorations/secure-document-download-proxy`.
 - **Primary ledger:**
-  `explorations/secure-document-download-proxy/research/SOURCES.md`.
+  [explorations/secure-document-download-proxy/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/secure-document-download-proxy/research/SOURCES.md).
 - **Research amendment:**
-  `explorations/secure-document-download-proxy/RESEARCH.md#2026-07-14-amendment--live-desktop-runtime-and-ratified-boundaries`.
+  [explorations/secure-document-download-proxy/RESEARCH.md#2026-07-14-amendment--live-desktop-runtime-and-ratified-boundaries](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/secure-document-download-proxy/RESEARCH.md#2026-07-14-amendment--live-desktop-runtime-and-ratified-boundaries).
 
 This implementation ledger reproduces the source corpus and the ratified
 dispositions. The exploration ledger remains primary if details diverge.
@@ -67,11 +67,11 @@ the primary exploration ledger; none authorizes a new dependency in this goal.
 - Ratified decisions and rejected options:
   `explorations/secure-document-download-proxy/DECISIONS.md`.
 - Candidate fan-out and capability check:
-  `explorations/secure-document-download-proxy/MAP.md`.
+  [explorations/secure-document-download-proxy/MAP.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/secure-document-download-proxy/MAP.md).
 - Credential-crypto fence and guarded-fetch gate:
   [explorations/ingestion-security-secret-governance/MAP.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/ingestion-security-secret-governance/MAP.md) and
   `DECISIONS.md`.
 - First consumer authorization spine:
   `goals/law-docketing-patent-spine`.
 - Codex research critique folded into the source packet:
-  `explorations/secure-document-download-proxy/reviews/2026-06-29-codex-research.md`.
+  [explorations/secure-document-download-proxy/reviews/2026-06-29-codex-research.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/secure-document-download-proxy/reviews/2026-06-29-codex-research.md).

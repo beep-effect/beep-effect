@@ -35,7 +35,7 @@ Higher sources outrank lower sources when they conflict.
 ## Constraints
 
 - One computed `beep.*` v2 value, three transports: `OTEL_RESOURCE_ATTRIBUTES`, `X-Beep-*` headers, hook env.
-- Run the five probes first (`explorations/observability-palantiri/research/harness-emitters-and-web-ci.md` §9) and record results before wiring.
+- Run the five probes first ([explorations/observability-palantiri/research/harness-emitters-and-web-ci.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/observability-palantiri/research/harness-emitters-and-web-ci.md) §9) and record results before wiring.
 - Proxy sessions set `CLAUDE_CODE_PROPAGATE_TRACEPARENT=1`.
 - The proxy plugin never exports the usage record's `APIKey`.
 - Grok rows carry `beep.harness=grok-build` even when Claude-format hooks fire.

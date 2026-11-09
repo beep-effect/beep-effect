@@ -10,7 +10,7 @@ per slice, each proving itself by a shrinking audit baseline. Migrate the
 uniformity, not the architecture: v4's boundaries stay; symbols, folders and
 suffixes move.
 
-PR train (exploration [`MAP.md` §Sequencing](../../explorations/v3-consistency-audit/MAP.md) steps 4–5):
+PR train (exploration [`MAP.md` §Sequencing](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/v3-consistency-audit/MAP.md) steps 4–5):
 
 1. **Manifest + lab PR.** The nine proof divergences (`.repository` →
    `.ports`, `.use-cases` → `.service`, server `.http/.rpc/.tools` →

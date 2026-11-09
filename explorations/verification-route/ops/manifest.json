@@ -20,6 +20,14 @@
       ]
     },
     "created": "2026-10-27",
-    "updated": "2026-10-28"
+    "updated": "2026-10-28",
+    "archive": {
+      "repo": "beep-effect/beep-effect-goals-archive",
+      "path": "explorations/verification-route",
+      "commit": "1604d5144ca9118523ea2de34057d06a2f478bb6",
+      "contentHash": "c502e7bffa1a41fb04c906552298d6a02577cd08",
+      "archivedAt": "2026-11-09T08:44:38.484Z",
+      "sourceCommit": "0b459d8674f24af3a7267e31f78050835dda3f65"
+    }
   }
 }

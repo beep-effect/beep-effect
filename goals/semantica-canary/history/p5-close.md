@@ -160,7 +160,7 @@ Three `bun run beep yeet verify` attempts bracket this closeout on 2026-09-02:
 
 1. The Codex closeout lane's sandbox attempt never reached a quality lane: its preflight
    `git fetch` could not write the linked worktree's Git metadata (environment-only; recorded in
-   `explorations/semantica-lab/research/OPPORTUNITIES.md` and in the closeout reflection).
+   [explorations/semantica-lab/research/OPPORTUNITIES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/OPPORTUNITIES.md) and in the closeout reflection).
 2. The orchestrating session's full proof on `dee32f6713` (the first closeout commit, cut from
    `main` at `dbad7e065a`) ran every packet, docs, knowledge, and code lane and failed only
    `repo-sanity:bun-audit` and `pre-push:security` (osv-scan) on `browserslist@4.28.6` and

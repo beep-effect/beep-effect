@@ -38,7 +38,7 @@ Higher sources outrank lower sources when they conflict.
 - Close the open `:8448` OTLP ingest before any strict-tier export: proposal includes Ansible-managed Serve routes and tag-based grants.
 - Propose narrowing the tailnet `funnel` node attribute; "no Funnel grant on a strict-tier host" is an enrollment check.
 - Always-on Linux hosts scraped; intermittent hosts push OTLP with `file_storage` queues and a raised retry ceiling; replay horizon capped explicitly.
-- The 16-point "fully enrolled" gate (`explorations/observability-palantiri/research/fleet-and-hub.md` §3) is a runnable command; passing on `beep-worker` and the incoming box fires D1.
+- The 16-point "fully enrolled" gate ([explorations/observability-palantiri/research/fleet-and-hub.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/observability-palantiri/research/fleet-and-hub.md) §3) is a runnable command; passing on `beep-worker` and the incoming box fires D1.
 - Dashboards generated from the catalog: host variable, regex devices, workload-vs-system split, mandatory panel descriptions, restart-survival and no-data tests, staleness alerts, a per-host "busy / safe to restart" signal.
 - Schema → `Context.Service` contract → implementation; Effect v4 only, validated against `.repos/effect`; `effect/<Module>` imports; `HashMap`/`HashSet`; `Effect.fn`/`fnUntraced`.
 - Names, metrics, events and attribute keys come from the instrumentation catalog (`goals/observability-kernel-catalog`); names are static literals, never interpolated.

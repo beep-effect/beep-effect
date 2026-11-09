@@ -3,10 +3,10 @@
 This implementation ledger reproduces the source-exploration entries relevant
 to the known-application observation, native vocabularies, transport, consent,
 and `PTMNFEE2` compatibility. The exploration ledger remains primary:
-[`explorations/uspto-patent-driver-depth/research/SOURCES.md`](../../../explorations/uspto-patent-driver-depth/research/SOURCES.md).
+[explorations/uspto-patent-driver-depth/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/uspto-patent-driver-depth/research/SOURCES.md).
 
 - **Source exploration:** `explorations/uspto-patent-driver-depth`
-- **Primary ledger:** `explorations/uspto-patent-driver-depth/research/SOURCES.md`
+- **Primary ledger:** [explorations/uspto-patent-driver-depth/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/uspto-patent-driver-depth/research/SOURCES.md)
 - **Cross-packet transport decision:** `explorations/effect-orchestration-patterns/DECISIONS.md`
 
 ## 1. Relevant mined source corpus
@@ -75,9 +75,9 @@ P0 facts, not claims established by this ledger.
 
 - Source packet: [`README`](../../../explorations/uspto-patent-driver-depth/README.md),
   [`BRIEF`](../../../explorations/uspto-patent-driver-depth/BRIEF.md),
-  [`MAP`](../../../explorations/uspto-patent-driver-depth/MAP.md),
+  [`MAP`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/uspto-patent-driver-depth/MAP.md),
   [`DECISIONS`](../../../explorations/uspto-patent-driver-depth/DECISIONS.md), and
-  [`PTMNFEE2` note](../../../explorations/uspto-patent-driver-depth/research/ptmnfee2-maintenance-fee-dataset.md).
+  [`PTMNFEE2` note](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/uspto-patent-driver-depth/research/ptmnfee2-maintenance-fee-dataset.md).
 - Transport provenance: [`effect-orchestration-patterns` decision](../../../explorations/effect-orchestration-patterns/DECISIONS.md#2026-07-14--locked-uspto-transport-adoption-folds-into-its-sibling).
 - Goal contract: [`SPEC.md`](../SPEC.md) and [`PLAN.md`](../PLAN.md).
 - Dependent sibling: [`goals/uspto-ptmnfee2-ingest`](../../uspto-ptmnfee2-ingest/README.md).

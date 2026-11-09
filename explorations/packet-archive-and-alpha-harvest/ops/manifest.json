@@ -18,6 +18,14 @@
       "supersededBy": null
     },
     "created": "2026-11-06",
-    "updated": "2026-11-06"
+    "updated": "2026-11-06",
+    "archive": {
+      "repo": "beep-effect/beep-effect-goals-archive",
+      "path": "explorations/packet-archive-and-alpha-harvest",
+      "commit": "1604d5144ca9118523ea2de34057d06a2f478bb6",
+      "contentHash": "f7a35f32127469b73444e45bbedda55745e75af4",
+      "archivedAt": "2026-11-09T08:44:38.484Z",
+      "sourceCommit": "0b459d8674f24af3a7267e31f78050835dda3f65"
+    }
   }
 }

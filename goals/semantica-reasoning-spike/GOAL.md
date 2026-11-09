@@ -14,10 +14,10 @@ Read these as the contract:
 - `goals/semantica-reasoning-spike/{README,SPEC,PLAN}.md`
 - `goals/semantica-reasoning-spike/ops/manifest.json`
 - `goals/semantica-reasoning-spike/research/SOURCES.md`
-- `explorations/semantica-lab/MAP.md` §R (v1.1) and `DECISIONS.md` (Current
+- `explorations/semantica-lab/README.md` (archived MAP §R, v1.1) and `DECISIONS.md` (Current
   law table, then the 2026-09-03 ratification grill R0.a, R1.g, R2.a–R2.g;
   the table wins over prose)
-- `explorations/semantica-lab/research/adhd-reasoning.md` §Focus 1–3
+- `explorations/semantica-lab/README.md` (archived adhd-reasoning research, §Focus 1–3)
 - `goals/semantica-storage-inversion/SPEC.md` (the tombstone law R-c inherits)
 
 Then `AGENTS.md`, `CLAUDE.md`, `standards/architecture/15-lab-apps.md`, and

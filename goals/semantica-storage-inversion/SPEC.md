@@ -24,7 +24,7 @@ C2 ledger:
 Scope is defined by reference, not restated:
 
 - **The probes, gates and kills** —
-  [`MAP.md` §S](../../explorations/semantica-lab/MAP.md#s-semantica-storage-inversion--what-delete-and-compaction-must-mean)
+  [`MAP.md` §S](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/MAP.md#s-semantica-storage-inversion--what-delete-and-compaction-must-mean)
   (v1.1, ratified 2026-09-03 with amendments applied inline).
 - **The ratified sub-decisions** —
   [`DECISIONS.md`](../../explorations/semantica-lab/DECISIONS.md) "2026-09-03
@@ -80,8 +80,8 @@ This spike adds:
    [`standards/architecture/15-lab-apps.md`](../../standards/architecture/15-lab-apps.md).
 4. The exploration contracts in force:
    [`BRIEF.md`](../../explorations/semantica-lab/BRIEF.md) v1.1,
-   [`MAP.md`](../../explorations/semantica-lab/MAP.md) v1.1 §S,
-   [`research/shared-schema.md`](../../explorations/semantica-lab/research/shared-schema.md)
+   [`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/MAP.md) v1.1 §S,
+   [`research/shared-schema.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/shared-schema.md)
    v1.4.
 5. [goals/semantica-canary/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/SPEC.md): the lab's
    standing constraints and the C2 evidence this spike replays.
@@ -206,7 +206,7 @@ The rows below are the ones this spike executes against, one line each.
 ## Acceptance Criteria
 
 Gates are quoted from
-[`MAP.md` §S probe table](../../explorations/semantica-lab/MAP.md#s-semantica-storage-inversion--what-delete-and-compaction-must-mean);
+[`MAP.md` §S probe table](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/MAP.md#s-semantica-storage-inversion--what-delete-and-compaction-must-mean);
 each probe passes over the full C2 ledger, not a sample.
 
 - [ ] **P-S0** — the cache-only regeneration reproduces the full-W1 C2 report

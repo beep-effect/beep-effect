@@ -30,6 +30,6 @@ client data or live filing. P8 is required only for installed KG/product handoff
 
 ## Latest evidence
 
-[Independent admission](../../explorations/research-corpus-synthesis/research/ADMISSION-REVIEW.md)
+[Independent admission](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/research-corpus-synthesis/research/ADMISSION-REVIEW.md)
 accepted this bounded ready/paused packet. No implementation proof exists yet.
 Completed span/candor/authority work stays completed-retained.

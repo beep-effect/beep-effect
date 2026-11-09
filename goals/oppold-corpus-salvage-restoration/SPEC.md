@@ -2,7 +2,7 @@
 
 Normative contract. Packet anchor document. Repo standards outrank this file
 when they conflict. Seeded 2026-08-24 from G1 of the ratified
-[parent MAP](../../explorations/oppold-corpus-overhaul/MAP.md). Back-links
+[parent MAP](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/oppold-corpus-overhaul/MAP.md). Back-links
 carry the source record; this spec does not duplicate the exploration.
 
 ## Objective
@@ -21,7 +21,7 @@ Close two independently accepted gates:
    originals and measuring declared fidelity dimensions.
 
 The [BRIEF](../../explorations/oppold-corpus-overhaul/BRIEF.md) defines the
-problem and appetite. The [MAP](../../explorations/oppold-corpus-overhaul/MAP.md)
+problem and appetite. The [MAP](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/oppold-corpus-overhaul/MAP.md)
 defines G1's boundary and re-entry gates.
 
 ## Scope
@@ -45,7 +45,7 @@ defines G1's boundary and re-entry gates.
 
 - Pipeline re-evaluation, semantic ingestion, enrichment, and practice-kg
   bundle v2. These remain gated candidates in the
-  [parent MAP](../../explorations/oppold-corpus-overhaul/MAP.md).
+  [parent MAP](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/oppold-corpus-overhaul/MAP.md).
 - Multi-firm productization. The parent MAP defers that decision to
   `solo-practice-corpus-kit`.
 
@@ -112,7 +112,7 @@ bags, and native JSON parsing are outside the permitted design.
 ## Capability inventory
 
 Faithful to G1 in the
-[ratified MAP](../../explorations/oppold-corpus-overhaul/MAP.md):
+[ratified MAP](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/oppold-corpus-overhaul/MAP.md):
 
 - **Existing:** recycle pairing
   (`packages/tooling/tool/cli/src/commands/Corpus/Corpus.recyclebin.ts` plus

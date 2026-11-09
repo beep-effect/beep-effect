@@ -41,7 +41,7 @@ Use this command for execution-capable sessions:
 5. [`research/SOURCES.md`](./research/SOURCES.md) - goal-side mirror of the
    exploration's provenance ledger.
 6. Exploration contracts in force:
-   [`MAP.md` §A](../../explorations/semantica-lab/MAP.md#a-semantica-atlas-sync--split-d5-into-a-verdict-lane-and-a-facts-lane)
+   [`MAP.md` §A](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/MAP.md#a-semantica-atlas-sync--split-d5-into-a-verdict-lane-and-a-facts-lane)
    v1.1,
    [`DECISIONS.md`](../../explorations/semantica-lab/DECISIONS.md) (Current
    law table: Atlas writes, Atlas backlog, Verdict map; the 2026-09-03

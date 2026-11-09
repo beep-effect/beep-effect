@@ -15,7 +15,7 @@ from park-pending-canary to a verdict (B1).
 
 Graduated 2026-08-24 from
 [`explorations/semantica-lab`](../../explorations/semantica-lab/README.md)
-(Goal 1 of its [`MAP.md`](../../explorations/semantica-lab/MAP.md)).
+(Goal 1 of its [`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/MAP.md)).
 
 ## Launch
 
@@ -39,12 +39,12 @@ Use this command for execution-capable sessions:
    exploration's provenance ledger.
 6. Exploration contracts in force:
    [`BRIEF.md`](../../explorations/semantica-lab/BRIEF.md) v1.1,
-   [`MAP.md`](../../explorations/semantica-lab/MAP.md) v1.0,
+   [`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/MAP.md) v1.0,
    [`DECISIONS.md`](../../explorations/semantica-lab/DECISIONS.md) (Current
    law table + M1-M6),
-   [`research/shared-schema.md`](../../explorations/semantica-lab/research/shared-schema.md)
+   [`research/shared-schema.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/shared-schema.md)
    v1.4, and
-   [`research/workload-contract.md`](../../explorations/semantica-lab/research/workload-contract.md)
+   [`research/workload-contract.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/workload-contract.md)
    v1.4.
 7. [`history/`](./history/) - stage evidence and the closeout reflection.
 

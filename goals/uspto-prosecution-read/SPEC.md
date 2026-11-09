@@ -44,9 +44,9 @@ reported; it never silently mutates decode semantics.
 4. This `SPEC.md`.
 5. `PLAN.md`, then `GOAL.md`.
 6. The exploration [`BRIEF.md`](../../explorations/uspto-patent-driver-depth/BRIEF.md),
-   [`MAP.md`](../../explorations/uspto-patent-driver-depth/MAP.md),
+   [`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/uspto-patent-driver-depth/MAP.md),
    [`DECISIONS.md`](../../explorations/uspto-patent-driver-depth/DECISIONS.md),
-   and [`research/SOURCES.md`](../../explorations/uspto-patent-driver-depth/research/SOURCES.md).
+   and [`research/SOURCES.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/uspto-patent-driver-depth/research/SOURCES.md).
 
 ## Target Surfaces
 

@@ -19,7 +19,7 @@ Scope is defined by reference, not restated here:
 - **Service roster** —
   [`BRIEF.md` §Solution Sketch, "Service boundaries (D8 made concrete)"](../../explorations/semantica-lab/BRIEF.md#service-boundaries-d8-made-concrete)
   and the re-verified
-  [`MAP.md` §Capability Check](../../explorations/semantica-lab/MAP.md#capability-check-goal-1--semantica-canary):
+  [`MAP.md` §Capability Check](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/MAP.md#capability-check-goal-1--semantica-canary):
   thirteen lab-local, promotion-shaped `Context.Service` contracts; nine compose
   live bricks, four are NET-NEW lab-local schema/wiring (`ProviderCache`,
   `EvalReport`, ρdf `Reasoner`, EYE oracle wiring) plus the lab-local write
@@ -82,10 +82,10 @@ brief carries the rationale.
    (the driver boundary the lab composes but never crosses).
 4. The exploration contracts in force:
    [`BRIEF.md`](../../explorations/semantica-lab/BRIEF.md) v1.1,
-   [`MAP.md`](../../explorations/semantica-lab/MAP.md) v1.0,
-   [`research/shared-schema.md`](../../explorations/semantica-lab/research/shared-schema.md)
+   [`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/MAP.md) v1.0,
+   [`research/shared-schema.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/shared-schema.md)
    v1.4,
-   [`research/workload-contract.md`](../../explorations/semantica-lab/research/workload-contract.md)
+   [`research/workload-contract.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/workload-contract.md)
    v1.4.
 5. The sibling `openai-driver` packet's SPEC, for the C1 embeddings Layer.
 6. This `SPEC.md`.
@@ -116,7 +116,7 @@ DECISIONS entry amends it.
 ## Constraints
 
 Each line is one item of
-[`MAP.md` §Open Risks Inherited From The Brief](../../explorations/semantica-lab/MAP.md#open-risks-inherited-from-the-brief);
+[`MAP.md` §Open Risks Inherited From The Brief](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/MAP.md#open-risks-inherited-from-the-brief);
 numbers 1-15 match the brief's rabbit holes, 16-17 were added by the
 capability check.
 
@@ -224,11 +224,11 @@ against families that are still park-pending-canary (B1).
 Stage pass criteria are quoted verbatim from
 [`BRIEF.md` §"The chain, staged"](../../explorations/semantica-lab/BRIEF.md#the-chain-staged);
 the mechanism behind "every span slices back" is `verifyTextAnchor` (M1,
-[`MAP.md` §Capability Check](../../explorations/semantica-lab/MAP.md#capability-check-goal-1--semantica-canary),
+[`MAP.md` §Capability Check](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/MAP.md#capability-check-goal-1--semantica-canary),
 Canonicalizer row).
 
 - [x] **First vertical slice**
-      ([`MAP.md` §First Vertical Slice](../../explorations/semantica-lab/MAP.md#first-vertical-slice)):
+      ([`MAP.md` §First Vertical Slice](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/MAP.md#first-vertical-slice)):
       C0 on F1 + one G-relation W1 paper, run live and then with the network
       off; the two `EvalReport`s have equal `reportDigest`s (telemetry sidecars excluded,
       R1); every span in every claim

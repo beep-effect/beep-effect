@@ -1,10 +1,10 @@
 # Evidence and ownership
 
 - [Corpus synthesis](../../../explorations/research-corpus-synthesis/README.md)
-  and [independent admission](../../../explorations/research-corpus-synthesis/research/ADMISSION-REVIEW.md).
-- [Reader1](../../../explorations/research-corpus-synthesis/research/readings/reading-1/SYNTHESIS.md): R1-240 GANDR scope.
-- [Reader2](../../../explorations/research-corpus-synthesis/research/readings/reading-2/SYNTHESIS.md): R2-052/R2-083 concrete candor/consumer seam.
-- [Reader3](../../../explorations/research-corpus-synthesis/research/readings/reading-3/SYNTHESIS.md): R3-001 existence/support/approval separation.
+  and [independent admission](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/research-corpus-synthesis/research/ADMISSION-REVIEW.md).
+- [Reader1](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/research-corpus-synthesis/research/readings/reading-1/SYNTHESIS.md): R1-240 GANDR scope.
+- [Reader2](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/research-corpus-synthesis/research/readings/reading-2/SYNTHESIS.md): R2-052/R2-083 concrete candor/consumer seam.
+- [Reader3](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/research-corpus-synthesis/research/readings/reading-3/SYNTHESIS.md): R3-001 existence/support/approval separation.
 - [Runtime owner](../../agentic-professional-runtime/README.md),
   [completed spans](../../citation-verified-span-substrate/README.md),
   [completed candor](../../patent-citation-candor-gate/README.md).

@@ -1,7 +1,7 @@
 # Skill Contract Gate Certificates — Sources & Provenance
 
 - **Source exploration:** `explorations/typed-agent-skill-contracts` — primary ledger:
-  `explorations/typed-agent-skill-contracts/research/SOURCES.md`.
+  [explorations/typed-agent-skill-contracts/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/typed-agent-skill-contracts/research/SOURCES.md).
 
 ## 1. Mined source corpus
 
@@ -21,7 +21,7 @@ P0 (2026-11-02) read these before implementing:
 
 | Reference | Used for |
 |-----------|----------|
-| `explorations/typed-agent-skill-contracts/MAP.md` §Amendment J re-entry | Binding inputs (envelope, five outcomes, reach, inconclusive exclusion, apply plan, first slice) |
+| [explorations/typed-agent-skill-contracts/MAP.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/typed-agent-skill-contracts/MAP.md) §Amendment J re-entry | Binding inputs (envelope, five outcomes, reach, inconclusive exclusion, apply plan, first slice) |
 | `explorations/typed-agent-skill-contracts/DECISIONS.md` 2026-08-26 and 2026-10-14 | Ownership ruling: candidate 7, kernel goal stays closed, one certificate vocabulary |
 | `packages/foundation/modeling/skill-contract/src/EvidenceReceipt.ts` | Reused `EvidenceReceipt` envelope factory, `EvidenceSubject`/`EvidenceDigest`, `GateSummaryVerifier` |
 | `packages/foundation/modeling/skill-contract/src/Gate.ts` | Reused `GateId`, `GateSeverity`, `EvidencePredicateType`, `IsoDateTimeString`; unique-id filter pattern |
