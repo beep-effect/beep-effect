@@ -694,6 +694,7 @@
     {"name":"CiPartitions.rebalance","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CiPartitions.shardedSourceReport","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CiPartitions.workspaceNamesByPath","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"CiPartitions.writeCiPartitionPlans","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CiPartitions.writeFamilyPlan","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CiPartitions.writeShardPlan","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"ClearingHouse.physicalTargets","owner":"@beep/repo-cli","family":"tooling","conforms":true},

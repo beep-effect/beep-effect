@@ -663,6 +663,23 @@ export const rebalanceCiPartitions = Effect.fn("CiPartitions.rebalance")(functio
   return A.appendAll(provenance, A.appendAll(A.flatten(planLines), binLines));
 });
 
+// `--write`: require at least one run, build the timing source for this command's scope and hand
+// its context to the program; the GitHub client and repository come from the same scope through
+// `withCiGithub`.
+const writeCiPartitionPlans = Effect.fn("CiPartitions.writeCiPartitionPlans")(function* (
+  repoRoot: string,
+  run: ReadonlyArray<number>
+) {
+  if (!A.isReadonlyArrayNonEmpty(run)) {
+    return yield* CiCommandError.make({ message: "--write needs --run <id> naming at least one green run." });
+  }
+  return yield* Layer.build(CiPartitionTimingSourceLive).pipe(
+    Effect.flatMap((context) => Effect.provideContext(rebalanceCiPartitions(repoRoot, run), context)),
+    Effect.scoped,
+    withCiGithub(repoRoot)
+  );
+});
+
 const rebalanceCommand = Command.make(
   "rebalance",
   {
@@ -694,16 +711,7 @@ const rebalanceCommand = Command.make(
       yield* printLines(lines);
     }
     if (write) {
-      const runIds = yield* A.isReadonlyArrayNonEmpty(run)
-        ? Effect.succeed(run)
-        : CiCommandError.make({ message: "--write needs --run <id> naming at least one green run." });
-      // Build the timing source for this command's scope and hand its context to the program; the
-      // GitHub client and repository come from the same scope through `withCiGithub`.
-      const lines = yield* Layer.build(CiPartitionTimingSourceLive).pipe(
-        Effect.flatMap((context) => Effect.provideContext(rebalanceCiPartitions(repoRoot, runIds), context)),
-        Effect.scoped,
-        withCiGithub(repoRoot)
-      );
+      const lines = yield* writeCiPartitionPlans(repoRoot, run);
       yield* printLines(lines);
     }
     if (check || (!write && !prune)) {
@@ -721,7 +729,7 @@ const rebalanceCommand = Command.make(
       yield* Console.log("[ci] every Test Unit partition is within budget and matches its plan.");
     }
   })
-).pipe(Command.withDescription("Recompute Test Unit shard plans and weights from a green main run, or check them"));
+).pipe(Command.withDescription("Recompute Test Unit shard plans and weights from green runs, or check them"));
 
 /**
  * `beep ci partitions` command group.
@@ -741,7 +749,7 @@ export const ciPartitionsCommand = Command.make("partitions", {}, () =>
   printLines([
     "Test Unit partition commands:",
     "- bun run beep ci partitions rebalance [--check] (offline budget check of the committed plans and table)",
-    "- bun run beep ci partitions rebalance --write --run <id> (repack from a green main run, then check)",
+    "- bun run beep ci partitions rebalance --write --run <id> [--run <id>...] (repack at each file's worst measurement over green runs, then check)",
     "- bun run beep ci partitions rebalance --prune (re-pack the committed plans after test deletions; no GitHub read)",
   ])
 ).pipe(
