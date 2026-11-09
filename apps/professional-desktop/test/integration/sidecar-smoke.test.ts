@@ -34,9 +34,10 @@ import * as RpcTest from "effect/rpc/RpcTest";
 import * as Stream from "effect/Stream";
 import { decodeWorkspaceId, userDocument } from "@/chat/ChatFixtures";
 import { RuntimeTest } from "@/runtime/Layer";
-import { fcDeepSweepActive, vitestCoverageRunActive } from "../../../../vitest.shared.ts";
+import { pgliteFixtureTimeout } from "./PgliteFixtureBudget.ts";
 
-const fixtureTimeout = vitestCoverageRunActive || fcDeepSweepActive ? "5 minutes" : "10 seconds";
+// RuntimeTest provides SyncDatabaseInMemory: a cold bundled PGlite plus the boot migrations.
+const fixtureTimeout = pgliteFixtureTimeout;
 const shouldRun = Bun.env.BEEP_TEST_SIDECAR_SMOKE === "1";
 
 const smokeProgram = Effect.gen(function* () {

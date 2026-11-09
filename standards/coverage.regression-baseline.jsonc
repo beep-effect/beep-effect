@@ -37784,6 +37784,30 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.command.ts": {
+          "lines": 54.4,
+          "statements": 54.28,
+          "branches": 36.36,
+          "functions": 54.09,
+          "uncovered": {
+            "lines": 57,
+            "statements": 64,
+            "branches": 28,
+            "functions": 28
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.service.ts": {
+          "lines": 50.79,
+          "statements": 49.23,
+          "branches": 12.5,
+          "functions": 47.61,
+          "uncovered": {
+            "lines": 31,
+            "statements": 33,
+            "branches": 14,
+            "functions": 11
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts": {
           "lines": 100,
           "statements": 100,

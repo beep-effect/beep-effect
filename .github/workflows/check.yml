@@ -708,7 +708,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        partition: [repo-cli-1, repo-cli-2, repo-cli-3, repo-cli-4, repo-cli-5, repo-cli-6, law-practice-1, law-practice-2, law-practice-3, unit-a, unit-b, unit-c, unit-d]
+        partition: [repo-cli-1, repo-cli-2, repo-cli-3, repo-cli-4, repo-cli-5, repo-cli-6, repo-cli-7, repo-cli-8, repo-cli-9, repo-cli-10, repo-cli-11, law-practice-1, law-practice-2, law-practice-3, law-practice-4, law-practice-5, law-practice-6, law-practice-7, law-practice-8, law-practice-9, law-practice-10, law-practice-11, law-practice-12, unit-a, unit-b, unit-c, unit-d, unit-e, unit-f, unit-g]
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
