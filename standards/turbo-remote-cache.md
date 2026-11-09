@@ -110,11 +110,18 @@ turbo is never asked to read a remote cache it cannot authenticate to.
 ### Separate environment health
 
 The CLI also probes all `op://` references in the checkout `.env` with output
-suppressed. When that independent health check fails, it retries references one
-at a time and prints only each failing variable name as a plan warning. It never
-prints a reference or resolved value, and its result never changes the cache
-plan; repair the named variable separately while a healthy Turbo quad continues
-to read the remote cache.
+suppressed. When that independent health check fails, it retries each reference
+in its own isolated probe and prints only the failing variable names as one plan
+warning. It never prints a reference or resolved value, and its result never
+changes the cache plan; repair the named variable separately while a healthy
+Turbo quad continues to read the remote cache.
+
+The probe runs at most once per CLI process. Most routes print the warning
+before each Turbo step that loads the checkout environment. The bare
+`bun run lint` sweep runs the probe beside its stages instead, so its `op` calls
+never delay the first stage, and prints the warning once at the end of the
+sweep. A red sweep prints it too, after the failure summary; an interrupted
+sweep does not.
 
 That scrub deliberately does **not** apply to an `op run`-wrapped spawn.
 `op run` resolves `op://` references out of the environment it is handed, not

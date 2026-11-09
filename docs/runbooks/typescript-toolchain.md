@@ -152,15 +152,19 @@ maximum RSS of 3.79 GiB and 1.90 GiB. All eight runs passed. The backend-only
 and complete-command samples are separate measurements.
 
 The default deprecated-API worker now selects the installed patched `tsrs-lint`
-launcher directly. Before linting, it asks Oxlint for its exact selected files
-(`--debug=files`) and uses `tsrs/async` config parsing to prove TypeScript file
-ownership. Config parsing handles extends, include/exclude and solution
-references; parsed membership is cached within the invocation. A failed or
-truncated file inventory, invalid config, or orphan TypeScript input fails the
-gate. Composite-reference traversal is conservative where the API does not
-expose the backend's pruning predicate. The full `packages`, `apps`, `infra`
-sweep passed this guard and lint. `BEEP_LINT_TSGOLINT=true` restores the old Go
-backend and its debug-summary guard for comparison or rollback.
+launcher directly. Alongside the lint, it asks Oxlint for its exact selected
+files (`--debug=files`) and uses `tsrs/async` config parsing to prove TypeScript
+file ownership. The proof and the lint run concurrently, so the proof's serial
+segment (1.35-1.58 seconds on the full sweep) leaves the critical path. A proof
+failure fails fast: it interrupts the running lint, whose process group the
+spawner's scoped release reaps, and it outranks any lint exit code. Config
+parsing handles extends, include/exclude and solution references; parsed
+membership is cached within the invocation. A failed or truncated file
+inventory, invalid config, or orphan TypeScript input fails the gate.
+Composite-reference traversal is conservative where the API does not expose the
+backend's pruning predicate. The full `packages`, `apps`, `infra` sweep passed
+this guard and lint. `BEEP_LINT_TSGOLINT=true` restores the old Go backend and
+its debug-summary guard for comparison or rollback.
 
 Keep Effect compiler diagnostics enabled: they already gate through Check,
 including the repository's explicit severity map. The upgrade adds the new

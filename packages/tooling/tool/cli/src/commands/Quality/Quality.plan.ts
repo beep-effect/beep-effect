@@ -80,10 +80,11 @@ export const qualityProfileConfigForTesting = (profile: QualityHardwareProfile):
         profile,
         // Hosted runners died ("runner lost communication") under turbo's default
         // concurrency (~10) stacking multi-GB tsgo processes on the smallest hosted
-        // machines; see goals/quality-speedup/research/instantiation-census.md §5.
-        // The heavy lanes now run on 32GB beep-ec2-heavy fleet workers, so the cap
-        // is the 8vCPU tuning; the 16GB lint/test-unit lanes keep their own cap in
-        // Ci/CiLane.ts.
+        // machines (instantiation census §5, archived with goals/quality-speedup in
+        // beep-effect/beep-effect-goals-archive). The heavy lanes now run on
+        // beep-ec2-heavy fleet workers (64 GiB, 8 or 16 vCPU; see
+        // infra/src/CiFleetController.ts), so the cap is tuned for the 8-vCPU shapes;
+        // the hosted 16GB Lint and Test Unit lanes keep their own cap in Ci/CiLane.ts.
         turboConcurrency: 4,
         policyLintConcurrency: 4,
         cheapGateConcurrency: 4,
@@ -114,7 +115,10 @@ export const qualityProfileConfigForTesting = (profile: QualityHardwareProfile):
         policyLintConcurrency: 8,
         cheapGateConcurrency: 8,
         prePushLaneConcurrency: 4,
-        oxlintThreads: 16,
+        // The deprecated-API sweep keeps only 4-5 cores busy at 8 or 16 threads:
+        // on a workstation host 8 threads took 30.0 s and 111.6 CPU-s, 16 took 30.5 s and
+        // 158.8 CPU-s with about 1.3 GB more peak RSS. Do not raise it.
+        oxlintThreads: 8,
         docgenParallel: 6,
         fullProofSlots: 1,
         reviewFixSlots: 3,

@@ -1,4 +1,5 @@
 import * as NodeURL from "node:url";
+import { LintPolicySweeps } from "@beep/repo-cli/commands/Quality";
 import {
   collectLintPolicyChangeFacts,
   DOCS_OXLINT_CONFIG,
@@ -262,15 +263,14 @@ describe("lint policy plan stages", () => {
     expect(deprecated.args).toContain("--affected");
   });
 
-  it("keeps the full sweep's single graph and root sweeps, reading the prepared docs config", () => {
+  it("keeps the full sweep's single graph and runs the three root sweeps abreast, reading the prepared docs config", () => {
     const stages = rootLintPolicyStagesForTesting("/repo", { hosted: true, docsConfig: PREBUILT_DOCS_OXLINT_CONFIG });
+    // The tail shares no inputs or outputs, so its three steps form one stage (perf plan P6).
     expect(labels(stages)).toEqual([
       ["lint:policy:cheap"],
       ["lint:policy:medium"],
       ["knowledge:doctor"],
-      ["lint:jsdoc"],
-      ["lint:deprecated-apis"],
-      ["quality:test-tsgo"],
+      ["lint:jsdoc", "lint:deprecated-apis", "quality:test-tsgo"],
     ]);
     expect(stepLabelled(stages, "lint:policy:medium").args).toContain(`--concurrency=${width}`);
     expect(stepLabelled(stages, "lint:jsdoc").args).toEqual([
@@ -279,8 +279,36 @@ describe("lint policy plan stages", () => {
       "--config",
       PREBUILT_DOCS_OXLINT_CONFIG,
       "--max-warnings=0",
+      `--threads=${localQualityConcurrencyPlan().oxlintThreads}`,
     ]);
+    expect(A.drop(stepLabelled(stages, "lint:deprecated-apis").args, 3)).toEqual(["lint", "deprecated-apis", "--full"]);
+    expect(A.drop(stepLabelled(stages, "quality:test-tsgo").args, 3)).toEqual(["quality", "test-tsgo"]);
     expect(A.every(A.flatten(stages), (step) => !A.contains(step.args, "--affected"))).toBe(true);
+    // A local full sweep leaves the knowledge doctor to the hosted plan and keeps the same tail.
+    expect(labels(rootLintPolicyStagesForTesting("/repo", { hosted: false }))).toEqual([
+      ["lint:policy:cheap"],
+      ["lint:policy:medium"],
+      ["lint:jsdoc", "lint:deprecated-apis", "quality:test-tsgo"],
+    ]);
+  });
+
+  it("keeps the Turbo deprecated-API rollback sweep in a stage of its own", () => {
+    const stages = rootLintPolicyStagesForTesting("/repo", {
+      hosted: true,
+      sweeps: LintPolicySweeps.make({ schemaVersion: "lint-policy-sweeps/v1", deprecatedApis: "turbo" }),
+    });
+    // The rollback graph takes the whole policy width, so it never runs abreast of another graph.
+    expect(labels(stages)).toEqual([
+      ["lint:policy:cheap"],
+      ["lint:policy:medium"],
+      ["knowledge:doctor"],
+      ["lint:jsdoc", "quality:test-tsgo"],
+      ["lint:deprecated-apis"],
+    ]);
+    const deprecated = stepLabelled(stages, "lint:deprecated-apis");
+    expect(turboTaskNames(deprecated)).toEqual(["lint:deprecated-apis"]);
+    expect(deprecated.args).toContain(`--concurrency=${width}`);
+    expect(deprecated.args).not.toContain("--affected");
   });
 });
 
