@@ -164,7 +164,9 @@ const SingleLine = S.String.check(
  * `title` and `date` make the rendered heading (`### <title>, <date>`);
  * `reversal` is the "how to reverse" the Decision Log always required;
  * `lane` (branch) and `pullRequest` attribute the decision to the lane that
- * took it. `kind` defaults to `decision`.
+ * took it. `kind` defaults to `decision`. Decision files decode this schema
+ * with `onExcessProperty: "error"`, so a misspelled key (`pr` for
+ * `pullRequest`) fails `goals decisions check` instead of being dropped.
  *
  * **Example** (Construct frontmatter)
  *
