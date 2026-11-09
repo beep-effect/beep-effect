@@ -31,10 +31,18 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — reports landed 2026-11-06 (`research/`: docs catalog, alchemy/distilled source inventory, t3code stack patterns, the "use this, never roll that" matrix, t3code patches; `research/alchemy-blog/reports/`: four blog catalogs over all 47 posts with per-post notes). Follow-up decisions D17–D21 recorded. Operator review of the matrix is the P1 gate.
+P1 Foundations (started 2026-11-09). P0 closed the same day: the matrix's ten open questions
+resolve to D17–D21 plus the 2026-11-09 decision files (Storybook on Cloudflare StaticSite, runner
+group and App webhook outside IaC). Landed in P1 so far: tooling kind `infra` (doctrine tables,
+`create-package --kind infra`, root workspace glob), the shared S3 state store bootstrapped with
+SSE-KMS, the GitHub OIDC state role, `BeepEffectWeb` pointed at the shared store with a plan step
+in its deploy workflow, the `@alchemy.run/aws` catalog pin and the `Artifacts.cached` bun patch,
+and `docs/runbooks/alchemy-infra.md`. P1 exit still owed: the first `prod` deploy on the shared
+store showing no create or replace (runs on merge).
 
 ## Latest Evidence
 
+- 2026-11-09 P1 bootstrap receipts: `decisions/2026-11-09-*.md` (state bucket, OIDC role, state move, bun patch).
 - 2026-11-06 grill session: decisions D1–D16 in [`explorations/pulumi-to-alchemy/DECISIONS.md`](../../explorations/pulumi-to-alchemy/DECISIONS.md); doctrine entry "Infrastructure Stacks Are A Tooling Kind" in `standards/architecture/DECISIONS.md`.
 - [explorations/pulumi-to-alchemy/RESEARCH.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/pulumi-to-alchemy/RESEARCH.md) (2026-11-02): coverage matrix, gaps G1–G9.
 

@@ -38,6 +38,7 @@
     "react-dom": "catalog:"
   },
   "devDependencies": {
+    "@alchemy.run/aws": "catalog:",
     "@alchemy.run/cloudflare": "catalog:",
     "@effect/platform-bun": "catalog:",
     "@effect/platform-node": "catalog:",

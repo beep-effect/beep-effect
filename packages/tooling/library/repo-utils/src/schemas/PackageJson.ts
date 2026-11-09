@@ -296,7 +296,7 @@ const BeepFoundationKind = S.Literals(["primitive", "modeling", "capability", "u
   })
 );
 
-const BeepToolingKind = S.Literals(["library", "tool", "policy-pack", "test-kit"] as const).pipe(
+const BeepToolingKind = S.Literals(["library", "tool", "policy-pack", "test-kit", "infra"] as const).pipe(
   $I.annoteSchema("BeepToolingKind", {
     title: "Beep Tooling Kind",
     description: "Canonical tooling package kind metadata from the repo architecture.",
