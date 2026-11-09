@@ -25,6 +25,7 @@ import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
@@ -1320,11 +1321,32 @@ const elementOf =
 type AntecedentStrategy = {
   readonly headFor: (path: string, term: EncodedTerm) => string;
   readonly allows: (path: string, term: EncodedTerm, candidatePath: string, candidate: EncodedTerm) => boolean;
+  readonly refinesSelection: boolean;
 };
 const legacyAntecedentStrategy: AntecedentStrategy = {
   headFor: (_path, term) => term.head,
   allows: () => true,
+  refinesSelection: false,
 };
+const leadingQuantifierPattern = /^(?:at least one|one or more)\s+/u;
+const containsInOrder =
+  (needle: ReadonlyArray<string>) =>
+  (words: ReadonlyArray<string>): boolean =>
+    A.reduce(words, 0, (matched, word) => (O.contains(A.get(needle, matched), word) ? matched + 1 : matched)) ===
+    A.length(needle);
+// A definite multi-word head may drop modifiers of its introducer ("the left barrier post" for
+// "a downwardly extending left barrier post"). One bare word is too weak to prove the identity.
+const isRefinedHead =
+  (referring: string) =>
+  (candidate: string): boolean => {
+    const needle = Str.split(" ")(Str.replace(leadingQuantifierPattern, "")(referring));
+    const words = Str.split(" ")(candidate);
+    return (
+      A.length(needle) >= 2 &&
+      O.exists(A.last(needle), (last) => O.contains(A.last(words), last)) &&
+      containsInOrder(needle)(words)
+    );
+  };
 const antecedentEdges = (
   elements: ReadonlyArray<EncodedElement>,
   ancestors: ReadonlyArray<EncodedElement> = [],
@@ -1422,6 +1444,8 @@ const antecedentEdges = (
               A.some(ancestors, (element) => element.path === path && element.kind === "preamble-subject")
           )
         : [];
+      const refining = strategy.refinesSelection && isReferringDeterminer(referring.term.determiner);
+      const refined = refining ? A.filter(eligible, ({ term }) => isRefinedHead(referring.term.head)(term.head)) : [];
       const introductions = O.getOrElse(
         A.findFirst(
           [
@@ -1432,6 +1456,7 @@ const antecedentEdges = (
             designated,
             rootShortened,
             modified,
+            refined,
             bareMentions,
             mentions,
             modifiedMentions,
@@ -1440,8 +1465,20 @@ const antecedentEdges = (
         ),
         () => []
       );
+      // Repeated exact introducers in one claim read as a fresh mention each time, so the
+      // nearest earlier one in this claim is the reference. Ancestor-only repeats stay unresolved.
+      const nearestLocal = () =>
+        A.last(
+          A.sortBy(Order.mapInput(Order.Number, ({ term }: (typeof located)[number]) => term.anchor.startChar))(
+            A.filter(exact, ({ path }) => local(path))
+          )
+        );
       return O.map(
-        A.length(introductions) === 1 ? A.head(introductions) : O.none(),
+        A.length(introductions) === 1
+          ? A.head(introductions)
+          : refining && introductions === exact
+            ? nearestLocal()
+            : O.none(),
         (introducing): EncodedEdge => ({
           kind: "antecedent",
           referring: { path: referring.path, anchor: referring.term.anchor },
@@ -1710,6 +1747,7 @@ const ownershipStrategy = (
     (map, fact) => HashMap.set(map, fact.part, fact.head)
   );
   const strategy: AntecedentStrategy = {
+    refinesSelection: true,
     headFor: (path, term) => O.getOrElse(HashMap.get(possessiveHeads, mentionKey(path, term)), () => term.head),
     allows: (path, term, candidatePath, candidate) => {
       const key = mentionKey(path, term);
@@ -1748,7 +1786,11 @@ const inspectionStructuralReferencesFor =
       antecedentEdges(
         elements,
         ancestors,
-        { ...legacyAntecedentStrategy, allows: (_path, _term, path, term) => donorAllowed(path, term) },
+        {
+          ...legacyAntecedentStrategy,
+          refinesSelection: true,
+          allows: (_path, _term, path, term) => donorAllowed(path, term),
+        },
         abbreviation
       ),
       ancestorBindings()
@@ -2942,6 +2984,46 @@ const alignedFactsOf = (
         : [];
     })
   );
+// "A method ... comprising a shaft, the method comprising:" restates the preamble's own head
+// noun before its real transition, so the preamble runs through that restated subject.
+const preambleHeadPattern =
+  /^(?:an?|the|one or more)\s+([^,;:()]*?)\s*(?:\b(?:for|of|to|in|on|with|that|which|using|by|having|comprising|including)\b|[,;:(]|$)/iu;
+const restatedSubjectPattern =
+  /,\s*(?:the|said)\s+(?:[\p{L}\p{N}-]+\s+){0,6}?[\p{L}\p{N}-]+(?=\s+(?:further\s+)?(?:comprising|including|having|consisting of)\b)/giu;
+const restatedTransitionPattern = /^\s+(?:further\s+)?(?:comprising|including|having|consisting of)\b\s*:?\s*/iu;
+const lastWordOf = (text: string): O.Option<string> =>
+  O.map(A.last(Str.split(Str.trim(text), /\s+/u)), Str.toLowerCase);
+const preambleHeadOf = (preamble: string): O.Option<string> =>
+  O.flatMap(Str.match(preambleHeadPattern)(Str.trim(preamble)), (match) => O.flatMap(A.get(match, 1), lastWordOf));
+const restatedTransitionParts = (claimText: string, parts: { readonly preamble: Span; readonly body: Span }) => {
+  const bodyEnd = parts.body.start + Str.length(parts.body.text);
+  return O.getOrElse(
+    O.flatMap(preambleHeadOf(parts.preamble.text), (head) =>
+      O.flatMap(
+        A.findFirst(matchesIn(restatedSubjectPattern)(parts.body), ({ text }) => O.contains(lastWordOf(text), head)),
+        (subject) => {
+          const preambleEnd = subject.start + Str.length(subject.text);
+          return O.flatMap(
+            Str.match(restatedTransitionPattern)(Str.slice(preambleEnd, bodyEnd)(claimText)),
+            (transition) => {
+              const bodyStart = preambleEnd + Str.length(transition[0]);
+              return bodyStart < bodyEnd
+                ? O.some({
+                    preamble: {
+                      start: parts.preamble.start,
+                      text: Str.slice(parts.preamble.start, preambleEnd)(claimText),
+                    },
+                    body: { start: bodyStart, text: Str.slice(bodyStart, bodyEnd)(claimText) },
+                  })
+                : O.none();
+            }
+          );
+        }
+      )
+    ),
+    () => parts
+  );
+};
 const sourceFallbackTree =
   (aligned: HashMap.HashMap<number, ReadonlyArray<ClaimLexicalToken>>): typeof inspectionTreeInput =>
   (claim, parts) =>
@@ -2952,7 +3034,7 @@ const sourceFallbackTree =
           sourcePartOfSpeechGrammar(facts),
           splitParallelInspectionBody,
           expandEnumeration
-        )(claim, parts),
+        )(claim, referencesOf(claim).length === 0 ? restatedTransitionParts(claim.claimText, parts) : parts),
     });
 const boundedSourceEvidence = (
   prepared: PreparedClaimInspection,

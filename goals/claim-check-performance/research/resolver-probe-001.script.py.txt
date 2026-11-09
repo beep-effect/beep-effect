@@ -1,0 +1,29 @@
+import sys
+p=sys.argv[1];s=open(p).read()
+old="""  const construct: typeof inspectionTreeInput = (claim, parts) =>
+    O.getOrElse("""
+new="""  const construct: typeof inspectionTreeInput = (claim, parts) =>
+    (globalThis as any).__oracle?.(claim, referencesOf(claim).length === 0) ?? O.getOrElse("""
+assert old in s
+s=s.replace(old,new)
+s=s.replace("const inspectionTreeInput = inspectionTreeInputFor(inspectionLexicalGrammar);","""const inspectionTreeInput = inspectionTreeInputFor(inspectionLexicalGrammar);
+{
+  const fs = require("node:fs");
+  const fx = "packages/law-practice/domain/test/fixtures/claim-element/positive";
+  const byText = new globalThis.Map<string, any>();
+  for (const fam of fs.readdirSync(fx)) {
+    try {
+      const g = JSON.parse(fs.readFileSync(`${fx}/${fam}/expected.json`, "utf8"));
+      const c = JSON.parse(fs.readFileSync(`${fx}/${fam}/claims.json`, "utf8")).claims;
+      for (const t of g) { const x = c.find((y: any) => y.claimNumber === t.claimNumber); if (x) byText.set(x.claimText, t); }
+    } catch {}
+  }
+  const mode = process.env.ORACLE;
+  (globalThis as any).__oracle = (claim: any, independent: boolean) => {
+    const on = mode === "all" || (mode === "root" && independent);
+    if (!on) return undefined;
+    const t = byText.get(claim.claimText);
+    return t ? { claimNumber: t.claimNumber, elements: t.elements, edges: t.edges, producer: t.producer } : undefined;
+  };
+}""")
+open(p,'w').write(s)

@@ -3,10 +3,12 @@ import {
   ClaimInputRecord,
   ClaimLexicalEvidence,
   ClaimLexicalToken,
+  decomposeClaim,
   decomposePreparedClaimRoles,
   inspectPreparedClaimRoles,
   prepareClaimInspection,
 } from "@beep/law-practice-domain/values/ClaimElement";
+import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
@@ -207,6 +209,40 @@ describe("part-of-speech boundary rules", () => {
   );
 });
 
+describe("restated preamble subjects", () => {
+  const preambleOf = (tree: ClaimElementTree) => O.getOrThrow(A.head(tree.elements)).anchor.quote;
+
+  it.effect("runs the preamble through a restated head noun before the real transition", () =>
+    Effect.gen(function* () {
+      const tree = yield* treeOf(
+        "A method for coating a plate comprising a shaft, the method comprising: removing a cover; and stores the signal.",
+        true
+      );
+      assert.strictEqual(preambleOf(tree), "A method for coating a plate comprising a shaft, the method");
+    })
+  );
+
+  it.effect("keeps the first transition for another noun, a finite verb or no evidence", () =>
+    Effect.gen(function* () {
+      const otherNoun = yield* treeOf(
+        "A method comprising a shaft, the plate comprising a tab; and stores the signal.",
+        true
+      );
+      const finiteVerb = yield* treeOf(
+        "A knee joint comprising a shaft, the knee joint includes a tab; and stores the signal.",
+        true
+      );
+      const evidenceFree = yield* treeOf(
+        "A method comprising a shaft, the method comprising a tab; and stores the signal.",
+        false
+      );
+      assert.strictEqual(preambleOf(otherNoun), "A method");
+      assert.strictEqual(preambleOf(finiteVerb), "A knee joint");
+      assert.strictEqual(preambleOf(evidenceFree), "A method");
+    })
+  );
+});
+
 describe("part-of-speech element kinds", () => {
   const kindOf = (tree: ClaimElementTree, quote: string) =>
     O.map(
@@ -326,6 +362,84 @@ describe("parallel coordinate fallback elements", () => {
       const prepared = yield* prepareClaimInspection(inputOf(text));
       const report = yield* inspectPreparedClaimRoles(prepared, [evidenceFor(text)]);
       assert.strictEqual(O.getOrThrow(A.head(report.records)).status, "partial");
+    })
+  );
+});
+
+describe("definite reference selection", () => {
+  const introducerOf = (tree: ClaimElementTree, referring: string): ReadonlyArray<string> =>
+    A.flatMap(tree.edges, (edge) =>
+      edge.kind === "antecedent" && edge.referring.anchor.quote === referring
+        ? [`${edge.introducing.anchor.startChar}:${edge.introducing.anchor.quote}`]
+        : []
+    );
+  const strictTreeOf = (text: string) => {
+    const claim = PatentClaim.cases.independent.make({
+      claimNumber: 1,
+      claimText: text,
+      preamble: "A system",
+      transition: "comprising",
+      body: Str.slice(Str.length("A system comprising "))(text),
+    });
+    return decomposeClaim(claim, [claim]);
+  };
+  const repeated = refused("a rod; a plate; a plate; the plate is mounted on the rod");
+
+  it.effect("binds repeated exact introducers to the nearest earlier one", () =>
+    Effect.gen(function* () {
+      const tree = yield* treeOf(repeated, false);
+      const nearest = Str.lastIndexOf("a plate")(repeated);
+      assert.deepStrictEqual(introducerOf(tree, "the plate"), [`${O.getOrThrow(nearest)}:a plate`]);
+    })
+  );
+
+  it.effect("leaves repeated introducers unresolved on the strict decomposition route", () =>
+    Effect.gen(function* () {
+      const tree = yield* strictTreeOf(repeated);
+      assert.deepStrictEqual(introducerOf(tree, "the plate"), []);
+    })
+  );
+
+  it.effect("binds a multi-word head to its unique introducer with added modifiers", () =>
+    Effect.gen(function* () {
+      const text = refused("a left rigid barrier post; the left barrier post is mounted on the rod");
+      const start = O.getOrThrow(Str.indexOf("a left rigid")(text));
+      const inspection = yield* treeOf(text, false);
+      const strict = yield* strictTreeOf(text);
+      assert.deepStrictEqual(introducerOf(inspection, "the left barrier post"), [`${start}:a left rigid barrier post`]);
+      assert.deepStrictEqual(introducerOf(strict, "the left barrier post"), []);
+    })
+  );
+
+  it.effect("does not bind a single-word head across several modifiers", () =>
+    Effect.gen(function* () {
+      const tree = yield* treeOf(refused("an ablation lesion zone; the zone is mounted on the rod"), false);
+      assert.deepStrictEqual(introducerOf(tree, "the zone"), []);
+    })
+  );
+
+  it.effect("does not bind a multi-word head whose words are out of order or end differently", () =>
+    Effect.gen(function* () {
+      const reordered = yield* treeOf(
+        refused("a barrier left post; the left barrier post is mounted on the rod"),
+        false
+      );
+      const otherLast = yield* treeOf(
+        refused("a left barrier post cover; the left barrier post is mounted on the rod"),
+        false
+      );
+      assert.deepStrictEqual(introducerOf(reordered, "the left barrier post"), []);
+      assert.deepStrictEqual(introducerOf(otherLast, "the left barrier post"), []);
+    })
+  );
+
+  it.effect("ignores a leading quantifier in the referring head", () =>
+    Effect.gen(function* () {
+      const tree = yield* treeOf(
+        refused("a first rigid barrier post; the at least one first barrier post is mounted on the rod"),
+        false
+      );
+      assert.strictEqual(introducerOf(tree, "the at least one first barrier post").length, 1);
     })
   );
 });
