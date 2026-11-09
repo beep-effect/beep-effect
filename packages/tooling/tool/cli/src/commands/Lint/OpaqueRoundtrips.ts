@@ -15,6 +15,7 @@ import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
@@ -179,12 +180,23 @@ const holdsArbitrary =
     return isArbitraryType(type) || A.some(elementTypes(checker, type), isArbitraryType);
   };
 
+// Calls that enclose a strict-equality assertion, keyed by node identity. Scope reaches findings only
+// through descendants, so a call with no assertion below it never needs a type query.
+type AssertionPaths = MutableHashSet.MutableHashSet<ts.Node>;
+
 const sampleScope = (
   checker: ts.TypeChecker,
+  assertionPaths: AssertionPaths,
   node: ts.Node,
   names: HashSet.HashSet<string>
 ): HashSet.HashSet<string> => {
-  if (!ts.isCallExpression(node) || !A.some(node.arguments, holdsArbitrary(checker))) return names;
+  if (
+    !ts.isCallExpression(node) ||
+    // Wrap the lookup too: an unwrapped node falls through to a structural hash of the cyclic AST.
+    !MutableHashSet.has(assertionPaths, Equal.byReferenceUnsafe(node)) ||
+    !A.some(node.arguments, holdsArbitrary(checker))
+  )
+    return names;
   return A.reduce(node.arguments, names, (scope, argument) => collectArgumentSamples(argument, scope));
 };
 
@@ -199,6 +211,19 @@ const strictEqualityOperands = (node: ts.Node): O.Option<readonly [ts.Expression
   if (node.expression.name.text !== "toStrictEqual") return O.none();
   return O.zipWith(expectOperand(node.expression.expression), O.fromUndefinedOr(node.arguments[0]), Tuple.make);
 };
+
+// Mark every ancestor-or-self of an `expect(x).toStrictEqual(y)` call. The callback never returns a
+// truthy value, because ts.forEachChild stops at the first one.
+const markAssertionPaths =
+  (assertionPaths: AssertionPaths) =>
+  (node: ts.Node): boolean => {
+    let encloses = O.isSome(strictEqualityOperands(node));
+    ts.forEachChild(node, (child) => {
+      encloses = markAssertionPaths(assertionPaths)(child) || encloses;
+    });
+    if (encloses) MutableHashSet.add(assertionPaths, Equal.byReferenceUnsafe(node));
+    return encloses;
+  };
 
 const assertionOpaqueNames = (
   checker: ts.TypeChecker,
@@ -246,12 +271,16 @@ export const detectOpaqueRoundtrips =
   (sources: ReadonlyArray<ts.SourceFile>): ReadonlyArray<OpaqueRoundtripFinding> => {
     const checker = program.getTypeChecker();
     const findings = A.empty<OpaqueRoundtripFinding>();
+    const assertionPaths = MutableHashSet.empty<ts.Node>();
     const visit = (node: ts.Node, samples: HashSet.HashSet<string>): void => {
-      const scope = sampleScope(checker, node, samples);
+      const scope = sampleScope(checker, assertionPaths, node, samples);
       O.map(assertionFinding(checker, scope, node), (finding) => findings.push(finding));
       ts.forEachChild(node, (child) => visit(child, scope));
     };
-    for (const source of sources) visit(source, HashSet.empty());
+    for (const source of sources) {
+      markAssertionPaths(assertionPaths)(source);
+      visit(source, HashSet.empty());
+    }
     return findings;
   };
 
@@ -303,14 +332,31 @@ const compilerLibraries = (path: Path.Path) => {
   );
 };
 
-const compilerHost = (path: Path.Path, libraryText: HashMap.HashMap<string, string>, options: ts.CompilerOptions) => {
+// One registry per scan shares parsed SourceFiles across tsconfig groups; it keys each file on the
+// source-file-affecting compiler options, so groups with different settings still parse separately.
+// Sharing is safe only because groups run one after another: a program writes per-program fields
+// onto the SourceFiles it binds, so two live programs must never share one.
+const compilerHost = (
+  path: Path.Path,
+  libraryText: HashMap.HashMap<string, string>,
+  registry: ts.DocumentRegistry,
+  options: ts.CompilerOptions
+) => {
   const host = { ...ts.createCompilerHost(options), useSourceOfProjectReferenceRedirect: () => true };
-  const readSource = host.getSourceFile;
-  host.getSourceFile = (file, languageVersion, onError, shouldCreateNewSourceFile) => {
-    const library = HashMap.get(libraryText, path.basename(file));
-    return O.isSome(library)
-      ? ts.createSourceFile(file, library.value, languageVersion)
-      : readSource(file, languageVersion, onError, shouldCreateNewSourceFile);
+  host.getSourceFile = (file, languageVersion, onError) => {
+    const text = O.orElse(HashMap.get(libraryText, path.basename(file)), () => O.fromUndefinedOr(host.readFile(file)));
+    if (O.isNone(text)) {
+      onError?.(`File not found: ${file}`);
+      return undefined;
+    }
+    return registry.acquireDocument(
+      file,
+      options,
+      ts.ScriptSnapshot.fromString(text.value),
+      "0",
+      undefined,
+      languageVersion
+    );
   };
   return host;
 };
@@ -318,6 +364,7 @@ const compilerHost = (path: Path.Path, libraryText: HashMap.HashMap<string, stri
 const configFindings = (
   path: Path.Path,
   libraryText: HashMap.HashMap<string, string>,
+  registry: ts.DocumentRegistry,
   config: string,
   files: ReadonlyArray<string>
 ): ReadonlyArray<OpaqueRoundtripFinding> => {
@@ -331,7 +378,7 @@ const configFindings = (
   const program = ts.createProgram({
     rootNames: A.fromIterable(files),
     options,
-    host: compilerHost(path, libraryText, options),
+    host: compilerHost(path, libraryText, registry, options),
     ...(parsed.projectReferences === undefined ? {} : { projectReferences: parsed.projectReferences }),
   });
   const sources = A.getSomes(A.map(files, (file) => O.fromUndefinedOr(program.getSourceFile(file))));
@@ -362,8 +409,9 @@ const scan = Effect.fn("OpaqueRoundtrips.scan")(function* () {
         isCandidate
       );
       const libraryText = compilerLibraries(path);
+      const registry = ts.createDocumentRegistry(ts.sys.useCaseSensitiveFileNames, root);
       const findings = A.flatMap(A.fromIterable(groupCandidates(path, root, candidates)), ([config, files]) =>
-        configFindings(path, libraryText, config, files)
+        configFindings(path, libraryText, registry, config, files)
       );
       return {
         findings: A.map(findings, (finding) =>

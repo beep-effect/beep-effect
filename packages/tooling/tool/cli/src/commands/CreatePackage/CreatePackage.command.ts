@@ -147,7 +147,7 @@ const VALID_TYPES = ["library", "tool", "app"] as const;
 const VALID_APP_KINDS = ["nextjs", "vite", "service", "tauri", "runtime-proof"] as const;
 const VALID_FAMILIES = ["drivers", "ecosystem", "foundation", "tooling"] as const;
 const VALID_FOUNDATION_KINDS = ["primitive", "modeling", "capability", "ui-system"] as const;
-const VALID_TOOLING_KINDS = ["library", "tool", "policy-pack", "test-kit"] as const;
+const VALID_TOOLING_KINDS = ["library", "tool", "policy-pack", "test-kit", "infra"] as const;
 const PACKAGE_NAME_PATTERN = /^[a-z_][a-z0-9._-]*$/;
 const PARENT_DIR_PATTERN = /^(?!.*\/\/)(?!.*\/$)(?!.*(?:^|\/)\.{1,2}(?:\/|$))[a-z0-9][a-z0-9/_-]*$/;
 const TypeScriptPluginsConfig = S.Struct({
@@ -1144,7 +1144,7 @@ export const createPackageCommand = Command.make(
     ),
     kind: Flag.String("kind").pipe(
       Flag.withDescription(
-        "Package kind for --family foundation or --family tooling. Tooling supports: library, tool, policy-pack, test-kit"
+        "Package kind for --family foundation or --family tooling. Tooling supports: library, tool, policy-pack, test-kit, infra"
       ),
       Flag.withDefault("")
     ),

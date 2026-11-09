@@ -86,8 +86,12 @@ const PUBLIC_ORIGIN_PATTERN = new RegExp(
   "giu"
 );
 
-/** Cheap pre-filter shared by every retired host. */
-const RETIRED_PREFILTER = /beep/iu;
+/**
+ * Cheap pre-filter shared by every retired host: each one contains one of these
+ * three names under the same case folding as the rule, so a file without them
+ * cannot match.
+ */
+const RETIRED_PREFILTER = /beep(?:-effect)?\.(?:dev|sh)/iu;
 
 type RawMatch = {
   readonly index: number;

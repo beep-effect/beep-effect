@@ -1,0 +1,28 @@
+diff --git a/lib/Artifacts.js b/lib/Artifacts.js
+index 648209c089f984dc45bd5eba0788130c9813a1d6..dcef14f169001506881d953405eb24e11ce89058 100644
+--- a/lib/Artifacts.js
++++ b/lib/Artifacts.js
+@@ -1,6 +1,7 @@
+ import * as Context from "effect/Context";
+ import * as Deferred from "effect/Deferred";
+ import * as Effect from "effect/Effect";
++import * as Exit from "effect/Exit";
+ import * as Layer from "effect/Layer";
+ import * as Option from "effect/Option";
+ /**
+@@ -81,9 +82,10 @@ export const cached = (id) => (eff) => Effect.gen(function* () {
+         return cached;
+     }
+     yield* artifacts.set(id, Deferred.await(deferred));
+-    const result = yield* eff;
+-    yield* Deferred.succeed(deferred, result);
+-    yield* artifacts.set(id, result);
+-    return result;
++    // Settle waiters on every exit, or a failed or interrupted run leaves
++    // them waiting forever. Only a success is cached: a later caller
++    // retries instead of replaying the failure. (Upstream main fix carried as
++    // a bun patch until the release after beta.85; goals/infra-alchemy-rebuild.)
++    return yield* eff.pipe(Effect.onExit((exit) => (Exit.isSuccess(exit) ? artifacts.set(id, exit.value) : artifacts.delete(id)).pipe(Effect.andThen(Deferred.done(deferred, exit)))));
+ });
+ //# sourceMappingURL=Artifacts.js.map
+\ No newline at end of file

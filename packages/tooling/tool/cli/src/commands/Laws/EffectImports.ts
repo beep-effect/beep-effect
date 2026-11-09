@@ -21,7 +21,7 @@ import { A, Str } from "@beep/utils";
 import { compileAndExpand } from "@beep/walker/Expand";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { constVoid, flow, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Inspectable from "effect/Inspectable";
 import * as MutableHashSet from "effect/MutableHashSet";
@@ -32,8 +32,9 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { Node, Project, SyntaxKind } from "ts-morph";
+import { Node, Project, SyntaxKind, ts } from "ts-morph";
 import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
+import { effectSchemaInventoryJsDocBlocks } from "../Lint/internal/EffectSchemaInventoryExtract.ts";
 import { messageGitErrorAdapter } from "./internal/TrackedTextFiles.ts";
 import { scriptFences } from "./internal/TypeScriptFences.ts";
 import { EffectImportRulesConfigurationError, EffectImportRulesPersistenceError } from "./Laws.errors.ts";
@@ -1251,93 +1252,126 @@ const planRootExport = (mappings: RootImportMappings, file: string, declaration:
   };
 };
 
-const rootSpecifierFromNode = (node: Node, mappings: RootImportMappings): O.Option<string> =>
+type ModuleCallKind = "dynamic-import" | "require";
+
+// One parse-tree census per source text. `ts.forEachChild` never enters JSDoc, so
+// the attached blocks are read from `node.jsDoc` before the node's children, which
+// reproduces ts-morph's `getDescendantsOfKind` order for every collected kind.
+type SyntaxCensus = {
+  readonly root: ts.SourceFile;
+  readonly moduleCalls: ReadonlyArray<readonly [ModuleCallKind, ts.CallExpression]>;
+  readonly importTypes: ReadonlyArray<ts.ImportTypeNode>;
+  readonly importEquals: ReadonlyArray<ts.ImportEqualsDeclaration>;
+  readonly jsDocs: ReadonlyArray<ts.JSDoc>;
+};
+
+const moduleCallKind = (call: ts.CallExpression, root: ts.SourceFile): O.Option<ModuleCallKind> =>
+  call.expression.kind === ts.SyntaxKind.ImportKeyword
+    ? O.some("dynamic-import")
+    : ts.isIdentifier(call.expression) && call.expression.getText(root) === "require"
+      ? O.some("require")
+      : O.none();
+
+const syntaxCensus = (root: ts.SourceFile): SyntaxCensus => {
+  const moduleCalls: Array<readonly [ModuleCallKind, ts.CallExpression]> = [];
+  const importTypes: Array<ts.ImportTypeNode> = [];
+  const importEquals: Array<ts.ImportEqualsDeclaration> = [];
+  const jsDocs: Array<ts.JSDoc> = [];
+  const visit = (node: ts.Node): void => {
+    A.appendAllInPlace(jsDocs, effectSchemaInventoryJsDocBlocks(node));
+    if (ts.isCallExpression(node)) {
+      O.map(moduleCallKind(node, root), (kind) => A.appendInPlace(moduleCalls, [kind, node] as const));
+    } else if (ts.isImportTypeNode(node)) {
+      A.appendInPlace(importTypes, node);
+    } else if (ts.isImportEqualsDeclaration(node)) {
+      A.appendInPlace(importEquals, node);
+    }
+    ts.forEachChild(node, visit);
+  };
+  ts.forEachChild(root, visit);
+  return { root, moduleCalls, importTypes, importEquals, jsDocs };
+};
+
+// ts-morph line numbers count only `\n`, unlike `getLineAndCharacterOfPosition`.
+const startLineNumber = (node: ts.Node, root: ts.SourceFile): number =>
+  A.length(Str.split("\n")(Str.slice(0, node.getStart(root))(root.text)));
+
+// First string literal in `getChildren` order, the walk ts-morph uses for token kinds.
+const firstStringLiteral = (node: ts.Node, root: ts.SourceFile): O.Option<ts.StringLiteral> =>
+  A.findFirst(node.getChildren(root), (child) =>
+    ts.isStringLiteral(child) ? O.some(child) : firstStringLiteral(child, root)
+  );
+
+const rootSpecifierFromNode = (node: ts.Node, root: ts.SourceFile, mappings: RootImportMappings): O.Option<string> =>
   pipe(
-    node.getDescendantsOfKind(SyntaxKind.StringLiteral),
-    A.head,
-    O.map((literal) => literal.getLiteralText()),
+    firstStringLiteral(node, root),
+    O.map((literal) => literal.text),
     O.filter((moduleSpecifier) => R.has(mappings, moduleSpecifier))
+  );
+
+const moduleCallSpecifier = (call: ts.CallExpression): O.Option<string> =>
+  pipe(
+    A.head(call.arguments),
+    O.filter(ts.isStringLiteral),
+    O.map((literal) => literal.text)
   );
 
 // fallow-ignore-next-line complexity -- closed syntax census keeps dynamic import, require, import-type and import-equals findings in one review ledger. Owner: @beep/repo-cli. Exit: split the matrix by syntax kind when another import form is supported, or retire it if the law moves to a Biome GritQL rule.
 const unsupportedRootUsageReviews = (
   mappings: RootImportMappings,
   file: string,
-  sourceFile: SourceFile
+  census: SyntaxCensus
 ): ReadonlyArray<EffectImportManualReview> => {
-  const reviews = A.empty<EffectImportManualReview>();
-
-  for (const callExpression of sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)) {
-    const expression = callExpression.getExpression();
-    const kind =
-      expression.getKind() === SyntaxKind.ImportKeyword
-        ? ("dynamic-import" as const)
-        : Node.isIdentifier(expression) && expression.getText() === "require"
-          ? ("require" as const)
-          : undefined;
-    if (P.isUndefined(kind)) {
-      continue;
-    }
-
-    const firstArgument = A.head(callExpression.getArguments());
-    const moduleSpecifier = pipe(
-      firstArgument,
-      O.filter(Node.isStringLiteral),
-      O.map((literal) => literal.getLiteralText()),
-      O.filter((specifier) => R.has(mappings, specifier))
-    );
-    if (O.isSome(moduleSpecifier)) {
-      A.appendInPlace(
-        reviews,
-        manualReview(
-          kind,
-          file,
-          callExpression.getStartLineNumber(),
-          moduleSpecifier.value,
-          kind === "dynamic-import" ? "import()" : "require()",
-          kind === "dynamic-import"
-            ? "A dynamic root import may require multiple lazy module loads; split it manually."
-            : "A CommonJS root require cannot be split safely without inspecting its runtime use."
+  const { root } = census;
+  const callReviews = A.getSomes(
+    A.map(census.moduleCalls, ([kind, call]) =>
+      pipe(
+        moduleCallSpecifier(call),
+        O.filter((specifier) => R.has(mappings, specifier)),
+        O.map((moduleSpecifier) =>
+          manualReview(
+            kind,
+            file,
+            startLineNumber(call, root),
+            moduleSpecifier,
+            kind === "dynamic-import" ? "import()" : "require()",
+            kind === "dynamic-import"
+              ? "A dynamic root import may require multiple lazy module loads; split it manually."
+              : "A CommonJS root require cannot be split safely without inspecting its runtime use."
+          )
         )
-      );
-    }
-  }
-
-  for (const importType of sourceFile.getDescendantsOfKind(SyntaxKind.ImportType)) {
-    const moduleSpecifier = rootSpecifierFromNode(importType, mappings);
-    if (O.isSome(moduleSpecifier)) {
-      A.appendInPlace(
-        reviews,
+      )
+    )
+  );
+  const importTypeReviews = A.getSomes(
+    A.map(census.importTypes, (importType) =>
+      O.map(rootSpecifierFromNode(importType, root, mappings), (moduleSpecifier) =>
         manualReview(
           "import-type",
           file,
-          importType.getStartLineNumber(),
-          moduleSpecifier.value,
+          startLineNumber(importType, root),
+          moduleSpecifier,
           "import type expression",
           "A type-level root import must be routed by the referenced qualifier."
         )
-      );
-    }
-  }
-
-  for (const importEquals of sourceFile.getDescendantsOfKind(SyntaxKind.ImportEqualsDeclaration)) {
-    const moduleSpecifier = rootSpecifierFromNode(importEquals, mappings);
-    if (O.isSome(moduleSpecifier)) {
-      A.appendInPlace(
-        reviews,
+      )
+    )
+  );
+  const importEqualsReviews = A.getSomes(
+    A.map(census.importEquals, (importEquals) =>
+      O.map(rootSpecifierFromNode(importEquals, root, mappings), (moduleSpecifier) =>
         manualReview(
           "import-equals",
           file,
-          importEquals.getStartLineNumber(),
-          moduleSpecifier.value,
-          importEquals.getName(),
+          startLineNumber(importEquals, root),
+          moduleSpecifier,
+          importEquals.name.text,
           "An import-equals root namespace has no single per-module equivalent."
         )
-      );
-    }
-  }
-
-  return reviews;
+      )
+    )
+  );
+  return A.appendAll(A.appendAll(callReviews, importTypeReviews), importEqualsReviews);
 };
 
 const incrementSpecifierCount = (
@@ -1357,7 +1391,8 @@ const incrementSpecifierCount = (
 // fallow-ignore-next-line complexity -- counter mirrors the closed unsupported-syntax census so measured totals and review detection cannot drift. Owner: @beep/repo-cli. Exit: split the matrix by syntax kind when another import form is supported, or retire it if the law moves to a Biome GritQL rule.
 const rootSpecifierCountsFor = (
   mappings: RootImportMappings,
-  sourceFile: SourceFile
+  sourceFile: SourceFile,
+  census: SyntaxCensus
 ): Readonly<Record<string, number>> => {
   let counts = R.empty<string, number>();
   const add = (moduleSpecifier: string | undefined): void => {
@@ -1372,24 +1407,14 @@ const rootSpecifierCountsFor = (
   for (const declaration of sourceFile.getExportDeclarations()) {
     add(declaration.getModuleSpecifierValue());
   }
-  for (const callExpression of sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)) {
-    const expression = callExpression.getExpression();
-    if (
-      expression.getKind() !== SyntaxKind.ImportKeyword &&
-      !(Node.isIdentifier(expression) && expression.getText() === "require")
-    ) {
-      continue;
-    }
-    const argument = O.getOrUndefined(A.head(callExpression.getArguments()));
-    if (P.isNotUndefined(argument) && Node.isStringLiteral(argument)) {
-      add(argument.getLiteralText());
-    }
+  for (const [, call] of census.moduleCalls) {
+    add(moduleCallSpecifier(call).pipe(O.getOrUndefined));
   }
-  for (const importType of sourceFile.getDescendantsOfKind(SyntaxKind.ImportType)) {
-    add(rootSpecifierFromNode(importType, mappings).pipe(O.getOrUndefined));
+  for (const importType of census.importTypes) {
+    add(rootSpecifierFromNode(importType, census.root, mappings).pipe(O.getOrUndefined));
   }
-  for (const importEquals of sourceFile.getDescendantsOfKind(SyntaxKind.ImportEqualsDeclaration)) {
-    add(rootSpecifierFromNode(importEquals, mappings).pipe(O.getOrUndefined));
+  for (const importEquals of census.importEquals) {
+    add(rootSpecifierFromNode(importEquals, census.root, mappings).pipe(O.getOrUndefined));
   }
 
   return counts;
@@ -1433,8 +1458,9 @@ const transformSourceFile = (
   let rootExportsRewritten = 0;
   let emittedImports = 0;
   let emittedExports = 0;
-  const rootSpecifierCounts = rootSpecifierCountsFor(mappings, sourceFile);
-  let manualReviews = A.fromIterable(unsupportedRootUsageReviews(mappings, file, sourceFile));
+  const census = syntaxCensus(sourceFile.compilerNode);
+  const rootSpecifierCounts = rootSpecifierCountsFor(mappings, sourceFile, census);
+  let manualReviews = A.fromIterable(unsupportedRootUsageReviews(mappings, file, census));
 
   for (const importDeclaration of importDeclarations) {
     const moduleSpecifier = importDeclaration.getModuleSpecifierValue();
@@ -1535,6 +1561,43 @@ class EffectImportFenceTransformSummary extends S.Opaque<
     })
   )
 ) {}
+
+type JsDocUnit = {
+  readonly innerText: () => string;
+  readonly replace: (text: string) => void;
+};
+
+const JSDOC_OPEN = /^\/\*\*[^\S\n]*\n?/u;
+const JSDOC_CLOSE = /(\r?\n)?[^\S\n]*\*\/$/u;
+// ts-morph's whitespace set, narrower than `\s`, before an optional leading `*` and one space.
+const JSDOC_LINE_STAR = /^[ \f\r\t\v\u00A0\u2028\u2029]*\* ?/u;
+
+// `JSDoc#getInnerText` from ts-morph, applied to the raw block text.
+const jsDocInnerText: (text: string) => string = flow(
+  Str.replace(JSDOC_OPEN, Str.empty),
+  Str.replace(JSDOC_CLOSE, Str.empty),
+  Str.split("\n"),
+  A.map(Str.replace(JSDOC_LINE_STAR, Str.empty)),
+  A.join("\n")
+);
+
+// JSDoc blocks last to first. Check mode reads the raw parse tree; write mode keeps the
+// ts-morph wrappers, which own the in-place replacement.
+const jsDocUnits = (sourceFile: SourceFile, write: boolean): ReadonlyArray<JsDocUnit> => {
+  if (write) {
+    return A.map(A.reverse(sourceFile.getDescendantsOfKind(SyntaxKind.JSDoc)), (jsDoc) => ({
+      innerText: () => jsDoc.getInnerText(),
+      replace: (text) => {
+        jsDoc.replaceWithText(text);
+      },
+    }));
+  }
+  const root = sourceFile.compilerNode;
+  return A.map(A.reverse(syntaxCensus(root).jsDocs), (jsDoc) => ({
+    innerText: () => jsDocInnerText(jsDoc.getText(root)),
+    replace: constVoid,
+  }));
+};
 
 const ROOT_EFFECT_IMPORT_PATTERN = /["']effect(?:\/[^"']+)?["']/u;
 
@@ -2020,9 +2083,8 @@ export const runEffectImportRules = Effect.fn("EffectImports.runEffectImportRule
         fileAffected = sourceSummary.affected;
       }
 
-      const jsDocs = A.reverse(sourceFile.getDescendantsOfKind(SyntaxKind.JSDoc));
-      for (const jsDoc of jsDocs) {
-        const originalInnerText = jsDoc.getInnerText();
+      for (const jsDoc of jsDocUnits(sourceFile, options.write)) {
+        const originalInnerText = jsDoc.innerText();
         // fallow-ignore-next-line code-duplication -- Markdown-file and JSDoc walkers keep distinct persistence ownership while folding the same fence-summary schema. Owner: @beep/repo-cli. Exit: split the matrix by syntax kind when another import form is supported, or retire it if the law moves to a Biome GritQL rule.
         const fenceSummary = transformFencedContent(rootMappings, relativePath, originalInnerText);
         scannedFences += fenceSummary.scannedFences;
@@ -2042,7 +2104,7 @@ export const runEffectImportRules = Effect.fn("EffectImports.runEffectImportRule
           A.isReadonlyArrayNonEmpty(fenceSummary.parserWarnings);
         fileAffected = fileAffected || affected;
         if (options.write && fenceSummary.content !== originalInnerText) {
-          jsDoc.replaceWithText(renderJsDoc(fenceSummary.content));
+          jsDoc.replace(renderJsDoc(fenceSummary.content));
         }
       }
       if (fileAffected) {

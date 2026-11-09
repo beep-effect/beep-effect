@@ -177,6 +177,30 @@ describe("goals decisions projection", () => {
         "---\ntitle: X\ndate: 2026-11-05\n---\nbody\n"
       );
       missingReversal.pipe(Result.isFailure, assertTrue);
+      const unknownKey = yield* parseGoalDecision(
+        "2026-11-05-x.md",
+        "---\ntitle: X\ndate: 2026-11-05\nreversal: R.\npr: 1\n---\nbody\n"
+      );
+      unknownKey.pipe(Result.isFailure, assertTrue);
+      if (Result.isFailure(unknownKey)) {
+        expect(unknownKey.failure.message).toContain("outside GoalDecisionFrontmatter: pr ");
+      }
+      // A refinement failure under a declared key walks Pointer -> Filter and names no unknown key.
+      const badPullRequest = yield* parseGoalDecision(
+        "2026-11-05-x.md",
+        "---\ntitle: X\ndate: 2026-11-05\nreversal: R.\npullRequest: 0\n---\nbody\n"
+      );
+      badPullRequest.pipe(Result.isFailure, assertTrue);
+      if (Result.isFailure(badPullRequest)) {
+        expect(badPullRequest.failure.message).toContain("does not decode as GoalDecisionFrontmatter");
+        expect(badPullRequest.failure.message).not.toContain("outside GoalDecisionFrontmatter");
+      }
+      // Frontmatter that is not YAML fails before the schema runs and reports no unknown key.
+      const notYaml = yield* parseGoalDecision("2026-11-05-x.md", "---\ntitle: [unclosed\n---\nbody\n");
+      notYaml.pipe(Result.isFailure, assertTrue);
+      if (Result.isFailure(notYaml)) {
+        expect(notYaml.failure.message).not.toContain("outside GoalDecisionFrontmatter");
+      }
       const ok = yield* parseGoalDecision("2026-11-05-forward-only-migration.md", VALID_FILE);
       ok.pipe(Result.isSuccess, assertTrue);
       if (Result.isSuccess(ok)) {
@@ -292,6 +316,19 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })("goals decisions command", (i
       yield* runGoalsCommand(["decisions", "check", "--slug", "demo"]);
       const repaired = yield* goalDecisionLogReport(record, reader);
       expect(A.every(repaired.projections, (projection) => !projection.drift)).toBe(true);
+
+      // A misspelled frontmatter key is refused, never stripped: check fails and the report names it.
+      yield* writeProjectFile(
+        "goals/demo/decisions/2026-11-05-typo.md",
+        "---\ntitle: Typo\ndate: 2026-11-05\nreversal: Revert.\npr: 1\n---\nbody\n"
+      );
+      const typo = yield* Effect.exit(runGoalsCommand(["decisions", "check", "--slug", "demo"]));
+      expectReportedExit(typo);
+      const withTypo = yield* goalDecisionLogReport(record, reader);
+      expect(A.map(withTypo.invalid, (item) => item.file)).toEqual(["2026-11-05-typo.md"]);
+      expect(withTypo.invalid[0]?.message).toContain("outside GoalDecisionFrontmatter: pr ");
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs.remove("goals/demo/decisions/2026-11-05-typo.md");
 
       // An invalid file blocks the projection and the doctor.
       yield* writeProjectFile("goals/demo/decisions/scratch.md", "no frontmatter\n");

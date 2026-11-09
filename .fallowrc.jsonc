@@ -129,7 +129,6 @@
     "goals/**",
     "scratchpad/**",
     "!goals/schema-opaque-default/ops/codemod/**",
-    "!scratchpad/.jsdoc-loop/census.ts",
     "infra/ci-runners/sdks/**",
     // Self-contained Lambda bundle source (own package.json + lockfile, not a workspace
     // member): esbuild bundles it into the deployed ZIP via infra/lambda/turbo-cache/build.sh,
@@ -355,15 +354,14 @@
     "maxCyclomatic": 20,
     "maxCrap": 30,
     "maxUnitSize": 60,
-    // The manual TS6-bridge tools (goal codemod, JSDoc census) entered discovery
-    // only so dead-code analysis sees the bridge's consumers; complexity scope
-    // stays as on main, where both paths were never health-scored.
+    // The archived schema-opaque goal codemod enters discovery only so dead-code
+    // analysis sees its ts-morph consumer; complexity scope stays as on main,
+    // where it was never health-scored.
     "ignore": [
       ".claude/skills/shadcn/**",
       // Preserve the existing generated-source renderer scoring scope.
       "packages/foundation/modeling/html/scripts/generate.ts",
-      "goals/schema-opaque-default/ops/codemod/**",
-      "scratchpad/.jsdoc-loop/census.ts"
+      "goals/schema-opaque-default/ops/codemod/**"
     ],
     "thresholdOverrides": [
       // Fallow reports CRAP at or above the cutoff. The .01 cutoffs below

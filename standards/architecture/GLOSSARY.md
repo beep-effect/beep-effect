@@ -536,8 +536,9 @@ mappings. They are not domain and they are not generic driver wrappers.
 ## Tooling Package
 
 A code-bearing package in the `tooling` family. Canonical kinds are `library`,
-`tool`, `policy-pack`, and `test-kit`. Tooling packages support development and
-operations; product/runtime code does not depend on them.
+`tool`, `policy-pack`, `test-kit`, and `infra` (Alchemy stacks for repo-platform
+infrastructure). Tooling packages support development and operations;
+product/runtime code does not depend on them.
 
 ## Use-Case Package
 

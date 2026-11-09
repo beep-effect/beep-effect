@@ -479,7 +479,7 @@ The canonical non-slice families are:
 |--------------|---------------------------------------------------------|----------------------------------------------------------|
 | `foundation` | `primitive`, `modeling`, `capability`, `ui-system`      | Repo-owned domain-agnostic reusable substrate.           |
 | `drivers`    | flat family; no extra kind segment                      | External engines, SDKs, services, and frameworks.        |
-| `tooling`    | `library`, `tool`, `policy-pack`, `test-kit`            | Developer-operational code packages.                     |
+| `tooling`    | `library`, `tool`, `policy-pack`, `test-kit`, `infra`   | Developer-operational code packages.                     |
 | `ecosystem`  | flat family; no extra kind segment                      | Publishable repo-authored libraries for external consumption. |
 
 The `shared` package family is not part of this table. `shared` remains the DDD
@@ -652,6 +652,7 @@ These rules are dependency ceilings, not permission for cycles.
 | `policy-pack` | any `foundation` kind, `tooling/library`                                       |
 | `tool`        | any `foundation` kind, `tooling/library`, `tooling/policy-pack`                |
 | `test-kit`    | any `foundation` kind, `tooling/library`, `tooling/policy-pack`, `test-kit`    |
+| `infra`       | any `foundation` kind, `drivers`, `tooling/library`; nothing depends on `infra` |
 
 Repo-wide orchestration is behavior inside `tool`. It is not a separate
 canonical kind. Tools never import other tools; code that two tools share
@@ -722,6 +723,7 @@ canonical:
 | `tooling/tool`             | `src/bin.ts` (optional when `@beep/beep` composes the tool), `commands/`, `*.command.ts`, `*.service.ts`, `*.schemas.ts`, `index.ts` |
 | `tooling/policy-pack`      | `*.config.ts`, `*.policy.ts`, `index.ts`                                          |
 | `tooling/test-kit`         | `*.test-kit.ts`, optional `fixtures/`, `layers/`, `index.ts`                     |
+| `tooling/infra`            | `alchemy.run.ts` at the package root, stack modules under `src/`, `index.ts`      |
 
 Repo CLI commands use thresholded role topology. Single-file leaf commands may
 stay flat while they have no schemas, service, renderers, or subcommands.
