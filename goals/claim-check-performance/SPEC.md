@@ -308,6 +308,8 @@ Rejected: dropping subject-derived depends-on-element (real 41, 13 lost); droppi
 
 Rebound after #2980 merged: the figures above were measured on the 48/538 base. Paired against main at 809ceb301b5, the merged head goes from 50 to 52 with 0 lost, gaining 14262251-root-1/4 and 16628033-root-1/1. Predicted edges go from 6100 to 6356 and matched edges from 2512 to 2640. All 538 claims still abstain. The gold-tree probe was not re-run on this base.
 
+Cost below the claim level: functional matched edges fall from 409 to 408. The lost edge is in 12536794-root-19/19: "an inner circumferential surface" (142) "defining" "a cavity" (184). The restated-preamble rule lengthens that claim's preamble from 72 to 436 characters, which equals gold, as it does in all five claims the rule changes. The edge sits inside the corrected preamble, and the pipeline does not segment inside a preamble, so the edge and 3 span-matched elements in that claim are lost. They matched before only because the preamble was too short.
+
 Reverse: Trigger: re-check alerts when abstention lifts. If they regress, or to undo the priority flip, remove refinesSelection and isRefinedHead, keep the probe as evidence, and return to segmentation-first.
 
 ### Compare independently source-certified fallback term refinement, 2026-11-08
