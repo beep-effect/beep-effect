@@ -34,14 +34,20 @@ declarations are unchanged. The bytes of existing global inputs legitimately
 changed; this review does not suppress an unrelated failure and qualifies no
 root task.
 
+Re-recorded on the merge of main 16370d15737 (#3014 moved the lint:laws
+manifests onto the seal and re-recorded the baseline first): the merge took
+main's baseline, and this request is replayed on top of it. `turbo.json` and
+`standards/policy-tools.fingerprint.json` carry the bytes main wrote plus the
+two new workspaces; nothing else in the review changed.
+
 Exact reviewed current input bytes (SHA-256):
 
 - `package.json`:
   `0979e9cdbafe9813a2d2e70c608d9491b689a7f503ece16fdbe3b946befa19c7`
 - `turbo.json`:
-  `89791e0323a482dc7770d5a9421befb3d2457ea5fb4060f9d807cbcc9e9132fc`
+  `5c603d7dded3bd88cbec749f3f672440249c1144302cedaa077f654957f27f25`
 - `standards/policy-tools.fingerprint.json`:
-  `b58eb73d585bf00e7fd0c7dba72073d89f450a4d85642095e4bc67dfe058da4c`
+  `94a09897722128bac14215d610bbd5cceb078dce53f8ee4707029514786f25e9`
 - `standards/root-package.projection.generated.json`:
   `357d939f81311ff66266c5b8b25afd44b513775607cd94e158e81dfa98c22bfa`
 - `packages/tooling/library/agent-memory-store/package.json`:
