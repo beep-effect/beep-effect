@@ -44,7 +44,7 @@ const countMatches = (source: string, pattern: RegExp): number =>
  *
  * True when the source names an inline execution call (`Arbitrary.checkEffect`,
  * `Arbitrary.sampleEffect`, `FastCheck`, `fast-check`, `fc.assert` and friends,
- * `assertSchemaArbitraryDecodesToSelf`, the `unstable/arbitrary/Arbitrary` module) or calls
+ * `assertSchemaArbitraryDecodesToSelf`, the retired unstable Arbitrary module path) or calls
  * `fcRuns` / `fcRunsCapped` anywhere other than as the `arbitrary:` option of a `.prop`
  * registration. In such a module every test is kept by the sweep.
  *

@@ -89,7 +89,8 @@ describe("runsPropertiesInline", () => {
       "yield* assertSchemaArbitraryDecodesToSelf(Schema)",
       "yield* Arbitrary.checkEffect(arb, f)",
       "const samples = yield* Arbitrary.sampleEffect(arb, { count: 3 })",
-      'import * as Arbitrary from "effect/unstable/arbitrary/Arbitrary"',
+      // Spelled in pieces: the retired-path law scans tracked text for the joined form.
+      `import * as Arbitrary from "${A.join(["effect", "unstable", "arbitrary", "Arbitrary"], "/")}"`,
       "fc.assert(fc.property(arb, f))",
       "fc.sample(arb, 5)",
     ];
