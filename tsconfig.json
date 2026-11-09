@@ -2525,7 +2525,15 @@
       ],
       "@beep/eyecite/recognize": [
         "./packages/drivers/eyecite/src/Eyecite.recognize.ts"
-      ]
+      ],
+      "@beep/agent-memory-store": [
+        "./packages/tooling/library/agent-memory-store/src/index.ts"
+      ],
+      "@beep/agent-memory-store/*": [
+        "./packages/tooling/library/agent-memory-store/src/*"
+      ],
+      "@beep/sqlite": ["./packages/drivers/sqlite/src/index.ts"],
+      "@beep/sqlite/*": ["./packages/drivers/sqlite/src/*"]
     }
   }
 }

@@ -1,0 +1,116 @@
+import {
+  Candidate,
+  defaultFusionWeights,
+  FusionWeights,
+  RecallBudget,
+  RecallQuery,
+  RecallResult,
+  Reranker,
+} from "@beep/agent-memory-store";
+import { describe, expect, it, layer } from "@effect/vitest";
+import { assertInstanceOf, assertNone } from "@effect/vitest/utils";
+import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import { nodeId, otherNodeId, revisionA, revisionB } from "./fixtures.ts";
+
+const decodeWeights = S.decodeEffect(FusionWeights);
+
+describe("Recall models", () => {
+  it.effect(
+    "rejects fusion weights that do not sum to 1",
+    Effect.fnUntraced(function* () {
+      const error = yield* Effect.flip(decodeWeights({ bm25: 0.5, vector: 0.4 }));
+      assertInstanceOf(error, S.SchemaError);
+
+      const weights = yield* decodeWeights({ bm25: 0.7, vector: 0.3 });
+      expect(weights.bm25).toBe(0.7);
+      expect(defaultFusionWeights.bm25).toBe(0.7);
+      expect(defaultFusionWeights.vector).toBe(0.3);
+    })
+  );
+
+  it.effect(
+    "applies the recall budget defaults",
+    Effect.fnUntraced(function* () {
+      const decoded = yield* S.decodeEffect(RecallBudget)({ maxTokens: 2000 });
+      expect(decoded.maxCandidates).toBe(50);
+      expect(decoded.maxAccepted).toBe(5);
+
+      const made = RecallBudget.make({ maxTokens: 2000 });
+      expect(made.maxCandidates).toBe(50);
+      expect(made.maxAccepted).toBe(5);
+    })
+  );
+});
+
+describe("RecallResult", () => {
+  const decodeResult = S.decodeUnknownEffect(RecallResult);
+
+  it.effect(
+    "cannot carry accepted candidates on an abstention",
+    Effect.fnUntraced(function* () {
+      const abstained = yield* decodeResult({ result: "abstained", violations: [], accepted: [] });
+      expect(abstained).toEqual(RecallResult.cases.abstained.make({ violations: [] }));
+      expect("accepted" in abstained).toBe(false);
+    })
+  );
+
+  it.effect(
+    "requires at least one accepted candidate on an answer",
+    Effect.fnUntraced(function* () {
+      const error = yield* Effect.flip(decodeResult({ result: "answered", accepted: [], violations: [] }));
+      assertInstanceOf(error, S.SchemaError);
+
+      const candidate = Candidate.make({
+        nodeId,
+        revisionId: revisionA,
+        text: "first",
+        bm25: O.some(0.9),
+        vector: O.none(),
+        fused: 0.63,
+        reranked: O.none(),
+      });
+      const answered = RecallResult.cases.answered.make({ accepted: [candidate], violations: [] });
+      const encoded = yield* S.encodeEffect(RecallResult)(answered);
+      const decoded = yield* decodeResult(encoded);
+      expect(decoded).toEqual(answered);
+    })
+  );
+});
+
+layer(Reranker.passThrough)("Reranker.passThrough", (it) => {
+  it.effect(
+    "passes candidates through in fused order without rerank scores",
+    Effect.fnUntraced(function* () {
+      const candidates = [
+        Candidate.make({
+          nodeId,
+          revisionId: revisionA,
+          text: "first",
+          bm25: O.some(0.9),
+          vector: O.none(),
+          fused: 0.63,
+          reranked: O.some(0.1),
+        }),
+        Candidate.make({
+          nodeId: otherNodeId,
+          revisionId: revisionB,
+          text: "second",
+          bm25: O.none(),
+          vector: O.some(0.8),
+          fused: 0.24,
+          reranked: O.none(),
+        }),
+      ];
+      const query = RecallQuery.make({ text: "decision", filters: [], budget: RecallBudget.make({ maxTokens: 500 }) });
+
+      const reranker = yield* Reranker;
+      const reranked = yield* reranker.rerank(query, candidates);
+
+      expect(A.map(reranked, (candidate) => candidate.text)).toEqual(["first", "second"]);
+      A.forEach(reranked, (candidate) => assertNone(candidate.reranked));
+    })
+  );
+});

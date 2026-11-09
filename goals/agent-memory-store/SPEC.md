@@ -75,15 +75,17 @@ Higher sources outrank lower sources when they conflict.
 
 ## Target Surfaces
 
-- One new workspace package for the store, created only through
-  `bun run beep create-package` after P0's specific-home-first routing
-  decision. Working hypothesis: a `packages/tooling/*` package, because the
-  store is repo-owned operator tooling with no product semantics; P0 confirms
-  or reverses by decision file. SQLite (FTS5, `sqlite-vec`) access goes
-  through the existing driver family (`@beep/pglite`, `@beep/duckdb` are the
-  nearest wrappers); if none fits, a `packages/drivers/*` wrapper is a second
-  `create-package` with its own routing decision file. The store's domain
-  modules never depend on a database driver directly.
+- The store package `@beep/agent-memory-store` at
+  `packages/tooling/library/agent-memory-store`, created through
+  `bun run beep create-package --family tooling --kind library` (decision
+  2026-11-09 `package-home-tooling-library`: repo operations route to tooling
+  before `foundation/capability`). Its domain modules never depend on a
+  database driver. SQLite (FTS5, `sqlite-vec`) is reached through the new
+  driver `@beep/sqlite` at `packages/drivers/sqlite`, wrapping
+  `@effect/sql-sqlite-bun` with the `@beep/pglite` roles (decision
+  `sqlite-driver-package`). The append-only log is `effect/eventlog`
+  (`EventLog` over `SqlEventJournal`) with no compaction registered
+  (decision `memory-log-on-effect-eventlog`).
 - A planned `memory` command family on `@beep/repo-cli` (`export`,
   `admit`, `project`, `recall`, `observe`, `doctor`) as the only agent-facing
   write path.
@@ -103,7 +105,8 @@ Higher sources outrank lower sources when they conflict.
   `RevisionId = hash(NodeId, parents, ContentHash)`, L0 raw-slice spans and
   patches, `ObservationEvent`, admission outcomes, typed findings) and the
   service contracts (`MemoryLog`, `Admission`, `MarkdownProjector`,
-  `MemoryIndexes`, `Recall`, `ObservationLog`) before any implementation PR.
+  `MemoryIndexes`, `Recall`, `Reranker`, `ObservationLog`, `SymbolResolver`)
+  before any implementation PR.
 - **Effect v4 only**, validated against `.repos/effect`; `effect/HashMap`,
   `HashSet` and their mutable forms, never `Map` or `Set`; `Effect.fn` or
   `Effect.fnUntraced` for generator functions; `LiteralKit` for literal
@@ -273,11 +276,115 @@ generated from that directory and never edited by hand.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug agent-memory-store`; add a `kind: decision` file there, never edit this block._
 
+### Admission outcomes are a superset of ClaimGateResult with a pure projection onto it, 2026-11-09
+
+Amends findings-reuse-epistemics-gate. ClaimGateVerdict is two-way (admitted, rejected), but admission has four outcomes: landed, deferred (exact-hash dedupe), held (both texts kept for a resolver) and rejected. A two-way verdict cannot carry the deferred node or the held texts, so AdmissionOutcome stays a store union discriminated on outcome. It does not duplicate the gate shapes: every finding is a MemoryGateViolation { code, violation } whose violation is a ClaimGateViolation with ClaimGateSeverity, and the pure toClaimGateResult projects any outcome onto ClaimGateResult (landed and deferred to admitted; held and rejected to rejected with the inner ClaimGateViolations). RecallResult findings use the same MemoryGateViolation. Code: packages/tooling/library/agent-memory-store/src/Admission.models.ts. Rejected: embedding a ClaimGateResult field in each variant (stores the verdict twice and lets it disagree with the outcome tag).
+
+Lane `goals/agent-memory-store-p0`
+
+Reverse: Collapse AdmissionOutcome to ClaimGateResult plus a side channel for deferral and held texts, by decision file, if the four-way outcome stops earning its keep
+
+### Dedupe defers exact hashes to tier 0 and only flags near-duplicates, 2026-11-09
+
+Confirmed from S10: 73.0% of duplicate writes carried a tier-0 pointer, so exact-hash duplicates defer to the existing node with nothing dropped; simhash at t=2 false-flagged 1.78% (18/1010) while t=4 reached 9.01%, past the kill, so near-duplicates are flagged as typed findings and never merged or dropped. The ContentHash is Sha256Hex over the normalized node text; the near-duplicate flag is advisory for consolidation only.
+
+Lane `goals/agent-memory-store-p0`
+
+Reverse: Re-baseline by decision file citing a new S10 measurement
+
+### Typed findings reuse the @beep/epistemics claim-gate shapes, 2026-11-09
+
+The SPEC reuses the epistemic kernel where it fits and @beep/repo-cli already depends on @beep/epistemics. Admission outcomes and retrieval-gate findings extend ClaimGateResult, ClaimGateViolation and ClaimGateSeverity with store-specific violation codes as a LiteralKit domain (held conflict, backward status move, missing candidate edge, failed identity lookup, unimported folder); the typed identity lookup is one violation kind. One finding vocabulary serves claim gates and memory admission. Rejected: a store-local union that duplicates severity and verdict shapes.
+
+Lane `goals/agent-memory-store-p0`
+
+Reverse: Introduce a store-local finding union by decision file if the epistemics gate vocabulary changes under the store
+
+### Node granularity is row and list-item nodes, 2026-11-09
+
+Confirmed from the spikes: S1 found top-level block spans about 33 times the real change, and S14 found list markers in trivia make the leaf model unsafe under merge. Nodes are table rows and list items inside the @beep/markdown positioned mdast (MarkdownRange carries 0-based offsets); paragraphs and headings are single nodes; fenced code is one node. The L0 raw-slice projection preserves every byte outside the touched node span (AC-1).
+
+Lane `goals/agent-memory-store-p0`
+
+Reverse: Re-baseline by decision file citing a new S1 or S14 replay on a different node model
+
+### Node identity depends on @beep/provenance now and follows the @beep/text rename, 2026-11-09
+
+The entry's starting position is confirmed: the store mints its own NodeId at admission and RevisionId = hash(NodeId, parents, ContentHash) with Sha256Hex from @beep/schema; span anchoring in the Markdown projection is the occurrence preimage (SourceTextIdentity with extractor pins, unit, range, quote) imported from @beep/provenance, which text-knowledge-stack-rebuild P2 renames to @beep/text and migrates every consumer in that PR. Identity tiers (exact hash, SCIP symbol, fused text) are bounded in P3 from S2, S9 and S10. Rejected: waiting for @beep/text (puts P1 on another packet's schedule) and a store-local anchor (forks span identity, forbidden by the SPEC constraint).
+
+Lane `goals/agent-memory-store-p0`
+
+Reverse: Pin the store to its own anchor schema by decision file only if text-knowledge-stack-rebuild abandons the occurrence preimage
+
+### MemoryLog sits on effect/eventlog with SqlEventJournal over @beep/sqlite, 2026-11-09
+
+Repo law: never hand-roll what an Effect module provides. effect/eventlog ships EventLog (typed Event groups with tag, payload schema and primaryKey), EventJournal (time-ordered EntryId, memory and SQL backends via SqlEventJournal), opt-in compaction and remote set-union sync, and @beep/duckdb already builds on it. NodeEvents are typed Events in one EventGroup with primaryKey = NodeId; the journal is SqlEventJournal over the @beep/sqlite driver; no compaction is registered for node events, so the log stays Layer 2's exact record; MemoryLog is a thin typed facade over EventLog and projections read entries and reactivity. Rejected: EventJournal-only writes (re-implements tag and payload plumbing) and an own append-only table (forbidden by the law).
+
+Lane `goals/agent-memory-store-p0`
+
+Reverse: Replace the EventLog facade with a store-owned append table by decision file, citing the Effect module gap that forced it
+
+### Package home: tooling/library/agent-memory-store as @beep/agent-memory-store, 2026-11-09
+
+Specific-home-first (standards/architecture/07, routing step 3): the store is repo operations and automation for operator agent memory, with no product semantics and no external engine of its own, so it routes to tooling before foundation/capability (step 5, which also needs two named importers and has none). Created only through bun run beep create-package agent-memory-store --family tooling --kind library. The memory command group is @beep/repo-cli/commands/Memory importing the library, because goals/beep-cli-composition is still active and repo-cli remains the composition root (DECISIONS 2026-10-28). Rejected: foundation/capability (fails the negative gate today), and a domain/store split before any consumer exists (SPEC Non-Goals exclude product memory).
+
+Lane `goals/agent-memory-store-p0`
+
+Reverse: Move the package with a new routing decision file once a second named consumer outside repo operations exists; create-package --family foundation --kind capability is the only alternative home that passes the negative gate
+
 ### Program shape: design first, then log, admission, identity, retrieval, agent loop; bars are the spike measurements, 2026-11-09
 
 The packet builds the 2026-11-09 decision in the order the evidence suggests: P0 lands schemas and Context.Service contracts and confirms or reverses the six packet-decidable design items by decision file (node identity and identity tiers, granularity, status fields, retrieval order, dedupe, symbol liveness) and routes the package home by specific-home-first (working hypothesis a tooling package); the entry's three rulings stay fixed and ruling 1 fixes the vocabulary; P1 the append-only log and raw-slice Markdown projection (AC-1, S1); P2 store-side admission with held conflicts and typed status fields (AC-2, AC-3, S14, S14b); P3 tiered identity and the observation log (AC-4, AC-5, AC-7, S2, S9, S10); P4 retrieval with no relevance stage (AC-6, S7); P5 the agent loop and runbook (AC-8). Every bar is the spike's pre-registered or measured number; a missed bar is remediated on route or re-baselined by a decision file citing a new measurement, per the S14b lesson. A phase opens only when the previous phase's bars are green on main.
 
 Reverse: Reorder or merge phases by a new decision file; the rulings of the 2026-11-09 decision-log entry are not reversible here
+
+### Reranker is a Context.Service port with a pass-through default; AC-6 is a model-gated recorded measurement, 2026-11-09
+
+S7 measured the gate with bge-reranker-base on CPU; the SPEC requires keyless, local operation with tests that run without local models. Reranker is a Context.Service port in the Recall pipeline (filters, BM25-leaning convex fusion, Reranker, admissibility gate, budgets); its default Layer preserves fused order, so every test runs keyless. A model-gated test, skipped without a local reranker, records the AC-6 measurement into a committed fixture, which the SPEC admits as a recorded measurement. Rejected: a mandatory ONNX reranker dependency (model download in install and hosted CI) and dropping the cross-encoder (contradicts S7 and fails AC-6).
+
+Lane `goals/agent-memory-store-p0`
+
+Reverse: Make a local reranker a hard dependency by decision file if hosted CI gains a model cache and the operator accepts the install cost
+
+### Retrieval order is filters, convex fusion, reranker, admissibility gate, budgets; no relevance stage, 2026-11-09
+
+Confirmed from S7: BM25-leaning convex fusion recalled 64/71 at 5 against RRF's 59/71, the cross-encoder plus gate cut macro lure acceptance 57.7% at zero recall loss, the typed identity lookup closed the renamed stratum 10/57 to 0/57, and the relevance stage was killed. Recall runs authoritative filters, convex fusion over FTS5 and vector candidates, the Reranker port, the admissibility gate with typed findings including the typed identity lookup, then budgets. Prevalence never enters rank or gate (ruling 3). AC-6 re-measures against the convex pool and records both numbers.
+
+Lane `goals/agent-memory-store-p0`
+
+Reverse: Re-baseline by decision file citing a new S7 measurement on the adopted pool
+
+### SQLite access through a new driver packages/drivers/sqlite (@beep/sqlite), 2026-11-09
+
+External engines and SDK wrappers route to drivers (07, step 2); @beep/pglite already wraps @effect/sql-pglite with SqliteClient-style roles (client service, errors, test-layer), so the consistent route is a second create-package --family drivers named sqlite wrapping @effect/sql-sqlite-bun 4.1.2 (catalog). The driver owns connection options, FTS5 availability and sqlite-vec extension loading through SqliteClient.loadExtension; the store's domain modules never import it. Drift recorded, not fixed here: @beep/repo-cli, @beep/repo-ai-metrics and @beep/test-utils import @effect/sql-sqlite-bun bare (cleanup-on-touch). Rejected: reusing @beep/duckdb (changes the substrate S7 and S10 measured on, forcing AC-6 and AC-7 re-measurement).
+
+Lane `goals/agent-memory-store-p0`
+
+Reverse: Retire @beep/sqlite per standards/architecture/11 and import @effect/sql-sqlite-bun in the store directly, by decision file
+
+### Status prose is generated from ops/manifest.json; typed status fields carry a lifecycle guard, 2026-11-09
+
+S14b: typed status fields resolve 10/10 with 0/14 wrong and need a lifecycle guard against backward moves (12/14 regress without it). The Current Phase paragraph and counters are projections of typed manifest fields (currentPhase, status enums), regenerated like the goals index and the decisions blocks, so no agent writes the paragraph and last-writer conflicts cannot arise. The admission path models status as LiteralKit fields with an ordered lifecycle and rejects backward transitions as typed findings. Rejected: a hand-written paragraph with a single-owner lock (adds an ownership rule to admission and lets text and manifest drift).
+
+Lane `goals/agent-memory-store-p0`
+
+Reverse: Switch the Current Phase paragraph to a single-owner lock by decision file if manifest generation proves too coarse for a packet
+
+### Status values are manifest data with a StatusLifecycle order, not static LiteralKit domains, 2026-11-09
+
+Amends status-generated-from-manifest. Its sentence that the admission path models status as LiteralKit fields cannot hold in P0: the status fields and their values come from ops/manifest.json at runtime, so no static LiteralKit can name them. P0 models a value as StatusValue (a branded NonEmptyString), a field's order as StatusLifecycle { field, order } with a no-duplicates check, and the guard as the pure lifecycleAllows, which admits only forward or same-position moves (S14b: 12/14 regress without it). Backward moves still surface as the backwardStatusMove finding. The rest of the decision (manifest-generated status prose, typed fields with a lifecycle guard) stands. Code: packages/tooling/library/agent-memory-store/src/StatusLifecycle.models.ts. Rejected: a hard-coded LiteralKit of today's manifest values (goes stale the first time a packet adds a status and fails decoding of valid manifests).
+
+Lane `goals/agent-memory-store-p0`
+
+Reverse: Generate one LiteralKit domain per status field from ops/manifest.json once the field set is closed, and type StatusTransition per field, by decision file
+
+### SymbolResolver is a port over a decoded SCIP index; drivers/scip arrives in P3, 2026-11-09
+
+S35: SCIP resolves identity (372/373 real imports, re-exports included) and the normalized span hash is a re-verify signal, never a staleness verdict (109/129 flags on intact claims). P0 defines SymbolResolver taking a decoded SCIP index document (schema in the store) and returning symbol identity plus a re-verify flag; P3 adds packages/drivers/scip wrapping @sourcegraph/scip-typescript (external tool, drivers family) with its own routing decision file. Rejected: shelling out from repo-cli (an engine wrapper inside the CLI) and deferring the contract (breaks the schema, contract, implementation order).
+
+Lane `goals/agent-memory-store-p0`
+
+Reverse: Collapse the port into the P3 implementation by decision file if no second resolver backend appears
 
 <!-- beep:decisions:end -->
 

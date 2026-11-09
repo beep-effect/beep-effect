@@ -58,8 +58,10 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Design and grill — not started. First action: confirm or reverse the six
-packet-decidable design items by decision file and route the package home.
+P0 Design and grill — in progress. The six packet-decidable items are confirmed
+by decision file (2026-11-09), the package home is `packages/tooling/library/agent-memory-store`
+with a new `@beep/sqlite` driver, and the schemas and `Context.Service`
+contracts are landing; no implementation has started.
 
 ## Latest Evidence
 

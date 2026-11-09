@@ -333,6 +333,7 @@
     "packages/party/server",
     "packages/drivers/alchemy-postgres",
     "packages/drivers/firecrawl",
-    "packages/drivers/eyecite"
+    "packages/drivers/eyecite",
+    "packages/drivers/sqlite"
   ]
 }

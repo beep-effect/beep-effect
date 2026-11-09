@@ -1997,6 +1997,23 @@
         "vitest": "catalog:",
       },
     },
+    "packages/drivers/sqlite": {
+      "name": "@beep/sqlite",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@effect/sql-sqlite-bun": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-runner": "workspace:^",
+        "@effect/platform-node": "catalog:",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
     "packages/drivers/tailscale": {
       "name": "@beep/tailscale",
       "version": "0.0.0",
@@ -3877,6 +3894,23 @@
         "bun-types": "catalog:",
       },
     },
+    "packages/tooling/library/agent-memory-store": {
+      "name": "@beep/agent-memory-store",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/epistemics": "workspace:^",
+        "@beep/identity": "workspace:^",
+        "@beep/markdown": "workspace:^",
+        "@beep/provenance": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
     "packages/tooling/library/ai-metrics": {
       "name": "@beep/repo-ai-metrics",
       "version": "0.0.3",
@@ -4962,6 +4996,8 @@
 
     "@beep/acp": ["@beep/acp@workspace:packages/drivers/acp"],
 
+    "@beep/agent-memory-store": ["@beep/agent-memory-store@workspace:packages/tooling/library/agent-memory-store"],
+
     "@beep/agents-client": ["@beep/agents-client@workspace:packages/agents/client"],
 
     "@beep/agents-domain": ["@beep/agents-domain@workspace:packages/agents/domain"],
@@ -5305,6 +5341,8 @@
     "@beep/skill-contract": ["@beep/skill-contract@workspace:packages/foundation/modeling/skill-contract"],
 
     "@beep/spdx": ["@beep/spdx@workspace:packages/foundation/modeling/spdx"],
+
+    "@beep/sqlite": ["@beep/sqlite@workspace:packages/drivers/sqlite"],
 
     "@beep/storybook": ["@beep/storybook@workspace:apps/storybook"],
 
