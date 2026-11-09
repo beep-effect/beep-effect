@@ -1,5 +1,6 @@
 {
   "catalog": {
+    "@alchemy.run/aws": "2.0.0-beta.85",
     "@alchemy.run/cloudflare": "2.0.0-beta.85",
     "@alchemy.run/domain": "2.0.0-beta.85",
     "@alchemy.run/test": "2.0.0-beta.85",
@@ -331,7 +332,8 @@
     "effect@4.1.2": "patches/effect@4.1.2.patch",
     "@effect/platform-node-shared@4.1.2": "patches/@effect%2Fplatform-node-shared@4.1.2.patch",
     "@alchemy.run/domain@2.0.0-beta.85": "patches/@alchemy.run%2Fdomain@2.0.0-beta.85.patch",
-    "rdf-validation@0.1.1": "patches/rdf-validation@0.1.1.patch"
+    "rdf-validation@0.1.1": "patches/rdf-validation@0.1.1.patch",
+    "alchemy@2.0.0-beta.85": "patches/alchemy@2.0.0-beta.85.patch"
   },
   "private": true,
   "repository": {

@@ -6,7 +6,7 @@
     "title": "Rebuild beep-effect infrastructure on Alchemy and distilled, Pulumi retired",
     "status": "active",
     "created": "2026-11-06",
-    "updated": "2026-11-06",
+    "updated": "2026-11-09",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/infra-alchemy-rebuild",
@@ -141,25 +141,45 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
-      "name": "Implement",
-      "status": "pending"
+      "name": "Foundations",
+      "status": "in-progress"
     },
     {
       "id": "P2",
-      "name": "Verify",
+      "name": "Providers",
       "status": "pending"
     },
     {
       "id": "P3",
-      "name": "Yeet: PR to mergeable",
+      "name": "Low-risk stacks",
       "status": "pending"
     },
     {
       "id": "P4",
+      "name": "OIP and hosts",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Runner fleet",
+      "status": "pending"
+    },
+    {
+      "id": "P6",
+      "name": "Retire",
+      "status": "pending"
+    },
+    {
+      "id": "P7",
+      "name": "Yeet: final PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P8",
       "name": "Close",
       "status": "pending"
     }
