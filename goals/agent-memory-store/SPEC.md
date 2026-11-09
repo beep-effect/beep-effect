@@ -186,9 +186,10 @@ test suite, titled with its id.
       floor is measured and reported: writes held for delete-vs-edit or
       insert-under-a-deleted-anchor conflicts (S14b: 8/279, 2.9%; 16/279 with
       the CAS-only writes). Then writes that need a resolver stay at or below
-      9.3% of cluster writes on the upper-bound replay (S14b: 26/279), the
-      entry's "about 9%" budget with no margin; a margin needs a decision file
-      citing a new measurement. Per-op admission lands at least 95% of
+      the measured ratio 26/279 of cluster writes (9.32%, compared as a ratio,
+      never as a rounded percentage) on the upper-bound replay (S14b: 26/279),
+      the entry's "about 9%" budget with no margin; a margin needs a decision
+      file citing a new measurement. Per-op admission lands at least 95% of
       operations (S14b: 98.0%, 1938/1977). Typed status conflicts leave the
       held path with 0 wrong resolutions (S14b: 10/10, 0/14); the lifecycle
       guard rejects every backward move in the fixture (S14b: 12/14 regress
@@ -199,6 +200,10 @@ test suite, titled with its id.
       candidate edge; on the delete-and-rewrite control, which the similarity
       tier alone continued 731/1,100 times, only op capture or a handle may
       continue a claim and the similarity tier mints with a candidate edge.
+      Abstention is reported beside false continuation and stays below 30% of
+      true continuations on single-block edits in every stratum (S2: at most
+      11.29% on the synthetic strata; 1/16 on the real single-block sample,
+      UB95 26.4%), so a resolver cannot pass by minting everything.
 - [ ] **AC-5 Prevalence out of rank (S9, ruling).** No retrieval or gate code path
       reads a count; a lint or test proves it. The observation log records
       `read`, `write`, `restate`, `update` as typed events and exposes
@@ -218,7 +223,12 @@ test suite, titled with its id.
 - [ ] **AC-8 Agent write path (P5, no spike).** An agent edit to a memory file through
       the planned `memory admit` command is captured as operations against the
       exported base and admitted store-side; the `MEMORY.md` index is a
-      generated projection; the runbook documents the loop.
+      generated projection; the runbook documents the loop. Bootstrap on a
+      nonempty existing memory folder imports every file into the log before
+      any projection runs and re-exports it byte-identical; a failed or
+      partial import leaves the folder untouched, and the projector refuses
+      to write over a folder the log has not imported (a test asserts no
+      existing file is replaced or emptied).
 - [ ] **AC-9 Packet discipline.** Every phase ships one PR or stack through
       Yeet with `final-check` before `ready`; every bar change is a decision
       file citing a measurement.
