@@ -25,8 +25,7 @@ from a `turbo.json` input change made in this PR. No other configuration changed
   `//#jsdoc:inventory:check`, `//#lint:allowlist`,
   `//#lint:deprecated-imports`, `//#lint:identity-registry`,
   `//#lint:jsdoc:root`, `//#lint:schema-catalog`, `//#lint:schema-first`,
-  `//#lint:tsgo-rules`, `//#lint:effect-imports-markdown`: each adds the
-  negation
+  `//#lint:tsgo-rules`: each adds the negation
   `!packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/.runtime-*/**`.
   These directories are gitignored Vitest runtime residue. None of these
   scanners reads them: they use git-visible discovery, dot-free globs, or both.
@@ -46,6 +45,14 @@ from a `turbo.json` input change made in this PR. No other configuration changed
   scanned and rewritten. After the change it is skipped, and output on the
   clean tree is unchanged. `src-tauri/target` stays an input because the walk
   can read it.
+- `//#lint:effect-imports-markdown`: adds the same four negations as
+  `//#lint:effect-imports` (the residue family, `!**/coverage/**`,
+  `!**/storybook-static/**` and `!**/.next/**`). The Markdown walk differs
+  from the code walk: it uses `dot: true` but keeps only git-visible paths, so
+  a gitignored `.next`, `coverage`, `storybook-static` or `.runtime-*` tree is
+  never read on a git checkout. Its foundation-source walk uses `dot: false`
+  with the same pruned directory names. Markdown mode output on the clean tree
+  is unchanged before and after the scanner change.
 
 ## `lint:laws` (197 packages)
 
