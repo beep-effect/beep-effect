@@ -84,7 +84,7 @@ Higher sources outrank lower sources when they conflict.
   nearest wrappers); if none fits, a `packages/drivers/*` wrapper is a second
   `create-package` with its own routing decision file. The store's domain
   modules never depend on a database driver directly.
-- A `bun run beep memory` command family on `@beep/repo-cli` (`export`,
+- A planned `memory` command family on `@beep/repo-cli` (`export`,
   `admit`, `project`, `recall`, `observe`, `doctor`) as the only agent-facing
   write path.
 - `standards/memory-architecture/`: status notes as phases land; no doctrine
@@ -210,7 +210,7 @@ test suite, titled with its id.
       The near-duplicate filter flags only, with a false-flag rate at or below
       2% at simhash t=2 (S10: 1.78%, 18/1010).
 - [ ] **AC-8 Agent write path (P5, no spike).** An agent edit to a memory file through
-      `bun run beep memory admit` is captured as operations against the
+      the planned `memory admit` command is captured as operations against the
       exported base and admitted store-side; the `MEMORY.md` index is a
       generated projection; the runbook documents the loop.
 - [ ] **AC-9 Packet discipline.** Every phase ships one PR or stack through
@@ -230,7 +230,7 @@ test suite, titled with its id.
 | Packet doctor | `bun run beep goals doctor` | No new blocking findings |
 | Package handoff | `bun run beep quality package-verify <store package>` | Passes per PR |
 | Spike-derived bars | Tests titled `AC-1` to `AC-7` in the store package | Green |
-| Agent write loop | `bun run beep memory doctor` on a fixture folder | Reports 0 drift |
+| Agent write loop | the planned `memory doctor` command on a fixture folder | Reports 0 drift |
 | Reflection | `bun run beep lint reflection-artifacts` | Passes at closeout |
 
 ## Stop Conditions

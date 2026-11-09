@@ -26,7 +26,7 @@ yourself, each as a decision file with reason and reversal.
 Scope:
 
 - In: one new store package (created only via `bun run beep create-package`
-  after P0's routing decision), a `bun run beep memory` command family on
+  after P0's routing decision), a planned `memory` command family on
   `@beep/repo-cli`, SQLite access through the driver family, status notes in
   `standards/memory-architecture/`, an operator runbook, synthetic or
   `goals/**`-derived fixtures.

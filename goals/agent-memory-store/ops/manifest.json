@@ -47,12 +47,8 @@
       "command": "/goal follow the instructions in goals/agent-memory-store/GOAL.md"
     }
   ],
-  "provides": [
-    "tooling/agent-memory-store"
-  ],
-  "requires": [
-    "foundation/epistemics-vocabulary"
-  ],
+  "provides": ["tooling/agent-memory-store"],
+  "requires": ["foundation/epistemics-vocabulary"],
   "phases": [
     {
       "id": "P0",

@@ -45,7 +45,7 @@
   anchoring converges on; `@beep/text` adopted when it lands.
 - `packages/epistemic/*`, `packages/ontology/*` — kernels reused where they
   fit (PROV-O, `ClaimLifecycle` transitions for typed status fields).
-- `@beep/repo-cli` — home of the `bun run beep memory` command family.
+- `@beep/repo-cli` — home of the planned `memory` command family.
 
 ## 5. Cross-links & provenance
 
