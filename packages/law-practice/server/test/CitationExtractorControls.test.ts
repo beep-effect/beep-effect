@@ -16,6 +16,7 @@ import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -40,6 +41,8 @@ import {
 } from "./CitationNativeSpawner.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+
+const encodeFailureJson = S.encodeEffect(S.fromJsonString(CitationExtractorFailure));
 
 const refusedResolver = SourceTextResolver.of({
   resolve: Effect.fn("ExtractorControls.resolve")(() =>
@@ -97,7 +100,7 @@ const fixture = Effect.fnUntraced(function* (
   return { extractor, input, fs, cwd, limits, snapshot: observed.snapshot };
 });
 const expectPrivateFailure = Effect.fnUntraced(function* (failure: CitationExtractorFailure, cwd: string) {
-  const encoded = yield* S.encodeEffect(S.fromJsonString(CitationExtractorFailure))(failure);
+  const encoded = yield* encodeFailureJson(failure);
   expect(encoded).not.toContain("PRIVATE");
   expect(encoded).not.toContain(cwd);
   expect(encoded).not.toContain("35 U.S.C.");
@@ -168,7 +171,7 @@ it.layer(testLayer, { excludeTestServices: true })("public extractor refusal con
       Effect.gen(function* () {
         const control = yield* fixture("35 U.S.C. 101; 35 U.S.C. 102", { limits: { [limit]: 1 } });
         const outcome = yield* control.extractor.extract(control.input).pipe(Effect.result);
-        expect(Result.isFailure(outcome)).toBe(true);
+        assertTrue(Result.isFailure(outcome));
         const failure = outcome.pipe(Result.getFailure, O.getOrThrow);
         expect(failure).toMatchObject({ _tag: "CitationSafetyLimitExceeded", operation: "extract", limit });
         yield* expectPhysical(control.snapshot, 1);
@@ -197,7 +200,7 @@ it.layer(testLayer, { excludeTestServices: true })("public extractor refusal con
       expect(result.document.mentions).toHaveLength(2);
       const first = O.getOrThrow(O.fromUndefinedOr(result.document.mentions[0]));
       expect(first.citation.type).toBe("case");
-      expect(first.citation.components.page).toEqual(O.none());
+      assertNone(first.citation.components.page);
       expect(result.report.outsideProfile).toBe(0);
       yield* expectPhysical(control.snapshot, 1);
     })

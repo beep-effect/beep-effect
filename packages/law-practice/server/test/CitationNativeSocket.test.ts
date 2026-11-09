@@ -13,6 +13,7 @@ import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { expect } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
@@ -228,11 +229,11 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned process with s
                 expect(echoed).toBe("ready");
                 const blocked = yield* rpc.Busy().pipe(Effect.forkChild);
                 const marker = yield* Stream.runHead(child.stderr).pipe(Effect.timeout(Duration.seconds(5)));
-                expect(O.isSome(marker)).toBe(true);
+                assertTrue(O.isSome(marker));
                 const running = yield* child.isRunning;
                 expect(running).toBe(true);
                 const result = yield* Fiber.join(blocked).pipe(Effect.timeoutOption(Duration.millis(100)));
-                expect(O.isNone(result)).toBe(true);
+                assertNone(result);
               })
             );
           })
@@ -269,7 +270,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned process with s
                 yield* rpc.Echo({ text: "ready" });
                 const busy = yield* rpc.Busy().pipe(Effect.forkChild);
                 const marker = yield* Stream.runHead(child.stderr).pipe(Effect.timeout(Duration.seconds(5)));
-                expect(O.isSome(marker)).toBe(true);
+                assertTrue(O.isSome(marker));
                 yield* Deferred.succeed(ready, undefined);
                 yield* Fiber.join(busy);
               })
