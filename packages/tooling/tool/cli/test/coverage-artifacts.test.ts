@@ -1195,7 +1195,36 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           const f = yield* fixture();
           yield* f.write(1);
           const failure = yield* collectCoverageProducerArtifacts(f.root, f.options).pipe(Effect.flip);
-          expect(failure.message).toContain("missing producer partitions");
+          expect(failure.message).toContain("missing producer partitions: unit-2.");
+        })
+      );
+
+      it.effect("accepts an unallocated partition that expects no package", () =>
+        Effect.gen(function* () {
+          const f = yield* fixture();
+          yield* f.write(1);
+          yield* f.write(2);
+          const complete = yield* collectCoverageProducerArtifacts(f.root, f.options);
+          const planned = CoverageProducerCompareOptions.make({
+            ...f.options,
+            expectedPartitions: A.append(
+              f.options.expectedPartitions,
+              CoverageProducerPartition.make({ partitionId: "unit-empty", packages: [] })
+            ),
+          });
+          const absent = yield* collectCoverageProducerArtifacts(f.root, planned);
+          expect(absent).toEqual(complete);
+          yield* writeCoverageProducerArtifact(
+            f.root,
+            CoverageProducerWriteOptions.make({
+              artifactRoot: ".beep/artifacts/shard-empty",
+              identity: f.identity,
+              partitionId: "unit-empty",
+              packages: [],
+            })
+          );
+          const present = yield* collectCoverageProducerArtifacts(f.root, planned);
+          expect(present).toEqual(complete);
         })
       );
 

@@ -56,6 +56,10 @@ const aggregateCases = A.flatMap(["success", "failure", "skipped", "cancelled", 
   )
 );
 const passingStates = ["success:true:skipped", "success:false:success"];
+// The test lanes also read the run's partition plan: its job result and the planned list.
+const planCases = A.flatMap(["success", "failure", "skipped", "cancelled", ""], (plan) =>
+  A.map(["[]", '["int-rest"]', '["unit-a","int-rest"]', "", "null", '"unit-a"'], (planned) => ({ plan, planned }))
+);
 const decodeWorkflowSteps = S.decodeUnknownEffect(S.Array(S.Unknown));
 const isWorkflowText = S.is(S.String);
 
@@ -67,37 +71,95 @@ it.effect(
       catch: CiCommandError.new("Unable to read the checked-in workflow for the admission regression."),
     });
     const workflow = parseWorkflowYaml(source);
-    for (const { job, shard, needs } of [
-      { job: "lint", shard: "lint-shard", needs: ["change-profile", "lint-shard"] },
-      { job: "test-unit", shard: "test-unit-shard", needs: ["change-profile", "test-unit-shard"] },
-      {
-        job: "test-integration",
-        shard: "test-integration-shard",
-        needs: ["admission", "change-profile", "test-integration-shard"],
-      },
+    for (const { job, shard } of [
+      { job: "lint", shard: "lint-shard" },
+      { job: "property-laws", shard: "property-laws-shard" },
     ]) {
       const script = yamlAt(workflow, ["jobs", job, "steps", 0, "run"]);
       assertTrue(isWorkflowText(script));
-      const render = (classification: string, docs: string, result: string, admission: string) =>
-        pipe(
+      for (const { classification, docs, result } of aggregateCases) {
+        const rendered = pipe(
           script,
-          Str.replaceAll("${{ needs.admission.result }}", admission),
           Str.replaceAll("${{ needs.change-profile.result }}", classification),
           Str.replaceAll("${{ needs.change-profile.outputs.docs_only }}", docs),
           Str.replaceAll(`\${{ needs.${shard}.result }}`, result)
         );
-      for (const { classification, docs, result } of aggregateCases) {
-        const executed = Bun.spawnSync(["bash", "-c", render(classification, docs, result, "success")], {
-          stdout: "pipe",
-          stderr: "pipe",
-        });
+        const executed = Bun.spawnSync(["bash", "-c", rendered], { stdout: "pipe", stderr: "pipe" });
         assert.strictEqual(
           executed.exitCode === 0,
           A.contains(passingStates, `${classification}:${docs}:${result}`),
           `${job}: ${classification}/${docs}/${result}`
         );
       }
+      assert.deepEqual(yamlAt(workflow, ["jobs", job, "needs"]), ["change-profile", shard]);
+    }
+
+    // A planned lane passes in exactly these states: a documentation-only diff whose shards were
+    // skipped, a plan that allocated shards which all passed, and (Test Unit only) a plan that
+    // selected no partition. Test Integration always plans its catch-all, so an empty plan fails.
+    const plannedLanes = [
+      {
+        job: "test-unit",
+        shard: "test-unit-shard",
+        needs: ["change-profile", "test-plan", "test-unit-shard"],
+        emptyPlanSkips: true,
+        isSome: (planned: string) => planned !== "[]",
+      },
+      {
+        job: "test-integration",
+        shard: "test-integration-shard",
+        needs: ["admission", "change-profile", "test-plan", "test-integration-shard"],
+        emptyPlanSkips: false,
+        isSome: (planned: string) => Str.includes('"int-rest"')(planned),
+      },
+    ];
+    const isPlanArray = (planned: string) => Str.startsWith("[")(planned);
+    for (const { job, shard, needs, emptyPlanSkips, isSome } of plannedLanes) {
+      const script = yamlAt(workflow, ["jobs", job, "steps", 0, "run"]);
+      assertTrue(isWorkflowText(script));
+      const run = (
+        classification: string,
+        docs: string,
+        result: string,
+        admission: string,
+        plan: string,
+        planned: string
+      ) =>
+        Bun.spawnSync(
+          [
+            "bash",
+            "-c",
+            pipe(
+              script,
+              Str.replaceAll("${{ needs.admission.result }}", admission),
+              Str.replaceAll("${{ needs.change-profile.result }}", classification),
+              Str.replaceAll("${{ needs.test-plan.result }}", plan),
+              Str.replaceAll("${{ needs.change-profile.outputs.docs_only }}", docs),
+              Str.replaceAll(`\${{ needs.${shard}.result }}`, result)
+            ),
+          ],
+          { stdout: "pipe", stderr: "pipe", env: { ...Bun.env, PLANNED_PARTITIONS: planned } }
+        ).exitCode === 0;
+      for (const { classification, docs, result } of aggregateCases) {
+        for (const { plan, planned } of planCases) {
+          const healthy = classification === "success" && plan === "success" && isPlanArray(planned);
+          const expected =
+            healthy &&
+            ((docs === "true" && result === "skipped") ||
+              (docs === "false" && isSome(planned) && result === "success") ||
+              (docs === "false" && emptyPlanSkips && planned === "[]" && result === "skipped"));
+          assert.strictEqual(
+            run(classification, docs, result, "success", plan, planned),
+            expected,
+            `${job}: ${classification}/${docs}/${result}/${plan}/${planned}`
+          );
+        }
+      }
       assert.deepEqual(yamlAt(workflow, ["jobs", job, "needs"]), needs);
+      assert.strictEqual(
+        yamlAt(workflow, ["jobs", job, "steps", 0, "env", "PLANNED_PARTITIONS"]),
+        `\${{ needs.test-plan.outputs.${job === "test-unit" ? "test_unit" : "test_integration"} }}`
+      );
     }
     // The integration aggregate also fails closed when admission itself did not succeed.
     const integrationScript = yamlAt(workflow, ["jobs", "test-integration", "steps", 0, "run"]);
@@ -107,20 +169,28 @@ it.effect(
         integrationScript,
         Str.replaceAll("${{ needs.admission.result }}", admission),
         Str.replaceAll("${{ needs.change-profile.result }}", "success"),
+        Str.replaceAll("${{ needs.test-plan.result }}", "success"),
         Str.replaceAll("${{ needs.change-profile.outputs.docs_only }}", "false"),
         Str.replaceAll("${{ needs.test-integration-shard.result }}", "success")
       );
-      const executed = Bun.spawnSync(["bash", "-c", rendered], { stdout: "pipe", stderr: "pipe" });
+      const executed = Bun.spawnSync(["bash", "-c", rendered], {
+        stdout: "pipe",
+        stderr: "pipe",
+        env: { ...Bun.env, PLANNED_PARTITIONS: '["int-rest"]' },
+      });
       assert.notStrictEqual(executed.exitCode, 0, `test-integration: admission ${admission}`);
     }
-    for (const job of [
-      "lint-shard",
-      "test-unit-shard",
-      "test-integration-shard",
-      "labs",
-      "property-laws",
-      "fallow-advisory",
+    for (const { job, output } of [
+      { job: "test-unit-shard", output: "test_unit" },
+      { job: "test-integration-shard", output: "test_integration" },
     ]) {
+      assert.deepEqual(yamlAt(workflow, ["jobs", job, "needs"]), ["change-profile", "test-plan"]);
+      assert.strictEqual(
+        yamlAt(workflow, ["jobs", job, "if"]),
+        `needs.change-profile.outputs.docs_only != 'true' && needs.test-plan.outputs.${output} != '[]'`
+      );
+    }
+    for (const job of ["lint-shard", "labs", "property-laws-shard", "fallow-advisory"]) {
       assert.deepEqual(yamlAt(workflow, ["jobs", job, "needs"]), ["change-profile"]);
       assert.strictEqual(yamlAt(workflow, ["jobs", job, "if"]), "needs.change-profile.outputs.docs_only != 'true'");
     }

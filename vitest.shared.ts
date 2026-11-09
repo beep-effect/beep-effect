@@ -11,8 +11,11 @@ import * as Doctest from "@effect/doctest/Plugin";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import * as R from "effect/Record";
+import * as Tuple from "effect/Tuple";
 import { mergeConfig } from "vitest/config";
 import { BaseSequencer } from "vitest/node";
 import { appSourceAlias } from "./vite.shared.ts";
@@ -115,12 +118,24 @@ export const packageTestTimeout = (focusedMs: number): number =>
   vitestDoctestActive ? vitestDoctestTestTimeoutMs : vitestCoverageRunActive || fcDeepSweepActive ? 300_000 : focusedMs;
 
 // Quality-lane audit A1 (D10): the deep sweep only changes the behaviour of
-// files that draw from fast-check, so under an active floor the include list
-// is resolved at config time to the test files that import `fast-check` or
-// use `it.prop` (the same predicate the audit census used). Everything else
-// already ran in the unit lane at the default run count; replaying it at
-// 400-1000 runs with rotating seeds cannot change its outcome. The scan is a
-// cheap synchronous walk of `test/` under the vitest root (the package cwd).
+// tests that draw from an arbitrary, so under an active floor selection runs at
+// two levels. Everything it drops already ran in the unit lane at the default
+// run count; replaying it at 400-1000 runs with rotating seeds cannot change
+// its outcome, because the floor reaches a test only through `fcRuns()` options
+// or an inline property call.
+// 1. File level (config time, below): `include` is resolved to the test files
+//    that match `propertyTestMarker`. The scan is a cheap synchronous walk of
+//    `test/` under the vitest root (the package cwd).
+// 2. Test level (`propertySweepPlainLines` + vitest.property-runner.ts): a
+//    matched file whose relative-import graph runs a property inline
+//    (`Arbitrary.checkEffect`/`sampleEffect`, `FastCheck`, `fc.assert`,
+//    `assertSchemaArbitraryDecodesToSelf`, or `fcRuns` used anywhere but as a
+//    `.prop` `arbitrary:` option) keeps every test. In any other matched file
+//    a test is skipped only when the source line at its task location is
+//    positively a plain `it(...)`/`it.effect(...)` registration; `.prop`
+//    registrations and every unrecognised shape keep running, and suites left
+//    with no runnable test skip their hooks. The pure rules live in
+//    `@beep/fc-runs/PropertySelection`, which carries their unit tests.
 // The snapshot's native Arbitrary model replaced the fast-check bridge: property
 // files now import `effect/Arbitrary` and call `it.prop`,
 // `it.effect.prop`, `Arbitrary.checkEffect`, or `Arbitrary.sampleEffect`.
@@ -153,14 +168,58 @@ const listTestFiles = (directory: string): ReadonlyArray<string> => {
 };
 const toPosixRelative = (root: string, file: string): string =>
   A.join(Str.split(NodePath.relative(root, file), NodePath.sep), "/");
-const propertyTestInclude = (packageRoot: string): ReadonlyArray<string> =>
+const readSourceSync = (file: string): O.Option<string> => {
+  try {
+    return O.some(NodeFS.readFileSync(file, "utf8"));
+  } catch {
+    return O.none();
+  }
+};
+const propertyTestFiles = (packageRoot: string): ReadonlyArray<string> =>
   pipe(
     listTestFiles(NodePath.join(packageRoot, "test")),
-    A.filter((file) => propertyTestMarker.test(NodeFS.readFileSync(file, "utf8"))),
-    A.map((file) => toPosixRelative(packageRoot, file)),
+    A.filter((file) => O.exists(readSourceSync(file), (source) => propertyTestMarker.test(source))),
     A.sort(Order.String)
   );
-const propertySweepInclude = fcDeepSweepActive ? propertyTestInclude(process.cwd()) : [];
+const propertySweepFiles = fcDeepSweepActive ? propertyTestFiles(process.cwd()) : [];
+const propertySweepInclude = A.map(propertySweepFiles, (file) => toPosixRelative(process.cwd(), file));
+// Package-relative test file -> 1-based lines that are plain registrations. Inline files are
+// absent, which keeps every test. Loaded only under an active floor so other runs never read it.
+const propertySweepPlainLines = (
+  files: ReadonlyArray<string>,
+  Selection: typeof import("@beep/fc-runs/PropertySelection")
+): Readonly<Record<string, ReadonlyArray<number>>> => {
+  const sources = MutableHashMap.empty<string, O.Option<string>>();
+  const read = (file: string): O.Option<string> =>
+    O.getOrElse(MutableHashMap.get(sources, file), () => {
+      const source = readSourceSync(file);
+      MutableHashMap.set(sources, file, source);
+      return source;
+    });
+  const resolve = (importer: string, specifier: string): ReadonlyArray<string> =>
+    A.map(Selection.relativeImportCandidates(specifier), (candidate) =>
+      NodePath.resolve(NodePath.dirname(importer), candidate)
+    );
+  return pipe(
+    files,
+    A.flatMap((file) =>
+      Selection.moduleGraphRunsPropertiesInline({ entry: file, readSource: read, resolveCandidates: resolve })
+        ? []
+        : A.map(O.toArray(read(file)), (source) =>
+            Tuple.make(toPosixRelative(process.cwd(), file), Selection.plainRegistrationLines(source))
+          )
+    ),
+    R.fromEntries
+  );
+};
+const propertySweepSelection = fcDeepSweepActive
+  ? await Effect.runPromise(
+      Effect.promise(() => import("@beep/fc-runs/PropertySelection")).pipe(
+        Effect.map((Selection) => propertySweepPlainLines(propertySweepFiles, Selection))
+      )
+    )
+  : {};
+const propertySweepRunner = new URL("./vitest.property-runner.ts", import.meta.url);
 // Fixed global coverage floors are retired (quality-gate-ratchets, 2026-07-06):
 // the committed per-package baseline compare (standards/coverage.regression-baseline.jsonc,
 // fail-on-drop) is the sole coverage judge. Package-local floors (e.g.
@@ -282,6 +341,18 @@ const config: ViteUserConfig = {
     },
     // One doctest owner per worker pair keeps 4 concurrent Turbo tasks inside the runner's CPU.
     ...(vitestDoctestActive ? { maxWorkers: 2 } : {}),
+    // Test-level property selection (see `propertyTestMarker`). Only the deep sweep sets these keys,
+    // so unit, coverage and doctest configs are unchanged.
+    ...(fcDeepSweepActive && !vitestDoctestActive
+      ? {
+          runner:
+            propertySweepRunner.protocol === "file:"
+              ? NodeURL.fileURLToPath(propertySweepRunner)
+              : propertySweepRunner.pathname,
+          includeTaskLocation: true,
+          provide: { beepPropertySweepPlainLines: propertySweepSelection },
+        }
+      : {}),
     include: vitestDoctestActive ? [] : fcDeepSweepActive ? [...propertySweepInclude] : ["test/**/*.test.{ts,tsx}"],
     includeSource: vitestDoctestActive ? ["src/**/*.{ts,tsx}"] : [],
     coverage: {

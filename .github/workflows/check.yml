@@ -696,10 +696,109 @@ jobs:
             *) echo "Unexpected classification or shard result"; exit 1 ;;
           esac
 
+  # Plans the Test Unit and Test Integration partitions this run allocates
+  # (goals/ci-lane-economics, 2026-11-09). A push allocates every partition.
+  # A pull request allocates only the partitions with selected tasks: an
+  # unaffected partition used to hold a hosted runner through setup to run
+  # nothing, and one run's 47 shard jobs queued behind the organization's
+  # concurrent hosted-job limit. The plan is the selection every partition
+  # runs. Each allocated partition re-derives it and fails when the plan left
+  # out a partition with selected tasks, and Coverage Regression requires
+  # evidence from every partition with affected owners, so a partition that
+  # was not allocated is a stated skip and never a silent pass.
+  test-plan:
+    name: Test Plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    env:
+      # Every partition of each lane, in table order (CiLanePartitions.ts).
+      ALL_TEST_UNIT_PARTITIONS: '["repo-cli-1", "repo-cli-2", "repo-cli-3", "repo-cli-4", "repo-cli-5", "repo-cli-6", "repo-cli-7", "repo-cli-8", "repo-cli-9", "repo-cli-10", "repo-cli-11", "law-practice-1", "law-practice-2", "law-practice-3", "law-practice-4", "law-practice-5", "law-practice-6", "law-practice-7", "law-practice-8", "law-practice-9", "law-practice-10", "law-practice-11", "law-practice-12", "unit-a", "unit-b", "unit-c", "unit-d", "unit-e", "unit-f", "unit-g"]'
+      ALL_TEST_INTEGRATION_PARTITIONS: '["lps-int-1", "lps-int-2", "lps-int-3", "lps-int-4", "lps-int-5", "lps-int-6", "lps-int-7", "lps-int-8", "lps-int-9", "lps-int-10", "lps-int-11", "lps-int-12", "lps-int-13", "lps-int-14", "lps-int-15", "lps-int-16", "int-rest"]'
+    outputs:
+      test_unit: ${{ steps.plan.outputs.test_unit }}
+      test_integration: ${{ steps.plan.outputs.test_integration }}
+    steps:
+      - name: Checkout repository
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Fetch pull request base
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
+
+      - name: Fetch beep CI binary
+        if: github.event_name == 'pull_request'
+        uses: ./.github/actions/fetch-beep-ci
+
+      # Classified here as well so the plan does not wait for Change Profile:
+      # a documentation-only diff plans nothing and installs nothing.
+      - name: Classify pinned pull request diff
+        id: profile
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: beep ci change-profile
+
+      - name: Setup monorepo CI
+        if: github.event_name == 'pull_request' && steps.profile.outputs.docs_only != 'true'
+        uses: ./.github/actions/setup-monorepo-ci
+
+      # Same shape arguments as the partitions below, so plan and partition
+      # read one selection.
+      - name: Plan Test Unit partitions
+        id: unit
+        if: github.event_name == 'pull_request' && steps.profile.outputs.docs_only != 'true'
+        shell: bash
+        run: bun run beep ci lane test-unit --plan-partitions --affected --base "$BEEP_COVERAGE_BASE_SHA"
+
+      - name: Plan Test Integration partitions
+        id: integration
+        if: github.event_name == 'pull_request' && steps.profile.outputs.docs_only != 'true'
+        shell: bash
+        run: bun run beep ci lane test-integration --plan-partitions --affected --base "origin/${GITHUB_BASE_REF:-main}"
+
+      - name: Publish partition plan
+        id: plan
+        shell: bash
+        env:
+          DOCS_ONLY: ${{ steps.profile.outputs.docs_only }}
+          PLANNED_TEST_UNIT: ${{ steps.unit.outputs.partitions }}
+          PLANNED_TEST_INTEGRATION: ${{ steps.integration.outputs.partitions }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_EVENT_NAME" != "pull_request" ]]; then
+            test_unit="$ALL_TEST_UNIT_PARTITIONS"
+            test_integration="$ALL_TEST_INTEGRATION_PARTITIONS"
+          elif [[ "$DOCS_ONLY" == "true" ]]; then
+            test_unit='[]'
+            test_integration='[]'
+          else
+            test_unit="$PLANNED_TEST_UNIT"
+            test_integration="$PLANNED_TEST_INTEGRATION"
+          fi
+          # A plan is a JSON array of this lane's partitions; anything else blocks the run.
+          publish() {
+            local name="$1" planned="$2" all="$3"
+            jq --exit-status --argjson all "$all" \
+              'type == "array" and (unique | length) == length and all(.[]; . as $id | any($all[]; . == $id))' \
+              <<<"$planned" > /dev/null
+            echo "${name}=$(jq --compact-output . <<<"$planned")" >> "$GITHUB_OUTPUT"
+            echo "${name}: $(jq --raw-output 'length' <<<"$planned") of $(jq --raw-output 'length' <<<"$all") partitions: $(jq --raw-output 'join(" ")' <<<"$planned")"
+          }
+          publish test_unit "$test_unit" "$ALL_TEST_UNIT_PARTITIONS"
+          publish test_integration "$test_integration" "$ALL_TEST_INTEGRATION_PARTITIONS"
+
   test-unit-shard:
     name: Test Unit (${{ matrix.partition }})
-    needs: [change-profile]
-    if: needs.change-profile.outputs.docs_only != 'true'
+    needs: [change-profile, test-plan]
+    if: needs.change-profile.outputs.docs_only != 'true' && needs.test-plan.outputs.test_unit != '[]'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
@@ -708,7 +807,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        partition: [repo-cli-1, repo-cli-2, repo-cli-3, repo-cli-4, repo-cli-5, repo-cli-6, repo-cli-7, repo-cli-8, repo-cli-9, repo-cli-10, repo-cli-11, law-practice-1, law-practice-2, law-practice-3, law-practice-4, law-practice-5, law-practice-6, law-practice-7, law-practice-8, law-practice-9, law-practice-10, law-practice-11, law-practice-12, unit-a, unit-b, unit-c, unit-d, unit-e, unit-f, unit-g]
+        partition: ${{ fromJSON(needs.test-plan.outputs.test_unit) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -776,6 +875,8 @@ jobs:
       - name: Run Test Unit shard
         id: unit-tests
         if: steps.lane-gate.outputs.should_run == 'true'
+        env:
+          PLANNED_PARTITIONS: ${{ needs.test-plan.outputs.test_unit }}
         run: |
           set -euo pipefail
           run_lane() {
@@ -794,7 +895,7 @@ jobs:
             shape_args+=(--affected)
           fi
           shape_args+=(--summarize)
-          run_lane ci lane test-unit --partition "${{ matrix.partition }}" --coverage-output ".beep/ci-coverage/${{ matrix.partition }}" "${shape_args[@]}"
+          run_lane ci lane test-unit --partition "${{ matrix.partition }}" --planned-partitions "$PLANNED_PARTITIONS" --coverage-output ".beep/ci-coverage/${{ matrix.partition }}" "${shape_args[@]}"
 
       # A failed producer never seals coverage evidence. Preserve its raw test
       # reports separately so bounded console output cannot hide later failures.
@@ -848,22 +949,31 @@ jobs:
             infra/r2-cache/adapter.sh stop-ci
           fi
 
+  # Fails on any shard failure or cancellation and on a plan or classification
+  # failure. A skipped shard matrix passes only as a stated skip: a
+  # documentation-only diff, or a plan that selected no Test Unit partition.
   test-unit:
     name: Test Unit
     timeout-minutes: 5
-    needs: [change-profile, test-unit-shard]
+    needs: [change-profile, test-plan, test-unit-shard]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     steps:
-      - name: Require every Test Unit shard
+      - name: Require every planned Test Unit shard
         shell: bash
+        env:
+          PLANNED_PARTITIONS: ${{ needs.test-plan.outputs.test_unit }}
         run: |
           set -euo pipefail
           [[ "${{ needs.change-profile.result }}" == "success" ]]
-          case "${{ needs.change-profile.outputs.docs_only }}:${{ needs.test-unit-shard.result }}" in
-            true:skipped) echo "Documentation-only diff: Test Unit shards were not allocated." ;;
-            false:success) echo "Every Test Unit shard passed." ;;
-            *) echo "Unexpected classification or shard result"; exit 1 ;;
+          [[ "${{ needs.test-plan.result }}" == "success" ]]
+          # An empty or non-array plan is a failed plan, never an empty one.
+          planned="$(jq --exit-status --raw-output 'if type == "array" then (if length == 0 then "none" else "some" end) else error("plan is not an array") end' <<<"$PLANNED_PARTITIONS")"
+          case "${{ needs.change-profile.outputs.docs_only }}:${planned}:${{ needs.test-unit-shard.result }}" in
+            true:*:skipped) echo "Documentation-only diff: Test Unit shards were not allocated." ;;
+            false:none:skipped) echo "The plan selected no Test Unit partition for this change set; Coverage Regression requires evidence from every partition with affected owners." ;;
+            false:some:success) echo "Every planned Test Unit shard passed: $(jq --raw-output 'join(" ")' <<<"$PLANNED_PARTITIONS")" ;;
+            *) echo "Unexpected classification, plan or shard result"; exit 1 ;;
           esac
 
   # Hosted integration partitions (goals/citation-extraction-engine, 2026-11-09).
@@ -874,8 +984,8 @@ jobs:
   # a mis-sized shard to report its own failure instead of a cancellation.
   test-integration-shard:
     name: Test Integration (${{ matrix.partition }})
-    needs: [change-profile]
-    if: needs.change-profile.outputs.docs_only != 'true'
+    needs: [change-profile, test-plan]
+    if: needs.change-profile.outputs.docs_only != 'true' && needs.test-plan.outputs.test_integration != '[]'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
@@ -884,7 +994,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        partition: [lps-int-1, lps-int-2, lps-int-3, lps-int-4, lps-int-5, lps-int-6, lps-int-7, lps-int-8, lps-int-9, lps-int-10, lps-int-11, lps-int-12, lps-int-13, lps-int-14, lps-int-15, lps-int-16, int-rest]
+        partition: ${{ fromJSON(needs.test-plan.outputs.test_integration) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -940,6 +1050,8 @@ jobs:
 
       - name: Run Test Integration partition
         if: steps.lane-gate.outputs.should_run == 'true'
+        env:
+          PLANNED_PARTITIONS: ${{ needs.test-plan.outputs.test_integration }}
         run: |
           set -euo pipefail
           run_lane() {
@@ -958,7 +1070,7 @@ jobs:
             shape_args+=(--affected --base "origin/${GITHUB_BASE_REF:-main}")
           fi
           shape_args+=(--summarize)
-          run_lane ci lane test-integration --partition "${{ matrix.partition }}" "${shape_args[@]}"
+          run_lane ci lane test-integration --partition "${{ matrix.partition }}" --planned-partitions "$PLANNED_PARTITIONS" "${shape_args[@]}"
 
       - name: Append Turbo summary
         if: steps.lane-gate.outputs.should_run == 'true' && always()
@@ -990,24 +1102,31 @@ jobs:
   # aggregate takes a migration name so one run never carries two check runs
   # under one context; once that job is gone it becomes the exact required
   # context without a ruleset edit. It fails on any partition failure,
-  # cancellation or skip, and on an admission or classification failure.
+  # cancellation or skip, and on an admission, plan or classification failure.
+  # The plan always allocates `int-rest`, so outside a documentation-only diff
+  # an empty plan is a failure, never a skip.
   test-integration:
     name: ${{ needs.admission.outputs.legacy_integration == 'true' && 'Test Integration Partitions' || 'Heavy / Test Integration' }}
     timeout-minutes: 5
-    needs: [admission, change-profile, test-integration-shard]
+    needs: [admission, change-profile, test-plan, test-integration-shard]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     steps:
-      - name: Require every Test Integration partition
+      - name: Require every planned Test Integration partition
         shell: bash
+        env:
+          PLANNED_PARTITIONS: ${{ needs.test-plan.outputs.test_integration }}
         run: |
           set -euo pipefail
           [[ "${{ needs.admission.result }}" == "success" ]]
           [[ "${{ needs.change-profile.result }}" == "success" ]]
-          case "${{ needs.change-profile.outputs.docs_only }}:${{ needs.test-integration-shard.result }}" in
-            true:skipped) echo "Documentation-only diff: Test Integration partitions were not allocated." ;;
-            false:success) echo "Every Test Integration partition passed." ;;
-            *) echo "Unexpected classification or partition result"; exit 1 ;;
+          [[ "${{ needs.test-plan.result }}" == "success" ]]
+          # An empty or non-array plan is a failed plan, never an empty one.
+          planned="$(jq --exit-status --raw-output 'if type == "array" then (if any(.[]; . == "int-rest") then "some" else "none" end) else error("plan is not an array") end' <<<"$PLANNED_PARTITIONS")"
+          case "${{ needs.change-profile.outputs.docs_only }}:${planned}:${{ needs.test-integration-shard.result }}" in
+            true:*:skipped) echo "Documentation-only diff: Test Integration partitions were not allocated." ;;
+            false:some:success) echo "Every planned Test Integration partition passed: $(jq --raw-output 'join(" ")' <<<"$PLANNED_PARTITIONS")" ;;
+            *) echo "Unexpected classification, plan or partition result"; exit 1 ;;
           esac
 
   coverage-regression:
@@ -1269,12 +1388,18 @@ jobs:
         if: steps.lane-gate.outputs.should_run != 'true'
         run: echo "Skipping desktop IPC stdio proof for this change set."
 
-  property-laws:
+  property-laws-shard:
     # one-round-loop P1 (D3): schema property laws for affected packages at a
     # 400-run floor. Lands NON-required; the required flip (ruleset 10240248
     # addition) is a P4 close criterion after a stable green history. The
     # nightly sweep (property-laws-nightly.yml) covers ALL suites at 1000+.
-    name: Property Laws
+    #
+    # Two complementary Turbo filters (goals/ci-lane-economics, 2026-11-09):
+    # `repo-cli` runs @beep/repo-cli's sweep alone and `rest` runs every other
+    # package, so the two cover each package exactly once without a table. As
+    # one job the lane ran 17 to 23 minutes cold: repo-cli's 12 to 15 minute
+    # task started about six minutes in, behind the other 85 packages.
+    name: Property Laws (${{ matrix.partition }})
     needs: [change-profile]
     if: needs.change-profile.outputs.docs_only != 'true'
     runs-on: ubuntu-24.04
@@ -1282,6 +1407,10 @@ jobs:
     environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        partition: [repo-cli, rest]
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -1346,6 +1475,12 @@ jobs:
 
           shape_args+=(--summarize)
 
+          case "${{ matrix.partition }}" in
+            repo-cli) shape_args+=(--filter "@beep/repo-cli") ;;
+            rest) shape_args+=(--filter "!@beep/repo-cli") ;;
+            *) echo "Unknown Property Laws partition"; exit 1 ;;
+          esac
+
           bun run beep ci lane property "${shape_args[@]}"
 
       - name: Append Turbo summary
@@ -1363,7 +1498,7 @@ jobs:
 
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'
-        run: echo "Skipping Property Laws for this change set."
+        run: echo "Skipping Property Laws (${{ matrix.partition }}) for this change set."
 
       - name: Stop R2 cache adapter
         if: always()
@@ -1372,6 +1507,26 @@ jobs:
           if [[ -x infra/r2-cache/adapter.sh ]]; then
             infra/r2-cache/adapter.sh stop-ci
           fi
+
+  # Keeps the single `Property Laws` context over both slices and fails on any
+  # slice failure, cancellation or unexpected skip.
+  property-laws:
+    name: Property Laws
+    timeout-minutes: 5
+    needs: [change-profile, property-laws-shard]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require every Property Laws slice
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "${{ needs.change-profile.result }}" == "success" ]]
+          case "${{ needs.change-profile.outputs.docs_only }}:${{ needs.property-laws-shard.result }}" in
+            true:skipped) echo "Documentation-only diff: Property Laws slices were not allocated." ;;
+            false:success) echo "Every Property Laws slice passed." ;;
+            *) echo "Unexpected classification or slice result"; exit 1 ;;
+          esac
 
   fallow-advisory:
     name: Fallow Advisory Envelopes

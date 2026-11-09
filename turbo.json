@@ -5404,6 +5404,8 @@
         "$TURBO_ROOT$/vite.shared.ts",
         "$TURBO_ROOT$/vitest.setup.ts",
         "$TURBO_ROOT$/vitest.aliases.generated.json",
+        "$TURBO_ROOT$/vitest.property-runner.ts",
+        "$TURBO_ROOT$/packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
         "!.beep/**",
         "!.fallow/**",
         ".env",

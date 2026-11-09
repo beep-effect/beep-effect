@@ -1890,6 +1890,9 @@ class CiEffectiveLaneSpec extends S.Opaque<CiEffectiveLaneSpec, { readonly brand
     // one of them, so a census window that straddles a layout change (10 Test Unit shards from 2026-11-02)
     // still judges each run against the layout that produced it.
     shardLayouts: S.NonEmptyString.pipe(S.NonEmptyArray, S.NonEmptyArray),
+    // Name of the attempt-one job whose presence marks a run that allocated only a planned subset of the
+    // newest layout's shards; a lane without it must always run one complete layout.
+    plannedBy: S.optionalKey(S.NonEmptyString),
   }).pipe(
     $I.annoteSchema("CiEffectiveLaneSpec", {
       description:
@@ -1899,6 +1902,10 @@ class CiEffectiveLaneSpec extends S.Opaque<CiEffectiveLaneSpec, { readonly brand
 ) {}
 
 const specShardNames = (spec: CiEffectiveLaneSpec): ReadonlyArray<string> => A.dedupe(A.flatten(spec.shardLayouts));
+
+// Must match the `name:` of the `test-plan` job in `.github/workflows/check.yml`: a run carrying exactly one
+// attempt-one job with this name built its Test Unit matrix from the affected partitions only.
+const CI_TEST_PLAN_JOB_NAME = "Test Plan";
 
 // The layout whose every shard has an attempt-one job in this run; the newest layout wins a tie (a layout
 // that is a superset of an older one always wins when complete).
@@ -1910,11 +1917,36 @@ const completeShardLayout = (
     A.every(layout, (shardName) => O.isSome(attemptOneJobNamed(jobs, shardName)))
   );
 
+// A planned run allocates only the newest layout's shards whose partitions have affected packages, so its
+// layout is that present subset; with no shard job there is no span to measure. A shard name carried by
+// more than one attempt-one job stays in the subset so the exactly-one component check still refuses it.
+const plannedShardLayout = (
+  jobs: ReadonlyArray<CiWorkflowAttemptOneJob>,
+  spec: CiEffectiveLaneSpec
+): O.Option<ReadonlyArray<string>> =>
+  pipe(
+    O.fromUndefinedOr(spec.plannedBy),
+    O.filter((marker) => O.isSome(attemptOneJobNamed(jobs, marker))),
+    O.map(
+      (): ReadonlyArray<string> =>
+        A.filter(A.lastNonEmpty(spec.shardLayouts), (shardName) =>
+          A.some(jobs, (job) => Str.equivalence(job.name, shardName))
+        )
+    ),
+    O.filter((layout) => A.isReadonlyArrayNonEmpty(layout))
+  );
+
+const effectiveShardLayout = (
+  jobs: ReadonlyArray<CiWorkflowAttemptOneJob>,
+  spec: CiEffectiveLaneSpec
+): O.Option<ReadonlyArray<string>> => O.orElse(completeShardLayout(jobs, spec), () => plannedShardLayout(jobs, spec));
+
 const CI_EFFECTIVE_LANE_SPECS: ReadonlyArray<CiEffectiveLaneSpec> = [
   CiEffectiveLaneSpec.make({ aggregator: "Lint", lane: "Lint", shardLayouts: [["Lint (lint-a)", "Lint (lint-b)"]] }),
   CiEffectiveLaneSpec.make({
     aggregator: "Test Unit",
     lane: "Test Unit",
+    plannedBy: CI_TEST_PLAN_JOB_NAME,
     shardLayouts: [
       // #1195 (2026-09-22) to 2026-11-02: four repo-cli quarters and two unit bins.
       [
@@ -2532,7 +2564,7 @@ const effectiveDurationRow = (
   jobs: ReadonlyArray<CiWorkflowAttemptOneJob>,
   spec: CiEffectiveLaneSpec
 ): CiLaneTimingWindowRow => {
-  const layout = completeShardLayout(jobs, spec);
+  const layout = effectiveShardLayout(jobs, spec);
   if (O.isNone(layout)) {
     return incompleteEffectiveRow(run, spec);
   }
