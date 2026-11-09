@@ -6,7 +6,7 @@
     "title": "Text-Knowledge Stack Rebuild",
     "status": "active",
     "created": "2026-11-08",
-    "updated": "2026-11-08",
+    "updated": "2026-11-09",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/text-knowledge-stack-rebuild",
@@ -24,12 +24,13 @@
   "currentSourceOfTruth": [
     "AGENTS.md",
     "CLAUDE.md",
+    "goals/text-knowledge-stack-rebuild/GOAL.md",
+    "goals/text-knowledge-stack-rebuild/PLAN.md",
     "goals/text-knowledge-stack-rebuild/README.md",
     "goals/text-knowledge-stack-rebuild/SPEC.md",
-    "goals/text-knowledge-stack-rebuild/PLAN.md",
-    "goals/text-knowledge-stack-rebuild/GOAL.md",
+    "goals/text-knowledge-stack-rebuild/research/2026-11-08-rebuild-report.md",
     "goals/text-knowledge-stack-rebuild/research/SOURCES.md",
-    "goals/text-knowledge-stack-rebuild/research/2026-11-08-rebuild-report.md"
+    "goals/text-knowledge-stack-rebuild/research/law-test-plan.md"
   ],
   "researchReports": [
     "research/2026-11-08-critic-1-theory.md",
@@ -47,7 +48,8 @@
     "research/figures/boundary-worlds.dot",
     "research/figures/boundary-worlds.svg",
     "research/figures/stack-layers.dot",
-    "research/figures/stack-layers.svg"
+    "research/figures/stack-layers.svg",
+    "research/law-test-plan.md"
   ],
   "agentLaunchers": [
     {
@@ -73,17 +75,17 @@
     },
     {
       "id": "P1",
-      "name": "L0 identity: freeze identities",
+      "name": "L0 identity: declared terms, one digest",
       "status": "pending"
     },
     {
       "id": "P2",
-      "name": "L1 text: occurrence identity and selectors",
+      "name": "L1 text: @beep/text, occurrence identity, selectors",
       "status": "pending"
     },
     {
       "id": "P3",
-      "name": "L2 annotation: lossless handoff",
+      "name": "L2 annotation: @beep/annotation, lossless handoff",
       "status": "pending"
     },
     {
@@ -98,12 +100,12 @@
     },
     {
       "id": "P6",
-      "name": "L5 and L7: operations and agent surface",
+      "name": "L5 and L7: operations, agent surface, the flow",
       "status": "pending"
     },
     {
       "id": "P7",
-      "name": "Census and folds",
+      "name": "Cut-over and retirement",
       "status": "pending"
     },
     {
@@ -130,7 +132,8 @@
   "stopConditions": [
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
-    "The same blocker repeats after reasonable investigation."
+    "The same blocker repeats after reasonable investigation.",
+    "A retirement or rename is attempted without its row in research/consumer-census.md or without the consumer migration in the same PR: that step stops, the packet does not."
   ],
-  "statusNote": "Authored 2026-11-08 from the OpenResearch rebuild report (revision 2). P0 Design and grill is next; no code has changed."
+  "statusNote": "Authored 2026-11-08 from the OpenResearch rebuild report (revision 2); revised 2026-11-09 under the operator ruling that breaking changes are acceptable (decisions/). P0 Design and grill is next; no package code has changed."
 }

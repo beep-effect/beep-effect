@@ -2,7 +2,7 @@
 
 Verdict: refuted as a prerequisite rebuild for the next twelve months. The evidence supports repairing source preservation and review semantics now. It does not establish that the practice needs a new formal foundation before using a real matter. Predictions about cost and attorney usability below are engineering inferences, not measured results. No repository files, Git state, dependencies, or compute runs were changed. This requested findings file is the sole deliverable.
 
-Evidence shorthand: **Draft** is [the report under review](~/.local/share/openresearch/files/beep-effect/text-knowledge-rebuild/text-knowledge-rebuild-report.md); **A** is [the law-practice reader](~/.local/share/openresearch/files/beep-effect/text-knowledge-rebuild/research/reader-a-law-practice.md), especially §§1, 2, 4, 5, 7; **C** is [the pipeline reader](~/.local/share/openresearch/files/beep-effect/text-knowledge-rebuild/research/reader-c-agent-surfaces.md), especially §§2, 3, 8. Reader observations are cited as audited observations, not newly executed verification. Primary standards were checked separately where linked. Repository citations use the reader's owning-source pointers.
+Evidence shorthand: **Draft** is [the report under review](./2026-11-08-rebuild-report.md); **A** is [the law-practice reader](./2026-11-08-reader-a-law-practice.md), especially §§1, 2, 4, 5, 7; **C** is [the pipeline reader](./2026-11-08-reader-c-agent-surfaces.md), especially §§2, 3, 8. Reader observations are cited as audited observations, not newly executed verification. Primary standards were checked separately where linked. Repository citations use the reader's owning-source pointers.
 
 ## 1. The migration makes known safety repairs wait for an unearned foundation
 

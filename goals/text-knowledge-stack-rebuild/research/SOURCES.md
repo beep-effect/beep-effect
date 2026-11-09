@@ -32,15 +32,15 @@ cites as precedent (`reference`). Line numbers are as read on 2026-11-08.
 | `lei` | `LogicalEdgeIdentity` requiring `orgScope` | beep-effect | `packages/foundation/modeling/epistemics/src/LogicalEdgeIdentity/LogicalEdgeIdentity.model.ts:82,120` | L4 scope | reference |
 | `oa` | Web Annotation selector codecs, both directions | beep-effect | `packages/foundation/modeling/rdf/src/Adapters/WebAnnotation.ts:358-369,492,577-588` | L6 codecs | generalize |
 | `evid` | `rdf.Evidence` selectors (text position and quote) | beep-effect | `packages/foundation/modeling/rdf/src/Evidence.ts:78-122,204-206` | L1/L6 selector union | generalize |
-| `prov` | Vendored PROV-O model, one test consumer | beep-effect | `packages/foundation/modeling/rdf/src/Prov.ts` | L5 activities | generalize |
-| `fold` | Ontology fold emitting `rdfs:subClassOf` and OWL property declarations | beep-effect | `packages/foundation/modeling/ontology/src/Fold.projections.ts:349-359`, `Fold.models.ts:15-24` | L3 fold | generalize |
+| `prov` | In-repo PROV core schema module (`Activity`, `Entity`, `Agent`); consumed by the `ProvRdf.ts` codec and four `rdf/test` files, by no handoff or claim record | beep-effect | `packages/foundation/modeling/rdf/src/Prov.ts:1-7`, `rdf/src/ProvRdf.ts`, `rdf/src/index.ts:54,61` | L5 activities | generalize |
+| `fold` | Ontology fold: `predicateNode` emits OWL property declarations with `rdfs:domain`/`rdfs:range`; `classNode` copies caller-supplied facts such as `rdfs:subClassOf` (it does not mint them); imports only `IRI` and `LanguageTag` from rdf | beep-effect | `packages/foundation/modeling/ontology/src/Fold.projections.ts:296-327,349-359`, `Fold.models.ts:15-24,485` | L3 fold | generalize |
 | `loader` | Manifested, pinned taxonomy asset loader | beep-effect | `packages/foundation/modeling/ontology/src/TaxonomyLoader.ts:233-256` | L3 asset packs | generalize |
 | `seeds` | Legal vocabulary seeds in foundation | beep-effect | `packages/foundation/modeling/ontology/src/Vocabulary.seed.ts:22-104`, `SemanticFoundation.seed.ts` | L3 misfiling | repair |
 | `dto` | FOLIO HTTP DTOs in a modeling package | beep-effect | `packages/foundation/modeling/ontology/src/Ontology.models.ts:242-311` | L3 misfiling | repair |
 | `iri` | IRIs minted from package, file and symbol paths | beep-effect | `packages/foundation/modeling/identity/src/Id.ts:60-77`, `identity/test/IriBinding.test.ts:58-74` | L0 term stability | repair |
 | `pins` | `test-utils` IRIs pinned under a renamed package | beep-effect | `packages/tooling/test-kit/test-runner/src/Vitest.errors.ts:23,141,151` | L0 term stability | repair |
 | `handoff` | Lossy langextract handoff: array-order ids, every label an `Entity`, empty relations, no digests | beep-effect | `packages/foundation/capability/langextract/src/Handoff/Handoff.behavior.ts:39-111` | L2 handoff | repair |
-| `ir` | `AnnotatedDocument` with no consumer; `IrToLaw` reads `GroundedExtraction` | beep-effect | `packages/foundation/modeling/nlp/src/Handoff/Contract.ts:518`, `packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts:6-14` | L2 consumer | repair |
+| `ir` | `AnnotatedDocument` is produced on `LangExtractResult` and round-tripped in tests, but `IrToLaw` reads `GroundedExtraction`, not the envelope | beep-effect | `packages/foundation/modeling/nlp/src/Handoff/Contract.ts:514`, `packages/foundation/capability/langextract/src/Service/Service.layer.ts:90-107`, `packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts:6-14` | L2 consumer | repair |
 | `proj` | Semantica RDF projection omitting anchor, quote, receipt, confidence | beep-effect | `apps/labs/semantica/src/layers/RdfProjectionLive.ts:66-111,113-122` | L6 projection | repair |
 | `one` | Missing confidence becomes `1` | beep-effect | `apps/labs/semantica/src/layers/ExtractorLive.ts:238-239` | L4 invented certainty | repair |
 | `ninety` | Evidence confidence fixed at `0.9` | beep-effect | `packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.service.ts:95` | L4 invented certainty | repair |
@@ -122,16 +122,18 @@ reading.
 | `@beep/rdf` | `packages/foundation/modeling/rdf` | extend (L6: `Dataset` quotient, `Literal` cases, `TextAnchor <-> oa:`, registry-backed namespaces) |
 | `@beep/epistemics` | `packages/foundation/modeling/epistemics` | extend (L4: immutable core, `Stance`, `Admission`, `Assessments<K>`, `epistemics/rdf`) |
 | `@beep/ontology` | `packages/foundation/modeling/ontology` | extend and move out (L3: SSSOM, `fold -> Dataset`; seeds and DTOs leave) |
-| `@beep/nlp` | `packages/foundation/modeling/nlp` | extend first (L2 contract in `Handoff/`, L5 operations); fold candidate at P7 |
+| `@beep/nlp` | `packages/foundation/modeling/nlp` | retire in P7 after L2 and L5 absorb it |
 | `@beep/md`, `@beep/pandoc-ast`, `@beep/lexical`, `@beep/html` | `packages/foundation/modeling/{md,pandoc-ast,lexical,html}` | extend (AST source maps into `provenance`) |
 | `@beep/langextract` | `packages/foundation/capability/langextract` | repair (lossless handoff; unit conversion moves down to L1) |
-| `@beep/schema` (`LiteralKit`) | `packages/foundation/primitive/schema` | reuse |
-| `@beep/schema-org` | `packages/foundation/modeling/schema-org` | inventory at P7 (five facets; rehome or retire each) |
-| `mcp-kit` (`S.toJsonSchemaDocument`) | see `rg -l toJsonSchemaDocument packages` | reuse (L7: tool schemas are the Effect schemas) |
-| law-practice citation identity | `packages/law-practice/server/src/internal/Citation` | reuse as precedent; persisted `cm1:`/`ca1:` bytes unchanged |
+| `@beep/schema` (`LiteralKit`) | `packages/foundation/modeling/schema` | reuse |
+| `@beep/schema-org` | `packages/foundation/modeling/schema-org` | every facet rehomed or deleted in P7 per the consumer census |
+| `mcp-kit` (`S.toJsonSchemaDocument`) | `packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts` | reuse (L7: tool schemas are the Effect schemas) |
+| law-practice citation identity | `packages/law-practice/server/src/internal/Citation`, `packages/law-practice/domain/src/values/Citation` | reuse as precedent; the `cm1:` preimage becomes the occurrence preimage and records are re-minted by a P2 migration with the `citation-extraction-engine` lane |
 | law-practice office action, docket, IrToLaw | `packages/law-practice/use-cases/src/{OfficeActionReview,DocketIntake,IrToLaw}` | repair (defaults, absent-attachment check, handoff consumer) |
 | semantica lab | `apps/labs/semantica` | repair (projection loss declared; `1` default removed; gold fixture migrated) |
-| `@beep/annotation`, `@beep/nlp-processing` | NET-NEW, conditional on the P7 census; only via `bun run beep create-package` | fold targets |
+| `@beep/annotation` | NET-NEW in P3 via `bun run beep create-package` after the P0 routing decision | L2 home |
+| `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` (existing) | extend (L5 home: absorbs `nlp/Operations` and `nlp/Algebra`) |
+| `@beep/text` | NET-NEW in P2 via `bun run beep create-package`; `@beep/provenance` retired with consumers migrated | L1 home |
 
 ## 5. Cross-links & provenance
 
@@ -139,7 +141,7 @@ reading.
   [`citation-verified-span-substrate`](../../citation-verified-span-substrate/README.md)
   (completed-retained; verified anchors and UTF-16 offsets this design keeps),
   [`attributed-multi-claim-span`](../../attributed-multi-claim-span/README.md)
-  (paused; attributed annotations over `TextAnchor`, superseded in scope by L2 here),
+  (superseded by this packet on 2026-11-09: L2 and L4 replace its annotation aggregate and its LangExtract-to-ClaimGate proof; see `SPEC.md` "Relationships"),
   [`epistemics-foundation-extraction`](../../epistemics-foundation-extraction/README.md)
   (completed-retained; provides `foundation/epistemics-vocabulary`, which this packet requires),
   [`provenance-shared-claim-kernel`](../../provenance-shared-claim-kernel/README.md),
@@ -159,7 +161,8 @@ reading.
   the Opaque default, the tagged-union ruling, the identity authority;
   `standards/architecture/GLOSSARY.md` "TextAnchor" and "Verdict";
   `standards/architecture/11-evolution-and-deprecation.md` (retirement procedure).
-- Decision files: `decisions/` (projected into `SPEC.md`).
+- Decision files: `decisions/` (projected into `SPEC.md`): program shape (2026-11-08), the breaking-changes ruling and the resolved questions (2026-11-09).
+- Law-test ledger: `law-test-plan.md`, one row per catalogue row `L0-1` to `L6-2`.
 - Artifacts outside the repository: the OpenResearch artifacts directory
   `text-knowledge-rebuild/` (report, PDF figures, unabridged reader A) and
   `nlp-algebra-model/` (the companion `@beep/nlp` law audit).

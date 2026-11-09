@@ -644,7 +644,7 @@ apps/labs/ciops/test/kpi-contract.test.ts:48:const ledgerPath: RepoRelativePath 
 apps/labs/ciops/test/evidence.test.ts:19:const aboxPath = "../../../explorations/beep-ci-operational-ontology/ontology/extraction/s6/graphs/abox.ttl";
 apps/labs/ciops/test/evidence.test.ts:21:  "../../../explorations/beep-ci-operational-ontology/ontology/extraction/s6/snapshot/raw/journal.ndjson";
 packages/tooling/tool/cli/test/yeet-monitor-loop.test.ts:76:  "FAIL packages/ontology/use-cases/test/SchemaParity.test.ts",
-packages/tooling/tool/cli/test/yeet-monitor-loop.test.ts:93:  "##[error]command (/opt/actions-runner/_work/beep-effect/beep-effect/packages/ontology/config) /home/ec2-user/.bun/bin/bun run build exited (2)",
+packages/tooling/tool/cli/test/yeet-monitor-loop.test.ts:93:  "##[error]command (/opt/actions-runner/_work/beep-effect/beep-effect/packages/ontology/config) [...] bun run build exited (2)",
 apps/labs/ciops/src/projection/Turtle.ts:17:  "@prefix ciops: <https://oip.law/ontology/ci-ops#> .",
 apps/labs/ciops/src/projection/Turtle.ts:18:  "@prefix ciops-prov: <https://oip.law/ontology/ci-ops-prov#> .",
 apps/labs/ciops/src/projection/Schemas.ts:449: * const document = TurtleDocument.make({ content: "@prefix ciops: <https://oip.law/ontology/ci-ops#> .\n" })

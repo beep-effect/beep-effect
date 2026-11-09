@@ -6,51 +6,60 @@ Status: `pending` (P0 Design and grill is next)
 
 ## Shape
 
-Design first, then the layers bottom-up along the dependency DAG, then the
-census that decides folds. The order is the critics' "smallest sequence that
-captures most of the value" (report section 7): the lossy boundaries (L1, L2,
-L4) are repaired before any package is renamed, so the product keeps its
-evidence intact even if the census declines every fold. Each phase ships as
-its own PR or PR stack through Yeet; a packet holds at most three open PRs.
+Design first, then rewrite the layers bottom-up along the dependency DAG and
+cut every consumer over as each layer lands, then retire what the new layers
+replaced. The operator's 2026-11-09 ruling (breaking changes are acceptable;
+build the best core) removed the earlier repair-then-rewrite order; the risk it
+guarded against, effort going to names before evidence, is carried instead by
+one standing acceptance consumer: the office-action flow stays green at every
+phase exit from P3 on. Each phase ships as its own PR or PR stack through
+Yeet; a packet holds at most three open PRs.
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Design and grill | pending | Take `SPEC.md` "Open Questions" and the nine rulings of report section 7 through `/grill-with-docs`; rewrite the report's section 4 schema sketches so they compile against the installed `effect`; triage the law catalogue into named test targets per package; draft the knowledge-stack chapter. | Five decision files; a `tsrs`-checked design module; a per-package law-test plan; the chapter and the nine `DECISIONS.md` entries drafted. |
-| P1 L0 identity: freeze identities | pending | `TermBinding`, the term-stability snapshot, one canonical JSON, preimage versioning, the registry over every namespace the repo speaks; identity regimes named in the glossary. | L0 law rows green; a module rename cannot change a published IRI; the test-runner's pinned IRIs resolve through the binding. |
-| P2 L1 text: occurrence identity and selectors | pending | `Selector`, `OccurrenceId`, `QuoteKey`, `Resolution`, `Reanchoring` and unit conversion in `@beep/provenance`; `TextAnchor <-> oa:` in `@beep/rdf`; AST source maps point at `provenance`. | L1 law rows green on the named fixtures; `cm1:` preimage expressed as an `OccurrenceId` preimage with persisted bytes unchanged; array-order ids gone. |
-| P3 L2 annotation: lossless handoff | pending | `Annotation<K>` with content hash and separate attribution, `merge`, `restrict`, containment; candidates as annotations; provenance threaded through the langextract handoff, office-action mapper, docket evidence and RDF projection; `IrToLaw` reads the handoff; OA/NIF adapter subpath. Home (`nlp/Handoff` or `@beep/annotation`) per the P0 decision. | L2 law rows green; declared loss per consumer; no consumer reads `GroundedExtraction` for anchors. |
-| P4 L4 claims: core, stance, admission, signals | pending | Immutable `ClaimCore` plus `Stance`, `Challenge`, `Admission`, `Assessments<K>`; status census of the seven vocabularies; the `1` and `0.9` defaults and the passing absent-attachment check removed; nanopub adapter subpath. | L4 law rows green; regression guards for the defaults; census report in `research/`. |
-| P5 L3 and L6: taxonomy, alignments, interchange | pending | Legal seeds and FOLIO DTOs out of `@beep/ontology` through the manifested loader; `fold -> Dataset`; `Dataset` quotient and canonical digest; `Literal` cases; `rdf -> md` removed; SSSOM `MappingSet`; gUFO class-typing pilot on the one relator that drives a check; `schema-org` facets inventoried. | L3 and L6 law rows green; gold fixture migrated explicitly; every external namespace carries license and digest. |
-| P6 L5 and L7: operations and agent surface | pending | `Operation` with `withActivity`, Kleisli laws under a declared observation, `Combiner`/`Reducer` census; MCP tools from the same schemas, write tools emit `proposed` only; one office-action flow end to end on synthetic fixtures; the two-matter adversarial fixture. | Flow passes; attorney-facing invariant tests green; every run emits a `prov:Activity`. |
-| P7 Census and folds | pending | Per-facet consumer census for `@beep/annotation`, the `@beep/nlp` fold, `@beep/schema-org`, the `@beep/ontology` split and the `@beep/provenance` name; approved folds through `create-package` and the retirement procedure; glossary, chapter and `THEORY.md` final. | Census report; each fold landed or declined with reasons; S31 inventories unchanged. |
-| P8 Yeet: final PR to mergeable | pending | Publish the final PR through yeet and drive it to mergeable: required checks green, review comments answered and resolved, `proposedCloseout` and the reflection on board. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P9 Close | pending | Verify completion after merge and adopt the status in a packet-state PR. | `completion refresh` verifies; `set-status` adopted on `origin/main`. |
+| P0 Design and grill | pending | `/grill-with-docs` over `SPEC.md` "Resolved Questions and P0 Design Items" and the rulings of report section 7; the consumer census; the routing decision for `@beep/annotation`; the section 4 sketches as a `tsrs`-checked module that follows the Constraints idioms; the law-test ledger; the chapter, the nine rulings and the chapter-11 amendment drafted. | `decisions/` holds a confirm-or-reverse file per resolved question and the routing decision; `research/consumer-census.md` and `research/law-test-plan.md` exist with every row filled; the design module passes `bunx tsrs -p <its tsconfig> --noEmit`; the chapter and rulings exist as drafts under `standards/architecture/`. |
+| P1 L0 identity: declared terms, one digest | pending | `TermBinding`, the term-stability snapshot, one canonical JSON, preimage versioning, the registry over every namespace the repo speaks; path-derived IRIs re-published from the registry; identity regimes named in the glossary. | `L0-1` to `L0-3` green by id in `packages/foundation/modeling/identity/test`; the module-rename test proves no published IRI changes; `bun run beep lint identity-registry` passes; the test-runner's pinned IRIs resolve from the registry. |
+| P2 L1 text: @beep/text, occurrence identity, selectors | pending | `@beep/text` created through `create-package`; `@beep/provenance` retired with every consumer migrated in the same PR; `Selector`, `OccurrenceId`, `QuoteKey`, `Resolution`, `Reanchoring`, unit conversion; the `cm1:` preimage re-expressed and records re-minted by a migration with the citation lane; `TextAnchor <-> oa:` in `rdf/src/Adapters/WebAnnotation.ts`; AST source maps point at `@beep/text`; the five non-canonical anchor encodings deleted. | `L1-1` to `L1-6` green by id in `packages/foundation/modeling/text/test` on the named fixtures; `rg -l "@beep/provenance" packages apps` is empty; the migration test re-mints a fixture `cm1:` record; the office-action tests stay green. |
+| P3 L2 annotation: @beep/annotation, lossless handoff | pending | `@beep/annotation` created through `create-package` with the P0 routing decision; `Annotation<K>`, the `anchors` table, `Generation` attribution, `merge`, `restrict`, containment; candidates as annotations; the langextract handoff mints verified receipts and emits the document; `IrToLaw` and the semantica projection read it; the handoff's `Entity`, `Relation` and `Provenance` types deleted; OA/NIF adapter subpath with import attribution. | `L2-1` to `L2-6` green by id in `packages/foundation/modeling/annotation/test`; `rg -n "GroundedExtraction" packages/law-practice/use-cases/src/IrToLaw` is empty; the handoff test asserts both digests, scope, pins, producer, attributes and typed candidates; the office-action tests stay green. |
+| P4 L4 claims: core, stance, admission, signals | pending | Immutable `ClaimCore` plus `Stance`, `Challenge`, `Admission`, `Assessments<K>` with caller-supplied value schemas; status census of the seven vocabularies; the `1` and `0.9` defaults and the passing absent-attachment check removed; nanopub adapter subpath. | `L4-1` to `L4-7` green by id in `packages/foundation/modeling/epistemics/test`; `OfficeActionReview.signals.test.ts`, `Extractor.signals.test.ts` and `DocketReview.absent-attachment.test.ts` green; `research/status-census.md` names each vocabulary; the office-action tests stay green. |
+| P5 L3 and L6: taxonomy, alignments, interchange | pending | Legal seeds and FOLIO DTOs out of `@beep/ontology` to the law-practice asset pack through the manifested loader, consumers migrated in the same PR per the census; `fold -> Dataset`; `Dataset` quotient and canonical digest with the gold fixture regenerated; `Literal` cases; `rdf -> md` removed; SSSOM `MappingSet`; gUFO class-typing pilot on the one relator that drives a check. | `L3-1` to `L3-4` green in `packages/foundation/modeling/ontology/test`, `L6-1` to `L6-2` green in `packages/foundation/modeling/rdf/test`; `rg -l "@beep/md" packages/foundation/modeling/rdf/src` is empty; every external namespace in the registry carries license and digest; the office-action tests stay green. |
+| P6 L5 and L7: operations, agent surface, the flow | pending | `@beep/nlp-processing` absorbs `nlp/Operations` and `nlp/Algebra` after the `Combiner`/`Reducer` census; `Operation` with `withActivity`, Kleisli laws under a declared observation; instrumentation shard regenerated; MCP tools from the same schemas, write tools emit `proposed` only; the office-action flow end to end on synthetic fixtures; the two-matter adversarial fixture. | `L5-1` to `L5-3` green by id in `packages/foundation/capability/nlp-processing/test`; `OfficeActionReview.flow.test.ts` and `MatterWall.two-matter.test.ts` green; `bun run beep observability catalog --check` current. |
+| P7 Cut-over and retirement | pending | Retire `@beep/nlp` and every superseded `@beep/schema-org` facet per `standards/architecture/11-evolution-and-deprecation.md` with consumers migrated in the same PR; glossary, chapter, rulings and the chapter-11 amendment merged; `THEORY.md` retired with its package; the vision document corrected. | `research/consumer-census.md` records every disposition; `rg -l "@beep/nlp\"" packages apps` and `rg -l "@beep/schema-org" packages apps` are empty or every remaining hit is a recorded exception; `bun run beep lint schema-first` and `bun run beep lint identity-registry` pass; S31 inventories unchanged (`git diff origin/main -- standards/*.inventory.*` empty). |
+| P8 Yeet: final PR to mergeable | pending | Publish the final PR through yeet with `final-check` on the pushed head and drive it to mergeable: required checks green or attributed, review threads answered and resolved, `proposedCloseout` plus the gating `yeet-verdict` and the reflection on board. | `bun run beep yeet final-check` receipt for the pushed head; `bun run beep yeet monitor --until-ready` prints `merge-ready: yes`; zero unresolved review threads. |
+| P9 Close | pending | Verify completion after merge and adopt the status in a packet-state PR. | `bun run beep goals completion refresh --slug text-knowledge-stack-rebuild` verifies; `set-status` adopted on `origin/main`. |
 
 Phase ids match `ops/manifest.json` `phases[]`. Each of P1 to P7 is its own
-PR or PR stack; P8 names the last of them.
+PR or PR stack; P8 names the last of them. "Green by id" means every test title
+starts with its ledger row id and `rg -n "<id>" <package>/test` finds it.
 
 ## Decomposition Rule
 
 If a phase needs more than three concurrently open PRs, or two phases must run
 in parallel, bootstrap a child packet for that phase with
-`bun run beep goals bootstrap --requires foundation/text-knowledge-stack ...`
-and record the split as a checkpoint here. The P0 grill decides whether to
-split up front (Open Question 5).
+`bun run beep goals bootstrap --requires <independently completed capability> ...`
+(for example `foundation/epistemics-vocabulary`). A child never requires a
+capability this packet itself provides: the goal frontier excludes consumers of
+an unfinished provider, so such a child could never start while the parent
+needs it. Record the split as a checkpoint here and name the child in the
+parent's phase exit criterion. P0 decides whether to split up front.
 
 ## Closeout Checklist
 
 Before marking the packet closed:
 
 1. Write a closeout reflection via the `/reflect` skill to
-   `history/reflections/<YYYY-MM-DD>-<agent>.md`. Its YAML frontmatter must
-   validate against `ReflectionFrontmatter`.
+   `history/reflections/<YYYY-MM-DD>-<agent>.md` in the final PR (P8). Its
+   YAML frontmatter must validate against `ReflectionFrontmatter`.
 2. Run `bun run beep lint reflection-artifacts`.
 3. Update `README.md` (status, latest evidence) and `ops/manifest.json` phase
    statuses and a typed `proposedCloseout` with status `completed-retained`
-   and finalPullRequest. Keep `initiative.status` operative until completion
-   evidence verifies; do not close the external execution/session ledger from a proposal.
+   and finalPullRequest, plus a gating `yeet-verdict` reference in
+   `completionGate.acceptanceEvidence` for the final PR's accepted head (the
+   proposal does not validate without it). Keep `initiative.status` operative
+   until completion evidence verifies; do not close the external
+   execution/session ledger from a proposal.
 
 ## Execution Notes
 
@@ -63,7 +72,10 @@ Before marking the packet closed:
 - Record friction receipts in `research/OPPORTUNITIES.md` as they happen.
 - Validate every Effect API against `.repos/effect` before writing it; the
   report's revision 1 sketches failed `tsc` on six constructs for exactly
-  this reason.
+  this reason, and revision 2 still used two constructs that do not exist
+  (`Present.or(Absent)`, a bare `LiteralKit` type bound).
+- Every retirement PR carries its consumer migration; `research/consumer-census.md`
+  is the work list and the evidence.
 
 ## Verification Commands
 
@@ -75,6 +87,7 @@ git diff --check -- goals/text-knowledge-stack-rebuild
 bun run beep goals doctor
 bun run beep goals decisions check --slug text-knowledge-stack-rebuild
 bun run beep goals manifest --check
+bun run beep lint reflection-artifacts
 ```
 
 ## Checkpoints

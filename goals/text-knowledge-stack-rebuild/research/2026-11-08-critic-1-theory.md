@@ -4,7 +4,7 @@ Lens: category theory plus Effect v4 TypeScript. The default on doubt is refuted
 
 How each claim was checked:
 
-- **Probed.** I ran it against `effect` 4.1.2 from the worktree's `node_modules`. The scripts are `probe.mjs` and `tc/probe.ts` in `~/.cache/claude-tmp/claude-1000/-home-elpresidank--local-share-openresearch-worktrees-03a52248-3148-4a31-aabd-8363abe1cc89-chat-860096ff-2c35-4859-9e7d-b1d6fe079ba3/4c0ebfc5-9210-4cbf-9581-15dd73d2d394/scratchpad/`.
+- **Probed.** I ran it against `effect` 4.1.2 from the worktree's `node_modules`. The scripts (`probe.mjs`, `tc/probe.ts`) lived in a local, uncommitted scratch directory.
 - **Read.** I read the repository file named.
 - **Reasoned.** It is my own derivation.
 - **Unverified.** It rests on memory of a paper. No papers were fetched.

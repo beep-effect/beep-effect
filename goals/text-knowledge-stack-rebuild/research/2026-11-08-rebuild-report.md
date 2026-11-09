@@ -2,6 +2,8 @@
 
 *beep-effect · `packages/foundation/modeling/{identity,provenance,nlp,rdf,ontology,epistemics,md}` and their consumers · 2026-11-08 · revision 2, after three adversarial reviews*
 
+> **Revision 3 corrections (2026-11-09, applied in place and marked `[rev 3]` where the sketch changed).** From the PR #2993 review (CodeRabbit and the eight-role reviewer panel): the `OccurrenceId` preimage binds the whole `SourceTextIdentity`, extractor and normalization pins included, so two captures of one text cannot collide (section 4, L1); the annotation document carries an `anchors` table so a target hash resolves to range, quote and receipt (L2); targets are deduplicated before sorting and hashing (L2); attribution records are run-specific `Generation` entities that `prov:specializationOf` the content entity, because PROV-CONSTRAINTS forbids two generation events for one entity (L2); the OA codec round-trips on a declared profile and gives unattributed third-party input the import activity as attribution (L2); langextract aligns and accepts fuzzy matches but does not verify against a `VerifiedTextAnchor`, so the new handoff must mint receipts first (D3); `rdf/src/Prov.ts` has a production codec consumer, not one test (D1); the ontology fold emits OWL property declarations and copies caller-supplied `subClassOf` facts rather than minting them (D5); `AnnotatedDocument` is produced on `LangExtractResult` and tested, it is `IrToLaw` that does not read it (D3); `@beep/nlp-processing` already exists as a capability package, so L5 absorbs `nlp/Operations` into it rather than creating it (L5, section 7). The packet `SPEC.md` is normative where it and this report differ.
+
 Companion to `../nlp-algebra-model/nlp-algebra-model-report.md` (the @beep/nlp law audit). The evidence behind every repository claim is in `research/reader-{a,b,c,d}-*.md`, four read-only audits of the law-practice product, the modeling cluster, the pipeline and agent surfaces, and the standards and rulings. Revision 1 of this report was reviewed by three adversarial critics (theory and Effect v4; repository doctrine and facts; legal product). Their findings are in `research/critic-{1,2,3}-*.md`, and §9 lists what they refuted and what changed. Every path is repository-relative with a line number.
 
 ---
@@ -59,15 +61,15 @@ One thing the owner values that the repository does not state as doctrine anywhe
 
 ### 2.2 The diagnosis
 
-**D1. Objects without morphisms.** Verified by empty greps or absent dependencies (Reader B §8, confirmed by Critic 2 finding 4 with the narrowing noted): `provenance.TextAnchor` has no codec into `rdf`'s selector union, and `SourceTextIdentity` no projection to `prov:Entity`; `ontology`'s fold imports only `IRI` and `LanguageTag` from rdf and bypasses `Dataset` (`ontology/src/Fold.models.ts:15-24`); `EvidenceSpan` and `Claim` have no RDF form; `md` cannot produce a `TextAnchor`. `@beep/nlp` depends only on identity, schema and utils. `rdf/src/Prov.ts` has a single test consumer.
+**D1. Objects without morphisms.** Verified by empty greps or absent dependencies (Reader B §8, confirmed by Critic 2 finding 4 with the narrowing noted): `provenance.TextAnchor` has no codec into `rdf`'s selector union, and `SourceTextIdentity` no projection to `prov:Entity`; `ontology`'s fold imports only `IRI` and `LanguageTag` from rdf and bypasses `Dataset` (`ontology/src/Fold.models.ts:15-24`); `EvidenceSpan` and `Claim` have no RDF form; `md` cannot produce a `TextAnchor`. `@beep/nlp` depends only on identity, schema and utils. `rdf/src/Prov.ts` has one production consumer (the `ProvRdf.ts` codec) and four test files; no handoff or claim record references it.
 
 **D2. Six anchor encodings around one canonical.** `provenance.TextAnchor` (`:156`), `rdf.TextQuoteSelector/TextPositionSelector` (`Evidence.ts:78-122`), `epistemics.EvidenceSpan` (wraps the `TextAnchor` fields, `:16-21,147`), `nlp.Handoff.Span` (`Contract.ts:249`), `nlp.Graph.Span` (`Schema.ts:358`, floats, no ordering check), and `party-domain.EvidenceAnchor` (a union that also covers header fields, metadata tags and record rows, `packages/party/domain/src/entities/Provenance/Provenance.model.ts:470`). The glossary names `TextAnchor` canonical (`GLOSSARY.md:302-307`); the vision names `GroundedExtraction.span` (`docs/PROSE_TO_PROOF_VISION.md:65`).
 
-**D3. The pipeline is lossy at exactly the point the vision calls sacred.** langextract verifies against a `VerifiedSourceText`, then `toAnnotatedDocument` re-mints chunk, mention and entity ids from array position, turns every aligned label into an `Entity`, drops attributes and alignment tier, always emits an empty relation list, and carries no source or text digest (`packages/foundation/capability/langextract/src/Handoff/Handoff.behavior.ts:39-111`). Semantica's RDF projection omits anchor, quote, receipt, producer and confidence from the claim quads and mints a predicate IRI per claim occurrence (`apps/labs/semantica/src/layers/RdfProjectionLive.ts:66-111`); the dataset and quads keep their named graph, only the triple-only artifact drops it (`:113-122`). Missing confidence becomes `1` at the lab's extraction boundary (`ExtractorLive.ts:238-239`); the office-action spike fixes evidence confidence at `0.9` (`packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.service.ts:95`); the docket citation-existence check passes when the attachment text is absent (`DocketReview.policy.ts:280-285`). The "product-neutral IR" `AnnotatedDocument` has no consumer: `IrToLaw` reads `GroundedExtraction` and its stated reason for bypassing the IR is stale (`IrToLaw.ports.ts:6-14` versus `Contract.ts:518`).
+**D3. The pipeline is lossy at exactly the point the vision calls sacred.** langextract aligns candidates against the source text and accepts fuzzy matches without minting a `VerifiedTextAnchor` receipt (`langextract/src/Alignment/Alignment.behavior.ts`), then `toAnnotatedDocument` re-mints chunk, mention and entity ids from array position, turns every aligned label into an `Entity`, drops attributes and alignment tier, always emits an empty relation list, and carries no source or text digest (`packages/foundation/capability/langextract/src/Handoff/Handoff.behavior.ts:39-111`). Semantica's RDF projection omits anchor, quote, receipt, producer and confidence from the claim quads and mints a predicate IRI per claim occurrence (`apps/labs/semantica/src/layers/RdfProjectionLive.ts:66-111`); the dataset and quads keep their named graph, only the triple-only artifact drops it (`:113-122`). Missing confidence becomes `1` at the lab's extraction boundary (`ExtractorLive.ts:238-239`); the office-action spike fixes evidence confidence at `0.9` (`packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.service.ts:95`); the docket citation-existence check passes when the attachment text is absent (`DocketReview.policy.ts:280-285`). The "product-neutral IR" `AnnotatedDocument` is produced on `LangExtractResult` and round-tripped in tests, but the one law consumer, `IrToLaw`, reads `GroundedExtraction` instead, and its stated reason for bypassing the IR is stale (`IrToLaw.ports.ts:6-14` versus `Contract.ts:514`).
 
 **D4. Identifiers come from code paths.** An IRI is authority + package + module path + symbol, so `@beep/ontology/Ontology.models/HttpUrl` is a published identifier that changes when a file is renamed (`identity/src/Id.ts:60-77`, `identity/test/IriBinding.test.ts:58-74`); `packages/tooling/test-kit/test-runner/src/Vitest.errors.ts:23,141,151` pins `test-utils` IRIs under a package now called `test-runner`. Seven registries coexist; `prov:`, `oa:` and `xsd:` are hand-written constants outside the CURIE registry, so `prov:wasGeneratedBy` cannot expand through `Curie.ts` (Reader B §7). Semantica, ciops and the SHACL driver mint under three other schemes.
 
-**D5. Names do not denote.** `provenance` is text identity and anchoring, not PROV; `ontology` is SKOS schemes, classification loaders, FOLIO HTTP DTOs and a fold that *does* emit `rdfs:subClassOf` and OWL property declarations (`ontology/src/Fold.projections.ts:349-359`) but runs no reasoner; `Evidence` (rdf) is Web Annotation selectors with no evidential semantics; `Vocabulary` has four meanings; `Claim` has five (patent claim, Hohfeld position, `CandidateClaim`, `Claim<P>`, "claim gate verdict"); `Provenance` has three or four. The knowledge-endgame capture counted "span ×8, ontology ×4+, claim ×3, digest ×3, provenance ×3" (`explorations/knowledge-endgame/CAPTURE.md:124-130`).
+**D5. Names do not denote.** `provenance` is text identity and anchoring, not PROV; `ontology` is SKOS schemes, classification loaders, FOLIO HTTP DTOs and a fold that emits OWL property declarations with `rdfs:domain` and `rdfs:range` (`ontology/src/Fold.projections.ts:349-359`) and copies caller-supplied facts such as `rdfs:subClassOf` (`Fold.models.ts:485`, `Fold.projections.ts:296-327`) but runs no reasoner; `Evidence` (rdf) is Web Annotation selectors with no evidential semantics; `Vocabulary` has four meanings; `Claim` has five (patent claim, Hohfeld position, `CandidateClaim`, `Claim<P>`, "claim gate verdict"); `Provenance` has three or four. The knowledge-endgame capture counted "span ×8, ontology ×4+, claim ×3, digest ×3, provenance ×3" (`explorations/knowledge-endgame/CAPTURE.md:124-130`).
 
 **D6. Foundation holds product semantics.** `@beep/ontology` ships docketing, party-kind and legal-role schemes and MPEP source IRIs (`ontology/src/Vocabulary.seed.ts:22-104`) against its own README and the ruling "law-practice keeps `LegalRole`" (`DECISIONS.md:2322`); slices re-declare the same vocabularies (`documents/domain/.../Taxonomy.seed.ts`, `law-practice/domain/.../LegalRole.model.ts`). `LogicalEdgeIdentity` requires a nonempty `orgScope` string (`:82,120`), which is defensible for instances but sits oddly under a "tenant-free" README.
 
@@ -153,7 +155,7 @@ export const Term           = S.Struct({ iri: IRI, namespace: Prefix, local: Loc
 // identity of a text capture is what SourceTextIdentity already is: artifact digest + extracted-text digest + extractor + normalization version
 // an occurrence is identified the way the citation engine identifies a mention: scope, text capture, unit, range, quote (the cm1 preimage, generalized)
 export const OffsetUnit   = LiteralKit(["utf16-code-unit", "unicode-code-point", "utf8-byte"])  // no grapheme clusters in identity-bearing positions
-export const OccurrenceId = AnchorDigest   // hash("occurrence/v1", scopeRef, sourceRef, locator, artifactDigest, textDigest, unit, start, end, quote)
+export const OccurrenceId = AnchorDigest   // hash("occurrence/v1", scopeRef, sourceRef, locator, SourceTextIdentity (artifactDigest, textDigest, extractor, normalization), unit, start, end, quote)  [rev 3: capture pins included, as cm1 does]
 export const QuoteKey     = ContentHash.pipe(S.brand("QuoteKey"))   // hash of the normalized quote: a grouping key, explicitly not injective
 
 // the selector algebra, Web Annotation's, as the tagged union rdf/Evidence.ts already sketches; TextAnchor keeps its wire shape as the Position case
@@ -196,10 +198,12 @@ export const Reanchoring = S.TaggedUnion({ Exact: { from: OccurrenceId, to: Occu
 // built by a slice- or capability-supplied kind registry, mirroring makeClaimEnvelope; the body schema is chosen per kind
 export const makeAnnotationDocument = <Kinds extends KindRegistry>(kinds: Kinds) => S.Struct({
   text:        SourceTextIdentity,
-  annotations: S.HashMap(AnnotationId, AnnotationOf(kinds)),      // content: id = hash("annotation/v1", sorted targets, kind, body)
-  attribution: S.HashMap(AnnotationId, S.HashSet(ActivityId)),     // who produced it; kept outside the content hash
+  anchors:     S.HashMap(OccurrenceId, Anchored),                   // [rev 3] the occurrence table: every target id resolves here to range, quote and receipt
+  annotations: S.HashMap(AnnotationId, AnnotationOf(kinds)),      // content: id = hash("annotation/v1", deduplicated sorted targets, kind, body)
+  attribution: S.HashMap(AnnotationId, S.HashSet(Generation)),     // [rev 3] run-specific entities (content id, activity) that specializationOf the content; kept outside the content hash
 }).pipe(S.check(everyTargetResolves, everyAnnotationAttributed))
-// AnnotationOf(kinds): { id, targets: NonEmptyArray<OccurrenceId> (sorted before hashing), kind: Kinds[K].iri, body: Kinds[K].body }
+// AnnotationOf(kinds): { id, targets: HashSet<OccurrenceId> (deduplicated and sorted before hashing), kind: Kinds[K].iri, body: Kinds[K].body }
+// Generation: { entity: AnnotationId, activity: ActivityId, at: Instant }; two runs that produce the same content yield two Generation records, not two prov:wasGeneratedBy of one entity (PROV-CONSTRAINTS)
 ```
 
 **Kinds (layers).** Generic structure: `Section`, `Paragraph`, `Title`, `Figure`, bound to DoCO IRIs through the registry. Segmentation: `Sentence`, `Word`, bound to NIF IRIs for export. Extraction: `Mention{class}`, `Chunk` (an Evidence Unit with a source map), and **candidates**: `RelationCandidate{subject: MentionId, predicate: TermIri, object: MentionId}`, `CorefCandidate{members: HashSet<MentionId>}`. Candidates are what the extractor read, with attribution; they are not claims. The consuming slice promotes them into its own proposition union (the 2026-10-21 ruling: propositions are slice-owned; a capability does not own a domain's union). Patent structure is **not** a generic kind: claim numbers, text, status, dependency links, rejection-to-claim coverage and pinpoints are a law-owned profile (`PatentDocument.model.ts` already aligns to ST.96 claim fields).
@@ -209,11 +213,11 @@ export const makeAnnotationDocument = <Kinds extends KindRegistry>(kinds: Kinds)
 **Laws.**
 
 - Merge is a join in the lattice of finite sets of content-keyed annotations **over one text capture** (the text is a check-level index; merging across captures is a typed refusal). Catches: duplicated text nodes when two passes of one document merge (the companion report's counterexample), and lost provenance when a `HashMap.union` overwrites.
-- `hash` is invariant under target permutation and duplication (sort before hashing). Catches: two ids for one multi-target annotation.
-- Every annotation has non-empty attribution, and each `(annotation, activity)` pair is exactly one generation. Catches: a rerun that silently drops its activity.
+- `hash` is invariant under target permutation and duplication (deduplicate, then sort, before hashing). Catches: two ids for one multi-target annotation, including `[a]` versus `[a, a]`.
+- Every annotation has non-empty attribution, and each `(annotation, activity)` pair is exactly one `Generation` record whose run-specific entity is a `prov:specializationOf` the content entity. Catches: a rerun that silently drops its activity, and two generation events claimed for one PROV entity.
 - Referential integrity is preserved by `merge` and `restrict_K`. Catches: dangling target ids across layers.
 - Containment is derived from strict range inclusion with a kind tie-break for equal spans (a one-sentence paragraph equals its sentence); multi-target annotations have no containment. Catches: the `canContain` closure bug and the equal-span cycle.
-- The OA/NIF codec round-trips both ways on the RDF quotient, including third-party OA input, and preserves resolution: `resolve(E, decode(encode s)) = resolve(E, s)`.
+- The OA/NIF codec round-trips both ways on the RDF quotient for the declared OA profile and preserves resolution: `resolve(E, decode(encode s)) = resolve(E, s)`. Third-party OA input without `dcterms:creator` or `as:generator` is admitted with the import activity as its attribution (the import is a `prov:Activity` over the source document digest); the round trip then holds up to that added attribution.
 
 **Upstream.** Annotation graphs; UIMA SofA; LAF; OA; NIF and DoCO as pinned export vocabularies; Evidence Units.
 
@@ -332,39 +336,39 @@ Glossary entries to add (today absent): Occurrence, Selector, Annotation, Mentio
 
 This replaces "full categorical fidelity" with a list. Three kinds of statement are kept apart: a **law** (a property of this repository's functions that a test can falsify), a **profile** (a local constraint stricter than the upstream standard), and an **acceptance test** (an operational scenario). A property test is falsification, not proof. Each row names the bug it would catch; a row with no answer was deleted.
 
-| Layer | Kind | Statement | Fails if |
-| --- | --- | --- | --- |
-| L0 | law | expand ∘ contract = id on registered terms | a namespace is missing from the registry |
-| L0 | law | `a ≡ b ⇒ hash(canon a) = hash(canon b)` for records | key order or number formatting leaks into a digest |
-| L0 | law | published term set changes only with a deprecation record (snapshot, including module-derived IRIs) | a file rename changes an identifier |
-| L1 | law | `slice(text, position) = quote` | a stale or re-indexed anchor |
-| L1 | law | unit conversion is a bijection on valid boundaries; split surrogates fail closed | a code-point offset enters a UTF-16 slice |
-| L1 | law | reanchoring is lax-functorial, exact on `Exact`, natural on `Exact` (tested with NFKC and de-hyphenation) | a locator map widens silently |
-| L1 | law | `OccurrenceId` distinct across repeated boilerplate; stable under serialization | array-order ids; first-match `indexOf` |
-| L1 | law | `resolve` returns `Ambiguous` for repeated passages | an ambiguous quote resolves to the first hit |
-| L1 | acceptance | a receipt cannot become a `VerifiedTextAnchor` without re-verification | deserialization grants proof |
-| L2 | law | merge over one text capture is idempotent, commutative, associative on content, and attribution unions | a rerun overwrites provenance |
-| L2 | law | annotation hash is invariant under target permutation | one annotation, two ids |
-| L2 | law | every annotation has non-empty attribution; each (annotation, activity) is one generation | a dropped activity |
-| L2 | law | referential integrity survives merge and restriction | dangling target ids |
-| L2 | law | containment is a strict order with a kind tie-break on equal spans | an equal-span cycle |
-| L2 | law | OA/NIF codec round-trips both ways on the RDF quotient and preserves `resolve` | third-party OA input breaks |
-| L3 | profile | `skos:broader` acyclic in repo-owned schemes; imported cycles recorded | an import silently rewrites hierarchy |
-| L3 | law | mapping sets coherent and consistent | a term maps to two disjoint upper types |
-| L3 | law | audit sound on the typed subset, silent on untyped | an untyped term fails the lint |
-| L3 | law | a pinned edition is immutable | a classification symbol changes meaning |
-| L4 | law | log prefix-monotone; `R(t)` stable after `t`; knowledge intervals disjoint per key | a retroactive edit of a hashed record |
-| L4 | law | admission requires non-empty grounding that verifies now | a settled claim without a source |
-| L4 | law | support and derivation acyclic; challenges may cycle | a support loop; a forbidden mutual contradiction |
-| L4 | law | retraction closure over derivation | an orphaned derived claim |
-| L4 | law | `a ≡ b ⇔ key(a) = key(b)` on generated pairs | two keys for one proposition |
-| L4 | law | refusal is a no-op; independent coordinates commute; gates monotone | a gate that passes on unknown |
-| L4 | acceptance | `Absent{reason}` never coerces to a number | the `1` and `0.9` defaults return |
-| L5 | law | Kleisli identity and associativity for fixed `(E, R)` under a declared observation | an effectful composition reorders |
-| L5 | law | only `Pure` is central | a throwing `sync` is treated as pure |
-| L5 | law | `generated` never earlier than `used`; every output attributed | a run with no activity |
-| L6 | law | dataset equality up to blank-node isomorphism; digest on canonical form | two serializations, two digests |
-| L6 | law | projection deterministic; kept fields satisfy GetPut and PutGet | a projection that cannot be audited |
+| Id | Layer | Kind | Statement | Fails if |
+| --- | --- | --- | --- | --- |
+| `L0-1` | L0 | law | expand ∘ contract = id on registered terms | a namespace is missing from the registry |
+| `L0-2` | L0 | law | `a ≡ b ⇒ hash(canon a) = hash(canon b)` for records | key order or number formatting leaks into a digest |
+| `L0-3` | L0 | law | published term set changes only with a deprecation record (snapshot, including module-derived IRIs) | a file rename changes an identifier |
+| `L1-1` | L1 | law | `slice(text, position) = quote` | a stale or re-indexed anchor |
+| `L1-2` | L1 | law | unit conversion is a bijection on valid boundaries; split surrogates fail closed | a code-point offset enters a UTF-16 slice |
+| `L1-3` | L1 | law | reanchoring is lax-functorial, exact on `Exact`, natural on `Exact` (tested with NFKC and de-hyphenation) | a locator map widens silently |
+| `L1-4` | L1 | law | `OccurrenceId` distinct across repeated boilerplate; stable under serialization | array-order ids; first-match `indexOf` |
+| `L1-5` | L1 | law | `resolve` returns `Ambiguous` for repeated passages | an ambiguous quote resolves to the first hit |
+| `L1-6` | L1 | acceptance | a receipt cannot become a `VerifiedTextAnchor` without re-verification | deserialization grants proof |
+| `L2-1` | L2 | law | merge over one text capture is idempotent, commutative, associative on content, and attribution unions | a rerun overwrites provenance |
+| `L2-2` | L2 | law | annotation hash is invariant under target permutation | one annotation, two ids |
+| `L2-3` | L2 | law | every annotation has non-empty attribution; each (annotation, activity) is one generation | a dropped activity |
+| `L2-4` | L2 | law | referential integrity survives merge and restriction | dangling target ids |
+| `L2-5` | L2 | law | containment is a strict order with a kind tie-break on equal spans | an equal-span cycle |
+| `L2-6` | L2 | law | OA/NIF codec round-trips both ways on the RDF quotient and preserves `resolve` | third-party OA input breaks |
+| `L3-1` | L3 | profile | `skos:broader` acyclic in repo-owned schemes; imported cycles recorded | an import silently rewrites hierarchy |
+| `L3-2` | L3 | law | mapping sets coherent and consistent | a term maps to two disjoint upper types |
+| `L3-3` | L3 | law | audit sound on the typed subset, silent on untyped | an untyped term fails the lint |
+| `L3-4` | L3 | law | a pinned edition is immutable | a classification symbol changes meaning |
+| `L4-1` | L4 | law | log prefix-monotone; `R(t)` stable after `t`; knowledge intervals disjoint per key | a retroactive edit of a hashed record |
+| `L4-2` | L4 | law | admission requires non-empty grounding that verifies now | a settled claim without a source |
+| `L4-3` | L4 | law | support and derivation acyclic; challenges may cycle | a support loop; a forbidden mutual contradiction |
+| `L4-4` | L4 | law | retraction closure over derivation | an orphaned derived claim |
+| `L4-5` | L4 | law | `a ≡ b ⇔ key(a) = key(b)` on generated pairs | two keys for one proposition |
+| `L4-6` | L4 | law | refusal is a no-op; independent coordinates commute; gates monotone | a gate that passes on unknown |
+| `L4-7` | L4 | acceptance | `Absent{reason}` never coerces to a number | the `1` and `0.9` defaults return |
+| `L5-1` | L5 | law | Kleisli identity and associativity for fixed `(E, R)` under a declared observation | an effectful composition reorders |
+| `L5-2` | L5 | law | only `Pure` is central | a throwing `sync` is treated as pure |
+| `L5-3` | L5 | law | `generated` never earlier than `used`; every output attributed | a run with no activity |
+| `L6-1` | L6 | law | dataset equality up to blank-node isomorphism; digest on canonical form | two serializations, two digests |
+| `L6-2` | L6 | law | projection deterministic; kept fields satisfy GetPut and PutGet | a projection that cannot be audited |
 
 Removed from revision 1 as vacuous, library-testing or category errors: union laws on `HashSet` itself, `hasPath` transitivity, layer-restriction distributivity, LTS totality, "no function Signals → number" (a lint, not a law), "AnchorId invariant under re-indexing", semiring propagation, `canContain = hasPath` (kind-level and instance-level graphs are different graphs).
 
@@ -496,6 +500,6 @@ Repository evidence: `2026-11-08-reader-a-law-practice.md` (abridged in this pac
 
 ## 11. Reproduction
 
-- Figures: `figures/render.sh` renders the three Graphviz sources to SVG and PDF (Nimbus Sans only; widths printed; all at or under 396 pt).
+- Figures: the three Graphviz sources under `figures/` were rendered to SVG before import (`dot -Tsvg`, Nimbus Sans, all at or under 396 pt); the render script and PDFs stayed in the OpenResearch artifacts directory.
 - Literature: `orx discover` loops and `orx paper` reads on 2026-11-08; the queries are listed by loop in the session transcript.
 - Readers and critics: seven read-only delegate sessions over worktree HEAD `de54b37982b` on branch `explorations/nlp-annotation-family`; their reports are carried into this packet as `2026-11-08-reader-*.md` and `2026-11-08-critic-*.md` (reader A abridged; absolute home paths replaced with `~`).
