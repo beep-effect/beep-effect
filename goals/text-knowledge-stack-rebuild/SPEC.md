@@ -292,9 +292,8 @@ and the phase order is `PLAN.md`), this file is normative.
 The five open questions of the first revision are resolved in
 `decisions/2026-11-09-open-questions-1-5-resolved-toward-the-clean-core-p0-confirms-or-reverses.md`;
 P0 confirms or reverses each by a decision file before the dependent phase.
-P0 also settles, in the `tsrs`-checked design module (at
-`goals/text-knowledge-stack-rebuild/ops/design/`, registered in the manifest's
-`opsScripts` and checked by `bunx tsrs -p goals/tsconfig.ops.json --noEmit`; if
+P0 also settles, in the `tsrs`-checked design module (in a `design/` directory under this packet's `ops/`, registered in the
+manifest's `opsScripts` and checked by `bunx tsrs -p goals/tsconfig.ops.json --noEmit`; if
 `@beep/*` aliases do not resolve there, P0 records the alternative home by
 decision file) and the law-test ledger:
 
@@ -382,22 +381,23 @@ decision file) and the law-test ledger:
       deleted; `IrToLaw` and the semantica projection read the annotation
       document; the OA/NIF adapter round-trips the declared profile and
       attributes unattributed input to the import activity; P3 creates
-      `packages/law-practice/use-cases/test/OfficeActionReview/OfficeActionReview.flow.test.ts`
+      `OfficeActionReview.flow.test.ts` in the law-practice use-cases tests
       over the annotation document on synthetic fixtures (P4 adds the signal
       assertions, P6 the law-owned structure, assessment profiles and
       admission); `L2-1` to `L2-6` are green.
 - [ ] L4: `makeClaimCore`, `Stance`, `Challenge`, `Admission` and
       `Assessments<K>` exist; the `1` and `0.9` defaults are deleted and
-      guarded by `packages/law-practice/use-cases/test/OfficeActionReview/OfficeActionReview.signals.test.ts`
-      and `apps/labs/semantica/test/Extractor.signals.test.ts`; the docket
+      guarded by `OfficeActionReview.signals.test.ts` in the law-practice use-cases
+      tests and `Extractor.signals.test.ts` beside `Extractor.test.ts` in the
+      semantica lab tests; the docket
       citation check no longer passes when a document is attached but its text
       is unavailable: `DeterministicCheck` gains a three-valued result, the
       review gate treats unknown as not passed without hiding urgent tentative
       entries, the existing assertion in `DocketReview.policy.test.ts` is
-      rewritten, and the guard is
-      `packages/law-practice/use-cases/test/DocketIntake/DocketReview.unavailable-document-text.test.ts`;
-      the nanopub adapter round-trips in
-      `packages/foundation/modeling/epistemics/test/NanopubAdapter.test.ts`;
+      rewritten, and the guard is `DocketReview.unavailable-document-text.test.ts`
+      beside `DocketReview.policy.test.ts` in the law-practice use-cases tests;
+      the nanopub adapter round-trips in `NanopubAdapter.test.ts` under
+      `packages/foundation/modeling/epistemics/test`;
       the status census names each of the seven vocabularies as coordinate,
       duplicate or projection; `L4-1` to `L4-7` are green.
 - [ ] L3 and L6: legal seeds and FOLIO DTOs are out of `@beep/ontology` with
@@ -417,7 +417,7 @@ decision file) and the law-test ledger:
       the write tools (named in P0); the office-action flow test created in P3
       is complete (law-owned claim structure, assessment profiles, attorney
       admission) and green; the two-matter adversarial fixture
-      (`packages/law-practice/server/test/MatterWall.two-matter.test.ts`,
+      (`MatterWall.two-matter.test.ts` in the law-practice server tests,
       composing the real server layer, identical bytes in two matters, one
       assertion per access path listed in Constraints) passes and P6's goal
       includes the authorization work the P0 access-path map scopes; `L5-1` to
@@ -457,7 +457,7 @@ packet-health subset; this matrix is the completion proof.
 | Law catalogue | for every non-deleted id in `research/law-test-plan.md`: `rg -n "<id>" <owning package>/test` finds a test and that package's vitest run is green | Green, or the row is `deleted` with a reason |
 | Regression guards | the three named signal tests in the L4 acceptance row | Green |
 | Office-action flow | `OfficeActionReview.flow.test.ts` (created in P3, complete at P6) plus the existing `packages/law-practice/server/test/LawPracticeServer.test.ts`, `server/test/OfficeActionStructure.test.ts`, `use-cases/test/OfficeActionStructure.test.ts` and `use-cases/test/OfficeActionFixtures.test.ts`, run with each package's `bun run test`, at every phase exit from P3 | Green |
-| Matter wall | `packages/law-practice/server/test/MatterWall.two-matter.test.ts` | Green |
+| Matter wall | `MatterWall.two-matter.test.ts` in the law-practice server tests | Green |
 | Observability | `bun run beep observability catalog --check` | Current for every package that gained spans |
 | Docs | `bun run docgen:local` | Passes |
 | Reflection | `bun run beep lint reflection-artifacts` | Passes at close |
