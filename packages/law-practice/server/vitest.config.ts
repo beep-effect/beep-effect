@@ -1,5 +1,6 @@
 import * as NodeURL from "node:url";
 import { A, Str } from "@beep/utils";
+import { pipe } from "effect/Function";
 import { defineConfig, mergeConfig } from "vitest/config";
 import { makeMeasuredSequencer } from "../../../vitest.sequencer.ts";
 import shared from "../../../vitest.shared.ts";
@@ -39,15 +40,13 @@ const nativeWallclockSuites = [
 // Vitest 5.1 forwards only a fixed list of CLI options to project configs (`maxWorkers`,
 // `isolate`, `passWithNoTests`, ...); `--exclude` is not among them, so the unit scripts'
 // `--exclude=test/integration/**` and `--exclude=test/PartyContactSource.boundary.test.ts` would
-// stop applying once the files are selected by projects. Read the CLI excludes here and add them
-// to every project so the scripts keep their meaning (hosted shards on PR #3007 ran integration
-// replays inside unit shards before this).
-const cliExcludes = A.flatMap(process.argv, (argument, index) =>
-  Str.startsWith("--exclude=")(argument)
-    ? [Str.slice(Str.length("--exclude="))(argument)]
-    : argument === "--exclude" && process.argv[index + 1] !== undefined
-      ? [process.argv[index + 1] ?? ""]
-      : []
+// stop applying once the files are selected by projects. Read the CLI excludes here (the package
+// scripts use the `--exclude=<glob>` form) and add them to every project so the scripts keep their
+// meaning; hosted shards on PR #3007 ran integration replays inside unit shards before this.
+const cliExcludes = pipe(
+  process.argv,
+  A.filter(Str.startsWith("--exclude=")),
+  A.map(Str.slice(Str.length("--exclude=")))
 );
 
 const config = mergeConfig(

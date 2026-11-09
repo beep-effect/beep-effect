@@ -313,6 +313,67 @@ export class CiPartitionRunTimings extends S.Opaque<CiPartitionRunTimings, { rea
 ) {}
 
 /**
+ * File and package timings read from one hosted Test Unit job log.
+ *
+ * **Example** (An empty parse)
+ *
+ * ```ts
+ * import { ParsedHostedTestUnitLog } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(ParsedHostedTestUnitLog.make({ files: [], packages: [] }).files.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ParsedHostedTestUnitLog extends S.Opaque<ParsedHostedTestUnitLog, { readonly brand: unique symbol }>()(
+  S.Struct({
+    files: S.Array(CiPartitionFileTiming),
+    packages: S.Array(CiPartitionPackageTiming),
+  }).pipe(
+    $I.annoteSchema("ParsedHostedTestUnitLog", {
+      description: "File and package timings parsed from one hosted Test Unit job log.",
+    })
+  )
+) {}
+
+/**
+ * Inputs of a shard-plan build: measured timings, the table's shard count and the run's provenance.
+ *
+ * **Example** (Describe a two-shard build)
+ *
+ * ```ts
+ * import { BuildVitestShardPlanOptions } from "@beep/repo-cli/commands/Ci"
+ *
+ * const options = BuildVitestShardPlanOptions.make({
+ *   files: [],
+ *   total: 2,
+ *   sourceRun: 42554761567,
+ *   sourceCommit: "b80e11050714191c6d0ff58e8371e9d4c3f17880",
+ * })
+ * console.log(options.total) // 2
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class BuildVitestShardPlanOptions extends S.Opaque<
+  BuildVitestShardPlanOptions,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    files: S.Array(CiPartitionFileTiming),
+    total: S.Int.check(S.isGreaterThanOrEqualTo(1)),
+    sourceRun: S.Finite,
+    sourceCommit: S.String,
+  }).pipe(
+    $I.annoteSchema("BuildVitestShardPlanOptions", {
+      description: "Measured file timings, target shard count and run provenance of one shard-plan build.",
+    })
+  )
+) {}
+
+/**
  * How one partition stands against its budget and the committed table.
  *
  * **Details**

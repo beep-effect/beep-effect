@@ -2,6 +2,7 @@ import * as NodeURL from "node:url";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
+import { assertNone, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -101,10 +102,10 @@ it.layer(NodeServices.layer)("law-practice-server shard plan", (it) => {
       const unit = A.filter(all, (file) => !Str.startsWith("test/integration/")(file));
       const planned = A.flatten(shardPlan.shards);
       // Disjoint: a file is planned into at most one shard.
-      expect(A.length(planned)).toBe(HashSet.size(HashSet.fromIterable(planned)));
+      strictEqual(A.length(planned), HashSet.size(HashSet.fromIterable(planned)));
       // No stale entries: every planned file still exists (a removed file would never be collected,
       // but a stale plan hides that the estimate no longer matches what the shard runs).
-      expect(A.difference(planned, unit)).toEqual([]);
+      deepStrictEqual(A.difference(planned, unit), []);
       // Union: a file the plan does not know (added after the source run) falls back to Vitest's
       // hash shard until `beep ci partitions rebalance --write --run <id>` refreshes the plan.
       const unplanned = A.difference(unit, planned);
@@ -114,15 +115,15 @@ it.layer(NodeServices.layer)("law-practice-server shard plan", (it) => {
         );
       }
       expect(A.length(unplanned)).toBeLessThan(A.length(unit) / 10);
-      expect(A.length(shardPlan.estimatedMilliseconds)).toBe(A.length(shardPlan.shards));
+      strictEqual(A.length(shardPlan.estimatedMilliseconds), A.length(shardPlan.shards));
       expect(A.every(shardPlan.shards, A.isReadonlyArrayNonEmpty)).toBe(true);
       for (const file of planned) {
         const index = plannedShardIndex(shardPlan, file);
-        expect(O.isSome(index)).toBe(true);
+        assertTrue(O.isSome(index));
         expect(O.getOrElse(index, () => 0)).toBeGreaterThanOrEqual(1);
         expect(O.getOrElse(index, () => 0)).toBeLessThanOrEqual(A.length(shardPlan.shards));
       }
-      expect(O.isNone(plannedShardIndex(shardPlan, "test/integration/CitationEngineCorpus.test.ts"))).toBe(true);
+      assertNone(plannedShardIndex(shardPlan, "test/integration/CitationEngineCorpus.test.ts"));
     })
   );
 
@@ -140,7 +141,7 @@ it.layer(NodeServices.layer)("law-practice-server shard plan", (it) => {
         O.getOrElse(() => A.empty<string>()),
         A.sort(Order.String)
       );
-      expect(declared).toEqual(derived);
+      deepStrictEqual(declared, derived);
       expect(A.length(derived)).toBeGreaterThan(0);
     })
   );

@@ -26,24 +26,18 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CiCommandError } from "./Ci.errors.ts";
 import { CiLanePartitionId } from "./CiLanePartitions.ts";
-import { CiPartitionFileTiming, CiPartitionPackageTiming, CiPartitionRunTimings } from "./CiPartitions.schemas.ts";
+import {
+  CiPartitionFileTiming,
+  CiPartitionPackageTiming,
+  CiPartitionRunTimings,
+  ParsedHostedTestUnitLog,
+} from "./CiPartitions.schemas.ts";
 import { ghApiJson } from "./LaneTimings.ts";
 import type { GitHubClient } from "@beep/github/GitHubClient";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoCliId.create("commands/Ci/CiPartitions.service");
-
-/**
- * File and package timings read from one hosted Test Unit job log.
- *
- * @category models
- * @since 0.0.0
- */
-export interface ParsedHostedTestUnitLog {
-  readonly files: ReadonlyArray<CiPartitionFileTiming>;
-  readonly packages: ReadonlyArray<CiPartitionPackageTiming>;
-}
 
 /**
  * Contract of a Test Unit timing source.
@@ -86,6 +80,36 @@ const jobNamePattern = /^Test Unit \((.+)\)$/u;
 const logLineContent = (line: string): string =>
   pipe(line, Str.replace(timestampPrefixPattern, ""), Str.replaceAll(decorationPattern, ""));
 
+const fileTimings = (partitionId: CiLanePartitionId, lines: ReadonlyArray<string>) =>
+  A.getSomes(
+    A.map(lines, (line) =>
+      pipe(
+        Str.match(fileLinePattern)(line),
+        O.map((match) =>
+          CiPartitionFileTiming.make({ partitionId, file: match[1] ?? "", milliseconds: Number(match[2]) })
+        )
+      )
+    )
+  );
+
+const packageTimings = (partitionId: CiLanePartitionId, lines: ReadonlyArray<string>) =>
+  A.getSomes(
+    A.map(lines, (line, index) =>
+      pipe(
+        Str.match(durationPattern)(line),
+        O.flatMap((duration) =>
+          pipe(
+            A.findFirst(A.drop(lines, index + 1), (candidate) => O.isSome(Str.match(reportPattern)(candidate))),
+            O.flatMap(Str.match(reportPattern)),
+            O.map((report) =>
+              CiPartitionPackageTiming.make({ partitionId, packagePath: report[1] ?? "", seconds: Number(duration[1]) })
+            )
+          )
+        )
+      )
+    )
+  );
+
 /**
  * Parse one hosted `Test Unit (<partition>)` job log into file and package timings.
  *
@@ -120,41 +144,10 @@ export const parseHostedTestUnitLog: {
   (text: string): (partitionId: CiLanePartitionId) => ParsedHostedTestUnitLog;
 } = dual(2, (partitionId: CiLanePartitionId, text: string): ParsedHostedTestUnitLog => {
   const lines = A.map(Str.split(/\r?\n/u)(text), logLineContent);
-  const files = A.getSomes(
-    A.map(lines, (line) =>
-      pipe(
-        Str.match(fileLinePattern)(line),
-        O.map((match) =>
-          CiPartitionFileTiming.make({
-            partitionId,
-            file: match[1] ?? "",
-            milliseconds: Number(match[2]),
-          })
-        )
-      )
-    )
-  );
-  const packages = A.getSomes(
-    A.map(lines, (line, index) =>
-      pipe(
-        Str.match(durationPattern)(line),
-        O.flatMap((duration) =>
-          pipe(
-            A.findFirst(A.drop(lines, index + 1), (candidate) => O.isSome(Str.match(reportPattern)(candidate))),
-            O.flatMap(Str.match(reportPattern)),
-            O.map((report) =>
-              CiPartitionPackageTiming.make({
-                partitionId,
-                packagePath: report[1] ?? "",
-                seconds: Number(duration[1]),
-              })
-            )
-          )
-        )
-      )
-    )
-  );
-  return { files, packages };
+  return ParsedHostedTestUnitLog.make({
+    files: fileTimings(partitionId, lines),
+    packages: packageTimings(partitionId, lines),
+  });
 });
 
 /**
@@ -183,10 +176,8 @@ export const testUnitJobPartition = (name: string): O.Option<CiLanePartitionId> 
   );
 
 const WorkflowRunHead = S.Struct({ head_sha: S.String });
-const WorkflowJobsPage = S.Struct({
-  total_count: S.Finite,
-  jobs: S.Array(S.Struct({ id: S.Finite, name: S.String, conclusion: S.NullOr(S.String) })),
-});
+const WorkflowJob = S.Struct({ id: S.Finite, name: S.String, conclusion: S.NullOr(S.String) });
+const WorkflowJobsPage = S.Struct({ total_count: S.Finite, jobs: S.Array(WorkflowJob) });
 const decodeRunHead = S.decodeUnknownEffect(WorkflowRunHead);
 const decodeJobsPage = S.decodeUnknownEffect(WorkflowJobsPage);
 const JOBS_PAGE_SIZE = 100;
@@ -195,7 +186,7 @@ const jobLogBound = OutputBound.make({ maxChars: 64 * 1024 * 1024, truncatedNoti
 
 const collectJobs = Effect.fn("CiPartitionTimingSource.collectJobs")(function* (runId: number) {
   let page = 1;
-  let jobs = A.empty<{ readonly id: number; readonly name: string; readonly conclusion: string | null }>();
+  let jobs = A.empty<typeof WorkflowJob.Type>();
   while (true) {
     const decoded = yield* ghApiJson(
       `repos/{owner}/{repo}/actions/runs/${runId}/jobs?filter=latest&per_page=${JOBS_PAGE_SIZE}&page=${page}`
@@ -204,6 +195,61 @@ const collectJobs = Effect.fn("CiPartitionTimingSource.collectJobs")(function* (
     if (A.length(decoded.jobs) < JOBS_PAGE_SIZE || A.length(jobs) >= decoded.total_count) return jobs;
     page += 1;
   }
+});
+
+interface TestUnitShardJob {
+  readonly conclusion: string | null;
+  readonly id: number;
+  readonly partitionId: CiLanePartitionId;
+}
+
+/** The run's Test Unit shard jobs, every one of which must be green for its timings to be complete. */
+const greenTestUnitShards = Effect.fn("CiPartitionTimingSource.greenShards")(function* (runId: number) {
+  const jobs = yield* collectJobs(runId);
+  const shards: ReadonlyArray<TestUnitShardJob> = A.getSomes(
+    A.map(jobs, (job) =>
+      pipe(
+        testUnitJobPartition(job.name),
+        O.map((partitionId) => ({ partitionId, id: job.id, conclusion: job.conclusion }))
+      )
+    )
+  );
+  if (A.isReadonlyArrayEmpty(shards)) {
+    return yield* CiCommandError.make({ message: `Run ${runId} has no Test Unit shard jobs.` });
+  }
+  // A red shard reports partial timings, so every Test Unit shard must be green; other lanes of
+  // the run (Heavy, Doctest) do not change what the unit shards measured.
+  const red = A.filter(shards, (shard) => shard.conclusion !== "success");
+  if (A.isReadonlyArrayNonEmpty(red)) {
+    return yield* CiCommandError.make({
+      message: `Run ${runId} has red Test Unit shards (${A.join(
+        A.map(red, (shard) => shard.partitionId),
+        ", "
+      )}); rebalance only from green shards.`,
+    });
+  }
+  return shards;
+});
+
+const readShardLog = Effect.fn("CiPartitionTimingSource.readShardLog")(function* (
+  owner: string,
+  repo: string,
+  shard: TestUnitShardJob
+) {
+  const log = yield* runCaptured({
+    command: "gh",
+    // Reporter output carries ANSI colours, which `gh api` refuses to print without this flag.
+    args: ["api", `repos/${owner}/${repo}/actions/jobs/${shard.id}/logs`, "--allow-escape-sequences"],
+    cwd: process.cwd(),
+    source: "stdout",
+    bound: jobLogBound,
+  }).pipe(CiCommandError.mapError(`Cannot read the log of job ${shard.id} (${shard.partitionId}).`));
+  if (log.exitCode !== 0 || log.truncated) {
+    return yield* CiCommandError.make({
+      message: `Reading the log of job ${shard.id} (${shard.partitionId}) failed or exceeded its bound.`,
+    });
+  }
+  return parseHostedTestUnitLog(shard.partitionId, log.output);
 });
 
 const makeCiPartitionTimingSource = Effect.fn("CiPartitionTimingSource.make")(function* () {
@@ -216,49 +262,8 @@ const makeCiPartitionTimingSource = Effect.fn("CiPartitionTimingSource.make")(fu
       Effect.flatMap(decodeRunHead),
       CiCommandError.mapError(`Cannot decode run ${runId}.`)
     );
-    const jobs = yield* collectJobs(runId);
-    const shards = A.getSomes(
-      A.map(jobs, (job) =>
-        pipe(
-          testUnitJobPartition(job.name),
-          O.map((partitionId) => ({ partitionId, id: job.id, conclusion: job.conclusion }))
-        )
-      )
-    );
-    if (A.isReadonlyArrayEmpty(shards)) {
-      return yield* CiCommandError.make({ message: `Run ${runId} has no Test Unit shard jobs.` });
-    }
-    // A red shard reports partial timings, so every Test Unit shard must be green; other lanes of
-    // the run (Heavy, Doctest) do not change what the unit shards measured.
-    const red = A.filter(shards, (shard) => shard.conclusion !== "success");
-    if (A.isReadonlyArrayNonEmpty(red)) {
-      return yield* CiCommandError.make({
-        message: `Run ${runId} has red Test Unit shards (${A.join(
-          A.map(red, (shard) => shard.partitionId),
-          ", "
-        )}); rebalance only from green shards.`,
-      });
-    }
-    const parsed = yield* Effect.forEach(
-      shards,
-      Effect.fnUntraced(function* (shard) {
-        const log = yield* runCaptured({
-          command: "gh",
-          // Reporter output carries ANSI colours, which `gh api` refuses to print without this flag.
-          args: ["api", `repos/${owner}/${repo}/actions/jobs/${shard.id}/logs`, "--allow-escape-sequences"],
-          cwd: process.cwd(),
-          source: "stdout",
-          bound: jobLogBound,
-        }).pipe(CiCommandError.mapError(`Cannot read the log of job ${shard.id} (${shard.partitionId}).`));
-        if (log.exitCode !== 0 || log.truncated) {
-          return yield* CiCommandError.make({
-            message: `Reading the log of job ${shard.id} (${shard.partitionId}) failed or exceeded its bound.`,
-          });
-        }
-        return parseHostedTestUnitLog(shard.partitionId, log.output);
-      }),
-      { concurrency: 4 }
-    );
+    const shards = yield* greenTestUnitShards(runId);
+    const parsed = yield* Effect.forEach(shards, (shard) => readShardLog(owner, repo, shard), { concurrency: 4 });
     return CiPartitionRunTimings.make({
       runId,
       headSha: head.head_sha,

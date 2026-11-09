@@ -38,6 +38,7 @@ import * as Str from "effect/String";
 import { CiCommandError } from "./Ci.errors.ts";
 import { CI_LANE_PARTITIONS } from "./CiLanePartitions.ts";
 import {
+  BuildVitestShardPlanOptions,
   CI_SHARDED_PARTITION_FILE_BUDGET_SECONDS,
   CI_SHARDED_PARTITION_SOURCES,
   CI_UNIT_BIN_SERIAL_BUDGET_SECONDS,
@@ -48,7 +49,7 @@ import {
 import { CiPartitionTimingSource, CiPartitionTimingSourceLive } from "./CiPartitions.service.ts";
 import { withCiGithub } from "./LaneTimings.ts";
 import type { CiLanePartition } from "./CiLanePartitions.ts";
-import type { CiPartitionFileTiming, CiPartitionRunTimings, CiShardedPartitionSource } from "./CiPartitions.schemas.ts";
+import type { CiPartitionRunTimings, CiShardedPartitionSource } from "./CiPartitions.schemas.ts";
 
 /**
  * One weighted item for {@link lptAssign}.
@@ -135,23 +136,6 @@ export const lptAssign: {
 });
 
 /**
- * Inputs of {@link buildVitestShardPlan}.
- *
- * @category models
- * @since 0.0.0
- */
-export interface BuildVitestShardPlanOptions {
-  /** Measured file timings of the package. */
-  readonly files: ReadonlyArray<CiPartitionFileTiming>;
-  /** That run's head commit. */
-  readonly sourceCommit: string;
-  /** The green run the timings came from. */
-  readonly sourceRun: number;
-  /** How many shards the table runs for the package. */
-  readonly total: number;
-}
-
-/**
  * Pack measured file timings of one package into a committed shard plan.
  *
  * **Details**
@@ -163,17 +147,19 @@ export interface BuildVitestShardPlanOptions {
  * **Example** (Pack two files into two shards)
  *
  * ```ts
- * import { buildVitestShardPlan, CiPartitionFileTiming } from "@beep/repo-cli/commands/Ci"
+ * import { buildVitestShardPlan, BuildVitestShardPlanOptions, CiPartitionFileTiming } from "@beep/repo-cli/commands/Ci"
  *
- * const plan = buildVitestShardPlan({
- *   files: [
- *     CiPartitionFileTiming.make({ partitionId: "repo-cli-1", file: "test/a.test.ts", milliseconds: 1200 }),
- *     CiPartitionFileTiming.make({ partitionId: "repo-cli-1", file: "test/b.test.ts", milliseconds: 800 }),
- *   ],
- *   total: 2,
- *   sourceRun: 42554761567,
- *   sourceCommit: "b80e11050714191c6d0ff58e8371e9d4c3f17880",
- * })
+ * const plan = buildVitestShardPlan(
+ *   BuildVitestShardPlanOptions.make({
+ *     files: [
+ *       CiPartitionFileTiming.make({ partitionId: "repo-cli-1", file: "test/a.test.ts", milliseconds: 1200 }),
+ *       CiPartitionFileTiming.make({ partitionId: "repo-cli-1", file: "test/b.test.ts", milliseconds: 800 }),
+ *     ],
+ *     total: 2,
+ *     sourceRun: 42554761567,
+ *     sourceCommit: "b80e11050714191c6d0ff58e8371e9d4c3f17880",
+ *   })
+ * )
  * console.log(plan.estimatedMilliseconds) // [1200, 800]
  * ```
  *
@@ -271,6 +257,73 @@ const binPartitions = (table: ReadonlyArray<CiLanePartition>) =>
 const roundSeconds = (milliseconds: number) => Math.round(milliseconds / 1000);
 const formatSeconds = (seconds: number) => (Math.round(seconds * 10) / 10).toFixed(1);
 
+const shardedSourceRows = (
+  plan: VitestShardPlan,
+  partitions: ReadonlyArray<CiLanePartition>
+): ReadonlyArray<CiPartitionBudgetRow> => {
+  const stalePlan = A.length(plan.shards) !== A.length(partitions);
+  return A.map(partitions, (partition, index) => {
+    const milliseconds = plan.estimatedMilliseconds[index] ?? 0;
+    const estimatedSeconds = milliseconds / 1000;
+    const status = stalePlan
+      ? "stale-plan"
+      : estimatedSeconds > CI_SHARDED_PARTITION_FILE_BUDGET_SECONDS
+        ? "over"
+        : roundSeconds(milliseconds) !== partition.weightSeconds
+          ? "stale-weight"
+          : "within";
+    return CiPartitionBudgetRow.make({
+      partitionId: partition.id,
+      estimatedSeconds,
+      weightSeconds: partition.weightSeconds,
+      budgetSeconds: CI_SHARDED_PARTITION_FILE_BUDGET_SECONDS,
+      status,
+    });
+  });
+};
+
+const shardedSourceReport = Effect.fn("CiPartitions.shardedSourceReport")(function* (
+  repoRoot: string,
+  table: ReadonlyArray<CiLanePartition>,
+  source: CiShardedPartitionSource
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const plan = yield* readShardPlan(repoRoot, source);
+  const partitions = shardedPartitionsOf(table, source);
+  const rows = shardedSourceRows(plan, partitions);
+  const missing = yield* Effect.filter(A.flatten(plan.shards), (file) =>
+    fs.exists(path.join(repoRoot, source.packagePath, file)).pipe(
+      Effect.map((exists) => !exists),
+      Effect.orElseSucceed(() => true)
+    )
+  );
+  const warnings = [
+    ...(A.length(plan.shards) !== A.length(partitions)
+      ? [
+          `${source.planPath} plans ${A.length(plan.shards)} shards but the table runs ${A.length(partitions)}; run rebalance --write.`,
+        ]
+      : []),
+    ...(A.isReadonlyArrayNonEmpty(missing)
+      ? [
+          `${source.planPath} names ${A.length(missing)} file(s) no longer in ${source.packagePath}: ${A.join(missing, ", ")} (they are simply not collected; refresh the plan when a green main run is available).`,
+        ]
+      : []),
+  ];
+  return { rows, warnings };
+});
+
+const binRows = (table: ReadonlyArray<CiLanePartition>): ReadonlyArray<CiPartitionBudgetRow> =>
+  A.map(binPartitions(table), (partition) =>
+    CiPartitionBudgetRow.make({
+      partitionId: partition.id,
+      estimatedSeconds: partition.weightSeconds,
+      weightSeconds: partition.weightSeconds,
+      budgetSeconds: CI_UNIT_BIN_SERIAL_BUDGET_SECONDS,
+      status: partition.weightSeconds > CI_UNIT_BIN_SERIAL_BUDGET_SECONDS ? "over" : "within",
+    })
+  );
+
 /**
  * Judge the committed plans and the partition table against their budgets, offline.
  *
@@ -293,68 +346,15 @@ export const checkCiPartitions = Effect.fn("CiPartitions.check")(function* (
   repoRoot: string,
   table: ReadonlyArray<CiLanePartition> = CI_LANE_PARTITIONS
 ) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const shardedRows = yield* Effect.forEach(
-    CI_SHARDED_PARTITION_SOURCES,
-    Effect.fnUntraced(function* (source) {
-      const plan = yield* readShardPlan(repoRoot, source);
-      const partitions = shardedPartitionsOf(table, source);
-      const stalePlan = A.length(plan.shards) !== A.length(partitions);
-      const rows = A.map(partitions, (partition, index) => {
-        const estimatedSeconds = (plan.estimatedMilliseconds[index] ?? 0) / 1000;
-        const status = stalePlan
-          ? "stale-plan"
-          : estimatedSeconds > CI_SHARDED_PARTITION_FILE_BUDGET_SECONDS
-            ? "over"
-            : roundSeconds(plan.estimatedMilliseconds[index] ?? 0) !== partition.weightSeconds
-              ? "stale-weight"
-              : "within";
-        return CiPartitionBudgetRow.make({
-          partitionId: partition.id,
-          estimatedSeconds,
-          weightSeconds: partition.weightSeconds,
-          budgetSeconds: CI_SHARDED_PARTITION_FILE_BUDGET_SECONDS,
-          status,
-        });
-      });
-      const planned = A.flatten(plan.shards);
-      const missing = yield* Effect.filter(planned, (file) =>
-        fs.exists(path.join(repoRoot, source.packagePath, file)).pipe(
-          Effect.map((exists) => !exists),
-          Effect.orElseSucceed(() => true)
-        )
-      );
-      const warnings = [
-        ...(stalePlan
-          ? [
-              `${source.planPath} plans ${A.length(plan.shards)} shards but the table runs ${A.length(partitions)}; run rebalance --write.`,
-            ]
-          : []),
-        ...(A.isReadonlyArrayNonEmpty(missing)
-          ? [
-              `${source.planPath} names ${A.length(missing)} file(s) no longer in ${source.packagePath}: ${A.join(missing, ", ")} (they are simply not collected; refresh the plan when a green main run is available).`,
-            ]
-          : []),
-      ];
-      return { rows, warnings };
-    })
-  );
-  const binRows = A.map(binPartitions(table), (partition) =>
-    CiPartitionBudgetRow.make({
-      partitionId: partition.id,
-      estimatedSeconds: partition.weightSeconds,
-      weightSeconds: partition.weightSeconds,
-      budgetSeconds: CI_UNIT_BIN_SERIAL_BUDGET_SECONDS,
-      status: partition.weightSeconds > CI_UNIT_BIN_SERIAL_BUDGET_SECONDS ? "over" : "within",
-    })
+  const sharded = yield* Effect.forEach(CI_SHARDED_PARTITION_SOURCES, (source) =>
+    shardedSourceReport(repoRoot, table, source)
   );
   return CiPartitionRebalanceReport.make({
     rows: A.appendAll(
-      A.flatMap(shardedRows, (entry) => entry.rows),
-      binRows
+      A.flatMap(sharded, (entry) => entry.rows),
+      binRows(table)
     ),
-    warnings: A.flatMap(shardedRows, (entry) => entry.warnings),
+    warnings: A.flatMap(sharded, (entry) => entry.warnings),
   });
 });
 
@@ -371,7 +371,7 @@ export const checkCiPartitions = Effect.fn("CiPartitions.check")(function* (
  *
  * @param report - The report to render.
  * @returns Header, one line per row, then warnings.
- * @category rendering
+ * @category utilities
  * @since 0.0.0
  */
 export const renderCiPartitionReport = (report: CiPartitionRebalanceReport): ReadonlyArray<string> => [
@@ -388,6 +388,114 @@ export const renderCiPartitionReport = (report: CiPartitionRebalanceReport): Rea
 
 const sharedFamilyFiles = (timings: CiPartitionRunTimings, source: CiShardedPartitionSource) =>
   A.filter(timings.files, (timing) => Str.startsWith(`${source.family}-`)(timing.partitionId));
+
+const writeFamilyPlan = Effect.fn("CiPartitions.writeFamilyPlan")(function* (
+  repoRoot: string,
+  table: ReadonlyArray<CiLanePartition>,
+  timings: CiPartitionRunTimings,
+  shardSource: CiShardedPartitionSource
+) {
+  const partitions = shardedPartitionsOf(table, shardSource);
+  const files = sharedFamilyFiles(timings, shardSource);
+  if (A.isReadonlyArrayEmpty(files)) {
+    return yield* CiCommandError.make({
+      message: `Run ${timings.runId} has no ${shardSource.family} file timings; is it a green run of the current layout?`,
+    });
+  }
+  const plan = buildVitestShardPlan(
+    BuildVitestShardPlanOptions.make({
+      files,
+      total: A.length(partitions),
+      sourceRun: timings.runId,
+      sourceCommit: timings.headSha,
+    })
+  );
+  yield* writeShardPlan(repoRoot, shardSource, plan);
+  return [
+    `${shardSource.planPath}: ${A.length(A.flatten(plan.shards))} files over ${A.length(plan.shards)} shards from run ${timings.runId} (${timings.headSha})`,
+    ...A.map(
+      A.zip(partitions, plan.estimatedMilliseconds),
+      ([partition, milliseconds]) =>
+        `  ${partition.id}: ${formatSeconds(milliseconds / 1000)} s planned; table weightSeconds ${partition.weightSeconds}${
+          roundSeconds(milliseconds) === partition.weightSeconds ? "" : ` -> set ${roundSeconds(milliseconds)}`
+        }`
+    ),
+  ];
+});
+
+// Package name by repository-relative directory, for mapping measured package paths back to names.
+const workspaceNamesByPath = Effect.fn("CiPartitions.workspaceNamesByPath")(function* (repoRoot: string) {
+  const path = yield* Path.Path;
+  const workspaces = yield* workspaceManifests(repoRoot).pipe(
+    CiCommandError.mapError("Cannot read the workspace inventory for the bin proposal.")
+  );
+  return pipe(
+    workspaces,
+    HashMap.entries,
+    A.fromIterable,
+    A.reduce(HashMap.empty<string, string>(), (acc, [name, entry]) =>
+      HashMap.set(acc, Str.replaceAll("\\", "/")(path.relative(repoRoot, entry.dir)), name)
+    )
+  );
+});
+
+// The largest measured wall of every bin package, keyed by package name.
+const measuredBinPackages = (
+  timings: CiPartitionRunTimings,
+  bins: ReadonlyArray<CiLanePartition>,
+  nameByPath: HashMap.HashMap<string, string>
+): ReadonlyArray<readonly [string, number]> =>
+  pipe(
+    timings.packages,
+    A.filter((timing) => A.some(bins, (bin) => bin.id === timing.partitionId)),
+    A.reduce(HashMap.empty<string, number>(), (acc, timing) =>
+      O.match(HashMap.get(nameByPath, timing.packagePath), {
+        onNone: () => acc,
+        onSome: (name) =>
+          HashMap.set(
+            acc,
+            name,
+            Math.max(
+              timing.seconds,
+              O.getOrElse(HashMap.get(acc, name), () => 0)
+            )
+          ),
+      })
+    ),
+    HashMap.entries,
+    A.fromIterable
+  );
+
+const binProposalLines = Effect.fn("CiPartitions.binProposalLines")(function* (
+  repoRoot: string,
+  table: ReadonlyArray<CiLanePartition>,
+  timings: CiPartitionRunTimings
+) {
+  const bins = binPartitions(table);
+  const nameByPath = yield* workspaceNamesByPath(repoRoot);
+  const measured = measuredBinPackages(timings, bins, nameByPath);
+  const measuredNames = A.map(measured, ([name]) => name);
+  const unmeasured = A.filter(
+    A.flatMap(bins, (bin) => bin.packages),
+    (name) => !A.contains(measuredNames, name)
+  );
+  const proposal = lptAssign(
+    A.map(measured, ([name, seconds]) => ({ key: name, weight: seconds, value: name })),
+    A.length(bins)
+  );
+  return [
+    `bin proposal: ${A.length(measured)} measured packages over ${A.length(bins)} bins (serial sums; budget ${CI_UNIT_BIN_SERIAL_BUDGET_SECONDS} s)`,
+    ...A.flatMap(A.zip(bins, proposal), ([bin, packed]) => [
+      `  ${bin.id}: weightSeconds ${Math.round(packed.load)} (table ${bin.weightSeconds})`,
+      ...A.map(A.sort(packed.items, Order.String), (name) => `    "${name}",`),
+    ]),
+    ...(A.isReadonlyArrayNonEmpty(unmeasured)
+      ? [
+          `  table packages without a measurement in run ${timings.runId}: ${A.join(A.sort(unmeasured, Order.String), ", ")}`,
+        ]
+      : []),
+  ];
+});
 
 /**
  * Repack every sharded family from one green run and write the plan files; propose the bin repack.
@@ -415,88 +523,10 @@ export const rebalanceCiPartitions = Effect.fn("CiPartitions.rebalance")(functio
 ) {
   const source = yield* CiPartitionTimingSource;
   const timings = yield* source.collect(runId);
-  const path = yield* Path.Path;
-  const planLines = yield* Effect.forEach(
-    CI_SHARDED_PARTITION_SOURCES,
-    Effect.fnUntraced(function* (shardSource) {
-      const partitions = shardedPartitionsOf(table, shardSource);
-      const files = sharedFamilyFiles(timings, shardSource);
-      if (A.isReadonlyArrayEmpty(files)) {
-        return yield* CiCommandError.make({
-          message: `Run ${runId} has no ${shardSource.family} file timings; is it a green run of the current layout?`,
-        });
-      }
-      const plan = buildVitestShardPlan({
-        files,
-        total: A.length(partitions),
-        sourceRun: runId,
-        sourceCommit: timings.headSha,
-      });
-      yield* writeShardPlan(repoRoot, shardSource, plan);
-      return [
-        `${shardSource.planPath}: ${A.length(A.flatten(plan.shards))} files over ${A.length(plan.shards)} shards from run ${runId} (${timings.headSha})`,
-        ...A.map(
-          A.zip(partitions, plan.estimatedMilliseconds),
-          ([partition, milliseconds]) =>
-            `  ${partition.id}: ${formatSeconds(milliseconds / 1000)} s planned; table weightSeconds ${
-              partition.weightSeconds
-            }${roundSeconds(milliseconds) === partition.weightSeconds ? "" : ` -> set ${roundSeconds(milliseconds)}`}`
-        ),
-      ];
-    })
+  const planLines = yield* Effect.forEach(CI_SHARDED_PARTITION_SOURCES, (shardSource) =>
+    writeFamilyPlan(repoRoot, table, timings, shardSource)
   );
-  const bins = binPartitions(table);
-  const workspaces = yield* workspaceManifests(repoRoot).pipe(
-    CiCommandError.mapError("Cannot read the workspace inventory for the bin proposal.")
-  );
-  const nameByPath = pipe(
-    workspaces,
-    HashMap.entries,
-    A.fromIterable,
-    A.reduce(HashMap.empty<string, string>(), (acc, [name, entry]) =>
-      HashMap.set(acc, Str.replaceAll("\\", "/")(path.relative(repoRoot, entry.dir)), name)
-    )
-  );
-  const binPackageIds = A.flatMap(bins, (bin) => bin.packages);
-  const measured = pipe(
-    timings.packages,
-    A.filter((timing) => A.some(bins, (bin) => bin.id === timing.partitionId)),
-    A.reduce(HashMap.empty<string, number>(), (acc, timing) =>
-      pipe(
-        HashMap.get(nameByPath, timing.packagePath),
-        O.match({
-          onNone: () => acc,
-          onSome: (name) =>
-            HashMap.set(
-              acc,
-              name,
-              Math.max(
-                timing.seconds,
-                O.getOrElse(HashMap.get(acc, name), () => 0)
-              )
-            ),
-        })
-      )
-    ),
-    HashMap.entries,
-    A.fromIterable
-  );
-  const measuredNames = A.map(measured, ([name]) => name);
-  const unmeasured = A.filter(binPackageIds, (name) => !A.contains(measuredNames, name));
-  const proposal = lptAssign(
-    A.map(measured, ([name, seconds]) => ({ key: name, weight: seconds, value: name })),
-    A.length(bins)
-  );
-  const binLines = [
-    `bin proposal: ${A.length(measured)} measured packages over ${A.length(bins)} bins (serial sums; budget ${CI_UNIT_BIN_SERIAL_BUDGET_SECONDS} s)`,
-    ...A.flatMap(A.zip(bins, proposal), ([bin, packed]) => [
-      `  ${bin.id}: weightSeconds ${Math.round(packed.load)} (table ${bin.weightSeconds})`,
-      ...A.map(A.sort(packed.items, Order.String), (name) => `    "${name}",`),
-    ]),
-    ...(A.isReadonlyArrayNonEmpty(unmeasured)
-      ? [`  table packages without a measurement in run ${runId}: ${A.join(A.sort(unmeasured, Order.String), ", ")}`]
-      : []),
-  ];
+  const binLines = yield* binProposalLines(repoRoot, table, timings);
   return A.appendAll(A.flatten(planLines), binLines);
 });
 
