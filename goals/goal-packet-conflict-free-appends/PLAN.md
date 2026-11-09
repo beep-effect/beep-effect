@@ -54,7 +54,7 @@ _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions wr
 
 Schema, service contract, projection core, doctor findings, `beep goals decisions check|write|add`, bootstrap templates, golden fixtures, repo docs and this packet landed together in feat/goal-packet-decision-files. The knowledge doctor reads the same projection from a Git tree. Remaining: review window and merge by the orchestrator.
 
-Lane `feat/goal-packet-decision-files`
+Lane feat/goal-packet-decision-files
 
 Reverse: Revert the PR.
 
@@ -62,7 +62,7 @@ Reverse: Revert the PR.
 
 PR #2702 merged 2026-11-06T00:10Z (merge 072748d024) without a closeout proposal. This docs-only PR carries the reflection, the phase flips and `proposedCloseout`. On main after merge: `decisions check` reported `packets=272 decisions=47 invalid=0 drift=0`, `goals doctor` reported `blocking_new=0`, and `goals-decisions.test.ts` passed 6/6. 13 packets now hold decision files and no open PR is CONFLICTING.
 
-Lane `docs/goal-packet-conflict-free-appends-closeout`
+Lane docs/goal-packet-conflict-free-appends-closeout
 
 Reverse: Revert this PR; the packet returns to active with no proposal.
 
@@ -70,7 +70,7 @@ Reverse: Revert this PR; the packet returns to active with no proposal.
 
 PR #2794 merged 2026-11-06T19:04Z (merge ea90653910) while both of its until-ready monitors were still stopped at the draft gate, so `goals completion refresh` reports `unknown` for it with either job. This docs-only PR records #2794 as `supporting`, rebinds `proposedCloseout.finalPullRequest`, the final `completionGate.pullRequests` entry and the `yeet-verdict` ref to this branch, and is held until its own until-ready job prints `merge-ready: yes`.
 
-Lane `docs/goal-packet-conflict-free-appends-refinal`
+Lane docs/goal-packet-conflict-free-appends-refinal
 
 Reverse: Revert this PR; the proposal points back at #2794, which cannot verify.
 
@@ -78,7 +78,7 @@ Reverse: Revert this PR; the proposal points back at #2794, which cannot verify.
 
 PR #2869 merged 2026-11-07T06:44Z at its first commit (b32c79590a). That commit named a predicted final PR number, #2848, which another PR had taken; the bind commit naming #2869 was still local. No #2869 readiness monitor recorded `merge-ready: yes` before the merge. This docs-only PR removes #2848, records #2869 as `supporting`, rebinds the final entry, `proposedCloseout.finalPullRequest` and the `yeet-verdict` ref to this branch, and stays draft until the bind commit is pushed.
 
-Lane `gpcfa-refinal3`
+Lane gpcfa-refinal3
 
 Reverse: Revert this PR; the proposal points back at #2848, an unrelated PR.
 

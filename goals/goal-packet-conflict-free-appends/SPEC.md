@@ -95,7 +95,7 @@ _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions wr
 
 Existing packets keep their hand-written Decision Log tables and `###` sections exactly as committed. The generated block is appended at the end of the `## Decision log` section the first time a packet gains a decision file (or inserted where a marker pair already exists), so the authored history sits above the marker and only the block is regenerated. A packet with no `decisions/` directory and no marker is not touched at all, which keeps this change out of the 265 existing packets. Converting history into files is optional per packet and never required by the doctor.
 
-Lane `feat/goal-packet-decision-files`
+Lane feat/goal-packet-decision-files
 
 Reverse: Convert a packet by hand: move each legacy entry into a decision file, delete the legacy text, run decisions write. Nothing in the tool depends on the legacy text being present or absent.
 
@@ -103,7 +103,7 @@ Reverse: Convert a packet by hand: move each legacy entry into a decision file, 
 
 The SPEC.md and PLAN.md blocks are pure projections of `decisions/*.md`, so they qualify for the `regenerate` merge driver (`packages/tooling/tool/cli/src/commands/Git/Git.command.ts`, `.gitattributes`). This lane does not edit those two files: the sibling lane feat/goal-manifest-research-projection is making `ops/manifest.json` `research[]` a directory projection and owns both edits. Handoff: that lane adds `goals/*/SPEC.md` and `goals/*/PLAN.md` to the allowlist only if the driver learns to regenerate a marker block inside an otherwise authored file; until then the documented repair is to merge main and run `bun run beep goals decisions write --slug <slug>`. The doctor keeps both honest either way.
 
-Lane `feat/goal-packet-decision-files`
+Lane feat/goal-packet-decision-files
 
 Reverse: Leave the two paths out of the regenerate allowlist; merges then conflict inside the block and are resolved by running decisions write after the merge, which is already the documented repair.
 
@@ -111,7 +111,7 @@ Reverse: Leave the two paths out of the regenerate allowlist; merges then confli
 
 On 2026-11-04 three merges on the turborepo-* packets put all eleven sibling PRs (#2683-#2695) into CONFLICTING at once; every conflict was a dated `###` section appended to the tail of `## Decision log` in SPEC.md (and current-preparation notes at the tail of PLAN.md). Two lanes appending to one tail is an unresolvable content conflict, and `.gitattributes` rightly keeps SPEC.md out of `merge=union` because its tables edit and delete rows. Each decision is now its own file, `goals/<slug>/decisions/<YYYY-MM-DD>-<topic>.md`, with schema-validated YAML frontmatter (`GoalDecisionFrontmatter`: title, date, reversal, optional kind/lane/pullRequest). New files never conflict. `bun run beep goals decisions write` renders the directory oldest-first into a marker-delimited block; `bun run beep goals doctor` blocks on `decision-log-drift` and `decision-file-invalid`.
 
-Lane `feat/goal-packet-decision-files`
+Lane feat/goal-packet-decision-files
 
 Reverse: Delete goals/*/decisions/, remove the marker blocks, drop the decision-* doctor kinds from Doctor.ts and restore the Decision Log table in the bootstrap template.
 
@@ -119,7 +119,7 @@ Reverse: Delete goals/*/decisions/, remove the marker blocks, drop the decision-
 
 The conflicting PLAN.md edits were status notes ("Current checkpoint", "Current diagnostic preparation") appended to the plan tail, the same shape as the SPEC.md decisions. Rather than a second generator, a decision file may carry `kind: checkpoint`; it then renders into the `## Checkpoints` block of PLAN.md instead of SPEC.md. One schema, one renderer, one splicer, two targets. Phase tables and other authored PLAN.md content stay hand-edited.
 
-Lane `feat/goal-packet-decision-files`
+Lane feat/goal-packet-decision-files
 
 Reverse: Drop the checkpoint literal from GoalDecisionKind and the PLAN.md target from GOAL_DECISION_TARGETS; the SPEC.md projection is unaffected.
 

@@ -570,7 +570,7 @@ const monitorFlags = {
   ...sharedFlags,
   pollInterval: Flag.String("poll-interval").pipe(
     Flag.withDefault(""),
-    Flag.withDescription("Positive polling duration for --until-ready or --until-merged (default 30 seconds)")
+    Flag.withDescription("Positive polling duration for --until-ready or --until-merged (default 90 seconds)")
   ),
   summary: summaryFlag,
   stateRoot: yeetStateRootFlag,

@@ -146,7 +146,7 @@ _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions wr
 
 Independent review accepted a lossless split of the unique qualified root-header self membership from semantic arguments. Preserve the complete raw argument array and its order. Derivation requires exact positive source, frame, scope, core, head and construction witnesses, with an explicit membership record and an ordinal bijection that reconstructs the original array. Keep other root-context, nonroot, predicated, private and unresolved arguments exact. Assert all complete expected frame objects; do not filter uncertainty or alter public wire, original source fixtures, legacy labels, scorers or results. Review receipt SHA-256: 4a4748f98747363b3c379f97d9199e433895877ad77ce7a564f023b6569a2099. This accepts the representation rule only, not the changing implementation or performance.
 
-Lane `feat/claim-check-clauses`
+Lane feat/claim-check-clauses
 
 Reverse: Remove the derived membership view and retain all original raw argument arrays and prior conformance runs.
 
@@ -158,7 +158,7 @@ Keep all 52 unchanged historical operator assertions and all 25 new complete exp
 
 Independent review receipt SHA-256: b233f60f8587b3d861d892bc34c6d0da7488495eedbbbbf3cbfa229b56bd8454. Private expected objects and all earlier review history remain unchanged.
 
-Lane `feat/claim-check-clauses`
+Lane feat/claim-check-clauses
 
 Reverse: Remove the conformance adapter and repair the actual proof join; never rewrite either frozen oracle set.
 
@@ -166,7 +166,7 @@ Reverse: Remove the conformance adapter and repair the actual proof join; never 
 
 Independent adjudication found no source, POS, lemma or attachment evidence justifying different public head conventions for equivalent licensed modifier-plus-noun constructions. Preserve the complete modifier-plus-tail public head uniformly and keep the independently proved terminal noun separate. A quoted modifier with an unquoted noun tail remains unknown absent independent whole-name evidence. Exactly two newly authored synthetic cases receive a separate guarded correction overlay with full-object and baseline digests, exact allowed deltas, complete corrected objects and inverse checks. Preserve all original 54 historical and 25 new expectations, legacy labels, scorers and prior results; report original and corrected comparisons separately. Review receipt SHA-256: 42d673cdf25dc5aa0b06dd8fd55a5eca7d1d3f684c79247fe55c7bd991b20dcb. Overlay SHA-256: b3f813947df71063ebe89c53520c6c255581567bd5ba38fe19bf158e1a2195a8. Separately, compare committed work counters for equality and nonnegativity plus a strict decrease from an independently compiled raw-role allowance for the same input and facts. This does not waive the 100-NP failure, discount executed work, raise any limit or accept the changing implementation or benchmark performance.
 
-Lane `feat/claim-check-clauses`
+Lane feat/claim-check-clauses
 
 Reverse: Remove the two-case development overlay while preserving all original and corrected artifacts; keep the existing public head convention.
 
@@ -174,7 +174,7 @@ Reverse: Remove the two-case development overlay while preserving all original a
 
 Independent review accepted a narrow raw qualified-citation boundary for an otherwise positively proved nominal whose sole missing obligation is closure. The complete citation must be the immediately following token interval with an exact whitespace-only gap. Its original dependent qualification, complete decimal reference set, supported prefix, quote/protection and following-continuation guards must derive entirely from lower-rank raw source facts. No later exclusion, nominal, operator or frame conclusion may supply evidence. Ordinary, quoted, malformed, mismatched, ranged, truncated, skipped-token or foreign-source constructions cannot create the boundary. Preserve original opening/core/head/terminal evidence and enumerate every nested proof reference. Charge all work to the unchanged shared source allowance; test each actual positive and negative branch. Review receipt SHA-256: 4b040f294b1d48da9c0a1d39ec78014c71920410ef4251bf366c925975c42e2d. No reference, expected fixture, scorer, prior result, public shape or resource cap change is authorized. Implementation and performance remain unaccepted.
 
-Lane `feat/claim-check-clauses`
+Lane feat/claim-check-clauses
 
 Reverse: Remove this boundary variant while retaining its proposal, tests and all historical outcomes.
 
@@ -188,7 +188,7 @@ This decision authorizes implementation preparation and synthetic controls only.
 
 Evidence: sealed plan manifest 3a8a1922f3908605fa3a6707d421a89ea46a7621a7a05dc3c779c61061001c3b; independent plan review receipt 415e59aad01c16759f057362dcc6f230fc108d11a55a6af98f9eeeed96c2fdfa with zero required code, source, protocol or scope findings. Neither plan nor review establishes concrete executor acceptance, source qualification, truth labels or checker performance.
 
-Lane `feat/claim-check-clauses`
+Lane feat/claim-check-clauses
 
 Reverse: Revoke preparation before any actual admission; retain all sealed evidence and consumed attempts. Any later actual window requires its own closeout and cannot be reset.
 
@@ -200,7 +200,7 @@ Preserve every original expected object and failed run. Use a separate three-ent
 
 Independent review receipt SHA-256: 33aa11f42363987b429160abf8dcc704bf11c929819db5215dfb68a83808cda0. Correction overlay SHA-256: e1ec75e1750e096902bb034243083cfdae09c09d59784622b45fe0c269268cfb. The original 25 synthetic expectations, six private legacy characterizations and 54 historical source fixtures remain unchanged.
 
-Lane `feat/claim-check-clauses`
+Lane feat/claim-check-clauses
 
 Reverse: Remove the explicit corrected conformance overlay while retaining every original and corrected artifact and run.
 
@@ -230,7 +230,7 @@ Evidence: local seam proposal002 be7f908df0ff76a72140ee54827d826bcfb47360e3f0ce9
 
 This admits implementation and synthetic runtime validation, not production correctness or performance. Preserve all original labels, scorers, prior measurements, original 37 and accepted 43 passing identities, existing numerical usefulness gates and all other scope exclusions. Exact concrete review, unchanged full evaluation and paired retention remain required. Attorney attendance is not a gate.
 
-Lane `feat/claim-check-clauses`
+Lane feat/claim-check-clauses
 
 Reverse: Remove the optional capability and intrinsic terminal path, restoring explicit unsupported coverage; retain every original and new adverse or passing measurement and use the prior accepted implementation until retention is proved.
 
@@ -242,7 +242,7 @@ The corrected validator first reproduces six old positive unit failures, then pa
 
 This corrects a private witness/validator defect, not a runtime unit or grammar change. Implementations must select original tokens by anchored source interval, retain the authoritative original aligned-input table, keep data ordinals distinct from proof ordinals, and preserve strict lower-rank references and the existing work allowance. Production, compiled, lifecycle, work-accounting, complete source conformance, retention and usefulness remain unproved until their required checks pass.
 
-Lane `feat/claim-check-clauses`
+Lane feat/claim-check-clauses
 
 Reverse: Disable the intrinsic terminal path if conformance fails; retain the corrected and original derivative evidence. Existing runtime character units must remain unchanged.
 
@@ -264,7 +264,7 @@ The research-intake-2026-11 intake routed 223 findings to this packet (86 affirm
 
 This amendment adds evidence only; it changes no acceptance criterion. The owning lane decides whether any finding changes its plan.
 
-Lane `feat/research-intake-2026-11`
+Lane feat/research-intake-2026-11
 
 Reverse: Delete this decision file and regenerate the block; the findings stay in the library and in research-intake-2026-11/research/routing.jsonl
 
@@ -282,7 +282,7 @@ Measure the clean d12346471279e8ba71724efe676f36bb9e7355b5 runtime before produc
 
 Verify original preservation and all six prior measurement seals before and after. Stop on integrity drift, unauthorized source access, ambiguous required joins or a lost mandatory pass; retain every diagnostic, failure and comparison.
 
-Lane `feat/claim-check-dotted-labels` · PR #2928
+Lane feat/claim-check-dotted-labels · PR #2928
 
 Reverse: Reject the candidate and retain the measured baseline; preserve this census, every result, all labels and mandatory passing identities.
 
@@ -320,7 +320,7 @@ Prepare one immutable private refinement per claim under the original live failu
 
 Before evaluation freeze the actual candidate source/runtime closure in a new exclusive directory. Compare the unchanged full 538-claim evaluation against product-composition-fallow-refactor-001, retaining the exact 48 identities in composition-candidate-strict-identities-001.json, all 60 complete input ledgers, original 1,213 bindings, ten prior measurement seals and diagnostic seals. Use family concurrency one, unchanged work/heap bounds, Bun identity and 94 asset pins. No corpus identifiers, gold lookup, new assets, heldout/source-QA bodies, acquisition, training, retrieval, spending or capacity. Preserve every failed attempt and output. Reject retention loss or integrity drift; report no-gain honestly. Usefulness and delivery gates remain unchanged.
 
-Lane `feat/claim-check-census-composition` · PR #2980
+Lane feat/claim-check-census-composition · PR #2980
 
 Reverse: Reject the candidate and retain every measurement, original label and all 48 mandatory passing identities.
 
@@ -332,7 +332,7 @@ The expanded replay passes 78 tests, including the original source-topology and 
 
 The unchanged 538-claim evaluation at 0906812bbeb0 retains all 49 strict identities, with no gains or losses and all 538 outcomes still abstaining. All 60 inspection reports and 1,219 qualifications equal the prior canonical run. Preserve every earlier failed and passing result. Hosted gates and full usefulness requirements remain unproved until separately demonstrated.
 
-Lane `feat/claim-check-census-composition` · PR #2980
+Lane feat/claim-check-census-composition · PR #2980
 
 Reverse: Revert the isolated boundary/refactor change while retaining all reference fixtures, old assertions and measurement archives.
 
@@ -344,7 +344,7 @@ The unchanged 538-claim production run at `608932924528` retains all 49 mandator
 
 A targeted family trace proves that projection succeeds and its plan is registered and used, with work allowance remaining. This establishes parser behavior, not legal validation. Every unmet goal gate remains active.
 
-Lane `feat/claim-check-census-composition` · PR #2980
+Lane feat/claim-check-census-composition · PR #2980
 
 Reverse: Revert the isolated source/test change while retaining all original labels, freeze archives and result history.
 
