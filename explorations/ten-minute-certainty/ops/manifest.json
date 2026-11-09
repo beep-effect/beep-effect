@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "ten-minute-certainty",
+    "title": "Ten-Minute Certainty",
+    "status": "active",
+    "stage": "research",
+    "openQuestions": [
+      "Is full canonical citation corpus replay required on every PR (R1), or is smoke-on-PR plus merge-group or nightly replay enough (Q13)? This decides whether Heavy / Test Integration can drop to a few minutes per PR.",
+      "Should Heavy / Coverage Regression become a required context, paired with a cheap touched-package ratchet before publish, or should Yeet stop gating mergeable on a non-required context?",
+      "Does this packet supersede the ci-lane-economics 20-minute p95 charter, and who owns the ProofLedger C4.2 enforcement flip while time-to-certainty is paused?",
+      "May phase 2 move a class of assurance from every PR to a periodic gate (a trust-cadence change), or must every current obligation stay on every selected PR?",
+      "What representative workstation fan-out (simultaneous agents, workload mix, protected non-agent reserve) is the acceptance condition for scheduler changes?",
+      "Does the 2026-11-08 pause on the R2 cache operational and qualification work bind this packet's implementation phase?",
+      "Money levers (standing heavy-pool cap, EC2 for short lanes, the org concurrent-job limit) stay out of scope unless the operator opens them; confirm."
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null,
+      "related": [
+        "goals/time-to-certainty",
+        "goals/ci-lane-economics",
+        "goals/verification-route",
+        "goals/compute-profile-gate-routing",
+        "goals/turborepo-quality-cache-adoption",
+        "explorations/beep-ci-operational-ontology"
+      ]
+    },
+    "created": "2026-11-09",
+    "updated": "2026-11-09"
+  }
+}
