@@ -128,6 +128,16 @@ import {
   yeetMonitorPolicyTerminals,
   yeetPushToReadyMillis,
 } from "./MonitorPolicy.ts";
+import {
+  decideYeetGithubRateLimitPause,
+  readYeetGithubRateLimit,
+  renderYeetGithubRateLimitPause,
+  resolveYeetGithubRateLimitKind,
+  stepYeetMonitorPollBudget,
+  YeetGithubRateLimitPauseInput,
+  YeetMonitorPollBudget,
+  YeetMonitorPollOutcome,
+} from "./MonitorRateLimit.ts";
 import { PROOF_JOB_ENV } from "./ProofJob.ts";
 import { updateProofJobBookkeeping } from "./ProofJobLauncher.ts";
 import {
@@ -176,6 +186,7 @@ import {
 import { YeetWatchThread, yeetFirstRed } from "./WatchStream.ts";
 import { escalateYeetPrWave } from "./WaveNotifier.ts";
 import type { Git } from "@beep/git/Git";
+import type { GitHubError } from "@beep/github/GitHubError";
 import type * as Context from "effect/Context";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -187,13 +198,16 @@ import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetGithubServices } from "./GhOps.ts";
 import type { YeetPrCommentRow } from "./Inbox.ts";
 import type { YeetMonitorLoopPolicy } from "./MonitorPolicy.ts";
+import type { YeetGithubRateLimitKind, YeetGithubRateLimitSnapshot } from "./MonitorRateLimit.ts";
 import type { YeetBaseConflictWalk } from "./Remediation.ts";
 import type { YeetReviewWindow } from "./ReviewWindow.ts";
 import type { YeetStatusReviewThread } from "./Status.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/MonitorLoop");
 
-const mergeLoopPollInterval = Duration.seconds(30);
+// Merge readiness waits out a 20-minute review window, so 90 s of latency is
+// immaterial, while every monitor on the fleet polls one shared GitHub bucket.
+const mergeLoopPollInterval = Duration.seconds(90);
 
 /**
  * Environment-only failure signatures the merge loop is allowed to rerun.
@@ -1285,6 +1299,10 @@ interface YeetMonitorUntilMergedOptions {
     | undefined;
   readonly policy?: YeetMonitorLoopPolicy | undefined;
   readonly pollInterval?: Duration.Duration | undefined;
+  // A failed poll reads `GET /rate_limit` to tell a rate limit the status read
+  // lost the text of, and to time the pause. Absent, the loop reads it as its
+  // gh login; the seam lets a test decide the pause without a GitHub read.
+  readonly readRateLimit?: Effect.Effect<YeetGithubRateLimitSnapshot, YeetCommandError | GitHubError> | undefined;
   // Runs once, on the first cycle only, under until-merged: the durable comment
   // stream is replayed from that mode's own position where the session starts,
   // not on every poll, because after that this loop is attached and nothing can
@@ -2490,16 +2508,70 @@ const pollObservedHead = Effect.fn("YeetMonitorLoop.pollObservedHead")(function*
   return yield* returnOnMonitorWave(context, options, observation.snapshot, triaged, scope);
 });
 
-const stepMonitorFailureBudget = Effect.fn("YeetMonitorLoop.stepFailureBudget")(function* (
-  next: MonitorPoll,
-  failures: number
-) {
-  if (O.isNone(next.failure)) return 0;
-  const count = failures + 1;
-  yield* Console.error(
-    `[yeet] poll failed (${count}/${YEET_MONITOR_POLL_ERROR_BUDGET}): ${next.failure.value.message}`
+// A failed poll that hit a GitHub rate limit, with the `GET /rate_limit` read
+// (none when it failed) that times its pause.
+interface MonitorRateLimitHit {
+  readonly limit: YeetGithubRateLimitKind;
+  readonly snapshot: O.Option<YeetGithubRateLimitSnapshot>;
+}
+
+// Every failed poll reads `GET /rate_limit` (free on the primary limit): the
+// status read drops gh's text at several sites, so an exhausted bucket is
+// what proves a GraphQL-only drain whose failure reads as a census gap.
+const monitorPollRateLimit = (
+  options: YeetMonitorUntilMergedOptions,
+  scope: MonitorLoopScope,
+  next: MonitorPoll
+): Effect.Effect<O.Option<MonitorRateLimitHit>> =>
+  O.match(next.failure, {
+    onNone: () => Effect.succeedNone,
+    onSome: (failure) =>
+      Effect.map(
+        Effect.option(
+          options.readRateLimit ??
+            Effect.flatMap(scope.github, (github) => Effect.provideContext(readYeetGithubRateLimit, github))
+        ),
+        (snapshot) => O.map(resolveYeetGithubRateLimitKind(failure.message, snapshot), (limit) => ({ limit, snapshot }))
+      ),
+  });
+
+// How a poll counts against the loop's budgets: a rate-limited failure is slept
+// through rather than spending the poll-error budget.
+const monitorPollOutcome = (next: MonitorPoll, rateLimit: O.Option<MonitorRateLimitHit>): YeetMonitorPollOutcome =>
+  O.isSome(rateLimit)
+    ? YeetMonitorPollOutcome.Enum["rate-limited"]
+    : O.isSome(next.failure)
+      ? YeetMonitorPollOutcome.Enum.failed
+      : YeetMonitorPollOutcome.Enum.succeeded;
+
+const reportMonitorPollFailure = (next: MonitorPoll, failures: number) =>
+  Console.error(
+    `[yeet] poll failed (${failures}/${YEET_MONITOR_POLL_ERROR_BUDGET}): ${O.match(next.failure, {
+      onNone: () => Str.empty,
+      onSome: (failure) => failure.message,
+    })}`
   );
-  return count;
+
+// A rate-limited poll sleeps until the exhausted bucket resets, or backs off
+// exponentially when no bucket is empty or `GET /rate_limit` could not be read.
+const pauseForMonitorRateLimit = Effect.fn("YeetMonitorLoop.pauseForRateLimit")(function* (
+  options: YeetMonitorUntilMergedOptions,
+  hit: MonitorRateLimitHit,
+  budget: YeetMonitorPollBudget,
+  interval: Duration.Duration
+) {
+  const now = yield* options.now ?? DateTime.now;
+  const pause = decideYeetGithubRateLimitPause(
+    YeetGithubRateLimitPauseInput.make({
+      attempt: budget.rateLimited,
+      interval,
+      limit: hit.limit,
+      now,
+      snapshot: hit.snapshot,
+    })
+  );
+  yield* Console.error(renderYeetGithubRateLimitPause(pause));
+  return pause.sleep;
 });
 
 // Only the registration budget shortens a sleep: a registered check that is
@@ -2612,7 +2684,7 @@ export const runYeetMonitorUntilMerged: {
     const interval = O.getOrElse(O.fromNullishOr(options.pollInterval), () => mergeLoopPollInterval);
     let budget = emptyYeetMonitorRerunBudget;
     let head = O.none<MonitorHeadState>();
-    let failures = 0;
+    let pollBudget = YeetMonitorPollBudget.make({});
     let firstCycle = true;
     const terminals = yeetMonitorLoopTerminals(
       options.policy ?? YeetUntilMergedPolicy.make({}),
@@ -2639,10 +2711,33 @@ export const runYeetMonitorUntilMerged: {
       firstCycle = firstCycle && !next.replayed;
       budget = next.budget;
       head = next.head;
-      failures = yield* stepMonitorFailureBudget(next, failures);
-      if (failures === YEET_MONITOR_POLL_ERROR_BUDGET) return "poll-error-budget";
-      if (failures === 0 && O.isSome(next.terminal)) return next.terminal.value;
-      yield* Effect.sleep(nextMonitorSleep(next, interval));
+      const rateLimit = yield* monitorPollRateLimit(options, scope, next);
+      pollBudget = stepYeetMonitorPollBudget(pollBudget, monitorPollOutcome(next, rateLimit));
+      const accounted = pollBudget;
+      // A rate-limited poll past its own cap was demoted to an ordinary failure.
+      const failed = () =>
+        reportMonitorPollFailure(next, accounted.failures).pipe(
+          Effect.as(
+            accounted.failures === YEET_MONITOR_POLL_ERROR_BUDGET
+              ? O.none<Duration.Duration>()
+              : O.some(nextMonitorSleep(next, interval))
+          )
+        );
+      const sleep = yield* O.match(rateLimit, {
+        onNone: () =>
+          accounted.outcome === YeetMonitorPollOutcome.Enum.failed
+            ? failed()
+            : Effect.succeedSome(nextMonitorSleep(next, interval)),
+        onSome: (hit) =>
+          accounted.outcome === YeetMonitorPollOutcome.Enum["rate-limited"]
+            ? Effect.asSome(pauseForMonitorRateLimit(options, hit, accounted, interval))
+            : failed(),
+      });
+      if (O.isNone(sleep)) return "poll-error-budget";
+      if (accounted.outcome === YeetMonitorPollOutcome.Enum.succeeded && O.isSome(next.terminal)) {
+        return next.terminal.value;
+      }
+      yield* Effect.sleep(sleep.value);
     }
   }, Effect.scoped)
 );
