@@ -1,0 +1,172 @@
+# Phase 2 audit, Opus 5.5 seat: G: local admission (QualityScheduler), extended under the 2026-11-09 ruling. No second authority.
+
+Produced 2026-11-09 by a `claude-opus-5-5` (medium) auditor from the shared brief and the phase 1 inventory; read-only. Paths are repository-relative or `~`.
+
+## Verdict
+
+The scheduler is not what stands between the repo and the 10-minute target. In the retained ring (200 admissions over 2.81 days) agents waited 100 min in total, p50 0.04 s and p95 277 s. That is small next to the work the leases cover: cheap-gates p50 240 s, final-check coverage p50 1,228 s, pre-push p50 14.5 min. The scheduler saves no hosted minutes. Locally it is worth roughly 1-4 agent-hours a week of waiting, plus avoided OOM-kill reruns (frequency unmeasured). Its real job is correctness of governance. Final-check (coverage p50 20 min, lint-policy, a cheap-gates rerun, docgen), package-verify, ad-hoc vitest/coverage, and the Cache commands, which mislabel themselves review-fix(1), all run outside admission or under a borrowed kind. 40 of the 98 wait-minutes over 30 s happened while only ONE 3-token lease was held. So unadmitted load had shrunk memory-derived capacity to 5 tokens or fewer, and the queue could neither order that work nor explain the wait. The extension should therefore go schema first. Every lease gets an explicit unit (lane | package | tier), a weight source, and an owner. Lane and package sub-units resize the one attempt lease instead of opening new cgroups, which keeps ruling 35's one proof = one cgroup. Weights come from sampled anon peaks, because memory.peak includes page cache: the median gap is 9.6 GiB between the cgroup peak and the largest process's RSS. A starvation bound becomes mandatory the moment small units allow backfill. Each step is proven by a ciops replay/simulation fixture plus a controlled N-agent A/B: attempts per hour, admission wait p95/max, slice memory.peak, oomd kills, PSI. Retention (L8) and host-pressure stamps come first, because no before/after can be measured on a 2.8-day ring.
+
+## Measured this pass
+
+- **Scheduler live state** (`bun run beep quality scheduler status`): 0/10 tokens, MemAvailable 77.6 GiB; 2,068 quarantine lines printed on every status call (8.1 MB under quarantine/)
+- **Admission waits in the retained ring** (`python over ~/.beep/runtime/beep-admit-uid-1000/journal.ndjson`): 200 admissions over 2.81 days; total wait 100.3 min; p95 277 s; 9 waits over 300 s; max 644 s (checkout audit-error-boundary)
+- **Waits over 30 s attributed to tokens held by OTHER leases at enqueue** (`python interval join over journal admitted/released events`): 3 tokens held: 11 waits / 40.2 min; 6 held: 7 / 19.5 min; 9 held: 8 / 36.0 min; 0 held: 2 / 1.9 min. About 41% of long-wait minutes happened with a single lease, so capacity was 5 tokens or fewer: unadmitted memory or FIFO head-of-line blocking
+- **Join of journal attemptId to per-checkout attempts.ndjson** (`scratchpad audit-phase2/G-opus/join.py`): 79/200 joined (85 checkouts; the rest retired or pruned). 67 publish, 12 verify. Hold minus cheap-gates duration median 6 s, so the lease covers the cheap tier almost exactly. Lane p50s inside the lease: jsdoc-ratchet:regenerated 174 s, effect-imports 93 s, effect-vitest 91 s, schema-first 62 s, schema-catalog 28 s, head-install-preflight 30 s
+- **cgroup MemoryPeak versus process RSS for the same lease** (`join.py: release memoryPeakBytes vs verdict lane peakRssKb (GNU time %M, the largest single process)`): n=50: cgroup peak 11.7-30.9 GiB against cheap-gates largest-process RSS 4.1-16.4 GiB; median gap 9.6 GiB (page cache plus concurrent processes; not separable from current telemetry). Cheap-gates largest single process p50 14.2 GiB, max 18.3 GiB
+- **Final-check gate durations (all unadmitted)** (`python over .beep/yeet/final-check/*.json in the primary clone and the -worktrees siblings (160 receipts)`): coverage n=58 p50 1,228 s p90 2,399 s; lint-policy n=184 p50 57 s p90 373 s; cheap-gates (rerun) n=86 p50 152 s p90 304 s; docgen p50 49 s p90 230 s; total p50 378 s p90 2,591 s
+- **agent-runs.slice state** (`systemctl --user show agent-runs.slice; memory.stat`): MemoryPeak 40.5 GiB since boot, MemoryHigh 88G, MemoryMax 96G, CPUWeight unset, CPUQuota infinity; 4 beep-proof-*.service plus docket-intake and practice-mail-tagging services resident in the slice
+- **anon vs file probe of one Turbo task inside a transient scope** (`systemd-run --user --scope probe.sh check @beep/utils (--only --force)`): The task took 251 ms, too short to be representative: sampled max anon 332 MiB and file 40 MiB against memory.peak 710 MiB, so 100 ms sampling misses the peak. The method works but needs heartbeat-rate sampling over a real lease
+- **PR run volume** (`gh run list --workflow check.yml --event pull_request --limit 400`): 76 (11-07), 245 (11-08), 79 (11-09, partial). Not affected by this area: the scheduler is local-only
+- **Admission call sites** (`rg withQualityAdmission packages/tooling/tool/cli/src`): Yeet Handler (full-proof, merged-preview, review-fix) plus 5 Cache command sites (protocol.runner, pilot, pilot.runner, workflow, dependencies), all as kind review-fix weight 1. FinalCheck.ts and package-verify: none
+
+## Ranked levers
+
+### G-L8. Retain the admission journal beyond the 200-admission ring (archive trimmed rows) and stamp host pressure on admitted/released events
+
+- **Mechanism:** AdmissionJournal.ts: when RETAINED_ADMISSIONS trims, append the trimmed rows to journal-archive-<yyyy-mm>.ndjson (gzip on month roll), or raise the ring to 2,000 (about 2.4 MB). Add optional fields to admission-admitted/released: capacityTokensAtAdmit, memAvailableGiB, psiCpuSome10, psiMemSome10, unadmittedSliceMemGiB (slice memory.current minus the lease sum), and the unit fields from G-L1. Economics and `quality scheduler status --history` read the archive.
+- **Grain:** n/a. Telemetry only, no verdict.
+- **Savings:** basis: derived; localWallMinPerPublish: 0 direct; localWallMinPerVerify: 0 direct; cpuSeconds: negligible (one /proc read per event). Sources: journal ring = 2.81 days (this pass); inventory J: per-machine throughput under N agents not measurable
+- **Trust risk:** none. Failure mode: None on verdicts. Only risk is a larger file read at status time. Mitigation: The archive is read only by economics and history, never by the hot admission path.
+- **Admission gate:** none: pure telemetry. Unit tests for the trim-to-archive fold and the decode of old rows without the new keys.
+- **Prior art:** Ontology DECISIONS run-3 ruling 9 rejected 'journal capacity stamps' because they fed a re-parked family. New evidence to reopen: 40 of 98 long-wait minutes occurred with a single lease held, and the cause (unadmitted memory vs FIFO head) cannot be attributed without capacity at admit. YOYO l.81 ring-of-50 precedent.
+- **Depends on:** prerequisite for measuring G-L1..G-L6
+- **PR slices:** feat(repo-cli): archive trimmed admission-journal rows and read them in economics [S]; feat(repo-cli): stamp capacity and host pressure on admitted and released events [S]
+- **Confidence:** high
+- **Open questions:** Does the ontology ruling-9 owner accept the reopen evidence above, or must stamps go to a separate pressure log keyed by nonce?
+
+### G-L1. Schema first: an AdmissionUnit on every ticket, lease and journal row (unit kind lane|package|tier, weight source, owner, cgroup), and fix the Cache commands' borrowed review-fix kind
+
+- **Mechanism:** QualityScheduler.schemas.ts: add `AdmissionUnit` as a tagged union. `tier` {tier: YeetProofTier | 'final-check' | 'package-verify'}, `lane` {laneId, tier}, `package` {package: @beep/*, task: test|coverage|check|lint|docgen}. Add `AdmissionWeightSource` LiteralKit [static-seed, measured-p90, clamped-ceiling] plus `weightBasis` {samples, p90AnonGiB}. Add `AdmissionOwner` {attemptId, checkoutRoot, originKey, sessionId?, command}. `cgroupUnit` stays the existing RunScopeRecord. All fields are optionalKey with decoding defaults (unit = tier from proofTier), so mixed-version leases decode. Add AdmissionWorkKind literals 'gate' and 'cache-qualification' so Cache.* stops posing as review-fix and stops consuming the review-fix class cap of 3. The Context.Service contract becomes withQualityAdmission(request: AdmissionRequest & {unit}, gate, use), plus a new `QualityAdmission` Context.Service exposing admit(unit) (scoped bracket), resize(leaseHandle, deltaUnit) and backpressure(unit) so callers stop threading free functions. A Layer wraps today's implementation.
+- **Grain:** n/a. Data model only. It makes lane/package grain expressible; journal rows can then be joined without attempts.ndjson, which already failed for 121 of 200 rows because checkouts retire.
+- **Savings:** basis: derived; localWallMinPerPublish: 0 direct; enabling; cpuSeconds: 0. Sources: join.py: 79/200 joinable; rg: 5 Cache sites use kind review-fix weight 1
+- **Trust risk:** low. Failure mode: A schema change that older binaries cannot decode puts live leases into quarantine. The 09-16/09-22 quarantine of 2,068 runScope.support=active lease files is exactly that failure: older readers then drop the tokens from capacity math and over-admit. Mitigation: Additive optionalKey fields with decoding defaults only. A protocol.json gate in the eviction=on style, so new fields are written only once `quality scheduler protocol` reports every live reader at the new version. A mixed-version fixture that decodes a new lease with the old schema.
+- **Admission gate:** Schema roundtrip plus a mixed-version decode fixture (old reader on new file, new reader on old file); ciops Replay of the frozen 79-event journal stays 41/41.
+- **Prior art:** admissionOwnerFields and attemptInputFactFields already carry proofTier and stage; `publish` kind reserved with hotPaths. ship-velocity D1 design record (git show 33b9f1cb31a^:goals/ship-velocity/research/d1-admission-scheduler.md).
+- **Depends on:** G-L8 (journal fields)
+- **PR slices:** feat(repo-cli): AdmissionUnit, weight source and owner on admission tickets, leases and journal [M]; refactor(repo-cli): QualityAdmission Context.Service over withQualityAdmission; Cache commands use their own kind [M]
+- **Confidence:** high
+- **Open questions:** Should a package unit carry the Turbo task id (`@beep/x#coverage`) so weights key on the same identity as Turbo summaries (M-L2 join)?
+
+### G-L3. Admit final-check, package-verify and ad-hoc coverage/vitest/docgen through the scheduler in small units
+
+- **Mechanism:** FinalCheck.ts: wrap each gate in QualityAdmission.admit({_tag:'tier', tier:'final-check'}) with per-gate weights. Coverage gets one package unit per affected owner, LPS and repo-cli as their own units, the rest batched to about 1 token. lint-policy is 1-2 tokens; the cheap-gates rerun reuses G-L2's per-wave weights. Priority 'verify', aging as today. package-verify gets one package unit. `bun run coverage|test` and `beep docgen` gain admission through the repo-cli entrypoints that call Turbo (Quality.command.ts) when invoked from an agent shell (BEEP_ADMIT=1 default on the workstation profile, off on hosted/worker). Raw `bunx vitest` stays outside; the skill and doc rules point agents at the admitted entrypoints. The run scope follows ruling 35: final-check is its own attempt and owns one cgroup; its gates resize that lease (G-L2), never new cgroups.
+- **Grain:** package. Coverage, package-verify and vitest already execute per package (Turbo task identity). Admitting at that grain changes ordering and concurrency only, never what runs, so no verdict can change.
+- **Savings:** basis: derived; localWallMinPerVerify: 0 to +0.5 (adds admission waits to today's free-running work); localWallMinPerPublish: 0; cpuSeconds: saves reruns after OOM/SIGKILL: 2026-11-07 reflection reports repeated kills of check, lint-policy, schema-catalog, docgen and coverage under 9 jobs on 4 tokens. One avoided coverage kill = 20-40 min of agent wall (final-check coverage p50 1,228 s, p90 2,399 s). Frequency unmeasured (guess: a few per week fleet-wide). Sources: final-check receipts n=160 (this pass); inventory G: 4.6 GiB dip with one lease; wait attribution: 40 min of long waits with one lease held
+- **Trust risk:** low. Failure mode: No verdict change. Risk is latency: a 30 s lint gate waiting behind a 20-minute coverage unit, which agents then bypass by running raw commands. Mitigation: Small weights for short gates plus the G-L6 backfill rule (a unit whose ETA ends before the head's projected start may pass). G-L5 backpressure output names the wait. A per-unit wait p95 is reported in economics.
+- **Admission gate:** A/B measurement with controls: the same N=4 agents scripted fan-out (final-check plus publish mix) on a quiet workstation, before and after, with admission wait p95, slice memory.peak, oomd kill count (journalctl --user -u agent-runs.slice) and attempts/hour. Acceptance: zero memcg/oomd kills, attempts/hour no worse than the control within noise, and no final-check gate verdict differences over the run.
+- **Prior art:** beep-heavy (2026-10-06) tried machine-wide by convention and was abandoned. repository-performance.md l.115 'parallel final-check not enabled pending memory admission' becomes unblockable after this. Inventory L3.
+- **Depends on:** G-L1; G-L2 (resize) for the one-cgroup rule; G-L4 for weights
+- **PR slices:** feat(yeet): admit final-check gates through QualityAdmission with per-gate units [M]; feat(quality): admit package-verify and agent-shell coverage/test/docgen entrypoints per package [M]
+- **Confidence:** medium
+- **Open questions:** What actually consumed about 70 GiB at 11-09 10:31Z: final-check coverage, rebalance measurements, or app.slice sessions (docket-intake and practice-mail-tagging live in agent-runs.slice too)? If app.slice, admission alone will not close the dip.
+
+### G-L2. Lane and package as the admission unit via a resizable lease: one attempt keeps one lease and one cgroup, and sub-units grow or shrink its weight
+
+- **Mechanism:** Today a lease covers the whole cheap-gates wave at 3 tokens for its full hold (hold minus cheap-gates duration median 6 s). Change: the attempt acquires a base lease at the weight of its first wave. Before each wave (WaveOrder / runQualityTasks) it calls resize(+delta) through the same queue (a resize ticket uses the attempt's nonce and owner, ordered like any ticket), and after the wave resize(-delta) releases immediately. A red lane in a fail-fast tier releases the lease at once. hasSameCheckoutLease stays: a resize is not a second lease for the checkout, so the skip rule is untouched. The journal gets `admission-resized` {nonce, unit, fromTokens, toTokens, atMillis}. Per-unit memory: at each wave boundary, write to the scope's memory.peak to reset the fd-local peak (kernel 6.12+, host runs 7.3) and record peak plus sampled anon per wave. Ruling 35 holds: the attempt process stays in exactly one agent-run-<nonce>.scope or beep-proof-<jobId>.service, and telemetry readers, oomd and reap authority are unchanged. Sub-cgroups per lane are rejected because a scope cannot nest under a scope.
+- **Grain:** package. The unit of accounting becomes the wave or lane the tier already executes. Execution order and fail-fast/collect-all semantics are unchanged, so verdicts cannot change. Only the token charge varies over the hold.
+- **Savings:** basis: derived; localWallMinPerPublish: up to about 0.5 at p95 (wait p95 277 s; most of it happens when 6-9 tokens are held. Shrinking a cheap-gates lease to 1 token outside the schema-catalog/jsdoc waves frees 2 tokens per peer for about 80% of its hold); localWallMinPerVerify: about 0.5 at p95; cpuSeconds: 0. Sources: journal waits: 55.5 min of long waits with 6-9 tokens held (this pass); cheap-gates largest-process RSS p50 14.2 / max 18.3 GiB vs per-lane durations (join.py)
+- **Trust risk:** medium. Failure mode: Under-charge between waves: a lane whose real peak exceeds its unit weight runs beside peers sized for the smaller charge, and memcg/oomd kills return (the 2026-10-06/10-09 incidents, 24 GiB cheap-gate scanner peaks). A resize-up that waits mid-attempt also stretches the attempt's wall. Mitigation: Weights from measured p90 anon plus a margin (G-L4), clamped to at least the static seed until 20 samples exist. Resize-up waits are bounded by G-L6. The slice MemoryHigh 88G and oomd guard remain the backstop. A shadow phase journals what the resize would have charged while still holding the static weight, then enforces once shadow shows zero under-charges (peak > charge) over 200 attempts.
+- **Admission gate:** Shadow then enforce. Shadow writes would-be resizes into the journal; the enforce bar is 200 attempts with zero per-wave anon peaks above the would-be charge, plus a ciops Engine replay extended with resize events and an N-agent simulation fixture showing no starvation.
+- **Prior art:** Inventory L4 / Y4 (per-lane admission). Ruling 35 (one proof owns one cgroup) is the binding constraint, satisfied by resize-not-split. ship-velocity D1 decision 4 (no preemption) is preserved: shrinking is voluntary, never forced. The ciops LanePlan rank-chain seam is parked.
+- **Depends on:** G-L1; G-L4; G-L6 (bound on resize-up waits)
+- **PR slices:** feat(repo-cli): resizable admission lease with admission-resized journal events (shadow) [L]; feat(yeet): per-wave resize and memory.peak reset in cheap-gates and pre-push tiers [M]; feat(repo-cli): enforce resize after shadow bar; ciops replay fixtures for resize events [M]
+- **Confidence:** medium
+- **Open questions:** Within a collect-all wave of 4-8 lanes, is the per-wave peak (sum) the right unit, or must lanes be serialized to attribute per-lane anon peaks?
+
+### G-L4. Weights from measured anon peaks, not cgroup memory.peak (which counts page cache) and not GNU time %M (largest single process)
+
+- **Mechanism:** Settle the open question. memory.peak is the high-water of the cgroup's memory.current, which in cgroup v2 includes file-backed page cache. MemAvailable, which capacity is computed from, already counts reclaimable cache as available, so charging memory.peak double-counts cache. Per lease, the median gap between cgroup peak and the largest process RSS is 9.6 GiB (n=50). peakRssKb is GNU time %M, the largest single process, so it under-states concurrent lanes. Change: the heartbeat loop (5 s) samples memory.stat anon+shmem+kernel of the lease's scope and keeps the max per unit, written at release as `anonPeakBytes`. The weight table becomes ceil((p90 anonPeak per unit + 2 GiB margin)/slotGiB), recomputed by `quality scheduler weights --write` into a tracked seed (repo-configs data), with static fallbacks. Weight source is recorded on the lease.
+- **Grain:** package. The weight is keyed by unit id (lane or package task), the same identity the work executes under.
+- **Savings:** basis: guess; localWallMinPerPublish: 0 to 0.3: if anon p90 for full-proof is about 15-18 GiB vs cgroup 27.6, the 3-token charge is about right and the gain is only correct sizing of new units; cpuSeconds: 0. Sources: join.py cgroup-vs-RSS gap 9.6 GiB median; RunScope.ts readRunScopeTelemetry reads MemoryPeak; probe: 100 ms sampling missed a 710 MiB peak on a 251 ms task, so heartbeat sampling only suits units of tens of seconds or more
+- **Trust risk:** medium. Failure mode: Anon sampling at 5 s misses short spikes, so the weight is under-set and units co-schedule into an OOM. Excluding cache ignores that dirty or unreclaimable file pages and tmpfs (shmem) can also exhaust memory. Mitigation: Count anon+shmem+kernel. Keep memory.peak as the upper bound and charge max(p90 anon + margin, static seed) until samples accrue. Keep the oomd slice guard. Recalibration only raises weights automatically; lowering needs a recorded decision with reversal.
+- **Admission gate:** Parity ledger: 2 weeks of shadow samples with the would-be weight recorded beside the actual charge; zero samples where anon peak exceeds the would-be charge.
+- **Prior art:** Inventory L2. D1 deviation 1 sized publish at 3 tokens from c5's 30-45 GiB full-proof estimate. The heavy-overrides note records 24 GiB cheap-gate scanner peaks and memcg kills at 16/24 GiB caps (2026-10-09).
+- **Depends on:** G-L1; G-L8
+- **PR slices:** feat(repo-cli): sample scope anon/shmem peak at heartbeat and journal it at release [S]; feat(quality): scheduler weights --write derives unit weights from measured p90 anon [M]
+- **Confidence:** medium
+- **Open questions:** Does the 10:31Z 4.6 GiB dip show up in anon, or was it page cache that MemAvailable would have reclaimed (which makes the 'dip' less dangerous than it reads)?
+
+### G-L5. Backpressure an agent can act on: typed queue position, ETA, cheapest-first hint and an admission deadline that routes to hosted CI
+
+- **Mechanism:** Replace the free-text progress line (QualityScheduler.ts ~1614) with an `AdmissionBackpressure` schema: {position, aheadUnits: [{unit, tokens, etaSeconds}], tokensFree, capacityTokens, etaSeconds (from journal p50 hold per unit id, minus elapsed), blockingReason: capacity|head-of-line|same-checkout|origin-stamp|class-cap|unadmitted-pressure, suggestedAction}. suggestedAction is wait | run-cheaper-unit (names the cheaper unit, e.g. the package-scoped check instead of the full tier) | push-to-hosted (`bun run beep yeet open --body-file`). It is emitted as an NDJSON line on stderr and in `quality scheduler status --json`. Add `--admission-deadline <dur>` (default 10 min on the workstation profile, matching the AGENTS.md constrained-compute rule). On expiry the ticket is withdrawn and the attempt ends with a typed `admission-deadline` outcome that economics counts separately from failures. Cheapest-first is ordering inside the queue only under G-L6's bound: units with eta*weight below the head's projected start may backfill.
+- **Grain:** n/a. Signal only; it changes no verdict.
+- **Savings:** basis: derived; localWallMinPerPublish: on the tail only: the 9 waits over 300 s (max 644 s) in 2.81 days become deterministic 'push to hosted' decisions instead of spin. About 10-20 agent-min/week on this host; cpuSeconds: 0. Sources: journal waits (this pass); AGENTS.md 'if scheduler admission or a local gate has waited 10 minutes, stop'
+- **Trust risk:** low. Failure mode: Agents treat push-to-hosted as a way to skip local gates, so more red hosted runs and more hosted runner-minutes. Mitigation: The deadline only routes to `yeet open`, which keeps the ready-for-heavy, provenance and final-check-before-ready rules. Economics tracks admission-deadline exits and the hosted red rate of those PRs.
+- **Admission gate:** Fixture tests on the backpressure fold (ciops Engine projections give ETA and position deterministically); none for verdicts.
+- **Prior art:** Escalation lines at 2 and 10 min (advisory). AGENTS.md constrained-compute rule (operator 2026-10-24). Rejected: fail-fast bounce lock (ship-velocity D1, #870). The deadline differs because it queues first and exits only at the documented 10-minute rule, with a named route.
+- **Depends on:** G-L1; G-L8 (ETA source)
+- **PR slices:** feat(repo-cli): typed AdmissionBackpressure with ETA, blocking reason and suggested action [M]; feat(yeet): --admission-deadline with a typed admission-deadline outcome in economics [S]
+- **Confidence:** high
+- **Open questions:** Operator: may the default deadline exit automatically, or only print the suggestion?
+
+### G-L6. Declared starvation bound and per-origin fairness, required once units get small
+
+- **Mechanism:** Today head-of-line is strict FIFO with priority plus 120 s aging, and skippable tickets let later ones pass. With small units, smaller tickets would routinely fit while a 5-token merged-preview or 3-token wave waits forever. Add an EASY-backfill rule in selfMayAttempt: a non-head ticket may pass the blocked head only if its ETA (unit p90 hold) ends before the head's projected start from release ETAs. Declare a bound: head projected start at most the sum of ETAs ahead plus 120 s. Exceeding it disables backfill until the head is admitted. Per-origin fairness: among equal effective rank, prefer the checkout with the least lease-seconds in the last 30 min (round-robin across checkouts and agents). Record `fairnessShare` in the journal.
+- **Grain:** n/a. Ordering policy only.
+- **Savings:** basis: guess; localWallMinPerPublish: 0 mean; caps tail waits for heavy units once G-L2/G-L3 land. Sources: ontology DECISIONS 'Starvation HARD INVARIANT + Must CQ' (CQ-023); YOYO l.98 ticket queued after five aging windows
+- **Trust risk:** low. Failure mode: A wrong ETA lets backfill delay the head (soft starvation) or idles capacity. Mitigation: The bound disables backfill when breached. ciops Engine property tests check no-starvation and capacity safety over generated N-agent workloads.
+- **Admission gate:** Route replay plus mutation fixture in the ciops lab. The Engine models backfill and fairness; property laws: capacity never exceeded, every ticket admitted within its bound, replay of the frozen journal unchanged when all units are tier-sized.
+- **Prior art:** Inventory L6. ciops Engine (pure projection, 41/41 replay).
+- **Depends on:** G-L1; G-L8
+- **PR slices:** feat(ciops): model backfill, starvation bound and per-origin fairness with property laws [M]; feat(repo-cli): EASY backfill with declared bound and per-checkout fairness in selfMayAttempt [M]
+- **Confidence:** medium
+
+### G-L7. Retire beep-heavy doctrine and the 2,068 quarantine rows
+
+- **Mechanism:** `quality scheduler reap --quarantine --older-than 7d [--apply]` moves quarantine files older than the bound to a dated tarball, then deletes them. `status` prints a count and newest timestamp instead of 2,068 lines. Record the quarantine reason in the file name or a sidecar going forward. Doctrine: remove the beep-heavy rule from the orchestrate skill (l.276/358) and docs/runbooks/practice-m365-contacts-seeding.md. Mark memory files workstation-beep-heavy-admission-wrapper.md and beep-heavy-wrapper-rule.md superseded (memory edits are the operator's harness, via script). ~/.local/bin/beep-heavy stays installed for one cycle and prints a deprecation pointing at the scheduler.
+- **Grain:** n/a. Housekeeping.
+- **Savings:** basis: measured; localWallMinPerVerify: about 0; removes 2,068 lines (8.1 MB of state) from every status read an agent pastes into context. Sources: quarantine count 2,068 (this pass); rg beep-heavy: 1 runbook, 1 skill, about 36 memory files, about 30 packet files
+- **Trust risk:** none. Failure mode: Deleting a quarantined file that is a live lease mis-decoded by an old binary. Mitigation: Only files older than 7 days whose nonce has no live pid/procStart. All 2,068 are dated 09-16/09-22.
+- **Admission gate:** none: pure waste removal (dry-run listing first).
+- **Prior art:** Inventory L7; beep-heavy dormant since 10-25 (zero units in the user journal).
+- **PR slices:** feat(quality): reap aged quarantine and summarise it in scheduler status [S]; docs: retire the beep-heavy rule from the orchestrate skill and runbook [S]
+- **Confidence:** high
+
+### G-L1b. Charge cheap-gates and docs/goals publishes by footprint (falls out of G-L2 plus G-L4, not a separate weight hack)
+
+- **Mechanism:** Once units exist, push-first cheap-gates is charged per wave: about 1 token for the scanner waves and its measured weight only for the schema-catalog and jsdoc-ratchet waves. A docs/goals-only diff whose scanners #3011 qualifies as skipped runs only light waves, so its lease stays at 1 token. No new kind and no admission skip: everything stays admitted.
+- **Grain:** package. Weight follows the waves that actually execute for the diff.
+- **Savings:** basis: derived; localWallMinPerPublish: about 0.3-0.5 at p95 for peers. Docs/goals branches held 51/199 leases and 8.4 of about 20 lease-hours at 3 tokens. Sources: inventory G docs/goals lease share; join.py lane durations
+- **Trust risk:** medium. Failure mode: Same as G-L2: under-charge of a scanner wave, leading to OOM kills. Mitigation: G-L4 measured weights and the G-L2 shadow bar.
+- **Admission gate:** Covered by the G-L2 shadow-then-enforce bar.
+- **Prior art:** Rejected on record: publish at weight 1 (D1 deviation 1), because the publish scope contained the full proof (30-45 GiB). New evidence that reopens it: push-first publish no longer embeds pre-push (cheap-gates plus preflight only). Its largest single process measures p50 14.2 / max 18.3 GiB, and the whole cgroup peak is p50 22.9 GiB including cache, below the 30-45 GiB premise. #2076 added admission after a schema-catalog OOM; per-wave charging keeps it admitted.
+- **Depends on:** G-L2; G-L4
+- **PR slices:** feat(yeet): per-wave charge table for push-first cheap-gates [S]
+- **Confidence:** medium
+
+### G-L5cpu. CPU dimension: CPUWeight on run scopes first; a CPU token axis only if measurement shows CPU-bound slowdown
+
+- **Mechanism:** Step 1, cheap: set CPUWeight on agent-run-<nonce>.scope and beep-proof services by priority (publish 200, verify 100, unadmitted default), via StartTransientUnit properties in RunScope.ts and ProofJobLauncher.ts. Step 2, only if justified: a cpuTokens dimension (nproc 64 split into 8-thread tokens), with Turbo --concurrency per unit set from the granted CPU tokens instead of scaleQualityWidthByAdmission's memory proxy.
+- **Grain:** n/a. Scheduling priority only.
+- **Savings:** basis: guess; localWallMinPerPublish: unknown; CPU-some p99 21%, max 66% (inventory). Sources: inventory G PSI 27 h
+- **Trust risk:** low. Failure mode: CPU-starved lower-priority proofs hit real-clock test deadlines (LPS extractDeadline 30 s), causing false reds. Mitigation: Weights, not quotas (work-conserving). Watch deadline-flake rates.
+- **Admission gate:** A/B measurement with controls: cheap-gates wall at N=1 vs N=4 concurrent with and without CPUWeight; adopt step 2 only if slowdown exceeds 25% at N=4.
+- **Prior art:** Inventory L5; #2560 profile-derived widths (unmeasured effect).
+- **Depends on:** G-L8 (PSI stamps)
+- **PR slices:** feat(repo-cli): CPUWeight by admission priority on run scopes and proof services [S]
+- **Confidence:** low
+- **Open questions:** Is wall-time sensitivity to concurrency on 64 threads large enough to matter? There is no receipt.
+
+## Rejected mechanisms considered
+
+- Per-lane child cgroups (a scope per lane under the attempt) for per-lane accounting: Violates ruling 35 (one proof owns one cgroup), and systemd scopes cannot nest under a scope. Resize-in-place plus fd-local memory.peak reset per wave gets the attribution without a second accounting unit. Reopen evidence: A ruling-35 amendment that makes the attempt a slice.
+- A 'checker agent' or second admission queue for small units: Operator ruling 2 and the time-to-certainty SPEC rejection: one authority. Small units go through the same QualityScheduler queue as resize tickets. Reopen evidence: none
+- Skip admission entirely for docs/goals-only publishes: Unadmitted work is the identified failure (the dip with one lease). Footprint charging keeps the work visible to capacity math. Reopen evidence: Measured anon peak of a docs-only cheap-gates run under 1 GiB across 50 samples.
+- Preempting a running lease to admit a higher-priority unit: ship-velocity D1 decision 4 rejected it. Shrinking is voluntary resize only. Reopen evidence: none
+- Fail-fast bounce instead of queue when capacity is short: The 27%/17% lock-bounce economy (#870). The admission deadline in G-L5 queues first and exits only at the documented 10-minute rule with a named route. Reopen evidence: none
+- Enforcing quality profile full_proof_slots=1: It would cut concurrency against a measured 73% idle scheduler. Weights from measured anon (G-L4) bound memory more precisely than a slot count. Reopen evidence: oomd/memcg kills coinciding with 2 or more concurrent full-proof leases in the extended journal.
+
+## Contradictions with the phase 1 inventory
+
+- Inventory G says 'only yeet takes leases'. Five Cache command sites (Cache.protocol.runner.ts:453, Cache.pilot.ts:2518, Cache.pilot.runner.ts:149, Cache.workflow.ts:809, Cache.dependencies.ts:315) call withQualityAdmission as kind review-fix weight 1. That mislabels the work and lets it consume the review-fix class cap of 3.
+- Inventory G says memory is not the binding constraint in steady state. In the retained ring, 40.2 of 97.6 long-wait minutes (11 of 28 waits over 30 s) began when only one 3-token lease was held, so capacity was 5 tokens or fewer (MemAvailable below about 40 GiB, or FIFO head blocking). Memory consumed outside admission does bind at those moments.
+- Levers L1/Y4 say the cheap tier needs 3 tokens 'because of one 12.6 GiB lane'. The cheap-gates verdict's peakRssKb (GNU time %M = largest single process) is p50 14.2 / max 18.3 GiB, and cgroup peak exceeds it by a median 9.6 GiB (n=50). Neither number is the anon sum the weight should use.
+- The open question 'does memoryPeakBytes count page cache' resolves from source: RunScope.ts reads systemd MemoryPeak = cgroup v2 memory.peak, which includes file pages. Capacity uses MemAvailable, which already counts reclaimable cache as free, so the 22.9 GiB p50 'peak' double-counts cache against a 15 GiB charge.
+- Hold minus cheap-gates duration has a median of 6 s. The publish lease covers essentially only the cheap tier, which supports the reopen evidence for footprint charging (D1 deviation 1 assumed the publish scope embedded the 30-45 GiB full proof).
+
+## Operator-only questions
+
+- May the admission deadline (default 10 min, AGENTS.md constrained-compute rule) exit automatically into the `yeet open` route, or only print the suggestion?
+- What representative fan-out is the acceptance condition for scheduler changes (for example N=4 and N=8 agents, mix of publish, final-check and coverage, protected reserve)? It decides the A/B bar for G-L2/G-L3.
+- Do the docket-intake and practice-mail-tagging services belong in agent-runs.slice (they share the 96G MemoryMax with admitted proofs), or should they move to their own slice so admission capacity math is not silently shared?
+- Does the ontology run-3 ruling-9 rejection of journal capacity stamps stand against the new attribution evidence (40 wait-minutes at one lease), or should stamps live in a separate pressure log?
