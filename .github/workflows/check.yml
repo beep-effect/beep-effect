@@ -884,7 +884,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        partition: [lps-int-1, lps-int-2, lps-int-3, lps-int-4, lps-int-5, lps-int-6, lps-int-7, lps-int-8, lps-int-9, lps-int-10, lps-int-11, lps-int-12, lps-int-13, lps-int-14, int-rest]
+        partition: [lps-int-1, lps-int-2, lps-int-3, lps-int-4, lps-int-5, lps-int-6, lps-int-7, lps-int-8, lps-int-9, lps-int-10, lps-int-11, lps-int-12, lps-int-13, lps-int-14, lps-int-15, lps-int-16, int-rest]
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
