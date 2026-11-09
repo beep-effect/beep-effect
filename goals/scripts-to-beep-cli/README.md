@@ -31,17 +31,18 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3 Yeet. Fourth goals-only re-final (branch `goals/scripts-to-beep-cli-refinal4`) carries
-`proposedCloseout`. #2961 (third re-final, merged 031fa9d4af) was hand-merged seven seconds after
-its ready flip, so no merge-ready verdict binds to its head and
-`goals completion refresh --slug scripts-to-beep-cli` returns unknown (checkpoint
-`2026-11-09-fourth-refinal-after-hand-merge`). #2860 (d15ecf4ca61), #2902 (8224cf33a5), #2906
-(5a842b4882), #2921 (17472a68ce), #2922 (2398f39133) and #2961 are merged supporting PRs; the
-code work is complete. The re-final stays a draft until the session that will run
-`yeet monitor --until-ready` flips it ready; it must not be hand-merged before the merge-ready
-line. The completion refresh needs a workstation token that reads ruleset history and rule
-suites (tbk-worker's fine-grained token gets 403 on both). `initiative.status` stays `active`
-until completion evidence verifies after the merge.
+P3 Yeet. Fifth goals-only re-final (branch `goals/scripts-to-beep-cli-refinal5`) carries
+`proposedCloseout`. #3022 (fourth re-final, merged 490332acbc) merged after its until-ready
+monitor printed merge-ready, but its accepted head e0e3eb3250 was pushed with a plain git push,
+so no publish verdict binds to it and `goals completion refresh --slug scripts-to-beep-cli`
+returns unknown on the yeet-verdict evidence (checkpoint
+`2026-11-09-fifth-refinal-after-raw-push`). Hosted required checks now verify from the gate
+workstation, whose token reads ruleset history and rule suites. #2860 (d15ecf4ca61), #2902
+(8224cf33a5), #2906 (5a842b4882), #2921 (17472a68ce), #2922 (2398f39133), #2961 (031fa9d4af) and
+#3022 are merged supporting PRs; the code work is complete. Every push on this branch goes
+through `yeet publish`, and the session that runs `yeet monitor --until-ready` merges it only on
+the merge-ready line. `initiative.status` stays `active` until completion evidence verifies after
+the merge.
 
 ## Latest Evidence
 
