@@ -149,9 +149,15 @@ def serve():
         reject()
     with socket.socket(socket.AF_UNIX) as server:
         server.settimeout(policy["listenMillis"] / 1000)
-        server.bind(path)
-        os.chmod(path, 0o600)
-        active_socket = (path, identity(os.lstat(path)))
+        # The handler can only release a recorded socket, so hold SIGTERM until bind is recorded.
+        # A signal sent in between is delivered as soon as the mask is restored.
+        previous_mask = signal.pthread_sigmask(signal.SIG_BLOCK, {signal.SIGTERM})
+        try:
+            server.bind(path)
+            os.chmod(path, 0o600)
+            active_socket = (path, identity(os.lstat(path)))
+        finally:
+            signal.pthread_sigmask(signal.SIG_SETMASK, previous_mask)
         server.listen(1)
         print('{"ready":true}', flush=True)
         with server.accept()[0] as connection:
