@@ -79,11 +79,55 @@ NOT YET RESEARCHED in this packet. THE_AGENTIC_YOYO.md carries the prior externa
 derivation discipline; Turborepo's single-player assumptions). Phase 2 auditors may cite external sources;
 each will be added to `research/SOURCES.md` with its URL when it is.
 
-### Phase 2 (in progress)
+## 2026-11-09 — phase 2: per-area audits, merge, refute, rank
 
 Twelve areas (A yeet pipeline, B coverage, C hosted CI, D Turbo, E lint/laws/knowledge, F tests,
 G scheduler, H deps/toolchain, I routing, J measurement, L1 peripheral hosted, L2 peripheral local), one
 Opus 5.5 auditor and one GPT-6 Astra (high) auditor each, briefed by `research/phase1/` plus the four
-rulings in `DECISIONS.md`. Deliverable per lever: mechanism, grain and its soundness, savings estimate with
-basis, trust risk and failure mode, admission gate, prior art, PR slices, confidence. Findings land under
-`research/phase2/` when they arrive, followed by an adversarial refute pass and a ranked plan.
+rulings in `DECISIONS.md`; neither seat saw the other. Seat reports: [`research/phase2/`](./research/phase2/)
+(96 Opus levers, 91 Astra levers). Phase 2b merged the seats per area (125 levers), put every material
+lever through two independent skeptics (69 reviewed; 15 refuted by the first, 1 more by the second),
+synthesized the ranked plan and ran a cross-area critic: [`research/phase2/PLAN.md`](./research/phase2/PLAN.md),
+with the per-area records under [`research/phase2/merged/`](./research/phase2/merged/).
+
+### What the plan says
+
+- **The hosted target is not reachable at the current heavy pool.** Peak heavy demand is about 260 slot-min/h
+  against 120 supplied at cap 2. After the no-money levers (the Lint Policy diet, the admission-chain fix,
+  job-level skips) the projected p95 push-to-required-green for code heads is 70 to 115 min, from 124.5.
+  Closing the rest needs capacity (a money decision) or a much smaller Test Unit and Test Integration
+  envelope, which only a #3005/#3007 steady-state measurement can confirm.
+- **Main verdicts are a correctness repair.** 13% of main commits get a verdict today; 27 of 60 recent main
+  runs were cancelled by hand mid-run, licensed by the AGENTS.md runner-freeing law. A no-cancel rule gets to
+  about 55 to 65%; per-SHA groups get above 95% but cost 20 to 36k runner-min/day at the full profile unless a
+  throughput layout lands first.
+- **Eight trust repairs come first, even at a cost:** main verdicts; the `@beep/glob` setup-closure stale green
+  (127 of 200 test tasks do not key on it); goal-folder data consumers misrouted as docs-only by #2999 (eyecite
+  and law-practice tests read a `goals/` fixture; citation ops scripts run from `goals/`); knowledge policy
+  skipped on docs/goals-only PRs since #2935 (two confirmed escapes); the bare-coverage self-judge; final-check
+  receipt versioning and its omitted required contexts; the Node 22 coverage runtime; base-ref CI patterns.
+- **Compute:** runner-minutes per green code run fall by about 20 to 40 from a p50 of 264. The largest items
+  are owner-mapping generated standards files in CoverageScope (about 8% of runs go from a full to a repo-cli
+  fan-out), the Property Laws file split, folding Fallow into Labs, one hosted `lint:shadcn` owner, the Nix,
+  Security and SAST install removals, and the JSDoc inventory with `noResolve`.
+- **Local:** publish p95 from 11.6 to about 6 to 9 min (the JSDoc and effect-imports poles shrink); verify
+  p95 stays at 25 to 45 min while law-practice-server coverage (2,680 s solo) remains the long pole; the only
+  route below that is running the hosted Test Unit partitions locally as admitted units, which is high risk
+  and undemonstrated.
+- **Dropped:** 16 refuted levers (one Turbo graph for the cheap tier, hosted Lint Policy on standard runners
+  at 32 to 36 GiB peaks, consumer-aware escalation narrowing, tool-dependency isolation, treeless checkout,
+  short lanes on EC2, caching eyecite, and others) and 3 that share a refuted mechanism.
+- **Measurement first:** a nightly head-SHA scorecard (push-to-required-green with red, held and api-partial
+  heads counted as misses; runner-minutes per run; main verdict rate), per-attempt job reads, the economics
+  attribution fix, partition-job mapping in the route corpus, and journal retention on lane retirement. No
+  target claim is checkable without them.
+
+### Candidate goal packets named by the synthesis
+
+`certainty-scorecard`, `route-soundness-repair`, `main-verdict-every-commit`, `heavy-pool-diet`,
+`hosted-setup-tax`, `local-proof-under-ten` (missions, levers and dependencies in `PLAN.md`). These are
+candidates for the decompose stage, not decisions.
+
+### External landscape
+
+Still NOT RESEARCHED in this packet; no seat cited an external source.

@@ -3,7 +3,7 @@
 ## Status
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
-Stage: `research`
+Stage: `align`
 Status: `active`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
@@ -22,11 +22,13 @@ through the existing QualityScheduler.
 
 ## Next Open Question
 
-Phase 2 (twelve Opus 5.5 auditors and twelve GPT-6 Astra seats, one pair per area) is running against
-[`research/phase1/SURFACE-INVENTORY.md`](./research/phase1/SURFACE-INVENTORY.md). When their ranked
-levers land, fold them into `RESEARCH.md`, run the adversarial refute pass, then open the align round on
-the seven questions in the manifest (corpus replay cadence, Coverage Regression as a required context,
-charter supersession and C4.2 ownership, assurance cadence, acceptance fan-out, the R2 pause, money).
+Align round 1 is open. The ranked plan ([`research/phase2/PLAN.md`](./research/phase2/PLAN.md)) needs the
+operator's rulings on the questions listed in the manifest, each with a recommended answer in the plan's
+"Questions for the align round" section: Coverage Regression's status, corpus replay cadence per PR, the
+Property Laws latency-for-compute trade, Lint Policy on the heavy pool and capacity, how a verdict for every
+main commit is delivered and paid for, review-window re-arm on diff-preserving merges, the #2999 docs-only
+widening, what the 10-minute target counts, merged-preview support, the R2 pause, time-to-certainty's open
+seams, monitor back-off, and fleet economics.
 
 ## Read This First
 
@@ -40,6 +42,10 @@ charter supersession and C4.2 ownership, assurance cadence, acceptance fan-out, 
 
 ## Trail
 
+- 2026-11-09 (later): phase 2 landed. 24 seat reports under `research/phase2/` (96 Opus and 91 Astra
+  levers); phase 2b merged them per area (125 levers), two skeptics reviewed 69 and refuted 16, a synthesizer
+  ranked 85 plan rows in six tiers with a projection and nine align questions, and a cross-area critic added
+  conflicts, double counts, dependency order and missing items (`research/phase2/PLAN.md`). Stage `align`.
 - 2026-11-09: packet opened from the operator's audit request. Phase 1 surface inventory filed under
   `research/phase1/` (eleven Opus 5.5 readers plus a completeness critic, and a blinded GPT-6 Astra map).
   Four operator rulings logged in `DECISIONS.md` (launch phase 2; target definition; extend the
