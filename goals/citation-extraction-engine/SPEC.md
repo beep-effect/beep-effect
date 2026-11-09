@@ -379,7 +379,7 @@ Measured on PR #3005 run 42600820554 (ubuntu-24.04, 4 vCPU, two Vitest workers, 
 
 Sizing. With one worker (run 42606323648) every partition passed and hosted wall was 0.92 to 1.87 times the 8-vCPU two-worker file-second sum, so 8-vCPU timings do not size hosted partitions. After the deletion lane merged, a plan projected from halved two-runtime seconds (fourteen bins, run 42637925544) ran green but three jobs crossed ten minutes: the bun side of a bun-only replay runs 1.6 to 1.8 times the halved figure. The shipped plan is therefore LPT over the per-file hosted seconds measured on that run, at the smallest bin count whose largest bin stays under 450 s: sixteen partitions, planned bodies 318 to 425 s, measured jobs 5.9 to 9.0 minutes (run 42642253640). Same-runner-class spread between runs was 3 to 5 percent on unchanged files, so the plan is sized without a further safety factor. The canonical replay runs as six range files (4/4/4/4/4/2 shards).
 
-Lane `claude/integration-hosted-partitions-ba7e3b` · PR #3005
+Lane claude/integration-hosted-partitions-ba7e3b · PR #3005
 
 Reverse: Drop --maxWorkers=1 from the integration shard passthrough in CiLane.ts once a hosted runner class with more cores is measured to keep the native deadlines at two workers.
 
@@ -405,7 +405,7 @@ Mechanism. The required context used to be the reusable heavy.yml job (called fr
 
 Measured. The first plan projected partitions from 8-vCPU heavy timings; the hosted runs refuted that assumption (see the one-worker decision of the same date) and the shipped plan is sized on measured hosted seconds: sixteen partitions of 318 to 425 s of planned body ran 5.9 to 9.0 minutes of job on run 42642253640, the aggregate green 9.3 minutes after the first job started. The plan is regenerated whenever integration files change; test/vitest-integration-shards.test.ts fails until it matches the directory.
 
-Lane `claude/integration-hosted-partitions-ba7e3b`
+Lane claude/integration-hosted-partitions-ba7e3b
 
 Reverse: Restore the test-integration job in heavy.yml and in the heavy route lanes, remove the check.yml partition matrix and aggregate, and drop the test-integration partitions from CiLanePartitions.ts and the sequencer plan from the package.
 
@@ -415,7 +415,7 @@ Integration replay files may be split into row-range chunks computed from the fi
 
 Shipped splits. The canonical corpus replay (test/integration/CitationCanonicalExtraction.test.ts, 1096.8 s of file time on the 8-vCPU heavy runner, about 71.5 hosted seconds per shard) is chunked into six contiguous ranges of its 22-shard table (4/4/4/4/4/2 shards), one file each (CitationCanonicalExtraction.test.ts and CitationCanonicalExtractionRange2..Range6.test.ts), every row still replaying with full=true. After the deletion lane (#3009, bun-only full replays) merged, CitationCanonicalParserOperations (8 groups of 10 rows) and CitationCanonicalRemainingExtraction (7 groups) received the same treatment through range helpers exported by their fixtures: two files each, 4/4 and 4/3 groups. test/CitationCanonicalExtractionRanges.test.ts asserts, for all three corpora, that the ranges are disjoint, that their concatenation is the whole table, and that exactly one integration file replays each range. No single-runner arrangement gets Heavy / Test Integration under ten minutes while one file alone takes 1097 s; the split is what lets hosted partitions be sized under the budget (the largest single integration file is now CitationRegexCaseFlags at 407 hosted seconds).
 
-Lane `claude/integration-hosted-partitions-ba7e3b`
+Lane claude/integration-hosted-partitions-ba7e3b
 
 Reverse: Merge the range files back into one CitationCanonicalExtraction.test.ts and drop the range exports from the fixture; the guard test then asserts a single range.
 
@@ -425,7 +425,7 @@ Reverse: Merge the range files back into one CitationCanonicalExtraction.test.ts
 
 `vitest.config.ts` now declares two projects: `native-wallclock` keeps `maxWorkers: 2` and `maxConcurrency: 2` for those twelve unit files and all of `test/integration/**` (`sequence.groupOrder: 0`), and `replay` runs the remaining unit files at Vitest's default worker count (`groupOrder: 1`). The hosted unit shards run one worker under coverage either way, so the widening helps local unit runs; the integration lane keeps its proven two-worker shape. Vitest 5.1 applies the CLI `--maxWorkers` to every project, so the hosted coverage producers' single-worker topology is unchanged; `--shard` is applied by the root sequencer before projects are grouped, so the committed shard plan still covers both projects. `test/vitest-shards-plan.test.ts` re-derives the wall-clock list mechanically and fails when the config drifts from it. The integration script (`vitest run test/integration`) now runs only the capped project.
 
-Lane `claude/silly-brahmagupta-5a4fd5`
+Lane claude/silly-brahmagupta-5a4fd5
 
 Reverse: Restore the package-wide test: { maxWorkers: 2, maxConcurrency: 2 } in packages/law-practice/server/vitest.config.ts and drop the two projects.
 
