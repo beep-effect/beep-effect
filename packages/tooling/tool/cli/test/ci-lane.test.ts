@@ -481,12 +481,13 @@ describe("CI lane partitions", () => {
       { id: "law-practice-9", packages: 1, weightSeconds: 393 },
       { id: "law-practice-10", packages: 1, weightSeconds: 393 },
       { id: "law-practice-11", packages: 1, weightSeconds: 393 },
-      { id: "unit-a", packages: 31, weightSeconds: 594 },
-      { id: "unit-b", packages: 34, weightSeconds: 595 },
-      { id: "unit-c", packages: 31, weightSeconds: 594 },
-      { id: "unit-d", packages: 31, weightSeconds: 594 },
-      { id: "unit-e", packages: 32, weightSeconds: 594 },
-      { id: "unit-f", packages: 32, weightSeconds: 593 },
+      { id: "unit-a", packages: 26, weightSeconds: 509 },
+      { id: "unit-b", packages: 27, weightSeconds: 508 },
+      { id: "unit-c", packages: 27, weightSeconds: 509 },
+      { id: "unit-d", packages: 27, weightSeconds: 509 },
+      { id: "unit-e", packages: 28, weightSeconds: 509 },
+      { id: "unit-f", packages: 28, weightSeconds: 509 },
+      { id: "unit-g", packages: 28, weightSeconds: 509 },
     ]);
   });
 
@@ -519,6 +520,7 @@ describe("CI lane partitions", () => {
       { id: "unit-d", shard: undefined },
       { id: "unit-e", shard: undefined },
       { id: "unit-f", shard: undefined },
+      { id: "unit-g", shard: undefined },
     ]);
     for (const id of ["repo-cli-1", "repo-cli-2", "repo-cli-3", "repo-cli-4", "repo-cli-5", "repo-cli-6"] as const) {
       expect(partitionPackages(id)).toEqual(["@beep/repo-cli"]);
@@ -668,7 +670,15 @@ describe("CI lane partitions", () => {
       A.map(ciLaneDefaultPlacements(unitPartitions, names), (placement) => placement.partition)
     );
 
-    expect(A.sort(partitions, Order.String)).toEqual(["unit-a", "unit-b", "unit-c", "unit-d", "unit-e", "unit-f"]);
+    expect(A.sort(partitions, Order.String)).toEqual([
+      "unit-a",
+      "unit-b",
+      "unit-c",
+      "unit-d",
+      "unit-e",
+      "unit-f",
+      "unit-g",
+    ]);
     expect(
       ciLaneDefaultPlacements(
         A.filter(unitPartitions, (partition) => partition.shard !== undefined),

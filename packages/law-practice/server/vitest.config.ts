@@ -1,4 +1,5 @@
 import * as NodeURL from "node:url";
+import { A, Str } from "@beep/utils";
 import { defineConfig, mergeConfig } from "vitest/config";
 import { makeMeasuredSequencer } from "../../../vitest.sequencer.ts";
 import shared from "../../../vitest.shared.ts";
@@ -35,6 +36,20 @@ const nativeWallclockSuites = [
   "test/integration/CitationRegexTranslator.test.ts",
 ];
 
+// Vitest 5.1 forwards only a fixed list of CLI options to project configs (`maxWorkers`,
+// `isolate`, `passWithNoTests`, ...); `--exclude` is not among them, so the unit scripts'
+// `--exclude=test/integration/**` and `--exclude=test/PartyContactSource.boundary.test.ts` would
+// stop applying once the files are selected by projects. Read the CLI excludes here and add them
+// to every project so the scripts keep their meaning (hosted shards on PR #3007 ran integration
+// replays inside unit shards before this).
+const cliExcludes = A.flatMap(process.argv, (argument, index) =>
+  Str.startsWith("--exclude=")(argument)
+    ? [Str.slice(Str.length("--exclude="))(argument)]
+    : argument === "--exclude" && process.argv[index + 1] !== undefined
+      ? [process.argv[index + 1] ?? ""]
+      : []
+);
+
 const config = mergeConfig(
   shared,
   defineConfig({
@@ -69,6 +84,7 @@ export default {
         test: {
           name: "native-wallclock",
           include: nativeWallclockSuites,
+          exclude: cliExcludes,
           // Real native worker tests include cold module loading. Bound the test runner fan-out
           // so it does not consume the production deadline itself (#2511). The hosted coverage
           // producer's `--maxWorkers=1` still overrides this: Vitest applies the CLI flag to
@@ -83,7 +99,7 @@ export default {
         test: {
           name: "replay",
           include: ["test/**/*.test.{ts,tsx}"],
-          exclude: nativeWallclockSuites,
+          exclude: [...nativeWallclockSuites, ...cliExcludes],
           // Distinct group order: projects with different worker caps cannot share one group, and
           // the wall-clock group drains before the replay group widens to the default worker count.
           sequence: { groupOrder: 1 },

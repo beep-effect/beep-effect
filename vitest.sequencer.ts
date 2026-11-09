@@ -1,7 +1,6 @@
 import * as NodePath from "@effect/platform-node/NodePath";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Str from "effect/String";
@@ -28,25 +27,9 @@ export interface MeasuredShardPlan {
   readonly shards: ReadonlyArray<ReadonlyArray<string>>;
 }
 
-/**
- * Find the one-based shard a package-relative test file is planned into.
- *
- * **Example** (Look up a planned file)
- *
- * ```ts
- * import { plannedShardIndex } from "./vitest.sequencer.ts"
- * const plan = { shards: [["test/a.test.ts"], ["test/b.test.ts"]] }
- * console.log(plannedShardIndex(plan, "test/b.test.ts")) // Option.some(2)
- * ```
- */
-export const plannedShardIndex: {
-  (plan: MeasuredShardPlan, relativeFile: string): O.Option<number>;
-  (relativeFile: string): (plan: MeasuredShardPlan) => O.Option<number>;
-} = dual(
-  2,
-  (plan: MeasuredShardPlan, relativeFile: string): O.Option<number> =>
-    A.findFirstIndex(plan.shards, (entries) => A.contains(entries, relativeFile)).pipe(O.map((index) => index + 1))
-);
+// The one-based shard a package-relative test file is planned into.
+const plannedShardIndex = (plan: MeasuredShardPlan, relativeFile: string): O.Option<number> =>
+  A.findFirstIndex(plan.shards, (entries) => A.contains(entries, relativeFile)).pipe(O.map((index) => index + 1));
 
 /**
  * Build the Vitest sequencer class that applies a committed measured shard plan.

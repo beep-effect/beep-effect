@@ -253,7 +253,7 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
     })
   );
 
-  it.effect("compares all twenty-five unit partitions and selected Labs without running a producer", () =>
+  it.effect("compares all twenty-six unit partitions and selected Labs without running a producer", () =>
     Effect.gen(function* () {
       const entries = [owner(), owner("@beep/ciops", "apps/labs/ciops")];
       const { root } = yield* fixture(entries);
@@ -287,10 +287,11 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
         "unit-d",
         "unit-e",
         "unit-f",
+        "unit-g",
         "labs",
       ]);
       const eighths = A.map(A.take(input.expectedPartitions, 8), (partition) => partition.packages[0]?.shard);
-      const lab = input.expectedPartitions[25]?.packages[0];
+      const lab = input.expectedPartitions[26]?.packages[0];
       assertDefined(lab);
       expect(eighths).toEqual(A.map(A.range(1, 8), (index) => ({ index, total: 8 })));
       expect(lab.packageName).toBe("@beep/ciops");
@@ -538,8 +539,8 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
           artifactRoot: ".beep/downloaded",
           expectedPartitions: expect.arrayContaining([
             expect.objectContaining({
-              // The curated six-bin table (LPT over run 42554761567) places @beep/mcpb-kit in unit-a.
-              partitionId: "unit-a",
+              // The curated seven-bin table (LPT over run 42554761567) places @beep/mcpb-kit in unit-c.
+              partitionId: "unit-c",
               packages: [expect.objectContaining({ packageName: "@beep/mcpb-kit" })],
             }),
           ]),

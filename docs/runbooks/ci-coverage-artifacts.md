@@ -8,8 +8,8 @@ execute tests or regenerate the baseline.
 
 ## Producers
 
-The twenty-five Test Unit partitions keep stable identities: `unit-a` to
-`unit-f`, `repo-cli-1` to `repo-cli-8` and `law-practice-1` to
+The twenty-six Test Unit partitions keep stable identities: `unit-a` to
+`unit-g`, `repo-cli-1` to `repo-cli-8` and `law-practice-1` to
 `law-practice-11` (thirteen before 2026-11-09, ten before 2026-11-08, six and
 four before 2026-11-02; the lane-timings census knows every layout). The
 sharded partitions follow the committed `vitest.shards.json` plan of their

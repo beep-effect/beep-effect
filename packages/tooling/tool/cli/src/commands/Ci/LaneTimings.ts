@@ -1955,7 +1955,7 @@ const CI_EFFECTIVE_LANE_SPECS: ReadonlyArray<CiEffectiveLaneSpec> = [
         "Test Unit (unit-d)",
       ],
       // From 2026-11-09: LPT shard plans widen repo-cli to eight and law-practice-server to eleven
-      // slices, and the unit bins are repacked into six, every Test Unit job sized under ten minutes.
+      // slices, and the unit bins are repacked into seven, every Test Unit job sized under ten minutes.
       [
         "Test Unit (repo-cli-1)",
         "Test Unit (repo-cli-2)",
@@ -1982,6 +1982,7 @@ const CI_EFFECTIVE_LANE_SPECS: ReadonlyArray<CiEffectiveLaneSpec> = [
         "Test Unit (unit-d)",
         "Test Unit (unit-e)",
         "Test Unit (unit-f)",
+        "Test Unit (unit-g)",
       ],
     ],
   }),
