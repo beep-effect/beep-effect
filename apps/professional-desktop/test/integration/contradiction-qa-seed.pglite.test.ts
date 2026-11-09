@@ -47,11 +47,11 @@ import {
   seedContradictionQaFixtures,
 } from "@/contradiction/ContradictionQaSeed";
 import { migrateOnBoot } from "@/runtime/Migrations";
-import { fcDeepSweepActive, vitestCoverageRunActive } from "../../../../vitest.shared.ts";
+import { pgliteFixtureTimeout } from "./PgliteFixtureBudget.ts";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
-const fixtureTimeout = vitestCoverageRunActive || fcDeepSweepActive ? "5 minutes" : "10 seconds";
+const fixtureTimeout = pgliteFixtureTimeout;
 const desktopWorkspaceId = WorkspaceIdentity.WorkspaceId.make(1);
 const instant = flow(S.decodeUnknownResult(S.DateTimeUtcFromMillis), Result.getOrThrow);
 const decodeVaultRoot = S.decodeUnknownEffect(WorkspaceVaultRootPath);

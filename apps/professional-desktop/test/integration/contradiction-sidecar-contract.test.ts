@@ -19,12 +19,13 @@ import * as Result from "effect/Result";
 import * as RpcTest from "effect/rpc/RpcTest";
 import * as S from "effect/Schema";
 import { RuntimeTest } from "@/runtime/Layer";
-import { fcDeepSweepActive, vitestCoverageRunActive } from "../../../../vitest.shared.ts";
 import { DesktopRpcs } from "../../server/DesktopRpcs.ts";
+import { pgliteFixtureTimeout } from "./PgliteFixtureBudget.ts";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
-const fixtureTimeout = vitestCoverageRunActive || fcDeepSweepActive ? "5 minutes" : "10 seconds";
+// RuntimeTest provides SyncDatabaseInMemory: a cold bundled PGlite plus the boot migrations.
+const fixtureTimeout = pgliteFixtureTimeout;
 const instant = Result.getOrThrow(S.decodeResult(S.DateTimeUtcFromMillis)(2_000));
 
 const RuntimeFixtureLive = Layer.unwrap(
