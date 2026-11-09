@@ -14,15 +14,15 @@ RULES
 
 - **Cluster / origin:** the "Patent citation events and candor disposition"
   cluster of the parent campaign's signed-off routing matrix
-  (`explorations/legal-patent-kg-deepening/routing-seed.json`, wave P1).
+  ([explorations/legal-patent-kg-deepening/routing-seed.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/legal-patent-kg-deepening/routing-seed.json), wave P1).
 - **Provenance:** parent ledger
-  [`nugget-catalog.json`](../../legal-patent-kg-deepening/research/nugget-catalog.json)
+  [`nugget-catalog.json`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/legal-patent-kg-deepening/research/nugget-catalog.json)
   (46 rows); this packet consumes nuggets `T2-F2`, `T3-F7`, `ADHD-1`.
 
 ## 1. Mined source corpus
 
 Inherited by reference from the parent campaign — the nuggets' distillates
-live in `explorations/legal-patent-kg-deepening/research/mined/` (T2-F2:
+live in [explorations/legal-patent-kg-deepening/research/mined/](https://github.com/beep-effect/beep-effect-goals-archive/tree/main/explorations/legal-patent-kg-deepening/research/mined) (T2-F2:
 P017, P006, P041; T3-F7: P064, P074, L14, P099; ADHD-1: /adhd frames spee6,
 regu3, onca4, comp3 in `research/20-adhd-integration.md`). No new corpus is
 mined for this wedge; links, not copies.

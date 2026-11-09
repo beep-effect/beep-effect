@@ -10,17 +10,17 @@ dated heading at the bottom.
 ## 2026-08-04
 
 Seeded from the signed-off routing matrix of
-[`legal-patent-kg-deepening`](../legal-patent-kg-deepening/ROUTING-SEED.md),
+[`legal-patent-kg-deepening`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/legal-patent-kg-deepening/ROUTING-SEED.md),
 cluster **"Patent citation events and candor disposition"** (route `mixed`,
 wave P1, proposed slug `patent-citation-candor-gate` — this packet). Machine
-row: [`routing-seed.json`](../legal-patent-kg-deepening/routing-seed.json).
+row: [`routing-seed.json`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/legal-patent-kg-deepening/routing-seed.json).
 Chosen as the first wedge in the 2026-08-01 reconciliation grill; opened by the
 2026-08-04 phase-2 grill.
 
 ### Nuggets (from the parent 46-row ledger)
 
 From
-[`research/nugget-catalog.json`](../legal-patent-kg-deepening/research/nugget-catalog.json):
+[`research/nugget-catalog.json`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/legal-patent-kg-deepening/research/nugget-catalog.json):
 
 - **T2-F2** (verified-finding, survived 3/3; track `11-track-patent-kg` F2;
   distillates P017, P006, P041): "Patent citations must be reified because
@@ -41,7 +41,7 @@ From
 ### The deepened play (verbatim intent, from the parent /adhd artifact)
 
 From
-[`research/20-adhd-integration.md`](../legal-patent-kg-deepening/research/20-adhd-integration.md)
+[`research/20-adhd-integration.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/legal-patent-kg-deepening/research/20-adhd-integration.md)
 § Focus 1:
 
 - `@beep/law-practice-domain` owns a persisted `PatentCitationEvent` relating

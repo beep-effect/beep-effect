@@ -163,7 +163,7 @@ Higher sources outrank lower sources when they conflict.
   SchemaDiagnostics (98 lines) is diagnostic formatting. The mining originally
   claimed a single choke point for all seven modules; the corrected scope is
   disclosed in the exploration's
-  [`RESEARCH.md`](../../explorations/graphnosis-prior-art/RESEARCH.md)
+  [`RESEARCH.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/graphnosis-prior-art/RESEARCH.md)
   2026-08-06 addendum.
 - **The live counterexample is verified.** `LawScan.ts:175` returns
   `scannedFiles: A.length(scannedSourceFiles)` unguarded, and nothing asserts

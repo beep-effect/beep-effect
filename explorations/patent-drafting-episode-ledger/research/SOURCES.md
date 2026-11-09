@@ -17,10 +17,10 @@ RULES
   "Claim-limitation support and governed patent drafting" as its first rung
   in the 2026-08-01 reconciliation grill, of the parent campaign's
   signed-off routing matrix
-  (`explorations/legal-patent-kg-deepening/routing-seed.json`, wave P1, one
+  ([explorations/legal-patent-kg-deepening/routing-seed.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/legal-patent-kg-deepening/routing-seed.json), wave P1, one
   merged row).
 - **Provenance:** parent ledger
-  [`nugget-catalog.json`](../../legal-patent-kg-deepening/research/nugget-catalog.json)
+  [`nugget-catalog.json`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/legal-patent-kg-deepening/research/nugget-catalog.json)
   (46 rows); this packet consumes nuggets `T1-F10`, `T3-F4`, `T3-F5`,
   `T3-F10`, `T4-F7`, `ADHD-3` (primary) and `T4-F1`, `T4-F2`, `T4-F3`,
   `T4-F4`, `ADHD-2` (absorbed first rung).
@@ -28,7 +28,7 @@ RULES
 ## 1. Mined source corpus
 
 Inherited by reference from the parent campaign — the nuggets' distillates
-live in `explorations/legal-patent-kg-deepening/research/mined/` (see each
+live in [explorations/legal-patent-kg-deepening/research/mined/](https://github.com/beep-effect/beep-effect-goals-archive/tree/main/explorations/legal-patent-kg-deepening/research/mined) (see each
 nugget's distillate list in [`CAPTURE.md`](../CAPTURE.md)). No new corpus is
 mined for this wedge; links, not copies. The two deepened plays (`ADHD-2`,
 `ADHD-3`) are not verified findings — research Lane B re-grounded their

@@ -1,4 +1,4 @@
-Primary provenance: [source exploration ledger](../../../explorations/agent-observability-rebuild/research/SOURCES.md). Sanitized research corpus is reproduced in `audit/`; it is an October27 snapshot, not live truth. No screenshots or raw trace bodies are copied.
+Primary provenance: [source exploration ledger](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/agent-observability-rebuild/research/SOURCES.md). Sanitized research corpus is reproduced in `audit/`; it is an October27 snapshot, not live truth. No screenshots or raw trace bodies are copied.
 
 # Source and provenance ledger
 

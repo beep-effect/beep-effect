@@ -13,6 +13,14 @@
       "supersededBy": null
     },
     "created": "2026-10-28",
-    "updated": "2026-10-31"
+    "updated": "2026-10-31",
+    "archive": {
+      "repo": "beep-effect/beep-effect-goals-archive",
+      "path": "explorations/expiring-repo-facts",
+      "commit": "28c4a59943cf5392c4a85d3b4fa8815373b36aaf",
+      "contentHash": "d962463bf1260bdf91bf440a50e4f59fd43b2bdb",
+      "archivedAt": "2026-11-09T06:36:23.435Z",
+      "sourceCommit": "deb7d0c5efd56b6b073ab43be6ec5a6f6074fdd6"
+    }
   }
 }

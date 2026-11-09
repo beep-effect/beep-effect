@@ -352,6 +352,33 @@ function isValueSepNode(c: CstNode): boolean {
   return c.type === "whitespace" && c.source === ":";
 }
 
+/** A `?` explicit-key indicator leaf. */
+function isKeyIndicatorNode(c: CstNode): boolean {
+  return c.type === "whitespace" && c.source === "?";
+}
+
+/**
+ * Whether the mapping entry being read has a `?` key with no `:` yet. A mapping
+ * that opens with an implicit key can continue with explicit ones
+ * (`- a: 1\n  ? b\n  : - 2`), whose values admit what implicit ones do not.
+ */
+function hasOpenExplicitKey(children: readonly CstNode[]): boolean {
+  const last = A.findLast(children, (c) => isValueSepNode(c) || isKeyIndicatorNode(c));
+  return O.isSome(last) && isKeyIndicatorNode(last.value);
+}
+
+/**
+ * Whether the cursor is at the start marker the lexer queued for a `:` deeper
+ * than its `?` (`? k\n : v`). The entry already holds its key and no second node
+ * can follow it, so that `:` is the entry's value. With no key yet (`?\n  : v`)
+ * it does open a mapping, as that key.
+ */
+function isDeeperValueMarker(state: ParserState, token: YamlToken.Data, children: readonly CstNode[]): boolean {
+  if (token.kind !== "block-map-start" || state.tokens[state.pos + 1]?.kind !== "block-map-value") return false;
+  const last = A.findLast(children, (c) => isKeyIndicatorNode(c) || !HashSet.has(valueSepSkippedTypes, c.type));
+  return hasOpenExplicitKey(children) && O.isSome(last) && !isKeyIndicatorNode(last.value);
+}
+
 /**
  * Check if the last non-trivia child in a CST node list is a value separator
  * (`:`) with no subsequent value content. This indicates the next block
@@ -496,7 +523,29 @@ function parseBlockMapNode(
     return parseBlockSequence(state, findFirstSeqEntryColumn(state));
   }
   if (token.kind !== "block-seq-entry") return parseBlockNode(state, token);
-  return token.column === indent ? parseCompactSeqValue(state, indent) : consumeLeafToken(state);
+  if (token.column === indent) return parseCompactSeqValue(state, indent);
+  // The lexer queues no start marker for a `? - k` key when the line indent already opened a sequence (`- ? - k`).
+  return sawExplicitKey ? parseBlockSequence(state, token.column) : consumeLeafToken(state);
+}
+
+/** Whether the rest of a `?` line is a compact mapping (`? k: v`, `? : v`). */
+function startsCompactMappingKey(state: ParserState): boolean {
+  if (atEnd(state)) return false;
+  const { kind } = peek(state);
+  if (kind === "block-map-value") return true;
+  const startsNode = HashSet.has(contentKinds, kind) || kind === "flow-map-start" || kind === "flow-seq-start";
+  return startsNode && !isBlockScalarToken(state) && hasImplicitMapAhead(state);
+}
+
+/**
+ * Consume a `?` indicator of a mapping at `indent` and, when the rest of its
+ * line is a compact mapping, that mapping: it IS the key, so a later ":" at
+ * `indent` is this entry's value rather than a sibling entry.
+ */
+function parseExplicitKeyIndicator(state: ParserState, indent: number): CstNode[] {
+  const nodes = [consumeLeafToken(state)];
+  while (!atEnd(state) && peek(state).kind === "whitespace") nodes.push(consumeLeafToken(state));
+  return startsCompactMappingKey(state) ? [...nodes, parseImplicitBlockMapping(state, indent)] : nodes;
 }
 
 /**
@@ -517,13 +566,17 @@ function parseBlockMapToken(
     return sawExplicitKey;
   }
   if (token.kind === "block-map-key") {
-    children.push(consumeLeafToken(state));
+    children.push(...parseExplicitKeyIndicator(state, indent));
     return true;
   }
   if (token.kind === "block-map-value") {
     children.push(consumeLeafToken(state));
     children.push(...parseBlockValue(state, indent, sawExplicitKey));
     return false;
+  }
+  if (isDeeperValueMarker(state, token, children)) {
+    skipScopeMarker(state);
+    return sawExplicitKey;
   }
   const node = parseBlockMapNode(state, token, indent, sawExplicitKey);
   if (node !== undefined) children.push(node);
@@ -717,12 +770,14 @@ function seqEntryContentStops(state: ParserState, token: YamlToken.Data, seqInde
  * block-map. If the immediate next non-trivia token is a nested seq entry
  * (deeper indent), it is parsed as a nested sequence first instead. This
  * prevents the implicit mapping check from absorbing nested "- key: value"
- * patterns that belong inside the nested sequence.
+ * patterns that belong inside the nested sequence. A start marker means the
+ * lexer already opened the entry's mapping at a compact `?` (`- ? k: v`), whose
+ * ":" sits inside that mapping's key.
  */
 function entryIsImplicitMap(state: ParserState, seqIndent: number): boolean {
   const nextToken = findNextNonTrivia(state);
   const nestedSeqFirst = nextToken?.kind === "block-seq-entry" && nextToken.column > seqIndent;
-  return !nestedSeqFirst && hasImplicitMapAhead(state);
+  return !nestedSeqFirst && nextToken?.kind !== "block-map-start" && hasImplicitMapAhead(state);
 }
 
 /**
@@ -812,6 +867,34 @@ function parseImplicitMapNode(
 }
 
 /**
+ * Consume the entry indicator at the cursor of an implicit mapping (`?`, `:` and
+ * its value, or the marker of a deeper `:`) into `children`, returning whether
+ * there was one.
+ */
+function parseImplicitMapIndicator(
+  state: ParserState,
+  token: YamlToken.Data,
+  seqIndent: number,
+  children: CstNode[],
+  entryIndent: number
+): boolean {
+  if (token.kind === "block-map-key") {
+    children.push(...parseExplicitKeyIndicator(state, entryIndent));
+    return true;
+  }
+  if (token.kind === "block-map-value") {
+    const explicitKey = hasOpenExplicitKey(children);
+    children.push(consumeLeafToken(state));
+    // After ":", consume the value
+    children.push(...parseBlockValue(state, explicitKey ? entryIndent : seqIndent, explicitKey));
+    return true;
+  }
+  if (!isDeeperValueMarker(state, token, children)) return false;
+  skipScopeMarker(state);
+  return true;
+}
+
+/**
  * Consume one token of an implicit mapping into `children`, returning the
  * entry indent afterwards: the column of the first key, which distinguishes
  * a same-level block-map-start (continuation) from a deeper one (nested
@@ -832,12 +915,7 @@ function parseImplicitMapToken(
     children.push(...consumeTrivia(state));
     return entryIndent;
   }
-  if (token.kind === "block-map-value") {
-    children.push(consumeLeafToken(state));
-    // After ":", consume the value
-    children.push(...parseBlockValue(state, seqIndent));
-    return entryIndent;
-  }
+  if (parseImplicitMapIndicator(state, token, seqIndent, children, entryIndent)) return entryIndent;
   const node = parseImplicitMapNode(state, token, entryIndent, children);
   if (node !== undefined) children.push(node);
   return entryIndent;

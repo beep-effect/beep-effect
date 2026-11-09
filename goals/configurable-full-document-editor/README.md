@@ -54,7 +54,7 @@ atlas/profile contract, then obtain user ratification of the complete batch map.
 ## Latest evidence
 
 Not started. The source exploration carries the
-[`pinned audits`](../../explorations/full-document-editor/research/SOURCES.md),
+[`pinned audits`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/full-document-editor/research/SOURCES.md),
 and Goal A owns their normalization into the executable atlas/profile contract.
 
 ## Notes

@@ -8,7 +8,7 @@ fixture files.
 
 | Run | Max RSS | Wall | Source |
 | --- | --- | --- | --- |
-| Before: scoped run regenerates each owning package whole | 5.31 GB | 15.3 s | `explorations/compute-profile-gate-routing/RESEARCH.md` M1 |
+| Before: scoped run regenerates each owning package whole | 5.31 GB | 15.3 s | [explorations/compute-profile-gate-routing/RESEARCH.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/compute-profile-gate-routing/RESEARCH.md) M1 |
 | Per-file splice only (checker-backed `isExported()`) | 2.28 GB | 6.2 s | this lane |
 | Per-file splice plus syntactic `getSymbol()` lookup | 2.27 GB | 6.0 s | this lane, fallback not adopted |
 | After: per-file splice plus syntactic export check | 0.63 GB | 2.1 s | this lane |

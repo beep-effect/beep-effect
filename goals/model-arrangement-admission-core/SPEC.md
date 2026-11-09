@@ -1,7 +1,7 @@
 # SPEC — Model Arrangement Admission Core
 
 Normative contract, seeded 2026-08-17 from the ratified
-[`MAP`](../../explorations/model-artifact-admission/MAP.md) (candidate 1)
+[`MAP`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/model-artifact-admission/MAP.md) (candidate 1)
 **including its five adversarial amendments** — back-links, not copies.
 
 ## Mission

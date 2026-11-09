@@ -8,7 +8,7 @@ Status: `pending` (blocked on `goals/mcp-stateless-kit-and-drivers` PR 1; gradua
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | complete | Done in the exploration (lanes 22-r3, 24-r5; Gate B; Gate C). | `explorations/effect-mcp-2026-07-28/RESEARCH.md` §3.3–3.4. |
+| P0 Research | complete | Done in the exploration (lanes 22-r3, 24-r5; Gate B; Gate C). | [explorations/effect-mcp-2026-07-28/RESEARCH.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/effect-mcp-2026-07-28/RESEARCH.md) §3.3–3.4. |
 | P1 Implement | pending | One PR: run key + tests + actor + span + sidecar pin + Origin/CORS. | Acceptance criteria met. |
 | P2 Verify | pending | package-verify, hosted Heavy / Test Integration, conformance. | Green or blockers documented. |
 | P3 Yeet: PR to mergeable | pending | `bun run beep yeet publish --monitor --pr`; goal slug in the commit. | `mergeStateStatus` CLEAN; zero unresolved threads. |

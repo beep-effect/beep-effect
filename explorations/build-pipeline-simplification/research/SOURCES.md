@@ -179,7 +179,7 @@ Paths verified on `main` @ e62411d63f, 2026-10-09. Details in
 | Desktop sidecar binary | `@beep/professional-desktop` | `apps/professional-desktop/scripts/build-sidecar.ts:46` | reuse |
 | Ecosystem-package standard | standards | `standards/architecture/14-ecosystem-packages.md:108,143` | reuse (defines publishable tier) |
 | SchemaCompiler DEFER ruling | effect-schema-parity | `explorations/effect-schema-parity/DECISIONS.md:611` | constraint |
-| Compiler spike numbers | effect-schema-parity | `explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md` | evidence |
+| Compiler spike numbers | effect-schema-parity | [explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md) | evidence |
 | Shared build-kit package | (proposed `packages/tooling/library/build-kit`) | NOT FOUND | NET-NEW |
 
 ## 5. Cross-links & provenance

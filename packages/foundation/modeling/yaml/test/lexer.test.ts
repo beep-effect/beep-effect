@@ -96,6 +96,39 @@ describe("newline positions and scanner reset", () => {
   }
 });
 
+describe("compact explicit key start markers", () => {
+  const structure = (source: string) =>
+    A.filterMap(lexAll(source), (token) =>
+      token.kind === "whitespace" || token.kind === "newline"
+        ? Result.failVoid
+        : Result.succeed(`${token.kind}@${token.column}`)
+    );
+
+  it("opens the key's mapping at a `?` behind a sequence indicator", () => {
+    assert.deepStrictEqual(structure("- ? k\n"), [
+      "block-seq-start@0",
+      "block-seq-entry@0",
+      "block-map-start@2",
+      "block-map-key@2",
+      "scalar@4",
+    ]);
+  });
+
+  it("opens a nested mapping at a `?` behind another `?`", () => {
+    assert.deepStrictEqual(structure("? ? k\n"), [
+      "block-map-start@0",
+      "block-map-key@0",
+      "block-map-start@2",
+      "block-map-key@2",
+      "scalar@4",
+    ]);
+  });
+
+  it("keeps the line indent for a `?` that starts its line", () => {
+    assert.deepStrictEqual(structure("  ? k\n"), ["block-map-start@2", "block-map-key@2", "scalar@4"]);
+  });
+});
+
 describe("plain scalar trailing whitespace", () => {
   for (const source of ["hello  ", "a: hello \t", "hello  : value"]) {
     it(`emits consumed whitespace separately for ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(source), identity)}`, () => {

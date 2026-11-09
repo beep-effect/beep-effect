@@ -3,7 +3,7 @@
 - **Source exploration:**
   [`explorations/lejeune-bolt-agentic-demo`](../../../explorations/lejeune-bolt-agentic-demo/README.md)
 - **Primary ledger:**
-  [`research/SOURCES.md`](../../../explorations/lejeune-bolt-agentic-demo/research/SOURCES.md)
+  [`research/SOURCES.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lejeune-bolt-agentic-demo/research/SOURCES.md)
   in the source exploration. It wins if this goal-side mirror drifts.
 - **Decision authority:**
   [`DECISIONS.md`](../../../explorations/lejeune-bolt-agentic-demo/DECISIONS.md)
@@ -16,11 +16,11 @@ Machine-local source locations are represented by their research reports, never 
 
 | Source | Title | Location | Theme | Disposition |
 | --- | --- | --- | --- | --- |
-| L3 | Fastener distribution process | [`03-fastener-distribution-process.md`](../../../explorations/lejeune-bolt-agentic-demo/research/03-fastener-distribution-process.md) | RFQ, quote, RFI, offers, lots, tools, and human-stop boundaries | Story and copy authority; do not reproduce standards |
-| L4 | In-repo capability inventory | [`04-in-repo-capability-inventory.md`](../../../explorations/lejeune-bolt-agentic-demo/research/04-in-repo-capability-inventory.md) | Labs, approval tools, Cosmos, Tailscale, and runtime gaps | Re-verify live source before implementation |
-| L5 | Open-source references | [`05-open-source-references.md`](../../../explorations/lejeune-bolt-agentic-demo/research/05-open-source-references.md) | UI and temporal-memory patterns with license boundaries | Port only named permissive files with notices |
-| L7 | Use-case evaluation | [`07-use-case-evaluation.md`](../../../explorations/lejeune-bolt-agentic-demo/research/07-use-case-evaluation.md) | Ranked cases and exact 30-minute storyline | Acceptance authority |
-| L8 | Demo options | [`08-demo-options.md`](../../../explorations/lejeune-bolt-agentic-demo/research/08-demo-options.md) | Option C architecture, deployment, five-day plan | Architecture and sequencing authority |
+| L3 | Fastener distribution process | [`03-fastener-distribution-process.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lejeune-bolt-agentic-demo/research/03-fastener-distribution-process.md) | RFQ, quote, RFI, offers, lots, tools, and human-stop boundaries | Story and copy authority; do not reproduce standards |
+| L4 | In-repo capability inventory | [`04-in-repo-capability-inventory.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lejeune-bolt-agentic-demo/research/04-in-repo-capability-inventory.md) | Labs, approval tools, Cosmos, Tailscale, and runtime gaps | Re-verify live source before implementation |
+| L5 | Open-source references | [`05-open-source-references.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lejeune-bolt-agentic-demo/research/05-open-source-references.md) | UI and temporal-memory patterns with license boundaries | Port only named permissive files with notices |
+| L7 | Use-case evaluation | [`07-use-case-evaluation.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lejeune-bolt-agentic-demo/research/07-use-case-evaluation.md) | Ranked cases and exact 30-minute storyline | Acceptance authority |
+| L8 | Demo options | [`08-demo-options.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lejeune-bolt-agentic-demo/research/08-demo-options.md) | Option C architecture, deployment, five-day plan | Architecture and sequencing authority |
 
 ## 2. Upstream repositories & licenses
 
@@ -44,14 +44,14 @@ components are preferred.
 - RCSC 2020 structural-joint specification:
   <https://www.boltcouncil.org/files/2020RCSCSpecification.pdf>
 - Supplier-portal terms evidence and vendor claims remain in the
-  [primary ledger](../../../explorations/lejeune-bolt-agentic-demo/research/SOURCES.md);
+  [primary ledger](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lejeune-bolt-agentic-demo/research/SOURCES.md);
   none authorizes a connector or external write.
 
 ## 4. In-repo capability references
 
 | Brick | Source evidence | Packet use or limit |
 | --- | --- | --- |
-| Lab lifecycle | [`L4 §E`](../../../explorations/lejeune-bolt-agentic-demo/research/04-in-repo-capability-inventory.md#e-lab-applications) and lab-app doctrine | Generator-only creation, deletion-dated charter, no public API |
+| Lab lifecycle | [`L4 §E`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lejeune-bolt-agentic-demo/research/04-in-repo-capability-inventory.md#e-lab-applications) and lab-app doctrine | Generator-only creation, deletion-dated charter, no public API |
 | `@beep/acp`, `@beep/mcp-kit` | `packages/drivers/acp/src/AcpRpc.models.ts:28-343`; `packages/foundation/capability/mcp-kit/README.md:3-4,17-20,28-48` | Permission and elicitation primitives; no supplier-write connector |
 | `@beep/cosmos` | `packages/drivers/cosmos/src/Cosmos.renderer.ts:331-587` | Half-day browser timebox; browser wiring unverified |
 | `@beep/epistemic-*` | `packages/epistemic/domain/README.md:3-12`; `packages/epistemic/server/src/GovernedTierGate/GovernedTierGate.gate.ts:250-415` | Claims, evidence, contradictions, and fail-closed egress; procurement review remains lab-local |
@@ -63,6 +63,6 @@ components are preferred.
 
 - [Ratified brief](../../../explorations/lejeune-bolt-agentic-demo/BRIEF.md)
 - [Ratified decisions](../../../explorations/lejeune-bolt-agentic-demo/DECISIONS.md)
-- [Decomposition map](../../../explorations/lejeune-bolt-agentic-demo/MAP.md)
-- [Research synthesis](../../../explorations/lejeune-bolt-agentic-demo/RESEARCH.md)
+- [Decomposition map](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lejeune-bolt-agentic-demo/MAP.md)
+- [Research synthesis](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lejeune-bolt-agentic-demo/RESEARCH.md)
 - [Bundle goal](../../lejeune-demo-corpus-and-ontology/README.md)

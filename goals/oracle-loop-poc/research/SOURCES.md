@@ -1,9 +1,9 @@
 # Oracle Loop POC — Sources & Provenance
 
 - **Source exploration:** `explorations/doc-hub-spokes` — primary ledger:
-  [`explorations/doc-hub-spokes/research/SOURCES.md`](../../../explorations/doc-hub-spokes/research/SOURCES.md).
+  [explorations/doc-hub-spokes/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/doc-hub-spokes/research/SOURCES.md).
   The six research notes, the six panel reviews and the synthesized prior-art report live
-  under [`explorations/doc-hub-spokes/research/`](../../../explorations/doc-hub-spokes/research/)
+  under [explorations/doc-hub-spokes/research/](../../../explorations/doc-hub-spokes/research/)
   and are not copied here.
 
 ## 1. Mined source corpus
@@ -58,4 +58,4 @@ report and notes):
 - Gated successors named in the exploration's `MAP.md`: `html-spoke-parser`,
   `doc-core-promotion`, `rule-dsl-projections`, `process-admissibility-gate`.
 - Page that carried the design discussion:
-  `explorations/doc-hub-spokes/assets/md-hub-and-spokes-v6.html`.
+  [explorations/doc-hub-spokes/assets/md-hub-and-spokes-v6.html](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/doc-hub-spokes/assets/md-hub-and-spokes-v6.html).

@@ -1,7 +1,7 @@
 # Coding Agent Effectiveness Evidence Loop — Sources & Provenance
 
 - **Source exploration:** `explorations/agent-effectiveness-pulse` — primary
-  ledger: `explorations/agent-effectiveness-pulse/research/SOURCES.md`.
+  ledger: [explorations/agent-effectiveness-pulse/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/agent-effectiveness-pulse/research/SOURCES.md).
 - **Provenance:** This packet is the wave-2 graduation of that exploration.
   Its plan was authored in a Codex (GPT-5.6 Sol) audit session (2026-07-30/31,
   user-archived transcript; key numbers reproduced in

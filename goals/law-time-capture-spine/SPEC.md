@@ -41,7 +41,7 @@ prebill previews without requiring a network connection.
 5. `PLAN.md`.
 6. `GOAL.md`.
 7. The exploration [`DECISIONS.md`](../../explorations/ip-attorney-time-tracking/DECISIONS.md),
-   [`MAP.md`](../../explorations/ip-attorney-time-tracking/MAP.md), and supporting
+   [`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/ip-attorney-time-tracking/MAP.md), and supporting
    `research/`, `ops/`, and `history/` files.
 
 Higher sources outrank lower sources when they conflict.

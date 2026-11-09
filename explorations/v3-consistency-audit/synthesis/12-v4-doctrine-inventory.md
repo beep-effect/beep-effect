@@ -204,7 +204,7 @@ Command: `for d in <slice>/<tier>/src; do find $d -maxdepth 1 -type f \( -name '
 | A12 | 01 L64-71 `config/src/entities/Membership/Membership.config.ts`; ARCH L1070-1082 config vocabulary = `.config` only **vs** proof `config/src/aggregates/WorkItem/WorkItem.layer.ts` | concept-level `.layer.ts` in config is outside the config vocabulary |
 | A13 | ARCH L1098 `.<port-name>.ts` | open-ended server role; cannot be linted; makes `.file-store`, `.host`, `.gate`, `.fetch`, `.probe` undecidable |
 | A14 | 09 L12 (port failures in `use-cases/<Concept>/<Concept>.errors.ts`) **vs** ARCH L1319-1326 table (no port-failure row) **vs** proof (`WorkItem.repository.ts`) | Three different answers for where port errors live |
-| A15 | 08 (no mirroring rule; flat `test/` examples) **vs** `explorations/atlas-synthesis/synthesis/41-v3-knowledge-engine.md` "1:1" test mirroring | v3 mirroring is archaeology, not v4 doctrine; v4 doctrine is silent on test-dir shape |
+| A15 | 08 (no mirroring rule; flat `test/` examples) **vs** [explorations/atlas-synthesis/synthesis/41-v3-knowledge-engine.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/atlas-synthesis/synthesis/41-v3-knowledge-engine.md) "1:1" test mirroring | v3 mirroring is archaeology, not v4 doctrine; v4 doctrine is silent on test-dir shape |
 
 ## 5. Uniformity ledger
 

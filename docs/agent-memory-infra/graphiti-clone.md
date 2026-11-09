@@ -108,7 +108,7 @@ MCP maturity is enough for continued evaluation, not enough for blind incumbency
 - `standards/memory-architecture/03-saas-landscape-assessment.md`: prior Graphiti/Zep LEARN verdict and FalkorDB wording cross-check.
 - `standards/memory-architecture/05-context-graph-capability-assessment.md`: authority/projection/cache boundary, Graphiti donor assessment, and implementation constraints.
 - `goals/agentic-professional-runtime/README.md`: product-runtime claim + evidence + provenance + lifecycle contract.
-- `explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md`: prior donor synthesis, Graphiti summary, and FalkorDB SSPL flag.
+- [explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md): prior donor synthesis, Graphiti summary, and FalkorDB SSPL flag.
 - `AGENTS.md` / `CLAUDE.md`: current repo Graphiti MCP memory incumbency and local proxy note.
 - `docs/agent-memory-infra/README.md`: comparative research lane contract and Role A/Role B framing.
 - `upstream/graphiti/README.md`: Graphiti architecture, self-hosting, backends, local LLM support, MCP/REST surfaces, telemetry.

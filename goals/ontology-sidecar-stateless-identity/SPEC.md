@@ -30,7 +30,7 @@ rulings in `DECISIONS.md` cited as `(D-name)`; the Gate D amendments dated 2026-
 2. `explorations/effect-mcp-2026-07-28/DECISIONS.md` (D-run-key, D-origin, D-posture, D-conformance, Gate D amendments) and
    `BRIEF.md`.
 3. `goals/agent-execution-authority/SPEC.md` (decision 10 and PR 5 findings);
-   `explorations/effect-mcp-2026-07-28/RESEARCH.md` §3.3–3.4 with the lane reports `research/22-r3-governance-identity.md`
+   [explorations/effect-mcp-2026-07-28/RESEARCH.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/effect-mcp-2026-07-28/RESEARCH.md) §3.3–3.4 with the lane reports `research/22-r3-governance-identity.md`
    and `24-r5-http-security-observability.md` for `file:line` evidence.
 4. [goals/mcp-stateless-kit-and-drivers/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/mcp-stateless-kit-and-drivers/SPEC.md) for the anchor, client and dual-read contract this goal consumes.
 5. The installed Effect source (`node_modules/effect/dist/ai/**`, `http/**`).

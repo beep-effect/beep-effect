@@ -74,6 +74,9 @@ const blockHeaderCharacter = /[-+#0-9]/;
 const isBlockScalarHeaderStart = (next: string): boolean =>
   isSeparatorOrEnd(next) || (next.length === 1 && blockHeaderCharacter.test(next));
 
+/** Block indicators and their separation: all that may precede a compact explicit key on its line. */
+const compactKeyPrefix = /^(?:[-?:][ \t]+)+$/;
+
 // ---------------------------------------------------------------------------
 // Source probes (pure)
 // ---------------------------------------------------------------------------
@@ -721,6 +724,18 @@ export function createScanner(text: string): YamlScanner {
   }
 
   /**
+   * The indent the block indicator at the cursor opens its scope at: the line
+   * indent, except for a compact explicit key (`- ? k`, `? ? k`, `: ? k`). That
+   * line indent belongs to the enclosing collection, so the key's mapping opens
+   * at the `?` itself; otherwise its start marker is lost and it opens only at
+   * its first `:`, behind its own key.
+   */
+  function blockIndicatorIndent(kind: YamlTokenKind): number {
+    const prefix = Str.slice(pos - (col - lineIndent), pos)(text);
+    return kind === "block-map-key" && compactKeyPrefix.test(prefix) ? col : lineIndent;
+  }
+
+  /**
    * Scan the block indicator at the cursor (`?`, `-` or `:`): lock the line
    * indent, consume the indicator, open its block scope and emit its token
    * behind any block-start marker the scope step queued.
@@ -738,7 +753,7 @@ export function createScanner(text: string): YamlScanner {
     tabIsIndent: (end: number) => boolean
   ): YamlToken.Data {
     lockLineIndent();
-    const indent = lineIndent;
+    const indent = blockIndicatorIndent(kind);
     const start = pos;
     const sLine = line;
     const sCol = col;
