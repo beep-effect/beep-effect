@@ -41,7 +41,7 @@
     "goals/t3code-fleet-rollout/GOAL.md",
     "goals/t3code-fleet-rollout/research/SOURCES.md"
   ],
-  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -95,5 +95,13 @@
   "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2985
+  },
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/t3code-fleet-rollout",
+    "commit": "94b8d15cd23bd07a95f6f1ab0680d24b94c5103b",
+    "contentHash": "af7942b20911091a8215ff6c72e5db0bb88be406",
+    "archivedAt": "2026-11-09T03:19:32.081Z",
+    "sourceCommit": "e3a763cad8722d5f47587c44530cf7bf44e5bc52"
   }
 }

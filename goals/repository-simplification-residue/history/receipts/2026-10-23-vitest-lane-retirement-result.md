@@ -61,7 +61,7 @@ The 22 remote branches in the inventory were not touched: none has a tip on `ori
 
 ## Ignored-state loss
 
-The archive keeps the branch head (archive ref), a tracked-changes patch and untracked **non-ignored** files. It does not keep git-ignored state, so each lane's `.beep/` was deleted with the worktree. Matched against the 2026-10-22 retention census ([`2026-10-22-storage-retention-plan.md`](../../../repository-simplification-confidence/history/receipts/2026-10-22-storage-retention-plan.md)), that is 384 rows and 353,271,253 apparent bytes, mostly `.beep/yeet` job logs and `.beep/ci`.
+The archive keeps the branch head (archive ref), a tracked-changes patch and untracked **non-ignored** files. It does not keep git-ignored state, so each lane's `.beep/` was deleted with the worktree. Matched against the 2026-10-22 retention census ([`2026-10-22-storage-retention-plan.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/2026-10-22-storage-retention-plan.md)), that is 384 rows and 353,271,253 apparent bytes, mostly `.beep/yeet` job logs and `.beep/ci`.
 
 36 of those rows (7,869,539 bytes) were classed `material-owner-required`:
 

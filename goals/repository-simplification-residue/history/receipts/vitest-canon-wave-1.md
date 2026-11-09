@@ -2,7 +2,7 @@
 
 Lane `residue-vitest-canon`, branch `test/residue-vitest-canon-w1` off `main`
 `e3ee18dfd7`. Source evidence: the Stage 4 reconciliation receipt
-`goals/repository-simplification-confidence/history/receipts/stage-4-vitest-reconciliation.md`
+[goals/repository-simplification-confidence/history/receipts/stage-4-vitest-reconciliation.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-4-vitest-reconciliation.md)
 (cohort table, preserved exports, identity mapping). The detector lane #1855 owns
 detector policy; the two repairs below are recorded for it.
 

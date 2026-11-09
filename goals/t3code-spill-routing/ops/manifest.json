@@ -41,7 +41,6 @@
     "goals/t3code-spill-routing/GOAL.md",
     "goals/t3code-spill-routing/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -95,5 +94,13 @@
   "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2985
+  },
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/t3code-spill-routing",
+    "commit": "94b8d15cd23bd07a95f6f1ab0680d24b94c5103b",
+    "contentHash": "ccb46e81fcf3a7bb9df0e18da2cae3dfb66bcfa7",
+    "archivedAt": "2026-11-09T03:19:32.081Z",
+    "sourceCommit": "e3a763cad8722d5f47587c44530cf7bf44e5bc52"
   }
 }

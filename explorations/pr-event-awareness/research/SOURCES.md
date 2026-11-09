@@ -268,7 +268,7 @@ re-read. Full tables with roles are in
   + warm fixer, removed by operator PR #921 (2026-08-30) together with the
   published-PR lease, watcher, and mutation fence; only stale `Remediation.ts`
   comments still narrate it.
-- [`goals/ship-velocity` C2 backpressure research](../../../goals/ship-velocity/research/c2-yeet-monitor-backpressure.md)
+- [`goals/ship-velocity` C2 backpressure research](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ship-velocity/research/c2-yeet-monitor-backpressure.md)
   — Rank 4 already designs the webhook-to-workstation router this packet's
   push-source gap describes (repository webhook or minimal App on the seven
   PR/review/comment events, `HttpRouter` signature verification, delivery-GUID

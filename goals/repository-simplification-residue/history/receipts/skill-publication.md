@@ -5,7 +5,7 @@ stacked on #1880's head `8093be236e` (PR #1970), then rebuilt by the driver on `
 `ab606411ed` (#1970 merged) as `5f25292ef4` plus this lane's follow-up, 2026-10-21. Route: ruling S39/S41, a
 Claude-originated residue lane worked by a `claude-opus-5-5` child (wave 8, third of
 #1879, #1880, #1881). Source evidence: finding R3-GROK-03 in the predecessor
-[F-R3 fix wave](../../../repository-simplification-confidence/SPEC.md#f-r3-bounded-shell-links--panel-round-3-fix-wave-2026-10-15).
+[F-R3 fix wave](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/SPEC.md#f-r3-bounded-shell-links--panel-round-3-fix-wave-2026-10-15).
 
 ## Problem
 

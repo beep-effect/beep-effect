@@ -3,9 +3,9 @@
 Lane `residue-telemetry-completeness`, branch `feat/residue-telemetry-completeness`
 off `main` `a33ad8bed3`, 2026-10-18. Route: ruling S39, a Claude-originated residue
 lane worked by a `claude-opus-5-5` child. Source evidence: finding H3-R3-001 in the
-[H3 handoff](../../../repository-simplification-confidence/history/handoffs/rsc-h3-telemetry-2026-10-15.md),
+[H3 handoff](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/handoffs/rsc-h3-telemetry-2026-10-15.md),
 the round-2 and round-3 sections of the
-[H3 receipt](../../../repository-simplification-confidence/history/receipts/stage-4-h3-telemetry.md),
+[H3 receipt](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-4-h3-telemetry.md),
 and the PR #1590 review thread on `derived-storage.ts` that H3-R3-001 tracks.
 
 ## Finding

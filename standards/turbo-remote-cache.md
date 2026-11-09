@@ -339,7 +339,7 @@ per-checkout default.
 
 ## Related
 
-- `goals/ship-velocity/research/c4-turbo-cache.md` — the audit this implements.
+- [goals/ship-velocity/research/c4-turbo-cache.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ship-velocity/research/c4-turbo-cache.md) — the audit this implements.
 - `infra/lambda/turbo-cache/README.md` — token/method matrix on the server.
 - `.github/workflows/check.yml` — push jobs write, same-repository PR jobs read,
   and fork PR jobs stay local-only.

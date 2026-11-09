@@ -63,7 +63,7 @@ done, the evidence, what would have prevented it.
   The beta still excludes 7.0.2 and rejects exact 7.1.0-dev.20261008.1; this
   supersedes the earlier target with the orchestrator's 7.1 ruling. Pin an
   exact supported 7.1 beta/stable when listed; next remains a moving target.
-  Evidence: `goals/ts7-tstyche8-type-tests/history/type-test-next.log`.
+  Evidence: [goals/ts7-tstyche8-type-tests/history/type-test-next.log](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ts7-tstyche8-type-tests/history/type-test-next.log).
   The hosted matrix keeps the two exact targets; `next` runs on demand with
   `beep:type-test --target next` so `beep:check` stays reproducible.
 

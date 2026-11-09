@@ -51,7 +51,7 @@ Repo graph note, 2026-06-15: graph-based repo search was attempted for this
 packet but was low-signal. It surfaced existing Lexical round-trip tests and
 exploration manifest structure rather than a useful DOCX capability graph. The
 inventory below is therefore grounded in live source/barrel searches plus
-package READMEs and specs: `goals/rich-text-foundation/SPEC.md`,
+package READMEs and specs: [goals/rich-text-foundation/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/rich-text-foundation/SPEC.md),
 `packages/foundation/modeling/lexical/README.md`,
 `packages/foundation/modeling/md/README.md`,
 and [goals/file-processing-capability/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/file-processing-capability/SPEC.md).

@@ -38,7 +38,7 @@ Scope is defined by reference, not restated:
   [`research/grounding-v3-logos.md` §5](../../explorations/semantica-lab/research/grounding-v3-logos.md#5-verdict-for-the-new-lab).
 - **What C2 already proved** — the ρdf runtime, content-addressed
   `InferenceEvent` proof DAGs and the EYE oracle wiring
-  ([`goals/semantica-canary/SPEC.md`](../semantica-canary/SPEC.md), C2 pass).
+  ([goals/semantica-canary/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/SPEC.md), C2 pass).
 
 Provenance: graduated 2026-09-03 from
 [`explorations/semantica-lab`](../../explorations/semantica-lab/README.md)
@@ -50,7 +50,7 @@ fixture committed" had no owner; it became this packet's P1 (R2.a).
 Every item of
 [`BRIEF.md` §No-Gos](../../explorations/semantica-lab/BRIEF.md#no-gos) holds
 as listed in
-[`goals/semantica-canary/SPEC.md` §Non-Goals](../semantica-canary/SPEC.md#non-goals).
+[goals/semantica-canary/SPEC.md §Non-Goals](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/SPEC.md#non-goals).
 This spike adds:
 
 - No change to `g-entailment-rdfs/v1`, its seven C2 cases, or
@@ -86,7 +86,7 @@ This spike adds:
    [`research/grounding-v3-logos.md`](../../explorations/semantica-lab/research/grounding-v3-logos.md).
 5. [`goals/semantica-storage-inversion/SPEC.md`](../semantica-storage-inversion/SPEC.md)
    for the tombstone law R-c and P4 inherit, and
-   [`goals/semantica-canary/SPEC.md`](../semantica-canary/SPEC.md) for the
+   [goals/semantica-canary/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/SPEC.md) for the
    lab's standing constraints.
 6. This `SPEC.md`.
 7. `PLAN.md`.
@@ -158,7 +158,7 @@ Each line cites the sub-decision or law it inherits.
    validation, never proof isomorphism or premise-set identity (S5, S8); EYE
    is an oracle, not the runtime.
 10. **Inherited canary constraints** hold by reference
-    ([`goals/semantica-canary/SPEC.md` §Constraints](../semantica-canary/SPEC.md#constraints)):
+    ([goals/semantica-canary/SPEC.md §Constraints](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/SPEC.md#constraints)):
     5 (provider cache determinism, for any hosted call the ablation makes), 11
     (C2's gate shape), 14 (no id truncation, no DDL dimension).
 11. **Telemetry law.** Tier-L/Tier-D performance measurements and wall-clock

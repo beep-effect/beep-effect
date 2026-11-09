@@ -21,7 +21,7 @@ Scope is defined by reference, not restated:
   (ratification grill)": R3.a–R3.g; the Current law table's "Atlas writes",
   "Atlas backlog" rows and the Verdict map win over any log entry.
 - **The proven method and the rows it declined** —
-  [`goals/semantica-canary/history/p5-atlas-sync.md`](../semantica-canary/history/p5-atlas-sync.md)
+  [goals/semantica-canary/history/p5-atlas-sync.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/history/p5-atlas-sync.md)
   §Method and §"Not written, and why".
 - **The verdict domain** — D3 (`adopt | adapt | already-have | park | drop`)
   and the Verdict map in the Current law table.
@@ -37,7 +37,7 @@ is unverified (the local `danklocal` checkout is 0.6.6) and gates P2 only.
 Every item of
 [`BRIEF.md` §No-Gos](../../explorations/semantica-lab/BRIEF.md#no-gos) holds
 as listed in
-[`goals/semantica-canary/SPEC.md` §Non-Goals](../semantica-canary/SPEC.md#non-goals).
+[goals/semantica-canary/SPEC.md §Non-Goals](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/SPEC.md#non-goals).
 This lane adds:
 
 - No new Notion rows, properties, views or databases; "zero schema" means
@@ -72,7 +72,7 @@ This lane adds:
    (the script lives in a lab and exports nothing).
 4. The exploration contracts in force:
    [`MAP.md`](../../explorations/semantica-lab/MAP.md) v1.1 §A;
-   [`goals/semantica-canary/history/p5-atlas-sync.md`](../semantica-canary/history/p5-atlas-sync.md).
+   [goals/semantica-canary/history/p5-atlas-sync.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/history/p5-atlas-sync.md).
 5. This `SPEC.md`.
 6. `PLAN.md`.
 7. `GOAL.md`.

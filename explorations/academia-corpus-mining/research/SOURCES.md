@@ -87,7 +87,7 @@ The repo streams this packet mines against (reuse — none modified here):
 |--------|------|---------------------|
 | No-Escape doctrine | `standards/memory-architecture/00-no-escape-theorem.md` | corroboration target, lens 1 |
 | Bitemporal edge core | `goals/epistemic-bitemporal-edge-core/SPEC.md` | lens 1 |
-| Semantic foundation | `goals/semantic-foundation/SPEC.md` | lens 2 |
+| Semantic foundation | [goals/semantic-foundation/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantic-foundation/SPEC.md) | lens 2 |
 | Identity as IRI | `goals/identity-iri-fold/README.md` | lens 2 |
 | Hybrid retrieval fusion | `goals/hybrid-retrieval-fusion-core/SPEC.md` | lens 3 |
 | Citation-verified spans | `goals/citation-verified-span-substrate/SPEC.md` | lens 3 |

@@ -10,7 +10,7 @@ deployed #870 scheduler).
 
 ## Your unit's sources (exact; no improvisation)
 
-`packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts`, `packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts`, `packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts` (admission call sites), `goals/ship-velocity/research/d1-admission-scheduler.md` (PR #870 design record). The DEPLOYED admission policy: ticket/lease records, token weights, capacity formula, aging, class caps, origin skip, hard floor, quarantine-as-corrupt-record. Deployed-policy PARAMETER VALUES are `facts` records, not terms. DRR in the design record stays labeled prospective.
+`packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.schemas.ts`, `packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts`, `packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts` (admission call sites), [goals/ship-velocity/research/d1-admission-scheduler.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ship-velocity/research/d1-admission-scheduler.md) (PR #870 design record). The DEPLOYED admission policy: ticket/lease records, token weights, capacity formula, aging, class caps, origin skip, hard floor, quarantine-as-corrupt-record. Deployed-policy PARAMETER VALUES are `facts` records, not terms. DRR in the design record stays labeled prospective.
 
 ## Your output file (the ONLY file you may write)
 

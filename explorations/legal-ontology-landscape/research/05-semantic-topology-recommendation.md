@@ -23,7 +23,7 @@ agent grounding. They do not become accepted legal fact authority.
 
 ## Local Grounding
 
-- `goals/semantic-foundation/SPEC.md` locks v1 non-goals: no SPARQL wiring, no
+- [goals/semantic-foundation/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantic-foundation/SPEC.md) locks v1 non-goals: no SPARQL wiring, no
   graph store, Postgres/PGlite projection doctrine, and M4 SHACL authoring
   against the current bounded validator.
 - `goals/legal-document-intake/SPEC.md` D6/D7 resolves KG storage as

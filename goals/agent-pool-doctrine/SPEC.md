@@ -38,7 +38,7 @@ copied).
 - `packages/tooling/library/ai-metrics/src/hook-pulse.ts` — `HookPulseAgentKind` += `"cursor-cli"`;
   `test/hook-pulse-writer.test.ts` — conformance case through the Cursor adapter.
 - `.cursor/agents/<name>.md` — only where a model pin pays (D20); none required for acceptance.
-- `goals/tsgo-045-effect-idiom-sweep/ops/prompts/50-cursor-lane.md` — cite the runbook (optional PR 2).
+- [goals/tsgo-045-effect-idiom-sweep/ops/prompts/50-cursor-lane.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/tsgo-045-effect-idiom-sweep/ops/prompts/50-cursor-lane.md) — cite the runbook (optional PR 2).
 
 ## Constraints
 

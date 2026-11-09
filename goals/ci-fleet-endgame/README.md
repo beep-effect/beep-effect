@@ -50,7 +50,7 @@ P6 (final close, gated on the lane-economics 20-minute outcome) remains here.
 
 ## Binding decisions
 
-Speed-loop [`GRILL-DECISIONS.md`](../speed-loop/research/GRILL-DECISIONS.md)
+Speed-loop [`GRILL-DECISIONS.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/speed-loop/research/GRILL-DECISIONS.md)
 57–63 bind the adoption invariant, Pulumi-first vehicle, velocity correction,
 repo-scoped GitHub App, cost gates, spot fallback, and RunsOn tripwire. The
 full record is retained in this packet's `research/` directory.

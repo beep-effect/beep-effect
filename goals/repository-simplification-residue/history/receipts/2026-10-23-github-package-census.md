@@ -29,7 +29,7 @@ versions: no deletion, transfer, dependency or consumer conclusion is authorized
 by the absence of a repository link.
 
 This completes the missing registry half of the bounded external-contract census.
-The prior consumer census remains [stage-2-policy.md](../../../repository-simplification-confidence/history/receipts/stage-2-policy.md#external-contracts):
+The prior consumer census remains [stage-2-policy.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/receipts/stage-2-policy.md#external-contracts):
 61,378 local manifests, zero demonstrated consumers, with its original remote
 and inaccessible-consumer limitations. It is historical evidence, not a fresh
 scan. Current package versions and APIs are preserved. Note-reset recovery

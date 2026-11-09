@@ -43,12 +43,7 @@
     "explorations/document-structure-ontologies/MAP.md",
     "explorations/document-structure-ontologies/DECISIONS.md"
   ],
-  "researchReports": [
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md",
-    "research/cache-policy-review.md",
-    "research/retained-private-release-notes.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -99,5 +94,13 @@
   ],
   "researchReferences": [
     "../../explorations/document-structure-ontologies/research/SOURCES.md"
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/spar-document-annotation-wire",
+    "commit": "94b8d15cd23bd07a95f6f1ab0680d24b94c5103b",
+    "contentHash": "5676e7914c494d9e215bb85a361d4061438a4b9c",
+    "archivedAt": "2026-11-09T03:19:32.081Z",
+    "sourceCommit": "e3a763cad8722d5f47587c44530cf7bf44e5bc52"
+  }
 }

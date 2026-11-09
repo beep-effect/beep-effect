@@ -162,7 +162,7 @@ The cluster’s central result is that the layer after SKOS is not “more ontol
 
 - The packet’s existing snippet audit has already established that the prior synthesis’s claimed verification publication gate does not currently exist. The cluster supports building a stronger evidence-and-evaluation boundary, but does not re-confirm that prior current-state claim.
 
-- There is no contradiction with the current `goals/semantic-foundation/SPEC.md`: its M1 taxonomy/registry scope is substantially narrower than the June-29 roadmap and should remain so.
+- There is no contradiction with the current [goals/semantic-foundation/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantic-foundation/SPEC.md): its M1 taxonomy/registry scope is substantially narrower than the June-29 roadmap and should remain so.
 
 ## Tensions & contradictions
 

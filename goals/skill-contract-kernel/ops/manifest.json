@@ -33,11 +33,7 @@
     "goals/skill-contract-kernel/GOAL.md",
     "goals/skill-contract-kernel/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md",
-    "research/p0-fact-base.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -94,5 +90,13 @@
     "../../explorations/typed-agent-skill-contracts/research/inventory/protocol-query-memory.md",
     "../../explorations/typed-agent-skill-contracts/research/landscape/skill-contract-formats.md",
     "../../explorations/typed-agent-skill-contracts/research/landscape/workflow-evidence-frameworks.md"
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/skill-contract-kernel",
+    "commit": "94b8d15cd23bd07a95f6f1ab0680d24b94c5103b",
+    "contentHash": "31c0d53874535b6fc7a409f8f30b33ed93070c8b",
+    "archivedAt": "2026-11-09T03:19:32.081Z",
+    "sourceCommit": "e3a763cad8722d5f47587c44530cf7bf44e5bc52"
+  }
 }

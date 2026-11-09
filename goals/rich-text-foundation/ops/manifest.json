@@ -77,5 +77,13 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "mission": "Give the repo one canonical rich-text pipeline as foundation substrate: `@beep/md` AST ↔ `@beep/lexical-schema` (schema-first Lexical serialized state + codecs) ↔ `@beep/editor` (React editor kit). Prerequisite packet for `desktop-chat-surface`."
+  "mission": "Give the repo one canonical rich-text pipeline as foundation substrate: `@beep/md` AST ↔ `@beep/lexical-schema` (schema-first Lexical serialized state + codecs) ↔ `@beep/editor` (React editor kit). Prerequisite packet for `desktop-chat-surface`.",
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/rich-text-foundation",
+    "commit": "94b8d15cd23bd07a95f6f1ab0680d24b94c5103b",
+    "contentHash": "36637b0a106a9eba4440a039380ee1439576d871",
+    "archivedAt": "2026-11-09T03:19:32.081Z",
+    "sourceCommit": "e3a763cad8722d5f47587c44530cf7bf44e5bc52"
+  }
 }

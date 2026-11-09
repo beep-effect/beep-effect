@@ -46,7 +46,7 @@ Use this command for execution-capable sessions:
    [`DECISIONS.md`](../../explorations/semantica-lab/DECISIONS.md) (Current
    law table: Atlas writes, Atlas backlog, Verdict map; the 2026-09-03
    ratification grill R3.a–R3.g).
-7. [`goals/semantica-canary/history/p5-atlas-sync.md`](../semantica-canary/history/p5-atlas-sync.md)
+7. [goals/semantica-canary/history/p5-atlas-sync.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/history/p5-atlas-sync.md)
    - the proven method, the six rows written, and the four rows declined.
 8. [`history/`](./history/) - access receipt, baseline, apply plan, receipts
    and the closeout reflection.

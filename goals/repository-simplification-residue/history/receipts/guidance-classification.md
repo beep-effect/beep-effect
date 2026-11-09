@@ -1,9 +1,9 @@
 # #1856 guidance currency and artifact classification: wave 1 record
 
 Lane `residue-guidance`, wave 1, branched from `main` at `e3ee18dfd7`. Source evidence: the B-lane handoff
-`goals/repository-simplification-confidence/history/handoffs/rsc-b-standards-2026-10-14.md`
+[goals/repository-simplification-confidence/history/handoffs/rsc-b-standards-2026-10-14.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/history/handoffs/rsc-b-standards-2026-10-14.md)
 and its 2026-10-09 sweep
-`goals/repository-simplification-confidence/research/sweeps/2026-10-09/B-standards.md`.
+[goals/repository-simplification-confidence/research/sweeps/2026-10-09/B-standards.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/research/sweeps/2026-10-09/B-standards.md).
 
 ## Scope
 

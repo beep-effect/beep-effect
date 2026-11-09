@@ -31,7 +31,7 @@ Packets / explorations:
 - `goals/law-doc-structure-oa-slice/SPEC.md` (full)
 - `goals/legal-document-intake/SPEC.md` (lines 1–140)
 - `goals/agentic-professional-runtime/SPEC.md` (full)
-- `goals/semantic-foundation/SPEC.md` (lines 1–100)
+- [goals/semantic-foundation/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantic-foundation/SPEC.md) (lines 1–100)
 - `goals/knowledge-surface-automation/SPEC.md` (full)
 - `goals/coding-agent-effectiveness-evidence-loop/SPEC.md` (lines 1–120)
 - `goals/coding-agent-effectiveness-evidence-loop/PLAN.md` (lines 291–325, grep for ablation)

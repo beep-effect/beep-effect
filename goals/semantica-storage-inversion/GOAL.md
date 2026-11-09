@@ -17,7 +17,7 @@ Read these as the contract:
 - `explorations/semantica-lab/MAP.md` §S (v1.1) and `DECISIONS.md` (Current
   law table, then the 2026-09-03 ratification grill R0.a, R1.a–R1.i; the
   table wins over prose)
-- `goals/semantica-canary/SPEC.md` (the lab's standing constraints)
+- `goals/semantica-canary/README.md` (its archived SPEC: the lab's standing constraints)
 
 Then `AGENTS.md`, `CLAUDE.md`, `standards/architecture/15-lab-apps.md`, and
 the skills `SPEC.md` names.
@@ -36,7 +36,7 @@ Execution:
 
 1. P0 P-S0: regenerate the full-W1 C2 ledger from the workstation provider
    cache with the lab's `canary` entry at C2 `--offline`; the report digest
-   must equal the archived C2 digest (`goals/semantica-canary/history/c2/`).
+   must equal the archived C2 digest (`apps/labs/semantica/test/fixtures/c2/`).
    No reproduction: stop and report; the spike does not start.
 2. P1 P-S1: schema (extended witness) → contract (retraction reach via
    `claimQuads` + recorded premises) → Layer (`Invalidated` emission,

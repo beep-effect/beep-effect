@@ -52,17 +52,7 @@
     "goals/research-library-ontology-core/GOAL.md",
     "goals/research-library-ontology-core/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/DESIGN.md",
-    "research/FOUNDATIONAL-AUDIT-REVIEW.md",
-    "research/FOUNDATIONAL-AUDIT.md",
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md",
-    "research/cache-baseline-request-2777.json",
-    "research/cache-baseline-request.json",
-    "research/cache-baseline-review-2777.md",
-    "research/cache-baseline-review.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -116,5 +106,13 @@
   "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2787
+  },
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/research-library-ontology-core",
+    "commit": "94b8d15cd23bd07a95f6f1ab0680d24b94c5103b",
+    "contentHash": "e86979c4ac8ca15a00f96280e6d468f0ae5dd3da",
+    "archivedAt": "2026-11-09T03:19:32.081Z",
+    "sourceCommit": "e3a763cad8722d5f47587c44530cf7bf44e5bc52"
   }
 }

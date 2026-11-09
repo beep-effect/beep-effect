@@ -59,7 +59,7 @@ Every URL below appears in the exploration ledger and was fetched there.
 | File-backed ledger | `packages/drivers/pglite/src/PgliteClient.service.ts` `makeLayer({ dataDir })` | reuse |
 | Telemetry sidecar | `src/schema/Telemetry.ts` `EvalRunTelemetry` | extend: bytes before/after |
 | PROV-O projection | `@beep/rdf` Prov `invalidatedAtTime` | reuse for the PROV projection of retraction |
-| C2 evidence | `goals/semantica-canary/history/c2/` (`SHA256SUMS`, live/replay reports and telemetry, crash log) | the P-S0 target digest |
+| C2 evidence | [goals/semantica-canary/history/c2/](https://github.com/beep-effect/beep-effect-goals-archive/tree/main/goals/semantica-canary/history/c2) (`SHA256SUMS`, live/replay reports and telemetry, crash log) | the P-S0 target digest |
 | Provider cache | lab `ProviderCache` (`SEMANTICA_PROVIDER_CACHE_DIR`, untracked workstation directory) | the regeneration fixture; NET-NEW reverse index for erasure |
 
 **How these inform implementation:** everything above the DDL line is

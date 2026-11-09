@@ -39,7 +39,6 @@
     "goals/semantica-canary/research/SOURCES.md",
     "goals/openai-driver/SPEC.md"
   ],
-  "researchReports": ["research/SOURCES.md", "research/c0-design.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -94,5 +93,13 @@
     "Verification requires credentials, cost, destructive side effects, or policy approval not named in SPEC.md.",
     "An adopt or pick-one value would be written to the Notion atlas before its canary stage passes.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/semantica-canary",
+    "commit": "94b8d15cd23bd07a95f6f1ab0680d24b94c5103b",
+    "contentHash": "73cdd28af55f84cf168ed0c9f5e830b5800b29ad",
+    "archivedAt": "2026-11-09T03:19:32.081Z",
+    "sourceCommit": "e3a763cad8722d5f47587c44530cf7bf44e5bc52"
+  }
 }

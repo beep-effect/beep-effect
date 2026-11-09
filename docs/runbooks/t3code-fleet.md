@@ -183,7 +183,7 @@ gated steps this section used to hold have run. The guest uses the same pull as
 beep-worker, keeps its T3 listener on loopback under `agent-runs.slice`, and is
 published with Serve on its own tagged tailnet node, not through an SSH forward.
 Its grants admit only hub SSH, hub to Serve, and guest to the hub mirror. Receipt:
-`goals/t3code-fleet-rollout/history/2026-11-07-tbk-worker-link.md`. A later stop
+[goals/t3code-fleet-rollout/history/2026-11-07-tbk-worker-link.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/t3code-fleet-rollout/history/2026-11-07-tbk-worker-link.md). A later stop
 latch is still the operator's to release; agents do not clear it as job cleanup.
 
 ## Harness MCP registration and renewal
@@ -244,7 +244,7 @@ the older `psi.log`, `runtime.json` or `runtime-history.ndjson` in that director
 are stale since 2026-09-15. To re-derive the thresholds, use 7 days of samples and the
 same percentile for each signal: p99 for the avg60 stall rows, p95 for the CPU avg300
 qualifier, and p1 for available memory, as
-`goals/t3code-spill-routing/history/2026-11-08-baseline.md` did.
+[goals/t3code-spill-routing/history/2026-11-08-baseline.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/t3code-spill-routing/history/2026-11-08-baseline.md) did.
 
 ## Gotchas
 

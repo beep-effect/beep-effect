@@ -42,7 +42,7 @@ Read when a publish, proof, or hosted check fails and the summary line is not en
   decoders and v3 acquisition test seams remain until a future CLI generation
   floor makes pre-v4 proof binaries non-runnable and a seven-day fleet audit
   observes no legacy ticket or lease; the exact removal gate is recorded in
-  `goals/ship-velocity/research/d1-admission-scheduler.md`.
+  [goals/ship-velocity/research/d1-admission-scheduler.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ship-velocity/research/d1-admission-scheduler.md).
 - Origin paths still hash a canonical host/repository identity into an opaque
   path under the machine temporary directory, so equivalent SCP, SSH, HTTPS,
   and Git origin URLs share one coordinator even when `.git`, trailing

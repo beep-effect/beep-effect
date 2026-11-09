@@ -15,7 +15,7 @@ RULES
   admission brief (PR C) and ruling 56 (B8-7).
 - **Provenance:** `goals/time-to-certainty/research/b8-brief.md`,
   `goals/time-to-certainty/research/decisions.md` (rulings 56–57),
-  `goals/ship-velocity/research/merge-queue-evaluation.md` (E8, 2026-08-27).
+  [goals/ship-velocity/research/merge-queue-evaluation.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ship-velocity/research/merge-queue-evaluation.md) (E8, 2026-08-27).
 
 ## 3. External research sources
 
@@ -32,7 +32,7 @@ RULES
 | `check.yml` `pull_request`/`push` triggers and per-ref `concurrency` group (main); the `Heavy Admission` job calling `heavy.yml@main` with `admitted` (on `main` via #1155; hosted pass-without-work lanes via #1165) | `.github/workflows/check.yml`, `.github/workflows/heavy.yml` | extend (add `merge_group`) |
 | `yeet monitor --until-ready` and the B7 settle loop (on `main` via #1149 and #1155) | `packages/tooling/tool/cli/src/commands/Yeet/internal/Settle.ts`, `.../Yeet/internal/MonitorPolicy.ts`, `.claude/skills/yeet/SKILL.md` | extend (merge-group tail) |
 | A5 attempt-journal fingerprints, M4 false-red proxies | `goals/time-to-certainty/research/baseline.md` | reuse (flake budget input) |
-| E8 flip-condition measurement query | `goals/ship-velocity/research/merge-queue-evaluation.md` | reuse (re-run) |
+| E8 flip-condition measurement query | [goals/ship-velocity/research/merge-queue-evaluation.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ship-velocity/research/merge-queue-evaluation.md) | reuse (re-run) |
 
 ## 5. Cross-links & provenance
 

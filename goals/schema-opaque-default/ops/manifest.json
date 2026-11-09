@@ -30,18 +30,7 @@
     "goals/schema-opaque-default/GOAL.md",
     "goals/schema-opaque-default/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md",
-    "research/cache-baseline-request-close-2.json",
-    "research/cache-baseline-request-close-3.json",
-    "research/cache-baseline-request-close.json",
-    "research/cache-baseline-review-close.md",
-    "research/class-census.md",
-    "research/codemod-run.md",
-    "research/jsdoc-examples.log",
-    "research/schema-shape-semantics.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -92,5 +81,13 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "2026-10-15: closed. #1758 landed the codemod and its output; #1776 cleared the 0.52 preferEffectArray sites and the apps/labs fallout; #1783 and #1798 fixed the main reds #1758 caused. The closing PR arms schemaClassMissingBrand at error in standards/effect-diagnostics.profile.json (the @effect/tsgo 0.53 Effect diagnostics lane from #1810; tsc-rs 0.6.0 does not know the rule) and adds lint:opaque-roundtrips."
+  "statusNote": "2026-10-15: closed. #1758 landed the codemod and its output; #1776 cleared the 0.52 preferEffectArray sites and the apps/labs fallout; #1783 and #1798 fixed the main reds #1758 caused. The closing PR arms schemaClassMissingBrand at error in standards/effect-diagnostics.profile.json (the @effect/tsgo 0.53 Effect diagnostics lane from #1810; tsc-rs 0.6.0 does not know the rule) and adds lint:opaque-roundtrips.",
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/schema-opaque-default",
+    "commit": "94b8d15cd23bd07a95f6f1ab0680d24b94c5103b",
+    "contentHash": "7b7e87ef113234a8286ef592dcf5eef65ebfe3b5",
+    "archivedAt": "2026-11-09T03:19:32.081Z",
+    "sourceCommit": "e3a763cad8722d5f47587c44530cf7bf44e5bc52"
+  }
 }

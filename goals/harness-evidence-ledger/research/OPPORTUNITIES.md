@@ -92,7 +92,7 @@
 
 - **Work:** reading the finished P4 rerun (`history/p4-rerun/`).
 - **Friction:** four corpus fixture directories under
-  `goals/skillopt-training-pilot/corpus/fixtures/` gained a
+  [goals/skillopt-training-pilot/corpus/fixtures/](https://github.com/beep-effect/beep-effect-goals-archive/tree/main/goals/skillopt-training-pilot/corpus/fixtures) gained a
   `node_modules/.tmp/tsconfig.tsbuildinfo` stamped inside rollout windows
   (05:54 to 06:02 local), and one rollout's final message reports a temp
   directory `corpus/fixtures/.tc-tmp-n003/` that it "didn't create". The scratch

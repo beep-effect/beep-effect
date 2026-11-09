@@ -48,7 +48,7 @@ Use this command for execution-capable sessions:
    [`BRIEF.md`](../../explorations/semantica-lab/BRIEF.md) v1.1,
    [`research/shared-schema.md`](../../explorations/semantica-lab/research/shared-schema.md)
    v1.4.
-7. [`goals/semantica-canary/SPEC.md`](../semantica-canary/SPEC.md) - the
+7. [goals/semantica-canary/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/SPEC.md) - the
    lab's standing constraints and the C2 evidence this spike replays.
 8. [`history/`](./history/) - probe evidence and the closeout reflection.
 
@@ -57,7 +57,7 @@ Use this command for execution-capable sessions:
 P0 P-S0 entry check — not started. First action: confirm the workstation
 provider cache is present, regenerate the full-W1 C2 ledger with the lab's
 `canary` entry at C2 `--offline`, and compare the report digest with
-[`goals/semantica-canary/history/c2/`](../semantica-canary/history/c2/).
+[goals/semantica-canary/history/c2/](../semantica-canary/history/c2/).
 No reproduction means the spike does not start.
 
 ## Latest evidence

@@ -251,5 +251,12 @@
     "A proposed enforcement rule produces unresolved false positives across unrelated packages.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "researchReports": ["research/reports/effect-v4-schema-capabilities.md"]
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/schema-first-v4-capabilities",
+    "commit": "94b8d15cd23bd07a95f6f1ab0680d24b94c5103b",
+    "contentHash": "05dec07c7e61275866e2f3f4e22c8eb0ad7eac40",
+    "archivedAt": "2026-11-09T03:19:32.081Z",
+    "sourceCommit": "e3a763cad8722d5f47587c44530cf7bf44e5bc52"
+  }
 }

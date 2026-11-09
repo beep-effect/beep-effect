@@ -87,7 +87,7 @@ surfaces, not a claim about every experimental file in the repository.
 
 Design inputs are not runtime dependencies. `goals/legal-document-intake/SPEC.md`
 D7-S1 supersedes only D7's validator with the real `@beep/shacl` driver;
-`goals/semantic-foundation/PLAN.md` M4 remains gated. The bounded engine in
+[goals/semantic-foundation/PLAN.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantic-foundation/PLAN.md) M4 remains gated. The bounded engine in
 [goals/epistemic-claim-lifecycle-gate/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/epistemic-claim-lifecycle-gate/SPEC.md) therefore cannot be assumed to
 cover G3's final shapes. G3 must pin a ready validator and shape version.
 `explorations/ingestion-security-secret-governance/research/secret-pii-scrub-and-audit.md`

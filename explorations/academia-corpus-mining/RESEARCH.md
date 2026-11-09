@@ -109,7 +109,7 @@ modified by this packet):
 | 1 memory-bitemporal | No-Escape doctrine | `standards/memory-architecture/00-no-escape-theorem.md` | standard, binding |
 | 1 | Memory layer taxonomy + agent ops | `standards/memory-architecture/01-memory-layer-taxonomy.md`, `.../06-agent-memory-operations.md` | standard |
 | 1 | Bitemporal edge core | [goals/epistemic-bitemporal-edge-core/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/epistemic-bitemporal-edge-core/SPEC.md) | goal packet |
-| 2 legal-ontology | Semantic foundation | `goals/semantic-foundation/SPEC.md` | goal packet |
+| 2 legal-ontology | Semantic foundation | [goals/semantic-foundation/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantic-foundation/SPEC.md) | goal packet |
 | 2 | Identity as IRI | `goals/identity-iri-fold/README.md` | goal packet |
 | 2 | Legal ontology landscape | `explorations/legal-ontology-landscape/` | sibling exploration |
 | 3 retrieval-citation | Hybrid retrieval fusion | `goals/hybrid-retrieval-fusion-core/SPEC.md` | goal packet |

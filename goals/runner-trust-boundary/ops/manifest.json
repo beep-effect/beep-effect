@@ -56,20 +56,7 @@
     "goals/ci-fleet-residue/research/p2-acceptance-evidence.md",
     "goals/ci-lane-economics/research/placement-decision.md"
   ],
-  "researchReports": [
-    "research/OPPORTUNITIES.md",
-    "research/P0-FACTS.md",
-    "research/P0-GRILL.md",
-    "research/P0-MECHANISM.md",
-    "research/P0-THREAT-MODEL.md",
-    "research/P1-EVIDENCE.md",
-    "research/P2-DESIGN.md",
-    "research/P2-EVIDENCE.md",
-    "research/P3-DESIGN.md",
-    "research/P3-EVIDENCE.md",
-    "research/P4-EVIDENCE.md",
-    "research/SOURCES.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -150,5 +137,13 @@
   "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 2618
+  },
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/runner-trust-boundary",
+    "commit": "94b8d15cd23bd07a95f6f1ab0680d24b94c5103b",
+    "contentHash": "df3b3971d817a59c716de7d8748d700a397b20f1",
+    "archivedAt": "2026-11-09T03:19:32.081Z",
+    "sourceCommit": "e3a763cad8722d5f47587c44530cf7bf44e5bc52"
   }
 }

@@ -107,7 +107,7 @@ store itself; keep the two in sync when either changes.
 Only the Claude Code row is repo-tracked. The other three are machine-local
 operator configuration and cannot ship in a pull request; the exact commands
 are recorded in
-[`goals/shared-memory-code-kg-wiring/research/SOURCES.md`](../../goals/shared-memory-code-kg-wiring/research/SOURCES.md).
+[goals/shared-memory-code-kg-wiring/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/shared-memory-code-kg-wiring/research/SOURCES.md).
 Note that `codegraph install` writes none of these env blocks and has no Grok
 target, so all four registrations are hand-written.
 

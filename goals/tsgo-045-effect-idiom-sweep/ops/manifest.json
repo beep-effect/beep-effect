@@ -31,12 +31,7 @@
     "goals/tsgo-045-effect-idiom-sweep/research/SOURCES.md",
     "goals/tsgo-045-effect-idiom-sweep/ops/prompts/00-orchestrator.md"
   ],
-  "researchReports": [
-    "research/2026-09-12-grounding.md",
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md",
-    "research/origin-prompt-2026-09-12.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -94,5 +89,13 @@
     "Never delete tests or weaken schemas to satisfy a diagnostic.",
     "Do not change the effect RC pin in this packet; consume whatever main pins."
   ],
-  "statusNote": "P0 complete on 2026-09-12: grill locked D1-D13, worktree tsgo-045-effect-idiom-sweep on feat/tsgo-045-effect-idiom-sweep off main 23f3919. P1 in progress 2026-09-12: hook deleted (identity + effect-drizzle copies), SFV4-tagged-error-equivalence inverted, two-entry directive allowlist and plugin option parity in tsgo-rules, doc-text proof 0/24,000, Cursor lane smoke test green; scanned-root widening deferred to the S01 PR. PR #1110 opened 2026-09-12; review round 1 resolved (9 threads); 18 rule cards authored by five Codex discovery lanes, pending copy into ops/rule-cards after PR A merges."
+  "statusNote": "P0 complete on 2026-09-12: grill locked D1-D13, worktree tsgo-045-effect-idiom-sweep on feat/tsgo-045-effect-idiom-sweep off main 23f3919. P1 in progress 2026-09-12: hook deleted (identity + effect-drizzle copies), SFV4-tagged-error-equivalence inverted, two-entry directive allowlist and plugin option parity in tsgo-rules, doc-text proof 0/24,000, Cursor lane smoke test green; scanned-root widening deferred to the S01 PR. PR #1110 opened 2026-09-12; review round 1 resolved (9 threads); 18 rule cards authored by five Codex discovery lanes, pending copy into ops/rule-cards after PR A merges.",
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/tsgo-045-effect-idiom-sweep",
+    "commit": "94b8d15cd23bd07a95f6f1ab0680d24b94c5103b",
+    "contentHash": "2c75e0121ac50646bc49efb92f52057fd7d8c643",
+    "archivedAt": "2026-11-09T03:19:32.081Z",
+    "sourceCommit": "e3a763cad8722d5f47587c44530cf7bf44e5bc52"
+  }
 }

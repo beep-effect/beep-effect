@@ -169,49 +169,49 @@ are this receipt and the packet bookkeeping.
 | [goals/quality-gate-ratchets/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/quality-gate-ratchets/research/SOURCES.md) | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
 | [goals/quality-speedup/research/data/fleet-lane-observations.tsv](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/quality-speedup/research/data/fleet-lane-observations.tsv) | 2 | E | Left byte-identical. Goal research/data snapshot (research/). |
 | [goals/quality-speedup/research/data/fleet-yeet-runs.tsv](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/quality-speedup/research/data/fleet-yeet-runs.tsv) | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/repo-cli-modularization/ops/discovery/audits.json` | 1 | E | Left byte-identical. Frozen discovery snapshot. |
-| `goals/repo-cli-modularization/ops/discovery/files/AgentEffectiveness.json` | 7 | E | Left byte-identical. Frozen discovery snapshot. |
-| `goals/repository-simplification-confidence/PLAN.md` | 3 | E | Left byte-identical. Completed-retained packet record (PLAN.md). |
-| `goals/repository-simplification-confidence/SPEC.md` | 9 | E | Left byte-identical. Completed-retained packet record (SPEC.md). |
-| `goals/repository-simplification-confidence/research/BRIEF-2026-10-09.md` | 2 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/repo-cli-modularization/ops/discovery/audits.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repo-cli-modularization/ops/discovery/audits.json) | 1 | E | Left byte-identical. Frozen discovery snapshot. |
+| [goals/repo-cli-modularization/ops/discovery/files/AgentEffectiveness.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repo-cli-modularization/ops/discovery/files/AgentEffectiveness.json) | 7 | E | Left byte-identical. Frozen discovery snapshot. |
+| [goals/repository-simplification-confidence/PLAN.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/PLAN.md) | 3 | E | Left byte-identical. Completed-retained packet record (PLAN.md). |
+| [goals/repository-simplification-confidence/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/SPEC.md) | 9 | E | Left byte-identical. Completed-retained packet record (SPEC.md). |
+| [goals/repository-simplification-confidence/research/BRIEF-2026-10-09.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/research/BRIEF-2026-10-09.md) | 2 | E | Left byte-identical. Goal research/data snapshot (research/). |
 | `goals/repository-simplification-confidence/research/OPPORTUNITIES.md` | 2 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/repository-simplification-confidence/research/baseline-2026-10-09.md` | 2 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/repository-simplification-confidence/research/sweeps/2026-10-09/A-retained-tools.md` | 5 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/repository-simplification-confidence/research/sweeps/2026-10-09/A-retire.md` | 23 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/repository-simplification-confidence/research/sweeps/2026-10-09/B-inline-suppressions.md` | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/repository-simplification-confidence/research/sweeps/2026-10-09/B-standards.md` | 2 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/repository-simplification-confidence/research/sweeps/2026-10-09/E-github.md` | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/repository-simplification-confidence/research/sweeps/2026-10-09/INDEX.md` | 3 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/repository-simplification-confidence/research/sweeps/2026-10-09/README.md` | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/repository-simplification-confidence/research/baseline-2026-10-09.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/research/baseline-2026-10-09.md) | 2 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/repository-simplification-confidence/research/sweeps/2026-10-09/A-retained-tools.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/research/sweeps/2026-10-09/A-retained-tools.md) | 5 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/repository-simplification-confidence/research/sweeps/2026-10-09/A-retire.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/research/sweeps/2026-10-09/A-retire.md) | 23 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/repository-simplification-confidence/research/sweeps/2026-10-09/B-inline-suppressions.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/research/sweeps/2026-10-09/B-inline-suppressions.md) | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/repository-simplification-confidence/research/sweeps/2026-10-09/B-standards.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/research/sweeps/2026-10-09/B-standards.md) | 2 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/repository-simplification-confidence/research/sweeps/2026-10-09/E-github.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/research/sweeps/2026-10-09/E-github.md) | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/repository-simplification-confidence/research/sweeps/2026-10-09/INDEX.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/research/sweeps/2026-10-09/INDEX.md) | 3 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/repository-simplification-confidence/research/sweeps/2026-10-09/README.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/research/sweeps/2026-10-09/README.md) | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
 | `goals/repository-simplification-residue/SPEC.md` | 2 | E | Left byte-identical. Dated #1851 context and the 2026-10-17 retirement Decision Log rows of this packet. |
-| `goals/skillopt-training-pilot/GOAL.md` | 11 | E | Left byte-identical. Completed-retained packet record (GOAL.md). |
-| `goals/skillopt-training-pilot/PLAN.md` | 12 | E | Left byte-identical. Completed-retained packet record (PLAN.md). |
+| [goals/skillopt-training-pilot/GOAL.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/skillopt-training-pilot/GOAL.md) | 11 | E | Left byte-identical. Completed-retained packet record (GOAL.md). |
+| [goals/skillopt-training-pilot/PLAN.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/skillopt-training-pilot/PLAN.md) | 12 | E | Left byte-identical. Completed-retained packet record (PLAN.md). |
 | `goals/skillopt-training-pilot/README.md` | 7 | E | Left byte-identical. Completed-retained packet record (README.md). |
-| `goals/skillopt-training-pilot/SPEC.md` | 11 | E | Left byte-identical. Completed-retained packet record (SPEC.md). |
-| `goals/skillopt-training-pilot/corpus/.proofs/json-validation.log` | 73 | E | Left byte-identical. Frozen pilot corpus and proofs. |
-| `goals/skillopt-training-pilot/corpus/.proofs/sensitive-data-scan.log` | 1 | E | Left byte-identical. Frozen pilot corpus and proofs. |
-| `goals/skillopt-training-pilot/corpus/.proofs/tsgo-all.log` | 12 | E | Left byte-identical. Frozen pilot corpus and proofs. |
-| `goals/skillopt-training-pilot/corpus/DERIVATION.md` | 19 | E | Left byte-identical. Frozen pilot corpus and proofs. |
-| `goals/skillopt-training-pilot/corpus/benchmark-cases.json` | 36 | E | Left byte-identical. Frozen pilot corpus and proofs. |
-| `goals/skillopt-training-pilot/corpus/splits/train/items.json` | 8 | E | Left byte-identical. Frozen pilot corpus and proofs. |
-| `goals/skillopt-training-pilot/corpus/splits/val/items.json` | 4 | E | Left byte-identical. Frozen pilot corpus and proofs. |
-| `goals/skillopt-training-pilot/corpus/tasks/sfv4-fn-schema-001.json` | 2 | E | Left byte-identical. Frozen pilot corpus and proofs. |
-| `goals/skillopt-training-pilot/corpus/tasks/sfv4-fn-schema-002.json` | 2 | E | Left byte-identical. Frozen pilot corpus and proofs. |
-| `goals/skillopt-training-pilot/corpus/tasks/sfv4-fn-schema-003.json` | 2 | E | Left byte-identical. Frozen pilot corpus and proofs. |
-| `goals/skillopt-training-pilot/corpus/tasks/sfv4-getsomes-struct-001.json` | 2 | E | Left byte-identical. Frozen pilot corpus and proofs. |
-| `goals/skillopt-training-pilot/corpus/tasks/sfv4-getsomes-struct-002.json` | 2 | E | Left byte-identical. Frozen pilot corpus and proofs. |
-| `goals/skillopt-training-pilot/corpus/tasks/sfv4-getsomes-struct-003.json` | 2 | E | Left byte-identical. Frozen pilot corpus and proofs. |
-| `goals/skillopt-training-pilot/corpus/tasks/sfv4-normalization-001.json` | 2 | E | Left byte-identical. Frozen pilot corpus and proofs. |
-| `goals/skillopt-training-pilot/corpus/tasks/sfv4-normalization-002.json` | 2 | E | Left byte-identical. Frozen pilot corpus and proofs. |
-| `goals/skillopt-training-pilot/corpus/tasks/sfv4-normalization-003.json` | 2 | E | Left byte-identical. Frozen pilot corpus and proofs. |
-| `goals/skillopt-training-pilot/corpus/tasks/sfv4-null-return-001.json` | 2 | E | Left byte-identical. Frozen pilot corpus and proofs. |
-| `goals/skillopt-training-pilot/corpus/tasks/sfv4-null-return-002.json` | 2 | E | Left byte-identical. Frozen pilot corpus and proofs. |
-| `goals/skillopt-training-pilot/corpus/tasks/sfv4-null-return-003.json` | 2 | E | Left byte-identical. Frozen pilot corpus and proofs. |
-| `goals/skillopt-training-pilot/ops/events/00001-packet-created-92e92655aa2e11cf621c3f4f4cc18f77e83cf7937d20efd94dc36227d084b7ea.json` | 1 | E | Left byte-identical. Completed-retained packet record (ops/events/00001-packet-created-92e92655aa2e11cf621c3f4f4cc18f77e83cf7937d20efd94dc36227d084b7ea.json). |
+| [goals/skillopt-training-pilot/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/skillopt-training-pilot/SPEC.md) | 11 | E | Left byte-identical. Completed-retained packet record (SPEC.md). |
+| [goals/skillopt-training-pilot/corpus/.proofs/json-validation.log](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/skillopt-training-pilot/corpus/.proofs/json-validation.log) | 73 | E | Left byte-identical. Frozen pilot corpus and proofs. |
+| [goals/skillopt-training-pilot/corpus/.proofs/sensitive-data-scan.log](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/skillopt-training-pilot/corpus/.proofs/sensitive-data-scan.log) | 1 | E | Left byte-identical. Frozen pilot corpus and proofs. |
+| [goals/skillopt-training-pilot/corpus/.proofs/tsgo-all.log](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/skillopt-training-pilot/corpus/.proofs/tsgo-all.log) | 12 | E | Left byte-identical. Frozen pilot corpus and proofs. |
+| [goals/skillopt-training-pilot/corpus/DERIVATION.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/skillopt-training-pilot/corpus/DERIVATION.md) | 19 | E | Left byte-identical. Frozen pilot corpus and proofs. |
+| [goals/skillopt-training-pilot/corpus/benchmark-cases.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/skillopt-training-pilot/corpus/benchmark-cases.json) | 36 | E | Left byte-identical. Frozen pilot corpus and proofs. |
+| [goals/skillopt-training-pilot/corpus/splits/train/items.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/skillopt-training-pilot/corpus/splits/train/items.json) | 8 | E | Left byte-identical. Frozen pilot corpus and proofs. |
+| [goals/skillopt-training-pilot/corpus/splits/val/items.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/skillopt-training-pilot/corpus/splits/val/items.json) | 4 | E | Left byte-identical. Frozen pilot corpus and proofs. |
+| [goals/skillopt-training-pilot/corpus/tasks/sfv4-fn-schema-001.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/skillopt-training-pilot/corpus/tasks/sfv4-fn-schema-001.json) | 2 | E | Left byte-identical. Frozen pilot corpus and proofs. |
+| [goals/skillopt-training-pilot/corpus/tasks/sfv4-fn-schema-002.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/skillopt-training-pilot/corpus/tasks/sfv4-fn-schema-002.json) | 2 | E | Left byte-identical. Frozen pilot corpus and proofs. |
+| [goals/skillopt-training-pilot/corpus/tasks/sfv4-fn-schema-003.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/skillopt-training-pilot/corpus/tasks/sfv4-fn-schema-003.json) | 2 | E | Left byte-identical. Frozen pilot corpus and proofs. |
+| [goals/skillopt-training-pilot/corpus/tasks/sfv4-getsomes-struct-001.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/skillopt-training-pilot/corpus/tasks/sfv4-getsomes-struct-001.json) | 2 | E | Left byte-identical. Frozen pilot corpus and proofs. |
+| [goals/skillopt-training-pilot/corpus/tasks/sfv4-getsomes-struct-002.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/skillopt-training-pilot/corpus/tasks/sfv4-getsomes-struct-002.json) | 2 | E | Left byte-identical. Frozen pilot corpus and proofs. |
+| [goals/skillopt-training-pilot/corpus/tasks/sfv4-getsomes-struct-003.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/skillopt-training-pilot/corpus/tasks/sfv4-getsomes-struct-003.json) | 2 | E | Left byte-identical. Frozen pilot corpus and proofs. |
+| [goals/skillopt-training-pilot/corpus/tasks/sfv4-normalization-001.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/skillopt-training-pilot/corpus/tasks/sfv4-normalization-001.json) | 2 | E | Left byte-identical. Frozen pilot corpus and proofs. |
+| [goals/skillopt-training-pilot/corpus/tasks/sfv4-normalization-002.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/skillopt-training-pilot/corpus/tasks/sfv4-normalization-002.json) | 2 | E | Left byte-identical. Frozen pilot corpus and proofs. |
+| [goals/skillopt-training-pilot/corpus/tasks/sfv4-normalization-003.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/skillopt-training-pilot/corpus/tasks/sfv4-normalization-003.json) | 2 | E | Left byte-identical. Frozen pilot corpus and proofs. |
+| [goals/skillopt-training-pilot/corpus/tasks/sfv4-null-return-001.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/skillopt-training-pilot/corpus/tasks/sfv4-null-return-001.json) | 2 | E | Left byte-identical. Frozen pilot corpus and proofs. |
+| [goals/skillopt-training-pilot/corpus/tasks/sfv4-null-return-002.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/skillopt-training-pilot/corpus/tasks/sfv4-null-return-002.json) | 2 | E | Left byte-identical. Frozen pilot corpus and proofs. |
+| [goals/skillopt-training-pilot/corpus/tasks/sfv4-null-return-003.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/skillopt-training-pilot/corpus/tasks/sfv4-null-return-003.json) | 2 | E | Left byte-identical. Frozen pilot corpus and proofs. |
+| [goals/skillopt-training-pilot/ops/events/00001-packet-created-92e92655aa2e11cf621c3f4f4cc18f77e83cf7937d20efd94dc36227d084b7ea.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/skillopt-training-pilot/ops/events/00001-packet-created-92e92655aa2e11cf621c3f4f4cc18f77e83cf7937d20efd94dc36227d084b7ea.json) | 1 | E | Left byte-identical. Completed-retained packet record (ops/events/00001-packet-created-92e92655aa2e11cf621c3f4f4cc18f77e83cf7937d20efd94dc36227d084b7ea.json). |
 | `goals/skillopt-training-pilot/ops/manifest.json` | 17 | E | Left byte-identical. Completed-retained packet record (ops/manifest.json). |
-| `goals/skillopt-training-pilot/ops/trace.json` | 1 | E | Left byte-identical. Completed-retained packet record (ops/trace.json). |
-| `goals/skillopt-training-pilot/research/SOURCES.md` | 7 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/skillopt-training-pilot/research/p23-contract.md` | 9 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/skillopt-training-pilot/ops/trace.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/skillopt-training-pilot/ops/trace.json) | 1 | E | Left byte-identical. Completed-retained packet record (ops/trace.json). |
+| [goals/skillopt-training-pilot/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/skillopt-training-pilot/research/SOURCES.md) | 7 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/skillopt-training-pilot/research/p23-contract.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/skillopt-training-pilot/research/p23-contract.md) | 9 | E | Left byte-identical. Goal research/data snapshot (research/). |
 | `goals/time-to-certainty/research/c3-sublane-inputs.md` | 2 | E | Left byte-identical. Goal research/data snapshot (research/). |
 | `goals/time-to-certainty/research/economics-close.json` | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
 | `goals/time-to-certainty/research/economics.json` | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
@@ -254,28 +254,28 @@ are this receipt and the packet bookkeeping.
 | [goals/model-routing-sync/research/2026-09-22-04-home-sweep.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/model-routing-sync/research/2026-09-22-04-home-sweep.md) | 5 | E | Left byte-identical. Goal research/data snapshot (research/). |
 | [goals/model-routing-sync/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/model-routing-sync/research/SOURCES.md) | 2 | E | Left byte-identical. Goal research/data snapshot (research/). |
 | `goals/packet-convention-migration/research/OPPORTUNITIES.md` | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/repository-simplification-confidence/PLAN.md` | 7 | E | Left byte-identical. Completed-retained packet record (PLAN.md). |
-| `goals/repository-simplification-confidence/SPEC.md` | 7 | E | Left byte-identical. Completed-retained packet record (SPEC.md). |
-| `goals/repository-simplification-confidence/research/BRIEF-2026-10-09.md` | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/repository-simplification-confidence/PLAN.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/PLAN.md) | 7 | E | Left byte-identical. Completed-retained packet record (PLAN.md). |
+| [goals/repository-simplification-confidence/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/SPEC.md) | 7 | E | Left byte-identical. Completed-retained packet record (SPEC.md). |
+| [goals/repository-simplification-confidence/research/BRIEF-2026-10-09.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/research/BRIEF-2026-10-09.md) | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
 | `goals/repository-simplification-confidence/research/OPPORTUNITIES.md` | 3 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/repository-simplification-confidence/research/baseline-2026-10-09.md` | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/repository-simplification-confidence/research/sweeps/2026-10-09/A-retained-tools.md` | 8 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/repository-simplification-confidence/research/sweeps/2026-10-09/A-retire.md` | 45 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/repository-simplification-confidence/research/sweeps/2026-10-09/B-inline-suppressions.md` | 15 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/repository-simplification-confidence/research/sweeps/2026-10-09/B-skills-stale-api.md` | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/repository-simplification-confidence/research/sweeps/2026-10-09/C-ownership-facts.md` | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/repository-simplification-confidence/research/sweeps/2026-10-09/E-github.md` | 3 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/repository-simplification-confidence/research/sweeps/2026-10-09/INDEX.md` | 7 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/repository-simplification-confidence/research/sweeps/2026-10-09/README.md` | 2 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/repository-simplification-confidence/research/baseline-2026-10-09.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/research/baseline-2026-10-09.md) | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/repository-simplification-confidence/research/sweeps/2026-10-09/A-retained-tools.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/research/sweeps/2026-10-09/A-retained-tools.md) | 8 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/repository-simplification-confidence/research/sweeps/2026-10-09/A-retire.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/research/sweeps/2026-10-09/A-retire.md) | 45 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/repository-simplification-confidence/research/sweeps/2026-10-09/B-inline-suppressions.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/research/sweeps/2026-10-09/B-inline-suppressions.md) | 15 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/repository-simplification-confidence/research/sweeps/2026-10-09/B-skills-stale-api.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/research/sweeps/2026-10-09/B-skills-stale-api.md) | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/repository-simplification-confidence/research/sweeps/2026-10-09/C-ownership-facts.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/research/sweeps/2026-10-09/C-ownership-facts.md) | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/repository-simplification-confidence/research/sweeps/2026-10-09/E-github.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/research/sweeps/2026-10-09/E-github.md) | 3 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/repository-simplification-confidence/research/sweeps/2026-10-09/INDEX.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/research/sweeps/2026-10-09/INDEX.md) | 7 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/repository-simplification-confidence/research/sweeps/2026-10-09/README.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/research/sweeps/2026-10-09/README.md) | 2 | E | Left byte-identical. Goal research/data snapshot (research/). |
 | `goals/repository-simplification-residue/SPEC.md` | 3 | E | Left byte-identical. Dated #1851 context and the 2026-10-17 retirement Decision Log rows of this packet. |
 | `goals/time-to-certainty/research/c3-sublane-inputs.md` | 13 | E | Left byte-identical. Goal research/data snapshot (research/). |
 | `goals/time-to-certainty/research/economics-close.json` | 2 | E | Left byte-identical. Goal research/data snapshot (research/). |
 | `goals/time-to-certainty/research/economics.json` | 2 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/todox-marketing-site/GOAL.md` | 3 | E | Left byte-identical. Completed-retained packet record (GOAL.md). |
-| `goals/todox-marketing-site/PLAN.md` | 6 | E | Left byte-identical. Completed-retained packet record (PLAN.md). |
+| [goals/todox-marketing-site/GOAL.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/todox-marketing-site/GOAL.md) | 3 | E | Left byte-identical. Completed-retained packet record (GOAL.md). |
+| [goals/todox-marketing-site/PLAN.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/todox-marketing-site/PLAN.md) | 6 | E | Left byte-identical. Completed-retained packet record (PLAN.md). |
 | `goals/todox-marketing-site/README.md` | 2 | E | Left byte-identical. Completed-retained packet record (README.md). |
-| `goals/todox-marketing-site/SPEC.md` | 8 | E | Left byte-identical. Completed-retained packet record (SPEC.md). |
-| `goals/todox-marketing-site/research/SOURCES.md` | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/todox-marketing-site/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/todox-marketing-site/SPEC.md) | 8 | E | Left byte-identical. Completed-retained packet record (SPEC.md). |
+| [goals/todox-marketing-site/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/todox-marketing-site/research/SOURCES.md) | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
 | `goals/turborepo-task-qualification/research/adoption/census.json` | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
 | `goals/turborepo-task-qualification/research/alias-file-open-review.json` | 3 | E | Left byte-identical. Goal research/data snapshot (research/). |
 | `goals/turborepo-task-qualification/research/annotated-input-coverage.json` | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
@@ -306,9 +306,9 @@ are this receipt and the packet bookkeeping.
 | `goals/codex-security-findings-2026-07-08/findings/CSF-003.md` | 3 | E | Left byte-identical. Dated security findings record. |
 | `goals/codex-security-findings-2026-07-08/ops/triage.json` | 3 | E | Left byte-identical. Dated security findings record. |
 | `goals/knowledge-freshness-audit/research/SOURCES.md` | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
-| `goals/repository-simplification-confidence/research/sweeps/2026-10-09/A-retire.md` | 3 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/repository-simplification-confidence/research/sweeps/2026-10-09/A-retire.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/research/sweeps/2026-10-09/A-retire.md) | 3 | E | Left byte-identical. Goal research/data snapshot (research/). |
 | `goals/repository-simplification-residue/SPEC.md` | 1 | E | Left byte-identical. Dated #1851 context and the 2026-10-17 retirement Decision Log rows of this packet. |
-| `goals/unified-ai-toolchain/research/claude-web-source-map.md` | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/unified-ai-toolchain/research/claude-web-source-map.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/unified-ai-toolchain/research/claude-web-source-map.md) | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
 
 ### Surface `marketplace\.json`
 
@@ -323,10 +323,10 @@ are this receipt and the packet bookkeeping.
 | `goals/codex-security-findings-2026-07-08/ops/triage.json` | 3 | E | Left byte-identical. Dated security findings record. |
 | `goals/knowledge-freshness-audit/research/SOURCES.md` | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
 | [goals/practice-claude-mod/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/practice-claude-mod/SPEC.md) | 1 | N | Left untouched. The practice mod's own `dist/marketplace/.claude-plugin/marketplace.json`. |
-| `goals/repository-simplification-confidence/research/sweeps/2026-10-09/A-retire.md` | 3 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/repository-simplification-confidence/research/sweeps/2026-10-09/A-retire.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/research/sweeps/2026-10-09/A-retire.md) | 3 | E | Left byte-identical. Goal research/data snapshot (research/). |
 | `goals/repository-simplification-residue/SPEC.md` | 1 | E | Left byte-identical. Dated #1851 context and the 2026-10-17 retirement Decision Log rows of this packet. |
-| `goals/unified-ai-toolchain/research/claude-web-source-map.md` | 4 | N | Left untouched. Vendor plugin manifest formats and the SchemaStore marketplace schema URL. |
-| `goals/unified-ai-toolchain/research/sources-of-truth.md` | 2 | N | Left untouched. Vendor plugin manifest formats and the SchemaStore marketplace schema URL. |
+| [goals/unified-ai-toolchain/research/claude-web-source-map.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/unified-ai-toolchain/research/claude-web-source-map.md) | 4 | N | Left untouched. Vendor plugin manifest formats and the SchemaStore marketplace schema URL. |
+| [goals/unified-ai-toolchain/research/sources-of-truth.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/unified-ai-toolchain/research/sources-of-truth.md) | 2 | N | Left untouched. Vendor plugin manifest formats and the SchemaStore marketplace schema URL. |
 | `packages/tooling/library/ai-sync/src/_generated/source-metadata.gen.ts` | 1 | N | Left untouched. SchemaStore `claude-code-marketplace.json` schema URL (vendor source map and its generated metadata). |
 | `packages/tooling/library/ai-sync/src/source-map.ts` | 1 | N | Left untouched. SchemaStore `claude-code-marketplace.json` schema URL (vendor source map and its generated metadata). |
 
@@ -336,7 +336,7 @@ are this receipt and the packet bookkeeping.
 
 | File | Hits | Class | Disposition |
 | --- | ---: | :---: | --- |
-| `goals/repository-simplification-confidence/research/sweeps/2026-10-09/A-retire.md` | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
+| [goals/repository-simplification-confidence/research/sweeps/2026-10-09/A-retire.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repository-simplification-confidence/research/sweeps/2026-10-09/A-retire.md) | 1 | E | Left byte-identical. Goal research/data snapshot (research/). |
 
 ### Surface `"sst"`
 

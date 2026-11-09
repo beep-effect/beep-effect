@@ -1,6 +1,6 @@
 # W7 — socket probe gate (2026-09-28)
 
-Goal `yeet-pr-events`, workstream W7 (`goals/yeet-pr-events/SPEC.md`; decisions
+Goal `yeet-pr-events`, workstream W7 ([goals/yeet-pr-events/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/yeet-pr-events/SPEC.md); decisions
 D15, D20, D26, D35). Measured from a live, attended Claude Code session running
 in bypass-permissions mode on this workstation (Claude Code 2.1.283, desktop
 entrypoint, Linux). The receiving session had no `crossSessionInbound` value

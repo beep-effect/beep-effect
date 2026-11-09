@@ -31,7 +31,7 @@ bun run test
 bun run lint
 ```
 
-The contract behind the ids above (D13, S4, B3, D14) is `goals/semantica-canary/SPEC.md`;
+The contract behind the ids above (D13, S4, B3, D14) is [goals/semantica-canary/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/SPEC.md);
 the law table is `explorations/semantica-lab/DECISIONS.md`.
 
 This workspace exports nothing reusable. Keep app internals behind `@/*` and

@@ -200,7 +200,7 @@ newline, not a parsed/re-encoded object). Copy `scope`, `profile` and `epoch`
 unchanged from that baseline. Set `subjects` to only those named in the drift
 and the reviewed basis; bind `review.basis.path` and `review.basis.sha256` to
 the reviewed basis file's exact bytes. The request also names the reviewer
-and reason. See `goals/tsc-rs-gates/research/cache-baseline-request-2026-10-14.json`
+and reason. See [goals/tsc-rs-gates/research/cache-baseline-request-2026-10-14.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/tsc-rs-gates/research/cache-baseline-request-2026-10-14.json)
 for the request shape, not current hashes or a reusable subject list.
 
 S31b permits only drift-named subjects with changed inputs: no widened

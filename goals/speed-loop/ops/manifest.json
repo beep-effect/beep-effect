@@ -30,35 +30,7 @@
     "goals/speed-loop/research/OPPORTUNITIES.md",
     "goals/speed-loop/research/GRILL-DECISIONS.md"
   ],
-  "researchReports": [
-    "research/GRILL-DECISIONS.md",
-    "research/OPPORTUNITIES.md",
-    "research/PR-E-TRIAGE.md",
-    "research/SYNTHESIS-2.md",
-    "research/SYNTHESIS.md",
-    "research/adhd/antcolony.json",
-    "research/adhd/assumption.json",
-    "research/adhd/deep-attestation.json",
-    "research/adhd/deep-failure-capsule.json",
-    "research/adhd/deep-merged-object.json",
-    "research/adhd/logistics.json",
-    "research/adhd/oncall.json",
-    "research/adhd/speedrunner.json",
-    "research/o1-jsdoc-incremental.md",
-    "research/o2-turbo-cache-keys.md",
-    "research/o3-battery-process-model.md",
-    "research/o4-testlanes.md",
-    "research/o5-instantiation-stages.md",
-    "research/o6-execution-plan.md",
-    "research/o6-owned-runners.md",
-    "research/r1-failfast-yeet.md",
-    "research/r2-ci-shared-setup.md",
-    "research/r3-package-deletions.md",
-    "research/r4-gate-value-audit.md",
-    "research/r5-grit-candidates.md",
-    "research/runner-secrets.md",
-    "research/upstream-tsgo-effectfn-issue.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -94,5 +66,13 @@
     "The stop rule fires: two consecutive cycles' best probe-gated candidates each under ~30s full-sweep saving.",
     "The loop's own research cost exceeds its measured wins for a full cycle.",
     "A cycle would ship a new always-on quality gate without a cost-vs-catch case."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/speed-loop",
+    "commit": "94b8d15cd23bd07a95f6f1ab0680d24b94c5103b",
+    "contentHash": "ccf36f6986ed8fbb891ac477966b9a4d685425b2",
+    "archivedAt": "2026-11-09T03:19:32.081Z",
+    "sourceCommit": "e3a763cad8722d5f47587c44530cf7bf44e5bc52"
+  }
 }

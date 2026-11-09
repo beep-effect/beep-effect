@@ -221,7 +221,7 @@ A stale item (`freshness._tag` other than `Fresh`) means unknown: do not spill o
 | Admission | `AdmissionSlots.hardFloorEngaged`, `queued` | engaged, or queued >= 1 | Not from PSI; the gate's own refusal |
 
 Any one row is a breach. Baseline and derivation:
-`goals/t3code-spill-routing/history/2026-11-08-baseline.md`. Re-derive the table if the
+[goals/t3code-spill-routing/history/2026-11-08-baseline.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/t3code-spill-routing/history/2026-11-08-baseline.md). Re-derive the table if the
 recorder changes.
 
 On a breach, launch on the first host in this order that `t3_environment_links` lists
