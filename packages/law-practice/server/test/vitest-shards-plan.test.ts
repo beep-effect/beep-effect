@@ -2,7 +2,7 @@ import * as NodeURL from "node:url";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
-import { assertNone, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
+import { assertNone, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -118,10 +118,10 @@ it.layer(NodeServices.layer)("law-practice-server shard plan", (it) => {
       strictEqual(A.length(shardPlan.estimatedMilliseconds), A.length(shardPlan.shards));
       expect(A.every(shardPlan.shards, A.isReadonlyArrayNonEmpty)).toBe(true);
       for (const file of planned) {
-        const index = plannedShardIndex(shardPlan, file);
-        assertTrue(O.isSome(index));
-        expect(O.getOrElse(index, () => 0)).toBeGreaterThanOrEqual(1);
-        expect(O.getOrElse(index, () => 0)).toBeLessThanOrEqual(A.length(shardPlan.shards));
+        // A planned file resolves to a one-based shard inside the plan (0 would mean "not planned").
+        const index = O.getOrElse(plannedShardIndex(shardPlan, file), () => 0);
+        expect(index).toBeGreaterThanOrEqual(1);
+        expect(index).toBeLessThanOrEqual(A.length(shardPlan.shards));
       }
       assertNone(plannedShardIndex(shardPlan, "test/integration/CitationEngineCorpus.test.ts"));
     })
