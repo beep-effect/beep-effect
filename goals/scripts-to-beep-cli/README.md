@@ -31,7 +31,17 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3 Yeet. Re-final PR #2922 (goals-only) carries `proposedCloseout`; #2921 (PR 3, merged 17472a68ce) deleted the seven transitional CI scripts now that #2906 (merged 5a842b4882) put the binary-calling heavy.yml on main. #2860 (d15ecf4ca61), #2902 (8224cf33a5) and #2906 are merged. `proposedCloseout` is `completed-retained` with `finalPullRequest` 2922 because #2921 merged inside its review window (decision `2026-11-08-refinal-after-early-merge`); `initiative.status` stays `active` until completion evidence verifies after the merge.
+P3 Yeet. Fourth goals-only re-final (branch `goals/scripts-to-beep-cli-refinal4`) carries
+`proposedCloseout`. #2961 (third re-final, merged 031fa9d4af) was hand-merged seven seconds after
+its ready flip, so no merge-ready verdict binds to its head and
+`goals completion refresh --slug scripts-to-beep-cli` returns unknown (checkpoint
+`2026-11-09-fourth-refinal-after-hand-merge`). #2860 (d15ecf4ca61), #2902 (8224cf33a5), #2906
+(5a842b4882), #2921 (17472a68ce), #2922 (2398f39133) and #2961 are merged supporting PRs; the
+code work is complete. The re-final stays a draft until the session that will run
+`yeet monitor --until-ready` flips it ready; it must not be hand-merged before the merge-ready
+line. The completion refresh needs a workstation token that reads ruleset history and rule
+suites (tbk-worker's fine-grained token gets 403 on both). `initiative.status` stays `active`
+until completion evidence verifies after the merge.
 
 ## Latest Evidence
 

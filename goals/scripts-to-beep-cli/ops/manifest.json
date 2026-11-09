@@ -6,7 +6,7 @@
     "title": "Retire ./scripts into beep CLI commands and a compiled beep binary for CI",
     "status": "active",
     "created": "2026-11-06",
-    "updated": "2026-11-06",
+    "updated": "2026-11-09",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/scripts-to-beep-cli",
@@ -47,13 +47,17 @@
       },
       {
         "number": 2961,
+        "role": "supporting"
+      },
+      {
+        "number": 3022,
         "role": "final"
       }
     ],
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/goals_scripts-to-beep-cli-refinal3-cfdf8bee554d/verdict.json",
+        "ref": ".beep/yeet/runs/goals_scripts-to-beep-cli-refinal4-063116c51820/verdict.json",
         "gating": true
       }
     ]
@@ -128,6 +132,6 @@
   ],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2961
+    "finalPullRequest": 3022
   }
 }
