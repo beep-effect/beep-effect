@@ -253,7 +253,7 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
     })
   );
 
-  it.effect("compares all twenty-eight unit partitions and selected Labs without running a producer", () =>
+  it.effect("compares all thirty unit partitions and selected Labs without running a producer", () =>
     Effect.gen(function* () {
       const entries = [owner(), owner("@beep/ciops", "apps/labs/ciops")];
       const { root } = yield* fixture(entries);
@@ -271,6 +271,8 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
         "repo-cli-7",
         "repo-cli-8",
         "repo-cli-9",
+        "repo-cli-10",
+        "repo-cli-11",
         "law-practice-1",
         "law-practice-2",
         "law-practice-3",
@@ -292,10 +294,10 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
         "unit-g",
         "labs",
       ]);
-      const ninths = A.map(A.take(input.expectedPartitions, 9), (partition) => partition.packages[0]?.shard);
-      const lab = input.expectedPartitions[28]?.packages[0];
+      const elevenths = A.map(A.take(input.expectedPartitions, 11), (partition) => partition.packages[0]?.shard);
+      const lab = input.expectedPartitions[30]?.packages[0];
       assertDefined(lab);
-      expect(ninths).toEqual(A.map(A.range(1, 9), (index) => ({ index, total: 9 })));
+      expect(elevenths).toEqual(A.map(A.range(1, 11), (index) => ({ index, total: 11 })));
       expect(lab.packageName).toBe("@beep/ciops");
       expect(mocks.run).not.toHaveBeenCalled();
       expect(mocks.write).not.toHaveBeenCalled();

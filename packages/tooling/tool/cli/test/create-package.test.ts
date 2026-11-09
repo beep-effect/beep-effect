@@ -1607,6 +1607,8 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
                   "repo-cli-7",
                   "repo-cli-8",
                   "repo-cli-9",
+                  "repo-cli-10",
+                  "repo-cli-11",
                   "law-practice-1",
                   "law-practice-2",
                   "law-practice-3",

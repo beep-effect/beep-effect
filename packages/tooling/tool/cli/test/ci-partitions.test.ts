@@ -165,7 +165,7 @@ describe("partition table shape", () => {
     // The Test Unit families own the `vitest.shards.json` plans; the Test Integration family shares
     // law-practice-server's package but runs the separate `vitest.integration.shards.json` plan.
     const unit = A.filter(sharded, (partition) => partition.lane === "test-unit");
-    expect(A.length(A.filter(unit, (partition) => A.contains(partition.packages, "@beep/repo-cli")))).toBe(9);
+    expect(A.length(A.filter(unit, (partition) => A.contains(partition.packages, "@beep/repo-cli")))).toBe(11);
     expect(A.length(A.filter(unit, (partition) => A.contains(partition.packages, "@beep/law-practice-server")))).toBe(
       12
     );
