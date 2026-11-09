@@ -164,6 +164,7 @@ const FIXTURE: ReadonlyArray<readonly [string, string]> = [
   ["explorations/open/ops/manifest.json", explorationManifest("open", "active")],
   ["docs/guide.md", GUIDE],
   ["docs/AGENTS.md", "Spec is `goals/done/SPEC.md`.\n"],
+  ["docs/wrapped.md", "Follows the [done\nplan](../goals/done/PLAN.md#p1) closely.\n"],
   ["goals/done/assets/figure.md", "# Figure\n"],
   ["docs/directories.md", "Figures in `goals/done/assets`.\nFriction stays in `goals/done/research`.\n"],
   ["packages/demo/src/prompt.ts", "export const prompt = 'Read `goals/done/PLAN.md` first.';\n"],
@@ -423,6 +424,15 @@ describe("goals archive", () => {
       assert.strictEqual(rewrite("[see `x.md` here](https://old/x.md)"), "[see x.md here](https://old/x.md)");
       assert.strictEqual(rewrite("[a](b) `x.md` [c](d)"), "[a](b) [x.md](https://e/x.md) [c](d)");
       assertTrue(rewriteLinksInText("no citation", [span("x.md")]).pipe(Result.isFailure));
+      const wrapped = InboundLink.make({
+        file: "a.md",
+        line: 2,
+        destination: "x.md",
+        form: "link",
+        rewrittenTo: "https://e/x.md",
+      });
+      const rewrittenTail = rewriteLinksInText("[two\nlines](x.md) on", [wrapped]).pipe(Result.getOrThrow);
+      assert.strictEqual(rewrittenTail, "[two\nlines](https://e/x.md) on");
     });
 
     it.effect("plans terminal packets in index order with keep/remove partitions and inbound links", () =>
@@ -499,6 +509,12 @@ describe("goals archive", () => {
                 [
                   "docs/guide.md",
                   3,
+                  "../goals/done/PLAN.md#p1",
+                  `https://github.com/${REPO}/blob/main/goals/done/PLAN.md#p1`,
+                ],
+                [
+                  "docs/wrapped.md",
+                  2,
                   "../goals/done/PLAN.md#p1",
                   `https://github.com/${REPO}/blob/main/goals/done/PLAN.md#p1`,
                 ],
@@ -765,6 +781,13 @@ describe("goals archive", () => {
           )(guide)
         );
         assertTrue(Str.includes("[fenced](../goals/done/SPEC.md)")(guide));
+
+        // A link wrapped inside its text is planned and rewritten at its tail.
+        const wrappedDoc = yield* readText(root, "docs/wrapped.md");
+        assert.strictEqual(
+          wrappedDoc,
+          `Follows the [done\nplan](https://github.com/${REPO}/blob/main/goals/done/PLAN.md#p1) closely.\n`
+        );
 
         // A symlink stays a symlink, and reads the target's single rewrite.
         const fs = yield* FileSystem.FileSystem;

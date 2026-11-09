@@ -362,7 +362,7 @@ ratchets hold at zero — keep-green only, no new clicks past zero.
   [`stack-installer`](../explorations/stack-installer/) revival (second-user
   distribution); `oip-web` revival (brand/intake surface) follows the completed
   [`oip-web-production-hardening` launch
-  runbook](../goals/oip-web-production-hardening/history/outputs/launch-runbook.md).
+  runbook](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/oip-web-production-hardening/history/outputs/launch-runbook.md).
 - **Generalization verticals** (Todox, wealth management) on the proven
   runtime.
 - **Platform programs** — crispening wave continuation,

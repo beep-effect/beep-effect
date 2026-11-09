@@ -37,7 +37,14 @@ import {
   knowledgeLinkDestinations,
   normalizeKnowledgeRepoPath,
 } from "../Knowledge/Knowledge.refs.ts";
-import { ArchivePlan, ArchivePlanEntry, ArchiveRepoRef, InboundLink, tombstoneKeeps } from "./Archive.schemas.ts";
+import {
+  ArchivePlan,
+  ArchivePlanEntry,
+  ArchiveRepoRef,
+  InboundLink,
+  tombstoneKeeps,
+  wrappedLinkDestination,
+} from "./Archive.schemas.ts";
 import { ArchiveError } from "./Goals.errors.ts";
 import { decodeGoalManifest, GoalStatus } from "./Goals.schemas.ts";
 import { isTerminalPacketStatus } from "./Harvest.service.ts";
@@ -316,7 +323,10 @@ const scanFileLinks = Effect.fnUntraced(function* (repoRoot: string, file: strin
   const text = yield* fs.readFileString(path.join(repoRoot, file)).pipe(Effect.orElseSucceed(() => ""));
   const proseLines: ReadonlyArray<KnowledgeDocumentLine> = A.filter(knowledgeDocumentLines(text), (line) => line.prose);
   const candidates = A.flatMap(proseLines, (line) =>
-    A.map(knowledgeLinkDestinations(line.text), (link) => ({ line: line.number, destination: link.destination }))
+    A.map(
+      A.appendAll(knowledgeLinkDestinations(line.text), wrappedLinkDestination(line.text).pipe(O.toArray)),
+      (link) => ({ line: line.number, destination: link.destination })
+    )
   );
   const resolved = yield* Effect.forEach(candidates, (candidate) =>
     Effect.map(

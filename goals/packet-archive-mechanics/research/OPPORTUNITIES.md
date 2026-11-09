@@ -89,3 +89,18 @@ Batch 3's rewrite turned one code span into a link and took
 reported `goal-md-oversize` (hard maximum 4000). Each rewrite adds about 110 characters of archive URL.
 It was fixed by hand with a plain-text reference. The planner could report which budgeted documents a
 plan would push over the limit, so this shows up before the archive write.
+
+## 2026-11-08: Links wrapped across lines escaped the rewriter
+
+Hosted `lint:roadmap-refs` failed on batch 3 because `docs/ROADMAP.md:365` holds a link whose text wraps
+(`[... launch` then `runbook](../goals/...)`). The link parser reads one line at a time and needs the
+opening bracket, so neither the planner nor the knowledge doctor saw it. Two more such links were
+already broken in an exploration. The planner and rewriter now read a wrapped link tail. Running
+`lint:roadmap-refs` before opening a batch PR would have caught this hours earlier.
+
+## 2026-11-08: A one-line path edit changed an effect-vitest occurrence digest
+
+Repointing a path inside `program` in two evaluation runners changed each row's `occurrence` digest, so
+hosted `lint:effect-vitest` reported new findings with unchanged ids. A full `--write` also rewrites about
+300 unrelated drifted rows, so only the two rows were refreshed. A command to refresh named rows, and a
+new-finding line that prints the id, would have made this quick to read.
