@@ -1,8 +1,12 @@
 import * as NodeOS from "node:os";
 import * as NodeURL from "node:url";
 import { defineConfig, mergeConfig } from "vitest/config";
-import { makeMeasuredSequencer } from "../../../../vitest.sequencer.ts";
-import shared, { fcDeepSweepActive, packageTestTimeout, vitestDoctestActive } from "../../../../vitest.shared.ts";
+import shared, {
+  fcDeepSweepActive,
+  makeMeasuredSequencer,
+  packageTestTimeout,
+  vitestDoctestActive,
+} from "../../../../vitest.shared.ts";
 import shardPlan from "./vitest.shards.json" with { type: "json" };
 
 // A committed plan keeps every hosted runner on the same assignment. New files use Vitest's

@@ -16,7 +16,7 @@ import * as Str from "effect/String";
 import shardPlan from "../vitest.shards.json" with { type: "json" };
 
 const packageRoot = NodeURL.fileURLToPath(new URL("../", import.meta.url));
-/** The sequencer's lookup (root `vitest.sequencer.ts`), restated here because the test tsconfig stops at the package root. */
+/** The sequencer's lookup (root `vitest.shared.ts`), restated here because the test tsconfig stops at the package root. */
 const plannedShardIndex = (
   plan: { readonly shards: ReadonlyArray<ReadonlyArray<string>> },
   file: string

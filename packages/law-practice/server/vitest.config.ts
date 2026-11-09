@@ -2,8 +2,7 @@ import * as NodeURL from "node:url";
 import { A, Str } from "@beep/utils";
 import { pipe } from "effect/Function";
 import { defineConfig, mergeConfig } from "vitest/config";
-import { makeMeasuredSequencer } from "../../../vitest.sequencer.ts";
-import shared, { fcDeepSweepActive, vitestDoctestActive } from "../../../vitest.shared.ts";
+import shared, { fcDeepSweepActive, makeMeasuredSequencer, vitestDoctestActive } from "../../../vitest.shared.ts";
 import shardPlan from "./vitest.shards.json" with { type: "json" };
 
 /**

@@ -27,7 +27,6 @@ const EXPECTED_COVERAGE_INPUTS: ReadonlyArray<string> = [
   "vitest.coverage.config.ts",
   "$TURBO_ROOT$/vitest.aliases.generated.json",
   "$TURBO_ROOT$/vitest.shared.ts",
-  "$TURBO_ROOT$/vitest.sequencer.ts",
   "$TURBO_ROOT$/vite.shared.ts",
   "$TURBO_ROOT$/vitest.setup.ts",
 ];

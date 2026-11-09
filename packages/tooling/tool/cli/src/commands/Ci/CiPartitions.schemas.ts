@@ -75,8 +75,8 @@ const ShardFiles = S.Array(S.String);
  *
  * `shards[i]` holds the package-relative test files hosted shard `i + 1` runs and
  * `estimatedMilliseconds[i]` their measured file time. `fileMilliseconds` keeps the per-file
- * measurements the plan was packed from so `--check` can re-add the bins offline. The root
- * `vitest.sequencer.ts` reads `shards` only.
+ * measurements the plan was packed from so `--check` can re-add the bins offline. The sequencer in the
+ * root `vitest.shared.ts` reads `shards` only.
  *
  * **Example** (Describe a two-shard plan)
  *
