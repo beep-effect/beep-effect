@@ -3,7 +3,7 @@ import { A, Str } from "@beep/utils";
 import { pipe } from "effect/Function";
 import { defineConfig, mergeConfig } from "vitest/config";
 import { makeMeasuredSequencer } from "../../../vitest.sequencer.ts";
-import shared from "../../../vitest.shared.ts";
+import shared, { fcDeepSweepActive, vitestDoctestActive } from "../../../vitest.shared.ts";
 import shardPlan from "./vitest.shards.json" with { type: "json" };
 
 /**
@@ -70,40 +70,48 @@ const config = mergeConfig(
   })
 );
 
+// Doctest mode collects `src/**` through `includeSource` and the property sweep resolves its own
+// include list, so both keep the single config with the package-wide cap; splitting would re-add
+// `test/**` to the projects and run every doctest twice (repo-cli guards the same way).
+const splitProjects = !vitestDoctestActive && !fcDeepSweepActive;
+
 // Projects that extend the root concatenate `include`, so the root include is cleared after the
 // merge (which would concatenate it back) and each project names its own files.
-export default {
-  ...config,
-  test: {
-    ...config.test,
-    include: [],
-    projects: [
-      {
-        extends: true,
-        test: {
-          name: "native-wallclock",
-          include: nativeWallclockSuites,
-          exclude: cliExcludes,
-          // Real native worker tests include cold module loading. Bound the test runner fan-out
-          // so it does not consume the production deadline itself (#2511). The hosted coverage
-          // producer's `--maxWorkers=1` still overrides this: Vitest applies the CLI flag to
-          // every project. Each native owner still enforces its configured queue/execution limits.
-          maxWorkers: 2,
-          maxConcurrency: 2,
-          sequence: { groupOrder: 0 },
-        },
+export default splitProjects
+  ? {
+      ...config,
+      test: {
+        ...config.test,
+        include: [],
+        projects: [
+          {
+            extends: true,
+            test: {
+              name: "native-wallclock",
+              include: nativeWallclockSuites,
+              exclude: cliExcludes,
+              // Real native worker tests include cold module loading. Bound the test runner fan-out
+              // so it does not consume the production deadline itself (#2511). The hosted coverage
+              // producer's `--maxWorkers=1` still overrides this: Vitest applies the CLI flag to
+              // every project. Each native owner still enforces its configured queue/execution limits.
+              maxWorkers: 2,
+              maxConcurrency: 2,
+              sequence: { groupOrder: 0 },
+            },
+          },
+          {
+            extends: true,
+            test: {
+              name: "replay",
+              include: ["test/**/*.test.{ts,tsx}"],
+              exclude: [...nativeWallclockSuites, ...cliExcludes],
+              // Distinct group order: projects with different worker caps cannot share one group, and
+              // the wall-clock group drains before the replay group widens to the default worker count.
+              sequence: { groupOrder: 1 },
+            },
+          },
+        ],
       },
-      {
-        extends: true,
-        test: {
-          name: "replay",
-          include: ["test/**/*.test.{ts,tsx}"],
-          exclude: [...nativeWallclockSuites, ...cliExcludes],
-          // Distinct group order: projects with different worker caps cannot share one group, and
-          // the wall-clock group drains before the replay group widens to the default worker count.
-          sequence: { groupOrder: 1 },
-        },
-      },
-    ],
-  },
-};
+    }
+  : // Doctests and the deep property sweep keep the #2511 package-wide cap.
+    mergeConfig(config, { test: { maxWorkers: 2, maxConcurrency: 2 } });

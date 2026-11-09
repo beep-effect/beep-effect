@@ -73,6 +73,7 @@
         "tsconfig*.json",
         "vitest*.config.ts",
         "$TURBO_ROOT$/vitest.shared.ts",
+        "$TURBO_ROOT$/vitest.sequencer.ts",
         "$TURBO_ROOT$/vite.shared.ts",
         "$TURBO_ROOT$/vitest.setup.ts",
         "$TURBO_ROOT$/vitest.aliases.generated.json",
@@ -5271,6 +5272,7 @@
         "$TURBO_ROOT$/tools/tsgo-shim/tsgo.js",
         "$TURBO_ROOT$/tools/tsgo-shim/package.json",
         "$TURBO_ROOT$/vitest.shared.ts",
+        "$TURBO_ROOT$/vitest.sequencer.ts",
         "$TURBO_ROOT$/vite.shared.ts",
         "$TURBO_ROOT$/vitest.aliases.generated.json"
       ],
@@ -5336,6 +5338,7 @@
         "$TURBO_ROOT$/tools/tsgo-shim/tsgo.js",
         "$TURBO_ROOT$/tools/tsgo-shim/package.json",
         "$TURBO_ROOT$/vitest.shared.ts",
+        "$TURBO_ROOT$/vitest.sequencer.ts",
         "$TURBO_ROOT$/vite.shared.ts",
         "$TURBO_ROOT$/vitest.aliases.generated.json"
       ],
@@ -5353,6 +5356,7 @@
         "!CHANGELOG.md",
         "!LICENSE",
         "$TURBO_ROOT$/vitest.shared.ts",
+        "$TURBO_ROOT$/vitest.sequencer.ts",
         "$TURBO_ROOT$/vite.shared.ts",
         "$TURBO_ROOT$/vitest.setup.ts",
         "$TURBO_ROOT$/vitest.aliases.generated.json",
@@ -5395,6 +5399,7 @@
         "!CHANGELOG.md",
         "!LICENSE",
         "$TURBO_ROOT$/vitest.shared.ts",
+        "$TURBO_ROOT$/vitest.sequencer.ts",
         "$TURBO_ROOT$/vite.shared.ts",
         "$TURBO_ROOT$/vitest.setup.ts",
         "$TURBO_ROOT$/vitest.aliases.generated.json",
@@ -5411,6 +5416,7 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/vitest.shared.ts",
+        "$TURBO_ROOT$/vitest.sequencer.ts",
         "$TURBO_ROOT$/vite.shared.ts",
         "$TURBO_ROOT$/vitest.setup.ts",
         "$TURBO_ROOT$/vitest.aliases.generated.json",
@@ -5425,6 +5431,7 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/vitest.shared.ts",
+        "$TURBO_ROOT$/vitest.sequencer.ts",
         "$TURBO_ROOT$/vite.shared.ts",
         "$TURBO_ROOT$/vitest.setup.ts",
         "$TURBO_ROOT$/vitest.aliases.generated.json",
@@ -5439,6 +5446,7 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/vitest.shared.ts",
+        "$TURBO_ROOT$/vitest.sequencer.ts",
         "$TURBO_ROOT$/vite.shared.ts",
         "$TURBO_ROOT$/vitest.setup.ts",
         "$TURBO_ROOT$/vitest.aliases.generated.json",
@@ -5467,6 +5475,7 @@
         "vitest.coverage.config.ts",
         "$TURBO_ROOT$/vitest.aliases.generated.json",
         "$TURBO_ROOT$/vitest.shared.ts",
+        "$TURBO_ROOT$/vitest.sequencer.ts",
         "$TURBO_ROOT$/vite.shared.ts",
         "$TURBO_ROOT$/vitest.setup.ts"
       ],
