@@ -1,6 +1,7 @@
 import * as NodeURL from "node:url";
 import { defineConfig, mergeConfig } from "vitest/config";
 import shared from "../../../vitest.shared.ts";
+import { IntegrationSequencer } from "./vitest.integration.sequencer.ts";
 
 export default mergeConfig(
   shared,
@@ -17,6 +18,8 @@ export default mergeConfig(
     // Real native worker tests include cold module loading. Bound the test
     // runner fan-out so it does not consume the production deadline itself.
     // Each native owner still enforces its configured queue/execution limits.
-    test: { maxWorkers: 2, maxConcurrency: 2 },
+    // The hosted integration partitions shard `test/integration` through the
+    // committed LPT plan (vitest.integration.sequencer.ts).
+    test: { maxWorkers: 2, maxConcurrency: 2, sequence: { sequencer: IntegrationSequencer } },
   })
 );

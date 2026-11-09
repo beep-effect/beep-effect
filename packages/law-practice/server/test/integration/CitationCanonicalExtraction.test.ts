@@ -1,16 +1,23 @@
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as Layer from "effect/Layer";
-import { citationCanonicalExtractionShards } from "../CitationCanonicalExtraction.fixtures.ts";
+import {
+  CITATION_CANONICAL_EXTRACTION_RANGE_COUNT,
+  citationCanonicalExtractionShardRange,
+} from "../CitationCanonicalExtraction.fixtures.ts";
 import { citationTokenizerTestLayer } from "../CitationTokenizer.fixtures.ts";
 
-// Bun runtime only. The node replay of these shards (CitationCanonicalExtractionNode.test.ts) was
-// deleted on 2026-11-09 (deletion addendum G1); integration/CitationEngineCorpus.test.ts is the node
-// full-corpus scene.
+// Bun runtime only. The canonical shard table is split into contiguous ranges,
+// one integration file per range, so no file exceeds a hosted integration
+// partition's budget (goals/citation-extraction-engine, 2026-11-09). Every row
+// still replays with full=true; test/CitationCanonicalExtractionRanges.test.ts
+// asserts the ranges are disjoint and their union is the whole table.
+const RANGE = 0;
+
 it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true })(
-  "all canonical builtin extraction inputs",
+  `canonical builtin extraction inputs, range ${RANGE + 1} of ${CITATION_CANONICAL_EXTRACTION_RANGE_COUNT}`,
   (it) => {
-    for (const shard of citationCanonicalExtractionShards) {
+    for (const shard of citationCanonicalExtractionShardRange(RANGE)) {
       it.effect(`${shard.title} on bun`, () => shard.replay("bun"), { timeout: 600000 });
     }
   }

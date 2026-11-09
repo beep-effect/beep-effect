@@ -98,6 +98,7 @@ jobs:
       route_skips: ${{ steps.decide.outputs.route_skips }}
       route_receipt: ${{ steps.decide.outputs.route_receipt }}
       legacy_coverage: ${{ steps.docs.outputs.verdict == 'skip-satisfied' && 'false' || steps.coverage-rollout.outputs.legacy_coverage }}
+      legacy_integration: ${{ steps.docs.outputs.verdict == 'skip-satisfied' && 'false' || steps.coverage-rollout.outputs.legacy_integration }}
     steps:
       - name: Satisfy documentation-only admission
         id: docs
@@ -156,8 +157,12 @@ jobs:
             import * as Effect from "effect/Effect";
             await Effect.promise(() => Bun.file(Bun.argv[1]).text()).pipe(
               Effect.flatMap((text) => workflowJobContexts("heavy.yml", text)),
-              Effect.map(A.contains("Heavy / Coverage Regression")),
-              Effect.tap((legacy) => Effect.sync(() => console.log(`legacy_coverage=${legacy}`))),
+              Effect.tap((contexts) =>
+                Effect.sync(() => {
+                  console.log(`legacy_coverage=${A.contains(contexts, "Heavy / Coverage Regression")}`);
+                  console.log(`legacy_integration=${A.contains(contexts, "Heavy / Test Integration")}`);
+                })
+              ),
               Effect.runPromise
             );
           ' "$heavy_file" >> "$GITHUB_OUTPUT"
@@ -341,7 +346,7 @@ jobs:
           }
 
           # Only the ids declared in this job's matrix have arms; the heavy
-          # lanes (check, test-integration, lint-policy) dispatch
+          # lanes (check, lint-policy) dispatch
           # from heavy.yml.
           case "${{ env.BEEP_CI_LANE_ID }}" in
             codegen|ecosystem)
@@ -859,6 +864,150 @@ jobs:
             true:skipped) echo "Documentation-only diff: Test Unit shards were not allocated." ;;
             false:success) echo "Every Test Unit shard passed." ;;
             *) echo "Unexpected classification or shard result"; exit 1 ;;
+          esac
+
+  # Hosted integration partitions (goals/citation-extraction-engine, 2026-11-09).
+  # `lps-int-N` runs one Vitest shard of @beep/law-practice-server's integration
+  # suite from the LPT plan in packages/law-practice/server/vitest.integration.shards.json;
+  # `int-rest` runs the root integration lane for every other package. Each
+  # partition is sized to finish under ten minutes; the budget leaves room for
+  # a mis-sized shard to report its own failure instead of a cancellation.
+  test-integration-shard:
+    name: Test Integration (${{ matrix.partition }})
+    needs: [change-profile]
+    if: needs.change-profile.outputs.docs_only != 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        partition: [lps-int-1, lps-int-2, lps-int-3, lps-int-4, lps-int-5, lps-int-6, lps-int-7, lps-int-8, lps-int-9, lps-int-10, lps-int-11, lps-int-12, lps-int-13, lps-int-14, lps-int-15, lps-int-16, int-rest]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Fetch pull request base
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
+
+      - name: Determine lane execution
+        id: lane-gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          should_run=true
+          docs_only="${{ needs.change-profile.outputs.docs_only }}"
+          if [[ "$docs_only" == "true" ]]; then
+            should_run=false
+          fi
+          echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
+
+      - name: Setup monorepo CI
+        if: steps.lane-gate.outputs.should_run == 'true'
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          native-pdf-tools: ${{ matrix.partition == 'int-rest' }}
+          free-disk: "true"
+          free-disk-min-gib: "64"
+          turbo-remote-cache: "true"
+          app-secrets: "true"
+          turbo-api: ${{ vars.TURBO_API }}
+          turbo-team: ${{ vars.TURBO_TEAM }}
+          turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
+          turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
+          r2-enabled: ${{ vars.TURBO_R2_ENABLED }}
+          r2-endpoint: ${{ vars.TURBO_R2_ENDPOINT }}
+          r2-bucket: ${{ vars.TURBO_R2_BUCKET }}
+          r2-access-key-id: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_ACCESS_KEY_ID || (github.event_name != 'push' && secrets.TURBO_R2_READ_ACCESS_KEY_ID || '') }}
+          r2-secret-access-key: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_SECRET_ACCESS_KEY || (github.event_name != 'push' && secrets.TURBO_R2_READ_SECRET_ACCESS_KEY || '') }}
+          database-url: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
+          database-url-unpooled: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
+          email-resend-api-key: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
+          auth-secret: ${{ github.event_name == 'push' && secrets.AUTH_SECRET || '' }}
+          better-auth-secret: ${{ github.event_name == 'push' && secrets.BETTER_AUTH_SECRET || '' }}
+          better-auth-url: ${{ github.event_name == 'push' && secrets.BETTER_AUTH_URL || '' }}
+          security-trusted-origins: ${{ github.event_name == 'push' && secrets.SECURITY_TRUSTED_ORIGINS || '' }}
+          liveblocks-secret-key: ${{ github.event_name == 'push' && secrets.LIVEBLOCKS_SECRET_KEY || '' }}
+
+      - name: Run Test Integration partition
+        if: steps.lane-gate.outputs.should_run == 'true'
+        run: |
+          set -euo pipefail
+          run_lane() {
+            setsid bun run beep "$@" < /dev/null &
+            local pgid=$!
+            local status=0
+            wait "$pgid" || status=$?
+            kill -TERM -- "-$pgid" 2>/dev/null || true
+            sleep 2
+            kill -KILL -- "-$pgid" 2>/dev/null || true
+            return "$status"
+          }
+
+          shape_args=()
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            shape_args+=(--affected --base "origin/${GITHUB_BASE_REF:-main}")
+          fi
+          shape_args+=(--summarize)
+          run_lane ci lane test-integration --partition "${{ matrix.partition }}" "${shape_args[@]}"
+
+      - name: Append Turbo summary
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        run: bun run beep ci append-turbo-summary
+
+      - name: Upload trusted Turbo summaries
+        if: github.event_name == 'push' && hashFiles('.turbo/runs/*.json') != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: turbo-summary-${{ github.job }}-${{ matrix.id || matrix.partition || 'single' }}
+          path: .turbo/runs/*.json
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Skip lane
+        if: steps.lane-gate.outputs.should_run != 'true'
+        run: echo "Skipping Test Integration (${{ matrix.partition }}) for this change set."
+
+      - name: Stop R2 cache adapter
+        if: always()
+        shell: bash
+        run: |
+          if [[ -x infra/r2-cache/adapter.sh ]]; then
+            infra/r2-cache/adapter.sh stop-ci
+          fi
+
+  # Reports the required context the heavy pool used to own. While the
+  # resolved heavy.yml@main still declares its Test Integration job, this
+  # aggregate takes a migration name so one run never carries two check runs
+  # under one context; once that job is gone it becomes the exact required
+  # context without a ruleset edit. It fails on any partition failure,
+  # cancellation or skip, and on an admission or classification failure.
+  test-integration:
+    name: ${{ needs.admission.outputs.legacy_integration == 'true' && 'Test Integration Partitions' || 'Heavy / Test Integration' }}
+    timeout-minutes: 5
+    needs: [admission, change-profile, test-integration-shard]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require every Test Integration partition
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "${{ needs.admission.result }}" == "success" ]]
+          [[ "${{ needs.change-profile.result }}" == "success" ]]
+          case "${{ needs.change-profile.outputs.docs_only }}:${{ needs.test-integration-shard.result }}" in
+            true:skipped) echo "Documentation-only diff: Test Integration partitions were not allocated." ;;
+            false:success) echo "Every Test Integration partition passed." ;;
+            *) echo "Unexpected classification or partition result"; exit 1 ;;
           esac
 
   coverage-regression:

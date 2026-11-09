@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-11-08",
+  "generatedOn": "2026-11-09",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -2336,6 +2336,16 @@
       "status": "exception",
       "owner": "@beep/repo-cli",
       "reason": "Generic workstation state partition key shared by PR-session and session-ledger helpers. It accepts existing plain repository objects and PrRepository instances; S.Struct preserves that structural contract without a redundant class constructor."
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 92,
+      "owner": "@beep/repo-cli",
+      "reason": "Golden regression file for the hosted lane inventory: it decodes committed snapshots (standards/branch-protection-contexts.json, the law-practice-server integration shard plan) and a shard literal to compare them with CiLanePartitions.ts and check.yml; CiLanePartitionShard's bound checks are exercised by the explicit accept/reject cases here, and schema-derived property coverage adds nothing to a snapshot comparison."
     },
     {
       "file": "packages/tooling/tool/cli/test/explore-graduate-write.test.ts",

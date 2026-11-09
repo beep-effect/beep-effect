@@ -270,7 +270,7 @@ export class HeavyAdmissionRoute extends S.Opaque<HeavyAdmissionRoute, { readonl
 const ROUTE_READ_TIMEOUT = Duration.minutes(3);
 
 const unavailableRoute = HeavyAdmissionRoute.make({ lanes: [], receipt: "route-unavailable" });
-const heavyRouteLanes = LiteralKit(["lint-policy", "check", "test-integration", "docgen", "doctest", "build"]).pipe(
+const heavyRouteLanes = LiteralKit(["lint-policy", "check", "docgen", "doctest", "build"]).pipe(
   $I.annoteSchema("HeavyRouteLanes", { description: "Lane ids in heavy.yml's verify matrix." })
 );
 const isHeavyRouteLane = S.is(heavyRouteLanes);

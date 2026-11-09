@@ -15,15 +15,6 @@ const heavyGuard =
 const heavyLaneContracts = [
   { job: "verify", id: "lint-policy", name: "Lint Policy", timeout: 50, docgen: "3", typos: "true", guard: heavyGuard },
   { job: "check", id: "check", name: "Check", timeout: 120, docgen: "3", typos: "false", guard: heavyGuard },
-  {
-    job: "test-integration",
-    id: "test-integration",
-    name: "Test Integration",
-    timeout: 60,
-    docgen: "3",
-    typos: "false",
-    guard: heavyGuard,
-  },
   { job: "docgen", id: "docgen", name: "Docgen", timeout: 60, docgen: "6", typos: "false", guard: heavyGuard },
   { job: "doctest", id: "doctest", name: "Doctest", timeout: 60, docgen: "3", typos: "false", guard: heavyGuard },
   { job: "build", id: "build", name: "Build", timeout: 40, docgen: "3", typos: "false", guard: heavyGuard },
@@ -76,29 +67,60 @@ it.effect(
       catch: CiCommandError.new("Unable to read the checked-in workflow for the admission regression."),
     });
     const workflow = parseWorkflowYaml(source);
-    for (const { job, shard } of [
-      { job: "lint", shard: "lint-shard" },
-      { job: "test-unit", shard: "test-unit-shard" },
+    for (const { job, shard, needs } of [
+      { job: "lint", shard: "lint-shard", needs: ["change-profile", "lint-shard"] },
+      { job: "test-unit", shard: "test-unit-shard", needs: ["change-profile", "test-unit-shard"] },
+      {
+        job: "test-integration",
+        shard: "test-integration-shard",
+        needs: ["admission", "change-profile", "test-integration-shard"],
+      },
     ]) {
       const script = yamlAt(workflow, ["jobs", job, "steps", 0, "run"]);
       assertTrue(isWorkflowText(script));
-      for (const { classification, docs, result } of aggregateCases) {
-        const command = pipe(
+      const render = (classification: string, docs: string, result: string, admission: string) =>
+        pipe(
           script,
+          Str.replaceAll("${{ needs.admission.result }}", admission),
           Str.replaceAll("${{ needs.change-profile.result }}", classification),
           Str.replaceAll("${{ needs.change-profile.outputs.docs_only }}", docs),
           Str.replaceAll(`\${{ needs.${shard}.result }}`, result)
         );
-        const executed = Bun.spawnSync(["bash", "-c", command], { stdout: "pipe", stderr: "pipe" });
+      for (const { classification, docs, result } of aggregateCases) {
+        const executed = Bun.spawnSync(["bash", "-c", render(classification, docs, result, "success")], {
+          stdout: "pipe",
+          stderr: "pipe",
+        });
         assert.strictEqual(
           executed.exitCode === 0,
           A.contains(passingStates, `${classification}:${docs}:${result}`),
           `${job}: ${classification}/${docs}/${result}`
         );
       }
-      assert.deepEqual(yamlAt(workflow, ["jobs", job, "needs"]), ["change-profile", shard]);
+      assert.deepEqual(yamlAt(workflow, ["jobs", job, "needs"]), needs);
     }
-    for (const job of ["lint-shard", "test-unit-shard", "labs", "property-laws", "fallow-advisory"]) {
+    // The integration aggregate also fails closed when admission itself did not succeed.
+    const integrationScript = yamlAt(workflow, ["jobs", "test-integration", "steps", 0, "run"]);
+    assertTrue(isWorkflowText(integrationScript));
+    for (const admission of ["failure", "skipped", "cancelled", ""]) {
+      const rendered = pipe(
+        integrationScript,
+        Str.replaceAll("${{ needs.admission.result }}", admission),
+        Str.replaceAll("${{ needs.change-profile.result }}", "success"),
+        Str.replaceAll("${{ needs.change-profile.outputs.docs_only }}", "false"),
+        Str.replaceAll("${{ needs.test-integration-shard.result }}", "success")
+      );
+      const executed = Bun.spawnSync(["bash", "-c", rendered], { stdout: "pipe", stderr: "pipe" });
+      assert.notStrictEqual(executed.exitCode, 0, `test-integration: admission ${admission}`);
+    }
+    for (const job of [
+      "lint-shard",
+      "test-unit-shard",
+      "test-integration-shard",
+      "labs",
+      "property-laws",
+      "fallow-advisory",
+    ]) {
       assert.deepEqual(yamlAt(workflow, ["jobs", job, "needs"]), ["change-profile"]);
       assert.strictEqual(yamlAt(workflow, ["jobs", job, "if"]), "needs.change-profile.outputs.docs_only != 'true'");
     }
