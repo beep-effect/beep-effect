@@ -4821,7 +4821,7 @@
     "react-dom": "19.3.1",
     "react-dropzone": "20.2.0",
     "react-grab": "0.2.0",
-    "react-resizable-panels": "^4.20.0",
+    "react-resizable-panels": "^4.21.0",
     "recharts": "^3.10.1",
     "replicad": "^1.2.1",
     "replicad-opencascadejs": "^1.2.1",
