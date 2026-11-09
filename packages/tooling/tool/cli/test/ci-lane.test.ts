@@ -487,18 +487,18 @@ describe("CI lane partitions", () => {
       { id: "lps-int-1", packages: 1, weightSeconds: 1120 },
       { id: "lps-int-2", packages: 1, weightSeconds: 844 },
       { id: "lps-int-3", packages: 1, weightSeconds: 823 },
-      { id: "lps-int-4", packages: 1, weightSeconds: 715 },
-      { id: "lps-int-5", packages: 1, weightSeconds: 735 },
-      { id: "lps-int-6", packages: 1, weightSeconds: 725 },
-      { id: "lps-int-7", packages: 1, weightSeconds: 724 },
-      { id: "lps-int-8", packages: 1, weightSeconds: 717 },
-      { id: "lps-int-9", packages: 1, weightSeconds: 708 },
-      { id: "lps-int-10", packages: 1, weightSeconds: 708 },
-      { id: "lps-int-11", packages: 1, weightSeconds: 723 },
-      { id: "lps-int-12", packages: 1, weightSeconds: 712 },
-      { id: "lps-int-13", packages: 1, weightSeconds: 708 },
-      { id: "lps-int-14", packages: 1, weightSeconds: 708 },
-      { id: "lps-int-15", packages: 1, weightSeconds: 714 },
+      { id: "lps-int-4", packages: 1, weightSeconds: 713 },
+      { id: "lps-int-5", packages: 1, weightSeconds: 712 },
+      { id: "lps-int-6", packages: 1, weightSeconds: 721 },
+      { id: "lps-int-7", packages: 1, weightSeconds: 711 },
+      { id: "lps-int-8", packages: 1, weightSeconds: 721 },
+      { id: "lps-int-9", packages: 1, weightSeconds: 718 },
+      { id: "lps-int-10", packages: 1, weightSeconds: 714 },
+      { id: "lps-int-11", packages: 1, weightSeconds: 713 },
+      { id: "lps-int-12", packages: 1, weightSeconds: 721 },
+      { id: "lps-int-13", packages: 1, weightSeconds: 721 },
+      { id: "lps-int-14", packages: 1, weightSeconds: 720 },
+      { id: "lps-int-15", packages: 1, weightSeconds: 713 },
       { id: "int-rest", packages: 0, weightSeconds: 60 },
     ]);
   });
@@ -583,6 +583,7 @@ describe("CI lane partitions", () => {
     expect([...sharded.args]).toContain("@beep/law-practice-server#test:integration:parallel");
     expect([...sharded.args]).toContain("--filter=@beep/law-practice-server");
     expect([...sharded.args]).toContain("--shard=3/15");
+    expect([...sharded.args]).toContain("--maxWorkers=1");
     expect([...sharded.args]).not.toContain("--force");
 
     const rest = ciLanePartitionStepForTesting(

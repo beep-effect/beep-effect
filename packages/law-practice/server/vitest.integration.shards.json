@@ -1,10 +1,10 @@
 {
   "sourceRun": 42554761567,
   "sourceCommit": "b80e11050714191c6d0ff58e8371e9d4c3f17880",
-  "note": "Per-file seconds from the Heavy / Test Integration job of main run 42554761567 (8 vCPU, two vitest workers); the three CitationCanonicalExtraction range files carry that file's 1096.8 s in proportion to their shard counts (8/7/7 of 22). Bins are LPT (heaviest first into the lightest bin). Regenerate when integration files change; test/vitest-integration-shards.test.ts fails until the plan matches the directory.",
+  "note": "Per-file seconds from the Heavy / Test Integration job of main run 42554761567 (8 vCPU, two vitest workers); the four CitationCanonicalExtraction range files carry that file's 1096.8 s in proportion to their shard counts (6/6/5/5 of 22). Bins are LPT (heaviest first into the lightest bin). Hosted partitions run one worker, so a bin's wall is about 1.1-1.5x its file-second sum (PR #3005 run 42600820554). Regenerate when integration files change; test/vitest-integration-shards.test.ts fails until the plan matches the directory.",
   "shardSeconds": [
-    1120.4, 843.5, 822.6, 714.7, 735, 725.3, 724.3, 716.9, 708.1, 708.2, 722.5,
-    711.5, 707.5, 707.5, 713.8
+    1120.4, 843.5, 822.6, 712.8, 712, 720.5, 710.8, 720.7, 717.5, 713.6, 712.7,
+    721.2, 720.8, 719.8, 712.9
   ],
   "fileSeconds": {
     "test/integration/CitationAnnotationCallback.test.ts": 38.8,
@@ -12,10 +12,11 @@
     "test/integration/CitationAnnotationWrap.test.ts": 155.9,
     "test/integration/CitationCanonicalAnnotationWorkflow.test.ts": 294,
     "test/integration/CitationCanonicalCourts.test.ts": 398.7,
-    "test/integration/CitationCanonicalExtraction.test.ts": 398.8,
+    "test/integration/CitationCanonicalExtraction.test.ts": 299.1,
     "test/integration/CitationCanonicalExtractionNode.test.ts": 1120.4,
-    "test/integration/CitationCanonicalExtractionRange2.test.ts": 349,
-    "test/integration/CitationCanonicalExtractionRange3.test.ts": 349,
+    "test/integration/CitationCanonicalExtractionRange2.test.ts": 299.1,
+    "test/integration/CitationCanonicalExtractionRange3.test.ts": 249.3,
+    "test/integration/CitationCanonicalExtractionRange4.test.ts": 249.3,
     "test/integration/CitationCanonicalParserOperations.test.ts": 843.5,
     "test/integration/CitationCanonicalReferenceMarkup.test.ts": 102.3,
     "test/integration/CitationCanonicalRemainingExtraction.test.ts": 822.6,
@@ -65,77 +66,78 @@
     ["test/integration/CitationCanonicalParserOperations.test.ts"],
     ["test/integration/CitationCanonicalRemainingExtraction.test.ts"],
     [
-      "test/integration/CitationAnnotationSkip.test.ts",
+      "test/integration/CitationAnnotationWrap.test.ts",
+      "test/integration/CitationCanonicalTokenizer.test.ts",
       "test/integration/CitationCaseNameSelection.test.ts",
-      "test/integration/CitationHtmlCaseName.test.ts",
+      "test/integration/CitationExtractorSelection.test.ts",
+      "test/integration/CitationInputDocument.test.ts"
+    ],
+    [
+      "test/integration/CitationEditionInference.test.ts",
+      "test/integration/CitationHtmlGeometryPreparation.test.ts",
+      "test/integration/CitationMetadataStrings.test.ts",
+      "test/integration/CitationRegexCaseFlags.test.ts",
       "test/integration/CitationRegexVerbose.test.ts"
     ],
     [
-      "test/integration/CitationAnnotationWrap.test.ts",
-      "test/integration/CitationCaseNameScan.test.ts",
-      "test/integration/CitationRegexCaseFlags.test.ts",
-      "test/integration/CitationRegexLookahead.test.ts"
+      "test/integration/CitationEngineCorpus.test.ts",
+      "test/integration/CitationLawMetadata.test.ts",
+      "test/integration/CitationPinExtraction.test.ts",
+      "test/integration/CitationRegexCaptureReuse.test.ts"
+    ],
+    [
+      "test/integration/CitationAnnotationSkip.test.ts",
+      "test/integration/CitationCanonicalCourts.test.ts",
+      "test/integration/CitationCaseMetadata.test.ts",
+      "test/integration/CitationStopWords.test.ts"
     ],
     [
       "test/integration/CitationAnnotationCallback.test.ts",
-      "test/integration/CitationDiffWorker.test.ts",
-      "test/integration/CitationEngineCorpus.test.ts",
-      "test/integration/CitationMetadataStrings.test.ts"
-    ],
-    [
-      "test/integration/CitationCanonicalExtraction.test.ts",
-      "test/integration/CitationCanonicalReferenceMarkup.test.ts",
-      "test/integration/CitationRegexCaptureReuse.test.ts",
-      "test/integration/CitationXmlWorker.test.ts"
-    ],
-    [
-      "test/integration/CitationCanonicalCourts.test.ts",
-      "test/integration/CitationCaseMetadata.test.ts",
-      "test/integration/CitationContextMatcher.test.ts",
-      "test/integration/CitationPinExtraction.test.ts"
-    ],
-    [
-      "test/integration/CitationCleanerNativeCustom.test.ts",
       "test/integration/CitationFullLawMetadata.test.ts",
-      "test/integration/CitationStopWords.test.ts",
+      "test/integration/CitationPostCaseMetadata.test.ts",
       "test/integration/CitationVerifiedExtraction.test.ts"
     ],
     [
-      "test/integration/CitationCaseNameProcess.test.ts",
-      "test/integration/CitationEditionInference.test.ts",
-      "test/integration/CitationHtmlGeometryPreparation.test.ts",
-      "test/integration/CitationPreCaseMetadata.test.ts",
-      "test/integration/CitationSemanticExtraction.test.ts"
-    ],
-    [
-      "test/integration/CitationCanonicalExtractionRange2.test.ts",
-      "test/integration/CitationCanonicalTokenizer.test.ts",
-      "test/integration/CitationCaseName.test.ts",
-      "test/integration/CitationLawMetadata.test.ts"
-    ],
-    [
-      "test/integration/CitationCanonicalExtractionRange3.test.ts",
-      "test/integration/CitationHtmlUnicode.test.ts",
-      "test/integration/CitationTokenizedExtraction.test.ts"
-    ],
-    [
+      "test/integration/CitationCanonicalExtractionRange4.test.ts",
       "test/integration/CitationCleanerNamedHtml.test.ts",
-      "test/integration/CitationExtractionEntry.test.ts",
-      "test/integration/CitationExtractorSelection.test.ts",
-      "test/integration/CitationRegexTranslator.test.ts",
+      "test/integration/CitationRegexNullable.test.ts",
+      "test/integration/CitationSemanticExtraction.test.ts",
       "test/integration/CitationTokenizer.test.ts"
     ],
     [
-      "test/integration/CitationCanonicalAnnotationWorkflow.test.ts",
-      "test/integration/CitationHtmlDiscovery.test.ts",
-      "test/integration/CitationInputDocument.test.ts",
+      "test/integration/CitationCanonicalExtractionRange3.test.ts",
+      "test/integration/CitationCleanerNativeCustom.test.ts",
+      "test/integration/CitationDiffWorker.test.ts",
+      "test/integration/CitationExtractionEntry.test.ts"
+    ],
+    [
+      "test/integration/CitationCaseNameProcess.test.ts",
+      "test/integration/CitationHtmlCaseName.test.ts",
       "test/integration/CitationJournalMetadata.test.ts"
     ],
     [
-      "test/integration/CitationDocumentExtraction.test.ts",
-      "test/integration/CitationPostCaseMetadata.test.ts",
+      "test/integration/CitationCanonicalReferenceMarkup.test.ts",
       "test/integration/CitationRegexBoundaries.test.ts",
-      "test/integration/CitationRegexNullable.test.ts"
+      "test/integration/CitationTokenizedExtraction.test.ts",
+      "test/integration/CitationXmlWorker.test.ts"
+    ],
+    [
+      "test/integration/CitationCaseName.test.ts",
+      "test/integration/CitationDocumentExtraction.test.ts",
+      "test/integration/CitationHtmlDiscovery.test.ts",
+      "test/integration/CitationRegexLookahead.test.ts"
+    ],
+    [
+      "test/integration/CitationCanonicalAnnotationWorkflow.test.ts",
+      "test/integration/CitationCanonicalExtraction.test.ts",
+      "test/integration/CitationCaseNameScan.test.ts",
+      "test/integration/CitationPreCaseMetadata.test.ts"
+    ],
+    [
+      "test/integration/CitationCanonicalExtractionRange2.test.ts",
+      "test/integration/CitationContextMatcher.test.ts",
+      "test/integration/CitationHtmlUnicode.test.ts",
+      "test/integration/CitationRegexTranslator.test.ts"
     ]
   ]
 }

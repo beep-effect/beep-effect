@@ -230,7 +230,7 @@ export const citationCanonicalExtractionShards = [
  * exceeds a hosted integration partition's budget.
  * @internal @category testing @since 0.0.0
  */
-export const CITATION_CANONICAL_EXTRACTION_RANGE_COUNT = 3;
+export const CITATION_CANONICAL_EXTRACTION_RANGE_COUNT = 4;
 
 /**
  * Contiguous, disjoint shard ranges whose concatenation is

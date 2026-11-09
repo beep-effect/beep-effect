@@ -1236,10 +1236,23 @@ const partitionDryRunArgs = (laneId: PartitionedCiLane, options: CiLaneRunOption
     [...(options.affected ? ["--affected"] : A.empty<string>()), LABS_TURBO_EXCLUDE_FILTER, "--only", "--dry-run=json"]
   );
 
-const shardPassThroughArgs = (shard: O.Option<CiLanePartitionShard>): ReadonlyArray<string> =>
+// Hosted integration shards run one Vitest worker. On the 4-vCPU ubuntu-24.04 runner two workers
+// gave almost no parallel gain (PR #3005 run 42600820554: 1.0-1.5x the 8-vCPU file-second sum)
+// and the contention pushed native replays past their production operation and extraction
+// deadlines; single-file partitions on the same run, effectively one worker, all passed.
+const INTEGRATION_SHARD_VITEST_ARGS: ReadonlyArray<string> = ["--maxWorkers=1"];
+
+const shardPassThroughArgs = (
+  laneId: PartitionedCiLane,
+  shard: O.Option<CiLanePartitionShard>
+): ReadonlyArray<string> =>
   O.match(shard, {
     onNone: A.empty<string>,
-    onSome: ({ index, total }) => ["--", `--shard=${index}/${total}`],
+    onSome: ({ index, total }) => [
+      "--",
+      `--shard=${index}/${total}`,
+      ...(laneId === "test-integration" ? INTEGRATION_SHARD_VITEST_ARGS : A.empty<string>()),
+    ],
   });
 
 const partitionExecutionArgs = (
@@ -1262,7 +1275,7 @@ const partitionExecutionArgs = (
             ...ciCoverageTestArgs,
             ...O.match(shard, { onNone: A.empty<string>, onSome: ({ index, total }) => [`--shard=${index}/${total}`] }),
           ]
-        : shardPassThroughArgs(shard)),
+        : shardPassThroughArgs(laneId, shard)),
     ]
   );
 

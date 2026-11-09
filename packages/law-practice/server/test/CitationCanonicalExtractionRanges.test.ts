@@ -19,7 +19,7 @@ import {
 // and exactly one integration file replays each range.
 const integrationDirectory = new URL("./integration/", import.meta.url);
 const rangeFilePattern = /^CitationCanonicalExtraction.*\.test\.ts$/;
-const rangeReference = /citationCanonicalExtractionShardRange\((\d+)\)/g;
+const rangeReference = /^const RANGE = (\d+);$/gm;
 const fullTableReference = /\bcitationCanonicalExtractionShards\b/;
 
 it("splits the canonical shard table into contiguous, disjoint ranges whose union is the table", () => {

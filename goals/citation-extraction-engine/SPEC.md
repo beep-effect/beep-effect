@@ -355,6 +355,14 @@ Lane `ci/test-integration-budget-120`
 
 Reverse: Lower heavy.yml timeout_minutes for Test Integration again once the law-practice-server integration suite is sharded or trimmed below the previous budget.
 
+### Hosted integration partitions run one Vitest worker and are sized on measured 4-vCPU walls, 2026-11-09
+
+Measured on PR #3005 run 42600820554 (ubuntu-24.04, 4 vCPU, two Vitest workers, fifteen partitions sized from the 8-vCPU heavy timings): bodies ran 10.3 to 27.1 minutes. Single-file partitions took 1.12 to 1.49 times their 8-vCPU file seconds (1120 s -> 27.1 min, 844 s -> 15.8 min, 823 s -> 20.4 min); four-file partitions at two workers took 1.0 to 1.5 times their file-second sum (715 s -> 18.1 min, 708 s -> 11.8 min), so two workers on four cores gave almost no parallel gain, about one third of the heavy runner's throughput. Ten partitions failed: six on the 600 s per-test timeout of long single replays (SemanticExtraction, EngineCorpus, VerifiedExtraction, TokenizedExtraction, DocumentExtraction, ExtractionEntry, which the deletion lane removes or halves) and four on production operationDeadline / extractDeadline refusals from native replays (CanonicalExtraction ranges, Courts, ReferenceMarkup, CaseName, CaseNameScan) contending with a second worker; every single-file partition passed. The integration shards therefore pass --maxWorkers=1 to Vitest (CiLane.ts) so deadlines hold, and partitions are sized at about 350 to 400 8-vCPU file seconds (about 1.3x gives an 8-minute body plus about 1.1 minutes of setup), with every single test under about 200 s of 8-vCPU time. The canonical replay is split into four range files (6/6/5/5 shards) instead of three. The fifteen-bin interim plan stays until the deletion lane merges; the rebalance then targets about eleven partitions.
+
+Lane `claude/integration-hosted-partitions-ba7e3b` · PR #3005
+
+Reverse: Drop --maxWorkers=1 from the integration shard passthrough in CiLane.ts once a hosted runner class with more cores is measured to keep the native deadlines at two workers.
+
 ### Keep the 8 effect-vitest exceptions PR 2994 adds as reviewed PR 2966 debt, 2026-11-09
 
 PR 2994, the `unblocks-main` PR for episode ep70, adds 8 rows to `standards/effect-vitest.inventory.jsonc` for findings that PR 2966 introduced. S31 counts that as inventory growth. The rows stay as reviewed exceptions because none of them is a defect in the test code:
