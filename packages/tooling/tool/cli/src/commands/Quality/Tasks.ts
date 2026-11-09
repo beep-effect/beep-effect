@@ -39,14 +39,17 @@ import { findRepoRoot, insertEndOfOptions } from "@beep/repo-utils";
 import { FsUtils, FsUtilsLive, GlobOptions } from "@beep/repo-utils/FsUtils";
 import { enumerate } from "@beep/repo-workspaces/internal/enumerate";
 import { WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
+import * as Cause from "effect/Cause";
 import * as Console from "effect/Console";
 import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
 import { dual, flow, identity, pipe } from "effect/Function";
@@ -1421,19 +1424,34 @@ export const withoutUnusableRemoteCacheForTesting = withoutUnusableRemoteCache;
  */
 export const turboSecretSessionStepForTesting = turboSecretSessionStep;
 
-const withTurboSecretSession = Effect.fn("QualityTasks.withTurboSecretSession")(function* (step: QualityTaskStep) {
+// Who reports the checkout `.env` health warning for a Turbo step that loads the local environment.
+// `step` probes and warns before the step, as every route except the bare lint sweep does. `route`
+// leaves both to the caller: `runRootLintTask` forks one shared probe as its sweep starts and warns
+// once when the sweep ends, so the probe's `op` calls never hold the first stage (perf plan P1).
+const TurboEnvironmentHealthReport = LiteralKit(["step", "route"]);
+type TurboEnvironmentHealthReport = typeof TurboEnvironmentHealthReport.Type;
+
+const warnTurboEnvironmentHealth = flow(
+  renderTurboEnvironmentHealthWarnings,
+  O.match({ onNone: () => Effect.void, onSome: Console.warn })
+);
+
+const loadsLocalEnvironment = (step: QualityTaskStep): boolean => step.useLocalEnv === true;
+
+const withTurboSecretSession = Effect.fn("QualityTasks.withTurboSecretSession")(function* (
+  step: QualityTaskStep,
+  environmentHealth: TurboEnvironmentHealthReport = TurboEnvironmentHealthReport.Enum.step
+) {
   yield* assertCacheRuntimeKeyUnspecified(step.command, step.args, Bun.env, step.env ?? {}).pipe(
     QualityTaskConfigurationError.mapError("Rejected a caller-provided cache runtime identity.")
   );
-  if (step.useLocalEnv !== true) {
+  if (!loadsLocalEnvironment(step)) {
     return withoutUnusableRemoteCache(step, needsTurboSecretSession());
   }
 
-  const environmentWarnings = yield* turboEnvironmentHealthWarnings(step.cwd, Bun.env);
-  yield* O.match(renderTurboEnvironmentHealthWarnings(environmentWarnings), {
-    onNone: () => Effect.void,
-    onSome: Console.warn,
-  });
+  if (TurboEnvironmentHealthReport.is.step(environmentHealth)) {
+    yield* Effect.flatMap(turboEnvironmentHealthWarnings(step.cwd, Bun.env), warnTurboEnvironmentHealth);
+  }
 
   // A missing, expired, or denied 1Password session degrades the lane to
   // local-only instead of failing it.
@@ -3116,7 +3134,8 @@ const runStepGroup = Effect.fn("QualityTasks.runStepGroup")(function* (
   }
 
   yield* Console.log(`[beep-cli] ${label}: running ${A.length(steps)} step(s) with concurrency ${concurrency}`);
-  const resolvedSteps = yield* Effect.forEach(steps, withTurboSecretSession);
+  // Not point-free: `forEach` passes the index second, where it would land in `environmentHealth`.
+  const resolvedSteps = yield* Effect.forEach(steps, (step) => withTurboSecretSession(step));
   yield* Effect.forEach(resolvedSteps, (step) =>
     Console.log(`[beep-cli] ${step.label}: ${commandText(step.command, step.args)}`)
   );
@@ -3564,13 +3583,17 @@ const policyUnscopedStateTasks = A.filter(policyStateTasks, (task) => !A.contain
 // Retain one slot of the existing width for state checks, independently of
 // changed-file selection. Tracked discovery remains unfiltered until qualified.
 const POLICY_UNSCOPED_STATE_WIDTH = 1;
-// Root documentation lint always runs oxlint; Turbo owns package/incremental caches.
-const rootDocsArgs = (docsConfig: string): ReadonlyArray<string> => [
+// Root documentation lint always runs oxlint; Turbo owns package/incremental caches. Its worker
+// count comes from the concurrency plan, as the deprecated-API sweep's does, so the root process
+// does not take one thread per core beside the sweep it runs abreast of (perf plan S6). The flag
+// lives here, never in a package script: the root scripts block is a global Turbo input.
+const rootDocsArgs = (docsConfig: string, plan: QualityConcurrencyPlan): ReadonlyArray<string> => [
   "oxlint",
   ".",
   "--config",
   docsConfig,
   "--max-warnings=0",
+  `--threads=${plan.oxlintThreads}`,
 ];
 // Changed scope: one oxlint process over the package directories Turbo's `lint:jsdoc` selection
 // picked (perf audit M16), instead of one repo-cli boot plus plugin load per package.
@@ -3676,8 +3699,34 @@ const policyStage = (...steps: A.NonEmptyReadonlyArray<QualityTaskStep>): LintPo
 
 // The test lane's own Turbo task is `package-test-typecheck` (uncached by tripwire
 // ruling); the orchestrating command stays a repo-cli step.
-const testTsgoPolicyStage = (repoRoot: string): LintPolicyStage =>
-  policyStage(repoCliStep(repoRoot, "quality:test-tsgo", ["quality", "test-tsgo"]));
+const testTsgoStep = (repoRoot: string): QualityTaskStep =>
+  repoCliStep(repoRoot, "quality:test-tsgo", ["quality", "test-tsgo"]);
+
+const testTsgoPolicyStage = (repoRoot: string): LintPolicyStage => policyStage(testTsgoStep(repoRoot));
+
+// The full sweep's tail. The root documentation lint, the deprecated-API sweep and the test-file
+// typecheck share no inputs or outputs, so they run abreast in one stage (perf plan P6); the stage
+// still renders their outputs in this order. Ruling 31 retains the hosted root docs program
+// independently of the deprecated-API sweep switch; it has no Turbo summary of its own. The Turbo
+// rollback sweep takes the whole policy width (`policyLintTurboStep`), so it keeps a stage of its
+// own instead of running abreast of another Turbo graph.
+const fullScopeTailStages = (
+  repoRoot: string,
+  sweeps: LintPolicySweeps,
+  docsConfig: string,
+  plan: QualityConcurrencyPlan
+): ReadonlyArray<LintPolicyStage> => {
+  const docs = bunxStep(repoRoot, "lint:jsdoc", rootDocsArgs(docsConfig, plan));
+  return sweeps.deprecatedApis === "oxlint"
+    ? [
+        policyStage(
+          docs,
+          repoCliStep(repoRoot, "lint:deprecated-apis", ["lint", "deprecated-apis", "--full"]),
+          testTsgoStep(repoRoot)
+        ),
+      ]
+    : [policyStage(docs, testTsgoStep(repoRoot)), policyStage(deprecatedApisTurboStep(repoRoot, undefined, plan))];
+};
 
 const fullScopePolicyStages = (
   repoRoot: string,
@@ -3697,15 +3746,7 @@ const fullScopePolicyStages = (
     )
   ),
   ...A.map(knowledgeDoctorPolicySteps(repoRoot, undefined, hosted), (step) => policyStage(step)),
-  // Ruling 31 retains the hosted root docs program independently of the
-  // deprecated-API sweep switch. It has no Turbo summary of its own.
-  policyStage(bunxStep(repoRoot, "lint:jsdoc", rootDocsArgs(docsConfig))),
-  policyStage(
-    sweeps.deprecatedApis === "oxlint"
-      ? repoCliStep(repoRoot, "lint:deprecated-apis", ["lint", "deprecated-apis", "--full"])
-      : deprecatedApisTurboStep(repoRoot, undefined, plan)
-  ),
-  testTsgoPolicyStage(repoRoot),
+  ...fullScopeTailStages(repoRoot, sweeps, docsConfig, plan),
 ];
 
 // With a Turbo target probe, the documentation and (oxlint-swept) deprecated-API package tasks
@@ -3832,8 +3873,11 @@ const stopsAfterCheapRed = (step: QualityTaskStep, collectAll: boolean, result: 
 
 // Every command line is announced before the stage starts; outputs render in plan order once the
 // whole stage finishes, so abreast steps never interleave their blocks.
-const runPolicyStage = Effect.fn("QualityTasks.runPolicyStage")(function* (stage: LintPolicyStage) {
-  const resolved = yield* Effect.forEach(stage, withTurboSecretSession);
+const runPolicyStage = Effect.fn("QualityTasks.runPolicyStage")(function* (
+  stage: LintPolicyStage,
+  environmentHealth: TurboEnvironmentHealthReport
+) {
+  const resolved = yield* Effect.forEach(stage, (step) => withTurboSecretSession(step, environmentHealth));
   yield* Effect.forEach(
     stage,
     (step) => Console.log(`[beep-cli] ${step.label}: ${commandText(step.command, step.args)}`),
@@ -3846,12 +3890,13 @@ const runPolicyStage = Effect.fn("QualityTasks.runPolicyStage")(function* (stage
 
 const runPolicyStages = Effect.fn("QualityTasks.runPolicyStages")(function* (
   stages: ReadonlyArray<LintPolicyStage>,
-  collectAll: boolean
+  collectAll: boolean,
+  environmentHealth: TurboEnvironmentHealthReport = TurboEnvironmentHealthReport.Enum.step
 ) {
   const results = A.empty<QualityTaskStepOutput>();
   yield* Console.log(`[beep-cli] lint:policy: running ${A.length(A.flatten(stages))} ordered step(s)`);
   for (const stage of stages) {
-    const stageResults = yield* runPolicyStage(stage);
+    const stageResults = yield* runPolicyStage(stage, environmentHealth);
     A.appendAllInPlace(results, stageResults);
     if (A.some(A.zip(stage, stageResults), ([step, result]) => stopsAfterCheapRed(step, collectAll, result))) {
       yield* failQualityTaskGroup("lint:policy", failedStepOutputs(results));
@@ -3859,9 +3904,6 @@ const runPolicyStages = Effect.fn("QualityTasks.runPolicyStages")(function* (
   }
   yield* failQualityTaskGroup("lint:policy", failedStepOutputs(results));
 });
-
-const runPolicySteps = (steps: ReadonlyArray<QualityTaskStep>, collectAll: boolean) =>
-  runPolicyStages(A.map(steps, A.of), collectAll);
 
 /**
  * Build the repo-wide root lint policy subprocess steps.
@@ -3921,10 +3963,12 @@ export const rootLintPolicyStepsForTesting: {
     rootRepoLintPolicySteps(repoRoot, files, base, sweeps, hosted, docsCacheKey, localQualityConcurrencyPlan(), options)
 );
 
-// A stage-level plan request: the scope base, the hosted posture and the runtime-resolved inputs.
+// A stage-level plan request: the scope base, the hosted posture, the sweep selection and the
+// runtime-resolved inputs.
 type LintPolicyStagesRequest = LintPolicyPlanOptions & {
   readonly base?: string | undefined;
   readonly hosted?: boolean | undefined;
+  readonly sweeps?: LintPolicySweeps | undefined;
 };
 
 /**
@@ -3941,7 +3985,8 @@ type LintPolicyStagesRequest = LintPolicyPlanOptions & {
  *
  * @param repoRoot - Repository root directory.
  * @param request - Scope base (omitted for full scope), hosted posture (defaults to the live CI
- *   detection), documentation config and Turbo target probe.
+ *   detection), sweep selection (defaults to the oxlint sweep), documentation config and Turbo
+ *   target probe.
  * @returns The plan's stages; each stage's steps run abreast.
  * @category utilities
  * @since 0.0.0
@@ -3955,7 +4000,7 @@ export const rootLintPolicyStagesForTesting: {
     rootRepoLintPolicyStages(
       repoRoot,
       request.base,
-      oxlintPolicySweeps,
+      request.sweeps ?? oxlintPolicySweeps,
       request.hosted ?? isCiSync(),
       UNKEYED_ROOT_DOCS_CACHE,
       localQualityConcurrencyPlan(),
@@ -4132,36 +4177,58 @@ export const runRootDeprecatedApisTask = Effect.fn("QualityTasks.runRootDeprecat
   yield* runStep(deprecatedApisTurboStep(repoRoot, base, qualityConcurrencyPlan8));
 });
 
-const rootLintPolicySteps = (
+// The bare lint route adds the policy stages only to a repo-wide check: a fix, or an
+// `--affected`/`--filter`/`--since` invocation, is the aggregate lane alone.
+const runsRootLintPolicy = (args: ReadonlyArray<string>, fix: boolean): boolean =>
+  !fix && shouldRunLintRepoWideSteps(args);
+
+const rootLintPolicyStages = (
   repoRoot: string,
   args: ReadonlyArray<string>,
   fix: boolean,
-  docsCacheKey: string,
+  docsConfig: string,
   plan: QualityConcurrencyPlan
-): ReadonlyArray<QualityTaskStep> => {
-  if (fix || !shouldRunLintRepoWideSteps(args)) {
-    return A.empty<QualityTaskStep>();
-  }
+): ReadonlyArray<LintPolicyStage> =>
+  runsRootLintPolicy(args, fix)
+    ? rootRepoLintPolicyStages(repoRoot, undefined, oxlintPolicySweeps, isCiSync(), UNKEYED_ROOT_DOCS_CACHE, plan, {
+        docsConfig,
+      })
+    : A.empty<LintPolicyStage>();
 
-  return rootRepoLintPolicySteps(repoRoot, undefined, undefined, oxlintPolicySweeps, isCiSync(), docsCacheKey, plan);
-};
+// Turbo stops scheduling the aggregate lint graph after the first red package unless it is told
+// to continue, so one Biome red hid every later package's findings (perf plan P4g). A caller's own
+// `--continue` wins, because Turbo rejects a repeated flag: Yeet repair already forwards one
+// through `bun run lint`. The bounded root args every other graph shares stay without it.
+const AGGREGATE_LINT_CONTINUE_ARG = "--continue=dependencies-successful";
 
-// The one root lint plan: the aggregate Turbo lint (or lint:fix) followed by
-// the policy siblings when the invocation is repo-wide. `runRootLintTask` runs
-// exactly this list, so the plan the tests inspect is the plan the CLI runs.
-const rootLintSteps = (
+const isTurboContinueArg = (arg: string): boolean => arg === "--continue" || Str.startsWith("--continue=")(arg);
+
+const withAggregateLintContinue = (args: ReadonlyArray<string>): ReadonlyArray<string> =>
+  A.some(args, isTurboContinueArg) ? args : A.prepend(args, AGGREGATE_LINT_CONTINUE_ARG);
+
+// The one root lint plan: the aggregate Turbo lint (or lint:fix) stage followed by the policy
+// stages when the invocation is repo-wide. `runRootLintTask` runs exactly these stages, so the
+// plan the tests inspect (`rootStepsFor` flattens it in run order) is the plan the CLI runs; the
+// runtime only swaps in the prebuilt documentation config where a pure plan names the source one.
+const rootLintStages = (
   repoRoot: string,
   args: ReadonlyArray<string>,
   fix: boolean,
-  docsCacheKey: string = UNKEYED_ROOT_DOCS_CACHE,
+  docsConfig: string = DOCS_OXLINT_CONFIG,
   plan: QualityConcurrencyPlan = localQualityConcurrencyPlan()
-): readonly [QualityTaskStep, ...ReadonlyArray<QualityTaskStep>] => {
-  const lintArgs = boundedRootTurboArgs(fix ? stripLintFixAggregateArgs(args) : args, plan);
-  return [
-    fix ? turboStep(repoRoot, "lint:fix", ["lint:fix"], lintArgs) : turboStep(repoRoot, "lint", ["lint"], lintArgs),
-    ...rootLintPolicySteps(repoRoot, lintArgs, fix, docsCacheKey, plan),
-  ];
-};
+): A.NonEmptyReadonlyArray<LintPolicyStage> => [
+  A.of(
+    fix
+      ? turboStep(repoRoot, "lint:fix", ["lint:fix"], boundedRootTurboArgs(stripLintFixAggregateArgs(args), plan))
+      : turboStep(repoRoot, "lint", ["lint"], boundedRootTurboArgs(withAggregateLintContinue(args), plan))
+  ),
+  ...rootLintPolicyStages(repoRoot, args, fix, docsConfig, plan),
+];
+
+// An interrupted sweep has no reader for the environment-health warning, and joining the probe from
+// an uninterruptible finalizer would hold Ctrl-C until its `op` calls return.
+const isInterruptOnlyExit = <A, E>(exit: Exit.Exit<A, E>): boolean =>
+  Exit.isFailure(exit) && Cause.hasInterruptsOnly(exit.cause);
 
 const runRootLintTask = Effect.fn("QualityTasks.runRootLintTask")(function* (
   repoRoot: string,
@@ -4180,16 +4247,35 @@ const runRootLintTask = Effect.fn("QualityTasks.runRootLintTask")(function* (
     return;
   }
 
-  const rootDocsCacheKey9 = yield* rootDocsCacheKey(repoRoot);
-  const qualityConcurrencyPlan11 = yield* qualityConcurrencyPlan;
-  const steps = rootLintSteps(repoRoot, args, fix, rootDocsCacheKey9, qualityConcurrencyPlan11);
-  if (A.length(steps) === 1) {
-    yield* runStep(A.headNonEmpty(steps));
+  const plan = yield* qualityConcurrencyPlan;
+  // The documentation plugin bundle is built only for a plan whose policy stages lint with it,
+  // the same prebuilt config `beep lint policy` passes (perf plan P34).
+  const docsConfig = runsRootLintPolicy(args, fix) ? yield* prepareDocsOxlintConfig(repoRoot) : DOCS_OXLINT_CONFIG;
+  const stages = rootLintStages(repoRoot, args, fix, docsConfig, plan);
+  if (A.length(stages) === 1) {
+    yield* runStep(A.headNonEmpty(A.headNonEmpty(stages)));
     return;
   }
 
-  yield* runPolicySteps(steps, true);
-});
+  // The `.env` health probe only prints a warning, yet inline it held the first Turbo step for a
+  // whole-file `op run` plus one isolated probe per reference (perf plan P1). The sweep owns it
+  // instead, and only when a step loads the local environment, the same condition under which a
+  // step would probe. One cached probe is forked as the sweep starts. Every stage resolves its
+  // sessions with `route`, so no step starts a second sweep while it is in flight (the EnvConfig
+  // memo is written only when a probe finishes). The warning prints once from `onExit`, because
+  // `runPolicyStages` fails a red sweep and a join placed after it would be skipped exactly when
+  // the operator reads the log.
+  if (!A.some(A.flatten(stages), loadsLocalEnvironment)) {
+    yield* runPolicyStages(stages, true);
+    return;
+  }
+
+  const environmentHealth = yield* Effect.cached(turboEnvironmentHealthWarnings(repoRoot, Bun.env));
+  yield* Effect.forkScoped(environmentHealth);
+  yield* Effect.onExit(runPolicyStages(stages, true, TurboEnvironmentHealthReport.Enum.route), (exit) =>
+    isInterruptOnlyExit(exit) ? Effect.void : Effect.flatMap(environmentHealth, warnTurboEnvironmentHealth)
+  );
+}, Effect.scoped);
 
 // `bun run audit` is the four cached quality graphs in order (build, check, test,
 // lint), not a fifth per-package `audit` script: the old `turbo run audit` task was
@@ -4208,7 +4294,7 @@ const rootAuditPackagesStaticSteps = (
 ): ReadonlyArray<QualityTaskStep> => [
   ...rootBuildSteps(repoRoot, args, plan),
   ...rootCheckSteps(repoRoot, args, plan),
-  ...rootLintSteps(repoRoot, args, false, undefined, plan),
+  ...A.flatten(rootLintStages(repoRoot, args, false, undefined, plan)),
 ];
 
 const rootAuditSteps = (
@@ -4263,7 +4349,7 @@ const rootStepsFor = (
       Match.when("build", () => rootBuildSteps(repoRoot, invocationArgs(current), plan)),
       Match.when("check", () => rootCheckSteps(repoRoot, invocationArgs(current), plan)),
       Match.when("lint", () =>
-        rootLintSteps(repoRoot, invocationArgs(current), invocationFix(current), undefined, plan)
+        A.flatten(rootLintStages(repoRoot, invocationArgs(current), invocationFix(current), undefined, plan))
       ),
       Match.when("audit", () => rootAuditSteps(repoRoot, invocationArgs(current), plan)),
       // `test` and `coverage` have no static plan: `runRootTask` hands them to

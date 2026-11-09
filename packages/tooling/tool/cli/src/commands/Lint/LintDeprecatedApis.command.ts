@@ -120,9 +120,8 @@ const runDeprecatedApiLint = Effect.fn("Lint.deprecatedApiWorker")(function* (
     ...targets,
   ];
   const useGo = yield* Config.Boolean("BEEP_LINT_TSGOLINT").pipe(Config.withDefault(false));
-  if (!useGo) yield* validateRustAssignmentEvidence(root, args);
   yield* Console.log(`[lint:deprecated-apis] oxlint (${useGo ? "tsgolint" : "tsrs"}) ${A.join(args, " ")}`);
-  const result = yield* runCaptured({
+  const lint = runCaptured({
     command: path.join(root, "node_modules/.bin/oxlint"),
     args,
     cwd: root,
@@ -136,6 +135,13 @@ const runDeprecatedApiLint = Effect.fn("Lint.deprecatedApiWorker")(function* (
     extendEnv: true,
     bound: qualityStepOutputBound,
     tee: true,
+  });
+  // The Rust ownership proof runs beside the sweep instead of ahead of it. The proof's failure
+  // fails fast and interrupts the sweep; the spawner's scoped release reaps its process group.
+  // A finished sweep's exit code is read only once the proof has passed, so a proof failure
+  // still outranks a lint failure.
+  const [, result] = yield* Effect.all([useGo ? Effect.void : validateRustAssignmentEvidence(root, args), lint], {
+    concurrency: 2,
   });
   if (useGo) yield* validateAssignmentEvidence(root, result.output, result.truncated);
   if (result.exitCode !== 0) {
