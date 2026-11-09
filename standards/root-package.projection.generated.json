@@ -217,7 +217,6 @@
     "packages/shared/tables",
     "packages/tooling/library/*",
     "packages/tooling/policy-pack/*",
-    "packages/tooling/infra/*",
     "packages/tooling/test-kit/*",
     "packages/tooling/tool/*",
     "apps/oip-web",
