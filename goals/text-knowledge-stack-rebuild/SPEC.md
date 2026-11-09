@@ -84,7 +84,10 @@ ruling of 2026-11-09, recorded in `decisions/`). The final state is observable:
   packet superseded it on 2026-11-09): L2 and L4 replace its attributed annotation aggregate and its
   LangExtract-to-ClaimGate proof, and its "preserve distinct confidence per
   claim" acceptance is withdrawn in favour of `Absent{reason}` and no default
-  signal algebra. Its manifest records `supersededBy: text-knowledge-stack-rebuild`.
+  signal algebra. Its manifest records `supersededBy: text-knowledge-stack-rebuild`,
+  and it stays retained on `main` until this packet's P4 acceptance item
+  `ClaimGate.two-claims-one-occurrence.test.ts` is green, which demonstrates the
+  replacement; only then is it archived.
   Its lexicog competency question (OntoLex `lexicog` as a mention-class
   vocabulary) is absorbed into P0's registry census as a candidate external
   vocabulary under the adapter rule, with no commitment to adopt it.
@@ -321,7 +324,7 @@ decision file) and the law-test ledger:
 7. The OA profile: the classes and properties the codec supports, which
    unknown triples are preserved, how an imported activity's identity and time
    are retained, and the imported-input law as equivalence to the normalized
-   input (`decode(encode s) = normalize(s)`), carried into ledger row `L2-6`
+   input (`encode(decode s) = normalize(s)` for third-party OA input `s`), carried into ledger row `L2-6`
    and its tests.
 8. Where the runtime `IRI` schema lives: today only in
    `packages/foundation/modeling/rdf/src/Iri.ts`, while `identity` must stay
@@ -399,7 +402,12 @@ decision file) and the law-test ledger:
       the nanopub adapter round-trips in `NanopubAdapter.test.ts` under
       `packages/foundation/modeling/epistemics/test`;
       the status census names each of the seven vocabularies as coordinate,
-      duplicate or projection; `L4-1` to `L4-7` are green.
+      duplicate or projection; the absorbed attributed-span proof passes: two
+      claims anchored on one verified occurrence pass through the claim gate with
+      accepted and rejected evidence retained per claim, in
+      `ClaimGate.two-claims-one-occurrence.test.ts` in the law-practice use-cases
+      tests (the proof `goals/attributed-multi-claim-span` promised); `L4-1` to
+      `L4-7` are green.
 - [ ] L3 and L6: legal seeds and FOLIO DTOs are out of `@beep/ontology` with
       IRIs and approval metadata preserved and every consumer migrated;
       `fold -> Dataset` is the only serialization path; `Dataset` equality is a

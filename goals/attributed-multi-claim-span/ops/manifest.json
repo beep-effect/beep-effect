@@ -99,5 +99,5 @@
   ],
   "supersededBy": "text-knowledge-stack-rebuild",
   "supersededNote": "2026-11-09: superseded by goals/text-knowledge-stack-rebuild. Its L2 and L4 phases replace the attributed annotation aggregate over TextAnchor/EvidenceSpan and the LangExtract-to-ClaimGate proof; the per-claim distinct-confidence acceptance is withdrawn in favour of Absent{reason} signals with no default algebra (see that packet's SPEC.md Relationships).",
-  "retentionReason": "Retained on main as the record of the attributed-span and LangExtract-to-ClaimGate requirements that goals/text-knowledge-stack-rebuild absorbs; archive after both of that packet's P3 (L2) and P4 (L4) delivery PRs merge."
+  "retentionReason": "Retained on main as the record of the attributed-span and LangExtract-to-ClaimGate requirements that goals/text-knowledge-stack-rebuild absorbs; archive only after that packet's P4 acceptance item ClaimGate.two-claims-one-occurrence.test.ts (two claims on one verified occurrence through the claim gate with accepted and rejected evidence retained per claim) is green on main, which demonstrates the replacement."
 }

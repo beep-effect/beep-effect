@@ -18,7 +18,7 @@ One row per law-catalogue row of `2026-11-08-rebuild-report.md` section 6 (`L<la
 | `L2-3` | L2 | law | every annotation has non-empty attribution; each (annotation, activity) is one generation | `@beep/nlp` -> `@beep/annotation` | planned in P0 | planned | planned | |
 | `L2-4` | L2 | law | referential integrity survives merge and restriction | `@beep/nlp` -> `@beep/annotation` | planned in P0 | planned | planned | |
 | `L2-5` | L2 | law | containment is a strict order with a kind tie-break on equal spans | `@beep/nlp` -> `@beep/annotation` | planned in P0 | planned | planned | |
-| `L2-6` | L2 | law | OA/NIF codec round-trips both ways on the RDF quotient for the declared OA profile and preserves `resolve`; unattributed import normalizes to the import activity (`decode(encode s) = normalize(s)`) | `@beep/nlp` -> `@beep/annotation` | planned in P0 | planned | planned | |
+| `L2-6` | L2 | law | OA/NIF codec round-trips both ways on the RDF quotient for the declared OA profile and preserves `resolve`; unattributed import normalizes to the import activity (`encode(decode s) = normalize(s)` for third-party input `s`) | `@beep/nlp` -> `@beep/annotation` | planned in P0 | planned | planned | |
 | `L3-1` | L3 | profile | `skos:broader` acyclic in repo-owned schemes; imported cycles recorded | `@beep/ontology` | planned in P0 | planned | planned | |
 | `L3-2` | L3 | profile | mapping sets coherent and consistent | `@beep/ontology` | planned in P0 | planned | planned | |
 | `L3-3` | L3 | law | audit sound on the typed subset, silent on untyped | `@beep/ontology` | planned in P0 | planned | planned | |
