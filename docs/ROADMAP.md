@@ -204,8 +204,9 @@ Only packets that directly feed Lane 1:
   (4/4) — the span-provenance substrate whose close unblocks the dormant
   consumers `citation-extraction-engine` and `law-doc-structure-oa-slice`
   (independent of each other; the OA slice excludes citation parsing) and
-  `attributed-multi-claim-span` (superseded 2026-11-09 by `text-knowledge-stack-rebuild`); the cheapest Lane 1 unlock in the
-  portfolio (added 2026-09-12).
+  [`text-knowledge-stack-rebuild`](../goals/text-knowledge-stack-rebuild/README.md)
+  (which absorbed the superseded `attributed-multi-claim-span`); the cheapest
+  Lane 1 unlock in the portfolio (added 2026-09-12).
 - [`patent-document-schema`](../goals/patent-document-schema/README.md) (5/5)
   — closes to unblock `document-ast-pattern-classification` →
   `spar-document-annotation-wire` → `folio-lynx-taxonomy-browse` (added
@@ -401,7 +402,6 @@ renders their current local status view.
 | [`voice-composer-slice`](../goals/voice-composer-slice/README.md) | Voice capture re-enters the product bet. |
 | [`belief-view-engine`](../goals/belief-view-engine/README.md) | Scaffolded paused 2026-08-17 (queue goal, adversarially reviewed spec); a lane slot frees or an epistemic consumer pulls it. |
 | [`model-arrangement-admission-core`](../goals/model-arrangement-admission-core/README.md) | Scaffolded paused 2026-08-17 (queue goal, adversarially reviewed spec); a lane slot frees or the approval-gate consumer pulls it. |
-| [`attributed-multi-claim-span`](../goals/attributed-multi-claim-span/README.md) | Superseded 2026-11-09 by [`text-knowledge-stack-rebuild`](../goals/text-knowledge-stack-rebuild/README.md), whose L2 and L4 phases deliver the attributed-span aggregate and the LangExtract-to-ClaimGate proof; it does not resume (paused 2026-09-12, graduated 2026-08-13, zero execution). |
 | [`effect-native-legal-eval`](../goals/effect-native-legal-eval/README.md) | Paused 2026-09-12 (graduated 2026-08-13, zero execution). Resumes when a Lane 2 slot pulls the C&H baseline; `tracked-changes-ingest-wedge` is blockedBy it and waits with it. |
 | [`patent-drafting-episode-ledger`](../goals/patent-drafting-episode-ledger/README.md) | Paused 2026-09-12 (graduated 2026-08-13, zero execution). Resumes after practice-kg-mcp P8 hands off and `agentic-professional-runtime` closes; also needs `citation-verified-span-substrate`. |
 | [`time-to-certainty`](../goals/time-to-certainty/README.md) | Paused 2026-09-28 on ruling 80 (P0, P1, P3 complete; P2 complete except C4.2). Resumes when `bun run beep yeet proof-report --since <ruling-83 merge instant>` in the owning clone reads ready (200 attempts, 10 branches, 0 disagreements, counting only rows recorded after that merge) with `malformed rows: 0` on the sample, every C5 fixture green (ruling 82 closed the ruling-69 root-input gap); the flip PR turns reuse on, retires the legacy stores and closes the packet. |
@@ -420,14 +420,18 @@ leaving them implied-active, and their manifests stay `active` (they are
 executable) while this file owns the fact that they are queued, not in
 flight. `belief-view-engine` and `model-arrangement-admission-core` were
 scaffolded `paused` on 2026-08-17 as queue goals. The rows from
-`attributed-multi-claim-span` on were added at the 2026-09-12 re-eval: the
+`effect-native-legal-eval` on were added at the 2026-09-12 re-eval: the
 three 2026-08-13 graduations that `goals doctor` flagged as stale-active
 (21+ days untouched, no blocker, no status note) were paused via
 `set-status` in the same PR, and the paused packets that graduated without
 lane rows since 2026-08-17 now carry their resume conditions here. The
 2026-10-02 re-eval added `time-to-certainty` (paused by its own ruling 80),
 `knowledge-freshness-audit` and `agent-pool-picker`, and retired the
-`turborepo-task-qualification` row (closed via #1389).
+`turborepo-task-qualification` row (closed via #1389). The 2026-11-09 revision
+retired the `attributed-multi-claim-span` row: the packet is `superseded` by
+[`text-knowledge-stack-rebuild`](../goals/text-knowledge-stack-rebuild/README.md)
+(#2993), whose L2 and L4 phases deliver its aggregate and claim-gate proof, and
+it does not resume.
 
 **2026-08-13 vintage, still `active` (queued, not in flight):** the rest of
 that graduation cohort is chained and waits on its `blockedBy` edges rather
