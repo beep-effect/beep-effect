@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import * as Rdf from "@beep/rdf/Rdf";
 import {
   LibraryArtifact,
@@ -24,6 +25,7 @@ import {
 } from "@beep/semantic-web/services/shacl-validation";
 import { expect, it } from "@effect/vitest";
 import { assertTrue, strictEqual } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Console from "effect/Console";
@@ -514,3 +516,15 @@ it.layer(services, { timeout: "30 seconds" })("portable research library views a
     })
   );
 });
+
+it.prop(
+  "round-trips any probe evidence and intake through their committed JSON codecs",
+  { probe: Arbitrary.schema(LibraryProbeEvidence), intake: Arbitrary.schema(LibraryIntake) },
+  ({ probe, intake }) => {
+    const probeJson = S.encodeSync(LibraryProbeEvidenceJson)(probe);
+    expect(S.encodeSync(LibraryProbeEvidenceJson)(S.decodeSync(LibraryProbeEvidenceJson)(probeJson))).toBe(probeJson);
+    const intakeJson = S.encodeSync(LibraryIntakeJson)(intake);
+    expect(S.encodeSync(LibraryIntakeJson)(S.decodeSync(LibraryIntakeJson)(intakeJson))).toBe(intakeJson);
+  },
+  { arbitrary: fcRuns(20) }
+);
