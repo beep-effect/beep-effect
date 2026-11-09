@@ -1198,15 +1198,30 @@ class SourcePlanner {
     const children = this.compositionItems(operator.value + 1, end);
     if (O.isNone(children)) return O.none();
     if (children.value.length === 0) return O.some(false);
+    return this.compositionDeclaration(start, end, parent, depth, operator.value, children.value);
+  };
+  private compositionDeclaration = (
+    start: number,
+    end: number,
+    parent: number,
+    depth: number,
+    operator: number,
+    children: ReadonlyArray<readonly [number, number]>
+  ): O.Option<boolean> => {
     const owner = this.add(
       this.span(start, end),
-      this.span(start, operator.value + 1),
+      this.span(start, operator + 1),
       O.some(parent),
       "composition-header",
       true
     );
     if (O.isNone(owner)) return O.none();
-    return this.parseChildren(children.value, owner.value, "composition-child", depth) ? O.some(true) : O.none();
+    this.declarationIntroducer(owner.value, operator, operator + 1);
+    const ordinals = this.declaredChildren(children, owner.value, depth);
+    if (O.isNone(ordinals)) return O.none();
+    return this.canonicalDeclaration("composition", owner.value, this.span(operator, operator + 1), ordinals.value)
+      ? O.some(true)
+      : O.none();
   };
   private ambiguousRelative = (index: number, sourceStart: number): boolean => {
     const before = A.filter(

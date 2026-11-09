@@ -33,14 +33,6 @@
     "goals/ontology-workbench/GOAL.md",
     "goals/ontology-workbench/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/SOURCES.md",
-    "research/beep-repo-capability-report.md",
-    "research/graph-performance-report.md",
-    "research/ontology-playground-report.md",
-    "research/ontosphere-delta-report.md",
-    "research/ontosphere-survey-report.md"
-  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -108,5 +100,13 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation.",
     "cosmos.gl proves non-viable on webkitgtk during the P3 spike (pre-approved fallback: sigma.js v3 + graphology)."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/ontology-workbench",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "d0513e73f7314bcc06064e68583cd75d6e02de18",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

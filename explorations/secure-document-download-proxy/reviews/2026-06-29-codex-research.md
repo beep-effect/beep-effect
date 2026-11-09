@@ -76,7 +76,7 @@
 
    Confirmed. Repo evidence: `rg "CacheControl|Cache-Control|cache-control|no-store|private" packages/foundation/modeling/schema/src packages/foundation/capability/observability/src packages/drivers packages/agents apps/professional-desktop --glob "**/src/**/*.{ts,tsx}"` found only generic/private/security-context hits plus `packages/foundation/modeling/schema/src/Http/Http.headers.shared.ts:144` referencing `wrapArray("cache-control")`; no first-class `Cache-Control` builder exists.
 
-4. "**NO `m365-document-ingest` goal directory.** NOT FOUND — referenced in `goals/m365-driver/SPEC.md` Non-Goals but no such packet was inventoried; confirm it does not later claim a serve-route."
+4. "**NO `m365-document-ingest` goal directory.** NOT FOUND — referenced in [goals/m365-driver/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/m365-driver/SPEC.md) Non-Goals but no such packet was inventoried; confirm it does not later claim a serve-route."
 
    Confirmed. Repo evidence: `find goals -maxdepth 2 -type d -name m365-document-ingest -print` produced no directory; `goals/m365-driver/SPEC.md:26-27` names `m365-document-ingest` only as the deferred follow-on.
 

@@ -37,7 +37,7 @@
     "explorations/effect-mcp-2026-07-28/MAP.md",
     "packages/foundation/capability/mcp-kit/README.md"
   ],
-  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -91,5 +91,13 @@
   ],
   "researchReferences": [
     "explorations/effect-mcp-2026-07-28/research/SOURCES.md"
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/mcp-stateless-kit-and-drivers",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "372c392b0974ab3fb4e43d6c8e59f0b5d337d1e7",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

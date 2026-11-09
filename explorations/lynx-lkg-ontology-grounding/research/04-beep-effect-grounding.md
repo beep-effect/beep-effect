@@ -233,7 +233,7 @@ for anything Hohfeld/relator/norm-shaped that Lynx might carry:
   (decision 10).
 - The system records; **"legal judgment stays human, always."**
 
-`goals/patent-citation-candor-gate/SPEC.md` adds the fact/judgment discipline:
+[goals/patent-citation-candor-gate/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/patent-citation-candor-gate/SPEC.md) adds the fact/judgment discipline:
 append-only fact records own the mechanics; the disposition holds only dated,
 scoped attorney judgment; **no stored "duty satisfied" state exists anywhere** —
 the gate predicate is recomputed and fails closed.
@@ -382,7 +382,7 @@ The conventions any ported ontology term must be expressed in:
   (see `TaxonomyLoader.ts:97-191`).
 - **Design order is law**: schema → `Context.Service` contract → implementation
   (`goals/legal-position-relator-runtime/SPEC.md` decision 4;
-  `goals/patent-citation-candor-gate/SPEC.md` decision 1).
+  [goals/patent-citation-candor-gate/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/patent-citation-candor-gate/SPEC.md) decision 1).
 
 ---
 

@@ -382,7 +382,7 @@ detail per scope.)
 
 **UNVERIFIED (asserted by docs, not independently checked this session):**
 - The "8,438 files", "643 docket files", "105 families" corpus counts (cited
-  from `goals/oppold-corpus-pipeline/SPEC.md`).
+  from [goals/oppold-corpus-pipeline/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/oppold-corpus-pipeline/SPEC.md)).
 - The "42 tools" count for `nlp-mcp`.
 - The internal content/behaviour of `@beep/md`, `@beep/pandoc-ast`, FalkorDB
   specs, and the `ip-law-knowledge-graph` 7-ontology set (read about, not

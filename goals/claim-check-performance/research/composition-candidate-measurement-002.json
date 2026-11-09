@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "claim-composition-ci-followup/v1",
+  "retainedPreviousMeasurement": "research/composition-candidate-measurement-001.json",
+  "ciHeadBeforeRepair": "ac116008f230bef00184868d18b1e5a3913879d9",
+  "ciJob": 128734106245,
+  "ciFindings": "Two introduced Fallow complexity findings, resolved with predicate extraction and explicit synthetic expectations; no baseline or threshold change.",
+  "replay": {
+    "sourceHead": "def9645eb2fc011aa673520d164c328ae5331c5b",
+    "implementationDigest": "67388aadb8801bc73b1f20a8fd561903c599e7f5853d94c650bdbb5ddc9ebecc",
+    "strict": 48,
+    "selected": 538,
+    "families": 60,
+    "retainedMandatory48": 48,
+    "lostMandatory48": [],
+    "parsed": 537,
+    "abstained": 538,
+    "changedSelectedScoreRows": 0,
+    "fullSourceInputLedgersUnchanged": 60,
+    "resultsSha256": "d7bfd2204a7e0649f04fadfee9377965a8207011e5ccbfe031ea1c2bddc0c01f",
+    "sourceFallowFindings": 0,
+    "baselineOrThresholdEdits": false,
+    "goalComplete": false
+  },
+  "originalBindingsPreserved": 1213,
+  "measurementGroupsPreserved": 10,
+  "measurementOutputFilesPreserved": 1210,
+  "fullQualificationLedgersUnchanged": 60,
+  "unitTests": 977,
+  "scopedFallowFindings": 0,
+  "allMandatory48Retained": true,
+  "goalComplete": false,
+  "newInputSourcesPublicSchemasOrAssets": false
+}

@@ -6,7 +6,7 @@ import { alwaysEquivalent } from "@beep/schema/SchemaUtils/toEquivalence";
 import { it } from "@beep/test-runner";
 import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { assertNone } from "@effect/vitest/utils";
+import { assertNone, deepStrictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -20,6 +20,34 @@ const decodeBoolKeySettingsEffect = S.decodeUnknownEffect(BoolKeySettings);
 const encodeBoolKeySettingsEffect = S.encodeEffect(BoolKeySettings);
 
 describe("BoolKeyDefaultFalse and BoolKeyDefaultTrue", () => {
+  it.effect.prop(
+    "round-trips schema-derived boolean settings without changing explicit values",
+    [Arbitrary.schema(BoolKeySettings)],
+    Effect.fnUntraced(function* ([settings]) {
+      const encoded = yield* encodeBoolKeySettingsEffect(settings);
+      expect(encoded).toEqual(settings);
+      const decoded = yield* decodeBoolKeySettingsEffect(encoded);
+      expect(decoded).toEqual(settings);
+      expect(BoolKeySettings.make(settings)).toEqual(settings);
+    })
+  );
+
+  it.effect.prop(
+    "defaults each omitted key while preserving the other schema-derived boolean",
+    [Arbitrary.schema(BoolKeySettings)],
+    Effect.fnUntraced(function* ([settings]) {
+      const missingVisible = { enabled: settings.enabled };
+      const expectedVisible = { visible: false, enabled: settings.enabled };
+      expect(BoolKeySettings.make(missingVisible)).toEqual(expectedVisible);
+      const decodedVisible = yield* decodeBoolKeySettingsEffect(missingVisible);
+      expect(decodedVisible).toEqual(expectedVisible);
+      const missingEnabled = { visible: settings.visible };
+      const expectedEnabled = { visible: settings.visible, enabled: true };
+      expect(BoolKeySettings.make(missingEnabled)).toEqual(expectedEnabled);
+      const decodedEnabled = yield* decodeBoolKeySettingsEffect(missingEnabled);
+      expect(decodedEnabled).toEqual(expectedEnabled);
+    })
+  );
   it("round-trips schema-derived arbitraries through decode and encode", () => {
     assertSchemaArbitraryDecodesToSelf(BoolKeySettings);
   });
@@ -93,6 +121,14 @@ describe("optionalDefect", () => {
       const encoded = yield* encode(failure);
       const decoded = yield* decode(encoded);
       expect(same(decoded, failure)).toBe(true);
+      deepStrictEqual(decoded.cause._tag, failure.cause._tag);
+      expect(same(failure, Failure.make({ code: failure.code }))).toBe(true);
+      const otherCause = O.map(failure.cause, () => new Error("different driver failure"));
+      expect(same(failure, Failure.make({ code: failure.code, cause: otherCause }))).toBe(true);
+      const withoutCause = yield* decode({ code: failure.code });
+      assertNone(withoutCause.cause);
+      const encodedWithoutCause = yield* encode(withoutCause);
+      expect(encodedWithoutCause).toEqual({ code: failure.code });
       if (O.isNone(failure.cause)) expect(encoded).toEqual({ code: failure.code });
     })
   );
@@ -106,6 +142,15 @@ describe("optionalDefect", () => {
       expect(encoded).toEqual({ code: "unavailable" });
     })
   );
+
+  it("excludes cause presence from identity while retaining the diagnostic code", () => {
+    const withoutCause = Failure.make({ code: "unavailable" });
+    const withCause = Failure.make({ code: "unavailable", cause: O.some(new Error("driver failure")) });
+    const different = Failure.make({ code: "forbidden" });
+    expect(same(withoutCause, withCause)).toBe(true);
+    expect(same(withCause, withoutCause)).toBe(true);
+    expect(same(withCause, different)).toBe(false);
+  });
 
   it("excludes defect details from identity while retaining the diagnostic code", () => {
     const first = Failure.make({ code: "unavailable", cause: O.some(new Error("first driver failure")) });

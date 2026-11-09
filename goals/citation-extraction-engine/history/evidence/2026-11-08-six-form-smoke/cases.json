@@ -1,0 +1,38 @@
+[
+  {
+    "id": "full",
+    "text": "Roe v. Wade, 410 U.S. 113, 120 (1973)."
+  },
+  {
+    "id": "short",
+    "text": "See 410 U.S. at 120."
+  },
+  {
+    "id": "id",
+    "text": "Id. at 120."
+  },
+  {
+    "id": "supra",
+    "text": "Smith, supra, at 3."
+  },
+  {
+    "id": "usc",
+    "text": "35 U.S.C. § 101."
+  },
+  {
+    "id": "cfr",
+    "text": "37 C.F.R. § 1.56."
+  },
+  {
+    "id": "unicode",
+    "text": "😀 See 410 U.S. 113 (1973)."
+  },
+  {
+    "id": "negative",
+    "text": "The ordinary document has no legal citation."
+  },
+  {
+    "id": "context",
+    "text": "Roe v. Wade, 410 U.S. 113 (1973). Id. at 120."
+  }
+]

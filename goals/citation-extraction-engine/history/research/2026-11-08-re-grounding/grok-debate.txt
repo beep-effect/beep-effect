@@ -1,0 +1,202 @@
+# Against a solo eyecite-ts trial
+
+Date: 2026-11-08
+Seat: grok-4.7, assigned to this exchange as xhigh. That is the exchange prompt, not a provider attestation of the resolved runtime.
+Status: one adversarial reply to Kimi's completed report. Kimi hit quota after writing that report and is not a participant here. Nothing below is a joint finding.
+
+Files left unchanged: `panel-launch/grok/report.md`, `panel-launch/grok/decisioncritique.md`, `panel-launch/kimi/report.md`, and the smoke directory (`README.md`, `cases.json`, `normalized-observations.json`, `python.stdout.json`, `ts.stdout.json`, `js.stdout.json`). No new search, fetch, install, or delegation.
+
+## How a sentence is marked
+
+| Tag | Means |
+| --- | --- |
+| Evidence | A value read in the smoke files, or a claim already recorded in the fact report, the decision critique, or Kimi's report, with that file as the source. |
+| Inference | A conclusion drawn from those records. |
+| Assumption | A step the records do not show. |
+| Legal question | A license reading this exchange does not decide. |
+| Concession | A prior grok claim this exchange withdraws. |
+
+## What this exchange recommends
+
+Stop the exhaustive eyecite 2.7.6 port. That part of Kimi's decision stands.
+
+Do not start with a solo `eyecite-ts@0.34.2` trial. Do not drop pinned eyecite-js before a six-form differential. Do not park official eyecite as a fallback that runs only after that trial fails. Do not treat candidate-only verification as the delivery for this extraction goal. Do not vendor a donor to make a catastrophic regular expression safe.
+
+The next measurement is a six-form screen. Pinned official eyecite 2.7.6 is the comparator for family and for both token text and span. eyecite-ts, eyecite-js, and a bounded native extract sit in the same row. A written product span rule decides which slice is the verified quote. Adoption still waits on an independent labelled holdout and on a kill trial. The nine-case smoke is not that holdout.
+
+## What the smoke shows, and where it stops
+
+Evidence, from `smoke/README.md`. Nine hand-authored synthetic snippets. Existing local pins only. Official eyecite 2.7.6 at `04d82c032ad5fd0f9ab72a61c87110c46ee8f52e`, eyecite-ts 0.34.2 at `34133d03143ea65861f48a5ed0eb32c931581666`, eyecite-js 2.7.6-alpha.28 at `53a49f2412da668aaf262e5f92584c2c3781043b`. The screen checks import and broad family recognition. It does not select an architecture. It does not prove parity, safety, resolution, metadata correctness, or document coverage. One-pass timings are not a benchmark. No native Beep engine timing was measured.
+
+Evidence. All three lanes emitted the anticipated family on each of the six initial forms, no citation on the negative, and two mentions on the full-case plus `Id.` context. Every normalized source span was in bounds. The astral case agrees at UTF-16 [7, 19) only after explicit conversion of Python code points. Python `unicode` code points are [6, 18) in `python.stdout.json`. One astral string does not show general Unicode fidelity.
+
+Evidence. The normalized file hides the disagreements that matter. Raw token text and raw span are different objects. Collapsing them makes the lanes look interchangeable.
+
+`Id. at 120.` and the context sentence `Id. at 120`:
+
+| Lane | Token or `text` | Citation span, UTF-16 | Slice of that span |
+| --- | --- | --- | --- |
+| Python | `Id.` | [0, 10) and, in context, [34, 44) | `Id. at 120` |
+| eyecite-js | token `Id.` at [0, 3) and, in context, [34, 37) | [0, 10) and [34, 44) | `Id. at 120` |
+| eyecite-ts | `Id. at 120` | [0, 10) and [34, 44) | `Id. at 120` |
+
+Python and eyecite-js split the core token from the pin-inclusive span. eyecite-ts stores the pin-inclusive text in both places. The spans match. The token contract does not. The README already states the Python split. The JS raw rows show the same split. The normalized `sourceSlice` drops it.
+
+`Smith, supra, at 3.`:
+
+| Lane | Token or `text` | Citation span, UTF-16 | What the span covers |
+| --- | --- | --- | --- |
+| Python | `supra,` | [7, 18) | `supra, at 3`, antecedent excluded |
+| eyecite-js | `Smith, supra,` at [0, 13) | [0, 18) | `Smith, supra, at 3` |
+| eyecite-ts | `Smith, supra, at 3` | [0, 18) | `Smith, supra, at 3`, and that string is also `matchedText` |
+
+Three layouts. Python's span starts at 7 and its `text` is shorter than that span. JS's citation span matches TS and includes the antecedent, while JS's token stops at `Smith, supra,`. TS's text and span are the same inclusive string. A later adapter that equates these layouts will verify the wrong quote.
+
+Evidence of single-case field splits the normalized file also drops:
+
+- Short form `See 410 U.S. at 120.` TS records volume 410, reporter `U.S.`, pincite 120, and no page. JS records groups `page: "120"` on a short citation, plus `pinCite: "120"`. Same span [4, 19). Different field for the pin.
+- `37 C.F.R. § 1.56.` Same span [0, 16). TS records section `1.56`. JS records part `1` and section `56`. Python's smoke row has the full string and no field breakdown.
+- `35 U.S.C. § 101.` Same span [0, 15). Both TS and JS expose title 35 and section `101`. That is one synthetic statute, not a statute-family result.
+- Full case `410 U.S. 113` agrees at [13, 25) on all three. TS and JS also carry a wider full span, [0, 37) on that string. The screen's Python row is `span()`, not `full_span()`.
+- TS raw rows include `confidence` (0.95, 0.7, 1, 0.9, 0.8 on these cases). The screen does not show that those numbers were calibrated.
+
+Inference. The smoke is an operability result for nine synthetic cases, six initial forms, one converted astral offset, an empty negative, and a two-mention context. It is not accuracy, throughput, normalization agreement, resolution, or safety. It is already enough to reject a comparison that scores only full-case spans. Full-case spans are the row where the three lanes match. Supra, `Id.` token text, the short-form pin field, and the C.F.R. section split are the rows where they do not.
+
+The context case emitted two mentions. Nothing in the raw rows shows the `Id.` mention resolved to Roe. Resolution was not measured.
+
+## The case against Kimi's order
+
+Kimi's report recommends one bounded `eyecite-ts@0.34.2` evaluation, an end to the native port, a continued ban on eyecite-js, and official Python only after a separate constraint change. Candidate-only verification ships first and becomes the fallback if the adapter fails.
+
+### A solo TS trial spends the only remediation on an unwritten span rule
+
+Evidence. Kimi allows one remediation round, then candidate-only grounding or a new decision for a Python wrapper. Kimi also says eyecite-ts "started as a port and has diverged," that fuzzy party matching defaults on, and that its real-opinion corpus states accuracy as a non-goal.
+
+Evidence. On the only supra string in the smoke, TS's span is not Python's span. On the only `Id.` strings, TS's stored text is not Python's `text` or JS's token.
+
+Inference. A solo trial has to choose, silently or in the adapter, whether the verified quote for supra includes `Smith` and whether the verified quote for `Id.` includes `at 120`. If the trial uses TS's own span as the success condition, it can pass while disagreeing with the pinned oracle the GOAL still names. If it uses Python's span as gold without writing that choice down, it treats an unsettled product rule as a TS defect. Either way the one remediation is spent on a convention, not on a measured miss.
+
+Official Python first is the better comparator for that convention, because the smoke already ran the pin and the two fields (`text` and `span()`) are both in `python.stdout.json`. Python first as a runtime to adopt is a different claim, and the smoke does not earn it. Accuracy is unmeasured. The no-Python sentence in `SPEC.md`, as Kimi and the fact report both record it, is still a written constraint. Using the existing pin as a comparator does not adopt that runtime. Promoting the pin to the product process does.
+
+### Stopping the native port before a six-form row confuses program cost with a miss
+
+Evidence, Kimi's report. The current service still exposes `clean`, `extract`, `resolve`, and `annotate`. The plan checkpoint Kimi cites moved Test Integration to about 120 minutes, with unfinished accounting in the tens of thousands of rows. Seven original documents passed a narrow public-engine receipt while full metadata comparison stayed open. Kimi reads that as a reason to stop, and to refuse a reduced native six-form path "by default" because it still inherits that surface.
+
+Inference. That evidence supports stopping the exhaustive parity program, the CPython emulation, and the public four-operation contract. It does not show that a native extract of the six Q8 forms disagrees with the pin. No such differential is in the fact report, the critique, or the smoke. The smoke did not run the native engine at all.
+
+A bounded native row is admissible only if the call under test returns the six-form tuple without loading clean, resolve, or annotate. If it cannot, it is not bounded, and it stays out. That is a structural fact to check on the entrypoint, not a reason to skip the check and declare the native code finished as a candidate.
+
+Bounded native first, as a new implementation program, is the wrong spend. Bounded native beside the two donors, on the same strings, is the spend that tells us whether the code already in the repo misses the tuple Kimi wants an adapter to grow.
+
+### Excluding JS is not what the inspected runs show
+
+Evidence, this smoke. Pinned eyecite-js recognized the same six families, the empty negative, the two-mention context, and the converted astral offset. It did not fail operability.
+
+Evidence, Kimi's source inspection, not re-opened here. Kimi reports a 2025-08-21 main commit, a README that says both complete parity and a 95% core port, a type-declaration script that ignores failure with `|| true`, a Bun engine declaration, five runtime dependencies, and an npm `latest` of 2.7.6 whose `gitHead` differs from alpha.28. The 2026-10-28 receipt recorded 423 passing tests for the pinned commit. Kimi did not call those tests independent accuracy, and this exchange does not either.
+
+Inference. Those provenance findings justify a hard pin to `53a49f2412da668aaf262e5f92584c2c3781043b` and a refusal to adopt the npm dist-tag. They justify an artifact and notice audit before any install into the product. They do not justify removing that pin from the screen the smoke already showed can run. The short-form `page` versus `pincite` split and the C.F.R. `1.56` versus `1`/`56` split are diverge rows to keep. One synthetic row is not a reject.
+
+Assumption. This exchange did not re-read eyecite-js `package.json`, `README`, or `LICENSE`. If Kimi's quotations of those files are wrong, the provenance half of this paragraph falls. The smoke half does not.
+
+### Candidate-only verification does not answer the written first consumer
+
+Evidence, recorded in the decision critique and the fact report. Q8 locks v1 to full and short case citations, `Id.`, supra, 35 U.S.C., and 37 C.F.R., and rejects case-only v1. The product note orders verified-span, then an extraction engine, then ground-before-cite. The fact report's excluded claim 21 records that the extraction GOAL allows P0 to proceed before those earlier contracts exist, and that the doctrine's order and that sentence conflict. The critique recorded the verified-span packet on this checkout as an archive tombstone and said the extraction comparison neither waits on that substrate nor replaces it.
+
+Evidence, Kimi's own table. Candidate-only grounding "does not discover citations automatically." Kimi's stop rule says to continue candidate-only only if a real consumer will use verified anchors, and otherwise to stop, because verified-span work already owns the generic mechanics.
+
+Inference. The written extraction consumer is discovery of the six forms, including the short, `Id.`, and supra references that point at an earlier authority, plus the two patent-law forms Q8 refused to postpone. A function that checks a quote the caller already supplied serves the verified-span consumer. Kimi says that consumer, if it has no caller, is a reason to stop, and if the mechanics are generic they already have a home. Shipping that function from this goal after an extractor fails renames a miss as a delivery.
+
+Assumption. Neither Kimi nor this exchange scanned live call sites. "First consumer" here means the written Q8 and product order, not a located importer. A scan that finds no six-form caller, and finds a quote-verification caller that is not the verified-span goal, reverses this paragraph. That scan does not exist yet.
+
+### Python as a later fallback inverts the evidence we already have
+
+Evidence. Kimi calls official eyecite the strongest maturity and the best technical fallback once Python packaging is acceptable, and credits a local process with a natural kill boundary for hostile regular expressions. The same report then withholds that evaluation until a constraint change, and spends the first implementation chance on eyecite-ts.
+
+Evidence. The smoke's Python lane already imported and returned rows for every synthetic case. JOSS, as both reports cite it, asks for an external time limit because extraction can take exponentially long. An in-process TypeScript dependency does not become that limit by being TypeScript. Kimi's own gate 9 already requires a bounded worker for the parser. Once a killable worker is required for TS, the remaining TS advantage is packaging and the absence of a second runtime, not safety.
+
+Inference. The first runtime experiment that answers the safety question is a pinned process the supervisor can kill. Official eyecite is the process Kimi already believes has that shape, and it is the pin the GOAL names. Running it as a comparator now is cheap relative to a new TS adapter. Adopting it as the product runtime is still a written-constraint change, and this exchange does not make that change. Holding it as a fallback until TS fails spends the remediation budget before the kill boundary is tried on the engine that already implements `span()` and `matched_text()` as separate fields.
+
+The CPython 3.12 `pyahocorasick` typedef failure in the fact report, and Kimi's list of native dependencies, are real costs of a Python product process. They are reasons to keep the comparator on the interpreter where 2.7.6 already ran. They are not reasons to discover the span convention inside eyecite-ts first.
+
+## Root's three challenges to the decision critique
+
+The critique recommended vendoring a full-case `get_citations` slice, custom code only if both donors diverge or fail a safety gate, and no runtime dependency. Root's objections land.
+
+### A pinned package inside a killable worker is a real safety design
+
+Concession. The critique's sentence that a dependency loses because a catastrophic pattern cannot be replaced without taking the whole package is an unsupported inference. An entire pinned package can run in a worker a supervisor outside the matching thread can kill. Vendoring that same pattern into our tree is the same hazard if the vendored pattern still runs on the caller thread. The SPEC ban on a Python or donor runtime is a written constraint. It is not an empirical proof that a dependency is less safe than a copy.
+
+Evidence that vendoring is a maintenance choice, not a safety proof:
+
+- No gathered source names a specific pattern that fires on ordinary input and can be deleted only by a fork. JOSS recommends an external limit for worst-case input. That sentence supports the worker.
+- The critique admitted the vendored slice's size was not measured, then still recommended vendoring. An unmeasured fork is an open-ended maintenance obligation. A pin can be bumped and the differential re-run. A vendor copy can drift from the commit the differential measured.
+- Kimi records eyecite-ts as MIT, zero runtime dependencies, with fuzzy matching and confidence on a resolver the product can refuse to call. Refusing to call `resolve` is available to a pinned dependency and to a vendor. The install graph is not the call graph. The critique treated them as the same.
+
+What would still justify a vendor. A recorded pattern that runs on the extract path, that a narrow adapter cannot avoid calling, and that a kill trial shows must be removed rather than timed out. Until that pattern is named, the safety gate is the external kill, applied to the pinned package as a whole. Vendoring does not pass the gate in advance.
+
+### Full-case-only can screen and cannot fulfill
+
+Concession. The critique made the full-case tuple the adoption instrument and the completion slice, and its gate 5 forbade short case, `Id.`, supra, statutes, and regulations in the implementation. A full-case-only run can show that volume, reporter, and page come back at all. It cannot fulfill Q8's six-form v1, and it cannot fulfill the extraction consumer those forms describe.
+
+The omission was deliberate and it was the wrong measurement cut. The critique held short, `Id.`, and supra out to avoid scoring antecedent binding. Token span and family do not require binding. The smoke scored them as operability and immediately produced the supra and `Id.` disagreements a full-case screen would have called agreement. Full-case [13, 25) matches. That match is the weakest row, not the representative one.
+
+35 U.S.C. and 37 C.F.R. belong in the same screen for the same reason. One C.F.R. string already splits `1.56` differently in TS and JS. Leaving them until "after adoption" adopts a case-only engine Q8 rejected.
+
+Resolution stays out of this screen. Binding an `Id.` or a supra to an antecedent is a later decision. Recording the span and the token is not that decision.
+
+### eyecite-ts is MIT, and the reporter data is a separate notice question
+
+Concession. The critique's adoption rule said to vendor under BSD-2-Clause and cited the landscape note for "the algorithm and reporter data may be ported with attribution." That note is about upstream eyecite, which the fact report records as BSD-2-Clause. It is the wrong blanket for the eyecite-ts pin.
+
+Evidence, Kimi's inspection of the pin. The package license is MIT. The generator embeds reporter data into `src/data/reporters.gen.ts`. Kimi says zero runtime dependencies do not remove reporters-db attribution duties. The fact report said the reporters-db license file was not opened. This exchange did not open either license file.
+
+Legal question, undecided. Whether MIT on the package plus whatever notice sits on the embedded data permits vendoring, a runtime dependency, or neither. This report makes no license conclusion and no sufficiency claim. The practical consequence is narrower. Any adoption, dependency or vendor, stops until the notices actually present in the pinned tree for code and for embedded reporter data are copied into the decision record. A single "BSD vendoring" sentence does not clear eyecite-ts. eyecite-js, which Kimi records as BSD-2-Clause with two copyright holders, is a different notice file and needs its own row if that pin stays in the screen.
+
+## Strongest recommendation
+
+1. Leave exhaustive four-operation parity, CPython emulation, HTML annotation, and public clean/annotate stopped. Kimi is right about that scope.
+2. Write one span rule before any adapter work. For each of the six forms, name the source slice that must equal the verified quote. The smoke shows that Python `span()`, Python `text`, JS token, JS citation span, and TS `matchedText` are not one rule on supra or `Id.`.
+3. Screen pinned eyecite 2.7.6, eyecite-ts at `34133d03`, eyecite-js at `53a49f24`, and a native extract against that rule on the nine smoke strings plus the repo's existing short, `Id.`, supra, 35 U.S.C., and 37 C.F.R. fixtures. Record family, token text, span, source slice, and the legal fields each lane actually emitted. Keep JS `page: "120"` and TS `pincite: 120` as different fields. Keep C.F.R. `1.56` and part/section `1`/`56` as different fields. No rollup by count. No resolve score. No timing rank.
+4. The native row is in that screen only when the entrypoint does not load clean, resolve, or annotate. Otherwise the native port stays stopped, including a "reduced" port that still carries that surface.
+5. Safety is a later kill trial on each survivor, whole and pinned, in a worker a supervisor can kill on a wall clock. An in-process Effect timeout around a synchronous regular expression remains a fail, as the critique said. Vendoring is not a substitute for that trial.
+6. Adoption, of TS, JS, Python-as-runtime, or a native slice, waits on Kimi's independent labelled holdout shape and on the notice record in the license section above. The recall numbers Kimi proposed are product targets, not results. This exchange does not certify them.
+7. Candidate-only verification stays in the verified-span goal if a caller needs it. It is not the fallback that closes this extraction goal.
+
+## Best counterargument to that recommendation
+
+The stronger objection is that this screen rebuilds a small parity program after the reconsideration demoted parity.
+
+Python `span()` may be the wrong gold for a grounding quote. On `Smith, supra, at 3.`, the inclusive TS span is the region a reader would call the citation. Marking TS wrong because Python starts at offset 7 freezes a tokenizer detail as the product. Kimi's human-labelled corpus, with one implementation under test, asks the question the product needs. A four-lane differential asks which library matches eyecite. Those are different questions, and the second one is the program we just called too large.
+
+The budget version of the same objection is sharper. Kimi allows one remediation. A screen with three candidates and a native row gives nobody a fix. eyecite-js's stale branch, ignored type-build failure, and npm versus git head are supply-chain facts. Leaving JS in the row lets a later reader treat "recognized `SupraCitation`" as adoption evidence. The native service still exposes four operations and a 100-minute lane. Inviting it back under the name "bounded" is how the exhaustive port resumes. And official Python as the lead runtime, even inside a worker, uses a safety story to reverse a written non-goal, while the fact report already records a broken CPython 3.12 native dependency on the way to that runtime.
+
+If that objection is right, the rational spend is Kimi's: write the span rule, trial only eyecite-ts against human labels, keep JS out, leave Python and the native engine stopped until that trial fails.
+
+This exchange does not accept that shortening. It accepts the part that bites. The span rule is a product choice and Python is not silent gold on the disputed slices. The screen exists so the solo trial cannot pick TS's supra span by default. It stays a screen of fixtures we already have. It is not a new parity GOAL, not a license to remediate all three donors, and not permission to load the old service.
+
+## Falsifier
+
+The recommendation above is false, and Kimi's order becomes the one to follow, if a recorded run shows all of the following.
+
+- The span rule is written first, and it chooses a slice on purpose for supra and for `Id.`.
+- On the nine smoke strings plus the existing six-form fixtures, eyecite-ts matches that rule on every non-waived row.
+- On that same set, eyecite-js misses a non-waived legal field, such as the short-form pin field or the C.F.R. section split, and the miss is not a one-string accident the waiver names in advance.
+- The native extract entrypoint cannot return the six-form tuple without clean, resolve, or annotate.
+- A kill trial on unedited pinned eyecite-ts, in a worker, returns the caller within the wall clock, so vendoring is unnecessary for safety.
+
+Any one of those failing keeps the corresponding candidate in the next row. Family-level recognition on the nine synthetic cases does not satisfy the JS bullet.
+
+Separate reversals:
+
+- A caller scan that finds no consumer for short, `Id.`, supra, 35 U.S.C., or 37 C.F.R., and finds a live quote-verification consumer outside the verified-span goal, makes candidate-only the right stop. This extraction goal should then close.
+- A named extract-path pattern that a narrow adapter cannot skip, plus a kill trial that fails for the pinned package and passes for a reduced copy of that pattern, restores vendoring for that pattern only.
+- A human holdout, built as Kimi described and not from donor output, where pinned eyecite 2.7.6 meets the pre-declared recall and precision targets inside a killable process and eyecite-ts misses them after one remediation, makes official Python the adoption candidate. That result is an explicit reversal of the no-Python runtime sentence. It is not a fallback discovered by exhausting TS.
+- A written amendment that drops the five non-full-case forms restores a full-case-only screen. Until that amendment, omitting them is the error the smoke already illustrates.
+
+## What stays in dispute
+
+No consensus is claimed. Kimi's report still says trial eyecite-ts first, stop native, exclude JS, and hold Python for a later decision, with candidate-only as the first ship and the failed-extractor fallback.
+
+This exchange says the span convention is already unsettled on the smoke's supra and `Id.` rows, so a solo TS trial is the wrong first spend. JS stays in the screen because operability did not eliminate it and provenance findings were not re-proven here as an accuracy reject. The native exhaustive port stays stopped. A native six-form extract stays measurable only if it sheds the four-operation surface. Python is the comparator now. Python as the product runtime waits on the holdout falsifier and on an explicit constraint change. Candidate-only does not close the extraction consumer written in Q8.
+
+Shared ground, which is not a merge of the two recommendations. Exhaustive parity is the wrong next build. Donor suite counts are not accuracy. The smoke is not accuracy, performance, normalization, resolution, or safety. Fuzzy scores and antecedent fallback are not product truth. An independent labelled corpus is required before adoption. License notices for MIT code and for embedded reporter data are unresolved, and this file does not decide them.

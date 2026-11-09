@@ -473,7 +473,7 @@ each adapter constructs the common `LanguageModel.LanguageModel` surface.
 
 ### Corrected ProviderInstance premise
 
-[`goals/llm-provider-subscription-auth/SPEC.md`](../../goals/llm-provider-subscription-auth/SPEC.md)
+[goals/llm-provider-subscription-auth/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/llm-provider-subscription-auth/SPEC.md)
 defines `ProviderInstance` as vendor-CLI delegation. The live entity at
 `packages/agents/domain/src/entities/ProviderInstance/ProviderInstance.model.ts`
 stores a CLI binary path, isolated HOME, token-safe env configuration, and the

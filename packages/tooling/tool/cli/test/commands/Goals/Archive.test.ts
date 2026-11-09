@@ -163,6 +163,8 @@ const FIXTURE: ReadonlyArray<readonly [string, string]> = [
   ["explorations/gone/RESEARCH.md", "# Research\n"],
   ["explorations/open/ops/manifest.json", explorationManifest("open", "active")],
   ["docs/guide.md", GUIDE],
+  ["docs/AGENTS.md", "Spec is `goals/done/SPEC.md`.\n"],
+  ["docs/wrapped.md", "Follows the [done\nplan](../goals/done/PLAN.md#p1) closely.\n"],
   ["goals/done/assets/figure.md", "# Figure\n"],
   ["docs/directories.md", "Figures in `goals/done/assets`.\nFriction stays in `goals/done/research`.\n"],
   ["packages/demo/src/prompt.ts", "export const prompt = 'Read `goals/done/PLAN.md` first.';\n"],
@@ -207,6 +209,7 @@ const makeFixtureRepo = Effect.fn("ArchiveTest.makeFixtureRepo")(function* () {
       }),
     { discard: true }
   );
+  yield* fs.symlink("AGENTS.md", path.join(root, "docs/CLAUDE.md"));
   yield* git(root, ["add", "-A"]);
   yield* git(root, [
     "-c",
@@ -421,6 +424,15 @@ describe("goals archive", () => {
       assert.strictEqual(rewrite("[see `x.md` here](https://old/x.md)"), "[see x.md here](https://old/x.md)");
       assert.strictEqual(rewrite("[a](b) `x.md` [c](d)"), "[a](b) [x.md](https://e/x.md) [c](d)");
       assertTrue(rewriteLinksInText("no citation", [span("x.md")]).pipe(Result.isFailure));
+      const wrapped = InboundLink.make({
+        file: "a.md",
+        line: 2,
+        destination: "x.md",
+        form: "link",
+        rewrittenTo: "https://e/x.md",
+      });
+      const rewrittenTail = rewriteLinksInText("[two\nlines](x.md) on", [wrapped]).pipe(Result.getOrThrow);
+      assert.strictEqual(rewrittenTail, "[two\nlines](https://e/x.md) on");
     });
 
     it.effect("plans terminal packets in index order with keep/remove partitions and inbound links", () =>
@@ -463,6 +475,7 @@ describe("goals archive", () => {
                 "goals/done/research/notes.md",
               ],
               links: [
+                ["docs/AGENTS.md", 1, "goals/done/SPEC.md", `https://github.com/${REPO}/blob/main/goals/done/SPEC.md`],
                 [
                   "docs/citations.md",
                   2,
@@ -496,6 +509,12 @@ describe("goals archive", () => {
                 [
                   "docs/guide.md",
                   3,
+                  "../goals/done/PLAN.md#p1",
+                  `https://github.com/${REPO}/blob/main/goals/done/PLAN.md#p1`,
+                ],
+                [
+                  "docs/wrapped.md",
+                  2,
                   "../goals/done/PLAN.md#p1",
                   `https://github.com/${REPO}/blob/main/goals/done/PLAN.md#p1`,
                 ],
@@ -762,6 +781,24 @@ describe("goals archive", () => {
           )(guide)
         );
         assertTrue(Str.includes("[fenced](../goals/done/SPEC.md)")(guide));
+
+        // A link wrapped inside its text is planned and rewritten at its tail.
+        const wrappedDoc = yield* readText(root, "docs/wrapped.md");
+        assert.strictEqual(
+          wrappedDoc,
+          `Follows the [done\nplan](https://github.com/${REPO}/blob/main/goals/done/PLAN.md#p1) closely.\n`
+        );
+
+        // A symlink stays a symlink, and reads the target's single rewrite.
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const claudeLink = yield* fs.readLink(path.join(root, "docs/CLAUDE.md"));
+        assert.strictEqual(claudeLink, "AGENTS.md");
+        const agents = yield* readText(root, "docs/AGENTS.md");
+        assert.strictEqual(
+          agents,
+          `Spec is [goals/done/SPEC.md](https://github.com/${REPO}/blob/main/goals/done/SPEC.md).\n`
+        );
 
         // Citations leave as plain link text; commands, kept files and fenced text stay.
         const citations = yield* readText(root, "docs/citations.md");

@@ -95,15 +95,15 @@ The target goal has self-references in its manifest id and creation plan, but th
 
 `goals/ontology-interop-roadmap/README.md` says the roadmap plans the next ontology interop phase after `goals/ontology-modeling-foundation`. `goals/ontology-interop-roadmap/README.md:18-24`
 
-`goals/ontology-interop-roadmap/SPEC.md` ranks `goals/ontology-modeling-foundation` as source-hierarchy item 3. `goals/ontology-interop-roadmap/SPEC.md:15-23`
+[goals/ontology-interop-roadmap/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ontology-interop-roadmap/SPEC.md) ranks `goals/ontology-modeling-foundation` as source-hierarchy item 3. `goals/ontology-interop-roadmap/SPEC.md:15-23`
 
-`goals/ontology-interop-roadmap/PLAN.md` records inspection of `goals/ontology-modeling-foundation` as completed phase-0 work. `goals/ontology-interop-roadmap/PLAN.md:8-15`
+[goals/ontology-interop-roadmap/PLAN.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ontology-interop-roadmap/PLAN.md) records inspection of `goals/ontology-modeling-foundation` as completed phase-0 work. `goals/ontology-interop-roadmap/PLAN.md:8-15`
 
-`goals/ontology-interop-roadmap/GOAL.md` says the packet extends `goals/ontology-modeling-foundation` and tells future editors to inspect that packet before package work. `goals/ontology-interop-roadmap/GOAL.md:16-28`
+[goals/ontology-interop-roadmap/GOAL.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ontology-interop-roadmap/GOAL.md) says the packet extends `goals/ontology-modeling-foundation` and tells future editors to inspect that packet before package work. `goals/ontology-interop-roadmap/GOAL.md:16-28`
 
-`goals/ontology-interop-roadmap/research/current-surface-gap-analysis.md` lists `goals/ontology-modeling-foundation/SPEC.md` as a source. `goals/ontology-interop-roadmap/research/current-surface-gap-analysis.md:5-12`
+[goals/ontology-interop-roadmap/research/current-surface-gap-analysis.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ontology-interop-roadmap/research/current-surface-gap-analysis.md) lists `goals/ontology-modeling-foundation/SPEC.md` as a source. `goals/ontology-interop-roadmap/research/current-surface-gap-analysis.md:5-12`
 
-`goals/ontology-interop-roadmap/research/skos-profile-research.md` lists `goals/ontology-modeling-foundation/SPEC.md` as a source. `goals/ontology-interop-roadmap/research/skos-profile-research.md:5-10`
+[goals/ontology-interop-roadmap/research/skos-profile-research.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ontology-interop-roadmap/research/skos-profile-research.md) lists `goals/ontology-modeling-foundation/SPEC.md` as a source. `goals/ontology-interop-roadmap/research/skos-profile-research.md:5-10`
 
 `goals/law-practice-office-action-spike/research/SOURCES.md` lists `goals/ontology-modeling-foundation` as a related secondary target not edited there. `goals/law-practice-office-action-spike/research/SOURCES.md:144-148`
 
@@ -168,14 +168,14 @@ Add that cross-link near the roadmap README purpose and GOAL extension note, bec
 - `goals/ontology-modeling-foundation/PLAN.md`
 - `goals/ontology-modeling-foundation/ops/manifest.json`
 - `goals/ontology-interop-roadmap/README.md`
-- `goals/ontology-interop-roadmap/SPEC.md`
-- `goals/ontology-interop-roadmap/PLAN.md`
-- `goals/ontology-interop-roadmap/GOAL.md`
+- [goals/ontology-interop-roadmap/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ontology-interop-roadmap/SPEC.md)
+- [goals/ontology-interop-roadmap/PLAN.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ontology-interop-roadmap/PLAN.md)
+- [goals/ontology-interop-roadmap/GOAL.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ontology-interop-roadmap/GOAL.md)
 - `goals/ontology-interop-roadmap/ops/manifest.json`
-- `goals/ontology-interop-roadmap/research/current-surface-gap-analysis.md`
-- `goals/ontology-interop-roadmap/research/skos-profile-research.md`
-- `goals/ontology-interop-roadmap/research/roadmap-synthesis.md`
-- `goals/ontology-interop-roadmap/research/effect-json-schema-metadata.md`
+- [goals/ontology-interop-roadmap/research/current-surface-gap-analysis.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ontology-interop-roadmap/research/current-surface-gap-analysis.md)
+- [goals/ontology-interop-roadmap/research/skos-profile-research.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ontology-interop-roadmap/research/skos-profile-research.md)
+- [goals/ontology-interop-roadmap/research/roadmap-synthesis.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ontology-interop-roadmap/research/roadmap-synthesis.md)
+- [goals/ontology-interop-roadmap/research/effect-json-schema-metadata.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ontology-interop-roadmap/research/effect-json-schema-metadata.md)
 - `goals/law-practice-office-action-spike/research/SOURCES.md`
 - `goals/repo-quality-acceleration/README.md`
 - `goals/repo-quality-acceleration/ops/manifest.json`

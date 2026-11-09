@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "claim-performance-accepted-main-census-location/v1",
+  "acceptedMainCommit": "c0c05364a7d",
+  "acceptedPullRequest": 2987,
+  "reason": "Preserve the earlier component census at its original path and retain the accepted main update separately, without overwriting either result. Accepted runtime behavior is integrated unchanged. These are development receipts, not a new combined-runtime measurement.",
+  "originalReceipt": {
+    "path": "research/component-census-001.json",
+    "sha256": "0c2e968e04ec6332f1ff3e456fa34887ce1d7c64f8affdaed90ea92d44e8633e"
+  },
+  "acceptedMainReceipt": {
+    "originalPath": "research/component-census-001.json",
+    "retainedPath": "research/component-census-accepted-main-2987.json",
+    "sha256": "a1ccb7a4a1973721fdebcf107d0ce1317ad04dae07de0ab9dc70d4e23be8c683"
+  },
+  "combinedAll49Retention": "unproved until fresh integrated evaluation"
+}

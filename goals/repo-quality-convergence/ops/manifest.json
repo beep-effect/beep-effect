@@ -48,5 +48,12 @@
   "lifecycle": "completed-retained",
   "mergedPullRequest": 165,
   "packetPath": "goals/repo-quality-convergence",
-  "researchReports": ["research/repo-health-scorecard.md"]
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/repo-quality-convergence",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "cf12d1b007c8cc18c60a42acdbcaf8bea1ef61ab",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

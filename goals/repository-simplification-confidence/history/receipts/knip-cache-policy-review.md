@@ -27,7 +27,7 @@ packet artifact rather than the current CLI lane registry.
 The root review also retains the incoming practice-claude-mod workspace
 addition and its generated app tasks/template turbo configuration. Its
 original review is recorded in
-`goals/practice-claude-mod/research/cache-baseline-review.md`. The merged
+[goals/practice-claude-mod/research/cache-baseline-review.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/practice-claude-mod/research/cache-baseline-review.md). The merged
 root posture covers both that workspace addition and Knip retirement;
 no cache qualification is granted. Revert this integration to restore the
 prior branch snapshot.

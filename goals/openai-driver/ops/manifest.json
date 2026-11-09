@@ -41,7 +41,7 @@
     "goals/openai-driver/GOAL.md",
     "goals/openai-driver/research/SOURCES.md"
   ],
-  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -95,5 +95,13 @@
     "Verification would need a live OpenAI key or paid calls; unit proof runs against the stubbed HttpClient only.",
     "The implementation would exceed named scope: protocol or base-URL knobs, lab schemas, engine code, or changes to sibling drivers.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/openai-driver",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "0e3aae80f4fc9e1d086f8f6924793b82fa2bb942",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "claim-performance-contextual-head-comparison/v1",
+  "privateDiagnosticOnly": true,
+  "canonicalMainRunnerMeasurement": false,
+  "performanceGateEstablished": false,
+  "candidate": "contextual-nominal-head-candidate-001",
+  "candidateFreezeSha256": "ffaf04b51316186f496adf4fb64f9d265a3e604c6732aaabb305e4292c4972f0",
+  "measuredSelected": 538,
+  "fullContextRecords": 1219,
+  "measuredFamilies": 60,
+  "baseline": {
+    "selected": 538,
+    "strict": 49,
+    "parsed": 537,
+    "abstained": 538,
+    "missingPrediction": 1
+  },
+  "candidateResult": {
+    "selected": 538,
+    "strict": 49,
+    "parsed": 537,
+    "abstained": 538,
+    "missingPrediction": 1
+  },
+  "retainedMandatory49": 49,
+  "lostMandatory49": [],
+  "gainedStrict": [],
+  "all60ReportsByteIdentical": true,
+  "contextSourcePlans": {
+    "before": 143,
+    "after": 144,
+    "onlyNewPlanSelected": false
+  },
+  "artifacts": {
+    "comparison": {
+      "path": "~/.cache/beep/claim-check-performance/contextual-nominal-head-score-candidate-001/comparison.json",
+      "sha256": "28083e493e8223df3d4f129bd145d661c146e64805fad8b4c9569edb3b3b03ef"
+    },
+    "actualSealSha256": "fd33c869a70307bf5cc3cf3738c5cfa34f9f82c88714e9b19b246a06f711f05f",
+    "comparisonSealSha256": "80e2dfb27ea1eb199601bb7c441e0a70e454e87c95c60a6062a25ad1cf24962c"
+  },
+  "focusedFollowup": {
+    "families": 4,
+    "fullContextRecords": 85,
+    "selected": 33,
+    "strictControls": 4,
+    "candidate002SyntheticAssertions": 98,
+    "candidate002FreezeSha256": "0ae551cd5247db7c9b6725a96983931a2502d68ef36b5b650d91481eddb56420",
+    "all4ReportsByteIdentical": true,
+    "newFull538Score": false,
+    "candidate002ActualSealSha256": "cf03100d9c6cdf0de92713f988ba36828f4ee0756914f3221c201d8faabff0bb",
+    "targetedActualSealSha256": "ea6cdf9b16ccd6c20ed92e08fa6dbfb56a89a64687dfd5413fd6b816e5bb519a"
+  },
+  "interpretation": "Local nominal proof succeeds in some records but whole SourcePlan failure discards those facts before fallback. Leading governing-colon A proof advances to a later compound-head token; B roots advance to later function-unowned gerund tokens. No public structural gain, policy qualification or production adoption follows.",
+  "preservation": "Reference labels, old measurement files, scorer and all previous results remain unchanged. New outputs and followups are separate. All49 mandatory include all original46 and37 identities.",
+  "goalComplete": false
+}

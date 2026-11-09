@@ -29,6 +29,10 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  BEEP_CI_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+  BEEP_CI_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+
 jobs:
   admission:
     name: Heavy Admission
@@ -38,9 +42,9 @@ jobs:
     permissions:
       contents: read
     outputs:
-      verdict: ${{ steps.decide.outputs.verdict }}
-      admitted: ${{ steps.decide.outputs.admitted }}
-      docs_only: ${{ steps.decide.outputs.docs_only }}
+      verdict: ${{ steps.decide.outputs.verdict || steps.docs.outputs.verdict }}
+      admitted: ${{ steps.decide.outputs.admitted || steps.docs.outputs.admitted }}
+      docs_only: ${{ steps.decide.outputs.docs_only || steps.docs.outputs.docs_only }}
       route_skips: ${{ steps.decide.outputs.route_skips }}
       route_receipt: ${{ steps.decide.outputs.route_receipt }}
     steps:
@@ -56,12 +60,32 @@ jobs:
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
+      - name: Fetch beep CI binary
+        uses: ./.github/actions/fetch-beep-ci
+
+      - name: Classify pinned pull request diff
+        id: profile
+        shell: bash
+        run: beep ci change-profile
+
+      - name: Satisfy documentation-only admission
+        id: docs
+        if: steps.profile.outputs.docs_only == 'true' && github.event.pull_request.head.repo.full_name == github.repository
+        shell: bash
+        run: |
+          echo "verdict=skip-satisfied" >> "$GITHUB_OUTPUT"
+          echo "admitted=false" >> "$GITHUB_OUTPUT"
+          echo "docs_only=true" >> "$GITHUB_OUTPUT"
+          echo "Documentation-only diff: no dependency installation or heavy proof needed."
+
       - name: Setup monorepo CI
+        if: steps.docs.outputs.verdict != 'skip-satisfied'
         uses: ./.github/actions/setup-monorepo-ci
         with:
           free-disk: "false"
 
       - name: Decide heavy admission
+        if: steps.docs.outputs.verdict != 'skip-satisfied'
         id: decide
         shell: bash
         run: bun run beep ci admission --github-output
@@ -73,7 +97,7 @@ jobs:
   heavy:
     name: Heavy
     needs: [admission]
-    if: ${{ needs.admission.outputs.verdict != 'hold' }}
+    if: ${{ needs.admission.outputs.verdict == 'run' || needs.admission.outputs.verdict == 'skip-satisfied' }}
     permissions:
       contents: read
       # GitHub validates every nested job, including the gated producer.

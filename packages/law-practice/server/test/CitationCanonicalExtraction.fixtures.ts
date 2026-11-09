@@ -16,7 +16,7 @@ import {
   projectCitationCanonicalExpectedMetadata,
   readCitationCanonicalAttributeLinks,
 } from "./CitationCanonicalAttributes.fixtures.ts";
-import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
+import { installCitationSourceDocumentConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
 import { buildCitationDefaultEngineFixture } from "./CitationEngineLayer.fixtures.ts";
 import { assertCitationMentionRanges, citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { readCitationOracleFixture } from "./CitationRegexWorker.fixtures.ts";
@@ -154,7 +154,7 @@ export const replayCitationCanonicalExtraction = Effect.fn("CanonicalExtractionT
   const rows = yield* readCitationCanonicalExtractions(family);
   const selected = rows.slice(shard * size, (shard + 1) * size);
   expect(selected.length).toBeGreaterThan(0);
-  const installed = yield* installCitationDefaultConfigurationFixture(kind);
+  const installed = yield* installCitationSourceDocumentConfigurationFixture(kind);
   let proof = yield* citationFixtureSourceProof("initial");
   const resolver = SourceTextResolver.of({
     resolve: Effect.fn("CanonicalExtractionTest.resolve")(() =>

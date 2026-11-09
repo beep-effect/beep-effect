@@ -298,7 +298,7 @@ query safeguards Constraint 16. Neither constraint defines concurrency.
 `packages/ontology/domain/src/aggregates/Session/Session.model.ts`;
 `@beep/professional-desktop` —
 `apps/professional-desktop/src/ontology/OntologyOrchestrator.ts`; packet contract
-— `goals/ontology-workbench/SPEC.md`)
+— [goals/ontology-workbench/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ontology-workbench/SPEC.md))
 
 Two writers therefore operate on independent session snapshots. There is no
 serialization or merge. File writes use temp-file plus rename, so one write is

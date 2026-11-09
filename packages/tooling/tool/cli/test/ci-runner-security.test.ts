@@ -60,9 +60,9 @@ const secretReference = (name: string): string =>
     ? `\${{ secrets.${name} }}`
     : `\${{ github.event_name == 'push' && secrets.${name} || '' }}`;
 const secretInputLine = ([input, name]: readonly [string, string]): string => `${input}: ${secretReference(name)}`;
-const MATRIX_WRITE_TOKEN =
-  "${{ github.event_name == 'push' && matrix.uses_turbo == 'true' && secrets.TURBO_TOKEN || '' }}";
-const SECRET_INPUT_LINES = [...A.map(SECRET_INPUTS, secretInputLine), `turbo-token: ${MATRIX_WRITE_TOKEN}`];
+const LANE_WRITE_TOKEN =
+  "${{ github.event_name == 'push' && env.BEEP_CI_LANE_USES_TURBO == 'true' && secrets.TURBO_TOKEN || '' }}";
+const SECRET_INPUT_LINES = [...A.map(SECRET_INPUTS, secretInputLine), `turbo-token: ${LANE_WRITE_TOKEN}`];
 const SECRET_REFERENCES = A.map(SECRET_INPUTS, ([, name]) => `secrets.${name}`);
 
 const WorkflowStep = S.Struct({
@@ -89,15 +89,42 @@ const decodeInspectionPolicy = S.decodeUnknownEffect(
 );
 const encodeJobsFixture = S.encodeEffect(S.fromJsonString(S.Unknown));
 const decodeYamlRecord = S.decodeUnknownEffect(S.Record(S.String, S.Unknown));
-const decodeYamlRecords = S.decodeUnknownEffect(S.Array(S.Record(S.String, S.Unknown)));
 
 const workflowJobs = Effect.fnUntraced(function* (document: unknown) {
   return yield* decodeWorkflowJobs(yamlAt(document, ["jobs"]));
 });
 
-// The heavy verify job's matrix lanes; each dispatches one `beep ci lane`.
-const heavyMatrixLanes = (document: unknown) =>
-  decodeYamlRecords(yamlAt(document, ["jobs", "verify", "strategy", "matrix", "include"]));
+// Enumerate every job, including unexpected jobs without Turbo metadata.
+const isYamlSequence = S.is(S.Array(S.Unknown));
+const heavyLaneParameters = (document: unknown) =>
+  decodeYamlRecord(yamlAt(document, ["jobs"]) ?? {}).pipe(
+    Effect.flatMap((jobs) =>
+      Effect.forEach(
+        R.keys(jobs),
+        (job) =>
+          decodeYamlRecord(yamlAt(document, ["jobs", job, "env"]) ?? {}).pipe(
+            Effect.map((env) => {
+              const entries = O.fromUndefinedOr(yamlAt(document, ["jobs", job, "strategy", "matrix", "include"])).pipe(
+                O.map((value) => {
+                  assertTrue(isYamlSequence(value));
+                  return value;
+                }),
+                O.getOrElse(A.empty)
+              );
+              return {
+                job,
+                id: env.BEEP_CI_LANE_ID,
+                ids: [job, env.BEEP_CI_LANE_ID, ...A.map(entries, (entry) => yamlAt(entry, ["id"]))],
+                name: env.BEEP_CI_LANE_NAME,
+                uses_turbo: env.BEEP_CI_LANE_USES_TURBO,
+                docgen_concurrency: env.BEEP_DOCGEN_CONCURRENCY,
+              };
+            })
+          ),
+        { concurrency: 1 }
+      )
+    )
+  );
 
 const jobSteps = (jobs: WorkflowJobs, jobId: string): ReadonlyArray<WorkflowStep> =>
   O.getOrThrowWith(
@@ -298,13 +325,17 @@ const turboJobTable = Effect.fnUntraced(function* (documents: {
 // application secrets only where the job is allowed them.
 const assertTurboJobSetup = (jobs: WorkflowJobs, jobId: string, appSecrets: boolean): void => {
   const inputs = setupMonorepoInputs(jobs, jobId);
-  assert.strictEqual(inputs["turbo-remote-cache"], jobId === "verify" ? "${{ matrix.uses_turbo }}" : "true", jobId);
+  assert.strictEqual(
+    inputs["turbo-remote-cache"],
+    jobId === "verify" ? "${{ env.BEEP_CI_LANE_USES_TURBO }}" : "true",
+    jobId
+  );
   assert.strictEqual(inputs["turbo-api"], "${{ vars.TURBO_API }}", jobId);
   assert.strictEqual(inputs["turbo-team"], "${{ vars.TURBO_TEAM }}", jobId);
   assert.isUndefined(inputs["repository-secrets"], jobId);
   assert.strictEqual(
     inputs["turbo-token"],
-    jobId === "verify" ? MATRIX_WRITE_TOKEN : secretReference("TURBO_TOKEN"),
+    jobId === "verify" ? LANE_WRITE_TOKEN : secretReference("TURBO_TOKEN"),
     `${jobId} turbo-token`
   );
   assert.strictEqual(inputs["turbo-read-token"], secretReference("TURBO_READ_TOKEN"), `${jobId} turbo-read-token`);
@@ -483,7 +514,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const steps = jobSteps(workflowJobs4, "verify");
       assert.strictEqual(stepByName(steps, "Fetch beep CI binary").uses, FETCH_BEEP_CI_ACTION);
       assert.isBelow(stepIndexByName(steps, "Fetch beep CI binary"), stepIndexByName(steps, "Run verification lane"));
-      const run = pipe(stepRun(steps, "Run verification lane"), Str.replaceAll("${{ matrix.id }}", "check"));
+      const run = pipe(stepRun(steps, "Run verification lane"), Str.replaceAll("${{ env.BEEP_CI_LANE_ID }}", "check"));
       assert.notInclude(run, "scripts/ci-runner-resources.sh");
       // A recording `beep` stands in for the fetched binary.
       const fakeBeep = path.join(tempRoot, "beep");
@@ -1259,9 +1290,30 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       );
       assert.include(gate, "labs_checks=false");
       assert.include(stepRun(steps, "Run Labs lane"), "run_lane ci lane labs --coverage-output .beep/ci-coverage/labs");
-      // Not a verify matrix leg: Coverage Regression `needs` the Labs job itself.
-      const heavyMatrixLanes11 = yield* heavyMatrixLanes(workflow);
-      assertNone(A.findFirst(heavyMatrixLanes11, (lane) => lane.id === "labs"));
+      // Coverage Regression needs the dedicated Labs job, while Verify owns Repo Sanity.
+      assert.strictEqual(yamlAt(workflow, ["jobs", "verify", "env", "BEEP_CI_LANE_ID"]), "repo-sanity");
+    })
+  );
+
+  it.effect(
+    "detects forbidden lanes in unexpected jobs, declared ids, and legacy matrix entries",
+    Effect.fnUntraced(function* () {
+      for (const fixture of [
+        { id: "coverage", yaml: "jobs:\n  coverage:\n    runs-on: ubuntu-24.04\n    steps: []\n" },
+        {
+          id: "effect-diagnostics",
+          yaml: "jobs:\n  unexpected:\n    env:\n      BEEP_CI_LANE_ID: effect-diagnostics\n      BEEP_CI_LANE_USES_TURBO: false\n    steps: []\n",
+        },
+        {
+          id: "labs",
+          yaml: "jobs:\n  unexpected:\n    strategy:\n      matrix:\n        include:\n          - id: labs\n    steps: []\n",
+        },
+        { id: "coverage", yaml: "jobs:\n  coverage:\n    env:\n      BEEP_CI_LANE_ID: check\n    steps: []\n" },
+      ]) {
+        const lanes = yield* heavyLaneParameters(parseWorkflowYaml(fixture.yaml));
+        const forbidden = A.findFirst(lanes, (lane) => A.contains(lane.ids, fixture.id));
+        assert.throws(() => assertNone(forbidden));
+      }
     })
   );
 
@@ -1310,7 +1362,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const verifyGate = stepRun(jobSteps(jobs, "verify"), "Determine lane execution");
       assert.include(verifyGate, 'skip_profile="$docs_only"');
       // Repo Sanity validates `.changeset/*.md`, which the docs-only rule counts as documentation.
-      assert.include(verifyGate, 'if [[ "${{ matrix.id }}" == "repo-sanity" ]]; then\n  skip_profile="$goals_only"');
+      assert.include(
+        verifyGate,
+        'if [[ "${{ env.BEEP_CI_LANE_ID }}" == "repo-sanity" ]]; then\n  skip_profile="$goals_only"'
+      );
       assert.include(verifyGate, "^packages/ecosystem/");
       assert.include(
         stepRun(jobSteps(jobs, "coverage-regression"), "Determine comparison execution"),
@@ -1331,7 +1386,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       );
       assert.include(stepRun(sast, "Run SAST"), "bun run beep ci lane sast");
 
-      for (const jobId of ["lint", "test-unit", "coverage-regression"]) {
+      for (const jobId of ["lint", "test-unit"]) {
         assert.strictEqual(yamlAt(policy.workflow, ["jobs", jobId, "if"]), "${{ !cancelled() }}", jobId);
       }
     })
@@ -1538,7 +1593,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const heavyJobs = yield* workflowJobs(heavyWorkflow);
       const storybookJobs = yield* workflowJobs(policy.storybook);
       assert.deepStrictEqual(cacheSaveSteps(checkJobs), []);
-      assert.deepStrictEqual(cacheSaveSteps(heavyJobs), ["verify/Save main Docgen Turbo cache"]);
+      assert.deepStrictEqual(
+        cacheSaveSteps(heavyJobs),
+        A.map(
+          ["verify", "check", "test-integration", "docgen", "doctest", "build"],
+          (job) => `${job}/Save main Docgen Turbo cache`
+        )
+      );
       assert.deepStrictEqual(cacheSaveSteps(storybookJobs), ["storybook/Save Playwright Chromium cache"]);
       assert.include(
         stepByName(jobSteps(heavyJobs, "verify"), "Save main Docgen Turbo cache").if,
@@ -1551,19 +1612,20 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assert.isUndefined(yamlAt(workflow, ["jobs", "build"]));
       assert.strictEqual(
         yamlAt(heavyWorkflow, ["jobs", "verify", "environment"]),
-        "${{ github.event_name == 'push' && inputs.admitted && matrix.uses_turbo == 'true' && 'turbo-cache-write' || null }}"
+        "${{ github.event_name == 'push' && inputs.admitted && 'turbo-cache-write' || null }}"
       );
-      const heavyMatrixLanes16 = yield* heavyMatrixLanes(heavyWorkflow);
+      const heavyLaneParameters16 = yield* heavyLaneParameters(heavyWorkflow);
       const buildLane = O.getOrThrowWith(
-        A.findFirst(heavyMatrixLanes16, (lane) => lane.id === "build"),
+        A.findFirst(heavyLaneParameters16, (lane) => lane.id === "build"),
         () => new Error("heavy.yml declares no build lane.")
       );
       assert.strictEqual(buildLane.name, "Build");
       assert.strictEqual(buildLane.uses_turbo, "true");
       // Effect rules run inside the patched tsrs typecheck, so the standalone
       // diagnostics matrix lane is retired.
-      const heavyMatrixLanes17 = yield* heavyMatrixLanes(heavyWorkflow);
-      assertNone(A.findFirst(heavyMatrixLanes17, (lane) => lane.id === "effect-diagnostics"));
+      const heavyLaneParameters17 = yield* heavyLaneParameters(heavyWorkflow);
+      assertNone(A.findFirst(heavyLaneParameters17, (lane) => A.contains(lane.ids, "effect-diagnostics")));
+      assertNone(A.findFirst(heavyLaneParameters17, (lane) => A.contains(lane.ids, "labs")));
       assert.notInclude(heavyWorkflowText, "run_lane ci lane effect-diagnostics");
       assert.notInclude(heavyWorkflowText, "commands/Quality/EffectDiagnostics.ts");
       assert.include(heavyWorkflowText, "check|test-integration|build)");
@@ -1577,7 +1639,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
 
       assert.include(workflowText, 'eval "$(beep ci change-profile');
       assert.include(workflowText, 'if [[ "$docs_only" == "true" ]]');
-      assert.include(heavyWorkflowText, 'if [[ "${{ matrix.id }}" == "docgen"');
+      assert.include(heavyWorkflowText, 'if [[ "${{ env.BEEP_CI_LANE_ID }}" == "docgen"');
       assert.include(heavyWorkflowText, "^apps/|^packages/|^infra/");
       assert.include(workflowText, "- name: Skip lane");
       // The heavy lane ids live in heavy.yml; check.yml's verify matrix keeps
@@ -1785,18 +1847,15 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const workflow = parseWorkflowYaml(workflowText);
       const jobs = yield* workflowJobs(workflow);
       const setup = setupMonorepoStep(jobs, "verify");
-      assert.strictEqual(setup.with?.["turbo-remote-cache"], "${{ matrix.uses_turbo }}");
-      assert.strictEqual(
-        yamlAt(workflow, ["jobs", "verify", "env", "BEEP_DOCGEN_CONCURRENCY"]),
-        "${{ matrix.docgen_concurrency || 3 }}"
-      );
+      assert.strictEqual(setup.with?.["turbo-remote-cache"], "${{ env.BEEP_CI_LANE_USES_TURBO }}");
+      assert.strictEqual(yamlAt(workflow, ["jobs", "verify", "env", "BEEP_DOCGEN_CONCURRENCY"]), "3");
       assert.include(workflowText, 'eval "$(beep ci change-profile');
       assert.include(workflowText, 'if [[ "$goals_only" == "true" ]]');
       assert.include(workflowText, "- name: Skip lane");
-      const heavyMatrixLanes20 = yield* heavyMatrixLanes(workflow);
+      const heavyLaneParameters20 = yield* heavyLaneParameters(workflow);
       assert.strictEqual(
-        O.getOrThrow(A.findFirst(heavyMatrixLanes20, (lane) => lane.id === "docgen")).docgen_concurrency,
-        6
+        O.getOrThrow(A.findFirst(heavyLaneParameters20, (lane) => lane.id === "docgen")).docgen_concurrency,
+        "6"
       );
       const steps = jobSteps(jobs, "verify");
       const restore = stepByName(steps, "Restore main Docgen Turbo cache");
@@ -1861,6 +1920,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const fs = yield* FileSystem.FileSystem;
       const root = NodeURL.fileURLToPath(new URL("../../../../..", import.meta.url));
       const exemptions = [
+        "check.yml:Change Profile",
+        "job-context-contract.yml:Active Static Context",
+        "job-context-contract.yml:Skipped Static Context",
+        "job-context-contract-pr.yml:Context Contract Probe",
+        "job-context-contract-pr.yml:All Skipped Context Contract Probe",
         // Publishes the compiled pre-toolchain binary from main; a release step, not a quality lane.
         "beep-ci-binary.yml:Publish Beep CI Binary",
         "check.yml:Heavy Admission",
@@ -2005,7 +2069,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         default: false,
       });
       expect(yamlAt(heavy, ["jobs", "verify", "if"])).toBe(
-        "${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}"
+        "${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}"
       );
       expect(yamlAt(heavy, ["jobs", "producer-inspect", "if"])).toBe(
         A.join(
@@ -2149,7 +2213,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         default: false,
       });
       expect(yamlAt(heavy, ["jobs", "verify", "if"])).toBe(
-        "${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}"
+        "${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}"
       );
       expect(yamlAt(heavy, ["jobs", "producer-prepare", "if"])).toBe(
         A.join(
@@ -2304,7 +2368,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       }
       expect(yamlAt(heavy, ["on", "workflow_call", "inputs", "producer_execution", "default"])).toBe(false);
       expect(yamlAt(heavy, ["jobs", "verify", "if"])).toBe(
-        "${{ !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}"
+        "${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}"
       );
       expect(yamlAt(heavy, ["jobs", "producer-execute", "if"])).toBe(
         A.join(
@@ -2543,7 +2607,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(gate.env).toMatchObject({
         ROUTE_SKIPS: "${{ inputs.route_skips }}",
         ROUTE_RECEIPT: "${{ inputs.route_receipt }}",
-        LANE_ID: "${{ matrix.id }}",
+        LANE_ID: "${{ env.BEEP_CI_LANE_ID }}",
       });
       expect(gate.run).toContain('"$GITHUB_EVENT_NAME" == "pull_request"');
       expect(gate.run).toContain('",${ROUTE_SKIPS}," == *",${LANE_ID},"*');
@@ -2570,12 +2634,14 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "test-unit",
         "labs",
       ]);
-      expect(yamlAt(policy.workflow, ["jobs", "coverage-regression", "if"])).toBe("${{ !cancelled() }}");
+      expect(yamlAt(policy.workflow, ["jobs", "coverage-regression", "if"])).toBe(
+        "${{ !cancelled() && needs.admission.outputs.docs_only != 'true' }}"
+      );
       expect(yamlAt(policy.workflow, ["jobs", "coverage-regression", "name"])).toBe(
         "${{ needs.admission.outputs.legacy_coverage == 'true' && 'Coverage Artifact Migration' || 'Heavy / Coverage Regression' }}"
       );
-      const heavyMatrixLanes31 = yield* heavyMatrixLanes(policy.heavyWorkflow);
-      expect(A.some(heavyMatrixLanes31, (lane) => lane.id === "coverage")).toBe(false);
+      const heavyLaneParameters31 = yield* heavyLaneParameters(policy.heavyWorkflow);
+      expect(A.some(heavyLaneParameters31, (lane) => A.contains(lane.ids, "coverage"))).toBe(false);
       expect(policy.heavyWorkflowText).not.toContain("Verify coverage runtime features");
       expect(policy.heavyWorkflowText).not.toContain("append-turbo-summary --all");
       const download = stepByName(comparison, "Download coverage evidence");

@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "claim-aligned-pos-composition-measurement/v1",
+  "developmentMeasurement": true,
+  "finalHeldoutGateCredit": false,
+  "sourceHead": "1fbb06f96237e9ccc4a4e7944e53958a7cca1323",
+  "implementationDigest": "884932c5920dd9e54f55a6fc8ead3a1137dbc461cb199f59f111338226e76c6a",
+  "resultsSha256": "47ef9d9a513b3fba712f0959bcbce618403d514d26797e472628b251630a8e13",
+  "selected": 538,
+  "families": 60,
+  "baselineStrict": 48,
+  "strict": 49,
+  "retainedMandatory48": 48,
+  "lostMandatory48": [],
+  "gainedStrict": [
+    {
+      "familyId": "14659462-root-1",
+      "claimNumber": 6
+    }
+  ],
+  "mandatoryStrictForLaterMeasurements": 49,
+  "mandatory49ManifestSha256": "79f1cb1fa8d810d1e6cb71190f6a457d71c31ae8b2ec11a9601844d7543c1605",
+  "changedSelectedScoreRows": 327,
+  "scorerComponents": {
+    "baseline": {
+      "goldElements": 1976,
+      "predictedElements": 1784,
+      "matchedElements": 755,
+      "goldEdges": 6910,
+      "predictedEdges": 5833,
+      "matchedEdges": 2162
+    },
+    "candidate": {
+      "goldElements": 1976,
+      "predictedElements": 1818,
+      "matchedElements": 870,
+      "goldEdges": 6910,
+      "predictedEdges": 5951,
+      "matchedEdges": 2351
+    }
+  },
+  "parsed": 537,
+  "abstained": 538,
+  "fullInputCollectionsUnchanged": 60,
+  "fullQualificationRecordsUnchanged": 1219,
+  "sameRunPredictionServiceReportsEqual": 60,
+  "sealedMeasurementFiles": 121,
+  "measurementSealSha256": "4dc3b807cb948071820c2d32b8980d42282da593c40e93747c809ed64cb273f4",
+  "originalBindingsUnchanged": 1213,
+  "previousArtifactGroupsVerified": 26,
+  "previousArtifactFilesVerified": 2382,
+  "previousArtifactChanged": 0,
+  "previousArtifactUnknown": 0,
+  "runtimeFilePaths": 1845,
+  "runtimeInputPaths": 1544,
+  "unchangedLexicalAssetPins": 94,
+  "bunVersion": "1.4.4",
+  "workCapsChanged": false,
+  "referenceLabelsChanged": false,
+  "scorerChanged": false,
+  "usefulnessGatesChanged": false,
+  "focusedTestsPassed": 20,
+  "sourceAndCompilerOnlyTestChecksPassed": true,
+  "goalComplete": false
+}

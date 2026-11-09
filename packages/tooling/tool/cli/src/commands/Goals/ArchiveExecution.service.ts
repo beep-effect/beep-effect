@@ -37,7 +37,13 @@ import * as Str from "effect/String";
 import { ExplorationManifest } from "../Explore/Atlas.ts";
 import { knowledgeInlineSpans, knowledgeLinkDestinations } from "../Knowledge/Knowledge.refs.ts";
 import { decodeReflectionFrontmatterText, reflectionFileNameIsArtifact } from "../Lint/ReflectionArtifact.ts";
-import { ArchiveIndexRow, ArchiveRecord, ArchiveRepoRef, TombstoneKeep } from "./Archive.schemas.ts";
+import {
+  ArchiveIndexRow,
+  ArchiveRecord,
+  ArchiveRepoRef,
+  TombstoneKeep,
+  wrappedLinkDestination,
+} from "./Archive.schemas.ts";
 import { ArchiveError } from "./Goals.errors.ts";
 import { decodeGoalManifest, renderGoalCloseoutRecord, renderGoalProposedCloseout } from "./Goals.schemas.ts";
 import { parseGoalManifestText, readmeMissionLine } from "./Inventory.ts";
@@ -951,7 +957,10 @@ export const TombstoneWriterLive = Layer.effect(TombstoneWriter, makeTombstoneWr
 
 const rewriteLinkDestination = (line: string, link: InboundLink): O.Option<string> =>
   O.map(
-    A.findFirst(knowledgeLinkDestinations(line), (candidate) => candidate.destination === link.destination),
+    A.findFirst(
+      A.appendAll(knowledgeLinkDestinations(line), wrappedLinkDestination(line).pipe(O.toArray)),
+      (candidate) => candidate.destination === link.destination
+    ),
     (match) => {
       const start = match.column - 1;
       return `${Str.slice(0, start)(line)}${link.rewrittenTo}${Str.slice(start + Str.length(link.destination))(line)}`;

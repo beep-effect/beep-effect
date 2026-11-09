@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "claim-performance-review-location-addendum/v1",
+  "historicalMeasurement": "research/composition-candidate-measurement-001.json",
+  "historicalMeasurementSha256": "9b7160f0e8b6f209c68cfc205b958851e6ae76971bae111fac51c2deaa261c45",
+  "historicalMeasurementUnmodified": true,
+  "note": "Portable aliases for the recorded local reviews. They describe evidence locations; they do not change any measurement, review content or hash. Expand ~ against the evidence-owning workstation account.",
+  "sourceReviews": [
+    {
+      "path": "~/.cache/beep/claim-check-performance/composition-candidate-source-review-001.md",
+      "sha256": "70d56ae353a09447d00134fab633995cf638669ad617037f5e4abe77242177ba"
+    },
+    {
+      "path": "~/.cache/beep/claim-check-performance/composition-candidate-closure-review-001.json",
+      "sha256": "c8c7b2714d921d285802f7bf64021f82875ecc0ec5b70c2cc73f2cfca5f54348"
+    },
+    {
+      "path": "~/.cache/beep/claim-check-performance/composition-integrated-closure-review-001.json",
+      "sha256": "c5a5eee05a1be24027aecd6a3f056e09b7929f184af4371c0bb18f667973f596"
+    }
+  ]
+}

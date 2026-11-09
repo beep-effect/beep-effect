@@ -42,7 +42,7 @@ from the retired S0.
 (`params.name` for tool calls and prompt gets, `params.uri` for resource reads) and `_meta`; a
 stdio NDJSON helper that sends `discover` first; the SSE unwrap ported from the #1173 harness; a
 port of Effect's conformance harness (D-conformance). Consumers: the sidecar integration harness,
-`goals/ontology-agent-surface/ops/live-mcp-client.ts`, the m365 stdio test, the vendor capture.
+[goals/ontology-agent-surface/ops/live-mcp-client.ts](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ontology-agent-surface/ops/live-mcp-client.ts), the m365 stdio test, the vendor capture.
 
 **Hosts in order (Goal A, S2/S3).** m365 first (the only real stdio JSON-RPC conversation test:
 the framing canary), then uspto (array `structuredContent`), gov-legal, practice-kg (smoke and

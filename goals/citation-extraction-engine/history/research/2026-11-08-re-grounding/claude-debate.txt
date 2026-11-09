@@ -1,0 +1,305 @@
+# Adversarial report comparison (Claude panel)
+
+Date: 2026-11-08. Requested model and effort: `claude-opus-5-5`, `xhigh`. One finite pass, with no delegation, no new search, fetch or inventory, and no new workflow.
+
+**Inputs read:** `panel-launch/kimi/report.md`, `panel-launch/grok/decisioncritique.md`, and `smoke/` (`README.md`, `normalized-observations.json`, `cases.json`, `screen.py`, `screen.ts`, raw `{ts,js,python}.stdout.json`). All original reports are preserved. My `report.md` is unchanged; where the two differ on these disputes, this file records my current position.
+
+**This is not a consensus.** Kimi could not participate because of quota, so its report is evidence only. Grok's critique is a static document. Neither has answered anything below, and agreement with a sentence of theirs is my reading, not theirs. Everything here is a proposal: `GOAL.md`, `SPEC.md` and `DECISIONS.md` remain in force until the operator rules.
+
+## Outcome
+
+1. **Stop exhaustive parity.** All three documents agree on this.
+2. **Replace it with one reduced engine contract:** six forms, plain text, exact source anchors, local ambiguity as data, and resource bounds ([section 7](#7-reduced-engine-contract)).
+3. **Choose the implementation with one finite selection run.** Candidates are the existing native engine, eyecite-ts and eyecite-js. Python eyecite is a diagnostic only ([section 8](#8-finite-selection-not-a-benchmark-project)).
+4. **Safety comes from the kill boundary, not from packaging.** Vendoring is a maintenance choice, to be made after selection.
+5. **I withdraw my product expansion:** the check report, the authority-lookup port and the paid CourtListener question. I also withdraw my invented performance and timebox numbers, and my rejection of eyecite-js.
+
+## 1. Vendoring versus a pinned dependency in a killable worker
+
+**Claim challenged.** Grok recommends vendoring a bounded slice and calls dependency adoption "the loser", keeping the runtime ban "for the safety reason" (`decisioncritique.md:93,98`).
+
+**My position: that safety reason does not discriminate.** A vendored copy of a catastrophic regex backtracks exactly like the original. Grok's own gate 3 says what makes it safe: a proved linear-time subset, or a boundary a supervisor can kill from outside the matching thread (`:138-141`). Packaging appears in neither branch.
+
+| Packaging | Same regex? | External kill? | Gate 3 result |
+| --- | --- | --- | --- |
+| Dependency in the host thread | Yes | No | Fail |
+| Vendored in the host thread | Yes | No | **Fail** |
+| Dependency in a killable process | Yes | Yes | Passes the boundary branch |
+| Vendored in a killable process | Yes | Yes | Passes the same branch |
+| Vendored, patterns proved linear | No | Either | Passes the proof branch, but no such proof exists (`:151`) |
+
+The old ban doesn't help either. `SPEC.md:157,470` state the ban, but those lines give no safety rationale. Grok supplies that rationale itself, and the argument fails on the table above.
+
+Grok's gate 4 (`:142`) says the "host runtime" must not load a donor. A dependency running in a separate process would pass that wording, but it still violates `SPEC.md:157`. I won't use that gap: this needs an explicit ruling.
+
+**So the real question is maintenance.** This table is my judgment, and none of it is measured.
+
+| | Pinned whole dependency | Vendored whole snapshot | Vendored slice |
+| --- | --- | --- | --- |
+| Code matches what the smoke ran | Yes | Yes | **No, slicing makes new code** |
+| Cost to edit one pattern | Patch or fork; the memory index records bun patches silently dropping on dependency bumps | Low | Low |
+| Registry and publisher exposure | Yes, reduced by an exact pin and lockfile | None | None |
+| Upstream fixes | A cheap bump, then re-run | Manual | Manual, and diffs stop mapping |
+| Reviewable surface | Whole package | Whole package | Smallest (size not measured, `:102`) |
+| Repo lint and law gates on the code | Outside them | Possibly inside; unchecked | Possibly inside; unchecked |
+
+**Strongest opposing case.** Both donors are quiet (eyecite-ts since 2026-07-04, eyecite-js since 2025-08-21), so a dependency's cheap-upgrade advantage is mostly theoretical. A small slice is the only surface anyone could fully review. A catastrophic pattern needs an edit eventually, and the kill boundary only converts a hang into a failed document, so it protects availability but doesn't fix the pattern. Those arguments are good, and they could make vendoring right later.
+
+**Resolution.** Default to the pinned whole package in a killable process, because the running code stays identical to what was screened. Vendor only on a named trigger: a pattern that must be edited, a rejected registry risk, or an import-surface finding. Slice only after that, and re-run selection on the slice.
+
+**Correcting the blanket BSD claim.** Grok's rule says "BSD-2-Clause attribution stays with the vendored text" and allows vendored source "with the retained BSD copyright" (`:100,142`). That doesn't fit eyecite-ts. Grok also says licensing was not re-verified (`:129`).
+
+| Candidate | Code license | Data | What must travel with it |
+| --- | --- | --- | --- |
+| eyecite (Python) | BSD-2 | reporters-db and courts-db, both BSD-2 | BSD-2 notices |
+| **eyecite-ts** | **MIT**; the LICENSE file names only its author | Bundled reporters-db-shaped data, embedded by a generator (`kimi/report.md:88`) | **MIT, plus the FLP BSD-2 notice for the data.** Its README says "ported from" eyecite, so check whether ported patterns also carry BSD duties |
+| eyecite-js | BSD-2; the LICENSE names FLP and the port author (`kimi/report.md:96`) | Provenance not checked | BSD-2 notices; check the data |
+
+This is a provenance checklist, not a legal opinion.
+
+**Concessions to Grok.** Pre-1.0 and alpha labels don't show a donor is inferior (`:35`). An Effect timeout around synchronous `RegExp` is not safety (`:43`). "Native child" as a default is unproved until executed (`:45`). The non-expansion gate (`:143`) is correct, and my report broke it.
+
+**Falsifiers.** A kill trial on the deployment runtime leaves the caller blocked past the limit: both packagings fail equally. Importing the package has effects outside the worker: the dependency default fails. A candidate cannot be packaged as a separate process at all: vendoring gains a real reason.
+
+## 2. Kimi's TypeScript-first order, with native outside the evaluation
+
+**Claim challenged.** Kimi evaluates only eyecite-ts. It treats reduced native as "do not choose by default" (`kimi/report.md:118`), and if adoption fails it stops automatic extraction instead of testing native (`:17,281,295`). Kimi's own uncertainty section says it ran nothing (`:285`). The smoke says "No current native Beep engine timing was measured here."
+
+**My position: Kimi's evidence condemns the parity program, not a six-form native extractor.** The 100-minute lane replays the exhaustive program. The Python-shaped inputs and results Kimi cites (`:51`) are real defects in the current public contract, and an adapter can stop them at the boundary. Neither fact measures whether native extracts six forms correctly.
+
+There is also an asymmetry. Kimi requires a bounded worker for eyecite-ts (`:216`), which has not been built or tested, while native already has process-isolation evidence in its packet (`README.md:18-24`; I have not re-verified it here). And Kimi's fallback could leave extraction shut off while a passing engine sits on `main`.
+
+**Strongest opposing case.** Native is 39,187 lines in four directories, with Python emulation of unknown entanglement. Sunk cost is not a reason to keep it, as Kimi says (`:21`). Native's fixtures were derived from the same oracle, so a pass there shows little. Testing it invites the old program back through the side door. And if a donor passes, the ownership cost favors the donor regardless of native's score.
+
+**Resolution.** I accept the last point in part: **among candidates that pass, ownership cost can legitimately favor a donor. That justifies a preference after measurement. It does not justify excluding native before measurement.** The side-door risk is real, so native enters under strict terms: run `extract` as it exists on `main`, through the same harness, with no new native features or parity work.
+
+**Concessions to Kimi.** Its contract instincts are good: plain text, six forms, no confidence fields, non-partial failure, and a reduced failure union. It is right that the public shape is a poor boundary, and right to treat official eyecite as a process-boundary option only under a separate decision. Its reading of 182 complete events against 15,316 unfinished rows (`:57`), with its own caveat that totals vary, supports stopping the ledger.
+
+**One rejection.** Kimi ships `verifyCandidate` first (`:142`). That belongs to the completed verified-span prerequisite, so it isn't a new engine operation.
+
+**Falsifiers.** Native is eliminated by a contract row, by the kill trial, or by being unable to emit the contract without leaking Python-shaped data. Dependency mapping shows that keeping any native extraction means keeping nearly all 35,123 lines of `internal/Citation`. Then a passing donor wins on cost, and Kimi's preference holds in effect.
+
+## 3. My own scope expansion
+
+**I withdraw this.** My report proposed a `DocumentCheck` report, a `Matched | NotInCorpus | ...` authority-lookup port, a quote status, a support queue, gates G3-G6 and G9, and asked the operator about paying for CourtListener. That is a larger product than the one being reduced. It moved scope in the opposite direction from what was requested, and it breaks Grok's non-expansion gate.
+
+**My lead argument attacked a claim nobody made.** I wrote that the goal "finished perfectly, still could not detect a fabricated citation". That is true, but the extraction engine never claimed to be the guard. `DECISIONS.md:275-292` sets up separate lanes and rejects citator and hosted enrichment in v1, and `SPEC.md:474-475` lists those as non-goals. An engine that doesn't do something it never promised has no scope defect.
+
+**Withdrawn from this decision:**
+
+- The check report, the authority port, and the money question. **Operator decision 2 in my earlier output is retracted.**
+- New gates for authority lookup, claim fitness, citator status or quote verification.
+- `CitationShapedResidue`, which was a new heuristic that no candidate has.
+- My `Altered{kind}` challenge to Q7. If it matters, it belongs to the verified-span and grounding lanes.
+- Report changes #9 (sequence lookup first) and #11 (redefine "land").
+
+**What survives:** the layer distinction, only as a statement of what the engine **does not claim**. Extraction and local linking don't establish that an authority exists, that a quote is real, that a source supports a proposition, or that it is good law.
+
+**Strongest opposing case: my own earlier one.** The Charlotin categories suggest extraction alone catches none of the recorded failure types, and an engine without a consumer is unvalidated. That remains a fair question about the grounding program's sequencing, but it isn't a reason to enlarge this engine. It belongs to whoever owns `citation-ground-before-cite` (`DECISIONS.md:5-10`).
+
+**Falsifier.** The operator explicitly names the guard as this goal's deliverable. That would be a new decision, and this contract would become one input to it.
+
+## 4. My performance numbers and one-week timebox
+
+**These were judgments, not requirements.** I labelled them as my judgment, but I still placed them in gates and decision rules. I withdraw all of these as gates: 2 s p95 on 250 KB, 5 s cold start, "within 1 point of eyecite", 0.97 precision, about 200 documents and 1,000 citations, one working week, 15-minute CI, and 5 MB fixtures.
+
+Kimi's 2 s per 100,000 units, 20 s per million, 512 MiB, its recall and precision thresholds, the 50-document corpus and the 5-minute lane (`kimi/report.md:186,209,216-217`) have the same status, as its own text says (`:221`). No consumer has stated a latency requirement in anything I read.
+
+**Nothing here measures comparative speed.** The smoke explicitly says its timings must not rank anything. Native's 5 s per document plus 25 s install (`SPEC.md:1506`) is a test-harness observation. A live lane (`ci-integration-fixture-perf`, session ledger) reports an unpublished fixture performance candidate, so those figures may move.
+
+**Strongest opposing case.** Without a number, nothing can reject a slow candidate, and an existing ceiling is arbitrary too. A contract with no target can quietly accept something unusable.
+
+**Resolution.** Use only limits that are already enforceable. The existing limit schema has hard ceilings (`SPEC.md:346-362`; the 60 s operation ceiling is at `SPEC.md:1498`). A candidate that exceeds them fails. Timing is recorded and reported, not gated, until a consumer states a need. Bound the work by artifacts (one fixture, one run, one adapter fix round), not by calendar.
+
+I also drop the per-family `3.5x` growth gate (`SPEC.md:380-382`) from the reduced contract. That concedes Grok's framing of a kill trial over a throughput target (`:156`), and disagrees with Kimi, which keeps it (`:216`).
+
+**Falsifier.** A consumer states a latency need that a surviving candidate misses. Reopen the choice for that need only.
+
+## 5. Excluding eyecite-js
+
+**I concede this.** My report rejected eyecite-js as "still alpha, last commit 2025-08-21" and admitted the clone was my only evidence. Grok's section 1 correctly identifies that error, which I also made in report change #10 ("eyecite-js stays rejected").
+
+**What the smoke actually shows,** on nine hand-written snippets: eyecite-js, eyecite-ts and Python all emitted the expected broad family for all six forms, nothing on the negative, two mentions on the context pair, and in-bounds spans with valid UTF-16 slices, including [7,19) on the astral prefix.
+
+**What the smoke does not show,** per its own README: accuracy, recall, metadata correctness, document coverage, parity, safety, resolution, or performance. The ambiguous and orphan cases were not tested. The TS and JS lanes ran pinned source under Bun, so **published packages and Node are unverified**.
+
+**eyecite-js returns as a candidate.** The same standard applies to eyecite-ts: star counts, activity and version labels aren't contract evidence for either one.
+
+**Strongest opposing case.** Kimi's specifics go beyond activity: conflicting completeness statements in the README, an npm `latest` whose gitHead differs from the inspected source, `|| true` on the type build, a Bun engine declaration, and five runtime dependencies (`kimi/report.md:94-98`). I'd treat those as real supply-chain and upkeep costs, relevant as a tie-breaker and to which artifact gets pinned. Pinning the commit addresses the npm mismatch. None of them shows a failed contract row.
+
+**Falsifiers.** eyecite-js fails a contract row. It can't run on the deployment runtime. Its heavier dependencies load outside the worker, or are required for plain text. Its C.F.R. fields can't be mapped reliably (next section).
+
+## 6. What the smoke shows about spans
+
+One mention produced three different strings across implementations. **This is why donor text fields can't be the verified quote.**
+
+| Case | Python `span()` | TS span | JS span | Python `matched_text()` | TS `matchedText` | JS `token.data` |
+| --- | --- | --- | --- | --- | --- | --- |
+| `Id. at 120.` | [0,10) | [0,10) | [0,10) | `Id.` | `Id. at 120` | `Id.` |
+| `Smith, supra, at 3.` | **[7,18)** | **[0,18)** | **[0,18)** | `supra,` | `Smith, supra, at 3` | `Smith, supra,` |
+| `Roe v. Wade, 410 U.S. 113, 120 (1973).` | [13,25) | [13,25) | [13,25) | `410 U.S. 113` | `410 U.S. 113` | `410 U.S. 113` |
+| `See 410 U.S. at 120.` | [4,19) | [4,19) | [4,19) | `410 U.S. at 120` | `410 U.S. at 120` | not inspected |
+
+- **Id.** All three spans agree and include the pin. The lexical core `Id.` is [0,3). `span()` and lexical matched text are different facts. The JS token range [0,3) shows this directly.
+- **Supra.** Implementations disagree about the span itself: Python starts at `supra`, while TS and JS include the antecedent name. JS self-reports 2.7.6 parity but differs from the pinned Python here. It is one row and a design difference, not an extraction failure.
+- **Span policy varies by form.** Full-case spans exclude the pin, whose location is [27,30) in TS, while short-form and Id. spans include it. TS and JS also expose a wider region [0,37) for the full case.
+- **Consequence for Grok's oracle.** Its "agree or diverge" tuple includes span start and end against pinned Python. On a supra row, both donors diverge. Grok avoids this by testing full case only (`:62`), but that can't carry over to six forms. **The contract must define the span; no implementation can.**
+- **Fields differ too.** On `37 C.F.R. § 1.56`, TS returns `title: 37, section: "1.56"`. JS returns `chapter: "37", part: "1", section: "56"`. An adapter reading only JS's `section` would state § 56. That is a mapping trap, not an error, since `part` is present. The Python screen didn't capture groups.
+- **Python offsets need conversion:** code points [6,18) become UTF-16 [7,19).
+
+## 7. Reduced engine contract
+
+A conceptual shape, not Effect code. Reuse the existing schemas where they fit. The two methods keep the `CitationEngine` names; the old shapes do not carry over.
+
+```text
+extract(request) : Effect<ExtractionResult, CitationEngineFailure, never>
+resolve(source, mentions) : Effect<LinkResult, CitationEngineFailure, never>
+
+Request = { source: { id, version, text /* plain text only */ }, limits }
+
+ExtractionResult = { mentions: Mention[], rejected: Rejected[], report: Report }
+
+Mention = { id, form, anchor: Anchor, components: Component[] }
+Anchor  = { start, end /* half-open UTF-16 */, rawText /* = source.slice(start, end) */ }
+
+form =
+  | FullCase  { volume, reporter, page }
+  | ShortCase { volume, reporter }
+  | Id        {}
+  | Supra     { antecedentText? }
+  | Usc       { title, section }          // FullLawCitation family
+  | Cfr       { title, section }          // section "1.56", never "56"
+
+Component = { role: pin | lexicalCore | antecedent | volume | reporter | page | title | section,
+              anchor: Anchor }
+
+Rejected = { reason: SpanNotVerified | OutOfScopeForm | Unparsed, anchor?: Anchor }
+
+LinkResult = { links: { mention, link: Resolved{authority} | Ambiguous{candidates} | Unresolved{reason} }[] }
+
+Report = { counts, engineArtifact, vocabularyVersion, limitDecisions, timing /* separate from semantics */ }
+```
+
+### Anchor definition per form
+
+These are **contract decisions, not findings**. Examples use the smoke's text.
+
+| Form | `anchor` | Components |
+| --- | --- | --- |
+| Full case | Locator only: `410 U.S. 113` [13,25) | pin `120` [27,30), if present |
+| Short case | Through the pin: `410 U.S. at 120` [4,19) | pin `120` |
+| Id. | Through the pin: `Id. at 120` [0,10) | **lexicalCore `Id.` [0,3)**; pin `120` [7,10) |
+| Supra | From `supra` through the pin: `supra, at 3` [7,18) | lexicalCore `supra` [7,12); pin `3` [17,18); **antecedent `Smith` [0,5)** |
+| 35 U.S.C. | `35 U.S.C. § 101` [0,15) | title, section |
+| 37 C.F.R. | `37 C.F.R. § 1.56` [0,16) | title, section |
+
+**Why the narrow supra anchor,** despite two of three implementations going wider: finding the name is a heuristic, and `supra` is a literal. If the name is mis-scoped, as in `Smith & Jones, supra`, a wide anchor is wrong at its start, while a narrow anchor stays correct and the error stays in one component. Anyone wanting the wide region takes the hull of antecedent and anchor; the reverse would need parsing. **Falsifier:** a named consumer needs a single mention range and the hull is wrong on labelled rows.
+
+### Laws
+
+1. `rawText` always equals `source.slice(start, end)`, checked through the existing `VerifiedSpan` contract, for anchors and components alike. Donor `matchedText`, `matched_text()` and `token.data` are never used as `rawText`.
+2. Offsets are half-open UTF-16 on the raw source. Any internal cleaning maps back and re-verifies. A span that fails becomes `Rejected{SpanNotVerified}`.
+3. Plain text only: no HTML, no cleaning operation, no callable cleaners or tokenizers.
+4. No donor type crosses the boundary. No confidence score, Python storage, cleaner container or callback handle.
+5. Recognized citations of other forms become `Rejected{OutOfScopeForm}` with counts, so they aren't silently dropped and aren't contract-gated.
+6. Identical source and engine artifact produce identical semantic output (`SPEC.md:198-204`). Timing stays out of semantic comparison.
+
+### Local ambiguity
+
+The link rules belong to this contract, not to any donor. Grok's fact report says eyecite's resolver drops unresolved citations with no ambiguous state (`decisioncritique.md:70`). Kimi says eyecite-ts defaults to fuzzy party matching and warns about `antecedentId` fallback chaining (`kimi/report.md:85-86`). **The smoke tested no linking.**
+
+| Mention | `Resolved` when | `Ambiguous` when | `Unresolved` when |
+| --- | --- | --- | --- |
+| Id. | Exactly one authority in the preceding citation unit | Preceding unit has more than one authority | No antecedent |
+| Supra | Antecedent text exactly matches one earlier authority's party text | Matches more than one | No match, or no antecedent text |
+| Short case | Volume and reporter match exactly one earlier authority | Match more than one | No match |
+
+Rules: no fuzzy matching, no similarity scores, and never the first or nearest candidate as a tiebreak. Links are local only, with no external authority. "Preceding citation unit" and party-text normalization need one precise definition when this is specified. **Falsifier:** labelled rows show these rules produce mostly `Ambiguous` or `Unresolved` where a careful reader sees one answer. That is a reason to refine the rule, not a reason to guess.
+
+### Resource bounds
+
+- Execute matching in a boundary a supervisor can kill from outside the matching thread, with the caller staying responsive. **I prefer a separate process** because an OS kill doesn't depend on engine cooperation. A worker thread qualifies only if demonstrated on the deployment runtime. A same-thread timeout fails.
+- A kill or limit hit gives `CitationSafetyLimitExceeded` with no partial result, carrying no source text.
+- Reuse the existing schema-owned ceilings, reduced to the fields this contract needs: source units, mentions, wall clock and concurrency. No new numeric targets.
+- Failure union: `CitationInputError`, `CitationPrerequisiteError`, `CitationSafetyLimitExceeded`. `CitationAnnotationError` goes away with annotation. `CitationOperationUnsupported` is unnecessary once modes are gone.
+
+### Explicitly outside
+
+Authority existence, quote verification as an engine operation, support, good law, Bluebook expansion, journals, general statutes, MPEP, annotation, HTML, confidence, parity claims, and any statement that the engine is a hallucination guard.
+
+## 8. Finite selection, not a benchmark project
+
+This run **selects or eliminates. It does not certify accuracy**, and nobody may quote its results as precision or recall.
+
+| Item | Bound |
+| --- | --- |
+| Fixture | One frozen file: the nine smoke rows plus public excerpts, labelled against section 7 **before any candidate runs on it** |
+| Ceiling | About 24 rows per form, plus ambiguity, orphan, duplicate, astral and negative rows. A cap, and my judgment. Grow it only if a named row class turns out to be missing |
+| Candidates | Native at `main`, eyecite-ts and eyecite-js at their pinned commits, all through one adapter harness on the deployment runtime |
+| Python eyecite | Diagnostic only. Disagreements get reviewed against the label; it is neither gold nor a runtime option |
+| Kill trial | A seeded catastrophic pattern to prove the boundary, then the existing `regex-adversarial-corpus.json` through each candidate's real patterns |
+| Output | One row-level table with no rollup percentages, timing reported with a repeat count fixed in advance, and one decision file |
+| Remediation | One adapter-mapping round. No upstream pattern work and no new native features |
+
+Donor runs need the authorization `GOAL.md:30` requires. Python stays outside the repo (`goals/python-free-repo/SPEC.md:71`).
+
+**Elimination:** an unverified anchor emitted as verified; a forced link on an ambiguous or orphan row; a miss on a contract row that the label stands behind after review; a failed kill trial; exceeding existing ceilings; or inability to emit the contract at the boundary.
+
+**Among survivors,** write down the ownership cost: retained lines, dependencies, license notices and upstream exposure. My current lean is the smallest owned surface, which likely favors a donor in a worker if one passes. That lean rests on upkeep, so the operator may reasonably weigh it differently.
+
+**If nothing survives:** fix specific measured errors, or stop. Parity doesn't come back, and a Python process needs a new decision.
+
+**If no consumer is named** once the contract lands, stop there.
+
+## 9. Old constraints challenged
+
+None of these has been applied. Each needs an operator ruling.
+
+| Constraint | Disposition |
+| --- | --- |
+| Exhaustive observable parity (`GOAL.md:1-5`; `SPEC.md:5-11`) | Challenged: replace with section 7 |
+| "first slice, not completion" (`GOAL.md:49-51`; `SPEC.md:455-460`; `PLAN.md:1003-1004`) | Challenged: the six forms are completion |
+| Four public operations (`SPEC.md:95-107`) | Challenged: `extract` and `resolve` only |
+| Helper, hash and comparison behavior (`SPEC.md:109-112`) | Challenged: removed |
+| Every case in a ledger with no deferral (`SPEC.md:114-116,487-492`; `GOAL.md:27-28`) | Challenged: removed. Parity rules (`SPEC.md:410-445`) and `citation:parity-check` retire as gates |
+| Every donor behavior dispositioned (`GOAL.md:29`; `SPEC.md:120-151,493-494`) | Challenged: removed. The install-authorization duty in `GOAL.md:30` stays |
+| No runtime donor (`SPEC.md:157,470,512-513`) | Challenged: a selected pinned donor may run inside the kill boundary. **No Python** |
+| "privileged off-box text" (`SPEC.md:158`) | Challenged: delete. The framing was withdrawn (`DECISIONS.md:334-338`). A hosted parser stays out on other grounds |
+| Q1 PORT/REIMPLEMENT NOW and "Do not add eyecite-js" (`DECISIONS.md:244-266`) | Challenged: reopen for both donors. This is the operator's own override, so it is their call |
+| Q8 "corpus proves parity" (`DECISIONS.md:425`) | Challenged: replaced as the proof method. **Q8's forms are kept** |
+| Oracle pin as behavior definition (`GOAL.md:10-12`; `SPEC.md:57-58`) | Challenged: the pin becomes a diagnostic; the contract defines behavior |
+| Callable cleaners and tokenizers (`GOAL.md:40`; `SPEC.md:220-224`) | Challenged: removed |
+| Bluebook transforms (`GOAL.md:41-44`; `SPEC.md:263-309`) | Challenged: out of this contract; shipped code is frozen |
+| Per-family regex proof and growth gate (`SPEC.md:377-386`) | Challenged: replaced by the kill trial |
+| One PR (`GOAL.md:52-54`; `SPEC.md:449-453`) | Challenged: small PRs under repo rules |
+| "Stop without weakening scope" (`GOAL.md:70-72`) | Challenged: the operator's ruling must supersede it explicitly |
+
+**Kept:** the six forms (Q8), no case-only slice, verified raw UTF-16 anchors, fail-closed verification (Q3, Q7), ambiguity as data (`GOAL.md:45`), closed failures, `R = never`, identity separation and the `LawPractice.CitationId` reservation (`SPEC.md:198-211`), resource limits, attribution (`SPEC.md:429-431`), and Q2's exclusions.
+
+**Grok's proposals I do not adopt:** the case-only slice and removal of resolution conflict with Q8, with Q2 (Grok says so at `:124-125`), and with the requested six-form contract with local ambiguity.
+
+## 10. Disagreements left open
+
+| Question | Grok | Kimi | Me |
+| --- | --- | --- | --- |
+| Forms in scope | Full case first | Six | Six |
+| Local linking | Later lane | In, conservative | In, with contract-owned rules |
+| Candidates | Both donors | eyecite-ts; eyecite-js rejected | Native and both donors |
+| Packaging | Vendored slice | Pinned dependency adapter | Pinned package in a process; vendor on a trigger |
+| Oracle | Pinned eyecite decides | Human labels | Human labels; eyecite is diagnostic |
+| If adoption fails | Custom for the same tuple | Stop extraction; Python only by new decision | Native is already in the run; otherwise fix or stop |
+| Numeric gates | Kill trial only | Many, as proposals | Existing ceilings and kill trial only |
+| Growth gate | Not in its gates | Kept | Dropped |
+
+Kimi and Grok have not reviewed these positions.
+
+## 11. Where I may still be wrong
+
+- **The narrow supra anchor** goes against two of three implementations on purely design grounds.
+- **Human labels on so small a fixture** can miss real failure classes. The reflection's missing-page defect came from replaying original inputs (`reflections/2026-11-07-integrated-parity-feedback.md:35`), which argues for including hard original rows in the fixture.
+- **Selection can't see what the fixture lacks.** A candidate could pass here and fail badly on real documents, and this run explicitly won't tell you.
+- **Whether a separate process is practical** on the deployment target is unchecked, and I haven't identified that target.
+- **The link rules are untested** by any evidence here.
+- **Native may be cheaper or costlier to reduce than I assume.** Dependency mapping has not been done.
+- **The smoke used Bun and source imports.** Node and published artifacts could differ.
+- **Licensing** of eyecite-ts's ported patterns and eyecite-js's data is unresolved.

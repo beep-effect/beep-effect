@@ -304,7 +304,7 @@ every result is a schema-decoded, byte-budgeted columnar row set
 
 ### 4.5 What it cannot answer — from the packet's own gauntlet
 
-`goals/practice-kg-mcp/history/p5/2026-07-30-defect-register.md` is the most
+[goals/practice-kg-mcp/history/p5/2026-07-30-defect-register.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/practice-kg-mcp/history/p5/2026-07-30-defect-register.md) is the most
 valuable honest artifact in this repo. Verified findings (client names
 anonymized in the register itself):
 

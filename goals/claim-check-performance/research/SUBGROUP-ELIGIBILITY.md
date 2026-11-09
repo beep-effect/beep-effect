@@ -24,5 +24,5 @@ before predictions. Unknowns remain conservative and cannot fill a minimum.
 Canceled source nodes remain in full source context and are explicitly
 identified before any substantive cohort selection.
 
-Sources: `goals/claim-element-antecedent-check/research/LABEL-PROTOCOL.md`
-and `goals/claim-element-antecedent-check/history/2026-10-31-nested-feature-correction.md`.
+Sources: [goals/claim-element-antecedent-check/research/LABEL-PROTOCOL.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/claim-element-antecedent-check/research/LABEL-PROTOCOL.md)
+and [goals/claim-element-antecedent-check/history/2026-10-31-nested-feature-correction.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/claim-element-antecedent-check/history/2026-10-31-nested-feature-correction.md).
