@@ -27,7 +27,9 @@
  * - Delivery: outbox rows are claimed with `FOR UPDATE SKIP LOCKED` under a
  *   per-host lease, oldest pending row per `(source, target)` first, so several
  *   hosts on one database deliver each row once and in order; a failed
- *   delivery stays pending with bounded backoff.
+ *   delivery stays pending with bounded backoff. A host that closes mid-pass
+ *   frees the rows and backfill jobs it claimed, so the next host need not
+ *   wait out the lease.
  * - Upcasting: an event class may declare `static readonly schemaVersion`
  *   (default 1) and `static readonly upcast: (fromVersion, json) => json`,
  *   which lifts the stored JSON of version `fromVersion` to `fromVersion + 1`.
