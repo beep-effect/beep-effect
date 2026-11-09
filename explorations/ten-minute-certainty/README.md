@@ -1,0 +1,47 @@
+# Ten-Minute Certainty
+
+## Status
+
+<!-- BEGIN GENERATED: EXPLORATION STATUS -->
+Stage: `research`
+Status: `active`
+<!-- END GENERATED: EXPLORATION STATUS -->
+
+Source: [`ops/manifest.json`](./ops/manifest.json)
+
+## Spark
+
+Agents ship code and the hosted Coverage Regression job fails because nothing compared the touched
+packages against the ratchet before publish. More generally: `yeet publish`, `yeet verify` and the hosted
+check run still verify far more than a change can affect, hold shared compute in whole-proof units, and
+leave agents spinning. Target, as ruled on 2026-11-09: on pull-request runs, p95 push-to-every-required-
+context-green under 10 minutes, reported beside runner-minutes per run; every main commit gets a hosted
+verdict; local verify and publish under 10 minutes; checks scoped to the affectable surface and ordered
+cheapest-precise-first (THE_AGENTIC_YOYO.md), admitted to local compute in lane- or package-sized units
+through the existing QualityScheduler.
+
+## Next Open Question
+
+Phase 2 (twelve Opus 5.5 auditors and twelve GPT-6 Astra seats, one pair per area) is running against
+[`research/phase1/SURFACE-INVENTORY.md`](./research/phase1/SURFACE-INVENTORY.md). When their ranked
+levers land, fold them into `RESEARCH.md`, run the adversarial refute pass, then open the align round on
+the seven questions in the manifest (corpus replay cadence, Coverage Regression as a required context,
+charter supersession and C4.2 ownership, assurance cadence, acceptance fan-out, the R2 pause, money).
+
+## Read This First
+
+1. [`ops/manifest.json`](./ops/manifest.json) - machine state: stage, status, open questions.
+2. [`CAPTURE.md`](./CAPTURE.md) - the operator's request and rulings (stage 0).
+3. [`RESEARCH.md`](./RESEARCH.md) - the in-repo inventory and constraints (stage 1).
+4. [`research/phase1/SURFACE-INVENTORY.md`](./research/phase1/SURFACE-INVENTORY.md) - the phase 1 surface map
+   (12 areas, 147 components, 111 levers, 120 rejections on record, critic gaps, Astra diff).
+5. [`DECISIONS.md`](./DECISIONS.md) - the four 2026-11-09 rulings (pre-seeded; align opens after phase 2).
+6. [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger.
+
+## Trail
+
+- 2026-11-09: packet opened from the operator's audit request. Phase 1 surface inventory filed under
+  `research/phase1/` (eleven Opus 5.5 readers plus a completeness critic, and a blinded GPT-6 Astra map).
+  Four operator rulings logged in `DECISIONS.md` (launch phase 2; target definition; extend the
+  QualityScheduler; this packet as the audit's home). Phase 2 launched: 24 seats, one Opus and one Astra
+  per area. Stage `research`.
