@@ -1,0 +1,32 @@
+name: Job Context Contract
+
+on:
+  workflow_call:
+    inputs:
+      active:
+        type: boolean
+        required: false
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  active:
+    name: Active Static Context
+    if: inputs.active
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    env:
+      CONTRACT_LANE_ID: active
+    steps: &context-steps
+      - name: Exercise shared static job steps
+        run: echo "Static context contract for ${{ env.CONTRACT_LANE_ID }}"
+  skipped:
+    name: Skipped Static Context
+    if: ${{ false }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    env:
+      CONTRACT_LANE_ID: skipped
+    steps: *context-steps

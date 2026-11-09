@@ -153,6 +153,7 @@ const firstOf = <T>(items: ReadonlyArray<T>): T => O.getOrThrow(A.head(items));
 const stepAt = <T>(items: ReadonlyArray<T>, index: number): T => O.getOrThrow(A.get(items, index));
 const lastOf = <T>(items: ReadonlyArray<T>): T => O.getOrThrow(A.last(items));
 const isLocalCiLaneId = S.is(CiLaneId);
+const isWorkflowScript = S.is(S.String);
 const decodeShard = S.decodeUnknownOption(CiLanePartitionShard);
 
 const baseOptions = CiLaneRunOptions.make({
@@ -921,7 +922,7 @@ describe("CI lane partitions", () => {
 
   // `!cancelled()` (not `always()`): a superseded run must not start aggregators
   // that can only fail; a failed shard still fails its aggregator.
-  it.effect("keeps literal required aggregators and fails every non-success shard result", () =>
+  it.effect("keeps literal required aggregators and fails closed on classification and shard outcomes", () =>
     Effect.gen(function* () {
       const workflowText = yield* Effect.tryPromise({
         try: () => Bun.file(checkWorkflowUrl).text(),
@@ -936,12 +937,21 @@ describe("CI lane partitions", () => {
       expect(yamlAt(workflow, ["jobs", "lint-shard", "strategy", "fail-fast"])).toBe(false);
       expect(yamlAt(workflow, ["jobs", "test-unit-shard", "strategy", "fail-fast"])).toBe(false);
 
-      const lintGate = String(yamlAt(workflow, ["jobs", "lint", "steps", 0, "run"]));
-      const unitGate = String(yamlAt(workflow, ["jobs", "test-unit", "steps", 0, "run"]));
-      expect(lintGate).toContain('needs.lint-shard.result }}" != "success"');
-      expect(unitGate).toContain('needs.test-unit-shard.result }}" != "success"');
-      expect(lintGate).toContain("exit 1");
-      expect(unitGate).toContain("exit 1");
+      for (const { job, shard } of [
+        { job: "lint", shard: "lint-shard" },
+        { job: "test-unit", shard: "test-unit-shard" },
+      ]) {
+        const gate = yamlAt(workflow, ["jobs", job, "steps", 0, "run"]);
+        assertTrue(isWorkflowScript(gate));
+        expect(yamlAt(workflow, ["jobs", job, "needs"])).toEqual(["change-profile", shard]);
+        expect(gate).toContain('[[ "${{ needs.change-profile.result }}" == "success" ]]');
+        expect(gate).toContain(
+          `case "\${{ needs.change-profile.outputs.docs_only }}:\${{ needs.${shard}.result }}" in`
+        );
+        expect(gate).toContain("true:skipped)");
+        expect(gate).toContain("false:success)");
+        expect(gate).toContain('*) echo "Unexpected classification or shard result"; exit 1');
+      }
     })
   );
 });
