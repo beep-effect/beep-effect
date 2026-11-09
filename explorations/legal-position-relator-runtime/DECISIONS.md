@@ -27,7 +27,7 @@ contracts (`RuntimeApprovalGate` plus every live Party/Role/principal
 surface), the `ExecutionLedger` append-only precedent, and the SPEC contract
 of `goals/epistemic-contradiction-triage` (candidate ownership, disposition
 flow, stop conditions) — reconciled against all ten nuggets and against the
-graduated sibling `goals/patent-citation-candor-gate/SPEC.md` boundaries →
+graduated sibling [goals/patent-citation-candor-gate/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/patent-citation-candor-gate/SPEC.md) boundaries →
 `research/01-repo-surfaces.md`. Lane B: bounded legal-theory grounding over
 PUBLIC sources only — Hohfeld's two Yale Law Journal articles (1913/1917,
 public domain), the published FLINT papers (van Doesburg & van Engers), the

@@ -211,11 +211,9 @@ const renderFields = Effect.fn("Citation.dumpFields")(function* (
   const scalar = (value: CitationDumpScalar) =>
     CitationDumpScalar.match(value, {
       Text: ({ value }) => repr.text(value).pipe(Effect.map((output) => parts.range(output))),
+      // Input owns a decoded S.Int value before rendering; finite encoding is total here.
       Integer: ({ value }) =>
-        S.encodeEffect(S.FiniteFromString)(value).pipe(
-          Effect.mapError(() => fail("invalid-input")),
-          Effect.flatMap(parts.literal)
-        ),
+        S.encodeEffect(S.FiniteFromString)(value).pipe(Effect.orDie, Effect.flatMap(parts.literal)),
       Boolean: ({ value }) => parts.literal(value ? "True" : "False"),
       None: () => parts.literal("None"),
     });

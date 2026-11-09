@@ -1,5 +1,35 @@
 # Citation engine friction receipts
 
+## 2026-11-08 — recognizer dependency and transport limits need separate proof
+
+- Work: adopt the measured TypeScript recognizer through a technical driver.
+- Evidence: its tokenizer catches pattern errors, warns and continues. Supplied
+  Effect SchemaBinary RPC maxFrameSize configures receive parsing; its encoder
+  does not enforce an outbound size ceiling. Neither behavior proves a complete
+  successful result under the service's captured resource contract.
+- Required integration: refuse unexpected worker diagnostics, enforce outbound
+  byte ceilings at provided Socket/Stdio boundaries, and keep independent process
+  retirement. Retain Effect's codec/framing; do not build another frame protocol.
+- Prevention: test both traffic directions and swallowed-error signals on the
+  actual parser process before switching the public Layer. Driver package proof
+  and a generic transport fixture are separate from that acceptance.
+
+## 2026-11-08 — encoded transport data is not a runtime proof
+
+- Work: replace historical native framing with supplied Effect RPC facilities.
+- Evidence: public RpcSerialization parser returns unknown messages, while
+  RpcClient.Protocol.make expects typed envelopes. Casting those values would
+  introduce a second unchecked protocol boundary.
+- Resolution: adapt the owned child's byte streams to Socket.make and use
+  RpcClient.makeProtocolSocket. Effect owns envelope validation and routing.
+  The provided JSON schema transform before SchemaBinary also round-trips
+  isolated UTF-16 surrogates without another string codec.
+- Adversarial correction: supplied socket retry defaults and stream scope-close
+  behavior needed explicit configuration/signals. Focused reader/writer scope,
+  backpressure, setup/write failure controls now pass alongside physical exit.
+- Prevention: inspect the complete supplied transport adapters before designing
+  custom protocol glue; test actual Unicode and physical shutdown behavior.
+
 ## 2026-11-05 — text/native capacity acquisition order
 
 - Work: join bounded cleaner production to the shared parent text authority.
@@ -188,7 +218,8 @@
 - Resolution: stop only the owned command tree, retain its incomplete receipt,
   and retain the 25 passing focused worker/ownership tests plus package lint/check.
   Full HTML/byte corpus proof stays hosted.
-- Prevention: inspect test bodies and select individual smoke-test names before local
+- Prevention: inspect test bodies and select individual smoke-test names before
+  local
   replay; filenames alone do not bound compute. No partial run is accepted as
   corpus proof.
 
@@ -284,7 +315,6 @@ the repository's strict Effect diagnostic rejects. Thirteen focused tests now
 pass without deadline weakening or diagnostic suppression. See
 history/evidence/2026-11-03-metadata-year.md.
 
-
 ### Keep native hex fields outside natural-language spelling checks
 
 The metadata string corpus preserved repeated native words as hexadecimal bytes.
@@ -293,7 +323,6 @@ limited to metadata-strings.json now ignores only its hexadecimal bytes fields;
 prose and every source/schema/hash/replay assertion remain checked. A reusable
 byte-field-aware spelling classifier would avoid repeating fixture exceptions.
 See history/evidence/2026-11-03-metadata-strings.md.
-
 
 ### Share invocation allocation authority before composing metadata stages
 
@@ -304,7 +333,6 @@ receiving copies now connect these stages without new process infrastructure.
 A source calendar ceiling is captured once and can be reinstalled under a fresh
 invocation budget. Complete compositor adoption remains required; see
 history/evidence/2026-11-03-composed-text-budget.md.
-
 
 ### Reuse authenticated artifact payloads in secondary source corpora
 

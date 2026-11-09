@@ -83,5 +83,13 @@
     "More than the minimum product-language is promoted to shared-kernel.",
     "Verification requires unnamed credentials, cost, or destructive side effects.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/provenance-shared-claim-kernel",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "5c404e4df6da19dd0e23a7e0309d6b9796ad498b",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

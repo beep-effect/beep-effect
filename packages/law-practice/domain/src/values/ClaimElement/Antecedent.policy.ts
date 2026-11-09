@@ -31,7 +31,7 @@ import {
   ClaimTermIntroducingDeterminer,
   ClaimTermReferringDeterminer,
   decomposeClaimInput,
-  decomposePreparedClaimRoles,
+  decomposePreparedClaimRolesForInspection,
 } from "./ClaimElement.behavior.ts";
 import { ClaimInputQualification } from "./ClaimElement.input.model.ts";
 import {
@@ -1230,7 +1230,7 @@ export const inspectPreparedClaimRoles = Effect.fn("ClaimElement.inspectPrepared
   prepared: PreparedClaimInspection,
   evidence: ReadonlyArray<ClaimLexicalEvidence>
 ) {
-  const result = yield* decomposePreparedClaimRoles(prepared, evidence);
+  const result = yield* decomposePreparedClaimRolesForInspection(prepared, evidence);
   const indexed = sourceRoleIndex(result.plans, result.decompositions);
   if (O.isNone(indexed))
     return lexicalCoverage(inspectionReport(prepared.input, result.decompositions, unknownBareRole), HashSet.empty());

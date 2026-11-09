@@ -1,0 +1,940 @@
+{
+  "scope": "Diagnostic only: in-process cached parser, existing Citation codec, genuine source/mention proofs and existing typed resolver. No production worker, deployment, reporter-edition selection, privacy/resource qualification or dependency adoption.",
+  "rows": [
+    {
+      "id": "public-full-doe",
+      "actual": [
+        {
+          "form": "full-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "page": "179",
+            "pinCite": "198"
+          },
+          "anchor": {
+            "start": 15,
+            "end": 28,
+            "quote": "410 U. S. 179"
+          },
+          "pin": {
+            "start": 30,
+            "end": 33,
+            "quote": "198"
+          },
+          "antecedent": null,
+          "lexicalCore": null,
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          }
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "public-short-roe",
+      "actual": [
+        {
+          "form": "short-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "pinCite": "154–155"
+          },
+          "anchor": {
+            "start": 0,
+            "end": 21,
+            "quote": "410 U. S., at 154–155"
+          },
+          "pin": {
+            "start": 14,
+            "end": 21,
+            "quote": "154–155"
+          },
+          "antecedent": null,
+          "lexicalCore": null,
+          "link": {
+            "status": "Unresolved"
+          }
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "public-supra-roe",
+      "actual": [
+        {
+          "form": "supra",
+          "fields": {
+            "antecedent": "Roe",
+            "pinCite": "162"
+          },
+          "anchor": {
+            "start": 5,
+            "end": 18,
+            "quote": "supra, at 162"
+          },
+          "pin": {
+            "start": 15,
+            "end": 18,
+            "quote": "162"
+          },
+          "antecedent": {
+            "start": 0,
+            "end": 3,
+            "quote": "Roe"
+          },
+          "lexicalCore": {
+            "start": 5,
+            "end": 10,
+            "quote": "supra"
+          },
+          "link": {
+            "status": "Unresolved"
+          }
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "public-id-orphan",
+      "actual": [
+        {
+          "form": "id",
+          "fields": {
+            "pinCite": "163"
+          },
+          "anchor": {
+            "start": 0,
+            "end": 11,
+            "quote": "Id., at 163"
+          },
+          "pin": {
+            "start": 8,
+            "end": 11,
+            "quote": "163"
+          },
+          "antecedent": null,
+          "lexicalCore": {
+            "start": 0,
+            "end": 3,
+            "quote": "Id."
+          },
+          "link": {
+            "status": "Unresolved"
+          }
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "public-usc-context",
+      "actual": [
+        {
+          "form": "usc",
+          "fields": {
+            "title": "35",
+            "section": "101",
+            "pinCite": null
+          },
+          "anchor": {
+            "start": 123,
+            "end": 136,
+            "quote": "35 U.S.C. 101"
+          },
+          "pin": null,
+          "antecedent": null,
+          "lexicalCore": null,
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          }
+        },
+        {
+          "form": "usc",
+          "fields": {
+            "title": "35",
+            "section": "102",
+            "pinCite": "(f)"
+          },
+          "anchor": {
+            "start": 158,
+            "end": 174,
+            "quote": "35 U.S.C. 102(f)"
+          },
+          "pin": {
+            "start": 171,
+            "end": 174,
+            "quote": "(f)"
+          },
+          "antecedent": null,
+          "lexicalCore": null,
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 1
+          }
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "public-cfr-context",
+      "actual": [
+        {
+          "form": "cfr",
+          "fields": {
+            "title": "37",
+            "section": "1.56",
+            "pinCite": null
+          },
+          "anchor": {
+            "start": 40,
+            "end": 51,
+            "quote": "37 CFR 1.56"
+          },
+          "pin": null,
+          "antecedent": null,
+          "lexicalCore": null,
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          }
+        },
+        {
+          "form": "cfr",
+          "fields": {
+            "title": "37",
+            "section": "1.105",
+            "pinCite": null
+          },
+          "anchor": {
+            "start": 124,
+            "end": 136,
+            "quote": "37 CFR 1.105"
+          },
+          "pin": null,
+          "antecedent": null,
+          "lexicalCore": null,
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 1
+          }
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "regression-full",
+      "actual": [
+        {
+          "form": "full-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "page": "113",
+            "pinCite": "120"
+          },
+          "anchor": {
+            "start": 13,
+            "end": 25,
+            "quote": "410 U.S. 113"
+          },
+          "pin": {
+            "start": 27,
+            "end": 30,
+            "quote": "120"
+          },
+          "antecedent": null,
+          "lexicalCore": null,
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          }
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "regression-short",
+      "actual": [
+        {
+          "form": "short-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "pinCite": "120"
+          },
+          "anchor": {
+            "start": 4,
+            "end": 19,
+            "quote": "410 U.S. at 120"
+          },
+          "pin": {
+            "start": 16,
+            "end": 19,
+            "quote": "120"
+          },
+          "antecedent": null,
+          "lexicalCore": null,
+          "link": {
+            "status": "Unresolved"
+          }
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "regression-id",
+      "actual": [
+        {
+          "form": "id",
+          "fields": {
+            "pinCite": "120"
+          },
+          "anchor": {
+            "start": 0,
+            "end": 10,
+            "quote": "Id. at 120"
+          },
+          "pin": {
+            "start": 7,
+            "end": 10,
+            "quote": "120"
+          },
+          "antecedent": null,
+          "lexicalCore": {
+            "start": 0,
+            "end": 3,
+            "quote": "Id."
+          },
+          "link": {
+            "status": "Unresolved"
+          }
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "regression-supra",
+      "actual": [
+        {
+          "form": "supra",
+          "fields": {
+            "antecedent": "Smith",
+            "pinCite": "3"
+          },
+          "anchor": {
+            "start": 7,
+            "end": 18,
+            "quote": "supra, at 3"
+          },
+          "pin": {
+            "start": 17,
+            "end": 18,
+            "quote": "3"
+          },
+          "antecedent": {
+            "start": 0,
+            "end": 5,
+            "quote": "Smith"
+          },
+          "lexicalCore": {
+            "start": 7,
+            "end": 12,
+            "quote": "supra"
+          },
+          "link": {
+            "status": "Unresolved"
+          }
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "regression-usc",
+      "actual": [
+        {
+          "form": "usc",
+          "fields": {
+            "title": "35",
+            "section": "101",
+            "pinCite": null
+          },
+          "anchor": {
+            "start": 0,
+            "end": 15,
+            "quote": "35 U.S.C. § 101"
+          },
+          "pin": null,
+          "antecedent": null,
+          "lexicalCore": null,
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          }
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "regression-cfr",
+      "actual": [
+        {
+          "form": "cfr",
+          "fields": {
+            "title": "37",
+            "section": "1.56",
+            "pinCite": null
+          },
+          "anchor": {
+            "start": 0,
+            "end": 16,
+            "quote": "37 C.F.R. § 1.56"
+          },
+          "pin": null,
+          "antecedent": null,
+          "lexicalCore": null,
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          }
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "astral-prefix",
+      "actual": [
+        {
+          "form": "full-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "page": "113",
+            "pinCite": null
+          },
+          "anchor": {
+            "start": 7,
+            "end": 19,
+            "quote": "410 U.S. 113"
+          },
+          "pin": null,
+          "antecedent": null,
+          "lexicalCore": null,
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          }
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "combining-prefix",
+      "actual": [
+        {
+          "form": "full-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "page": "113",
+            "pinCite": null
+          },
+          "anchor": {
+            "start": 12,
+            "end": 24,
+            "quote": "410 U.S. 113"
+          },
+          "pin": null,
+          "antecedent": null,
+          "lexicalCore": null,
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          }
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "usc-subsection",
+      "actual": [
+        {
+          "form": "usc",
+          "fields": {
+            "title": "35",
+            "section": "112",
+            "pinCite": "(a)"
+          },
+          "anchor": {
+            "start": 6,
+            "end": 24,
+            "quote": "35 U.S.C. § 112(a)"
+          },
+          "pin": {
+            "start": 21,
+            "end": 24,
+            "quote": "(a)"
+          },
+          "antecedent": null,
+          "lexicalCore": null,
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          }
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "usc-nested-subsection",
+      "actual": [
+        {
+          "form": "usc",
+          "fields": {
+            "title": "35",
+            "section": "102",
+            "pinCite": "(a)(1)"
+          },
+          "anchor": {
+            "start": 0,
+            "end": 21,
+            "quote": "35 U.S.C. § 102(a)(1)"
+          },
+          "pin": {
+            "start": 15,
+            "end": 21,
+            "quote": "(a)(1)"
+          },
+          "antecedent": null,
+          "lexicalCore": null,
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          }
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "cfr-subsection",
+      "actual": [
+        {
+          "form": "cfr",
+          "fields": {
+            "title": "37",
+            "section": "1.56",
+            "pinCite": "(c)"
+          },
+          "anchor": {
+            "start": 6,
+            "end": 25,
+            "quote": "37 C.F.R. § 1.56(c)"
+          },
+          "pin": {
+            "start": 22,
+            "end": 25,
+            "quote": "(c)"
+          },
+          "antecedent": null,
+          "lexicalCore": null,
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          }
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "duplicate-cfr",
+      "actual": [
+        {
+          "form": "cfr",
+          "fields": {
+            "title": "37",
+            "section": "1.56",
+            "pinCite": null
+          },
+          "anchor": {
+            "start": 0,
+            "end": 11,
+            "quote": "37 CFR 1.56"
+          },
+          "pin": null,
+          "antecedent": null,
+          "lexicalCore": null,
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          }
+        },
+        {
+          "form": "cfr",
+          "fields": {
+            "title": "37",
+            "section": "1.56",
+            "pinCite": null
+          },
+          "anchor": {
+            "start": 13,
+            "end": 24,
+            "quote": "37 CFR 1.56"
+          },
+          "pin": null,
+          "antecedent": null,
+          "lexicalCore": null,
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          }
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "negative-empty",
+      "actual": [],
+      "failures": []
+    },
+    {
+      "id": "negative-prose",
+      "actual": [],
+      "failures": []
+    },
+    {
+      "id": "negative-numbers",
+      "actual": [],
+      "failures": []
+    },
+    {
+      "id": "negative-section",
+      "actual": [],
+      "failures": []
+    },
+    {
+      "id": "outside-usc-title",
+      "actual": [],
+      "failures": []
+    },
+    {
+      "id": "outside-journal",
+      "actual": [],
+      "failures": []
+    },
+    {
+      "id": "local-id",
+      "actual": [
+        {
+          "form": "full-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "page": "113",
+            "pinCite": null
+          },
+          "anchor": {
+            "start": 13,
+            "end": 25,
+            "quote": "410 U.S. 113"
+          },
+          "pin": null,
+          "antecedent": null,
+          "lexicalCore": null,
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          }
+        },
+        {
+          "form": "id",
+          "fields": {
+            "pinCite": "120"
+          },
+          "anchor": {
+            "start": 34,
+            "end": 44,
+            "quote": "Id. at 120"
+          },
+          "pin": {
+            "start": 41,
+            "end": 44,
+            "quote": "120"
+          },
+          "antecedent": null,
+          "lexicalCore": {
+            "start": 34,
+            "end": 37,
+            "quote": "Id."
+          },
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          }
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "local-short",
+      "actual": [
+        {
+          "form": "full-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "page": "113",
+            "pinCite": null
+          },
+          "anchor": {
+            "start": 13,
+            "end": 25,
+            "quote": "410 U.S. 113"
+          },
+          "pin": null,
+          "antecedent": null,
+          "lexicalCore": null,
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          }
+        },
+        {
+          "form": "short-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "pinCite": "120"
+          },
+          "anchor": {
+            "start": 34,
+            "end": 49,
+            "quote": "410 U.S. at 120"
+          },
+          "pin": {
+            "start": 46,
+            "end": 49,
+            "quote": "120"
+          },
+          "antecedent": null,
+          "lexicalCore": null,
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          }
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "local-supra",
+      "actual": [
+        {
+          "form": "full-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "page": "113",
+            "pinCite": null
+          },
+          "anchor": {
+            "start": 13,
+            "end": 25,
+            "quote": "410 U.S. 113"
+          },
+          "pin": null,
+          "antecedent": null,
+          "lexicalCore": null,
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          }
+        },
+        {
+          "form": "supra",
+          "fields": {
+            "antecedent": "Roe",
+            "pinCite": "162"
+          },
+          "anchor": {
+            "start": 39,
+            "end": 52,
+            "quote": "supra, at 162"
+          },
+          "pin": {
+            "start": 49,
+            "end": 52,
+            "quote": "162"
+          },
+          "antecedent": {
+            "start": 34,
+            "end": 37,
+            "quote": "Roe"
+          },
+          "lexicalCore": {
+            "start": 39,
+            "end": 44,
+            "quote": "supra"
+          },
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          }
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "ambiguous-short",
+      "actual": [
+        {
+          "form": "full-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "page": "113",
+            "pinCite": null
+          },
+          "anchor": {
+            "start": 15,
+            "end": 27,
+            "quote": "410 U.S. 113"
+          },
+          "pin": null,
+          "antecedent": null,
+          "lexicalCore": null,
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          }
+        },
+        {
+          "form": "full-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "page": "114",
+            "pinCite": null
+          },
+          "anchor": {
+            "start": 52,
+            "end": 64,
+            "quote": "410 U.S. 114"
+          },
+          "pin": null,
+          "antecedent": null,
+          "lexicalCore": null,
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 1
+          }
+        },
+        {
+          "form": "short-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "pinCite": "120"
+          },
+          "anchor": {
+            "start": 73,
+            "end": 88,
+            "quote": "410 U.S. at 120"
+          },
+          "pin": {
+            "start": 85,
+            "end": 88,
+            "quote": "120"
+          },
+          "antecedent": null,
+          "lexicalCore": null,
+          "link": {
+            "status": "Ambiguous",
+            "candidateAuthorities": [0, 1]
+          }
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "ambiguous-supra",
+      "actual": [
+        {
+          "form": "full-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "page": "113",
+            "pinCite": null
+          },
+          "anchor": {
+            "start": 15,
+            "end": 27,
+            "quote": "410 U.S. 113"
+          },
+          "pin": null,
+          "antecedent": null,
+          "lexicalCore": null,
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 0
+          }
+        },
+        {
+          "form": "full-case",
+          "fields": {
+            "volume": "410",
+            "reporter": "U.S.",
+            "page": "114",
+            "pinCite": null
+          },
+          "anchor": {
+            "start": 52,
+            "end": 64,
+            "quote": "410 U.S. 114"
+          },
+          "pin": null,
+          "antecedent": null,
+          "lexicalCore": null,
+          "link": {
+            "status": "Resolved",
+            "sameAuthorityAs": 1
+          }
+        },
+        {
+          "form": "supra",
+          "fields": {
+            "antecedent": "Alpha",
+            "pinCite": "120"
+          },
+          "anchor": {
+            "start": 80,
+            "end": 93,
+            "quote": "supra, at 120"
+          },
+          "pin": {
+            "start": 90,
+            "end": 93,
+            "quote": "120"
+          },
+          "antecedent": {
+            "start": 73,
+            "end": 78,
+            "quote": "Alpha"
+          },
+          "lexicalCore": {
+            "start": 80,
+            "end": 85,
+            "quote": "supra"
+          },
+          "link": {
+            "status": "Ambiguous",
+            "candidateAuthorities": [0, 1]
+          }
+        }
+      ],
+      "failures": []
+    }
+  ]
+}

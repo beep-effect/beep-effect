@@ -32,7 +32,10 @@ import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { makeCitationXmlTestRuntime } from "./CitationXmlWorker.fixtures.ts";
-import type { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
+import type {
+  installCitationDefaultConfigurationFixture,
+  installCitationSourceDocumentConfigurationFixture,
+} from "./CitationDefaultConfiguration.fixtures.ts";
 
 /** Controlled per-operation object identities for conditional grouping proof.
  * This is not a production allocator or a native-address/hash attestation.
@@ -86,12 +89,30 @@ export const buildCitationEngineFixture = Effect.fn("EngineLayerTest.build")(fun
 
 /** Build the production default Layer with explicit test-only host/deployment
  * dependencies; actual owners and asset assembly are created by the Layer.
+ *
+ * **Example** (Preparing a fresh canonical replay dependency)
+ * ```ts
+ * import * as Effect from "effect/Effect";
+ * import { installCitationSourceDocumentConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
+ * import { buildCitationDefaultEngineFixture } from "./CitationEngineLayer.fixtures.ts";
+ * import { ResolvedSourceText, SourceTextResolver } from "@beep/file-processing/SourceText";
+ * import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
+ * const engine = Effect.gen(function* () {
+ *   const installed = yield* installCitationSourceDocumentConfigurationFixture("bun");
+ *   const proof = yield* citationFixtureSourceProof("example source");
+ *   const resolver = SourceTextResolver.of({ resolve: () => Effect.succeed(ResolvedSourceText.make({ identity: proof.source, text: proof.sourceText })) });
+ *   return yield* buildCitationDefaultEngineFixture(installed, resolver);
+ * });
+ * ```
  * @internal
  * @category testing
  * @since 0.0.0
  */
 export const buildCitationDefaultEngineFixture = Effect.fn("EngineLayerTest.buildDefault")(function* (
-  installed: Effect.Success<ReturnType<typeof installCitationDefaultConfigurationFixture>>,
+  installed: Pick<
+    Effect.Success<ReturnType<typeof installCitationSourceDocumentConfigurationFixture>>,
+    "setup" | "defaultConfiguration"
+  >,
   resolver: SourceTextResolver["Service"]
 ) {
   const { setup, defaultConfiguration } = installed;

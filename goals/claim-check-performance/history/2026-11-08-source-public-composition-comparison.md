@@ -1,0 +1,15 @@
+# Source ownership with stable public composition identities
+
+The unchanged production evaluation at source commit `6089329245284fa4d016bf3718df3069fd169c3b` remains **49/538 strict**, retaining every mandatory passing claim with zero losses, zero gains and zero changed selected score rows. Parsed remains 537/538, and all 538 outcomes still abstain. The goal remains active; this is source-coverage development, not usefulness or legal validation.
+
+The bounded original 60-family census covers 538 selected claims and 1,219 complete-context records. It found no independent root admitted by the previous full source compiler. The focused change registers canonical evidence for eligible non-colon numbered compositions and introduces a distinct, independently checked governed-PP coordination certificate. The original object-only coordinator validator is unchanged.
+
+The first private candidate admitted a root but expanded its public list from three to five elements. A dependent donor path changed despite unchanged source anchors, losing mandatory claim `16628033:7` and scoring 48/538. That failed result remains sealed and was not adopted.
+
+Public projection now reuses the existing narrow closed-flat composition guard to group an eligible header and two nominal leaves. It keeps the detailed source plan immutable, preserves nested, predicate and functional boundaries and original term identities, constructs final public paths once, and uses the ordinary graph and resolver. It adds no claim-ID exceptions, reference lookups or donor aliases after resolution. Every added source/projection operation uses the carried allowance.
+
+The repaired private comparison retained all 49 passes. A separate one-family, ten-record observer proved that root source planning, public projection and registration actually succeeded: five source elements became three public elements through one flat group, with work allowance 211,709→208,447. Its report exactly matches the sealed full comparison; fallback does not explain the result. This mechanism evidence does not make the root a strict match or establish legal truth.
+
+Production validation passed: 23 focused tests across three files; source and governed-test compiler checks; formatting; original preservation; and schema inventory generation with unchanged inventory bytes. The fresh production run retained all 60 source collections and 1,219 qualification records. Service and prediction reports agree in all 60 families. Its 121 outputs are sealed separately. Runtime freeze `37cc8a84edbdc3192e0c1a067b73e11530312d0aa9c36eada7778d8260f7a5e5` retains 1,845 file paths, 1,544 runtime inputs, 94 assets, Bun and caps. Original labels, scorer and every previous result remain unchanged.
+
+Machine-readable evidence: [source-public-composition-measurement-001.json](../research/source-public-composition-measurement-001.json). The new results hash is `a0f2693ce72bb9f256fccbbaf3b5a77ad51eebf469b27358a79764f16b653e9c`. The all-49 mandatory manifest is unchanged. No fresh heldout, recurrence or source-QA cohort was read or evaluated.

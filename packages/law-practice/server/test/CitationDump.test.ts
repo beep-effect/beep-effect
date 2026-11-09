@@ -1,3 +1,4 @@
+import { makeCitationBuiltinDump } from "@beep/law-practice-server/internal/Citation/BuiltinDump";
 import { makeCitationDump } from "@beep/law-practice-server/internal/Citation/Dump";
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
 import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
@@ -75,6 +76,151 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
         expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" });
         const empty = yield* dump.render({ text: { width: 1, bytes: new Uint8Array() }, citations: [] });
         expect(empty).toEqual({ width: 1, bytes: new Uint8Array() });
+      })
+    );
+    it.effect("refuses an invalid policy or printability table before rendering", () =>
+      Effect.gen(function* () {
+        const policy = yield* defaultCitationEnginePolicy;
+        const printability = yield* readCitationNativeRenderingAsset("python-printability");
+        const badPolicy = yield* makeCitationDump({}, printability).pipe(Effect.flip);
+        expect(badPolicy).toMatchObject({ reason: "invalid-policy" });
+        const notText = yield* makeCitationDump(policy.limits, 5).pipe(Effect.flip);
+        expect(notText).toMatchObject({ reason: "invalid-configuration" });
+        const wrongTable = yield* makeCitationDump(policy.limits, "not the pinned table").pipe(Effect.flip);
+        expect(wrongTable).toMatchObject({ reason: "invalid-configuration" });
+      })
+    );
+    it.effect("refuses more citations than the mention limit", () =>
+      Effect.gen(function* () {
+        const policy = yield* defaultCitationEnginePolicy;
+        const printability = yield* readCitationNativeRenderingAsset("python-printability");
+        const dump = yield* makeCitationDump({ ...policy.limits, mentions: 1 }, printability);
+        const row = { kind: "IdCitation", span: [0, 0], fields: [] };
+        const refused = yield* dump
+          .render({ text: { width: 1, bytes: new Uint8Array() }, citations: [row, row] })
+          .pipe(Effect.flip);
+        expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "mentions" });
+      })
+    );
+    it.effect("renders integer and None scalars and omits falsy top-level fields", () =>
+      Effect.gen(function* () {
+        const policy = yield* defaultCitationEnginePolicy;
+        const printability = yield* readCitationNativeRenderingAsset("python-printability");
+        const dump = yield* makeCitationDump(policy.limits, printability);
+        const output = yield* dump.render({
+          text: { width: 1, bytes: new Uint8Array() },
+          citations: [
+            {
+              kind: "IdCitation",
+              span: [0, 0],
+              fields: [
+                { _tag: "Scalar", name: "kept", value: { _tag: "Integer", value: 7 } },
+                { _tag: "Scalar", name: "zero", value: { _tag: "Integer", value: 0 } },
+                { _tag: "Scalar", name: "none", value: { _tag: "None" } },
+                {
+                  _tag: "Fields",
+                  name: "groups",
+                  entries: [
+                    { name: "count", value: { _tag: "Integer", value: 3 } },
+                    { name: "absent", value: { _tag: "None" } },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+        const text = new TextDecoder().decode(output.bytes);
+        expect(text).toContain("  * kept=7");
+        expect(text).not.toContain("zero=");
+        expect(text).not.toContain("none=");
+        expect(text).toContain("    * count=3");
+        expect(text).toContain("    * absent=None");
+      })
+    );
+    it.effect("renders text and boolean scalars by their truthiness", () =>
+      Effect.gen(function* () {
+        const policy = yield* defaultCitationEnginePolicy;
+        const printability = yield* readCitationNativeRenderingAsset("python-printability");
+        const dump = yield* makeCitationDump(policy.limits, printability);
+        const storage = (text: string) => ({ width: 1, bytes: new TextEncoder().encode(text) });
+        const output = yield* dump.render({
+          text: { width: 1, bytes: new Uint8Array() },
+          citations: [
+            {
+              kind: "IdCitation",
+              span: [0, 0],
+              fields: [
+                { _tag: "Scalar", name: "name", value: { _tag: "Text", value: storage("abc") } },
+                { _tag: "Scalar", name: "blank", value: { _tag: "Text", value: storage("") } },
+                { _tag: "Scalar", name: "on", value: { _tag: "Boolean", value: true } },
+                { _tag: "Scalar", name: "off", value: { _tag: "Boolean", value: false } },
+                {
+                  _tag: "Fields",
+                  name: "flags",
+                  entries: [
+                    { name: "yes", value: { _tag: "Boolean", value: true } },
+                    { name: "no", value: { _tag: "Boolean", value: false } },
+                  ],
+                },
+              ],
+            },
+          ],
+        });
+        const text = new TextDecoder().decode(output.bytes);
+        expect(text).toContain("  * name='abc'");
+        expect(text).not.toContain("blank=");
+        expect(text).toContain("  * on=True");
+        expect(text).not.toContain("off=");
+        expect(text).toContain("    * yes=True");
+        expect(text).toContain("    * no=False");
+      })
+    );
+    it.effect("clamps spans past the text and trims whitespace runs longer than one yield interval", () =>
+      Effect.gen(function* () {
+        const policy = yield* defaultCitationEnginePolicy;
+        const printability = yield* readCitationNativeRenderingAsset("python-printability");
+        const dump = yield* makeCitationDump(policy.limits, printability);
+        const encoder = new TextEncoder();
+        const row = (span: readonly [number, number]) => ({ kind: "IdCitation", span, fields: [] });
+        const clamped = yield* dump.render({
+          text: { width: 1, bytes: encoder.encode("abc") },
+          citations: [row([-100, 100])],
+        });
+        expect(new TextDecoder().decode(clamped.bytes)).toContain("abc");
+        const padding = new TextDecoder().decode(new Uint8Array(5000).fill(32));
+        const padded = yield* dump.render({
+          text: { width: 1, bytes: encoder.encode(`${padding}match${padding}`) },
+          citations: [row([5000, 5005])],
+          contextChars: 6000,
+        });
+        expect(new TextDecoder().decode(padded.bytes)).toContain("match");
+      })
+    );
+    it.effect("refuses an enclosing budget larger than the policy allows", () =>
+      Effect.gen(function* () {
+        const policy = yield* defaultCitationEnginePolicy;
+        const printability = yield* readCitationNativeRenderingAsset("python-printability");
+        const larger = yield* makeCitationTextBudget(policy.limits);
+        const refused = yield* makeCitationDump({ ...policy.limits, producedTextUtf16: 1 }, printability).pipe(
+          Effect.provideService(CitationTextBudget, larger),
+          Effect.flip
+        );
+        expect(refused).toMatchObject({ reason: "invalid-policy" });
+      })
+    );
+    it.effect("builtin adapter refuses an invalid profile, policy or model", () =>
+      Effect.gen(function* () {
+        const policy = yield* defaultCitationEnginePolicy;
+        const profile = yield* readCitationNativeRenderingAsset("builtin-dump-profile");
+        const notText = yield* makeCitationBuiltinDump(policy.limits, 5).pipe(Effect.flip);
+        expect(notText).toMatchObject({ reason: "invalid-configuration" });
+        const wrongDigest = yield* makeCitationBuiltinDump(policy.limits, "not the pinned profile").pipe(Effect.flip);
+        expect(wrongDigest).toMatchObject({ reason: "invalid-configuration" });
+        const badPolicy = yield* makeCitationBuiltinDump({}, profile).pipe(Effect.flip);
+        expect(badPolicy).toMatchObject({ reason: "invalid-policy" });
+        const adapter = yield* makeCitationBuiltinDump(policy.limits, profile);
+        const badModel = yield* adapter.project({}).pipe(Effect.flip);
+        expect(badModel).toMatchObject({ reason: "invalid-input" });
       })
     );
   }

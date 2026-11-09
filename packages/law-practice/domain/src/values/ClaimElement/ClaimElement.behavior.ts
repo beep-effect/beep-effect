@@ -27,6 +27,7 @@ import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { PatentClaim } from "../PatentDocument/PatentDocument.model.ts";
 import { qualifyClaimInput } from "../PatentDocument/PatentDocument.normalizer.ts";
 import { compileClaimClauseRoles } from "./ClaimClauseRole.behavior.ts";
@@ -310,7 +311,11 @@ const separatorPattern = /[,;()[\]]|:(?=\s|$)/gu;
 const clauseStartPattern =
   /^(?:and\s+|or\s+)?(?:wherein\b|(?:the|said|an?|at least one|one or more)\s+[^,;]*?\b(?:is|are|has|have|comprises|includes|forms|acts|passes|describes|generates)\b|(?:creating|encoding|generating|transmitting|receiving|flushing|placing|threading|stretching|turning)\b)/iu;
 
-const splitAtSeparators = (body: Span, separators: ReadonlyArray<Span>): ReadonlyArray<Span> => {
+const splitAtSeparators = (
+  body: Span,
+  separators: ReadonlyArray<Span>,
+  parallelComma: (head: string, tail: string) => boolean = () => false
+): ReadonlyArray<Span> => {
   const split = A.reduce(separators, { depth: 0, from: 0, segments: A.empty<Span>() }, (state, mark) =>
     Match.value(mark.text).pipe(
       Match.whenOr("(", "[", () => ({ ...state, depth: state.depth + 1 })),
@@ -319,7 +324,9 @@ const splitAtSeparators = (body: Span, separators: ReadonlyArray<Span>): Readonl
         const at = mark.start - body.start;
         const end = separator === ":" ? at + 1 : at;
         const isClauseComma =
-          separator !== "," || O.isSome(Str.match(clauseStartPattern)(Str.trimStart(Str.slice(at + 1)(body.text))));
+          separator !== "," ||
+          O.isSome(Str.match(clauseStartPattern)(Str.trimStart(Str.slice(at + 1)(body.text)))) ||
+          parallelComma(Str.slice(state.from, at)(body.text), Str.trimStart(Str.slice(at + 1)(body.text)));
         return state.depth > 0 || !isClauseComma
           ? state
           : { depth: 0, from: at + 1, segments: A.append(state.segments, sliceSpan(body, state.from, end)) };
@@ -335,16 +342,41 @@ const isStepLabelSeparator = (body: Span, mark: Span): boolean =>
   O.isSome(
     Str.match(/(?:^|[;:])\s*(?:(?:and|or)\s+)?step\s+[0-9]+$/iu)(Str.slice(0, mark.start - body.start)(body.text))
   );
-const splitInspectionBody = (body: Span): ReadonlyArray<Span> => {
-  const quotations = matchesIn(quotedPhrasePattern)(body);
-  const separators = A.filter(
-    matchesIn(separatorPattern)(body),
-    (mark) =>
-      !isStepLabelSeparator(body, mark) &&
-      !A.some(quotations, (quote) => mark.start >= quote.start && mark.start < quote.start + Str.length(quote.text))
+const nominalOpeningPattern = /^(?:and\s+)?(?:an?|the|said|each|at least one|one or more)\s/iu;
+const gerundOpeningPattern = /^\p{L}+ing\s/iu;
+const openListPattern = /\b(?:including|comprising|having|consisting|that|which|wherein|when|if|between|from|of)\b/iu;
+const predicatePattern = /\b(?:is|are|was|were|has|have|comprises|includes)\b/iu;
+const absoluteClausePattern = /^(?:said|the)\s[^,;]*?\b(?:being|having|comprising)\b/iu;
+// A comma opens a new coordinate when the following text starts the same way as the current one.
+const parallelCoordinate = (head: string, tail: string): boolean => {
+  const opening = Str.trimStart(head);
+  // A comma left inside the current coordinate means its internal structure is unresolved.
+  if (Str.includes(",")(opening) || O.isSome(Str.match(absoluteClausePattern)(tail))) return false;
+  return (
+    (O.isSome(Str.match(nominalOpeningPattern)(opening)) &&
+      O.isSome(Str.match(nominalOpeningPattern)(tail)) &&
+      O.isNone(Str.match(openListPattern)(opening)) &&
+      O.isNone(Str.match(predicatePattern)(opening))) ||
+    (O.isSome(Str.match(gerundOpeningPattern)(opening)) && O.isSome(Str.match(gerundOpeningPattern)(tail)))
   );
-  return splitAtSeparators(body, separators);
 };
+const splitInspectionBodyWith =
+  (parallelComma?: (head: string, tail: string) => boolean) =>
+  (body: Span): ReadonlyArray<Span> => {
+    const quotations = matchesIn(quotedPhrasePattern)(body);
+    const separators = A.filter(
+      matchesIn(separatorPattern)(body),
+      (mark) =>
+        !isStepLabelSeparator(body, mark) &&
+        !A.some(quotations, (quote) => mark.start >= quote.start && mark.start < quote.start + Str.length(quote.text))
+    );
+    return splitAtSeparators(body, separators, parallelComma);
+  };
+const splitInspectionBody = splitInspectionBodyWith();
+const splitParallelInspectionBody = (body: Span): ReadonlyArray<Span> =>
+  A.filter(splitInspectionBodyWith(parallelCoordinate)(body), (span) =>
+    O.isNone(Str.match(/^\s*(?:and|or)\s*$/iu)(span.text))
+  );
 
 const cleanSegment = flow(
   trimSpan,
@@ -650,6 +682,7 @@ class NominalBoundaryPlan extends S.Opaque<NominalBoundaryPlan, { readonly brand
       "possessive-plural-quantity",
       "possessive-regular-singular",
       "possessive-known-plural",
+      "source-part-of-speech",
     ]),
   }).pipe(
     $I.annoteSchema("NominalBoundaryPlan", {
@@ -877,7 +910,7 @@ class InspectionSourceRole extends S.Opaque<InspectionSourceRole, { readonly bra
   S.Struct({
     consumedStart: S.Int,
     resumeAt: S.Int,
-    reason: S.Literals(["reciprocal-argument", "relational-link", "licensed-infinitive"]),
+    reason: S.Literals(["reciprocal-argument", "relational-link", "licensed-infinitive", "source-part-of-speech"]),
   }).pipe(
     $I.annoteSchema("InspectionSourceRole", {
       description:
@@ -1046,7 +1079,9 @@ const relationalNominalPlan = (
   );
 };
 type LexicalGrammar = {
+  readonly closedCompositionInspection: boolean;
   readonly coordinatedPredicates: boolean;
+  readonly boundBareHead: (tokens: ReadonlyArray<Span>, index: number, end: number) => number;
   readonly plan: NominalPlanner;
   readonly functionalAt: (span: Span) => boolean;
   readonly refineTerms: (span: Span, terms: ReadonlyArray<EncodedTerm>) => ReadonlyArray<EncodedTerm>;
@@ -1057,14 +1092,18 @@ type LexicalGrammar = {
   ) => O.Option<InspectionSourceRole>;
 };
 const strictLexicalGrammar: LexicalGrammar = {
+  closedCompositionInspection: false,
   coordinatedPredicates: false,
+  boundBareHead: (_tokens, _index, end) => end,
   plan: legacyNominalPlan,
   functionalAt: () => false,
   ignoreAt: () => O.none(),
   refineTerms: (_span, terms) => terms,
 };
 const inspectionLexicalGrammar: LexicalGrammar = {
+  closedCompositionInspection: true,
   coordinatedPredicates: true,
+  boundBareHead: (_tokens, _index, end) => end,
   functionalAt: () => false,
   refineTerms: (_span, terms) => terms,
   plan: (tokens, index, headStart, quotations) =>
@@ -1134,8 +1173,9 @@ const scanStep =
       determinerAt(tokens, index),
       O.match({
         onNone: () => {
-          const head = headAt(tokens, index, quotations, grammar.coordinatedPredicates);
-          const end = index + head.length;
+          const scanned = headAt(tokens, index, quotations, grammar.coordinatedPredicates);
+          const end = grammar.boundBareHead(tokens, index, index + scanned.length);
+          const head = A.take(scanned, end - index);
           const resumeAt = headResumeAt(tokens, index, end, grammar.coordinatedPredicates);
           const previous = O.map(A.get(tokens, index - 1), ({ text }) => text);
           const isReferenceNumber =
@@ -1199,15 +1239,71 @@ const termsIn =
     );
   };
 
+const normalizeReferenceGap = flow(
+  Str.replace(/\(\s*\d+[a-z]?\s*\)|\[\s*\d+[a-z]?\s*\]/giu, " "),
+  Str.replace(/\s+/gu, " "),
+  Str.toLowerCase,
+  Str.trim
+);
+const sourceAlignedCompositionSubject = (span: Span, subject: EncodedTerm): boolean =>
+  subject.anchor.startChar === span.start && (subject.determiner === "the" || subject.determiner === "said");
+const indefiniteCompositionObject = (term: EncodedTerm): boolean => term.determiner === "a" || term.determiner === "an";
+const closedCompositionEnumeration = (
+  span: Span,
+  terms: ReadonlyArray<EncodedTerm>,
+  tokens: ReadonlyArray<Span>
+): boolean =>
+  terms.length === 3 &&
+  O.exists(
+    O.all({ subject: A.get(terms, 0), first: A.get(terms, 1), second: A.get(terms, 2) }),
+    ({ subject, first, second }) => {
+      const gap = (from: number, to: number): string =>
+        normalizeReferenceGap(Str.slice(from - span.start, to - span.start)(span.text));
+      return (
+        sourceAlignedCompositionSubject(span, subject) &&
+        indefiniteCompositionObject(first) &&
+        indefiniteCompositionObject(second) &&
+        O.isSome(
+          Str.match(/^(?:further )?(?:includes|comprises)$/u)(gap(subject.anchor.endChar, first.anchor.startChar))
+        ) &&
+        gap(first.anchor.endChar, second.anchor.startChar) === "and" &&
+        O.isSome(Str.match(/^[.,;:!?]*$/u)(gap(second.anchor.endChar, span.start + span.text.length))) &&
+        !A.some(terms, (term) => O.isSome(Str.match(/\bof\b/iu)(term.anchor.quote))) &&
+        !A.some(
+          tokens,
+          (token, index) =>
+            isPredicateToken(tokens, index) && !O.isSome(Str.match(/^(?:includes|comprises)$/iu)(token.text))
+        )
+      );
+    }
+  );
+
 const elementOf =
   (claimText: string, kind: ClaimElementKind, grammar: LexicalGrammar = strictLexicalGrammar) =>
   (path: string, span: Span): EncodedElement => {
     const tokens = tokensIn(span);
+    const terms = termsIn(
+      claimText,
+      grammar
+    )(
+      kind === "preamble-subject"
+        ? O.match(
+            Str.match(
+              /\b(?:according to|in accordance with|as (?:set forth|recited|claimed) in|of)\s+(?:the\s+|any(?:\s+one)?\s+of\s+)?claims?\b/iu
+            )(span.text),
+            {
+              onNone: () => span,
+              onSome: (match) => sliceSpan(span, 0, O.getOrElse(O.fromUndefinedOr(match.index), constant(0))),
+            }
+          )
+        : span
+    );
     return {
       path,
       anchor: anchorOf(span),
       kind:
         kind !== "preamble-subject" &&
+        !(grammar.closedCompositionInspection && closedCompositionEnumeration(span, terms, tokens)) &&
         (grammar.functionalAt(span) ||
           A.some(tokens, (_, index) => isPredicateToken(tokens, index)) ||
           O.isSome(
@@ -1217,22 +1313,7 @@ const elementOf =
           ))
           ? "functional-relation"
           : kind,
-      terms: termsIn(
-        claimText,
-        grammar
-      )(
-        kind === "preamble-subject"
-          ? O.match(
-              Str.match(
-                /\b(?:according to|in accordance with|as (?:set forth|recited|claimed) in|of)\s+(?:the\s+|any(?:\s+one)?\s+of\s+)?claims?\b/iu
-              )(span.text),
-              {
-                onNone: () => span,
-                onSome: (match) => sliceSpan(span, 0, O.getOrElse(O.fromUndefinedOr(match.index), constant(0))),
-              }
-            )
-          : span
-      ),
+      terms,
     };
   };
 
@@ -1396,10 +1477,7 @@ const ownerBridge = (element: EncodedElement, left: EncodedTerm, right: EncodedT
       left.anchor.endChar - element.anchor.startChar,
       right.anchor.startChar - element.anchor.startChar
     )(element.anchor.quote),
-    Str.replace(/\(\s*\d+[a-z]?\s*\)|\[\s*\d+[a-z]?\s*\]/giu, " "),
-    Str.replace(/\s+/gu, " "),
-    Str.toLowerCase,
-    Str.trim
+    normalizeReferenceGap
   );
 const isSpatialPartHead = (head: string): boolean =>
   O.isSome(Str.match(/\b(?:portions?|surfaces?|edges?|ends?|regions?|areas?|sections?|sides?|bases?)$/u)(head));
@@ -1946,15 +2024,79 @@ const scopedElementOf =
         }
       : element;
   };
+const compositionVerbPattern =
+  /\b(?:further\s+)?(?:comprises|comprise|comprising|includes|include|including|has|have|having)\s+(?=(?:an?|at least one|one or more)\s)/giu;
+const enumerationItemPattern = /^(?:and\s+)?(?:an?|at least one|one or more)\s/iu;
+const enumerationMarkPattern =
+  /[()[\]]|,\s+and\s+(?=(?:an?|at least one|one or more)\s)|,\s+(?=(?:an?|at least one|one or more)\s)|\s+and\s+(?=(?:an?|at least one|one or more)\s)/giu;
+// An item boundary is a top-level comma, or "and", directly before a determiner-led item.
+const enumerationItems = (list: Span): ReadonlyArray<Span> => {
+  const split = A.reduce(
+    matchesIn(enumerationMarkPattern)(list),
+    { depth: 0, from: 0, items: A.empty<Span>() },
+    (state, mark) => {
+      if (mark.text === "(" || mark.text === "[") return { ...state, depth: state.depth + 1 };
+      if (mark.text === ")" || mark.text === "]") return { ...state, depth: state.depth - 1 };
+      if (state.depth > 0) return state;
+      const at = mark.start - list.start;
+      return {
+        ...state,
+        from: at + Str.length(mark.text),
+        items: A.append(state.items, sliceSpan(list, state.from, at)),
+      };
+    }
+  );
+  return A.append(split.items, sliceSpan(list, split.from));
+};
+// A subject that composes three or more determiner-led items is a container of those items.
+const expandEnumeration = (node: ColonScopeNode): ReadonlyArray<ColonScopeNode> => {
+  const text = node.header.text;
+  if (node.group || O.isSome(node.label)) return [node];
+  return O.getOrElse(
+    O.flatMap(A.head(matchesIn(compositionVerbPattern)(node.header)), (verb) => {
+      const at = verb.start - node.header.start;
+      const listStart = at + Str.length(verb.text);
+      if (Str.includes(",")(Str.slice(0, at)(text))) return O.none();
+      const items = enumerationItems(sliceSpan(node.header, listStart));
+      if (
+        items.length < 3 ||
+        !A.every(items, ({ text: item }) => O.isSome(Str.match(enumerationItemPattern)(`${item} `)))
+      )
+        return O.none();
+      const parent = ColonScopeNode.make({
+        ...node,
+        group: true,
+        header: ColonHeaderSpan.make(sliceSpan(node.header, 0, listStart)),
+      });
+      return O.some(
+        A.prepend(
+          A.map(items, (item, index) =>
+            ColonScopeNode.make({
+              path: `${node.path}.${romanSegment(index + 1)}`,
+              parent: node.path,
+              header: ColonHeaderSpan.make(trimSpan(item)),
+              endChar: item.start + Str.length(item.text),
+              group: false,
+              label: O.none(),
+            })
+          ),
+          parent
+        )
+      );
+    }),
+    () => [node]
+  );
+};
 const inspectionTreeInputFor =
-  (grammar: LexicalGrammar): typeof treeInput =>
+  (
+    grammar: LexicalGrammar,
+    split: (body: Span) => ReadonlyArray<Span> = splitInspectionBody,
+    expand: (node: ColonScopeNode) => ReadonlyArray<ColonScopeNode> = A.of
+  ): typeof treeInput =>
   (claim, parts) => {
     const root = `${claim.claimNumber}`;
-    const segments = A.filter(
-      bodySegments(claim, parts.body, splitInspectionBody),
-      (span) => !transparentColonFrame(span)
-    );
-    const nodes = colonNodesOf(root, segments);
+    const segments = A.filter(bodySegments(claim, parts.body, split), (span) => !transparentColonFrame(span));
+    const nodes = A.flatMap(colonNodesOf(root, segments), expand);
     const elements = A.prepend(
       A.map(nodes, scopedElementOf(claim.claimText, root, grammar)),
       elementOf(
@@ -1971,6 +2113,120 @@ const inspectionTreeInputFor =
   };
 
 const inspectionTreeInput = inspectionTreeInputFor(inspectionLexicalGrammar);
+
+const sourceNominalTags = HashSet.make("NOUN", "PROPN");
+const sourceModifierTags = HashSet.make("ADJ", "NUM");
+const sourceCoordinators = HashSet.make("and", "or", "and/or");
+const participialModifierPattern = /(?:ing|ed)$/u;
+
+// Bound nominal candidates with the claim's aligned part-of-speech facts. A fact applies only
+// when both source offsets match, so a token the provider split differently keeps its
+// historical boundary instead of receiving a guessed tag.
+const sourcePartOfSpeechGrammar = (facts: ReadonlyArray<ClaimLexicalToken>): LexicalGrammar => {
+  const tagBySpan = HashMap.fromIterable(
+    A.map(facts, (fact) => Tuple.make(`${fact.anchor.startChar}:${fact.anchor.endChar}`, fact.pos))
+  );
+  const tagAt = (tokens: ReadonlyArray<Span>, index: number): O.Option<string> =>
+    O.flatMap(A.get(tokens, index), ({ start, text }) =>
+      HashMap.get(tagBySpan, `${start}:${start + Str.length(text)}`)
+    );
+  const tagged = (tokens: ReadonlyArray<Span>, index: number, tags: HashSet.HashSet<string>): boolean =>
+    O.exists(tagAt(tokens, index), (tag) => HashSet.has(tags, tag));
+  const nominalAt = (tokens: ReadonlyArray<Span>, index: number): boolean => tagged(tokens, index, sourceNominalTags);
+  const modifierAt = (tokens: ReadonlyArray<Span>, index: number): boolean => tagged(tokens, index, sourceModifierTags);
+  const participleAt = (tokens: ReadonlyArray<Span>, index: number): boolean =>
+    tagged(tokens, index, HashSet.make("VERB")) &&
+    O.isSome(Str.match(participialModifierPattern)(tokenWordAt(tokens, index))) &&
+    (nominalAt(tokens, index + 1) || modifierAt(tokens, index + 1));
+  const adverbAt = (tokens: ReadonlyArray<Span>, index: number): boolean =>
+    tagged(tokens, index, HashSet.make("ADV")) &&
+    (modifierAt(tokens, index + 1) ||
+      tagged(tokens, index + 1, HashSet.make("VERB")) ||
+      HashSet.has(sourceCoordinators, tokenWordAt(tokens, index + 1)));
+  const premodifierAt = (tokens: ReadonlyArray<Span>, index: number): boolean =>
+    modifierAt(tokens, index) || participleAt(tokens, index) || adverbAt(tokens, index);
+  // Walk determiner-introduced premodifiers and the nominal run; a coordinator continues only
+  // between premodifiers, so "the left and right posts" stays one mention.
+  const coordinatedPremodifierAt = (tokens: ReadonlyArray<Span>, at: number, start: number): boolean =>
+    at > start &&
+    HashSet.has(sourceCoordinators, tokenWordAt(tokens, at)) &&
+    premodifierAt(tokens, at - 1) &&
+    (premodifierAt(tokens, at + 1) || nominalAt(tokens, at + 1));
+  const nominalEnd = (tokens: ReadonlyArray<Span>, start: number): O.Option<number> => {
+    let at = start;
+    while (premodifierAt(tokens, at) || coordinatedPremodifierAt(tokens, at, start)) at++;
+    if (!nominalAt(tokens, at)) return O.none();
+    while (nominalAt(tokens, at)) at++;
+    return O.some(at);
+  };
+  // A parenthetical reference numeral attaches to the noun before it, whatever tag that noun received.
+  const referenceNumeralAt = (tokens: ReadonlyArray<Span>, at: number): boolean =>
+    tokenWordAt(tokens, at) === "(" && O.isSome(Str.match(/^[0-9]/u)(tokenWordAt(tokens, at + 1)));
+  // A tagged non-nominal word directly after a nominal ends the mention. Compounds the
+  // provider mistags as verbs stay whole because a nominal continues immediately after them.
+  const overrunAt = (tokens: ReadonlyArray<Span>, at: number): boolean => {
+    if (!nominalAt(tokens, at - 1) || tokenWordAt(tokens, at) === "of" || referenceNumeralAt(tokens, at + 1))
+      return false;
+    const next = nominalAt(tokens, at + 1);
+    const nextModifier = modifierAt(tokens, at + 1);
+    return O.exists(tagAt(tokens, at), (tag) => {
+      if (tag === "VERB") {
+        const word = tokenWordAt(tokens, at);
+        const inflected = O.isSome(Str.match(/(?:s|ed|ing)$/u)(word));
+        const pluralSubject = Str.endsWith("s")(tokenWordAt(tokens, at - 1));
+        return (
+          !next &&
+          (inflected || pluralSubject) &&
+          !(nextModifier && O.isSome(Str.match(participialModifierPattern)(word)))
+        );
+      }
+      if (tag === "ADJ") return !next && !nextModifier && tagged(tokens, at + 1, HashSet.make("ADP", "PART"));
+      return HashSet.has(HashSet.make("AUX", "ADV", "ADP", "PRON", "SCONJ", "PART", "DET"), tag);
+    });
+  };
+  const boundedEnd = (tokens: ReadonlyArray<Span>, start: number, end: number): number => {
+    for (let at = start + 1; at < end; at++) if (overrunAt(tokens, at)) return at;
+    return end;
+  };
+  return {
+    ...inspectionLexicalGrammar,
+    functionalAt: (span) => {
+      const tokens = tokensIn(span);
+      return (
+        (tagged(tokens, 0, HashSet.make("VERB")) && Str.endsWith("ing")(tokenWordAt(tokens, 0))) ||
+        A.some(
+          tokens,
+          (_, index) =>
+            tagged(tokens, index, HashSet.make("VERB", "AUX")) &&
+            !participleAt(tokens, index) &&
+            (!nominalAt(tokens, index + 1) ||
+              (nominalAt(tokens, index - 1) && Str.endsWith("s")(tokenWordAt(tokens, index))))
+        )
+      );
+    },
+    boundBareHead: (tokens, index, end) => {
+      const bounded = boundedEnd(tokens, index, end);
+      for (let at = index; at < bounded; at++) if (nominalAt(tokens, at)) return bounded;
+      return O.isSome(tagAt(tokens, index)) ? index : bounded;
+    },
+    plan: (tokens, index, headStart, quotations) => {
+      const base = inspectionLexicalGrammar.plan(tokens, index, headStart, quotations);
+      if (base.reason !== "legacy") return base;
+      const extended =
+        base.headEnd === headStart || !nominalAt(tokens, base.headEnd - 1) ? nominalEnd(tokens, headStart) : O.none();
+      if (O.isSome(extended) && extended.value > base.headEnd)
+        return NominalBoundaryPlan.make({
+          headEnd: extended.value,
+          resumeAt: extended.value,
+          reason: "source-part-of-speech",
+        });
+      const bounded = boundedEnd(tokens, headStart, base.headEnd);
+      return bounded === base.headEnd
+        ? base
+        : NominalBoundaryPlan.make({ headEnd: bounded, resumeAt: bounded, reason: "source-part-of-speech" });
+    },
+  };
+};
 
 const decodeTree = S.decodeEffect(ClaimElementTree);
 
@@ -2334,14 +2590,136 @@ const sourcePathLetterWidth = (siblings: number, charge: (amount: number) => boo
   }
   return letters;
 };
-const sourceElementPaths = (
+type SourceElement = ClaimSourceElementPlan["elements"][number];
+type SourceDeclaration = ClaimSourceElementPlan["declarationPlans"][number];
+type SourceFrame = ClaimSourceElementPlan["frames"][number];
+
+const flatCompositionHeader = (
   structural: ClaimSourceElementPlan,
+  declaration: SourceDeclaration
+): O.Option<SourceElement> => {
+  if (declaration.kind !== "composition" || declaration.items.length !== 2) return O.none();
+  return O.filter(
+    A.get(structural.elements, declaration.owner - 1),
+    (owner) => owner.grouping === "composition-header" && owner.kind === "limitation"
+  );
+};
+const sameSourceExtent = (left: SourceElement["extent"], right: SourceElement["extent"]): boolean =>
+  left.startChar === right.startChar && left.endChar === right.endChar && left.quote === right.quote;
+const flatCompositionChildShape = (
+  child: SourceElement,
+  item: SourceDeclaration["items"][number],
+  owner: number
+): boolean =>
+  child.grouping === "composition-child" &&
+  child.kind !== "functional-relation" &&
+  O.contains(child.parent, owner) &&
+  sameSourceExtent(child.extent, item.extent);
+const flatCompositionChildTerminal = (structural: ClaimSourceElementPlan, child: SourceElement): boolean =>
+  !A.some(structural.elements, (element) => O.contains(element.parent, child.ordinal)) &&
+  !A.some(structural.declarationPlans, (declaration) => declaration.owner === child.ordinal);
+const flatCompositionFrame = (frame: SourceFrame): boolean =>
+  frame.attachment === "composition-child" && frame.predicates.length === 0 && frame.privateArguments.length === 0;
+const flatCompositionChild = (
+  structural: ClaimSourceElementPlan,
+  terms: ReadonlyArray<ReadonlyArray<EncodedTerm>>,
+  declaration: SourceDeclaration,
+  child: SourceElement,
+  index: number
+): boolean => {
+  const item = O.getOrThrow(A.get(declaration.items, index));
+  const childTerms = O.getOrThrow(A.get(terms, child.ordinal - 1));
+  const frames = A.filter(structural.frames, (frame) => frame.publicOwner === child.ordinal);
+  return (
+    flatCompositionChildShape(child, item, declaration.owner) &&
+    childTerms.length === 1 &&
+    child.ownedTermRegions.length === 1 &&
+    flatCompositionChildTerminal(structural, child) &&
+    frames.length === 1 &&
+    A.every(frames, flatCompositionFrame)
+  );
+};
+const closedFlatCompositionChildren = (
+  structural: ClaimSourceElementPlan,
+  terms: ReadonlyArray<ReadonlyArray<EncodedTerm>>,
+  declaration: SourceDeclaration,
+  owner: SourceElement
+): O.Option<ReadonlyArray<SourceElement>> => {
+  if (A.filter(structural.declarationPlans, (candidate) => candidate.owner === declaration.owner).length !== 1)
+    return O.none();
+  const children = A.getSomes(A.map(declaration.items, (item) => A.get(structural.elements, item.child - 1)));
+  const headerTerms = O.getOrThrow(A.get(terms, owner.ordinal - 1));
+  if (
+    children.length !== 2 ||
+    headerTerms.length !== 1 ||
+    !A.every(children, (child, index) => flatCompositionChild(structural, terms, declaration, child, index))
+  )
+    return O.none();
+  const merged = A.appendAll(
+    headerTerms,
+    A.flatMap(children, (child) => O.getOrThrow(A.get(terms, child.ordinal - 1)))
+  );
+  const span = { start: owner.extent.startChar, text: owner.extent.quote };
+  return closedCompositionEnumeration(span, merged, tokensIn(span)) ? O.some(children) : O.none();
+};
+const flatCompositionOwnersUnmerged = (
+  owners: HashMap.HashMap<number, number>,
+  owner: number,
+  children: ReadonlyArray<SourceElement>
+): boolean =>
+  O.contains(HashMap.get(owners, owner), owner) &&
+  A.every(children, (child) => O.contains(HashMap.get(owners, child.ordinal), child.ordinal));
+const flatCompositionPublicOwner = (
+  structural: ClaimSourceElementPlan,
+  terms: ReadonlyArray<ReadonlyArray<EncodedTerm>>,
+  declaration: SourceDeclaration,
+  owners: HashMap.HashMap<number, number>,
+  charge: (amount: number) => boolean
+): O.Option<HashMap.HashMap<number, number>> => {
+  const owner = flatCompositionHeader(structural, declaration);
+  if (O.isNone(owner)) return O.some(owners);
+  if (
+    !charge(
+      owner.value.extent.quote.length * 32 +
+        structural.elements.length * 12 +
+        structural.frames.length * 8 +
+        structural.declarationPlans.length * 8 +
+        32
+    )
+  )
+    return O.none();
+  const children = closedFlatCompositionChildren(structural, terms, declaration, owner.value);
+  if (O.isNone(children) || !flatCompositionOwnersUnmerged(owners, declaration.owner, children.value))
+    return O.some(owners);
+  let merged = owners;
+  for (const child of children.value) merged = HashMap.set(merged, child.ordinal, declaration.owner);
+  return O.some(merged);
+};
+// Projection-only quotient: internal source ordinals, frames and owners stay exact.
+const flatCompositionPublicOwners = (
+  structural: ClaimSourceElementPlan,
+  terms: ReadonlyArray<ReadonlyArray<EncodedTerm>>,
+  charge: (amount: number) => boolean
+): O.Option<HashMap.HashMap<number, number>> => {
+  if (!charge(structural.elements.length * 8 + structural.declarationPlans.length + 4)) return O.none();
+  let owners = HashMap.fromIterable(
+    A.map(structural.elements, (element) => [element.ordinal, element.ordinal] as const)
+  );
+  for (const declaration of structural.declarationPlans) {
+    const next = flatCompositionPublicOwner(structural, terms, declaration, owners, charge);
+    if (O.isNone(next)) return O.none();
+    owners = next.value;
+  }
+  return O.some(owners);
+};
+const sourceElementPaths = (
+  sourceElements: ClaimSourceElementPlan["elements"],
   rootPath: string,
   charge: (amount: number) => boolean
 ): O.Option<HashMap.HashMap<number, string>> => {
   let paths = HashMap.empty<number, string>();
   let siblingCounts = HashMap.empty<number, number>();
-  for (const element of structural.elements) {
+  for (const element of sourceElements) {
     const parent = O.flatMap(element.parent, (ordinal) => HashMap.get(paths, ordinal));
     const key = O.getOrElse(element.parent, () => 0);
     const siblings = O.getOrElse(HashMap.get(siblingCounts, key), () => 0);
@@ -2365,25 +2743,112 @@ const sourceElementPaths = (
   // Pay the added successful Option carrier before allocation; no source allowance is restored.
   return charge(1) ? O.some(paths) : O.none();
 };
-const projectedClaimInput = (
-  claim: PatentClaim,
-  structural: ClaimSourceElementPlan
-): O.Option<{
-  readonly input: ReturnType<typeof inspectionTreeInput>;
-  readonly opaqueNonDonors: HashSet.HashSet<string>;
-}> => {
-  let remaining = structural.remainingWork;
-  const charge = (amount: number): boolean => {
-    remaining -= amount;
-    return remaining >= 0;
-  };
-  // The sole private caller immediately supplies the immutable result of
-  // sourcePlanFor, whose compiler has already completed global ownership/DAG
-  // validation under this same remaining allowance. Projection charges only
-  // its actual path/term construction; external plans never enter this seam.
-  if (!charge(structural.elements.length * 16 + structural.roles.nominals.length + 32)) return O.none();
-  const rootPath = `${claim.claimNumber}`;
-  const paths = sourceElementPaths(structural, rootPath, charge);
+const sourceGroupedTerms = (
+  sourceElements: ReadonlyArray<SourceElement>,
+  terms: ReadonlyArray<ReadonlyArray<EncodedTerm>>,
+  owners: HashMap.HashMap<number, number>,
+  charge: (amount: number) => boolean
+): O.Option<HashMap.HashMap<number, ReadonlyArray<EncodedTerm>>> => {
+  let grouped = HashMap.empty<number, ReadonlyArray<EncodedTerm>>();
+  for (let index = 0; index < sourceElements.length; index++) {
+    const original = O.getOrThrow(A.get(sourceElements, index));
+    const owner = O.getOrThrow(HashMap.get(owners, original.ordinal));
+    const prior = O.getOrElse(HashMap.get(grouped, owner), () => []);
+    const next = O.getOrThrow(A.get(terms, index));
+    if (!charge(prior.length + next.length + 8)) return O.none();
+    grouped = HashMap.set(grouped, owner, A.appendAll(prior, next));
+  }
+  return O.some(grouped);
+};
+const sourcePublicElements = (
+  sourceElements: ReadonlyArray<SourceElement>,
+  paths: HashMap.HashMap<number, string>,
+  groupedTerms: HashMap.HashMap<number, ReadonlyArray<EncodedTerm>>
+): Array<EncodedElement> =>
+  A.map(
+    sourceElements,
+    (element): EncodedElement => ({
+      path: O.getOrThrow(HashMap.get(paths, element.ordinal)),
+      anchor: element.extent,
+      kind: element.kind,
+      terms: O.getOrThrow(HashMap.get(groupedTerms, element.ordinal)),
+    })
+  );
+const sourceContainmentPaths = (
+  element: SourceElement,
+  owners: HashMap.HashMap<number, number>,
+  paths: HashMap.HashMap<number, string>
+): O.Option<readonly [child: string, parent: string]> => {
+  if (O.isNone(element.parent)) return O.none();
+  const childOrdinal = O.getOrThrow(HashMap.get(owners, element.ordinal));
+  const parentOrdinal = O.getOrThrow(HashMap.get(owners, element.parent.value));
+  if (childOrdinal === parentOrdinal) return O.none();
+  return O.some(
+    Tuple.make(O.getOrThrow(HashMap.get(paths, childOrdinal)), O.getOrThrow(HashMap.get(paths, parentOrdinal)))
+  );
+};
+const sourcePublicContainment = (
+  sourceElements: ReadonlyArray<SourceElement>,
+  owners: HashMap.HashMap<number, number>,
+  paths: HashMap.HashMap<number, string>,
+  charge: (amount: number) => boolean
+): O.Option<ReadonlyArray<EncodedEdge>> => {
+  const containment: Array<EncodedEdge> = [];
+  // Validated children have one parent. Grouped children are leaves whose
+  // self-mapped edges are omitted, so every remaining public child is unique.
+  for (const element of sourceElements) {
+    const endpoints = sourceContainmentPaths(element, owners, paths);
+    if (O.isNone(endpoints)) continue;
+    const [child, parent] = endpoints.value;
+    if (!charge(child.length + parent.length + 9)) return O.none();
+    containment.push({ kind: "part-of", child, parent });
+  }
+  return O.some(containment);
+};
+const sourceOpaqueNonDonors = (
+  selections: ClaimSourceElementPlan["roles"]["opaqueSelections"],
+  charge: (amount: number) => boolean
+): O.Option<HashSet.HashSet<string>> => {
+  let nonDonors = HashSet.empty<string>();
+  for (const selection of selections) {
+    // Registry storage belongs to this successful immutable source projection.
+    // All public anchors/quotes were globally validated against this source.
+    // The immutable per-claim input registry therefore makes coordinates an
+    // exact source-core identity; a foreign quote cannot enter this seam.
+    if (!charge(selection.core.quote.length * 2 + 12)) return O.none();
+    nonDonors = HashSet.add(nonDonors, sourceCoreKey(selection.core));
+  }
+  return O.some(nonDonors);
+};
+const sourcePublicProjection = (
+  structural: ClaimSourceElementPlan,
+  terms: ReadonlyArray<ReadonlyArray<EncodedTerm>>,
+  rootPath: string,
+  charge: (amount: number) => boolean
+): O.Option<readonly [elements: Array<EncodedElement>, containment: ReadonlyArray<EncodedEdge>]> => {
+  const groups = flatCompositionPublicOwners(structural, terms, charge);
+  if (O.isNone(groups) || !charge(structural.elements.length * 12 + structural.roles.nominals.length * 4 + 8))
+    return O.none();
+  const publicElements = A.filter(structural.elements, (element) =>
+    O.contains(HashMap.get(groups.value, element.ordinal), element.ordinal)
+  );
+  const paths = sourceElementPaths(publicElements, rootPath, charge);
+  if (O.isNone(paths)) return O.none();
+  const groupedTerms = sourceGroupedTerms(structural.elements, terms, groups.value, charge);
+  if (O.isNone(groupedTerms)) return O.none();
+  const elements = sourcePublicElements(publicElements, paths.value, groupedTerms.value);
+  const containment = sourcePublicContainment(structural.elements, groups.value, paths.value, charge);
+  if (O.isNone(containment)) return O.none();
+  return O.some(Tuple.make(elements, containment.value));
+};
+// Detailed decomposition retains every validated source element. Inspection
+// explicitly selects its canonical public view before graph construction.
+const sourceDetailedProjection = (
+  structural: ClaimSourceElementPlan,
+  rootPath: string,
+  charge: (amount: number) => boolean
+): ReturnType<typeof sourcePublicProjection> => {
+  const paths = sourceElementPaths(structural.elements, rootPath, charge);
   if (O.isNone(paths)) return O.none();
   const terms = O.all(A.map(structural.elements, (element) => projectClaimRoleTerms(element, charge)));
   if (O.isNone(terms)) return O.none();
@@ -2408,26 +2873,164 @@ const projectedClaimInput = (
       ],
     })
   );
-  let opaqueNonDonors = HashSet.empty<string>();
-  for (const selection of structural.roles.opaqueSelections) {
-    // Registry storage belongs to this successful immutable source projection.
-    // All public anchors/quotes were globally validated against this source.
-    // The immutable per-claim input registry therefore makes coordinates an
-    // exact source-core identity; a foreign quote cannot enter this seam.
-    if (!charge(selection.core.quote.length * 2 + 12)) return O.none();
-    opaqueNonDonors = HashSet.add(opaqueNonDonors, sourceCoreKey(selection.core));
-  }
-  return remaining >= 0 && A.isArrayNonEmpty(elements)
-    ? O.some({ input: assembleTree(claim, elements, containment), opaqueNonDonors })
-    : O.none();
+  return O.some(Tuple.make(elements, containment));
 };
+const sourceCanonicalProjection: typeof sourceDetailedProjection = (structural, rootPath, charge) => {
+  if (structural.declarationPlans.length === 0) return sourceDetailedProjection(structural, rootPath, charge);
+  const terms = O.all(A.map(structural.elements, (element) => projectClaimRoleTerms(element, charge)));
+  return O.flatMap(terms, (value) => sourcePublicProjection(structural, value, rootPath, charge));
+};
+const projectedClaimInputFor =
+  (projector: typeof sourceDetailedProjection) =>
+  (
+    claim: PatentClaim,
+    structural: ClaimSourceElementPlan
+  ): O.Option<{
+    readonly input: ReturnType<typeof inspectionTreeInput>;
+    readonly opaqueNonDonors: HashSet.HashSet<string>;
+  }> => {
+    let remaining = structural.remainingWork;
+    const charge = (amount: number): boolean => {
+      remaining -= amount;
+      return remaining >= 0;
+    };
+    // The sole private caller immediately supplies the immutable result of
+    // sourcePlanFor, whose compiler has already completed global ownership/DAG
+    // validation under this same remaining allowance. Projection charges only
+    // its actual path/term construction; external plans never enter this seam.
+    if (!charge(structural.elements.length * 16 + structural.roles.nominals.length + 32)) return O.none();
+    const rootPath = `${claim.claimNumber}`;
+    const projection = projector(structural, rootPath, charge);
+    if (O.isNone(projection)) return O.none();
+    const opaqueNonDonors = sourceOpaqueNonDonors(structural.roles.opaqueSelections, charge);
+    if (O.isNone(opaqueNonDonors)) return O.none();
+    const [elements, containment] = projection.value;
+    return remaining >= 0 && A.isArrayNonEmpty(elements)
+      ? O.some({ input: assembleTree(claim, elements, containment), opaqueNonDonors: opaqueNonDonors.value })
+      : O.none();
+  };
+// Evidence rows bound to one record; only a single aligned row supplies fallback facts.
+const sourceFactsFor = (
+  prepared: PreparedClaimInspection,
+  sourceOrdinal: number,
+  claimText: string,
+  evidence: ReadonlyArray<ClaimLexicalEvidence>
+): ReadonlyArray<ClaimLexicalEvidence> =>
+  A.filter(
+    evidence,
+    (fact) =>
+      fact.sourceKey === prepared.input.sourceKey &&
+      fact.sourceOrdinal === sourceOrdinal &&
+      fact.qualifiedText === claimText
+  );
+const alignedFactsOf = (
+  prepared: PreparedClaimInspection,
+  evidence: ReadonlyArray<ClaimLexicalEvidence>
+): HashMap.HashMap<number, ReadonlyArray<ClaimLexicalToken>> =>
+  HashMap.fromIterable(
+    A.flatMap(prepared.qualifications, (qualification) => {
+      if (!ClaimInputQualification.guards["context-ready"](qualification)) return [];
+      const facts = sourceFactsFor(
+        prepared,
+        qualification.record.sourceOrdinal,
+        qualification.claim.claimText,
+        evidence
+      );
+      const [fact] = facts;
+      return facts.length === 1 && fact?.status === "aligned"
+        ? [Tuple.make(qualification.claim.claimNumber, fact.tokens)]
+        : [];
+    })
+  );
+const sourceFallbackTree =
+  (aligned: HashMap.HashMap<number, ReadonlyArray<ClaimLexicalToken>>): typeof inspectionTreeInput =>
+  (claim, parts) =>
+    O.match(HashMap.get(aligned, claim.claimNumber), {
+      onNone: () => inspectionTreeInput(claim, parts),
+      onSome: (facts) =>
+        inspectionTreeInputFor(
+          sourcePartOfSpeechGrammar(facts),
+          splitParallelInspectionBody,
+          expandEnumeration
+        )(claim, parts),
+    });
 const boundedSourceEvidence = (
   prepared: PreparedClaimInspection,
   evidence: ReadonlyArray<ClaimLexicalEvidence>
 ): ReadonlyArray<ClaimLexicalEvidence> => (evidence.length * prepared.qualifications.length <= 262_144 ? evidence : []);
 
+const decomposePreparedClaimRolesWith = (projector: ReturnType<typeof projectedClaimInputFor>) =>
+  Effect.fn("ClaimElement.decomposePreparedRoles")(function* (
+    prepared: PreparedClaimInspection,
+    evidence: ReadonlyArray<ClaimLexicalEvidence>
+  ) {
+    const claims = A.map(
+      A.filter(prepared.qualifications, ClaimInputQualification.guards["context-ready"]),
+      ({ claim }) => claim
+    );
+    let inputs = HashMap.empty<
+      number,
+      { readonly input: ReturnType<typeof inspectionTreeInput>; readonly opaqueNonDonors: HashSet.HashSet<string> }
+    >();
+    const plans = A.empty<ClaimBoundRolePlan>();
+    const boundedEvidence = boundedSourceEvidence(prepared, evidence);
+    const fallbackTree = sourceFallbackTree(alignedFactsOf(prepared, boundedEvidence));
+    for (const qualification of prepared.qualifications) {
+      if (!ClaimInputQualification.guards["context-ready"](qualification)) continue;
+      const claim = qualification.claim;
+      const facts = sourceFactsFor(prepared, qualification.record.sourceOrdinal, claim.claimText, boundedEvidence);
+      const plan = O.flatMap(facts.length === 1 ? A.head(facts) : O.none(), (fact) =>
+        compileClaimClauseRoles(claim, fact)
+      );
+      const structure = O.flatMap(plan, (value) =>
+        O.flatMap(A.head(facts), (fact) =>
+          fact.status === "aligned" ? sourcePlanFor(claim, value, fact.tokens) : O.none()
+        )
+      );
+      const candidate = O.flatMap(structure, (value) => projector(claim, value));
+      if (O.isNone(structure) || O.isNone(candidate)) continue;
+      inputs = HashMap.set(inputs, claim.claimNumber, candidate.value);
+      plans.push(
+        ClaimBoundRolePlan.make({
+          claimNumber: claim.claimNumber,
+          plan: structure.value.roles,
+          sourcePlan: structure.value,
+        })
+      );
+    }
+    const construct: typeof inspectionTreeInput = (claim, parts) =>
+      O.getOrElse(
+        O.map(HashMap.get(inputs, claim.claimNumber), (projected) => projected.input),
+        () => fallbackTree(claim, parts)
+      );
+    const enhancedRoots = HashSet.fromIterable(A.map(plans, ({ claimNumber }) => `${claimNumber}`));
+    const sourceAbbreviation: typeof isExplicitAbbreviatedHead = (head) => (candidate) =>
+      isExplicitAbbreviatedHead(head)(candidate) || isSourcePrefixAbbreviatedHead(head)(candidate);
+    const resolve: StructuralReferenceStrategy = (elements, ancestors, parents, ancestorBindings) =>
+      inspectionStructuralReferencesFor(
+        O.exists(A.head(elements), ({ path }) => HashSet.has(enhancedRoots, path))
+          ? sourceAbbreviation
+          : isExplicitAbbreviatedHead,
+        (path, term) =>
+          !O.exists(
+            O.flatMap(claimOfMention(path), (number) => HashMap.get(inputs, number)),
+            (projected) => HashSet.has(projected.opaqueNonDonors, sourceCoreKey(term.anchor))
+          )
+      )(elements, ancestors, parents, ancestorBindings);
+    const decompositions = yield* Effect.forEach(
+      prepared.qualifications,
+      inputDecomposition(claims, construct, resolve)
+    );
+    return ClaimRoleDecomposition.make({ decompositions, plans });
+  });
+
 /**
- * Decompose prepared records with atomic source roles, preserving unavailable records.
+ * Decompose prepared records into detailed source topology, preserving unavailable records.
+ *
+ * **Details**
+ *
+ * Inspection selects a separate canonical public view before graph construction;
+ * this decomposition API retains every validated source element.
  *
  * **Example** (Retain decomposition while enhanced evidence is absent)
  *
@@ -2449,68 +3052,27 @@ const boundedSourceEvidence = (
  * @category parsing
  * @since 0.0.0
  */
-export const decomposePreparedClaimRoles = Effect.fn("ClaimElement.decomposePreparedRoles")(function* (
-  prepared: PreparedClaimInspection,
-  evidence: ReadonlyArray<ClaimLexicalEvidence>
-) {
-  const claims = A.map(
-    A.filter(prepared.qualifications, ClaimInputQualification.guards["context-ready"]),
-    ({ claim }) => claim
-  );
-  let inputs = HashMap.empty<
-    number,
-    { readonly input: ReturnType<typeof inspectionTreeInput>; readonly opaqueNonDonors: HashSet.HashSet<string> }
-  >();
-  const plans = A.empty<ClaimBoundRolePlan>();
-  const boundedEvidence = boundedSourceEvidence(prepared, evidence);
-  for (const qualification of prepared.qualifications) {
-    if (!ClaimInputQualification.guards["context-ready"](qualification)) continue;
-    const claim = qualification.claim;
-    const facts = A.filter(
-      boundedEvidence,
-      (fact) =>
-        fact.sourceKey === prepared.input.sourceKey &&
-        fact.sourceOrdinal === qualification.record.sourceOrdinal &&
-        fact.qualifiedText === claim.claimText
-    );
-    const plan = O.flatMap(facts.length === 1 ? A.head(facts) : O.none(), (fact) =>
-      compileClaimClauseRoles(claim, fact)
-    );
-    const structure = O.flatMap(plan, (value) =>
-      O.flatMap(A.head(facts), (fact) =>
-        fact.status === "aligned" ? sourcePlanFor(claim, value, fact.tokens) : O.none()
-      )
-    );
-    const candidate = O.flatMap(structure, (value) => projectedClaimInput(claim, value));
-    if (O.isNone(structure) || O.isNone(candidate)) continue;
-    inputs = HashMap.set(inputs, claim.claimNumber, candidate.value);
-    plans.push(
-      ClaimBoundRolePlan.make({
-        claimNumber: claim.claimNumber,
-        plan: structure.value.roles,
-        sourcePlan: structure.value,
-      })
-    );
-  }
-  const construct: typeof inspectionTreeInput = (claim, parts) =>
-    O.getOrElse(
-      O.map(HashMap.get(inputs, claim.claimNumber), (projected) => projected.input),
-      () => inspectionTreeInput(claim, parts)
-    );
-  const enhancedRoots = HashSet.fromIterable(A.map(plans, ({ claimNumber }) => `${claimNumber}`));
-  const sourceAbbreviation: typeof isExplicitAbbreviatedHead = (head) => (candidate) =>
-    isExplicitAbbreviatedHead(head)(candidate) || isSourcePrefixAbbreviatedHead(head)(candidate);
-  const resolve: StructuralReferenceStrategy = (elements, ancestors, parents, ancestorBindings) =>
-    inspectionStructuralReferencesFor(
-      O.exists(A.head(elements), ({ path }) => HashSet.has(enhancedRoots, path))
-        ? sourceAbbreviation
-        : isExplicitAbbreviatedHead,
-      (path, term) =>
-        !O.exists(
-          O.flatMap(claimOfMention(path), (number) => HashMap.get(inputs, number)),
-          (projected) => HashSet.has(projected.opaqueNonDonors, sourceCoreKey(term.anchor))
-        )
-    )(elements, ancestors, parents, ancestorBindings);
-  const decompositions = yield* Effect.forEach(prepared.qualifications, inputDecomposition(claims, construct, resolve));
-  return ClaimRoleDecomposition.make({ decompositions, plans });
-});
+export const decomposePreparedClaimRoles = decomposePreparedClaimRolesWith(
+  projectedClaimInputFor(sourceDetailedProjection)
+);
+
+/**
+ * Select the canonical inspection view before caching and resolving public trees.
+ *
+ * **Details**
+ *
+ * Internal adapter for the inspection policy; source certificates remain unchanged.
+ *
+ * **Example** (Select the inspection view)
+ * ```ts
+ * // Public callers use inspectPreparedClaimRoles, which selects this view.
+ * import { inspectPreparedClaimRoles } from "@beep/law-practice-domain/values/ClaimElement"
+ * void inspectPreparedClaimRoles
+ * ```
+ * @internal
+ * @category domain-logic
+ * @since 0.0.0
+ */
+export const decomposePreparedClaimRolesForInspection = decomposePreparedClaimRolesWith(
+  projectedClaimInputFor(sourceCanonicalProjection)
+);

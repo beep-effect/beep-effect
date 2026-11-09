@@ -401,7 +401,7 @@ never the only shape.
 
 *Correction 2026-08-30 (PR #918 review — superseded by the graduated
 packet contract):* two more deltas in this report are overridden by
-`goals/practice-m365-contacts/SPEC.md`. First, wherever this report says
+[goals/practice-m365-contacts/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/practice-m365-contacts/SPEC.md). First, wherever this report says
 the application role is granted "with admin consent", the ratified design
 grants mailbox access exclusively through the Exchange
 RBAC-for-Applications assignment scoped to the attorney's mailbox — the

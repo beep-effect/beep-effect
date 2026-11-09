@@ -7,9 +7,9 @@
 // Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
 {
   "schema_version": 2,
-  "generated_at": "2026-11-08T05:53:05.520Z",
-  "git_sha": "9ac2f194e68b3ef35ab3c331ac2f7f6d2f1c3122",
-  "command": "bun run coverage -- --filter=@beep/documents-use-cases --write-baseline --add-missing-files-only",
+  "generated_at": "2026-11-08T16:35:47.519Z",
+  "git_sha": "cd9653f803d25d26dc880008b8df8db1a381a1e4",
+  "command": "bun run coverage -- --filter=@beep/law-practice-server --write-baseline --add-missing-files-only",
   "epsilon": 0.001,
   "minimum": {
     "lines": 70,
@@ -21758,6 +21758,102 @@
             "lines": 0,
             "statements": 0,
             "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/BuiltinDump.ts": {
+          "lines": 100,
+          "statements": 96,
+          "branches": 88.88,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 2,
+            "branches": 2,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/Dump.ts": {
+          "lines": 99.11,
+          "statements": 99.21,
+          "branches": 100,
+          "functions": 97.36,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/NativeRendering.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/PythonRepr.ts": {
+          "lines": 100,
+          "statements": 98.11,
+          "branches": 96,
+          "functions": 92.85,
+          "uncovered": {
+            "lines": 0,
+            "statements": 2,
+            "branches": 2,
+            "functions": 1
+          }
+        },
+        "packages/law-practice/server/src/CitationExtractor/CitationExtractor.layer.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 95,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 1,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/RecognizerWorker.entry.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/RecognizerWorker.node.entry.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/law-practice/server/src/internal/Citation/RecognizerWorkerProgram.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 75,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 1,
             "functions": 0
           }
         }

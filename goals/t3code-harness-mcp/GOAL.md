@@ -4,7 +4,7 @@ Repo root: the current working directory — the `beep-effect` checkout you are
 running in. Do not assume an absolute path; several checkouts exist. All paths
 below are repo-relative.
 
-Outcome: Register `t3-hub` (the DankStation T3 environment, Full-access OAuth) in every harness that runs outside T3 on every live host, prove T3-launched sessions do not double-load it, and remind before the 30-day grants and links expire.
+Outcome: Register a user-scope `t3-code` entry against each host's own T3 in every harness that runs outside T3 on every live host, prove T3-launched sessions do not double-load it, and remind before the 180-day tokens and links expire.
 
 This is a compact `/goal` launcher. Treat the packet files as the detailed
 contract:
@@ -20,7 +20,7 @@ prose when they conflict.
 
 Scope:
 
-- In: Register `t3-hub` (DankStation environment, Full-access OAuth over Tailscale HTTPS) in Claude Code, Codex, Grok, cursor-agent and Junie on every live host; prove T3-launched sessions do not double-load it; renewal reminders for 30-day grants and links; per-harness recipe in the runbook.
+- In: Register `t3-code` (each host's own T3, per-harness Full-access OAuth token) in Claude Code, Codex, Grok, cursor-agent and Junie on every live host; prove T3-launched sessions do not double-load it; a renewal reminder for the 180-day tokens and links; per-harness recipe in the runbook.
 - Out: A repo-owned config writer (`agent-config-canonicalization`); host installs; per-environment grants; other MCP servers' config.
 
 Workflow:
@@ -57,9 +57,8 @@ irreversible change (a tested down-migration, a backup of deleted state) before
 the change merges, and ship a breaking public API or schema change with a major
 changeset. Escalate only what AGENTS.md "Autonomy" lists.
 
-Ship proposedCloseout and the reflection in the final PR (status stays active or
-paused). After that merge, verify with `bun run beep goals completion refresh --slug t3code-harness-mcp`,
-then adopt with `bun run beep goals set-status t3code-harness-mcp <status>` in a
-packet-state PR. Done only once it merges and this passes, or an operator
-blocker is reported with evidence:
+Closed in one PR by operator ruling (decision `single-pr-closeout`), replacing the
+usual two-PR closeout. After that merge, the lane owner verifies with
+`bun run beep goals completion refresh --slug t3code-harness-mcp` and opens a packet-state PR
+reopening the packet unless the outcome is verified. Check:
 `git show origin/main:goals/t3code-harness-mcp/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

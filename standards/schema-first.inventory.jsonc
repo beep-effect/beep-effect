@@ -240,6 +240,16 @@
       "reason": "Drop-in replacement for the effect 4.0.6 effect/cluster/SqlRunnerStorage export of the same name: the option bag (table prefixes, shard groups, migration hooks) mirrors the upstream signature verbatim so a consumer swaps one import (D63/D64, #2084). It configures DDL and layer wiring in memory and never crosses a decode or persistence boundary."
     },
     {
+      "file": "packages/drivers/eyecite/test/index.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 44,
+      "owner": "@beep/eyecite",
+      "reason": "Frozen independent recognizer labels, explicit count contradictions, blank-page regression and isolated-surrogate wire fixtures verify pinned donor behavior. Generated output values would not independently validate recognition or original UTF-16 fidelity; this file intentionally provides fixed regression coverage."
+    },
+    {
       "file": "packages/drivers/freshbooks/src/Freshbooks.models.ts",
       "symbol": "FreshbooksClient.email",
       "kind": "schema-policy-advisory",
@@ -1185,7 +1195,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 132,
+      "line": 133,
       "owner": "@beep/law-practice-domain",
       "reason": "Fixed reviewed source grammar regression controls decode 54 authored source plans and three route families to assert exact UTF-16 terms, head/outer extents, kinds, topology, frame argument provenance, functional partitions and route verdicts, plus atomic negative controls. Random codec round trips cannot establish those source grammar obligations. Public claim/tree model properties remain covered by the existing domain model tests; no arbitrary padding is introduced. This exception is limited to @beep/law-practice-domain fixed source-regression tests and must be re-reviewed when this file or its asserted invariants change."
     },
@@ -1378,6 +1388,16 @@
       "reason": "Checks complete independently captured byte/Unicode hash vectors, explicit surrogate storage and seed behavior. Fixture decoding authenticates the source oracle; arbitrary target-produced hashes would not be independent evidence. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
     },
     {
+      "file": "packages/law-practice/server/test/CitationRecognizerWorker.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 72,
+      "owner": "@beep/law-practice-server",
+      "reason": "Actual Bun/Node child execution replays frozen independently labeled citations and terminal source, byte, diagnostic, exit and retirement controls. Schema decoding authenticates fixture input; arbitrary values cannot replace physical process observations or the fixed donor labels."
+    },
+    {
       "file": "packages/law-practice/server/test/CitationRegexCharacters.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
@@ -1446,6 +1466,16 @@
       "line": 68,
       "owner": "@beep/law-practice-server",
       "reason": "Replays source null-page identities through dispatch and sealed projection with real resource bindings. Schema-generated JSON cannot mint those owned/sealed runtime relationships. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
+    },
+    {
+      "file": "packages/law-practice/server/test/CitationSixFormResolution.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 25,
+      "owner": "@beep/law-practice-server",
+      "reason": "Fixed semantic mentions are verified against real source capabilities to exercise independently specified local-link outcomes, barrier ordering, ambiguity, budgets and forged-proof rejection. Arbitrary structural values cannot mint genuine anchor capabilities or establish the expected antecedent relation."
     },
     {
       "file": "packages/law-practice/server/test/ClaimElement.reference.test.ts",
@@ -1534,6 +1564,16 @@
       "line": 42,
       "owner": "@beep/law-practice-use-cases",
       "reason": "Deterministic policy fixtures decode exact anchored event and disposition wires so lineage, source-resolution, supersession, and fail-closed semantics remain observable; schema-derived round-trip coverage for these law-practice domain schemas lives in packages/law-practice/domain/test/LawPracticeDomain.test.ts."
+    },
+    {
+      "file": "packages/law-practice/use-cases/test/CitationExtractorReport.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 32,
+      "owner": "@beep/law-practice-use-cases",
+      "reason": "Fixed installation policy and artifact fixtures verify profile/version claims, exact resource-count refusal, server-only exports and source-free closed errors. These tests intentionally prove cross-field policy and privacy regressions rather than generic schema round trips."
     },
     {
       "file": "packages/law-practice/use-cases/test/CitationOracleAssertions.test.ts",

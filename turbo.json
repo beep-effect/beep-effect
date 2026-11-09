@@ -256,6 +256,7 @@
         "packages/drivers/duckdb/package.json",
         "packages/drivers/ecfr/package.json",
         "packages/drivers/exiftool/package.json",
+        "packages/drivers/eyecite/package.json",
         "packages/drivers/ffmpeg/package.json",
         "packages/drivers/ffmpeg/src/**",
         "packages/drivers/firecrawl/package.json",

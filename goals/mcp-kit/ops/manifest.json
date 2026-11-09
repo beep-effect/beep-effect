@@ -32,7 +32,6 @@
     "goals/mcp-kit/GOAL.md",
     "goals/mcp-kit/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -87,5 +86,13 @@
   "researchReferences": [
     "../../explorations/mcp-auth-gated-registration/research/SOURCES.md",
     "../../explorations/mcp-auth-gated-registration/reviews/2026-07-01-codex-verification.md"
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/mcp-kit",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "b1e2ec05fb7799cb4b7a48f7c8a57751782e4f18",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

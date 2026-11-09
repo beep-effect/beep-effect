@@ -31,5 +31,13 @@
     "goals/recorded-qa-acceptance/README.md",
     ".claude/skills/browser-qa-loop/SKILL.md",
     "goals/recorded-qa-acceptance/history/rounds/followup-notes.md"
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/recorded-qa-acceptance",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "ce658af09e336dbb223ef4cc77aab96039d62cfe",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

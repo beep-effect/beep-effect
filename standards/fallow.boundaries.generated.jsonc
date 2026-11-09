@@ -372,6 +372,12 @@
         ]
       },
       {
+        "name": "@beep/eyecite",
+        "patterns": [
+          "packages/drivers/eyecite/src/**"
+        ]
+      },
+      {
         "name": "@beep/fc-runs",
         "patterns": [
           "packages/tooling/test-kit/fc-runs/src/**"
@@ -2607,6 +2613,19 @@
         ]
       },
       {
+        "from": "@beep/eyecite",
+        "allow": [
+          "@beep/eyecite",
+          "@beep/identity",
+          "@beep/schema"
+        ],
+        "allowTypeOnly": [
+          "@beep/eyecite",
+          "@beep/identity",
+          "@beep/schema"
+        ]
+      },
+      {
         "from": "@beep/fc-runs",
         "allow": [
           "@beep/fc-runs"
@@ -3060,6 +3079,7 @@
           "@beep/epistemic-server",
           "@beep/epistemic-tables",
           "@beep/epistemic-use-cases",
+          "@beep/eyecite",
           "@beep/file-processing",
           "@beep/identity",
           "@beep/langextract",
@@ -3095,6 +3115,7 @@
           "@beep/epistemic-server",
           "@beep/epistemic-tables",
           "@beep/epistemic-use-cases",
+          "@beep/eyecite",
           "@beep/file-processing",
           "@beep/identity",
           "@beep/langextract",

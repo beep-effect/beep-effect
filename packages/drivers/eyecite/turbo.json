@@ -1,0 +1,30 @@
+{
+  "$schema": "https://v2-11-10.turborepo.dev/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "cache": false
+    },
+    "check": {
+      "cache": false
+    },
+    "docgen": {
+      "cache": false
+    },
+    "lint": {
+      "cache": false
+    },
+    "lint:deprecated-apis": {
+      "cache": false
+    },
+    "lint:jsdoc": {
+      "cache": false
+    },
+    "lint:laws": {
+      "cache": false
+    },
+    "test": {
+      "cache": false
+    }
+  }
+}

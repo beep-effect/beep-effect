@@ -84,5 +84,12 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "researchReports": ["research/corpus-scan-inventory.md"]
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/oppold-corpus-pipeline",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "ac0358095a0d3b2daa6b81de393c6cc16a84aa59",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

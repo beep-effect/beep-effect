@@ -1,0 +1,146 @@
+# Citation re-grounding: ADHD exploration
+
+## Brief
+
+Reconsider the citation engine around legal ground-before-cite: can we bound implementation to the evidence needed for actual legal answers, with exact anchors and explicit unresolved states? Exhaustive eyecite parity is under reconsideration; reopening the earlier user-directed port-not-adopt decision remains a decision to evaluate, not a policy change already made.
+
+**Evidence status:** All ideas, scores, feasibility judgments, and FOCUS sketches below are speculative design assessment. They are not measured performance, legal validation, corpus coverage proof, component evaluation, or implementation acceptance. No outside research-panel outputs informed this artifact.
+
+## Scope correction: keep the engine small
+
+**The ranking below evaluates broader product ideas, not CitationEngine completion requirements.** Authority identity and claim fitness are a useful product boundary distinction: extracting or resolving a citation does not prove a legal claim. That distinction does not require CitationEngine to solve claim fitness. Automated claim verification, evidence graphs, new model contracts, human-review queues, and a legal-grounding framework are not prerequisites to the parser decision or to completing the reduced engine scope. The original scores and independently generated FOCUS responses remain intact as exploratory provenance; their high fit scores refer to broader product relevance, not fit as mandatory engine work.
+
+**The immediate recommendation is an extraction-only tournament using identical supplied inputs**, alongside a bounded supported-citation contract. Compare candidate extraction behavior, exact span preservation, supported forms, ambiguity/unresolved output, implementation effort, and operator effort before expanding custom implementation. Keep any retrieval-plus-grounding workflow comparison as a separate, optional research track with its own scope and acceptance. Do not mix corpus access or claim-support capabilities into extraction acceptance. The user asked to reduce scope substantially; no new evidence framework should be required to decide whether a smaller parser, an existing component, or a thin adapter is sufficient.
+
+## Wide set
+
+Five independent generator pools supplied 30 ideas. The five clusters below group underlying angles across frames. Scores use N = novelty, V = viability, F = broader-product fit (not engine-completion fit), each 0–10; weighted total = 0.35N + 0.40V + 0.25F. “Viability” means a judgment about whether a bounded version could ship; it does not claim that the present repository supports it. Duplicate or near-duplicate ideas remain visible because independent convergence is part of the pool.
+
+### Bound the proof obligation
+
+- **regulator-1** [N7 V9 F9; **8.30**] — Replace exhaustive eyecite parity with a declared jurisdiction-and-citation contract. Rationale: Make supported forms, excluded authorities, and mandatory refusal cases explicit and testable.
+- **regulator-6** [N7 V9 F9; **8.30**] — Replace one exhaustive acceptance gate with independently accepted citation workflows. Rationale: Each workflow has a bounded proof obligation, such as verifying a supplied citation or grounding one claim in a retrieved passage.
+- **competitor-6** [N7 V9 F9; **8.30**] — Make an unresolved citation trigger an evidence request that names the missing document or authority identifier. Rationale: Invert the competitor's use of obscure authorities to force universal coverage by turning resolution gaps into explicit inputs required before the affected legal claim can be emitted.
+- **remove-assumption-2** [N9 V8 F10; **8.85**] — Remove the assumption that every citation in a document must be processed; resolve only the authorities needed to ground a proposed answer. Rationale: The answer's claims define the unit of work.
+- **oncall-3** [N7 V9 F9; **8.30**] — Replace exhaustive eyecite parity with acceptance of three outcomes: verified authority, ambiguous candidate, or unresolved reference. Rationale: The product contract becomes faithful anchors and explicit resolution status, allowing extraction, cleaning, and annotation behavior to diverge.
+- **oncall-4** [N7 V7 F8; **7.25**] ⚠ Trap — Build an asynchronous authority inbox where unresolved citations wait for batch resolution while verified work continues. Rationale: Resolution failures become ordinary queued work with durable evidence instead of incidents requiring immediate intervention.
+- **oncall-6** [N7 V9 F9; **8.30**] — Shrink the first release to one jurisdiction and one authoritative corpus, with every unsupported citation preserved verbatim for handoff. Rationale: A finite authority universe makes resolution acceptance concrete while retaining the evidence needed to expand coverage later.
+- **biology-4** [N8 V8 F8; **8.00**] — Introduce programmed cell death for citation branches that exceed a fixed resolution budget, preserving their anchors as unresolved evidence. Rationale: Make bounded completion and explicit abstention the product contract.
+
+### Preserve replayable evidence
+
+- **regulator-2** [N7 V8 F10; **8.15**] — Make each legal answer carry a replayable chain from exact input span to retrieved authority passage. Rationale: An auditor can reconstruct extraction, normalization, resolution, and grounding without trusting the generated explanation.
+- **regulator-3** [N6 V9 F9; **7.95**] — Treat citation normalization as a reversible transformation with its own evidence record. Rationale: Every cleanup operation remains traceable to the original characters, including changes that alter citation identity.
+- **competitor-2** [N7 V9 F10; **8.55**] — Replace exhaustive engine acceptance with acceptance of a citation ledger for each proposed legal answer. Rationale: Invert the competitor's ability to prolong parity work by making completion depend on verified authorities, exact source anchors, and grounded claims in the answer being delivered.
+- **competitor-3** [N6 V9 F9; **7.95**] — Treat citation cleanup as a reversible interpretation layer over immutable source text. Rationale: Invert attacks through malformed citations and destructive normalization by preserving the original span while recording each proposed reading separately.
+- **remove-assumption-4** [N6 V9 F9; **7.95**] — Remove the assumption that cleaning must produce canonical text; retain immutable source spans and attach alternative interpretations without rewriting them. Rationale: Exact anchors survive independently of normalization.
+- **oncall-2** [N7 V9 F10; **8.55**] — Make every citation a receipt containing the original text span, source identity, retrieved passage, and verification result. Rationale: A broken extractor produces an incomplete receipt that blocks the affected claim without taking down the answer workflow.
+- **biology-2** [N8 V7 F8; **7.60**] — Build a spliceosome pipeline that preserves the original text while assembling interrupted citation fragments into a separate interpretation. Rationale: Treat cleaning as reversible reconstruction with explicit source coordinates.
+
+### Separate identity from support
+
+- **regulator-4** [N8 V9 F10; **8.90**] — Separate authority identity from authority fitness for the proposed legal claim. Rationale: Resolving a real case does not establish that its jurisdiction, date, procedural posture, or quoted passage supports the answer.
+- **remove-assumption-3** [N8 V8 F9; **8.25**] — Remove the assumption that one citation must resolve to one authority; preserve competing identities until surrounding legal context selects one. Rationale: Resolution becomes an explicit set of candidates.
+- **oncall-1** [N7 V9 F10; **8.55**] — Require an authority manifest before drafting, then attach citations from that verified set. Rationale: Citation discovery becomes an explicit research step, leaving answer generation with a bounded set of authorities and exact source passages.
+- **biology-1** [N9 V5 F8; **7.15**] ⚠ Trap — Use quorum sensing: emit a legal authority only when independent extraction and resolution routes converge on the same source and exact text anchor. Rationale: Replace exhaustive implementation parity with a narrowly defined agreement threshold.
+- **biology-3** [N7 V8 F9; **7.90**] — Borrow complement-system tagging: attach independently verified evidence tags to each citation before allowing it into an answer. Rationale: Separate citation detection, authority identity, and passage grounding into small acceptance contracts.
+- **biology-6** [N8 V8 F9; **8.25**] — Apply morphogen-style gradients so citation candidates receive progressively more verification as they approach answer emission. Rationale: Concentrate acceptance work on authorities supporting actual claims instead of every intermediate annotation.
+
+### Buy evidence through a thin boundary
+
+- **regulator-5** [N7 V8 F9; **7.90**] — Assess open-source components through a shared refusal-and-evidence interface. Rationale: The feasibility study can compare candidate stacks by the artifacts and failure states they expose without requiring identical internal behavior.
+- **competitor-4** [N8 V6 F8; **7.20**] ⚠ Trap — Move citation resolution into reusable authority dossiers prepared when documents enter the research collection. Rationale: Invert the competitor's strategy of forcing repeated resolution by attaching authority identities, supporting passages, and provenance to documents before answer generation.
+- **competitor-5** [N8 V8 F10; **8.50**] — Run a research tournament in which existing open-source stacks, hosted services, and human-assisted workflows must produce the same grounded answer packets. Rationale: Invert architectural lock-in by comparing complete product outcomes and measured effort without requiring contenders to reproduce the custom engine's internal stages.
+- **remove-assumption-5** [N8 V8 F10; **8.50**] — Remove the assumption that a library's output defines acceptance; assess complete claim-to-passage-to-authority evidence chains on real legal questions. Rationale: Verified grounding becomes the measurement target.
+- **remove-assumption-6** [N8 V7 F9; **7.85**] — Remove the assumption that the engine must own extraction, resolution and annotation; research existing legal platforms, authority identifiers and open-source components as interchangeable evidence suppliers. Rationale: The custom boundary becomes an anchored evidence contract.
+- **oncall-5** [N8 V9 F10; **8.90**] — Run a replacement tournament among existing extractors, hosted legal search, and a minimal custom adapter using the same small set of real legal questions. Rationale: Measure verified authority coverage, anchor fidelity, false grounding, and operator minutes to expose which implementation work the product actually needs.
+- **biology-5** [N7 V8 F8; **7.65**] — Use horizontal gene transfer to assemble existing open-source extractors, authority resolvers, and annotation tools through thin adapters. Rationale: Make custom implementation answer specific interoperability gaps instead of reproducing an entire organism.
+
+### Invert discovery order
+
+- **competitor-1** [N9 V6 F8; **7.55**] ⚠ Trap — Make authority retrieval produce the citation candidates, then match their aliases back to exact spans in the user's text. Rationale: Invert the competitor's attack on extraction complexity by starting with identifiable authorities and using extraction to locate their mentions.
+- **remove-assumption-1** [N9 V6 F8; **7.55**] ⚠ Trap — Remove the assumption that citations must be extracted before authorities are found; retrieve candidate authorities first and align their citation forms to the source text. Rationale: Authority identity becomes the starting point for recognition.
+
+## Converge
+
+The following is the original broader-product shortlist; the implementation priority after the scope correction is the extraction-only comparison and bounded parser contract described above.
+
+1. **Separate authority identity from fitness for the claim — regulator-4, 8.90.** This identifies a product responsibility boundary: finding the right case and establishing support for a proposed statement are different concerns. It prevents treating a resolver as proof of legal grounding, while keeping claim-support assessment outside CitationEngine completion.
+2. **Run a replacement tournament on real questions — oncall-5, 8.90.** The immediate research move is an extraction-only comparison on identical supplied documents across existing components and minimal custom work. A complete grounded-answer comparison can be proposed later as a separate optional product study, without making it an engine gate or presupposing adoption.
+3. **★ Resolve only authorities needed for an answer — remove-assumption-2, 8.85.** This broader-product possibility changes the unit of work from an entire document to authorities used in a proposed answer. It is an optional workflow direction, not a reason to add answer-generation or claim-verification requirements to the reduced parser contract.
+
+The first two tie; source ordering breaks the tie and does not imply a substantive difference in confidence. These three offer complementary product research directions, but they are not a combined engine delivery plan. Exact source spans and explicit extraction outcomes can remain the small engine contract; richer receipts and claim-support workflows require separate justification.
+
+### Traps
+
+- **competitor-1** — Retrieval can miss authorities the text actually cites; candidate-first discovery cannot prove exhaustive document coverage.
+- **competitor-4** — Corpus-wide dossiers can front-load large ingestion and refresh costs before real answer demand exists.
+- **remove-assumption-1** — Same recall blind spot as competitor-1; useful as one route, unsafe as a universal replacement.
+- **oncall-4** — A durable inbox adds queue ownership and backlog operations; defer until demand justifies it.
+- **biology-1** — Correlated routes can agree on the same wrong answer; quorum increases cost without proving support.
+
+A trap flag rejects the broad formulation, not every constrained variant: retrieval-first can be an additional discovery route, a dossier can cache proven repeat demand, and a human-owned inbox can begin as a simple pending item before becoming a service.
+
+## Focus
+
+**Scope warning for the raw sketches:** The independent agents proposed broader product structures, including claim-support types, evidence graphs, and review queues. Those are retained hypotheses, not approved work, engine completion criteria, or prerequisites to comparing parsers. The immediate builder step is the bounded identical-input extraction comparison, not building those suggested frameworks.
+
+Each branch below was developed by its own isolated `codex exec` process using `gpt-6.1-sol`, medium reasoning, the exact FOCUS instruction from the skill, the common product context, and only its own selected idea. Agents were instructed to use no tools or additional source material. These are actual independent calls, not simulated voices. Prompt, event log, and JSON response files are retained beside this report.
+
+### regulator-4: Separate authority identity from authority fitness for the proposed legal claim.
+
+**Sketch.** A promising scope reduction is to make the engine produce two separate records: an authority identity record and a claim-specific fitness assessment. The identity record would capture the cited authority, resolution evidence, and exact anchors into the original source, while the fitness assessment would bind one proposed legal claim to the particular passage offered as support. Before a citation could appear as support in an answer, a grounding gate would require an anchored passage and an explicit assessment of jurisdiction, relevant date, procedural posture, and whether the passage supports the claim as worded. An unresolved assessment would remain visibly unassessed and could enter human review; successful identity resolution alone would never satisfy the gate. The initial scope could cover a narrow class of claims and citation forms, treating exhaustive eyecite parity as a separate question whose necessity remains open. Existing components, hosted services, and human-assisted workflows could be evaluated against these record contracts without changing the current port-not-adopt policy. This is a speculative architecture: its usefulness would depend on whether the fitness assessment can reliably detect plausible-looking citations that fail to support the proposed claim.
+
+**Load-bearing risk.** The fitness assessment could turn incomplete context into apparent legal assurance: an accurately identified authority and an exact passage may still mislead when a qualification, procedural limitation, or relevant legal development is missing.
+
+**First concrete step.** Define a minimal typed contract for AuthorityIdentity and ClaimSupportAssessment, with claim text, original-source anchors, passage provenance, separate fitness dimensions, and an explicit unassessed state; encode one illustrative fixture in which identity resolves successfully but claim support remains blocked.
+
+**Child ideas.**
+
+- Add claim narrowing: when a passage supports only a qualified proposition, propose narrower wording and require a fresh fitness assessment for that wording.
+- Build a human review queue that presents the proposed claim, anchored passage, surrounding context, and unresolved fitness dimensions together.
+- Evaluate extraction and resolution candidates through interchangeable adapters, measuring anchor preservation and identity accuracy separately from claim-support assessment.
+- Represent claim-to-passage relationships as a small evidence graph so one authority can support one claim, undermine another, and remain unassessed for a third.
+- Make fitness assessments sensitive to changes: edits to claim wording, source passages, jurisdiction, or relevant date would invalidate the affected assessment and trigger review.
+
+### oncall-5: Run a replacement tournament among existing extractors, hosted legal search, and a minimal custom adapter using the same small set of real legal questions.
+
+**Sketch.** A tightly scoped replacement tournament could compare existing extractors, hosted legal search, and a minimal custom adapter on the same small set of real legal questions and source documents. Each candidate would produce a common evidence packet containing the proposed authority identity, an exact source anchor and excerpt, the legal claim it might support, and any unresolved uncertainty. Evaluation would separate finding and identifying an authority from establishing that its anchored text supports the particular claim; a correct case match would earn no claim-support credit by itself. A human reviewer would assess verified authority coverage, anchor fidelity, false grounding, and operator minutes, with abstentions recorded separately from unsupported assertions. The tournament would target only the citation forms and grounding tasks represented in this narrow workload, leaving exhaustive eyecite parity outside its initial scope. Its output would be a reviewable recommendation about which product capabilities require custom implementation, which might be supplied by an existing component or service, and which could remain human-assisted. Evaluating adoption would reopen the option without changing the existing port-not-adopt decision, and all expected benefits would remain hypotheses until tested.
+
+**Load-bearing risk.** The small evaluation set could reward convincing authority matches while failing to reveal unsupported legal claims, especially if reviewers conflate authority identity with claim support or the selected questions omit difficult grounding cases; that would make an apparent winner a misleading basis for scope reduction.
+
+**First concrete step.** Define a candidate-neutral evidence-packet schema and create one manually reviewed fixture from a real legal question, recording authority identity separately from the proposed claim-support relationship and preserving the source document identifier, exact quoted text, and location anchor; use it to establish the evaluation contract before integrating candidates.
+
+**Child ideas.**
+
+- Run an extraction-only track on identical supplied documents and a separate retrieval-plus-grounding track, so access to a larger legal corpus does not obscure differences in extraction quality.
+- Include a human-assisted candidate that combines a basic extractor with explicit reviewer verification, testing whether a modest workflow can meet the narrow product need with less implementation.
+- Introduce an abstention-first variant in which candidates must leave claim support unresolved when they cannot supply an exact supporting passage, then compare coverage and operator time at an acceptable false-grounding threshold.
+- Explore a hybrid pipeline that uses an existing extractor for authority identity, hosted search for source discovery, and a minimal custom adapter for anchor preservation and evidence-packet assembly.
+- Use observed failures to propose a bounded implementation backlog, admitting new citation forms or automation only when they address a demonstrated grounding gap in the selected workload.
+
+### remove-assumption-2: Remove the assumption that every citation in a document must be processed; resolve only the authorities needed to ground a proposed answer.
+
+**Sketch.** A speculative design would make each proposed answer claim the unit of work, replacing exhaustive document-wide citation processing with a small, explicit grounding queue. For each claim, the engine would locate candidate supporting passages in the supplied materials and preserve their exact source anchors before attempting to resolve any cited authority. It would then resolve only the authorities needed to assess that claim, keeping authority identity, passage provenance, and support for the claim as separate records. A successfully resolved citation would establish which authority is referenced; a separate assessment would determine whether the anchored passage supports the proposed wording, requires qualification, or leaves the claim ungrounded. The answer would be assembled from grounded claims, with bounded expansion to additional passages or authorities when the initial evidence reveals a material qualification or dependency. This narrower workflow could be evaluated using existing components, hosted services, or human review without changing the standing port-not-adopt override or assuming that exhaustive eyecite parity remains a requirement.
+
+**Load-bearing risk.** Claim-directed retrieval can become confirmation-directed retrieval: an engine may find a plausible supporting passage while missing nearby qualifications, contrary treatment, or dependencies that change its meaning. The scope reduction depends on a bounded context-expansion and abstention rule that catches material gaps without recreating exhaustive processing.
+
+**First concrete step.** Define a minimal claim-grounding record and hand-author one fixture containing a proposed claim, an exact source passage and anchor, an unresolved authority reference, a separate authority-identity result, and a separate support assessment; include a resolved authority whose passage does not support the claim so the implementation must preserve that distinction.
+
+**Child ideas.**
+
+- Add a grounding budget per claim: limit retrieval and authority-resolution attempts, then qualify or omit claims whose evidence remains incomplete.
+- Build a human-assisted review queue that shows the proposed claim beside its anchored evidence and asks reviewers to assess support separately from authority identity.
+- Cache authority identities across answers while reassessing claim support for each new proposition, preserving the source anchors used in every assessment.
+- Evaluate candidate parsers or hosted resolvers behind the same narrow authority-identity interface, allowing comparison while leaving adoption policy unchanged.
+- Explore a qualification pass that inspects surrounding source context and explicit treatment signals for each selected passage before the claim enters the answer.
+
+## Provocation
+
+What if the first product never accepted an arbitrary citation at all, and accepted only an authority plus an exact passage supplied by research or the user—how much of the current engine would still be necessary to prevent an unsupported legal answer? Treat this as a boundary experiment, not a decision to remove document extraction.
+
+## Decision boundary and validation still needed
+
+Before changing the parser decision, select representative supplied documents, declare the reduced supported-citation contract, and compare extraction candidates on those identical inputs. Assess span fidelity, supported citation forms, ambiguous and unresolved outputs, false extraction, and implementation/operator effort. Preserve unsupported text for handoff without requiring full-document parity. Candidate availability, licensing, data handling, cost, and integration effort require actual research.
+
+A retrieval-plus-grounding workflow track is separate and optional. If later authorized, it can distinguish identity, passage support, unsupported-claim emission, ambiguity, abstention, latency, and operator effort; that study must not become an implicit prerequisite to CitationEngine completion. A high refusal rate should remain visible in either track. No source edits, commits, installs, adoption decision, or legal correctness claims follow from this ideation artifact.

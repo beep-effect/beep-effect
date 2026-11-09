@@ -14,7 +14,6 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
-import { CitationOperationAdmission, makeCitationOperationAdmission } from "../internal/Citation/Admission.ts";
 import { CitationAnnotationEntryConfiguration } from "../internal/Citation/AnnotationEntry.ts";
 import { failCitationAnnotationBoundary } from "../internal/Citation/AnnotationFailure.ts";
 import { makeCitationAnnotationOperation } from "../internal/Citation/AnnotationOperation.ts";
@@ -27,12 +26,9 @@ import {
 } from "../internal/Citation/EngineArtifact.ts";
 import { failCitationExtractionBoundary } from "../internal/Citation/EngineFailure.ts";
 import { CitationFrozenEditions } from "../internal/Citation/FrozenEditions.ts";
-import {
-  CitationNativeProcessAdmission,
-  makeCitationNativeProcessAdmission,
-} from "../internal/Citation/NativeAdmission.ts";
+import { CitationNativeProcessAdmission, makeCitationAdmissionOwners } from "../internal/Citation/NativeAdmission.ts";
 import { CitationNativeProcessRuntime } from "../internal/Citation/NativeProcess.ts";
-import { captureCitationOperationPolicy, snapshotCitationValue } from "../internal/Citation/Snapshot.ts";
+import { captureCitationOperationPolicy, captureCitationSnapshot } from "../internal/Citation/Snapshot.ts";
 import { makeCitationSourceCleaning } from "../internal/Citation/SourceCleaning.ts";
 import { makeCitationSourcePairDocument } from "../internal/Citation/SourceDocument.ts";
 import { makeCitationSourceResolution } from "../internal/Citation/SourceResolution.ts";
@@ -72,8 +68,7 @@ const Configuration = S.toType(CitationEngineConfiguration);
 const ConfigurationJson = CitationEngineConfiguration.pipe(S.toCodecJson, S.fromJsonString);
 const make = Effect.fn("Citation.makeEngine")(function* (raw: unknown) {
   const invalid = () => CitationInputError.make({ operation: "extract" });
-  const decoded = yield* S.decodeUnknownEffect(Configuration)(raw).pipe(Effect.mapError(invalid));
-  const configuration = yield* snapshotCitationValue(ConfigurationJson, decoded, invalid);
+  const configuration = yield* captureCitationSnapshot(Configuration, ConfigurationJson, raw, invalid);
   const { limits, engineArtifact } = yield* captureCitationOperationPolicy(
     configuration.limits,
     configuration.extraction.engineArtifact,
@@ -161,19 +156,14 @@ const DefaultConfiguration = S.toType(CitationEngineDefaultConfiguration);
 const DefaultConfigurationJson = CitationEngineDefaultConfiguration.pipe(S.toCodecJson, S.fromJsonString);
 const makeDefault = Effect.fn("Citation.makeDefaultEngine")(function* (raw: unknown) {
   const invalid = () => CitationInputError.make({ operation: "extract" });
-  const decoded = yield* S.decodeUnknownEffect(DefaultConfiguration)(raw).pipe(Effect.mapError(invalid));
   // Snapshot before asynchronous asset reads or host acquisition can mutate input.
-  const configuration = yield* snapshotCitationValue(DefaultConfigurationJson, decoded, invalid);
+  const configuration = yield* captureCitationSnapshot(DefaultConfiguration, DefaultConfigurationJson, raw, invalid);
   const { limits, build, runtime, htmlRuntime, xmlRuntime, assets } = configuration;
   if (
     !A.every([runtime, htmlRuntime, xmlRuntime, assets.diffRuntime], (backend) => backend.kind === build.runtime.kind)
   )
     return yield* invalid();
-  const operation = yield* makeCitationOperationAdmission(limits).pipe(Effect.mapError(invalid));
-  const native = yield* makeCitationNativeProcessAdmission(limits).pipe(Effect.mapError(invalid));
-  const owners = Context.make(CitationOperationAdmission, operation).pipe(
-    Context.add(CitationNativeProcessAdmission, native)
-  );
+  const owners = yield* makeCitationAdmissionOwners(limits).pipe(Effect.mapError(invalid));
   const installed = yield* makeCitationDefaultEngineConfiguration(limits, assets, build).pipe(Effect.mapError(invalid));
   const services = yield* makeCitationDocumentServices(limits, htmlRuntime).pipe(
     Effect.provideContext(owners),

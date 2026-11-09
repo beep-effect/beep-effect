@@ -31,7 +31,7 @@
     "goals/practice-box-onboarding/GOAL.md",
     "goals/practice-box-onboarding/research/SOURCES.md"
   ],
-  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -86,5 +86,13 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Completed 2026-10-06: content-migration engine shipped in @beep/box-provisioning (#1462); 10,155 files migrated live in two runs (3,772 from the salvaged drives, 6,383 from the attorney's live folder), every upload hash-verified and every source unchanged; attorney access applied; Box Drive runbook, how-to, and migration runbook written. Follow-ups outside the packet: act on the attorney's locked review answers (client names, held dockets, non-client folders), and re-link matter folders when the KG publishes its next bundle."
+  "statusNote": "Completed 2026-10-06: content-migration engine shipped in @beep/box-provisioning (#1462); 10,155 files migrated live in two runs (3,772 from the salvaged drives, 6,383 from the attorney's live folder), every upload hash-verified and every source unchanged; attorney access applied; Box Drive runbook, how-to, and migration runbook written. Follow-ups outside the packet: act on the attorney's locked review answers (client names, held dockets, non-client folders), and re-link matter folders when the KG publishes its next bundle.",
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/practice-box-onboarding",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "b3c244ce52d047b041ef4c8d724de79dfdb57fd2",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

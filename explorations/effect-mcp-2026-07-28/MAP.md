@@ -28,7 +28,7 @@ order, nlp-mcp last behind the live capture.
    RpcGroup (rc.117 has no public `server/discover` group). Bricks it ports: the SSE unwrap in
    `apps/professional-desktop/test/integration/support/ontology-mcp-harness.ts` (#1173), the
    JSON-RPC client construction in the same harness and in
-   `goals/ontology-agent-surface/ops/live-mcp-client.ts`, the stdio conversation test in
+   [goals/ontology-agent-surface/ops/live-mcp-client.ts](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ontology-agent-surface/ops/live-mcp-client.ts), the stdio conversation test in
    `packages/drivers/m365-mcp/test/Server.test.ts`, Effect's conformance harness
    (`effect:packages/effect/test/ai/McpServer/**`).
 3. S2/S3 host cutover in order: `packages/drivers/m365-mcp`, `packages/drivers/uspto-mcp`,

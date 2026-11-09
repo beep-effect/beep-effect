@@ -44,7 +44,7 @@ re-rooted at this worktree, prints identical rows). Two refinements:
 - Seed scratchpad deltas came from `census.py scratchpad explorations goals`.
   This census scans `scratchpad/` only, so `withKeyDefaults` reads 64 files
   instead of 65. The extra file is
-  `goals/repo-crispening-orchestration/ops/codemods/defaults-fallback.codemod.ts`.
+  [goals/repo-crispening-orchestration/ops/codemods/defaults-fallback.codemod.ts](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repo-crispening-orchestration/ops/codemods/defaults-fallback.codemod.ts).
 - An early draft of the tool also scanned files that mention `SchemaUtils`
   without importing `@beep/schema`. That added a JSDoc-only hit in
   `packages/foundation/modeling/utils/src/Str.ts:22` to `toEquivalence`. The

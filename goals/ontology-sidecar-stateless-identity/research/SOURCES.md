@@ -12,7 +12,7 @@ reproduces the corpus for implementation.
 | Gate run keying | `packages/epistemic/server/src/GovernedTierGate/GovernedTierGate.gate.ts` (`runIdOf`) | re-key on launch |
 | Ontology MCP config | `packages/ontology/config/src/McpConfig.ts` (`OntologyMcpServerConfig`) | allow-list home |
 | Integration harness (SSE unwrap, #1173) | `apps/professional-desktop/test/integration/support/ontology-mcp-harness.ts` | move onto the kit client |
-| Live proof client | `goals/ontology-agent-surface/ops/live-mcp-client.ts` | move onto the kit client |
+| Live proof client | [goals/ontology-agent-surface/ops/live-mcp-client.ts](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ontology-agent-surface/ops/live-mcp-client.ts) | move onto the kit client |
 | Decision 10 home | `goals/agent-execution-authority/SPEC.md` | wording update |
 | Kit client and dual-read | `goals/mcp-stateless-kit-and-drivers` PR 1 | precondition |
 

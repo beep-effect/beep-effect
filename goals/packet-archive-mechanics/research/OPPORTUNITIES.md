@@ -53,3 +53,54 @@ fallow matrix's `acceptanceCommands`, which named `bun goals/.../ops/*.ts`
 scripts this batch archives; they surfaced only when each reference was
 checked for a live target. Listing references whose target no longer exists,
 after the archive write, would catch this kind of entry in every batch.
+
+## 2026-11-08: Worker final-check passes with a stale schema catalog
+
+Adding a schema to the archive tool left `standards/schema-catalog/@beep/repo-cli.generated.jsonc`
+stale. The worker profile skips the catalog hook and final-check's `repo-sanity` runs only changeset
+status there, so `final-check` passed and hosted Repo Sanity failed with `[schema-catalog] stale`. The
+file-scoped `lint schema-catalog --write --stage <paths>` fixed it at a 1.6 GB peak. Running that
+writer on worker hosts for the staged schema files, or having final-check warn when a changed file
+declares a schema, would catch this before the push.
+
+## 2026-11-08: Deferred gates hid introduced reds until a heavy runner arrived
+
+Batch 2 waited hours for `Heavy / Lint Policy` and `Heavy / Coverage Regression`, then both showed
+introduced reds: 37 unlabelled Markdown fences in a relocated prompt, 54 semantic-delta findings, and
+a coverage drop on `ArchiveExecution.service.ts`. A worker `final-check` defers all of them. Before each
+tombstone PR, running the Markdown fence and knowledge doctor checks scoped to the batch's touched
+files would surface the first two locally. `gh pr checks` also reports a cancelled job as `fail`, so
+read each job's conclusion before attributing it.
+
+## 2026-11-08: The first code-span plan listed symlinked documents twice
+
+The first batch 3 write stopped with `tombstone-conflict apps/practice-kg-mcp/CLAUDE.md: line 20 no
+longer references ...`. That file is a tracked symlink to `AGENTS.md`, so the plan held each citation
+twice and the second rewrite found it already gone. The planner now skips mode `120000` entries. The
+stop also left two rewritten files and two unpushed archive commits, because inbound rewrites are not
+atomic and the archive commit precedes them; both were undone by hand. A symlink in the fixture repo
+would have caught this before #2979 merged. A rewrite dry run over the whole plan before the archive
+commit would make this failure leave nothing behind.
+
+## 2026-11-08: Rewriting a citation can push a GOAL.md over its budget
+
+Batch 3's rewrite turned one code span into a link and took
+`goals/ontology-sidecar-stateless-identity/GOAL.md` from 3,992 to 4,112 characters, so `goals doctor`
+reported `goal-md-oversize` (hard maximum 4000). Each rewrite adds about 110 characters of archive URL.
+It was fixed by hand with a plain-text reference. The planner could report which budgeted documents a
+plan would push over the limit, so this shows up before the archive write.
+
+## 2026-11-08: Links wrapped across lines escaped the rewriter
+
+Hosted `lint:roadmap-refs` failed on batch 3 because `docs/ROADMAP.md:365` holds a link whose text wraps
+(`[... launch` then `runbook](../goals/...)`). The link parser reads one line at a time and needs the
+opening bracket, so neither the planner nor the knowledge doctor saw it. Two more such links were
+already broken in an exploration. The planner and rewriter now read a wrapped link tail. Running
+`lint:roadmap-refs` before opening a batch PR would have caught this hours earlier.
+
+## 2026-11-08: A one-line path edit changed an effect-vitest occurrence digest
+
+Repointing a path inside `program` in two evaluation runners changed each row's `occurrence` digest, so
+hosted `lint:effect-vitest` reported new findings with unchanged ids. A full `--write` also rewrites about
+300 unrelated drifted rows, so only the two rows were refreshed. A command to refresh named rows, and a
+new-finding line that prints the id, would have made this quick to read.

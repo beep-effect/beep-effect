@@ -1,0 +1,296 @@
+[
+  {
+    "lane": "python",
+    "case": "full",
+    "citations": [
+      {
+        "kind": "FullCaseCitation",
+        "spanUtf16": [13, 25],
+        "sourceSlice": "410 U.S. 113"
+      }
+    ]
+  },
+  {
+    "lane": "python",
+    "case": "short",
+    "citations": [
+      {
+        "kind": "ShortCaseCitation",
+        "spanUtf16": [4, 19],
+        "sourceSlice": "410 U.S. at 120"
+      }
+    ]
+  },
+  {
+    "lane": "python",
+    "case": "id",
+    "citations": [
+      {
+        "kind": "IdCitation",
+        "spanUtf16": [0, 10],
+        "sourceSlice": "Id. at 120"
+      }
+    ]
+  },
+  {
+    "lane": "python",
+    "case": "supra",
+    "citations": [
+      {
+        "kind": "SupraCitation",
+        "spanUtf16": [7, 18],
+        "sourceSlice": "supra, at 3"
+      }
+    ]
+  },
+  {
+    "lane": "python",
+    "case": "usc",
+    "citations": [
+      {
+        "kind": "FullLawCitation",
+        "spanUtf16": [0, 15],
+        "sourceSlice": "35 U.S.C. § 101"
+      }
+    ]
+  },
+  {
+    "lane": "python",
+    "case": "cfr",
+    "citations": [
+      {
+        "kind": "FullLawCitation",
+        "spanUtf16": [0, 16],
+        "sourceSlice": "37 C.F.R. § 1.56"
+      }
+    ]
+  },
+  {
+    "lane": "python",
+    "case": "unicode",
+    "citations": [
+      {
+        "kind": "FullCaseCitation",
+        "spanUtf16": [7, 19],
+        "sourceSlice": "410 U.S. 113"
+      }
+    ]
+  },
+  {
+    "lane": "python",
+    "case": "negative",
+    "citations": []
+  },
+  {
+    "lane": "python",
+    "case": "context",
+    "citations": [
+      {
+        "kind": "FullCaseCitation",
+        "spanUtf16": [13, 25],
+        "sourceSlice": "410 U.S. 113"
+      },
+      {
+        "kind": "IdCitation",
+        "spanUtf16": [34, 44],
+        "sourceSlice": "Id. at 120"
+      }
+    ]
+  },
+  {
+    "lane": "ts",
+    "case": "full",
+    "citations": [
+      {
+        "kind": "case",
+        "spanUtf16": [13, 25],
+        "sourceSlice": "410 U.S. 113"
+      }
+    ]
+  },
+  {
+    "lane": "ts",
+    "case": "short",
+    "citations": [
+      {
+        "kind": "shortFormCase",
+        "spanUtf16": [4, 19],
+        "sourceSlice": "410 U.S. at 120"
+      }
+    ]
+  },
+  {
+    "lane": "ts",
+    "case": "id",
+    "citations": [
+      {
+        "kind": "id",
+        "spanUtf16": [0, 10],
+        "sourceSlice": "Id. at 120"
+      }
+    ]
+  },
+  {
+    "lane": "ts",
+    "case": "supra",
+    "citations": [
+      {
+        "kind": "supra",
+        "spanUtf16": [0, 18],
+        "sourceSlice": "Smith, supra, at 3"
+      }
+    ]
+  },
+  {
+    "lane": "ts",
+    "case": "usc",
+    "citations": [
+      {
+        "kind": "statute",
+        "spanUtf16": [0, 15],
+        "sourceSlice": "35 U.S.C. § 101"
+      }
+    ]
+  },
+  {
+    "lane": "ts",
+    "case": "cfr",
+    "citations": [
+      {
+        "kind": "regulation",
+        "spanUtf16": [0, 16],
+        "sourceSlice": "37 C.F.R. § 1.56"
+      }
+    ]
+  },
+  {
+    "lane": "ts",
+    "case": "unicode",
+    "citations": [
+      {
+        "kind": "case",
+        "spanUtf16": [7, 19],
+        "sourceSlice": "410 U.S. 113"
+      }
+    ]
+  },
+  {
+    "lane": "ts",
+    "case": "negative",
+    "citations": []
+  },
+  {
+    "lane": "ts",
+    "case": "context",
+    "citations": [
+      {
+        "kind": "case",
+        "spanUtf16": [13, 25],
+        "sourceSlice": "410 U.S. 113"
+      },
+      {
+        "kind": "id",
+        "spanUtf16": [34, 44],
+        "sourceSlice": "Id. at 120"
+      }
+    ]
+  },
+  {
+    "lane": "js",
+    "case": "full",
+    "citations": [
+      {
+        "kind": "FullCaseCitation",
+        "spanUtf16": [13, 25],
+        "sourceSlice": "410 U.S. 113"
+      }
+    ]
+  },
+  {
+    "lane": "js",
+    "case": "short",
+    "citations": [
+      {
+        "kind": "ShortCaseCitation",
+        "spanUtf16": [4, 19],
+        "sourceSlice": "410 U.S. at 120"
+      }
+    ]
+  },
+  {
+    "lane": "js",
+    "case": "id",
+    "citations": [
+      {
+        "kind": "IdCitation",
+        "spanUtf16": [0, 10],
+        "sourceSlice": "Id. at 120"
+      }
+    ]
+  },
+  {
+    "lane": "js",
+    "case": "supra",
+    "citations": [
+      {
+        "kind": "SupraCitation",
+        "spanUtf16": [0, 18],
+        "sourceSlice": "Smith, supra, at 3"
+      }
+    ]
+  },
+  {
+    "lane": "js",
+    "case": "usc",
+    "citations": [
+      {
+        "kind": "FullLawCitation",
+        "spanUtf16": [0, 15],
+        "sourceSlice": "35 U.S.C. § 101"
+      }
+    ]
+  },
+  {
+    "lane": "js",
+    "case": "cfr",
+    "citations": [
+      {
+        "kind": "FullLawCitation",
+        "spanUtf16": [0, 16],
+        "sourceSlice": "37 C.F.R. § 1.56"
+      }
+    ]
+  },
+  {
+    "lane": "js",
+    "case": "unicode",
+    "citations": [
+      {
+        "kind": "FullCaseCitation",
+        "spanUtf16": [7, 19],
+        "sourceSlice": "410 U.S. 113"
+      }
+    ]
+  },
+  {
+    "lane": "js",
+    "case": "negative",
+    "citations": []
+  },
+  {
+    "lane": "js",
+    "case": "context",
+    "citations": [
+      {
+        "kind": "FullCaseCitation",
+        "spanUtf16": [13, 25],
+        "sourceSlice": "410 U.S. 113"
+      },
+      {
+        "kind": "IdCitation",
+        "spanUtf16": [34, 44],
+        "sourceSlice": "Id. at 120"
+      }
+    ]
+  }
+]

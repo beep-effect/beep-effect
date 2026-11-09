@@ -99,7 +99,7 @@ deferral (D23). Evidence: six lane reports under
 [`research/2026-08-26-session-b/`](./research/2026-08-26-session-b/) — three
 repo audits and three web prior-art sweeps; the seventh lane was the rung-4
 implementation itself, whose evidence is PR #848 and the rung-4 paragraph of
-[`goals/packet-control-plane-core/PLAN.md`](../../goals/packet-control-plane-core/PLAN.md).
+[goals/packet-control-plane-core/PLAN.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/packet-control-plane-core/PLAN.md).
 The three candidates queued on 2026-08-25 were H, I, and J; two are ratified
 in reshaped form and one is rejected.
 

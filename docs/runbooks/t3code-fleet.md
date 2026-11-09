@@ -76,9 +76,11 @@ Two separate planes:
    one server links to another's MCP endpoint. Link hub → host over `https://`
    or `http://<host>.<tailnet>.ts.net:3773`, never a bare `http://100.x`. Choose
    Auto or Full access for unattended work (Supervised prompts on every command;
-   only Full access allows remote scheduled tasks). Links expire after 30 days;
-   `goals/t3code-harness-mcp` owns the renewal reminder. Environment ids and
-   tailnet names stay in the private orchestrator handoff, never in the repo.
+   only Full access allows remote scheduled tasks). The fleet links at Full access;
+   below it, a link's agents touch only threads they started and skip setup
+   scripts. Links expire after 180 days (see "Harness MCP registration and
+   renewal"). Environment ids and tailnet names stay in the private orchestrator
+   handoff, never in the repo.
 
 ## Pair a host in the desktop app (client plane)
 
@@ -174,26 +176,75 @@ proxy refuses `deb.debian.org` pool downloads: list them with
 then `apt-get install ./*.deb`. Vendor repositories (Anthropic, OpenAI,
 1Password, GitHub, the hub mirror) work directly.
 
-## tbk-worker (gated)
+## tbk-worker
 
-Do not run these until the operator releases tbk-worker's protective-stop
-latch (exploration `t3code-fleet-driver`, decision `tbk-worker`). tbk-worker
-is a KVM guest whose network design exposes nothing but SSH to DankStation, so
-its T3 listener stays on loopback and is reached through an SSH port forward,
-not Tailscale Serve.
+The operator released tbk-worker's protective-stop latch on 2026-11-07, so the
+gated steps this section used to hold have run. The guest uses the same pull as
+beep-worker, keeps its T3 listener on loopback under `agent-runs.slice`, and is
+published with Serve on its own tagged tailnet node, not through an SSH forward.
+Its grants admit only hub SSH, hub to Serve, and guest to the hub mirror. Receipt:
+`goals/t3code-fleet-rollout/history/2026-11-07-tbk-worker-link.md`. A later stop
+latch is still the operator's to release; agents do not clear it as job cleanup.
 
-1. Start the guest through its guarded manual start and confirm the latch is
-   clear; connect with `ssh-tbk-worker` (account `worker`, no sudo).
-2. Install the pull the same way as beep-worker (section above); the service,
-   linger and slice already exist from the worker's readiness packet.
-   `service.env` keeps `T3CODE_HOST=127.0.0.1`.
-3. Link from the hub over a forward:
-   `ssh -N -L 127.0.0.1:3774:127.0.0.1:3773 tbk-worker` kept open by a user
-   unit on DankStation, then `t3 pair --ttl 15m` on the guest and
-   `t3 environment link http://127.0.0.1:3774 --pairing-code <code> --access auto`.
-   The link dies with the forward; the unit must restart it.
-4. Record the receipt under `goals/t3code-fleet-rollout/history/` and fill in
-   the `tbk-worker` row of the host profiles.
+## Harness MCP registration and renewal
+
+Every harness on every host has a user-scope MCP entry named `t3-code` that points
+at **that host's own** loopback T3 (`http://127.0.0.1:3773/mcp`). Linked environments
+carry calls on to the other hosts. This replaced the planned shared `t3-hub` entry
+(decision `per-host-t3-code-replaces-t3-hub` in `goals/t3code-harness-mcp`).
+
+| Harness | Where the entry lives | Header key |
+| --- | --- | --- |
+| Claude Code | `~/.claude.json`, top-level `mcpServers` | `headers.Authorization` |
+| Codex | `~/.codex/config.toml`, `[mcp_servers.t3-code]` | `http_headers.Authorization` |
+| Grok | `~/.grok/config.toml`, `[mcp_servers.t3-code]` | `headers.Authorization` |
+| cursor-agent | `~/.cursor/mcp.json`, then `cursor-agent mcp enable t3-code` | `headers.Authorization` |
+| Junie | `~/.junie/mcp/mcp.json` | `headers.Authorization` |
+
+**Authorize or renew.** `/mcp` accepts only MCP OAuth tokens; `t3 auth session issue`
+tokens fail with `invalid_mcp_credential`. The token has no refresh, so each harness
+gets one bearer token by a headless authorization-code + PKCE run. The script lives
+out of repo because tracked Python is banned: on the hub
+`$HOME/.local/share/t3code-fleet/t3-mcp-authorize.py`. Copy it to the host, run it
+there, and delete the copy. It mints its own pairing code, prints no token, backs up
+each config under `$HOME/.cache/beep/mcp-auth-backup-<time>/` and leaves configs at
+mode 600. Never copy a token between hosts.
+
+**Renew the links** in the same pass: `t3 pair --ttl 10m` on the host, then on the hub
+`t3 environment link <serve-url> --pairing-code <code> --access full-access`, which
+upserts the same environment id.
+
+**Expiry.** Tokens and links both ride the fork's `MCP_CLIENT_SESSION_TTL`, 180 days
+(`beep-effect/t3code#2`), and the current set expires **2027-05-07**. The one-shot
+`t3code-fleet-renewal-reminder.timer` on DankStation notifies on 2027-04-23. It only
+reminds; automatic renewal was declined on 2026-11-08. After renewing, set the unit's
+`OnCalendar` two weeks before the next expiry.
+
+**Verify.** A headless turn in an empty directory (a repository's `.mcp.json` can stall
+one at "Pending approval"): ask the harness to call `t3_thread_list` with
+`allProjects: true, limit: 1`, then `t3_thread_read`.
+
+**T3-launched sessions do not double-load.** T3 injects a thread-scoped server under the
+same `t3-code` key, so the injected entry replaces the user-scope one. A T3-launched
+Codex session lists `mcp__t3_code` plus `mcp__t3_code_direct`, which is T3's own split
+(68 deferred tools and a direct `t3_thread_wait`, no name in both), not a second server.
+
+## Where to launch (spill routing)
+
+The advisory rule and its threshold table are in `.claude/skills/orchestrate/SKILL.md`,
+"Where to launch". Read the signal with
+`bun run beep palantiri parcel host-pressure --json`, which reads `/proc` live and does
+not depend on the recorder below.
+
+The baseline came from the contained PSI sampler: `beep-psi-sample.timer` (30 s) runs
+`$HOME/.local/share/beep-psi/sample-safe.py` through the drop-in
+`99-workstation-light-sampling.conf` and appends to
+`$HOME/.local/state/beep-psi/safe-pressure.jsonl`, ring-trimmed at 14 days. Do not read
+the older `psi.log`, `runtime.json` or `runtime-history.ndjson` in that directory; they
+are stale since 2026-09-15. To re-derive the thresholds, use 7 days of samples and the
+same percentile for each signal: p99 for the avg60 stall rows, p95 for the CPU avg300
+qualifier, and p1 for available memory, as
+`goals/t3code-spill-routing/history/2026-11-08-baseline.md` did.
 
 ## Gotchas
 
@@ -220,3 +271,15 @@ not Tailscale Serve.
   project's `disabledMcpjsonServers` (or `enabledMcpjsonServers`) in the host's
   Claude user config (`.claude.json` in the account's home). A bare one-commit
   project passing on the same host confirms the diagnosis.
+- `t3_thread_list` from a session T3 did not launch fails with `target_required`
+  ("this MCP client is not running inside a T3 thread") unless it passes `projectId`
+  or `allProjects: true`. The registration is fine. Thread-scoped defaults exist only
+  inside T3-launched sessions.
+- Workers run an older Junie build without a JetBrains login. Their `t3-code` token
+  works when called directly, but a Junie turn there needs an operator login first,
+  and `--model=claude-opus-5-5` is not in that build's catalog.
+- beep-worker's AppArmor profile (`/etc/apparmor.d/beep-cursor-sandbox`) pins the exact
+  Cursor CLI and T3 SDK helper paths, so an update of either breaks that sandbox with
+  `SandboxUnsupportedError`. Reconcile the two paths through YubiKey sudo, reload with
+  `apparmor_parser -r`, confirm with `cursor-agent sandbox run echo ok`, and restart T3
+  when idle to clear a cached preflight failure. Never disable the sandbox.

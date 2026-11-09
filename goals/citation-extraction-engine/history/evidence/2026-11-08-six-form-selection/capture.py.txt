@@ -1,0 +1,17 @@
+import json,pathlib,dataclasses,sys
+from eyecite import get_citations, resolve_citations
+p=pathlib.Path(__file__).parent
+profile=json.loads((p/'profile.frozen.json').read_text());rows=[]
+for row in profile['cases']:
+ try:
+  citations=get_citations(row['text'])
+  indices={id(c):i for i,c in enumerate(citations)}
+  resolved=resolve_citations(citations)
+  groups=[[indices[id(c)] for c in members] for members in resolved.values()]
+  found=[]
+  for c in citations:
+   metadata=dataclasses.asdict(c.metadata)
+   found.append(dict(kind=type(c).__name__,tokenText=c.matched_text(),spanCodePoints=c.span(),spanUtf16=[len(row['text'][:n].encode('utf-16-le'))//2 for n in c.span()],groups=c.groups,metadata=metadata))
+  rows.append(dict(id=row['id'],citations=found,resolvedGroups=groups))
+ except Exception as error:rows.append(dict(id=row['id'],error=str(error)))
+print(json.dumps(dict(lane='python',runtime=sys.version.split()[0],profileStatus=profile['status'],rows=rows),indent=2))

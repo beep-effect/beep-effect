@@ -1,0 +1,96 @@
+import { extractCitations } from '/home/elpresidank/.cache/beep/citation-extraction-engine/eyecite-ts/src/index.ts';
+import { Citation } from '@beep/law-practice-domain/values';
+import { CourtReporterArtifact } from '@beep/law-practice-domain/values/CourtReporterVocabulary';
+import { defaultCitationEnginePolicy } from '@beep/law-practice-use-cases/test';
+import { TextAnchor } from '@beep/provenance/TextAnchor';
+import { VerifyTextAnchorAgainstVerifiedSourceInput, verifyTextAnchorAgainstVerifiedSource } from '@beep/provenance/VerifiedTextAnchor';
+import { Sha256HexFromBytes } from '@beep/schema';
+import { makeCitationMention } from '../../packages/law-practice/server/src/internal/Citation/Mention.ts';
+import { resolveCitationMentions } from '../../packages/law-practice/server/src/internal/Citation/Resolve.ts';
+import * as BunCrypto from '@effect/platform-bun/BunCrypto';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as O from 'effect/Option';
+import * as Result from 'effect/Result';
+import * as S from 'effect/Schema';
+import { citationFixtureSourceProof } from '../../packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts';
+const profile=await Bun.file(new URL('./profile.frozen.json',import.meta.url)).json();
+const decodeCitation=S.decodeUnknownEffect(Citation);
+const vocabularyVersion=Result.getOrThrow(CourtReporterArtifact).artifactVersion;
+const range=(span:any)=>({start:span.originalStart,end:span.originalEnd});
+const locate=(text:string,value:string,start:number,end:number)=>{
+ const at=text.indexOf(value,start);
+ if(at<start||at+value.length>end||text.indexOf(value,at+1)>=0&&text.indexOf(value,at+1)<end)throw Error('Non-unique bounded component');
+ return{start:at,end:at+value.length};
+};
+const capture=(text:string,a:any)=>a?{...a,quote:text.slice(a.start,a.end)}:null;
+const project=(text:string,c:any)=>{
+ const span=range(c.span);let anchor=span,antecedent=null,lexicalCore=null;
+ if(c.type==='supra'){
+  const local=text.slice(span.start,span.end);const matches=[...local.matchAll(/\bsupra\b/gi)];
+  if(matches.length!==1)throw Error('Non-unique supra token');
+  const start=span.start+matches[0].index!;anchor={start,end:span.end};lexicalCore={start,end:start+5};
+  antecedent=locate(text,c.partyName,span.start,start);
+ }
+ if(c.type==='id')lexicalCore={start:span.start,end:span.start+3};
+ const pinSpan=c.spans?.pincite??c.spans?.subsection;
+ const pin=pinSpan?range(pinSpan):null;const pinCite=pin?text.slice(pin.start,pin.end):null;
+ const locator={pinCite,parenthetical:null};
+ const dated={...locator,year:c.year===undefined?null:String(c.year),month:null,day:null};
+ const casePublication={vocabularyVersion,editions:[],selectedEdition:null};
+ let citation:any,form=c.type;
+ if(c.type==='case'){
+  form='full-case';citation={type:'case',components:{volume:String(c.volume),reporter:c.reporter,page:String(c.page)},publication:casePublication,metadata:{...dated,court:null,plaintiff:c.plaintiff??null,defendant:c.defendant??null,additionalText:null,antecedentGuess:null,shortCaseName:null,caseName:c.caseName??null}};
+ }else if(c.type==='shortFormCase'){
+  form='short-case';citation={type:'shortFormCase',components:{volume:String(c.volume),reporter:c.reporter},publication:casePublication,metadata:{...dated,court:null,antecedentGuess:null,plaintiff:null}};
+ }else if(c.type==='id')citation={type:'id',components:{},metadata:locator};
+ else if(c.type==='supra')citation={type:'supra',components:{},metadata:{...locator,antecedentGuess:text.slice(antecedent!.start,antecedent!.end),volume:c.volume===undefined?null:String(c.volume)}};
+ else if(c.type==='statute'&&c.title===35||c.type==='regulation'&&c.title===37){
+  form=c.type==='statute'?'usc':'cfr';citation={type:'law',components:{title:String(c.title),reporter:form==='usc'?'U.S.C.':'C.F.R.',section:c.section},publication:{editions:[],selectedEdition:null},metadata:{...dated,publisher:null}};
+ }else return null;
+ const fields=c.type==='case'?{volume:String(c.volume),reporter:c.reporter,page:String(c.page),pinCite}:c.type==='shortFormCase'?{volume:String(c.volume),reporter:c.reporter,pinCite}:c.type==='id'?{pinCite}:c.type==='supra'?{antecedent:c.partyName,pinCite}:{title:String(c.title),section:c.section,pinCite};
+ return{form,fields,citation,anchor:capture(text,anchor),pin:capture(text,pin),antecedent:capture(text,antecedent),lexicalCore:capture(text,lexicalCore)};
+};
+const program=Effect.gen(function*(){
+ const {limits}=yield* defaultCitationEnginePolicy;
+ const engineArtifact=yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode('diagnostic:six-form-eyecite-ts-0.34.2-adapter-v1'));
+ const rows=[];
+ for(const row of profile.cases){
+  const run=Effect.gen(function*(){
+   const proof=yield* citationFixtureSourceProof(row.text);
+   const mapped=extractCitations(row.text).map((c:any)=>project(row.text,c)).filter(Boolean);
+   const mentions=[];
+   for(const item of mapped){
+    const citation=yield* decodeCitation(item.citation);
+    const verify=(a:any)=>verifyTextAnchorAgainstVerifiedSource(VerifyTextAnchorAgainstVerifiedSourceInput.make({verifiedSource:proof,anchor:TextAnchor.make({startChar:a.start,endChar:a.end,quote:a.quote})}));
+    const anchor=yield* verify(item.anchor);const components=[];
+    for(const name of ['pin','antecedent','lexicalCore'])if(item[name])components.push({name,anchor:yield* verify(item[name])});
+    mentions.push(yield* makeCitationMention({citation,engineArtifact,signal:O.none(),warnings:[],evidenceConfidence:O.none(),anchor,components,footnote:O.none()}));
+   }
+   const doc=yield* resolveCitationMentions({verifiedSource:proof,engineArtifact,mentions,editions:[],limits});
+   const firstByAuthority=new Map<string,number>();
+   for(let i=0;i<doc.mentions.length;i++)if(['case','law'].includes(doc.mentions[i].citation.type)){
+    const resolution=doc.resolutions.find((r:any)=>r.mentionId===doc.mentions[i].id);
+    if(resolution?.status==='Resolved'&&!firstByAuthority.has(resolution.authorityId))firstByAuthority.set(resolution.authorityId,i);
+   }
+   const actual=mapped.map((item:any,i:number)=>{
+    const r=doc.resolutions.find((r:any)=>r.mentionId===mentions[i].id);
+    const link=r?.status==='Resolved'?{status:'Resolved',sameAuthorityAs:firstByAuthority.get(r.authorityId)}:r?.status==='Ambiguous'?{status:'Ambiguous',candidateAuthorities:r.candidateAuthorityIds.map((id:string)=>firstByAuthority.get(id)).sort((a:number,b:number)=>a-b)}:{status:r?.status};
+    const {citation,...observation}=item;return{...observation,link};
+   });
+   const failures=[];
+   if(actual.length!==row.expected.length)failures.push('occurrence-count');
+   for(let i=0;i<Math.min(actual.length,row.expected.length);i++){
+    const want=row.expected[i],got=actual[i];
+    for(const key of ['form','anchor','pin','antecedent','lexicalCore','link'])if(JSON.stringify(got[key])!==JSON.stringify(want[key]))failures.push(`${i}:${key}`);
+    for(const [k,v]of Object.entries(want.fields))if(got.fields[k]!==v)failures.push(`${i}:field:${k}`);
+   }
+   return{id:row.id,actual,failures};
+  });
+  rows.push(yield* run.pipe(Effect.catchCause(cause=>Effect.succeed({id:row.id,error:String(cause)}))));
+ }
+ return rows;
+}).pipe(Effect.provide(Layer.merge(BunCrypto.layer,BunCrypto.layerDigest)));
+const rows=await Effect.runPromise(program);
+await Bun.write(new URL('./typed-prototype.raw.json',import.meta.url),JSON.stringify({scope:'Diagnostic only: in-process cached parser, existing Citation codec, genuine source/mention proofs and existing typed resolver. No production worker, deployment, reporter-edition selection, privacy/resource qualification or dependency adoption.',rows},null,2));
+console.log(JSON.stringify(rows.filter((r:any)=>r.error||r.failures?.length).map((r:any)=>({id:r.id,error:r.error,failures:r.failures})),null,2));

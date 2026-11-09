@@ -37,7 +37,7 @@
     "goals/packet-convention-migration/GOAL.md",
     "goals/packet-convention-migration/research/SOURCES.md"
   ],
-  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -68,5 +68,13 @@
     "Fork repair cannot stage and fold a lossless linear stream.",
     "Genesis seeding would overwrite an existing stream or fabricate history.",
     "Verification requires unnamed credentials, cost, destructive effects, or policy approval."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/packet-convention-migration",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "04f33f576b2cf1389544cfb37423680f154a386e",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

@@ -30,8 +30,21 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ExplorationManifest, ExplorationStatus } from "../Explore/Atlas.ts";
-import { knowledgeDocumentLines, knowledgeLinkDestinations } from "../Knowledge/Knowledge.refs.ts";
-import { ArchivePlan, ArchivePlanEntry, ArchiveRepoRef, InboundLink, tombstoneKeeps } from "./Archive.schemas.ts";
+import {
+  isKnowledgeCommandSpan,
+  knowledgeDocumentLines,
+  knowledgeInlineSpans,
+  knowledgeLinkDestinations,
+  normalizeKnowledgeRepoPath,
+} from "../Knowledge/Knowledge.refs.ts";
+import {
+  ArchivePlan,
+  ArchivePlanEntry,
+  ArchiveRepoRef,
+  InboundLink,
+  tombstoneKeeps,
+  wrappedLinkDestination,
+} from "./Archive.schemas.ts";
 import { ArchiveError } from "./Goals.errors.ts";
 import { decodeGoalManifest, GoalStatus } from "./Goals.schemas.ts";
 import { isTerminalPacketStatus } from "./Harvest.service.ts";
@@ -40,6 +53,7 @@ import { PacketRoot } from "./PacketCore/PacketCore.schemas.ts";
 import { canonicalJsonText, sha256Hex } from "./PacketCore/PacketDigest.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type { KnowledgeDocumentLine } from "../Knowledge/Knowledge.refs.ts";
+import type { InboundLinkForm } from "./Archive.schemas.ts";
 import type { GoalManifest } from "./Goals.schemas.ts";
 import type { GoalPacketRecord } from "./Inventory.ts";
 
@@ -72,6 +86,8 @@ export const INBOUND_LINK_ROOTS: ReadonlyArray<string> = [
 ];
 
 const INBOUND_LINK_EXTENSIONS: ReadonlyArray<string> = [".md", ".mdx", ".ts", ".tsx", ".json"];
+// The knowledge doctor reads code spans only in Markdown; elsewhere a backticked path may be program output.
+const CODE_SPAN_CITATION_EXTENSIONS: ReadonlyArray<string> = [".md", ".mdx"];
 const QUERY_OR_FRAGMENT = /[?#].*$/;
 const FRAGMENT = /#.*$/;
 
@@ -278,8 +294,28 @@ type ScannedLink = {
   readonly file: string;
   readonly line: number;
   readonly destination: string;
+  readonly form: InboundLinkForm;
   readonly target: string;
 };
+
+// The code spans the knowledge doctor reads as tracked paths, so the plan repoints what the doctor would flag.
+const scanLineCodeSpans = (file: string, line: KnowledgeDocumentLine): ReadonlyArray<ScannedLink> =>
+  A.getSomes(
+    A.map(
+      A.filter(knowledgeInlineSpans(line.text), (inline) => !isKnowledgeCommandSpan(inline.span)),
+      (inline) =>
+        O.map(
+          normalizeKnowledgeRepoPath(file, inline.span),
+          (target): ScannedLink => ({
+            file,
+            line: line.number,
+            destination: inline.span,
+            form: "code-span",
+            target,
+          })
+        )
+    )
+  );
 
 const scanFileLinks = Effect.fnUntraced(function* (repoRoot: string, file: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -287,21 +323,47 @@ const scanFileLinks = Effect.fnUntraced(function* (repoRoot: string, file: strin
   const text = yield* fs.readFileString(path.join(repoRoot, file)).pipe(Effect.orElseSucceed(() => ""));
   const proseLines: ReadonlyArray<KnowledgeDocumentLine> = A.filter(knowledgeDocumentLines(text), (line) => line.prose);
   const candidates = A.flatMap(proseLines, (line) =>
-    A.map(knowledgeLinkDestinations(line.text), (link) => ({ line: line.number, destination: link.destination }))
+    A.map(
+      A.appendAll(knowledgeLinkDestinations(line.text), wrappedLinkDestination(line.text).pipe(O.toArray)),
+      (link) => ({ line: line.number, destination: link.destination })
+    )
   );
   const resolved = yield* Effect.forEach(candidates, (candidate) =>
     Effect.map(
       resolveLinkDestination(file, candidate.destination),
-      O.map((target): ScannedLink => ({ file, line: candidate.line, destination: candidate.destination, target }))
+      O.map(
+        (target): ScannedLink => ({
+          file,
+          line: candidate.line,
+          destination: candidate.destination,
+          form: "link",
+          target,
+        })
+      )
     )
   );
-  return A.getSomes(resolved);
+  const codeSpans = A.some(CODE_SPAN_CITATION_EXTENSIONS, (extension) => Str.endsWith(extension)(file))
+    ? A.flatMap(proseLines, (line) => scanLineCodeSpans(file, line))
+    : A.empty<ScannedLink>();
+  return A.appendAll(A.getSomes(resolved), codeSpans);
 });
 
+const GIT_SYMLINK_MODE = "120000";
+
+// A tracked symlink has no text of its own: its target is scanned and rewritten once, under its own path.
 const scanInboundLinks = Effect.fnUntraced(function* (repoRoot: string) {
-  const tracked = yield* trackedPaths(repoRoot, INBOUND_LINK_ROOTS);
-  const documents = A.filter(tracked, (file) =>
-    A.some(INBOUND_LINK_EXTENSIONS, (extension) => Str.endsWith(extension)(file))
+  const git = yield* Git;
+  const tracked = yield* git
+    .lsFiles(repoRoot, { pathspec: INBOUND_LINK_ROOTS })
+    .pipe(Effect.mapError(gitFailed(repoRoot)));
+  const documents = A.dedupe(
+    A.filter(
+      A.map(
+        A.filter(tracked, (entry) => entry.mode !== GIT_SYMLINK_MODE),
+        (entry) => entry.path
+      ),
+      (file) => A.some(INBOUND_LINK_EXTENSIONS, (extension) => Str.endsWith(extension)(file))
+    )
   );
   const links = yield* Effect.forEach(documents, (file) => scanFileLinks(repoRoot, file), { concurrency: 16 });
   return A.flatten(links);
@@ -329,14 +391,21 @@ const planEntry = Effect.fnUntraced(function* (
     .revParse(options.repoRoot, `HEAD:${dir}`)
     .pipe(Effect.mapError(gitFailed(options.repoRoot)));
   const removed = HashSet.fromIterable(remove);
+  const under = (target: string): ((file: string) => boolean) => Str.startsWith(`${target}/`);
+  // A cited directory breaks only when the tombstone keeps nothing under it.
+  const citesRemovedDirectory = (target: string): boolean =>
+    Str.startsWith(`${dir}/`)(target) && A.some(remove, under(target)) && !A.some(keep, under(target));
+  const cited = (link: ScannedLink): boolean =>
+    HashSet.has(removed, link.target) || (link.form === "code-span" && citesRemovedDirectory(link.target));
   const inbound = A.map(
-    A.filter(links, (link) => !Str.startsWith(`${dir}/`)(link.file) && HashSet.has(removed, link.target)),
+    A.filter(links, (link) => !Str.startsWith(`${dir}/`)(link.file) && cited(link)),
     (link) =>
       InboundLink.make({
         file: link.file,
         line: link.line,
         destination: link.destination,
-        rewrittenTo: `https://github.com/${options.repo}/blob/main/${link.target}${fragmentOf(link.destination)}`,
+        form: link.form,
+        rewrittenTo: `https://github.com/${options.repo}/${HashSet.has(removed, link.target) ? "blob" : "tree"}/main/${link.target}${fragmentOf(link.destination)}`,
       })
   );
   return ArchivePlanEntry.make({

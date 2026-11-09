@@ -32,11 +32,7 @@
     "goals/practice-m365-contacts/SPEC.md",
     "explorations/solo-firm-docketing/DECISIONS.md"
   ],
-  "researchReports": [
-    "research/OPPORTUNITIES.md",
-    "research/SOURCES.md",
-    "research/cache-baseline-review.md"
-  ],
+  "researchReports": ["research/OPPORTUNITIES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -91,5 +87,13 @@
     "practice/docket-intake",
     "drivers/m365-calendar-write",
     "m365/message-category-write"
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/practice-docket-intake",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "3c0f9dd03976edb3d52abbab5ec5705907a70593",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

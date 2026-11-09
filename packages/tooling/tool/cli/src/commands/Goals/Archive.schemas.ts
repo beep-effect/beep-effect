@@ -15,8 +15,10 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GitCommitSha } from "../Codex/Findings.capture.schemas.ts";
@@ -256,6 +258,75 @@ export const ArchivePlanId = S.String.check(
  */
 export type ArchivePlanId = typeof ArchivePlanId.Type;
 
+const WRAPPED_LINK_TAIL = /^[^[\]]*\]\(([^)\s]+)\)/u;
+
+/**
+ * Reads a Markdown link destination whose text began on the previous line.
+ *
+ * **Details**
+ *
+ * The line-based link parser needs the opening bracket on the same line, so a
+ * link wrapped inside its text is invisible to it. The returned column is
+ * 1-based, matching the parser's.
+ *
+ * **Example** (Read a wrapped link tail)
+ *
+ * ```ts
+ * import { wrappedLinkDestination } from "@beep/repo-cli/commands/Goals/Archive.schemas"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isSome(wrappedLinkDestination("runbook](../goals/demo/PLAN.md).")) ) // true
+ * console.log(O.isNone(wrappedLinkDestination("[plan](../goals/demo/PLAN.md)"))) // true
+ * ```
+ *
+ * @param line - One document line outside every fence.
+ * @returns The destination and its column, when the line opens with a link tail.
+ * @category parsing
+ * @since 0.0.0
+ */
+export const wrappedLinkDestination = (
+  line: string
+): O.Option<{ readonly destination: string; readonly column: number }> =>
+  pipe(
+    Str.match(WRAPPED_LINK_TAIL)(line),
+    O.flatMap((match) =>
+      O.map(O.fromUndefinedOr(match[1]), (destination) => ({
+        destination,
+        column: Str.length(match[0]) - Str.length(destination),
+      }))
+    )
+  );
+
+/**
+ * How an inbound reference is written: a Markdown link destination, or an
+ * inline code span citing the path.
+ *
+ * **Example** (Validate a form)
+ *
+ * ```ts
+ * import { InboundLinkForm } from "@beep/repo-cli/commands/Goals/Archive.schemas"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(InboundLinkForm)("code-span")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const InboundLinkForm = LiteralKit(["link", "code-span"]).pipe(
+  $I.annoteSchema("InboundLinkForm", {
+    description: "Whether an inbound reference is a Markdown link destination or an inline code span.",
+  })
+);
+
+/**
+ * Runtime type of {@link InboundLinkForm}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type InboundLinkForm = typeof InboundLinkForm.Type;
+
 /**
  * One link into a file the archive will remove from `main`, and the archive
  * URL it is rewritten to.
@@ -269,6 +340,7 @@ export type ArchivePlanId = typeof ArchivePlanId.Type;
  *   file: "docs/README.md",
  *   line: 3,
  *   destination: "../goals/demo/PLAN.md",
+ *   form: "link",
  *   rewrittenTo: "https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/demo/PLAN.md",
  * })
  * console.log(link.line) // 3
@@ -282,10 +354,12 @@ export class InboundLink extends S.Opaque<InboundLink, { readonly brand: unique 
     file: S.String,
     line: S.Int.check(S.isGreaterThanOrEqualTo(1)),
     destination: S.String,
+    form: InboundLinkForm,
     rewrittenTo: S.String,
   }).pipe(
     $I.annoteSchema("InboundLink", {
-      description: "A link from a file outside the packet into a removed packet file, with its archive blob URL.",
+      description:
+        "A link or code-span citation from a file outside the packet into a removed packet file, with its archive blob URL.",
     })
   )
 ) {}

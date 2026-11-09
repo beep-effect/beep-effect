@@ -24,6 +24,9 @@
       "path": "../../../drivers/duckdb/tsconfig.json"
     },
     {
+      "path": "../../../drivers/eyecite/tsconfig.json"
+    },
+    {
       "path": "../../../drivers/libpff/tsconfig.json"
     },
     {

@@ -20,8 +20,8 @@ prose when they conflict.
 
 Scope:
 
-- In: DankStation fork sync gains pack+publish; per-host pull timer and `t3 service` on beep-worker, dankserver, tom-pc-1 (new WSL distro); Tailscale HTTPS; hub-and-spoke Linked environments; host runbook and `remote-development-agents` host profiles.
-- Out: grok-bot-box-1; Hyper-V; Funnel/T3 Connect; harness MCP registration; spill rule; copying credentials between hosts.
+- In: DankStation fork sync gains pack+publish; per-host pull timer and `t3 service` on beep-worker, dankserver, tbk-worker, tom-pc-1 (new WSL distro); grok-bot under a hub-reconciled supervisor (no systemd); Tailscale HTTPS; hub-and-spoke Linked environments; host runbook and `remote-development-agents` host profiles.
+- Out: Hyper-V; Funnel/T3 Connect; harness MCP registration; spill rule; copying credentials between hosts.
 
 Workflow:
 
@@ -57,9 +57,8 @@ irreversible change (a tested down-migration, a backup of deleted state) before
 the change merges, and ship a breaking public API or schema change with a major
 changeset. Escalate only what AGENTS.md "Autonomy" lists.
 
-Ship proposedCloseout and the reflection in the final PR (status stays active or
-paused). After that merge, verify with `bun run beep goals completion refresh --slug t3code-fleet-rollout`,
-then adopt with `bun run beep goals set-status t3code-fleet-rollout <status>` in a
-packet-state PR. Done only once it merges and this passes, or an operator
-blocker is reported with evidence:
+Closed in one PR by operator ruling (decision `single-pr-closeout`), replacing the
+usual two-PR closeout. After that merge, the lane owner verifies with
+`bun run beep goals completion refresh --slug t3code-fleet-rollout` and opens a packet-state PR
+reopening the packet unless the outcome is verified. Check:
 `git show origin/main:goals/t3code-fleet-rollout/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`

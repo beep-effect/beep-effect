@@ -1,0 +1,11 @@
+const lane=process.argv[2];
+const profile=await Bun.file(new URL('./profile.frozen.json',import.meta.url)).json();
+const base='/home/elpresidank/.cache/beep/citation-extraction-engine/';
+const library=await import(base+(lane==='ts'?'eyecite-ts':'eyecite-js')+'/src/index.ts');
+const rows=profile.cases.map((row: {id:string;text:string})=>{
+ try {
+  const result=lane==='ts'?library.extractCitations(row.text):library.getCitations(row.text);
+  return {id:row.id,citations:result.map((citation: {span: unknown;type?:string;constructor:{name:string}})=>({kind:citation.type??citation.constructor.name,span:typeof citation.span==='function'?citation.span():citation.span,raw:citation}))};
+ }catch(error){return{id:row.id,error:String(error)}}
+});
+console.log(JSON.stringify({lane,runtime:Bun.version,profileStatus:profile.status,rows},null,2));

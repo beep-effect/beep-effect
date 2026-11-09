@@ -127,13 +127,12 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "researchReports": [
-    "research/current-surface-gap-analysis.md",
-    "research/effect-json-schema-metadata.md",
-    "research/folio-export-benchmark.md",
-    "research/oip-workflow-fit.md",
-    "research/roadmap-synthesis.md",
-    "research/skos-profile-research.md",
-    "research/standards-format-inventory.md"
-  ]
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/ontology-interop-roadmap",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "567c45179c4b294a456ff50a164b009b70baaba1",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

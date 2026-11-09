@@ -132,7 +132,7 @@ bare `Registry` (leans entirely on package namespace).
 > Superseded 2026-10-20 by the entry "authority host supersession:
 > beep-effect.com/ns/" at the end of this file. The retired host below is
 > written defanged; its undefanged form is recorded once, in
-> `goals/public-origin-beep-effect-com/history/2026-10-20-operator-brief.md`.
+> [goals/public-origin-beep-effect-com/history/2026-10-20-operator-brief.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/public-origin-beep-effect-com/history/2026-10-20-operator-brief.md).
 
 **Question:** What real authority host replaces the `https://ns[.]beep[.]sh/`
 placeholder?

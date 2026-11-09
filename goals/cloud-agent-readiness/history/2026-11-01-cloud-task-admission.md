@@ -140,7 +140,7 @@ assigned branch, open a draft PR through the GitHub integration with
 
 ### T4 — party-slice P1 steps 2–3 (domain package only)
 
-- Acceptance: `goals/party-slice/PLAN.md` P1 and "P1 Settlement Checklist":
+- Acceptance: [goals/party-slice/PLAN.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/party-slice/PLAN.md) P1 and "P1 Settlement Checklist":
   create `@beep/party-domain`; PartyKey v1 canonicalizer with pinned
   bytes/digest fixtures; identifier normalizers (header `Dana@example.test`
   equals card `dana@example.test`; Exchange DN, Username and E.164 fixtures).

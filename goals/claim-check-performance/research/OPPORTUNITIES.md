@@ -144,3 +144,30 @@ Measure startup, frame transfer and validation separately; preserve native exit
 and cleanup evidence. Any repair must keep the original failed pass, its unknown
 outcomes and all resource charges intact. Synthetic transport success would
 establish transport behavior only, with no source-fidelity or reference admission.
+
+## Decision lane flag: a `goals/` branch name reads as a broken path
+
+Recording a decision with the lane flag set to this branch rendered the branch
+name as inline code in the SPEC decision block. Hosted Lint Policy then failed
+`knowledge:semantic-delta` with one introduced `broken-tracked-path` finding,
+because a `goals/` prefix looks like a tracked repo path. Local package checks and
+cheap gates do not run that scan. Dropping the optional lane field and regenerating
+the block cleared it. The decisions tool could reject or differently render a lane
+value that resembles a repo path.
+
+## Quick package verify runs no tests
+
+While adding fallback kind tests, a script gated its commit on
+`quality package-verify --quick`, which runs only lint and check. It committed a
+failing test, caught by a separate test run moments later and amended before any
+push. Gate a commit on the package's tests as well as that command, or have the
+quick form say plainly that it ran no tests.
+
+## A follow-up lane's draft inherits an earlier PR's title
+
+A lane branched from #2975 before that PR was squashed. Its commits stay in the
+lane's history even after merging main, and `yeet open` took the draft title from
+the oldest branch commit. #2987 therefore opened with #2975's title, which would
+have become its squash subject. Check the title after opening. Branching follow-up
+work from main after the squash would avoid it, or the tool could warn when the
+oldest commit's subject matches a merged pull request.

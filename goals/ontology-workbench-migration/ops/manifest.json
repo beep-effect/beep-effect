@@ -35,7 +35,6 @@
     "goals/ontology-workbench-migration/GOAL.md",
     "goals/ontology-workbench-migration/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -83,5 +82,13 @@
     "Per-panel maxima prove unsatisfiable against the geometry solver's invariants (report with failing fixture; minima alone may land).",
     "The StrictMode fix would require weakening StrictMode (forbidden; keep SurfaceRetry for ontology and record the residual).",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval."
-  ]
+  ],
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/ontology-workbench-migration",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "0f66a048d2ba243d921ab7aba4c3fc9bdbe15b32",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

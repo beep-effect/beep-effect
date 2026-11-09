@@ -139,12 +139,12 @@ on the first page selects languages for the entire source, not each page.
 
 ### Recorded P9 to P11 evidence (counts, rates and timings only)
 
-- `goals/practice-kg-mcp/history/p9/2026-10-06-working-files-bundle.md`,
+- [goals/practice-kg-mcp/history/p9/2026-10-06-working-files-bundle.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/practice-kg-mcp/history/p9/2026-10-06-working-files-bundle.md),
   "Extraction failures" and "Fill-in bundle": 94 PDF timeouts and 3
   Tesseract JPEG 2000 crashes; fill-in reduced timeouts to 8.
-- `goals/practice-kg-mcp/history/p10/2026-10-07-anchor-dominance-and-correspondents.md`,
+- [goals/practice-kg-mcp/history/p10/2026-10-07-anchor-dominance-and-correspondents.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/practice-kg-mcp/history/p10/2026-10-07-anchor-dominance-and-correspondents.md),
   "Still out": those 8 timeouts and crash-hit pages remained unresolved.
-- `goals/practice-kg-mcp/history/p11/2026-10-07-mail-archive-correspondents.md`,
+- [goals/practice-kg-mcp/history/p11/2026-10-07-mail-archive-correspondents.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/practice-kg-mcp/history/p11/2026-10-07-mail-archive-correspondents.md),
   "OCR re-extraction": 7,640 sources in 2 h 36 min at concurrency 8;
   296 sources, 2,034 pages read page by page, 0 failed. Succeeded sources
   increased from 6,380 to 6,385; 1,248 remained without an engine.

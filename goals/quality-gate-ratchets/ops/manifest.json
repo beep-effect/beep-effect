@@ -60,7 +60,6 @@
     "goals/quality-gate-ratchets/GOAL.md",
     "goals/quality-gate-ratchets/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -111,5 +110,13 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "mergedPullRequest": 305
+  "mergedPullRequest": 305,
+  "archive": {
+    "repo": "beep-effect/beep-effect-goals-archive",
+    "path": "goals/quality-gate-ratchets",
+    "commit": "2323b2cb71e718be968892143171e7424fe1b756",
+    "contentHash": "9742b0e176d124d1003a613cf57bb1f049079546",
+    "archivedAt": "2026-11-08T22:43:21.296Z",
+    "sourceCommit": "b628348e0db3704472962a198ba8d1d73ff6f48a"
+  }
 }

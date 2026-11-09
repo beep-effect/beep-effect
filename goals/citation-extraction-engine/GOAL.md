@@ -1,72 +1,37 @@
-# GOAL: deliver eyecite capability parity as an Effect-native citation engine
+# GOAL: deliver bounded six-form citation extraction and local linking
 
-Ship attributed, schema-first, Effect-native exhaustive observable
-parity to Free Law Project eyecite 2.7.6, verified source evidence, lawful schema
-transforms, and only proven TypeScript-port extensions.
+The operator approved this replacement on 2026-11-08. Follow SPEC.md and
+PLAN.md. This supersedes the old exhaustive eyecite-parity objective, including
+its stop-without-weakening instruction; do not restore that scope from an older
+launcher or automatic continuation. Historical requirements are superseded, not
+completed. See decisions/2026-11-08-six-form-completion-contract.md.
 
-Read `AGENTS.md`, architecture/skills, prerequisites, and packet in
-`goals/README.md` order. Repo law prevails.
+Deliver a schema-first Effect service for full case, short case, Id., supra, 35
+U.S.C. and 37 C.F.R. citations in supplied plain text, with exact verified
+original UTF-16 anchors and document-local linking that preserves resolved,
+ambiguous and unresolved outcomes. These six forms are completion.
 
-Oracle: `04d82c032ad5fd0f9ab72a61c87110c46ee8f52e`; optional live clone:
-`EYECITE_ORACLE_ROOT`. Committed fixtures/accounting are the portable gate.
-`eyecite-ts`/`eyecite-js` are differential/extension references only.
+Preserve prerequisite contracts, semantic identities, attribution, closed
+failures, R = never, resource ceilings and responsive isolated execution. Use
+Effect-provided services and primitives wherever they fit; verify a concrete gap
+before introducing custom infrastructure.
 
-Blocked by:
+Before selecting an implementation, freeze a small public reviewed input set and
+compare the current public Layer with pinned eyecite-ts and eyecite-js. Use
+official eyecite diagnostically, not as the definition of correctness. Do not
+rewrite/prune the current implementation before measuring it. Existing isolated
+donor installs are authorized; production dependency or Python runtime changes
+require a separate recorded decision supported by the comparison.
 
-- `goals/citation-verified-span-substrate`
-- `goals/court-reporter-vocabulary`
+Exclude exhaustive Python compatibility, object/hash/debug protocols, donor-wide
+disposition accounting, HTML reconstruction, annotation, arbitrary callbacks,
+non-profile citation forms, external lookup, claim support and citator/good-law
+work from completion. Keep historical corpora and ledgers; never turn superseded
+rows into passing evidence.
 
-P0 may proceed. Before P1, both contracts must be available and
-`history/evidence/prerequisite-compatibility.md` must record exact symbols,
-public imports, versions, compatibility, and approved adaptations. Until then,
-separation/removal binds; target fields/imports/versions are provisional.
-
-Requirements:
-
-1. Port behavior and exhaustive coverage, not donor layout/classes.
-2. Reconcile static inventory and runtime oracle cases. Portable checks reject
-   every missing, duplicate, nonterminal, unlicensed, or unexplained row.
-3. Evidence every TypeScript export/test disposition: adopted, subsumed,
-   rejected, or follow-up. Donor installs need explicit authorization and frozen lockfiles.
-4. Replace provisional schemas as needed. Separate semantic citations,
-   verified mentions, document-local mention/authority IDs, resolution data,
-   document relationships, and run diagnostics. Reserve
-   `LawPractice.CitationId` for persisted entities.
-5. Publish semantic schemas from law-practice domain; the raw-text request,
-   closed errors, ports, and `CitationEngine` `Context.Service` from
-   `@beep/law-practice-use-cases/server`; test fixtures from `/test`; and the
-   live Layer from `@beep/law-practice-server/layer`. Client surfaces need a proved safe consumer.
-6. Every service method has `R = never`. Modes are schema data; callable
-   cleaners/tokenizers are injected server services, never request fields.
-7. `Citation` is its own structured codec; no redundant wire model.
-   `BluebookFromFullCitation` must accept
-   `FullCitation.Type` in the exact `S.decodeEffect(...)(citation)` call and
-   declare separate information and directional-totality laws.
-8. Ambiguous, unresolved, and unknown citations are data. Boundary failures
-   use a closed tagged error union. Enforce schema-owned resource limits,
-   interruptibility-aware regex safety, clock-controlled timing, and
-   privacy-safe spans.
-9. Case/Id./supra/35 U.S.C./37 C.F.R. are the first slice, not completion.
-   Classify 35 U.S.C. as `FullLawCitation`; audit 37 C.F.R. before calling
-   residual behavior an extension.
-10. Deliver packet, implementation, corpus, proof, reflection, and lifecycle
-    update in one PR. Use phase-local green commits; claim completion only after
-    all accounting and quality gates pass.
-
-Approved 2026-10-29: native HTML resource exhaustion fails without partial
-output per `ops/html-safety-exception.json`. Other parity duties remain.
-
-Approved 2026-11-02; draft status later superseded: push ready work using
-hosted CI without waiting on verification/local compute. Record
-passed/pending checks. Keep PR #2511 ready for review while continuing the full
-goal. Draft status is no acceptance gate; review readiness neither claims
-completion nor authorizes merging. All acceptance requirements remain.
-
-Approved 2026-11-05: continue unchanged in linked follow-ups when PRs merge,
-starting with HTML geometry/quality fixes after #2713. Only one-PR delivery/
-reviewability is excepted. Keep prior PR/evidence links and all acceptance duties.
-See `decisions/2026-11-05-linked-follow-up-publication.md`.
-
-Stop without weakening scope on incompatible prerequisites, unprovable
-exhaustive parity, unrecorded safety/fidelity divergence, or loss of one-PR
-reviewability.
+Complete the actual Layer's reviewed profile cases, exact-source, ambiguity and
+resource controls; resolve owned hosted CI failures without weakening assertions
+or timeout limits; preserve relevant attribution; check consumers before
+retiring old APIs/tests; and publish ready linked PRs with hosted CI. Finish
+reflection, lifecycle and verified retention on main. The goal remains active
+until that bounded delivery is proven, merged and retained.

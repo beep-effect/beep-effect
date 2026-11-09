@@ -1,0 +1,15 @@
+{
+  "purpose": "Frozen selection inputs and diagnostic donor observations; native, field/range/link/resource evaluation remains incomplete.",
+  "files": {
+    "profile.frozen.json.txt": "3cc6263c77bdb1f9d7b546b97dc0f503faf8644fcc2136ac5a1cbbebd4c8e65b",
+    "freeze-receipt.json.txt": "662a8f465e83055097fe54230c36f4ab6690c2f76f1b318178d14e14e7379f28",
+    "label-review.md.txt": "9387afccadce8e0d85fc374502f567e5489c9dfeed24a08fcd04ce39198d5578",
+    "capture.ts.txt": "48c9fc88fd01198f2327f82c30d8498f94cfb659f2c201214091afb446f80c66",
+    "capture.py.txt": "418bc615a307eff0762934ab21ecc2f57bdc04e25cfc93fe55bb2e0c888a09c5",
+    "recognition-count-observations.json": "e0c395e58ba6410943cc46f4666d89d00bbbc27834d2915f815c8bc7dc774610",
+    "python.observed.json": "0fcde5114aec5eb69f580abfe69a152d659702217a42b3aee96990ada289831b",
+    "ts.observed.json": "c2bbf1fe5bdcdfdebd0c2ee295b9ffeee3714054d4548b597563e2d3dc5a248c",
+    "js.observed.json": "3e7c49394c7f634b08cc78025b4612c3b698073003f2a34b58c2f655cc2e0314",
+    "README.md": "2d9ff16865d18a65e0b52d3936499977ea23131683c71bcddec2de4f50ec136f"
+  }
+}

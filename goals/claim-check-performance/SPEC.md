@@ -274,6 +274,66 @@ Accepted main archive sweep c8d729841b removed 364 files protected by the active
 
 Reverse: Remove original-path copies only after this active goal no longer depends on them and a separately reviewed migration preserves every original byte, unchanged scorer behavior and all historical results; never weaken preservation to accept missing evidence.
 
+### Run bounded legacy census and paired focused candidate, 2026-11-08
+
+The operator authorized a bounded census of all 538 exposed legacy claims followed by implementation and comparison of one focused candidate. Consume only the sealed product-memo-coordinator-001 replay and the original 60-family references; retain all labels, scorers, selections, historical results and the mandatory 46 exact identities. The census is observational and cannot establish causal stage ceilings or legal correctness.
+
+Measure the clean d12346471279e8ba71724efe676f36bb9e7355b5 runtime before production edits, then the focused candidate on that same base and installed assets. Use fresh exclusive output and closure directories, family concurrency one, unchanged heap/work bounds and unchanged numerical gates. No new parser/model assets, fresh heldout bodies, capacity, training, retrieval or spending are admitted. A candidate is a development direction only if paired exact recovery improves and all 46 identities remain exact; failure is retained and does not complete the goal.
+
+Verify original preservation and all six prior measurement seals before and after. Stop on integrity drift, unauthorized source access, ambiguous required joins or a lost mandatory pass; retain every diagnostic, failure and comparison.
+
+Lane `feat/claim-check-dotted-labels` · PR #2928
+
+Reverse: Reject the candidate and retain the measured baseline; preserve this census, every result, all labels and mandatory passing identities.
+
+### Measure components first and bound the fallback with aligned part-of-speech, 2026-11-08
+
+Feasibility adjudication 002 asked for one component census and then paired comparison before any architecture choice. The census over all 538 exposed legacy claims reconciles with the unchanged scorer and shows the enhanced source plan reaches 61 of 538 selected claims and 0 of 60 independent claims; the rest use the word-scanner fallback, which ignored the aligned part-of-speech evidence already computed for them. Removing the most frequent planner refusal gained no strict claim, so loosening single guards is not the route and the guard stays. The adopted repair uses aligned facts only inside the fallback: it cuts clear nominal overruns, keeps premodifiers with their head, drops non-nominal bare mentions and opens elements at gated parallel coordinates. Development replay moves 46 to 47 of 538 with all 46 identities retained, matched elements 752 to 867 and matched edges 2141 to 2330. Three parity tests now assert that a declined plan keeps the record outcome and partial coverage instead of byte equality with the evidence-free tree, because fallback terms now differ by design. No label, scorer, fixture, denominator or gate changed, the replay is not a frozen gate measurement, and every usefulness gate still fails. Evidence: research/component-census-001.json.
+
+Reverse: Revert the fallback commit and remove sourcePartOfSpeechGrammar; the census receipt stays as retained evidence.
+
+### Nest composed lists of three or more items and classify finite verbs by tag, 2026-11-08
+
+Gold keeps a composition verb's list nested about as often as flat (41 against 46), so a blanket split is unjustified. Two-object lists stay flat and only three or more determiner-led items nest. Separately, element kind is part of node identity, and the known predicate word list missed many finite verbs, so a tagged finite verb or auxiliary now makes an element functional. A noun following the verb keeps the mistagged-compound exception, except for an -s verb directly after a nominal, following subject agreement. Development replay moves 47 to 48 of 538 with all 46 identities retained, matched elements 867 to 910 and matched edges 2330 to 2490. A dot-label strip was measured and rejected because it breaks deliberate negative controls. No label, scorer, fixture, denominator or gate changed, the replay is not a frozen gate measurement, and every usefulness gate still fails.
+
+Reverse: Remove expandEnumeration and the tagged verb branch of functionalAt; the replay receipt stays as retained evidence.
+
+### Compare independently source-certified fallback term refinement, 2026-11-08
+
+Continue the operator-authorized performance repair with one focused source-certified fallback-term candidate, based on the retained 48/538 implementation. Preserve the earlier census/composition decision and every label, scorer, source selection, result and mandatory passing identity. The real five-family diagnostic certified one local three-head/governor registry while all five report payloads remained byte-identical; this establishes a narrow implementation lead, not performance or complete attachment semantics.
+
+Prepare one immutable private refinement per claim under the original live failure-work ledger, separate from enhanced-plan admission and context readiness. A refinement may shorten an existing uniquely owned term only when an independently certified head closure proves its exact source prefix and the existing term ends exactly at the adjacent regular participle boundary. Reject ambiguous ownership, duplicate or foreign identities, overlapping terms, non-whitespace gaps, coordination and unsupported boundaries. Do not add terms or introductions, change determiners, element spans/kinds/paths, public schemas, admission or policy coverage. Recompute affected identity links through the existing resolver. Unknown attachment alternatives remain unknown.
+
+Before evaluation freeze the actual candidate source/runtime closure in a new exclusive directory. Compare the unchanged full 538-claim evaluation against product-composition-fallow-refactor-001, retaining the exact 48 identities in composition-candidate-strict-identities-001.json, all 60 complete input ledgers, original 1,213 bindings, ten prior measurement seals and diagnostic seals. Use family concurrency one, unchanged work/heap bounds, Bun identity and 94 asset pins. No corpus identifiers, gold lookup, new assets, heldout/source-QA bodies, acquisition, training, retrieval, spending or capacity. Preserve every failed attempt and output. Reject retention loss or integrity drift; report no-gain honestly. Usefulness and delivery gates remain unchanged.
+
+Lane `feat/claim-check-census-composition` · PR #2980
+
+Reverse: Reject the candidate and retain every measurement, original label and all 48 mandatory passing identities.
+
+### Separate source topology from canonical inspection view, 2026-11-08
+
+Establish an explicit source/inspection projection boundary while preserving every frozen reference fixture and old assertion. The default source-role API retains detailed topology; inspection chooses the canonical flat view before caching, full-family reference resolution and policy. Each invocation compiles and projects once on the same immutable source plan and carried allowance. The package barrel and public report wire remain stable.
+
+The expanded replay passes 78 tests, including the original source-topology and 100-NP/107-NP budget controls. Complexity and duplication findings are refactored without threshold changes or suppressions. The earlier 23-test scope is superseded; it did not establish this broader coverage.
+
+The unchanged 538-claim evaluation at 0906812bbeb0 retains all 49 strict identities, with no gains or losses and all 538 outcomes still abstaining. All 60 inspection reports and 1,219 qualifications equal the prior canonical run. Preserve every earlier failed and passing result. Hosted gates and full usefulness requirements remain unproved until separately demonstrated.
+
+Lane `feat/claim-check-census-composition` · PR #2980
+
+Reverse: Revert the isolated boundary/refactor change while retaining all reference fixtures, old assertions and measurement archives.
+
+### Retain source-owned flat composition identities, 2026-11-08
+
+Promote the source-owned non-colon and governed-PP composition implementation while preserving the existing public contract for closed, flat lists. The original object-only coordinator proof remains unchanged. The new PP case independently validates original source anchors and frame/argument ownership. Public paths are assigned after narrow grouping based on source structure, using normal reference resolution.
+
+The unchanged 538-claim production run at `608932924528` retains all 49 mandatory strict identities with zero gains or losses; 537 claims parse and all 538 outcomes abstain. All 60 original source collections and 1,219 qualification records remain unchanged. Preserve the earlier private 48/538 regression and repaired 49/538 comparison. No labels, scorer, runtime assets, work caps or usefulness gates change.
+
+A targeted family trace proves that projection succeeds and its plan is registered and used, with work allowance remaining. This establishes parser behavior, not legal validation. Every unmet goal gate remains active.
+
+Lane `feat/claim-check-census-composition` · PR #2980
+
+Reverse: Revert the isolated source/test change while retaining all original labels, freeze archives and result history.
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

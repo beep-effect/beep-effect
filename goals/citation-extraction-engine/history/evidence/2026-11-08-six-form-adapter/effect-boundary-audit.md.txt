@@ -1,0 +1,157 @@
+# Effect boundary audit for a pinned synchronous TypeScript parser
+
+Inspected 2026-11-08. Research only: no parser dependency selected/installed, no source changes, no workflow or tests run. Installed `effect`, `@effect/platform-node`, and `@effect/platform-bun` are all **4.1.2** (`node_modules/<package>/package.json:4`). Paths below are relative to this checkout unless explicitly absolute. These are source observations, not runtime acceptance proof.
+
+## Initial reuse assessment (superseded by final recommendation below)
+
+Use an **owned OS child process**, launched through `effect/process/ChildProcess` and `ChildProcessSpawner`, with the repository's existing `NativeProcess`, `NativeAdmission`, `NativeRpc`, and bounded `ByteFrames` composition. Put the pinned synchronous parser invocation entirely inside the child. A parent Effect timeout can interrupt waiting for a result; it cannot preempt a synchronous parser on its own JavaScript thread. Physical retirement must follow timeout/cancellation and must complete before publishing a successful result or releasing the transferred native lease.
+
+This needs a parser-specific schema/procedure/entrypoint adapter, not another scheduler, admission service, RPC transport, or lifecycle framework. Existing `RegexWorker.ts:39-98` is the closest complete composition example; its regex-specific descriptor/preparation/result code should not be copied into parser policy.
+
+## Exact shutdown configuration: worker threads versus OS processes
+
+| Boundary | Actual lever | Observed limitation |
+| --- | --- | --- |
+| `@effect/platform-node/NodeWorker.layer(spawn)` for `node:worker_threads.Worker` | No grace argument. Finalizer posts `[1]`, waits for exit, then `Effect.timeout(5000)` and `worker.terminate()` | Grace is hardcoded 5 seconds. Node terminate returns a Promise; the fallback awaits it. No public physical-exit receipt on `Worker.Worker` |
+| Same NodeWorker layer for IPC `node:child_process.ChildProcess` | Same hardcoded 5 seconds, fallback `worker.kill("SIGKILL")` | `kill()` returns a boolean; adapter wraps it in a resolved Promise. Fallback completion does **not** independently await the child exit event after sending SIGKILL |
+| `@effect/platform-bun/BunWorker.layer(spawn)` | Same hardcoded 5 seconds; fallback `worker.terminate()` in `Effect.sync` | Thread boundary, not OS-process isolation. Its close latch is awaited on graceful path; force fallback does not await a separate close receipt |
+| `effect/process/ChildProcess.make(executable, args, options)` | `CommandOptions extends KillOptions`: `killSignal`, `forceKillAfter`; same fields accepted by handle `.kill(options)` | Defaults are SIGTERM and no escalation deadline. Configure explicitly for hostile synchronous work |
+| Current repository `citationNativeProcessCommand` | `killSignal: "SIGKILL"`, `forceKillAfter: Duration.zero`, `detached: false`, no inherited environment, shell false | Immediate kill policy already exists. Descendant process-group ownership is disabled by `detached: false`; appropriate only if the parser child does not spawn descendants |
+
+Citations (installed source): `node_modules/@effect/platform-node/src/NodeWorker.ts:33-66,118-126`; `node_modules/@effect/platform-bun/src/BunWorker.ts:30-65`; `node_modules/effect/src/process/ChildProcess.ts:258-274,443`; `node_modules/effect/src/process/ChildProcessSpawner.ts:86-109`; `node_modules/@effect/platform-node-shared/src/NodeChildProcessSpawner.ts:581-612,677-702,730-750`. In the shared Node process implementation, kill sends the signal, optionally waits `forceKillAfter` before SIGKILL escalation, and ends with `Deferred.await(exitSignal)`. Thus `forceKillAfter` is an escalation grace period, not a guarantee that the OS will acknowledge exit by that deadline. Signal termination makes `exitCode` fail with PlatformError; it is not a successful numeric exit. `isRunning` observes the independent exit Deferred.
+
+The requested reference tree independently has the same hardcoded worker grace and process levers at:
+
+- `/home/elpresidank/YeeBois/references/effect/effect/packages/platform/node/src/NodeWorker.ts:33-65,118`
+- `/home/elpresidank/YeeBois/references/effect/effect/packages/platform/bun/src/BunWorker.ts:30-65`
+- `/home/elpresidank/YeeBois/references/effect/effect/packages/platform/node-shared/src/NodeChildProcessSpawner.ts:581-612`
+- `/home/elpresidank/YeeBois/references/effect/effect/packages/effect/src/workers/Worker.ts:31-58,155-244` and `WorkerRunner.ts:25-65` define the platform-neutral message primitives, not configurable termination.
+
+**Correction to any broad claim that “Effect worker shutdown is configurable”: that is false for these installed NodeWorker/BunWorker layer APIs. Effect OS-process kill/escalation policy is configurable through ChildProcess.** `RpcClient.layerProtocolWorker` pool size, concurrency, target utilization and timeToLive do not configure worker shutdown grace (`node_modules/effect/src/rpc/RpcClient.ts:1550-1565,1737-1756`).
+
+## Reuse repository ownership and admission
+
+`packages/law-practice/server/src/internal/Citation/NativeProcess.ts` already supplies:
+
+- `prepareCitationNativeRuntime` and `CitationNativeProcessRuntime`: validated, injected runtime/executable/workerFile/cwd capabilities, separate from raw request data.
+- `citationNativeProcessCommand` (around lines 69-102): bounded launch policy for Node/Bun. Node requires a built JS entrypoint or another already authorized TypeScript execution arrangement; do not assume plain Node executes this repository's TS import graph.
+- `makeCitationNativeProcessOwner` (line 227 onward): captures Clock, spawner, and owner Scope; records physical ownership before spawn; retains retirement fibers; exposes `snapshot` and `reap`.
+- `withCitationNativeProcess` (line 150 onward): masked lease transfer, interruptible task, then mandatory retirement. No output escapes until retirement completes.
+- Retirement (lines 322-338) requests SIGKILL if still running, checks `isRunning` again, closes the child Scope, then releases the binding. `cleanupDeadline` only bounds observing the detached retirement fiber. If acknowledgement is absent, ownership/permit remains quarantined; it is not silently marked clean (lines 269-282).
+
+`NativeAdmission.ts` already uses `effect/transactions/TxRef` and `Effect.tx`; its lease acquisition, transfer, quarantine and release should remain the only native accounting mechanism. Do not add FiberMap as a duplicate owner: the current owner already retains exact bounded retirement fibers behind native leases. Do not interpret RPC terminal success as lease-release authority.
+
+## Typed request/result and transport composition
+
+Imports for the preferred existing process route:
+
+```ts
+import * as Effect from "effect/Effect"
+import * as Duration from "effect/Duration"
+import * as S from "effect/Schema"
+import * as Rpc from "effect/rpc/Rpc"
+import * as RpcGroup from "effect/rpc/RpcGroup"
+import * as ChildProcess from "effect/process/ChildProcess"
+import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner"
+import * as NodeServices from "@effect/platform-node/NodeServices"
+// Bun host alternative: @effect/platform-bun/BunServices
+```
+
+Provide `NodeServices.layer` on Node or `BunServices.layer` on Bun. Both include `ChildProcessSpawner`, FileSystem, Path, Stdio, Terminal. Minimal Node composition instead is `NodeChildProcessSpawner.layer` provided with `NodeFileSystem.layer` and `NodePath.layer`; spawner layer requires FileSystem and Path (`node_modules/@effect/platform-node-shared/src/NodeChildProcessSpawner.ts:861-865`). `BunChildProcessSpawner` reexports this shared implementation. The owner's construction additionally requires Scope and Clock; use the enclosing scoped service Layer, with default Clock unless intentionally injected.
+
+Typed procedure pattern directly supported by current APIs:
+
+```ts
+const ParserRpcs = RpcGroup.make(Rpc.make("Parse", {
+  payload: ParserRequest,    // bounded Schema, chosen parser pin and six-form policy explicit
+  success: ParserResult,    // bounded Schema with offsets and supported classification
+  error: ParserFailure      // closed, source-free failure Schema
+}))
+```
+
+This constructor shape is used in `RegexWorkerRpc.ts:176-183`. Prefer the existing `NativeRpc.makeCitationNativeRpcClient`, `makeCitationNativeRpcServer`, `runCitationNativeRpcJob`, `receiveCitationNativeConversation`, and terminal delivery helpers. They wrap `RpcClient.makeNoSerialization` / `RpcServer.makeNoSerialization`; framing and schema validation are repository responsibilities already supplied by ByteFrames/NativeJson and specific worker schemas. Reuse those responsibilities; a parser request/result schema alone does not bound the synchronous parser's internal allocations.
+
+Minimal **composition sketch**, not a drop-in patch (parser-specific helpers deliberately undefined):
+
+```ts
+const owner = yield* makeCitationNativeProcessOwner(limits, operation, failure)
+const admission = yield* captureCitationNativeAdmission(limits, invalidRuntime)
+
+const parse = (input) => withCitationNativeProcess(
+  owner,
+  acquireCitationNativeLease(admission, operation, false, failure),
+  invalidRuntime,
+  (lease) => Effect.gen(function* () {
+    // Validate and reserve before large copies; encode within processMessageBytes.
+    const prepared = yield* prepareBoundedParserJob(input, lease.acquire)
+    const child = yield* lease.start(citationNativeProcessCommand(runtime, prepared.startup))
+    return yield* callTypedParserRpc(child, prepared).pipe(
+      Effect.timeoutOrElse({
+        duration: parserDeadline,
+        orElse: () => Effect.fail(parserDeadlineFailure())
+      })
+    )
+  })
+)
+```
+
+The parser synchronous call belongs in the child-side typed RPC handler (`Effect.try` for parser exceptions, then bounded result validation/encoding). This makes exceptions typed but does not make CPU work cooperatively interruptible. Parent cancellation reaches process retirement through `withCitationNativeProcess`. Keep the independent READY / STARTED / terminal / EOF checks as applicable; `RegexWorkerClient.ts:35-75` currently combines the framed conversation and RPC result, while explicitly leaving physical retirement to the enclosing owner.
+
+## Existing Effect worker/RPC alternative, and why it is secondary here
+
+A fresh worker-based system can use `effect/workers/Worker`, `effect/workers/WorkerRunner`, `effect/rpc/RpcClient`, `effect/rpc/RpcServer`, `@effect/platform-node/NodeWorker.layer(spawn)`, and worker-side `@effect/platform-node/NodeWorkerRunner.layer`; Bun has `BunWorker`/`BunWorkerRunner`. Parent `RpcClient.layerProtocolWorker({ size: 1, concurrency: 1 })` requires WorkerPlatform and Spawner. Child `RpcServer.layerProtocolWorkerRunner` requires WorkerRunnerPlatform. This supplies protocol handling and typed RPC without custom messages. NodeWorker accepts both worker_threads and IPC child_process values; BunWorker accepts `globalThis.Worker`.
+
+It is not a replacement for the existing exact-process exit/accounting receipt: the public `Worker.Worker` exposes send/run only (`Worker.ts:46-58`), and the hardcoded shutdown/fallback behavior above does not meet configurable immediate retirement with independent OS exit acknowledgement on all paths. A custom WorkerPlatform could expose more ownership, but that would add a second transport/lifecycle implementation when this repository already has the process owner required.
+
+## SchemaBinary capability and actual gap
+
+`effect/encoding/SchemaBinary` exists and provides `encode(schema, { maxFrameSize })()` and `decode(schema, { maxFrameSize })()` Channels (`node_modules/effect/src/encoding/SchemaBinary.ts:665-678,723-736`). `effect/rpc/RpcSerialization.layerSchemaBinary({ maxFrameSize, ... })` exists (`RpcSerialization.ts:586-607,689-701`). Binary RPC serialization is supported for protocols that consume RpcSerialization. **The existing worker protocol does not consume it**: worker client/server explicitly use JSON codecs (`RpcClient.ts:1722-1725`, `RpcServer.ts:1693-1697`). Adding layerSchemaBinary to layerProtocolWorker does not switch worker messaging to binary.
+
+No new binary transport is necessary for the parser boundary. Reuse existing bounded framing first. If binary representation later becomes a measured requirement, SchemaBinary is available, but integrating its exact framing/codec semantics with repository message/EOF bounds is a separate bounded change.
+
+Genuinely absent from the inspected high-level worker API: configurable shutdown grace and a portable public post-force-kill exit receipt. Neither is absent from the repository's current OS-process route. Still requiring implementation-specific proof: pinned parser coverage for the six forms, bounded source/result sizes, correct offset semantics, entrypoint packaging on Node/Bun, and actual deadline/cancellation/exit tests. This audit does not establish those runtime facts or authorize dependency selection.
+
+
+## Final recommendation after assessing provided stdio Protocol and serialization
+
+For the reduced plain-text TypeScript parser, **prefer Effect RPC Protocol + Effect SchemaBinary over carrying forward NativeRpc/ByteFrames**. Retain only the domain-specific NativeProcess owner and NativeAdmission accounting. The initial reuse assessment above documented the existing route; it is not sufficient justification to preserve its custom transport in this new adapter.
+
+Exact provided capability:
+
+- Child: `RpcServer.layerProtocolStdio` / `makeProtocolStdio` (`node_modules/effect/src/rpc/RpcServer.ts:1564-1633`) consumes `effect/Stdio.Stdio` and `RpcSerialization.RpcSerialization`, parses stdin, serializes stdout, emits EOF to server, supports acknowledgements and schema codecs. Provide `NodeServices.layer` or `BunServices.layer` and the same serialization on both ends. Use `RpcServer.make(ParserRpcs)` or its Layer equivalent with `ParserRpcs.toLayer({ Parse: handler })`. No WorkerRunner needed for this stdio route.
+- Serialization: `RpcSerialization.layerSchemaBinary({ maxFrameSize: limits.processMessageBytes, fingerprintPayloads: true })` (`RpcSerialization.ts:586-607,689-701`). The library owns RPC envelope and payload serialization, schema checking, binary framing, and incremental parsing. Do not write another frame format.
+- Parent: there is **no supplied RpcClient.layerProtocolStdio** in the installed RpcClient export surface. It supplies HTTP, Socket and Worker protocols. The narrow missing adapter is connecting a spawned ChildProcessHandle stdin/stdout to `RpcClient.Protocol`.
+- Build that glue with **`RpcClient.Protocol.make`** (`RpcClient.ts:975-999`, `rpc/Utils.ts:65-100`), supplying `send`, `supportsAck: true`, `supportsTransferables: false`, and `codecFor: serialization.codecFor`. Obtain one parser from `serialization.makeUnsafe()` per owned child; use its `encode(request)` in send and `decode(chunk)` in a scoped `Stream.runForEach(child.stdout, ...)` receiver that forwards decoded responses to the Protocol.make callback for this client. Serialize outbound writes with an Effect Queue and one scoped `Stream.run(child.stdin)` writer, because running the stdin Sink separately per message closes its input. Map write/decode/EOF failure through RpcClientError so outstanding RPC requests terminate; preserve the exact process owner outside the protocol Scope. A one-shot Parse request does not need READY/STARTED custom control frames or CPython identity/callback conversation logic.
+- Alternatively adapt child streams to `effect/socket/Socket.Socket` and use `RpcClient.makeProtocolSocket({ retryTransientErrors: false })`; `Socket.make({ reader, writer })` exists (`socket/Socket.ts:195-204`). This reuses more connection protocol handling but requires mapping Effect stream pulls and a persistent stdin writer into Socket errors/close events. For one owned child and one request, direct Protocol.make glue is smaller and more explicit. `Socket.fromTransformStream` (`Socket.ts:1283`) expects Web ReadableStream/WritableStream, not ChildProcessHandle's Effect Stream/Sink directly, so it is not a zero-glue process adapter.
+
+Revised minimal shape (schematic, not claimed typechecked):
+
+```ts
+// Child
+const handlers = ParserRpcs.toLayer({
+  Parse: ({ source }) => Effect.try({
+    try: () => pinnedParser(source),
+    catch: toSourceFreeParserFailure
+  }).pipe(Effect.flatMap(validateAndBoundParserResult))
+})
+// RpcServer.make(ParserRpcs), provided with handlers,
+// RpcServer.layerProtocolStdio, NodeServices.layer/BunServices.layer,
+// RpcSerialization.layerSchemaBinary({ maxFrameSize, fingerprintPayloads: true }).
+
+// Parent, inside existing withCitationNativeProcess task
+const child = yield* operation.start(command)
+const protocol = yield* makeParserChildStdioProtocol(child) // only missing glue above
+const rpc = yield* RpcClient.make(ParserRpcs).pipe(
+  Effect.provideService(RpcClient.Protocol, protocol)
+)
+const result = yield* rpc.Parse(request).pipe(
+  Effect.timeoutOrElse({ duration: parserDeadline, orElse: deadlineFailure })
+)
+// Enclosing existing owner retires child and verifies OS exit before returning result.
+```
+
+Additional exact import leaves for this final route: `effect/rpc/RpcSerialization`, `effect/rpc/RpcClientError`, `effect/rpc/RpcServer`, `effect/Queue`, `effect/Stream`, and child `effect/Stdio`. This design uses provided RpcClient.make/RpcServer.make instead of the no-serialization variants and uses library SchemaBinary instead of custom byte framing. SchemaBinary maxFrameSize bounds each encoded envelope; schema length/count checks must also bound the typed source and result before constructing large arrays or encoding. Keep logs off stdout.
+
+Important limits of provided stdio server: its receive/write fibers retry failures with a 500ms schedule (`RpcServer.ts:1580-1609`); this is library behavior, not a process watchdog or exit receipt. A parent request deadline and enclosing exact-process retirement remain necessary. `RpcClient.Protocol` and `RpcServer.Protocol` expose protocol messages, not physical process exit or lease/quarantine ownership. This is the concrete reason NativeProcess/NativeAdmission remain domain/safety glue while the custom transport does not.
+
+The parent adapter must account for EOF with pending requests and codec exceptions; it must not rely on an RPC terminal result to infer process exit. The current owner's quarantine and independent exit Deferred observation address that separate safety requirement. No new admission architecture, WorkerPlatform implementation, manual RequestId protocol, or historical READY/STARTED state machine is required for this reduced case. Node/Bun TypeScript packaging and real deadline/cancellation/exit tests remain implementation acceptance work.

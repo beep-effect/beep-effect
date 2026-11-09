@@ -1,0 +1,180 @@
+{
+  "schemaVersion": "claim-component-census-summary/v1",
+  "diagnosticOnly": true,
+  "causalAttribution": false,
+  "roleGoldAvailable": false,
+  "policyGoldAvailable": false,
+  "selectedFamilies": 60,
+  "selectedClaims": 538,
+  "authoritativeStrict": 46,
+  "allAlignedButStrictFailed": 55,
+  "fullCensus": {
+    "path": "/home/elpresidank/.cache/beep/claim-check-performance/census-components-001/census.json",
+    "sha256": "c73376fb4355e0c7a6ada7d928e57a8e775698354258d62da6fba2ab923d3291",
+    "bytes": 2379949
+  },
+  "allSelectedRows": "research/census-components-rows-001.jsonl",
+  "metricTotals": {
+    "antecedentGivenMention": {
+      "gold": 2967,
+      "matched": 2190,
+      "predicted": 2736,
+      "unavailableGold": 579,
+      "unavailablePredicted": 188
+    },
+    "claimParentFromEdges": {
+      "gold": 511,
+      "matched": 483,
+      "predicted": 483,
+      "unavailableGold": 0,
+      "unavailablePredicted": 0
+    },
+    "conditionalEdge:antecedent": {
+      "gold": 1035,
+      "matched": 869,
+      "predicted": 1135,
+      "unavailableGold": 2511,
+      "unavailablePredicted": 1789
+    },
+    "conditionalEdge:depends-on-element": {
+      "gold": 501,
+      "matched": 442,
+      "predicted": 472,
+      "unavailableGold": 194,
+      "unavailablePredicted": 135
+    },
+    "conditionalEdge:functional": {
+      "gold": 409,
+      "matched": 289,
+      "predicted": 294,
+      "unavailableGold": 822,
+      "unavailablePredicted": 764
+    },
+    "conditionalEdge:part-of": {
+      "gold": 563,
+      "matched": 541,
+      "predicted": 547,
+      "unavailableGold": 875,
+      "unavailablePredicted": 700
+    },
+    "edge:antecedent": {
+      "gold": 3546,
+      "matched": 869,
+      "predicted": 2924,
+      "unavailableGold": 0,
+      "unavailablePredicted": 0
+    },
+    "edge:depends-on-element": {
+      "gold": 695,
+      "matched": 442,
+      "predicted": 607,
+      "unavailableGold": 0,
+      "unavailablePredicted": 0
+    },
+    "edge:functional": {
+      "gold": 1231,
+      "matched": 289,
+      "predicted": 1058,
+      "unavailableGold": 0,
+      "unavailablePredicted": 0
+    },
+    "edge:part-of": {
+      "gold": 1438,
+      "matched": 541,
+      "predicted": 1247,
+      "unavailableGold": 0,
+      "unavailablePredicted": 0
+    },
+    "elementIdentity": {
+      "gold": 1976,
+      "matched": 1164,
+      "predicted": 1784,
+      "unavailableGold": 0,
+      "unavailablePredicted": 0
+    },
+    "elementKindGivenSpan": {
+      "compared": 1261,
+      "matched": 1164,
+      "unavailable": 1238
+    },
+    "elementSpan": {
+      "gold": 1976,
+      "matched": 1261,
+      "predicted": 1784,
+      "unavailableGold": 0,
+      "unavailablePredicted": 0
+    },
+    "termAnchor": {
+      "gold": 8166,
+      "matched": 7107,
+      "predicted": 9244,
+      "unavailableGold": 0,
+      "unavailablePredicted": 0
+    },
+    "termDeterminerGivenAnchor": {
+      "compared": 7107,
+      "matched": 7107,
+      "unavailable": 3196
+    },
+    "termHeadGivenAnchor": {
+      "compared": 7107,
+      "matched": 7052,
+      "unavailable": 3196
+    },
+    "termOrderGivenElement": {
+      "compared": 1164,
+      "matched": 755,
+      "unavailable": 1432
+    },
+    "termOwnershipGivenAnchor": {
+      "compared": 7107,
+      "matched": 3534,
+      "unavailable": 3196
+    },
+    "termPayloadGivenElement": {
+      "compared": 1164,
+      "matched": 752,
+      "unavailable": 1432
+    }
+  },
+  "overlappingFeatureCounts": {
+    "antecedentGivenMention": 355,
+    "claimParentFromEdges": 26,
+    "conditionalEdge:antecedent": 200,
+    "conditionalEdge:depends-on-element": 76,
+    "conditionalEdge:functional": 100,
+    "conditionalEdge:part-of": 14,
+    "edge:antecedent": 467,
+    "edge:depends-on-element": 242,
+    "edge:functional": 432,
+    "edge:part-of": 297,
+    "elementIdentity": 297,
+    "elementKindGivenSpan": 83,
+    "elementSpan": 251,
+    "prediction-missing": 1,
+    "termAnchor": 403,
+    "termHeadGivenAnchor": 34,
+    "termOrderGivenElement": 270,
+    "termOwnershipGivenAnchor": 291,
+    "termPayloadGivenElement": 271,
+    "unavailable:antecedentGivenMention": 280,
+    "unavailable:conditionalEdge:antecedent": 436,
+    "unavailable:conditionalEdge:depends-on-element": 182,
+    "unavailable:conditionalEdge:functional": 432,
+    "unavailable:conditionalEdge:part-of": 297,
+    "unavailable:elementKindGivenSpan": 251,
+    "unavailable:termDeterminerGivenAnchor": 403,
+    "unavailable:termHeadGivenAnchor": 403,
+    "unavailable:termOrderGivenElement": 297,
+    "unavailable:termOwnershipGivenAnchor": 403,
+    "unavailable:termPayloadGivenElement": 297
+  },
+  "limitations": [
+    "Conditional metrics exclude unavailable endpoints and report their counts separately.",
+    "Role and legal policy correctness are unidentified by structural references.",
+    "Reference byte identities are recorded; original freeze preservation is an external gate.",
+    "Service files are allowlisted by seal but are not read or used by this census.",
+    "Feature counts overlap and do not identify causal error stages.",
+    "Claim-parent set metric is derived from element dependency edges, not independently annotated claimReferences."
+  ]
+}

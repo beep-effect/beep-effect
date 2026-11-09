@@ -1044,7 +1044,7 @@ Decision:
 Rationale:
 
 These decisions were locked in
-`goals/repo-crispening-orchestration/research/decisions-locked.md` (D1–D5,
+[goals/repo-crispening-orchestration/research/decisions-locked.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/repo-crispening-orchestration/research/decisions-locked.md) (D1–D5,
 G1–G7) after a grounded grill and are not to be reopened during packet
 execution. `O.getSomesStruct` is literally `cast(R.getSomes(self))`
 (`packages/foundation/modeling/utils/src/Option.ts:102`) — runtime behavior is
@@ -1228,7 +1228,7 @@ task, the `quality dtslint-tsgo` lane, the `--types` test selection, and the
 create-package/tsconfig-sync/architecture generator support for them. The
 architecture proof surface is runtime tests only. The type-level guarantees
 lost are recorded per file in
-`goals/quality-speedup/research/data/tst-coverage-assessment.tsv`; porting any
+[goals/quality-speedup/research/data/tst-coverage-assessment.tsv](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/quality-speedup/research/data/tst-coverage-assessment.tsv); porting any
 of them to a compile-only surface is deliberate future work triggered by an
 actual type-level regression, not maintained insurance.
 
@@ -2266,7 +2266,7 @@ exempt), and no file outside `**/history/**` and the top-level `research/`
 tree names a retired authority; `bun run beep laws retired-iri-authorities`
 enforces both.
 The operator brief, the decisions D1 to D6 and the rulings that refine them
-are in `goals/public-origin-beep-effect-com/SPEC.md`.
+are in [goals/public-origin-beep-effect-com/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/public-origin-beep-effect-com/SPEC.md).
 
 Rationale:
 

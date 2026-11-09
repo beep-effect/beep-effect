@@ -148,6 +148,9 @@
       "path": "packages/drivers/exiftool"
     },
     {
+      "path": "packages/drivers/eyecite"
+    },
+    {
       "path": "packages/drivers/ffmpeg"
     },
     {

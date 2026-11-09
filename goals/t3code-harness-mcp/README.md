@@ -2,13 +2,13 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Mission
 
-Register `t3-hub` (the DankStation T3 environment, Full-access OAuth) in every harness that runs outside T3 on every live host, prove T3-launched sessions do not double-load it, and remind before the 30-day grants and links expire.
+Register a user-scope `t3-code` entry against each host's own T3 in every harness that runs outside T3 on every live host, prove T3-launched sessions do not double-load it, and remind before the 180-day tokens and links expire.
 
 Graduated from [explorations/t3code-fleet-driver](../../explorations/t3code-fleet-driver/README.md).
 
@@ -33,11 +33,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+Closed by the single closeout PR (operator ruling 2026-11-08). Open exception: no Junie turn has called the server (`SPEC.md`, Exception Ledger).
 
 ## Latest Evidence
 
-Not started.
+2026-11-08: `history/2026-11-08-harness-matrix.md` (harness matrix across six hosts, double-load check, reminder test fire).
 
 ## Notes
 

@@ -1,0 +1,2055 @@
+{
+  "scope": "Diagnostic projection. Opaque source anchors are not serializable; no native exact-range qualification is inferred. Captured before the later main merge.",
+  "rows": [
+    {
+      "id": "public-full-doe",
+      "resultTag": "Success",
+      "failure": null,
+      "citations": [
+        {
+          "type": "case",
+          "components": {
+            "volume": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "410"
+            },
+            "reporter": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "U. S."
+            },
+            "page": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "179"
+            }
+          },
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "198"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "year": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "1973"
+            },
+            "month": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "day": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "court": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": {
+                "status": "known",
+                "id": "scotus",
+                "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92"
+              }
+            },
+            "plaintiff": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "Doe"
+            },
+            "defendant": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "Bolton"
+            },
+            "additionalText": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "antecedentGuess": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "shortCaseName": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "caseName": {
+              "_id": "Option",
+              "_tag": "None"
+            }
+          }
+        }
+      ],
+      "resolutions": [
+        {
+          "status": "Resolved",
+          "mentionId": "cm1:0e4e4e656bf261625090ea031f182719f8a5edba0c285405898e3ed47e18e04e",
+          "authorityId": "ca1:32e6fdc5bed0feab67a27fb22cd3129baadf4e669dd5480f37484d2b0093a1aa",
+          "confidence": {
+            "_id": "Option",
+            "_tag": "None"
+          }
+        }
+      ]
+    },
+    {
+      "id": "public-short-roe",
+      "resultTag": "Success",
+      "failure": null,
+      "citations": [
+        {
+          "type": "shortFormCase",
+          "components": {
+            "volume": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "410"
+            },
+            "reporter": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "U. S."
+            },
+            "page": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "154"
+            }
+          },
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "year": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "month": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "day": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "court": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": {
+                "status": "known",
+                "id": "scotus",
+                "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92"
+              }
+            },
+            "antecedentGuess": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "plaintiff": {
+              "_id": "Option",
+              "_tag": "None"
+            }
+          }
+        }
+      ],
+      "resolutions": [
+        {
+          "status": "Unresolved",
+          "mentionId": "cm1:81d4e849ec6b84ec5c9bd5ff3526de814c0e136bff142d37fda3081cddd338f2",
+          "reason": "no-matching-authority"
+        }
+      ]
+    },
+    {
+      "id": "public-supra-roe",
+      "resultTag": "Success",
+      "failure": null,
+      "citations": [
+        {
+          "type": "supra",
+          "components": {},
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "at 162"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "antecedentGuess": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "Roe"
+            },
+            "volume": {
+              "_id": "Option",
+              "_tag": "None"
+            }
+          }
+        }
+      ],
+      "resolutions": [
+        {
+          "status": "Unresolved",
+          "mentionId": "cm1:77fdfffa9e4e5844b8f3af8f60eae96c36cc89942a8e9f8dbb468ae5179d0d4c",
+          "reason": "no-matching-authority"
+        }
+      ]
+    },
+    {
+      "id": "public-id-orphan",
+      "resultTag": "Success",
+      "failure": null,
+      "citations": [
+        {
+          "type": "id",
+          "components": {},
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "at 163"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            }
+          }
+        }
+      ],
+      "resolutions": [
+        {
+          "status": "Unresolved",
+          "mentionId": "cm1:e812e8d0bc0e3da926fb5846d3e32b42c8ee5c17ceb117c136afaa0420bd113a",
+          "reason": "no-previous-authority"
+        }
+      ]
+    },
+    {
+      "id": "public-usc-context",
+      "resultTag": "Success",
+      "failure": null,
+      "citations": [],
+      "resolutions": []
+    },
+    {
+      "id": "public-cfr-context",
+      "resultTag": "Success",
+      "failure": null,
+      "citations": [],
+      "resolutions": []
+    },
+    {
+      "id": "regression-full",
+      "resultTag": "Success",
+      "failure": null,
+      "citations": [
+        {
+          "type": "case",
+          "components": {
+            "volume": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "410"
+            },
+            "reporter": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "U.S."
+            },
+            "page": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "113"
+            }
+          },
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "120"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "year": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "1973"
+            },
+            "month": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "day": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "court": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": {
+                "status": "known",
+                "id": "scotus",
+                "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92"
+              }
+            },
+            "plaintiff": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "Roe"
+            },
+            "defendant": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "Wade"
+            },
+            "additionalText": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "antecedentGuess": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "shortCaseName": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "caseName": {
+              "_id": "Option",
+              "_tag": "None"
+            }
+          }
+        }
+      ],
+      "resolutions": [
+        {
+          "status": "Resolved",
+          "mentionId": "cm1:5156772d198bed6922a1abc256b12ca445cde9bd39b04ffc543aa1c4a429f697",
+          "authorityId": "ca1:fffab37260190ce4c5884cf3e0ede5d045bb6805915e8864fed95ca7b7d82725",
+          "confidence": {
+            "_id": "Option",
+            "_tag": "None"
+          }
+        }
+      ]
+    },
+    {
+      "id": "regression-short",
+      "resultTag": "Success",
+      "failure": null,
+      "citations": [
+        {
+          "type": "shortFormCase",
+          "components": {
+            "volume": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "410"
+            },
+            "reporter": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "U.S."
+            },
+            "page": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "120"
+            }
+          },
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "120"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "year": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "month": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "day": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "court": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": {
+                "status": "known",
+                "id": "scotus",
+                "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92"
+              }
+            },
+            "antecedentGuess": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "plaintiff": {
+              "_id": "Option",
+              "_tag": "None"
+            }
+          }
+        }
+      ],
+      "resolutions": [
+        {
+          "status": "Unresolved",
+          "mentionId": "cm1:6f4b853388292763ff7ebdad0c77fbbcc51e93fb49da54a631b8952d59cf2d6d",
+          "reason": "no-matching-authority"
+        }
+      ]
+    },
+    {
+      "id": "regression-id",
+      "resultTag": "Success",
+      "failure": null,
+      "citations": [
+        {
+          "type": "id",
+          "components": {},
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "at 120"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            }
+          }
+        }
+      ],
+      "resolutions": [
+        {
+          "status": "Unresolved",
+          "mentionId": "cm1:9a47f176d11dcaddce3ded8d82fafc60c878e7f2b77fc4b43317693d4d0c41fc",
+          "reason": "no-previous-authority"
+        }
+      ]
+    },
+    {
+      "id": "regression-supra",
+      "resultTag": "Success",
+      "failure": null,
+      "citations": [
+        {
+          "type": "supra",
+          "components": {},
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "at 3"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "antecedentGuess": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "Smith"
+            },
+            "volume": {
+              "_id": "Option",
+              "_tag": "None"
+            }
+          }
+        }
+      ],
+      "resolutions": [
+        {
+          "status": "Unresolved",
+          "mentionId": "cm1:00f3543fcde57c32fed9de648ddb6dc21bae7318ae73baf32d502acbd91f3a19",
+          "reason": "no-matching-authority"
+        }
+      ]
+    },
+    {
+      "id": "regression-usc",
+      "resultTag": "Success",
+      "failure": null,
+      "citations": [
+        {
+          "type": "law",
+          "components": {
+            "title": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "35"
+            },
+            "reporter": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "U.S.C."
+            },
+            "section": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "101"
+            }
+          },
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "year": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "month": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "day": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "publisher": {
+              "_id": "Option",
+              "_tag": "None"
+            }
+          }
+        }
+      ],
+      "resolutions": [
+        {
+          "status": "Resolved",
+          "mentionId": "cm1:327ae6b0eee96193ee18bac9ffc4387570c4b4ac1fd5385c0c8ef2d5b5753379",
+          "authorityId": "ca1:1453e3fa26c3711f3a90e628bea27d3170f25261a6c21bcf329eaf0b522bd395",
+          "confidence": {
+            "_id": "Option",
+            "_tag": "None"
+          }
+        }
+      ]
+    },
+    {
+      "id": "regression-cfr",
+      "resultTag": "Success",
+      "failure": null,
+      "citations": [
+        {
+          "type": "law",
+          "components": {
+            "chapter": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "37"
+            },
+            "reporter": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "C.F.R."
+            },
+            "section": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "1.56"
+            }
+          },
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "year": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "month": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "day": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "publisher": {
+              "_id": "Option",
+              "_tag": "None"
+            }
+          }
+        }
+      ],
+      "resolutions": [
+        {
+          "status": "Resolved",
+          "mentionId": "cm1:cbed1916d320414ef880392f9ea408d2e4a2f92c83360e7f25da0adfe2d76766",
+          "authorityId": "ca1:081da6027353372f4e9cccff9317ebb049da3642da58049cbd981ca7585e6a07",
+          "confidence": {
+            "_id": "Option",
+            "_tag": "None"
+          }
+        }
+      ]
+    },
+    {
+      "id": "astral-prefix",
+      "resultTag": "Success",
+      "failure": null,
+      "citations": [
+        {
+          "type": "case",
+          "components": {
+            "volume": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "410"
+            },
+            "reporter": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "U.S."
+            },
+            "page": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "113"
+            }
+          },
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "year": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "1973"
+            },
+            "month": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "day": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "court": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": {
+                "status": "known",
+                "id": "scotus",
+                "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92"
+              }
+            },
+            "plaintiff": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "defendant": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "additionalText": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "antecedentGuess": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "shortCaseName": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "caseName": {
+              "_id": "Option",
+              "_tag": "None"
+            }
+          }
+        }
+      ],
+      "resolutions": [
+        {
+          "status": "Resolved",
+          "mentionId": "cm1:510ba93bb8c34baa7904e6316cd35fe256d0778ea98a55a06a8c39eb85857cb8",
+          "authorityId": "ca1:fffab37260190ce4c5884cf3e0ede5d045bb6805915e8864fed95ca7b7d82725",
+          "confidence": {
+            "_id": "Option",
+            "_tag": "None"
+          }
+        }
+      ]
+    },
+    {
+      "id": "combining-prefix",
+      "resultTag": "Success",
+      "failure": null,
+      "citations": [
+        {
+          "type": "case",
+          "components": {
+            "volume": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "410"
+            },
+            "reporter": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "U.S."
+            },
+            "page": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "113"
+            }
+          },
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "year": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "1973"
+            },
+            "month": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "day": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "court": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": {
+                "status": "known",
+                "id": "scotus",
+                "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92"
+              }
+            },
+            "plaintiff": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "defendant": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "additionalText": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "antecedentGuess": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "shortCaseName": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "caseName": {
+              "_id": "Option",
+              "_tag": "None"
+            }
+          }
+        }
+      ],
+      "resolutions": [
+        {
+          "status": "Resolved",
+          "mentionId": "cm1:87852f5a6db097764bc7440297c966facb4428217122345d777184c2ad1365c8",
+          "authorityId": "ca1:fffab37260190ce4c5884cf3e0ede5d045bb6805915e8864fed95ca7b7d82725",
+          "confidence": {
+            "_id": "Option",
+            "_tag": "None"
+          }
+        }
+      ]
+    },
+    {
+      "id": "usc-subsection",
+      "resultTag": "Success",
+      "failure": null,
+      "citations": [
+        {
+          "type": "law",
+          "components": {
+            "title": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "35"
+            },
+            "reporter": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "U.S.C."
+            },
+            "section": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "112"
+            }
+          },
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "(a)"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "year": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "month": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "day": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "publisher": {
+              "_id": "Option",
+              "_tag": "None"
+            }
+          }
+        }
+      ],
+      "resolutions": [
+        {
+          "status": "Resolved",
+          "mentionId": "cm1:18d9251b83a09b657f68d182acf826e486ec484cd1f363325f62355d0c00aa7c",
+          "authorityId": "ca1:ef7a772ef54e7b3e91b71db5fc39378b8641ffb4f3487249f10e73d97c531d3e",
+          "confidence": {
+            "_id": "Option",
+            "_tag": "None"
+          }
+        }
+      ]
+    },
+    {
+      "id": "usc-nested-subsection",
+      "resultTag": "Success",
+      "failure": null,
+      "citations": [
+        {
+          "type": "law",
+          "components": {
+            "title": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "35"
+            },
+            "reporter": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "U.S.C."
+            },
+            "section": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "102"
+            }
+          },
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "(a)(1)"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "year": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "month": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "day": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "publisher": {
+              "_id": "Option",
+              "_tag": "None"
+            }
+          }
+        }
+      ],
+      "resolutions": [
+        {
+          "status": "Resolved",
+          "mentionId": "cm1:04f6376c0fceb63a2ae2825ef288c13303b43809d063ee5b9f6c71d36bde05b4",
+          "authorityId": "ca1:9904559f13c1e2cd2474ab7bc5809a140bc80bf4c03aa35b9f6a66467e627189",
+          "confidence": {
+            "_id": "Option",
+            "_tag": "None"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cfr-subsection",
+      "resultTag": "Success",
+      "failure": null,
+      "citations": [
+        {
+          "type": "law",
+          "components": {
+            "chapter": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "37"
+            },
+            "reporter": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "C.F.R."
+            },
+            "section": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "1.56"
+            }
+          },
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "(c)"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "year": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "month": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "day": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "publisher": {
+              "_id": "Option",
+              "_tag": "None"
+            }
+          }
+        }
+      ],
+      "resolutions": [
+        {
+          "status": "Resolved",
+          "mentionId": "cm1:b56d7f486ffe49c6cfc1007471b911b611826dc298bd58f1bd45d4029b730c73",
+          "authorityId": "ca1:081da6027353372f4e9cccff9317ebb049da3642da58049cbd981ca7585e6a07",
+          "confidence": {
+            "_id": "Option",
+            "_tag": "None"
+          }
+        }
+      ]
+    },
+    {
+      "id": "duplicate-cfr",
+      "resultTag": "Success",
+      "failure": null,
+      "citations": [],
+      "resolutions": []
+    },
+    {
+      "id": "negative-empty",
+      "resultTag": "Failure",
+      "failure": null,
+      "citations": [],
+      "resolutions": []
+    },
+    {
+      "id": "negative-prose",
+      "resultTag": "Success",
+      "failure": null,
+      "citations": [],
+      "resolutions": []
+    },
+    {
+      "id": "negative-numbers",
+      "resultTag": "Success",
+      "failure": null,
+      "citations": [],
+      "resolutions": []
+    },
+    {
+      "id": "negative-section",
+      "resultTag": "Success",
+      "failure": null,
+      "citations": [],
+      "resolutions": []
+    },
+    {
+      "id": "outside-usc-title",
+      "resultTag": "Success",
+      "failure": null,
+      "citations": [
+        {
+          "type": "law",
+          "components": {
+            "title": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "42"
+            },
+            "reporter": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "U.S.C."
+            },
+            "section": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "1983"
+            }
+          },
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "year": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "month": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "day": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "publisher": {
+              "_id": "Option",
+              "_tag": "None"
+            }
+          }
+        }
+      ],
+      "resolutions": [
+        {
+          "status": "Resolved",
+          "mentionId": "cm1:2951068c41a4afd616065ee6dc2b18c270cd0a4e67dc24b8a264bf1df83814af",
+          "authorityId": "ca1:a55f2ed421768524375ca6098f46fcca466550a254dadaa614d4f980966965f7",
+          "confidence": {
+            "_id": "Option",
+            "_tag": "None"
+          }
+        }
+      ]
+    },
+    {
+      "id": "outside-journal",
+      "resultTag": "Success",
+      "failure": null,
+      "citations": [
+        {
+          "type": "journal",
+          "components": {
+            "volume": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "123"
+            },
+            "reporter": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "Harv. L. Rev."
+            },
+            "page": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "456"
+            }
+          },
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "year": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "month": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "day": {
+              "_id": "Option",
+              "_tag": "None"
+            }
+          }
+        }
+      ],
+      "resolutions": [
+        {
+          "status": "Resolved",
+          "mentionId": "cm1:73b0ba8e7ad71a14c74859a24fa985c502315f12de9d28c2ca1a1128ae8a09bb",
+          "authorityId": "ca1:aadbd05914d0f4a2ed2ef55f00cb041fbf4a51b732a61074ca5c7faa3b3c2789",
+          "confidence": {
+            "_id": "Option",
+            "_tag": "None"
+          }
+        }
+      ]
+    },
+    {
+      "id": "local-id",
+      "resultTag": "Success",
+      "failure": null,
+      "citations": [
+        {
+          "type": "case",
+          "components": {
+            "volume": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "410"
+            },
+            "reporter": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "U.S."
+            },
+            "page": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "113"
+            }
+          },
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "year": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "1973"
+            },
+            "month": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "day": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "court": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": {
+                "status": "known",
+                "id": "scotus",
+                "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92"
+              }
+            },
+            "plaintiff": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "Roe"
+            },
+            "defendant": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "Wade"
+            },
+            "additionalText": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "antecedentGuess": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "shortCaseName": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "caseName": {
+              "_id": "Option",
+              "_tag": "None"
+            }
+          }
+        },
+        {
+          "type": "id",
+          "components": {},
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "at 120"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            }
+          }
+        }
+      ],
+      "resolutions": [
+        {
+          "status": "Resolved",
+          "mentionId": "cm1:086ef50dc54d2f05186d69be74cce04a807c8c90254b65cf30b31b387a1242d9",
+          "authorityId": "ca1:fffab37260190ce4c5884cf3e0ede5d045bb6805915e8864fed95ca7b7d82725",
+          "confidence": {
+            "_id": "Option",
+            "_tag": "None"
+          }
+        },
+        {
+          "status": "Resolved",
+          "mentionId": "cm1:d602a8077a8067a335d223ad4fa098d2a629c528efe23351a90c1da9e8e26e4b",
+          "authorityId": "ca1:fffab37260190ce4c5884cf3e0ede5d045bb6805915e8864fed95ca7b7d82725",
+          "confidence": {
+            "_id": "Option",
+            "_tag": "None"
+          }
+        }
+      ]
+    },
+    {
+      "id": "local-short",
+      "resultTag": "Success",
+      "failure": null,
+      "citations": [
+        {
+          "type": "case",
+          "components": {
+            "volume": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "410"
+            },
+            "reporter": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "U.S."
+            },
+            "page": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "113"
+            }
+          },
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "year": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "1973"
+            },
+            "month": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "day": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "court": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": {
+                "status": "known",
+                "id": "scotus",
+                "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92"
+              }
+            },
+            "plaintiff": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "Roe"
+            },
+            "defendant": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "Wade"
+            },
+            "additionalText": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "antecedentGuess": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "shortCaseName": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "caseName": {
+              "_id": "Option",
+              "_tag": "None"
+            }
+          }
+        },
+        {
+          "type": "shortFormCase",
+          "components": {
+            "volume": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "410"
+            },
+            "reporter": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "U.S."
+            },
+            "page": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "120"
+            }
+          },
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "120"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "year": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "1973"
+            },
+            "month": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "day": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "court": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": {
+                "status": "known",
+                "id": "scotus",
+                "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92"
+              }
+            },
+            "antecedentGuess": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "Wade"
+            },
+            "plaintiff": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "Roe"
+            }
+          }
+        }
+      ],
+      "resolutions": [
+        {
+          "status": "Resolved",
+          "mentionId": "cm1:58ea89860198bdee2cd39220d58c5c30dbce4921d912bc199eb7d7a7881e9c7b",
+          "authorityId": "ca1:fffab37260190ce4c5884cf3e0ede5d045bb6805915e8864fed95ca7b7d82725",
+          "confidence": {
+            "_id": "Option",
+            "_tag": "None"
+          }
+        },
+        {
+          "status": "Resolved",
+          "mentionId": "cm1:f805b864bbb66c8781f326eed6a2db57af63d4d7cbe332bc99d047704456c63b",
+          "authorityId": "ca1:fffab37260190ce4c5884cf3e0ede5d045bb6805915e8864fed95ca7b7d82725",
+          "confidence": {
+            "_id": "Option",
+            "_tag": "None"
+          }
+        }
+      ]
+    },
+    {
+      "id": "local-supra",
+      "resultTag": "Success",
+      "failure": null,
+      "citations": [
+        {
+          "type": "case",
+          "components": {
+            "volume": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "410"
+            },
+            "reporter": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "U.S."
+            },
+            "page": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "113"
+            }
+          },
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "year": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "1973"
+            },
+            "month": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "day": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "court": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": {
+                "status": "known",
+                "id": "scotus",
+                "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92"
+              }
+            },
+            "plaintiff": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "Roe"
+            },
+            "defendant": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "Wade"
+            },
+            "additionalText": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "antecedentGuess": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "shortCaseName": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "caseName": {
+              "_id": "Option",
+              "_tag": "None"
+            }
+          }
+        },
+        {
+          "type": "supra",
+          "components": {},
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "at 162"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "antecedentGuess": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "Roe"
+            },
+            "volume": {
+              "_id": "Option",
+              "_tag": "None"
+            }
+          }
+        }
+      ],
+      "resolutions": [
+        {
+          "status": "Resolved",
+          "mentionId": "cm1:c45ddb883d41adb5b934a041f64676a09046c764267ffd2b70e537623b5f52e3",
+          "authorityId": "ca1:fffab37260190ce4c5884cf3e0ede5d045bb6805915e8864fed95ca7b7d82725",
+          "confidence": {
+            "_id": "Option",
+            "_tag": "None"
+          }
+        },
+        {
+          "status": "Resolved",
+          "mentionId": "cm1:56ff6562e3604db2ed3cccbeb59c11701316a5f6a443d63717864f3d4435b60d",
+          "authorityId": "ca1:fffab37260190ce4c5884cf3e0ede5d045bb6805915e8864fed95ca7b7d82725",
+          "confidence": {
+            "_id": "Option",
+            "_tag": "None"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ambiguous-short",
+      "resultTag": "Success",
+      "failure": null,
+      "citations": [
+        {
+          "type": "case",
+          "components": {
+            "volume": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "410"
+            },
+            "reporter": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "U.S."
+            },
+            "page": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "113"
+            }
+          },
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "year": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "1973"
+            },
+            "month": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "day": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "court": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": {
+                "status": "known",
+                "id": "scotus",
+                "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92"
+              }
+            },
+            "plaintiff": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "Alpha"
+            },
+            "defendant": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "Beta"
+            },
+            "additionalText": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "antecedentGuess": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "shortCaseName": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "caseName": {
+              "_id": "Option",
+              "_tag": "None"
+            }
+          }
+        },
+        {
+          "type": "case",
+          "components": {
+            "volume": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "410"
+            },
+            "reporter": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "U.S."
+            },
+            "page": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "114"
+            }
+          },
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "year": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "1973"
+            },
+            "month": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "day": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "court": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": {
+                "status": "known",
+                "id": "scotus",
+                "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92"
+              }
+            },
+            "plaintiff": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": ""
+            },
+            "defendant": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "Beta"
+            },
+            "additionalText": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "antecedentGuess": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "shortCaseName": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "caseName": {
+              "_id": "Option",
+              "_tag": "None"
+            }
+          }
+        },
+        {
+          "type": "shortFormCase",
+          "components": {
+            "volume": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "410"
+            },
+            "reporter": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "U.S."
+            },
+            "page": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "120"
+            }
+          },
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "120"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "year": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "1973"
+            },
+            "month": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "day": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "court": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": {
+                "status": "known",
+                "id": "scotus",
+                "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92"
+              }
+            },
+            "antecedentGuess": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "Beta"
+            },
+            "plaintiff": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": ""
+            }
+          }
+        }
+      ],
+      "resolutions": [
+        {
+          "status": "Resolved",
+          "mentionId": "cm1:3af9ac10eb31a5456e3505566ff6eed8f93c50435b42017cd0fe0b5749b6e1e7",
+          "authorityId": "ca1:fffab37260190ce4c5884cf3e0ede5d045bb6805915e8864fed95ca7b7d82725",
+          "confidence": {
+            "_id": "Option",
+            "_tag": "None"
+          }
+        },
+        {
+          "status": "Resolved",
+          "mentionId": "cm1:11bdf6cbb68e0d29cc1cf31f11f4f3a50f401280f66d881474d0e2310b95e848",
+          "authorityId": "ca1:e4486d649fd1d29a9102df89e169a96a2d1ee5f4d047dbbc92ce4a399cbb367c",
+          "confidence": {
+            "_id": "Option",
+            "_tag": "None"
+          }
+        },
+        {
+          "status": "Ambiguous",
+          "mentionId": "cm1:6bfcdb3a73bf011dd74258cd5f34b994cf55d5f3f21dc2f65a652e6d0dc04cee",
+          "candidateAuthorityIds": [
+            "ca1:fffab37260190ce4c5884cf3e0ede5d045bb6805915e8864fed95ca7b7d82725",
+            "ca1:e4486d649fd1d29a9102df89e169a96a2d1ee5f4d047dbbc92ce4a399cbb367c"
+          ],
+          "confidence": {
+            "_id": "Option",
+            "_tag": "None"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ambiguous-supra",
+      "resultTag": "Success",
+      "failure": null,
+      "citations": [
+        {
+          "type": "case",
+          "components": {
+            "volume": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "410"
+            },
+            "reporter": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "U.S."
+            },
+            "page": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "113"
+            }
+          },
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "year": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "1973"
+            },
+            "month": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "day": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "court": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": {
+                "status": "known",
+                "id": "scotus",
+                "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92"
+              }
+            },
+            "plaintiff": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "Alpha"
+            },
+            "defendant": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "Beta"
+            },
+            "additionalText": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "antecedentGuess": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "shortCaseName": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "caseName": {
+              "_id": "Option",
+              "_tag": "None"
+            }
+          }
+        },
+        {
+          "type": "case",
+          "components": {
+            "volume": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "410"
+            },
+            "reporter": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "U.S."
+            },
+            "page": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "114"
+            }
+          },
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "year": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "1973"
+            },
+            "month": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "day": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "court": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": {
+                "status": "known",
+                "id": "scotus",
+                "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92"
+              }
+            },
+            "plaintiff": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": ""
+            },
+            "defendant": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "Beta"
+            },
+            "additionalText": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "antecedentGuess": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "shortCaseName": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "caseName": {
+              "_id": "Option",
+              "_tag": "None"
+            }
+          }
+        },
+        {
+          "type": "supra",
+          "components": {},
+          "metadata": {
+            "pinCite": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "at 120"
+            },
+            "parenthetical": {
+              "_id": "Option",
+              "_tag": "None"
+            },
+            "antecedentGuess": {
+              "_id": "Option",
+              "_tag": "Some",
+              "value": "Alpha"
+            },
+            "volume": {
+              "_id": "Option",
+              "_tag": "None"
+            }
+          }
+        }
+      ],
+      "resolutions": [
+        {
+          "status": "Resolved",
+          "mentionId": "cm1:bd0cf981d1a8fce051c4a6a30e967795f76f19d3b20ce955e9c2497f4f0a9d63",
+          "authorityId": "ca1:fffab37260190ce4c5884cf3e0ede5d045bb6805915e8864fed95ca7b7d82725",
+          "confidence": {
+            "_id": "Option",
+            "_tag": "None"
+          }
+        },
+        {
+          "status": "Resolved",
+          "mentionId": "cm1:5e918091402447119329e7acb498ea6960268625eee8ecebf718ffcb1d5bd0ba",
+          "authorityId": "ca1:e4486d649fd1d29a9102df89e169a96a2d1ee5f4d047dbbc92ce4a399cbb367c",
+          "confidence": {
+            "_id": "Option",
+            "_tag": "None"
+          }
+        },
+        {
+          "status": "Resolved",
+          "mentionId": "cm1:74150e47d6881ef2e8785364d4258ea402ee46da13b209cb4ee485540816d4c6",
+          "authorityId": "ca1:fffab37260190ce4c5884cf3e0ede5d045bb6805915e8864fed95ca7b7d82725",
+          "confidence": {
+            "_id": "Option",
+            "_tag": "None"
+          }
+        }
+      ]
+    }
+  ]
+}

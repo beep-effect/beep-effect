@@ -90,7 +90,7 @@ Effect: <https://github.com/Effect-TS/effect/pull/7265>; snapshots at
 | Ontology MCP sidecar | `apps/professional-desktop/server/OntologyMcpTransport.ts` | extend (CORS, Origin, identity) |
 | `GovernedTierGate`, `OntologyChangeActor`, `GovernedEgress` | `packages/epistemic/server/src/GovernedTierGate/`, `apps/professional-desktop/server/` | extend (run key without sessions, owned here) |
 | `OntologyMcpServerConfig` | `packages/ontology/config/src/McpConfig.ts` | extend (Origin allow-list home if D-origin picks config) |
-| Sidecar HTTP harness and live client | `apps/professional-desktop/test/integration/support/ontology-mcp-harness.ts`, `goals/ontology-agent-surface/ops/live-mcp-client.ts` | extend (2026 wire or SSE-aware transport) |
+| Sidecar HTTP harness and live client | `apps/professional-desktop/test/integration/support/ontology-mcp-harness.ts`, [goals/ontology-agent-surface/ops/live-mcp-client.ts](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/ontology-agent-surface/ops/live-mcp-client.ts) | extend (2026 wire or SSE-aware transport) |
 | Effect catalog and `patchedDependencies` | `package.json` | extend (snapshot pin, patch re-key) |
 | `@beep/schema` `EffectSchema`, ai-metrics `source-discovery` | `packages/foundation/modeling/schema/src/EffectSchema.ts`, `packages/tooling/library/ai-metrics/src/source-discovery.ts` | extend (two snapshot type fixes) |
 | Snapshot campaign precedent | beep-effect #1060 (`c8349ed`) | reuse (procedure) |

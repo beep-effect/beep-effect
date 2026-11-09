@@ -1,0 +1,8 @@
+{
+  "profileSha256": "3cc6263c77bdb1f9d7b546b97dc0f503faf8644fcc2136ac5a1cbbebd4c8e65b",
+  "draftSha256": "c9f2932c4f354aa003501cc4230fbb44d0ffe7bc3213f86d83505e41524c224c",
+  "reviewSha256": "9387afccadce8e0d85fc374502f567e5489c9dfeed24a08fcd04ce39198d5578",
+  "cases": 29,
+  "expectedOccurrences": 33,
+  "frozenBeforeThisSelectionRun": true
+}

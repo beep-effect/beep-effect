@@ -1,0 +1,103 @@
+# Independent pre-execution label review
+
+Reviewed 2026-11-08 by a GPT-6.1-Sol model reviewer. This is model review, **not human annotation**, legal advice, or a claim of independent legal validity. Inputs were the current citation-extraction-engine SPEC and `profile.draft.json`; repository agent instructions were also read. No donor output, smoke/raw output, existing parser, or candidate implementation was inspected. No candidate was imported or executed, no dependency installed, and no production/profile file changed. The only executable check was ordinary JavaScript string slicing against the supplied draft, not citation extraction.
+
+## Result and corrections before freeze
+
+All **29 input rows and 33 expected occurrences** were reviewed. Every existing expected anchor is an exact, half-open UTF-16 slice of its supplied text; all boundaries respect surrogate pairs. All six-form classifications, written base-section/subsection splits, and currently asserted authority groups are defensible under the bounded rules below. There are no corrections to existing locator coordinates or quotes.
+
+Three matters should be settled in the file before a candidate run:
+
+1. **Pin and antecedent ranges are not yet frozen.** SPEC requires canonical locator, pin and antecedent ranges before scoring, but every `pin` is null and no antecedent anchor exists. Retain the current locator anchors; add numeric/subsection-only pin anchors from the table below and antecedent anchors from the next table. These are separate occurrences, even when nested within the locator. Define whether absent pin is semantically absent rather than “not scored.” A field containing a pin string does not establish its verified source range.
+2. **Full-case semantic pins are omitted.** Set `fields.pinCite` to `198` for `public-full-doe` and `120` for `regression-full`, with their separate ranges below. A full-case locator intentionally excluding the pin should still retain the written semantic pin. Full cases with no written pin should explicitly use null if that is the comparison convention.
+3. **Inherited statute section is unaccounted for.** `public-usc-context` contains an additional written section number at `[141,144)` (`115`) inheriting the earlier title/code. The two existing explicit-code expectations are correct. Either explicitly exclude coordinated/inherited statute locators from this selection profile before execution (recommended for this finite screen), or add a third USC occurrence with title `35`, section `115`, no pin and a distinct authority. Do not silently score a candidate's recognition of that real section as hallucination. If excluded, state whether recognized inherited sections are permitted extras; `allowRecognizedOutsideProfile` currently exists only for the two dedicated unsupported rows. This is a grammar decision, not evidence for either implementation.
+
+The standalone public Id. row also needs a more precise primary-source receipt or a provenance downgrade; see below. That issue does not affect its supplied-text extraction label.
+
+## Explicit local-link interpretation
+
+Authority indices are local to each supplied input and index that row's expected occurrences; they are not global corpus IDs, persisted entity IDs, truth judgments, or assertions that a legal authority remains valid. A fully written case locator independently establishes its own authority using volume, canonical reporter and first page. Same volume/reporter alone does not merge different first pages. A fully written statute/regulation establishes title plus full base section; written subsections remain pin metadata. Repeated identical title/base-section occurrences share authority.
+
+An immediately following Id. can resolve to the uniquely established preceding local authority in `local-id`. A short case resolves only when its exact volume/reporter matches one unique preceding locally established case authority. Named supra resolves only when its exact party token identifies one unique preceding locally established case authority. No first/nearest match, fuzzy party matching, external lookup, or knowledge of Roe from outside the supplied document resolves an orphan or ambiguous reference. These rules should be written into the frozen profile rather than inferred from its examples.
+
+The two Alpha full cases remain independent despite sharing `Alpha`, `410` and `U.S.`. Their different first pages establish authorities 0 and 1. Each later short/supra has two admissible local antecedents, so candidate authorities `[0,1]` and Ambiguous are correct. A hypothetical last-citation preference would not make them unique under this rule. These are controlled synthetic ambiguity tests, not a claim that both invented Alpha cases exist at those reporter locations.
+
+## Complete row disposition
+
+Every range below uses `[start,end)`; multiple ranges follow expected occurrence order.
+
+| Input row | Current locator ranges | Classification / local grouping / disposition |
+| --- | --- | --- |
+| public-full-doe | [15,28) | full-case, own authority 0; add written pin 198 |
+| public-short-roe | [0,21) | short-case, Unresolved orphan; pin range preserves en dash |
+| public-supra-roe | [5,18) | supra, Unresolved orphan; antecedent Roe is outside locator |
+| public-id-orphan | [0,11) | id, Unresolved orphan; source provenance still unconfirmed |
+| public-usc-context | [123,136), [158,174) | usc, distinct 101 and 102 authorities 0/1; 102 base and (f) pin correct; decide inherited 115 |
+| public-cfr-context | [40,51), [124,136) | cfr, distinct 1.56 and 1.105 authorities 0/1; preserve complete section |
+| regression-full | [13,25) | full-case, own authority 0; add written pin 120 |
+| regression-short | [4,19) | short-case, Unresolved orphan |
+| regression-id | [0,10) | id, Unresolved orphan |
+| regression-supra | [7,18) | supra, Unresolved orphan; Smith outside locator |
+| regression-usc | [0,15) | usc, base section 101, no pin; own authority 0 |
+| regression-cfr | [0,16) | cfr, base section 1.56, no pin; own authority 0 |
+| astral-prefix | [7,19) | full-case; emoji occupies two UTF-16 units; own authority 0 |
+| combining-prefix | [12,24) | full-case; combining mark retained without NFC rewriting; own authority 0 |
+| usc-subsection | [6,24) | usc; base 112, pin (a); own authority 0 |
+| usc-nested-subsection | [0,21) | usc; base 102, pin (a)(1); own authority 0 |
+| cfr-subsection | [6,25) | cfr; base 1.56, pin (c); own authority 0 |
+| duplicate-cfr | [0,11), [13,24) | two distinct cfr mentions sharing authority 0 |
+| negative-empty | none | empty expected list correct |
+| negative-prose | none | empty expected list correct |
+| negative-numbers | none | ordinary numbers alone establish no required form |
+| negative-section | none | section 101 alone establishes no USC title/code |
+| outside-usc-title | none required | genuine law citation outside title-35 profile; optional recognition permitted, not a no-citation truth claim |
+| outside-journal | none required | journal citation outside six-form profile; optional recognition permitted |
+| local-id | [13,25), [34,44) | full-case + id; both authority 0 |
+| local-short | [13,25), [34,49) | full-case + short-case; both authority 0 |
+| local-supra | [13,25), [39,52) | full-case + supra; both authority 0 through exact local Roe token |
+| ambiguous-short | [15,27), [52,64), [73,88) | full cases own authorities 0/1; short-case Ambiguous [0,1] |
+| ambiguous-supra | [15,27), [52,64), [80,93) | full cases own authorities 0/1; supra Ambiguous [0,1] |
+
+## Candidate-neutral pin ranges to freeze
+
+Pin anchors cover only written pin values, excluding `at`, commas, and surrounding spaces. Law pins include their parentheses. This convention makes the semantic pin's exact-source quote explicit without changing any current locator.
+
+| Input row / expected index | Pin quote | Range |
+| --- | --- | --- |
+| public-full-doe / 0 | 198 | [30,33) |
+| public-short-roe / 0 | 154–155 | [14,21) |
+| public-supra-roe / 0 | 162 | [15,18) |
+| public-id-orphan / 0 | 163 | [8,11) |
+| public-usc-context / 1 | (f) | [171,174) |
+| regression-full / 0 | 120 | [27,30) |
+| regression-short / 0 | 120 | [16,19) |
+| regression-id / 0 | 120 | [7,10) |
+| regression-supra / 0 | 3 | [17,18) |
+| usc-subsection / 0 | (a) | [21,24) |
+| usc-nested-subsection / 0 | (a)(1) | [15,21) |
+| cfr-subsection / 0 | (c) | [22,25) |
+| local-id / 1 | 120 | [41,44) |
+| local-short / 1 | 120 | [46,49) |
+| local-supra / 1 | 162 | [49,52) |
+| ambiguous-short / 2 | 120 | [85,88) |
+| ambiguous-supra / 2 | 120 | [90,93) |
+
+No other existing occurrence has a written pin under this convention.
+
+| Input row / expected index | Antecedent quote | Range |
+| --- | --- | --- |
+| public-supra-roe / 0 | Roe | [0,3) |
+| regression-supra / 0 | Smith | [0,5) |
+| local-supra / 1 | Roe | [34,37) |
+| ambiguous-supra / 2 | Alpha | [73,78) |
+
+## Targeted primary-source fidelity review
+
+Primary-source checks were confined to the two supplied URLs, with targeted find/open reads. They establish transcription provenance only. Supplied-text offsets above are independent of PDF page coordinates, HTML offsets, styling, hyperlink spans, or source line wrapping.
+
+- [Supreme Court bound volume 505](https://www.supremecourt.gov/opinions/boundvolumes/505bv.pdf): the Doe full citation and short Roe pinpoint occur on zero-based PDF page 900 (printed page 875); the named Roe supra at 162 occurs across a line wrap on PDF page 896 (printed page 871), and also without that wrap in the later Casey material. Space-joined transcription is appropriate for this plaintext contract. These three excerpt strings are supported by the primary source.
+- The exact standalone `public-id-orphan` excerpt was **not established** by the targeted text search. The search returned nearby partial/token matches in a long volume rather than a trustworthy exact location. This is uncertainty, not proof of absence. Before calling this an independently selected real excerpt, retain a page-specific source receipt for the exact token sequence, or reclassify it as controlled/regression text. Do not resolve it to Roe merely because the intended larger source is Casey.
+- [USPTO MPEP 704](https://www.uspto.gov/web/offices/pac/mpep/s704.html), item (N) in 704.10: the USC sentence matches the supplied wording apart from stripping the list marker and normalizing the rendered space after `pre-AIA`. The inherited 115 is visibly present in the source and is a genuine coordinated section reference.
+- The same USPTO page, 704.12(a), first paragraph: the CFR excerpt is an exact prefix through the second explicit regulation locator. The source sentence continues afterward; truncating there is legitimate for the supplied input, with no implied claim of whole-sentence completeness.
+
+This finite screen does not demonstrate a representative corpus, general Bluebook coverage, source-coordinate reconstruction, legal validity, or throughput. Resource-control names alone are not executable refusal/retirement evidence; the orchestrator must supply the separate bounded controls required by SPEC. None was run as part of label review.

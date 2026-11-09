@@ -35,7 +35,7 @@
 
 The canonical order and evidence pointer live beside `githubCheckLaneWaves` in
 `packages/tooling/tool/cli/src/commands/Quality/internal/GithubChecks.ts`, citing
-`goals/quality-speedup/research/quality-time-inventory.md` section 2. All waves
+[goals/quality-speedup/research/quality-time-inventory.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/quality-speedup/research/quality-time-inventory.md) section 2. All waves
 remain serial; no unmeasured RSS concurrency experiment was introduced.
 
 ## Schema changes

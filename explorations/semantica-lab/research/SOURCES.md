@@ -112,7 +112,7 @@ for the Findings DB and candidates for the upstream lane (DECISIONS D16).
   [`grounding-beep-labs.md`](./grounding-beep-labs.md),
   [`grounding-notion-semantica.md`](./grounding-notion-semantica.md),
   [`grounding-v3-logos.md`](./grounding-v3-logos.md)
-- Graduated goals (2026-08-24, primary consumers of this ledger): [`goals/semantica-canary`](../../../goals/semantica-canary/research/SOURCES.md), [`goals/openai-driver`](../../../goals/openai-driver/research/SOURCES.md) — each carries a goal-side mirror of this ledger and links back here as primary.
+- Graduated goals (2026-08-24, primary consumers of this ledger): [`goals/semantica-canary`](../../../goals/semantica-canary/research/SOURCES.md), [`goals/openai-driver`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/openai-driver/research/SOURCES.md) — each carries a goal-side mirror of this ledger and links back here as primary.
 - Graduated goals (2026-09-03, MAP v1.1 re-entry): [`goals/semantica-atlas-sync`](../../../goals/semantica-atlas-sync/research/SOURCES.md),
   [`goals/semantica-storage-inversion`](../../../goals/semantica-storage-inversion/research/SOURCES.md),
   [`goals/semantica-reasoning-spike`](../../../goals/semantica-reasoning-spike/research/SOURCES.md)
