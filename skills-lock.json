@@ -676,7 +676,7 @@
         ".claude/skills/update-harnesses",
         ".agents/skills/update-harnesses"
       ],
-      "installedTreeHash": "454aa2836d9009c85b8670c8b358adcc872f91052fba819fb31ee4b6ec925eca"
+      "installedTreeHash": "71a7d42aea43fea3f3e3339b3f04ea9e4405f64245612ef8b423cd8ba38843fa"
     },
     "yeet": {
       "_tag": "local",

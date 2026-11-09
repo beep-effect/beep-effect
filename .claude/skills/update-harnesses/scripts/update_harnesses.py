@@ -167,6 +167,19 @@ def mark_latest(rows: list[Row], latest: dict[str, str]):
                 r.status, r.after = "pending", latest[r.harness]
 
 
+def mark_t3_published(rows: list[Row], published: str):
+    """status mode: a T3 Code row is current when it runs the build the hub published,
+    pending when it runs anything else. Without a readable publish manifest it stays installed."""
+    if published in ("", "-"):
+        return
+    for r in rows:
+        if r.harness == "t3code" and r.status == "installed":
+            if r.before == published:
+                r.status = "current"
+            else:
+                r.status, r.after = "pending", published
+
+
 def parse_electron_feed(text: str) -> dict:
     """version / url / sha512 / size of the x86_64 AppImage in an electron-builder feed."""
     version = re.search(r"^version:\s*['\"]?([^'\"\s]+)", text, re.M)
@@ -417,9 +430,9 @@ def published_t3() -> str:
 def hub_t3(run: Run):
     before = read_text(T3_OPT / "source-version")
     if run.mode == "status":
-        published = published_t3()
-        note = "" if before == published else f"published {published}"
-        run.add(Row(HUB, "t3code", "installed", before, "-", "fork-sync", str(T3_OPT), note))
+        row = Row(HUB, "t3code", "installed", before, "-", "fork-sync", str(T3_OPT))
+        mark_t3_published([row], published_t3())
+        run.add(row)
         return
     run.say(HUB, "t3code: fork sync + build + publish (can take up to 90 min)")
     res = run.sh(["systemctl", "--user", "start", "t3code-source-update.service"], timeout=95 * 60)
@@ -661,10 +674,7 @@ def agent_phase(run: Run, host: str, harnesses: list[str], apparmor: dict):
     recs, rc = host_agent(run, host, run.mode, harnesses)
     rows, aa = rows_from_records(host, recs, run.mode)
     if host != HUB and "t3code" in harnesses and run.mode == "status":
-        published = published_t3()
-        for r in rows:
-            if r.harness == "t3code" and r.before not in ("-", published):
-                r.note = f"{r.note}; published {published}".lstrip("; ")
+        mark_t3_published(rows, published_t3())
     rows += missing_rows(host, harnesses, rows, f"host agent exit {rc}; no record (see log)")
     run.add(*rows)
     if aa:

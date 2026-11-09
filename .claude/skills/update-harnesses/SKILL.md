@@ -35,9 +35,12 @@ full log under `~/.local/state/beep/update-harnesses/`.
 
 1. Run `status` first unless the operator asked for a blind update. It shows
    each install's version, method and standing (active, shadowed, root-owned,
-   stale). It marks pending updates where it can see upstream: Claude Code and
-   Codex via npm `latest`, the desktop apps and T3 Code. Other CLI rows read
-   `installed`; their self-updaters decide during `update`.
+   stale). It marks rows `current` or `pending` where it can see upstream:
+   Claude Code and Codex (npm `latest`), T3 Code (the build the hub last
+   published), and the hub's desktop apps (pacman and the Kimi feed). Every other
+   row reads `installed`. That covers the other CLIs, whose self-updaters decide
+   during `update`, and grok-bot's ChatGPT and Claude Desktop, whose apt
+   candidates are only known after the root `apt-get update` that `update` runs.
 2. grok-bot sleeps. If its rows come back `unreachable`, ask the operator to
    open the Grok Bot app's computer view, then rerun with `--host grok-bot`.
 3. Announce the touches before starting. Expect one YubiKey touch per SSH host
@@ -83,7 +86,7 @@ changing a method or adding a host.
 | `skipped` | not writable, unknown method, stale node version, or migration declined | read the note; root-owned copies need the host's admin route, not this account |
 | `failed` | updater or auth failed | read the log; rerun that host/harness once the cause is fixed. Never rerun an uncertain privileged step blindly |
 | `unreachable` | SSH master did not open | missed touch or asleep (grok-bot) |
-| `pending` | a newer version exists (update: hub desktop apps without `--system-upgrade`, or a T3 pull still running) | run `update`, with the flag if needed |
+| `pending` | a newer version exists: status rows behind upstream (see step 1), hub desktop apps left without `--system-upgrade`, or a T3 pull still running | run `update`, with the flag if needed |
 
 Also:
 

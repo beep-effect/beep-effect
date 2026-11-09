@@ -106,6 +106,17 @@ class Parsing(unittest.TestCase):
         self.assertEqual([(r.status, r.after) for r in rows],
                          [("pending", "2.1.321"), ("installed", "-"), ("current", "-"), ("installed", "-")])
 
+    def test_mark_t3_published(self):
+        rows = [uh.Row("dankstation", "t3code", "installed", "0.1.7-fork.2"),
+                uh.Row("dankserver", "t3code", "installed", "0.1.7-fork.1"),
+                uh.Row("dankserver", "codex", "installed", "0.1.7-fork.1")]
+        uh.mark_t3_published(rows, "0.1.7-fork.2")
+        self.assertEqual([(r.status, r.after) for r in rows],
+                         [("current", "-"), ("pending", "0.1.7-fork.2"), ("installed", "-")])
+        stay = [uh.Row("tbk-worker", "t3code", "installed", "0.1.7-fork.1")]
+        uh.mark_t3_published(stay, "-")
+        self.assertEqual(stay[0].status, "installed")
+
     def test_vetted_debs_rejects_untrusted_records(self):
         sha = "a" * 64
         out = "\n".join([
