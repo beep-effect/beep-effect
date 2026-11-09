@@ -113,7 +113,7 @@ Reverse: Add an archived event type to the packet event vocabulary (body, fold b
 
 The earlier decision deferred the goals-archive member until the repo existed, because provisioning a member with no remote breaks every checkout. The agent created beep-effect/beep-effect-goals-archive (public, wiki and issues off) and seeded main with the projection README that ArchiveStore writes, so the member is safe now and rides #2801. The SSH URL is used because the archive checkout must push. bun run beep refs provision linked .repos/goals-archive at 4ca1a37. The ledger is still regenerated at a main SHA in its own PR before batch 1.
 
-Lane `feat/packet-archive-mechanics` · PR #2801
+Lane feat/packet-archive-mechanics · PR #2801
 
 Reverse: Remove the goals-archive member from packages/tooling/policy-pack/repo-configs/data/references.json and its two refs test rows; archive or delete beep-effect/beep-effect-goals-archive only if no tombstone links into it
 
@@ -127,7 +127,7 @@ Reverse: Add the member to packages/tooling/policy-pack/repo-configs/data/refere
 
 The exploration tombstone decision keeps ops/manifest.json, README.md, DECISIONS.md and BRIEF.md, which would move explorations/packet-archive-and-alpha-harvest/research/harvest/ to the archive repo in the exploration batch. The ledger-home decision puts the harvest ledger and the panel verdicts on main under that path, and harvested-alpha-triage names it as its prerequisite and writes its merge output beside it. The two decisions only agree if the tombstone keeps that subtree, so TombstoneKeep.explorations gains research/harvest/**. Only this exploration has the directory, so the sweep is otherwise unchanged and no packet is exempted.
 
-Lane `feat/packet-archive-mechanics`
+Lane feat/packet-archive-mechanics
 
 Reverse: Drop research/harvest/** from TombstoneKeep.explorations once harvested-alpha-triage has closed and moved its inputs; re-run beep goals archive on the exploration
 
@@ -135,7 +135,7 @@ Reverse: Drop research/harvest/** from TombstoneKeep.explorations once harvested
 
 A consumer scan of batch 2 found five live surfaces inside packets the batch deletes: the retention-calibration fixture, protocol and dataset that RetentionCalibrationCLI.test.ts copies; the capability atlas the editor capability-catalog test reads; the Fallow feature matrix that quality github-checks plan-contract-check and quality-tasks.test.ts read; the effect-vitest census that lint effect-vitest --census writes; and the effect-schema-inventory prompt root that --prompt writes and the drift check reads. Following the 2026-11-07 fixture decision, each moves byte-for-byte (git hash-object equals the HEAD blob) to an owner home before the archive write: packages/epistemic/server/test/fixtures/retention-calibration/, packages/foundation/ui-system/editor/test/fixtures/capability-atlas.json, standards/fallow.feature-matrix.jsonc, standards/effect-vitest.census.json and standards/effect-schema-inventory/prompts/. Their locators, biome.jsonc entries, the regenerated biome.identity.jsonc and the gitleaks allowlist path follow them. Prose and provenance strings stay historical. The batch also showed that a goal tombstone kept opsScripts naming archived ops/ scripts, which goals doctor blocks as ops-script-missing. TombstoneWriter now narrows opsScripts to kept files and drops the key when none remain (regression in Archive.test.ts), and effected-promotion's manifest was reprojected.
 
-Lane `feat/packet-archive-batch-2`
+Lane feat/packet-archive-batch-2
 
 Reverse: Restore the previous locators and delete the seven relocated copies once another retained owner exists; the archived packets keep their originals
 
@@ -143,7 +143,7 @@ Reverse: Restore the previous locators and delete the seven relocated copies onc
 
 The first fifty-goal archive removed three law-practice sampling/reference manifests and four CI Ops retained evidence files still consumed by hosted checks. Fallow reports four unresolved new-URL paths and Labs reports five missing-file test failures. Repair the inherited main regression once in a consolidated unblocker, not in each Turbo lane. Move the consumed files to package-owned fixture directories, update the existing locators and keep the archived packets as tombstones. Copy five files byte-for-byte from accepted pre-archive 7e0288484841963d726c0ee69ac6dcf6688d32f9; update only the adoption-table locator in the two KPI reading goldens. Preserve the adoption-table digest, replay-render digest, metrics, corpus selections, quota/digest checks and all assertions. No new samples or evidence generation, suppression, lowered floor, network-dependent test input or cache promotion. No local verify, publish, tests, compiler, docgen, package quality or manual source-generator entrypoint runs; ordinary bootstrap/hooks and native goal writers are allowed. Hosted CI remains authoritative. Existing Turbo PRs consume the fix through accepted main.
 
-Lane `codex/cache-archive-consumer-repair-20261107`
+Lane codex/cache-archive-consumer-repair-20261107
 
 Reverse: Restore the previous consumer locators and remove the seven promoted fixtures only after another retained runtime owner is supplied; keep the full packet archive intact.
 
@@ -151,7 +151,7 @@ Reverse: Restore the previous consumer locators and remove the seven promoted fi
 
 The knowledge doctor reads inline code spans as tracked paths, including inside link text, but the inbound-link rewriter repointed only Markdown link destinations. #2968 failed knowledge:semantic-delta with 54 findings, and batch 1 merged over 30 of the same class. Plans now record each reference's form and rewrite a Markdown code span to plain link text, using the doctor's own span parser and path normalizer. Code spans outside Markdown stay untouched, because there a backticked path may be program data such as a JSON string or generated prompt text. A span citing a directory the tombstone keeps nothing under gets a tree URL. Tombstones render Provides as plain text, because capability names are not paths. Findings already left by batch 1 stay as they are, since a later plan no longer sees those paths.
 
-Lane `fix/packet-archive-citation-rewrite` · PR #2979
+Lane fix/packet-archive-citation-rewrite · PR #2979
 
 Reverse: Revert #2979; plans return to exact removed-file link destinations, and later batches repair code-span citations by hand
 
@@ -159,7 +159,7 @@ Reverse: Revert #2979; plans return to exact removed-file link destinations, and
 
 Batch 5's scan found two explorations still read live: apps/labs/ciops reads and hash-pins the ontology packet's 10,465 files, and SemanticFoundation.test decodes the legal ontology asset manifest. Both stay on main with a retentionReason. Provenance strings in the editor capability atlas and the lejeune-bolt bundle are citations that nothing opens, so those packets are archived. From this batch on the archive push comes last, after every gate, so a packet found to be live can be retained without leaving a copy in the public archive.
 
-Lane `feat/packet-archive-batch-5`
+Lane feat/packet-archive-batch-5
 
 Reverse: Remove each retentionReason after moving what apps/labs/ciops and SemanticFoundation.test read
 
@@ -167,7 +167,7 @@ Reverse: Remove each retentionReason after moving what apps/labs/ciops and Seman
 
 Batch 4 first moved the sealed Semantica C2 report into a test fixture and archived schema-opaque-default. It also moved the speed-loop runner-burst script to scripts/. Hosted CI then failed: Secret Scanning on two digests in the moved report, the retired IRI law on its IRIs, fallow on @typescript/typescript6 losing its last consumer, and the tracked-shell law on the moved script. All three packets stay on main with a retentionReason, because a sweep batch should not add shell scripts. The archive commits were already public, so the archive repo still holds copies of them; those copies are harmless and inbound references rewritten to them still resolve. The batch landed from a new branch so the report never appears in the PR's commit range; nothing was force-pushed.
 
-Lane `feat/packet-archive-batch-4b`
+Lane feat/packet-archive-batch-4b
 
 Reverse: Remove each retentionReason; for semantica-canary first replace the sealed witness test, for schema-opaque-default first remove the codemod dependency, and for speed-loop first retire its security test
 
@@ -175,7 +175,7 @@ Reverse: Remove each retentionReason; for semantica-canary first replace the sea
 
 Cache.conformance reads this packet's corpus plan and backend rubric with pinned SHA-256s, and standards/cache-conformance/conformance-corpus.json records the plan's path. Evidence strings in Corpus Preservation.ts are citations nothing opens, the harvest ledger stays because exploration tombstones keep it, and the research library reads only manifests, so those packets are archived.
 
-Lane `feat/packet-archive-batch-6`
+Lane feat/packet-archive-batch-6
 
 Reverse: Remove the retentionReason after moving the plan and rubric and regenerating the conformance corpus
 
@@ -183,7 +183,7 @@ Reverse: Remove the retentionReason after moving the plan and rubric and regener
 
 standards/cache-qualification.json verifies four research reviews in this packet by path and SHA-256, including in its history entries. Rewriting those paths would alter an append-only ledger, so the packet stays on main with a retentionReason, as citation-extraction-engine and catalog-writer-incremental already do. Live inputs of five other batch 4 packets moved to standards/, scripts/, .semgrep/ and a test fixture.
 
-Lane `feat/packet-archive-batch-4`
+Lane feat/packet-archive-batch-4
 
 Reverse: Remove the retentionReason and archive the packet after moving the four reviews and rewriting the ledger paths
 

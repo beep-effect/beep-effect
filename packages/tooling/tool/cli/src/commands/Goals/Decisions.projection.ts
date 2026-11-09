@@ -176,9 +176,11 @@ const byDateThenFile: Order.Order<GoalDecision> = Order.combine(
   Order.mapInput(Order.String, (decision: GoalDecision) => decision.file)
 );
 
+// The lane is a branch name, not a tracked path: it stays plain text so the knowledge gates never
+// probe it as a repository path once the lane branch is gone.
 const attribution = (decision: GoalDecision): O.Option<string> => {
   const parts = A.getSomes([
-    O.map(O.fromUndefinedOr(decision.frontmatter.lane), (lane) => `Lane \`${lane}\``),
+    O.map(O.fromUndefinedOr(decision.frontmatter.lane), (lane) => `Lane ${lane}`),
     O.map(O.fromUndefinedOr(decision.frontmatter.pullRequest), (pr) => `PR #${pr}`),
   ]);
   return A.isReadonlyArrayNonEmpty(parts) ? O.some(A.join(parts, " · ")) : O.none();

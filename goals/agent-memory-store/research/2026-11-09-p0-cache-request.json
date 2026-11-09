@@ -8,15 +8,8 @@
       "sha256": "99d40e057d04f0fc2801e60c2dbb0dc67822bb3c331ff40bab87ec4e73d1f21e"
     }
   },
-  "subjects": [
-    "//",
-    "@beep/agent-memory-store",
-    "@beep/sqlite"
-  ],
-  "scope": [
-    "@beep/identity#lint",
-    "@beep/types#lint"
-  ],
+  "subjects": ["//", "@beep/agent-memory-store", "@beep/sqlite"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
   "profile": "local-linux-x64-bun1.4.4",
   "epoch": "qualification-v3"
 }

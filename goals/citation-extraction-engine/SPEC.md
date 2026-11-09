@@ -158,7 +158,7 @@ _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions wr
 
 On 2026-11-05 the operator explicitly authorized continuing the unchanged citation-extraction-engine goal in a follow-up PR, starting with committed scanner and word-boundary work, after PR #2511 was squash-merged as 96a7698b63ed3e187981faf3b5b2d0663706ee91. This is a scoped exception to the one-PR delivery and reviewability stop condition. All parity, accounting, safety, proof, reflection, and lifecycle requirements remain binding; the prior PR merge does not prove goal completion. Preserve links to the prior PR and exact evidence, and publish ready changes using hosted CI.
 
-Lane `citation-extraction-engine`
+Lane citation-extraction-engine
 
 Reverse: Requires a new explicit operator instruction; this publication exception does not relax any acceptance requirement.
 
@@ -166,7 +166,7 @@ Reverse: Requires a new explicit operator instruction; this publication exceptio
 
 On 2026-11-05 the operator explicitly authorized linked follow-up PRs for this unchanged goal when active PRs merge, starting with prepared HTML geometry and hosted quality repairs at 7fcf0897c0 after PR #2713 merged. This renews and generalizes the publication exception: preserve links to earlier PRs, exact source and proof receipts, all acceptance requirements, and the active full objective. A PR merge does not establish goal completion and this grants no merge authority, safety waiver or scope reduction.
 
-Lane `citation-extraction-engine`
+Lane citation-extraction-engine
 
 Reverse: Requires an explicit operator instruction changing this publication authorization; all goal acceptance gates remain binding.
 
@@ -244,7 +244,7 @@ Recorded rows below 100% (path relative to packages/law-practice/server):
 | `src/internal/Citation/XmlWorkerProtocol.ts` | 96.77 | 94.44 | 83.33 | 83.33 | 1/2/1/1 |
 | `src/internal/Citation/XmlWorkerRpc.ts` | 92.85 | 87.5 | 50 | 75 | 1/2/1/2 |
 
-Lane `fix/law-practice-coverage-ep36`
+Lane fix/law-practice-coverage-ep36
 
 Reverse: Restore package floors by covering the listed worker programs with in-process tests
 
@@ -260,7 +260,7 @@ The research-intake-2026-11 intake routed 479 findings to this packet (202 affir
 
 This amendment adds evidence only; it changes no acceptance criterion. The owning lane decides whether any finding changes its plan.
 
-Lane `feat/research-intake-2026-11`
+Lane feat/research-intake-2026-11
 
 Reverse: Delete this decision file and regenerate the block; the findings stay in the library and in research-intake-2026-11/research/routing.jsonl
 
@@ -268,7 +268,7 @@ Reverse: Delete this decision file and regenerate the block; the findings stay i
 
 check.yml and heavy-admit.yml call heavy.yml@main, so the 90-minute Test Integration budget applies only after this PR merges; on the PR's own run (job 128583045297) the lane still stopped at 40 minutes with 15 of 47 law-practice-server integration files done (62 minutes of file time), even though the per-runtime split brought the bun canonical replay from 38 to 19 minutes. A local run of the whole suite with --maxWorkers=4 on a 64-core workstation still took 38 minutes and pushed CitationDiffWorker's 1005-source-map bun replay into its 600 s watchdog, so more vitest workers trade the lane timeout for load-dependent failures on the 8-vCPU heavy runner; the package keeps maxWorkers 2 and maxConcurrency 2. Until the budget lands on main, Test Integration on this PR is the same inherited red main carries (S11, attributed in the PR). The same local run exposed two failures that the lane timeout had been hiding and that do not depend on this PR: test/integration/CitationInputDocument.test.ts asserts reservedUnits === cleanerTextUtf16 when no geometry is produced and gets 0 for 5 on both runtimes (fixture unchanged since #2737; the reservation path changed in #2896), and the diff-worker corpus replay sits at the edge of its watchdog. Both stay with this packet. The deterministic test policy's operationDeadline moved from 30 s to 50 s (under the engine's 60 s ceiling, so the request-local-increase proof in CitationEngineLimits.test.ts still has room) so corpus replays that take 28 s locally stop failing on the slower hosted runner; the pinned engine artifact vector follows the policy.
 
-Lane `@slop/11-6-26` · PR #2915
+Lane @slop/11-6-26 · PR #2915
 
 Reverse: Add --maxWorkers=N to the package's beep:test:integration script only with a hosted measurement showing the suite fits the lane without deadline or watchdog failures.
 
@@ -294,7 +294,7 @@ and runtime-packaging controls. Use supplied Effect RPC/serialization and
 configured process levers; the existing owner retains cleanup
 acknowledgement/quarantine.
 
-Lane `feat/citation-six-form-contract` · PR #2966
+Lane feat/citation-six-form-contract · PR #2966
 
 Reverse: Remove the driver dependency and return the Layer composition to the preserved native engine; retain frozen labels and all comparative evidence.
 
@@ -335,7 +335,7 @@ focused real-Layer evidence, reflection and verified retention on main remain
 completion duties. Publish ready linked follow-ups using hosted CI; unrelated
 reds do not block publication.
 
-Lane `feat/citation-six-form-contract`
+Lane feat/citation-six-form-contract
 
 Reverse: Restore the prior packet from 7dc8c2d443d only after a new explicit operator instruction; preserve the re-grounding evidence.
 
@@ -343,7 +343,7 @@ Reverse: Restore the prior packet from 7dc8c2d443d only after a new explicit ope
 
 Since #2847 registered all 193 canonical inputs per runtime, Heavy / Test Integration on main hit its 40-minute lane timeout on every run (42417048100, 42422844786, 42426906781): the single integration file ran 44 shards behind the package's maxConcurrency 2 while the other worker drained the remaining 46 files, so the bun half alone took 38 minutes. The replay now lives in one file per runtime (bun in CitationCanonicalExtraction.test.ts, node in CitationCanonicalExtractionNode.test.ts) sharing one shard table, so both workers replay in parallel, and the lane budget is 90 minutes so the whole suite fits with headroom. The remaining lever is per-extraction cost (about 5 s per document plus 25 s of engine installation per shard) or sharding the integration lane like Test Unit; that stays with this packet.
 
-Lane `@slop/11-6-26` · PR #2915
+Lane @slop/11-6-26 · PR #2915
 
 Reverse: Merge the node shards back into CitationCanonicalExtraction.test.ts and restore timeout_minutes: 40 in heavy.yml once the per-extraction cost or the lane sharding makes the suite fit.
 
@@ -351,7 +351,7 @@ Reverse: Merge the node shards back into CitationCanonicalExtraction.test.ts and
 
 main's first run after #2915 (42444900312) ran Heavy / Test Integration for the full 90 minutes and still had 5 of 48 law-practice-server integration files left; the 43 finished files total 168.5 minutes of file time on the 8-vCPU heavy runner at two vitest workers, so the lane needs about 100 minutes. Two files fail deterministically regardless of budget: test/integration/CitationInputDocument.test.ts (reservedUnits 0, expected cleanerTextUtf16 5 on both runtimes) and test/integration/CitationDiffWorker.test.ts (the 1005-source-map bun replay hits its own 600 s watchdog at 599.8 s on hosted CI as well as locally). heavy.yml now gives the lane 120 minutes so it reports those failures instead of a cancellation; sharding or trimming the suite and fixing both tests stays with this packet.
 
-Lane `ci/test-integration-budget-120`
+Lane ci/test-integration-budget-120
 
 Reverse: Lower heavy.yml timeout_minutes for Test Integration again once the law-practice-server integration suite is sharded or trimmed below the previous budget.
 
@@ -365,7 +365,7 @@ PR 2994, the `unblocks-main` PR for episode ep70, adds 8 rows to `standards/effe
 
 Clearing them from the test code would mean either changing what the tests prove or moving the calls into support files that the scanner does not report, which only hides them. The operator chose to record them here instead.
 
-Lane `@chore/deps-update-11-8-26` · PR #2994
+Lane @chore/deps-update-11-8-26 · PR #2994
 
 Reverse: Delete the 8 rows from standards/effect-vitest.inventory.jsonc once EV004 and EV010 accept these tests or the tests are rewritten, then run bun run beep lint effect-vitest.
 
