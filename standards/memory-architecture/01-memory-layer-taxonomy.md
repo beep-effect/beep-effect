@@ -12,7 +12,7 @@ This document defines the four memory layers required by the project's agent mem
 
 - Claude Code MEMORY.md / CLAUDE.md style -- always loaded, never searched semantically.
 - The expert-memory ClaimRecord model for structured assertions with evidence and provenance.
-- Human-authored and human-curated. The LLM does not write to this layer autonomously.
+- Standards and `CLAUDE.md` are human-authored and human-curated. Agent-written memory notes reach this layer only through the agent memory store's admission (2026-11-09 entry in `04-decision-log.md`): each note traces to a log event and is revertible, so curation is operator review of the log and of held conflicts, not pre-approval.
 
 **Theorem status:** OUTSIDE -- these are exact records, not semantic retrievals. No degradation.
 
@@ -40,7 +40,7 @@ This document defines the four memory layers required by the project's agent mem
 - **Exact episodic records** -- append-only, immutable session/event records. OUTSIDE the theorem (exact records, no semantic retrieval); pruned only by explicit retention policy, never to manage interference.
 - **Prunable semantic/session projections** -- consolidated, clustered, compressed views derived from those records. INSIDE the theorem; every pruning, windowing, and compression lever below applies to these projections. They stay rebuildable only while their source records are retained; when retention policy removes source records, dependent projections must expire with them rather than persist as memory whose provenance no longer exists.
 
-"Old sessions drop off" means the projections drop off; the exact records that produced them are governed by retention policy alone. Evidence: the memory-bitemporal cluster of `explorations/academia-corpus-mining` ([`research/t3-memory-bitemporal.md`](../../explorations/academia-corpus-mining/research/t3-memory-bitemporal.md)) and the dispatch note in [goals/epistemic-bitemporal-edge-core/research/](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/epistemic-bitemporal-edge-core/research/).
+"Old sessions drop off" means the projections drop off; the exact records that produced them are governed by retention policy alone. The agent memory store decided on 2026-11-09 (`04-decision-log.md`) instantiates this split: its set-union log of immutable node events is the exact record, and its indexes and the Markdown memory files are projections. Evidence: the memory-bitemporal cluster of `explorations/academia-corpus-mining` ([`research/t3-memory-bitemporal.md`](../../explorations/academia-corpus-mining/research/t3-memory-bitemporal.md)) and the dispatch note in [goals/epistemic-bitemporal-edge-core/research/](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/epistemic-bitemporal-edge-core/research/).
 
 **Theorem status:** INSIDE for semantic retrieval (the projection store), but manageable through:
 
@@ -60,7 +60,7 @@ This document defines the four memory layers required by the project's agent mem
 4. Competitor density is monitored.
 5. The graph is periodically compressed (clustering).
 
-**Consolidation strategy:** Automated with human-in-the-loop for promotion to Layer 1. OpenClaw's six-signal weighted scoring is a good starting model: relevance (0.30), frequency (0.24), query diversity (0.15), recency (0.15), consolidation (0.10), conceptual richness (0.06).
+**Consolidation strategy:** Automated with human-in-the-loop for promotion to Layer 1. OpenClaw's six-signal weighted scoring is a good starting model: relevance (0.30), frequency (0.24), query diversity (0.15), recency (0.15), consolidation (0.10), conceptual richness (0.06). Frequency reads distinct-lineage counts from the store's observation log, never naive occurrence counts, and prevalence never enters retrieval rank or the admissibility gate (2026-11-09 entry).
 
 ---
 
