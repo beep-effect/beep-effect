@@ -92,7 +92,10 @@ research records.
 
 - **HOST-09 (fold PR Size Label into Change Profile), packet 5:** the label write must never sit on the
   `Change Profile -> Test Unit / Heavy Admission` dependency path. Keep it a separate non-blocking step or
-  job that fails open, so a label API failure cannot hold required checks.
+  job that fails open, so a label API failure cannot hold required checks. Label failures are reported on
+  their own (a dedicated step summary line and a `label_failed` output, never the job's exit status), and
+  the slice ships a failure-injection gate: a fixture that makes the label API call fail must still show
+  Change Profile green, Test Unit and Heavy Admission scheduled, and the failure visible in the report.
 - **PERIH-01 (Heavy Admission on the pinned binary, deleting the coverage-rollout probe), packet 4:**
   `check.yml` derives both `legacy_coverage` and `legacy_integration` from that step. The slice must set
   both outputs explicitly or remove their consumers in the same PR; hard-coding the coverage job name alone
