@@ -7,7 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
-import { normalizePath } from "@beep/schema";
+import { LiteralKit, normalizePath } from "@beep/schema";
 import { A, Str, Text, thunkFalse } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
@@ -86,6 +86,24 @@ const bySourceRootLengthDescending = Order.mapInput(
   Order.Number,
   (sourceRoot: PackageSourceRoot) => -sourceRoot.sourceRoot.length
 );
+
+// The directory names `lint:laws` already drops from its Turbo inputs; the
+// source-root walk never descends into them. It also never follows symlinked
+// directories: a deliberate change from the former `fs.stat` walk, which
+// resolved links (pinned by the lint-command symlink scan test).
+const PrunedWalkDirectory = LiteralKit([
+  "node_modules",
+  "dist",
+  "build",
+  ".turbo",
+  "coverage",
+  "storybook-static",
+  ".next",
+  ".beep",
+]);
+const isPrunedDirectory = S.is(PrunedWalkDirectory);
+const isWalkedDirectory = (entry: FileSystem.DirectoryEntry): boolean =>
+  entry.type === "Directory" && !isPrunedDirectory(entry.name);
 
 const exists = (fs: FileSystem.FileSystem, filePath: string): Effect.Effect<boolean> =>
   fs.exists(filePath).pipe(Effect.orElseSucceed(thunkFalse));
@@ -168,38 +186,19 @@ const collectPackageSourceRoots = Effect.fn(WORKSPACE_MANIFEST_WALK)((packagesRo
     const walk = Effect.fn("PackageTestImports.collectPackageSourceRoots.walk")(function* (
       currentPath: string
     ): Effect.fn.Return<ReadonlyArray<PackageSourceRoot>, never, FileSystem.FileSystem | Path.Path> {
-      const stat = yield* fs.stat(currentPath).pipe(Effect.option);
-
-      if (O.isNone(stat) || stat.value.type !== "Directory") {
-        return A.empty<PackageSourceRoot>();
-      }
-
       const packageName = yield* readOptionalPackageName(path.join(currentPath, "package.json"));
-      let roots = A.empty<PackageSourceRoot>();
-
-      if (O.isSome(packageName) && Str.startsWith("@beep/")(packageName.value)) {
-        roots = A.append(
-          roots,
-          PackageSourceRoot.make({
-            name: packageName.value,
-            sourceRoot: normalizePath(path.resolve(currentPath, "src")),
-          })
-        );
-      }
-
-      const entries = yield* fs.readDirectory(currentPath).pipe(Effect.orElseSucceed(A.empty<string>));
-
-      for (const entry of entries) {
-        const childPath = path.join(currentPath, entry);
-        const childStat = yield* fs.stat(childPath).pipe(Effect.option);
-
-        if (O.isSome(childStat) && childStat.value.type === "Directory") {
-          const walk1 = yield* walk(childPath);
-          roots = A.appendAll(roots, walk1);
-        }
-      }
-
-      return roots;
+      const entries = yield* fs
+        .readDirectoryEntries(currentPath)
+        .pipe(Effect.orElseSucceed(A.empty<FileSystem.DirectoryEntry>));
+      const nested = yield* Effect.forEach(A.filter(entries, isWalkedDirectory), (entry) =>
+        walk(path.join(currentPath, entry.name))
+      );
+      const own = pipe(
+        packageName,
+        O.filter(Str.startsWith("@beep/")),
+        O.map((name) => PackageSourceRoot.make({ name, sourceRoot: normalizePath(path.resolve(currentPath, "src")) }))
+      );
+      return A.appendAll(A.fromOption(own), A.flatten(nested));
     });
 
     return Effect.map(walk(packagesRoot), A.sort(bySourceRootLengthDescending));

@@ -2197,10 +2197,8 @@ const platformNamespaceMembers = (
     : binding.getNameNode();
   if (!Node.isIdentifier(name)) return [];
   const local = name.getText();
-  const references = A.filter(
-    binding.getSourceFile().getDescendantsOfKind(SyntaxKind.Identifier),
-    (reference) =>
-      reference.getText() === local && O.exists(imports.resolveBinding(reference), (resolved) => resolved === binding)
+  const references = A.filter(imports.identifiersNamed(local), (reference) =>
+    O.exists(imports.resolveBinding(reference), (resolved) => resolved === binding)
   );
   return A.getSomes(A.map(references, platformReferenceMember));
 };
@@ -2266,9 +2264,8 @@ const bindingReferences = (
   imports: EffectVitestImports
 ): ReadonlyArray<Identifier> =>
   A.filter(
-    binding.getSourceFile().getDescendantsOfKind(SyntaxKind.Identifier),
+    imports.identifiersNamed(local),
     (reference) =>
-      reference.getText() === local &&
       reference.getFirstAncestorByKind(SyntaxKind.ImportDeclaration) === undefined &&
       !isNamePosition(reference) &&
       O.exists(imports.resolveBinding(reference), (resolved) => resolved === binding)
@@ -2997,48 +2994,59 @@ const harnessKillsChildProcess = (harness: CallExpression, imports: EffectVitest
     });
   });
 
+// A write target: the left side of an assignment, a for-in/of head, or a ++/-- operand.
+const identifierIsWritten = (candidate: Identifier): boolean =>
+  A.some(candidate.getAncestors(), (ancestor) => {
+    if (Node.isForInStatement(ancestor) || Node.isForOfStatement(ancestor))
+      return candidate.getEnd() <= ancestor.getInitializer().getEnd();
+    if (Node.isBinaryExpression(ancestor)) {
+      const operator = ancestor.getOperatorToken().getKind();
+      return (
+        operator >= SyntaxKind.FirstAssignment &&
+        operator <= SyntaxKind.LastAssignment &&
+        candidate.getEnd() <= ancestor.getLeft().getEnd()
+      );
+    }
+    return (
+      (Node.isPrefixUnaryExpression(ancestor) || Node.isPostfixUnaryExpression(ancestor)) &&
+      A.contains([SyntaxKind.PlusPlusToken, SyntaxKind.MinusMinusToken], ancestor.getOperatorToken())
+    );
+  });
+
+// The names a declaration binds: one identifier, or every identifier of a destructuring pattern.
+const declarationBoundNames = (declaration: VariableDeclaration): ReadonlyArray<string> => {
+  const nameNode = declaration.getNameNode();
+  return Node.isIdentifier(nameNode)
+    ? [nameNode.getText()]
+    : A.dedupe(A.map(nameNode.getDescendantsOfKind(SyntaxKind.Identifier), (identifier) => identifier.getText()));
+};
+
+// A mutable declaration is opaque only if a later write can replace its initializer.
+// A candidate resolves to the declaration only through a name it binds; order is irrelevant to A.some.
+const declarationIsReassigned = (declaration: VariableDeclaration, imports: EffectVitestImports): boolean => {
+  const declarations = declaration.getParentIfKind(SyntaxKind.VariableDeclarationList);
+  if (declarations === undefined || declarations.getDeclarationKind() === "const") return false;
+  return A.some(
+    A.flatMap(declarationBoundNames(declaration), imports.identifiersNamed),
+    (candidate) =>
+      !(candidate.getStart() >= declaration.getStart() && candidate.getEnd() <= declaration.getEnd()) &&
+      O.contains(imports.resolveBinding(candidate), declaration) &&
+      identifierIsWritten(candidate)
+  );
+};
+
+const PLATFORM_LOCAL_MODULES = ["@effect/vitest", "@beep/test-runner", "@beep/test-utils/Vitest"];
+
 // Imported values can carry filesystem effects even when passed without calling them.
 // Unbound runtime I/O globals are opaque; local shadowing remains lexical.
+// Loop heads have a declaration list but no variable statement; catch bindings have neither.
 const opaquePlatformReference = (reference: Identifier, imports: EffectVitestImports): boolean => {
   const binding = imports.resolveBinding(reference);
   if (O.isNone(binding)) return A.contains(["Bun", "require", "process", "globalThis", "global"], reference.getText());
-  // Loop heads have a declaration list but no variable statement; catch bindings have neither.
-  if (Node.isVariableDeclaration(binding.value)) {
-    const declaration = binding.value;
-    const declarations = declaration.getParentIfKind(SyntaxKind.VariableDeclarationList);
-    if (declarations === undefined || declarations.getDeclarationKind() === "const") return false;
-    // A mutable declaration is opaque only if a later write can replace its initializer.
-    return A.some(declaration.getSourceFile().getDescendantsOfKind(SyntaxKind.Identifier), (candidate) => {
-      if (
-        (candidate.getStart() >= declaration.getStart() && candidate.getEnd() <= declaration.getEnd()) ||
-        !O.contains(imports.resolveBinding(candidate), declaration)
-      )
-        return false;
-      return A.some(candidate.getAncestors(), (ancestor) => {
-        if (Node.isForInStatement(ancestor) || Node.isForOfStatement(ancestor))
-          return candidate.getEnd() <= ancestor.getInitializer().getEnd();
-        if (Node.isBinaryExpression(ancestor)) {
-          const operator = ancestor.getOperatorToken().getKind();
-          return (
-            operator >= SyntaxKind.FirstAssignment &&
-            operator <= SyntaxKind.LastAssignment &&
-            candidate.getEnd() <= ancestor.getLeft().getEnd()
-          );
-        }
-        return (
-          (Node.isPrefixUnaryExpression(ancestor) || Node.isPostfixUnaryExpression(ancestor)) &&
-          A.contains([SyntaxKind.PlusPlusToken, SyntaxKind.MinusMinusToken], ancestor.getOperatorToken())
-        );
-      });
-    });
-  }
+  if (Node.isVariableDeclaration(binding.value)) return declarationIsReassigned(binding.value, imports);
   if (!Node.isImportDeclaration(binding.value)) return false;
   const module = binding.value.getModuleSpecifierValue();
-  return (
-    module !== "effect" &&
-    !Str.startsWith("effect/")(module) &&
-    !A.contains(["@effect/vitest", "@beep/test-runner", "@beep/test-utils/Vitest"], module)
-  );
+  return module !== "effect" && !Str.startsWith("effect/")(module) && !A.contains(PLATFORM_LOCAL_MODULES, module);
 };
 
 // Follow local values as well as helpers: an initializer can hide an imported effect,

@@ -94,6 +94,7 @@ const isolatedSuites = [
   "test/laws-tracked-shell-allowlist.test.ts",
   "test/lint-command.test.ts",
   "test/lint-identity-registry.test.ts",
+  "test/lint-opaque-roundtrips.test.ts",
   "test/lint-program-assignment.test.ts",
   "test/lint-tsconfig-overlay.test.ts",
   "test/lint-workers.test.ts",

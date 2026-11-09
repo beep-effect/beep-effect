@@ -56,6 +56,7 @@ export type EffectVitestImports = {
   readonly loops: ReadonlyArray<MorphNode>;
   readonly declarationPositions: MutableHashMap.MutableHashMap<string, O.Option<number>>;
   readonly resolveBinding: (identifier: Identifier) => O.Option<MorphNode>;
+  readonly identifiersNamed: (name: string) => ReadonlyArray<Identifier>;
   readonly chains: WeakMap<Expression, O.Option<ExpressionChain>>;
   readonly harnessModes: WeakMap<CallExpression, O.Option<EffectVitestHarnessMode>>;
   readonly hasEffectImport: boolean;
@@ -167,6 +168,50 @@ const bindScope = (scope: MorphNode, bind: BindSyntaxName, add: AddSyntaxBinding
 
 // One immutable analysis pass owns these AST caches. A fresh import context
 // rebuilds them, including after a SourceFile edit or on another scan.
+/**
+ * Index every identifier of a source file by its text, in document order.
+ *
+ * **Details**
+ * One descendant walk replaces a whole-file identifier walk per binding. Each
+ * bucket keeps the document order of the walk, so filtering a bucket yields the
+ * same sequence as filtering the whole file by name.
+ *
+ * **Example** (Look up every reference spelled `layer`)
+ *
+ * ```ts
+ * import { indexIdentifiersByName } from "@beep/repo-cli/commands/Lint"
+ * import { Project } from "ts-morph"
+ *
+ * const source = new Project({ useInMemoryFileSystem: true }).createSourceFile("index.ts", "const layer = 1; layer")
+ * console.log(indexIdentifiersByName(source)("layer").length) // 2
+ * ```
+ *
+ * @param sourceFile - Source file whose identifiers are indexed once.
+ * @returns A lookup returning the identifiers with the given text, empty when none match.
+ * @category parsing
+ * @since 0.0.0
+ */
+export const indexIdentifiersByName = (sourceFile: SourceFile): ((name: string) => ReadonlyArray<Identifier>) => {
+  const index = MutableHashMap.empty<string, Array<Identifier>>();
+  for (const identifier of sourceFile.getDescendantsOfKind(SyntaxKind.Identifier)) {
+    const name = identifier.getText();
+    O.match(MutableHashMap.get(index, name), {
+      onNone: () => MutableHashMap.set(index, name, [identifier]),
+      onSome: (bucket) => bucket.push(identifier),
+    });
+  }
+  return (name) => O.getOrElse(MutableHashMap.get(index, name), A.empty<Identifier>);
+};
+
+const lazyIdentifierIndex = (sourceFile: SourceFile): ((name: string) => ReadonlyArray<Identifier>) => {
+  let lookup: O.Option<(name: string) => ReadonlyArray<Identifier>> = O.none();
+  return (name) => {
+    const resolved = O.getOrElse(lookup, () => indexIdentifiersByName(sourceFile));
+    lookup = O.some(resolved);
+    return resolved(name);
+  };
+};
+
 const bindingResolver = (): ((identifier: Identifier) => O.Option<MorphNode>) => {
   const scopes = new WeakMap<MorphNode, MutableHashMap.MutableHashMap<string, MorphNode>>();
   const resolved = new WeakMap<Identifier, O.Option<MorphNode>>();
@@ -363,6 +408,7 @@ export const collectEffectVitestImports = (sourceFile: SourceFile): EffectVitest
     loops,
     declarationPositions: MutableHashMap.empty(),
     resolveBinding: bindingResolver(),
+    identifiersNamed: lazyIdentifierIndex(sourceFile),
     chains: new WeakMap(),
     harnessModes: new WeakMap(),
     hasEffectImport: A.some(imports, (declaration) => {
