@@ -1694,6 +1694,60 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
+    it.effect("skips manifests under pruned build directories when collecting source roots", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const packageDir = path.join("packages", "foundation", "modeling", "example");
+
+          yield* writePackage(packageDir, "@beep/example");
+          yield* writePackage(path.join(packageDir, "dist", "inner"), "@beep/inner");
+          yield* fs.makeDirectory(path.join(packageDir, "test"), { recursive: true });
+          yield* fs.writeFileString(
+            path.join(packageDir, "test", "Example.test.ts"),
+            `import { inner } from "../dist/inner/src/index.ts";\nvoid inner;\n`
+          );
+
+          yield* runLintCommand(["package-test-imports"]);
+
+          const logLines = yield* TestConsole.logLines;
+          const errorLines = yield* TestConsole.errorLines;
+          expect(logLines).toEqual(["[check-package-test-imports] OK: package test imports use package aliases."]);
+          expect(errorLines).toEqual([]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("does not follow symlinked directories when collecting source roots", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const packageDir = path.join("packages", "foundation", "modeling", "example");
+          const linkedTarget = path.join("outside", "linked");
+
+          yield* writePackage(packageDir, "@beep/example");
+          yield* writePackage(linkedTarget, "@beep/linked");
+          yield* fs.symlink(path.resolve(linkedTarget), path.join(packageDir, "linked"));
+          yield* fs.makeDirectory(path.join(packageDir, "test"), { recursive: true });
+          yield* fs.writeFileString(
+            path.join(packageDir, "test", "Example.test.ts"),
+            `import { linked } from "../linked/src/index.ts";\nvoid linked;\n`
+          );
+
+          yield* runLintCommand(["package-test-imports"]);
+
+          const logLines = yield* TestConsole.logLines;
+          const errorLines = yield* TestConsole.errorLines;
+          expect(logLines).toEqual(["[check-package-test-imports] OK: package test imports use package aliases."]);
+          expect(errorLines).toEqual([]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
     it.effect("allows relative imports to local test fixtures", () =>
       Effect.andThen(
         temporaryWorkingDirectory,

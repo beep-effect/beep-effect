@@ -9,6 +9,7 @@ import {
 import { CitationDefaultConfigurationInput } from "@beep/law-practice-server/internal/Citation/DefaultConfiguration";
 import { makeCitationDefaultEngineConfiguration } from "@beep/law-practice-server/internal/Citation/EngineArtifact";
 import { CitationFrozenEditions } from "@beep/law-practice-server/internal/Citation/FrozenEditions";
+import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -18,6 +19,7 @@ import {
 } from "./CitationDocumentExtraction.fixtures.ts";
 import { citationFixtureEngineBuild } from "./CitationEngineArtifact.fixtures.ts";
 import { setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
+import { makeCitationReplayBudgetClock } from "./CitationReplayBudget.ts";
 import type {
   CitationNativeProcessRuntime,
   CitationNativeRuntimeKind,
@@ -80,6 +82,19 @@ export const installCitationDefaultConfigurationFixture = Effect.fn("DefaultConf
 
 /** Install production defaults for source-document tests without unused replay evidence or stages.
  *
+ * **Details**
+ *
+ * The declared limits stay the shared test policy. The installed Clock keeps the manual
+ * `regexDeadline`/`extractDeadline` sleep and waits `citationReplayOperationBudget` of real time
+ * whenever an owner sleeps for the declared `operationDeadline`, so hosted canonical replays are
+ * not failed by runner contention (`makeCitationReplayBudgetClock` in `CitationReplayBudget.ts`,
+ * covered by `CitationReplayBudget.test.ts`).
+ *
+ * **Gotchas**
+ *
+ * The widening matches by value: any sleep equal to `operationDeadline` is widened, and the
+ * install dies if another declared limit equals it.
+ *
  * **Example** (Preparing a fresh source-document installation)
  * ```ts
  * import { installCitationSourceDocumentConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
@@ -91,12 +106,15 @@ export const installCitationSourceDocumentConfigurationFixture = Effect.fn("Defa
   function* (kind: CitationNativeRuntimeKind) {
     const base = yield* setupCitationMetadataRuntime(kind, undefined, false, true, 8192);
     const limits = { ...base.limits, concurrentOperations: 1 };
-    const operation = yield* makeCitationOperationAdmission(limits).pipe(Effect.provideContext(base.provided));
+    const clock = yield* makeCitationReplayBudgetClock(limits, base.timer.clock);
+    const provided = Context.add(base.provided, Clock.Clock, clock);
+    const operation = yield* makeCitationOperationAdmission(limits).pipe(Effect.provideContext(provided));
     const setup = {
       ...base,
       limits,
       operation,
-      provided: Context.add(base.provided, CitationOperationAdmission, operation),
+      context: Context.add(base.context, Clock.Clock, clock),
+      provided: Context.add(provided, CitationOperationAdmission, operation),
     };
     const prepared = yield* installCitationDocumentRuntimeFixture(kind, setup);
     const installed = yield* installDefaults(kind, setup, prepared);

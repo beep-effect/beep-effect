@@ -96,7 +96,6 @@ export const scanLawsPackage = Effect.fn("LawsPackage.scan")(function* (scope: L
     yield* Console.log(`lint laws: skipping four laws for ${scope.packageDir}; no TypeScript source files.`);
     const findings = A.empty<LawsPackageFinding>();
     if (A.contains(scope.laws, "package-test-imports")) {
-      yield* inspectPackageTestImports(scope.repoRoot, []);
       return LawsPackageReport.make({
         projectSourceFileCount: 0,
         findings: [

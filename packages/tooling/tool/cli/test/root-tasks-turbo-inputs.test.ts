@@ -505,7 +505,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           ),
           Tuple.make(
             "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
-            "7c1426fad4c8c2867812526cb9ce499253c966e0dbae9e8d6ac7a9112cb27c96"
+            "03ea7c99c6e3eaa10e4dada1a7acd1641cabb62bfd7aa2a21f39638c8bf4adee"
           ),
           Tuple.make(
             "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
@@ -517,11 +517,11 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           ),
           Tuple.make(
             "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-            "b8d56784fa50ee216c3b951ee5e0894a3867172e38cec432d909970b17eaa19f"
+            "2809d7461562208cab5a686be34aa0f33989bbdb6ffb07328e2113f77fd7c03f"
           ),
           Tuple.make(
             "packages/tooling/library/repo-cli-kit/src/tsmorph/ProjectFactory.ts",
-            "0234ea9c2baec10ace9cd26bc64014b3dd957fda211c9fb066c90c128bd96c24"
+            "f18f549174c1c8a57db6438aedf0aef5e90d287ae1a7a45668e0740c8ac6bd9a"
           ),
           Tuple.make(
             "packages/foundation/capability/walker/src/Descend.ts",

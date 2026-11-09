@@ -1338,7 +1338,8 @@ const analyzePackage = Effect.fn("JSDocDocumentationInventory.analyzePackage")(f
   const sourceFiles = A.filter(listSourceFiles1, (sourceFilePath) =>
     sourceFileIsInPackageInventory(sourceFilePath, packageInfo, srcDir, exclude, repoRoot, path, candidatePaths)
   );
-  const project = createInMemoryTsMorphProject();
+  // Only declarations in the added files are scored, so imports into other packages stay unloaded.
+  const project = createInMemoryTsMorphProject({ compilerOptions: { noResolve: true } });
   // Populate the project before asking for semantic exports: adding another
   // source file invalidates the compiler program used by getExportedDeclarations.
   const projectSourceFiles = A.map(sourceFiles, (sourceFilePath) => project.addSourceFileAtPath(sourceFilePath));

@@ -25,7 +25,6 @@
     "@types/bun": "catalog:",
     "@types/node": "catalog:",
     "@typescript/native": "catalog:",
-    "@typescript/typescript6": "catalog:",
     "@vitest/browser": "catalog:",
     "@vitest/coverage-istanbul": "catalog:",
     "@vitest/coverage-v8": "catalog:",
@@ -39,6 +38,7 @@
     "oxlint-tsgolint": "catalog:",
     "statelyai": "catalog:",
     "syncpack": "catalog:",
+    "ts-morph": "catalog:",
     "tsrs": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:",
@@ -70,7 +70,8 @@
     "effect@4.1.2": "patches/effect@4.1.2.patch",
     "@effect/platform-node-shared@4.1.2": "patches/@effect%2Fplatform-node-shared@4.1.2.patch",
     "@alchemy.run/domain@2.0.0-beta.85": "patches/@alchemy.run%2Fdomain@2.0.0-beta.85.patch",
-    "rdf-validation@0.1.1": "patches/rdf-validation@0.1.1.patch"
+    "rdf-validation@0.1.1": "patches/rdf-validation@0.1.1.patch",
+    "alchemy@2.0.0-beta.85": "patches/alchemy@2.0.0-beta.85.patch"
   },
   "private": true,
   "repository": {
