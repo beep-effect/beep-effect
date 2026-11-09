@@ -1,0 +1,112 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "agent-memory-store",
+    "packetId": "goal-packet/v1:6304bff81860d34d93e2088e4339f98b9541c82ca2caa44ebe0147b6a68a5f1b",
+    "title": "Agent Memory Store",
+    "status": "active",
+    "created": "2026-11-09",
+    "updated": "2026-11-09",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/agent-memory-store",
+  "lifecycle": "active",
+  "mission": "Build the agent memory store the 2026-11-09 memory-architecture decision licenses: a set-union log of immutable node events as sole authority, Markdown memory files and indexes as projections, store-side admission with no CRDT on agent write paths, prevalence as an observation log.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/agent-memory-store/GOAL.md",
+    "goals/agent-memory-store/PLAN.md",
+    "goals/agent-memory-store/README.md",
+    "goals/agent-memory-store/SPEC.md",
+    "goals/agent-memory-store/research/2026-11-07-validation-spike-plan.md",
+    "goals/agent-memory-store/research/2026-11-08-validation-scoreboard.md",
+    "goals/agent-memory-store/research/SOURCES.md",
+    "standards/memory-architecture/04-decision-log.md"
+  ],
+  "researchReports": [
+    "research/2026-11-07-validation-spike-plan.md",
+    "research/2026-11-08-validation-scoreboard.md",
+    "research/SOURCES.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/agent-memory-store/GOAL.md"
+    }
+  ],
+  "provides": ["tooling/agent-memory-store"],
+  "requires": ["foundation/epistemics-vocabulary"],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Design and grill",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Log and L0 projection",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Admission",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Identity and observation",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Retrieval",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Agent loop",
+      "status": "pending"
+    },
+    {
+      "id": "P6",
+      "name": "Yeet: final PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P7",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/agent-memory-store/GOAL.md)\" -le 4000",
+    "jq . goals/agent-memory-store/ops/manifest.json",
+    "rg -n \"agent-memory-store|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/agent-memory-store",
+    "git diff --check -- goals/agent-memory-store",
+    "bun run beep lint reflection-artifacts",
+    "bun run beep goals decisions check --slug agent-memory-store",
+    "bun run beep goals manifest --check",
+    "bun run beep goals doctor"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation.",
+    "A ruling of the 2026-11-09 decision-log entry cannot be met by the phase as designed: the phase stops and reports; the ruling is not routed around.",
+    "A spike-derived bar is missed: remediation on the current route, or a decision file re-baselining the bar with a new measurement; never a silent threshold edit."
+  ],
+  "statusNote": "Opened 2026-11-09 from the merged decision entry (PR #2996). P0 Design and grill is next: confirm or reverse the six packet-decidable design items by decision file (the entry's three rulings stay fixed) and route the package home; no package code has changed."
+}
