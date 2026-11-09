@@ -306,6 +306,8 @@ Adopted, on inspection routes only: the nearest local introducer among repeated 
 
 Rejected: dropping subject-derived depends-on-element (real 41, 13 lost); dropping all definite-to-definite links (real 47, 1 lost; gold-tree 139, 9 lost); the local-only form (real 48, 0 lost, but gives back the 49th claim; gold-tree 116, 7 lost). Numbers and the next open lever are in research/resolver-probe-001.md.
 
+Rebound after #2980 merged: the figures above were measured on the 48/538 base. Paired against main at 809ceb301b5, the merged head goes from 50 to 52 with 0 lost, gaining 14262251-root-1/4 and 16628033-root-1/1. Predicted edges go from 6100 to 6356 and matched edges from 2512 to 2640. All 538 claims still abstain. The gold-tree probe was not re-run on this base.
+
 Reverse: Trigger: re-check alerts when abstention lifts. If they regress, or to undo the priority flip, remove refinesSelection and isRefinedHead, keep the probe as evidence, and return to segmentation-first.
 
 ### Compare independently source-certified fallback term refinement, 2026-11-08
