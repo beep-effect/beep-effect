@@ -61,7 +61,7 @@ This area adds almost nothing to the critical path of a PR run, and it cannot mo
 - **Admission gate:** Parity ledger over 10 PR runs: identical envelope JSON (findingCount, introduced) and context outcome between the old job and the folded step on the same heads. Then A/B runner-minutes per run.
 - **Prior art:** The 'Merged bins' rejection (repair-decision-2.md) is about Test Unit and Lint bins with 20-min cold bodies breaching the wave; that does not apply to two ~90 s bodies. The inventory's L10 'remove trivial hosted duplicates' is adjacent. check.yml carries a comment that the Fallow job only needs the toolchain plus Fallow but uses the shared setup.
 - **Depends on:** Coordinate with the area auditing always-on side jobs (Security/SAST/Commitlint/Labs) so Labs is not removed in the same wave
-- **PR slices:** ci: run Fallow envelopes inside the Labs job and post its context as a status [M]
+- **PR slices:** ci: run Fallow envelopes inside the Labs job and create its check run through the Checks API under `checks: write` (reviewer correction, 2026-11-09; see MAP.md, Reviewer constraints, PERIL-01) [M]
 - **Confidence:** medium
 - **Open questions:** Is Labs itself stable enough (pass rate, docs-only behaviour) to host an advisory lane, or is another non-required ubuntu job (Ecosystem Contracts, Shadcn Lint) a better host?
 
