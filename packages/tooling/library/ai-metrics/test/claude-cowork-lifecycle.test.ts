@@ -1156,3 +1156,49 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, NodeFileSystem.layer
     })
   )
 );
+const startupSignalHarness = `import json, os, signal, sys
+source = json.loads(sys.stdin.buffer.readline())
+real_chmod = os.chmod
+def signalled_chmod(path, mode):
+    print("signalled", flush=True)
+    os.kill(os.getpid(), signal.SIGTERM)
+    real_chmod(path, mode)
+os.chmod = signalled_chmod
+exec(compile(source, "owned-public-helper-fixture", "exec"))
+`;
+it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, NodeFileSystem.layer, platformLayer), {
+  timeout: "45 seconds",
+})((it) =>
+  it.effect("a SIGTERM landing between bind and recording the socket still removes the owned listener", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const fs = yield* FileSystem.FileSystem;
+      const source = yield* encode(coworkPeerSource);
+      const policy = yield* encode({
+        workspace: f.policy.workspace,
+        listenMillis: f.policy.listenMillis,
+        sourcePins: f.policy.sourcePins,
+        runtimeExecutable: f.policy.runtimeExecutable,
+        runtimeSha256: f.policy.runtimeSha256,
+        appExecutable: f.policy.appExecutable,
+        appSha256: f.policy.appSha256,
+      });
+      const child = yield* ChildProcess.make(
+        f.policy.pythonExecutable,
+        ["-I", "-B", "-c", startupSignalHarness, f.policy.socketPath],
+        {
+          extendEnv: false,
+          stdin: Stream.make(new TextEncoder().encode(`${source}\n${policy}\n`)),
+          stderr: "ignore",
+        }
+      );
+      const output = yield* child.stdout.pipe(Stream.decodeText(), Stream.mkString, Effect.timeout("10 seconds"));
+      const exitCode = yield* child.exitCode;
+      expect(exitCode).toBe(2);
+      // A rejected policy also exits 2 with no socket, so require proof the signal landed after bind.
+      deepStrictEqual(output, "signalled\n");
+      const present = yield* fs.exists(f.policy.socketPath);
+      assertFalse(present);
+    })
+  )
+);
