@@ -50,9 +50,11 @@ bunx alchemy state list --no-input   # first read creates a missing bucket outsi
 
 `export-credentials` runs the profile's `credential_process` (aws-vault) and
 prints shell exports; `eval` keeps the values out of logs. Never `aws login`,
-never `alchemy profile`. CI never creates or upgrades the store (`CI=true`
-without `--yes` refuses), so a missing or outdated store is an operator
-action, not a workflow retry.
+never `alchemy profile`. The store stays operator-bootstrapped by workflow
+shape, not by `CI=true` alone: `alchemy plan` runs first and fails on a missing
+or outdated store, while `deploy --yes` would create or upgrade it in CI
+(`--yes` sets `updateStateStore`). Keep the plan step ahead of every deploy;
+a missing or outdated store is an operator action, not a workflow retry.
 
 Teardown is `alchemy state teardown --backend aws` after every stack has been
 destroyed; the decision file that recorded the bootstrap carries the receipt.
@@ -77,9 +79,13 @@ steps:
       role-to-assume: ${{ vars.ALCHEMY_STATE_ROLE_ARN }}
       role-session-name: alchemy-<stack>-prod
       aws-region: us-east-1
-  - run: bunx alchemy plan --stage prod --env-file /dev/null
-  - run: bunx alchemy deploy --stage prod --yes --env-file /dev/null
+  - run: bunx alchemy plan --stage prod --env-file /dev/null $ADOPT
+  - run: bunx alchemy deploy --stage prod --yes --env-file /dev/null $ADOPT
 ```
+
+`ADOPT` is `--adopt` only on a one-time `workflow_dispatch` with `adopt: true`
+(a state-store move); plan and deploy take the same adoption policy because a
+plan without `--adopt` fails on an `Unowned` read before the deploy runs.
 
 `ALCHEMY_STATE_ROLE_ARN` is an environment variable on each deploying GitHub
 environment. `--env-file /dev/null` stops the CLI loading a stray `.env`.
