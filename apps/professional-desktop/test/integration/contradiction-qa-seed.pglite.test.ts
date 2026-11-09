@@ -51,7 +51,12 @@ import { fcDeepSweepActive, vitestCoverageRunActive } from "../../../../vitest.s
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
-const fixtureTimeout = vitestCoverageRunActive || fcDeepSweepActive ? "5 minutes" : "10 seconds";
+// Each fixture layer opens a fresh in-process PGlite (btree_gist bundle plus the boot migrations). The
+// first one on a cold 4-vCPU hosted runner, with the other integration files of this package running
+// alongside, takes well over ten seconds (main run 42662847801, int-rest partition: hook timed out at
+// 10 s; the sibling PgliteDataDirCompatibility suite measured 39 s for the bundled layer there), so the
+// budget is two minutes outside coverage and deep sweeps.
+const fixtureTimeout = vitestCoverageRunActive || fcDeepSweepActive ? "5 minutes" : "2 minutes";
 const desktopWorkspaceId = WorkspaceIdentity.WorkspaceId.make(1);
 const instant = flow(S.decodeUnknownResult(S.DateTimeUtcFromMillis), Result.getOrThrow);
 const decodeVaultRoot = S.decodeUnknownEffect(WorkspaceVaultRootPath);
