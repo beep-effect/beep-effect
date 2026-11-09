@@ -87,8 +87,9 @@ required-green and main-verdict report` (MEAS-01 slice 1, M).
 
 ### Reviewer constraints (CodeRabbit on #3017, 2026-11-09)
 
-Carried into the owning packets as lever constraints; the seat reports they annotate stay verbatim as
-research records.
+Carried into the owning packets as lever constraints. The seat reports and merged records they annotate
+are research records: where a sentence proposed something invalid, it is corrected in place and marked as
+a reviewer correction with the date, so the record never contradicts the constraint.
 
 - **HOST-09 (fold PR Size Label into Change Profile), packet 5:** the label write must never sit on the
   `Change Profile -> Test Unit / Heavy Admission` dependency path. Keep it a separate non-blocking step or
