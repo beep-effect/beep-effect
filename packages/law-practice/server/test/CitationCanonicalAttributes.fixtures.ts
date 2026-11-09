@@ -159,10 +159,16 @@ export const makeCitationCanonicalAttributeAssertion = Effect.fn("CanonicalAttri
   >
 ) {
   const { setup, provided, defaultConfiguration } = installed;
-  const unicode = yield* makeCitationPythonUnicode(setup.limits);
+  // Every kernel captures the installation's Clock, as the engine's own owners do. On the default
+  // Clock the year kernel's 997 ms extract budget ran in real time and failed hosted replays
+  // (PR #3013 lps-int-12: `extractDeadline` from `getMetadataYear`). On the installation's manual
+  // clock that 997 ms wait never fires here and these assertions run after `engine.extract`, so a
+  // hung kernel is bounded only by the Vitest timeout; CitationMetadataYear.test.ts keeps the
+  // `extractDeadline` expiry coverage.
+  const unicode = yield* makeCitationPythonUnicode(setup.limits).pipe(Effect.provideContext(provided));
   const correction = yield* makeCitationResourceCorrection(setup.limits).pipe(Effect.provideContext(provided));
   const bound = defaultConfiguration.extraction.extraction.loop.full.case.post.highestValidYear;
-  const years = yield* makeCitationMetadataYearFromBound(setup.limits, bound);
+  const years = yield* makeCitationMetadataYearFromBound(setup.limits, bound).pipe(Effect.provideContext(provided));
   const toStorage = Effect.fnUntraced(function* (text: string | null) {
     return text === null ? null : (yield* unicode.fromText(text)).storage;
   });
