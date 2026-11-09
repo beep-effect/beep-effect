@@ -91,7 +91,7 @@ Also:
   repinned to the current Cursor CLI and T3 SDK helpers. Restart T3 there once
   idle if Cursor turns still fail preflight.
 - Junie on the workers moves from the frozen npm package (1468.x) to the managed
-  launcher the first time, only when `~/.local/bin/junie` is the active entry.
+  launcher the first time, only when the account's `.local/bin/junie` entry is the active one.
   The previous entry is kept under `~/.local/state/beep/update-harnesses/`.
   `--no-junie-migrate` keeps the old install.
 - Desktop apps that are open keep running the old version until restarted.

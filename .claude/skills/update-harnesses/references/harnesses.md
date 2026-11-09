@@ -7,7 +7,7 @@ install list.
 ## Connections
 
 Only the main thread authenticates. It opens one ControlMaster per host
-(`~/.ssh/cm-harness-<host>`, `ControlPersist=2h`, keepalive 15 s x 4) through
+(socket `cm-harness-<host>` in the SSH directory, `ControlPersist=2h`, keepalive 15 s x 4) through
 the canonical wrapper, serially, and opens it again before the T3 and admin
 phases if it lapsed during the hub build. Worker threads connect with
 `ControlMaster=no` to a `.invalid` host name, so without a live master they fail
@@ -20,7 +20,7 @@ instead of starting a login. A host agent that dies without records produces
 
 1. the `PATH` of the host's `t3code.service` (what delegated agents resolve);
 2. the `PATH` the agent inherited (an SSH command gets a minimal one);
-3. `~/.local/bin`, `~/.bun/bin`, `~/.npm-global/bin`, the shell's `node` dir,
+3. the home directory's `.local/bin`, `.bun/bin` and `.npm-global/bin`, the shell's `node` dir,
    `/usr/local/bin`, `/usr/bin`.
 
 The first hit is `active`; later hits are `shadowed`. Copies found only under
@@ -52,7 +52,7 @@ its background self-update.
 
 `@jetbrains/junie-cli` on npm stopped at 1468.30, and the workers' pre-launcher
 shim lacks `update`. JetBrains' supported channel is the managed launcher from
-`https://junie.jetbrains.com/install.sh`, which writes `~/.local/bin/junie`, so
+`https://junie.jetbrains.com/install.sh`, which writes the home directory's `.local/bin/junie`, so
 migration runs only when that entry is the active one. Otherwise the row is
 skipped ("migrate by hand"). The host agent downloads the installer first, then
 moves the old entry, which may be an npm symlink that must not be written
@@ -62,7 +62,7 @@ confirmation (SIGPIPE is ignored meanwhile, so a dropped SSH channel cannot cut
 the restore short), the old entry goes back. The backup is kept after success,
 and the npm package stays installed (inactive). Opt out with
 `--no-junie-migrate`. To reverse, move the kept backup back to
-`~/.local/bin/junie`.
+the home directory's `.local/bin/junie`.
 The JetBrains login is unaffected; workers were not signed in before either.
 
 ## T3 Code
@@ -96,7 +96,7 @@ happen inside each one), and a fall-through to a password prompt dies with its
 attempt. Then `sudo -n pacman -Syu --noconfirm` runs with no kill timeout,
 because killing pacman mid-transaction is worse than waiting.
 
-Kimi Code Desktop is an AppImage at `~/.local/opt/kimi-code/`. Its built-in
+Kimi Code Desktop is an AppImage in the home directory's `.local/opt/kimi-code/`. Its built-in
 updater feed (`app-update.yml`, provider `generic`) is
 `https://code.kimi.com/kimi-code/desktop/latest-linux.yml`. The script
 downloads the AppImage named there, checks size and base64 sha512, keeps the
