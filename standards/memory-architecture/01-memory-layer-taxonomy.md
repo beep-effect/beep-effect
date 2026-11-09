@@ -22,7 +22,7 @@ This document defines the four memory layers required by the project's agent mem
 
 **Concrete implementation:** `standards/` directory documents, `CLAUDE.md`, project-level memory files. The expert-memory-big-picture ClaimRecord system when it matures -- but artifact-to-packet first.
 
-**Consolidation strategy:** Manual curation with periodic LLM-assisted "health checks" (Karpathy's linting idea is sound here -- use LLMs to find inconsistencies in curated knowledge, but humans approve changes).
+**Consolidation strategy:** For standards and `CLAUDE.md`, manual curation with periodic LLM-assisted "health checks" (Karpathy's linting idea is sound here -- use LLMs to find inconsistencies in curated knowledge, but humans approve changes). Agent memory notes are admitted store-side and reviewed after the fact through the store's log and held conflicts (2026-11-09 entry in `04-decision-log.md`).
 
 ---
 
@@ -40,7 +40,7 @@ This document defines the four memory layers required by the project's agent mem
 - **Exact episodic records** -- append-only, immutable session/event records. OUTSIDE the theorem (exact records, no semantic retrieval); pruned only by explicit retention policy, never to manage interference.
 - **Prunable semantic/session projections** -- consolidated, clustered, compressed views derived from those records. INSIDE the theorem; every pruning, windowing, and compression lever below applies to these projections. They stay rebuildable only while their source records are retained; when retention policy removes source records, dependent projections must expire with them rather than persist as memory whose provenance no longer exists.
 
-"Old sessions drop off" means the projections drop off; the exact records that produced them are governed by retention policy alone. The agent memory store decided on 2026-11-09 (`04-decision-log.md`) instantiates this split: its set-union log of immutable node events is the exact record, and its indexes and the Markdown memory files are projections. Evidence: the memory-bitemporal cluster of `explorations/academia-corpus-mining` ([`research/t3-memory-bitemporal.md`](../../explorations/academia-corpus-mining/research/t3-memory-bitemporal.md)) and the dispatch note in [goals/epistemic-bitemporal-edge-core/research/](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/epistemic-bitemporal-edge-core/research/).
+"Old sessions drop off" means the projections drop off; the exact records that produced them are governed by retention policy alone. The agent memory store decided on 2026-11-09 (`04-decision-log.md`) instantiates this split: its set-union log of immutable node events is the exact record and its indexes are the Layer 2 projections governed by the rules below; the Markdown memory files it projects are the Layer 1 projection, durable and outside these pruning rules. Evidence: the memory-bitemporal cluster of `explorations/academia-corpus-mining` ([`research/t3-memory-bitemporal.md`](../../explorations/academia-corpus-mining/research/t3-memory-bitemporal.md)) and the dispatch note in [goals/epistemic-bitemporal-edge-core/research/](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/epistemic-bitemporal-edge-core/research/).
 
 **Theorem status:** INSIDE for semantic retrieval (the projection store), but manageable through:
 
