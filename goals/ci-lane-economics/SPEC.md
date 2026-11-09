@@ -52,7 +52,7 @@ _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions wr
 
 The 2026-11-02 rebin measured @beep/law-practice-server at 98 s. After #2847 registered the canonical citation corpora its Bun/Istanbul unit run takes about 2,970 s on the 4-vCPU hosted runner, so unit-d went from a 25-minute body to a 60-minute job timeout on main (runs 42417048100, 42422844786) and on #2915. The package now runs as three Vitest shards (law-practice-1..3, weight 990 each, the mechanism repo-cli-1..6 already use); unit-d keeps its other 45 packages at weight 651. check.yml lists thirteen Test Unit partitions and the lane-timings census gains the thirteen-shard layout. The per-document extraction cost itself stays with goals/citation-extraction-engine.
 
-Lane `@slop/11-6-26` · PR #2915
+Lane @slop/11-6-26 · PR #2915
 
 Reverse: Return @beep/law-practice-server to unit-d (weight 749), drop law-practice-1..3 from the partition table, the check.yml matrix and the census layout; the census keeps judging runs by the layout they ran.
 
@@ -66,7 +66,7 @@ Tier 1 of the 2026-11-09 test/coverage efficiency plan (41-agent workflow, HEAD 
 
 Measured on the 64-thread workstation under contention; the values are upper bounds and influence placement only.
 
-Lane `claude/fervent-darwin-040f12`
+Lane claude/fervent-darwin-040f12
 
 Reverse: Delete resolveCoverageScopeMode's affected branch in Tasks.ts so a bare run resolves through resolveCoverageTaskOptions again (and drop the --full flag), and restore the #707/#684 weight tables in CoverageScope.ts; no baseline rows or hosted workflows changed.
 
@@ -82,7 +82,7 @@ Every Test Unit partition is now packed by LPT from that run's per-file and per-
 
 `check.yml` lists the thirty Test Unit partitions, the lane-timings census gains the layout, and `bun run beep ci partitions rebalance --check` fails when a table weight drifts from its plan or a partition exceeds its budget; `--write --run <id> [--run <id>...]` repacks from later green runs at each file's worst measurement. Budgets live in `CiPartitions.schemas.ts`. The check stays on demand (it is not in the cheap lint tier) because the unit lane's `ci-partitions.test.ts` already replays it against the committed plans.
 
-Lane `claude/silly-brahmagupta-5a4fd5`
+Lane claude/silly-brahmagupta-5a4fd5
 
 Reverse: Restore the 13-partition layout (repo-cli-1..6 at 402 s, law-practice-1..3 at 990 s, unit-a..d) in CiLanePartitions.ts, check.yml and the lane-timings census, delete packages/law-practice/server/vitest.shards.json together with the unit-plan branch of LawPracticeSequencer (restoring the integration-only sequencer of #3005) and restore the 2026-11-06 repo-cli plan; the census keeps judging runs by the layout they ran.
 

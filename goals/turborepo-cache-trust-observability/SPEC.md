@@ -1437,7 +1437,7 @@ Set PYTHONDONTWRITEBYTECODE=1 only on Setup pinned toolchain without trial capab
 
 This prepares matching install policy; it does not prove actual producer equality or authorize execution. Obtain hosted source/scope proof, primary acceptance, fresh current source inspection and independent source/tool/profile approval before the protected trial. No secret, selection variable, signing setting, storage grant, deployment or whole-goal acceptance changes. No manual local verify, publish, tests, check, docgen or package-quality suite; hosted CI is authoritative.
 
-Lane `codex/cache-producer-install-parity-20261106`
+Lane codex/cache-producer-install-parity-20261106
 
 Reverse: Remove the producer setup step environment and its scope assertions. Retain historical guarded observations and require fresh independent source/profile approval.
 
@@ -1464,7 +1464,7 @@ Reverse: Remove the bounded fileDetails addition and its fixtures; retain the re
 
 Source inspection already permits a report up to four MiB. A later refusal adds bytes, so unconditional retention can exceed the existing aggregate cap at the boundary. Run one metadata-only publication selector after diagnostics, including failure, using the same ARTIFACT_LIMIT. Retain both reports only when they fit together; otherwise retain only the individually safe report selected by policy and fail the complete-pair gate. Reject missing, symlink and special-file candidates without reading payloads, mutating reports, or repeating archive passes. Author exact-boundary, overflow, missing/special-file and fixed-output CLI controls for hosted CI. No local quality suite or source-generator entrypoint is run. No profile, signing, credential, capacity or whole-goal acceptance change.
 
-Lane `codex/cache-diagnostic-refusal`
+Lane codex/cache-diagnostic-refusal
 
 Reverse: Remove the publication selector only after another gate enforces the same combined four-MiB cap; preserve all earlier failure evidence.
 
@@ -1472,7 +1472,7 @@ Reverse: Remove the publication selector only after another gate enforces the sa
 
 Accepted-source inspection42142818104 failed before diagnostics. Three new declared fixtures are13.4/17.0/34.9MB, beyond the previous8MiB reader cap. Raise the file payload ceiling to64MiB and add a one-GiB aggregate metadata preflight before any source payload read. Keep four-reader concurrency,20,000paths,ten-minute job,four-MiB source-plus-diagnostic report and all diagnostic limits. Read each file only up to its preflight size with the existing overflow probe, and reject a returned length mismatch. Hash every declared byte with the existing digest algorithm, preserving containment, aliases, modes and source-inventory drift checks. Larger future inventories refuse until their numeric budget is reviewed. Author complete-large-file, per-file overflow, aggregate zero-read and size-drift controls for hosted CI; no local quality suite or source-generator entrypoint. No deployment, producer approval, qualification, credential, signing, capacity or whole-goal acceptance change.
 
-Lane `codex/cache-source-budget`
+Lane codex/cache-source-budget
 
 Reverse: Revert the focused preflight while preserving failed evidence and complete-input binding; keep producer approval closed until a bounded replacement handles the actual declared fixtures.
 
@@ -1484,7 +1484,7 @@ Set PYTHONDONTWRITEBYTECODE=1 only for the credential-free source-inspection job
 
 Add hosted controls for identical import output and preserved source bytes with the guard, ordinary import cache creation and raw digest invalidation without it, and workflow scope isolation. Keep the existing resource caps. After primary acceptance and hosted proof, require two fresh serial real observations before claiming repeatability. No producer approval, production trust, signing activation, task qualification or observation-window completion follows from this preparation.
 
-Lane `codex/cache-import-bytecode-20261106`
+Lane codex/cache-import-bytecode-20261106
 
 Reverse: Remove the source-only job environment guard and its regression assertions; retain immutable observations, failed comparisons and the canonical digest policy.
 
@@ -1492,7 +1492,7 @@ Reverse: Remove the source-only job environment guard and its regression asserti
 
 The launcher, acceptance criterion and P6 checklist still prescribed lifecycle adoption in the final implementation PR, contradicting the current Agent Guide. Keep all behavioral, trust, observation-window and hosted-proof requirements. Land final evidence, reflection and proposedCloseout with implementation while status stays active or paused; after merge, completion refresh verifies it and a separate packet-state PR adopts completed-retained and updates README/statusNote. Completion requires that adoption PR merged and origin/main closeout.status equals initiative.status. This is navigation and lifecycle alignment, not a completion proposal, signing activation, qualification grant or observation-window waiver.
 
-Lane `codex/cache-current-dependency-evidence-20261107`
+Lane codex/cache-current-dependency-evidence-20261107
 
 Reverse: Restore the old packet prose only if the governing repository closeout law is deliberately changed; never mark completion from an unverified or unmerged proposal.
 
@@ -1500,7 +1500,7 @@ Reverse: Restore the old packet prose only if the governing repository closeout 
 
 Both registered pilot source roots must pass the existing assertCacheProducerWorkflowProfile guard after ordinary Git cleanliness and before tool probes, source copying or sandbox execution. Reuse its ignored-source and root dotenv policy, scrubbed bounded Git capture and metadata-only dotenv inspection; do not invent another denylist, read dotenv contents or clean source trees automatically. Add two authored orchestration cases covering six regular dotenv refusals across both local source roots and two dangling-alias refusals across both signed source roots. These process-boundary controls use real contained filesystem operations with a deterministic process double; no native task or production leak is claimed. No local verify, publish, tests, compiler, docgen, package-quality suite or manual source generator runs. Ordinary bootstrap/hooks and native goal writers are allowed. Hosted CI is authoritative. No signing, credential, capability, qualification, backend or production setting changes. Both full Turbo goals and representative windows remain open.
 
-Lane `codex/cache-pilot-source-profile-20261107`
+Lane codex/cache-pilot-source-profile-20261107
 
 Reverse: Remove the pilot guard call while retaining the producer workflow guard and recorded qualification limits.
 
@@ -1508,7 +1508,7 @@ Reverse: Remove the pilot guard call while retaining the producer workflow guard
 
 Repeated hosted unit-d captures end before the final failure summary. Keep repo-run captures within their existing 524288-character budget while retaining both initial context and the final diagnostic footer. Extend the existing OutputBound schema and fold with explicit retention, defaulting legacy constructors and encoded inputs to head-only behavior. Opt only repoRunOutputBound into head-tail retention. Other consumers, process exit codes, deadlines and required proof gates retain their contracts. Hosted controls cover the legacy default, chunk partitioning, empty and small budgets, and actual stream footer retention. No local test, compiler or quality suite runs; syntax/source inspection and ordinary hooks only. This is a diagnostic prerequisite, not evidence that the inherited law-practice-server failure is fixed or that either Turbo goal is complete.
 
-Lane `codex/cache-ci-failure-tail-20261107`
+Lane codex/cache-ci-failure-tail-20261107
 
 Reverse: Restore repoRunOutputBound to head retention; other callers already default to head.
 

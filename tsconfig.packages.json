@@ -250,6 +250,9 @@
       "path": "packages/drivers/shacl"
     },
     {
+      "path": "packages/drivers/sqlite"
+    },
+    {
       "path": "packages/drivers/tailscale"
     },
     {
@@ -518,6 +521,9 @@
     },
     {
       "path": "packages/shared/use-cases"
+    },
+    {
+      "path": "packages/tooling/library/agent-memory-store"
     },
     {
       "path": "packages/tooling/library/ai-metrics"

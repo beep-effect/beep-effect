@@ -12,6 +12,12 @@
         ]
       },
       {
+        "name": "@beep/agent-memory-store",
+        "patterns": [
+          "packages/tooling/library/agent-memory-store/src/**"
+        ]
+      },
+      {
         "name": "@beep/agents-client",
         "patterns": [
           "packages/agents/client/src/**"
@@ -1044,6 +1050,12 @@
         ]
       },
       {
+        "name": "@beep/sqlite",
+        "patterns": [
+          "packages/drivers/sqlite/src/**"
+        ]
+      },
+      {
         "name": "@beep/storybook",
         "patterns": [
           "apps/storybook/src/**"
@@ -1226,6 +1238,25 @@
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/agent-memory-store",
+        "allow": [
+          "@beep/agent-memory-store",
+          "@beep/epistemics",
+          "@beep/identity",
+          "@beep/markdown",
+          "@beep/provenance",
+          "@beep/schema"
+        ],
+        "allowTypeOnly": [
+          "@beep/agent-memory-store",
+          "@beep/epistemics",
+          "@beep/identity",
+          "@beep/markdown",
+          "@beep/provenance",
+          "@beep/schema"
         ]
       },
       {
@@ -5406,6 +5437,21 @@
           "@beep/fc-runs",
           "@beep/identity",
           "@beep/spdx"
+        ]
+      },
+      {
+        "from": "@beep/sqlite",
+        "allow": [
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/sqlite",
+          "@beep/test-runner"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/sqlite",
+          "@beep/test-runner"
         ]
       },
       {

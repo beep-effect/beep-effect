@@ -156,7 +156,7 @@ _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions wr
 
 449 PDFs from 2026-06-02, a different corpus from the Nov-5 aggregation and from academia-2026-07. Download through the Box route, hash-dedupe, inventory as a separate snapshot with its own denominator, T1 triage on gpt-6-luna. Full mining would double deep-read volume and mix two topical catalogs; leaving it in Box repeats the academia PDF loss.
 
-Lane `explore/research-library-ontology`
+Lane explore/research-library-ontology
 
 Reverse: Fire the legal-ontology-pile-deep-read re-entry in the exploration MAP; T2 reads run against the already-retained objects
 
@@ -164,7 +164,7 @@ Reverse: Fire the legal-ontology-pile-deep-read re-entry in the exploration MAP;
 
 The 34 Box nightlies (2026-09-13 to 2026-11-05) are hop 0 for the nightly series; 18 dates exist only there. Local copies and the five 11-05 variants attach as versions of the same identity linked by nearDuplicateOf; byte-identical files share one object; nothing is dropped (October D10).
 
-Lane `explore/research-library-ontology`
+Lane explore/research-library-ontology
 
 Reverse: Re-inventory with the local directory as primary; identities and versions are additive so no bytes or receipts are lost
 
@@ -172,7 +172,7 @@ Reverse: Re-inventory with the local directory as primary; identities and versio
 
 T1 triage of every readable artifact on gpt-6-luna (child.lightweight); T2 deep reads on Junie claude-opus-5-5 while JetBrains credits remain (5 of 10 cycle on 2026-11-06), then claude-opus-5-5 children; T3 synthesis by the orchestrating session. /deep-research once per evidence-gap cluster, sequential, at most six (memory: parallel runs trip the server rate limit). /adhd once on the routed catalog for the graduation portfolio. Precedent: academia-corpus-mining T1/T2/T3.
 
-Lane `explore/research-library-ontology`
+Lane explore/research-library-ontology
 
 Reverse: Change the pool order in the mine command config; ModelRun agents on every finding keep provenance intact
 
@@ -180,7 +180,7 @@ Reverse: Change the pool order in the mine command config; ModelRun agents on ev
 
 Research-11-5-26 imports with accessClass private: mineable with hosted models (the OIP hygiene rule constrains what moves into the repo, not product architecture), excluded from rendered views by default, reported separately in status, never committed, never in a PR body, alphaXiv folder, Cursor or Junie lane.
 
-Lane `explore/research-library-ontology`
+Lane explore/research-library-ontology
 
 Reverse: Remove the partition's objects from the library; the repo never held them
 
@@ -188,7 +188,7 @@ Reverse: Remove the partition's objects from the library; the repo never held th
 
 The Box root now lists 36 nightly files against the 34 surveyed: a 2026-11-06 report and a misnamed alias of 2026-11-04 with the same SHA-1. The snapshot includes 2026-11-06 because Box is authoritative for the series and freezing an older listing would drop a source; the alias shares the 2026-11-04 object. Local 11-05 (3) is byte-identical to Box 2026-10-21 and attaches to that identity, not to 11-05. Rejected: filename-keyed identity, which files three different reports under 11-05.
 
-Lane `feat/research-intake-2026-11`
+Lane feat/research-intake-2026-11
 
 Reverse: Exclude the 2026-11-06 nightly from the snapshot by re-inventorying with a date filter; objects and receipts are additive
 
@@ -196,7 +196,7 @@ Reverse: Exclude the 2026-11-06 nightly from the snapshot by re-inventorying wit
 
 891 November hop-1 identities were not fetchable: 449 internal and 423 unresolved kinds (mostly paths and tokens inside the private archive's repo snapshot) and 19 X posts. Each got a reviewed disposition whose evidence binds every inventoried occurrence (document snapshot hash, position, context hash). Rules: relative and repository paths, Effect/@beep module specifiers and in-bundle document anchors are internal when the source is internally owned and non-reference otherwise (the importer admits internal only for internal ownership); slash tokens with no scheme or host and truncated URLs are non-reference; X posts are incomplete (SPEC non-goal); two Hugging Face dataset ids cited without a host are tool-blocked because reference resolution admits only GitHub proofs. 90 owner/name-shaped tokens were read individually before the rule applied. Rejected: leaving them missing (fails the readable-or-disposed criterion) and resolving them through web search (no authentic proof object).
 
-Lane `feat/research-intake-2026-11`
+Lane feat/research-intake-2026-11
 
 Reverse: Delete the 891 reviewed-disposition captures by their review ids and re-run the generator with different rules; the sources and occurrences are untouched
 
@@ -204,7 +204,7 @@ Reverse: Delete the 891 reviewed-disposition captures by their review ids and re
 
 With routed findings in place, the routed-parent gate with a 25-per-domain cap admitted 15,597 hop-2 identities. Nearly every hop-1 parent carried live topics, and the top of the list was site navigation, social profiles, privacy pages, image assets and extraction fragments such as https://arxiv/ and doi.org/10. That exceeded the remaining Firecrawl plan credits (about 6,600 of 8,000) and the mining budget with no purchase allowed. The gate now refuses non-content (reserved hosts, IP literals, static assets, dotless or wildcard hosts, bare site roots, empty query values, suffixless DOIs, social or consent hosts, X profiles other than posts, YouTube channel pages, legal and administration paths), counts in-degree only from routed parents on a different site than the child, and admits a global budget of 400 by that in-degree with a canonical-URL tie-break. Result on the real library: 75,918 hop-2 identities catalogued, 400 admitted, 9,481 non-content, 43,863 over budget, 15,611 unrouted, 4,607 GitHub not transitive, 1,544 arXiv catalogue-only. Residual portal pages among the 400 are left to T1, which skips them. Rejected: a relevance-score threshold (model opinion, as the routes goal already decided) and acquiring the 15,597.
 
-Lane `feat/research-intake-2026-11`
+Lane feat/research-intake-2026-11
 
 Reverse: Raise --hop2-limit or clear the chrome lists in LibraryHopPolicy and re-run hops and acquire; refused identities stay catalogued
 
@@ -212,7 +212,7 @@ Reverse: Raise --hop2-limit or clear the chrome lists in LibraryHopPolicy and re
 
 The 449 IP_LAW_ONTOLOGY_RESEARCH PDFs were downloaded by explicit Box file id (449 readable, 0 byte-identical duplicates, 337.6 MB), staged under the library and inventoried as a separate intake from a private root, so they stay out of rendered views and Junie or Cursor lanes. T1 on gpt-6-luna: 379 select, 69 skip, 1 unreadable PDF (no text). The 69 skips are off-topic strays (pharmacology, hardware design, energy economics); the orchestrator reviewed the skip reasons. The library's non-reference disposition admits only unresolved or internal sources and these are captured docs sources, so the reviewed T1 skip record is the disposition and nothing is deleted. No T2 reads (SPEC non-goal; re-entry is the exploration's legal-ontology-pile-deep-read candidate).
 
-Lane `feat/research-intake-2026-11`
+Lane feat/research-intake-2026-11
 
 Reverse: Re-inventory the staged PDFs with --input to make the intake public, or import explicit dispositions if the validator later admits captured docs sources
 
@@ -220,7 +220,7 @@ Reverse: Re-inventory the staged PDFs with --input to make the intake public, or
 
 The first hop-0 inventory wrote hop-1 and hop-2 derivations against the four October intake ids (0 before, about 90k each after), which the SPEC forbids as an edit to October accounting. A reflink backup of the library was taken before the intake's first write, and only this goal's Box acquisition and inventory had written since, so the library was restored from that backup rather than pruned edge by edge. Box acquisition, staging and inventory were then re-run on code that derives hops only for the recorded intake. Rejected: deleting the October-keyed edges in place (no tested prune path, and the catalog history would still carry them).
 
-Lane `feat/research-intake-2026-11`
+Lane feat/research-intake-2026-11
 
 Reverse: The tainted library is kept at ~/.cache/beep/library-tainted-hop0-2026-11-07; swap it back into place to undo the restore
 
@@ -228,7 +228,7 @@ Reverse: The tainted library is kept at ~/.cache/beep/library-tainted-hop0-2026-
 
 epistemic-library-model-promotion (move the finding and evidence model into packages/epistemic/domain once a second consumer exists): no second code consumer of LibraryFinding exists outside packages/tooling/tool/cli, and every epistemic goal the routed findings name (epistemic-claim-lifecycle-gate, provenance-shared-claim-kernel and five siblings) is completed-retained. Stays gated; the trigger is unchanged. legal-ontology-pile-deep-read (T2 reads of the 449-PDF pile): its trigger packets legal-ontology-landscape, lynx-lkg-ontology-grounding and legal-patent-kg-deepening have all graduated, so the trigger as written can never fire. T1 on the pile selected 379 PDFs; their topic ids name legal-ontology-landscape 127 times, legal-patent-kg-deepening 91, the completed patent-document-schema 71 and the active legal-document-intake 66. Stays gated, with the trigger re-pointed: fire when goals/legal-document-intake, or a live successor of the graduated legal ontology explorations, names the pile in its plan. The 379 T1 selections are the ready worklist.
 
-Lane `feat/research-intake-2026-11`
+Lane feat/research-intake-2026-11
 
 Reverse: Restore the original trigger text in the exploration MAP; nothing was implemented
 
@@ -236,7 +236,7 @@ Reverse: Restore the original trigger text in the exploration MAP; nothing was i
 
 Port of the academia T1/T2/T3 scripts (codex exec with an output schema per job) into research library mine: mine triage (T1, gpt-6-luna), mine read (T2, Junie claude-opus-5-5 while JetBrains credits remain, then claude-opus-5-5), mine synthesize (T3, imports session-authored synthesis). Each job spawns a configured runner, validates the JSON result against a schema, rejects any finding whose span is not verbatim in the bound capture text, and records a LibraryModelRun carrying model, effort, route and the exact launch argv (new additive field, decoding default empty so existing catalogs decode). Private-partition artifacts never route to Junie or Cursor runners. Rejected: keeping the runners as packet scripts (the academia packet lost them) and an MCP-driven runner (not reproducible from argv).
 
-Lane `feat/research-intake-2026-11`
+Lane feat/research-intake-2026-11
 
 Reverse: Drop the mine command group and the additive ModelRun argv field (decoding default empty); recorded findings stay valid
 
@@ -244,7 +244,7 @@ Reverse: Drop the mine command group and the additive ModelRun argv field (decod
 
 The acceptance check named a git grep on the archive's message ids and participant handle. The 50 message ids must match nothing anywhere in the tree. The one non-operator participant handle is also a public GitHub owner already cited in 9 tracked exploration and goal files that predate this goal, so a whole-tree grep can never pass. The guard therefore checks message ids against the whole tree and the handle against lines this goal adds (origin/main...HEAD plus uncommitted). Identifiers live only in an out-of-repo pattern file and the guard prints counts, never values. First run 2026-11-07: 0 and 0. Rejected: rewriting the pre-existing public references, an unrelated change.
 
-Lane `feat/research-intake-2026-11`
+Lane feat/research-intake-2026-11
 
 Reverse: Return to a literal whole-tree git grep on the handle after removing the pre-existing public references, or widen the guard's diff base
 
@@ -252,7 +252,7 @@ Reverse: Return to a literal whole-tree git grep on the handle after removing th
 
 After 463 T2 readings, the signed-in Codex account and then every proxy credential for gpt-6.1-sol reported usage_limit_reached (proxy reset in about 142 hours). Remaining pools: Cursor's API pool shows 0% and refuses private artifacts anyway, and Grok has no mine profile. claude-opus-5-5 is the Claude chain's step 1 and its rate limit had cleared, so the remaining ~724 reads (public and private) run on a new proxy-opus profile. It launches claude -p against CLIProxyAPI with a scrubbed environment, so the batch draws on every admitted Claude login instead of the 12%-left account the CLI is signed in to. The runner pauses on quota errors. Rejected: waiting six days for the Codex reset, and buying credits (operator-only spend).
 
-Lane `feat/research-intake-2026-11`
+Lane feat/research-intake-2026-11
 
 Reverse: Re-run any partition with --profile codex-sol after the Codex reset; per-artifact records keep completed reads
 
@@ -260,7 +260,7 @@ Reverse: Re-run any partition with --profile codex-sol after the Codex reset; pe
 
 Junie's JetBrains quota returned 477 Out of quota on 2026-11-07 after a handful of reads (the runner recorded 239 failed launches before the batch stopped making progress; the quota signal appeared only in Junie's log file, now detected and treated as a pause). The next pool is claude-opus-5-5 children, which recovered from this morning's rate limit, but 784 Opus reads would draw the scarce Anthropic weekly pool that also runs the orchestrating session, and that pool already tripped a rate limit today. The public partition therefore runs on the chain's step 2, Codex gpt-6.1-sol medium (codex-sol profile), beside the private partition. Every reading records its ModelRun, so pool provenance stays per finding. Rejected: buying JetBrains credits (operator-only spend).
 
-Lane `feat/research-intake-2026-11`
+Lane feat/research-intake-2026-11
 
 Reverse: Re-run remaining public jobs with --profile claude or junie once quota returns; per-artifact records keep completed reads
 
@@ -268,7 +268,7 @@ Reverse: Re-run remaining public jobs with --profile claude or junie once quota 
 
 T1 selected 1187 of 1434 November artifacts (241 skip, 6 defer). The pool doctrine puts T2 on Junie claude-opus-5-5 while JetBrains credits remain, then claude-opus-5-5 children. Private artifacts may not go to Junie (enforced by the runner), and two Claude Opus children failed on 2026-11-07 with a confirmed API rate limit, so the private 400 run on the Claude chain's next step, Codex gpt-6.1-sol medium, through a new codex-sol profile. --only-private and --exclude-private keep the two runs disjoint, and the writer lock now serializes their catalog writes. Both routes were qualified by one live read each before the batch (Junie 6 findings, codex-sol 12).
 
-Lane `feat/research-intake-2026-11`
+Lane feat/research-intake-2026-11
 
 Reverse: Re-run the private partition with --profile claude once the Claude limit resets; records are keyed per artifact so a re-read replaces nothing silently
 
@@ -276,7 +276,7 @@ Reverse: Re-run the private partition with --profile claude once the Claude limi
 
 Before any November work, research library verify on the untouched library reports source/version coverage missing=5 and 7 integrity lines, all from the 2026-10-06 and 2026-10-14 intakes, with SHACL conforming. A reflink copy mined with one real T1 and one real T2 job produced byte-identical verify output, so mining adds no failures. The SPEC forbids editing the October intakes or their accounting, so this goal's zero-missing and zero-integrity checks apply to sources whose derivation roots are November or legal-ontology intakes, and COVERAGE.md reports the October baseline beside them. Rejected: writing dispositions onto October sources from this goal.
 
-Lane `feat/research-intake-2026-11`
+Lane feat/research-intake-2026-11
 
 Reverse: Give the five October sources reviewed dispositions in a separate packet and tighten the acceptance to library-wide zero
 
@@ -291,7 +291,7 @@ The first full research library verify after mining failed on November data: 3,3
 
 The rerun conforms (0 SHACL violations) and its 8 integrity lines and 4 missing sources all belong to the 2026-10-06 intakes, which the verify baseline-scope decision reports without repair.
 
-Lane `feat/research-intake-2026-11` · PR #2892
+Lane feat/research-intake-2026-11 · PR #2892
 
 Reverse: Revert the Derivation sourceId flexibility, the cited-only census and the rdf-validation patch; re-import nothing, the dispositions and captures stay valid
 

@@ -146,7 +146,7 @@ _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions wr
 
 A slice may import foundation; reusing the function keeps the bytes identical by construction. Recorded in the exploration: explorations/execution-authority-home/DECISIONS.md (canonical-json).
 
-Lane `docs/execution-authority-home-exploration`
+Lane docs/execution-authority-home-exploration
 
 Reverse: Promote a neutral canonical-JSON primitive to foundation/primitive with golden byte tests
 
@@ -154,7 +154,7 @@ Reverse: Promote a neutral canonical-JSON primitive to foundation/primitive with
 
 Both sinks share one frozen grant set, one hash-chained ledger and one config. Recorded in the exploration: explorations/execution-authority-home/DECISIONS.md (egress-scope).
 
-Lane `docs/execution-authority-home-exploration`
+Lane docs/execution-authority-home-exploration
 
 Reverse: Split egress into its own home with its own ledger
 
@@ -162,7 +162,7 @@ Reverse: Split egress into its own home with its own ledger
 
 They are hash inputs; changing them changes every new row's bytes. Comment each definition with why it keeps the epistemic name. Recorded in the exploration: explorations/execution-authority-home/DECISIONS.md (hash-domain-labels).
 
-Lane `docs/execution-authority-home-exploration`
+Lane docs/execution-authority-home-exploration
 
 Reverse: Mint new labels with a dual-prefix verifier
 
@@ -170,7 +170,7 @@ Reverse: Mint new labels with a dual-prefix verifier
 
 A cross-cut gets its own slice (10-cross-slice-coordination.md section 5). packages/agents runs the model and would also judge its tools. shared needs two consumers and admits no adapters. Recorded in the exploration: explorations/execution-authority-home/DECISIONS.md (home-slice).
 
-Lane `docs/execution-authority-home-exploration`
+Lane docs/execution-authority-home-exploration
 
 Reverse: Move the packages into another home and repoint consumers in one PR
 
@@ -178,7 +178,7 @@ Reverse: Move the packages into another home and repoint consumers in one PR
 
 The link is new ontology behavior and gets its own reviewable PR. Recorded in the exploration: explorations/execution-authority-home/DECISIONS.md (brief-split).
 
-Lane `docs/execution-authority-home-exploration`
+Lane docs/execution-authority-home-exploration
 
 Reverse: Fold the link into the move PR
 
@@ -186,7 +186,7 @@ Reverse: Fold the link into the move PR
 
 Config owns its key namespace. A stale env empties the allowlist, which unregisters the publish tool and fails closed. Recorded in the exploration: explorations/execution-authority-home/DECISIONS.md (env-keys).
 
-Lane `docs/execution-authority-home-exploration`
+Lane docs/execution-authority-home-exploration
 
 Reverse: Restore the EPISTEMIC_* key names in the config package, .env.example and turbo.json
 
@@ -194,7 +194,7 @@ Reverse: Restore the EPISTEMIC_* key names in the config package, .env.example a
 
 Provenance of a result attaches to the result; a decision that precedes, gates or never produces a result is its own record (research/provenance-placement-ddd.md). Session journal entries get an authorizedBy IRI next to OntologyChangeActor. Recorded in the exploration: explorations/execution-authority-home/DECISIONS.md (ledger-shape).
 
-Lane `docs/execution-authority-home-exploration`
+Lane docs/execution-authority-home-exploration
 
 Reverse: Collapse decisions into Session journal provenance and send denials to telemetry
 
@@ -202,7 +202,7 @@ Reverse: Collapse decisions into Session journal provenance and send denials to 
 
 Reuse before recreate; copying without searching may trip the fallow duplication gate. Recorded in the exploration: explorations/execution-authority-home/DECISIONS.md (optional-defect-helper).
 
-Lane `docs/execution-authority-home-exploration`
+Lane docs/execution-authority-home-exploration
 
 Reverse: Promote the helper to a foundation package
 
@@ -210,7 +210,7 @@ Reverse: Promote the helper to a foundation package
 
 execution-authority-recording.pglite.test.ts drives the real desktop MCP transport over a migrated PGlite ledger: one allowed and one egress-denied publish. It records the sidecar bind host, verdict chains with verification results, outcome settlements, information_schema column pins, constraints and triggers. With EXECUTION_AUTHORITY_RECORDING_OUT set it writes JSON. research/recordings/pre-move.json (taken on cf46c70048) and post-move.json are identical after mapping the declared epistemic_execution_ prefix to execution_authority_.
 
-Lane `feat/execution-authority-slice`
+Lane feat/execution-authority-slice
 
 Reverse: Delete apps/professional-desktop/test/integration/execution-authority-recording.pglite.test.ts and the recordings
 
@@ -218,7 +218,7 @@ Reverse: Delete apps/professional-desktop/test/integration/execution-authority-r
 
 EpistemicServerDrizzleLive no longer provides ExecutionLedger. apps/professional-desktop/src/runtime/Layer.ts only Layer.provides it to the contradiction QA seed, whose output never included the ledger, and server/main.ts already provides ExecutionLedgerDrizzle beside PgliteDrizzleLive to the governed MCP transport. Typecheck of @beep/professional-desktop and the four desktop integration suites confirm it.
 
-Lane `feat/execution-authority-slice`
+Lane feat/execution-authority-slice
 
 Reverse: Merge ExecutionLedgerDrizzle back into EpistemicServerDrizzleLive
 
@@ -226,7 +226,7 @@ Reverse: Merge ExecutionLedgerDrizzle back into EpistemicServerDrizzleLive
 
 SPEC Constraints classify decision and outcome records as entities. Domain and tables therefore export ./entities/ExecutionRecord and ./values/{ExecutionGrant,GrantSet,ExecutionVerdict}. Use-cases and server keep the epistemic concept folders (ExecutionLedger, GovernedTierGate, GovernedEgress), so the move stays a relocation. $I composer paths follow the new file paths. No test pins an execution identifier (RESEARCH section 6).
 
-Lane `feat/execution-authority-slice`
+Lane feat/execution-authority-slice
 
 Reverse: Move entities/ExecutionRecord back under values/ in domain and tables and update the export maps
 
@@ -234,7 +234,7 @@ Reverse: Move entities/ExecutionRecord back under values/ in domain and tables a
 
 Search result (2026-11-07): no foundation helper combines `S.Defect` with `SchemaUtils.alwaysEquivalent` and `Effect.succeedNone`. The only equivalent is `law-practice/use-cases/src/internal/DefectCause.ts`, which another slice cannot import. A first copy into `@beep/execution-authority-use-cases` tripped the Fallow audit duplication gate (introduced clone `dup:f67f335a`, 6 lines). Following this decision's recorded reversal, the helper moves to `@beep/schema/SchemaUtils/optionalDefect`, and the epistemic internal copy is deleted. Its two consumers, `EdgeAuthority.errors.ts` and `ExecutionLedger.errors.ts`, import that subpath directly. The helper is deliberately left out of the `SchemaUtils` barrel: re-exporting it there made `@beep/storybook`'s stories typecheck lose `TaskList.make` and `TaskItem.make` on `@beep/md` (6 errors, reproduced deterministically; clean main and the subpath-only form both have 0). The law-practice `DefectCause` takes no description argument and stays out of scope.
 
-Lane `feat/execution-authority-slice`
+Lane feat/execution-authority-slice
 
 Reverse: Restore packages/epistemic/use-cases/src/internal/OptionalDefect.ts and an internal copy in @beep/execution-authority-use-cases, then drop SchemaUtils.optionalDefect
 
@@ -242,7 +242,7 @@ Reverse: Restore packages/epistemic/use-cases/src/internal/OptionalDefect.ts and
 
 The forward migration renames both tables, every constraint through one DO block (PostgreSQL 18 names NOT NULL constraints, which ALTER TABLE RENAME leaves alone; the block is a single line, safe for the LegacyStatementBoundary splitter), the four triggers and the guard function. The function body and its RAISE text are unchanged, so behavior stays byte-identical. down.sql is the exact inverse. The drizzle migrator and the desktop bundler read only migration.sql, so down.sql is never applied automatically. ExecutionAuthorityLedgerMigration.pglite.test.ts seeds a pre-move database with an allowed-denied-allowed chain and two outcomes, migrates it forward, verifies the chain and outcome bindings, runs down.sql and checks that the old names and row counts are back. The db-admin target is renamed to execution-authority-ledger with schemaName execution_authority.
 
-Lane `feat/execution-authority-slice`
+Lane feat/execution-authority-slice
 
 Reverse: Run drizzle/20261107032821_execution_authority_rename/down.sql, then delete the folder and re-sync the desktop bundle
 
@@ -250,7 +250,7 @@ Reverse: Run drizzle/20261107032821_execution_authority_rename/down.sql, then de
 
 EpistemicConfig, EpistemicServerConfig and the rest become ExecutionAuthority*. Spans Epistemic.{ExecutionLedger,GovernedTierGate,GovernedEgress}.* become ExecutionAuthority.*, and log subsystems become execution_authority_governed_*, because the instrumentation catalog keys span names by owning package. Hash and digest inputs stay byte-identical: the three epistemic-*/v1 labels and the run-key prefixes epistemic-run/ and epistemic-egress/. Each now carries a comment explaining why.
 
-Lane `feat/execution-authority-slice`
+Lane feat/execution-authority-slice
 
 Reverse: Restore the Epistemic* config symbols, the Epistemic.* span names and the epistemic_governed_* subsystem annotations
 
@@ -266,7 +266,7 @@ The research-intake-2026-11 intake routed 211 findings to this packet (96 affirm
 
 This amendment adds evidence only; it changes no acceptance criterion. The owning lane decides whether any finding changes its plan.
 
-Lane `feat/research-intake-2026-11`
+Lane feat/research-intake-2026-11
 
 Reverse: Delete this decision file and regenerate the block; the findings stay in the library and in research-intake-2026-11/research/routing.jsonl
 
@@ -274,7 +274,7 @@ Reverse: Delete this decision file and regenerate the block; the findings stay i
 
 06-configuration-boundaries.md, 01-hexagonal-vertical-slices.md and the same-PR rule in 11-evolution-and-deprecation.md fix these. Recorded in the exploration: explorations/execution-authority-home/DECISIONS.md (settled-by-doctrine).
 
-Lane `docs/execution-authority-home-exploration`
+Lane docs/execution-authority-home-exploration
 
 Reverse: Split the move into staged PRs with temporary dual composition
 
@@ -282,7 +282,7 @@ Reverse: Split the move into staged PRs with temporary dual composition
 
 Matches agent-execution-authority and the Execution* vocabulary; bare authority collides with glossary terms. Recorded in the exploration: explorations/execution-authority-home/DECISIONS.md (slice-name).
 
-Lane `docs/execution-authority-home-exploration`
+Lane docs/execution-authority-home-exploration
 
 Reverse: Rename the packages in one PR
 
@@ -290,7 +290,7 @@ Reverse: Rename the packages in one PR
 
 Installed desktops keep PGlite data; hash inputs contain no table names; the prefix should name the owning slice. Recorded in the exploration: explorations/execution-authority-home/DECISIONS.md (table-names).
 
-Lane `docs/execution-authority-home-exploration`
+Lane docs/execution-authority-home-exploration
 
 Reverse: Run the down-migration to restore the epistemic_execution_* names
 
@@ -298,7 +298,7 @@ Reverse: Run the down-migration to restore the epistemic_execution_* names
 
 The move stays a relocation that preserves behavior; anchoring is a security feature with its own design space. Recorded in the exploration: explorations/execution-authority-home/DECISIONS.md (tip-anchoring).
 
-Lane `docs/execution-authority-home-exploration`
+Lane docs/execution-authority-home-exploration
 
 Reverse: Fold anchoring into this goal's scope
 

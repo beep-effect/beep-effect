@@ -36,6 +36,8 @@
   "researchReports": [
     "research/2026-11-07-validation-spike-plan.md",
     "research/2026-11-08-validation-scoreboard.md",
+    "research/2026-11-09-p0-cache-request.json",
+    "research/2026-11-09-p0-cache-review.md",
     "research/SOURCES.md"
   ],
   "agentLaunchers": [
@@ -53,7 +55,7 @@
     {
       "id": "P0",
       "name": "Design and grill",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P1",
@@ -108,5 +110,5 @@
     "A ruling of the 2026-11-09 decision-log entry cannot be met by the phase as designed: the phase stops and reports; the ruling is not routed around.",
     "A spike-derived bar is missed: remediation on the current route, or a decision file re-baselining the bar with a new measurement; never a silent threshold edit."
   ],
-  "statusNote": "Opened 2026-11-09 from the merged decision entry (PR #2996). P0 Design and grill is next: confirm or reverse the six packet-decidable design items by decision file (the entry's three rulings stay fixed) and route the package home; no package code has changed."
+  "statusNote": "P0 Design and grill in progress (2026-11-09): the six packet-decidable design items and the package home are decided by decision file (tooling/library/agent-memory-store, new drivers/sqlite, effect/eventlog log, @beep/provenance identity, @beep/epistemics findings, Reranker and SymbolResolver ports, status prose generated from the manifest); schemas and Context.Service contracts are landing in the P0 PR; no implementation has started."
 }
