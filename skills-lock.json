@@ -670,6 +670,14 @@
       ],
       "installedTreeHash": "94f4301d065429357b097b195bf4275660c0faab54dbc6cd97ef2f9620e143d4"
     },
+    "update-harnesses": {
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/update-harnesses",
+        ".agents/skills/update-harnesses"
+      ],
+      "installedTreeHash": "71a7d42aea43fea3f3e3339b3f04ea9e4405f64245612ef8b423cd8ba38843fa"
+    },
     "yeet": {
       "_tag": "local",
       "installedTargets": [

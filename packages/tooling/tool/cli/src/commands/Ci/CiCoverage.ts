@@ -39,7 +39,7 @@ import {
   runQualityTaskStreamingStepGroup,
 } from "../Quality/Tasks.ts";
 import { CiCommandError } from "./Ci.errors.ts";
-import { CI_LANE_PARTITIONS, withCiLaneDefaultPlacements } from "./CiLanePartitions.ts";
+import { CI_LANE_PARTITIONS, ciLaneStartOrder, withCiLaneDefaultPlacements } from "./CiLanePartitions.ts";
 import type { CoverageScopeOwner } from "../Quality/internal/CoverageScope.ts";
 import type { CiCoverageArtifactPlan } from "../Quality/Tasks.ts";
 import type { CiLanePartitionProof, CiLaneRunOptions } from "./CiLane.ts";
@@ -459,7 +459,7 @@ const runAndWrite = Effect.fn("CiCoverage.runAndWrite")(function* (
   if (step !== undefined) {
     yield* runOrdinaryCoverageStep(repoRoot, step, packageNames);
   }
-  yield* runCompoundCoverageSteps(repoRoot, packages, packageNames, step?.env);
+  yield* runCompoundCoverageSteps(repoRoot, startFirstOrdered(partitionId, packages), packageNames, step?.env);
   yield* writeCoverageProducerArtifact(
     repoRoot,
     CoverageProducerWriteOptions.make({
@@ -470,6 +470,21 @@ const runAndWrite = Effect.fn("CiCoverage.runAndWrite")(function* (
     })
   ).pipe(Effect.mapError(coverageCommandError(`Failed to seal coverage partition ${partitionId}`)));
 });
+
+// A bin's curated `startFirst` packages lead its two-at-a-time steps (ciLaneStartOrder); a partition
+// the table does not name, such as labs, keeps its order.
+const startFirstOrdered = (partitionId: string, packages: ReadonlyArray<CoverageProducerPackage>) =>
+  ciLaneStartOrder(
+    packages,
+    O.getOrElse(
+      O.flatMap(
+        A.findFirst(CI_LANE_PARTITIONS, (partition) => partition.id === partitionId),
+        (partition) => O.fromUndefinedOr(partition.startFirst)
+      ),
+      A.empty<string>
+    ),
+    (entry) => entry.packageName
+  );
 
 const coverageReporterArgument = (repoRoot: string) =>
   `--reporter=${repoRoot}/packages/tooling/tool/cli/src/commands/Ci/CiCoverage.reporter.ts`;

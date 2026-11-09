@@ -110,7 +110,7 @@ _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions wr
 
 `@beep/pglite` ships `PgliteTestLayer` (Postgres dialect in-process), so the driver's conformance scenarios run three ways: `Domain.InMemory`, PGlite, and a real Postgres `test/integration` project reusing the same scenario module. The workflow engine is `effect/cluster/ClusterWorkflowEngine.layer` over `effect/cluster/SingleRunner.layer()` (SqlMessageStorage + SqlRunnerStorage) on the same SqlClient (D6).
 
-Lane `goals/alchemy-vault-sync-slice`
+Lane goals/alchemy-vault-sync-slice
 
 Reverse: Drop the PGlite project and run the suite against a docker Postgres only
 
@@ -118,7 +118,7 @@ Reverse: Drop the PGlite project and run the suite against a docker Postgres onl
 
 The Postgres Platform implementation and its conformance suite live in `packages/drivers/alchemy-postgres` as `@beep/alchemy-postgres`, created with `bun run beep create-package --family drivers`. `standards/ARCHITECTURE.md` lists Postgres, message storage and workflow engines as driver concerns; a repo-owned event-store platform is an external boundary wrapper, not shared-kernel substrate.
 
-Lane `goals/alchemy-vault-sync-slice`
+Lane goals/alchemy-vault-sync-slice
 
 Reverse: Move the package with bun run beep create-package into the foundation family and update the import sites; no data involved
 
@@ -126,7 +126,7 @@ Reverse: Move the package with bun run beep create-package into the foundation f
 
 `bun run beep laws entity-kit-freeze --check` fails any git-tracked `.ts`/`.tsx` file under `packages/` or `apps/` that imports the frozen specifiers (`@beep/shared-domain/entity` barrel, `entity/EntityKit`, `BaseEntity`, `AuditEntity`, `OrgEntity`, `ProductEntity`, `primitives`, or those names from the `@beep/shared-domain` barrel) unless it is in `standards/entity-kit-freeze.baseline.jsonc`; a baseline entry that stopped importing is a stale finding fixed by `--write`, so the baseline only shrinks. `Principal`, `SourceKind`, `PublicEntityId`, `EntityId`, `EntityRef` are not frozen (D3). Registered as cheap-gate lane `lint:entity-kit-freeze`.
 
-Lane `goals/alchemy-vault-sync-slice`
+Lane goals/alchemy-vault-sync-slice
 
 Reverse: Delete the law, its baseline and the lint lane when the kit's last consumer migrates and the kit is removed
 
@@ -134,7 +134,7 @@ Reverse: Delete the law, its baseline and the lint lane when the kit's last cons
 
 beta.85 has no version slot on the wire event or the envelope. Each event class declares `static readonly schemaVersion` (default 1); the driver reads it from the hosted aggregate's declared events, writes a `schema_version` column, and applies the class's upcaster chain to stored JSON at read before the kernel decodes. Genesis-import rows are version 1 (D12). Evidence: `packages/drivers/alchemy-postgres/test/spikes/event-annotations.test.ts`.
 
-Lane `goals/alchemy-vault-sync-slice`
+Lane goals/alchemy-vault-sync-slice
 
 Reverse: Move the version into the stored row only and drop the static once alchemy ships a kernel version slot
 
@@ -142,7 +142,7 @@ Reverse: Move the version into the stored row only and drop the static once alch
 
 Under the repo's `exactOptionalPropertyTypes: true`, `Domain.Model` rejects every aggregate without a `read` contract because beta.85 types `Aggregate.Resolved.read` as `R` (possibly undefined) while `AnyDefinition.read?` is optional. A one-line bun patch (`patches/@alchemy.run%2Fdomain@2.0.0-beta.85.patch`, precedent `patches/effect@4.1.2.patch`) makes the field optional in `lib/Aggregate.d.ts` and `src/Aggregate.ts`. Alternatives rejected: relaxing the compiler option for alchemy consumers; a `read` contract on every test aggregate.
 
-Lane `goals/alchemy-vault-sync-slice`
+Lane goals/alchemy-vault-sync-slice
 
 Reverse: Delete patches/@alchemy.run%2Fdomain@2.0.0-beta.85.patch and its patchedDependencies entry at the next lockstep bump, where upstream HEAD already restructured Aggregate.Resolved
 
@@ -150,7 +150,7 @@ Reverse: Delete patches/@alchemy.run%2Fdomain@2.0.0-beta.85.patch and its patche
 
 The kernel envelope is exactly id, stream, seq, at, commandId, correlationId, trace. Every `AggregateStore.send` receives `meta.context`, the encoded RequestContext the Session middleware provided. The Postgres driver persists it beside the command receipt and copies principal and source kind onto each event row; audit reads come from those rows (D10). Evidence: `packages/drivers/alchemy-postgres/test/spikes/platform-send-meta.test.ts`.
 
-Lane `goals/alchemy-vault-sync-slice`
+Lane goals/alchemy-vault-sync-slice
 
 Reverse: Add principal and source kind as explicit payload fields on every event and drop the driver columns
 
@@ -158,7 +158,7 @@ Reverse: Add principal and source kind as explicit payload fields on every event
 
 The reference checkout HEAD is 56 commits past `v2.0.0-beta.85` and differs in 29 kernel files (Event annotations, Query, Aggregate.Resolved). All API reads use the installed package source (it ships `src/` and agent docs) or `git show v2.0.0-beta.85:<path>`. Evidence: `goals/alchemy-vault-sync-slice/research/01-p0-spikes.md` section 0.
 
-Lane `goals/alchemy-vault-sync-slice`
+Lane goals/alchemy-vault-sync-slice
 
 Reverse: Re-point the spikes and driver at the reference checkout once the trio is bumped to a release that matches it (a named goal task per D11)
 
@@ -166,7 +166,7 @@ Reverse: Re-point the spikes and driver at the reference checkout once the trio 
 
 The desktop PGlite migration bundle has no shared_membership table. Until activation adds it and seeds an active owner row for the desktop principal (user 1, org 1), every vault-sync adapter denies with ScopeDenied, which is the intended fail-closed state. This is an activation input for the cutover lane, not a permissive default.
 
-Lane `goals/vault-sync-api`
+Lane goals/vault-sync-api
 
 Reverse: Drop the shared_membership migration and seed; adapters keep failing closed
 
@@ -174,7 +174,7 @@ Reverse: Drop the shared_membership migration and seed; adapters keep failing cl
 
 The generated CLI speaks the Api RPC protocol. The sidecar serves that protocol at /vault-sync/rpc with handlers that forward every RPC to the protected delivery client with the caller's headers, so Session runs and watch/events pass the per-frame gate. The unwrapped Api fetch, whose streams bypass that gate, is not mounted. The remote CLI reads the launch token per call from BEEP_DESKTOP_RPC_SESSION_TOKEN, redacted. An IPC-mode sidecar serves no HTTP, so the remote CLI then cannot connect.
 
-Lane `goals/vault-sync-api`
+Lane goals/vault-sync-api
 
 Reverse: Unmount VaultSyncRpcHttp; the CLI stays in-process only
 
@@ -188,7 +188,7 @@ Reverse: Supply host credential verification, enrollment and live membership ada
 
 Supersedes the 2026-11-07 identity hold. Each sidecar route builds its own SessionResolver: launch-token adapters for HTTP (http), the gated RPC endpoint (cli) and MCP (mcp), a channel adapter for the desktop RPC surface (sidecar; HTTP passes the global token middleware and IPC the Tauri token check before handlers run), and the local-operator adapter for in-process CLI. The route fixes the transport kind; headers can only prove the token and supply a correlation id. All adapters bind the desktop principal and read active, undeleted shared_membership rows live on every call and frame; the owner role carries the diagnostics grant OperationQueue needs. No test stub sits in a production Layer.
 
-Lane `goals/vault-sync-api`
+Lane goals/vault-sync-api
 
 Reverse: Add a bearer adapter behind SessionResolver; no caller changes
 
@@ -196,7 +196,7 @@ Reverse: Add a bearer adapter behind SessionResolver; no caller changes
 
 VaultSyncRpcsApiLive implements the four VaultSyncRpcs over the protected Api client with unchanged payloads and DTOs. Workspace maps to its destination through the authorized DestinationList View. Trigger and forceProbe record RequestVaultSync and ProbeDestination and answer with the status at acceptance, not after the pass; the panel's existing invalidation re-reads status. forceProbe also refreshes the probe cache for the answer. Conflict rows come from the legacy SQL read model the slice projects, restricted to public ids the authorized OpenConflicts View returns; review resolves the numeric id through those rows, sends ReviewConflict with a per-conflict heal operation id, and never writes legacy tables. Mounting it in RuntimeLive is the single-writer flip and belongs to the cutover activation, which also hosts the model on the sidecar PGlite.
 
-Lane `goals/vault-sync-api`
+Lane goals/vault-sync-api
 
 Reverse: Keep VaultSyncHandlersLive in RuntimeLive; VaultSyncRpcsApiLive is a drop-in layer swap
 
@@ -204,7 +204,7 @@ Reverse: Keep VaultSyncHandlersLive in RuntimeLive; VaultSyncRpcsApiLive is a dr
 
 RequestVaultSync and ProbeDestination are public destination commands with Session. Their events route through the VaultSyncRequests policy to VaultSyncPass under the key destination/event/requestId, so repeated delivery resumes one run. The probe run executes only the BoxMirror probe activity. A paused destination refuses RequestVaultSync; probing stays allowed.
 
-Lane `goals/vault-sync-api`
+Lane goals/vault-sync-api
 
 Reverse: Split a dedicated probe saga keyed by request id
 
@@ -236,7 +236,7 @@ Reverse: Introduce a separately authorized organization-wide View and migrate it
 
 PR 2b measures @beep/alchemy-postgres at L/S/B/F 96.88/96.04/90.21/92.26 against the floor 98.36/97.72/86.95/95.53 set by #2831. The remaining units are fallbacks copied from Domain.InMemory and upstream Backfill (source or consumer gone from the model, scanner kick, relay fan-out, stored-job rebuilds, generation and duplicate guards, a schedule cancelled between due query and fire) that only run under faults, races or very large histories. Deleting faithful fallbacks to satisfy a number would make the driver diverge from the reference, so the floor for lines, statements and functions moves to the measured totals in a baseline-only PR first; branches stay at 86.95.
 
-Lane `alchemy-postgres-views worktree`
+Lane alchemy-postgres-views worktree
 
 Reverse: Add fault-injection seams for the listed host/view/aggregate/projection fallbacks and raise the floor back in a baseline-only PR
 
@@ -248,7 +248,7 @@ The migrated store records its writer in `documents_sync_writer_epoch` (legacy, 
 
 **Why runtime DDL, not a drizzle migration.** The epoch table, the fence and the D14 identity table are cutover state owned by the documents server, created idempotently at admission like the alchemy driver's own tables. The drizzle target keeps describing the four retained table contracts unchanged (D15), so the desktop migration bundle needs no refresh. The down path is the tested post-admission reversal, which leaves the fence armed under the legacy epoch so the abandoned Model cannot write.
 
-Lane `goals/vault-sync-cutover`
+Lane goals/vault-sync-cutover
 
 Reverse: Drop the four documents_sync_*_writer_fence triggers, the fence function and documents_sync_writer_epoch, after a reversal has returned the store to the legacy epoch
 
@@ -290,7 +290,7 @@ Reverse: Introduce a separately versioned cursor aggregate if account-wide polli
 
 PII audit F3 requires genesis to mint opaque destination ids. The earlier lane derived legacy-box-workspace-<n> from the workspace id, and the bootstrap used the same derivation. A minted id must still be the same on every call: a genesis re-run after a crash in migrating, the desktop bootstrap and the Model engine all have to agree. workspaceDestinationId therefore mints a documents_sync_destination_<cuid-shaped random> id once and records it in documents_sync_destination_binding (workspace_id primary key, destination_id unique). Every later call reads that binding. The table is cutover state, created idempotently at runtime like the epoch and D14 identity tables, and is outside the writer fence. Minting uses Clock and Random through makeDestinationId, not mintDestinationId, so neither host needs a CuidState layer. Uniqueness comes from about 62 random bits plus the unique constraint.
 
-Lane `goals/vs-cutover`
+Lane goals/vs-cutover
 
 Reverse: Drop documents_sync_destination_binding and restore a derived workspace destination id in SyncGenesis.service.ts; any store already imported keeps its minted ids
 
@@ -304,7 +304,7 @@ Reverse: Change genesis mapping before import; no data is imported in PR 3a
 
 Genesis reads the four *_cutover_backup tables fully into one validated snapshot, then sends one genesis command per row. It is not paged. The desktop sidecar store is the only genesis target: one workspace, with item and operation rows in the thousands at most. The whole snapshot fits in memory, and the per-row commands are already crash-safe. Each command id is derived from the snapshot digest, so a re-run after a crash replays as receipts and adds no events. Batching would split the snapshot digest that names the import and add a resumable cursor, which costs more than it saves at this size. Revisit when a server Postgres store with many workspaces becomes a genesis target.
 
-Lane `goals/vs-cutover`
+Lane goals/vs-cutover
 
 Reverse: Page the four backup tables by numeric id and send each page's genesis commands before reading the next
 
@@ -312,7 +312,7 @@ Reverse: Page the four backup tables by numeric id and send each page's genesis 
 
 PII audit F2: the kernel always records aggregate ids and streams on spans, so an orgId:name key leaked destination names into domain.id, domain.stream, driver spans and SyncRuleViolation evidence. ReservationKey is now orgId:sha256hex(trimmed, lowercased name), built only by reservationKey in aggregates/VaultSync/Values.ts with a synchronous @noble/hashes SHA-256 (the PartyKey precedent), so pure decide and policy code hash in place. The schema admits only an integer, a colon and a 64-character lowercase hex digest. The name stays in reservation state and event payloads, which the kernel never puts on spans.
 
-Lane `goals/vault-sync-domain` · PR #2886
+Lane goals/vault-sync-domain · PR #2886
 
 Reverse: Restore the orgId:normalizedName key in Values.ts reservationKey and widen the ReservationKey schema back to NonEmptyString; replay any stored reservation streams under the old ids
 
@@ -348,7 +348,7 @@ vendor text, asserts the state's `cursorError` is `pollEvents`, keeps the
 all-column zero diff, and supersedes an imported queued operation live, asserting
 `idempotency_key` stays `stored-key-107` while `last_error` becomes `kind-replaced`.
 
-Lane `goals/vs-cutover-2`
+Lane goals/vs-cutover-2
 
 Reverse: Restore free-text reason fields (S.String) on the domain events and state, and write idempotency_key on every projected operation event again
 
@@ -356,7 +356,7 @@ Reverse: Restore free-text reason fields (S.String) on the domain events and sta
 
 PII audit F3: DestinationId is the SyncDestination aggregate id, View key, URL segment and saga key, and accepted any non-empty string such as a destination name. It is now the fixed prefix documents_sync_destination_ plus a CUID (the PublicEntityId format), checked by a template-literal pattern, so decode rejects names. mintDestinationId draws a fresh CUID; makeDestinationId wraps an existing one. The id lives in Values.ts without the frozen entity kit, since a destination has no SQL row id. The cutover genesis in PR 3b2 must mint one id per destination and never derive it from a name or path.
 
-Lane `goals/vault-sync-domain` · PR #2886
+Lane goals/vault-sync-domain · PR #2886
 
 Reverse: Widen DestinationId in Values.ts back to a branded NonEmptyString and drop mintDestinationId and makeDestinationId
 
@@ -370,7 +370,7 @@ A pass now reads its vault root on every call through `VaultSyncRootFromWorkspac
 
 Behaviour change at the flip: TriggerVaultSync and the forced probe answer at acceptance; the pass completes in its saga. The panel invalidates its status and conflict keys when the RPC returns, so counts reflect the pass only on the next read.
 
-Lane `goals/vault-sync-cutover`
+Lane goals/vault-sync-cutover
 
 Reverse: Apply drizzle/20261107120500_shared_membership/down.sql, restore VaultSyncHandlersLive over a Model-backed engine port, and drop the transport mount from server/main.ts
 
@@ -414,7 +414,7 @@ The event and workflow store stays in place, read-only: the fence refuses the Mo
 
 Test: `SyncCutoverAdmission.pglite.test.ts` admits a drizzle-migrated store, writes and leases through the Model, proves the uncertain-intent refusal, reverses, then shows the live tables equal the snapshot except the three recorded lease-rollback columns, the legacy writer inserts and updates again with an id beyond every Model id, and the Model can neither resume nor write.
 
-Lane `goals/vault-sync-cutover`
+Lane goals/vault-sync-cutover
 
 Reverse: Replace reverseSyncCutover with a restore of the offline backup plus a replay of post-admission events into legacy rows, keeping the same refusal preconditions
 
@@ -432,7 +432,7 @@ Known narrowing: the legacy review requeued a corrective operation for remote mo
 
 Superseded the same day by `2026-11-07-mount-the-pr-3c-api-on-the-sidecar-and-provision-desktop-membership-at-startup.md`: the PR 3c Api now serves the RPCs and the engine port is deleted.
 
-Lane `goals/vault-sync-cutover`
+Lane goals/vault-sync-cutover
 
 Reverse: When PR 3c moves the RPC callers onto the Model Api, delete makeVaultSyncModelEngine and the VaultSyncEngine port in that PR; the Model, projections and read model stay
 

@@ -52,7 +52,7 @@ _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions wr
 
 The 2026-11-02 rebin measured @beep/law-practice-server at 98 s. After #2847 registered the canonical citation corpora its Bun/Istanbul unit run takes about 2,970 s on the 4-vCPU hosted runner, so unit-d went from a 25-minute body to a 60-minute job timeout on main (runs 42417048100, 42422844786) and on #2915. The package now runs as three Vitest shards (law-practice-1..3, weight 990 each, the mechanism repo-cli-1..6 already use); unit-d keeps its other 45 packages at weight 651. check.yml lists thirteen Test Unit partitions and the lane-timings census gains the thirteen-shard layout. The per-document extraction cost itself stays with goals/citation-extraction-engine.
 
-Lane `@slop/11-6-26` · PR #2915
+Lane @slop/11-6-26 · PR #2915
 
 Reverse: Return @beep/law-practice-server to unit-d (weight 749), drop law-practice-1..3 from the partition table, the check.yml matrix and the census layout; the census keeps judging runs by the layout they ran.
 
@@ -66,7 +66,7 @@ Tier 1 of the 2026-11-09 test/coverage efficiency plan (41-agent workflow, HEAD 
 
 Measured on the 64-thread workstation under contention; the values are upper bounds and influence placement only.
 
-Lane `claude/fervent-darwin-040f12`
+Lane claude/fervent-darwin-040f12
 
 Reverse: Delete resolveCoverageScopeMode's affected branch in Tasks.ts so a bare run resolves through resolveCoverageTaskOptions again (and drop the --full flag), and restore the #707/#684 weight tables in CoverageScope.ts; no baseline rows or hosted workflows changed.
 
@@ -82,8 +82,24 @@ Every Test Unit partition is now packed by LPT from that run's per-file and per-
 
 `check.yml` lists the thirty Test Unit partitions, the lane-timings census gains the layout, and `bun run beep ci partitions rebalance --check` fails when a table weight drifts from its plan or a partition exceeds its budget; `--write --run <id> [--run <id>...]` repacks from later green runs at each file's worst measurement. Budgets live in `CiPartitions.schemas.ts`. The check stays on demand (it is not in the cheap lint tier) because the unit lane's `ci-partitions.test.ts` already replays it against the committed plans.
 
-Lane `claude/silly-brahmagupta-5a4fd5`
+Lane claude/silly-brahmagupta-5a4fd5
 
 Reverse: Restore the 13-partition layout (repo-cli-1..6 at 402 s, law-practice-1..3 at 990 s, unit-a..d) in CiLanePartitions.ts, check.yml and the lane-timings census, delete packages/law-practice/server/vitest.shards.json together with the unit-plan branch of LawPracticeSequencer (restoring the integration-only sequencer of #3005) and restore the 2026-11-06 repo-cli plan; the census keeps judging runs by the layout they ran.
+
+### Start each unit bin's heaviest packages first and split the 449 s repo-cli test file, 2026-11-09
+
+Main run 42677073526, the first on the 11/12/7 layout, ran every Test Unit shard under ten minutes except unit-b at 10.2 min; repo-cli-1 ran 9.8 min there and over ten on two of the next four pull-request runs. All seven bins had the same serial sum (582 s), so the repack was not the cause. The lane runs two package steps at a time in name order, and unit-b's 309 s package (`@beep/repo-ai-metrics`) started 162 s in and then ran alone: the bin body took 471 s against 265 to 448 s for its siblings.
+
+- A unit bin row now carries `startFirst`: its packages measured at 30 s or more, heaviest first. The lane starts those before the rest (`ciLaneStartOrder`), so a bin's body stays near the larger of its heaviest package and half its serial sum.
+- `beep ci partitions rebalance --write` prints each bin's `startFirst` list with the measured seconds.
+- `test/research-library-views.test.ts` was one 434 to 449 s file, so `repo-cli-1` held it alone and ran 9.0 to 10.7 min over five runs. The file is split at the test that halves its measured time: `research-library-views.test.ts` keeps the view and integrity tests, `research-library-evidence.test.ts` takes the evidence-binding and correction tests, and `test/support/ResearchLibraryViews.ts` holds the shared fixture. The plan seeds the halves at 221 s and 228 s, the old file's worst measurement divided by the per-test seconds of main run 42677073526, until a green run measures them.
+- The bins and both shard plans are refolded over six green runs (five on PR #3007 and main run 42677073526): repo-cli eleven shards of 321 s, law-practice-server twelve of 376 s after pruning two deleted files, unit bins 593 to 594 s.
+- Rejected: an eighth unit bin. It lowers the serial sums but leaves the start order to chance, which is what made unit-b slow.
+
+The rerun of PR #3007's last head (42669948388) could not be folded: GitHub returns 502 for its jobs listing.
+
+Lane `perf/unit-bins-fold-main-run`
+
+Reverse: Remove the startFirst lists from the unit bins in CiLanePartitions.ts and the ciLaneStartOrder call in CiCoverage.ts; steps then run in name order again. Undo the split by moving the tests of research-library-evidence.test.ts back into research-library-views.test.ts and pruning the plan.
 
 <!-- beep:decisions:end -->

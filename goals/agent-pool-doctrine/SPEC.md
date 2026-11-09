@@ -115,7 +115,7 @@ The research-intake-2026-11 intake routed 191 findings to this packet (69 affirm
 
 This amendment adds evidence only; it changes no acceptance criterion. The owning lane decides whether any finding changes its plan.
 
-Lane `feat/research-intake-2026-11`
+Lane feat/research-intake-2026-11
 
 Reverse: Delete this decision file and regenerate the block; the findings stay in the library and in research-intake-2026-11/research/routing.jsonl
 

@@ -74,6 +74,7 @@ export * from "../commands/Yeet/internal/MonitorComments.schemas.ts";
 export * from "../commands/Yeet/internal/MonitorComments.ts";
 export * from "../commands/Yeet/internal/MonitorLoop.ts";
 export * from "../commands/Yeet/internal/MonitorPolicy.ts";
+export * from "../commands/Yeet/internal/MonitorRateLimit.ts";
 export * from "../commands/Yeet/internal/OwnerCheckpoint.adapter.ts";
 export * from "../commands/Yeet/internal/OwnerCheckpoint.merge.ts";
 export * from "../commands/Yeet/internal/OwnerCheckpoint.publisher.ts";

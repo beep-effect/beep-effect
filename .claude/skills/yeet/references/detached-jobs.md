@@ -26,10 +26,16 @@ bun run beep yeet job cancel <jobId>
 detached `monitor --until-ready` that may be abandoned, because a red does not
 end it. `--plan` and recursive detachment inside a job are rejected.
 For `--until-ready` and `--until-merged`, `--poll-interval "60 seconds"`
-sets the time between status polls; the default remains 30 seconds. The value
-must be positive and finite, and is retained in the detached job's command.
+sets the time between status polls; the default is 90 seconds, because every
+monitor on the fleet polls one shared GitHub bucket. The value must be
+positive and finite, and is retained in the detached job's command.
 Unavailable remote reads count toward the five-consecutive-failure budget;
 a confirmed absence of a pull request does not count as a read failure.
+A poll that failed on a GitHub rate limit does not count either: the monitor
+reads `GET /rate_limit` and sleeps until the exhausted bucket resets (at most
+65 minutes), or backs off from one minute to at most 15 for a secondary
+limit. After eight rate-limited polls without a successful one, further ones
+count toward the failure budget.
 `job wait` returns:
 
 | Exit | Outcome | Meaning |

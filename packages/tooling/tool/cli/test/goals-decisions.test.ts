@@ -74,7 +74,7 @@ describe("goals decisions projection", () => {
         "### Same day earlier file, 2026-11-05",
         "### Later, 2026-11-05",
       ]);
-      expect(block).toContain("Lane `feat/x` · PR #42");
+      expect(block).toContain("Lane feat/x · PR #42");
       expect(block).toContain("Reverse: Undo Later.");
       assertTrue(Str.startsWith("<!-- beep:decisions:begin -->")(block));
       assertTrue(Str.endsWith("<!-- beep:decisions:end -->")(block));

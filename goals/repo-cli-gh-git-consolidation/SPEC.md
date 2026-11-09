@@ -123,7 +123,7 @@ deleted. **Frozen evidence.** The older differentials (`yeet-git-differential-w1
 `ops/frozen-w7b/GitRunners.old.ts`, the verbatim lane-base copy, so the frozen bodies keep replaying. **Seals.**
 `Goals.errors.ts` leaves the goals-doctor and knowledge policy seals (`research/cache-baseline-review-w7-retire.md`).
 
-Lane `feat/gh-git-w7-retire`
+Lane feat/gh-git-w7-retire
 
 Reverse: Restore runGitOutput, runGitPathList, runGitLines, runGitRawOutput and their capture helpers in internal/repo-run/GitExec.ts from the pre-retirement tree, point the Laws, Doctor and Knowledge sites back at them, and drop the frozen-w7b import repoints in the older differentials.
 

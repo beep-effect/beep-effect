@@ -15,6 +15,7 @@ import {
   ciLaneDefaultPlacements,
   ciLanePartitionArgsForTesting,
   ciLanePartitionStepForTesting,
+  ciLaneStartOrder,
   ciLaneStepsForTesting,
   ciLocalLaneInputsForTesting,
   ciLocalStepsForTesting,
@@ -49,7 +50,7 @@ import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
-import { constUndefined, flow, pipe } from "effect/Function";
+import { constUndefined, flow, identity, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Latch from "effect/Latch";
 import * as Layer from "effect/Layer";
@@ -471,36 +472,36 @@ describe("CI lane partitions", () => {
     ).toEqual([
       { id: "lint-a", packages: 75, weightSeconds: 1132 },
       { id: "lint-b", packages: 68, weightSeconds: 1134 },
-      { id: "repo-cli-1", packages: 1, weightSeconds: 449 },
-      { id: "repo-cli-2", packages: 1, weightSeconds: 306 },
-      { id: "repo-cli-3", packages: 1, weightSeconds: 306 },
-      { id: "repo-cli-4", packages: 1, weightSeconds: 306 },
-      { id: "repo-cli-5", packages: 1, weightSeconds: 306 },
-      { id: "repo-cli-6", packages: 1, weightSeconds: 306 },
-      { id: "repo-cli-7", packages: 1, weightSeconds: 306 },
-      { id: "repo-cli-8", packages: 1, weightSeconds: 306 },
-      { id: "repo-cli-9", packages: 1, weightSeconds: 306 },
-      { id: "repo-cli-10", packages: 1, weightSeconds: 306 },
-      { id: "repo-cli-11", packages: 1, weightSeconds: 306 },
-      { id: "law-practice-1", packages: 1, weightSeconds: 375 },
-      { id: "law-practice-2", packages: 1, weightSeconds: 375 },
-      { id: "law-practice-3", packages: 1, weightSeconds: 375 },
-      { id: "law-practice-4", packages: 1, weightSeconds: 375 },
-      { id: "law-practice-5", packages: 1, weightSeconds: 375 },
-      { id: "law-practice-6", packages: 1, weightSeconds: 375 },
-      { id: "law-practice-7", packages: 1, weightSeconds: 375 },
-      { id: "law-practice-8", packages: 1, weightSeconds: 375 },
-      { id: "law-practice-9", packages: 1, weightSeconds: 375 },
-      { id: "law-practice-10", packages: 1, weightSeconds: 375 },
-      { id: "law-practice-11", packages: 1, weightSeconds: 375 },
-      { id: "law-practice-12", packages: 1, weightSeconds: 375 },
-      { id: "unit-a", packages: 25, weightSeconds: 582 },
-      { id: "unit-b", packages: 28, weightSeconds: 582 },
-      { id: "unit-c", packages: 27, weightSeconds: 582 },
-      { id: "unit-d", packages: 29, weightSeconds: 582 },
-      { id: "unit-e", packages: 27, weightSeconds: 582 },
-      { id: "unit-f", packages: 27, weightSeconds: 583 },
-      { id: "unit-g", packages: 28, weightSeconds: 582 },
+      { id: "repo-cli-1", packages: 1, weightSeconds: 321 },
+      { id: "repo-cli-2", packages: 1, weightSeconds: 321 },
+      { id: "repo-cli-3", packages: 1, weightSeconds: 321 },
+      { id: "repo-cli-4", packages: 1, weightSeconds: 321 },
+      { id: "repo-cli-5", packages: 1, weightSeconds: 321 },
+      { id: "repo-cli-6", packages: 1, weightSeconds: 321 },
+      { id: "repo-cli-7", packages: 1, weightSeconds: 321 },
+      { id: "repo-cli-8", packages: 1, weightSeconds: 321 },
+      { id: "repo-cli-9", packages: 1, weightSeconds: 321 },
+      { id: "repo-cli-10", packages: 1, weightSeconds: 321 },
+      { id: "repo-cli-11", packages: 1, weightSeconds: 321 },
+      { id: "law-practice-1", packages: 1, weightSeconds: 376 },
+      { id: "law-practice-2", packages: 1, weightSeconds: 376 },
+      { id: "law-practice-3", packages: 1, weightSeconds: 376 },
+      { id: "law-practice-4", packages: 1, weightSeconds: 376 },
+      { id: "law-practice-5", packages: 1, weightSeconds: 376 },
+      { id: "law-practice-6", packages: 1, weightSeconds: 376 },
+      { id: "law-practice-7", packages: 1, weightSeconds: 376 },
+      { id: "law-practice-8", packages: 1, weightSeconds: 376 },
+      { id: "law-practice-9", packages: 1, weightSeconds: 376 },
+      { id: "law-practice-10", packages: 1, weightSeconds: 376 },
+      { id: "law-practice-11", packages: 1, weightSeconds: 376 },
+      { id: "law-practice-12", packages: 1, weightSeconds: 376 },
+      { id: "unit-a", packages: 26, weightSeconds: 594 },
+      { id: "unit-b", packages: 28, weightSeconds: 593 },
+      { id: "unit-c", packages: 27, weightSeconds: 594 },
+      { id: "unit-d", packages: 27, weightSeconds: 594 },
+      { id: "unit-e", packages: 27, weightSeconds: 593 },
+      { id: "unit-f", packages: 28, weightSeconds: 593 },
+      { id: "unit-g", packages: 28, weightSeconds: 594 },
       { id: "lps-int-1", packages: 1, weightSeconds: 407 },
       { id: "lps-int-2", packages: 1, weightSeconds: 394 },
       { id: "lps-int-3", packages: 1, weightSeconds: 337 },
@@ -519,6 +520,20 @@ describe("CI lane partitions", () => {
       { id: "lps-int-16", packages: 1, weightSeconds: 411 },
       { id: "int-rest", packages: 0, weightSeconds: 60 },
     ]);
+  });
+
+  it("starts each unit bin's heaviest packages first and names only its own packages", () => {
+    const bins = A.filter(CI_LANE_PARTITIONS, (partition) => Str.startsWith("unit-")(partition.id));
+    for (const bin of bins) {
+      const startFirst = bin.startFirst ?? [];
+      expect(A.isReadonlyArrayNonEmpty(startFirst)).toBe(true);
+      expect(A.every(startFirst, (name) => A.contains(bin.packages, name))).toBe(true);
+      const ordered = ciLaneStartOrder(bin.packages, startFirst, identity);
+      expect(A.take(ordered, A.length(startFirst))).toEqual(startFirst);
+      expect(A.sort(ordered, Order.String)).toEqual(A.sort(bin.packages, Order.String));
+    }
+    expect(ciLaneStartOrder(["a", "b", "c", "d"], ["c", "x", "b"], identity)).toEqual(["c", "b", "a", "d"]);
+    expect(ciLaneStartOrder(["a", "b"], [], identity)).toEqual(["a", "b"]);
   });
 
   it("pins the repo-cli and law-practice-server Vitest shard splits and keeps every other bin unsharded", () => {

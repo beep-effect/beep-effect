@@ -146,7 +146,7 @@ _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions wr
 
 Review the frozen-to-current diff and targeted context for all 80 changed linked paths at source1d21c0e007. Preserve private per-path dispositions and original claims. Repair reproduced query invalidation omission P4-V002 and the obsolete audit resume instruction P4-V003. Existing CI, observability, fleet and compiler owners keep their code and proof obligations. P4 remains in progress; PM and ADHD stay separate; no spending.
 
-Lane `codex/knowledge-audit-p4-linked`
+Lane codex/knowledge-audit-p4-linked
 
 Reverse: Revert this checkpoint and its scoped documentation repairs; retain original private evidence and historical receipts.
 
@@ -154,7 +154,7 @@ Reverse: Revert this checkpoint and its scoped documentation repairs; retain ori
 
 Parent review revalidated original T9 t9-dd93a013201032ab and T10 t10-c6ad1b6701cf3daf against frozen blob and exact line hashes. The skill TopicName copy was already repaired, but the standards duplicate still filtered empty segments before validation. The extracted standards example rejects :a after the repair and passes all six boundary cases; before it failed on accepting :a. Remove the unused filtering helper and use Str.split directly. The Atom runtime comment named a nonexistent defaultMemoMap export; installed source defines runtime = context() and a registry-scoped memo-map atom. Correct only the comment, with dependency bytes archived separately from Git provenance. Fresh paginated16-open-PR target census found no overlap. No ontology work, package source, external service, spending or broad runtime certification; PM and ADHD remain separate.
 
-Lane `codex/knowledge-audit-p4-enforcement-context`
+Lane codex/knowledge-audit-p4-enforcement-context
 
 Reverse: Restore only the two example edits; retain the original parent evidence and six-case counterfactual.
 
@@ -162,7 +162,7 @@ Reverse: Restore only the two example edits; retain the original parent evidence
 
 Parent review of original T5 t5-f8e5feb0d8e0f72d and T3 kfa-t3-003 at source 6dbf4e543148c1ac30838fa9a72d7a2cc6047d62 validated two description corrections. Source hashes still match at fresh base ff3970ddf0c0848d65830d60af080ad903ed4b6a. Promotion-record lint is planned; required manual PR review and record schema remain binding. The effect-drizzle member and ecosystem-polarity command exist; member-local boundary tests and configured CI proof remain required, without inferring their execution from a command registration. Fresh file census found no overlap in 14 open PRs. Use a direct Git worktree in canonical sibling placement to avoid the optional worktree helper's local-only file copying under this task's no-credential-copy constraint. No root switch, source package change, cloud work or spending. PM, ADHD, other owners and broader P4 obligations remain separate.
 
-Lane `codex/knowledge-audit-p4-enforcement-context`
+Lane codex/knowledge-audit-p4-enforcement-context
 
 Reverse: Restore the two original enforcement paragraphs and remove this checkpoint; preserve the binding promotion schema, dependency rules and private parent review.
 
@@ -170,7 +170,7 @@ Reverse: Restore the two original enforcement paragraphs and remove this checkpo
 
 P4 is in progress under the operator instruction of 2026-11-06. Reconcile frozen inventory e462bc12 against source snapshot 914ede95a490cf26e1fe435762ec191fd2e69da1. Keep raw per-entry ledgers and full reports in the private archive; publish compact accounting and review limits. Inventory, entry linkage, whole-body reading, claim acceptance and delivery readiness are separate obligations. PM and ADHD remain separate holds; no spending or cloud work is admitted.
 
-Lane `codex/knowledge-audit-p4-final-tree`
+Lane codex/knowledge-audit-p4-final-tree
 
 Reverse: Revert this checkpoint and phase-progress record; retain the private immutable inventory and historical receipts.
 
@@ -186,7 +186,7 @@ This is partial P4 evidence, not whole-body extraction, complete claim
 verification or lifecycle closeout. PM and ADHD remain separately held; no
 spending or cloud work.
 
-Lane `codex/knowledge-audit-p4-routing`
+Lane codex/knowledge-audit-p4-routing
 
 Reverse: Revert only the current-use qualifications and this checkpoint; retain the private before/after receipts and original dated models.
 
@@ -194,7 +194,7 @@ Reverse: Revert only the current-use qualifications and this checkpoint; retain 
 
 Parent review of T11 C2 at immutable source 3f3b06289764853e3b6f5982e4b80247ac5aabf7 distinguishes the already repaired opaque brands from the remaining named HeadingLevel domain. Use the existing LiteralKit import as prescribed by root and schema-first guidance. Preserve the six numeric wire values and annotation. The new keyed-helper test fails before this expression change while the existing 24 conformance tests pass; all 25 pass after it. Package verification and final publication proof are still pending. No duplicate brand edit, new helper, private-package changeset, cloud work or spending. PM, ADHD, existing owner repairs and broader P4 coverage remain separate.
 
-Lane `codex/knowledge-audit-p4-heading-domain`
+Lane codex/knowledge-audit-p4-heading-domain
 
 Reverse: Restore HeadingLevel to S.Literals and remove the added keyed-helper regression test; preserve all existing conformance tests and private review evidence.
 
@@ -202,7 +202,7 @@ Reverse: Restore HeadingLevel to S.Literals and remove the added keyed-helper re
 
 Review T8 K1/K2/K4 at immutable source 34d6cd130971c7d8434a188fcb5532a4a6c709c2. Reject an automatic contradiction for the explicitly dated July 8 Graphiti condition; preserve it as history. Add current reading context to the landscape assessment and decision log, linking later coverage, dated retirement/archive decisions and the governing root Agent Memory policy. Original assessment and decision bytes remain unchanged. No vendor/scientific/deployment qualification, service configuration, memory revival, ontology operation or paid/cloud work. P4 remains in progress, with PM/ADHD and existing source-owner/delivery-proof holds separate.
 
-Lane `codex/knowledge-audit-p4-memory-context`
+Lane codex/knowledge-audit-p4-memory-context
 
 Reverse: Remove the two dated reading notes and this checkpoint; preserve original assessments, decisions and private review evidence.
 
@@ -210,7 +210,7 @@ Reverse: Remove the two dated reading notes and this checkpoint; preserve origin
 
 Original T14 t14-6805ebba1de26ec6 and T21 t21-f48d16497c14c00c frozen file and line hashes matched. Parent review qualifies the omitted-prefix finding: host injection can supply context, so no universal runtime failure is proven. Existing copyable examples still omit mappings under their own include-prefix rule. Add explicit rdf, default and federation mappings without changing query bodies; explain dataset placeholder and shared prologue reuse. W3C SPARQL1.1 section4.1.1.1 is the primary syntax reference. Static source review only: no engine, endpoint, ontology operation or vendor behavior certification. Fresh16-PR target census found no overlap. PM, ADHD, private records and broader P4 remain separate; no spending.
 
-Lane `codex/knowledge-audit-p4-enforcement-context`
+Lane codex/knowledge-audit-p4-enforcement-context
 
 Reverse: Remove only the added prefix mappings and prologue explanation; preserve query bodies and the private parent review.
 
@@ -224,7 +224,7 @@ Reverse: Revert the namespace classification and its focused regression; retaine
 
 Reuse the existing collectMarkdownFences API and scoped platform test pattern to execute the actual TopicName fence in each of the two public guidance files. Three valid forms and five empty-segment forms are asserted per copy; no second TopicName implementation or parser is introduced. A fresh main-only control fails the standards copy on true versus false while its already-repaired skill copy passes; the repaired branch passes both tests. Package lint/typecheck and the real file detector pass. This adds standing protection for the demonstrated duplicate-example omission; five other guidance facets still lack established dedicated protection in the bounded review, and broader acceptance remains unproven. The next PR2817 push includes a repo-cli test and must carry ready-for-heavy admission plus current code proof; the old docs-only coverage skip belongs only to its earlier published head. PM, ADHD, private evidence and source-owner holds remain separate. No paid work, lifecycle flip or S11.
 
-Lane `codex/knowledge-audit-p4-enforcement-context` · PR #2817
+Lane codex/knowledge-audit-p4-enforcement-context · PR #2817
 
 Reverse: Remove only the new source-bound test and this checkpoint; preserve the repaired examples and private counterfactual evidence.
 
@@ -232,7 +232,7 @@ Reverse: Remove only the new source-bound test and this checkpoint; preserve the
 
 Documentation repair PR #2817 and heading-domain PR #2818 are published as drafts. They cover six bounded guidance corrections and the named HeadingLevel helper omission, with prior repairs and false positives kept distinct. The 80-path refresh is a delta/context review, not whole-body or exhaustive extraction. The derived private navigation index links 68 of 70 flagged rows to parent review; the other two remain privacy/ADHD holds, not accepted or repaired claims. PM original-report recovery is a separate unvalidated hold. P4 remains in progress and P5 remains pending; this is not proposed closeout or a lifecycle change. Main repair #2811 was integrated once. Fresh documentation final-check at f705b4cc9add fails only the inherited live fleet-reference gate; existing owner repair #2815 carries an explicit sole-merger hold. The audit does not copy that fix, lower the gate or use S11. Heading local gates excluding the known inherited policy red are deliberately incomplete and cannot admit ready. Each PR still needs current proof, readable threads and the full review window; same-packet finals merge one at a time. Records remain in the private archive; no paid work or cloud resumption.
 
-Lane `codex/knowledge-audit-p4-enforcement-context` · PR #2817
+Lane codex/knowledge-audit-p4-enforcement-context · PR #2817
 
 Reverse: Remove this publication checkpoint and regenerate projections; preserve the private original reports, source bundles and failure receipts.
 
@@ -240,7 +240,7 @@ Reverse: Remove this publication checkpoint and regenerate projections; preserve
 
 Parent static and bounded runtime review found that the error-pattern handler discarded Console.log before returning a fallback. Return the logging Effect mapped to the same fallback. A regression extracts the actual Markdown fence, substitutes a local ValidationError operation, and requires exactly one log with the unchanged fallback. The original guide fails that assertion; no HTTP or retry branch is executed. Live local registered-worktree census found no competing committed or dirty target changes. Remote PR census remains unavailable under canonical API quota; publication and finality remain held pending normal remote checks. PM and ADHD remain separate.
 
-Lane `codex/audit-error-boundary`
+Lane codex/audit-error-boundary
 
 Reverse: Revert this checkpoint, the narrow example change and its fence regression if the recovery branch intentionally stops logging.
 
@@ -252,7 +252,7 @@ Reverse: Revert the guide correction if a later pinned implementation removes th
 
 Parent review found that OPTIONAL and UNION can yield several rows per class. Correct both label and definition coverage examples to count distinct total and covered class identities. Preserve the blank-node exclusion, both definition properties and existing targets. Static cardinality counterexamples and primary SPARQL syntax review support the correction; no ontology or endpoint query was executed. PM and ADHD remain separate.
 
-Lane `codex/audit-timer-guidance`
+Lane codex/audit-timer-guidance
 
 Reverse: Revert this checkpoint and its two coverage example corrections if class-based coverage is no longer the intended metric.
 
@@ -264,7 +264,7 @@ Reverse: Restore grouped cases only after they fit the unchanged timeout under p
 
 A local final-check coverage run exposed ProviderCacheCorrupt in the Semantica healthy slow-winner fixture. The same source passed in a parallel run. The fixture wrote JSON directly to its published path, while the production writer stages and atomically renames. A controlled pause in that direct-write window reproduced the same schema decode failure. The fixture now stages its bytes and renames after the write; the retained observer asserts that lookup sees no entry during the incomplete staging write. All 22 provider-cache tests pass, while the direct-write negative control fails. Production cache code, corruption handling, retry schedule, 30-second test deadline and four-second watchdog are unchanged. The original failing run did not capture the partial bytes, so this validates and repairs the fixture race without claiming it is the exclusive cause of every historical failure. The touched fixture now builds its runtime through it.layer and uses the explicitly provided test clock that the bounded retry driver advances. Native test-policy analysis resolves two existing findings (14 to 12) with zero introduced findings and no baseline changes. Full package verification passes after that harness change (lint and audit; app docgen is not applicable), and package coverage passes all 140 tests across 16 files. Hosted proof remains pending. PM and ADHD holds are separate; no cloud admission or spending.
 
-Lane `codex/audit-semantica-winner`
+Lane codex/audit-semantica-winner
 
 Reverse: Revert the fixture-only commit; production cache behavior is unchanged.
 
@@ -272,7 +272,7 @@ Reverse: Revert the fixture-only commit; production cache behavior is unchanged.
 
 Parent review revalidated T52 kfa-t52-001 against its frozen file, blob and line hashes. Reject a contradiction inferred solely from the historical fingerprint exemption: the current fingerprint file has no literal retired prefix. Confirm the narrower omission against the actual retirement law: its implementation, model and regression fixtures deliberately retain retired strings and are explicitly allowlisted. Describe the guide as the canonical mapping and include those existing exceptions. Preserve the allowlist, vendor patches, historical fingerprints and dated migration facts. Twenty open PRs had no target overlap. This is bounded documentation reconciliation, not full T52/P4 acceptance or runtime proof; PM and ADHD remain separately held, and no spending is admitted.
 
-Lane `codex/audit-timer-guidance`
+Lane codex/audit-timer-guidance
 
 Reverse: Restore the two guide paragraphs and remove this checkpoint; retain the private original report and review evidence.
 
@@ -280,7 +280,7 @@ Reverse: Restore the two guide paragraphs and remove this checkpoint; retain the
 
 Read the current 99-line notification guide and checked bounded hook, worker and upstream source context. The URI override is forwarded before its environment name is removed, and desktop markup is escaped before delivery; those suspected discrepancies were rejected. The cited Ghostty v1.3.1 line 1578 handles environment setup, while the notification sender begins at line 1718. Pin that link to verified commit 332b2aefc6e72d363aa93ab6ecfc86eeeeb5ed28 and the actual sender. This is a source-citation repair, not proof of installed desktop behavior, focus, receipt visibility or clicks. No hooks, services or billing changed. P4 remains partial; PM and ADHD holds remain separate. Raw source and parent review receipts stay in the private archive.
 
-Lane `codex/audit-notification-citation`
+Lane codex/audit-notification-citation
 
 Reverse: Revert this citation repair and checkpoint together if the pinned upstream identity or sender mapping is disproved; preserve the original review receipts.
 
@@ -296,7 +296,7 @@ Reverse: Restore the combined scenario only after package verification fits its 
 
 Reuse the already-declared public Oxigraph SPARQL service and MarkdownDocument/MarkdownFence APIs in a repo-cli regression. Execute both actual checklist query fences over six small in-memory synthetic fixtures: multiple language values, values shared across classes, no annotations, both definition properties, excluded blank-node classes and empty data. The corrected guide passes six cases; the original accepted-main guide fails two and passes four. Restore the corrected owned file byte-for-byte after the negative control. No dependency, installation, endpoint, driver source or real ontology asset is added. This closes the precise local standing-query regression gap, not campaign-wide acceptance or hosted proof. Earlier failed harness attempts remain private; PM and ADHD remain separate.
 
-Lane `codex/audit-timer-guidance`
+Lane codex/audit-timer-guidance
 
 Reverse: Revert this regression and checkpoint if the public query consumer contract changes; preserve the original-versus-corrected cardinality evidence.
 
@@ -319,7 +319,7 @@ of production transport behavior, every translator, or complete audit coverage.
 P4 remains active. Original reports and raw proof stay private; no paid pilot
 or cloud work is admitted.
 
-Lane `codex/audit-error-boundary`
+Lane codex/audit-error-boundary
 
 Reverse: Revert the example and its regression, regenerate packet projections, and retain the private before/after compiler receipts.
 
@@ -331,7 +331,7 @@ Reverse: Restore the prior paragraph only if both service renderers add the docu
 
 A supplemental T43 finding exposed an install/prepare stamp ordering gap. In a synthetic cache with a current prepare stamp and a missing install stamp, the old source can finish reinstalling and publish the install stamp, then stop before invalidating preparation. The next run can skip both steps. Invalidate the prepare stamp before starting reinstall so interruption or failure cannot preserve that stale success. The existing hermetic bootstrap suite now has a cache-reinstall regression with a failing late-cleanup stub: the original source fails it and the repaired source passes all 30 tests. Package lint and check pass; bash syntax passes. ShellCheck is unavailable locally (command not found), so no ShellCheck success is claimed. This does not prove actual VM frequency, installed compiler correctness or campaign completion. PM and ADHD remain separate, source records stay private, and no cloud work or spending is admitted.
 
-Lane `codex/audit-bootstrap-stamp`
+Lane codex/audit-bootstrap-stamp
 
 Reverse: Revert the stamp ordering and its regression together; preserve the private original and counterexample receipts.
 
@@ -339,7 +339,7 @@ Reverse: Revert the stamp ordering and its regression together; preserve the pri
 
 Parent review found an unqualified rebase instruction in the generated-artifact refresh policy. The workflow applies to in-flight feature PRs, while Yeet prohibits rebasing published branches. Replace that instruction with merging accepted origin/main after the dedicated refresh PR lands. Preserve the dedicated-refresh rule, scoped catalog exception, ratchet behavior and historical evidence. Ten open PR file lists and 131 existing registered checkouts showed no competing target edit before this change. This is a documentation repair; no artifact regeneration, baseline change, git-history rewrite or service action is performed. P4 remains partial, PM and ADHD stay separate, and no spending is admitted.
 
-Lane `codex/audit-generated-refresh`
+Lane codex/audit-generated-refresh
 
 Reverse: Restore the prior paragraph and remove this checkpoint if published feature branches adopt a different history policy.
 
@@ -347,7 +347,7 @@ Reverse: Restore the prior paragraph and remove this checkpoint if published fea
 
 Record the normally gated Semantica fixture merge and the generated-refresh guidance merge that occurred outside the source lane before its current local proof finished. Preserve the 13-second last-ready window as a delivery gap. Exact changed blobs match both merges; the guidance final receipt passed afterward and cannot retroactively prove the original gate. On fresh accepted main, 140 Semantica tests and eight guidance regressions pass without baseline or deadline changes. Link the dated evidence record from README, keep P4 active and P5 pending, and require ordinary exact-head gates for this revalidation. PM and ADHD remain separate; raw records stay private, and no spending or cloud admission is authorized.
 
-Lane `codex/audit-p4-delivery-record`
+Lane codex/audit-p4-delivery-record
 
 Reverse: Remove this checkpoint and delivery addendum if its source pins or proof distinctions are disproved; retain all original private receipts.
 
@@ -355,7 +355,7 @@ Reverse: Remove this checkpoint and delivery addendum if its source pins or proo
 
 Parent review of T37 confirms a trailing --repo raises IndexError at the CLI boundary. Add the existing usage exit-2 convention without changing valid argument dispatch. A synthetic extracted-main regression stops at a stubbed validation boundary; no ontology artifacts or validator functions execute. The old source fails that regression and the repaired source passes. P4 remains partial; PM, ADHD provenance and private teaching holds remain separate.
 
-Lane `codex/audit-validator-cli`
+Lane codex/audit-validator-cli
 
 Reverse: Revert this checkpoint and the three-line guard with its focused regression; retain private original audit evidence.
 
@@ -363,7 +363,7 @@ Reverse: Revert this checkpoint and the three-line guard with its focused regres
 
 The local omission review found raw violation strings and unreadable-manifest exceptions reaching terminal output. Reuse safe_text at both final boundaries, preserving ordinary text and already-escaped evidence. An isolated rendering probe fails its safety assertions on the previous source and passes on the candidate; it compiles only the existing pure formatter and output statements with inert printing, without importing or running artifact validation. Qualify the skey and identity_expectation docstrings to name their actual caller and validated-domain scope. Malformed-record rejection remains the responsibility of the existing record checks. Original audit records and historical receipts remain unchanged. The superseded exact-head proof was stopped only after its process ancestry and groups were verified; partial results are retained and are not a passing final receipt. This new head requires fresh local checks and hosted review before content-final. P4 remains partial and no lifecycle or operator acceptance is claimed.
 
-Lane `codex/audit-validator-cli` · PR #2948
+Lane codex/audit-validator-cli · PR #2948
 
 Reverse: Revert this diagnostic-output wave and its isolated boundary regression together.
 
@@ -371,7 +371,7 @@ Reverse: Revert this diagnostic-output wave and its isolated boundary regression
 
 Parent review validates that needed-evidence strings enter flags raw and the final CLI loop prints them raw, contrary to the existing safe_text flag-output contract. Reuse safe_text once at the final print boundary, preserving ordinary text and already-escaped text. A focused permanent CLI-boundary regression executes only the extracted pure formatter and output loop with an inert print sink; it passes after the fix and fails against the original rendering line. No full validator module, artifact-validation function, self-test suite or ontology artifacts were invoked. The argument-boundary regression also passes. P4 remains partial, with PM and ADHD held separately.
 
-Lane `codex/audit-validator-cli`
+Lane codex/audit-validator-cli
 
 Reverse: Revert the final print formatting call and its focused rendering regression if the boundary evidence is disproved; preserve all original reports and private counterfactual receipts.
 
@@ -379,7 +379,7 @@ Reverse: Revert the final print formatting call and its focused rendering regres
 
 Parent review validates that the existing positive negation-context criterion lacks the identifier token needed to enter the guarded branch. Strengthen that fixture sentence without changing validator logic. An isolated actual-condition probe with an inert diagnostic confirms the old fixture is unchanged when the negation exemption is deleted, while the revised fixture detects that mutation. The actual branch AST is unchanged; no validator function, ontology record, full module or self-test was executed by this probe. Whole self-test and integration coverage remain unproved; P4 stays partial and PM/ADHD holds stay separate.
 
-Lane `codex/audit-validator-cli`
+Lane codex/audit-validator-cli
 
 Reverse: Restore the prior fixture sentence and remove this checkpoint if the branch-witness evidence is disproved; retain original reports and counterfactual receipts privately.
 

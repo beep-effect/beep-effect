@@ -200,7 +200,7 @@ _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions wr
 
 The joined view's scan writes a legacy row for every origin-matched clone under the legacy root that has no row, and an adopted row for every lane without one. Adoption is idempotent, never deletes, and an explicit register wins and survives a rescan. Rejected: explicit register only (37 clones today, view empty until someone types them, new sprawl never recorded); seeding in legacy-drain (the view has nothing to join until then).
 
-Lane `@chore/deps-update-11-6-26 (grill session)`
+Lane @chore/deps-update-11-6-26 (grill session)
 
 Reverse: Remove the adoption write from the scan and require fleet register for every row.
 
@@ -208,7 +208,7 @@ Reverse: Remove the adoption write from the scan and require fleet register for 
 
 fleet --join, fleet describe <checkout>, fleet register <checkout> --role ... [--owning-seat] [--retention-exempt]. Plain fleet output stays unchanged per the fleet-mirror SPEC. Schema and store modules live in commands/Worktree/internal/FleetRoots.* and FleetRegistry.*. Rejected: a new beep fleet group (splits fleet code across two groups); registry under beep session (mixes checkout facts into a session tool).
 
-Lane `@chore/deps-update-11-6-26 (grill session)`
+Lane @chore/deps-update-11-6-26 (grill session)
 
 Reverse: Lift --join, describe and register into a new beep fleet group and re-export the Worktree internals.
 
@@ -216,7 +216,7 @@ Reverse: Lift --join, describe and register into a new beep fleet group and re-e
 
 ~/.local/state/beep/fleet/<repo-key>/roots.json and registry.json, where <repo-key> is the session ledger's key (github.com__beep-effect__beep-effect). beep-effect-private gets its own fleet by construction. BEEP_FLEET_ROOTS (path-list) overrides the file for tests and timer units. Rejected: XDG config dir (a second tree nothing else uses); an in-repo fleet.json (ties the public repo to one workstation's layout).
 
-Lane `@chore/deps-update-11-6-26 (grill session)`
+Lane @chore/deps-update-11-6-26 (grill session)
 
 Reverse: Move both files to ~/.config/beep/fleet/<repo-key>/ and update the FleetRoots and FleetRegistry stores' path resolution.
 
@@ -224,7 +224,7 @@ Reverse: Move both files to ~/.config/beep/fleet/<repo-key>/ and update the Flee
 
 A configured list names beep/seats and beep/lanes before lane-bootstrap creates them, so a configured root that does not exist contributes nothing instead of failing the scan. A beep/lanes child is a linked worktree whose .git is a file; discovery resolves it through git-common-dir to its owning clone and adds that clone when its origin matches. The derived single root (roots unset, or FleetScanOptions.fleetRoot) keeps the old behavior exactly, which the byte-identity fixture pins. Rejected: applying both rules to the derived root (a behavior change for roots-unset users).
 
-Lane `feat/fleet-root-registry`
+Lane feat/fleet-root-registry
 
 Reverse: Pass configured=false to discoverClones for every source so configured roots behave like the derived root.
 
@@ -232,7 +232,7 @@ Reverse: Pass configured=false to discoverClones for every source so configured 
 
 Live code reads one directory level under the fleet root and origin-matches (Fleet.service.ts discoverClones); Economics fleetCandidates prefix-matches beep-effect*. The 2026-10-05 criterion (projects/beep/seats/main discovered with the projects dir as root) was unreachable. The setting becomes an ordered list: <projects> (legacy, prefix-matched), <projects>/beep/seats, <projects>/beep/lanes. Discovery stays one level deep, origin-matched, no recursion, no symlinks. Unset defaults to today's derived root so fleet --json is byte-identical. Rejected: single root with two-level recursion (discovery learns a layout shape and the legacy dir still needs a second rule); single root at seats/ only (desktop-app and Codex lanes invisible until adopted).
 
-Lane `@chore/deps-update-11-6-26 (grill session)`
+Lane @chore/deps-update-11-6-26 (grill session)
 
 Reverse: Collapse the list to a single root by keeping only its first entry and re-adding recursion into seats/ and lanes/ in discoverClones.
 
@@ -240,7 +240,7 @@ Reverse: Collapse the list to a single root by keeping only its first entry and 
 
 Yeet economics is filesystem-only (FileSystem, Path, Digest) and its review-lane read has a never error channel. It reads the clone's .git/config origin (originUrlFromGitConfig, fleetRepositoryFromOriginUrl) for the roots.json key and shares readConfiguredFleetRoots with the mirror. A roots.json that does not decode logs a warning and falls back to the derived projects root; worktree fleet refuses it. Rejected: spawning git from Economics (widens four explicit signatures and the source services); silently ignoring a bad file.
 
-Lane `feat/fleet-root-registry`
+Lane feat/fleet-root-registry
 
 Reverse: Give Economics a ChildProcessSpawner requirement and call detectPrRepository, and let a bad roots.json fail the report.
 
@@ -248,7 +248,7 @@ Reverse: Give Economics a ChildProcessSpawner requirement and call detectPrRepos
 
 An Effect Vitest fixture fleet (temp projects dir with beep-effectN clones, <clone>-worktrees and .claude/worktrees lanes, beep/seats/main and beep/lanes/x, all origin-matched) proves discovery with the roots configured and byte-identity with roots unset. The workstation smoke is the byte-identical fleet --json diff only. The real seats/main clone is created by lane-bootstrap's first lane. Rejected: cloning a multi-GB idle seat now; a --depth 1 smoke seat (a trap if anyone starts work in it).
 
-Lane `@chore/deps-update-11-6-26 (grill session)`
+Lane @chore/deps-update-11-6-26 (grill session)
 
 Reverse: Add a workstation acceptance step that clones seats/main during P2 verification.
 
@@ -256,7 +256,7 @@ Reverse: Add a workstation acceptance step that clones seats/main during P2 veri
 
 The pre-commit Biome hook reformatted the first golden (roots-unset.json, collapsing short arrays), so the post-change comparison failed on whitespace with identical data. The golden is now roots-unset.snapshot.txt, reconstructed byte-exact as JSON.stringify(value, null, 2) of the captured pre-change value, which is what the test emits.
 
-Lane `feat/fleet-root-registry`
+Lane feat/fleet-root-registry
 
 Reverse: Rename roots-unset.snapshot.txt back to .json and add the path to Biome's ignore list.
 
@@ -264,7 +264,7 @@ Reverse: Rename roots-unset.snapshot.txt back to .json and add the path to Biome
 
 AGENTS.md Quality Operator, Worktree.service.ts:1540 and Worktree.command.ts:462 still derive the managed root from <clone>-worktrees, while the exploration decided flat <fleet>/lanes/<slug> with the owning seat as a registry fact. This packet carries owningSeat in the registry schema and lanes/ in the roots list; the worktree add rewrite and the AGENTS.md worktree bullet edit are assigned to lane-bootstrap. Rejected: keeping sibling -worktrees roots (reverses a grilled decision for less churn); pulling the managed-root rewrite into this packet (grows the first PR).
 
-Lane `@chore/deps-update-11-6-26 (grill session)`
+Lane @chore/deps-update-11-6-26 (grill session)
 
 Reverse: Reverse the exploration's lane-home decision: drop lanes/ from the roots list, make owningSeat a path fact again and leave Worktree.service.ts:1540 as is.
 
@@ -272,7 +272,7 @@ Reverse: Reverse the exploration's lane-home decision: drop lanes/ from the root
 
 LCM (Ehrlich and Blackman, arXiv 2605.04050) keeps an immutable store, a compact active context holding summaries with stable IDs, and expands detail only in sub-agents. The fleet analogue: fleet --join prints one compact row per checkout keyed by path; fleet describe <checkout> expands mirror, registry and the latest ledger rows on demand. No new daemon or store. Rejected for this packet: a summary DAG over the session ledger (context tooling, captured in explorations/INBOX.md); borrowing nothing.
 
-Lane `@chore/deps-update-11-6-26 (grill session)`
+Lane @chore/deps-update-11-6-26 (grill session)
 
 Reverse: Drop fleet describe and print the full joined record per row.
 
@@ -280,7 +280,7 @@ Reverse: Drop fleet describe and print the full joined record per row.
 
 FleetScanOptions gains roots (non-empty FleetRootEntry list) with precedence roots, fleetRoot, BEEP_FLEET_ROOTS, roots.json, derived. FleetRootsSource gains option for the first so --join can say where the list came from. The existing fleetRoot option keeps its one-unfiltered-root meaning and the derived discovery rules, so existing tests and callers are unchanged.
 
-Lane `feat/fleet-root-registry`
+Lane feat/fleet-root-registry
 
 Reverse: Drop option from FleetRootsSource and label FleetScanOptions.roots as env.
 
@@ -288,7 +288,7 @@ Reverse: Drop option from FleetRootsSource and label FleetScanOptions.roots as e
 
 Operator ruling 2026-11-06. fleet-root-registry stays first in the map but its scope shrinks to: per-repository discovery-roots list, thin registry overlay, joined and describe views, undercount explanation. lane-bootstrap starts the moment this merges. Rejected: lane-bootstrap first (it would invent fleet-root and registry stubs this packet then replaces); merging both into one packet (breaks the one-PR appetite and delays drain).
 
-Lane `@chore/deps-update-11-6-26 (grill session)`
+Lane @chore/deps-update-11-6-26 (grill session)
 
 Reverse: Swap the order by moving the roots list and registry stubs into lane-bootstrap's SPEC and marking this packet dependent on it.
 
@@ -296,7 +296,7 @@ Reverse: Swap the order by moving the roots list and registry stubs into lane-bo
 
 The session ledger (~/.local/state/beep/sessions/<repo-key>.jsonl, 4971 rows on 2026-11-06) already records clone, lane, branch, pr, state and summary per checkout; orchestrator/ and merge-reservations/ sit beside it. A fourth checkout-keyed store duplicating lane and PR was rejected. The registry is ~/.local/state/beep/fleet/<repo-key>/registry.json authoring only seatRole, owningSeat, drainStatus, retentionExempt; the joined view reads lane, pr and state from the ledger's latest row. Rejected: extending the ledger row (append-only session history is the wrong home for slowly changing checkout facts); the SPEC's independent store (two sources of truth for PR and lane, which the exploration already rejected).
 
-Lane `@chore/deps-update-11-6-26 (grill session)`
+Lane @chore/deps-update-11-6-26 (grill session)
 
 Reverse: Fold the four authored fields into the session-ledger row schema and delete registry.json, or restore the 2026-10-05 independent store with its own lane/packet/PR fields.
 
@@ -304,7 +304,7 @@ Reverse: Fold the four authored fields into the session-ledger row schema and de
 
 Refutes the 2026-11-06 hypothesis. git -C beep-effect0 worktree list reports 34 checkouts and succeeds; beep-effect0's origin is https://github.com/beep-effect/beep-effect.git while every other clone uses git@github.com:beep-effect/beep-effect.git, and Fleet.service.ts normalizeOriginUrl stripped only a trailing slash and .git, so cloneMatchesOrigin rejected the clone and every lane it owns. The one attributed lane under beep-effect0-worktrees (pr1371-r10-9951f493) is registered in beep-effect2. #2852 reuses ArtifactPaths canonicalRepositoryIdentity; after it the beep-effect0 group lists 35 rows (34 plus the beep-effect2 lane). The fix lives outside this PR so this PR's roots-unset parity diff stays clean and plain fleet output is not changed here. Rejected: folding the fix into this PR (the workstation parity diff would carry 34 unrelated rows).
 
-Lane `feat/fleet-root-registry` · PR #2852
+Lane feat/fleet-root-registry · PR #2852
 
 Reverse: Revert #2852 to restore the suffix-only normalizeOriginUrl; beep-effect0 and its lanes drop out of the mirror again.
 
@@ -312,7 +312,7 @@ Reverse: Revert #2852 to restore the suffix-only normalizeOriginUrl; beep-effect
 
 Fleet.service.ts cloneStubs attributes lanes only through a clone's successful git worktree list; a failed or refused listing contributes the clone alone. Leading hypothesis for 35 directories, 1 attributed under beep-effect0-worktrees. P1 confirms or refutes it and the reflection names the cause.
 
-Lane `@chore/deps-update-11-6-26 (grill session)`
+Lane @chore/deps-update-11-6-26 (grill session)
 
 Reverse: Move the undercount criterion to legacy-drain if the cause turns out to live in the reaper rather than the mirror.
 
@@ -320,7 +320,7 @@ Reverse: Move the undercount criterion to legacy-drain if the cause turns out to
 
 The operator's intent is to scope kinds of work to specific clones. One LiteralKit carries it: main (operator WebStorm), ops (timers), review, research, impl, legacy, adopted. beep session open and the orchestrator route by role; no second field. Replaces the exploration's a/b/c chat seats. Rejected: a/b/c plus a workload tag (one more thing to drift); no scoping until the registry has run.
 
-Lane `@chore/deps-update-11-6-26 (grill session)`
+Lane @chore/deps-update-11-6-26 (grill session)
 
 Reverse: Rename review/research/impl back to a/b/c in the LiteralKit and add a separate optional workload field.
 
@@ -328,7 +328,7 @@ Reverse: Rename review/research/impl back to a/b/c in the LiteralKit and add a s
 
 #2859 merged at 7d78dae90e through yeet merge-gate --relaxed (S11) with only inherited required reds: Test Unit and Heavy / Test Integration (@beep/law-practice-server citation suites from #2737), Repo Sanity (root-package projection drift, fixed by #2881). goals completion refresh --readiness-job 9d460031 returned unsatisfied: the hosted-required-checks sub-claim needs green required checks at the accepted head, and readiness recovery refused the yeet-verdict because its head (b73215a6, the yeet open run) was not the accepted head. Following the research-library-ontology-core precedent (#2771 then re-final #2787), a docs-only re-final PR carries the closeout pointer; docs-only CI skips the inherited unit suites, so its required checks can be green once #2881 lands. Rejected: waiting for main's citation suites to go green and re-running a code PR (blocks on another lane's fix for no change in content).
 
-Lane `docs/fleet-root-registry-refinal` · PR #2859
+Lane docs/fleet-root-registry-refinal · PR #2859
 
 Reverse: Point proposedCloseout.finalPullRequest back at #2859 once the completion gate accepts attributed S11 reds at the accepted head.
 
