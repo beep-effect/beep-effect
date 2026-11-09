@@ -106,7 +106,8 @@ export const replayCitationCanonicalFullSpan = Effect.fn("CanonicalFullSpanTest.
   count: number
 ) {
   const { operations, assertions } = yield* readCitationCanonicalCaptures();
-  const rows = A.take(A.drop(yield* readCalls(operations), from), count);
+  const calls = yield* readCalls(operations);
+  const rows = A.take(A.drop(calls, from), count);
   const replay = yield* makeCitationCanonicalExtractionReplay(kind);
   let checked = 0;
   for (const { row, body, models, combined, simple, targets } of rows) {

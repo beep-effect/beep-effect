@@ -119,7 +119,8 @@ export const replayCitationCanonicalParsedEquality = Effect.fn("CanonicalParsedE
   from: number,
   count: number
 ) {
-  const rows = A.take(A.drop(yield* readRows(), from), count);
+  const all = yield* readRows();
+  const rows = A.take(A.drop(all, from), count);
   const { replay, service: owner } = yield* installCitationParsedResourceReplay(kind, () => CitationFrozenEditions);
   for (const row of rows) {
     const actual = yield* Effect.forEach(

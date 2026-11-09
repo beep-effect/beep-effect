@@ -96,7 +96,8 @@ export const replayCitationCanonicalPinSpan = Effect.fn("CanonicalPinSpanTest.re
   from: number,
   count: number
 ) {
-  const rows = A.take(A.drop(yield* readRows(), from), count);
+  const all = yield* readRows();
+  const rows = A.take(A.drop(all, from), count);
   const replay = yield* makeCitationCanonicalExtractionReplay(kind);
   for (const row of rows) {
     const actual = yield* replay.extract(row.raw, "plain", row.models, row.id, row.steps);

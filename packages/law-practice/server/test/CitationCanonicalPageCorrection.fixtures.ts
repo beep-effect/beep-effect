@@ -81,7 +81,8 @@ export const replayCitationCanonicalPageCorrection = Effect.fn("CanonicalPageCor
   from: number,
   count: number
 ) {
-  const rows = A.take(A.drop(yield* readRows(), from), count);
+  const all = yield* readRows();
+  const rows = A.take(A.drop(all, from), count);
   const {
     replay,
     unicode,
