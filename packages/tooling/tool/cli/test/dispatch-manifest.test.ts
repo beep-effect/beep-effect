@@ -135,6 +135,20 @@ it.layer(HelpRenderLayer, { timeout: "30 seconds" })((it) => {
         }
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
+
+    // P61: the flag used to land on the group's help index and exit 0, a false green.
+    it.effect("fails `beep lint --log-level=debug` through the lazy root and points to `bun run lint`", () =>
+      Effect.gen(function* () {
+        const argv = ["lint", "--log-level=debug"];
+        const commands = yield* loadDispatchTarget(resolveDispatchTarget(argv));
+        const failure = yield* Command.runWith(makeRootCommand(commands), { version: "0.0.0" })(argv).pipe(Effect.flip);
+        expect(failure).toMatchObject({ _tag: "CliReportedExit", exitCode: 1 });
+        const errors = yield* TestConsole.errorLines;
+        expect(errors).toContain("Run the sweep with `bun run lint`, or one policy check:");
+        const logs = yield* TestConsole.logLines;
+        expect(logs).toEqual([]);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
   });
 });
 
@@ -205,6 +219,9 @@ describe("argv-first dispatch target", () => {
     expect(resolveDispatchTarget(["build"])).toStrictEqual(qualityTask);
     expect(resolveDispatchTarget(["lint", "--fix"])).toStrictEqual(qualityTask);
     expect(resolveDispatchTarget(["lint", "laws"])).toStrictEqual(group("lint"));
+    // A root flag sends bare `lint` to the group, whose handler exits 1 with a pointer to `bun run lint`.
+    expect(resolveDispatchTarget(["lint", "--log-level=debug"])).toStrictEqual(group("lint"));
+    expect(resolveDispatchTarget(["--log-level", "debug", "lint"])).toStrictEqual(group("lint"));
     expect(resolveDispatchTarget(["check", "--help"])).toStrictEqual(root);
     expect(resolveDispatchTarget(["ci", "run"])).toStrictEqual(group("ci"));
   });

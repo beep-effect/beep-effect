@@ -3,7 +3,7 @@
 - **Source exploration:**
   [`explorations/semantica-lab`](../../../explorations/semantica-lab/README.md)
 - **Primary ledger:**
-  [`explorations/semantica-lab/research/SOURCES.md`](../../../explorations/semantica-lab/research/SOURCES.md)
+  [explorations/semantica-lab/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/SOURCES.md)
   — this file is the goal-side mirror; when the two disagree, the exploration
   ledger wins and this copy is corrected.
 - **Decision authority:**
@@ -11,9 +11,9 @@
   (Current law table: Atlas writes, Atlas backlog, Verdict map; 2026-09-03
   ratification grill R3.a–R3.g).
 - **Design source:**
-  [`MAP.md` §A](../../../explorations/semantica-lab/MAP.md#a-semantica-atlas-sync--split-d5-into-a-verdict-lane-and-a-facts-lane)
+  [`MAP.md` §A](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/MAP.md#a-semantica-atlas-sync--split-d5-into-a-verdict-lane-and-a-facts-lane)
   v1.1; adversarial review
-  [`reviews/2026-09-03-sol-reentry-review.md`](../../../explorations/semantica-lab/research/reviews/2026-09-03-sol-reentry-review.md).
+  [`reviews/2026-09-03-sol-reentry-review.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/reviews/2026-09-03-sol-reentry-review.md).
 - **Carry-forward date:** 2026-09-03
 
 The tables below reproduce the rows of the exploration's corpus this lane
@@ -25,7 +25,7 @@ search in the private Todox workspace.
 The D5 extraction pipeline mined the semantica repository at symbol
 granularity into a schema-validated JSONL IR (6,105 records, 354 files,
 SHA-256-stamped; stats in
-[`ir-extraction-report.md`](../../../explorations/semantica-lab/research/ir-extraction-report.md)).
+[`ir-extraction-report.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/ir-extraction-report.md)).
 The extractor (`extract.py`, `ir-schema.json`, README) was committed in #790
 at `fd560ca8e5` and deleted by #882; it survives in git history and feeds only
 the gated facts lane (P2). The verdict lane (P1) reads no IR.
@@ -44,11 +44,11 @@ the gated facts lane (P2). The verdict lane (P1) reads no IR.
 - Notion atlas page: `@beep/semantica` in the private Todox workspace
   (identifier withheld; find it via Notion search).
 - Atlas forensics and upgrade reports:
-  [`grounding-notion-semantica.md`](../../../explorations/semantica-lab/research/grounding-notion-semantica.md),
-  [`atlas-upgrade-report.md`](../../../explorations/semantica-lab/research/atlas-upgrade-report.md)
+  [`grounding-notion-semantica.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/grounding-notion-semantica.md),
+  [`atlas-upgrade-report.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/atlas-upgrade-report.md)
   (the 2026-08-24 read-back of thirteen D10 auto-parks),
-  [`atlas-upgrade-report-2.md`](../../../explorations/semantica-lab/research/atlas-upgrade-report-2.md),
-  [`atlas-upgrade-report-3.md`](../../../explorations/semantica-lab/research/atlas-upgrade-report-3.md).
+  [`atlas-upgrade-report-2.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/atlas-upgrade-report-2.md),
+  [`atlas-upgrade-report-3.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/atlas-upgrade-report-3.md).
 - Park lists: the `## Park list` sections of
   `bakeoff-{storage,embeddings,input,extraction,reasoning}.md` under the
   exploration's `research/`.
@@ -59,7 +59,7 @@ the gated facts lane (P2). The verdict lane (P1) reads no IR.
 | --- | --- | --- |
 | Sync method | [goals/semantica-canary/history/p5-atlas-sync.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/history/p5-atlas-sync.md) (proposal → inventory → canary write → apply → read-back) | reuse verbatim |
 | Verdict domain | D3 column values; `@beep/schema` `LiteralKit` | NET-NEW `atlas-verdicts/v1` schema + `verdicts.json` |
-| Tracked evidence data in a packet | `explorations/semantica-lab/research/tracker/inventory.jsonl` (725 rows) | precedent; redaction law applies |
+| Tracked evidence data in a packet | [explorations/semantica-lab/research/tracker/inventory.jsonl](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/tracker/inventory.jsonl) (725 rows) | precedent; redaction law applies |
 | Notion read/write | the operating session's Notion connection (Claude Notion plugin); Codex Notion MCP after re-login (`codex mcp login notion`; writes need `--approve-for-me`) | not live-verified on 2026-09-03; one-catalog read first |
 | Script home | `apps/labs/semantica/scripts/` beside `generate-f1-*.ts` and `generate-g-entailment.ts` | NET-NEW small render/diff script; no reusable export |
 | IR extractor (facts lane) | git history `fd560ca8e5:scratchpad/semantica-ir/{extract.py,ir-schema.json,README.md}` | recovered only when P2 fires; home decided then |

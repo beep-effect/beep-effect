@@ -1,7 +1,7 @@
 # Research intake 2026-11 — Sources & Provenance
 
 - **Source exploration:** `explorations/research-library-ontology`; primary
-  ledger: `explorations/research-library-ontology/research/SOURCES.md`.
+  ledger: [explorations/research-library-ontology/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/research-library-ontology/research/SOURCES.md).
 - **Prerequisites:** `goals/research-library-ontology-core` (catalog models,
   ontology) and `goals/research-library-routes` (web, Box, VidBee, alphaXiv
   routes, hop gate), both `completed-retained` on `main`.

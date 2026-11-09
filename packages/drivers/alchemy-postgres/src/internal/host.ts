@@ -72,6 +72,8 @@ const retryCeilingMillis = Duration.toMillis(Duration.minutes(1));
 const retryExponentCap = 30;
 /** How long a failed backfill job waits before it runs again. */
 const jobRetryMillis = Duration.toMillis(Duration.seconds(1));
+/** How long an interrupted delivery pass spends freeing its rows before it leaves them to lapse with their lease. */
+const claimReleaseBudget = Duration.seconds(5);
 const byPosition = Order.mapInput(Order.Number, (row: DeliveryRow) => row.position);
 
 /** The longest failure tag a log line carries. */
@@ -609,13 +611,31 @@ export const makeContext = (deps: HostDeps) => {
         ),
     });
 
+  /**
+   * Free the rows an interrupted pass claimed, as on host close, instead of making the next host wait up to
+   * `leaseMillis` for them. An interruption is not a failed attempt, so attempts and retry times stay as they
+   * were. The release is bounded so an unreachable database cannot hold up close; the lease remains the fallback.
+   */
+  const releaseOnInterrupt = (rows: ReadonlyArray<DeliveryRow>, exit: Exit.Exit<boolean, SqlError.SqlError>) =>
+    Exit.hasInterrupts(exit)
+      ? release(rows).pipe(
+          Effect.interruptible,
+          Effect.timeoutOption(claimReleaseBudget),
+          Effect.asVoid,
+          Effect.catchCause(logFailure("delivery release"))
+        )
+      : Effect.void;
+
   /** One pass: claim, deliver; another pass follows while every claimed row was delivered. */
   const deliveryPass = Effect.gen(function* () {
     const at = yield* now;
     const hosted = A.fromIterable(MutableHashMap.keys(delivers));
-    const rows = A.isReadonlyArrayNonEmpty(hosted) ? yield* claim(at, hosted) : [];
-    const completed = yield* deliverAll(rows);
-    return completed && A.isReadonlyArrayNonEmpty(rows);
+    // The claim is uninterruptible, so an interrupted pass always knows which rows it holds.
+    return yield* Effect.acquireUseRelease(
+      A.isReadonlyArrayNonEmpty(hosted) ? claim(at, hosted) : Effect.succeed(A.empty<DeliveryRow>()),
+      (rows) => Effect.map(deliverAll(rows), (completed) => completed && A.isReadonlyArrayNonEmpty(rows)),
+      releaseOnInterrupt
+    );
   }).pipe(orDieAs("deliver")(tables.delivery));
 
   /** Log a background failure; the next pass, poll or wake runs the work again. */

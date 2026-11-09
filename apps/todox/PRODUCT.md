@@ -72,7 +72,7 @@ evidence-bounded context packet.
   certifications, metrics, or outcomes may be claimed.
 - Claim gate: every factual public assertion must resolve to a
   `publicEligible: true` record in
-  `explorations/todox-wealth-management-site/research/CLAIMS.jsonl` and keep
+  [explorations/todox-wealth-management-site/research/CLAIMS.jsonl](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/todox-wealth-management-site/research/CLAIMS.jsonl) and keep
   its caveat through the rewrite.
 - Concept tense required where applicable: "designed to," "the proposed
   runtime," "the concept," or an explicit synthetic-demonstration label.

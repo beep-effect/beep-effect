@@ -31,7 +31,7 @@ event and reminders one way through `@beep/m365`.
 5. `PLAN.md`.
 6. `GOAL.md`.
 7. The exploration [`DECISIONS.md`](../../explorations/solo-firm-docketing/DECISIONS.md),
-   [`MAP.md`](../../explorations/solo-firm-docketing/MAP.md), and supporting
+   [`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/solo-firm-docketing/MAP.md), and supporting
    `research/`, `ops/`, and `history/` files.
 
 Higher sources outrank lower sources when they conflict.

@@ -2,7 +2,7 @@
 
 This implementation ledger carries only the fusion-core sources. The source
 exploration's ledger remains primary:
-[`explorations/rag-retrieval-projection/research/SOURCES.md`](../../../explorations/rag-retrieval-projection/research/SOURCES.md).
+[explorations/rag-retrieval-projection/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/rag-retrieval-projection/research/SOURCES.md).
 
 - **Source exploration:** `explorations/rag-retrieval-projection`
 - **Ratified contract:** exploration `DECISIONS.md`, `BRIEF.md`, and `MAP.md`
@@ -59,7 +59,7 @@ ground the method and policy tradeoffs, not copied code.
   https://softwaredoug.com/blog/2025/03/13/elasticsearch-hybrid-search-strategies
 
 The complete citation list and raw synthesis live in the exploration's
-[`rrf-fusion-and-retrieval-contract.md`](../../../explorations/rag-retrieval-projection/research/rrf-fusion-and-retrieval-contract.md).
+[`rrf-fusion-and-retrieval-contract.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/rag-retrieval-projection/research/rrf-fusion-and-retrieval-contract.md).
 
 ## 4. In-repo capabilities
 
@@ -80,9 +80,9 @@ the source of truth.
 
 - Source exploration: [`README`](../../../explorations/rag-retrieval-projection/README.md),
   [`BRIEF`](../../../explorations/rag-retrieval-projection/BRIEF.md),
-  [`MAP`](../../../explorations/rag-retrieval-projection/MAP.md),
+  [`MAP`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/rag-retrieval-projection/MAP.md),
   [`DECISIONS`](../../../explorations/rag-retrieval-projection/DECISIONS.md), and
-  [`primary ledger`](../../../explorations/rag-retrieval-projection/research/SOURCES.md).
+  [`primary ledger`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/rag-retrieval-projection/research/SOURCES.md).
 - Consumer contract: [`epistemic-bitemporal-edge-core`](../../epistemic-bitemporal-edge-core/README.md)
   defers RRF to this goal as sole owner.
 - Verified-span substrate: [`citation-verified-span-substrate`](../../citation-verified-span-substrate/README.md).

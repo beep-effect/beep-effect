@@ -20,6 +20,14 @@
       "supersededBy": null
     },
     "created": "2026-10-14",
-    "updated": "2026-10-14"
+    "updated": "2026-10-14",
+    "archive": {
+      "repo": "beep-effect/beep-effect-goals-archive",
+      "path": "explorations/observability-palantiri",
+      "commit": "1604d5144ca9118523ea2de34057d06a2f478bb6",
+      "contentHash": "53469ddfaf8be8b18604f6c9a421e99b5a84e34f",
+      "archivedAt": "2026-11-09T08:44:38.484Z",
+      "sourceCommit": "0b459d8674f24af3a7267e31f78050835dda3f65"
+    }
   }
 }

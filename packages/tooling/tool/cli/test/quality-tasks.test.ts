@@ -79,6 +79,7 @@ import {
   coverageSelectedStepsForTesting,
   coverageStepForTesting,
   coverageVitestTopologyArgs,
+  DOCS_OXLINT_CONFIG,
   detectQualityProfileForTesting,
   devQualityStepsForTesting,
   FallowReportFinding,
@@ -110,6 +111,7 @@ import {
   listSourceFiles,
   localQualityConcurrencyPlan,
   missingTestTsgoTaskMessageForTesting,
+  PREBUILT_DOCS_OXLINT_CONFIG,
   parseQualityTaskInvocation,
   persistLaneProofs,
   pinnedLaneProofBaseSha,
@@ -523,6 +525,11 @@ const expectedRootTurboArgs = (task: string, args: ReadonlyArray<string>): Reado
     task,
     A.some(args, isTurboConcurrencyArg) ? args : [`--concurrency=${localQualityConcurrencyPlan().rootTurbo}`, ...args]
   );
+// The aggregate `lint` graph (not `lint:fix`, not the other root graphs) continues past a red
+// package unless the caller already chose a `--continue` mode; the flag precedes caller args.
+const AGGREGATE_LINT_CONTINUE_ARG = "--continue=dependencies-successful";
+const withAggregateLintContinue = (task: string, args: ReadonlyArray<string>): ReadonlyArray<string> =>
+  task === "lint" ? [AGGREGATE_LINT_CONTINUE_ARG, ...args] : args;
 // Coverage keeps its fixed caps (the shard worker topology is the ratchet's
 // baseline shape): the fleet cap under CI, three locally.
 const expectedCoverageTurboArgs = (task: string, args: ReadonlyArray<string>): ReadonlyArray<string> =>
@@ -1535,7 +1542,10 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           expect(steps[index]).toMatchObject({
             label: task,
             command: "bunx",
-            args: expectedRootTurboArgs(task, ["--filter=@beep/schema", "--summarize"]),
+            args: expectedRootTurboArgs(
+              task,
+              withAggregateLintContinue(task, ["--filter=@beep/schema", "--summarize"])
+            ),
             cwd: "/repo",
           });
         }
@@ -1576,9 +1586,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             "run",
             task,
             "--concurrency=4",
-            "--force",
-            "--filter=@beep/schema",
-            "--dry=json",
+            ...withAggregateLintContinue(task, ["--force", "--filter=@beep/schema", "--dry=json"]),
           ]);
         }
       }));
@@ -5230,7 +5238,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         policyLintConcurrency: 8,
         cheapGateConcurrency: 8,
         prePushLaneConcurrency: 4,
-        oxlintThreads: 16,
+        oxlintThreads: 8,
       });
       // `ci` carries the hosted values verbatim; `current` keeps the pre-profile local values.
       expect(qualityProfileConfigForTesting("ci")).toMatchObject({
@@ -5276,7 +5284,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         policyLint: 8,
         cheapGates: 8,
         prePushLanes: 4,
-        oxlintThreads: 16,
+        oxlintThreads: 8,
       });
 
       // Overrides: the policy lint width honours BEEP_QUALITY_CHECK_CONCURRENCY over the
@@ -5305,7 +5313,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         policyLint: 4,
         cheapGates: 4,
         prePushLanes: 2,
-        oxlintThreads: 8,
+        oxlintThreads: 4,
         admission: half,
         notes: ["[quality] admission: 4/8 tokens held by other runs; local widths scaled."],
       });
@@ -5740,6 +5748,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "--config",
         ".oxlintrc.docs.json",
         "--max-warnings=0",
+        `--threads=${localQualityConcurrencyPlan().oxlintThreads}`,
       ]);
       expect(rootLintPolicyStepsForTesting("/repo", undefined, undefined, undefined, true, "abc123")).toContainEqual(
         expect.objectContaining({ label: "lint:jsdoc", args: expect.arrayContaining([".oxlintrc.docs.json"]) })
@@ -5752,7 +5761,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         policyTurboStep("lint:deprecated-apis", "review-base", "oxlint")
       );
       expect(rootQualityStepsForTesting("/repo", getInvocation(["lint"]))).toEqual([
-        expect.objectContaining({ label: "lint", args: expectedRootTurboArgs("lint", []) }),
+        expect.objectContaining({ label: "lint", args: expectedRootTurboArgs("lint", [AGGREGATE_LINT_CONTINUE_ARG]) }),
         ...rootLintPolicyStepsForTesting("/repo"),
       ]);
     });
@@ -10358,18 +10367,28 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     // The aggregate lint lane opens a remote-cache secret session whenever the
     // Turbo credentials are 1Password references, and the session verdict comes
-    // from spawning `op run -- true`. Each case pins the reference-backed
-    // posture, clears the cached verdicts and puts its own `op` first on PATH,
-    // so neither the host `op` nor the host's TURBO_* values decide the label.
-    const aggregateLintFailureWithOp = Effect.fnUntraced(function* (opScript: ReadonlyArray<string>) {
+    // from spawning `op run -- true`. Each case pins the Turbo posture, clears
+    // the cached verdicts and puts its own `op` first on PATH, so neither the
+    // host `op` nor the host's TURBO_* values decide the label. Fake `bunx` and
+    // `bun` sit beside it and log every call: the aggregate lint runs
+    // `aggregateLint` (a red exit 7 by default), and `bun build` writes its
+    // `--outfile`, so the documentation prebuild installs whenever a case's
+    // `files` carry the source config. `envFile` is the checkout `.env` the
+    // health probe reads.
+    const installFakeLintTools = Effect.fnUntraced(function* (options: {
+      readonly op: ReadonlyArray<string>;
+      readonly aggregateLint?: string | undefined;
+      readonly envFile?: string | undefined;
+      readonly files?: Readonly<Record<string, string>> | undefined;
+    }) {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const tmpDir = process.cwd();
       const binDir = path.join(tmpDir, "bin");
-      const commandLogPath = path.join(tmpDir, "quality-commands.log");
       const fakeBunxPath = path.join(binDir, "bunx");
       const fakeBunPath = path.join(binDir, "bun");
       const fakeOpPath = path.join(binDir, "op");
+      const aggregateLint = options.aggregateLint ?? "exit 7";
 
       yield* fs.makeDirectory(binDir, { recursive: true });
       yield* fs.writeFileString(
@@ -10379,7 +10398,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             "#!/usr/bin/env sh",
             "printf 'bunx %s\\n' \"$*\" >> quality-commands.log",
             'if [ "$1" = "turbo" ] && [ "$2" = "run" ] && [ "$3" = "lint" ]; then',
-            "  exit 7",
+            `  ${aggregateLint}`,
             "fi",
             "exit 0",
             "",
@@ -10393,43 +10412,81 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           [
             "#!/usr/bin/env sh",
             "printf 'bun %s\\n' \"$*\" >> quality-commands.log",
-            'case " $* " in *" cache execute -- run lint "*) exit 7 ;; esac',
+            'if [ "$1" = "build" ]; then',
+            '  for arg in "$@"; do',
+            '    case "$arg" in --outfile=*) printf "export default {};\\n" > "${arg#--outfile=}" ;; esac',
+            "  done",
+            "  exit 0",
+            "fi",
+            `case " $* " in *" cache execute -- run lint "*) ${aggregateLint} ;; esac`,
             "exit 0",
             "",
           ],
           "\n"
         )
       );
-      yield* fs.writeFileString(fakeOpPath, A.join(opScript, "\n"));
-      yield* fs.chmod(fakeBunxPath, 0o755);
-      yield* fs.chmod(fakeBunPath, 0o755);
-      yield* fs.chmod(fakeOpPath, 0o755);
+      yield* fs.writeFileString(fakeOpPath, A.join(options.op, "\n"));
+      yield* Effect.forEach([fakeBunxPath, fakeBunPath, fakeOpPath], (file) => fs.chmod(file, 0o755), {
+        discard: true,
+      });
+      if (options.envFile !== undefined) {
+        yield* fs.writeFileString(path.join(tmpDir, ".env"), options.envFile);
+      }
+      yield* Effect.forEach(
+        R.toEntries(options.files ?? {}),
+        ([file, content]) => fs.writeFileString(path.join(tmpDir, file), content),
+        { discard: true }
+      );
       yield* Effect.sync(clearTurboCacheSecretSessionVerdictsForTesting);
+      return { binDir, commandLogPath: path.join(tmpDir, "quality-commands.log") };
+    });
 
-      const [exit, lintStepCount] = yield* withEnvVarsEffect(
+    const OP_TURBO_TOKEN = "op://fixture-vault/turbo/token";
+
+    // Run `use` with the fake tools first on PATH, the Turbo quad pinned and CI cleared. The default
+    // ConfigProvider snapshots the environment on first use, so a worker started under CI=true would
+    // keep `isCi` true and skip the probe; a provider built inside the pinned scope reads the cleared
+    // CI signals.
+    const underFakeLintTools = <Out, E, Req>(binDir: string, turboToken: string, use: Effect.Effect<Out, E, Req>) =>
+      withEnvVarsEffect(
         {
           PATH: `${binDir}:${Bun.env.PATH ?? ""}`,
           TURBO_API: "http://127.0.0.1:9427",
-          TURBO_TOKEN: "op://fixture-vault/turbo/token",
+          TURBO_TOKEN: turboToken,
           TURBO_TEAM: "fixture-team",
           TURBO_CACHE: "local:rw,remote:r",
           BEEP_TURBO_TRUSTED_WRITER: undefined,
         },
-        // The default ConfigProvider snapshots the environment on first use, so a
-        // worker started under CI=true would keep `isCi` true and skip the probe;
-        // a provider built inside the pinned scope reads the cleared CI signals.
-        // The step count is derived inside the same scope from the plan the
-        // runtime executes (aggregate lane plus every policy step), so a lint
-        // step added on another branch, or a CI-only step, never skews it.
         withoutCiEffect(
-          runQualityTask(getInvocation(["lint"])).pipe(
-            Effect.exit,
-            Effect.zip(Effect.sync(() => A.length(rootQualityStepsForTesting(process.cwd(), getInvocation(["lint"]))))),
+          use.pipe(
             Effect.provideServiceEffect(
               ConfigProvider.ConfigProvider,
               Effect.sync(() => ConfigProvider.fromEnv())
             )
           )
+        )
+      );
+
+    // The bare `lint` sweep, red at its aggregate lane, under reference-backed Turbo credentials.
+    const aggregateLintFailureWithOp = Effect.fnUntraced(function* (
+      opScript: ReadonlyArray<string>,
+      fixture: {
+        readonly envFile?: string | undefined;
+        readonly files?: Readonly<Record<string, string>> | undefined;
+      } = {}
+    ) {
+      const fs = yield* FileSystem.FileSystem;
+      const { binDir, commandLogPath } = yield* installFakeLintTools({ op: opScript, ...fixture });
+
+      // The step count is derived inside the pinned scope from the plan the
+      // runtime executes (aggregate lane plus every policy step), so a lint
+      // step added on another branch, or a CI-only step, never skews it.
+      const [exit, lintStepCount] = yield* underFakeLintTools(
+        binDir,
+        OP_TURBO_TOKEN,
+        runQualityTask(getInvocation(["lint"])).pipe(
+          Effect.exit,
+          Effect.zip(Effect.sync(() => A.length(rootQualityStepsForTesting(process.cwd(), getInvocation(["lint"])))))
         )
       );
 
@@ -10453,9 +10510,240 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       expect(logText).toContain(`[beep-cli] lint:policy: running ${lintStepCount} ordered step(s)`);
 
       return {
+        commandLog,
         failedLabels: A.map(failure.failures, (step) => step.label),
         wrappedAggregate: pipe(commandLog, Str.includes("op run -- bun ")),
       };
+    });
+
+    // TestConsole keeps each method's lines apart; this records log, error and warn calls in call
+    // order as well, so a case can pin where a warning lands relative to the failure summary.
+    const orderedTestConsole = (entries: Array<readonly [method: string, text: string]>) =>
+      Effect.map(TestConsole.make, (testConsole) => {
+        const record =
+          (method: string, forward: (...args: ReadonlyArray<unknown>) => void) =>
+          (...args: ReadonlyArray<unknown>) => {
+            entries.push([method, A.join(A.filter(args, isString), " ")]);
+            forward(...args);
+          };
+        return {
+          ...testConsole,
+          error: record("error", testConsole.error),
+          log: record("log", testConsole.log),
+          warn: record("warn", testConsole.warn),
+        };
+      });
+
+    const warningTexts = (entries: ReadonlyArray<readonly [method: string, text: string]>) =>
+      A.map(
+        A.filter(entries, ([method]) => method === "warn"),
+        ([, text]) => text
+      );
+
+    // A missing, expired or denied 1Password session: the fixture `op` logs its argv and exits 78.
+    const unusableSessionOp = ["#!/usr/bin/env sh", "printf 'op %s\\n' \"$*\" >> quality-commands.log", "exit 78", ""];
+
+    // Both `.env` references fail. The whole-file probe and each isolated probe log a marker line, so
+    // a case can count the probes; every other `op` call (the session probe) is `unusableSessionOp`.
+    const staleReferenceOp = [
+      "#!/usr/bin/env sh",
+      "case \"$*\" in *--env-file=*) printf 'op whole-file\\n' >> quality-commands.log; exit 1 ;; esac",
+      'if [ -n "${STALE_SERVICE_TOKEN}${STALE_DATABASE_URL}" ]; then',
+      "  printf 'op isolated\\n' >> quality-commands.log",
+      "  exit 1",
+      "fi",
+      ...A.drop(unusableSessionOp, 1),
+    ];
+    const staleReferenceEnvFile = A.join(
+      [
+        "STALE_SERVICE_TOKEN=op://fixture-vault/service/missing",
+        "STALE_DATABASE_URL=op://fixture-vault/database/missing",
+        "",
+      ],
+      "\n"
+    );
+    const staleReferenceWarning =
+      "2 .env variables have unavailable 1Password references (STALE_SERVICE_TOKEN, STALE_DATABASE_URL)";
+    const countLogLines = (commandLog: string, marker: string) =>
+      A.length(A.filter(Str.split(commandLog, "\n"), (line) => line === marker));
+
+    // The documentation config as the repository ships it: the plugin loads from its TypeScript source.
+    const docsSourceConfigFile = {
+      [DOCS_OXLINT_CONFIG]: '{ "jsPlugins": ["./packages/tooling/policy-pack/lint-rules/src/rules/docs.index.ts"] }\n',
+    };
+
+    // The bare lint sweep forks the `.env` health probe instead of running it before the first Turbo
+    // step (perf plan P1). Both references fail here, so a second sweep would show as a second
+    // whole-file probe and doubled isolated probes, and the warning must still print once the red
+    // sweep has reported its failures.
+    it.effect("runs one .env health sweep beside the bare lint sweep and warns after a red stage", () => {
+      const entries: Array<readonly [method: string, text: string]> = [];
+      return Effect.andThen(
+        temporaryRepository,
+        aggregateLintFailureWithOp(staleReferenceOp, { envFile: staleReferenceEnvFile }).pipe(
+          Effect.map(({ commandLog, failedLabels }) => {
+            expect(failedLabels).toEqual(["lint"]);
+            expect(countLogLines(commandLog, "op whole-file")).toBe(1);
+            expect(countLogLines(commandLog, "op isolated")).toBe(2);
+
+            expect(warningTexts(entries)).toEqual([expect.stringContaining(staleReferenceWarning)]);
+            const failureSummary = A.findFirstIndex(
+              entries,
+              ([method, text]) => method === "error" && Str.startsWith("[beep-cli] lint:policy: failed")(text)
+            ).pipe(O.getOrThrow);
+            const warning = A.findFirstIndex(entries, ([method]) => method === "warn").pipe(O.getOrThrow);
+            expect(warning).toBeGreaterThan(failureSummary);
+          })
+        )
+      ).pipe(Effect.provideServiceEffect(Console.Console, orderedTestConsole(entries)), TestClock.withLive);
+    });
+
+    // Every route but the bare sweep probes the `.env` inline, before the step it resolves: here the
+    // one aggregate step of `lint --affected`. That plan runs no policy stage, so it builds no
+    // documentation bundle either (perf plan P34), although the fixture root carries the source config.
+    it.effect("warns once before a single-step lint route and builds no documentation bundle", () => {
+      const entries: Array<readonly [method: string, text: string]> = [];
+      return Effect.gen(function* () {
+        yield* temporaryRepository;
+        const fs = yield* FileSystem.FileSystem;
+        const { binDir, commandLogPath } = yield* installFakeLintTools({
+          op: staleReferenceOp,
+          envFile: staleReferenceEnvFile,
+          files: docsSourceConfigFile,
+        });
+        const exit = yield* underFakeLintTools(
+          binDir,
+          OP_TURBO_TOKEN,
+          Effect.exit(runQualityTask(getInvocation(["lint", "--affected"])))
+        );
+
+        assertTrue(exit._tag === "Failure");
+        const failure = Cause.squash(exit.cause);
+        assertTrue(isQualityTaskFailed(failure));
+        expect(failure.exitCode).toBe(7);
+
+        const commandLog = yield* fs.readFileString(commandLogPath);
+        expect(countLogLines(commandLog, "op whole-file")).toBe(1);
+        expect(countLogLines(commandLog, "op isolated")).toBe(2);
+        // The session probe follows the health probe on the same step.
+        expect(commandLog).toContain("op run -- true");
+        expect(commandLog).not.toContain("bun build");
+        expect(commandLog).not.toContain("oxlint");
+
+        expect(warningTexts(entries)).toEqual([expect.stringContaining(staleReferenceWarning)]);
+        // `step` mode warns before the step's command line, not once the run has ended.
+        const warning = A.findFirstIndex(entries, ([method]) => method === "warn").pipe(O.getOrThrow);
+        const stepLine = A.findFirstIndex(
+          entries,
+          ([method, text]) => method === "log" && Str.startsWith("[beep-cli] lint: ")(text)
+        ).pipe(O.getOrThrow);
+        expect(warning).toBeLessThan(stepLine);
+      }).pipe(Effect.provideServiceEffect(Console.Console, orderedTestConsole(entries)), TestClock.withLive);
+    });
+
+    // The bare sweep lints the root documentation with the bundle it prebuilt, the config `beep lint
+    // policy` passes too (perf plan P34), at the concurrency plan's oxlint thread count (perf plan S6).
+    it.effect("lints the root documentation with the prebuilt config in the bare lint sweep", () =>
+      Effect.andThen(
+        temporaryRepository,
+        aggregateLintFailureWithOp(unusableSessionOp, { files: docsSourceConfigFile }).pipe(
+          Effect.map(({ commandLog }) => {
+            expect(commandLog).toContain("bun build ./packages/tooling/policy-pack/lint-rules/src/rules/docs.index.ts");
+            const rootDocsLint = `bunx oxlint . --config ${PREBUILT_DOCS_OXLINT_CONFIG} --max-warnings=0 --threads=`;
+            expect(A.filter(Str.split(commandLog, "\n"), Str.startsWith(rootDocsLint))).toEqual([
+              expect.stringMatching(/--threads=\d+$/),
+            ]);
+            expect(commandLog).not.toContain(`--config ${DOCS_OXLINT_CONFIG}`);
+          })
+        )
+      ).pipe(
+        Effect.provideServiceEffect(Console.Console, TestConsole.make),
+        Effect.provideServiceEffect(Console.Console, TestConsole.make),
+        TestClock.withLive
+      )
+    );
+
+    // Literal Turbo credentials load no local environment, so the bare sweep forks no `.env` probe:
+    // a literal-credential checkout, like hosted CI, makes no `op` call even beside a
+    // reference-backed `.env`, and prints no warning.
+    it.effect("forks no .env probe and makes no op call when the Turbo credentials are literal", () => {
+      const entries: Array<readonly [method: string, text: string]> = [];
+      return Effect.gen(function* () {
+        yield* temporaryRepository;
+        const fs = yield* FileSystem.FileSystem;
+        const { binDir, commandLogPath } = yield* installFakeLintTools({
+          op: staleReferenceOp,
+          envFile: staleReferenceEnvFile,
+        });
+        const exit = yield* underFakeLintTools(
+          binDir,
+          "fixture-literal-token",
+          Effect.exit(runQualityTask(getInvocation(["lint"])))
+        );
+
+        assertTrue(exit._tag === "Failure");
+        const failure = Cause.squash(exit.cause);
+        assertTrue(isQualityTaskGroupFailed(failure));
+        expect(A.map(failure.failures, (step) => step.label)).toEqual(["lint"]);
+
+        const commandLog = yield* fs.readFileString(commandLogPath);
+        expect(commandLog).toContain("lint:typos");
+        expect(A.filter(Str.split(commandLog, "\n"), Str.startsWith("op "))).toEqual([]);
+        expect(warningTexts(entries)).toEqual([]);
+      }).pipe(Effect.provideServiceEffect(Console.Console, orderedTestConsole(entries)), TestClock.withLive);
+    });
+
+    // Ctrl-C on the bare sweep: nothing is left to read the warning, so the sweep neither warns nor
+    // joins the in-flight probe. The whole-file probe blocks until the test releases it and then
+    // fails, so a sweep that joined it on interrupt would outlast the bound and then warn.
+    it.effect("interrupts the bare lint sweep without joining the .env probe or warning", () => {
+      const entries: Array<readonly [method: string, text: string]> = [];
+      return Effect.gen(function* () {
+        yield* temporaryRepository;
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { binDir, commandLogPath } = yield* installFakeLintTools({
+          op: [
+            "#!/usr/bin/env sh",
+            'case "$*" in *--env-file=*)',
+            "  printf 'op whole-file\\n' >> quality-commands.log",
+            "  while [ ! -f op-release ]; do sleep 0.05; done",
+            "  exit 1",
+            "  ;;",
+            "esac",
+            ...A.drop(staleReferenceOp, 2),
+          ],
+          aggregateLint: "printf 'aggregate lint started\\n' >> quality-commands.log; exec sleep 30",
+          envFile: staleReferenceEnvFile,
+        });
+        const { commandLog, exit, interrupted } = yield* underFakeLintTools(
+          binDir,
+          OP_TURBO_TOKEN,
+          Effect.gen(function* () {
+            const sweep = yield* Effect.forkChild(runQualityTask(getInvocation(["lint"])));
+            // Interrupt mid-stage: the aggregate lint is running and the probe is in flight.
+            const commandLog = yield* fs.readFileString(commandLogPath).pipe(
+              Effect.orElseSucceed(() => Str.empty),
+              Effect.repeat({
+                schedule: Schedule.spaced("20 millis"),
+                until: (log) => Str.includes("aggregate lint started")(log) && Str.includes("op whole-file")(log),
+                times: 500,
+              })
+            );
+            const interrupted = yield* Fiber.interrupt(sweep).pipe(Effect.timeoutOption("10 seconds"));
+            // Release the probe either way, so a sweep still waiting on it finishes and can be read.
+            yield* fs.writeFileString(path.join(process.cwd(), "op-release"), "");
+            const exit = yield* Fiber.await(sweep);
+            return { commandLog, exit, interrupted };
+          })
+        );
+
+        expect(commandLog).toContain("aggregate lint started");
+        expect(commandLog).toContain("op whole-file");
+        interrupted.pipe(O.isSome, assertTrue);
+        exit.pipe(Exit.hasInterrupts, assertTrue);
+        expect(warningTexts(entries)).toEqual([]);
+      }).pipe(Effect.provideServiceEffect(Console.Console, orderedTestConsole(entries)), TestClock.withLive);
     });
 
     it.effect("keeps running repo-wide root lint policy checks after aggregate lint fails", () =>
@@ -10463,12 +10751,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         temporaryRepository,
         // A missing, expired or denied 1Password session degrades the aggregate
         // to an unwrapped local-only run, so its label carries no session suffix.
-        aggregateLintFailureWithOp([
-          "#!/usr/bin/env sh",
-          "printf 'op %s\\n' \"$*\" >> quality-commands.log",
-          "exit 78",
-          "",
-        ]).pipe(
+        aggregateLintFailureWithOp(unusableSessionOp).pipe(
           Effect.map(({ failedLabels, wrappedAggregate }) => {
             expect(failedLabels).toEqual(["lint"]);
             expect(wrappedAggregate).toBe(false);
@@ -10528,14 +10811,56 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       const steps = rootQualityStepsForTesting("/repo", getInvocation(["lint", "--affected", "--summarize"]));
 
       expect(steps).toHaveLength(1);
-      expect(steps[0]?.args).toEqual(expectedRootTurboArgs("lint", ["--affected", "--summarize"]));
+      expect(steps[0]?.args).toEqual(
+        expectedRootTurboArgs("lint", [AGGREGATE_LINT_CONTINUE_ARG, "--affected", "--summarize"])
+      );
     });
 
     it("skips repo-wide lint policy checks for explicit package filters", () => {
       const steps = rootQualityStepsForTesting("/repo", getInvocation(["lint", "--filter=@beep/schema"]));
 
       expect(steps).toHaveLength(1);
-      expect(steps[0]?.args).toEqual(expectedRootTurboArgs("lint", ["--filter=@beep/schema"]));
+      expect(steps[0]?.args).toEqual(
+        expectedRootTurboArgs("lint", [AGGREGATE_LINT_CONTINUE_ARG, "--filter=@beep/schema"])
+      );
+    });
+
+    const isContinueArg = (arg: string) => arg === "--continue" || Str.startsWith("--continue=")(arg);
+    const firstRootStep = (argv: ReadonlyArray<string>) =>
+      O.getOrThrow(A.head(rootQualityStepsForTesting("/repo", getInvocation(argv))));
+    const continueArgsOf = (argv: ReadonlyArray<string>) => A.filter(firstRootStep(argv).args, isContinueArg);
+
+    it("lets the aggregate lint graph continue past a red package when the caller sets no mode", () => {
+      // The aggregate graph carries exactly one injected flag, the repo-wide plan too.
+      expect(firstRootStep(["lint"]).label).toBe("lint");
+      expect(continueArgsOf(["lint"])).toEqual([AGGREGATE_LINT_CONTINUE_ARG]);
+      expect(continueArgsOf(["lint", "--affected"])).toEqual([AGGREGATE_LINT_CONTINUE_ARG]);
+    });
+
+    it("never repeats a continue mode the caller already chose", () => {
+      // Yeet repair forwards one through `bun run lint`; Turbo rejects a duplicate flag.
+      const yeetFeedback = [
+        "--filter=@beep/schema",
+        "--concurrency=3",
+        "--continue=dependencies-successful",
+        "--summarize",
+        "--ui=stream",
+      ];
+      expect(firstRootStep(["lint", "--continue"]).args).toEqual(expectedRootTurboArgs("lint", ["--continue"]));
+      expect(firstRootStep(["lint", "--continue=always"]).args).toEqual(
+        expectedRootTurboArgs("lint", ["--continue=always"])
+      );
+      expect(firstRootStep(["lint", "--affected", "--continue=never"]).args).toEqual(
+        expectedRootTurboArgs("lint", ["--affected", "--continue=never"])
+      );
+      expect(firstRootStep(["lint", ...yeetFeedback]).args).toEqual(expectedRootTurboArgs("lint", yeetFeedback));
+      expect(continueArgsOf(["lint", ...yeetFeedback])).toEqual(["--continue=dependencies-successful"]);
+    });
+
+    it("keeps the continue flag off lint:fix and the other root graphs", () => {
+      // They keep the shared bounded args without the flag.
+      expect(continueArgsOf(["lint", "--fix", "--filter=@beep/schema"])).toEqual([]);
+      expect(continueArgsOf(["check", "--filter=@beep/schema"])).toEqual([]);
     });
 
     it.effect("limits root integration test filters to script-owning workspaces", () =>

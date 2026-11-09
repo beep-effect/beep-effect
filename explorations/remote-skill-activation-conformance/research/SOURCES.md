@@ -1,7 +1,7 @@
 # Sources
 
-- [Corpus source/routing ledger](../../research-corpus-synthesis/research/ROUTING.md).
-- [Independent admission](../../research-corpus-synthesis/research/ADMISSION-REVIEW.md).
+- [Corpus source/routing ledger](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/research-corpus-synthesis/research/ROUTING.md).
+- [Independent admission](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/research-corpus-synthesis/research/ADMISSION-REVIEW.md).
 - [Skills SEP2640](https://modelcontextprotocol.io/seps/2640-skills-extension): retained normative origin/cache sections; hash in RESEARCH.
 - [Typed skill parent](../../typed-agent-skill-contracts/README.md),
   [protocol parent](../../protocol-as-value/README.md),

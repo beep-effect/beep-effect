@@ -51,7 +51,7 @@ Step 2, after the mint is mergeable (may share a PR with the first C0 slice):
 
 6. Commit F1: about ten small synthetic documents (MD, HTML, born-digital
    PDF, one malformed specimen per format) for deterministic tests
-   ([`workload-contract.md` §Corpus](../../explorations/semantica-lab/research/workload-contract.md#corpus)).
+   ([`workload-contract.md` §Corpus](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/workload-contract.md#corpus)).
 7. Commit the W1 manifest: the first 25 of the 76 on-disk academia-corpus
    PDFs by corpus id sort, one row per paper with id, sha256, and byte length.
    The manifest defines W1, never a directory (B3); the corpus itself stays
@@ -63,7 +63,7 @@ Step 2, after the mint is mergeable (may share a PR with the first C0 slice):
 ## P2 C0
 
 First vertical slice first
-([`MAP.md` §First Vertical Slice](../../explorations/semantica-lab/MAP.md#first-vertical-slice)):
+([`MAP.md` §First Vertical Slice](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/MAP.md#first-vertical-slice)):
 C0 on F1 + one G-relation W1 paper, then the same over all three G-relation
 papers.
 
@@ -75,7 +75,7 @@ papers.
    (with the S2 refinement), `EvalReport` with its `reportDigest` (sha256 over
    the canonical JSON of the report body with the `reportDigest` field
    omitted), and the `EvalRunTelemetry` sidecar that references it (R1)
-   ([`shared-schema.md`](../../explorations/semantica-lab/research/shared-schema.md)
+   ([`shared-schema.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/shared-schema.md)
    v1.4). `CanonicalText` is composed from `ResolvedSourceText` + `TextAnchor`,
    not built (M1).
 2. Define the C0 `Context.Service` contracts (`DocumentSource`, `Parser`,

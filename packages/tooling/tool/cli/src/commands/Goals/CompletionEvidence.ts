@@ -30,9 +30,9 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
   GithubClientRequest,
-  GithubIdentity,
   layerGithubClientFor,
   layerGithubRepoFor,
+  selectGithubIdentity,
 } from "../../internal/github/GithubIdentity.ts";
 import { rulesetRequiredContextsFromRules, YeetRulesetRulesPayload } from "../Yeet/internal/Settle.ts";
 import { YeetCommandError } from "../Yeet/Yeet.errors.ts";
@@ -97,12 +97,16 @@ export const goalCompletionIo = Effect.fn("Goals.Completion.io")(function* () {
   const context = yield* Effect.context<ChildProcessSpawner.ChildProcessSpawner>();
   const error = () => YeetCommandError.make({ message: "goal completion GitHub observation: read failed" });
   // Each read owns its scope: the returned port accepts roots later and outlives this factory.
+  // The same precedence as Yeet: `BEEP_GH_TOKEN_REF`, then the GitHub App, then the gh login. A host
+  // whose `gh` refuses `gh auth token` reaches GitHub through the 1Password reference.
   const github = <A, E>(root: string, read: Effect.Effect<A, E, GitHubClient | Repo>) =>
     Effect.flatMap(
-      Layer.build(
-        Layer.mergeAll(
-          layerGithubClientFor(GithubClientRequest.make({ identity: completionIdentity, cwd: root }), { retry: "off" }),
-          layerGithubRepoFor(root)
+      Effect.flatMap(selectGithubIdentity(O.none()), (identity) =>
+        Layer.build(
+          Layer.mergeAll(
+            layerGithubClientFor(GithubClientRequest.make({ identity, cwd: root }), { retry: "off" }),
+            layerGithubRepoFor(root)
+          )
         )
       ),
       (services) => Effect.provideContext(read, services)
@@ -238,14 +242,6 @@ export const goalCompletionIo = Effect.fn("Goals.Completion.io")(function* () {
       ).pipe(Effect.flatMap(decodeObservation(GoalCompletionRulesetList)))
     ),
   });
-});
-
-const completionIdentity = GithubIdentity.make({
-  kind: "gh-cli",
-  tokenRef: O.none(),
-  appId: O.none(),
-  installationId: O.none(),
-  privateKeyRef: O.none(),
 });
 
 /**

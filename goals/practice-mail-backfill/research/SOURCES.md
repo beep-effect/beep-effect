@@ -2,9 +2,9 @@
 
 - **Source exploration:** `explorations/practice-office-provisioning` —
   primary ledger:
-  [`explorations/practice-office-provisioning/research/SOURCES.md`](../../../explorations/practice-office-provisioning/research/SOURCES.md)
+  [explorations/practice-office-provisioning/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/practice-office-provisioning/research/SOURCES.md)
   (per-lane URL registry in
-  [`SOURCES-lane-citations.md`](../../../explorations/practice-office-provisioning/research/SOURCES-lane-citations.md)).
+  [`SOURCES-lane-citations.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/practice-office-provisioning/research/SOURCES-lane-citations.md)).
   This file reproduces the implementation-relevant slice; the exploration's
   ledger stays canonical.
 - **Provenance:** R2 Grok lane + r5 SKU preflight + the r7 Sol Pro gap
@@ -24,15 +24,15 @@ None — no dependencies are added.
 Carried by the exploration lane reports (each with its own Sources section on
 disk):
 
-- [`r2-purview-pst-import.md`](../../../explorations/practice-office-provisioning/research/r2-purview-pst-import.md)
+- [`r2-purview-pst-import.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/practice-office-provisioning/research/r2-purview-pst-import.md)
   — the runbook authority: network-upload + AzCopy mechanics (staging-form /
   mapping-CSV pairing, nested-PST flat-upload caveat), `IsArchive=TRUE` +
   `TargetRootFolder` rules, throughput and per-PST limits, retention-hold
   behavior, the 100 GB ceiling and the auto-expansion documentation
   conflict (§2.5).
-- [`r5-sku-preflight-and-process.md`](../../../explorations/practice-office-provisioning/research/r5-sku-preflight-and-process.md)
+- [`r5-sku-preflight-and-process.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/practice-office-provisioning/research/r5-sku-preflight-and-process.md)
   — SKU gating matrix and preflight stop conditions.
-- [`r7-sol-pro-gap-report.md`](../../../explorations/practice-office-provisioning/research/r7-sol-pro-gap-report.md)
+- [`r7-sol-pro-gap-report.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/practice-office-provisioning/research/r7-sol-pro-gap-report.md)
   — §A: license belongs on the target-mailbox user; EOP2 seat as cheapest
   verified path; Purview-Suite-for-BP alternative; operational adjudication
   of the auto-expand conflict (support case still required).

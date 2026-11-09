@@ -1,5 +1,5 @@
 import * as Domain from "@alchemy.run/domain";
-import { AlchemyPostgres, AlchemyPostgresConfig } from "@beep/alchemy-postgres";
+import { AlchemyPostgres } from "@beep/alchemy-postgres";
 import * as V from "@beep/documents-domain/aggregates/VaultSync";
 import {
   BoxMirrorEvidence,
@@ -47,10 +47,8 @@ class PassScenario extends Domain.Model("VaultSync", {
   sagas: [VaultSyncPass],
 }) {}
 const infrastructure = Layer.mergeAll(PgliteTestLayer, BunServices.layer);
-// A restart interrupts the delivery worker, and whatever batch it had just claimed stays leased until the lease
-// lapses. At the driver's 30-second default, that wait plus the old runtime's 15-second close outlasts the per-test
-// budget. A short lease lets the fresh runtime reclaim those deliveries, as in VaultSyncCrash.child.ts.
-const config = AlchemyPostgresConfig.make({ leaseMillis: 1_000 });
+// The driver's default 30-second lease on purpose: the old runtime frees the deliveries it claimed as it closes, so
+// the fresh one resumes them at once. Holding them to the lease would push a restart past the per-test budget.
 describe("VaultSyncPass SQL durability", () => {
   layer(infrastructure, { timeout: "60 seconds", excludeTestServices: true, concurrent: false })("restart", (it) => {
     for (const phase of ["before-poll", "item-acknowledged"]) {
@@ -82,7 +80,7 @@ describe("VaultSyncPass SQL durability", () => {
             PassScenario.layer(Layer.mergeAll(VaultSyncPolicies, VaultSyncPassLive)).pipe(
               Layer.provide(adapters),
               Layer.provide(rootLayer),
-              Layer.provide(AlchemyPostgres.layer(config))
+              Layer.provide(AlchemyPostgres.layer())
             )
           );
           const oldScope = yield* Scope.make();
@@ -208,7 +206,7 @@ describe("VaultSyncPass SQL durability", () => {
         const runtime = yield* PassScenario.layer(Layer.mergeAll(VaultSyncPolicies, VaultSyncPassLive)).pipe(
           Layer.provide(adapters),
           Layer.provide(rootLayer),
-          Layer.provide(AlchemyPostgres.layer(config)),
+          Layer.provide(AlchemyPostgres.layer()),
           Layer.fresh,
           Layer.build
         );

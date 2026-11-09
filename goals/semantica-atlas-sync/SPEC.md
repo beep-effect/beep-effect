@@ -14,7 +14,7 @@ stays a gated P2 until semantica 0.6.7+ ships, the firing recorded in a dated
 Scope is defined by reference, not restated:
 
 - **The split, the scope and the homes** —
-  [`MAP.md` §A](../../explorations/semantica-lab/MAP.md#a-semantica-atlas-sync--split-d5-into-a-verdict-lane-and-a-facts-lane)
+  [`MAP.md` §A](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/MAP.md#a-semantica-atlas-sync--split-d5-into-a-verdict-lane-and-a-facts-lane)
   (v1.1, ratified 2026-09-03 with amendments applied inline).
 - **The ratified sub-decisions** —
   [`DECISIONS.md`](../../explorations/semantica-lab/DECISIONS.md) "2026-09-03
@@ -71,7 +71,7 @@ This lane adds:
    [`standards/architecture/15-lab-apps.md`](../../standards/architecture/15-lab-apps.md)
    (the script lives in a lab and exports nothing).
 4. The exploration contracts in force:
-   [`MAP.md`](../../explorations/semantica-lab/MAP.md) v1.1 §A;
+   [`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/MAP.md) v1.1 §A;
    [goals/semantica-canary/history/p5-atlas-sync.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/history/p5-atlas-sync.md).
 5. This `SPEC.md`.
 6. `PLAN.md`.

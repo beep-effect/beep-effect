@@ -10,9 +10,9 @@ Status: `pending`
 | --- | --- | --- | --- |
 | P0 Tooling | complete | Schemas (`ArchiveRecord`, `retentionReason`, harvest row), `beep goals harvest`, `beep goals archive`, doctor check, INDEX column, README doctrine, closeout-skill step; public-CLI smoke on one packet. | Tooling PR merged; ledger committed under the exploration's `research/harvest/` at a named `main` SHA. |
 | P1 Archive repo | complete | Create `beep-effect/beep-effect-goals-archive` (public, mirrored paths, generated index, projection README); add the `beep refs` member. | Repo exists; `beep refs provision` links `.repos/goals-archive`. |
-| P2 Sweep | in-progress | Batches of about 50 packets, one PR at a time, goals then explorations; each PR = archive output + link rewrites for its batch, opened after hash verification. | Every terminal packet tombstoned; tag `archive/packets-2026-11` on the last batch. |
-| P3 Yeet | pending | Each PR driven to mergeable behind its review window; inherited reds attributed. | All batch PRs merged. |
-| P4 Close | pending | Reflection, `proposedCloseout`, adoption PR; this packet itself is archived by its own command after adoption. | `closeout.status == initiative.status` on `origin/main`. |
+| P2 Sweep | complete | Batches of about 50 packets, one PR at a time, goals then explorations; each PR = archive output + link rewrites for its batch, opened after hash verification. | Every terminal packet tombstoned; tag `archive/packets-2026-11` on the last batch. |
+| P3 Yeet | in-progress | Each PR driven to mergeable behind its review window; inherited reds attributed. | All batch PRs merged. |
+| P4 Close | in-progress | Reflection, `proposedCloseout`, adoption PR; this packet itself is archived by its own command after adoption. | `closeout.status == initiative.status` on `origin/main`. |
 
 ## Closeout Checklist
 
@@ -107,5 +107,13 @@ Plan a5296fe6 archived 50 explorations from deb7d0c5ef. Archive commits 28c4a59 
 Lane `feat/packet-archive-batch-5`
 
 Reverse: Revert the batch 5 tombstone PR to restore the packets on main; the archive commits stay public
+
+### Batch 6 archived and verified, ending the sweep, 2026-11-09
+
+Plan 9e9e11f9 archived the last 26 explorations from 0b459d8674. Archive commits 1604d51 and 6187b83 are on the remote, and all 26 manifest content hashes matched the remote trees. knowledge semantic-delta reported 0 introduced and 38 resolved. The planner reports no packets left to archive. The tag archive/packets-2026-11 goes on the merge commit.
+
+Lane `feat/packet-archive-batch-6`
+
+Reverse: Revert the batch 6 tombstone PR to restore the packets on main; the archive commits stay public
 
 <!-- beep:decisions:end -->

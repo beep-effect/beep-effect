@@ -36,7 +36,7 @@ P0 Research — reports landed 2026-11-06 (`research/`: docs catalog, alchemy/di
 ## Latest Evidence
 
 - 2026-11-06 grill session: decisions D1–D16 in [`explorations/pulumi-to-alchemy/DECISIONS.md`](../../explorations/pulumi-to-alchemy/DECISIONS.md); doctrine entry "Infrastructure Stacks Are A Tooling Kind" in `standards/architecture/DECISIONS.md`.
-- `explorations/pulumi-to-alchemy/RESEARCH.md` (2026-11-02): coverage matrix, gaps G1–G9.
+- [explorations/pulumi-to-alchemy/RESEARCH.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/pulumi-to-alchemy/RESEARCH.md) (2026-11-02): coverage matrix, gaps G1–G9.
 
 ## Notes
 

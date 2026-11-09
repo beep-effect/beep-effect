@@ -18,6 +18,14 @@
       "supersededBy": null
     },
     "created": "2026-11-01",
-    "updated": "2026-11-01"
+    "updated": "2026-11-01",
+    "archive": {
+      "repo": "beep-effect/beep-effect-goals-archive",
+      "path": "explorations/t3code-fleet-driver",
+      "commit": "1604d5144ca9118523ea2de34057d06a2f478bb6",
+      "contentHash": "0dc0c47b7e62edd5bcdf22b012cb2761c8790eff",
+      "archivedAt": "2026-11-09T08:44:38.484Z",
+      "sourceCommit": "0b459d8674f24af3a7267e31f78050835dda3f65"
+    }
   }
 }

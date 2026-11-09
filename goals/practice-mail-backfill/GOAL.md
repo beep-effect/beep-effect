@@ -22,7 +22,7 @@ as the detailed contract:
 Read those first, then `AGENTS.md`, `CLAUDE.md`, the source exploration's
 decision log (`explorations/practice-office-provisioning/DECISIONS.md` —
 binding), and the mechanics reference
-`explorations/practice-office-provisioning/research/r2-purview-pst-import.md`.
+[explorations/practice-office-provisioning/research/r2-purview-pst-import.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/practice-office-provisioning/research/r2-purview-pst-import.md).
 
 Scope:
 

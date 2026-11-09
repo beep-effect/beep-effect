@@ -3,7 +3,7 @@
 <!-- markdownlint-disable MD034 -- Provenance ledger preserves cited URLs verbatim. -->
 
 - **Primary ledger:**
-  [`explorations/solo-firm-docketing/research/SOURCES.md`](../../../explorations/solo-firm-docketing/research/SOURCES.md).
+  [explorations/solo-firm-docketing/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/solo-firm-docketing/research/SOURCES.md).
   The relevant reliability corpus below is reproduced from that exploration;
   provenance corrections begin there and are then synchronized here.
 - **Origin:** 2026-06-18 research tracks and 2026-07-14 live capability refresh.
@@ -47,8 +47,8 @@ evidence and must not be repurposed as such.
 ## 5. Cross-links & provenance
 
 - Primary provenance surface:
-  `explorations/solo-firm-docketing/research/SOURCES.md`.
-- Synthesis: `explorations/solo-firm-docketing/RESEARCH.md`.
+  [explorations/solo-firm-docketing/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/solo-firm-docketing/research/SOURCES.md).
+- Synthesis: [explorations/solo-firm-docketing/RESEARCH.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/solo-firm-docketing/RESEARCH.md).
 - Ratified contract: `explorations/solo-firm-docketing/{DECISIONS,BRIEF,MAP}.md`.
 - Dependency and blocked acceptance:
   `goals/law-docketing-patent-spine/`.

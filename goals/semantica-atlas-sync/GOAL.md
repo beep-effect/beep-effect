@@ -14,7 +14,7 @@ Read these as the contract:
 - `goals/semantica-atlas-sync/{README,SPEC,PLAN}.md`
 - `goals/semantica-atlas-sync/ops/manifest.json`
 - `goals/semantica-atlas-sync/research/SOURCES.md`
-- `explorations/semantica-lab/MAP.md` §A (v1.1) and `DECISIONS.md` (Current
+- [explorations/semantica-lab/MAP.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/MAP.md) §A (v1.1) and `DECISIONS.md` (Current
   law table: Atlas writes, Atlas backlog, Verdict map; then the 2026-09-03
   ratification grill R3.a–R3.g; the table wins over prose)
 - [goals/semantica-canary/history/p5-atlas-sync.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/history/p5-atlas-sync.md) (the proven method and

@@ -3,9 +3,9 @@
 This ledger reproduces the source-exploration entries relevant to the weekly
 cumulative maintenance-fee release. The primary ledger and detailed research
 remain:
-[`research/SOURCES.md`](../../../explorations/uspto-patent-driver-depth/research/SOURCES.md)
+[`research/SOURCES.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/uspto-patent-driver-depth/research/SOURCES.md)
 and
-[`ptmnfee2-maintenance-fee-dataset.md`](../../../explorations/uspto-patent-driver-depth/research/ptmnfee2-maintenance-fee-dataset.md).
+[`ptmnfee2-maintenance-fee-dataset.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/uspto-patent-driver-depth/research/ptmnfee2-maintenance-fee-dataset.md).
 
 - **Source exploration:** `explorations/uspto-patent-driver-depth`
 - **Dataset:** USPTO `PTMNFEE2`, cataloged as Public Domain Mark 1.0
@@ -75,7 +75,7 @@ infer; they belong to the patent-spine consumer, not this native parser.
 
 - Source packet: [`README`](../../../explorations/uspto-patent-driver-depth/README.md),
   [`BRIEF`](../../../explorations/uspto-patent-driver-depth/BRIEF.md),
-  [`MAP`](../../../explorations/uspto-patent-driver-depth/MAP.md), and
+  [`MAP`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/uspto-patent-driver-depth/MAP.md), and
   [`DECISIONS`](../../../explorations/uspto-patent-driver-depth/DECISIONS.md).
 - Dependency: [`goals/uspto-prosecution-read`](../../uspto-prosecution-read/README.md).
 - Goal contract: [`SPEC.md`](../SPEC.md) and [`PLAN.md`](../PLAN.md).

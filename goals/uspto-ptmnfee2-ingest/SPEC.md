@@ -34,9 +34,9 @@ no legal conclusion.
 6. [`goals/uspto-prosecution-read/SPEC.md`](../uspto-prosecution-read/SPEC.md)
    for the shared generator contract.
 7. The exploration [`BRIEF.md`](../../explorations/uspto-patent-driver-depth/BRIEF.md),
-   [`MAP.md`](../../explorations/uspto-patent-driver-depth/MAP.md),
+   [`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/uspto-patent-driver-depth/MAP.md),
    [`DECISIONS.md`](../../explorations/uspto-patent-driver-depth/DECISIONS.md), and
-   [`PTMNFEE2` research note](../../explorations/uspto-patent-driver-depth/research/ptmnfee2-maintenance-fee-dataset.md).
+   [`PTMNFEE2` research note](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/uspto-patent-driver-depth/research/ptmnfee2-maintenance-fee-dataset.md).
 
 ## Target Surfaces
 
@@ -94,7 +94,7 @@ no legal conclusion.
 | 2026-07-14 | All four native vocabularies share one deterministic, checksum-pinned, reviewable mechanism. | [`Q4`](../../explorations/uspto-patent-driver-depth/DECISIONS.md#2026-07-14--q4-native-vocabulary-lifecycle) |
 | 2026-07-14 | Native decoding stays in `@beep/uspto`; legal meaning and translation stay in law practice. | [`Q5`](../../explorations/uspto-patent-driver-depth/DECISIONS.md#2026-07-14--q5-placement-and-translation-boundary) |
 | 2026-07-14 | `PTMNFEE2` is a weekly cumulative, checksum-pinned, validated full replacement with attributed fixtures. | [`Q8`](../../explorations/uspto-patent-driver-depth/DECISIONS.md#2026-07-14--q8-ptmnfee2-ingestion) |
-| 2026-07-14 | Keep bulk ingest separate from the prosecution read but reuse its generation substrate. | [`MAP judgment`](../../explorations/uspto-patent-driver-depth/MAP.md#judgment-keep-ptmnfee2-separate) |
+| 2026-07-14 | Keep bulk ingest separate from the prosecution read but reuse its generation substrate. | [`MAP judgment`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/uspto-patent-driver-depth/MAP.md#judgment-keep-ptmnfee2-separate) |
 
 ## Acceptance Criteria
 
