@@ -1,4 +1,3 @@
-import { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { it } from "@beep/test-runner";
 import {
   assertCitationCaptureReuseProfiles,
@@ -10,7 +9,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source logi
   it.effect("preserves independent source profiles and capture closing order", assertCitationCaptureReuseProfiles, {
     timeout: 120000,
   });
-  for (const kind of CitationNativeRuntimeKind.literals)
+  for (const kind of ["bun"] as const)
     it.effect(
       `matches logical captures and retains unqualified-profile refusal through ${kind}`,
       () => replayCitationCaptureReuse(kind, false),

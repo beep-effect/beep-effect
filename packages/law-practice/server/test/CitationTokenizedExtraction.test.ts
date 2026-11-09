@@ -8,7 +8,4 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("native text
     () => replayCitationTokenizedExtraction("bun", false),
     { timeout: 180000 }
   );
-  it.effect("preserves the same composition on Node", () => replayCitationTokenizedExtraction("node", false), {
-    timeout: 180000,
-  });
 });

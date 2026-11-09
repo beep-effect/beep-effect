@@ -8,9 +8,4 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("original sk
     () => replayCitationSkipAnnotations("bun", false),
     { timeout: 120000 }
   );
-  it.effect(
-    "preserves the same overlap state and native text on Node",
-    () => replayCitationSkipAnnotations("node", false),
-    { timeout: 120000 }
-  );
 });

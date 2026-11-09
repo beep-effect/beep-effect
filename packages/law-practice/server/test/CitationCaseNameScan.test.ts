@@ -1,4 +1,3 @@
-import { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { it } from "@beep/test-runner";
 import {
   assertCitationCaseNameScanBudget,
@@ -16,7 +15,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("initialized
   it.effect("retains the existing default pattern refusal", assertCitationCaseNameScanDefaultPolicy, {
     timeout: 120000,
   });
-  for (const kind of CitationNativeRuntimeKind.literals)
+  for (const kind of ["bun"] as const)
     it.effect(`matches original scan states through ${kind}`, () => replayCitationCaseNameScan(kind, false), {
       timeout: 120000,
     });

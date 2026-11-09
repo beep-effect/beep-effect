@@ -117,16 +117,16 @@ export const replayCitationLawMetadata = Effect.fn("LawMetadataTest.replay")(fun
 ) {
   const corpus = yield* loadCitationLawMetadataFixtures();
   const setup = yield* install(kind, corpus.configuration);
-  const rows = full ? corpus.cases : A.filter(corpus.cases, (row) => row.smoke);
+  const rows = full ? corpus.cases : A.filter(corpus.cases, (row) => row.smoke || A.contains([0, 12, 40, 52], row.id));
   for (const row of rows) {
     const actual = yield* setup.metadata.apply(row.request);
     const patch = yield* Effect.fromOption(actual.patch);
     expect(patch, `source law row ${row.id}`).toEqual(row.patch);
     expect(actual.reservedUnits).toBeLessThanOrEqual(setup.limits.producedTextUtf16);
   }
-  expect(rows).toHaveLength(full ? 128 : 10);
+  expect(rows).toHaveLength(full ? 128 : 14);
   const calls = A.reduce(rows, 0, (total, row) => total + row.calls.length);
-  expect(calls).toBe(full ? 156 : 13);
+  expect(calls).toBe(full ? 156 : 17);
   yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, calls);
 });
 /** Partial allocation failure cannot publish a patch; caller mutation cannot change configuration. */

@@ -61,8 +61,8 @@ const readCalls = Effect.fn("CanonicalFullSpanTest.calls")(function* (
   operations: Effect.Success<ReturnType<typeof readCitationCanonicalCaptures>>["operations"]
 ) {
   const rows = A.filter(operations.cases, (row) => Str.startsWith(prefix)(row.id));
-  expect(rows).toHaveLength(10);
-  return yield* Effect.forEach(
+  expect(rows).toHaveLength(citationCanonicalFullSpanCalls);
+  const calls = yield* Effect.forEach(
     rows,
     Effect.fnUntraced(function* (row) {
       if (row.operation !== "get_citations") return yield* Effect.die("Expected original full-span extraction");
@@ -85,6 +85,8 @@ const readCalls = Effect.fn("CanonicalFullSpanTest.calls")(function* (
       return { row, body, models, combined, simple, targets };
     })
   );
+  expect(A.reduce(calls, 0, (total, call) => total + call.targets.length)).toBe(13);
+  return calls;
 });
 
 const observeFullSpan = (range: readonly [number, number], combined: boolean, id: string) => {
@@ -92,14 +94,19 @@ const observeFullSpan = (range: readonly [number, number], combined: boolean, id
   return Str.includes(":1165:")(id) ? range[0] : range[1];
 };
 
-/** Recompute all original parser calls and thirteen independent full-span equalities.
+/** Original parser calls in the full-span cohort; replay slices must cover every call. */
+export const citationCanonicalFullSpanCalls = 10;
+/** Recompute a slice of the original parser calls and their independent full-span equalities.
+ * The whole cohort (`from` 0, `count` ${citationCanonicalFullSpanCalls}) checks all thirteen.
  * @internal @category testing @since 0.0.0
  */
 export const replayCitationCanonicalFullSpan = Effect.fn("CanonicalFullSpanTest.replay")(function* (
-  kind: CitationNativeRuntimeKind
+  kind: CitationNativeRuntimeKind,
+  from: number,
+  count: number
 ) {
   const { operations, assertions } = yield* readCitationCanonicalCaptures();
-  const rows = yield* readCalls(operations);
+  const rows = A.take(A.drop(yield* readCalls(operations), from), count);
   const replay = yield* makeCitationCanonicalExtractionReplay(kind);
   let checked = 0;
   for (const { row, body, models, combined, simple, targets } of rows) {
@@ -143,7 +150,7 @@ export const replayCitationCanonicalFullSpan = Effect.fn("CanonicalFullSpanTest.
       checked++;
     }
   }
-  expect(checked).toBe(13);
+  expect(checked).toBe(A.reduce(rows, 0, (total, call) => total + call.targets.length));
   yield* replay.assertRetired;
 });
 

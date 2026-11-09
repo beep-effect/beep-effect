@@ -355,6 +355,24 @@ Lane `ci/test-integration-budget-120`
 
 Reverse: Lower heavy.yml timeout_minutes for Test Integration again once the law-practice-server integration suite is sharded or trimmed below the previous budget.
 
+### Delete redundant law-practice-server citation tests and re-baseline coverage, 2026-11-09
+
+Operator ruling (2026-11-09, verbatim): "deleting useless or unnecessary tests are warranted even if it breaks coverage whos ratchets can be re-adjusted."
+
+Heavy / Test Integration ran 99 minutes as one turbo task over 50 law-practice-server citation files (11,382 s of file time at two vitest workers). A 31-agent census (five analysts, two adversarial refuters per group) found 45 of the 50 to be full-row twins of unit files that replay the same fixtures in smoke mode on both runtimes, and found `CitationCanonicalExtractionNode` replaying the same 22 shards as `CitationCanonicalExtraction` on node instead of bun.
+
+Deleted integration files (30, about 5,040 file-seconds): G1 `CitationCanonicalExtractionNode`; G2 `CitationCaseNameSelection`, `CitationCaseName`, `CitationCaseNameProcess`, `CitationCaseNameScan`, `CitationHtmlCaseName`, `CitationStopWords`; G3 `CitationTokenizedExtraction`, `CitationDocumentExtraction`, `CitationExtractionEntry`, `CitationSemanticExtraction`; G4 `CitationCaseMetadata`, `CitationPreCaseMetadata`, `CitationPostCaseMetadata`, `CitationPinExtraction`, `CitationLawMetadata`, `CitationMetadataStrings`, `CitationHtmlDiscovery`, `CitationHtmlGeometryPreparation`; G5 `CitationAnnotationCallback`, `CitationAnnotationSkip`, `CitationAnnotationWrap`, `CitationXmlWorker`, `CitationContextMatcher`, `CitationTokenizer`, `CitationExtractorSelection`; G6 `CitationRegexCaptureReuse`, `CitationRegexLookahead`, `CitationRegexNullable`, `CitationRegexVerbose`. Deleted unit files (U1, about 207 s): `CitationCanonicalComplexMarkup`, `CitationCanonicalMissingPage` (rows 26, 27, 117, 122, 123, 129 stay in the bun integration canonical shards).
+
+Trimmed, not deleted: G7 runs the eleven surviving full replays on bun only, keeping `integration/CitationEngineCorpus` on both runtimes as the one node full-corpus scene and `integration/CitationRegexTranslator` on both; G8 drops the fourteen odd `removeAmbiguous` twins from the EngineCorpus and VerifiedExtraction full filters (36 to 22 rows, eight families kept); U2 runs ExtractionLoop, CanonicalFullSpan, PageCorrection, PinSpan and ParsedEquality fully on bun with one node slice each (the ExtractionLoop node slice holds case 2); U3 trims the node smoke arm from 39 unit twins, keeping node scenes in `CitationDiffWorker`, `CitationXmlWorker` and `CitationHtmlGeometryPreparation` (one per worker kind with its own `*.node.entry.ts`), plus `CitationRegexWorker`, `CitationRecognizerWorker`, `CitationNativeProcess`, `CitationNativeSpawner` and `CitationSixFormProjection` untouched.
+
+Kept as sole proofs (addendum 2.4): integration `CitationRegexTranslator`, `CitationInputDocument`, `CitationDiffWorker`, `CitationEditionInference`, `CitationCanonicalTokenizer`, `CitationCleanerNamedHtml`, `CitationCleanerNativeCustom`, `CitationHtmlUnicode`; all 45 unit twins; the 29 `*Coverage.test.ts` files. G9 (dedup canonical case rows) is killed: the proposed key merged 25 of 39 metadata-field shapes whose only end-to-end proof is the full canonical replay.
+
+Smoke promotion (addendum 2.1 condition): each unit smoke set now holds at least one row per stop-word alternative, year-search family, law kind and regex profile subfamily (StopWords 14 to 28 rows, CaseMetadata 8 to 18, PostCaseMetadata 16 to 28, HtmlDiscovery 16 to 23, LawMetadata 10 to 14, PreCaseMetadata 230 to 233, HtmlCaseName 8 to 11, CaseNameSelection 8 to 9, PinExtraction 24 to 25, RegexVerbose rows 20 and 36).
+
+Lane `claude/amazing-fermi-223c68`
+
+Reverse: git revert the deletion PR, then restore the previous @beep/law-practice-server rows in standards/coverage.regression-baseline.jsonc from the parent commit (or rerun bun run coverage -- --filter=@beep/law-practice-server --write-baseline on the reverted tree).
+
 ### Keep the 8 effect-vitest exceptions PR 2994 adds as reviewed PR 2966 debt, 2026-11-09
 
 PR 2994, the `unblocks-main` PR for episode ep70, adds 8 rows to `standards/effect-vitest.inventory.jsonc` for findings that PR 2966 introduced. S31 counts that as inventory growth. The rows stay as reviewed exceptions because none of them is a defect in the test code:

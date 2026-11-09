@@ -145,10 +145,13 @@ const replayEngine = Effect.fn("VerboseTest.engine")(function* (
   corpus: typeof Corpus.Type,
   engine: typeof CitationRegexEngine.Type
 ) {
-  const rows = A.filter(corpus.patterns, (row) => row.engines[engine].kind === "single-match" && (full || row.smoke));
+  const rows = A.filter(
+    corpus.patterns,
+    (row) => row.engines[engine].kind === "single-match" && (full || row.smoke || A.contains([20, 36], row.id))
+  );
   const wanted = CitationRegexEngine.match(engine, {
-    "python-re": () => ({ rows: full ? 33 : 5, calls: full ? 190 : 15 }),
-    "python-regex-v0": () => ({ rows: full ? 38 : 8, calls: full ? 216 : 23 }),
+    "python-re": () => ({ rows: full ? 33 : 7, calls: full ? 190 : 21 }),
+    "python-regex-v0": () => ({ rows: full ? 38 : 10, calls: full ? 216 : 29 }),
   });
   expect(rows).toHaveLength(wanted.rows);
   const bindings = A.map(rows, (row) => ({
@@ -181,7 +184,7 @@ const replayEngine = Effect.fn("VerboseTest.engine")(function* (
   const admission = yield* setup.admission.snapshot;
   expect(admission).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
 });
-/** Actual isolated workers, with complete replay deferred to hosted integration. */
+/** Actual isolated workers; smoke holds one row per profile subfamily since the full replay retired 2026-11-09. */
 export const replayCitationRegexVerbose = Effect.fn("VerboseTest.replay")(function* (
   kind: CitationNativeRuntimeKind,
   full: boolean

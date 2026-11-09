@@ -15,10 +15,5 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
       () => replayCitationAnnotationCallbacks("bun", false),
       { timeout: 120000 }
     );
-    it.effect(
-      "preserves the same native callback inputs and outcomes on Node",
-      () => replayCitationAnnotationCallbacks("node", false),
-      { timeout: 120000 }
-    );
   }
 );

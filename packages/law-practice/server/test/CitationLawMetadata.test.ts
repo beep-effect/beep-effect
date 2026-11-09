@@ -1,4 +1,3 @@
-import { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { it } from "@beep/test-runner";
 import {
   assertCitationFullLawMetadataInput,
@@ -26,7 +25,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source law 
   it.effect("closes lifetime and captured deadline failures without metadata", assertCitationLawMetadataLifetime, {
     timeout: 120000,
   });
-  for (const kind of CitationNativeRuntimeKind.literals) {
+  for (const kind of ["bun"] as const) {
     it.effect(
       `matches source field updates and span changes through ${kind}`,
       () => replayCitationLawMetadata(kind, false),

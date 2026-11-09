@@ -108,10 +108,10 @@ export const replayCitationCaseNameSelection = Effect.fn("CaseNameSelectionTest.
 ) {
   const installed = yield* install(kind);
   const { corpus, setup } = installed;
-  const rows = A.filter(corpus.cases, (row) => full || A.contains([0, 3, 7, 259, 267, 268, 269, 271], row.id));
+  const rows = A.filter(corpus.cases, (row) => full || A.contains([0, 3, 6, 7, 259, 267, 268, 269, 271], row.id));
   let children = 0;
   for (const row of rows) children += yield* assertRow(installed, row, kind);
 
-  expect(rows).toHaveLength(full ? 272 : 8);
+  expect(rows).toHaveLength(full ? 272 : 9);
   yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, children);
 });

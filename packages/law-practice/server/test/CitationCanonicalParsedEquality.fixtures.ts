@@ -107,15 +107,19 @@ const hashActualCase = Effect.fn("CanonicalParsedEqualityTest.hash")(function* (
   return yield* makeCitationCaseResourceHash(input);
 });
 
-/** Recompute raw parsing and the original hash-based equality predicate.
+/** Original comparison cohorts; replay slices must cover every cohort. */
+export const citationCanonicalParsedEqualityCohorts = cohorts.length;
+/** Recompute raw parsing and the original hash-based equality predicate for one slice of cohorts.
  * Full known-page source hashes are compared exactly; identity-backed models
  * and general retained object/hash protocols stay in separate cohorts.
  * @internal @category testing @since 0.0.0
  */
 export const replayCitationCanonicalParsedEquality = Effect.fn("CanonicalParsedEqualityTest.replay")(function* (
-  kind: CitationNativeRuntimeKind
+  kind: CitationNativeRuntimeKind,
+  from: number,
+  count: number
 ) {
-  const rows = yield* readRows();
+  const rows = A.take(A.drop(yield* readRows(), from), count);
   const { replay, service: owner } = yield* installCitationParsedResourceReplay(kind, () => CitationFrozenEditions);
   for (const row of rows) {
     const actual = yield* Effect.forEach(
