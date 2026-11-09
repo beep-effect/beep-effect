@@ -3,7 +3,7 @@
 ## Status
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
-Stage: `align`
+Stage: `shape`
 Status: `active`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
@@ -22,14 +22,10 @@ through the existing QualityScheduler.
 
 ## Next Open Question
 
-Align round 1 is open. The ranked plan ([`research/phase2/PLAN.md`](./research/phase2/PLAN.md)) needs the
-operator's rulings on the questions listed in the manifest, each with a recommended answer in the plan's
-"Questions for the align round" section: Coverage Regression's status, corpus replay cadence per PR, the
-Property Laws latency-for-compute trade, Lint Policy on the heavy pool and capacity, how a verdict for every
-main commit is delivered and paid for, review-window re-arm on diff-preserving merges, the #2999 docs-only
-widening, what the 10-minute target counts, merged-preview support, the R2 pause, time-to-certainty's open
-seams, monitor back-off, and fleet economics.
-
+Shape review: does `BRIEF.md` match the operator's picture, and does `MAP.md` name the right six goal
+packets in the right order (measurement first, soundness before any narrowing, job-removing before
+job-adding, main verdicts only with their throughput layout)? Align closed on 2026-11-09 with nineteen
+rulings in `DECISIONS.md` (D1 to D19); no open questions remain in the manifest.
 ## Read This First
 
 1. [`ops/manifest.json`](./ops/manifest.json) - machine state: stage, status, open questions.
@@ -41,6 +37,13 @@ seams, monitor back-off, and fleet economics.
 6. [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger.
 
 ## Trail
+
+- 2026-11-09 (align closed): four grill rounds settled all nineteen rulings on the recommended
+  answers (target scope, Coverage Regression status, staged main verdicts, #2999 narrowing, full corpus
+  replay per PR, Property Laws split-first, Lint Policy on heavy with the diet, patch-id review-window
+  anchor, TTC seams re-homed, R2 pause binding, bounded in-publish advisory coverage, monitor back-off and
+  REST budgeting, merged-preview dormant, fleet economics, whole program sequenced). BRIEF.md and MAP.md
+  drafted; stage `shape`.
 
 - 2026-11-09 (later): phase 2 landed. 24 seat reports under `research/phase2/` (96 Opus and 91 Astra
   levers); phase 2b merged them per area (125 levers), two skeptics reviewed 69 and refuted 16, a synthesizer

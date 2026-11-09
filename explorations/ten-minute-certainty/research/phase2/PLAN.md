@@ -1,6 +1,6 @@
 # Ranked plan (phase 2b)
 
-Produced 2026-11-09 by the merge, refute and synthesis pass: twelve Opus 5.5 mergers reconciled the Opus and Astra seat reports per area (125 merged levers); two independent Opus skeptics reviewed every material lever (69 levers; 15 refuted by the first skeptic, 1 more by the second); one Opus 5.5 (high) synthesizer produced the ranked plan below and one cross-area critic reviewed it. Refute verdicts and merged lever records are in [`merged-levers.md`](./merged-levers.md). This is a research artifact of the exploration: nothing here is adopted until the align round in `../../DECISIONS.md` rules on it.
+Produced 2026-11-09 by the merge, refute and synthesis pass: twelve Opus 5.5 mergers reconciled the Opus and Astra seat reports per area (125 merged levers); two independent Opus skeptics reviewed every material lever (69 levers; 15 refuted by the first skeptic, 1 more by the second); one Opus 5.5 (high) synthesizer produced the ranked plan below and one cross-area critic reviewed it. Refute verdicts and merged lever records are in [`merged/`](./merged/README.md). This is a research artifact of the exploration: nothing here is adopted until the align round in `../../DECISIONS.md` rules on it.
 
 ## Summary
 

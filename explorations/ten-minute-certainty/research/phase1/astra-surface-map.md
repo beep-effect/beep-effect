@@ -354,7 +354,7 @@ Freeze a current source/base/toolchain/runner profile and representative narrow-
 
 ## Memory provenance
 
-Memory was used only as a discovery index; source verification superseded historical conclusions. Relevant index: `~/.codex/memories/MEMORY.md:114–130` (verification-route fail-open/admission pointers; rollout `01a1b4e0-1a4b-7941-94b1-face69b93ea2`). No claims in this report depend solely on unverified memory.
+Memory was used only as a discovery index; source verification superseded historical conclusions. Relevant index: `~/.codex/memories/MEMORY.md:114–130` (verification-route fail-open and admission pointers). No claims in this report depend solely on unverified memory.
 
 ## Reproducible hosted job ledger
 
