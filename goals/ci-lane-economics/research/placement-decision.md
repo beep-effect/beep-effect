@@ -201,3 +201,36 @@ Coverage lane at 16m26s p95 across PR and push waves. It also falsifies the
 standing Lint and Test Unit assumptions at 20m31s and 22m48s. The P1 decision
 contains no further signed move for either lane; changing their placement,
 concurrency, or shard topology requires a new signed and costed decision.
+
+## Local weight refresh and law-practice-server isolation — 2026-11-09
+
+The 2026-11-09 local baseline (HEAD 33b9f1cb31, load 48-59, another
+worktree's Vitest running) ran the full sharded path for 1789 s without
+finishing: shard-1 (`@beep/repo-cli`, two workers) ended at 1205 s and shard-4
+(`@beep/law-practice-server` plus 24 packages at one worker) was still running
+at 1778 s. The #684/#707 weights put law-practice-server at 51.7 and 103.9 s.
+
+No hosted run exposes per-task coverage durations any more: hosted coverage is
+produced inside the Test Unit partitions (`ci lane test-unit
+--coverage-output`), whose `turbo-summary-test-unit-shard-*` artifacts hold
+only the prebuild, and `Heavy / Coverage Regression` is the comparator. The
+weight table in `CoverageScope.ts` is therefore one local measurement: 190
+packages from the baseline run's Turbo summaries and law-practice-server from
+one solo run at the shard topology (`--maxWorkers=1`), 2679.9 s wall over 279
+test files, 4692.7 s user + 543.9 s system, load 28 rising to 61 with three
+other lanes running coverage. Upper bounds; placement only.
+
+Resulting ten-shard plan over the 191 live owners (planner unchanged):
+
+| Shard | Weight (s) | Packages |
+| --- | --- | --- |
+| shard-1 | 2679.9 | `@beep/law-practice-server` |
+| shard-2 | 1191.7 | `@beep/repo-cli` |
+| shard-3..10 | 251.3-252.5 | 22-26 packages each; heaviest members law-practice-domain 157.8, repo-ai-metrics 148.4, markdown 124.8, professional-desktop 110.9 |
+
+Shard count (10), the Vitest worker cap (11) and law-practice-server's
+one-worker topology are unchanged; a second worker for it is tier 3 of the
+efficiency plan and needs the writer/judge parity clause amended. The same PR
+makes a bare local `bun run coverage` default to `--affected` with `--full` as
+the opt-in (decision
+`decisions/2026-11-09-local-coverage-affected-default-and-lps-shard.md`).
