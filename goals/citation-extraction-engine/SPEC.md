@@ -369,7 +369,7 @@ Kept as sole proofs (addendum 2.4): integration `CitationRegexTranslator`, `Cita
 
 Smoke promotion (addendum 2.1 condition): each unit smoke set now holds at least one row per stop-word alternative, year-search family, law kind and regex profile subfamily (StopWords 14 to 28 rows, CaseMetadata 8 to 18, PostCaseMetadata 16 to 28, HtmlDiscovery 16 to 23, LawMetadata 10 to 14, PreCaseMetadata 230 to 233, HtmlCaseName 8 to 11, CaseNameSelection 8 to 9, PinExtraction 24 to 25, RegexVerbose rows 20 and 36).
 
-Lane `claude/amazing-fermi-223c68`
+Lane claude/amazing-fermi-223c68
 
 Reverse: git revert the deletion PR, then restore the previous @beep/law-practice-server rows in standards/coverage.regression-baseline.jsonc from the parent commit (or rerun bun run coverage -- --filter=@beep/law-practice-server --write-baseline on the reverted tree).
 
