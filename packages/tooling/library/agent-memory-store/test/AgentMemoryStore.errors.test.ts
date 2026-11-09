@@ -1,10 +1,12 @@
 import {
   AdmissionError,
+  HoldNotOpenError,
   MemoryIndexError,
   MemoryLogError,
   ObservationError,
   ProjectionError,
   RecallError,
+  StaleParentsError,
   SymbolResolutionError,
   UnimportedFolderError,
 } from "@beep/agent-memory-store";
@@ -12,7 +14,7 @@ import { PosixPath } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
-import { folderDigest } from "./fixtures.ts";
+import { folderDigest, holdId, nodeId, revisionA, revisionB } from "./fixtures.ts";
 
 const constructors = [
   ["MemoryLogError", MemoryLogError.fromUnknown],
@@ -59,5 +61,21 @@ describe("AgentMemoryStore errors", () => {
     expect(error._tag).toBe("UnimportedFolderError");
     expect(error.root).toBe("memory");
     expect(error.folderDigest).toBe(folderDigest);
+  });
+
+  it("refuses a stale node event with the parents it named and the heads the log held", () => {
+    const error = StaleParentsError.make({ nodeId, parents: [revisionA], heads: [revisionB] });
+
+    expect(error._tag).toBe("StaleParentsError");
+    expect(error.nodeId).toBe(nodeId);
+    expect(error.parents).toEqual([revisionA]);
+    expect(error.heads).toEqual([revisionB]);
+  });
+
+  it("refuses to resolve a hold the log does not hold open", () => {
+    const error = HoldNotOpenError.make({ holdId });
+
+    expect(error._tag).toBe("HoldNotOpenError");
+    expect(error.holdId).toBe(holdId);
   });
 });

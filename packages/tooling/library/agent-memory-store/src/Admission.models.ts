@@ -13,6 +13,8 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { NearDuplicateFlag } from "./Dedupe.models.ts";
 import { ContentHash, NodeId, RevisionId } from "./NodeIdentity.models.ts";
+import { LineageId } from "./Observation.events.ts";
+import { InsertPlacement, NodeOperation } from "./Operation.models.ts";
 
 const $I = $AgentMemoryStoreId.create("Admission.models");
 
@@ -32,6 +34,11 @@ export { ClaimGateSeverity, ClaimGateViolation } from "@beep/epistemics/ClaimGat
  *
  * Decision `findings-reuse-epistemics-gate`: one finding vocabulary serves
  * claim gates and memory admission; these codes say which store rule fired.
+ * `insertAfterMissingNode` holds an insert whose predecessor never reached the
+ * log (it was held, deferred or rejected in the same batch), which is a
+ * different cause from `insertUnderDeletedAnchor` and stays out of the AC-3
+ * structural floor. `nodeIdAlreadyExists` rejects an insert whose minted id
+ * the log already holds, as on a batch retried after an uncertain commit.
  *
  * **Example** (Check a violation code)
  *
@@ -52,6 +59,8 @@ export const MemoryViolationCode = LiteralKit([
   "unimportedFolder",
   "deleteVersusEdit",
   "insertUnderDeletedAnchor",
+  "insertAfterMissingNode",
+  "nodeIdAlreadyExists",
   "staleExpectedRevision",
 ]).pipe(
   $I.annoteSchema("MemoryViolationCode", {
@@ -102,6 +111,41 @@ export class MemoryGateViolation extends S.Opaque<MemoryGateViolation, { readonl
   )
 ) {}
 
+/**
+ * Store-minted identifier of one held write.
+ *
+ * **Details**
+ *
+ * Decision `held-writes-are-log-events`: a hold is keyed on its own id, not
+ * on the node, so two writes held on one node stay two holds.
+ *
+ * **Example** (Brand a hold id)
+ *
+ * ```ts
+ * import { HoldId } from "@beep/agent-memory-store"
+ *
+ * const holdId = HoldId.make("018f9c3e-7d2a-7b4c-9e1f-2a3b4c5d6e90")
+ * console.log(holdId)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HoldId = S.String.check(S.isUUID()).pipe(
+  S.brand("HoldId"),
+  $I.annoteSchema("HoldId", {
+    description: "Store-minted UUID identifier of one held write.",
+  })
+);
+
+/**
+ * Runtime type for {@link HoldId}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type HoldId = typeof HoldId.Type;
+
 const AdmissionOutcomeKind = LiteralKit(["landed", "deferred", "held", "rejected"]).pipe(
   $I.annoteSchema("AdmissionOutcomeKind", {
     description: "Internal literal vocabulary used to build AdmissionOutcome.",
@@ -119,8 +163,11 @@ const AdmissionOutcomeKind = LiteralKit(["landed", "deferred", "held", "rejected
  *   write and is read by consolidation only. Defaults to no flags.
  * - `deferred`: the text hashed to an existing node, so the write defers to it
  *   (exact-hash dedupe to tier 0; nothing is dropped).
- * - `held`: a conflict needs a resolver; both texts are retained, so nothing
- *   is lost silently, and at least one finding explains why.
+ * - `held`: a conflict needs a resolver. The hold is a `WriteHeld` event in
+ *   the log under `holdId`, so nothing is lost silently, and at least one
+ *   finding explains why. `ours` is absent when the log holds no live text
+ *   (the node was retired, or a held insert's node does not exist yet);
+ *   `theirs` is absent when the agent submitted a delete.
  * - `rejected`: the operation broke a rule, such as a backward status move.
  *
  * The claim gate verdict is two-way (`admitted | rejected`), so this
@@ -160,9 +207,14 @@ export const AdmissionOutcome = AdmissionOutcomeKind.toTaggedUnion("outcome")({
     contentHash: ContentHash.annotateKey({ description: "Hash shared by the write and the existing node." }),
   },
   held: {
-    nodeId: NodeId.annotateKey({ description: "Node waiting on a resolver." }),
-    ours: S.String.annotateKey({ description: "Text the log holds for the node." }),
-    theirs: S.String.annotateKey({ description: "Text the agent submitted." }),
+    holdId: HoldId.annotateKey({ description: "Hold the write waits under." }),
+    nodeId: NodeId.annotateKey({ description: "Node the held operation names." }),
+    ours: S.OptionFromOptionalKey(S.String).annotateKey({
+      description: "Live text the log holds for the node; absent when it holds none.",
+    }),
+    theirs: S.OptionFromOptionalKey(S.String).annotateKey({
+      description: "Text the agent submitted; absent for a delete.",
+    }),
     violations: S.NonEmptyArray(MemoryGateViolation).annotateKey({ description: "Findings that held the write." }),
   },
   rejected: {
@@ -224,14 +276,21 @@ export const toClaimGateResult: (outcome: AdmissionOutcome) => ClaimGateResult =
 });
 
 /**
- * A held write on the operator review list, with both texts retained.
+ * A held write on the operator review list.
+ *
+ * **Details**
+ *
+ * This is the read model of one unresolved `WriteHeld` event. `operation` is
+ * the write exactly as submitted, `headRevision` is the revision the log held
+ * for the node when the write was held, and `since` is the journal time of the
+ * hold. `ours` and `theirs` follow the rules of the `held` admission outcome.
  *
  * **Example** (Read the fields of a held conflict)
  *
  * ```ts
  * import { HeldConflict } from "@beep/agent-memory-store"
  *
- * console.log(HeldConflict.fields.since)
+ * console.log(HeldConflict.fields.holdId)
  * ```
  *
  * @category models
@@ -239,14 +298,24 @@ export const toClaimGateResult: (outcome: AdmissionOutcome) => ClaimGateResult =
  */
 export class HeldConflict extends S.Opaque<HeldConflict, { readonly brand: unique symbol }>()(
   S.Struct({
-    nodeId: NodeId.annotateKey({ description: "Node waiting on a resolver." }),
-    ours: S.String.annotateKey({ description: "Text the log holds for the node." }),
-    theirs: S.String.annotateKey({ description: "Text the agent submitted." }),
+    holdId: HoldId.annotateKey({ description: "Hold the write waits under." }),
+    operation: NodeOperation.annotateKey({ description: "The write exactly as the agent submitted it." }),
+    author: LineageId.annotateKey({ description: "Lineage that submitted the held write." }),
+    nodeId: NodeId.annotateKey({ description: "Node the held operation names." }),
+    headRevision: S.OptionFromOptionalKey(RevisionId).annotateKey({
+      description: "Revision the log held for the node when the write was held.",
+    }),
+    ours: S.OptionFromOptionalKey(S.String).annotateKey({
+      description: "Live text the log holds for the node; absent when it holds none.",
+    }),
+    theirs: S.OptionFromOptionalKey(S.String).annotateKey({
+      description: "Text the agent submitted; absent for a delete.",
+    }),
     since: S.DateTimeUtcFromString.annotateKey({ description: "When the write was held." }),
     violations: S.NonEmptyArray(MemoryGateViolation).annotateKey({ description: "Findings that held the write." }),
   }).pipe(
     $I.annoteSchema("HeldConflict", {
-      description: "A held write on the operator review list, with both texts retained.",
+      description: "A held write on the operator review list.",
     })
   )
 ) {}
@@ -262,15 +331,29 @@ const ConflictChoice = LiteralKit(["ours", "theirs", "merged"]).pipe(
  *
  * **Details**
  *
- * `ours` keeps the logged text, `theirs` takes the agent's text, and `merged`
- * supplies a new text written by the resolver.
+ * `ours` keeps what the log holds and writes no revision; it is also how a
+ * hold is closed once the node has moved on without it. `theirs` applies the
+ * held operation's change, and `merged` a text written by the resolver; both
+ * write a revision on top of the node's heads at resolve time, never on the
+ * stale revision the operation named. Each resolution is recorded as a
+ * `HoldResolved` event.
+ *
+ * A held insert has no heads: `theirs` and `merged` create the node. When its
+ * predecessor never reached the log, the resolver names where it goes with
+ * `placement`; without one the insert keeps the placement it was submitted
+ * with, and is held again if that predecessor is still missing. `placement`
+ * is ignored for every other operation.
  *
  * **Example** (Resolve with a merged text)
  *
  * ```ts
  * import { ConflictResolution } from "@beep/agent-memory-store"
+ * import * as O from "effect/Option"
  *
- * const resolution = ConflictResolution.cases.merged.make({ text: "Both facts, reconciled." })
+ * const resolution = ConflictResolution.cases.merged.make({
+ *   text: "Both facts, reconciled.",
+ *   placement: O.none(),
+ * })
  * console.log(resolution.choice)
  * ```
  *
@@ -279,9 +362,16 @@ const ConflictChoice = LiteralKit(["ours", "theirs", "merged"]).pipe(
  */
 export const ConflictResolution = ConflictChoice.toTaggedUnion("choice")({
   ours: {},
-  theirs: {},
+  theirs: {
+    placement: S.OptionFromOptionalKey(InsertPlacement).annotateKey({
+      description: "New place for a held insert; absent keeps the submitted placement.",
+    }),
+  },
   merged: {
     text: S.NonEmptyString.annotateKey({ description: "Resolver-written replacement text." }),
+    placement: S.OptionFromOptionalKey(InsertPlacement).annotateKey({
+      description: "New place for a held insert; absent keeps the submitted placement.",
+    }),
   },
 }).pipe(
   $I.annoteSchema("ConflictResolution", {

@@ -11,7 +11,9 @@ bun add @beep/agent-memory-store
 ## Usage
 
 The package holds schemas and `Context.Service` contracts. The only live
-Layer is `Reranker.passThrough`, which keeps candidates in fused order.
+Layers are the keyless defaults of the two optional local-model ports:
+`Reranker.passThrough`, which keeps candidates in fused order, and
+`Embedder.unavailable`, which leaves the vector index empty.
 
 ```ts
 import { Candidate, NodeId, RecallBudget, RecallQuery, Reranker, RevisionId } from "@beep/agent-memory-store"
@@ -43,6 +45,18 @@ const program = Effect.gen(function* () {
 Storage lives behind the contracts: P1 provides `MemoryLog` over
 `effect/eventlog` and `@beep/sqlite` in a separate layer file, so the domain
 modules never import a driver.
+
+Four rules shape the log:
+
+- A memory file is the exact concatenation of its live nodes in document
+  order. `NodeCreated.after` records the order and `gap` nodes hold the bytes
+  between content nodes, so the log alone rebuilds every file.
+- A node event appended on this replica lands only when its `parents` are
+  the node's current heads. `MemoryLog.append` refuses anything else with
+  `StaleParentsError`.
+- A held write and its resolution are `WriteHeld` and `HoldResolved` events
+  keyed by `HoldId`.
+- Every event names the lineage that wrote it.
 
 ## Development
 

@@ -29,7 +29,8 @@ every surviving measurement into a named test.
   `01-memory-layer-taxonomy.md`. Those rulings are not re-opened here; a
   change to them is a new decision-log entry, not a packet decision.
 - **Converges with:** `text-knowledge-stack-rebuild`. The store mints its own
-  `NodeId` at admission, but span anchoring inside the Markdown projection is
+  `NodeId` in its import and capture steps (admission rejects one the log
+  already holds), but span anchoring inside the Markdown projection is
   expressed as that packet's occurrence preimage (source identity, unit, range,
   quote). This packet does not wait for `@beep/text`; when it lands, P1's
   anchoring module adopts it in one PR and deletes its local copy.
@@ -103,10 +104,11 @@ Higher sources outrank lower sources when they conflict.
 - **Design order is schema, then `Context.Service` contract, then
   implementation.** P0 lands the schemas (`NodeEvent`, `NodeId`,
   `RevisionId = hash(NodeId, parents, ContentHash)`, L0 raw-slice spans and
-  patches, `ObservationEvent`, admission outcomes, typed findings) and the
+  patches, node placement and `gap` nodes, held-write events,
+  `ObservationEvent`, admission outcomes, typed findings) and the
   service contracts (`MemoryLog`, `Admission`, `MarkdownProjector`,
-  `MemoryIndexes`, `Recall`, `Reranker`, `ObservationLog`, `SymbolResolver`)
-  before any implementation PR.
+  `MemoryIndexes`, `Recall`, `Reranker`, `Embedder`, `ObservationLog`,
+  `SymbolResolver`) before any implementation PR.
 - **Effect v4 only**, validated against `.repos/effect`; `effect/HashMap`,
   `HashSet` and their mutable forms, never `Map` or `Set`; `Effect.fn` or
   `Effect.fnUntraced` for generator functions; `LiteralKit` for literal
@@ -292,6 +294,14 @@ Lane goals/agent-memory-store-p0
 
 Reverse: Re-baseline by decision file citing a new S10 measurement
 
+### A memory file is the ordered partition of its nodes; the log alone rebuilds it, 2026-11-09
+
+Amends granularity-row-and-list-item, dedupe-exact-defer-near-flag (gap nodes are exempt from exact-hash deferral) and identity-depends-on-provenance (where a NodeId is minted). Ruling 1 makes every memory file a projection rebuildable from the log, but the first P0 schemas could not rebuild one: NodeCreated kept only an occurrence anchor into the imported source and dropped the insert operation's afterNodeId, and no event held the bytes between nodes. A file is now the exact concatenation of its live nodes' texts in document order. NodeCreated.after names the predecessor (absent opens the file); nodes naming the same predecessor order newest first by journal entry order (creation time, then entry id bytes, the same on every replica); a retired node keeps its place as a tombstone. An insert carries the NodeId its capture step minted, so a later operation in the same batch can follow it (a paragraph and its separator are two inserts); admission rejects an id the log already holds (finding nodeIdAlreadyExists), and an insert whose predecessor did not land is held (finding insertAfterMissingNode), never placed elsewhere, until its resolver places it. NodeKind gains gap for the bytes between content nodes, so every byte belongs to exactly one node; gap nodes are never indexed and never deduplicated, and list markers stay inside list-item nodes (S14). FileImported records each file's path, digest and node count, so a rebuild proves AC-1 against the imported bytes and an empty file has a record. The anchor stays as import provenance, is absent on a node an agent wrote, and never decides order. Every memory event also names the lineage that wrote it, so the log holds the per-revision provenance S15 found a CRDT drops. Code: packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts. Rejected: a per-node leading-separator field (deleting the first node of a file strands its successor's separator and needs separator-editing operations) and storing the imported file text beside its nodes (two copies of every byte that disagree after the first edit).
+
+Lane goals/agent-memory-store-p0
+
+Reverse: Replace gap nodes with a per-node separator field by decision file citing an AC-1 replay in which gap nodes fail byte identity or inflate held writes
+
 ### Typed findings reuse the @beep/epistemics claim-gate shapes, 2026-11-09
 
 The SPEC reuses the epistemic kernel where it fits and @beep/repo-cli already depends on @beep/epistemics. Admission outcomes and retrieval-gate findings extend ClaimGateResult, ClaimGateViolation and ClaimGateSeverity with store-specific violation codes as a LiteralKit domain (held conflict, backward status move, missing candidate edge, failed identity lookup, unimported folder); the typed identity lookup is one violation kind. One finding vocabulary serves claim gates and memory admission. Rejected: a store-local union that duplicates severity and verdict shapes.
@@ -308,6 +318,14 @@ Lane goals/agent-memory-store-p0
 
 Reverse: Re-baseline by decision file citing a new S1 or S14 replay on a different node model
 
+### Held writes and their resolutions are log events keyed by HoldId, 2026-11-09
+
+Ruling 1: the log is the sole authority, and AC-2 holds every contested write with both texts. The first P0 schemas had no event for a hold, so held state had no authority behind it, and Admission.resolve took a NodeId, which is ambiguous when two writes are held on one node and impossible for a held insert. WriteHeld records the operation exactly as submitted (the agent's text), the head revision the log held (the other text), the author and the findings, under a store-minted HoldId; HoldResolved records the resolver's choice and the revision it produced. The held outcome and the HeldConflict read model carry the HoldId and make ours and theirs optional, so deleteVersusEdit (no agent text) and insertUnderDeletedAnchor (no logged text) are representable; the node id is always present because an insert carries the id its capture step minted. A theirs or merged resolution writes its revision on the node's heads at resolve time, never on the stale revision the operation named; ours writes none and is also how a hold is closed once the node has moved on without it. A held insert is created by theirs or merged; when its predecessor never reached the log (held, deferred or rejected in the same batch, finding insertAfterMissingNode) the resolution carries an InsertPlacement, so the resolver is never left with ours as the only choice. A HoldResolved lands only while its hold is open, checked in the journal transaction and refused with the typed HoldNotOpenError, so two resolvers cannot both settle one hold. Amends admission-outcome-supersets-claim-gate in the held variant's fields only; the projection onto ClaimGateResult is unchanged. Code: packages/tooling/library/agent-memory-store/src/Admission.models.ts. Rejected: a side table for holds (state outside the log that a rebuild or a set-union sync would lose) and copying both texts into the event (the log already holds one and the operation carries the other).
+
+Lane goals/agent-memory-store-p0
+
+Reverse: Fold WriteHeld and HoldResolved into a holds table by decision file if held writes prove too frequent for the log; ruling 1 must be amended by a decision-log entry first
+
 ### Node identity depends on @beep/provenance now and follows the @beep/text rename, 2026-11-09
 
 The entry's starting position is confirmed: the store mints its own NodeId at admission and RevisionId = hash(NodeId, parents, ContentHash) with Sha256Hex from @beep/schema; span anchoring in the Markdown projection is the occurrence preimage (SourceTextIdentity with extractor pins, unit, range, quote) imported from @beep/provenance, which text-knowledge-stack-rebuild P2 renames to @beep/text and migrates every consumer in that PR. Identity tiers (exact hash, SCIP symbol, fused text) are bounded in P3 from S2, S9 and S10. Rejected: waiting for @beep/text (puts P1 on another packet's schedule) and a store-local anchor (forks span identity, forbidden by the SPEC constraint).
@@ -315,6 +333,22 @@ The entry's starting position is confirmed: the store mints its own NodeId at ad
 Lane goals/agent-memory-store-p0
 
 Reverse: Pin the store to its own anchor schema by decision file only if text-knowledge-stack-rebuild abandons the occurrence preimage
+
+### Index search applies the authoritative filters; Embedder is a port with an unavailable default, 2026-11-09
+
+Amends retrieval-order-convex-fusion and extends reranker-port-pass-through. The pipeline starts with authoritative filters, but MemoryIndexes.searchText and searchVector took only a query and a limit, so a filter could run only after each index had cut its top hits, and matching nodes ranked below unrelated ones were lost. Both now take an IndexSearch (text, filters, limit) and the index applies the filters before the limit. They return IndexHit with the index's own score; Candidate stays the fused shape recall builds. Embeddings are an optional local model like the cross-encoder (SPEC Non-Goals), so Embedder is a Context.Service port whose default Layer returns none; the vector index embeds node texts and the query through that one port, stays empty without a model, and recall then fuses the text index alone. Code: packages/tooling/library/agent-memory-store/src/Embedder.service.ts. Rejected: recall embedding the query and passing a vector (index and query could come from different models) and a mandatory embedding dependency (a model download in install and hosted CI).
+
+Lane goals/agent-memory-store-p0
+
+Reverse: Collapse the Embedder port into the vector index Layer by decision file if no second embedding backend appears
+
+### MemoryLog enforces the per-node compare-and-set inside the journal transaction, 2026-11-09
+
+Admission is a per-node compare-and-set (ruling 2) and several agent processes share one SQLite file, so a head read followed by an append is not atomic. effect/eventlog runs each event handler inside the journal's writer transaction (EventLog write and writeMany over SqlEventJournal, read in the Effect reference checkout), so the check lives there: a revision-producing event lands only when its parents are exactly the node's current heads, a NodeCreated only when the node has none, and a stale event fails the whole batch with the typed StaleParentsError, which the four node event definitions declare as their error schema and Admission turns into a staleExpectedRevision finding. Handlers read heads from a table they maintain in that same transaction, so a later event of a batch sees the earlier ones. The check applies to appends through MemoryLog, the only writes any phase of this packet makes, so every node keeps one head. A remote replay is a set-union and must not be refused, so it bypasses the check and could add a second head; no phase wires a remote, and the packet that does must first decide by decision file how a forked node is held and resolved, because agent operations name one expected revision. MemoryLog exposes heads(nodeId), a LogCursor (the count of entries this replica has committed, numbered by the store in commit order; not a journal entry id, because a remote replay can commit an older id after a newer one) and entriesAfter(cursor) in place of a frontier of unkeyed revisions and a read of the whole log; BaseExport records the cursor it reflects. revisionPreimage deduplicates parents so a repeated parent cannot change a RevisionId. Code: packages/tooling/library/agent-memory-store/src/MemoryLog.service.ts. Rejected: a lock file around read-then-append (a second locking scheme beside SQLite's) and resolving forks at projection time (a merge on the agent write path, which ruling 2 forbids).
+
+Lane goals/agent-memory-store-p0
+
+Reverse: Move the check into Admission behind a store-level lock by decision file if effect/eventlog stops running handlers inside the writer transaction
 
 ### MemoryLog sits on effect/eventlog with SqlEventJournal over @beep/sqlite, 2026-11-09
 
@@ -377,6 +411,14 @@ Amends status-generated-from-manifest. Its sentence that the admission path mode
 Lane goals/agent-memory-store-p0
 
 Reverse: Generate one LiteralKit domain per status field from ops/manifest.json once the field set is closed, and type StatusTransition per field, by decision file
+
+### SymbolResolver owns its SCIP index; the store models references and resolutions only, 2026-11-09
+
+Amends symbol-resolver-port-scip-driver-p3. The port took a decoded SCIP index document on every call and the store carried that document's schema. A SCIP index covers every source file of the repository, decoding it through a store schema per call is waste, and the document shape belongs to the tool that writes it. SymbolResolver.resolve now takes the SymbolReference only; the implementing Layer loads and holds the index, and the index schema arrives with the SCIP driver in P3. The store keeps ScipSymbol, ScipRange, ScipDefinition, SymbolReference and SymbolResolution. Code: packages/tooling/library/agent-memory-store/src/SymbolResolver.service.ts. Rejected: keeping the document schema in the store for the P3 driver to import (a driver would depend on a tooling library for its own wire shape).
+
+Lane goals/agent-memory-store-p0
+
+Reverse: Restore the index parameter by decision file if a caller must resolve against more than one index in one process
 
 ### SymbolResolver is a port over a decoded SCIP index; drivers/scip arrives in P3, 2026-11-09
 

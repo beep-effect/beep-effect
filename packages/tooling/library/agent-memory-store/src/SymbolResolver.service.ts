@@ -10,12 +10,12 @@ import { $AgentMemoryStoreId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
 import type * as Effect from "effect/Effect";
 import type { SymbolResolutionError } from "./AgentMemoryStore.errors.ts";
-import type { ScipIndex, SymbolReference, SymbolResolution } from "./Scip.models.ts";
+import type { SymbolReference, SymbolResolution } from "./Scip.models.ts";
 
 const $I = $AgentMemoryStoreId.create("SymbolResolver.service");
 
 /**
- * Resolves symbol references against a decoded SCIP index.
+ * Resolves symbol references against the SCIP index its Layer owns.
  *
  * **Details**
  *
@@ -25,21 +25,22 @@ const $I = $AgentMemoryStoreId.create("SymbolResolver.service");
  * hash changed yields `reverify` with both hashes, never stale (S35); a
  * symbol SCIP cannot find yields `unresolved`.
  *
- * The index carries no source text. An implementing Layer reads the defining
- * span through its own dependency (for example `FileSystem`) to hash it, so
- * that requirement never appears on this contract. P3 adds the SCIP driver
- * that provides this port.
+ * Decision `symbol-resolver-owns-its-index`: the contract takes the reference
+ * only. The implementing Layer loads and holds the index, and reads the
+ * defining span through its own dependency (for example `FileSystem`) to hash
+ * it, so neither the index document nor that requirement appears here. P3
+ * adds the SCIP driver that provides this port.
  *
  * **Example** (Resolve a symbol reference)
  *
  * ```ts
- * import { ScipIndex, SymbolReference, SymbolResolver } from "@beep/agent-memory-store"
+ * import { SymbolReference, SymbolResolver } from "@beep/agent-memory-store"
  * import * as Effect from "effect/Effect"
  *
- * const check = (index: ScipIndex, reference: SymbolReference) =>
+ * const check = (reference: SymbolReference) =>
  *   Effect.gen(function* () {
  *     const resolver = yield* SymbolResolver
- *     return yield* resolver.resolve(index, reference)
+ *     return yield* resolver.resolve(reference)
  *   })
  * console.log(check)
  * ```
@@ -50,9 +51,6 @@ const $I = $AgentMemoryStoreId.create("SymbolResolver.service");
 export class SymbolResolver extends Context.Service<
   SymbolResolver,
   {
-    readonly resolve: (
-      index: ScipIndex,
-      reference: SymbolReference
-    ) => Effect.Effect<SymbolResolution, SymbolResolutionError>;
+    readonly resolve: (reference: SymbolReference) => Effect.Effect<SymbolResolution, SymbolResolutionError>;
   }
 >()($I`SymbolResolver`) {}

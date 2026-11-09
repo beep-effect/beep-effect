@@ -1,6 +1,12 @@
 /**
- * Minimal decoded SCIP index document and symbol liveness vocabulary used by
- * the symbol resolver port.
+ * SCIP symbol references and the liveness vocabulary of the symbol resolver
+ * port.
+ *
+ * **Details**
+ *
+ * Decision `symbol-resolver-owns-its-index`: the decoded SCIP index document
+ * is not modelled here. The resolver Layer owns its index, and the index
+ * schema arrives with the SCIP driver in P3.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -65,114 +71,6 @@ export class ScipRange extends S.Opaque<ScipRange, { readonly brand: unique symb
   }).pipe(
     $I.annoteSchema("ScipRange", {
       description: "Zero-based line and character range of a SCIP occurrence.",
-    })
-  )
-) {}
-
-/**
- * Role a SCIP occurrence plays for its symbol.
- *
- * **Example** (Check an occurrence role)
- *
- * ```ts
- * import { ScipOccurrenceRole } from "@beep/agent-memory-store"
- *
- * console.log(ScipOccurrenceRole.is.definition("definition"))
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const ScipOccurrenceRole = LiteralKit(["definition", "import", "reference", "writeAccess", "readAccess"]).pipe(
-  $I.annoteSchema("ScipOccurrenceRole", {
-    description: "Role a SCIP occurrence plays for its symbol.",
-  })
-);
-
-/**
- * Runtime type for {@link ScipOccurrenceRole}.
- *
- * @category type-level
- * @since 0.0.0
- */
-export type ScipOccurrenceRole = typeof ScipOccurrenceRole.Type;
-
-/**
- * One occurrence of a symbol in a SCIP document.
- *
- * **Example** (Read the fields of an occurrence)
- *
- * ```ts
- * import { ScipOccurrence } from "@beep/agent-memory-store"
- *
- * console.log(ScipOccurrence.fields.roles)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class ScipOccurrence extends S.Opaque<ScipOccurrence, { readonly brand: unique symbol }>()(
-  S.Struct({
-    symbol: ScipSymbol.annotateKey({ description: "Symbol the occurrence refers to." }),
-    range: ScipRange.annotateKey({ description: "Source range of the occurrence." }),
-    roles: S.Array(ScipOccurrenceRole).annotateKey({ description: "Roles the occurrence plays." }),
-  }).pipe(
-    $I.annoteSchema("ScipOccurrence", {
-      description: "One occurrence of a symbol in a SCIP document.",
-    })
-  )
-) {}
-
-/**
- * One source file of a SCIP index with its occurrences.
- *
- * **Example** (Construct an empty document)
- *
- * ```ts
- * import { ScipDocument } from "@beep/agent-memory-store"
- * import { PosixPath } from "@beep/schema/PosixPath"
- *
- * const document = ScipDocument.make({ relativePath: PosixPath.make("src/index.ts"), occurrences: [] })
- * console.log(document.relativePath)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class ScipDocument extends S.Opaque<ScipDocument, { readonly brand: unique symbol }>()(
-  S.Struct({
-    relativePath: PosixPath.annotateKey({ description: "Source path relative to the index root." }),
-    occurrences: S.Array(ScipOccurrence).annotateKey({ description: "Symbol occurrences in the file." }),
-  }).pipe(
-    $I.annoteSchema("ScipDocument", {
-      description: "One source file of a SCIP index with its occurrences.",
-    })
-  )
-) {}
-
-/**
- * Minimal decoded SCIP index: documents plus the producing tool.
- *
- * **Example** (Construct an empty index)
- *
- * ```ts
- * import { ScipIndex } from "@beep/agent-memory-store"
- *
- * const index = ScipIndex.make({ documents: [], toolName: "scip-typescript", toolVersion: "0.4.0" })
- * console.log(index.toolName)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class ScipIndex extends S.Opaque<ScipIndex, { readonly brand: unique symbol }>()(
-  S.Struct({
-    documents: S.Array(ScipDocument).annotateKey({ description: "Indexed source documents." }),
-    toolName: S.NonEmptyString.annotateKey({ description: "Name of the indexer that produced the index." }),
-    toolVersion: S.NonEmptyString.annotateKey({ description: "Version of the indexer." }),
-  }).pipe(
-    $I.annoteSchema("ScipIndex", {
-      description: "Minimal decoded SCIP index: documents plus the producing tool.",
     })
   )
 ) {}

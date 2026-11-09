@@ -11,7 +11,8 @@ import { defectDiagnostics, optionalDefectMessage } from "@beep/schema/SchemaUti
 import { optionalDefect } from "@beep/schema/SchemaUtils/optionalDefect";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { MemoryFilePath, NodeId } from "./NodeIdentity.models.ts";
+import { HoldId } from "./Admission.models.ts";
+import { MemoryFilePath, NodeId, RevisionId } from "./NodeIdentity.models.ts";
 import { ScipSymbol } from "./Scip.models.ts";
 
 const $I = $AgentMemoryStoreId.create("AgentMemoryStore.errors");
@@ -246,6 +247,84 @@ export class MemoryIndexError extends S.TaggedError<MemoryIndexError, { readonly
   static readonly fromUnknown = (operation: string, cause?: unknown): MemoryIndexError =>
     MemoryIndexError.make({ operation, ...defectDiagnostics(cause) });
 }
+
+/**
+ * Refusal to append a node event whose parents are not the node's heads.
+ *
+ * **Details**
+ *
+ * This is the per-node compare-and-set of the memory log, not an I/O failure.
+ * A revision-producing event appended on this replica lands only when its
+ * `parents` are exactly the node's current head revisions, and a
+ * `NodeCreated` lands only when the node has none. The check runs inside the
+ * journal's writer transaction, so two local writers cannot both pass it; a
+ * failed check appends nothing. `parents` is what the refused event named
+ * (empty for a `NodeCreated`) and `heads` is what the log held.
+ *
+ * **Example** (Refuse a stale revision)
+ *
+ * ```ts
+ * import { NodeId, RevisionId, StaleParentsError } from "@beep/agent-memory-store"
+ *
+ * const error = StaleParentsError.make({
+ *   nodeId: NodeId.make("018f9c3e-7d2a-7b4c-9e1f-2a3b4c5d6e7f"),
+ *   parents: [RevisionId.make("1111111111111111111111111111111111111111111111111111111111111111")],
+ *   heads: [RevisionId.make("2222222222222222222222222222222222222222222222222222222222222222")],
+ * })
+ * console.log(error.heads.length)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class StaleParentsError extends S.TaggedError<StaleParentsError, { readonly brand: unique symbol }>(
+  $I`StaleParentsError`
+)(
+  "StaleParentsError",
+  {
+    nodeId: NodeId.annotateKey({ description: "Node the refused event was written for." }),
+    parents: S.Array(RevisionId).annotateKey({ description: "Parent revisions the refused event named." }),
+    heads: S.Array(RevisionId).annotateKey({ description: "Head revisions the log held for the node." }),
+  },
+  $I.annoteError<StaleParentsError>("StaleParentsError", {
+    description: "Refusal to append a node event whose parents are not the node's current heads.",
+  })
+) {}
+
+/**
+ * Refusal to resolve a hold the log does not hold open.
+ *
+ * **Details**
+ *
+ * A `HoldResolved` event lands only while the log holds an unresolved
+ * `WriteHeld` for its `holdId`. The check runs inside the journal's writer
+ * transaction like the per-node compare-and-set, so two resolvers cannot both
+ * settle one hold. `holdId` is the id the refused resolution named; the hold
+ * is either unknown or already resolved.
+ *
+ * **Example** (Refuse a second resolution)
+ *
+ * ```ts
+ * import { HoldId, HoldNotOpenError } from "@beep/agent-memory-store"
+ *
+ * const error = HoldNotOpenError.make({ holdId: HoldId.make("018f9c3e-7d2a-7b4c-9e1f-2a3b4c5d6e90") })
+ * console.log(error.holdId)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class HoldNotOpenError extends S.TaggedError<HoldNotOpenError, { readonly brand: unique symbol }>(
+  $I`HoldNotOpenError`
+)(
+  "HoldNotOpenError",
+  {
+    holdId: HoldId.annotateKey({ description: "Hold the refused resolution named." }),
+  },
+  $I.annoteError<HoldNotOpenError>("HoldNotOpenError", {
+    description: "Refusal to resolve a hold the log does not hold open.",
+  })
+) {}
 
 /**
  * Refusal to project over a memory folder the log has not imported (AC-8).

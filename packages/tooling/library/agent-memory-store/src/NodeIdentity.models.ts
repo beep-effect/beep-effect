@@ -18,11 +18,13 @@ import * as S from "effect/Schema";
 const $I = $AgentMemoryStoreId.create("NodeIdentity.models");
 
 /**
- * Store-minted opaque node identifier: a UUID string assigned once, at
- * admission, and never derived from content.
+ * Store-minted opaque node identifier: a UUID string assigned once and never
+ * derived from content.
  *
  * **Details**
  *
+ * The store's import and capture steps mint the id, and admission refuses one
+ * the log already holds (decision `file-is-an-ordered-node-partition`).
  * Content can change under a stable `NodeId`; the content and revision hashes
  * track those changes. Construct trusted values with `NodeId.make` and decode
  * untrusted input with `S.decodeUnknownEffect(NodeId)`.
@@ -42,7 +44,7 @@ const $I = $AgentMemoryStoreId.create("NodeIdentity.models");
 export const NodeId = S.String.check(S.isUUID()).pipe(
   S.brand("NodeId"),
   $I.annoteSchema("NodeId", {
-    description: "Store-minted opaque UUID identifier for a memory node, assigned at admission.",
+    description: "Store-minted opaque UUID identifier for a memory node, never derived from content.",
   })
 );
 
@@ -198,13 +200,62 @@ export const MemoryFilePath = PosixPath.check(S.isNonEmpty()).pipe(
 export type MemoryFilePath = typeof MemoryFilePath.Type;
 
 /**
+ * Position in the memory log on this replica: how many entries it has
+ * committed.
+ *
+ * **Details**
+ *
+ * The store numbers entries in the order it commits them, starting at 1, so a
+ * cursor of `n` names "the first `n` entries" and `0` names the empty log. An
+ * export records the cursor it reflects, and a projection reads the entries
+ * after its last cursor instead of the whole log (decision
+ * `memory-log-checks-parents-in-the-journal-transaction`).
+ *
+ * **Gotchas**
+ *
+ * A cursor is not a journal entry id. Entry ids are creation-time UUIDs, and a
+ * remote replay can commit an older id after a newer one, so only the commit
+ * position is safe to resume from. Positions are local to one replica and are
+ * never compared across replicas.
+ *
+ * **Example** (Brand a log cursor)
+ *
+ * ```ts
+ * import { LogCursor } from "@beep/agent-memory-store"
+ *
+ * const cursor = LogCursor.make(42)
+ * console.log(cursor)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const LogCursor = S.Natural.pipe(
+  S.brand("LogCursor"),
+  $I.annoteSchema("LogCursor", {
+    description: "Number of entries this replica has committed to the memory log; 0 names the empty log.",
+  })
+);
+
+/**
+ * Runtime type for {@link LogCursor}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type LogCursor = typeof LogCursor.Type;
+
+/**
  * Markdown construct a memory node is cut from.
  *
  * **Details**
  *
  * Decision `granularity-row-and-list-item`: list items and table rows are
  * nodes, a fenced code block is one node, and headings and paragraphs are
- * single nodes.
+ * single nodes. Decision `file-is-an-ordered-node-partition`: a `gap` node
+ * holds the bytes between two content nodes (blank lines and separators), so
+ * every byte of a memory file belongs to exactly one node. Gap nodes are never
+ * indexed for recall and never deduplicated.
  *
  * **Example** (Check a node kind)
  *
@@ -226,6 +277,7 @@ export const NodeKind = LiteralKit([
   "frontmatter",
   "thematicBreak",
   "html",
+  "gap",
 ]).pipe(
   $I.annoteSchema("NodeKind", {
     description: "Markdown construct a memory node is cut from.",
@@ -246,7 +298,7 @@ export type NodeKind = typeof NodeKind.Type;
  * **Details**
  *
  * Field order is fixed (`nodeId`, `parents`, `contentHash`) and `parents` is
- * sorted ascending, so the JSON form is canonical.
+ * sorted ascending without repeats, so the JSON form is canonical.
  *
  * **Example** (Construct a revision preimage)
  *
@@ -267,7 +319,7 @@ export type NodeKind = typeof NodeKind.Type;
 export class RevisionPreimage extends S.Opaque<RevisionPreimage, { readonly brand: unique symbol }>()(
   S.Struct({
     nodeId: NodeId.annotateKey({ description: "Node whose revision is being identified." }),
-    parents: S.Array(RevisionId).annotateKey({ description: "Parent revisions, sorted ascending." }),
+    parents: S.Array(RevisionId).annotateKey({ description: "Distinct parent revisions, sorted ascending." }),
     contentHash: ContentHash.annotateKey({ description: "Hash of the revision's normalized text." }),
   }).pipe(
     $I.annoteSchema("RevisionPreimage", {
@@ -283,8 +335,9 @@ const encodeRevisionPreimage = S.encodeResult(S.fromJsonString(RevisionPreimage)
  *
  * **Details**
  *
- * Parents are sorted ascending before encoding, so the result does not depend
- * on the order the caller supplies them in. P1 hashes the returned string with
+ * Parents are deduplicated and sorted ascending before encoding, so the
+ * result depends on the set of parents, not on the order or repetition the
+ * caller supplies them in. P1 hashes the returned string with
  * `effect/crypto/Digest` SHA-256 to obtain the {@link RevisionId}.
  *
  * **Gotchas**
@@ -320,7 +373,7 @@ export const revisionPreimage: {
     encodeRevisionPreimage(
       RevisionPreimage.make({
         nodeId,
-        parents: A.sort(parents, Order.String),
+        parents: A.sort(A.dedupe(parents), Order.String),
         contentHash,
       })
     )

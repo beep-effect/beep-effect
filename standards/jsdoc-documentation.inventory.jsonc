@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-09T14:21:18.870Z",
+  "generatedAt": "2026-11-09T21:51:19.503Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 179,
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 15,
-    "publicModules": 3871,
-    "publicExports": 27588,
+    "publicModules": 3875,
+    "publicExports": 27641,
     "openModules": 114,
     "openExports": 88,
     "missingExportExamples": 0,
@@ -264824,9 +264824,9 @@
       "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 20,
-        "publicModuleCount": 20,
-        "publicExportCount": 119
+        "sourceFileCount": 21,
+        "publicModuleCount": 21,
+        "publicExportCount": 134
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -264884,7 +264884,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 10,
+          "exportCount": 12,
           "remediationStatus": "resolved"
         },
         {
@@ -264928,7 +264928,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 8,
+          "exportCount": 10,
           "remediationStatus": "resolved"
         },
         {
@@ -264937,6 +264937,28 @@
           "repoPath": "packages/tooling/library/agent-memory-store/src/Dedupe.models.ts",
           "line": 1,
           "anchor": "packages-tooling-library-agent-memory-store-src-dedupe-models-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 1,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/Embedder.service.ts",
+          "repoPath": "packages/tooling/library/agent-memory-store/src/Embedder.service.ts",
+          "line": 1,
+          "anchor": "packages-tooling-library-agent-memory-store-src-embedder-service-ts-1-module",
           "currentTags": [
             "@packageDocumentation",
             "@since"
@@ -265038,7 +265060,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 13,
+          "exportCount": 19,
           "remediationStatus": "resolved"
         },
         {
@@ -265060,7 +265082,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 14,
+          "exportCount": 16,
           "remediationStatus": "resolved"
         },
         {
@@ -265126,7 +265148,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 6,
+          "exportCount": 7,
           "remediationStatus": "resolved"
         },
         {
@@ -265148,7 +265170,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 9,
+          "exportCount": 14,
           "remediationStatus": "resolved"
         },
         {
@@ -265214,7 +265236,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 14,
+          "exportCount": 9,
           "remediationStatus": "resolved"
         },
         {
@@ -265302,7 +265324,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 19,
+          "exportCount": 20,
           "remediationStatus": "resolved"
         }
       ],
@@ -265312,8 +265334,8 @@
           "exportKind": "re-export",
           "filePath": "src/Admission.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Admission.models.ts",
-          "line": 26,
-          "anchor": "packages-tooling-library-agent-memory-store-src-admission-models-ts-26-export-claimgateseverity-claimgateviolation-from-beep-epistemics-claimgate",
+          "line": 28,
+          "anchor": "packages-tooling-library-agent-memory-store-src-admission-models-ts-28-export-claimgateseverity-claimgateviolation-from-beep-epistemics-claimgate",
           "currentTags": [
             "@category",
             "@since"
@@ -265334,8 +265356,8 @@
           "exportKind": "const",
           "filePath": "src/Admission.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Admission.models.ts",
-          "line": 47,
-          "anchor": "packages-tooling-library-agent-memory-store-src-admission-models-ts-47-memoryviolationcode",
+          "line": 54,
+          "anchor": "packages-tooling-library-agent-memory-store-src-admission-models-ts-54-memoryviolationcode",
           "currentTags": [
             "@category",
             "@since"
@@ -265356,8 +265378,8 @@
           "exportKind": "type",
           "filePath": "src/Admission.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Admission.models.ts",
-          "line": 68,
-          "anchor": "packages-tooling-library-agent-memory-store-src-admission-models-ts-68-memoryviolationcode",
+          "line": 77,
+          "anchor": "packages-tooling-library-agent-memory-store-src-admission-models-ts-77-memoryviolationcode",
           "currentTags": [
             "@category",
             "@since"
@@ -265378,8 +265400,52 @@
           "exportKind": "class",
           "filePath": "src/Admission.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Admission.models.ts",
-          "line": 94,
-          "anchor": "packages-tooling-library-agent-memory-store-src-admission-models-ts-94-memorygateviolation",
+          "line": 103,
+          "anchor": "packages-tooling-library-agent-memory-store-src-admission-models-ts-103-memorygateviolation",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldId",
+          "exportKind": "const",
+          "filePath": "src/Admission.models.ts",
+          "repoPath": "packages/tooling/library/agent-memory-store/src/Admission.models.ts",
+          "line": 134,
+          "anchor": "packages-tooling-library-agent-memory-store-src-admission-models-ts-134-holdid",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldId",
+          "exportKind": "type",
+          "filePath": "src/Admission.models.ts",
+          "repoPath": "packages/tooling/library/agent-memory-store/src/Admission.models.ts",
+          "line": 147,
+          "anchor": "packages-tooling-library-agent-memory-store-src-admission-models-ts-147-holdid",
           "currentTags": [
             "@category",
             "@since"
@@ -265400,8 +265466,8 @@
           "exportKind": "const",
           "filePath": "src/Admission.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Admission.models.ts",
-          "line": 150,
-          "anchor": "packages-tooling-library-agent-memory-store-src-admission-models-ts-150-admissionoutcome",
+          "line": 197,
+          "anchor": "packages-tooling-library-agent-memory-store-src-admission-models-ts-197-admissionoutcome",
           "currentTags": [
             "@category",
             "@since"
@@ -265422,8 +265488,8 @@
           "exportKind": "type",
           "filePath": "src/Admission.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Admission.models.ts",
-          "line": 185,
-          "anchor": "packages-tooling-library-agent-memory-store-src-admission-models-ts-185-admissionoutcome",
+          "line": 237,
+          "anchor": "packages-tooling-library-agent-memory-store-src-admission-models-ts-237-admissionoutcome",
           "currentTags": [
             "@category",
             "@since"
@@ -265444,8 +265510,8 @@
           "exportKind": "const",
           "filePath": "src/Admission.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Admission.models.ts",
-          "line": 219,
-          "anchor": "packages-tooling-library-agent-memory-store-src-admission-models-ts-219-toclaimgateresult",
+          "line": 271,
+          "anchor": "packages-tooling-library-agent-memory-store-src-admission-models-ts-271-toclaimgateresult",
           "currentTags": [
             "@param",
             "@returns",
@@ -265468,8 +265534,8 @@
           "exportKind": "class",
           "filePath": "src/Admission.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Admission.models.ts",
-          "line": 240,
-          "anchor": "packages-tooling-library-agent-memory-store-src-admission-models-ts-240-heldconflict",
+          "line": 299,
+          "anchor": "packages-tooling-library-agent-memory-store-src-admission-models-ts-299-heldconflict",
           "currentTags": [
             "@category",
             "@since"
@@ -265490,8 +265556,8 @@
           "exportKind": "const",
           "filePath": "src/Admission.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Admission.models.ts",
-          "line": 280,
-          "anchor": "packages-tooling-library-agent-memory-store-src-admission-models-ts-280-conflictresolution",
+          "line": 363,
+          "anchor": "packages-tooling-library-agent-memory-store-src-admission-models-ts-363-conflictresolution",
           "currentTags": [
             "@category",
             "@since"
@@ -265512,8 +265578,8 @@
           "exportKind": "type",
           "filePath": "src/Admission.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Admission.models.ts",
-          "line": 298,
-          "anchor": "packages-tooling-library-agent-memory-store-src-admission-models-ts-298-conflictresolution",
+          "line": 388,
+          "anchor": "packages-tooling-library-agent-memory-store-src-admission-models-ts-388-conflictresolution",
           "currentTags": [
             "@category",
             "@since"
@@ -265534,8 +265600,8 @@
           "exportKind": "class",
           "filePath": "src/Admission.service.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Admission.service.ts",
-          "line": 53,
-          "anchor": "packages-tooling-library-agent-memory-store-src-admission-service-ts-53-admission",
+          "line": 63,
+          "anchor": "packages-tooling-library-agent-memory-store-src-admission-service-ts-63-admission",
           "currentTags": [
             "@category",
             "@since"
@@ -265556,8 +265622,8 @@
           "exportKind": "class",
           "filePath": "src/AgentMemoryStore.errors.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/AgentMemoryStore.errors.ts",
-          "line": 45,
-          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-45-memorylogerror",
+          "line": 46,
+          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-46-memorylogerror",
           "currentTags": [
             "@category",
             "@since"
@@ -265578,8 +265644,8 @@
           "exportKind": "class",
           "filePath": "src/AgentMemoryStore.errors.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/AgentMemoryStore.errors.ts",
-          "line": 87,
-          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-87-admissionerror",
+          "line": 88,
+          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-88-admissionerror",
           "currentTags": [
             "@category",
             "@since"
@@ -265600,8 +265666,8 @@
           "exportKind": "class",
           "filePath": "src/AgentMemoryStore.errors.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/AgentMemoryStore.errors.ts",
-          "line": 129,
-          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-129-projectionerror",
+          "line": 130,
+          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-130-projectionerror",
           "currentTags": [
             "@category",
             "@since"
@@ -265622,8 +265688,8 @@
           "exportKind": "class",
           "filePath": "src/AgentMemoryStore.errors.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/AgentMemoryStore.errors.ts",
-          "line": 177,
-          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-177-recallerror",
+          "line": 178,
+          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-178-recallerror",
           "currentTags": [
             "@category",
             "@since"
@@ -265644,8 +265710,52 @@
           "exportKind": "class",
           "filePath": "src/AgentMemoryStore.errors.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/AgentMemoryStore.errors.ts",
-          "line": 223,
-          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-223-memoryindexerror",
+          "line": 224,
+          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-224-memoryindexerror",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "StaleParentsError",
+          "exportKind": "class",
+          "filePath": "src/AgentMemoryStore.errors.ts",
+          "repoPath": "packages/tooling/library/agent-memory-store/src/AgentMemoryStore.errors.ts",
+          "line": 280,
+          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-280-staleparentserror",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldNotOpenError",
+          "exportKind": "class",
+          "filePath": "src/AgentMemoryStore.errors.ts",
+          "repoPath": "packages/tooling/library/agent-memory-store/src/AgentMemoryStore.errors.ts",
+          "line": 317,
+          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-317-holdnotopenerror",
           "currentTags": [
             "@category",
             "@since"
@@ -265666,8 +265776,8 @@
           "exportKind": "class",
           "filePath": "src/AgentMemoryStore.errors.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/AgentMemoryStore.errors.ts",
-          "line": 276,
-          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-276-unimportedfoldererror",
+          "line": 355,
+          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-355-unimportedfoldererror",
           "currentTags": [
             "@category",
             "@since"
@@ -265688,8 +265798,8 @@
           "exportKind": "class",
           "filePath": "src/AgentMemoryStore.errors.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/AgentMemoryStore.errors.ts",
-          "line": 304,
-          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-304-observationerror",
+          "line": 383,
+          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-383-observationerror",
           "currentTags": [
             "@category",
             "@since"
@@ -265710,8 +265820,8 @@
           "exportKind": "class",
           "filePath": "src/AgentMemoryStore.errors.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/AgentMemoryStore.errors.ts",
-          "line": 346,
-          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-346-symbolresolutionerror",
+          "line": 425,
+          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-425-symbolresolutionerror",
           "currentTags": [
             "@category",
             "@since"
@@ -265750,12 +265860,34 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "Embedder",
+          "exportKind": "class",
+          "filePath": "src/Embedder.service.ts",
+          "repoPath": "packages/tooling/library/agent-memory-store/src/Embedder.service.ts",
+          "line": 48,
+          "anchor": "packages-tooling-library-agent-memory-store-src-embedder-service-ts-48-embedder",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "MarkdownProjector",
           "exportKind": "class",
           "filePath": "src/MarkdownProjector.service.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MarkdownProjector.service.ts",
-          "line": 54,
-          "anchor": "packages-tooling-library-agent-memory-store-src-markdownprojector-service-ts-54-markdownprojector",
+          "line": 57,
+          "anchor": "packages-tooling-library-agent-memory-store-src-markdownprojector-service-ts-57-markdownprojector",
           "currentTags": [
             "@category",
             "@since"
@@ -265776,8 +265908,8 @@
           "exportKind": "class",
           "filePath": "src/MemoryIndexes.service.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MemoryIndexes.service.ts",
-          "line": 51,
-          "anchor": "packages-tooling-library-agent-memory-store-src-memoryindexes-service-ts-51-memoryindexes",
+          "line": 57,
+          "anchor": "packages-tooling-library-agent-memory-store-src-memoryindexes-service-ts-57-memoryindexes",
           "currentTags": [
             "@category",
             "@since"
@@ -265820,8 +265952,8 @@
           "exportKind": "class",
           "filePath": "src/MemoryLog.service.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MemoryLog.service.ts",
-          "line": 60,
-          "anchor": "packages-tooling-library-agent-memory-store-src-memorylog-service-ts-60-memorylog",
+          "line": 82,
+          "anchor": "packages-tooling-library-agent-memory-store-src-memorylog-service-ts-82-memorylog",
           "currentTags": [
             "@category",
             "@since"
@@ -265842,8 +265974,8 @@
           "exportKind": "class",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 40,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-40-nodecreated",
+          "line": 66,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-66-nodecreated",
           "currentTags": [
             "@category",
             "@since"
@@ -265864,8 +265996,8 @@
           "exportKind": "class",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 70,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-70-noderevised",
+          "line": 102,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-102-noderevised",
           "currentTags": [
             "@category",
             "@since"
@@ -265886,8 +266018,8 @@
           "exportKind": "class",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 107,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-107-nodestatuschanged",
+          "line": 140,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-140-nodestatuschanged",
           "currentTags": [
             "@category",
             "@since"
@@ -265908,8 +266040,8 @@
           "exportKind": "class",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 142,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-142-noderetired",
+          "line": 176,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-176-noderetired",
           "currentTags": [
             "@category",
             "@since"
@@ -265930,8 +266062,74 @@
           "exportKind": "class",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 179,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-179-folderimported",
+          "line": 215,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-215-folderimported",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FileImported",
+          "exportKind": "class",
+          "filePath": "src/NodeEvent.events.ts",
+          "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
+          "line": 256,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-256-fileimported",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "WriteHeld",
+          "exportKind": "class",
+          "filePath": "src/NodeEvent.events.ts",
+          "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
+          "line": 291,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-291-writeheld",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldResolved",
+          "exportKind": "class",
+          "filePath": "src/NodeEvent.events.ts",
+          "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
+          "line": 328,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-328-holdresolved",
           "currentTags": [
             "@category",
             "@since"
@@ -265952,8 +266150,8 @@
           "exportKind": "const",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 205,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-205-nodecreatedevent",
+          "line": 363,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-363-nodecreatedevent",
           "currentTags": [
             "@category",
             "@since"
@@ -265974,8 +266172,8 @@
           "exportKind": "const",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 225,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-225-noderevisedevent",
+          "line": 384,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-384-noderevisedevent",
           "currentTags": [
             "@category",
             "@since"
@@ -265996,8 +266194,8 @@
           "exportKind": "const",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 245,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-245-nodestatuschangedevent",
+          "line": 405,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-405-nodestatuschangedevent",
           "currentTags": [
             "@category",
             "@since"
@@ -266018,8 +266216,8 @@
           "exportKind": "const",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 265,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-265-noderetiredevent",
+          "line": 426,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-426-noderetiredevent",
           "currentTags": [
             "@category",
             "@since"
@@ -266040,8 +266238,74 @@
           "exportKind": "const",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 285,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-285-folderimportedevent",
+          "line": 447,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-447-folderimportedevent",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "FileImportedEvent",
+          "exportKind": "const",
+          "filePath": "src/NodeEvent.events.ts",
+          "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
+          "line": 467,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-467-fileimportedevent",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "WriteHeldEvent",
+          "exportKind": "const",
+          "filePath": "src/NodeEvent.events.ts",
+          "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
+          "line": 487,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-487-writeheldevent",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "HoldResolvedEvent",
+          "exportKind": "const",
+          "filePath": "src/NodeEvent.events.ts",
+          "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
+          "line": 513,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-513-holdresolvedevent",
           "currentTags": [
             "@category",
             "@since"
@@ -266062,8 +266326,8 @@
           "exportKind": "const",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 310,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-310-memoryevents",
+          "line": 541,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-541-memoryevents",
           "currentTags": [
             "@category",
             "@since"
@@ -266084,8 +266348,8 @@
           "exportKind": "type",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 323,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-323-memoryevent",
+          "line": 557,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-557-memoryevent",
           "currentTags": [
             "@category",
             "@since"
@@ -266106,8 +266370,8 @@
           "exportKind": "const",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 345,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-345-memorylogschema",
+          "line": 579,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-579-memorylogschema",
           "currentTags": [
             "@category",
             "@since"
@@ -266128,8 +266392,8 @@
           "exportKind": "const",
           "filePath": "src/NodeIdentity.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeIdentity.models.ts",
-          "line": 42,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-42-nodeid",
+          "line": 44,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-44-nodeid",
           "currentTags": [
             "@category",
             "@since"
@@ -266150,8 +266414,8 @@
           "exportKind": "type",
           "filePath": "src/NodeIdentity.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeIdentity.models.ts",
-          "line": 55,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-55-nodeid",
+          "line": 57,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-57-nodeid",
           "currentTags": [
             "@category",
             "@since"
@@ -266172,8 +266436,8 @@
           "exportKind": "const",
           "filePath": "src/NodeIdentity.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeIdentity.models.ts",
-          "line": 77,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-77-contenthash",
+          "line": 79,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-79-contenthash",
           "currentTags": [
             "@category",
             "@since"
@@ -266194,8 +266458,8 @@
           "exportKind": "type",
           "filePath": "src/NodeIdentity.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeIdentity.models.ts",
-          "line": 90,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-90-contenthash",
+          "line": 92,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-92-contenthash",
           "currentTags": [
             "@category",
             "@since"
@@ -266216,8 +266480,8 @@
           "exportKind": "const",
           "filePath": "src/NodeIdentity.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeIdentity.models.ts",
-          "line": 114,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-114-tombstonecontenthash",
+          "line": 116,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-116-tombstonecontenthash",
           "currentTags": [
             "@category",
             "@since"
@@ -266238,8 +266502,8 @@
           "exportKind": "const",
           "filePath": "src/NodeIdentity.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeIdentity.models.ts",
-          "line": 140,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-140-revisionid",
+          "line": 142,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-142-revisionid",
           "currentTags": [
             "@category",
             "@since"
@@ -266260,8 +266524,8 @@
           "exportKind": "type",
           "filePath": "src/NodeIdentity.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeIdentity.models.ts",
-          "line": 153,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-153-revisionid",
+          "line": 155,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-155-revisionid",
           "currentTags": [
             "@category",
             "@since"
@@ -266282,8 +266546,8 @@
           "exportKind": "namespace",
           "filePath": "src/NodeIdentity.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeIdentity.models.ts",
-          "line": 161,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-161-revisionid",
+          "line": 163,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-163-revisionid",
           "currentTags": [
             "@category",
             "@since"
@@ -266304,8 +266568,8 @@
           "exportKind": "const",
           "filePath": "src/NodeIdentity.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeIdentity.models.ts",
-          "line": 186,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-186-memoryfilepath",
+          "line": 188,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-188-memoryfilepath",
           "currentTags": [
             "@category",
             "@since"
@@ -266326,8 +266590,52 @@
           "exportKind": "type",
           "filePath": "src/NodeIdentity.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeIdentity.models.ts",
-          "line": 198,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-198-memoryfilepath",
+          "line": 200,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-200-memoryfilepath",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "LogCursor",
+          "exportKind": "const",
+          "filePath": "src/NodeIdentity.models.ts",
+          "repoPath": "packages/tooling/library/agent-memory-store/src/NodeIdentity.models.ts",
+          "line": 233,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-233-logcursor",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "LogCursor",
+          "exportKind": "type",
+          "filePath": "src/NodeIdentity.models.ts",
+          "repoPath": "packages/tooling/library/agent-memory-store/src/NodeIdentity.models.ts",
+          "line": 246,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-246-logcursor",
           "currentTags": [
             "@category",
             "@since"
@@ -266348,8 +266656,8 @@
           "exportKind": "const",
           "filePath": "src/NodeIdentity.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeIdentity.models.ts",
-          "line": 220,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-220-nodekind",
+          "line": 271,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-271-nodekind",
           "currentTags": [
             "@category",
             "@since"
@@ -266370,8 +266678,8 @@
           "exportKind": "type",
           "filePath": "src/NodeIdentity.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeIdentity.models.ts",
-          "line": 241,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-241-nodekind",
+          "line": 293,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-293-nodekind",
           "currentTags": [
             "@category",
             "@since"
@@ -266392,8 +266700,8 @@
           "exportKind": "class",
           "filePath": "src/NodeIdentity.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeIdentity.models.ts",
-          "line": 267,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-267-revisionpreimage",
+          "line": 319,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-319-revisionpreimage",
           "currentTags": [
             "@category",
             "@since"
@@ -266414,8 +266722,8 @@
           "exportKind": "const",
           "filePath": "src/NodeIdentity.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeIdentity.models.ts",
-          "line": 315,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-315-revisionpreimage",
+          "line": 368,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-368-revisionpreimage",
           "currentTags": [
             "@param",
             "@returns",
@@ -266614,8 +266922,8 @@
           "exportKind": "class",
           "filePath": "src/Operation.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Operation.models.ts",
-          "line": 32,
-          "anchor": "packages-tooling-library-agent-memory-store-src-operation-models-ts-32-basenode",
+          "line": 33,
+          "anchor": "packages-tooling-library-agent-memory-store-src-operation-models-ts-33-basenode",
           "currentTags": [
             "@category",
             "@since"
@@ -266636,8 +266944,8 @@
           "exportKind": "class",
           "filePath": "src/Operation.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Operation.models.ts",
-          "line": 64,
-          "anchor": "packages-tooling-library-agent-memory-store-src-operation-models-ts-64-basefile",
+          "line": 65,
+          "anchor": "packages-tooling-library-agent-memory-store-src-operation-models-ts-65-basefile",
           "currentTags": [
             "@category",
             "@since"
@@ -266658,8 +266966,30 @@
           "exportKind": "class",
           "filePath": "src/Operation.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Operation.models.ts",
-          "line": 102,
-          "anchor": "packages-tooling-library-agent-memory-store-src-operation-models-ts-102-baseexport",
+          "line": 103,
+          "anchor": "packages-tooling-library-agent-memory-store-src-operation-models-ts-103-baseexport",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "InsertPlacement",
+          "exportKind": "class",
+          "filePath": "src/Operation.models.ts",
+          "repoPath": "packages/tooling/library/agent-memory-store/src/Operation.models.ts",
+          "line": 137,
+          "anchor": "packages-tooling-library-agent-memory-store-src-operation-models-ts-137-insertplacement",
           "currentTags": [
             "@category",
             "@since"
@@ -266680,8 +267010,8 @@
           "exportKind": "const",
           "filePath": "src/Operation.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Operation.models.ts",
-          "line": 149,
-          "anchor": "packages-tooling-library-agent-memory-store-src-operation-models-ts-149-nodeoperation",
+          "line": 192,
+          "anchor": "packages-tooling-library-agent-memory-store-src-operation-models-ts-192-nodeoperation",
           "currentTags": [
             "@category",
             "@since"
@@ -266702,8 +267032,8 @@
           "exportKind": "type",
           "filePath": "src/Operation.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Operation.models.ts",
-          "line": 184,
-          "anchor": "packages-tooling-library-agent-memory-store-src-operation-models-ts-184-nodeoperation",
+          "line": 228,
+          "anchor": "packages-tooling-library-agent-memory-store-src-operation-models-ts-228-nodeoperation",
           "currentTags": [
             "@category",
             "@since"
@@ -266724,8 +267054,8 @@
           "exportKind": "class",
           "filePath": "src/Operation.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Operation.models.ts",
-          "line": 200,
-          "anchor": "packages-tooling-library-agent-memory-store-src-operation-models-ts-200-operationbatch",
+          "line": 244,
+          "anchor": "packages-tooling-library-agent-memory-store-src-operation-models-ts-244-operationbatch",
           "currentTags": [
             "@category",
             "@since"
@@ -266746,8 +267076,8 @@
           "exportKind": "const",
           "filePath": "src/Recall.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Recall.models.ts",
-          "line": 47,
-          "anchor": "packages-tooling-library-agent-memory-store-src-recall-models-ts-47-recallfilter",
+          "line": 48,
+          "anchor": "packages-tooling-library-agent-memory-store-src-recall-models-ts-48-recallfilter",
           "currentTags": [
             "@category",
             "@since"
@@ -266768,8 +267098,8 @@
           "exportKind": "type",
           "filePath": "src/Recall.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Recall.models.ts",
-          "line": 73,
-          "anchor": "packages-tooling-library-agent-memory-store-src-recall-models-ts-73-recallfilter",
+          "line": 74,
+          "anchor": "packages-tooling-library-agent-memory-store-src-recall-models-ts-74-recallfilter",
           "currentTags": [
             "@category",
             "@since"
@@ -266790,8 +267120,118 @@
           "exportKind": "class",
           "filePath": "src/Recall.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Recall.models.ts",
-          "line": 95,
-          "anchor": "packages-tooling-library-agent-memory-store-src-recall-models-ts-95-recallbudget",
+          "line": 96,
+          "anchor": "packages-tooling-library-agent-memory-store-src-recall-models-ts-96-recallbudget",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "IndexSearch",
+          "exportKind": "class",
+          "filePath": "src/Recall.models.ts",
+          "repoPath": "packages/tooling/library/agent-memory-store/src/Recall.models.ts",
+          "line": 141,
+          "anchor": "packages-tooling-library-agent-memory-store-src-recall-models-ts-141-indexsearch",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "IndexHit",
+          "exportKind": "class",
+          "filePath": "src/Recall.models.ts",
+          "repoPath": "packages/tooling/library/agent-memory-store/src/Recall.models.ts",
+          "line": 181,
+          "anchor": "packages-tooling-library-agent-memory-store-src-recall-models-ts-181-indexhit",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "EmbeddingModel",
+          "exportKind": "const",
+          "filePath": "src/Recall.models.ts",
+          "repoPath": "packages/tooling/library/agent-memory-store/src/Recall.models.ts",
+          "line": 208,
+          "anchor": "packages-tooling-library-agent-memory-store-src-recall-models-ts-208-embeddingmodel",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "EmbeddingModel",
+          "exportKind": "type",
+          "filePath": "src/Recall.models.ts",
+          "repoPath": "packages/tooling/library/agent-memory-store/src/Recall.models.ts",
+          "line": 221,
+          "anchor": "packages-tooling-library-agent-memory-store-src-recall-models-ts-221-embeddingmodel",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "Embedding",
+          "exportKind": "class",
+          "filePath": "src/Recall.models.ts",
+          "repoPath": "packages/tooling/library/agent-memory-store/src/Recall.models.ts",
+          "line": 246,
+          "anchor": "packages-tooling-library-agent-memory-store-src-recall-models-ts-246-embedding",
           "currentTags": [
             "@category",
             "@since"
@@ -266812,8 +267252,8 @@
           "exportKind": "class",
           "filePath": "src/Recall.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Recall.models.ts",
-          "line": 138,
-          "anchor": "packages-tooling-library-agent-memory-store-src-recall-models-ts-138-fusionweights",
+          "line": 282,
+          "anchor": "packages-tooling-library-agent-memory-store-src-recall-models-ts-282-fusionweights",
           "currentTags": [
             "@category",
             "@since"
@@ -266834,8 +267274,8 @@
           "exportKind": "const",
           "filePath": "src/Recall.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Recall.models.ts",
-          "line": 180,
-          "anchor": "packages-tooling-library-agent-memory-store-src-recall-models-ts-180-defaultfusionweights",
+          "line": 324,
+          "anchor": "packages-tooling-library-agent-memory-store-src-recall-models-ts-324-defaultfusionweights",
           "currentTags": [
             "@category",
             "@since"
@@ -266856,8 +267296,8 @@
           "exportKind": "class",
           "filePath": "src/Recall.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Recall.models.ts",
-          "line": 204,
-          "anchor": "packages-tooling-library-agent-memory-store-src-recall-models-ts-204-recallquery",
+          "line": 348,
+          "anchor": "packages-tooling-library-agent-memory-store-src-recall-models-ts-348-recallquery",
           "currentTags": [
             "@category",
             "@since"
@@ -266878,8 +267318,8 @@
           "exportKind": "class",
           "filePath": "src/Recall.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Recall.models.ts",
-          "line": 245,
-          "anchor": "packages-tooling-library-agent-memory-store-src-recall-models-ts-245-candidate",
+          "line": 389,
+          "anchor": "packages-tooling-library-agent-memory-store-src-recall-models-ts-389-candidate",
           "currentTags": [
             "@category",
             "@since"
@@ -266900,8 +267340,8 @@
           "exportKind": "const",
           "filePath": "src/Recall.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Recall.models.ts",
-          "line": 294,
-          "anchor": "packages-tooling-library-agent-memory-store-src-recall-models-ts-294-recallresult",
+          "line": 438,
+          "anchor": "packages-tooling-library-agent-memory-store-src-recall-models-ts-438-recallresult",
           "currentTags": [
             "@category",
             "@since"
@@ -266922,8 +267362,8 @@
           "exportKind": "type",
           "filePath": "src/Recall.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Recall.models.ts",
-          "line": 316,
-          "anchor": "packages-tooling-library-agent-memory-store-src-recall-models-ts-316-recallresult",
+          "line": 460,
+          "anchor": "packages-tooling-library-agent-memory-store-src-recall-models-ts-460-recallresult",
           "currentTags": [
             "@category",
             "@since"
@@ -266988,8 +267428,8 @@
           "exportKind": "const",
           "filePath": "src/Scip.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Scip.models.ts",
-          "line": 29,
-          "anchor": "packages-tooling-library-agent-memory-store-src-scip-models-ts-29-scipsymbol",
+          "line": 35,
+          "anchor": "packages-tooling-library-agent-memory-store-src-scip-models-ts-35-scipsymbol",
           "currentTags": [
             "@category",
             "@since"
@@ -267010,8 +267450,8 @@
           "exportKind": "type",
           "filePath": "src/Scip.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Scip.models.ts",
-          "line": 42,
-          "anchor": "packages-tooling-library-agent-memory-store-src-scip-models-ts-42-scipsymbol",
+          "line": 48,
+          "anchor": "packages-tooling-library-agent-memory-store-src-scip-models-ts-48-scipsymbol",
           "currentTags": [
             "@category",
             "@since"
@@ -267032,8 +267472,8 @@
           "exportKind": "class",
           "filePath": "src/Scip.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Scip.models.ts",
-          "line": 59,
-          "anchor": "packages-tooling-library-agent-memory-store-src-scip-models-ts-59-sciprange",
+          "line": 65,
+          "anchor": "packages-tooling-library-agent-memory-store-src-scip-models-ts-65-sciprange",
           "currentTags": [
             "@category",
             "@since"
@@ -267050,122 +267490,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "ScipOccurrenceRole",
+          "symbolName": "SymbolLiveness",
           "exportKind": "const",
-          "filePath": "src/Scip.models.ts",
-          "repoPath": "packages/tooling/library/agent-memory-store/src/Scip.models.ts",
-          "line": 86,
-          "anchor": "packages-tooling-library-agent-memory-store-src-scip-models-ts-86-scipoccurrencerole",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ScipOccurrenceRole",
-          "exportKind": "type",
           "filePath": "src/Scip.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Scip.models.ts",
           "line": 98,
-          "anchor": "packages-tooling-library-agent-memory-store-src-scip-models-ts-98-scipoccurrencerole",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ScipOccurrence",
-          "exportKind": "class",
-          "filePath": "src/Scip.models.ts",
-          "repoPath": "packages/tooling/library/agent-memory-store/src/Scip.models.ts",
-          "line": 114,
-          "anchor": "packages-tooling-library-agent-memory-store-src-scip-models-ts-114-scipoccurrence",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ScipDocument",
-          "exportKind": "class",
-          "filePath": "src/Scip.models.ts",
-          "repoPath": "packages/tooling/library/agent-memory-store/src/Scip.models.ts",
-          "line": 142,
-          "anchor": "packages-tooling-library-agent-memory-store-src-scip-models-ts-142-scipdocument",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "ScipIndex",
-          "exportKind": "class",
-          "filePath": "src/Scip.models.ts",
-          "repoPath": "packages/tooling/library/agent-memory-store/src/Scip.models.ts",
-          "line": 168,
-          "anchor": "packages-tooling-library-agent-memory-store-src-scip-models-ts-168-scipindex",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "SymbolLiveness",
-          "exportKind": "const",
-          "filePath": "src/Scip.models.ts",
-          "repoPath": "packages/tooling/library/agent-memory-store/src/Scip.models.ts",
-          "line": 200,
-          "anchor": "packages-tooling-library-agent-memory-store-src-scip-models-ts-200-symbolliveness",
+          "anchor": "packages-tooling-library-agent-memory-store-src-scip-models-ts-98-symbolliveness",
           "currentTags": [
             "@category",
             "@since"
@@ -267186,8 +267516,8 @@
           "exportKind": "type",
           "filePath": "src/Scip.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Scip.models.ts",
-          "line": 212,
-          "anchor": "packages-tooling-library-agent-memory-store-src-scip-models-ts-212-symbolliveness",
+          "line": 110,
+          "anchor": "packages-tooling-library-agent-memory-store-src-scip-models-ts-110-symbolliveness",
           "currentTags": [
             "@category",
             "@since"
@@ -267208,8 +267538,8 @@
           "exportKind": "class",
           "filePath": "src/Scip.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Scip.models.ts",
-          "line": 233,
-          "anchor": "packages-tooling-library-agent-memory-store-src-scip-models-ts-233-symbolreference",
+          "line": 131,
+          "anchor": "packages-tooling-library-agent-memory-store-src-scip-models-ts-131-symbolreference",
           "currentTags": [
             "@category",
             "@since"
@@ -267230,8 +267560,8 @@
           "exportKind": "class",
           "filePath": "src/Scip.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Scip.models.ts",
-          "line": 263,
-          "anchor": "packages-tooling-library-agent-memory-store-src-scip-models-ts-263-scipdefinition",
+          "line": 161,
+          "anchor": "packages-tooling-library-agent-memory-store-src-scip-models-ts-161-scipdefinition",
           "currentTags": [
             "@category",
             "@since"
@@ -267252,8 +267582,8 @@
           "exportKind": "const",
           "filePath": "src/Scip.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Scip.models.ts",
-          "line": 311,
-          "anchor": "packages-tooling-library-agent-memory-store-src-scip-models-ts-311-symbolresolution",
+          "line": 209,
+          "anchor": "packages-tooling-library-agent-memory-store-src-scip-models-ts-209-symbolresolution",
           "currentTags": [
             "@category",
             "@since"
@@ -267274,8 +267604,8 @@
           "exportKind": "type",
           "filePath": "src/Scip.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/Scip.models.ts",
-          "line": 337,
-          "anchor": "packages-tooling-library-agent-memory-store-src-scip-models-ts-337-symbolresolution",
+          "line": 235,
+          "anchor": "packages-tooling-library-agent-memory-store-src-scip-models-ts-235-symbolresolution",
           "currentTags": [
             "@category",
             "@since"
@@ -267498,8 +267828,8 @@
           "exportKind": "class",
           "filePath": "src/SymbolResolver.service.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/SymbolResolver.service.ts",
-          "line": 50,
-          "anchor": "packages-tooling-library-agent-memory-store-src-symbolresolver-service-ts-50-symbolresolver",
+          "line": 51,
+          "anchor": "packages-tooling-library-agent-memory-store-src-symbolresolver-service-ts-51-symbolresolver",
           "currentTags": [
             "@category",
             "@since"
@@ -267604,12 +267934,34 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export * from \"./MarkdownProjector.service.ts\";",
+          "symbolName": "export * from \"./Embedder.service.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/index.ts",
           "line": 44,
-          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-44-export-from-markdownprojector-service-ts",
+          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-44-export-from-embedder-service-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./MarkdownProjector.service.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/tooling/library/agent-memory-store/src/index.ts",
+          "line": 51,
+          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-51-export-from-markdownprojector-service-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -267630,8 +267982,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/index.ts",
-          "line": 51,
-          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-51-export-from-memoryindexes-service-ts",
+          "line": 58,
+          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-58-export-from-memoryindexes-service-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -267652,8 +268004,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/index.ts",
-          "line": 58,
-          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-58-export-from-memorylog-service-ts",
+          "line": 65,
+          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-65-export-from-memorylog-service-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -267674,8 +268026,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/index.ts",
-          "line": 65,
-          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-65-export-from-nodeevent-events-ts",
+          "line": 72,
+          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-72-export-from-nodeevent-events-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -267696,8 +268048,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/index.ts",
-          "line": 72,
-          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-72-export-from-nodeidentity-models-ts",
+          "line": 79,
+          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-79-export-from-nodeidentity-models-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -267718,8 +268070,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/index.ts",
-          "line": 79,
-          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-79-export-from-observation-events-ts",
+          "line": 86,
+          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-86-export-from-observation-events-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -267740,8 +268092,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/index.ts",
-          "line": 86,
-          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-86-export-from-observationlog-service-ts",
+          "line": 93,
+          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-93-export-from-observationlog-service-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -267762,8 +268114,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/index.ts",
-          "line": 93,
-          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-93-export-from-operation-models-ts",
+          "line": 100,
+          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-100-export-from-operation-models-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -267784,8 +268136,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/index.ts",
-          "line": 100,
-          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-100-export-from-recall-models-ts",
+          "line": 107,
+          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-107-export-from-recall-models-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -267806,8 +268158,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/index.ts",
-          "line": 107,
-          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-107-export-from-recall-service-ts",
+          "line": 114,
+          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-114-export-from-recall-service-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -267828,8 +268180,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/index.ts",
-          "line": 114,
-          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-114-export-from-reranker-service-ts",
+          "line": 121,
+          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-121-export-from-reranker-service-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -267850,8 +268202,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/index.ts",
-          "line": 121,
-          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-121-export-from-scip-models-ts",
+          "line": 128,
+          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-128-export-from-scip-models-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -267872,8 +268224,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/index.ts",
-          "line": 128,
-          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-128-export-from-spananchor-models-ts",
+          "line": 135,
+          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-135-export-from-spananchor-models-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -267894,8 +268246,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/index.ts",
-          "line": 135,
-          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-135-export-from-statuslifecycle-models-ts",
+          "line": 142,
+          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-142-export-from-statuslifecycle-models-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -267916,8 +268268,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/index.ts",
-          "line": 142,
-          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-142-export-from-symbolresolver-service-ts",
+          "line": 149,
+          "anchor": "packages-tooling-library-agent-memory-store-src-index-ts-149-export-from-symbolresolver-service-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -505593,9 +505945,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 566,
-        "publicModuleCount": 562,
-        "publicExportCount": 5134
+        "sourceFileCount": 569,
+        "publicModuleCount": 565,
+        "publicExportCount": 5172
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -507689,7 +508041,7 @@
               "rule": "multiple-description-paragraphs"
             }
           ],
-          "exportCount": 31,
+          "exportCount": 33,
           "remediationStatus": "open"
         },
         {
@@ -507733,7 +508085,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 11,
+          "exportCount": 13,
           "remediationStatus": "resolved"
         },
         {
@@ -507756,6 +508108,72 @@
           "categoryViolations": [],
           "documentationShapeViolations": [],
           "exportCount": 2,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/Ci/CiPartitions.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.command.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 10,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 16,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/commands/Ci/CiPartitions.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.service.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-service-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 5,
           "remediationStatus": "resolved"
         },
         {
@@ -507885,7 +508303,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 22,
+          "exportCount": 21,
           "remediationStatus": "resolved"
         },
         {
@@ -508097,7 +508515,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 30,
+          "exportCount": 33,
           "remediationStatus": "resolved"
         },
         {
@@ -513115,7 +513533,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 2,
+          "exportCount": 3,
           "remediationStatus": "resolved"
         },
         {
@@ -531553,8 +531971,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/Ci.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts",
-          "line": 295,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-ci-command-ts-295-appendturbosummary",
+          "line": 296,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-ci-command-ts-296-appendturbosummary",
           "currentTags": [
             "@param",
             "@returns",
@@ -531578,8 +531996,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/Ci.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts",
-          "line": 391,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-ci-command-ts-391-cicommand",
+          "line": 392,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-ci-command-ts-392-cicommand",
           "currentTags": [
             "@category",
             "@since"
@@ -532381,8 +532799,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiCoverage.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiCoverage.ts",
-          "line": 402,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-402-cicoverageplan",
+          "line": 406,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-406-cicoverageplan",
           "currentTags": [
             "@category",
             "@since"
@@ -532403,8 +532821,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiCoverage.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiCoverage.ts",
-          "line": 424,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-424-runcicoveragepartition",
+          "line": 428,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-428-runcicoveragepartition",
           "currentTags": [
             "@category",
             "@since"
@@ -532425,8 +532843,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiCoverage.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiCoverage.ts",
-          "line": 585,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-585-runcilabscoverage",
+          "line": 591,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-591-runcilabscoverage",
           "currentTags": [
             "@category",
             "@since"
@@ -532447,8 +532865,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiCoverage.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiCoverage.ts",
-          "line": 627,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-627-runcicoveragecomparison",
+          "line": 633,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-633-runcicoveragecomparison",
           "currentTags": [
             "@category",
             "@since"
@@ -532469,8 +532887,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiCoverage.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiCoverage.ts",
-          "line": 710,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-710-cicoveragetestargs",
+          "line": 716,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-716-cicoveragetestargs",
           "currentTags": [
             "@category",
             "@since"
@@ -532645,8 +533063,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 443,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-443-workflowjobcontexts",
+          "line": 447,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-447-workflowjobcontexts",
           "currentTags": [
             "@category",
             "@since"
@@ -532667,8 +533085,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 485,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-485-prsizelabeldiff",
+          "line": 484,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-484-prsizelabeldiff",
           "currentTags": [
             "@param",
             "@returns",
@@ -532691,8 +533109,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 513,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-513-heldgrouprunids",
+          "line": 512,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-512-heldgrouprunids",
           "currentTags": [
             "@param",
             "@returns",
@@ -532715,8 +533133,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 556,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-556-desktopenvironmentapproved",
+          "line": 555,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-555-desktopenvironmentapproved",
           "currentTags": [
             "@param",
             "@returns",
@@ -532739,8 +533157,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 597,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-597-reviewerappintegrationmatches",
+          "line": 596,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-596-reviewerappintegrationmatches",
           "currentTags": [
             "@param",
             "@returns",
@@ -532763,8 +533181,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 793,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-793-cigovernancecommands",
+          "line": 792,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-792-cigovernancecommands",
           "currentTags": [
             "@category",
             "@since"
@@ -533097,8 +533515,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 719,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-719-cilanerunoptions",
+          "line": 720,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-720-cilanerunoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -533119,8 +533537,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 910,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-910-cilanepartitionproof",
+          "line": 911,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-911-cilanepartitionproof",
           "currentTags": [
             "@category",
             "@since"
@@ -533141,8 +533559,54 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1158,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1158-provecilanepartition",
+          "line": 1159,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1159-provecilanepartition",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiLanePartitionStepRequest",
+          "exportKind": "class",
+          "filePath": "src/commands/Ci/CiLane.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+          "line": 1354,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1354-cilanepartitionsteprequest",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ciLanePartitionStepForTesting",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiLane.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+          "line": 1397,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1397-cilanepartitionstepfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -533165,8 +533629,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1279,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1279-cilanepartitionargs",
+          "line": 1422,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1422-cilanepartitionargs",
           "currentTags": [
             "@category",
             "@since"
@@ -533187,8 +533651,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1311,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1311-cilanedefaultplacementlinesfortesting",
+          "line": 1454,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1454-cilanedefaultplacementlinesfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -533211,8 +533675,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1358,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1358-cilanepartitionargsfortesting",
+          "line": 1501,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1501-cilanepartitionargsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -533235,8 +533699,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1572,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1572-cilanestepsfortesting",
+          "line": 1715,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1715-cilanestepsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -533263,8 +533727,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1926,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1926-docgenlanemodeforchangedpaths",
+          "line": 2069,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2069-docgenlanemodeforchangedpaths",
           "currentTags": [
             "@param",
             "@returns",
@@ -533287,8 +533751,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2370,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2370-runcilane",
+          "line": 2529,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2529-runcilane",
           "currentTags": [
             "@param",
             "@returns",
@@ -533311,8 +533775,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2448,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2448-cilanecommand",
+          "line": 2607,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2607-cilanecommand",
           "currentTags": [
             "@category",
             "@since"
@@ -533333,8 +533797,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2635,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2635-ci-local-default-lanes",
+          "line": 2794,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2794-ci-local-default-lanes",
           "currentTags": [
             "@category",
             "@since"
@@ -533355,8 +533819,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2730,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2730-cilocalstepplan",
+          "line": 2889,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2889-cilocalstepplan",
           "currentTags": [
             "@category",
             "@since"
@@ -533377,8 +533841,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2812,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2812-cilanedispatchstep",
+          "line": 2971,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2971-cilanedispatchstep",
           "currentTags": [
             "@param",
             "@returns",
@@ -533401,8 +533865,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2850,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2850-cilocalstepsfortesting",
+          "line": 3009,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3009-cilocalstepsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -533425,8 +533889,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2886,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2886-cilocallaneinputsfortesting",
+          "line": 3045,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3045-cilocallaneinputsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -533449,8 +533913,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2917,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2917-runcilocal",
+          "line": 3076,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3076-runcilocal",
           "currentTags": [
             "@param",
             "@returns",
@@ -533473,8 +533937,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2953,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2953-cilocalcommand",
+          "line": 3112,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3112-cilocalcommand",
           "currentTags": [
             "@category",
             "@since"
@@ -533561,8 +534025,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 92,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-92-cilanepartitionid",
+          "line": 96,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-96-cilanepartitionid",
           "currentTags": [
             "@category",
             "@since"
@@ -533583,8 +534047,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 129,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-129-cilanepartitionid",
+          "line": 167,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-167-cilanepartitionid",
           "currentTags": [
             "@category",
             "@since"
@@ -533605,8 +534069,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 153,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-153-cilanepartitionshard",
+          "line": 191,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-191-cilanepartitionshard",
           "currentTags": [
             "@category",
             "@since"
@@ -533627,8 +534091,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 195,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-195-cilanepartition",
+          "line": 233,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-233-cilanepartition",
           "currentTags": [
             "@category",
             "@since"
@@ -533649,8 +534113,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 243,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-243-ci-lane-partitions",
+          "line": 281,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-281-ci-lane-partitions",
           "currentTags": [
             "@category",
             "@since"
@@ -533671,8 +534135,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 702,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-702-cilanedefaultplacement",
+          "line": 1004,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-1004-cilanedefaultplacement",
           "currentTags": [
             "@category",
             "@since"
@@ -533693,8 +534157,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 755,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-755-cilanedefaultplacements",
+          "line": 1057,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-1057-cilanedefaultplacements",
           "currentTags": [
             "@param",
             "@returns",
@@ -533717,8 +534181,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 812,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-812-withcilanedefaultplacements",
+          "line": 1114,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-1114-withcilanedefaultplacements",
           "currentTags": [
             "@param",
             "@returns",
@@ -533781,12 +534245,58 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "heavyDocsOnlyPattern",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiOperational.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
+          "line": 94,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-94-heavydocsonlypattern",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "isHeavyDocsOnlyPath",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiOperational.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
+          "line": 116,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-116-isheavydocsonlypath",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "CiGoalDocument",
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 84,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-84-cigoaldocument",
+          "line": 132,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-132-cigoaldocument",
           "currentTags": [
             "@category",
             "@since"
@@ -533807,8 +534317,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 101,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-101-cigoaldocument",
+          "line": 149,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-149-cigoaldocument",
           "currentTags": [
             "@category",
             "@since"
@@ -533829,8 +534339,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 117,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-117-cidesktopinput",
+          "line": 165,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-165-cidesktopinput",
           "currentTags": [
             "@category",
             "@since"
@@ -533851,8 +534361,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 134,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-134-cidesktopinput",
+          "line": 182,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-182-cidesktopinput",
           "currentTags": [
             "@category",
             "@since"
@@ -533873,8 +534383,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 150,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-150-ciresourcelane",
+          "line": 198,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-198-ciresourcelane",
           "currentTags": [
             "@category",
             "@since"
@@ -533895,8 +534405,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 167,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-167-ciresourcelane",
+          "line": 215,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-215-ciresourcelane",
           "currentTags": [
             "@category",
             "@since"
@@ -533917,8 +534427,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 182,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-182-cichangeprofile",
+          "line": 230,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-230-cichangeprofile",
           "currentTags": [
             "@category",
             "@since"
@@ -533939,8 +534449,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 201,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-201-ciresourcesample",
+          "line": 249,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-249-ciresourcesample",
           "currentTags": [
             "@category",
             "@since"
@@ -533961,8 +534471,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 235,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-235-cienvironmentselection",
+          "line": 283,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-283-cienvironmentselection",
           "currentTags": [
             "@category",
             "@since"
@@ -534007,6 +534517,706 @@
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.service.ts",
           "line": 144,
           "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-service-ts-144-cioperationallive",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "LptItem",
+          "exportKind": "interface",
+          "filePath": "src/commands/Ci/CiPartitions.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.command.ts",
+          "line": 62,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-62-lptitem",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "LptBin",
+          "exportKind": "interface",
+          "filePath": "src/commands/Ci/CiPartitions.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.command.ts",
+          "line": 76,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-76-lptbin",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "lptAssign",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiPartitions.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.command.ts",
+          "line": 114,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-114-lptassign",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "buildVitestShardPlan",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiPartitions.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.command.ts",
+          "line": 173,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-173-buildvitestshardplan",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "checkCiPartitions",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiPartitions.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.command.ts",
+          "line": 350,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-350-checkcipartitions",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "renderCiPartitionReport",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiPartitions.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.command.ts",
+          "line": 382,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-382-rendercipartitionreport",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "pruneCiPartitionPlans",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiPartitions.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.command.ts",
+          "line": 575,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-575-prunecipartitionplans",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "worstCaseRunTimings",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiPartitions.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.command.ts",
+          "line": 610,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-610-worstcaseruntimings",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "rebalanceCiPartitions",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiPartitions.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.command.ts",
+          "line": 647,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-647-rebalancecipartitions",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ciPartitionsCommand",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiPartitions.command.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.command.ts",
+          "line": 748,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-748-cipartitionscommand",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CI_SHARDED_PARTITION_FILE_BUDGET_SECONDS",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
+          "line": 43,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-43-ci-sharded-partition-file-budget-seconds",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CI_UNIT_BIN_SERIAL_BUDGET_SECONDS",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
+          "line": 66,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-66-ci-unit-bin-serial-budget-seconds",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "VitestShardPlan",
+          "exportKind": "class",
+          "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
+          "line": 99,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-99-vitestshardplan",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiShardedPartitionFamily",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
+          "line": 139,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-139-cishardedpartitionfamily",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiShardedPartitionFamily",
+          "exportKind": "type",
+          "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
+          "line": 160,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-160-cishardedpartitionfamily",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiShardedPartitionSource",
+          "exportKind": "class",
+          "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
+          "line": 182,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-182-cishardedpartitionsource",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CI_SHARDED_PARTITION_SOURCES",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
+          "line": 210,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-210-ci-sharded-partition-sources",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiPartitionFileTiming",
+          "exportKind": "class",
+          "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
+          "line": 244,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-244-cipartitionfiletiming",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiPartitionPackageTiming",
+          "exportKind": "class",
+          "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
+          "line": 275,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-275-cipartitionpackagetiming",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiPartitionRunTimings",
+          "exportKind": "class",
+          "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
+          "line": 302,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-302-cipartitionruntimings",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ParsedHostedTestUnitLog",
+          "exportKind": "class",
+          "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
+          "line": 329,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-329-parsedhostedtestunitlog",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "BuildVitestShardPlanOptions",
+          "exportKind": "class",
+          "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
+          "line": 360,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-360-buildvitestshardplanoptions",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiPartitionBudgetStatus",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
+          "line": 396,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-396-cipartitionbudgetstatus",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiPartitionBudgetStatus",
+          "exportKind": "type",
+          "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
+          "line": 417,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-417-cipartitionbudgetstatus",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiPartitionBudgetRow",
+          "exportKind": "class",
+          "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
+          "line": 440,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-440-cipartitionbudgetrow",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiPartitionRebalanceReport",
+          "exportKind": "class",
+          "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
+          "line": 469,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-469-cipartitionrebalancereport",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiPartitionTimingSourceShape",
+          "exportKind": "interface",
+          "filePath": "src/commands/Ci/CiPartitions.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.service.ts",
+          "line": 48,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-service-ts-48-cipartitiontimingsourceshape",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiPartitionTimingSource",
+          "exportKind": "class",
+          "filePath": "src/commands/Ci/CiPartitions.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.service.ts",
+          "line": 68,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-service-ts-68-cipartitiontimingsource",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "parseHostedTestUnitLog",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiPartitions.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.service.ts",
+          "line": 142,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-service-ts-142-parsehostedtestunitlog",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "testUnitJobPartition",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiPartitions.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.service.ts",
+          "line": 171,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-service-ts-171-testunitjobpartition",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiPartitionTimingSourceLive",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiPartitions.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.service.ts",
+          "line": 296,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-service-ts-296-cipartitiontimingsourcelive",
           "currentTags": [
             "@category",
             "@since"
@@ -535117,12 +536327,31 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "export { heavyDocsOnlyPattern, isHeavyDocsOnlyPath } from \"./CiOperational.schemas.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Ci/HeavyAdmission.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
+          "line": 50,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-50-export-heavydocsonlypattern-isheavydocsonlypath-from-cioperational-schemas-ts",
+          "currentTags": [],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "HEAVY_ADMISSION_LABEL",
           "exportKind": "const",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 71,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-71-heavy-admission-label",
+          "line": 74,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-74-heavy-admission-label",
           "currentTags": [
             "@category",
             "@since"
@@ -535143,8 +536372,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 87,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-87-heavy-context-prefix",
+          "line": 90,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-90-heavy-context-prefix",
           "currentTags": [
             "@category",
             "@since"
@@ -535165,8 +536394,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 104,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-104-heavyadmissionsource",
+          "line": 107,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-107-heavyadmissionsource",
           "currentTags": [
             "@category",
             "@since"
@@ -535187,8 +536416,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 117,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-117-heavyadmissionsource",
+          "line": 120,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-120-heavyadmissionsource",
           "currentTags": [
             "@category",
             "@since"
@@ -535209,8 +536438,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 142,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-142-heavyadmissionverdict",
+          "line": 145,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-145-heavyadmissionverdict",
           "currentTags": [
             "@category",
             "@since"
@@ -535231,8 +536460,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 155,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-155-heavyadmissionverdict",
+          "line": 158,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-158-heavyadmissionverdict",
           "currentTags": [
             "@category",
             "@since"
@@ -535253,8 +536482,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 171,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-171-heavyadmissioneventname",
+          "line": 174,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-174-heavyadmissioneventname",
           "currentTags": [
             "@category",
             "@since"
@@ -535275,8 +536504,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 184,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-184-heavyadmissioneventname",
+          "line": 187,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-187-heavyadmissioneventname",
           "currentTags": [
             "@category",
             "@since"
@@ -535297,8 +536526,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 215,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-215-heavyadmissionevent",
+          "line": 218,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-218-heavyadmissionevent",
           "currentTags": [
             "@category",
             "@since"
@@ -535319,8 +536548,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 260,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-260-heavyadmissionroute",
+          "line": 263,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-263-heavyadmissionroute",
           "currentTags": [
             "@category",
             "@since"
@@ -535341,55 +536570,9 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 298,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-298-heavyadmission",
+          "line": 301,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-301-heavyadmission",
           "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "heavyDocsOnlyPattern",
-          "exportKind": "const",
-          "filePath": "src/commands/Ci/HeavyAdmission.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 340,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-340-heavydocsonlypattern",
-          "currentTags": [
-            "@category",
-            "@since"
-          ],
-          "missingRequiredTags": [],
-          "forbiddenTags": [],
-          "missingSummary": false,
-          "malformedConditionalTags": [],
-          "exampleImportViolations": [],
-          "unsafeExampleViolations": [],
-          "schemaAnnotationGaps": [],
-          "categoryViolations": [],
-          "documentationShapeViolations": [],
-          "remediationStatus": "resolved"
-        },
-        {
-          "symbolName": "isHeavyDocsOnlyPath",
-          "exportKind": "const",
-          "filePath": "src/commands/Ci/HeavyAdmission.ts",
-          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 362,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-362-isheavydocsonlypath",
-          "currentTags": [
-            "@param",
-            "@returns",
             "@category",
             "@since"
           ],
@@ -535409,8 +536592,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 420,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-420-decideheavyadmission",
+          "line": 375,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-375-decideheavyadmission",
           "currentTags": [
             "@param",
             "@returns",
@@ -535433,8 +536616,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 485,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-485-ghpullrequesteventpayload",
+          "line": 440,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-440-ghpullrequesteventpayload",
           "currentTags": [
             "@category",
             "@since"
@@ -535455,8 +536638,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 519,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-519-heavyadmissionreadinput",
+          "line": 474,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-474-heavyadmissionreadinput",
           "currentTags": [
             "@category",
             "@since"
@@ -535477,8 +536660,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 568,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-568-readheavyadmissionchangedpaths",
+          "line": 523,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-523-readheavyadmissionchangedpaths",
           "currentTags": [
             "@param",
             "@returns",
@@ -535501,8 +536684,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 618,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-618-readheavyadmissionevent",
+          "line": 573,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-573-readheavyadmissionevent",
           "currentTags": [
             "@param",
             "@returns",
@@ -535525,8 +536708,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 674,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-674-readheavyadmissionroute",
+          "line": 629,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-629-readheavyadmissionroute",
           "currentTags": [
             "@category",
             "@since"
@@ -535547,8 +536730,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 754,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-754-heavyadmissiongithuboutputs",
+          "line": 709,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-709-heavyadmissiongithuboutputs",
           "currentTags": [
             "@param",
             "@returns",
@@ -535571,8 +536754,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 790,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-790-renderheavyadmissionsummary",
+          "line": 745,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-745-renderheavyadmissionsummary",
           "currentTags": [
             "@param",
             "@returns",
@@ -535595,8 +536778,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/HeavyAdmission.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/HeavyAdmission.ts",
-          "line": 823,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-823-heavyadmissionschemasfortesting",
+          "line": 778,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-heavyadmission-ts-778-heavyadmissionschemasfortesting",
           "currentTags": [
             "@category",
             "@since"
@@ -536459,8 +537642,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 2055,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2055-cilanetiminggithubclientshape",
+          "line": 2089,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2089-cilanetiminggithubclientshape",
           "currentTags": [
             "@category",
             "@since"
@@ -536481,8 +537664,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 2074,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2074-cilanetiminggithubclient",
+          "line": 2108,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2108-cilanetiminggithubclient",
           "currentTags": [
             "@category",
             "@since"
@@ -536503,8 +537686,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 2245,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2245-collectrequiredcontexts",
+          "line": 2279,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2279-collectrequiredcontexts",
           "currentTags": [
             "@param",
             "@returns",
@@ -536527,8 +537710,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 2822,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2822-buildcilanetimingwindowreport",
+          "line": 2856,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2856-buildcilanetimingwindowreport",
           "currentTags": [
             "@param",
             "@returns",
@@ -536551,8 +537734,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 2912,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2912-collectcilanetimingwindow",
+          "line": 2946,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2946-collectcilanetimingwindow",
           "currentTags": [
             "@param",
             "@returns",
@@ -536575,8 +537758,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3191,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3191-cilanetimingdaypeaks",
+          "line": 3225,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3225-cilanetimingdaypeaks",
           "currentTags": [
             "@param",
             "@returns",
@@ -536599,8 +537782,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3300,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3300-rendercilanetimingwindowmarkdown",
+          "line": 3334,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3334-rendercilanetimingwindowmarkdown",
           "currentTags": [
             "@param",
             "@returns",
@@ -536623,8 +537806,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3337,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3337-rendercilanetimingwindowsummary",
+          "line": 3371,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3371-rendercilanetimingwindowsummary",
           "currentTags": [
             "@param",
             "@returns",
@@ -536647,8 +537830,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3450,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3450-rendercilanetimingwindowtsv",
+          "line": 3484,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3484-rendercilanetimingwindowtsv",
           "currentTags": [
             "@param",
             "@returns",
@@ -536671,8 +537854,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3552,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3552-assesscilanetimingwindowbounds",
+          "line": 3586,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3586-assesscilanetimingwindowbounds",
           "currentTags": [
             "@param",
             "@returns",
@@ -536695,8 +537878,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3600,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3600-assesscilanetimingwindowpopulation",
+          "line": 3634,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3634-assesscilanetimingwindowpopulation",
           "currentTags": [
             "@param",
             "@returns",
@@ -536719,8 +537902,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3638,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3638-rendercilanetimingwindowpreviewbanner",
+          "line": 3672,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3672-rendercilanetimingwindowpreviewbanner",
           "currentTags": [
             "@param",
             "@returns",
@@ -536743,8 +537926,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3673,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3673-guardcilanetimingwindowbounds",
+          "line": 3707,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3707-guardcilanetimingwindowbounds",
           "currentTags": [
             "@param",
             "@returns",
@@ -536767,8 +537950,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3823,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3823-cilanetimingscommand",
+          "line": 3857,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3857-cilanetimingscommand",
           "currentTags": [
             "@category",
             "@since"
@@ -539673,12 +540856,78 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export * from \"./CiRerunRunnerLoss.ts\";",
+          "symbolName": "export * from \"./CiPartitions.command.ts\";",
           "exportKind": "re-export",
           "filePath": "src/commands/Ci/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/index.ts",
           "line": 106,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-106-export-from-cirerunrunnerloss-ts",
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-106-export-from-cipartitions-command-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./CiPartitions.schemas.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Ci/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/index.ts",
+          "line": 113,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-113-export-from-cipartitions-schemas-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./CiPartitions.service.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Ci/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/index.ts",
+          "line": 120,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-120-export-from-cipartitions-service-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "export * from \"./CiRerunRunnerLoss.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Ci/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/index.ts",
+          "line": 127,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-127-export-from-cirerunrunnerloss-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -539699,8 +540948,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Ci/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/index.ts",
-          "line": 113,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-113-export-from-cirunneroutputs-ts",
+          "line": 134,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-134-export-from-cirunneroutputs-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -539721,8 +540970,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Ci/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/index.ts",
-          "line": 120,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-120-export-from-dependencyreview-ts",
+          "line": 141,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-141-export-from-dependencyreview-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -539743,8 +540992,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Ci/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/index.ts",
-          "line": 127,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-127-export-from-dependencyreviewcommand-ts",
+          "line": 148,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-148-export-from-dependencyreviewcommand-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -539765,8 +541014,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Ci/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/index.ts",
-          "line": 134,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-134-export-from-dependencyreviewschemas-ts",
+          "line": 155,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-155-export-from-dependencyreviewschemas-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -539787,8 +541036,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Ci/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/index.ts",
-          "line": 141,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-141-export-from-heavyadmission-ts",
+          "line": 162,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-162-export-from-heavyadmission-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -539809,8 +541058,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Ci/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/index.ts",
-          "line": 148,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-148-export-from-lanetimings-ts",
+          "line": 169,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-169-export-from-lanetimings-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -539831,8 +541080,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Ci/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/index.ts",
-          "line": 155,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-155-export-from-route-command-ts",
+          "line": 176,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-176-export-from-route-command-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -539853,8 +541102,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Ci/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/index.ts",
-          "line": 162,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-162-export-from-route-schemas-ts",
+          "line": 183,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-183-export-from-route-schemas-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -539875,8 +541124,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Ci/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/index.ts",
-          "line": 169,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-169-export-from-route-service-ts",
+          "line": 190,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-190-export-from-route-service-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -539897,8 +541146,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Ci/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/index.ts",
-          "line": 176,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-176-export-from-routecensus-ts",
+          "line": 197,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-197-export-from-routecensus-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -539919,8 +541168,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Ci/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/index.ts",
-          "line": 183,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-183-export-from-routeclassify-ts",
+          "line": 204,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-204-export-from-routeclassify-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -539941,8 +541190,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Ci/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/index.ts",
-          "line": 190,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-190-export-from-routecorpus-ts",
+          "line": 211,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-211-export-from-routecorpus-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -539963,8 +541212,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Ci/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/index.ts",
-          "line": 197,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-197-export-from-routefootprints-ts",
+          "line": 218,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-218-export-from-routefootprints-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -539985,8 +541234,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Ci/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/index.ts",
-          "line": 204,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-204-export-from-runnerlossrerun-ts",
+          "line": 225,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-index-ts-225-export-from-runnerlossrerun-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -559322,8 +560571,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Decisions.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.projection.ts",
-          "line": 224,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-224-rendergoaldecisionblock",
+          "line": 226,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-226-rendergoaldecisionblock",
           "currentTags": [
             "@param",
             "@returns",
@@ -559346,8 +560595,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Decisions.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.projection.ts",
-          "line": 276,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-276-splicegoaldecisionblock",
+          "line": 278,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-278-splicegoaldecisionblock",
           "currentTags": [
             "@param",
             "@returns",
@@ -559370,8 +560619,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Decisions.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.projection.ts",
-          "line": 380,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-380-goaldecisionlogreport",
+          "line": 382,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-382-goaldecisionlogreport",
           "currentTags": [
             "@param",
             "@returns",
@@ -581850,8 +583099,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 1786,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1786-discovereffectimportsourcefiles",
+          "line": 1797,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1797-discovereffectimportsourcefiles",
           "currentTags": [
             "@param",
             "@returns",
@@ -581874,8 +583123,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 1830,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1830-discovereffectimportmarkdownfiles",
+          "line": 1841,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1841-discovereffectimportmarkdownfiles",
           "currentTags": [
             "@param",
             "@returns",
@@ -581898,8 +583147,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 1875,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1875-runeffectimportrules",
+          "line": 1886,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1886-runeffectimportrules",
           "currentTags": [
             "@category",
             "@since"
@@ -588496,12 +589745,34 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "WORKSPACE_MANIFEST_WALK",
+          "exportKind": "const",
+          "filePath": "src/commands/Lint/PackageTestImports.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PackageTestImports.ts",
+          "line": 163,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-packagetestimports-ts-163-workspace-manifest-walk",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "inspectPackageTestImports",
           "exportKind": "const",
           "filePath": "src/commands/Lint/PackageTestImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PackageTestImports.ts",
-          "line": 345,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-packagetestimports-ts-345-inspectpackagetestimports",
+          "line": 364,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-packagetestimports-ts-364-inspectpackagetestimports",
           "currentTags": [
             "@category",
             "@since"
@@ -588522,8 +589793,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/PackageTestImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PackageTestImports.ts",
-          "line": 417,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-packagetestimports-ts-417-lintpackagetestimportscommand",
+          "line": 436,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-packagetestimports-ts-436-lintpackagetestimportscommand",
           "currentTags": [
             "@category",
             "@since"
@@ -589034,8 +590305,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 752,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-752-policytoolsfingerprintpolicy",
+          "line": 756,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-756-policytoolsfingerprintpolicy",
           "currentTags": [
             "@category",
             "@since"
@@ -589056,8 +590327,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/PolicyFingerprint.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.ts",
-          "line": 827,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-827-lintpolicyfingerprintcommand",
+          "line": 831,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-policyfingerprint-ts-831-lintpolicyfingerprintcommand",
           "currentTags": [
             "@category",
             "@since"

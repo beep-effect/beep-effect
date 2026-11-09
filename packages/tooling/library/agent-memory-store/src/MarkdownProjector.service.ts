@@ -22,8 +22,11 @@ const $I = $AgentMemoryStoreId.create("MarkdownProjector.service");
  *
  * **Details**
  *
- * - `importFolder` records a folder in the log and returns its base. A failed
- *   import leaves the folder untouched (AC-8).
+ * - `importFolder` records a folder in the log and returns its base. It cuts
+ *   every file into an ordered partition of nodes, `gap` nodes included, so
+ *   the log alone reproduces each file's bytes (decision
+ *   `file-is-an-ordered-node-partition`). A failed import leaves the folder
+ *   untouched (AC-8).
  * - `exportFolder` writes the log's current state to the folder and returns
  *   the base agents edit against; bytes outside touched node spans are
  *   preserved exactly (AC-1). A folder the log has not imported fails with

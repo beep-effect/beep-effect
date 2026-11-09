@@ -1,6 +1,8 @@
 import {
   ClaimGateViolation,
   ContentHash,
+  HoldId,
+  LineageId,
   MemoryFilePath,
   MemoryGateViolation,
   NodeId,
@@ -18,6 +20,8 @@ export const revisionB = RevisionId.make("22222222222222222222222222222222222222
 export const revisionC = RevisionId.make("3333333333333333333333333333333333333333333333333333333333333333");
 export const folderDigest = Sha256Hex.make("4444444444444444444444444444444444444444444444444444444444444444");
 export const filePath = MemoryFilePath.make("notes/decisions.md");
+export const holdId = HoldId.make("018f9c3e-7d2a-7b4c-9e1f-2a3b4c5d6e90");
+export const author = LineageId.make("session-42");
 
 const digest = SourceTextDigest.make("sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
 
@@ -33,6 +37,16 @@ export const anchor = OccurrenceAnchor.make({
   }),
   unit: "utf16",
   anchor: TextAnchor.make({ startChar: 6, endChar: 10, quote: "fact" }),
+});
+
+export const missingPredecessor = MemoryGateViolation.make({
+  code: "insertAfterMissingNode",
+  violation: ClaimGateViolation.make({
+    focusNode: nodeId,
+    path: "afterNodeId",
+    message: "The node this insert follows never reached the log.",
+    severity: "violation",
+  }),
 });
 
 export const staleRevision = MemoryGateViolation.make({

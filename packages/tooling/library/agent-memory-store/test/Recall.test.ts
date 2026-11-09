@@ -1,8 +1,12 @@
 import {
   Candidate,
   defaultFusionWeights,
+  Embedder,
   FusionWeights,
+  IndexHit,
+  IndexSearch,
   RecallBudget,
+  RecallFilter,
   RecallQuery,
   RecallResult,
   Reranker,
@@ -54,6 +58,41 @@ describe("Recall models", () => {
       const made = RecallBudget.make({ maxTokens: 2000 });
       expect(made.maxCandidates).toBe(50);
       expect(made.maxAccepted).toBe(5);
+    })
+  );
+
+  it.effect(
+    "carries the authoritative filters inside an index search and scores a hit in the index's own scale",
+    Effect.fnUntraced(function* () {
+      const search = IndexSearch.make({
+        text: "sqlite driver",
+        filters: [RecallFilter.cases.kind.make({ kind: "listItem" })],
+        limit: 50,
+      });
+      const encoded = yield* S.encodeEffect(IndexSearch)(search);
+      expect(encoded).toEqual({ text: "sqlite driver", filters: [{ filter: "kind", kind: "listItem" }], limit: 50 });
+      const decoded = yield* S.decodeEffect(IndexSearch)(encoded);
+      expect(decoded).toEqual(search);
+
+      const hit = IndexHit.make({ nodeId, revisionId: revisionA, text: "Use the sqlite driver.", score: 4.2 });
+      const encodedHit = yield* S.encodeEffect(IndexHit)(hit);
+      expect(encodedHit).toEqual({
+        nodeId,
+        revisionId: revisionA,
+        text: "Use the sqlite driver.",
+        score: 4.2,
+      });
+    })
+  );
+});
+
+layer(Embedder.unavailable)("Embedder.unavailable", (it) => {
+  it.effect(
+    "returns no embeddings, so the vector index stays empty without a local model",
+    Effect.fnUntraced(function* () {
+      const embedder = yield* Embedder;
+      const embeddings = yield* embedder.embed(["sqlite driver", "memory log"]);
+      assertNone(embeddings);
     })
   );
 });

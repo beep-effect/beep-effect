@@ -9,7 +9,8 @@
 import { $AgentMemoryStoreId } from "@beep/identity/packages";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as S from "effect/Schema";
-import { MemoryFilePath, NodeId, NodeKind, RevisionId } from "./NodeIdentity.models.ts";
+import { LogCursor, MemoryFilePath, NodeId, NodeKind, RevisionId } from "./NodeIdentity.models.ts";
+import { LineageId } from "./Observation.events.ts";
 import { OccurrenceAnchor } from "./SpanAnchor.models.ts";
 import { StatusTransition } from "./StatusLifecycle.models.ts";
 
@@ -79,19 +80,19 @@ export class BaseFile extends S.Opaque<BaseFile, { readonly brand: unique symbol
  * **Details**
  *
  * Admission compares each operation's expected revision with the log, so the
- * base records the folder digest, every file's nodes and the log frontier at
- * export time.
+ * base records the folder digest, every file's nodes and the log cursor the
+ * export reflects.
  *
  * **Example** (Construct an empty base export)
  *
  * ```ts
- * import { BaseExport } from "@beep/agent-memory-store"
+ * import { BaseExport, LogCursor } from "@beep/agent-memory-store"
  * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const base = BaseExport.make({
  *   folderDigest: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
  *   files: [],
- *   frontier: [],
+ *   cursor: LogCursor.make(0),
  * })
  * console.log(base.files.length)
  * ```
@@ -103,10 +104,44 @@ export class BaseExport extends S.Opaque<BaseExport, { readonly brand: unique sy
   S.Struct({
     folderDigest: Sha256Hex.annotateKey({ description: "SHA-256 over the exported folder." }),
     files: S.Array(BaseFile).annotateKey({ description: "Exported files with their nodes." }),
-    frontier: S.Array(RevisionId).annotateKey({ description: "Log frontier revisions at export time." }),
+    cursor: LogCursor.annotateKey({ description: "Log position the export reflects." }),
   }).pipe(
     $I.annoteSchema("BaseExport", {
       description: "The exported base an agent edited against.",
+    })
+  )
+) {}
+
+/**
+ * Where a new node goes in its file.
+ *
+ * **Details**
+ *
+ * The node follows `afterNodeId`, or opens the file when it is absent. A
+ * resolver supplies one to place a held insert whose own predecessor never
+ * reached the log (decision `held-writes-are-log-events`).
+ *
+ * **Example** (Place a node at the top of its file)
+ *
+ * ```ts
+ * import { InsertPlacement } from "@beep/agent-memory-store"
+ * import * as O from "effect/Option"
+ *
+ * const placement = InsertPlacement.make({ afterNodeId: O.none() })
+ * console.log(placement.afterNodeId)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class InsertPlacement extends S.Opaque<InsertPlacement, { readonly brand: unique symbol }>()(
+  S.Struct({
+    afterNodeId: S.OptionFromOptionalKey(NodeId).annotateKey({
+      description: "Node the new node follows; absent places it at the top of the file.",
+    }),
+  }).pipe(
+    $I.annoteSchema("InsertPlacement", {
+      description: "Where a new node goes in its file.",
     })
   )
 ) {}
@@ -125,7 +160,15 @@ const NodeOperationKind = LiteralKit(["replace", "insert", "delete", "setStatus"
  * `replace`, `delete` and `setStatus` carry the revision the agent saw; the
  * store admits them only when it still matches (per-node compare-and-set).
  * `insert` places a new node after `afterNodeId`, or at the top of the file
- * when it is absent.
+ * when it is absent. A file is the exact concatenation of its nodes, so the
+ * capture step submits the separator bytes around a new node as `gap` inserts
+ * (decision `file-is-an-ordered-node-partition`). An insert carries the
+ * `nodeId` its capture step minted, so a later operation in the same batch
+ * can follow it: a paragraph and its separator are two inserts, the second
+ * after the first. Admission rejects an id the log already holds
+ * (`nodeIdAlreadyExists`), and an insert whose predecessor did not land is
+ * held (`insertAfterMissingNode`), not placed elsewhere; its resolver may
+ * give it a new place.
  *
  * **Example** (Decode a replace operation)
  *
@@ -153,6 +196,7 @@ export const NodeOperation = NodeOperationKind.toTaggedUnion("op")({
     text: S.NonEmptyString.annotateKey({ description: "Replacement node text." }),
   },
   insert: {
+    nodeId: NodeId.annotateKey({ description: "Identity the capture step minted for the new node." }),
     afterNodeId: S.OptionFromOptionalKey(NodeId).annotateKey({
       description: "Node the new node follows; absent inserts at the top of the file.",
     }),
@@ -201,7 +245,7 @@ export class OperationBatch extends S.Opaque<OperationBatch, { readonly brand: u
   S.Struct({
     base: BaseExport.annotateKey({ description: "Exported base the operations were written against." }),
     operations: S.NonEmptyArray(NodeOperation).annotateKey({ description: "Node operations in submission order." }),
-    author: S.NonEmptyString.annotateKey({ description: "Agent or session that wrote the batch." }),
+    author: LineageId.annotateKey({ description: "Session or agent lineage that wrote the batch." }),
   }).pipe(
     $I.annoteSchema("OperationBatch", {
       description: "A batch of node operations written against one exported base.",

@@ -37,11 +37,23 @@ describe("NodeIdentity", () => {
   );
 
   it.effect(
+    "ignores a repeated parent in the revision preimage",
+    Effect.fnUntraced(function* () {
+      const distinct = revisionPreimage(nodeId, [revisionA, revisionB], contentHash);
+      expect(revisionPreimage(nodeId, [revisionB, revisionA, revisionB, revisionA], contentHash)).toBe(distinct);
+
+      const decoded = yield* decodePreimage(distinct);
+      expect(decoded.parents).toEqual([revisionA, revisionB]);
+    })
+  );
+
+  it.effect(
     "decodes every node kind literal and rejects others",
     Effect.fnUntraced(function* () {
       const decoded = yield* Effect.forEach(NodeKind.literals, (literal) => decodeNodeKind(literal));
       expect(decoded).toEqual([...NodeKind.literals]);
-      expect(decoded).toHaveLength(8);
+      expect(decoded).toHaveLength(9);
+      expect(NodeKind.is.gap("gap")).toBe(true);
 
       const error = yield* Effect.flip(decodeNodeKind("table"));
       assertInstanceOf(error, S.SchemaError);

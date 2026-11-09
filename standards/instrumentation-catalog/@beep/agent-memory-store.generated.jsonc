@@ -6,6 +6,7 @@
   "attributes": [],
   "instruments": [],
   "spans": [
+    {"name":"Embedder.unavailable.embed","owner":"@beep/agent-memory-store","family":"tooling","conforms":false},
     {"name":"Reranker.passThrough.rerank","owner":"@beep/agent-memory-store","family":"tooling","conforms":false}
   ]
 }

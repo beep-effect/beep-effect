@@ -29,8 +29,9 @@ const RecallFilterKind = LiteralKit(["path", "kind", "status", "symbol"]).pipe(
  *
  * **Details**
  *
- * Filters run before fusion and narrow the candidate pool exactly. `symbol`
- * is the typed identity lookup.
+ * Filters run before fusion and narrow the candidate pool exactly: recall
+ * passes them to each index inside {@link IndexSearch}, and the index applies
+ * them before its limit. `symbol` is the typed identity lookup.
  *
  * **Example** (Filter by node kind)
  *
@@ -106,6 +107,149 @@ export class RecallBudget extends S.Opaque<RecallBudget, { readonly brand: uniqu
   }).pipe(
     $I.annoteSchema("RecallBudget", {
       description: "Size limits applied at the end of recall.",
+    })
+  )
+) {}
+
+/**
+ * One search request against a single index: query text, authoritative
+ * filters and a result limit.
+ *
+ * **Details**
+ *
+ * Decision `index-search-applies-filters-and-embedder-port`: the filters go
+ * to the index with the query, so the index narrows the pool before it
+ * applies `limit`. Filtering after the limit would drop matching nodes that
+ * ranked below unrelated ones.
+ *
+ * **Example** (Search list items only)
+ *
+ * ```ts
+ * import { IndexSearch, RecallFilter } from "@beep/agent-memory-store"
+ *
+ * const search = IndexSearch.make({
+ *   text: "sqlite driver",
+ *   filters: [RecallFilter.cases.kind.make({ kind: "listItem" })],
+ *   limit: 50,
+ * })
+ * console.log(search.limit)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class IndexSearch extends S.Opaque<IndexSearch, { readonly brand: unique symbol }>()(
+  S.Struct({
+    text: S.NonEmptyString.annotateKey({ description: "Query text." }),
+    filters: S.Array(RecallFilter).annotateKey({
+      description: "Authoritative filters the index applies before the limit.",
+    }),
+    limit: S.Natural.annotateKey({ description: "Most hits the index may return." }),
+  }).pipe(
+    $I.annoteSchema("IndexSearch", {
+      description: "One search request against a single index.",
+    })
+  )
+) {}
+
+/**
+ * One hit from a single index, with that index's own score.
+ *
+ * **Details**
+ *
+ * A hit is what one index knows: fusion has not run, so it carries no fused
+ * or reranked score. Recall builds {@link Candidate} values from the hits of
+ * both indexes.
+ *
+ * **Example** (Construct a text index hit)
+ *
+ * ```ts
+ * import { IndexHit, NodeId, RevisionId } from "@beep/agent-memory-store"
+ *
+ * const hit = IndexHit.make({
+ *   nodeId: NodeId.make("018f9c3e-7d2a-7b4c-9e1f-2a3b4c5d6e7f"),
+ *   revisionId: RevisionId.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+ *   text: "Use the sqlite driver.",
+ *   score: 4.2,
+ * })
+ * console.log(hit.score)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class IndexHit extends S.Opaque<IndexHit, { readonly brand: unique symbol }>()(
+  S.Struct({
+    nodeId: NodeId.annotateKey({ description: "Node the index returned." }),
+    revisionId: RevisionId.annotateKey({ description: "Revision the indexed text comes from." }),
+    text: S.String.annotateKey({ description: "Indexed node text." }),
+    score: S.Finite.annotateKey({ description: "Score in the index's own scale." }),
+  }).pipe(
+    $I.annoteSchema("IndexHit", {
+      description: "One hit from a single index, with that index's own score.",
+    })
+  )
+) {}
+
+/**
+ * Name of the embedding model a vector was produced by.
+ *
+ * **Example** (Brand an embedding model name)
+ *
+ * ```ts
+ * import { EmbeddingModel } from "@beep/agent-memory-store"
+ *
+ * console.log(EmbeddingModel.make("bge-small-en-v1.5"))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const EmbeddingModel = S.NonEmptyString.pipe(
+  S.brand("EmbeddingModel"),
+  $I.annoteSchema("EmbeddingModel", {
+    description: "Name of the embedding model a vector was produced by.",
+  })
+);
+
+/**
+ * Runtime type for {@link EmbeddingModel}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type EmbeddingModel = typeof EmbeddingModel.Type;
+
+/**
+ * One embedding vector with the model that produced it.
+ *
+ * **Details**
+ *
+ * Vectors from different models are not comparable, so the model name travels
+ * with the values and the vector index rebuilds when it changes.
+ *
+ * **Example** (Construct an embedding)
+ *
+ * ```ts
+ * import { Embedding, EmbeddingModel } from "@beep/agent-memory-store"
+ *
+ * const embedding = Embedding.make({
+ *   model: EmbeddingModel.make("bge-small-en-v1.5"),
+ *   values: [0.1, -0.2, 0.3],
+ * })
+ * console.log(embedding.values.length)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class Embedding extends S.Opaque<Embedding, { readonly brand: unique symbol }>()(
+  S.Struct({
+    model: EmbeddingModel.annotateKey({ description: "Model that produced the vector." }),
+    values: S.NonEmptyArray(S.Finite).annotateKey({ description: "Vector components." }),
+  }).pipe(
+    $I.annoteSchema("Embedding", {
+      description: "One embedding vector with the model that produced it.",
     })
   )
 ) {}

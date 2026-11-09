@@ -36,6 +36,13 @@ export * from "./AgentMemoryStore.errors.ts";
  */
 export * from "./Dedupe.models.ts";
 /**
+ * Embedder port exports.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./Embedder.service.ts";
+/**
  * Markdown projector service contract exports.
  *
  * @category services
