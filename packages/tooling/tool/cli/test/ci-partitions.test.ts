@@ -321,11 +321,13 @@ it.layer(Layer.merge(NodeServices.layer, NodeCrypto.layer))("rebalance from a me
       // LPT puts the heavier package (@beep/glob, 30 s) in the first bin and the lighter one in the second.
       const proposal = A.dropWhile(lines, (line) => !Str.startsWith("bin proposal")(line));
       deepStrictEqual(
-        A.filter(proposal, (line) => Str.startsWith("  unit-")(line) || Str.startsWith('    "@beep/')(line)),
+        A.filter(proposal, (line) => Str.startsWith("  unit-")(line) || Str.startsWith("    ")(line)),
         [
           "  unit-a: weightSeconds 30 (table 0)",
+          '    startFirst: ["@beep/glob" /* 30 s */],',
           '    "@beep/glob",',
           "  unit-b: weightSeconds 10 (table 0)",
+          "    startFirst: [],",
           '    "@beep/yaml",',
         ]
       );

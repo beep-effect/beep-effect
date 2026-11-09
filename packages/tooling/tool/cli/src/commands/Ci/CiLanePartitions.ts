@@ -221,6 +221,9 @@ export class CiLanePartitionShard extends S.Opaque<CiLanePartitionShard, { reado
  * A partition that carries `shard` runs a Vitest slice of its single package
  * instead of the whole task; sibling partitions with the same package and
  * total together cover every file once.
+ * `startFirst` names the packages a Test Unit bin starts before the rest,
+ * heaviest first ({@link ciLaneStartOrder}); it is a scheduling input, unlike
+ * the weight.
  *
  * **Example** (Inspect a partition)
  *
@@ -240,6 +243,7 @@ export class CiLanePartition extends S.Opaque<CiLanePartition, { readonly brand:
     packages: S.Array(S.String),
     weightSeconds: S.Finite,
     shard: S.optionalKey(CiLanePartitionShard),
+    startFirst: S.String.pipe(S.Array, S.optionalKey),
   }).pipe(
     $I.annoteSchema("CiLanePartition", {
       description: "Schema-backed package assignment and measured p95 weight for one CI lane partition.",
@@ -255,17 +259,18 @@ export class CiLanePartition extends S.Opaque<CiLanePartition, { readonly brand:
  * Lint bins come from the p95 package-task weights recorded in
  * `goals/ci-lane-economics/research/tail-attribution.md`: candidates ordered
  * by descending p95 weight with task id as the stable tie-break, each assigned
- * to the currently lightest bin. Test Unit isolates `@beep/repo-cli` (nine
+ * to the currently lightest bin. Test Unit isolates `@beep/repo-cli` (eleven
  * Vitest `--shard` slices, `packages/tooling/tool/cli/vitest.shards.json`) and
  * `@beep/law-practice-server` (twelve slices,
  * `packages/law-practice/server/vitest.shards.json`); a sharded weight is the
  * shard's planned file time, and the seven unit bins are the LPT repack of every
- * other package's Vitest wall measured on PR #3007's run 42607991192
- * (2026-11-09, pull-request runners, where repo-cli tests run about 1.5x slower than on main; `goals/ci-lane-economics` decisions of 2026-11-02, 2026-11-08
- * and 2026-11-09). `beep ci partitions rebalance --write --run <id>` refreshes
- * the plans and prints the bin repack; `--check` fails when a weight drifts
- * from its plan or a partition exceeds its budget. The weights are evidence,
- * not runtime scheduling inputs.
+ * other package's worst Vitest wall over six green runs, five on PR #3007 and
+ * main run 42677073526 (`goals/ci-lane-economics` decisions of 2026-11-02,
+ * 2026-11-08 and 2026-11-09). `beep ci partitions rebalance --write --run <id>`
+ * refreshes the plans and prints the bin repack; `--check` fails when a weight
+ * drifts from its plan or a partition exceeds its budget. The weights are
+ * evidence, not runtime scheduling inputs; a bin's `startFirst` list is the one
+ * scheduling input, the order its heaviest packages start in.
  * A package the table does not name is placed by `ciLaneDefaultPlacements`, so
  * a new workspace needs no edit here; add it explicitly only when rebalancing.
  *
@@ -442,77 +447,77 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
   CiLanePartition.make({
     id: "repo-cli-1",
     lane: "test-unit",
-    weightSeconds: 449,
+    weightSeconds: 321,
     packages: ["@beep/repo-cli"],
     shard: CiLanePartitionShard.make({ index: 1, total: 11 }),
   }),
   CiLanePartition.make({
     id: "repo-cli-2",
     lane: "test-unit",
-    weightSeconds: 306,
+    weightSeconds: 321,
     packages: ["@beep/repo-cli"],
     shard: CiLanePartitionShard.make({ index: 2, total: 11 }),
   }),
   CiLanePartition.make({
     id: "repo-cli-3",
     lane: "test-unit",
-    weightSeconds: 306,
+    weightSeconds: 321,
     packages: ["@beep/repo-cli"],
     shard: CiLanePartitionShard.make({ index: 3, total: 11 }),
   }),
   CiLanePartition.make({
     id: "repo-cli-4",
     lane: "test-unit",
-    weightSeconds: 306,
+    weightSeconds: 321,
     packages: ["@beep/repo-cli"],
     shard: CiLanePartitionShard.make({ index: 4, total: 11 }),
   }),
   CiLanePartition.make({
     id: "repo-cli-5",
     lane: "test-unit",
-    weightSeconds: 306,
+    weightSeconds: 321,
     packages: ["@beep/repo-cli"],
     shard: CiLanePartitionShard.make({ index: 5, total: 11 }),
   }),
   CiLanePartition.make({
     id: "repo-cli-6",
     lane: "test-unit",
-    weightSeconds: 306,
+    weightSeconds: 321,
     packages: ["@beep/repo-cli"],
     shard: CiLanePartitionShard.make({ index: 6, total: 11 }),
   }),
   CiLanePartition.make({
     id: "repo-cli-7",
     lane: "test-unit",
-    weightSeconds: 306,
+    weightSeconds: 321,
     packages: ["@beep/repo-cli"],
     shard: CiLanePartitionShard.make({ index: 7, total: 11 }),
   }),
   CiLanePartition.make({
     id: "repo-cli-8",
     lane: "test-unit",
-    weightSeconds: 306,
+    weightSeconds: 321,
     packages: ["@beep/repo-cli"],
     shard: CiLanePartitionShard.make({ index: 8, total: 11 }),
   }),
   CiLanePartition.make({
     id: "repo-cli-9",
     lane: "test-unit",
-    weightSeconds: 306,
+    weightSeconds: 321,
     packages: ["@beep/repo-cli"],
     shard: CiLanePartitionShard.make({ index: 9, total: 11 }),
   }),
   CiLanePartition.make({
     id: "repo-cli-10",
     lane: "test-unit",
-    weightSeconds: 306,
+    weightSeconds: 321,
     packages: ["@beep/repo-cli"],
     shard: CiLanePartitionShard.make({ index: 10, total: 11 }),
   }),
   CiLanePartition.make({
     id: "repo-cli-11",
     lane: "test-unit",
-    weightSeconds: 306,
+    weightSeconds: 321,
     packages: ["@beep/repo-cli"],
     shard: CiLanePartitionShard.make({ index: 11, total: 11 }),
   }),
@@ -531,335 +536,351 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
   CiLanePartition.make({
     id: "law-practice-1",
     lane: "test-unit",
-    weightSeconds: 375,
+    weightSeconds: 376,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 1, total: 12 }),
   }),
   CiLanePartition.make({
     id: "law-practice-2",
     lane: "test-unit",
-    weightSeconds: 375,
+    weightSeconds: 376,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 2, total: 12 }),
   }),
   CiLanePartition.make({
     id: "law-practice-3",
     lane: "test-unit",
-    weightSeconds: 375,
+    weightSeconds: 376,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 3, total: 12 }),
   }),
   CiLanePartition.make({
     id: "law-practice-4",
     lane: "test-unit",
-    weightSeconds: 375,
+    weightSeconds: 376,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 4, total: 12 }),
   }),
   CiLanePartition.make({
     id: "law-practice-5",
     lane: "test-unit",
-    weightSeconds: 375,
+    weightSeconds: 376,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 5, total: 12 }),
   }),
   CiLanePartition.make({
     id: "law-practice-6",
     lane: "test-unit",
-    weightSeconds: 375,
+    weightSeconds: 376,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 6, total: 12 }),
   }),
   CiLanePartition.make({
     id: "law-practice-7",
     lane: "test-unit",
-    weightSeconds: 375,
+    weightSeconds: 376,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 7, total: 12 }),
   }),
   CiLanePartition.make({
     id: "law-practice-8",
     lane: "test-unit",
-    weightSeconds: 375,
+    weightSeconds: 376,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 8, total: 12 }),
   }),
   CiLanePartition.make({
     id: "law-practice-9",
     lane: "test-unit",
-    weightSeconds: 375,
+    weightSeconds: 376,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 9, total: 12 }),
   }),
   CiLanePartition.make({
     id: "law-practice-10",
     lane: "test-unit",
-    weightSeconds: 375,
+    weightSeconds: 376,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 10, total: 12 }),
   }),
   CiLanePartition.make({
     id: "law-practice-11",
     lane: "test-unit",
-    weightSeconds: 375,
+    weightSeconds: 376,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 11, total: 12 }),
   }),
   CiLanePartition.make({
     id: "law-practice-12",
     lane: "test-unit",
-    weightSeconds: 375,
+    weightSeconds: 376,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 12, total: 12 }),
   }),
   // Seven unit bins, LPT over per-package Vitest wall seconds at each package's worst measurement across
-  // PR #3007's five green runs (42607991192, 42615698428, 42626103000, 42637312401, 42646019844; hosted
-  // package walls swing between runs). History: four bins from main run 42554761567 summed 809 / 894 /
-  // 1,175 / 700 s and unit-c took 13.9 min; six bins of about 595 s still let unit-a run 10.7 min because
-  // Turbo's two-at-a-time order can leave the largest package for last; seven bins packed from one run at
-  // 453 s ran 5.1-9.6 min. The weight is the bin's serial sum; the lane runs two package steps at once, so a
-  // bin's body is between half and all of it plus about 180 s of setup, prerequisite builds and upload.
-  // Every package that ran, default-placed ones included, is curated here; @beep/infra, @beep/storybook,
-  // @beep/drizzle and @beep/effect-drizzle kept their bins without a measurement in those runs.
+  // six green runs: PR #3007's 42607991192, 42615698428, 42626103000, 42637312401 and 42646019844, and
+  // main run 42677073526 (hosted package walls swing between runs). History: four bins from main run
+  // 42554761567 summed 809 / 894 / 1,175 / 700 s and unit-c took 13.9 min; six bins of about 595 s still
+  // let unit-a run 10.7 min; seven bins of 582 s ran 5.6-8.5 min on main run 42677073526 except unit-b at
+  // 10.2 min, whose 309 s package started 162 s in and then ran alone. The lane runs two package steps at
+  // once in list order, so each bin now starts its `startFirst` packages (30 s and over, heaviest first;
+  // CI_UNIT_BIN_START_FIRST_SECONDS) before the rest, which keeps a body near the larger of its heaviest
+  // package and half the serial sum, plus about 180 s of setup, prerequisite builds and upload. The weight
+  // is the bin's serial sum. Every package that ran, default-placed ones included, is curated here;
+  // @beep/infra and @beep/storybook kept their bin without a measurement in those runs.
   // Budget: CI_UNIT_BIN_SERIAL_BUDGET_SECONDS (CiPartitions.schemas.ts).
   CiLanePartition.make({
     id: "unit-a",
     lane: "test-unit",
-    weightSeconds: 582,
+    weightSeconds: 594,
+    // law-practice-domain 322 s, alchemy-postgres 51 s, ontology-client 33 s
+    startFirst: ["@beep/law-practice-domain", "@beep/alchemy-postgres", "@beep/ontology-client"],
     packages: [
-      "@beep/agents-server",
       "@beep/agents-use-cases",
-      "@beep/ai-provider-cli",
+      "@beep/alchemy-postgres",
       "@beep/anthropic",
-      "@beep/architecture-lab-proof",
-      "@beep/epistemic-use-cases",
-      "@beep/epistemics",
-      "@beep/eyecite",
-      "@beep/firecrawl",
+      "@beep/api-transport",
+      "@beep/architecture-lab-tables",
+      "@beep/beep-effect-web",
+      "@beep/discord",
+      "@beep/ecfr",
+      "@beep/execution-authority-tables",
       "@beep/github",
-      "@beep/gov-legal-mcp",
-      "@beep/govinfo",
-      "@beep/jsonc",
+      "@beep/jsonl",
       "@beep/law-practice-domain",
-      "@beep/n3",
+      "@beep/law-practice-tables",
+      "@beep/lockfiles",
+      "@beep/managed-section",
       "@beep/ontology-client",
-      "@beep/pglite",
-      "@beep/practice-kg-mcp",
-      "@beep/practice-m365-contacts",
-      "@beep/rdf",
-      "@beep/sbom",
-      "@beep/shared-tables",
-      "@beep/test-runner",
-      "@beep/tsconfig",
-      "@beep/workspace-use-cases",
+      "@beep/pacer",
+      "@beep/palantiri",
+      "@beep/practice-claude-mod",
+      "@beep/repo-tsconfig",
+      "@beep/schema-org",
+      "@beep/skill-contract",
+      "@beep/spdx",
+      "@beep/ui",
+      "@beep/uspto",
+      "@beep/workspace-domain",
     ],
   }),
   CiLanePartition.make({
     id: "unit-b",
     lane: "test-unit",
-    weightSeconds: 582,
+    weightSeconds: 593,
+    // repo-ai-metrics 309 s, epistemic-server 59 s, occt 39 s
+    startFirst: ["@beep/repo-ai-metrics", "@beep/epistemic-server", "@beep/occt"],
     packages: [
+      "@beep/agents-tables",
       "@beep/ai-sync",
       "@beep/architecture-lab-config",
       "@beep/architecture-lab-domain",
       "@beep/commands",
-      "@beep/docket-intake",
-      "@beep/epistemic-server",
-      "@beep/execution-authority-server",
-      "@beep/execution-authority-tables",
-      "@beep/jsonl",
-      "@beep/libpff",
-      "@beep/m365",
-      "@beep/memfs",
-      "@beep/nlp-mcp",
-      "@beep/npm-spec",
-      "@beep/occt",
-      "@beep/party-use-cases",
-      "@beep/poppler",
-      "@beep/rdf-canonize",
-      "@beep/repo-ai-metrics",
-      "@beep/repo-docgen",
-      "@beep/tesseract",
-      "@beep/tika",
-      "@beep/types",
-      "@beep/uspto",
-      "@beep/utils",
-      "@beep/windows-secrets",
-      "@beep/infra",
-      "@beep/storybook",
-    ],
-  }),
-  CiLanePartition.make({
-    id: "unit-c",
-    lane: "test-unit",
-    weightSeconds: 582,
-    packages: [
-      "@beep/alchemy-postgres",
-      "@beep/api-transport",
-      "@beep/architecture-lab-tables",
-      "@beep/chalk",
-      "@beep/codegen-kit",
-      "@beep/cosmos",
-      "@beep/execution-authority-use-cases",
-      "@beep/exiftool",
-      "@beep/ffmpeg",
-      "@beep/github-references",
-      "@beep/github-reporting",
-      "@beep/html",
-      "@beep/markdown",
-      "@beep/mcpb-kit",
-      "@beep/oip-web",
-      "@beep/ontology",
-      "@beep/ontology-domain",
-      "@beep/oxigraph",
-      "@beep/party-server",
-      "@beep/pdf-tools",
-      "@beep/practice-identify",
-      "@beep/practice-review-hub",
-      "@beep/repo-utils",
-      "@beep/skill-contract",
-      "@beep/wink",
-      "@beep/workspace-tables",
-      "@beep/yaml",
-    ],
-  }),
-  CiLanePartition.make({
-    id: "unit-d",
-    lane: "test-unit",
-    weightSeconds: 582,
-    packages: [
-      "@beep/agents-domain",
-      "@beep/architecture-lab-server",
-      "@beep/architecture-lab-ui",
-      "@beep/architecture-lab-use-cases",
-      "@beep/doc-text",
-      "@beep/dock-react",
-      "@beep/documents-use-cases",
-      "@beep/epistemic-tables",
-      "@beep/execution-authority-config",
-      "@beep/fc-runs",
-      "@beep/identity",
-      "@beep/lexical-schema",
-      "@beep/ontology-use-cases",
-      "@beep/package-json",
-      "@beep/palantiri",
-      "@beep/phoenix",
-      "@beep/practice-mail-tagging",
-      "@beep/professional-desktop",
-      "@beep/provenance",
-      "@beep/repo-cli-kit",
-      "@beep/shacl",
-      "@beep/shared-domain",
-      "@beep/spdx",
-      "@beep/technical-drawing",
-      "@beep/ui",
-      "@beep/xdg",
-      "@beep/xstate",
-      "@beep/drizzle",
       "@beep/effect-drizzle",
-    ],
-  }),
-  CiLanePartition.make({
-    id: "unit-e",
-    lane: "test-unit",
-    weightSeconds: 582,
-    packages: [
-      "@beep/agents-client",
-      "@beep/agents-tables",
-      "@beep/architecture-lab-client",
-      "@beep/brand",
-      "@beep/cli-kit",
-      "@beep/db-admin",
-      "@beep/discord",
-      "@beep/dock",
-      "@beep/execution-authority-domain",
-      "@beep/file-processing",
-      "@beep/github-commands",
-      "@beep/hubspot",
-      "@beep/law-practice-use-cases",
+      "@beep/epistemic-server",
+      "@beep/firecrawl",
+      "@beep/freshbooks",
+      "@beep/infra",
+      "@beep/lexical-schema",
+      "@beep/libpff",
       "@beep/mcp-kit",
-      "@beep/md",
-      "@beep/nlp-processing",
-      "@beep/observability",
+      "@beep/occt",
+      "@beep/oip-web",
       "@beep/onepassword-cli",
       "@beep/ontology-config",
-      "@beep/postgres",
-      "@beep/practice-claude-mod",
-      "@beep/qa-capture",
-      "@beep/repo-workspaces",
-      "@beep/runtime-env",
-      "@beep/schema",
-      "@beep/semver",
-      "@beep/shared-use-cases",
-    ],
-  }),
-  CiLanePartition.make({
-    id: "unit-f",
-    lane: "test-unit",
-    weightSeconds: 583,
-    packages: [
-      "@beep/beep-effect-web",
-      "@beep/box-provisioning",
-      "@beep/data",
-      "@beep/documents-server",
-      "@beep/documents-tables",
-      "@beep/duckdb",
-      "@beep/ecfr",
-      "@beep/editor",
-      "@beep/epistemic-client",
-      "@beep/epistemic-domain",
-      "@beep/epistemic-ui",
-      "@beep/freshbooks",
-      "@beep/graph-3d",
-      "@beep/langextract",
-      "@beep/nlp",
-      "@beep/obs",
-      "@beep/ontology-ui",
-      "@beep/pacer",
+      "@beep/openai-compat",
+      "@beep/pandoc-ast",
       "@beep/party-domain",
-      "@beep/practice-gateway",
-      "@beep/pretext",
-      "@beep/repo-configs",
-      "@beep/repo-tsconfig",
-      "@beep/runpod",
-      "@beep/semantic-web",
+      "@beep/party-server",
+      "@beep/practice-review-hub",
+      "@beep/practice-setup",
+      "@beep/repo-ai-metrics",
+      "@beep/sbom",
+      "@beep/storybook",
       "@beep/toml",
       "@beep/workspace-server",
     ],
   }),
   CiLanePartition.make({
+    id: "unit-c",
+    lane: "test-unit",
+    weightSeconds: 594,
+    // markdown 279 s, box-provisioning 75 s, practice-kg-mcp 48 s
+    startFirst: ["@beep/markdown", "@beep/box-provisioning", "@beep/practice-kg-mcp"],
+    packages: [
+      "@beep/architecture-lab-ui",
+      "@beep/box-provisioning",
+      "@beep/chalk",
+      "@beep/config-file",
+      "@beep/documents-tables",
+      "@beep/execution-authority-use-cases",
+      "@beep/exiftool",
+      "@beep/jsonc",
+      "@beep/law-practice-use-cases",
+      "@beep/m365-mcp",
+      "@beep/markdown",
+      "@beep/mcpb-kit",
+      "@beep/nlp-processing",
+      "@beep/oxigraph",
+      "@beep/package-json",
+      "@beep/pdf-tools",
+      "@beep/pglite",
+      "@beep/practice-kg-mcp",
+      "@beep/public-site",
+      "@beep/qa-capture",
+      "@beep/repo-docgen",
+      "@beep/runpod",
+      "@beep/semver",
+      "@beep/tailscale",
+      "@beep/tika",
+      "@beep/types",
+      "@beep/xdg",
+    ],
+  }),
+  CiLanePartition.make({
+    id: "unit-d",
+    lane: "test-unit",
+    weightSeconds: 594,
+    // professional-desktop 231 s, repo-cli-kit 77 s, doc-text 62 s, technical-drawing 35 s
+    startFirst: ["@beep/professional-desktop", "@beep/repo-cli-kit", "@beep/doc-text", "@beep/technical-drawing"],
+    packages: [
+      "@beep/box",
+      "@beep/brand",
+      "@beep/doc-text",
+      "@beep/dock",
+      "@beep/documents-domain",
+      "@beep/documents-use-cases",
+      "@beep/execution-authority-server",
+      "@beep/ffmpeg",
+      "@beep/git",
+      "@beep/github-references",
+      "@beep/graph-3d",
+      "@beep/html",
+      "@beep/identity",
+      "@beep/nlp-mcp",
+      "@beep/ontology-domain",
+      "@beep/ontology-ui",
+      "@beep/openclaw",
+      "@beep/poppler",
+      "@beep/pretext",
+      "@beep/professional-desktop",
+      "@beep/repo-cli-kit",
+      "@beep/shacl",
+      "@beep/technical-drawing",
+      "@beep/todox",
+      "@beep/walker",
+      "@beep/workspace-tables",
+      "@beep/xstate",
+    ],
+  }),
+  CiLanePartition.make({
+    id: "unit-e",
+    lane: "test-unit",
+    weightSeconds: 593,
+    // repo-workspaces 203 s, md 87 s, db-admin 66 s, editor 48 s
+    startFirst: ["@beep/repo-workspaces", "@beep/md", "@beep/db-admin", "@beep/editor"],
+    packages: [
+      "@beep/architecture-lab-server",
+      "@beep/codegen-kit",
+      "@beep/db-admin",
+      "@beep/dock-react",
+      "@beep/editor",
+      "@beep/epistemic-tables",
+      "@beep/epistemics",
+      "@beep/execution-authority-domain",
+      "@beep/fc-runs",
+      "@beep/github-actions",
+      "@beep/govinfo",
+      "@beep/hubspot",
+      "@beep/langextract",
+      "@beep/md",
+      "@beep/n3",
+      "@beep/npm-spec",
+      "@beep/openai",
+      "@beep/practice-identify",
+      "@beep/practice-m365-contacts",
+      "@beep/practice-mail-tagging",
+      "@beep/repo-configs",
+      "@beep/repo-utils",
+      "@beep/repo-workspaces",
+      "@beep/sanity",
+      "@beep/shared-tables",
+      "@beep/tesseract",
+      "@beep/windows-secrets",
+    ],
+  }),
+  CiLanePartition.make({
+    id: "unit-f",
+    lane: "test-unit",
+    weightSeconds: 593,
+    // documents-server 154 s, duckdb 96 s, glob 76 s, cli-kit 49 s
+    startFirst: ["@beep/documents-server", "@beep/duckdb", "@beep/glob", "@beep/cli-kit"],
+    packages: [
+      "@beep/agents-client",
+      "@beep/agents-domain",
+      "@beep/agents-server",
+      "@beep/ai-provider-cli",
+      "@beep/architecture-lab-client",
+      "@beep/architecture-lab-proof",
+      "@beep/architecture-lab-use-cases",
+      "@beep/cli-kit",
+      "@beep/colors",
+      "@beep/cosmos",
+      "@beep/documents-server",
+      "@beep/duckdb",
+      "@beep/epistemic-ui",
+      "@beep/file-processing",
+      "@beep/github-reporting",
+      "@beep/glob",
+      "@beep/gov-legal-mcp",
+      "@beep/m365",
+      "@beep/memfs",
+      "@beep/obs",
+      "@beep/observability",
+      "@beep/ontology-use-cases",
+      "@beep/party-use-cases",
+      "@beep/rdf",
+      "@beep/rdf-canonize",
+      "@beep/shared-domain",
+      "@beep/shared-use-cases",
+      "@beep/test-runner",
+    ],
+  }),
+  CiLanePartition.make({
     id: "unit-g",
     lane: "test-unit",
-    weightSeconds: 582,
+    weightSeconds: 594,
+    // test-utils 128 s, lint-rules 115 s, yaml 76 s, ontology-server 55 s, wink 32 s
+    startFirst: ["@beep/test-utils", "@beep/lint-rules", "@beep/yaml", "@beep/ontology-server", "@beep/wink"],
     packages: [
       "@beep/acp",
-      "@beep/box",
-      "@beep/colors",
-      "@beep/config-file",
-      "@beep/documents-domain",
-      "@beep/git",
-      "@beep/github-actions",
-      "@beep/glob",
-      "@beep/law-practice-tables",
+      "@beep/data",
+      "@beep/docket-intake",
+      "@beep/drizzle",
+      "@beep/epistemic-client",
+      "@beep/epistemic-domain",
+      "@beep/epistemic-use-cases",
+      "@beep/execution-authority-config",
+      "@beep/eyecite",
+      "@beep/github-commands",
       "@beep/lint-rules",
-      "@beep/lockfiles",
-      "@beep/m365-mcp",
-      "@beep/managed-section",
+      "@beep/nlp",
+      "@beep/ontology",
       "@beep/ontology-server",
-      "@beep/openai",
-      "@beep/openai-compat",
-      "@beep/openclaw",
-      "@beep/pandoc-ast",
-      "@beep/practice-setup",
-      "@beep/public-site",
-      "@beep/sanity",
-      "@beep/schema-org",
-      "@beep/tailscale",
+      "@beep/phoenix",
+      "@beep/postgres",
+      "@beep/practice-gateway",
+      "@beep/provenance",
+      "@beep/runtime-env",
+      "@beep/schema",
+      "@beep/semantic-web",
       "@beep/test-utils",
-      "@beep/todox",
+      "@beep/tsconfig",
       "@beep/uspto-mcp",
-      "@beep/walker",
-      "@beep/workspace-domain",
+      "@beep/utils",
+      "@beep/wink",
+      "@beep/workspace-use-cases",
+      "@beep/yaml",
     ],
   }),
   // Hosted Test Integration partitions (goals/citation-extraction-engine, 2026-11-09). Nineteen
@@ -1013,6 +1034,61 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
     packages: [],
   }),
 ];
+
+/**
+ * Order a partition's items so its `startFirst` packages lead, in their listed order.
+ *
+ * **Details**
+ *
+ * A Test Unit bin runs two package steps at a time in list order, so a long
+ * package that starts late runs alone at the end. On main run 42677073526
+ * unit-b's 309 s package started 162 s in and the bin body took 471 s, against
+ * 265 to 448 s for siblings of the same serial sum. Starting the heaviest
+ * packages first keeps a body near the larger of its heaviest package and half
+ * its serial sum. Items the list does not name follow in their given order.
+ *
+ * **Example** (Lead with the heaviest package)
+ *
+ * ```ts
+ * import { ciLaneStartOrder } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(ciLaneStartOrder(["a", "b", "c"], ["c"], (name) => name)) // ["c", "a", "b"]
+ * ```
+ *
+ * @param items - The partition's runnable items in their default order.
+ * @param startFirst - Package names to start first, in start order.
+ * @param nameOf - The package name of one item.
+ * @returns The items with the named packages leading.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const ciLaneStartOrder: {
+  <Item>(
+    items: ReadonlyArray<Item>,
+    startFirst: ReadonlyArray<string>,
+    nameOf: (item: Item) => string
+  ): ReadonlyArray<Item>;
+  <Item>(
+    startFirst: ReadonlyArray<string>,
+    nameOf: (item: Item) => string
+  ): (items: ReadonlyArray<Item>) => ReadonlyArray<Item>;
+} = dual(
+  3,
+  <Item>(
+    items: ReadonlyArray<Item>,
+    startFirst: ReadonlyArray<string>,
+    nameOf: (item: Item) => string
+  ): ReadonlyArray<Item> =>
+    A.sort(
+      items,
+      Order.mapInput(Order.Number, (item: Item) =>
+        O.getOrElse(
+          A.findFirstIndex(startFirst, (name) => name === nameOf(item)),
+          () => A.length(startFirst)
+        )
+      )
+    )
+);
 
 /**
  * Default placement for one executable package the curated table does not name.

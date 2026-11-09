@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../../tsconfig.base.json",
+  "include": ["src", "test"],
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "incremental": false,
+    "noEmit": true,
+    "outDir": "dist-test",
+    "rootDir": ".",
+    "sourceMap": false,
+    "types": ["node", "bun-types"]
+  },
+  "references": [
+    {
+      "path": "../../../foundation/modeling/epistemics/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/markdown/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/provenance/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/schema/tsconfig.json"
+    }
+  ]
+}

@@ -57,7 +57,7 @@ _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions wr
 
 Integrate accepted main #2987 through a normal merge while retaining the two-item closed-composition guard, explicit source/inspection view and unchanged source validators. Preserve the earlier census JSON at its original path and retain accepted main’s updated receipt separately with exact hash bindings. The fresh canonical main-runner comparison on all 60 families/538 selected/1,219 context records scores 50/538, retaining every prior 49 strict identity with zero losses. One new strict identity becomes mandatory, making 50 protected. The runtime freeze changes only ClaimElement.behavior.ts; the 1,845 paths, 94 lexical assets, scorer, source/reference selection, Bun and caps remain unchanged. All 538 outcomes still abstain; no private nominal candidate is adopted and no usefulness or legal-quality gate is declared passed. The 121 output files are sealed separately; original 1,213 bindings and 5,222 historical files across 47 anchored groups remain exact. Six focused files/99 tests and both package compiler checks pass. Hosted combined-head CI and review remain required. Evidence: research/accepted-main-2987-measurement-001.json.
 
-Lane `feat/claim-check-census-composition` · PR #2980
+Lane feat/claim-check-census-composition · PR #2980
 
 Reverse: Revert the integration behavior only while retaining both census receipts, all original labels and every measured result.
 
@@ -67,7 +67,7 @@ Accepted main aa2e0f4eb1f adds aligned part-of-speech fallback boundaries. Merge
 
 The unchanged frozen evaluation at 1fbb06f96237 scores 49/538 with all prior48 passing identities retained and one additional strict claim. All60 source collections and all1219 full-context qualification ledgers are unchanged. Parsed remains537 and abstained538; this does not meet usefulness gates. Preserve the new49 identities for every later comparison. Original1213 bindings and2382 historical artifact files across26 groups verify unchanged. No label, scorer, denominator, asset, work limit or gate changes are admitted. The separate synthetic method-step prototype produced no actual local change and remains private, rejected and sealed.
 
-Lane `feat/claim-check-census-composition` · PR #2980
+Lane feat/claim-check-census-composition · PR #2980
 
 Reverse: Return to the retained 48/538 implementation while preserving both measurements, the rejected private prototype and every reference; never weaken paired retention.
 
@@ -77,7 +77,7 @@ The hosted coverage job at PR head 74c1f259bc2 identified uncovered citation dum
 
 This is a CI behavior-preservation repair, not a numerical performance candidate. Before publication, commit the exact reviewed source/tests, capture a fresh runtime closure against the retained 48/538 freeze, require exactly the intended Dump.ts source change with unchanged inputs/assets/Bun/caps, run decoder rejection controls and the unchanged full538 replay in exclusive directories, require all48 identities and all60 canonical report payloads unchanged, then retain/seal every result. Do not change any reference, scorer, historical result, coverage floor, baseline, suppression or dependency. Package/full hosted coverage is still required; local coverage overlay is a projection only. No local audit/full-root queue, fresh source QA or new acquisition is authorized.
 
-Lane `feat/claim-check-census-composition` · PR #2980
+Lane feat/claim-check-census-composition · PR #2980
 
 Reverse: Revert the scoped CI repair while retaining every test, failed check, archived source and replay result.
 
