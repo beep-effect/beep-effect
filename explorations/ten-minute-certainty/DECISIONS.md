@@ -6,6 +6,35 @@ rejected options named. Pre-seeded on 2026-11-09 with the rulings the operator
 gave at the phase 1 closeout; the align round proper opens after phase 2 lands.
 -->
 
+## 2026-11-09 — shape and decompose review
+
+### D22. Landing
+
+- **Question.** Graduating six goal packets adds six scaffolds through the goals tooling. How do the
+  exploration PR and the graduation land?
+- **Answer.** PR #3017 lands at stage `decompose` as a reviewable docs-only exploration; a follow-up PR
+  scaffolds the six goals, flips this packet to `graduated`, and the three ready implementation PRs open
+  from their goal lanes right after.
+- **Rationale.** Keeps review size sane and one merge gate per concern. Rejected: graduate inside #3017
+  (one large PR); hold #3017 as draft until a lever proves out (keeps the plan and rulings off main).
+
+### D21. Decomposition
+
+- **Question.** `MAP.md` names six goal packets in the critic's dependency order with the goal-data
+  consumer census as the first vertical slice and nine gated re-entry points.
+- **Answer.** Approved as drafted: certainty-scorecard, route-soundness-repair, main-verdict-every-commit,
+  heavy-pool-diet, hosted-setup-tax, local-proof-under-ten.
+- **Rationale.** Independent acceptance per packet with one shared scorecard and soundness floor.
+  Rejected: fold to three packets (fewer owners, blurred acceptance).
+
+### D20. Brief
+
+- **Question.** Does `BRIEF.md` match the operator's picture, including that it does not promise the
+  10-minute number (projected p95 70 to 115 minutes for code heads without capacity)?
+- **Answer.** Approved as drafted. The no-gos and rabbit holes stand.
+- **Rationale.** Promising the number would commit to the heavy-pool capacity decision up front, which D11
+  defers until the post-diet residual is measured.
+
 ## 2026-11-09 — align round 4 (frontier closed)
 
 ### D19. Appetite

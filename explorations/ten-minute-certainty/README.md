@@ -3,7 +3,7 @@
 ## Status
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
-Stage: `shape`
+Stage: `decompose`
 Status: `active`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
@@ -22,10 +22,12 @@ through the existing QualityScheduler.
 
 ## Next Open Question
 
-Shape review: does `BRIEF.md` match the operator's picture, and does `MAP.md` name the right six goal
-packets in the right order (measurement first, soundness before any narrowing, job-removing before
-job-adding, main verdicts only with their throughput layout)? Align closed on 2026-11-09 with nineteen
-rulings in `DECISIONS.md` (D1 to D19); no open questions remain in the manifest.
+Graduate in a follow-up PR (ruling D22): scaffold the six goal packets named in `MAP.md` from
+`goals/_template/` (SPEC seeded from `BRIEF.md`: no-gos to non-goals, rabbit holes to constraints; one
+decision file per relevant ruling through `bun run beep goals decisions add`; `research/SOURCES.md`
+carried over; manifests cross-linked), flip this packet to `graduated`, then open the three ready
+implementation PRs (ROUT-03, TURB-01, MEAS-01) from their goal lanes. Brief and map were approved on
+2026-11-09 (D20, D21); no open questions remain.
 ## Read This First
 
 1. [`ops/manifest.json`](./ops/manifest.json) - machine state: stage, status, open questions.
@@ -33,10 +35,15 @@ rulings in `DECISIONS.md` (D1 to D19); no open questions remain in the manifest.
 3. [`RESEARCH.md`](./RESEARCH.md) - the in-repo inventory and constraints (stage 1).
 4. [`research/phase1/SURFACE-INVENTORY.md`](./research/phase1/SURFACE-INVENTORY.md) - the phase 1 surface map
    (12 areas, 147 components, 111 levers, 120 rejections on record, critic gaps, Astra diff).
-5. [`DECISIONS.md`](./DECISIONS.md) - the four 2026-11-09 rulings (pre-seeded; align opens after phase 2).
-6. [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger.
+5. [`DECISIONS.md`](./DECISIONS.md) - the 22 rulings of 2026-11-09 (D1 to D22).
+6. [`BRIEF.md`](./BRIEF.md) - the shaped pitch (approved D20).
+7. [`MAP.md`](./MAP.md) - six goal packets, sequencing, first slice, capability check (approved D21).
+8. [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger.
 
 ## Trail
+
+- 2026-11-09 (shape and decompose): BRIEF.md and MAP.md approved as drafted (D20, D21); landing ruled
+  as exploration first, graduation in a follow-up PR (D22). Stage `decompose`; graduation pending.
 
 - 2026-11-09 (align closed): four grill rounds settled all nineteen rulings on the recommended
   answers (target scope, Coverage Regression status, staged main verdicts, #2999 narrowing, full corpus
