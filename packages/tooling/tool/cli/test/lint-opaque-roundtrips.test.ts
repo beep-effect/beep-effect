@@ -1,15 +1,23 @@
 import { Git, GitCommandError } from "@beep/git/Git";
+import { LsFilesEntry } from "@beep/git/Git.models";
 import { detectOpaqueRoundtrips, lintOpaqueRoundtripsCommand } from "@beep/repo-cli/commands/Lint/OpaqueRoundtrips";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as Str from "effect/String";
+import * as TestConsole from "effect/testing/TestConsole";
 import { Project } from "ts-morph";
 import { NodeTestLayer } from "./support/CommandTest.ts";
 
-const detect = (body: string) => {
+const fixtureProject = (body: string) => {
   const project = new Project({ tsConfigFilePath: "test/tsconfig.json", skipAddingFilesFromTsConfig: true });
   const source = project.createSourceFile(
     "test/__opaque_roundtrip_fixture.test.ts",
@@ -24,8 +32,12 @@ const detect = (body: string) => {
     ${body}
   `
   );
-  const program = project.getProgram().compilerObject;
-  return detectOpaqueRoundtrips(program)([source.compilerNode]);
+  return { program: project.getProgram().compilerObject, source: source.compilerNode };
+};
+
+const detect = (body: string) => {
+  const { program, source } = fixtureProject(body);
+  return detectOpaqueRoundtrips(program)([source]);
 };
 
 // Compiler programs are isolated in memory; no fixture is written into the repository.
@@ -260,6 +272,36 @@ describe("opaque-roundtrips", () => {
   );
 
   it.effect(
+    "type-queries only the calls that enclose a strict-equality assertion",
+    Effect.fnUntraced(function* () {
+      const { program, source } = fixtureProject(`
+      const property = (...args: ReadonlyArray<unknown>) => undefined;
+      property(Arbitrary.schema(Value), (sample: Value) => {
+        const unused = sample;
+      });
+      property(Arbitrary.schema(Value), (sample: Value) => {
+        expect(Value.make(sample)).toStrictEqual(sample);
+      });
+    `);
+      const checker = program.getTypeChecker();
+      const queried = A.empty<string>();
+      const counting = Object.assign(Object.create(checker), {
+        getTypeAtLocation: (node: Parameters<typeof checker.getTypeAtLocation>[0]) => {
+          queried.push(node.getText());
+          return checker.getTypeAtLocation(node);
+        },
+      });
+      const findings = yield* Effect.sync(() =>
+        detectOpaqueRoundtrips(Object.assign(Object.create(program), { getTypeChecker: () => counting }))([source])
+      );
+      expect(A.map(findings, (finding) => finding.opaque)).toEqual([["Value"]]);
+      // Only the second property call's arguments and the assertion operands reach the checker.
+      expect(queried).toHaveLength(4);
+      expect(A.some(queried, Str.includes("unused"))).toBe(false);
+    })
+  );
+
+  it.effect(
     "preserves strict assertion matching, sample scope, and call boundaries",
     Effect.fnUntraced(function* () {
       const findings = yield* Effect.sync(() =>
@@ -314,6 +356,78 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })("opaque-roundtrips git listin
         GitCommandError.make({ kind: "failed", args: ["ls-files"], cwd: ".", stderr: "", detail: "spawn ENOENT" })
       );
       expect(unspawned).toContain("git ls-files");
+    })
+  );
+});
+
+// A self-contained fixture: the temporary root has no node_modules, so the Opaque base and the Arbitrary
+// interface are declared locally. The comment keeps the file a candidate (effect/Arbitrary).
+const scanFixture = (config: string) => `// effect/Arbitrary fixture
+import { Value, make, property, arb } from "../shared/Value";
+const expect = (actual: unknown) => ({ toStrictEqual: (expected: unknown) => undefined });
+property(arb, (sample: Value) => {
+  expect(make(sample)).toStrictEqual(sample);
+});
+export const config = "${config}";
+`;
+
+const sharedValue = `declare const S: { Opaque: <Self, Brand>() => (schema: unknown) => new () => { readonly value: string } };
+export class Value extends S.Opaque<Value, { readonly brand: "Value" }>()({}) {}
+export interface Arbitrary<T> { readonly sample: T }
+export declare const arb: Arbitrary<Value>;
+export declare const property: (arbitrary: Arbitrary<Value>, run: (sample: Value) => void) => void;
+export declare const make: (value: Value) => Value;
+`;
+
+const scanEntries = ["a/one.test.ts", "b/two.test.ts"];
+
+it.layer(NodeTestLayer, { timeout: "60 seconds" })("opaque-roundtrips scan", (it) => {
+  it.effect(
+    "reports findings from tsconfig groups that share source files",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped();
+      const write = (relative: string, content: string) =>
+        fs
+          .makeDirectory(path.dirname(path.join(root, relative)), { recursive: true })
+          .pipe(Effect.andThen(fs.writeFileString(path.join(root, relative), content)));
+      yield* write("bun.lock", "");
+      yield* write("shared/Value.ts", sharedValue);
+      // Two groups with different source-file-affecting options exercise the registry's bucket keys.
+      yield* write("a/tsconfig.json", `{ "compilerOptions": { "strict": true, "target": "ES2022" } }`);
+      yield* write("b/tsconfig.json", `{ "compilerOptions": { "strict": true, "target": "ES2020" } }`);
+      yield* write("a/one.test.ts", scanFixture("a"));
+      yield* write("b/two.test.ts", scanFixture("b"));
+      const previousCwd = process.cwd();
+      yield* Effect.acquireRelease(
+        Effect.sync(() => process.chdir(root)),
+        () => Effect.sync(() => process.chdir(previousCwd))
+      );
+      const lines = yield* Effect.gen(function* () {
+        yield* runCommand([]).pipe(Effect.flip);
+        return yield* TestConsole.logLines;
+      }).pipe(
+        Effect.provideService(
+          Git,
+          Git.makeTest({
+            lsFiles: () =>
+              Effect.succeed(
+                A.map(scanEntries, (entry) => LsFilesEntry.make({ mode: "100644", oid: "0", stage: 0, path: entry }))
+              ),
+          })
+        ),
+        Effect.provideServiceEffect(Console.Console, TestConsole.make)
+      );
+      // Groups follow HashMap order over absolute tsconfig paths, which varies with the temp root.
+      expect(A.sort(A.filter(A.dropRight(lines, 1), P.isString), Order.String)).toEqual([
+        "a/one.test.ts:5 [Value] expect(make(sample)).toStrictEqual(sample)",
+        "b/two.test.ts:5 [Value] expect(make(sample)).toStrictEqual(sample)",
+      ]);
+      assertSome(
+        A.last(lines),
+        "Arbitrary-sample Opaque toStrictEqual asserts: 2 in 2 file(s); scanned 2 candidate file(s)"
+      );
     })
   );
 });

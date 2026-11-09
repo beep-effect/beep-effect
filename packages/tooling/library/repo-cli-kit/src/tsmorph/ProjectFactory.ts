@@ -7,6 +7,7 @@
 
 import * as A from "effect/Array";
 import { getCompilerOptionsFromTsConfig, Project } from "ts-morph";
+import type { CompilerOptions } from "ts-morph";
 
 type RepoTsMorphProjectInput = {
   readonly tsConfigFilePath: string;
@@ -57,6 +58,11 @@ export const createRepoTsMorphProject = (input: RepoTsMorphProjectInput): Projec
 /**
  * Create an in-memory ts-morph project for single-source fixtures.
  *
+ * **Details**
+ *
+ * Pass `compilerOptions` to change the program, for example `{ noResolve: true }` when a scanner
+ * reads only the declarations of the files it added and must not load their imports.
+ *
  * **Example** (Build in-memory fixture project)
  *
  * ```ts
@@ -67,8 +73,13 @@ export const createRepoTsMorphProject = (input: RepoTsMorphProjectInput): Projec
  * console.log(project.getSourceFileOrThrow("fixture.ts").getBaseName())
  * ```
  *
+ * @param options - Optional compiler options for the project's program; omitted means the defaults.
  * @returns An empty ts-morph project; fixtures are added with `createSourceFile`.
  * @category factories
  * @since 0.0.0
  */
-export const createInMemoryTsMorphProject = (): Project => new Project({ skipAddingFilesFromTsConfig: true });
+export const createInMemoryTsMorphProject = (options?: { readonly compilerOptions?: CompilerOptions }): Project =>
+  new Project({
+    skipAddingFilesFromTsConfig: true,
+    ...(options?.compilerOptions === undefined ? {} : { compilerOptions: options.compilerOptions }),
+  });

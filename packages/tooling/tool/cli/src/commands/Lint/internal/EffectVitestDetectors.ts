@@ -2197,10 +2197,8 @@ const platformNamespaceMembers = (
     : binding.getNameNode();
   if (!Node.isIdentifier(name)) return [];
   const local = name.getText();
-  const references = A.filter(
-    binding.getSourceFile().getDescendantsOfKind(SyntaxKind.Identifier),
-    (reference) =>
-      reference.getText() === local && O.exists(imports.resolveBinding(reference), (resolved) => resolved === binding)
+  const references = A.filter(imports.identifiersNamed(local), (reference) =>
+    O.exists(imports.resolveBinding(reference), (resolved) => resolved === binding)
   );
   return A.getSomes(A.map(references, platformReferenceMember));
 };
@@ -2266,9 +2264,8 @@ const bindingReferences = (
   imports: EffectVitestImports
 ): ReadonlyArray<Identifier> =>
   A.filter(
-    binding.getSourceFile().getDescendantsOfKind(SyntaxKind.Identifier),
+    imports.identifiersNamed(local),
     (reference) =>
-      reference.getText() === local &&
       reference.getFirstAncestorByKind(SyntaxKind.ImportDeclaration) === undefined &&
       !isNamePosition(reference) &&
       O.exists(imports.resolveBinding(reference), (resolved) => resolved === binding)
@@ -3008,7 +3005,12 @@ const opaquePlatformReference = (reference: Identifier, imports: EffectVitestImp
     const declarations = declaration.getParentIfKind(SyntaxKind.VariableDeclarationList);
     if (declarations === undefined || declarations.getDeclarationKind() === "const") return false;
     // A mutable declaration is opaque only if a later write can replace its initializer.
-    return A.some(declaration.getSourceFile().getDescendantsOfKind(SyntaxKind.Identifier), (candidate) => {
+    // A candidate resolves to the declaration only through a name it binds; order is irrelevant to A.some.
+    const nameNode = declaration.getNameNode();
+    const boundNames = Node.isIdentifier(nameNode)
+      ? [nameNode.getText()]
+      : A.map(nameNode.getDescendantsOfKind(SyntaxKind.Identifier), (identifier) => identifier.getText());
+    return A.some(A.flatMap(A.dedupe(boundNames), imports.identifiersNamed), (candidate) => {
       if (
         (candidate.getStart() >= declaration.getStart() && candidate.getEnd() <= declaration.getEnd()) ||
         !O.contains(imports.resolveBinding(candidate), declaration)

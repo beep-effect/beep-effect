@@ -2,6 +2,7 @@ import {
   browserModeIncludeGlobs,
   collectEffectVitestImports,
   detectEffectVitestFindings,
+  indexIdentifiersByName,
   resolveEffectVitestBinding,
   retainBrowserSafeFindings,
 } from "@beep/repo-cli/test/Lint";
@@ -1812,6 +1813,30 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
         spans([...forLoops, ...whileLoops, ...doLoops, ...forOfLoops, ...forInLoops])
       );
     }
+  });
+
+  it("indexes identifiers by name in document order across nested scopes", () => {
+    const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
+    const source = project.createSourceFile(
+      "identifier-index.ts",
+      `const layer = 1;
+      const outer = () => { const layer = 2; return () => layer + layer; };
+      const { layer: alias, other } = { layer, other: outer };`
+    );
+    const lookup = indexIdentifiersByName(source);
+    const oracle = (name: string) =>
+      A.filter(source.getDescendantsOfKind(SyntaxKind.Identifier), (identifier) => identifier.getText() === name);
+    // Duplicate names across nested scopes share one bucket in walk order.
+    deepStrictEqual(
+      A.map(lookup("layer"), (node) => node.getStart()),
+      A.map(oracle("layer"), (node) => node.getStart())
+    );
+    deepStrictEqual(lookup("layer").length, 6);
+    deepStrictEqual(lookup("alias").length, 1);
+    // A name absent from the file yields an empty bucket, also through the lazy import context.
+    deepStrictEqual(lookup("missing"), []);
+    deepStrictEqual(collectEffectVitestImports(source).identifiersNamed("missing"), []);
+    deepStrictEqual(collectEffectVitestImports(source).identifiersNamed("other").length, 2);
   });
 
   it("keeps shared scope-name results equal to fresh resolution in either reference order", () => {

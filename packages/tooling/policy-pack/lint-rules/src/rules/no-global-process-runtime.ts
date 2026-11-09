@@ -80,8 +80,11 @@ export default defineRule({
     const nodeOsNamespaces = MutableHashSet.empty<string>();
     const nodeOsRuntimeImports = MutableHashMap.empty<string, string>();
     const shadow = makeIdentifierShadowTracker(["process"]);
+    // Resolved once per file: the visitors run on every member read and call.
+    let hostProcessReferenceFile = false;
 
     const resetBindings = () => {
+      hostProcessReferenceFile = isHostProcessReferenceFile(context.filename, context.cwd);
       MutableHashSet.clear(nodeOsNamespaces);
       MutableHashMap.clear(nodeOsRuntimeImports);
       shadow.reset();
@@ -151,7 +154,7 @@ export default defineRule({
       ImportDeclaration: trackImportDeclaration,
       ...shadow.visitors,
       MemberExpression(node) {
-        if (isHostProcessReferenceFile(context.filename, context.cwd)) return;
+        if (hostProcessReferenceFile) return;
 
         const property = globalProcessProperty(node);
         if (O.isNone(property)) return;
@@ -159,7 +162,7 @@ export default defineRule({
         context.report({ node, message: processReadMessage(property.value) });
       },
       CallExpression(node) {
-        if (isHostProcessReferenceFile(context.filename, context.cwd)) return;
+        if (hostProcessReferenceFile) return;
 
         const property = getNodeOsRuntimeCall(node.callee);
         if (O.isNone(property)) return;

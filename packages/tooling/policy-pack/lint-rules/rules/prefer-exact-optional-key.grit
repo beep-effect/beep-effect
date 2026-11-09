@@ -50,13 +50,13 @@ pattern shadowing_statements($ns) {
   }
 }
 
+// Imports are top-level module items: matching them directly rejects files
+// without the import before any whole-program traversal.
 pattern schema_namespace_import($ns) {
-  within JsModule() where {
-    $program <: contains or {
-      JsImportNamespaceClause(namespace_specifier=JsNamespaceImportSpecifier(local_name=$ns), source=`"effect/Schema"`),
-      JsImportCombinedClause(specifier=JsNamespaceImportSpecifier(local_name=$ns), source=`"effect/Schema"`)
-    }
-  }
+  within JsModule(items=some JsImport(import_clause=or {
+    JsImportNamespaceClause(namespace_specifier=JsNamespaceImportSpecifier(local_name=$ns), source=`"effect/Schema"`),
+    JsImportCombinedClause(specifier=JsNamespaceImportSpecifier(local_name=$ns), source=`"effect/Schema"`)
+  }))
 }
 
 // Value parameters do not shadow a namespace used as a type. A typeof query
@@ -71,7 +71,8 @@ pattern schema_type_reference($ns) {
 
 // Match the import binding rather than assuming the conventional S/Schema name.
 pattern schema_reference($ns) {
-  and { not within or {
+  and { schema_namespace_import($ns),
+  not within or {
     JsFunctionDeclaration(parameters=shadowing_parameters($ns)),
     JsFunctionExpression(parameters=shadowing_parameters($ns)),
     JsArrowFunctionExpression(parameters=shadowing_parameters($ns)),
@@ -81,8 +82,7 @@ pattern schema_reference($ns) {
     JsConstructorClassMember(parameters=shadowing_parameters($ns)),
     JsBlockStatement(statements=shadowing_statements($ns)),
     JsFunctionBody(statements=shadowing_statements($ns))
-  } ,
-  schema_namespace_import($ns) }
+  } }
 }
 
 or {
