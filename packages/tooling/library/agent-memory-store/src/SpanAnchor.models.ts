@@ -59,8 +59,9 @@ export type TextUnit = typeof TextUnit.Type;
  *
  * ```ts
  * import { OccurrenceAnchor } from "@beep/agent-memory-store"
- * import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity, TextAnchor } from "@beep/provenance"
- * import { PosixPath } from "@beep/schema"
+ * import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity"
+ * import { TextAnchor } from "@beep/provenance/TextAnchor"
+ * import { PosixPath } from "@beep/schema/PosixPath"
  *
  * const digest = SourceTextDigest.make("sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
  * const anchor = OccurrenceAnchor.make({
@@ -106,8 +107,9 @@ export class OccurrenceAnchor extends S.Opaque<OccurrenceAnchor, { readonly bran
  *
  * ```ts
  * import { OccurrenceAnchor, toMarkdownRange } from "@beep/agent-memory-store"
- * import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity, TextAnchor } from "@beep/provenance"
- * import { PosixPath } from "@beep/schema"
+ * import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity"
+ * import { TextAnchor } from "@beep/provenance/TextAnchor"
+ * import { PosixPath } from "@beep/schema/PosixPath"
  *
  * const digest = SourceTextDigest.make("sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
  * const range = toMarkdownRange(

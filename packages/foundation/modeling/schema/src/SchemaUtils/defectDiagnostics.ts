@@ -5,11 +5,14 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { $SchemaId } from "@beep/identity";
 import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+
+const $I = $SchemaId.create("SchemaUtils/defectDiagnostics");
 
 const decodeMessage = S.decodeUnknownOption(S.NonEmptyString);
 
@@ -49,6 +52,40 @@ export const optionalDefectMessage = (description: string) =>
   });
 
 /**
+ * The optional cause and message recovered from an unknown failure, in the
+ * shape tagged-error constructors spread into their fields.
+ *
+ * **Example** (Build diagnostics by hand)
+ *
+ * ```ts
+ * import { DefectDiagnostics } from "@beep/schema/SchemaUtils/defectDiagnostics"
+ * import * as O from "effect/Option"
+ *
+ * const diagnostics = DefectDiagnostics.make({ cause: O.none(), message: O.some("disk full") })
+ *
+ * console.log(O.getOrUndefined(diagnostics.message)) // "disk full"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class DefectDiagnostics extends S.Class<DefectDiagnostics, { readonly brand: unique symbol }>(
+  $I`DefectDiagnostics`
+)(
+  {
+    cause: S.Option(S.Unknown).annotateKey({
+      description: "Original failure when one was supplied; none when the cause was undefined.",
+    }),
+    message: S.Option(S.NonEmptyString).annotateKey({
+      description: "Non-empty message extracted from an Error cause.",
+    }),
+  },
+  $I.annote("DefectDiagnostics", {
+    description: "Optional cause and message recovered from an unknown failure for tagged-error constructors.",
+  })
+) {}
+
+/**
  * Splits an unknown failure into the `cause` and `message` options an error
  * built from `optionalDefect` and {@link optionalDefectMessage} expects.
  *
@@ -72,9 +109,8 @@ export const optionalDefectMessage = (description: string) =>
  * @category utilities
  * @since 0.0.0
  */
-export const defectDiagnostics = (
-  cause: unknown
-): { readonly cause: O.Option<unknown>; readonly message: O.Option<string> } => ({
-  cause: O.fromUndefinedOr(cause),
-  message: errorMessage(cause),
-});
+export const defectDiagnostics = (cause: unknown): DefectDiagnostics =>
+  DefectDiagnostics.make({
+    cause: O.fromUndefinedOr(cause),
+    message: errorMessage(cause),
+  });

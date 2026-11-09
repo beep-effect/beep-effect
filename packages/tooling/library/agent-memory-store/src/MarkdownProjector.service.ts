@@ -38,7 +38,7 @@ const $I = $AgentMemoryStoreId.create("MarkdownProjector.service");
  *
  * ```ts
  * import { MarkdownProjector } from "@beep/agent-memory-store"
- * import { PosixPath } from "@beep/schema"
+ * import { PosixPath } from "@beep/schema/PosixPath"
  * import * as Effect from "effect/Effect"
  *
  * const program = Effect.gen(function* () {

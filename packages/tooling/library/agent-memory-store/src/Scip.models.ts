@@ -130,7 +130,7 @@ export class ScipOccurrence extends S.Opaque<ScipOccurrence, { readonly brand: u
  *
  * ```ts
  * import { ScipDocument } from "@beep/agent-memory-store"
- * import { PosixPath } from "@beep/schema"
+ * import { PosixPath } from "@beep/schema/PosixPath"
  *
  * const document = ScipDocument.make({ relativePath: PosixPath.make("src/index.ts"), occurrences: [] })
  * console.log(document.relativePath)
@@ -218,7 +218,7 @@ export type SymbolLiveness = typeof SymbolLiveness.Type;
  *
  * ```ts
  * import { ScipSymbol, SymbolReference } from "@beep/agent-memory-store"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const reference = SymbolReference.make({
  *   symbol: ScipSymbol.make("scip-typescript npm @beep/schema 0.0.0 src/`Sha256.ts`/Sha256Hex."),
@@ -248,7 +248,7 @@ export class SymbolReference extends S.Opaque<SymbolReference, { readonly brand:
  *
  * ```ts
  * import { ScipDefinition, ScipRange } from "@beep/agent-memory-store"
- * import { PosixPath } from "@beep/schema"
+ * import { PosixPath } from "@beep/schema/PosixPath"
  *
  * const definition = ScipDefinition.make({
  *   relativePath: PosixPath.make("src/Sha256.ts"),
@@ -290,7 +290,8 @@ export class ScipDefinition extends S.Opaque<ScipDefinition, { readonly brand: u
  *
  * ```ts
  * import { ScipDefinition, ScipRange, ScipSymbol, SymbolResolution } from "@beep/agent-memory-store"
- * import { PosixPath, Sha256Hex } from "@beep/schema"
+ * import { PosixPath } from "@beep/schema/PosixPath"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const resolution = SymbolResolution.cases.reverify.make({
  *   symbol: ScipSymbol.make("scip-typescript npm @beep/schema 0.0.0 src/`Sha256.ts`/Sha256Hex."),

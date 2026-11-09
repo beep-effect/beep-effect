@@ -260,7 +260,8 @@ export class MemoryIndexError extends S.TaggedError<MemoryIndexError, { readonly
  *
  * ```ts
  * import { UnimportedFolderError } from "@beep/agent-memory-store"
- * import { PosixPath, Sha256Hex } from "@beep/schema"
+ * import { PosixPath } from "@beep/schema/PosixPath"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const error = UnimportedFolderError.make({
  *   root: PosixPath.make("memory"),

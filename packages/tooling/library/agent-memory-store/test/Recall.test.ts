@@ -9,6 +9,7 @@ import {
 } from "@beep/agent-memory-store";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { assertInstanceOf, assertNone } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -18,6 +19,18 @@ import { nodeId, otherNodeId, revisionA, revisionB } from "./fixtures.ts";
 const decodeWeights = S.decodeEffect(FusionWeights);
 
 describe("Recall models", () => {
+  it.effect.prop(
+    "round-trips arbitrary recall budgets",
+    [Arbitrary.schema(RecallBudget)],
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(RecallBudget)(value);
+        const decoded = yield* S.decodeEffect(RecallBudget)(encoded);
+        expect(decoded).toEqual(value);
+      }),
+    { arbitrary: { runs: 50 } }
+  );
+
   it.effect(
     "rejects fusion weights that do not sum to 1",
     Effect.fnUntraced(function* () {

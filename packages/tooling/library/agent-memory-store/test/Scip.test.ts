@@ -2,6 +2,7 @@ import { ScipDefinition, ScipRange, ScipSymbol, SymbolResolution } from "@beep/a
 import { PosixPath, Sha256Hex } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import { assertInstanceOf } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
@@ -24,6 +25,18 @@ const resolutions: ReadonlyArray<SymbolResolution> = [
 ];
 
 describe("SymbolResolution", () => {
+  it.effect.prop(
+    "round-trips arbitrary SCIP ranges",
+    [Arbitrary.schema(ScipRange)],
+    ([value]) =>
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(ScipRange)(value);
+        const decoded = yield* S.decodeEffect(ScipRange)(encoded);
+        expect(decoded).toEqual(value);
+      }),
+    { arbitrary: { runs: 50 } }
+  );
+
   it.effect(
     "round-trips every resolution and keeps the definition of a resolved symbol",
     Effect.fnUntraced(function* () {

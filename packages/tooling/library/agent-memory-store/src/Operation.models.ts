@@ -48,7 +48,7 @@ export class BaseNode extends S.Opaque<BaseNode, { readonly brand: unique symbol
  *
  * ```ts
  * import { BaseFile, MemoryFilePath } from "@beep/agent-memory-store"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const file = BaseFile.make({
  *   path: MemoryFilePath.make("notes/empty.md"),
@@ -86,7 +86,7 @@ export class BaseFile extends S.Opaque<BaseFile, { readonly brand: unique symbol
  *
  * ```ts
  * import { BaseExport } from "@beep/agent-memory-store"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const base = BaseExport.make({
  *   folderDigest: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),

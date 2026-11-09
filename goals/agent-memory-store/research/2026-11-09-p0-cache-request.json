@@ -1,0 +1,22 @@
+{
+  "previous": "a29b03470c0e4d75b82bd924ca12dc40af34753d811ede6da95adda0792ddbe3",
+  "review": {
+    "reviewer": "Claude Fable 5.1 medium, goals/agent-memory-store-p0",
+    "reason": "Record the two new workspaces created by create-package (@beep/agent-memory-store, @beep/sqlite) with their sixteen inherited task slots explicitly uncached, and the root policy-fingerprint and turbo.json input additions those manifests cause. Preserve commands, cache flags, outputs, environment, epoch and qualification scope; no qualification or exception.",
+    "basis": {
+      "path": "goals/agent-memory-store/research/2026-11-09-p0-cache-review.md",
+      "sha256": "99d40e057d04f0fc2801e60c2dbb0dc67822bb3c331ff40bab87ec4e73d1f21e"
+    }
+  },
+  "subjects": [
+    "//",
+    "@beep/agent-memory-store",
+    "@beep/sqlite"
+  ],
+  "scope": [
+    "@beep/identity#lint",
+    "@beep/types#lint"
+  ],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

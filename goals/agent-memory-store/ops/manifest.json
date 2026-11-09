@@ -36,6 +36,8 @@
   "researchReports": [
     "research/2026-11-07-validation-spike-plan.md",
     "research/2026-11-08-validation-scoreboard.md",
+    "research/2026-11-09-p0-cache-request.json",
+    "research/2026-11-09-p0-cache-review.md",
     "research/SOURCES.md"
   ],
   "agentLaunchers": [
