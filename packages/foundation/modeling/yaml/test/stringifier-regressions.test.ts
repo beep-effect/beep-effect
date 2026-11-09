@@ -277,6 +277,18 @@ describe("stable key ordering", () => {
   });
 });
 
+describe("compact explicit key round trip", () => {
+  it("keeps a newline key in a nested sequence stable across re-composition", () => {
+    // Shrunk counterexample from the "stringifyDocument is idempotent" property:
+    // its `- - ? "\n"` output lost the key's mapping on the next composition.
+    const value = [[{ "\n": [""] }]];
+    const input = stringifyValue(value);
+    const text = stringifyDocument(composeFirstDocument(input));
+    assert.deepStrictEqual(parse(text), value);
+    assert.strictEqual(stringifyDocument(composeFirstDocument(text)), text);
+  });
+});
+
 describe("scalar rendering fidelity", () => {
   it.effect("round-trips newline-only values through public block-style options", () =>
     Effect.gen(function* () {
