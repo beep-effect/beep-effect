@@ -2,7 +2,7 @@ import * as NodeURL from "node:url";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
-import { assertNone, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
+import { assertNone, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -70,14 +70,16 @@ const resolveRelative = (from: string, specifier: string): string => {
 };
 
 /**
- * A file asserts against the real wall clock when its closure spawns real native workers and no
- * file in the closure (the spawner fixtures aside, which define the substitutes) installs a clock.
+ * A unit file keeps the worker cap when its closure spawns real native workers and no file in the
+ * closure (the spawner fixtures aside, which define the substitutes) installs a clock. Integration
+ * files are capped wholesale (their canonical replays run `extractDeadline` on the real clock).
  */
-const nativeWallclockFiles = (sources: HashMap.HashMap<string, string>): ReadonlyArray<string> =>
+const nativeWallclockUnitFiles = (sources: HashMap.HashMap<string, string>): ReadonlyArray<string> =>
   pipe(
     HashMap.keys(sources),
     A.fromIterable,
     A.filter(Str.endsWith(".test.ts")),
+    A.filter((file) => !Str.startsWith("test/integration/")(file)),
     A.filter((file) => {
       const closure = fixtureClosure(sources, file);
       const spawns = HashSet.has(closure, nativeSpawnerFixtures);
@@ -93,6 +95,8 @@ const nativeWallclockFiles = (sources: HashMap.HashMap<string, string>): Readonl
     }),
     A.sort(Order.String)
   );
+
+const INTEGRATION_GLOB = "test/integration/**/*.test.{ts,tsx}";
 
 it.layer(NodeServices.layer)("law-practice-server shard plan", (it) => {
   it.effect("names every unit test file exactly once and nothing else", () =>
@@ -127,22 +131,29 @@ it.layer(NodeServices.layer)("law-practice-server shard plan", (it) => {
     })
   );
 
-  it.effect("keeps the native-wallclock project equal to the files that spawn workers on the real clock", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const sources = yield* testSources();
-      const derived = nativeWallclockFiles(sources);
-      const config = yield* fs.readFileString(path.join(packageRoot, "vitest.config.ts"));
-      const declared = pipe(
-        Str.match(/const nativeWallclockSuites = \[([\s\S]*?)\];/u)(config),
-        O.flatMapNullishOr((match) => match[1]),
-        O.map((body) => A.map(A.fromIterable(Str.matchAll(/"([^"]+)"/gu)(body)), (match) => match[1] ?? "")),
-        O.getOrElse(() => A.empty<string>()),
-        A.sort(Order.String)
-      );
-      deepStrictEqual(declared, derived);
-      expect(A.length(derived)).toBeGreaterThan(0);
-    })
+  it.effect(
+    "keeps the native-wallclock project equal to the unit files that spawn workers on the real clock plus every integration file",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const sources = yield* testSources();
+        const derived = nativeWallclockUnitFiles(sources);
+        const config = yield* fs.readFileString(path.join(packageRoot, "vitest.config.ts"));
+        const declared = pipe(
+          Str.match(/const nativeWallclockSuites = \[([\s\S]*?)\];/u)(config),
+          O.flatMapNullishOr((match) => match[1]),
+          O.map((body) => A.map(A.fromIterable(Str.matchAll(/"([^"]+)"/gu)(body)), (match) => match[1] ?? "")),
+          O.getOrElse(() => A.empty<string>()),
+          A.sort(Order.String)
+        );
+        // Every integration file is capped wholesale; the unit entries must match the derivation exactly.
+        assertTrue(A.contains(declared, INTEGRATION_GLOB));
+        deepStrictEqual(
+          A.filter(declared, (entry) => entry !== INTEGRATION_GLOB),
+          derived
+        );
+        expect(A.length(derived)).toBeGreaterThan(0);
+      })
   );
 });

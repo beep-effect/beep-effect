@@ -6,16 +6,20 @@ import shared, { fcDeepSweepActive, makeMeasuredSequencer, vitestDoctestActive }
 import shardPlan from "./vitest.shards.json" with { type: "json" };
 
 /**
- * Test files that run real native workers against the real wall clock: they spawn through
- * `CitationNativeSpawner.fixtures.ts` and neither they nor their fixtures install a manual, sleep
- * or fixed clock, so a cold worker load under a saturated runner can consume a production deadline
- * (five of them override `regexDeadline`/`extractDeadline`; the rest run the policy defaults). They
- * keep the two-worker cap #2511 set package-wide. Every other file either drives deadlines through
- * `makeCitationNativeManualClock` / `makeCitationNativeSleepClock` (`test/CitationTokenizer.fixtures.ts`)
- * or spawns nothing, so it runs at Vitest's default width.
+ * Test files that keep the #2511 two-worker cap.
  *
- * Membership is mechanical: a file is listed when its fixture closure reaches the native spawner
- * fixtures without any clock substitute (`test/vitest-shards-plan.test.ts` re-derives the list).
+ * Unit files: the twelve that spawn real native workers through `CitationNativeSpawner.fixtures.ts`
+ * with no manual, sleep or fixed clock in their fixture closure, so a cold worker load under a
+ * saturated runner can consume a production deadline. Every other unit file drives its deadlines
+ * through `makeCitationNativeManualClock` / `makeCitationNativeSleepClock`
+ * (`test/CitationTokenizer.fixtures.ts`) or spawns nothing, so it runs at Vitest's default width.
+ *
+ * Integration files: all of them. The canonical replays substitute `regexDeadline` only; their
+ * `extractDeadline` and `operationDeadline` run on the real clock, and PR #3007's first heavy run at
+ * Vitest's default width (seven workers plus native children on the 8-vCPU runner) failed them with
+ * `CitationSafetyLimitExceeded`. The integration lane therefore keeps its proven two-worker shape.
+ *
+ * Membership of the unit entries is mechanical (`test/vitest-shards-plan.test.ts` re-derives it).
  */
 const nativeWallclockSuites = [
   "test/CitationBuiltinCleaners.test.ts",
@@ -30,10 +34,7 @@ const nativeWallclockSuites = [
   "test/CitationLiteralUnicodeComposition.test.ts",
   "test/CitationNativeProcess.test.ts",
   "test/CitationNativeSocket.test.ts",
-  "test/integration/CitationCleanerNamedHtml.test.ts",
-  "test/integration/CitationCleanerNativeCustom.test.ts",
-  "test/integration/CitationHtmlUnicode.test.ts",
-  "test/integration/CitationRegexTranslator.test.ts",
+  "test/integration/**/*.test.{ts,tsx}",
 ];
 
 // Vitest 5.1 forwards only a fixed list of CLI options to project configs (`maxWorkers`,
