@@ -3351,11 +3351,17 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             yield* fs.writeFileString(path.join(root, "docs/reports/probe.md"), "report\n");
             yield* runGit(root, ["add", "."]);
             yield* runGit(root, ["commit", "-m", "custom source report"]);
-            if (kind === "changed") {
-              yield* fs.writeFileString(file, "export const value = 2;\n");
-              yield* runGit(root, ["add", "."]);
-              yield* runGit(root, ["commit", "-m", "changed custom scanner input"]);
-            }
+            yield* Match.value(kind).pipe(
+              Match.when("changed", () =>
+                fs
+                  .writeFileString(file, "export const value = 2;\n")
+                  .pipe(
+                    Effect.andThen(runGit(root, ["add", "."])),
+                    Effect.andThen(runGit(root, ["commit", "-m", "changed custom scanner input"]))
+                  )
+              ),
+              Match.orElse(() => Effect.void)
+            );
             if (kind === "ignored") {
               yield* fs.makeDirectory(source, { recursive: true });
               yield* fs.writeFileString(file, "export const value = 1;\n");

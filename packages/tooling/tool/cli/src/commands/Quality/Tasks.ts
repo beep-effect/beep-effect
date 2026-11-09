@@ -62,7 +62,7 @@ import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
-import { isHeavyDocsOnlyPath } from "../Ci/HeavyAdmission.ts";
+import { isHeavyDocsOnlyPath } from "../Ci/CiOperational.schemas.ts";
 import { discoverEffectImportSourceFiles, EffectImportRulesOptions } from "../Laws/EffectImports.ts";
 import { coverageEnvironment } from "./internal/CoverageEnvironment.ts";
 import { defaultJSDocTotalsBaselinePath } from "./internal/JSDocRatchet.ts";
