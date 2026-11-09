@@ -73,6 +73,11 @@ contested sections; their surviving content is summarised in `phase1/rejected-qu
 | `phase1/astra-surface-map.md` | GPT-6 Astra (high), blinded | 32 components, 28-row rejected ledger, 12 constraints, pushbacks, per-job ledger for runs A/B/C |
 | `phase1/baseline-2026-11-09.md` | orchestrator | scouted numbers before the fan-out |
 
+Completion note: every GPT-6 Astra seat (the phase 1 map and the twelve phase 2 auditors) wrote its report
+in full, then its closing reply failed on the Codex usage limit (reset 2026-11-14). Each report was
+verified complete (verdict section and trailing JSON lever block) before it was merged, so no seat was
+re-run and no substitute model was used.
+
 ## 5. External sources
 
 None yet. Add each with its URL and access date when phase 2 cites one.

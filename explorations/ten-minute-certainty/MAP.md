@@ -106,8 +106,10 @@ a reviewer correction with the date, so the record never contradicts the constra
   from a successful producer; skipping the job would leave the comparator without it.
 - **PERIL-01 (fold Fallow envelopes into Labs), packet 5:** fork PR tokens are read-only and Labs has
   `contents: read` only, so the folded step cannot publish a commit status for fork runs, and commit
-  statuses have no `skipped` state. The fold needs a publication path that works for forks (or keeps the
-  existing job for them) before the standalone Fallow job is removed.
+  statuses have no `skipped` state. The host job must carry `statuses: write` (Labs runs with
+  `contents: read` today, for same-repository PRs too), and the standalone Fallow job stays whenever
+  publication is unavailable: fork PRs, or any host job without that permission. Only then may the
+  standalone job be removed.
 
 ## Gated candidates (re-entry points, not goals)
 
