@@ -1,0 +1,31 @@
+// Proposed text-knowledge tower, bottom-up by dependency (an arrow means "depends on").
+// Grey last line in each box: the external formalism the layer is grounded in.
+// Blue dashed = codecs that do not exist today (objects without morphisms). Render: dot -Tsvg <file>.dot > <file>.svg (Nimbus Sans)
+digraph stack {
+  graph [rankdir=BT, bgcolor=white, pad=0.04, nodesep=0.30, ranksep=0.20, fontname="Nimbus Sans"];
+  node  [shape=box, style="rounded,filled", fontname="Nimbus Sans", fontsize=8, color="#8C8C8C",
+         fillcolor=white, fontcolor=black, penwidth=0.6, margin="0.08,0.04"];
+  edge  [fontname="Nimbus Sans", fontsize=7, color="#5C5C5C", fontcolor="#444444", penwidth=0.6, arrowsize=0.55];
+
+  L0 [label=<<B>@beep/identity</B><BR/>TermIri · InstanceIri · registry · ContentHash<BR/><FONT COLOR="#8C8C8C" POINT-SIZE="7">RDF IRIs · CURIE · trusty URIs (Kuhn 2018)</FONT>>];
+  L1 [label=<<B>@beep/provenance</B>  (text identity, anchors)<BR/>SourceTextIdentity · VerifiedTextAnchor<BR/>+ Selector · OccurrenceId · Reanchoring<BR/><FONT COLOR="#8C8C8C" POINT-SIZE="7">OA selectors · UIMA SofA · LRMoo at the edge</FONT>>];
+  L6 [label=<<B>@beep/rdf</B><BR/>Dataset (set, canonical digest) · JSON-LD<BR/>vendored PROV-O · OA · NIF · DoCO · SKOS<BR/><FONT COLOR="#8C8C8C" POINT-SIZE="7">RDF canonical forms (Hogan 2017)</FONT>>];
+  L2 [label=<<B>@beep/annotation</B>  (today: nlp/Handoff)<BR/>Annotation&lt;K&gt; over an Expression<BR/>layers = kinds · merge = content join<BR/><FONT COLOR="#8C8C8C" POINT-SIZE="7">annotation graphs (Bird &amp; Liberman 1999)</FONT>>];
+  L3 [label=<<B>@beep/ontology</B>  (seeds, DTOs move out)<BR/>SKOS schemes · classification editions · fold<BR/>SSSOM alignments · optional gUFO class typing<BR/><FONT COLOR="#8C8C8C" POINT-SIZE="7">SKOS · gUFO (Almeida 2026) · SSSOM</FONT>>];
+  L4 [label=<<B>@beep/epistemics</B><BR/>Claim&lt;P&gt;: immutable core + separate records<BR/>stance · scoped admission · signals · coordinates<BR/><FONT COLOR="#8C8C8C" POINT-SIZE="7">nanopub · micropub · DEC as export mapping</FONT>>];
+  L5 [label=<<B>@beep/nlp-processing</B>  (capability)<BR/>Operation&lt;A, B&gt; in the Kleisli category<BR/>every run emits a prov:Activity<BR/><FONT COLOR="#8C8C8C" POINT-SIZE="7">functorial migration · acsets · APG · PROV-O</FONT>>];
+  L7 [label=<<B>agent surface</B><BR/>MCP tools from the same schemas<BR/>quotes/citations verified · claims link anchors<BR/><FONT COLOR="#8C8C8C" POINT-SIZE="7">JSON Schema · legal warrant (Taranukhin 2026)</FONT>>];
+
+  // dependency tower (real edges)
+  L1 -> L0;  L6 -> L1;  L2 -> L1;  L3 -> L6;  L4 -> L2;  L5 -> L4;  L5 -> L3;  L7 -> L5;
+  // force one column
+  edge [style=invis];
+  L2 -> L6;  L3 -> L2;  L4 -> L3;
+
+  // codecs that do not exist today
+  edge [color="#0072B2", fontcolor="#0072B2", penwidth=0.9, style=dashed, constraint=false];
+  L1 -> L6 [label="TextAnchor -> oa:"];
+  L2 -> L6 [label="OA/NIF adapter"];
+  L3 -> L6 [label="fold -> Dataset"];
+  L4 -> L6 [label="nanopub adapter"];
+}

@@ -1,0 +1,139 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "text-knowledge-stack-rebuild",
+    "packetId": "goal-packet/v1:5f1a509fe3c68671a4884544ffad5ddd7b070d25f786cab5050e51ade707c667",
+    "title": "Text-Knowledge Stack Rebuild",
+    "status": "active",
+    "created": "2026-11-08",
+    "updated": "2026-11-09",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/text-knowledge-stack-rebuild",
+  "lifecycle": "active",
+  "mission": "Redesign and rewrite the foundation text-knowledge stack (identity, text anchoring, annotation, taxonomy, claims, operations, RDF interchange, agent surface) as eight lawful layers in a dependency DAG: design first, rewrite the layers bottom-up and cut consumers over as each lands, retire what they replace.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/text-knowledge-stack-rebuild/GOAL.md",
+    "goals/text-knowledge-stack-rebuild/PLAN.md",
+    "goals/text-knowledge-stack-rebuild/README.md",
+    "goals/text-knowledge-stack-rebuild/SPEC.md",
+    "goals/text-knowledge-stack-rebuild/research/2026-11-08-rebuild-report.md",
+    "goals/text-knowledge-stack-rebuild/research/SOURCES.md",
+    "goals/text-knowledge-stack-rebuild/research/law-test-plan.md"
+  ],
+  "researchReports": [
+    "research/2026-11-08-critic-1-theory.md",
+    "research/2026-11-08-critic-2-doctrine.md",
+    "research/2026-11-08-critic-3-product.md",
+    "research/2026-11-08-reader-a-law-practice.md",
+    "research/2026-11-08-reader-b-modeling-audit.md",
+    "research/2026-11-08-reader-c-agent-surfaces.md",
+    "research/2026-11-08-reader-d-standards-vision.md",
+    "research/2026-11-08-rebuild-report.md",
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md",
+    "research/figures/anchored-annotation.dot",
+    "research/figures/anchored-annotation.svg",
+    "research/figures/boundary-worlds.dot",
+    "research/figures/boundary-worlds.svg",
+    "research/figures/stack-layers.dot",
+    "research/figures/stack-layers.svg",
+    "research/law-test-plan.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/text-knowledge-stack-rebuild/GOAL.md"
+    }
+  ],
+  "provides": [
+    "foundation/text-knowledge-stack",
+    "foundation/occurrence-anchor",
+    "foundation/annotation-layer",
+    "foundation/scoped-admission"
+  ],
+  "requires": ["foundation/epistemics-vocabulary"],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Design and grill",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "L0 identity: declared terms, one digest",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "L1 text: @beep/text, occurrence identity, selectors",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "L2 annotation: @beep/annotation, lossless handoff",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "L4 claims: core, stance, admission, signals",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "L3 and L6: taxonomy, alignments, interchange",
+      "status": "pending"
+    },
+    {
+      "id": "P6",
+      "name": "L5 and L7: operations, agent surface, the flow",
+      "status": "pending"
+    },
+    {
+      "id": "P7",
+      "name": "Cut-over and retirement",
+      "status": "pending"
+    },
+    {
+      "id": "P8",
+      "name": "Yeet: final PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P9",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/text-knowledge-stack-rebuild/GOAL.md)\" -le 4000",
+    "jq . goals/text-knowledge-stack-rebuild/ops/manifest.json",
+    "rg -n \"text-knowledge-stack-rebuild|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/text-knowledge-stack-rebuild",
+    "git diff --check -- goals/text-knowledge-stack-rebuild",
+    "bun run beep lint reflection-artifacts",
+    "bun run beep goals doctor",
+    "bun run beep goals decisions check --slug text-knowledge-stack-rebuild",
+    "bun run beep goals manifest --check"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation.",
+    "A retirement or rename is attempted without its row in research/consumer-census.md or without the consumer migration in the same PR: that step stops, the packet does not."
+  ],
+  "statusNote": "Authored 2026-11-08 from the OpenResearch rebuild report (revision 2); revised 2026-11-09 under the operator ruling that breaking changes are acceptable (decisions/). P0 Design and grill is next; no package code has changed."
+}
