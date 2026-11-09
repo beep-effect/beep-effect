@@ -31,7 +31,7 @@ automatically checked.
 - v3 (archived): repo `effect-v3-main-archive`, local checkout
   the local v3 clone `beep-effect4` (path in `research/SOURCES.md`; HEAD `997a827454`, "archiving main",
   2026-02-22). Focus the v3 `iam` & `knowledge` slices (`beep-effect4/packages/iam`, `beep-effect4/packages/knowledge`). Existing
-  archaeology: `explorations/atlas-synthesis/synthesis/40-v3-specs-corpus.md`,
+  archaeology: [explorations/atlas-synthesis/synthesis/40-v3-specs-corpus.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/atlas-synthesis/synthesis/40-v3-specs-corpus.md),
   `41-v3-knowledge-engine.md`, `42-v3-knowledge-domain-and-demo.md`.
 - v4 doctrine: `standards/ARCHITECTURE.md`; `standards/architecture/` `01`, `07`,
   `13`, `GLOSSARY.md`, `DECISIONS.md`.

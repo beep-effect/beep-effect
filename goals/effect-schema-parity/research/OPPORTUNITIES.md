@@ -9,7 +9,7 @@ machine ids, quote only the minimal identifying error text.
 ## 2026-09-15 — Audit rows can rule RETIRE on a facet nobody counted
 
 - **What I was doing:** Decomposing the exploration into this goal.
-- **Evidence:** `explorations/effect-schema-parity/research/idiom-families.md`
+- **Evidence:** [explorations/effect-schema-parity/research/idiom-families.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/effect-schema-parity/research/idiom-families.md)
   §F01 ruled LiteralKit a retirement with "Full static-member consumer census
   is UNVERIFIED" in its own row; the align ruling of 2026-09-14 took it. A
   census at decompose (Enum 1,172 lines, is 603, Options 395, $match 243)
@@ -38,7 +38,7 @@ machine ids, quote only the minimal identifying error text.
 - **Evidence:** `feedback:00-heavy:01-lint-fix` exit 1 (biome `noConsole`,
   `useTemplate`, `useNodejsImportProtocol`, `noUselessStringRaw`,
   `noInnerDeclarations`, `noExplicitAny` across nine files under
-  `explorations/effect-schema-parity/research/`) and
+  [explorations/effect-schema-parity/research/](https://github.com/beep-effect/beep-effect-goals-archive/tree/main/explorations/effect-schema-parity/research)) and
   `feedback:00-cheap-gates` exit 1 on `fallow:audit` (29 introduced: 18
   dead-code, 11 complexity), `fallow:dead-code` (9 unused files, 9 unresolved
   imports into `.repos/effect`), all in the same directory. The Yeet routing
@@ -323,7 +323,7 @@ machine ids, quote only the minimal identifying error text.
 ## 2026-09-29 — Fresh lane gives invalid `--extendedDiagnostics` numbers until the dependency closure is built
 
 - **What I was doing:** P2 before-measurement on a newly cut lane, using the
-  recipe in `explorations/effect-schema-parity/research/performance-verification-supplement.md`.
+  recipe in [explorations/effect-schema-parity/research/performance-verification-supplement.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/effect-schema-parity/research/performance-verification-supplement.md).
 - **Evidence:** all three `bun run tsc -p <pkg>/tsconfig.json --noEmit
   --extendedDiagnostics` runs exited 1 with thousands of `TS6305: Output file
   '.../dist/*.d.ts' has not been built from source file` errors and reported

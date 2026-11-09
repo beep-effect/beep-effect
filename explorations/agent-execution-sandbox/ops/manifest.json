@@ -13,6 +13,14 @@
       "supersededBy": null
     },
     "created": "2026-07-25",
-    "updated": "2026-10-06"
+    "updated": "2026-10-06",
+    "archive": {
+      "repo": "beep-effect/beep-effect-goals-archive",
+      "path": "explorations/agent-execution-sandbox",
+      "commit": "28c4a59943cf5392c4a85d3b4fa8815373b36aaf",
+      "contentHash": "858a57ae44b7166fc87efa80606c92f8b655d1f0",
+      "archivedAt": "2026-11-09T06:36:23.435Z",
+      "sourceCommit": "deb7d0c5efd56b6b073ab43be6ec5a6f6074fdd6"
+    }
   }
 }

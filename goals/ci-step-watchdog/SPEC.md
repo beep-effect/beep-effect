@@ -4,7 +4,7 @@ Normative contract. Packet anchor document. Repo instructions and governing
 standards outrank this file when they conflict. This spec was seeded on
 2026-08-23 from the operator-confirmed
 [`BRIEF.md`](../../explorations/ci-hang-observability/BRIEF.md), the ratified
-[`MAP.md`](../../explorations/ci-hang-observability/MAP.md), and the
+[`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/ci-hang-observability/MAP.md), and the
 [`DECISIONS.md`](../../explorations/ci-hang-observability/DECISIONS.md) log.
 Those links preserve provenance; this packet states the execution contract in
 its own words.

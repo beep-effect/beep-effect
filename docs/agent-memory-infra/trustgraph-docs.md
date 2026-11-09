@@ -106,7 +106,7 @@ The `03` "trust/reputation scoring" claim is not confirmed by the fetched primar
 
 `05` remains correct that TrustGraph should not win package topology or source-of-truth status. Current docs make that more important, not less, because TrustGraph is a broad agentic runtime with flows, processors, Workbench, IAM/workspaces, deployment packages, RAG, MCP, and agent orchestration. Sources: https://docs.trustgraph.ai/overview/architecture.html, https://docs.trustgraph.ai/overview/workspaces.html, https://docs.trustgraph.ai/reference/changelog/trustgraph.html, local lines 86-99 of `standards/memory-architecture/05-context-graph-capability-assessment.md`.
 
-`explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md` section "2.1 TrustGraph" is confirmed on the borrowing thesis: provenance/explainability shell, three named graphs, PROV-O traces, Context Cores packaging, Python/service-platform orientation, and rejection of schema-light triples as authority. It is stale on activity numbers: this run fetched 2.3k stars and 1,468 commits, not the earlier 2.2k/~1,425 snapshot. Sources: https://github.com/trustgraph-ai/trustgraph, https://docs.trustgraph.ai/overview/explainability.html, local lines 56-85 of `explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md`.
+[explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md) section "2.1 TrustGraph" is confirmed on the borrowing thesis: provenance/explainability shell, three named graphs, PROV-O traces, Context Cores packaging, Python/service-platform orientation, and rejection of schema-light triples as authority. It is stale on activity numbers: this run fetched 2.3k stars and 1,468 commits, not the earlier 2.2k/~1,425 snapshot. Sources: https://github.com/trustgraph-ai/trustgraph, https://docs.trustgraph.ai/overview/explainability.html, local lines 56-85 of [explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md).
 
 # References
 
@@ -146,4 +146,4 @@ Repo context and prior assessments checked:
 - `goals/agentic-professional-runtime/README.md`
 - `standards/memory-architecture/03-saas-landscape-assessment.md`
 - `standards/memory-architecture/05-context-graph-capability-assessment.md`
-- `explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md`
+- [explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md)

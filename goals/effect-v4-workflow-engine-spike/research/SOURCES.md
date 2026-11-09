@@ -1,10 +1,10 @@
 # Effect v4 Workflow Engine Spike — Implementation Sources & Provenance
 
 - **Primary ledger:**
-  [`explorations/effect-orchestration-patterns/research/SOURCES.md`](../../../explorations/effect-orchestration-patterns/research/SOURCES.md).
+  [explorations/effect-orchestration-patterns/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/effect-orchestration-patterns/research/SOURCES.md).
   Corrections begin there and are synchronized here.
 - **Current capability inventory:**
-  [`explorations/effect-orchestration-patterns/RESEARCH.md`](../../../explorations/effect-orchestration-patterns/RESEARCH.md),
+  [explorations/effect-orchestration-patterns/RESEARCH.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/effect-orchestration-patterns/RESEARCH.md),
   refreshed 2026-07-14. Live vendored source must be re-read before implementation
   because the workflow namespace is unstable.
 - **Gold-intake provenance:**
@@ -78,7 +78,7 @@ this goal:
 - Source exploration:
   `explorations/effect-orchestration-patterns/{BRIEF,MAP,DECISIONS,RESEARCH}.md`.
 - Primary provenance ledger:
-  `explorations/effect-orchestration-patterns/research/SOURCES.md`.
+  [explorations/effect-orchestration-patterns/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/effect-orchestration-patterns/research/SOURCES.md).
 - Graduated goal: `goals/effect-v4-workflow-engine-spike`.
 - Handoff consumer: `goals/law-docketing-reliability`.
 - Demand-gated candidates remain indexed only in the exploration `MAP.md`.

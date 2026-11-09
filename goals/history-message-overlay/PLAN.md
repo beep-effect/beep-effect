@@ -9,7 +9,7 @@ Status: `completed-retained` — all four slices shipped in #2785; #2858 re-fina
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded. |
-| P1 Implement | complete | Slice 1: map import + schema + `@beep/git` notes reads + `history notes --check`. Slice 2: `--write`, `sync`, worktree/cloud bootstrap hooks. Slice 3: post-merge publication workflow. Slice 4: cutover folder archive + docs. (Order: `explorations/git-history-rewrite/MAP.md`.) | Acceptance criteria are met. |
+| P1 Implement | complete | Slice 1: map import + schema + `@beep/git` notes reads + `history notes --check`. Slice 2: `--write`, `sync`, worktree/cloud bootstrap hooks. Slice 3: post-merge publication workflow. Slice 4: cutover folder archive + docs. (Order: [explorations/git-history-rewrite/MAP.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/git-history-rewrite/MAP.md).) | Acceptance criteria are met. |
 | P2 Verify | complete | Run required checks and capture evidence. | Verification is green or blockers are documented. |
 | P3 Yeet: PR to mergeable | complete | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | complete | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |

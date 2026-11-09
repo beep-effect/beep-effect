@@ -21,7 +21,7 @@ copied).
 
 1. `AGENTS.md` (repo laws) and `standards/ARCHITECTURE.md`.
 2. `explorations/cursor-agent-pool/DECISIONS.md` D1–D21 and `BRIEF.md`.
-3. `explorations/cursor-agent-pool/RESEARCH.md` and `research/2026-09-16-L{1,2,3,4}-brief.md` for
+3. [explorations/cursor-agent-pool/RESEARCH.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/cursor-agent-pool/RESEARCH.md) and `research/2026-09-16-L{1,2,3,4}-brief.md` for
    facts (prices, flags, hook events, sandbox rules); every cited fact carries its brief URL.
 4. `packages/tooling/library/ai-metrics/src/hook-pulse.ts` — the ledger schema is the oracle for rows.
 

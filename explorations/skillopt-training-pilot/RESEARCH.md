@@ -6,7 +6,7 @@
 
 Full provenance in [`research/SOURCES.md`](./research/SOURCES.md) and the
 predecessor packet's deep-research report
-(`explorations/agent-pipeline-velocity/research/deep-research-report.json`).
+([explorations/agent-pipeline-velocity/research/deep-research-report.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/agent-pipeline-velocity/research/deep-research-report.json)).
 Load-bearing facts: MIT license (port-with-attribution permitted); optimizer
 treats the skill document as trainable state with validation-gated bounded
 edits; deployable artifact band 300–2,000 tokens (our restructured

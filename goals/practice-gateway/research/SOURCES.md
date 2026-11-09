@@ -1,7 +1,7 @@
 # Practice Gateway — Sources & Provenance
 
 - **Source exploration:** `explorations/harness-the-harness` — primary ledger:
-  [`explorations/harness-the-harness/research/SOURCES.md`](../../../explorations/harness-the-harness/research/SOURCES.md).
+  [explorations/harness-the-harness/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/harness-the-harness/research/SOURCES.md).
   This copy carries the corpus for implementation; the exploration ledger
   stays primary.
 
@@ -59,5 +59,5 @@ stack-installer lessons give the repair and evidence discipline for setup.
 - Sibling: [`explorations/claude-mods-law-practice`](../../../explorations/claude-mods-law-practice/README.md)
   → [`goals/practice-claude-mod`](../../practice-claude-mod/README.md).
 - Pattern archive this packet re-enters: [`explorations/stack-installer`](../../../explorations/stack-installer/README.md).
-- Exploration: [`RESEARCH.md`](../../../explorations/harness-the-harness/RESEARCH.md), [`DECISIONS.md`](../../../explorations/harness-the-harness/DECISIONS.md).
+- Exploration: [`RESEARCH.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/harness-the-harness/RESEARCH.md), [`DECISIONS.md`](../../../explorations/harness-the-harness/DECISIONS.md).
 - [Onboarding distribution research (B1/B2)](onboarding-distribution.md) — primary sources on MCPB prompts, plugins, Claude Desktop install, `.mcpb` install and `claude://` links

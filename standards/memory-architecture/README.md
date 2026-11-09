@@ -5,7 +5,7 @@
 > intelligence / repo-memory v0 as "the competitive edge / the diamond / Priority 1"**
 > is **superseded**: repo-memory v0 was a *learning vehicle* and is **archived**
 > (`archive/pre-repo-architecture-automation-2026-04-27`; the git-dated prune is traced in
-> `explorations/atlas-synthesis/synthesis/90-archaeology-pruned-repo-intel.md`). The
+> [explorations/atlas-synthesis/synthesis/90-archaeology-pruned-repo-intel.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/atlas-synthesis/synthesis/90-archaeology-pruned-repo-intel.md)). The
 > **product** is the solo IP-law firm flywheel (`goals/agentic-professional-runtime`,
 > prose-to-proof). The No-Escape Theorem and the four-layer taxonomy now govern
 > **law-domain** memory; the *principles* — exact/deterministic records as authority,

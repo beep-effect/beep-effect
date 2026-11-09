@@ -343,7 +343,7 @@ ADD-only, extracted-memory, vector/entity-ranking architecture
 (https://docs.mem0.ai/core-concepts/how-it-works,
 https://docs.mem0.ai/core-concepts/memory-evaluation).
 
-`explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md` does
+[explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md) does
 not list mem0 as one of the main donors. That omission remains defensible for
 Role A because Mem0 has weaker provenance/ontology authority than TrustGraph,
 Graphiti, or Cognee. The new evidence is that Mem0 may deserve a narrow Role B
@@ -404,7 +404,7 @@ https://raw.githubusercontent.com/mem0ai/mem0/main/openmemory/README.md).
 - `goals/agentic-professional-runtime/README.md`
 - `standards/memory-architecture/05-context-graph-capability-assessment.md`
 - `standards/memory-architecture/03-saas-landscape-assessment.md`
-- `explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md`
+- [explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md)
 - `docs/agent-memory-infra/README.md`
 
 ## Linked pages from llms.txt not followed

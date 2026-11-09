@@ -1,7 +1,7 @@
 # CI Step Watchdog Sources and Provenance
 
 Primary and canonical ledger:
-[`explorations/ci-hang-observability/research/SOURCES.md`](../../../explorations/ci-hang-observability/research/SOURCES.md).
+[explorations/ci-hang-observability/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/ci-hang-observability/research/SOURCES.md).
 This goal carries the exploration's source tables so implementers can work
 from the goal packet without losing the original provenance. Resolve any
 disagreement in favor of the canonical exploration ledger.
@@ -11,14 +11,14 @@ disagreement in favor of the canonical exploration ledger.
 - [`BRIEF.md`](../../../explorations/ci-hang-observability/BRIEF.md) records
   the operator-confirmed problem, appetite, solution shape, rabbit holes, and
   no-gos.
-- [`MAP.md`](../../../explorations/ci-hang-observability/MAP.md) defines the
+- [`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/ci-hang-observability/MAP.md) defines the
   W1-W4 decomposition and the Lint Policy first vertical slice.
 - [`DECISIONS.md`](../../../explorations/ci-hang-observability/DECISIONS.md)
   records the align decisions carried into `SPEC.md`.
-- [`RESEARCH.md`](../../../explorations/ci-hang-observability/RESEARCH.md)
+- [`RESEARCH.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/ci-hang-observability/RESEARCH.md)
   synthesizes the four-incident census, code trace, host evidence, Bun prior
   art, and mitigation gap.
-- [`EVIDENCE.md`](../../../explorations/ci-hang-observability/research/evidence/EVIDENCE.md)
+- [`EVIDENCE.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/ci-hang-observability/research/evidence/EVIDENCE.md)
   preserves the operational evidence distilled from short-lived CI and host
   sources.
 
@@ -75,17 +75,17 @@ existing dependencies; it does not vendor upstream code.
   timing.
 
 The remaining external URL corpus is cataloged in
-[`external-prior-art.md`](../../../explorations/ci-hang-observability/research/lanes/external-prior-art.md)
+[`external-prior-art.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/ci-hang-observability/research/lanes/external-prior-art.md)
 and
-[`external-bun-spin.md`](../../../explorations/ci-hang-observability/research/lanes/external-bun-spin.md).
+[`external-bun-spin.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/ci-hang-observability/research/lanes/external-bun-spin.md).
 
 ## Mined lane reports
 
 | Id | Producer | Path | Disposition |
 | --- | --- | --- | --- |
-| code-trace | GPT-5.6 Sol, 2026-08-23 | [`code-trace-report.md`](../../../explorations/ci-hang-observability/research/lanes/code-trace-report.md) | Primary in-repo trace; file and line claims were spot-verified against live source during synthesis. |
-| external-prior-art | Grok 4.6, 2026-08-23 | [`external-prior-art.md`](../../../explorations/ci-hang-observability/research/lanes/external-prior-art.md) | External source survey with primary citations. |
-| external-bun-spin | Grok 4.6, 2026-08-23 | [`external-bun-spin.md`](../../../explorations/ci-hang-observability/research/lanes/external-bun-spin.md) | Follow-up on the 100 percent CPU signature and Bun-side diagnostics. |
+| code-trace | GPT-5.6 Sol, 2026-08-23 | [`code-trace-report.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/ci-hang-observability/research/lanes/code-trace-report.md) | Primary in-repo trace; file and line claims were spot-verified against live source during synthesis. |
+| external-prior-art | Grok 4.6, 2026-08-23 | [`external-prior-art.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/ci-hang-observability/research/lanes/external-prior-art.md) | External source survey with primary citations. |
+| external-bun-spin | Grok 4.6, 2026-08-23 | [`external-bun-spin.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/ci-hang-observability/research/lanes/external-bun-spin.md) | Follow-up on the 100 percent CPU signature and Bun-side diagnostics. |
 
 ## Operational evidence
 

@@ -15,6 +15,14 @@
       "supersededBy": null
     },
     "created": "2026-06-18",
-    "updated": "2026-06-18"
+    "updated": "2026-06-18",
+    "archive": {
+      "repo": "beep-effect/beep-effect-goals-archive",
+      "path": "explorations/microsoft-365-integration",
+      "commit": "28c4a59943cf5392c4a85d3b4fa8815373b36aaf",
+      "contentHash": "f99b70d5d3ebb5d2991c4b80001347faa92ef579",
+      "archivedAt": "2026-11-09T06:36:23.435Z",
+      "sourceCommit": "deb7d0c5efd56b6b073ab43be6ec5a6f6074fdd6"
+    }
   }
 }

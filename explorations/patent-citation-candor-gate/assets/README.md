@@ -10,4 +10,4 @@
   whose opinion text is public domain while the aggregator's own layers are
   cited only as the capture vehicle.
 - Committed record = this README + the SOURCES ledger; per parent-packet
-  precedent (`../../legal-patent-kg-deepening/assets/README.md`).
+  precedent ([../../legal-patent-kg-deepening/assets/README.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/legal-patent-kg-deepening/assets/README.md)).

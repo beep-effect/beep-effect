@@ -29,7 +29,7 @@ design record.
 ## Source Hierarchy
 
 1. The operator request captured in
-   `explorations/expiring-repo-facts/CAPTURE.md`.
+   [explorations/expiring-repo-facts/CAPTURE.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/expiring-repo-facts/CAPTURE.md).
 2. `AGENTS.md`, `CLAUDE.md`, and the schema-first and effect-first skills.
 3. `standards/ARCHITECTURE.md` and
    `standards/architecture/07-non-slice-families.md`.

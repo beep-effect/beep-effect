@@ -20,7 +20,7 @@ operator-approved upstream C&H harness run as an external baseline.
 1. The 2026-08-13 operator sign-off and ceremony request.
 2. Repo instructions and required skills.
 3. [`BRIEF.md`](../../explorations/harvey-lab-firm-knowledge/BRIEF.md),
-   [`MAP.md`](../../explorations/harvey-lab-firm-knowledge/MAP.md), and
+   [`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/harvey-lab-firm-knowledge/MAP.md), and
    [`DECISIONS.md`](../../explorations/harvey-lab-firm-knowledge/DECISIONS.md).
 4. This `SPEC.md`, then `PLAN.md` and `GOAL.md`.
 

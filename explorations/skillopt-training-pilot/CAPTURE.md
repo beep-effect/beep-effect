@@ -22,7 +22,7 @@ provisioning = **flake.nix python3 + uv with committed lock**; execution =
 codex sub-agents implement, Claude orchestrates/verifies.
 
 SkillOpt provenance inherited from
-`explorations/agent-pipeline-velocity/research/SOURCES.md` §2:
+[explorations/agent-pipeline-velocity/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/agent-pipeline-velocity/research/SOURCES.md) §2:
 [microsoft/SkillOpt](https://github.com/microsoft/SkillOpt) — MIT (verified
 2026-07-05), v0.2.0 (2026-07-02), `pip install skillopt`. Text-space
 optimizer: skill markdown = trainable state; optimizer model proposes bounded

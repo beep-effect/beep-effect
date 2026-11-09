@@ -127,7 +127,7 @@
   `packages/epistemic/server` `tsc -b` alone killed a runner. Only the CLI-side
   advisory swap step plus serial lane caps (both stopgaps, landed in #607) got
   the PR green.
-- **Evidence:** `explorations/graphnosis-prior-art/research/OPPORTUNITIES.md`
+- **Evidence:** [explorations/graphnosis-prior-art/research/OPPORTUNITIES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/graphnosis-prior-art/research/OPPORTUNITIES.md)
   (the beta.104 heavy-lane receipt, lines 35–52). The recurring kill set:
   `epistemic/server`, `epistemic/client`, `epistemic/ui`, `db-admin`,
   `ontology/client`, `tooling/tool/cli`, `apps/storybook`.

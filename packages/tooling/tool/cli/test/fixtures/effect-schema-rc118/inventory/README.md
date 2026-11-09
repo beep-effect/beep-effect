@@ -6,7 +6,7 @@ modules, owned by `bun run beep lint effect-schema-inventory` in `@beep/repo-cli
 `460272d30457f4697d8b8c52cad41caccbcace08` (`effect@4.0.1`).
 The rows began as the effect-schema-parity research prototype; the
 2026-09-28 refresh deltas are in
-`explorations/effect-schema-parity/research/2026-09-28-inventory-refresh.md`,
+[explorations/effect-schema-parity/research/2026-09-28-inventory-refresh.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/effect-schema-parity/research/2026-09-28-inventory-refresh.md),
 and the History section below records every regeneration since.
 
 | Command | What it does |

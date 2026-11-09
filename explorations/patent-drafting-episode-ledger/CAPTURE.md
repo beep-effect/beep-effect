@@ -10,7 +10,7 @@ dated heading at the bottom.
 ## 2026-08-06
 
 Seeded from the signed-off routing matrix of
-[`legal-patent-kg-deepening`](../legal-patent-kg-deepening/ROUTING-SEED.md),
+[`legal-patent-kg-deepening`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/legal-patent-kg-deepening/ROUTING-SEED.md),
 TWO clusters that are one merged row. Primary: **"Drafting episodes,
 deterministic retrieval, and rebuildable projections"** (route `mixed`, wave
 P1, proposed slug `patent-drafting-episode-ledger` — this packet). Absorbed:
@@ -18,7 +18,7 @@ P1, proposed slug `patent-drafting-episode-ledger` — this packet). Absorbed:
 2026-08-01 in the reconciliation grill — that cluster is this wedge's first
 rung; `ClaimLimitationSupport` is a submachine of the `DraftingEpisode`
 state machine sharing the same `RuntimeApprovalGate`). Machine row:
-[`routing-seed.json`](../legal-patent-kg-deepening/routing-seed.json) (the
+[`routing-seed.json`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/legal-patent-kg-deepening/routing-seed.json) (the
 merged clusters are a single row). Third wedge of the phase-2 sequence —
 the first-wedge order was fixed by the 2026-08-01 reconciliation grill with
 the other P1 wedges queued behind it, and the relator-second ordering was
@@ -29,7 +29,7 @@ milestone); opened 2026-08-06 on Benjamin's call after the second wedge
 ### Nuggets (from the parent 46-row ledger)
 
 From
-[`research/nugget-catalog.json`](../legal-patent-kg-deepening/research/nugget-catalog.json).
+[`research/nugget-catalog.json`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/legal-patent-kg-deepening/research/nugget-catalog.json).
 
 Primary cluster (drafting episodes, deterministic retrieval, rebuildable
 projections):
@@ -69,7 +69,7 @@ projections):
   and other memory engines limited to rebuildable lossy projections plus a
   recent-raw fallback. This is grill-gated because remo3 touches the
   standing memory-architecture decision." Deepened play:
-  [`research/20-adhd-integration.md`](../legal-patent-kg-deepening/research/20-adhd-integration.md)
+  [`research/20-adhd-integration.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/legal-patent-kg-deepening/research/20-adhd-integration.md)
   § Focus 3 ("★ DraftingEpisode ledger, Cognee as lossy projection"). The
   remo3 grill it names is RESOLVED 2026-08-01 — the resolved boundaries are
   carried below and are binding, not open.
@@ -106,7 +106,7 @@ drafting):
   promotion while any limitation lacks verified current-description anchors
   or an append-only attorney disposition. Dependency closure is part of the
   gate." Deepened play:
-  [`research/20-adhd-integration.md`](../legal-patent-kg-deepening/research/20-adhd-integration.md)
+  [`research/20-adhd-integration.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/legal-patent-kg-deepening/research/20-adhd-integration.md)
   § Focus 2 ("ClaimLimitationSupport promotion gate").
 
 ### Cluster grounding (net-new vs already-covered, from the routing seed)
@@ -169,7 +169,7 @@ Already covered (compose, do not rebuild):
 
 Both route grills on this cluster were RESOLVED in the 2026-08-01
 reconciliation grill (parent
-[`ROUTING-SEED.md`](../legal-patent-kg-deepening/ROUTING-SEED.md)
+[`ROUTING-SEED.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/legal-patent-kg-deepening/ROUTING-SEED.md)
 § Reconciliation amendments;
 [`DECISIONS.md`](../legal-patent-kg-deepening/DECISIONS.md)):
 

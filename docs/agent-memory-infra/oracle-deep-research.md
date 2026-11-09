@@ -183,5 +183,5 @@ Deliver: (1) per-product scorecard for both roles with hard-gate verdicts; (2) a
 - `standards/memory-architecture/05-context-graph-capability-assessment.md`
 - `goals/agentic-professional-runtime/README.md`
 - `goals/agentic-professional-runtime/SPEC.md`
-- `explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md`
+- [explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md)
 - `explorations/agent-memory-tiers-bitemporal-edges/DECISIONS.md`

@@ -69,7 +69,7 @@ These are composition references, not implementation claims.
 - `goals/legal-document-intake/SPEC.md` — in-repo composition/design reference.
 - [goals/semantic-foundation/PLAN.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantic-foundation/PLAN.md) — in-repo composition/design reference.
 - `goals/epistemic-claim-lifecycle-gate/SPEC.md` — in-repo composition/design reference.
-- `explorations/ingestion-security-secret-governance/research/secret-pii-scrub-and-audit.md` — in-repo composition/design reference.
+- [explorations/ingestion-security-secret-governance/research/secret-pii-scrub-and-audit.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/ingestion-security-secret-governance/research/secret-pii-scrub-and-audit.md) — in-repo composition/design reference.
 - `explorations/gpu-document-ocr/RESEARCH.md` — in-repo composition/design reference.
 - `explorations/oppold-corpus-overhaul/MAP.md` — in-repo composition/design reference.
 - `explorations/oppold-corpus-overhaul/research/2026-08-24-graduation-dossier.md` — in-repo composition/design reference.

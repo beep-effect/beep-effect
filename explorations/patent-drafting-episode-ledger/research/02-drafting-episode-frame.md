@@ -961,12 +961,12 @@ the underlying source was inspected.
 - `explorations/patent-drafting-episode-ledger/CAPTURE.md` (nuggets, resolved remo2/remo3 boundaries, cautions)
 - `explorations/patent-drafting-episode-ledger/DECISIONS.md` (lane scope)
 - `explorations/patent-drafting-episode-ledger/research/SOURCES.md`
-- `explorations/legal-patent-kg-deepening/research/00-catalog.json` (historical
+- [explorations/legal-patent-kg-deepening/research/00-catalog.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/legal-patent-kg-deepening/research/00-catalog.json) (historical
   lane-open state: all 18 consumed paper rows had `url: null`; the two duplicate
   pairs represent 16 distinct works. See D7 for the post-lane promotion.)
-- `explorations/legal-patent-kg-deepening/research/SOURCES.md`
-- `explorations/legal-patent-kg-deepening/research/20-adhd-integration.md` § Focus 2 (lines 161-194), § Focus 3 (lines 195-234)
-- `explorations/legal-patent-kg-deepening/research/mined/` — P002, P003, P005, P016, P018, P019, P025, P027, P028, P030, P048, P056, P066, P068, P069, P078, P084, P099
+- [explorations/legal-patent-kg-deepening/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/legal-patent-kg-deepening/research/SOURCES.md)
+- [explorations/legal-patent-kg-deepening/research/20-adhd-integration.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/legal-patent-kg-deepening/research/20-adhd-integration.md) § Focus 2 (lines 161-194), § Focus 3 (lines 195-234)
+- [explorations/legal-patent-kg-deepening/research/mined/](https://github.com/beep-effect/beep-effect-goals-archive/tree/main/explorations/legal-patent-kg-deepening/research/mined) — P002, P003, P005, P016, P018, P019, P025, P027, P028, P030, P048, P056, P066, P068, P069, P078, P084, P099
 
 ### Drift and corrections discovered
 
