@@ -98,6 +98,27 @@ export * from "./CiOperational.schemas.ts";
  */
 export * from "./CiOperational.service.ts";
 /**
+ * Test Unit partition rebalance command (`beep ci partitions`).
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiPartitions.command.ts";
+/**
+ * Test Unit partition plan, timing and budget schemas.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./CiPartitions.schemas.ts";
+/**
+ * Test Unit timing source service and live layer.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiPartitions.service.ts";
+/**
  * Public runner-loss rerun subcommand export.
  *
  * @category cli-commands

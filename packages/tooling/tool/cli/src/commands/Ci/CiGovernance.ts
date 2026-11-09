@@ -316,7 +316,7 @@ const environmentName = (job: WorkflowJob): string =>
 const isMatrixWriter = (job: WorkflowJob, file: string, id: string): boolean =>
   job.strategy === undefined ||
   Str.includes("matrix.uses_turbo == 'true'")(environmentName(job)) ||
-  (file === "check.yml" && A.contains(["lint-shard", "test-unit-shard"], id));
+  (file === "check.yml" && A.contains(["lint-shard", "test-unit-shard", "test-integration-shard"], id));
 
 const writerEnvironmentAllowed = (job: WorkflowJob): boolean => {
   const env = environmentName(job);
@@ -421,13 +421,17 @@ export const setupActionSavesNoCache = Effect.fn("CiGovernance.setupActionSavesN
   );
 });
 
+const migrationJobName = /^\$\{\{ needs\.admission\.outputs\.[a-z_]+ == 'true' && '([^']+)' \|\| '([^']+)' \}\}$/u;
+
 /**
  * Expand YAML job names into their hosted check contexts.
  *
  * **Details**
  *
- * The coverage migration job advertises both possible contexts. Its live name
- * depends on whether GitHub resolved the legacy reusable coverage producer.
+ * A check.yml job named by a `needs.admission.outputs.<flag> == 'true' && 'A' || 'B'`
+ * expression advertises both contexts: the coverage and integration migration
+ * jobs take their live name from whether the resolved reusable heavy workflow
+ * still declares the context they are taking over.
  *
  * **Example** (A static job name)
  *
@@ -449,13 +453,8 @@ export const workflowJobContexts = Effect.fn("CiGovernance.workflowJobContexts")
   );
   return A.flatMap(jobsFor(workflow), ([id, job]) => {
     const name = job.name ?? id;
-    if (
-      file === "check.yml" &&
-      id === "coverage-regression" &&
-      name ===
-        "${{ needs.admission.outputs.legacy_coverage == 'true' && 'Coverage Artifact Migration' || 'Heavy / Coverage Regression' }}"
-    )
-      return ["Coverage Artifact Migration", "Heavy / Coverage Regression"];
+    const migration = file === "check.yml" ? O.fromNullOr(migrationJobName.exec(name)) : O.none();
+    if (O.isSome(migration)) return [migration.value[1] ?? name, migration.value[2] ?? name];
     const include = pipe(
       O.fromUndefinedOr(job.strategy?.matrix.include),
       O.flatMap(textRecordsOption),

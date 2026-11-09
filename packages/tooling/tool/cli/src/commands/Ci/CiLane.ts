@@ -471,12 +471,13 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
   }),
   CiLaneDescriptor.make({
     id: "test-integration",
-    workflow: "heavy",
     contextName: "Heavy / Test Integration",
     required: true,
     laneClass: "cli-runnable",
     replay: "exact",
-    flags: [...TURBO_SHAPE_FLAGS],
+    flags: [...TURBO_SHAPE_FLAGS, "--partition", "--dry-run"],
+    notes:
+      "Hosted partitions since 2026-11-09: `lps-int-N` runs one Vitest shard of @beep/law-practice-server's integration suite and `int-rest` runs the root integration lane for every other package; a fail-closed check.yml aggregate reports the context the heavy pool used to own.",
   }),
   CiLaneDescriptor.make({
     id: "coverage",
@@ -1223,7 +1224,11 @@ export const proveCiLanePartition = Effect.fn("CiLane.proveCiLanePartition")(fun
 });
 
 const partitionedLaneTask = (laneId: PartitionedCiLane): string =>
-  PartitionedCiLaneSchema.match(laneId, { lint: () => "lint", "test-unit": () => "test" });
+  PartitionedCiLaneSchema.match(laneId, {
+    lint: () => "lint",
+    "test-unit": () => "test",
+    "test-integration": () => "test:integration:parallel",
+  });
 
 const partitionDryRunArgs = (laneId: PartitionedCiLane, options: CiLaneRunOptions): ReadonlyArray<string> =>
   directTurboArgs(
@@ -1231,10 +1236,23 @@ const partitionDryRunArgs = (laneId: PartitionedCiLane, options: CiLaneRunOption
     [...(options.affected ? ["--affected"] : A.empty<string>()), LABS_TURBO_EXCLUDE_FILTER, "--only", "--dry-run=json"]
   );
 
-const shardPassThroughArgs = (shard: O.Option<CiLanePartitionShard>): ReadonlyArray<string> =>
+// Hosted integration shards run one Vitest worker. On the 4-vCPU ubuntu-24.04 runner two workers
+// gave almost no parallel gain (PR #3005 run 42600820554: 1.0-1.5x the 8-vCPU file-second sum)
+// and the contention pushed native replays past their production operation and extraction
+// deadlines; single-file partitions on the same run, effectively one worker, all passed.
+const INTEGRATION_SHARD_VITEST_ARGS: ReadonlyArray<string> = ["--maxWorkers=1"];
+
+const shardPassThroughArgs = (
+  laneId: PartitionedCiLane,
+  shard: O.Option<CiLanePartitionShard>
+): ReadonlyArray<string> =>
   O.match(shard, {
     onNone: A.empty<string>,
-    onSome: ({ index, total }) => ["--", `--shard=${index}/${total}`],
+    onSome: ({ index, total }) => [
+      "--",
+      `--shard=${index}/${total}`,
+      ...(laneId === "test-integration" ? INTEGRATION_SHARD_VITEST_ARGS : A.empty<string>()),
+    ],
   });
 
 const partitionExecutionArgs = (
@@ -1257,8 +1275,133 @@ const partitionExecutionArgs = (
             ...ciCoverageTestArgs,
             ...O.match(shard, { onNone: A.empty<string>, onSome: ({ index, total }) => [`--shard=${index}/${total}`] }),
           ]
-        : shardPassThroughArgs(shard)),
+        : shardPassThroughArgs(laneId, shard)),
     ]
+  );
+
+const shardedLanePackages = (laneId: PartitionedCiLane): ReadonlyArray<string> =>
+  pipe(
+    CI_LANE_PARTITIONS,
+    A.filter((partition) => partition.lane === laneId && partition.shard !== undefined),
+    A.flatMap((partition) => partition.packages),
+    A.dedupe,
+    A.sort(Order.String)
+  );
+
+// The integration catch-all bin is not a package list for Turbo: it runs today's root
+// integration lane (parallel, unsplit and serial tasks alike) for every package the sharded
+// bins do not own, so the hosted leg proves exactly what the heavy lane proved. Turbo's
+// negated filters keep the sharded packages out; `--affected` still scopes pull requests.
+const isIntegrationRestPartition = (laneId: PartitionedCiLane, shard: O.Option<CiLanePartitionShard>): boolean =>
+  laneId === "test-integration" && O.isNone(shard);
+
+const integrationRestLaneStep = (
+  repoRoot: string,
+  partition: CiLanePartitionId,
+  options: CiLaneRunOptions
+): QualityTaskStep =>
+  rootScriptStep(
+    repoRoot,
+    `ci:test-integration:${partition}`,
+    "test",
+    [
+      "--integration",
+      ...A.map(shardedLanePackages("test-integration"), (name) => `--filter=!${name}`),
+      ...turboShapeArgs(options),
+    ],
+    options.affected ? { TURBO_SCM_BASE: options.base } : undefined
+  );
+
+const partitionExecutionStep = (
+  repoRoot: string,
+  laneId: PartitionedCiLane,
+  partition: CiLanePartitionId,
+  packages: ReadonlyArray<string>,
+  options: CiLaneRunOptions,
+  shard: O.Option<CiLanePartitionShard>
+): QualityTaskStep =>
+  isIntegrationRestPartition(laneId, shard)
+    ? integrationRestLaneStep(repoRoot, partition, options)
+    : QualityTaskStep.make({
+        label: `ci:${laneId}:${partition}`,
+        command: "bunx",
+        args: partitionExecutionArgs(laneId, packages, options, shard),
+        cwd: repoRoot,
+      });
+
+/**
+ * One partition's execution request: where it runs, which lane and partition, the selected
+ * packages, the lane shape and the Vitest shard it carries, when any.
+ *
+ * **Example** (Describe the integration catch-all leg)
+ *
+ * ```ts
+ * import { CiLanePartitionStepRequest, CiLaneRunOptions } from "@beep/repo-cli/commands/Ci"
+ *
+ * const options = CiLaneRunOptions.make({
+ *   affected: true, base: "origin/main", head: "HEAD", summarize: true, mode: "auto",
+ *   to: "HEAD", last: false, changesetStatus: false, validateEnvelopes: false
+ * })
+ * const request = CiLanePartitionStepRequest.make({
+ *   repoRoot: "/repo", laneId: "test-integration", partition: "int-rest", packages: [], options
+ * })
+ * console.log(request.partition)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CiLanePartitionStepRequest extends S.Opaque<
+  CiLanePartitionStepRequest,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    repoRoot: S.String,
+    laneId: PartitionedCiLaneSchema,
+    partition: CiLanePartitionId,
+    packages: S.Array(S.String),
+    options: CiLaneRunOptions,
+    shard: S.optionalKey(CiLanePartitionShard),
+  }).pipe(
+    $I.annoteSchema("CiLanePartitionStepRequest", {
+      description: "Execution request for one partition of a partitioned CI lane.",
+    })
+  )
+) {}
+
+/**
+ * Build the exact process step one partition of a partitioned CI lane executes.
+ *
+ * **Example** (Plan the integration catch-all leg)
+ *
+ * ```ts
+ * import { CiLanePartitionStepRequest, CiLaneRunOptions, ciLanePartitionStepForTesting } from "@beep/repo-cli/commands/Ci"
+ *
+ * const options = CiLaneRunOptions.make({
+ *   affected: true, base: "origin/main", head: "HEAD", summarize: true, mode: "auto",
+ *   to: "HEAD", last: false, changesetStatus: false, validateEnvelopes: false
+ * })
+ * const step = ciLanePartitionStepForTesting(
+ *   CiLanePartitionStepRequest.make({
+ *     repoRoot: "/repo", laneId: "test-integration", partition: "int-rest", packages: [], options
+ *   })
+ * )
+ * console.log(step.args)
+ * ```
+ *
+ * @param request - Repository root, lane, partition, selected packages, lane shape and optional Vitest shard.
+ * @returns The step the lane would run for that partition.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const ciLanePartitionStepForTesting = (request: CiLanePartitionStepRequest): QualityTaskStep =>
+  partitionExecutionStep(
+    request.repoRoot,
+    request.laneId,
+    request.partition,
+    request.packages,
+    request.options,
+    O.fromUndefinedOr(request.shard)
   );
 
 /**
@@ -2139,26 +2282,42 @@ const runCiPartitionExecution = Effect.fn("CiLane.runCiPartitionExecution")(func
   coveragePlan: CiCoverageArtifactPlan | undefined
 ) {
   const { laneId, partition } = request;
-  if (options.dryRun) {
-    if (A.isReadonlyArrayNonEmpty(proof.packages)) {
-      const plannedArgs = partitionExecutionArgs(laneId, proof.packages, options, O.fromUndefinedOr(proof.shard));
-      yield* Console.log(`[ci] ${laneId} ${partition}: planned execution: bunx ${A.join(plannedArgs, " ")}`);
-    }
-    yield* Console.log(`[ci] ${laneId} ${partition}: dry-run proof complete; no tasks executed.`);
-    return;
-  }
-  if (A.isReadonlyArrayEmpty(proof.packages)) {
+  const shard = O.fromUndefinedOr(proof.shard);
+  // The integration catch-all leg always runs: Turbo applies the affected scope to its
+  // parallel, unsplit and serial tasks itself, and only the parallel task is in the proof.
+  const runnable = isIntegrationRestPartition(laneId, shard) || A.isReadonlyArrayNonEmpty(proof.packages);
+  const step = runnable
+    ? O.some(partitionExecutionStep(repoRoot, laneId, partition, proof.packages, options, shard))
+    : O.none();
+  if (options.dryRun) return yield* logPartitionDryRun(laneId, partition, step);
+  if (O.isNone(step)) {
     if (coveragePlan !== undefined) yield* runCiCoveragePartition(repoRoot, options, coveragePlan, proof, undefined);
     yield* Console.log(`[ci] ${laneId} ${partition}: partition has no selected tasks (skipped).`);
     return;
   }
+  yield* runPartitionStep(repoRoot, laneId, partition, options, proof, coveragePlan, step.value);
+});
 
-  const step = QualityTaskStep.make({
-    label: `ci:${laneId}:${partition}`,
-    command: "bunx",
-    args: partitionExecutionArgs(laneId, proof.packages, options, O.fromUndefinedOr(proof.shard)),
-    cwd: repoRoot,
-  });
+const logPartitionDryRun = Effect.fn("CiLane.logPartitionDryRun")(function* (
+  laneId: PartitionedCiLane,
+  partition: CiLanePartitionId,
+  step: O.Option<QualityTaskStep>
+) {
+  if (O.isSome(step)) {
+    yield* Console.log(`[ci] ${laneId} ${partition}: planned execution: ${renderStepCommand(step.value)}`);
+  }
+  yield* Console.log(`[ci] ${laneId} ${partition}: dry-run proof complete; no tasks executed.`);
+});
+
+const runPartitionStep = Effect.fn("CiLane.runPartitionStep")(function* (
+  repoRoot: string,
+  laneId: PartitionedCiLane,
+  partition: CiLanePartitionId,
+  options: CiLaneRunOptions,
+  proof: CiLanePartitionProof,
+  coveragePlan: CiCoverageArtifactPlan | undefined,
+  step: QualityTaskStep
+) {
   if (coveragePlan !== undefined) {
     yield* runCiCoveragePartition(repoRoot, options, coveragePlan, proof, step);
   } else {
@@ -2496,7 +2655,7 @@ export const ciLaneCommand = Command.make(
       Flag.optional
     ),
     partition: Flag.ChoiceWithValue("partition", partitionFlagChoices).pipe(
-      Flag.withDescription("Run one deterministic Lint or Test Unit package partition"),
+      Flag.withDescription("Run one deterministic Lint, Test Unit or Test Integration package partition"),
       Flag.optional
     ),
     coverageOutput: Flag.String("coverage-output").pipe(

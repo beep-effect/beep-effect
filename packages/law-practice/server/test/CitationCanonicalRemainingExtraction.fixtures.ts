@@ -7,6 +7,7 @@ import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
@@ -85,3 +86,48 @@ export const replayCitationCanonicalRemainingExtraction = Effect.fn("CanonicalRe
 });
 
 const OriginalOperations = S.fromJsonString(CitationOracleOperations);
+
+/**
+ * Rows per replay group; the integration range files pass it as `size`.
+ * @internal @category testing @since 0.0.0
+ */
+export const CITATION_CANONICAL_REMAINING_EXTRACTION_GROUP_SIZE = 10;
+
+/**
+ * Number of replay groups of `CITATION_CANONICAL_REMAINING_EXTRACTION_GROUP_SIZE` rows that cover the table.
+ * @internal @category testing @since 0.0.0
+ */
+export const CITATION_CANONICAL_REMAINING_EXTRACTION_GROUP_COUNT = 7;
+
+/**
+ * Number of integration range files the groups are split across.
+ * @internal @category testing @since 0.0.0
+ */
+export const CITATION_CANONICAL_REMAINING_EXTRACTION_RANGE_COUNT = 2;
+
+/**
+ * Contiguous, disjoint group-index ranges whose concatenation is every group.
+ * One integration file replays one range
+ * (`test/integration/CitationCanonicalRemainingExtraction*.test.ts`);
+ * `test/CitationCanonicalExtractionRanges.test.ts` guards the union and the
+ * file census, so a group is never dropped when a range file is added.
+ * @internal @category testing @since 0.0.0
+ */
+export const citationCanonicalRemainingExtractionGroupRanges = A.chunksOf(
+  A.range(0, CITATION_CANONICAL_REMAINING_EXTRACTION_GROUP_COUNT - 1),
+  Math.ceil(CITATION_CANONICAL_REMAINING_EXTRACTION_GROUP_COUNT / CITATION_CANONICAL_REMAINING_EXTRACTION_RANGE_COUNT)
+);
+
+/**
+ * One group range by zero-based index; throws when no such range exists so a
+ * stale range file fails at collection instead of replaying nothing.
+ * @internal @category testing @since 0.0.0
+ */
+export const citationCanonicalRemainingExtractionGroupRange = (index: number) =>
+  O.getOrThrowWith(
+    A.get(citationCanonicalRemainingExtractionGroupRanges, index),
+    () =>
+      new Error(
+        `CitationCanonicalRemainingExtraction group range ${index} does not exist; the table has ${A.length(citationCanonicalRemainingExtractionGroupRanges)} ranges.`
+      )
+  );
