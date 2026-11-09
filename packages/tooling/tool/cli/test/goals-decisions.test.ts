@@ -185,6 +185,22 @@ describe("goals decisions projection", () => {
       if (Result.isFailure(unknownKey)) {
         expect(unknownKey.failure.message).toContain("outside GoalDecisionFrontmatter: pr ");
       }
+      // A refinement failure under a declared key walks Pointer -> Filter and names no unknown key.
+      const badPullRequest = yield* parseGoalDecision(
+        "2026-11-05-x.md",
+        "---\ntitle: X\ndate: 2026-11-05\nreversal: R.\npullRequest: 0\n---\nbody\n"
+      );
+      badPullRequest.pipe(Result.isFailure, assertTrue);
+      if (Result.isFailure(badPullRequest)) {
+        expect(badPullRequest.failure.message).toContain("does not decode as GoalDecisionFrontmatter");
+        expect(badPullRequest.failure.message).not.toContain("outside GoalDecisionFrontmatter");
+      }
+      // Frontmatter that is not YAML fails before the schema runs and reports no unknown key.
+      const notYaml = yield* parseGoalDecision("2026-11-05-x.md", "---\ntitle: [unclosed\n---\nbody\n");
+      notYaml.pipe(Result.isFailure, assertTrue);
+      if (Result.isFailure(notYaml)) {
+        expect(notYaml.failure.message).not.toContain("outside GoalDecisionFrontmatter");
+      }
       const ok = yield* parseGoalDecision("2026-11-05-forward-only-migration.md", VALID_FILE);
       ok.pipe(Result.isSuccess, assertTrue);
       if (Result.isSuccess(ok)) {
