@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "ten-minute-certainty",
+    "title": "Ten-Minute Certainty",
+    "status": "active",
+    "stage": "decompose",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null,
+      "related": [
+        "goals/time-to-certainty",
+        "goals/ci-lane-economics",
+        "goals/verification-route",
+        "goals/compute-profile-gate-routing",
+        "goals/turborepo-quality-cache-adoption",
+        "explorations/beep-ci-operational-ontology"
+      ]
+    },
+    "created": "2026-11-09",
+    "updated": "2026-11-09"
+  }
+}
