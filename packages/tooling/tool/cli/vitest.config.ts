@@ -1,40 +1,15 @@
 import * as NodeOS from "node:os";
 import * as NodeURL from "node:url";
-import * as NodePath from "@effect/platform-node/NodePath";
-import * as A from "effect/Array";
-import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
-import * as Path from "effect/Path";
-import * as Str from "effect/String";
 import { defineConfig, mergeConfig } from "vitest/config";
-import { BaseSequencer } from "vitest/node";
+import { makeMeasuredSequencer } from "../../../../vitest.sequencer.ts";
 import shared, { fcDeepSweepActive, packageTestTimeout, vitestDoctestActive } from "../../../../vitest.shared.ts";
 import shardPlan from "./vitest.shards.json" with { type: "json" };
-import type { TestSpecification } from "vitest/node";
 
-// A committed plan keeps all six runners on the same assignment. New files use Vitest's
+// A committed plan keeps every hosted runner on the same assignment. New files use Vitest's
 // hash partition over the unknown set; removed files simply disappear from collection.
-// Other shard counts retain Vitest's default behavior. The plan changes scheduling only.
-class MeasuredSequencer extends BaseSequencer {
-  override shard(files: TestSpecification[]): Promise<TestSpecification[]> {
-    const shard = this.ctx.config.shard;
-    if (shard === undefined || shard.count !== shardPlan.shards.length) return super.shard(files);
-    const path = Effect.runSync(Effect.provide(Path.Path, NodePath.layer));
-    const assignment = (file: TestSpecification) => {
-      const relative = Str.replaceAll(path.sep, "/")(path.relative(this.ctx.config.root, file.moduleId));
-      return A.findFirstIndex(shardPlan.shards, (entries) => A.contains(entries, relative));
-    };
-    return Effect.promise(() => super.shard(A.filter(files, (file) => O.isNone(assignment(file))))).pipe(
-      Effect.map((unknown) =>
-        A.appendAll(
-          A.filter(files, (file) => O.contains(assignment(file), shard.index - 1)),
-          unknown
-        )
-      ),
-      Effect.runPromise
-    );
-  }
-}
+// Other shard counts retain Vitest's default behavior. The plan changes scheduling only;
+// `beep ci partitions rebalance --write --run <id>` refreshes it from a green main run.
+const MeasuredSequencer = makeMeasuredSequencer(shardPlan);
 
 /**
  * Suites that leak process-wide state into whatever runs next in the same worker, so they keep

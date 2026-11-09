@@ -8,13 +8,17 @@ execute tests or regenerate the baseline.
 
 ## Producers
 
-The thirteen Test Unit partitions keep stable identities: `unit-a` to `unit-d`,
-`repo-cli-1` to `repo-cli-6` and `law-practice-1` to `law-practice-3` (ten
-before 2026-11-08, six and four before 2026-11-02; the lane-timings census
-knows every layout). Each unit partition runs its packages two at a
+The twenty-five Test Unit partitions keep stable identities: `unit-a` to
+`unit-f`, `repo-cli-1` to `repo-cli-8` and `law-practice-1` to
+`law-practice-11` (thirteen before 2026-11-09, ten before 2026-11-08, six and
+four before 2026-11-02; the lane-timings census knows every layout). The
+sharded partitions follow the committed `vitest.shards.json` plan of their
+package, packed by `bun run beep ci partitions rebalance --write --run <id>`
+from a green main run and judged by `rebalance --check` against the budgets in
+`CiPartitions.schemas.ts`. Each unit partition runs its packages two at a
 time with buffered output. They run each package's canonical coverage
 commands, preserving environment assignments, configuration and test selection.
-Node invocations use V8; Bun invocations use Istanbul. The CLI's six partitions
+Node invocations use V8; Bun invocations use Istanbul. The CLI's eight partitions
 use its existing Node/V8 coverage command. The Labs job supplies its own additional
 artifact. Providers are recorded per invocation, and a package's canonical
 coverage shards must use the same provider before their raw counters can be merged.

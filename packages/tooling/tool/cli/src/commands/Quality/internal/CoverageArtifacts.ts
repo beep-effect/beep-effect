@@ -937,9 +937,11 @@ export const collectCoverageProducerArtifacts = Effect.fn("CoverageArtifacts.col
         ),
       });
     }),
-    // Each package owns its maps and source/runtime discovery process. Two independent
-    // validations fit the hosted 4-vCPU runner without making the producer census authoritative.
-    { concurrency: 2 }
+    // Each package owns its maps and source/runtime discovery process (one short runtime boot plus a
+    // ts-morph pass). Four independent validations use the hosted 4-vCPU runner's cores: run
+    // 42554761567 verified 197 packages in 164 s at two at a time, the Coverage Regression job's
+    // largest cost. The producer census stays non-authoritative; only the width changed.
+    { concurrency: 4 }
   );
 });
 

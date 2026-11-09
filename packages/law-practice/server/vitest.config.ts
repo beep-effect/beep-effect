@@ -1,8 +1,41 @@
 import * as NodeURL from "node:url";
 import { defineConfig, mergeConfig } from "vitest/config";
+import { makeMeasuredSequencer } from "../../../vitest.sequencer.ts";
 import shared from "../../../vitest.shared.ts";
+import shardPlan from "./vitest.shards.json" with { type: "json" };
 
-export default mergeConfig(
+/**
+ * Test files that run real native workers against the real wall clock: they spawn through
+ * `CitationNativeSpawner.fixtures.ts` and neither they nor their fixtures install a manual, sleep
+ * or fixed clock, so a cold worker load under a saturated runner can consume a production deadline
+ * (five of them override `regexDeadline`/`extractDeadline`; the rest run the policy defaults). They
+ * keep the two-worker cap #2511 set package-wide. Every other file either drives deadlines through
+ * `makeCitationNativeManualClock` / `makeCitationNativeSleepClock` (`test/CitationTokenizer.fixtures.ts`)
+ * or spawns nothing, so it runs at Vitest's default width.
+ *
+ * Membership is mechanical: a file is listed when its fixture closure reaches the native spawner
+ * fixtures without any clock substitute (`test/vitest-shards-plan.test.ts` re-derives the list).
+ */
+const nativeWallclockSuites = [
+  "test/CitationBuiltinCleaners.test.ts",
+  "test/CitationCleanerCustomCorpus.test.ts",
+  "test/CitationCleanerNamedCorpus.test.ts",
+  "test/CitationCleanerPipelineCoverage.test.ts",
+  "test/CitationDocumentCleanerProtocols.test.ts",
+  "test/CitationHtmlBytes.test.ts",
+  "test/CitationHtmlCleanerStage.test.ts",
+  "test/CitationHtmlNativeInput.test.ts",
+  "test/CitationHtmlWorkerCorpus.test.ts",
+  "test/CitationLiteralUnicodeComposition.test.ts",
+  "test/CitationNativeProcess.test.ts",
+  "test/CitationNativeSocket.test.ts",
+  "test/integration/CitationCleanerNamedHtml.test.ts",
+  "test/integration/CitationCleanerNativeCustom.test.ts",
+  "test/integration/CitationHtmlUnicode.test.ts",
+  "test/integration/CitationRegexTranslator.test.ts",
+];
+
+const config = mergeConfig(
   shared,
   defineConfig({
     // Test-only aliases reach private subjects without publishing package exports.
@@ -14,9 +47,48 @@ export default mergeConfig(
         },
       ],
     },
-    // Real native worker tests include cold module loading. Bound the test
-    // runner fan-out so it does not consume the production deadline itself.
-    // Each native owner still enforces its configured queue/execution limits.
-    test: { maxWorkers: 2, maxConcurrency: 2 },
+    test: {
+      // Hosted Test Unit runs `--shard=<i>/<n>` with `n` equal to the plan length; the committed
+      // LPT plan keeps every law-practice shard's file time near the others (run 42554761567
+      // measured sha1 shards at 1274 / 1779 / 1267 s). `beep ci partitions rebalance` refreshes it.
+      sequence: { sequencer: makeMeasuredSequencer(shardPlan) },
+    },
   })
 );
+
+// Projects that extend the root concatenate `include`, so the root include is cleared after the
+// merge (which would concatenate it back) and each project names its own files.
+export default {
+  ...config,
+  test: {
+    ...config.test,
+    include: [],
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "native-wallclock",
+          include: nativeWallclockSuites,
+          // Real native worker tests include cold module loading. Bound the test runner fan-out
+          // so it does not consume the production deadline itself (#2511). The hosted coverage
+          // producer's `--maxWorkers=1` still overrides this: Vitest applies the CLI flag to
+          // every project. Each native owner still enforces its configured queue/execution limits.
+          maxWorkers: 2,
+          maxConcurrency: 2,
+          sequence: { groupOrder: 0 },
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "replay",
+          include: ["test/**/*.test.{ts,tsx}"],
+          exclude: nativeWallclockSuites,
+          // Distinct group order: projects with different worker caps cannot share one group, and
+          // the wall-clock group drains before the replay group widens to the default worker count.
+          sequence: { groupOrder: 1 },
+        },
+      },
+    ],
+  },
+};

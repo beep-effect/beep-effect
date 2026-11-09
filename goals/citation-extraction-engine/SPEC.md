@@ -369,5 +369,15 @@ Lane `@chore/deps-update-11-8-26` · PR #2994
 
 Reverse: Delete the 8 rows from standards/effect-vitest.inventory.jsonc once EV004 and EV010 accept these tests or the tests are rewritten, then run bun run beep lint effect-vitest.
 
+### Split law-practice-server tests into native-wallclock and replay Vitest projects, 2026-11-09
+
+#2511 capped the whole package at two Vitest workers because real native worker tests include cold module loading and a saturated runner could consume a production deadline. Only nine files actually assert against the real wall clock: their fixture closure reaches `CitationNativeSpawner.fixtures.ts` without installing `makeCitationNativeManualClock`, `makeCitationNativeSleepClock` or the fixed `makeCitationNativeWallClock` (`test/CitationBuiltinCleaners`, `CitationHtmlCleanerStage`, `CitationHtmlNativeInput`, `CitationHtmlWorkerCorpus`, `CitationLiteralUnicodeComposition`, and `test/integration/CitationCleanerNamedHtml`, `CitationCleanerNativeCustom`, `CitationHtmlUnicode`, `CitationRegexTranslator`). The other 320 unit and integration files drive every deadline through a substituted clock or spawn nothing.
+
+`vitest.config.ts` now declares two projects: `native-wallclock` keeps `maxWorkers: 2` and `maxConcurrency: 2` for those nine files (`sequence.groupOrder: 0`), and `replay` runs everything else at Vitest's default worker count (`groupOrder: 1`). Vitest 5.1 applies the CLI `--maxWorkers` to every project, so the hosted coverage producers' single-worker topology is unchanged; `--shard` is applied by the root sequencer before projects are grouped, so the committed shard plan still covers both projects. `test/vitest-shards-plan.test.ts` re-derives the wall-clock list mechanically and fails when the config drifts from it. The integration script keeps running the four wall-clock integration files under the capped project.
+
+Lane `claude/silly-brahmagupta-5a4fd5`
+
+Reverse: Restore the package-wide test: { maxWorkers: 2, maxConcurrency: 2 } in packages/law-practice/server/vitest.config.ts and drop the two projects.
+
 <!-- beep:decisions:end -->
 <!-- markdownlint-enable MD013 MD034 -->

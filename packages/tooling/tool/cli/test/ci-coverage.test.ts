@@ -253,7 +253,7 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
     })
   );
 
-  it.effect("compares all six unit partitions and selected Labs without running a producer", () =>
+  it.effect("compares all twenty-five unit partitions and selected Labs without running a producer", () =>
     Effect.gen(function* () {
       const entries = [owner(), owner("@beep/ciops", "apps/labs/ciops")];
       const { root } = yield* fixture(entries);
@@ -268,19 +268,31 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
         "repo-cli-4",
         "repo-cli-5",
         "repo-cli-6",
+        "repo-cli-7",
+        "repo-cli-8",
         "law-practice-1",
         "law-practice-2",
         "law-practice-3",
+        "law-practice-4",
+        "law-practice-5",
+        "law-practice-6",
+        "law-practice-7",
+        "law-practice-8",
+        "law-practice-9",
+        "law-practice-10",
+        "law-practice-11",
         "unit-a",
         "unit-b",
         "unit-c",
         "unit-d",
+        "unit-e",
+        "unit-f",
         "labs",
       ]);
-      const sixths = A.map(A.take(input.expectedPartitions, 6), (partition) => partition.packages[0]?.shard);
-      const lab = input.expectedPartitions[13]?.packages[0];
+      const eighths = A.map(A.take(input.expectedPartitions, 8), (partition) => partition.packages[0]?.shard);
+      const lab = input.expectedPartitions[25]?.packages[0];
       assertDefined(lab);
-      expect(sixths).toEqual(A.map(A.range(1, 6), (index) => ({ index, total: 6 })));
+      expect(eighths).toEqual(A.map(A.range(1, 8), (index) => ({ index, total: 8 })));
       expect(lab.packageName).toBe("@beep/ciops");
       expect(mocks.run).not.toHaveBeenCalled();
       expect(mocks.write).not.toHaveBeenCalled();
@@ -526,8 +538,8 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
           artifactRoot: ".beep/downloaded",
           expectedPartitions: expect.arrayContaining([
             expect.objectContaining({
-              // FNV-1a default placement over four unit bins (unit-a..unit-d) lands @beep/tool in unit-c.
-              partitionId: "unit-c",
+              // The curated six-bin table (LPT over run 42554761567) places @beep/mcpb-kit in unit-a.
+              partitionId: "unit-a",
               packages: [expect.objectContaining({ packageName: "@beep/mcpb-kit" })],
             }),
           ]),
