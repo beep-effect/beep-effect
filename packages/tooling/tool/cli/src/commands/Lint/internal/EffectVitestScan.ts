@@ -23,6 +23,7 @@ import { Node, Project, SyntaxKind } from "ts-morph";
 import { EffectVitestLintError } from "../Lint.errors.ts";
 import {
   EffectVitestCensusRow,
+  EffectVitestConfigFileGlobs,
   EffectVitestFinding,
   EffectVitestInventoryDocument,
   EffectVitestScanTiming,
@@ -246,14 +247,12 @@ export const retainBrowserSafeFindings: {
   browserMode ? A.filter(findings, (finding) => !A.contains(NODE_ASSERT_REPLACEMENT_RULES, finding.ruleId)) : findings
 );
 
-const VitestConfigGlobs = ["{apps,packages,infra}/**/vitest*.config.{ts,mts,js,mjs}"];
-
 const discoverBrowserModeTestPaths = Effect.fnUntraced(function* (root: string) {
   const fsUtils = yield* FsUtils;
   const path = yield* Path.Path;
   const configProject = new Project({ skipAddingFilesFromTsConfig: true, skipFileDependencyResolution: true });
   const configs = yield* fsUtils.globFiles(
-    VitestConfigGlobs,
+    EffectVitestConfigFileGlobs,
     GlobOptions.make({ cwd: root, absolute: true, ignore: ["**/node_modules/**"] })
   );
   const included = yield* Effect.forEach(configs, (configPath) =>

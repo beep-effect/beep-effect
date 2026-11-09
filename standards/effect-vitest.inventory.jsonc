@@ -5,7 +5,8 @@
   "scope": [
     "{apps,packages,infra}/**/*.{test,spec}.{ts,tsx,js,jsx,mts,cts,mjs,cjs}",
     "{apps,packages,infra}/**/test/**/*.ts",
-    "!{apps,packages,infra}/**/node_modules/**"
+    "!{apps,packages,infra}/**/node_modules/**",
+    "!{apps,packages,infra}/**/.*/**"
   ],
   "findings": [
     {

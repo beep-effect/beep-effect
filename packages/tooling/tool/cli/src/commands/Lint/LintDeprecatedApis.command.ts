@@ -18,6 +18,7 @@ import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
@@ -32,6 +33,12 @@ import {
 } from "./internal/LintPackage.ts";
 import { validateLintProgramAssignment } from "./internal/LintProgramAssignment.ts";
 import { LintProgramAssignmentError } from "./Lint.errors.ts";
+import {
+  deprecatedApiPartitionArgs,
+  deprecatedApiSweepPartitions,
+  deprecatedApiSweepRoots,
+} from "./LintDeprecatedApis.schemas.ts";
+import type { DeprecatedApiPartition } from "./LintDeprecatedApis.schemas.ts";
 
 const validateAssignmentEvidence = Effect.fn("Lint.validateAssignmentEvidence")(function* (
   root: string,
@@ -77,7 +84,7 @@ const validateAssignmentEvidence = Effect.fn("Lint.validateAssignmentEvidence")(
   }
 });
 
-const validateRustAssignmentEvidence = Effect.fn("Lint.validateRustAssignmentEvidence")(function* (
+const deprecatedApiInventory = Effect.fn("Lint.deprecatedApiInventory")(function* (
   root: string,
   args: ReadonlyArray<string>
 ) {
@@ -96,62 +103,170 @@ const validateRustAssignmentEvidence = Effect.fn("Lint.validateRustAssignmentEvi
       message: "lint deprecated-apis: file inventory failed or was truncated; cannot prove TypeScript coverage.",
     });
   }
-  const files = pipe(inventory.output, Str.split(/\r?\n/), A.map(Str.trim), A.filter(Str.isNonEmpty));
+  return pipe(inventory.output, Str.split(/\r?\n/), A.map(Str.trim), A.filter(Str.isNonEmpty));
+});
+
+const validateRustAssignmentEvidence = Effect.fn("Lint.validateRustAssignmentEvidence")(function* (
+  root: string,
+  args: ReadonlyArray<string>
+) {
+  const files = yield* deprecatedApiInventory(root, args);
   yield* validateLintProgramAssignment(root, files).pipe(Effect.scoped);
 });
 
-const runDeprecatedApiLint = Effect.fn("Lint.deprecatedApiWorker")(function* (
+// The partitioned full sweep proves its cover before the ownership proof: every partition selects
+// files, no file is selected twice, and the partitions' union is exactly the single-run inventory.
+const validateRustPartitionEvidence = Effect.fn("Lint.validateRustPartitionEvidence")(function* (
   root: string,
-  targets: ReadonlyArray<string>
+  options: ReadonlyArray<string>,
+  partitions: A.NonEmptyReadonlyArray<DeprecatedApiPartition>
 ) {
-  if (A.isReadonlyArrayEmpty(targets)) return;
+  const [full, selections] = yield* Effect.all(
+    [
+      deprecatedApiInventory(root, [...options, ...deprecatedApiSweepRoots]),
+      Effect.forEach(partitions, (partition) =>
+        Effect.map(deprecatedApiInventory(root, [...options, ...deprecatedApiPartitionArgs(partition)]), (files) => ({
+          name: partition.name,
+          files,
+        }))
+      ),
+    ],
+    { concurrency: "unbounded" }
+  );
+  const empty = A.filter(selections, (selection) => A.isReadonlyArrayEmpty(selection.files));
+  if (A.isReadonlyArrayNonEmpty(empty)) {
+    return yield* LintProgramAssignmentError.make({
+      files: [],
+      message: `lint deprecated-apis: partitions select no files: ${A.join(
+        A.map(empty, (selection) => selection.name),
+        ", "
+      )}.`,
+    });
+  }
+  const selected = A.flatMap(selections, (selection) => selection.files);
+  const union = HashSet.fromIterable(selected);
+  const expected = HashSet.fromIterable(full);
+  const duplicated = HashSet.size(union) !== A.length(selected);
+  const drift = pipe(
+    HashSet.difference(expected, union),
+    HashSet.union(HashSet.difference(union, expected)),
+    A.fromIterable,
+    A.sort(Order.String)
+  );
+  if (duplicated || A.isReadonlyArrayNonEmpty(drift)) {
+    return yield* LintProgramAssignmentError.make({
+      files: drift,
+      message: duplicated
+        ? "lint deprecated-apis: sweep partitions overlap; a file would be linted twice."
+        : `lint deprecated-apis: sweep partitions do not cover the full inventory exactly:\n${A.join(drift, "\n")}`,
+    });
+  }
+  yield* validateLintProgramAssignment(root, full).pipe(Effect.scoped);
+});
+
+// One oxlint invocation of the sweep: a log label and its path arguments.
+interface DeprecatedApiInvocation {
+  readonly label: string;
+  readonly paths: ReadonlyArray<string>;
+}
+
+const runDeprecatedApiInvocations = Effect.fn("Lint.deprecatedApiWorker")(function* (
+  root: string,
+  invocations: A.NonEmptyReadonlyArray<DeprecatedApiInvocation>,
+  partitions: O.Option<A.NonEmptyReadonlyArray<DeprecatedApiPartition>>
+) {
   const path = yield* Path.Path;
   // Type-aware oxlint takes its worker count from the concurrency plan: four on
   // the hosted profile, the profile's thread budget locally.
   const plan = yield* qualityConcurrencyPlan;
-  const args = [
+  const options = [
     "--config",
     path.join(root, OXLINT_DEPRECATED_APIS_CONFIG),
     "--disable-nested-config",
     `--threads=${plan.oxlintThreads}`,
+  ];
+  const argsOf = (paths: ReadonlyArray<string>) => [
+    ...options,
     // A labs package may match nothing, as its own per-package run always allowed; a changed-scope
     // union keeps that allowance when it names one.
-    ...(A.some(targets, isLabsWorkspaceDir) ? ["--no-error-on-unmatched-pattern"] : []),
-    ...targets,
+    ...(A.some(paths, isLabsWorkspaceDir) ? ["--no-error-on-unmatched-pattern"] : []),
+    ...paths,
   ];
   const useGo = yield* Config.Boolean("BEEP_LINT_TSGOLINT").pipe(Config.withDefault(false));
-  yield* Console.log(`[lint:deprecated-apis] oxlint (${useGo ? "tsgolint" : "tsrs"}) ${A.join(args, " ")}`);
-  const lint = runCaptured({
-    command: path.join(root, "node_modules/.bin/oxlint"),
-    args,
-    cwd: root,
-    env: useGo
-      ? { OXC_LOG: "debug" }
-      : {
-          OXLINT_TSGOLINT_PATH: path.join(root, "node_modules/.bin/tsrs-lint"),
-          RAYON_NUM_THREADS: `${plan.oxlintThreads}`,
-          TSRS_FAST: "0",
-        },
-    extendEnv: true,
-    bound: qualityStepOutputBound,
-    tee: true,
-  });
+  const backend = useGo ? "tsgolint" : "tsrs";
+  // Partitions run one after another so the peak is the largest partition, and every partition
+  // runs even after a red one so the full set of findings is reported.
+  const sweep = Effect.forEach(
+    invocations,
+    Effect.fnUntraced(function* (invocation) {
+      const args = argsOf(invocation.paths);
+      yield* Console.log(`[lint:deprecated-apis] ${invocation.label}oxlint (${backend}) ${A.join(args, " ")}`);
+      const result = yield* runCaptured({
+        command: path.join(root, "node_modules/.bin/oxlint"),
+        args,
+        cwd: root,
+        env: useGo
+          ? { OXC_LOG: "debug" }
+          : {
+              OXLINT_TSGOLINT_PATH: path.join(root, "node_modules/.bin/tsrs-lint"),
+              RAYON_NUM_THREADS: `${plan.oxlintThreads}`,
+              TSRS_FAST: "0",
+            },
+        extendEnv: true,
+        bound: qualityStepOutputBound,
+        tee: true,
+      });
+      return { invocation, result };
+    }),
+    { concurrency: 1 }
+  );
   // The Rust ownership proof runs beside the sweep instead of ahead of it. The proof's failure
   // fails fast and interrupts the sweep; the spawner's scoped release reaps its process group.
-  // A finished sweep's exit code is read only once the proof has passed, so a proof failure
+  // A finished sweep's exit codes are read only once the proof has passed, so a proof failure
   // still outranks a lint failure.
-  const [, result] = yield* Effect.all([useGo ? Effect.void : validateRustAssignmentEvidence(root, args), lint], {
-    concurrency: 2,
-  });
-  if (useGo) yield* validateAssignmentEvidence(root, result.output, result.truncated);
-  if (result.exitCode !== 0) {
+  const proof = useGo
+    ? Effect.void
+    : O.match(partitions, {
+        onNone: () => validateRustAssignmentEvidence(root, argsOf(invocations[0].paths)),
+        onSome: (planned) => validateRustPartitionEvidence(root, options, planned),
+      });
+  const [results] = yield* Effect.all([sweep, proof], { concurrency: 2 });
+  if (useGo) {
+    yield* Effect.forEach(results, ({ result }) => validateAssignmentEvidence(root, result.output, result.truncated), {
+      discard: true,
+    });
+  }
+  const failed = A.findFirst(results, ({ result }) => result.exitCode !== 0);
+  if (O.isSome(failed)) {
+    const { invocation, result } = failed.value;
     return yield* failWithReportedExit(
-      `lint deprecated-apis: failed with exit code ${result.exitCode}.`,
+      `lint deprecated-apis: ${invocation.label}failed with exit code ${result.exitCode}.`,
       result.exitCode
     );
   }
   yield* Console.log("[lint:deprecated-apis] assignment coverage: zero unmatched TypeScript files.");
   yield* Console.log("[lint:deprecated-apis] OK: no deprecated vendor API usage found.");
+});
+
+const runDeprecatedApiLint = Effect.fn("Lint.deprecatedApiScope")(function* (
+  root: string,
+  targets: ReadonlyArray<string>
+) {
+  if (A.isReadonlyArrayNonEmpty(targets)) {
+    yield* runDeprecatedApiInvocations(root, [{ label: "", paths: targets }], O.none());
+  }
+});
+
+// The full sweep: one oxlint process per partition instead of one over every root.
+const runDeprecatedApiFullSweep = Effect.fn("Lint.deprecatedApiFullSweep")(function* (root: string) {
+  yield* runDeprecatedApiInvocations(
+    root,
+    A.map(deprecatedApiSweepPartitions, (partition) => ({
+      label: `partition ${partition.name}: `,
+      paths: deprecatedApiPartitionArgs(partition),
+    })),
+    O.some(deprecatedApiSweepPartitions)
+  );
 });
 
 // The changed-scope policy plan's union: every Turbo-selected package directory in one process.
@@ -185,7 +300,7 @@ const runLintDeprecatedApis = Effect.fn("Lint.deprecatedApis")(function* (option
       return yield* runRootDeprecatedApisTask(base);
     }
     return yield* sweeps.deprecatedApis === "oxlint"
-      ? yield* Effect.map(findRepoRoot(), (value) => runDeprecatedApiLint(value, ["apps", "packages", "infra"]))
+      ? yield* Effect.map(findRepoRoot(), runDeprecatedApiFullSweep)
       : runRootDeprecatedApisTask();
   }
   const root = yield* findRepoRoot();

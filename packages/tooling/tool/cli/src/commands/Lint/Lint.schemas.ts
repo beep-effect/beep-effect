@@ -1708,6 +1708,14 @@ export const isEffectVitestTestFilePath = S.is(EffectVitestTestFilePath);
 /**
  * Supplies the only D9 include/exclude glob set used by project discovery.
  *
+ * **Details**
+ *
+ * Discovery walks with `dot: false`, so it never enters a dot directory
+ * (gitignored `.runtime-*` Vitest residue, `.turbo`, `.next`). The dot-directory
+ * exclusion states that boundary explicitly, so the `//#lint:effect-vitest`
+ * Turbo inputs, which are pinned to this list and would otherwise hash every
+ * dot directory, exclude exactly what the walk skips.
+ *
  * **Example** (Inspect the test-root glob)
  *
  * ```ts
@@ -1723,6 +1731,35 @@ export const EffectVitestSourceFileGlobs: ReadonlyArray<string> = A.fromIterable
   "{apps,packages,infra}/**/*.{test,spec}.{ts,tsx,js,jsx,mts,cts,mjs,cjs}",
   "{apps,packages,infra}/**/test/**/*.ts",
   "!{apps,packages,infra}/**/node_modules/**",
+  "!{apps,packages,infra}/**/.*/**",
+]);
+
+/**
+ * Supplies the vitest config globs the D9 browser-mode filter parses.
+ *
+ * **Details**
+ *
+ * The scan reads every matching config and, for a project with
+ * `browser: { enabled: true }`, drops the `node:assert` replacement rows of the
+ * test files its `include` globs match. A config edit therefore changes the
+ * result, so the `//#lint:effect-vitest` Turbo inputs, pinned to this list
+ * beside `EffectVitestSourceFileGlobs`, hash every file it names. The walk runs
+ * with `dot: false` and ignores `node_modules`, which the source globs'
+ * exclusions already state.
+ *
+ * **Example** (Inspect the config glob)
+ *
+ * ```ts
+ * import { EffectVitestConfigFileGlobs } from "@beep/repo-cli/commands/Lint"
+ *
+ * console.log(EffectVitestConfigFileGlobs[0]) // "{apps,packages,infra}/**\/vitest*.config.{ts,mts,js,mjs}"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const EffectVitestConfigFileGlobs: ReadonlyArray<string> = A.fromIterable([
+  "{apps,packages,infra}/**/vitest*.config.{ts,mts,js,mjs}",
 ]);
 
 /**

@@ -199,13 +199,11 @@ describe("lint policy plan stages", () => {
     expect(medium.env?.TURBO_SCM_BASE).toBe("origin/main");
     expect(turboTaskNames(medium)).not.toContain("lint:jsdoc");
     expect(turboTaskNames(medium)).toEqual(
-      expect.arrayContaining([
-        "lint:jsdoc:root",
-        "lint:jsdoc-module-tags",
-        "jsdoc:inventory:check",
-        "jsdoc:ratchet:check",
-      ])
+      expect.arrayContaining(["lint:jsdoc:root", "jsdoc:inventory:check", "jsdoc:ratchet:check"])
     );
+    expect(turboTaskNames(medium)).not.toContain("lint:jsdoc-module-tags");
+    expect(turboTaskNames(medium)).not.toContain("lint:schema-tag-idioms");
+    expect(turboTaskNames(medium)).not.toContain("lint:effect-imports-markdown");
     expect(state.args).toContain("--concurrency=1");
     expect(state.args).not.toContain("--affected");
     expect(state.env?.TURBO_SCM_BASE).toBeUndefined();
@@ -222,6 +220,9 @@ describe("lint policy plan stages", () => {
       "lint:retired-iri-authorities",
       "lint:tracked-shell-allowlist",
       "lint:opaque-roundtrips",
+      "lint:schema-tag-idioms",
+      "lint:jsdoc-module-tags",
+      "lint:effect-imports-markdown",
     ]);
   });
 

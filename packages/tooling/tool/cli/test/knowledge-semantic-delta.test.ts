@@ -19,9 +19,12 @@ import {
 } from "@beep/repo-cli/commands/Knowledge";
 import {
   gitRefSpanNamesForTesting,
+  inSequenceOrderForTesting,
   KnowledgeCommandSurface,
+  knowledgeTrackedPathExistsForTesting,
   makeKnowledgeArchiveOracle,
   renderKnowledgeSemanticDeltaHumanReport,
+  sharesStaticCommandSurfaceForTesting,
 } from "@beep/repo-cli/test/Knowledge";
 import { findRepoRoot } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
@@ -31,6 +34,7 @@ import { assert, describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Hex from "effect/encoding/Hex";
@@ -44,6 +48,7 @@ import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -2168,4 +2173,152 @@ describe("knowledge clone-local attributes guard", () => {
       })
     );
   });
+});
+
+describe("knowledge semantic-delta indexed tracked-path lookup", () => {
+  const entry = (path: string) => KnowledgeTrackedEntry.make({ path, mode: "100644", objectId: `oid:${path}` });
+  const ENTRIES = [entry("goals/ab/x.md"), entry("README.md"), entry("packages/a/b/c/index.ts")];
+  // The prefix scan the index replaces, kept here as the oracle the index must agree with.
+  const linearExists = (repoPath: string): boolean =>
+    A.some(ENTRIES, (tracked) => tracked.path === repoPath || Str.startsWith(`${repoPath}/`)(tracked.path));
+  const SPELLINGS = [
+    "goals/ab/x.md",
+    "goals/ab",
+    "goals",
+    "goals/a",
+    "goals/ab/",
+    "goals//ab",
+    "",
+    "/",
+    "README.md",
+    "README",
+    "packages/a/b",
+    "packages/a/b/c/index",
+    "packages/a/b/c/index.ts/extra",
+  ];
+
+  it.effect("agrees with the linear prefix scan for every spelling", () =>
+    Effect.sync(() => {
+      for (const spelling of SPELLINGS) {
+        assert.strictEqual(
+          knowledgeTrackedPathExistsForTesting(ENTRIES, spelling),
+          linearExists(spelling),
+          `spelling <${spelling}>`
+        );
+      }
+    })
+  );
+});
+
+describe("knowledge semantic-delta shared static command surface", () => {
+  const COMMAND_FILE = "packages/tooling/tool/cli/src/commands/Root.ts";
+  const FLAGS_FILE = "packages/tooling/library/repo-cli-kit/src/cli/Flags.ts";
+  const SIDE_FILES = { [COMMAND_FILE]: "export const rootCommand = 1\n", [FLAGS_FILE]: "flags\n", "docs/a.md": "a\n" };
+
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("reuses the HEAD surface only when every static-reader input is identical", () =>
+      Effect.gen(function* () {
+        const head = makeOracle(SIDE_FILES);
+        const same = makeOracle(
+          { ...SIDE_FILES, "docs/a.md": "changed outside the reader\n" },
+          {
+            objectIds: { "docs/a.md": "oid:changed" },
+          }
+        );
+        const changedCommand = makeOracle(SIDE_FILES, { objectIds: { [COMMAND_FILE]: "oid:changed" } });
+        const changedFlags = makeOracle(SIDE_FILES, { objectIds: { [FLAGS_FILE]: "oid:changed" } });
+        const changedMode = makeOracle(SIDE_FILES, { modes: { [COMMAND_FILE]: "100755" } });
+        const linkedCommand = makeOracle(SIDE_FILES, { modes: { [COMMAND_FILE]: "120000" } });
+        const extraCommand = makeOracle({
+          ...SIDE_FILES,
+          "packages/tooling/tool/cli/src/commands/Extra.ts": "export {}\n",
+        });
+
+        const shared = yield* Effect.forEach(
+          [same, changedCommand, changedFlags, changedMode, linkedCommand, extraCommand],
+          (base) => sharesStaticCommandSurfaceForTesting(base.trackedEntries, head)
+        );
+
+        assert.deepStrictEqual(shared, [true, false, false, false, false, false]);
+      })
+    );
+
+    it.effect("refuses the reuse when an attribute file differs, substitutes commit text, or is unreadable", () =>
+      Effect.gen(function* () {
+        const plain = { ...SIDE_FILES, ".gitattributes": "* text=auto eol=lf\n" };
+        const plainHead = makeOracle(plain);
+        const changedAttributes = makeOracle(plain, { objectIds: { ".gitattributes": "oid:changed" } });
+        const substituting = { ...SIDE_FILES, "packages/x/.gitattributes": "*.ts export-subst\n" };
+        const substitutingHead = makeOracle(substituting);
+        const unreadableHead: KnowledgeArchiveOracle = {
+          ...plainHead,
+          readBytes: (repoPath) =>
+            repoPath === ".gitattributes"
+              ? Effect.fail(KnowledgeOperationalError.make({ message: "export-ignored" }))
+              : plainHead.readBytes(repoPath),
+        };
+
+        const shared = yield* Effect.all([
+          sharesStaticCommandSurfaceForTesting(plainHead.trackedEntries, plainHead),
+          sharesStaticCommandSurfaceForTesting(changedAttributes.trackedEntries, plainHead),
+          sharesStaticCommandSurfaceForTesting(substitutingHead.trackedEntries, substitutingHead),
+          sharesStaticCommandSurfaceForTesting(plainHead.trackedEntries, unreadableHead),
+        ]);
+
+        assert.deepStrictEqual(shared, [true, false, false, false]);
+      })
+    );
+  });
+});
+
+describe("knowledge semantic-delta archive phase error precedence", () => {
+  const baseError = KnowledgeOperationalError.make({ message: "base side failed" });
+  const headError = KnowledgeOperationalError.make({ message: "head side failed" });
+
+  it.effect("reports the base error when both sides fail, even when HEAD fails first", () =>
+    Effect.gen(function* () {
+      const headFailed = yield* Deferred.make<void>();
+      const base = Deferred.await(headFailed).pipe(Effect.andThen(Effect.fail(baseError)));
+      const head = Effect.fail(headError).pipe(Effect.ensuring(Deferred.succeed(headFailed, undefined)));
+
+      const error = yield* Effect.flip(inSequenceOrderForTesting(base, head));
+
+      assert.strictEqual(error, baseError);
+    })
+  );
+
+  it.effect("reports the HEAD error when only HEAD fails, after the base side finishes", () =>
+    Effect.gen(function* () {
+      const baseFinished = yield* Ref.make(false);
+      const base = Effect.yieldNow.pipe(Effect.andThen(Ref.set(baseFinished, true)), Effect.as("base"));
+
+      const error = yield* Effect.flip(inSequenceOrderForTesting(base, Effect.fail(headError)));
+
+      const finished = yield* Ref.get(baseFinished);
+
+      assert.strictEqual(error, headError);
+      assertTrue(finished);
+    })
+  );
+
+  it.effect("reports the base error when only the base fails, after HEAD runs to completion", () =>
+    Effect.gen(function* () {
+      const headFinished = yield* Ref.make(false);
+      const head = Effect.yieldNow.pipe(Effect.andThen(Ref.set(headFinished, true)), Effect.as("head"));
+
+      const error = yield* Effect.fail(baseError).pipe(inSequenceOrderForTesting(head), Effect.flip);
+      const finished = yield* Ref.get(headFinished);
+
+      assert.strictEqual(error, baseError);
+      assertTrue(finished);
+    })
+  );
+
+  it.effect("returns both results in sequence order when both sides succeed", () =>
+    Effect.gen(function* () {
+      const result = yield* inSequenceOrderForTesting(Effect.yieldNow.pipe(Effect.as("base")), Effect.succeed("head"));
+
+      assert.deepStrictEqual(result, ["base", "head"]);
+    })
+  );
 });

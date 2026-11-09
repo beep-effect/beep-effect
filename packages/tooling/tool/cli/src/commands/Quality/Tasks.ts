@@ -3675,8 +3675,6 @@ const policyMediumTasks = [
   "lint:identity-registry",
   "lint:circular",
   "lint:effect-imports",
-  "lint:effect-imports-markdown",
-  "lint:schema-tag-idioms",
   "lint:holds",
   "lint:tsconfig-overlay",
   "lint:package-test-typecheck",
@@ -3684,6 +3682,9 @@ const policyMediumTasks = [
 ];
 // Index-only membership changes cannot drive native affected selection until
 // the complete discovery boundary is qualified, even with result caching off.
+// Every member lists its candidates with `git ls-files` (the Markdown import
+// scan filters its walk to git-visible paths) and reads working-tree bytes, so
+// staging an unchanged or ignored file changes the scan without changing a key.
 const policyTrackedDiscoveryTasks = [
   "lint:markdown-fences",
   "lint:retired-effect-paths",
@@ -3691,6 +3692,9 @@ const policyTrackedDiscoveryTasks = [
   "lint:retired-iri-authorities",
   "lint:tracked-shell-allowlist",
   "lint:opaque-roundtrips",
+  "lint:schema-tag-idioms",
+  "lint:jsdoc-module-tags",
+  "lint:effect-imports-markdown",
 ];
 // The git-delta checks compare the merge-base archive with HEAD. They are uncached by
 // contract and cost about two minutes on a clean tree, so a local full-scope `bun run lint`
@@ -3699,7 +3703,6 @@ const policyTrackedDiscoveryTasks = [
 const policyGitDeltaTasks = ["knowledge:semantic-delta", "knowledge:refs-check"];
 const policyStateTasks = [
   ...policyGitDeltaTasks,
-  "lint:jsdoc-module-tags",
   "goals:doctor",
   "lint:oxlint",
   "lint:shadcn",
@@ -3716,7 +3719,7 @@ const fullScopeStateTasks = (hosted: boolean): ReadonlyArray<string> =>
 // clock checks and the uncertified binary walkers stay unfiltered (standards/turbo-remote-cache.md)
 // in a graph that runs abreast of the medium one, so its long poles overlap as they do in the
 // single full-scope graph.
-const policyCachedStateTasks = ["lint:jsdoc-module-tags", "jsdoc:inventory:check", "jsdoc:ratchet:check"];
+const policyCachedStateTasks = ["jsdoc:inventory:check", "jsdoc:ratchet:check"];
 const policyUnscopedStateTasks = A.filter(policyStateTasks, (task) => !A.contains(policyCachedStateTasks, task));
 // Retain one slot of the existing width for state checks, independently of
 // changed-file selection. Tracked discovery remains unfiltered until qualified.

@@ -1,6 +1,14 @@
 import { GlobPattern } from "@beep/glob/GlobPattern";
 import { $RepoCliId } from "@beep/identity/packages";
 import {
+  EffectImportsCodeGlobs,
+  EffectImportsCodeOnlyExcludedDirectories,
+  EffectImportsMarkdownGlobs,
+  EffectImportsMarkdownOnlyExcludedDirectories,
+  EffectImportsPrunedDirectoryNames,
+} from "@beep/repo-cli/commands/Laws/EffectImports";
+import {
+  EffectVitestConfigFileGlobs,
   EffectVitestInventoryPath,
   EffectVitestPrimitiveGraphPath,
   EffectVitestSourceFileGlobs,
@@ -185,6 +193,9 @@ const trackedDiscoveryTasks = LiteralKit([
   "lint:retired-iri-authorities",
   "lint:tracked-shell-allowlist",
   "lint:markdown-fences",
+  "lint:schema-tag-idioms",
+  "lint:jsdoc-module-tags",
+  "lint:effect-imports-markdown",
 ]);
 const nonReusableTasks: ReadonlyArray<string> = [
   ...trackedDiscoveryTasks.literals,
@@ -517,7 +528,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           ),
           Tuple.make(
             "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-            "2809d7461562208cab5a686be34aa0f33989bbdb6ffb07328e2113f77fd7c03f"
+            "79365873c3aa467a84ba0801b91806f71fda7e2698b22c34b6c04f32802ed5ff"
           ),
           Tuple.make(
             "packages/tooling/library/repo-cli-kit/src/tsmorph/ProjectFactory.ts",
@@ -676,7 +687,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
         });
         const digest = yield* Digest.Digest;
         const bytes = yield* digest.digest(Digest.sha256, new TextEncoder().encode(encoded));
-        expect(Hex.encode(bytes)).toBe("e2786912b42e37f0ec1bcc66decc329cb39c2ce280c14dfa5848c1393e59814b");
+        expect(Hex.encode(bytes)).toBe("cd5f5c2fa66d7255480d6d17fb30fbbb01243d71a7abcd6b241ad425a0c11f46");
       })
     );
   });
@@ -779,13 +790,55 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
     );
 
     it.effect(
+      "hashes every effect-imports corpus family and no directory the scanner prunes",
+      Effect.fnUntraced(function* () {
+        const { root, binary } = yield* fixture();
+        const code = "//#lint:effect-imports";
+        const markdown = "//#lint:effect-imports-markdown";
+        const ids = [code, markdown];
+        const baseline = yield* dryRun(root, binary, ids, false);
+        // A file under any pruned directory name, at any depth, is never read by either walk.
+        // `.git` is left out of the plant: a nested `.git` directory turns the fixture into a submodule.
+        const pruned = A.flatMap(
+          A.filter(EffectImportsPrunedDirectoryNames, (name) => name !== ".git"),
+          (name) => [`packages/fixture/${name}/c3-pruned.ts`, `scratchpad/${name}/c3-pruned.md`]
+        );
+        yield* Effect.forEach(pruned, (file) => writeFile(root, file, "export const pruned = 1;\n"));
+        const withPruned = yield* dryRun(root, binary, ids, false);
+        for (const id of ids) {
+          expect(rowFor(withPruned, id).hash, id).toBe(rowFor(baseline, id).hash);
+          for (const file of pruned) expect(R.has(rowFor(withPruned, id).inputs, file), `${id}: ${file}`).toBe(false);
+        }
+        // One authored file per code family root, derived from the scanner's own globs, plus Markdown
+        // outside the documentation roots: each is read by the scanner, so each must re-key its row.
+        const familyProbes = A.map(EffectImportsCodeGlobs, (glob) =>
+          Str.replace(/(?:\*\*\/)?\*\.\{[^}]+\}$/u, "c3-family-probe.ts")(glob)
+        );
+        const markdownProbes = ["packages/fixture/c3-family-probe.md", "explorations/fixture/c3-family-probe.md"];
+        for (const [id, file] of [
+          ...A.map(familyProbes, (file) => Tuple.make(code, file)),
+          ...A.map(markdownProbes, (file) => Tuple.make(markdown, file)),
+        ]) {
+          const before = yield* dryRun(root, binary, [id], false);
+          yield* writeFile(root, file, "export const authored = 1;\n");
+          const after = yield* dryRun(root, binary, [id], false);
+          expect(R.has(rowFor(after, id).inputs, file), `${id}: ${file}`).toBe(true);
+          expect(rowFor(after, id).hash, `${id}: ${file}`).not.toBe(rowFor(before, id).hash);
+        }
+      }),
+      { timeout: 120_000 }
+    );
+
+    it.effect(
       "ignores gitignored Vitest runtime residue in the tasks whose scanners skip it",
       Effect.fnUntraced(function* () {
         const { root, binary } = yield* fixture();
         // `Vitest.runtime.test.ts` creates `.runtime-<mode>-*` under this fixture directory and
         // leaves it behind when killed before its scoped finalizer runs. The repository ignores
         // the family; every task below reads git-visible files, walks without entering dot
-        // directories, prunes `test`, or (Fallow) ignores `**/test/fixtures/**`.
+        // directories, prunes `test`, or (Fallow) ignores `**/test/fixtures/**`. `lint:effect-vitest`
+        // walks with `dot: false`; its pinned scope (`EffectVitestSourceFileGlobs`) negates every dot
+        // directory, so the inputs drop exactly what the walk skips.
         const residueRoot = "packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation";
         yield* writeFile(root, ".gitignore", `node_modules\n.turbo\n/${residueRoot}/.runtime-*/\n`);
         const negated = [
@@ -802,6 +855,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           "//#lint:deprecated-imports",
           "//#lint:effect-imports",
           "//#lint:effect-imports-markdown",
+          "//#lint:effect-vitest",
           "//#lint:identity-registry",
           "//#lint:jsdoc-module-tags",
           "//#lint:jsdoc:root",
@@ -810,9 +864,9 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           "//#lint:schema-tag-idioms",
           "//#lint:tsgo-rules",
         ];
-        // `lint:effect-vitest` keeps hashing the residue (its inputs are pinned to the scanner's
-        // own globs), which proves the planted files are real input candidates.
-        const control = "//#lint:effect-vitest";
+        // `lint:markdown-fences` keeps hashing the residue (uncached, `**/*.ts` with no residue
+        // negation), which proves the planted files are real input candidates.
+        const control = "//#lint:markdown-fences";
         const ids = A.append(negated, control);
         const baseline = yield* dryRun(root, binary, ids, false);
         const residue = A.map(
@@ -829,6 +883,12 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
         }
         expect(R.has(rowFor(changed, control).inputs, residue[0] ?? "")).toBe(true);
         expect(rowFor(changed, control).hash).not.toBe(rowFor(baseline, control).hash);
+        // A real test file outside a dot directory still re-keys the effect-vitest row.
+        const authored = "packages/fixture/test/c3-probe.test.ts";
+        yield* writeFile(root, authored, "export const authored = 1;\n");
+        const edited = yield* dryRun(root, binary, ["//#lint:effect-vitest"], false);
+        expect(R.has(rowFor(edited, "//#lint:effect-vitest").inputs, authored)).toBe(true);
+        expect(rowFor(edited, "//#lint:effect-vitest").hash).not.toBe(rowFor(changed, "//#lint:effect-vitest").hash);
       }),
       { timeout: 60_000 }
     );
@@ -899,7 +959,8 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
             "packages/foundation/primitive/fixture/src/_generated/bindings.ts"
           ),
           Tuple.make("//#lint:ecosystem-polarity", "packages/ecosystem/fixture/src/docs/consumer.ts"),
-          Tuple.make("//#lint:effect-imports-markdown", "docs/_internal/cache-contract.md"),
+          // `docs/_internal` is gitignored and excluded by the Markdown walk; nested authored docs are read.
+          Tuple.make("//#lint:effect-imports-markdown", "docs/runbooks/nested/cache-contract.md"),
           // The zero-legacy gate reads every tracked `packages|apps/**/src/**` file, fixtures
           // included; the inventory analyzes every workspace, scratchpad and tools included;
           // the D9 scan reads fixture tests.
@@ -913,6 +974,9 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           Tuple.make("//#jsdoc:ratchet:check", "packages/fixture/src/coverage/Legacy.ts"),
           Tuple.make("//#jsdoc:inventory:check", "tools/fixture/src/c3-probe.ts"),
           Tuple.make("//#lint:effect-vitest", "packages/drivers/fixture/test/fixtures/zz-probe.test.ts"),
+          // The browser-mode filter parses every vitest config, so a config edit re-keys the row.
+          Tuple.make("//#lint:effect-vitest", "packages/fixture/vitest.browser.config.ts"),
+          Tuple.make("//#lint:effect-vitest", "apps/fixture/vitest.config.mts"),
           Tuple.make("//#lint:opaque-roundtrips", "packages/fixture/src/Nested.ts"),
           Tuple.make("//#lint:opaque-roundtrips", "apps/fixture/tsconfig.test.json"),
           Tuple.make("//#lint:opaque-roundtrips", "infra/fixture/test/opaque.test.tsx"),
@@ -938,6 +1002,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
         const effectVitest = O.getOrThrow(R.get(tasks, "//#lint:effect-vitest"));
         expect(effectVitest.inputs).toEqual([
           ...EffectVitestSourceFileGlobs,
+          ...EffectVitestConfigFileGlobs,
           EffectVitestInventoryPath,
           EffectVitestPrimitiveGraphPath,
         ]);
@@ -1175,5 +1240,75 @@ describe("Root-reaching task inputs", () => {
       expect(excludesNestedLanes("lint")("!.claude/worktrees/**")).toBe(false);
       expect(excludesNestedLanes("lint")("$TURBO_ROOT$/.claude/worktrees/**")).toBe(false);
     });
+  });
+});
+
+// Directories the effect-imports walks never read although no exclusion of the scanner names them:
+// the code walk runs with `dot: false` and the Markdown walk keeps only git-visible paths, so each
+// of these must be a dot directory and gitignored. The nested-lane form is the root-reaching law.
+const effectImportsUnreadResidue = [
+  Tuple.make("!.claude/worktrees/**", ".claude/worktrees/c3/README.md"),
+  Tuple.make("!**/.next/**", "apps/c3/.next/server/page.md"),
+  Tuple.make(
+    "!packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/.runtime-*/**",
+    "packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/.runtime-c3/runtime.md"
+  ),
+];
+const sortedStrings = (values: ReadonlyArray<string>) => A.sort(A.dedupe(values), Str.Order);
+const negatedDirectory = (directory: string) => `!${directory}/**`;
+
+describe("effect-imports scanner and Turbo inputs", () => {
+  it.layer(PlatformLayer)("tracked root configuration", (it) => {
+    it.effect(
+      "derives both effect-imports rows from the scanner's corpus globs and exclusions",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repo = yield* findRepoRoot();
+        const text = yield* fs.readFileString(path.join(repo, "turbo.json"));
+        const configuration = yield* decodeConfiguration(text);
+        const inputsOf = Effect.fnUntraced(function* (id: string) {
+          const task = yield* R.get(configuration.tasks, id).pipe(O.getOrThrow, decodeTask);
+          return sortedStrings(task.inputs);
+        });
+        const pruned = A.map(EffectImportsPrunedDirectoryNames, (name) => negatedDirectory(`**/${name}`));
+        // The foundation sources resolve exports for the mapping phase in both modes.
+        const foundation = ["packages/foundation/**/package.json", "packages/foundation/**/src/**"];
+        const residue = A.map(effectImportsUnreadResidue, Tuple.get(0));
+        const codeInputs = yield* inputsOf("//#lint:effect-imports");
+        const markdownInputs = yield* inputsOf("//#lint:effect-imports-markdown");
+        expect(codeInputs).toEqual(
+          sortedStrings([
+            ...EffectImportsCodeGlobs,
+            ...foundation,
+            ...pruned,
+            ...A.map(EffectImportsCodeOnlyExcludedDirectories, negatedDirectory),
+            ...residue,
+          ])
+        );
+        expect(markdownInputs).toEqual(
+          sortedStrings([
+            ...EffectImportsMarkdownGlobs,
+            ...foundation,
+            ...pruned,
+            ...A.map(EffectImportsMarkdownOnlyExcludedDirectories, negatedDirectory),
+            ...residue,
+          ])
+        );
+        // Each residue negation names a dot directory (the code walk never enters one) that git
+        // ignores (the Markdown walk drops it), so neither walk reads what the rows stop hashing.
+        for (const [negation, sample] of effectImportsUnreadResidue) {
+          expect(A.some(Str.split("/")(Str.slice(1)(negation)), Str.startsWith(".")), negation).toBe(true);
+          const ignored = yield* StepExec.runCaptured({
+            command: "git",
+            args: ["check-ignore", "--no-index", "-q", "--", sample],
+            cwd: repo,
+            source: "stdout",
+            extendEnv: true,
+          });
+          expect(ignored.exitCode, sample).toBe(0);
+        }
+      })
+    );
   });
 });
