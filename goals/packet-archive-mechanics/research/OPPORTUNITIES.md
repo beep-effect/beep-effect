@@ -104,3 +104,12 @@ Repointing a path inside `program` in two evaluation runners changed each row's 
 hosted `lint:effect-vitest` reported new findings with unchanged ids. A full `--write` also rewrites about
 300 unrelated drifted rows, so only the two rows were refreshed. A command to refresh named rows, and a
 new-finding line that prints the id, would have made this quick to read.
+
+## 2026-11-09: Evidence stores read packet files by path and hash
+
+Batch 4's plan would have removed `goals/turborepo-task-qualification/research/*-review.md`, which
+`standards/cache-qualification.json` verifies by path and SHA-256, so cache qualification would fail at
+runtime. A literal scan lists these as text in a JSON file, easy to take for a citation. The packet now
+carries a `retentionReason`. `beep goals archive --plan` could refuse a file that a known evidence store
+references. The same scan also skipped hidden paths such as `.github`, because `rg` does by default; a
+re-check found only comments and historical allowlist entries, and later scans use `--hidden`.

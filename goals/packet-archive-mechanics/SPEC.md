@@ -155,6 +155,14 @@ Lane `fix/packet-archive-citation-rewrite` · PR #2979
 
 Reverse: Revert #2979; plans return to exact removed-file link destinations, and later batches repair code-span citations by hand
 
+### Retain turborepo-task-qualification because the cache ledger verifies its files, 2026-11-09
+
+standards/cache-qualification.json verifies four research reviews in this packet by path and SHA-256, including in its history entries. Rewriting those paths would alter an append-only ledger, so the packet stays on main with a retentionReason, as citation-extraction-engine and catalog-writer-incremental already do. Live inputs of five other batch 4 packets moved to standards/, scripts/, .semgrep/ and a test fixture.
+
+Lane `feat/packet-archive-batch-4`
+
+Reverse: Remove the retentionReason and archive the packet after moving the four reviews and rewriting the ledger paths
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

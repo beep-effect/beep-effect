@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "branch-protection-contexts/v1",
+  "capturedAt": "2026-10-27T03:41:42.741Z",
+  "repository": "beep-effect/beep-effect",
+  "branch": "main",
+  "rulesetId": 10240248,
+  "rulesetName": "main",
+  "enforcement": "active",
+  "strictRequiredStatusChecksPolicy": false,
+  "requiredStatusChecks": [
+    "Codegen Drift",
+    "Commitlint",
+    "Heavy / Check",
+    "Heavy / Docgen",
+    "Heavy / Doctest",
+    "Heavy / Test Integration",
+    "JSDoc Ratchet",
+    "Lint",
+    "Nix Shell",
+    "Professional Desktop IPC Stdio",
+    "Repo Sanity",
+    "SAST",
+    "Secret Scanning",
+    "Security",
+    "Test Unit"
+  ]
+}

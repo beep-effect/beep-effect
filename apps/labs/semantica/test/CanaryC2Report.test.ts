@@ -19,9 +19,7 @@ describe("C2 report sealing", () => {
   it.layer(BunCrypto.layer, { timeout: "30 seconds" })((it) => {
     it.effect("seals a committed C2 witness and rejects a placeholder digest", () =>
       Effect.gen(function* () {
-        const json = yield* Effect.promise(() =>
-          Bun.file("../../../goals/semantica-canary/history/c2/full-w1.replay.eval-report.json").text()
-        );
+        const json = yield* Effect.promise(() => Bun.file("test/fixtures/c2/full-w1.replay.eval-report.json").text());
         const previous = yield* decodeC2EvalReportJson(json);
         const sealed = yield* sealC2EvalReport(previous.base, previous.reasoning);
 

@@ -1513,7 +1513,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const repoRoot = yield* findRepoRoot();
-      const burstRoot = path.join(repoRoot, "goals/speed-loop/ops/runner-burst");
+      const burstRoot = path.join(repoRoot, "scripts/runner-burst");
       const readDirectory15 = yield* fs.readDirectory(burstRoot);
       const entries = A.sort(readDirectory15, Order.String);
       const readme = yield* fs.readFileString(path.join(burstRoot, "README.md"));

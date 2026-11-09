@@ -30,6 +30,8 @@ goals/semantica-canary/history/c2/full-w1.live.eval-report.json:generic-api-key:
 goals/semantica-canary/history/c2/full-w1.live.eval-report.json:generic-api-key:3176
 goals/semantica-canary/history/c2/full-w1.replay.eval-report.json:generic-api-key:1342
 goals/semantica-canary/history/c2/full-w1.replay.eval-report.json:generic-api-key:3176
+apps/labs/semantica/test/fixtures/c2/full-w1.replay.eval-report.json:generic-api-key:1342
+apps/labs/semantica/test/fixtures/c2/full-w1.replay.eval-report.json:generic-api-key:3176
 
 # False positives from imported upstream test fixtures in local subtree commits.
 4f6b06621704b4f5b7f578f57914e6d9e7f4d376:packages/client/test/client/crossAppAccess.test.ts:generic-api-key:13

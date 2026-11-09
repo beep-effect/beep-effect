@@ -187,7 +187,7 @@ const BranchProtectionContextSnapshot = S.Struct({
 });
 const decodeBranchProtectionContextSnapshot = S.decodeUnknownEffect(S.fromJsonString(BranchProtectionContextSnapshot));
 const branchProtectionContextSnapshotUrl = new URL(
-  "../../../../../goals/ship-velocity/research/branch-protection-contexts.json",
+  "../../../../../standards/branch-protection-contexts.json",
   import.meta.url
 );
 const checkWorkflowUrl = new URL("../../../../../.github/workflows/check.yml", import.meta.url);

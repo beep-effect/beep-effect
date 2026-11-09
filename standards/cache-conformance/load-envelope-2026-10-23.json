@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "cache-conformance-load-envelope/v1",
+  "observedAt": "2026-10-23",
+  "authority": "measured-production-metadata-read-only",
+  "approval": "Operator approved the read-only size census in chat on 2026-10-23 with the lab ceiling.",
+  "method": [
+    "s3api list-objects-v2 over the production cache bucket, keeping only Size and LastModified; no keys or content were retained.",
+    "CloudWatch AWS/Lambda ConcurrentExecutions Maximum, hourly, 2026-09-24..2026-10-24, for the production read and write functions."
+  ],
+  "artifactSizes": {
+    "objects": 120154,
+    "windowDays": 28,
+    "firstDay": "2026-09-23",
+    "lastDay": "2026-10-24",
+    "peakObjectsPerDay": 11893,
+    "totalBytes": 3758465852,
+    "p50Bytes": 471,
+    "p95Bytes": 122214,
+    "p99Bytes": 428602,
+    "maxBytes": 4616341
+  },
+  "concurrency": {
+    "readPeak": 20,
+    "writePeak": 10,
+    "censored": true,
+    "reservedConcurrency": {
+      "read": 20,
+      "write": 10,
+      "authorizer": 20,
+      "source": "CiTurboCache reserved concurrency, identical in production (ci-turbo-cache-*) and the lab"
+    },
+    "productionThrottles30d": {
+      "read": 25760,
+      "write": 3,
+      "window": "2026-09-24..2026-10-24, AWS/Lambda Throttles Sum"
+    },
+    "interpretation": "The observed peaks equal the reserved caps, so true demand is unknown and higher. Production read throttles surface to Turbo as fail-soft misses. The 1.5x envelope (30/15) is a floor, not an estimate of demand."
+  },
+  "envelope": {
+    "rule": "2 x observed p99 size and 1.5 x observed peak concurrency (SPEC deployment boundary)",
+    "payloadBytes": 857204,
+    "readConcurrency": 30,
+    "writeConcurrency": 15,
+    "alsoRun": "the observed maximum (4616341 bytes), because synchronous Lambda invocation carries the base64-encoded body: 4616341 bytes encode to about 6155122, above the 6 MiB (6291456) request limit only with headers and event framing, so this size sits at the incumbent's ceiling and must be measured, not assumed"
+  },
+  "limits": [
+    "Sizes are the stored compressed artifacts; they do not show request headers or event framing overhead.",
+    "Hourly maxima can under-report sub-hour bursts; the envelope multiplier covers part of that.",
+    "Because concurrency is censored at the reserved caps, no topology's envelope result can be called representative of demand until throttle-free demand is measured."
+  ],
+  "labReproduction": {
+    "run": "runs/aws-c1023a-beep-incumbent-lab.json RC-028",
+    "observed": "at 30 readers / 15 writers: 10 GET and 6 PUT answered 503; lab Throttles 10 (read) and 6 (write); max concurrent executions 20 and 10, the reserved caps"
+  }
+}

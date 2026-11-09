@@ -73,7 +73,7 @@ const $I = $RepoCliId.create("commands/Cache/Cache.conformance.native");
  * @category constants
  * @since 0.0.0
  */
-export const cacheConformancePinsPath = "goals/turborepo-cache-conformance/research/pins-2026-10-23.json";
+export const cacheConformancePinsPath = "standards/cache-conformance/pins-2026-10-23.json";
 
 /**
  * One exact client lane from the pin file.
