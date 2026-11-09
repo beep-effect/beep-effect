@@ -3,8 +3,11 @@ import { replayCitationRegexBoundaries } from "../CitationRegexBoundaries.fixtur
 import { citationRegexReplayBatches } from "../CitationRegexVerbose.fixtures.ts";
 import { citationTokenizerTestLayer } from "../CitationTokenizer.fixtures.ts";
 
-// Bun only since 2026-11-09 (deletion addendum G7): node parity for this corpus is the unit twin's smoke
-// loop plus integration/CitationEngineCorpus.test.ts, the one node full-corpus scene.
+// Bun only since 2026-11-09 (deletion addendum G7). Node coverage of the engine now comes from
+// integration/CitationEngineCorpus.test.ts and integration/CitationCanonicalTokenizer.test.ts (both
+// runtimes), the U2 node slices (CitationExtractionLoop, CitationCanonicalFullSpan, PageCorrection,
+// PinSpan, ParsedEquality) and the kept worker scenes (CitationDiffWorker, CitationXmlWorker,
+// CitationHtmlGeometryPreparation); the unit twins of this corpus run on bun only.
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("complete source regex word boundaries", (it) => {
   for (const kind of ["bun"] as const)
     for (const batch of citationRegexReplayBatches)

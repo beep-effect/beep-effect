@@ -348,7 +348,7 @@ jobs:
     name: Test Integration
     if: ${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}
     runs-on: beep-ec2-heavy
-    # law-practice-server's integration suite is 20 files and about 68 min of
+    # law-practice-server's integration suite is 21 files and about 68 min of
     # file time after the 2026-11-09 deletion (goals/citation-extraction-engine
     # decision of that date): 35 min of wall at two vitest workers locally, the
     # largest file (CitationCanonicalExtraction) about 17 min. 60 min leaves the
