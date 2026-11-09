@@ -78,7 +78,7 @@ _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions wr
 
 Compose raw source preparation and verified extraction under the existing metadata operation. Reuse parent admission, total timing and cumulative budget, with resolver active-permit and no-native-refusal controls. Full dual-source/retained-input dispatch and final engine contracts remain open. See history/evidence/2026-11-06-admitted-source-extraction.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Remove the private source-extraction composition and its connected controls; preserve the existing resolver and verified extraction stages.
 
@@ -86,7 +86,7 @@ Reverse: Remove the private source-extraction composition and its connected cont
 
 The existing native Unicode range/concatenation and captured text-budget primitives now assemble source-defined annotation spans with Python slicing, overlap trimming and exact output/growth admission. Two tests replay 214 original outputs and exercise exact/refused budgets. Fresh pinned Python replay is byte-identical. This is the prepared ordered primitive branch, not target sorting, HTML balancing, callback semantics or the full annotation service. No accounting row is promoted. See history/evidence/2026-11-06-annotation-assembly.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert the annotation assembly module, source corpus and this checkpoint together; preserve the original annotation capability obligations.
 
@@ -94,7 +94,7 @@ Reverse: Revert the annotation assembly module, source corpus and this checkpoin
 
 Assembly now captures the native-string annotator profile through an Effect service, preserves prepared callback arguments, defers non-string results until final join and stops on callback exceptions. Existing budget/Unicode/range capabilities snapshot receiving text without a new arena or registry. Eleven tests pass in 62.44s, including all unchecked source cases, actual Bun/Node markup traces, physical exits, exact capacity, callback capture/mutable-return controls and actual deadline labels. General host values, nested callbacks, final engine/boundary integration and every open law/fidelity/proof obligation remain required. See history/evidence/2026-11-06-annotation-callback.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert native callback capture and assembly integration together, preserving original corpora, default assembly and every unfinished acceptance requirement.
 
@@ -102,7 +102,7 @@ Reverse: Revert native callback capture and assembly integration together, prese
 
 Effect Array/Order now sorts primitive tuples with Python point-order string ties, then applies existing offsets right at starts and left at ends. The Document forward placeholder/diff path has one shared owner; annotation executes only that direction while Document retains backward/emphasis order. All 214 unsorted primitive cases and 36 new mapped cases compare. Seven tests pass, including actual Bun/Node placeholder+diff children with twelve confirmed exits each and Document geometry regression. Full HTML/callback modes and synchronous-sort isolation/scaling remain open before engine completion. See history/evidence/2026-11-06-annotation-preparation.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert annotation preparation and restore the prior single Document forward-map implementation together; retain all original source corpora and open acceptance requirements.
 
@@ -110,7 +110,7 @@ Reverse: Revert annotation preparation and restore the prior single Document for
 
 Effect Context.Reference supplies the extraction default directly; the optional service lookup and custom fallback are removed. The selected schema-owned operation is still captured at installation, leaving returned methods R=never. Six actual Bun/Node wrap and Clock tests pass in 23.16s after this simplification; server lint/types, declarations, blocking laws and scoped Fallow pass with zero introduced findings. Full hosted source replay, custom annotators, final engine/boundary integration and every open law/fidelity/proof obligation remain required. See history/evidence/2026-11-06-annotation-wrap.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert the default context reference and its consumers together while preserving captured operation timing and original source corpora.
 
@@ -118,7 +118,7 @@ Reverse: Revert the default context reference and its consumers together while p
 
 Original skip annotation now composes overlap trimming, XML checks, style expansion and output assembly through captured Effect services. Focused actual Bun/Node replay covers 36 source cases and 83 acknowledged children per runtime, preserving exact outputs, parser query order/results and 33 skip decisions. Eight annotation regression tests pass in 47.34s; lint/types, declarations, blocking laws and scoped Fallow pass. Complete 126-case replay per runtime is registered for hosted CI. Wrap templates, custom annotators, final public engine integration and all eleven representation laws, four fidelity questions and fifteen unfinished proof rows remain open. See history/evidence/2026-11-06-annotation-skip.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert span processing and assembly integration together, retaining original corpora and every unfinished acceptance obligation.
 
@@ -126,7 +126,7 @@ Reverse: Revert span processing and assembly integration together, retaining ori
 
 The original i/em/b proximity helper now preserves initial-span membership, first/last literal searches, raw signed arithmetic and Python slice bounds on native text. Shared Unicode range/search primitives avoid whole candidate copies and arrays; exact final slice allocation uses the captured parent budget. All 685 original source observations compare, and sixteen tests across style, annotation, native Unicode and literal composition pass. XML balance checking, wrap substitution, full skip/wrap dispatch and general host/numeric behavior remain open. See history/evidence/2026-11-06-annotation-style.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert the style helper and shared native search/slice migration together; restore the prior assembly normalizer and retain all open annotation obligations.
 
@@ -134,7 +134,7 @@ Reverse: Revert the style helper and shared native search/slice migration togeth
 
 The private template component matches all 1320 cold original observations: 792 outputs using independently observed source match ranges and 528 invalid-template failures. It reuses frozen Unicode/integer services and native range concatenation. Ten regression tests across four files pass in 80.60s, including actual Bun/Node skip composition. Exact allocation/captured-authority controls, server checks, declarations, blocking laws and scoped Fallow pass. Native tag matching, full wrap dispatch, warm-cache warning fidelity, final exception translation and engine integration remain open. All eleven laws, four fidelity questions and fifteen unfinished proof rows remain open. See history/evidence/2026-11-06-annotation-template.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert the fixed-capture template adapter and shared reservation extraction together, retaining original corpora and every unfinished acceptance requirement.
 
@@ -142,7 +142,7 @@ Reverse: Revert the fixed-capture template adapter and shared reservation extrac
 
 Wrap now composes the original tag pattern through existing regex/XML workers, templates and assembly; skip/wrap share one span preparer. Captured regex timing selects annotation across preparation/compiler/binding/native ownership while extraction remains default. Twenty-seven regression tests pass in 43.01s, with actual Bun/Node exact outputs/refusals, XML traces, physical exits and released admission. Controlled Clock replacement/default deadline tests pass. Server checks, declarations, blocking laws and scoped Fallow pass with zero introduced findings. Full hosted replay is registered and pending. Warm-cache warning fidelity, custom annotators, final boundary translation/public engine and all eleven laws/four questions/fifteen proof rows remain open. See history/evidence/2026-11-06-annotation-wrap.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert wrap composition and the captured operation selector together, retaining all original corpora and every unfinished acceptance obligation.
 
@@ -150,7 +150,7 @@ Reverse: Revert wrap composition and the captured operation selector together, r
 
 A small authored query links unchanged authenticated libxml2/converter/runtime archives and uses the shared restricted WASI host. All 300 original outcomes compare, including 57 no-angle fast paths and width-dependent surrogate pairs. Two builds are identical. Twenty XML/HTML kernel tests, package/declaration checks, blocking laws and scoped Fallow pass. This component is not installed in the live engine: typed worker/RPC framing and physical retirement remain required before production use. No new parser/process manager, divergence or completed accounting row is claimed. See history/evidence/2026-11-06-annotation-xml-kernel.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert the XML query module/assets and its package inclusion together; retain the source observations and all open worker/annotation obligations.
 
@@ -158,7 +158,7 @@ Reverse: Revert the XML query module/assets and its package inclusion together; 
 
 A genuine parent source capability now drives the actual primitive extraction request. Unchanged text retains its existing proof. Changed tokenizer text receives a verified manifestation with preserved artifact/locator/normalization identity and a versioned parent/engine/cleaning-mode/output commitment. Source derivation and occurrence projection share one admitted operation, deadline and cumulative budget with extraction. Plain, Unicode and raw HTML replay pass on both runtimes; output evidence is produced by production code. Determinism, mode/engine changes, malformed-text refusal and shortcut bypass controls pass. Public service/Layer, authenticated runtime asset loading, final document adaptation and full accounting/safety qualification remain open. See history/evidence/2026-11-06-verified-extraction.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert canonical source derivation and its composition; retain the separately qualified raw, semantic and occurrence stages.
 
@@ -166,7 +166,7 @@ Reverse: Revert canonical source derivation and its composition; retain the sepa
 
 Builtin parsed models now project legal meaning through the domain Citation structured codec and a complete authenticated runtime projection of the reviewed edition mapping. Five focused tests cover all 80 captured models across eight families, all 2533 edition identities, shortcut semantics, short plaintiff absence/null/text, unmapped courts and refusal controls. This is projection evidence, not parser or full-engine acceptance. Public service/Layer, mention adaptation, broader behavioral qualification and all unfinished proof obligations remain open. See history/evidence/2026-11-06-semantic-projection.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert the semantic projection wave; retain the sealed source mapping and private extraction pipeline.
 
@@ -174,7 +174,7 @@ Reverse: Revert the semantic projection wave; retain the sealed source mapping a
 
 Move the full existing lazy owned-value cleaner contract into the server use-case subpath as CitationCleaner. Default production Context and all source/test consumers use it directly, without aliases or a second implementation. Declared port failures stay separate from the five engine-boundary failures. Repair hosted duplicate timing/test controls without dropping assertions or weakening gates. Tokenizer/service/Layer and remaining acceptance stay open. See history/evidence/2026-11-06-cleaner-port.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Move the cleaner contract back into the private pipeline and restore direct imports, preserving existing issuance, runtime behavior and sealed evidence.
 
@@ -182,7 +182,7 @@ Reverse: Move the cleaner contract back into the private pipeline and restore di
 
 PR review found that an empty truthy generator charged an already-reserved source twice. Top-level runOwned now settles unchanged input locally while raw input and newly produced/nested text retain parent enforcement. The actual generator regression proves identity, four local units, four parent units, generator closure and raw-input refusal against the exhausted parent. Twenty-five focused tests, type/declaration checks, blocking laws and scoped Fallow pass. The evidence command uses the existing use-case package path. See history/evidence/2026-11-06-cleaner-unchanged-reservation.md. No parity obligations are promoted.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert this checkpoint and accounting change together; restore the parent-budget regression before changing the source reservation contract.
 
@@ -190,7 +190,7 @@ Reverse: Revert this checkpoint and accounting change together; restore the pare
 
 Source annotation now exposes only CitationEngineFailure with R=never. Explicit schema/Match translation covers all seventeen private adapter classes without an unknown fallback or missing-capability unsupported substitution. Nine tests pass in 2.67s, including actual callback deferred join ordering, Bun/Node mapping and shared timing; lint/types, declarations, blocking laws and scoped Fallow pass. Public Engine/Layer and all exhaustive proof/accounting remain open. See history/evidence/2026-11-06-annotation-failure-boundary.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert the typed annotation translator and source method wrapper together while retaining source corpora, redaction evidence and all unfinished acceptance requirements.
 
@@ -198,7 +198,7 @@ Reverse: Revert the typed annotation translator and source method wrapper togeth
 
 The private annotation entry composes original sorting/mapping, skip/wrap and captured callback behavior through the existing admitted metadata owner. All 214 original unchecked cases pass twice with fresh budgets. Actual Bun/Node markup and default mapping controls confirm child retirement. Eleven entry/callback/operation tests pass in 53.10s; lint/types, declaration emission, blocking laws and scoped Fallow pass with zero introduced findings. Complete raw-source/public engine composition and all eleven laws, four fidelity questions and fifteen proof rows remain open. See history/evidence/2026-11-06-admitted-annotation-entry.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert the native entry and shared child-permit extraction together while retaining source corpora and all remaining acceptance requirements.
 
@@ -206,7 +206,7 @@ Reverse: Revert the native entry and shared child-permit extraction together whi
 
 One admitted source annotation operation now verifies canonical plain/markup sources, snapshots replacements before resolver work and runs existing native annotation children under the same Scope, cumulative budget and deadline. Eleven tests pass in 6.48s, including actual Bun/Node mapping and a controlled combined resolver/callback deadline. Native entry regression retains all 214 unchecked cases twice. Public service/Layer, full host protocols and all exhaustive proof/accounting remain open. See history/evidence/2026-11-06-verified-source-annotation.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert source annotation and restore the private entry helper boundary together, retaining original corpora and all unfinished proof obligations.
 
@@ -214,7 +214,7 @@ Reverse: Revert source annotation and restore the private entry helper boundary 
 
 The versioned engine commitment combines trusted installer build/runtime/selected-port metadata with actual authenticated default assets, captured calendar and encoded policy. Existing Schema snapshot and SHA-256 primitives are reused. Build metadata is snapshotted before asset loading; runtime kind matches the installed diff backend. This commits installer claims rather than attesting arbitrary code. Connected extraction uses the producer with explicit fake deployment metadata; actual deployment/Layer port binding and all broader acceptance remain open. See history/evidence/2026-11-06-engine-artifact.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert the identity producer and connected fixture use; retain prior asset and source evidence and every acceptance requirement.
 
@@ -222,7 +222,7 @@ Reverse: Revert the identity producer and connected fixture use; retain prior as
 
 Publish server-only source-free report schemas and project actual successful extraction counts, captured policy/artifact and Effect-timed work. Measure executed tokenizer patterns against pinned selected rows and preserve skipped-versus-zero distinction. Do not claim queue/total timing or full failure-report/service qualification. Public ports/service/Layer and all remaining acceptance duties remain open. See history/evidence/2026-11-06-extraction-reports.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Remove completed-report composition and public report contracts and restore the preceding extraction result; retain the original oracle and tokenizer fixtures.
 
@@ -230,7 +230,7 @@ Reverse: Remove completed-report composition and public report contracts and res
 
 Verified primary occurrences now retain original full spans as canonical component anchors. Equal primary/full spans share evidence without a second quote allocation; invalid full spans remain explicit component issues. Source overlap warnings bind original model IDs to verified cm1 endpoints after validating returned model views; unavailable or identical occurrence endpoints remain explicit unbound events. Source-backed Bun/Node and mention regression passes 15 tests. Final component/footnote detection, canonical source production for cleaning, public service/Layer and exhaustive goal qualification remain open. See history/evidence/2026-11-06-full-span-warnings.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert the full-span/warning adaptation wave; retain primary occurrence projection and original raw warning pairs.
 
@@ -238,7 +238,7 @@ Reverse: Revert the full-span/warning adaptation wave; retain primary occurrence
 
 Reuse the existing resolver/verifier and admitted extraction owner for independently identified plain/markup slots. Preserve the canonical Both branch: plain tokenization, markup source parent, no geometry and truthy-cleaner refusal. Retain both input identities and bind companion identity in changed-text derivation. Retained Document dispatch and full goal qualification remain open. See history/evidence/2026-11-06-paired-source-extraction.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Remove the primitive-pair component and adapter and companion integration; restore the preceding single-source route while retaining the sealed source observations.
 
@@ -246,7 +246,7 @@ Reverse: Remove the primitive-pair component and adapter and companion integrati
 
 The production constructor composes complete parser/helper/vocabulary assets and returns the existing frozen-edition owner. Semantic vocabulary now uses shared bounded byte authentication before its existing schema and public-membership checks. Semantic/verified replay uses this constructor. Individual data identities remain separate from the unfinished complete implementation identity. Public service/Layer and exhaustive acceptance remain open. See history/evidence/2026-11-06-default-configuration.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert the default constructor and fixture wiring; retain all source assets and full acceptance duties.
 
@@ -254,7 +254,7 @@ Reverse: Revert the default constructor and fixture wiring; retain all source as
 
 Existing value/builtin/container/registry/pipeline owners now compose through a production constructor and Context. It captures one policy/runtime and requires injected host protocols; no production fake host or duplicate worker/registry framework is added. Caller Scope controls cohort lifetime, preserving explicit retained-state ownership rather than resetting custom registries per request. Document/semantic/verified replay uses the production context, including named steps. Public ports/Layer and complete lifecycle/exhaustive acceptance remain open. See history/evidence/2026-11-06-document-services.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert the production constructor and connected fixture wiring; retain all original source evidence and acceptance obligations.
 
@@ -262,7 +262,7 @@ Reverse: Revert the production constructor and connected fixture wiring; retain 
 
 Thirteen sealed oracle sources now project into a production-only helper asset. Existing runtime schemas derive the static codec and Effect Clock/CurrentTimeZone captures one calendar cutoff for all five temporal helpers. Production tokenizer/document replay uses both catalog and helper assets. Existing bounded native asset loading is shared with schema-driven JSON authentication. Complete engine artifact/public Layer and all broader acceptance remain open. See history/evidence/2026-11-06-production-helpers.md. Base-pinned Secret Scanning requires separately reviewed exact provenance exception in PR #2786.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert the helper projection and production wiring; retain original source fixtures and all parity obligations.
 
@@ -270,7 +270,7 @@ Reverse: Revert the helper projection and production wiring; retain original sou
 
 The complete default catalog and frozen publications now have a reproducible production-only asset and bounded Effect FileSystem loader. All 6805 extractor occurrences/descriptors, 2533 editions and 2430 reporter payloads match independent sealed fixture installation. The source hash profile remains explicitly captured seed 0. Connected Bun/Node replay now uses the production loader and frozen owner; ten tests across three files pass in 25.75 seconds. Changed/truncated/appended/missing assets refuse. Helper metadata, full engine artifact, public service/Layer and exhaustive qualification remain open. See history/evidence/2026-11-06-parser-catalog.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert the runtime catalog projection/loader and restore the fixture-based tokenizer installer; retain all sealed oracle evidence.
 
@@ -278,7 +278,7 @@ Reverse: Revert the runtime catalog projection/loader and restore the fixture-ba
 
 Raw primitive input now reaches domain Citation values under one admitted operation, deadline and cumulative text budget. Seven source documents on both actual runtimes cover all eight families, Unicode and HTML; complete 36-document replay is registered for hosted integration. Configuration binds the same edition mapping to parsing and projection. Exact/one-unit-short shortcut budget controls and complete original raw model checks pass. Hosted Fallow findings on the preceding head identified test-function complexity; focused model/metadata/publication assertion helpers repair those functions without threshold or baseline changes. See history/evidence/2026-11-06-semantic-extraction.md. Public service/Layer, verified mentions and full goal qualification remain open.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert the composition wave; retain separately qualified raw entry and semantic projection.
 
@@ -286,7 +286,7 @@ Reverse: Revert the composition wave; retain separately qualified raw entry and 
 
 The pinned get_citations creates a fresh Document, so retained reuse belongs to private model composition rather than a new public raw-input mode. Reuse initialized document/handles/geometry without cleaning again, checking live ownership before native work. Repair the hosted paired replay complexity finding with shared setup/result assertions and unchanged gates. Full C-009 model mutation/custom-tokenizer behavior remains open. See history/evidence/2026-11-06-retained-document-reuse.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Remove the private retained-Document constructor and restore the preceding initial-only extraction module; retain pinned source observations and all existing coverage.
 
@@ -294,7 +294,7 @@ Reverse: Remove the private retained-Document constructor and restore the preced
 
 Two review threads identified the untested runtime-kind refusal. A focused effect test passes Node build metadata with an actual Bun diff backend and asserts CitationEngineArtifactFailure plus zero native children. Six configuration/artifact tests pass in 9.97s, with package and scoped quality checks. Production behavior is unchanged. See history/evidence/2026-11-06-runtime-kind-review.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert only the new regression test and receipt; keep the production guard and acceptance requirements.
 
@@ -302,7 +302,7 @@ Reverse: Revert only the new regression test and receipt; keep the production gu
 
 Publish exactly the five SPEC failure classes from the use-case server subpath and share the four-operation schema with safety. The typed extraction translator reconstructs declared data, emits closed debug labels and tests private-payload redaction. It accepts only established input/source/vocabulary/safety families, never arbitrary native errors or missing canonical capabilities as unsupported modes. Root/client surfaces remain empty. Full service/Layer and remaining translators/acceptance remain open. See history/evidence/2026-11-06-server-failure-contract.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert server-only failure/operation exports and the narrow translator; preserve safety payloads and all goal requirements.
 
@@ -310,7 +310,7 @@ Reverse: Revert server-only failure/operation exports and the narrow translator;
 
 Canonical resolver/verifier behavior now has one shared helper, reused by single/paired extraction and independently qualified under annotation timing without extraction shortcuts. Shared metadata ownership captures the operation reference for admission and children. Fifteen source/routing tests pass in 8.00s and two actual Bun/Node paired tests pass in 53.33s. Root/nested resolver mutation controls passed before the refactor; no verification vulnerability is claimed. Server checks, named-capability declarations, blocking laws and scoped Fallow pass with zero introduced findings. Admitted annotation/raw-source/public engine composition, general host/nested callbacks, builtin difflib and every open law/fidelity/proof obligation remain required. See history/evidence/2026-11-06-shared-source-evidence.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert the shared helper extraction and operation routing together while preserving canonical verification, source corpora and every unfinished acceptance requirement.
 
@@ -318,7 +318,7 @@ Reverse: Revert the shared helper extraction and operation routing together whil
 
 Server-only source/options components share builtin/container/role schemas with private implementation. The adapter reuses SourceTextResolver and the public provenance verifier, snapshots before resolver work, preflights sizes and preserves ignored shortcut getters. Connected replay now issues input proofs through that production boundary. Single-source scope is explicit; complete dual-source/retained-input dispatch, reports, ports and service/Layer remain open. Corrected hosted JSDoc/docgen missing-since failures by separating tags, without baseline changes. See history/evidence/2026-11-06-source-request-boundary.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert the source adapter/shared mode ownership and replay wiring; retain original source proofs and every full-goal requirement.
 
@@ -326,7 +326,7 @@ Reverse: Revert the source adapter/shared mode ownership and replay wiring; reta
 
 The existing default tokenizer consumes CitationTokenizer from the use-case server subpath within the current admitted Scope and budget. Native Unicode storage, text allocation capability, token seed, assembly and result models have one public server-only owner; private factories retain configuration and retirement controls. Closed admission maps to a declared port refusal with zero workers. Eight final tokenizer tests pass after correcting a test provider-order error; other focused regressions, declaration build, docgen and scoped Fallow pass. General custom/mutable tokenizer protocols, final engine integration and all exhaustive acceptance duties remain open. See history/evidence/2026-11-06-tokenizer-port.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert this checkpoint and the tokenizer contract migration together; preserve all open parity and safety obligations.
 
@@ -334,7 +334,7 @@ Reverse: Revert this checkpoint and the tokenizer contract migration together; p
 
 Builtin semantic results now produce primary mentions only against genuine source capabilities for the exact tokenizer text. Existing canonical offset conversion, provenance verification and cm1 production are reused. Shortcut, invalid spans and native/JavaScript point-layout differences retain explicit unverified semantic data. Shared code-point conversion now scans cooperatively without whole-source arrays or prefix joins, with unchanged public contract. Forty prerequisite tests and both-runtime source/mention regression pass. Full-span/component evidence, warning translation, canonical source production for cleaning and the public service/Layer remain open. See history/evidence/2026-11-06-occurrence-projection.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert the occurrence adaptation and converter optimization while retaining the public prerequisite contracts and raw/semantic pipeline.
 
@@ -342,7 +342,7 @@ Reverse: Revert the occurrence adaptation and converter optimization while retai
 
 XML now uses upstream typed RPC over existing bounded framing and a shared markup worker extracted from HTML supervision. HTML/diff/XML share upstream client transport/delivery composition. Exact preflight, false result preservation, captured input budgets, independent retirement and operation-specific Unicode timers are tested. Twenty-nine regression tests pass, with 28 XML children acknowledged per actual Bun/Node runtime. Full 300-case-per-runtime replay is registered for hosted integration, not claimed locally complete. Skip/wrap/custom annotator and final engine duties remain open. See history/evidence/2026-11-06-xml-worker-transport.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert XML transport and restore the original HTML process block together; preserve all source corpora, physical retirement requirements and open acceptance duties.
 
@@ -350,7 +350,7 @@ Reverse: Revert XML transport and restore the original HTML process block togeth
 
 Two Effect Schema transformations provide a declared lossless U.S. Reports case profile with exact FullCitation.Type input and total supported reconstruction/rendering. Independent pinned donor layout observations, source replay, seven corruption controls, two 100-example properties and compile-only inline call proofs qualify this initial profile without completing Bluebook scope. Hosted lint repairs hoist compiled schemas, use the existing typed Option helper, add eight schema law properties, isolate simulated clocks and retain two explicitly reviewed real-filesystem exceptions. No source/donor dispositions or final proof rows are promoted.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert the supported profile and its independent layout evidence together; retain every unfinished source/donor and whole-engine obligation.
 
@@ -358,7 +358,7 @@ Reverse: Revert the supported profile and its independent layout evidence togeth
 
 Ten focused Bun/Node tests pass in 110.04 seconds through raw input and default production cleaning/extraction. Validate original comparison operands before checking target ordered kinds. Bind only six exact count assertion events as complete-case proof; parallel attribute assertions, parent capabilities, other tokenizers and whole-engine acceptance remain separate. The 23 annotation-stage bindings stay ready. See history/evidence/2026-11-07-canonical-count-case-proof.md.
 
-Lane `feat/citation-default-owners` · PR #2847
+Lane feat/citation-default-owners · PR #2847
 
 Reverse: Remove the explicit six-case binding and regenerate to restore audit state if its criterion or execution proof is invalid; preserve all original observations.
 
@@ -366,7 +366,7 @@ Reverse: Remove the explicit six-case binding and regenerate to restore audit st
 
 Existing dictionary/set owners now bind capacity/work refusals to actual engine ceilings without guessing categories for unbound guards. Resolution, cleaner registry, extractor ordering and edition deduplication preserve those bindings. Fifty-one regression tests pass in 4.74s and seven final capacity/extractor/edition controls in 2.86s. Lint/types, declarations, blocking laws and scoped Fallow pass with zero introduced findings. Complete public boundaries/Engine/Layer and all exhaustive proof/accounting remain open. See history/evidence/2026-11-07-table-capacity-bindings.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert optional table budget bindings and owner mappings together while retaining source table histories, capture controls and all acceptance duties.
 
@@ -380,7 +380,7 @@ Reverse: Revisit the selector adaptation if the captured host container contract
 
 Standalone registered resolution now captures normalized policy/artifact, Clock and shared admission. Four focused tests and twenty-seven regressions pass, with package lint/types/build/blocking laws and zero introduced Fallow findings. Queue time consumes the resolve deadline and cancellation returns capacity. Public raw-source service/Layer and all open acceptance duties remain. See history/evidence/2026-11-07-admitted-resolver-operation.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert ResolverOperation and its callers/tests together; retain the raw registered resolver used inside the admitted extraction parent.
 
@@ -388,7 +388,7 @@ Reverse: Revert ResolverOperation and its callers/tests together; retain the raw
 
 Admitted cleaner methods and a captured registered-resolver boundary now expose CitationEngineFailure with R=never. Known resource/evidence categories and interruption are preserved; incidental private payloads are removed. Seven focused tests pass in 2.36s and twenty-two resolver/cleaner regressions in 4.64s; lint/types, declarations, blocking laws and scoped Fallow pass. Complete extraction translation, admitted public resolver/Engine/Layer and all exhaustive proof/accounting remain open. See history/evidence/2026-11-07-cleaner-resolver-boundaries.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert the typed method translators/wrappers and restore preflight placement together while retaining source corpora, closed-method tests and all acceptance requirements.
 
@@ -396,7 +396,7 @@ Reverse: Revert the typed method translators/wrappers and restore preflight plac
 
 Single/pair connected extraction now captures the extract operation and exposes only CitationEngineFailure with R=never. Native Unicode deadlines retain producer metadata. Sixteen applicable tests, package lint/types, declaration build, blocking laws and scoped Fallow pass. Public Engine/Layer, admitted resolver composition and all eleven laws, four fidelity questions and fifteen proof rows remain open. See history/evidence/2026-11-07-extraction-method-boundary.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert the extraction wrapper and typed translator together, preserving native corpora and every unfinished acceptance requirement.
 
@@ -404,7 +404,7 @@ Reverse: Revert the extraction wrapper and typed translator together, preserving
 
 Share the existing three-range comparison between original public corpora and extend the 150-input canonical replay to full and pin-inclusive source coordinates. Add focused Bun/Node tests for original input 11, whose primary/full/pin-inclusive ranges differ. Original capture coordinates remain authoritative; no inferred expected spans or ledger completion promotion. See history/evidence/2026-11-07-canonical-extraction-corpus.md.
 
-Lane `feat/citation-default-owners` · PR #2847
+Lane feat/citation-default-owners · PR #2847
 
 Reverse: Revert only an unsound coordinate projection after recording the source mismatch; retain the original captured ranges and verification requirement.
 
@@ -412,7 +412,7 @@ Reverse: Revert only an unsound coordinate projection after recording the source
 
 The default public engine replay now links all 182 original builtin attribute assertions to 150 count invocations. Reuse production ResourceCorrection and MetadataYear operations on actual public data, with source argument/frame/operand checks. All ten focused tests pass in 124.53 seconds; six exercised attribute cases receive local complete-case proof beside six existing count cases. Other attributes, model protocols and full hosted acceptance remain open. Repair the hosted TSDoc literal-brace warning without changing template parsing. See history/evidence/2026-11-07-canonical-attribute-proof.md.
 
-Lane `feat/citation-default-owners` · PR #2847
+Lane feat/citation-default-owners · PR #2847
 
 Reverse: Remove the six explicit attribute bindings and return them to audit if their represented-data projection is unsound; retain original operands and all general model obligations.
 
@@ -420,7 +420,7 @@ Reverse: Remove the six explicit attribute bindings and return them to audit if 
 
 The public extraction corpus and private semantic replay independently compare case reporter ids, publication/court artifact versions and known/unmapped court objects against the sealed vocabulary mapping. All eighty original projection models and explicit unknown/empty/null controls are covered. Seven public/projection tests pass; the factored projection replay passes five tests. Prior head 50a493cef5 now passes hosted Labs and Fallow envelopes. See history/evidence/2026-11-07-public-vocabulary-identities.md. All full-goal proof rows remain open.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Remove the additional identity assertions while retaining original source/mapping artifacts and unfinished vocabulary obligations.
 
@@ -428,7 +428,7 @@ Reverse: Remove the additional identity assertions while retaining original sour
 
 Strengthen the shared public/private semantic comparator with whole represented metadata-record equality, preserved court labels and original ordered candidate/selected edition references. The original source fixture is unchanged. Coordinate metadata, vocabulary classification/version mapping and exhaustive capability proof remain separate obligations. See history/evidence/2026-11-07-public-semantic-metadata.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Remove the stronger assertion while retaining original frozen metadata, edition observations and all unfinished proof duties.
 
@@ -436,7 +436,7 @@ Reverse: Remove the stronger assertion while retaining original frozen metadata,
 
 CitationEngineDefaultLive reuses Effect Layer.effectContext and existing authenticated default installers to create coherent cleaner/container owners and shared operation/native admission. Trusted host/source/identity/platform dependencies remain injected; no synthetic production identity is added. Both configured and default engines capture complete schema data before async use. Four Bun/Node assembly combinations plus one property pass in 60.60s; mixed-runtime/missing-asset refusals, post-build worker-path mutation and scope closure are covered. Package lint/types, declarations, blocking laws and zero-introduced scoped Fallow pass. Deployment, whole-engine safety/scaling and exhaustive source/donor/lifecycle acceptance remain open.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert the default Layer and complete configuration snapshot together with their runtime controls; preserve explicit host identity and every unfinished goal requirement.
 
@@ -444,7 +444,7 @@ Reverse: Revert the default Layer and complete configuration snapshot together w
 
 CitationEngine Context.Service and CitationEngineLive compose real clean/extract/resolve/annotate operations with closed failures and R=never methods. Actual Bun and Node Layer paths execute all four operations, preserve outputs and confirm exits. Final eleven service/cleaner/resolver tests, twenty-two cleaner regressions and four contracts pass; lint/types/declarations/laws/Fallow pass. Ninety-four documentation export checks pass; prior-head hosted JSDoc/Fallow are green. Broader protocols, lawful transforms, deployment/lifecycle, safety/scaling and exhaustive accounting remain open. See history/evidence/2026-11-07-four-operation-engine-layer.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert the service/Layer, cleaner public composition and shared standalone text-work helper together; preserve the earlier operation adapters, original corpora and every unfinished qualification requirement.
 
@@ -452,7 +452,7 @@ Reverse: Revert the service/Layer, cleaner public composition and shared standal
 
 One admitted operation now connects canonical source resolution, native semantic extraction, verified occurrences, authenticated edition spelling and registered default resolution. Three actual Bun/Node/shortcut tests pass in 33.68s, including independent plain/markup lineage, exact original spans/grouping and complete receipt restoration. Lint/types, declaration emission, blocking laws and scoped Fallow pass with zero introduced findings. Public Engine/Layer, complete failure boundaries and all exhaustive proof/accounting remain open. See history/evidence/2026-11-06-connected-source-document.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert source document composition and restore the private source extraction helper boundary together, retaining source observations, receipts and all acceptance requirements.
 
@@ -460,7 +460,7 @@ Reverse: Revert source document composition and restore the private source extra
 
 A focused test reproduced mutation of a report deadline changing the next raw-resolution policy report. Scalar fields already copied correctly. Resolution/annotation/standalone extraction now snapshot report policy through the existing Schema codec; connected extraction reuses the detached inner policy. Seventeen final resolver/extraction/annotation/timing tests pass, including Bun/Node repeated calls, exact restoration and unchanged output after report mutation. Full ownership laws remain open. See history/evidence/2026-11-07-public-source-resolution.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert the per-report Schema policy snapshot and its mutation controls together; doing so reopens the demonstrated nested deadline alias and must not be described as captured-authority proof.
 
@@ -468,7 +468,7 @@ Reverse: Revert the per-report Schema policy snapshot and its mutation controls 
 
 The focused seven-document replay and hosted full 36-document Bun/Node replay now build the default public Layer. Resolver admission and final quiescence checks inspect the default owners, not the separately preassembled fixture owners. Original expectations and comparison scope remain unchanged. Full hosted replay and production identity remain unqualified; see history/evidence/2026-11-07-default-engine-corpus.md.
 
-Lane `feat/citation-default-owners` · PR #2847
+Lane feat/citation-default-owners · PR #2847
 
 Reverse: Restore the configured Layer only if default assembly cannot preserve the source observations; record the failure rather than change expectations.
 
@@ -476,7 +476,7 @@ Reverse: Restore the configured Layer only if default assembly cannot preserve t
 
 Explicit useDmp=false selects CPython 3.11.15 SequenceMatcher semantics in the existing admitted Effect RPC diff child. All 4231 independent step observations, source bounds controls, 22 acknowledged Bun/Node child exits and public annotation outcomes pass. Nineteen canonical builtin SpanUpdater maps match all 328 queries. The lone-surrogate public source case remains a prerequisite refusal with native exact-string coverage; no fidelity waiver. Compact source rows, exact replay and eight corruption controls are retained. Focused package/type/declaration/law/Fallow gates pass without new findings or suppression. See history/evidence/2026-11-07-builtin-annotation-diff.md.
 
-Lane `feat/citation-default-owners` · PR #2847
+Lane feat/citation-default-owners · PR #2847
 
 Reverse: Revert the builtin selector, algorithm and source corpus together; preserve DMP behavior, source prerequisite refusals and every unfinished goal acceptance obligation.
 
@@ -484,7 +484,7 @@ Reverse: Revert the builtin selector, algorithm and source corpus together; pres
 
 Extend the same authenticated canonical replay with all 10 builtin law inputs, 6 journal inputs and 4 Tax Court inputs. The complete hosted replay now covers 150 original inputs per runtime. Add focused first-input checks for each new family on both runtimes. Preserve every original ID and independent expected object; no ready/complete ledger promotion follows from scheduling coverage. See history/evidence/2026-11-07-canonical-extraction-corpus.md.
 
-Lane `feat/citation-default-owners` · PR #2847
+Lane feat/citation-default-owners · PR #2847
 
 Reverse: Remove a family replay only after recording why its source projection is unsound; retain original assertions and never change expected outputs to fit the target.
 
@@ -498,7 +498,7 @@ Reverse: Retain the original raw-prefix ordering and independent source observat
 
 Server use cases own annotation mode/replacement/input/result schemas; native stages reuse them without aliases. Reported annotation preserves genuine proofs, exact native output and measured admitted work. Twelve final annotation/resolver tests, eleven regressions and four contract tests pass; lint/types/declarations/laws/Fallow pass with zero introduced findings. Shared Schema policy capture removes duplicated installer code. Final service/Layer and all goal acceptance remain open. See history/evidence/2026-11-07-public-annotation-operation.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert reported annotation composition and restore the previous private tuple/mode definitions together, retaining original corpora and every unfinished acceptance requirement.
 
@@ -506,7 +506,7 @@ Reverse: Revert reported annotation composition and restore the previous private
 
 Server use cases now own genuine source lineage and explicit unverified diagnostics. Connected extraction produces CitationEngineExtractionResult with source/engine identity coherence, all semantic citations and checked report counts. Four contract tests, canonical source regression and three final actual Bun/Node connected tests pass. Lint/types/build/blocking laws and scoped Fallow pass. Final four-operation service/Layer and every full-goal acceptance requirement remain open. See history/evidence/2026-11-07-public-extraction-result.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert public result production and restore the previous private source/diagnostic definitions together; retain all original source, native and restoration corpora.
 
@@ -514,7 +514,7 @@ Reverse: Revert public result production and restore the previous private source
 
 Replay all 23 original canonical annotation assertions through the default public engine on Bun and Node. Bind their exact source observations to hashed evidence and target tests through the explicit proof plan. These are nonterminal annotation-stage proofs: original upstream cleaning/extraction are not recomputed, no case is complete, and all full-goal acceptance duties remain. The validator and exporter reject stale or escaping references, duplicate identities and stage proof promoted to completion. See history/evidence/2026-11-07-canonical-annotation-ledger.md.
 
-Lane `feat/citation-default-owners` · PR #2847
+Lane feat/citation-default-owners · PR #2847
 
 Reverse: Remove the explicit binding and regenerate the ledgers; cases return to audit without changing original observations.
 
@@ -522,7 +522,7 @@ Reverse: Remove the explicit binding and regenerate the ledgers; cases return to
 
 Resolution admission, callback/list/resource guards and projection now retain actual closed budget names through nested sanitizers using Effect Struct.pick. Thirty-one tests pass in 3.97s, including original 76 default contexts, receipt restoration and retained mutation/alias safety controls. Lint/types, declarations, blocking laws and scoped Fallow pass with zero introduced findings. Generic table/set owner attribution, public boundaries/Engine/Layer and all exhaustive proof/accounting remain open. See history/evidence/2026-11-07-resolution-limit-diagnostics.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert optional private limit metadata and its producers/translators together, retaining source corpora and exact-category regression evidence without weakening any acceptance requirement.
 
@@ -542,7 +542,7 @@ Reverse: Preserve the original source calendar, actual edition references and as
 
 The focused public CitationEngine Layer replay now passes on Bun and Node across seven original documents and all eight canonical families, with independent kind/component and Unicode/HTML span comparisons. The unchanged full 36-document corpus is registered in hosted integration. Resolution completion is not independent group parity; metadata, retained-host, laws, safety and all source/donor obligations remain open. See history/evidence/2026-11-07-public-engine-corpus.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Remove the public replay entrypoints while retaining original oracle observations and unresolved acceptance obligations.
 
@@ -562,7 +562,7 @@ Reverse: Retain the actual Bun entrypoint and all source outcomes, byte limits a
 
 Hosted job 128250296967 reports nine missing since tags plus one leading/trailing blank. Public comments now separate category/since tags, and the mode alias has a lead description. The actual repository tag/shape parser passes 86 focused export comments. Main ce87ff21b2 is merged at 0ef0edc00a. Full hosted ratchet remains pending; baselines/thresholds unchanged. See history/evidence/2026-11-07-public-source-resolution.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert only the documentation tag/lead normalization; this reopens the observed hosted since/blank findings and does not change runtime semantics.
 
@@ -576,7 +576,7 @@ Reverse: Retain exact source expectations and public redaction if replay ownersh
 
 Add all 130 original builtin Tokenizer inputs from the canonical assertion capture to the default public engine replay. Thirteen ten-document shards per runtime cover the full set in hosted integration; focused tests run the first two cases. Compare independent expected citation kinds/components/metadata and original observed primary spans. Alternate tokenizers and unrepresented methods remain separate obligations; no case is promoted on scheduled tests. See history/evidence/2026-11-07-canonical-extraction-corpus.md.
 
-Lane `feat/citation-default-owners` · PR #2847
+Lane feat/citation-default-owners · PR #2847
 
 Reverse: Remove the new replay only if its projection is unsound; preserve original cases and report any failing source outcome without changing its expectation.
 
@@ -584,7 +584,7 @@ Reverse: Remove the new replay only if its projection is unsound; preserve origi
 
 Add all 11 builtin disambiguation and 32 markup/name inputs, preserving remove_ambiguous and original cleaners. Full integration now schedules 193 inputs and 234 attribute assertions per runtime, including final partial groups. Sixteen focused tests pass in 171.44 seconds; three count and two attribute events receive complete local proof, bringing completed cases to 17. General protocols, alternate tokenizers, safety and scaling, and full hosted acceptance remain open. See history/evidence/2026-11-07-canonical-markup-ambiguity.md.
 
-Lane `feat/citation-default-owners` · PR #2847
+Lane feat/citation-default-owners · PR #2847
 
 Reverse: Remove the five new explicit bindings if their source linkage or target proof is invalid, preserving every original input and unqualified full-corpus duty.
 
@@ -610,7 +610,7 @@ Reverse: Revisit finite assertion bindings if authenticated source observations 
 
 The public resolver replays all thirty original default operation groups across ninety-four mentions. This exposed omitted short-case selected editions, now authenticated as case editions, and an absent missing-page identity owner. The Layer now explicitly requires the existing identity factory at installation. Test identity values are controlled; production allocation and exact native hash proof remain open. Fourteen public/private regression tests pass; no source expectation or semantic waiver changes. See history/evidence/2026-11-07-public-resolution-groups.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert the trusted short-case edition selection and required identity dependency together with their public regression; retain the original expected groups and unfinished production identity obligations.
 
@@ -618,7 +618,7 @@ Reverse: Revert the trusted short-case edition selection and required identity d
 
 Raw-source resolution snapshots receipts before source work, reverifies source/anchors/engine IDs and shares captured frozen edition selection with extraction. Six final resolver tests, nine-test resolver/Bun/Node replay and four contracts pass, including exact receipt restoration and mutation/refusal recovery. Lint/types/declarations/laws/Fallow pass with zero introduced findings. Cleaner composition, final service/Layer and all full acceptance duties remain open. See history/evidence/2026-11-07-public-source-resolution.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert SourceResolution and public resolution contracts together, restoring the former extraction-local edition selector and retaining all original restoration/parity corpora.
 
@@ -626,7 +626,7 @@ Reverse: Revert SourceResolution and public resolution contracts together, resto
 
 Hosted Labs and Fallow dead-code failed after main archived goal inputs still read by active packages. Retain the three claim JSON inputs, live replay evidence and KPI artifacts with their active consumers. Exact original hashes are retained; regenerated KPI outputs differ only in adoption-table path. All 106 lab and eleven claim tests pass. Four unresolved imports are gone; the unrelated existing foldkit unused dependency is still reported locally. See history/evidence/2026-11-07-archive-consumer-ci-repair.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Restore the original consumer paths only together with an executable retained source for those archived inputs; preserve source bytes and metrics.
 
@@ -640,7 +640,7 @@ Reverse: Preserve all original inputs and assertions if regression placement cha
 
 Publish canonical spanWithPincite evidence using the pinned source algorithm and closed per-component diagnostics. The source-v2 corpus adds 157 direct ranges and sixteen actual-model endpoint overrides without changing any prior observation. Nine public/private regression tests pass; source replay and eight corruption controls pass. Component issue and text limits remain enforced. See history/evidence/2026-11-07-verified-pincite-components.md.
 
-Lane `feat/citation-diff-kernel` · PR #2737
+Lane feat/citation-diff-kernel · PR #2737
 
 Reverse: Revert the new component and source-v2 field together while preserving original observations and all unfinished parity duties.
 

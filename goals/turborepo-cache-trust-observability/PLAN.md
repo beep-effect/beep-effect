@@ -1539,7 +1539,7 @@ Reverse: Restore the previous full-report reread; leave all existing memory and 
 
 The released-source inspection passed on run 42209083425, but dependency diagnosis refused with memory-limit. Add only a fixed module family, line number and Python version to that refusal. Preserve private exception/frame data and the original minimal refusal if metadata allocation also fails. Keep the 256 MiB process cap and all archive/digest/publication bounds unchanged. Hosted CI must prove the new privacy regressions; two successful real diagnostics and every whole-goal acceptance criterion remain pending.
 
-Lane `codex/cache-dependency-memory-site-20261106`
+Lane codex/cache-dependency-memory-site-20261106
 
 Reverse: Revert the optional refusal-location fields and their tests; retain the actual failed observation and its artifact identities.
 
@@ -1551,7 +1551,7 @@ The cross-run comparison still fails: only ten bytecode-classified file contents
 
 Both complete Turbo goals remain active. No producer approval, production trust, task qualification, signing activation, representative window or whole-goal acceptance is granted by these observations.
 
-Lane `codex/cache-import-bytecode-20261106`
+Lane codex/cache-import-bytecode-20261106
 
 Reverse: Remove this checkpoint projection while retaining the immutable paired observation reports and failed comparison.
 
@@ -1561,7 +1561,7 @@ After merged PR #2782, serial runs 42269287143 and 42270163848 both execute only
 
 Retain source-bound run/job/artifact identities and hashes in research/guarded-dependency-repeatability-2026-11-06.json and its narrative. No digest normalization, exclusions or cleanup occurred. Earlier failed comparisons remain failed, and the historical bytecode-generation mechanism is not proven. This removes the observed source-only repeatability prerequisite at this revision/profile; independent producer approval, protected execution/publication/import and every whole-goal acceptance gate remain required. No signing, credentials, task qualification, production setting or representative window changed. No local quality suites ran.
 
-Lane `codex/cache-guarded-evidence-20261106`
+Lane codex/cache-guarded-evidence-20261106
 
 Reverse: Remove the checkpoint projection while retaining both immutable successful observations and the earlier failed comparisons.
 
@@ -1569,7 +1569,7 @@ Reverse: Remove the checkpoint projection while retaining both immutable success
 
 Serial source-only inspection runs 42332185638 and 42333355378 passed at accepted source cf46c700488b6950ea7340369e0d0508e596cd1e with exact caller and resolved Heavy revision. Authenticated source reports are byte-identical; raw dependency digest c112ea17c1f7526a0d6a43583ca3d27179220c00d1ba706e8ef941ea1e11ab3d, all 2194 package groups, thirteen control hashes and resource bounds agree. Diagnostic times are 43.781 and 44.406 seconds; each combined report pair is 3411533 bytes under 4 MiB. Neither complete group inventory contains node-gyp, so its optional file-detail comparison is not applicable, not a file-level pass. Retain research/current-dependency-inspection-2026-11-07.json and narrative. No exclusions, normalization or cleanup produced equality. This establishes dependency repeatability only for that exact source/profile; independent producer approval, signed execution/publication/import, task qualification, representative windows and both whole-goal acceptance gates remain open. No signing, capability, production or lifecycle change and no local quality suite.
 
-Lane `codex/cache-current-dependency-evidence-20261107`
+Lane codex/cache-current-dependency-evidence-20261107
 
 Reverse: Retain the immutable observations and mark this profile prerequisite unproven if a later authenticated comparison contradicts it; do not normalize digests or reuse it for an unreviewed profile.
 

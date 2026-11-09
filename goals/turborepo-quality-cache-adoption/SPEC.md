@@ -1134,7 +1134,7 @@ Add only !$TURBO_ROOT$/.repos/** to identity lint inputs. Keep cache:false, all 
 
 Twelve candidate-bound root dry runs compare build/check/lint across both pinned clients with strict entrypoint selection absent/true. Both clients remove two build commands from check, so leave that flag absent until execution/caller/value proof is complete. This source repair requires hosted acceptance and a newly bound identity input profile before protected trials. No quality task, feature activation, qualification, credential or production setting changed. No manual local verify, publish, check, tests, docgen or package-quality suite.
 
-Lane `codex/cache-strict-entrypoint-review-20261106`
+Lane codex/cache-strict-entrypoint-review-20261106
 
 Reverse: Remove the one .repos input exclusion while retaining the source-bound original refusal and candidate metadata observations.
 
@@ -1154,7 +1154,7 @@ Reverse: Restore reuse only after portable discovery-state identity and membersh
 
 Prepare the next implementation while three owned PRs remain open. The publication cap does not forbid an unpublished dependent worktree: start from parent #2813 head 563b0b210647b6909ea9f3de8638a28c5513bf86, then replay only this unpublished work onto accepted main after the parent lands, before opening another PR. Select the reviewed recipe from the verified activation preview. Types lint has no dependency tasks, uses local-only observations, rejects identity scanner routing and signed execution, and does not fabricate a dependency-source control. Unknown computations fail before task execution. Existing input, native plan, runtime key, capture and integrity checks remain required; failed candidate comparisons remain failed observations. Nine process-boundary cases are authored but unrun locally: five named cases and four fault-refusal cases. No local verify, publish, tests, check, docgen, package verification or manual source generator is run, per operator instruction; ordinary hooks are allowed. Syntax parsing alone is not type or runtime proof. Types caching remains disabled, and no qualification, signing, credential or production grant changes. Types input-profile review and admitted native comparisons remain necessary before any adoption.
 
-Lane `codex/cache-types-pilot-20261106`
+Lane codex/cache-types-pilot-20261106
 
 Reverse: Revert local types observation support; identity remains the only execution recipe. No deployment or qualification state changes.
 
@@ -1162,7 +1162,7 @@ Reverse: Revert local types observation support; identity remains the only execu
 
 Centralize the existing identity pilot computation, package filter, selected package path, and fresh dependency paths in one internal schema-backed recipe. Route activation, closure validation, native summary selection, filters, sandbox mounts, and mutation paths through that recipe. Identity remains the sole admitted recipe. This is the first implementation step toward additional reviewed computation recipes, beginning with dependency-free types lint; it does not add types execution or reuse authority. Static substitution of the unchanged recipe values reproduces the prior runner source exactly before formatting. Hosted CI remains required runtime and type-check evidence. No manual local verify, publish, tests, check, docgen or package verification was run, per operator instruction. Both whole goals and all qualification and rollout obligations remain open.
 
-Lane `codex/cache-pilot-recipes-20261106`
+Lane codex/cache-pilot-recipes-20261106
 
 Reverse: Revert the recipe refactor; no task cache setting or qualification state changes.
 
@@ -1196,7 +1196,7 @@ Reverse: Revert the integration argument resolver and its regression controls; r
 
 After accepted PR #2695, nonempty affected-query summaries still reported zero packages. Count distinct valid package.name identities with existing Effect helpers; retain the accepted optional-array codec fix. Extend the three-task/two-package and explicit-empty assertions for hosted CI without running local quality suites. Bind the initial SCM report explicitly to f48bf842, whose two recorded hashes match, and preserve every historical hash and native capture. Record the current repair source separately. This changes diagnostic metadata only and grants no qualification, signing, capacity or whole-goal completion.
 
-Lane `codex/turbo-query-package-counts`
+Lane codex/turbo-query-package-counts
 
 Reverse: Revert the package counter and its assertions while preserving historical source and native evidence.
 
@@ -1210,7 +1210,7 @@ Reverse: Restore the two preserved response entries only if no newer entry exist
 
 Prepare the dependency-free types lint computation for the existing pilot runtime-key guard by declaring BEEP_CACHE_TOOLCHAIN_DIGEST in the child task env list while retaining cache false. Eight bounded native metadata-only plans with the pinned stable and canary clients prove that synthetic digest changes were ignored before the edit and invalidate the task hash after it. Input paths, command, dependencies and outputs are unchanged; only the child config file input changes. Evidence is in research/types-lint-toolchain-key-2026-11-06.json and its companion report. No task body, remote cache operation, credential read or manual quality suite ran. This is not runtime-key enforcement, qualification, adoption or production activation; types-specific execution and the full trust/adoption contracts remain open.
 
-Lane `codex/cache-types-key-input-20261106`
+Lane codex/cache-types-key-input-20261106
 
 Reverse: Remove the hashed environment declaration or revert this change; types lint stays uncached.
 
@@ -1218,7 +1218,7 @@ Reverse: Remove the hashed environment declaration or revert this change; types 
 
 Align the launcher, acceptance criterion and P6 checklist with the Agent Guide: final evidence, reflection and proposedCloseout land with final implementation while the goal stays active or paused; after merge, completion refresh verifies the proposal and a separate packet-state PR adopts completed-retained and updates README/statusNote. Completion requires the adoption merged and origin/main closeout.status matching initiative.status. Preserve every task/profile disposition, eligibility/adoption obligation, correctness and portability proof, hosted status, measured value and representative observation requirement. No criterion is checked and no qualification, cache activation, exclusion or observation waiver is granted.
 
-Lane `codex/cache-current-dependency-evidence-20261107`
+Lane codex/cache-current-dependency-evidence-20261107
 
 Reverse: Restore the old packet prose only if the governing repository closeout law is deliberately changed; never mark completion from an unverified or unmerged proposal.
 
@@ -1226,7 +1226,7 @@ Reverse: Restore the old packet prose only if the governing repository closeout 
 
 Independent producer approvals remain separate from the existing credential-free local pilot. Add an exact-main manual caller through the already admitted Heavy workflow, with no protected environment, cache or application secrets, remote cache, issuer or publication capability. Reuse the existing pilot CLI and extract its existing input preparation for both signed and local callers; retain signed identity-only restrictions. Local observations select only reviewed identity/types lint and pinned stable/canary clients. One workflow job at a time, maximum twenty job minutes and fifteen execution minutes; no capacity increase. Keep full local receipts private with a sixteen MiB read bound, a 256 MiB/ten-second publication worker, publish only a maximum sixty-four KiB allowlisted digest/count summary for one day, and remove only owned worktrees/scratch. The summary cannot promote a qualification tuple. Add hosted security/control regressions; no manual local tests or quality suites. Dispatch only after accepted source and preview review. This enables actual local observation independently of signed grants and does not reduce any full-goal acceptance, portability, trust or representative-window requirement.
 
-Lane `codex/cache-local-observation-hosted-20261107`
+Lane codex/cache-local-observation-hosted-20261107
 
 Reverse: Remove the manual local-observation caller and Heavy leaf; keep signed producer gates, inactive grants and previously retained observations unchanged.
 

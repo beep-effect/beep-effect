@@ -80,7 +80,7 @@ Reverse: Revert the batch PR on main to restore the 50 packets; the archive repo
 
 Plan 2fc4f570 archived 50 goal packets from main 19c9aa06b0. Archive commits 87fc463 and 2feb1eb reached the remote on 2026-11-08 after the operator granted write access, and all 50 manifest content hashes matched the remote trees. Batch 3 follows this PR's merge.
 
-Lane `feat/packet-archive-batch-2b`
+Lane feat/packet-archive-batch-2b
 
 Reverse: Revert the batch 2 tombstone PR to restore the packets on main; the archive commits stay public
 
@@ -88,7 +88,7 @@ Reverse: Revert the batch 2 tombstone PR to restore the packets on main; the arc
 
 Plan a11eb819 archived 50 goal packets from b628348e0d. Archive commits 2323b2c and 68b4d99 are on the remote, and all 50 manifest content hashes matched the remote trees. This was the first batch through the code-span rewriter: knowledge semantic-delta reported 0 introduced and 54 resolved on the committed tree. 41 goals and 79 explorations remain.
 
-Lane `feat/packet-archive-batch-3`
+Lane feat/packet-archive-batch-3
 
 Reverse: Revert the batch 3 tombstone PR to restore the packets on main; the archive commits stay public
 
@@ -96,7 +96,7 @@ Reverse: Revert the batch 3 tombstone PR to restore the packets on main; the arc
 
 Plan 00922606 pushed 40 terminal goal packets to the archive from e3a763cad8. Archive commits 94b8d15 and 73619b4 are on the remote, and all 40 manifest content hashes matched the remote trees. 37 became tombstones on main; semantica-canary, schema-opaque-default and speed-loop were then retained after hosted reds, as the retention decision records.  turborepo-task-qualification stays on main with a retentionReason. 79 explorations remain.
 
-Lane `feat/packet-archive-batch-4b`
+Lane feat/packet-archive-batch-4b
 
 Reverse: Revert the batch 4 tombstone PR to restore the packets on main; the archive commits stay public
 
@@ -104,7 +104,7 @@ Reverse: Revert the batch 4 tombstone PR to restore the packets on main; the arc
 
 Plan a5296fe6 archived 50 explorations from deb7d0c5ef. Archive commits 28c4a59 and 3b5e47d are on the remote, and all 50 manifest content hashes matched the remote trees. knowledge semantic-delta reported 0 introduced and 128 resolved. This was the first batch to push the archive after every gate. 27 explorations remain.
 
-Lane `feat/packet-archive-batch-5`
+Lane feat/packet-archive-batch-5
 
 Reverse: Revert the batch 5 tombstone PR to restore the packets on main; the archive commits stay public
 
@@ -112,7 +112,7 @@ Reverse: Revert the batch 5 tombstone PR to restore the packets on main; the arc
 
 Plan 9e9e11f9 archived the last 26 explorations from 0b459d8674. Archive commits 1604d51 and 6187b83 are on the remote, and all 26 manifest content hashes matched the remote trees. knowledge semantic-delta reported 0 introduced and 38 resolved. The planner reports no packets left to archive. The tag archive/packets-2026-11 goes on the merge commit.
 
-Lane `feat/packet-archive-batch-6`
+Lane feat/packet-archive-batch-6
 
 Reverse: Revert the batch 6 tombstone PR to restore the packets on main; the archive commits stay public
 
