@@ -67,6 +67,13 @@ const decodePolicyTasks = S.decodeEffect(S.fromJsonString(PolicyTaskConfiguratio
 
 const SEAL = "@beep/repo-cli#lint:policy-fingerprint:";
 const TURBO_ROOT = "$TURBO_ROOT$/";
+// A seal input is `$TURBO_ROOT$/<file>`, or `!$TURBO_ROOT$/<glob>` for a negated family glob.
+const isRootRelative = (input: string): boolean =>
+  Str.startsWith(TURBO_ROOT)(input) || Str.startsWith(`!${TURBO_ROOT}`)(input);
+const declaredInput = (input: string): string =>
+  Str.startsWith("!")(input)
+    ? `!${Str.slice(1 + Str.length(TURBO_ROOT))(input)}`
+    : Str.slice(Str.length(TURBO_ROOT))(input);
 const expectedPolicyTasks = {
   "lint:deprecated-apis": {
     cache: true,
@@ -212,7 +219,7 @@ describe("policy fingerprint Turbo inputs", { concurrent: false }, () => {
           if (!isSeal(task)) continue;
           expect(Str.startsWith(SEAL)(task), task).toBe(true);
           expect(
-            A.filter(value.inputs ?? [], (input) => !Str.startsWith(TURBO_ROOT)(input)),
+            A.filter(value.inputs ?? [], (input) => !isRootRelative(input)),
             task
           ).toEqual([]);
         }
@@ -231,10 +238,7 @@ describe("policy fingerprint Turbo inputs", { concurrent: false }, () => {
         expect(A.length(seals)).toBeGreaterThan(1);
         const declaredOf = (task: string): ReadonlyArray<string> => {
           const value = config.tasks[task];
-          return [
-            ...A.map(value?.inputs ?? [], Str.slice(Str.length(TURBO_ROOT))),
-            ...A.flatMap(value?.dependsOn ?? [], declaredOf),
-          ];
+          return [...A.map(value?.inputs ?? [], declaredInput), ...A.flatMap(value?.dependsOn ?? [], declaredOf)];
         };
         // Re-derive each chain's reads from the declared modules' live text, independently of the writer;
         // a whole-`src` input (an opaque dynamic import) contributes every TypeScript file under it.
@@ -275,6 +279,8 @@ describe("policy fingerprint Turbo inputs", { concurrent: false }, () => {
         // The per-package policy chains read no root `turbo.json` (the M9 cascade).
         for (const key of ["lint-laws", "lint-jsdoc"])
           expect(declaredOf(`${SEAL}${key}`), key).not.toContain("turbo.json");
+        // lint:laws itself no longer lists the manifests; its seal is the only hashed carrier.
+        expect(declaredOf(`${SEAL}lint-laws`)).toContain("packages/**/package.json");
       }),
       { timeout: 60_000 }
     );

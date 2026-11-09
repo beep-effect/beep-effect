@@ -621,9 +621,13 @@ interface SealTaskValue {
   readonly outputs: ReadonlyArray<string>;
 }
 
-// Seal inputs are declared root-relative and rendered for the CLI workspace task.
+// Seal inputs are declared root-relative and rendered for the CLI workspace task;
+// a negated input keeps its `!` ahead of the root prefix.
+const renderSealInput = (input: string): string =>
+  Str.startsWith("!")(input) ? `!${TURBO_ROOT}${Str.slice(1)(input)}` : `${TURBO_ROOT}${input}`;
+
 const sealTaskValue = (declared: ReadonlyArray<string>, dependsOn: ReadonlyArray<string>): SealTaskValue => {
-  const inputs = A.map(declared, (input) => `${TURBO_ROOT}${input}`);
+  const inputs = A.map(declared, renderSealInput);
   return A.isReadonlyArrayEmpty(dependsOn)
     ? { cache: true, outputs: [], inputs }
     : { cache: true, outputs: [], dependsOn, inputs };

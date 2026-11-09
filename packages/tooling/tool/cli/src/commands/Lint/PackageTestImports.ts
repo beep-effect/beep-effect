@@ -90,6 +90,19 @@ const bySourceRootLengthDescending = Order.mapInput(
 const exists = (fs: FileSystem.FileSystem, filePath: string): Effect.Effect<boolean> =>
   fs.exists(filePath).pipe(Effect.orElseSucceed(thunkFalse));
 
+// Both package walks start the same way: an absent `packagesRoot` yields nothing,
+// otherwise the walk runs with the resolved file system and path services.
+const underPackagesRoot = <Item>(
+  packagesRoot: string,
+  walk: (
+    fs: FileSystem.FileSystem,
+    path: Path.Path
+  ) => Effect.Effect<ReadonlyArray<Item>, never, FileSystem.FileSystem | Path.Path>
+): Effect.Effect<ReadonlyArray<Item>, never, FileSystem.FileSystem | Path.Path> =>
+  Effect.flatMap(Effect.all([FileSystem.FileSystem, Path.Path]), ([fs, path]) =>
+    Effect.flatMap(exists(fs, packagesRoot), (present) => (present ? walk(fs, path) : Effect.succeed(A.empty<Item>())))
+  );
+
 const isRelativeModuleSpecifier = (specifier: string): boolean =>
   Str.startsWith("./")(specifier) || Str.startsWith("../")(specifier);
 
@@ -126,102 +139,108 @@ const readOptionalPackageName = Effect.fn("PackageTestImports.readOptionalPackag
   );
 });
 
-const collectPackageSourceRoots = Effect.fn("PackageTestImports.collectPackageSourceRoots")(function* (
-  packagesRoot: string
-): Effect.fn.Return<ReadonlyArray<PackageSourceRoot>, never, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const packagesRootExists = yield* exists(fs, packagesRoot);
+/**
+ * Span name of the workspace-manifest walk, also the policy fingerprint's route marker.
+ *
+ * **Details**
+ *
+ * `POLICY_ROOT_FILE_ROUTES` imports this constant, so a seal whose command
+ * reaches the walk keeps hashing every workspace `package.json` after a rename.
+ * The literal must stay unique to this module: the fingerprint routes the
+ * manifest family to every module whose code contains it.
+ *
+ * **Example** (Read the marker)
+ *
+ * ```ts
+ * import { WORKSPACE_MANIFEST_WALK } from "@beep/repo-cli/commands/Lint/PackageTestImports"
+ *
+ * console.log(WORKSPACE_MANIFEST_WALK)
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const WORKSPACE_MANIFEST_WALK = "PackageTestImports.collectPackageSourceRoots";
 
-  if (!packagesRootExists) {
-    return A.empty<PackageSourceRoot>();
-  }
+const collectPackageSourceRoots = Effect.fn(WORKSPACE_MANIFEST_WALK)((packagesRoot: string) =>
+  underPackagesRoot(packagesRoot, (fs, path) => {
+    // Literal on purpose: the instrumentation catalog rejects interpolated span names.
+    const walk = Effect.fn("PackageTestImports.collectPackageSourceRoots.walk")(function* (
+      currentPath: string
+    ): Effect.fn.Return<ReadonlyArray<PackageSourceRoot>, never, FileSystem.FileSystem | Path.Path> {
+      const stat = yield* fs.stat(currentPath).pipe(Effect.option);
 
-  const walk = Effect.fn("PackageTestImports.collectPackageSourceRoots.walk")(function* (
-    currentPath: string
-  ): Effect.fn.Return<ReadonlyArray<PackageSourceRoot>, never, FileSystem.FileSystem | Path.Path> {
-    const stat = yield* fs.stat(currentPath).pipe(Effect.option);
-
-    if (O.isNone(stat) || stat.value.type !== "Directory") {
-      return A.empty<PackageSourceRoot>();
-    }
-
-    const packageName = yield* readOptionalPackageName(path.join(currentPath, "package.json"));
-    let roots = A.empty<PackageSourceRoot>();
-
-    if (O.isSome(packageName) && Str.startsWith("@beep/")(packageName.value)) {
-      roots = A.append(
-        roots,
-        PackageSourceRoot.make({
-          name: packageName.value,
-          sourceRoot: normalizePath(path.resolve(currentPath, "src")),
-        })
-      );
-    }
-
-    const entries = yield* fs.readDirectory(currentPath).pipe(Effect.orElseSucceed(A.empty<string>));
-
-    for (const entry of entries) {
-      const childPath = path.join(currentPath, entry);
-      const childStat = yield* fs.stat(childPath).pipe(Effect.option);
-
-      if (O.isSome(childStat) && childStat.value.type === "Directory") {
-        const walk1 = yield* walk(childPath);
-        roots = A.appendAll(roots, walk1);
+      if (O.isNone(stat) || stat.value.type !== "Directory") {
+        return A.empty<PackageSourceRoot>();
       }
-    }
 
-    return roots;
-  });
+      const packageName = yield* readOptionalPackageName(path.join(currentPath, "package.json"));
+      let roots = A.empty<PackageSourceRoot>();
 
-  const walk2 = yield* walk(packagesRoot);
-  return pipe(walk2, A.sort(bySourceRootLengthDescending));
-});
+      if (O.isSome(packageName) && Str.startsWith("@beep/")(packageName.value)) {
+        roots = A.append(
+          roots,
+          PackageSourceRoot.make({
+            name: packageName.value,
+            sourceRoot: normalizePath(path.resolve(currentPath, "src")),
+          })
+        );
+      }
 
-const collectPackageTestFiles = Effect.fn("PackageTestImports.collectPackageTestFiles")(function* (
-  packagesRoot: string,
-  repoRoot: string
-): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const packagesRootExists = yield* exists(fs, packagesRoot);
+      const entries = yield* fs.readDirectory(currentPath).pipe(Effect.orElseSucceed(A.empty<string>));
 
-  if (!packagesRootExists) {
-    return A.empty<string>();
-  }
+      for (const entry of entries) {
+        const childPath = path.join(currentPath, entry);
+        const childStat = yield* fs.stat(childPath).pipe(Effect.option);
 
-  const walk = Effect.fn("PackageTestImports.collectPackageTestFiles.walk")(function* (
-    currentPath: string
-  ): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
-    const stat = yield* fs.stat(currentPath).pipe(Effect.option);
+        if (O.isSome(childStat) && childStat.value.type === "Directory") {
+          const walk1 = yield* walk(childPath);
+          roots = A.appendAll(roots, walk1);
+        }
+      }
 
-    if (O.isNone(stat)) {
-      return A.empty<string>();
-    }
+      return roots;
+    });
 
-    if (stat.value.type === "File") {
-      const relativePath = normalizePath(path.relative(repoRoot, currentPath));
-      return isPackageTestFilePath(relativePath) ? A.of(normalizePath(path.resolve(currentPath))) : A.empty();
-    }
+    return Effect.map(walk(packagesRoot), A.sort(bySourceRootLengthDescending));
+  })
+);
 
-    if (stat.value.type !== "Directory") {
-      return A.empty<string>();
-    }
+const collectPackageTestFiles = Effect.fn("PackageTestImports.collectPackageTestFiles")(
+  (packagesRoot: string, repoRoot: string) =>
+    underPackagesRoot(packagesRoot, (fs, path) => {
+      const walk = Effect.fn("PackageTestImports.collectPackageTestFiles.walk")(function* (
+        currentPath: string
+      ): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
+        const stat = yield* fs.stat(currentPath).pipe(Effect.option);
 
-    const entries = yield* fs.readDirectory(currentPath).pipe(Effect.orElseSucceed(A.empty<string>));
-    let files = A.empty<string>();
+        if (O.isNone(stat)) {
+          return A.empty<string>();
+        }
 
-    for (const entry of entries) {
-      const walk3 = yield* walk(path.join(currentPath, entry));
-      files = A.appendAll(files, walk3);
-    }
+        if (stat.value.type === "File") {
+          const relativePath = normalizePath(path.relative(repoRoot, currentPath));
+          return isPackageTestFilePath(relativePath) ? A.of(normalizePath(path.resolve(currentPath))) : A.empty();
+        }
 
-    return files;
-  });
+        if (stat.value.type !== "Directory") {
+          return A.empty<string>();
+        }
 
-  const walk4 = yield* walk(packagesRoot);
-  return pipe(walk4, A.sort(Order.String));
-});
+        const entries = yield* fs.readDirectory(currentPath).pipe(Effect.orElseSucceed(A.empty<string>));
+        let files = A.empty<string>();
+
+        for (const entry of entries) {
+          const walk3 = yield* walk(path.join(currentPath, entry));
+          files = A.appendAll(files, walk3);
+        }
+
+        return files;
+      });
+
+      return Effect.map(walk(packagesRoot), A.sort(Order.String));
+    })
+);
 
 const collectModuleSpecifierUses = (
   project: Project,
