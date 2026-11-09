@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-09T21:51:19.503Z",
+  "generatedAt": "2026-11-09T22:03:19.941Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -265908,8 +265908,8 @@
           "exportKind": "class",
           "filePath": "src/MemoryIndexes.service.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MemoryIndexes.service.ts",
-          "line": 57,
-          "anchor": "packages-tooling-library-agent-memory-store-src-memoryindexes-service-ts-57-memoryindexes",
+          "line": 59,
+          "anchor": "packages-tooling-library-agent-memory-store-src-memoryindexes-service-ts-59-memoryindexes",
           "currentTags": [
             "@category",
             "@since"
@@ -396158,8 +396158,8 @@
           "exportKind": "const",
           "filePath": "src/tsmorph/ProjectFactory.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/tsmorph/ProjectFactory.ts",
-          "line": 36,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-tsmorph-projectfactory-ts-36-createrepotsmorphproject",
+          "line": 37,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-tsmorph-projectfactory-ts-37-createrepotsmorphproject",
           "currentTags": [
             "@param",
             "@returns",
@@ -396182,9 +396182,10 @@
           "exportKind": "const",
           "filePath": "src/tsmorph/ProjectFactory.ts",
           "repoPath": "packages/tooling/library/repo-cli-kit/src/tsmorph/ProjectFactory.ts",
-          "line": 74,
-          "anchor": "packages-tooling-library-repo-cli-kit-src-tsmorph-projectfactory-ts-74-createinmemorytsmorphproject",
+          "line": 81,
+          "anchor": "packages-tooling-library-repo-cli-kit-src-tsmorph-projectfactory-ts-81-createinmemorytsmorphproject",
           "currentTags": [
+            "@param",
             "@returns",
             "@category",
             "@since"
@@ -560437,8 +560438,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Decisions.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.projection.ts",
-          "line": 56,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-56-goal-decisions-begin-marker",
+          "line": 59,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-59-goal-decisions-begin-marker",
           "currentTags": [
             "@category",
             "@since"
@@ -560459,8 +560460,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Decisions.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.projection.ts",
-          "line": 72,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-72-goal-decisions-end-marker",
+          "line": 75,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-75-goal-decisions-end-marker",
           "currentTags": [
             "@category",
             "@since"
@@ -560481,8 +560482,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Decisions.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.projection.ts",
-          "line": 89,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-89-goal-decision-targets",
+          "line": 92,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-92-goal-decision-targets",
           "currentTags": [
             "@category",
             "@since"
@@ -560503,8 +560504,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Goals/Decisions.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.projection.ts",
-          "line": 100,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-100-goaldecisiondocument",
+          "line": 103,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-103-goaldecisiondocument",
           "currentTags": [
             "@category",
             "@since"
@@ -560525,8 +560526,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Goals/Decisions.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.projection.ts",
-          "line": 116,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-116-goaldecisionreader",
+          "line": 119,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-119-goaldecisionreader",
           "currentTags": [
             "@category",
             "@since"
@@ -560547,8 +560548,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Decisions.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.projection.ts",
-          "line": 150,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-150-parsegoaldecision",
+          "line": 186,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-186-parsegoaldecision",
           "currentTags": [
             "@param",
             "@returns",
@@ -560571,8 +560572,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Decisions.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.projection.ts",
-          "line": 226,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-226-rendergoaldecisionblock",
+          "line": 269,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-269-rendergoaldecisionblock",
           "currentTags": [
             "@param",
             "@returns",
@@ -560595,8 +560596,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Decisions.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.projection.ts",
-          "line": 278,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-278-splicegoaldecisionblock",
+          "line": 321,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-321-splicegoaldecisionblock",
           "currentTags": [
             "@param",
             "@returns",
@@ -560619,8 +560620,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Goals/Decisions.projection.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.projection.ts",
-          "line": 382,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-382-goaldecisionlogreport",
+          "line": 425,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-projection-ts-425-goaldecisionlogreport",
           "currentTags": [
             "@param",
             "@returns",
@@ -560797,8 +560798,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Goals/Decisions.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.schemas.ts",
-          "line": 186,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-186-goaldecisionfrontmatter",
+          "line": 188,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-188-goaldecisionfrontmatter",
           "currentTags": [
             "@category",
             "@since"
@@ -560819,8 +560820,8 @@
           "exportKind": "namespace",
           "filePath": "src/commands/Goals/Decisions.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.schemas.ts",
-          "line": 220,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-220-goaldecisionfrontmatter",
+          "line": 222,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-222-goaldecisionfrontmatter",
           "currentTags": [
             "@category",
             "@since"
@@ -560841,8 +560842,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Goals/Decisions.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.schemas.ts",
-          "line": 254,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-254-goaldecision",
+          "line": 256,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-256-goaldecision",
           "currentTags": [
             "@category",
             "@since"
@@ -560863,8 +560864,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Goals/Decisions.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.schemas.ts",
-          "line": 281,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-281-goaldecisionfileinvalid",
+          "line": 283,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-283-goaldecisionfileinvalid",
           "currentTags": [
             "@category",
             "@since"
@@ -560885,8 +560886,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Goals/Decisions.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.schemas.ts",
-          "line": 308,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-308-goaldecisiontarget",
+          "line": 310,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-310-goaldecisiontarget",
           "currentTags": [
             "@category",
             "@since"
@@ -560907,8 +560908,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Goals/Decisions.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.schemas.ts",
-          "line": 347,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-347-goaldecisionprojection",
+          "line": 349,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-349-goaldecisionprojection",
           "currentTags": [
             "@category",
             "@since"
@@ -560929,8 +560930,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Goals/Decisions.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Goals/Decisions.schemas.ts",
-          "line": 376,
-          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-376-goaldecisionlogreport",
+          "line": 378,
+          "anchor": "packages-tooling-tool-cli-src-commands-goals-decisions-schemas-ts-378-goaldecisionlogreport",
           "currentTags": [
             "@category",
             "@since"
@@ -582945,8 +582946,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 71,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-71-effectimportcorpusmode",
+          "line": 72,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-72-effectimportcorpusmode",
           "currentTags": [
             "@category",
             "@since"
@@ -582967,8 +582968,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 83,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-83-effectimportcorpusmode",
+          "line": 84,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-84-effectimportcorpusmode",
           "currentTags": [
             "@category",
             "@since"
@@ -582989,8 +582990,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 99,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-99-effectimportmanualreviewkind",
+          "line": 100,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-100-effectimportmanualreviewkind",
           "currentTags": [
             "@category",
             "@since"
@@ -583011,8 +583012,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 121,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-121-effectimportmanualreviewkind",
+          "line": 122,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-122-effectimportmanualreviewkind",
           "currentTags": [
             "@category",
             "@since"
@@ -583033,8 +583034,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 147,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-147-effectimportrulesoptions",
+          "line": 148,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-148-effectimportrulesoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -583055,8 +583056,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 194,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-194-effectimportmanualreview",
+          "line": 195,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-195-effectimportmanualreview",
           "currentTags": [
             "@category",
             "@since"
@@ -583077,8 +583078,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 238,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-238-effectimportrulessummary",
+          "line": 239,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-239-effectimportrulessummary",
           "currentTags": [
             "@category",
             "@since"
@@ -583099,8 +583100,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 1797,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1797-discovereffectimportsourcefiles",
+          "line": 1860,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1860-discovereffectimportsourcefiles",
           "currentTags": [
             "@param",
             "@returns",
@@ -583123,8 +583124,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 1841,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1841-discovereffectimportmarkdownfiles",
+          "line": 1904,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1904-discovereffectimportmarkdownfiles",
           "currentTags": [
             "@param",
             "@returns",
@@ -583147,8 +583148,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/EffectImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-          "line": 1886,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1886-runeffectimportrules",
+          "line": 1949,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-effectimports-ts-1949-runeffectimportrules",
           "currentTags": [
             "@category",
             "@since"
@@ -585464,8 +585465,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/RetiredIriAuthorities.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/RetiredIriAuthorities.ts",
-          "line": 191,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-retirediriauthorities-ts-191-scanretirediriauthoritytext",
+          "line": 195,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-retirediriauthorities-ts-195-scanretirediriauthoritytext",
           "currentTags": [
             "@param",
             "@returns",
@@ -585488,8 +585489,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/RetiredIriAuthorities.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/RetiredIriAuthorities.ts",
-          "line": 270,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-retirediriauthorities-ts-270-scanpublicoriginliterals",
+          "line": 274,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-retirediriauthorities-ts-274-scanpublicoriginliterals",
           "currentTags": [
             "@param",
             "@returns",
@@ -585512,8 +585513,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/RetiredIriAuthorities.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/RetiredIriAuthorities.ts",
-          "line": 310,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-retirediriauthorities-ts-310-isretirediriauthorityexempt",
+          "line": 314,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-retirediriauthorities-ts-314-isretirediriauthorityexempt",
           "currentTags": [
             "@param",
             "@returns",
@@ -585536,8 +585537,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/RetiredIriAuthorities.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/RetiredIriAuthorities.ts",
-          "line": 331,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-retirediriauthorities-ts-331-ispublicoriginallowlisted",
+          "line": 335,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-retirediriauthorities-ts-335-ispublicoriginallowlisted",
           "currentTags": [
             "@param",
             "@returns",
@@ -585560,8 +585561,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/RetiredIriAuthorities.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/RetiredIriAuthorities.ts",
-          "line": 359,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-retirediriauthorities-ts-359-ispublicoriginscoped",
+          "line": 363,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-retirediriauthorities-ts-363-ispublicoriginscoped",
           "currentTags": [
             "@param",
             "@returns",
@@ -585584,8 +585585,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/RetiredIriAuthorities.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/RetiredIriAuthorities.ts",
-          "line": 391,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-retirediriauthorities-ts-391-scanretirediriauthorityfile",
+          "line": 395,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-retirediriauthorities-ts-395-scanretirediriauthorityfile",
           "currentTags": [
             "@param",
             "@returns",
@@ -585608,8 +585609,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/RetiredIriAuthorities.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/RetiredIriAuthorities.ts",
-          "line": 423,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-retirediriauthorities-ts-423-formatretirediriauthorityfinding",
+          "line": 427,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-retirediriauthorities-ts-427-formatretirediriauthorityfinding",
           "currentTags": [
             "@param",
             "@returns",
@@ -585632,8 +585633,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Laws/RetiredIriAuthorities.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Laws/RetiredIriAuthorities.ts",
-          "line": 456,
-          "anchor": "packages-tooling-tool-cli-src-commands-laws-retirediriauthorities-ts-456-runretirediriauthorities",
+          "line": 460,
+          "anchor": "packages-tooling-tool-cli-src-commands-laws-retirediriauthorities-ts-460-runretirediriauthorities",
           "currentTags": [
             "@param",
             "@returns",
@@ -587613,12 +587614,12 @@
           "remediationStatus": "resolved"
         },
         {
-          "symbolName": "export {\n  callbackCalls,\n  callLabel,\n  classifyHarnessCall,\n  collectEffectVitestImports,\n  compactEvidence,\n  createEffectVitestHarnessIndex,\n  effectVitestTestCallbacks,\n  enclosingLayerBlock,\n  enclosingTest,\n  isHarnessMethodCall,\n  isProvenanceCall,\n  isProvenanceExpression,\n  isWholeBodyCall,\n  resolveEffectVitestBinding,\n  rootTestBodyCall,\n  sourceFunctionDefinitions,\n} from \"./internal/EffectVitestSyntax.ts\";",
+          "symbolName": "export {\n  callbackCalls,\n  callLabel,\n  classifyHarnessCall,\n  collectEffectVitestImports,\n  compactEvidence,\n  createEffectVitestHarnessIndex,\n  effectVitestTestCallbacks,\n  enclosingLayerBlock,\n  enclosingTest,\n  indexIdentifiersByName,\n  isHarnessMethodCall,\n  isProvenanceCall,\n  isProvenanceExpression,\n  isWholeBodyCall,\n  resolveEffectVitestBinding,\n  rootTestBodyCall,\n  sourceFunctionDefinitions,\n} from \"./internal/EffectVitestSyntax.ts\";",
           "exportKind": "re-export",
           "filePath": "src/commands/Lint/EffectVitest.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/EffectVitest.ts",
           "line": 109,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectvitest-ts-109-export-callbackcalls-calllabel-classifyharnesscall-collecteffectvitestimports-compactevidence-createeffectvitestharnessindex-effectvitesttestcallbacks-enclosinglayerblock-enclosingtest-isharnessmethodcall-isprovenancecall-isprovenanceexpression-iswholebodycall-resolveeffectvitestbinding-roottestbodycall-sourcefunctiondefinitions-from-internal-effectvitestsyntax-ts",
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectvitest-ts-109-export-callbackcalls-calllabel-classifyharnesscall-collecteffectvitestimports-compactevidence-createeffectvitestharnessindex-effectvitesttestcallbacks-enclosinglayerblock-enclosingtest-indexidentifiersbyname-isharnessmethodcall-isprovenancecall-isprovenanceexpression-iswholebodycall-resolveeffectvitestbinding-roottestbodycall-sourcefunctiondefinitions-from-internal-effectvitestsyntax-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -587639,8 +587640,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Lint/EffectVitest.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/EffectVitest.ts",
-          "line": 133,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectvitest-ts-133-export-type-effectvitestfunctionnode-effectvitestharnessindex-effectvitestharnessmode-effectvitestimports-from-internal-effectvitestsyntax-ts",
+          "line": 134,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-effectvitest-ts-134-export-type-effectvitestfunctionnode-effectvitestharnessindex-effectvitestharnessmode-effectvitestimports-from-internal-effectvitestsyntax-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -589637,8 +589638,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/OpaqueRoundtrips.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/OpaqueRoundtrips.ts",
-          "line": 40,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-opaqueroundtrips-ts-40-opaqueroundtripfinding",
+          "line": 41,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-opaqueroundtrips-ts-41-opaqueroundtripfinding",
           "currentTags": [
             "@category",
             "@since"
@@ -589659,8 +589660,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/OpaqueRoundtrips.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/OpaqueRoundtrips.ts",
-          "line": 59,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-opaqueroundtrips-ts-59-opaqueroundtripserror",
+          "line": 60,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-opaqueroundtrips-ts-60-opaqueroundtripserror",
           "currentTags": [
             "@category",
             "@since"
@@ -589681,8 +589682,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/OpaqueRoundtrips.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/OpaqueRoundtrips.ts",
-          "line": 244,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-opaqueroundtrips-ts-244-detectopaqueroundtrips",
+          "line": 269,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-opaqueroundtrips-ts-269-detectopaqueroundtrips",
           "currentTags": [
             "@param",
             "@returns",
@@ -589705,8 +589706,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/OpaqueRoundtrips.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/OpaqueRoundtrips.ts",
-          "line": 401,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-opaqueroundtrips-ts-401-lintopaqueroundtripscommand",
+          "line": 449,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-opaqueroundtrips-ts-449-lintopaqueroundtripscommand",
           "currentTags": [
             "@category",
             "@since"
@@ -589749,8 +589750,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/PackageTestImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PackageTestImports.ts",
-          "line": 163,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-packagetestimports-ts-163-workspace-manifest-walk",
+          "line": 181,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-packagetestimports-ts-181-workspace-manifest-walk",
           "currentTags": [
             "@category",
             "@since"
@@ -589771,8 +589772,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/PackageTestImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PackageTestImports.ts",
-          "line": 364,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-packagetestimports-ts-364-inspectpackagetestimports",
+          "line": 363,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-packagetestimports-ts-363-inspectpackagetestimports",
           "currentTags": [
             "@category",
             "@since"
@@ -589793,8 +589794,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/PackageTestImports.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/PackageTestImports.ts",
-          "line": 436,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-packagetestimports-ts-436-lintpackagetestimportscommand",
+          "line": 435,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-packagetestimports-ts-435-lintpackagetestimportscommand",
           "currentTags": [
             "@category",
             "@since"
