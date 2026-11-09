@@ -123,35 +123,6 @@ export const relativeImportCandidates = (specifier: string): ReadonlyArray<strin
       : [specifier, `${specifier}.ts`, `${specifier}.tsx`, `${specifier}/index.ts`];
 
 /**
- * A test file and the two reads {@link moduleGraphRunsPropertiesInline} needs to walk its imports.
- *
- * **Example** (Describe an in-memory graph)
- *
- * ```ts
- * import type { ModuleGraph } from "@beep/fc-runs/PropertySelection"
- * import * as O from "effect/Option"
- *
- * const graph: ModuleGraph = {
- *   entry: "/t/a.test.ts",
- *   readSource: (path) => (path === "/t/a.test.ts" ? O.some('it("a", () => {})') : O.none()),
- *   resolveCandidates: (_importer, specifier) => [specifier],
- * }
- * console.log(graph.entry)
- * ```
- *
- * @category testing
- * @since 0.0.0
- */
-export interface ModuleGraph {
-  /** The test file path. */
-  readonly entry: string;
-  /** Reads a module's source, or none when it cannot be read. */
-  readonly readSource: (path: string) => O.Option<string>;
-  /** Maps an importer path and a relative specifier to candidate paths. */
-  readonly resolveCandidates: (importer: string, specifier: string) => ReadonlyArray<string>;
-}
-
-/**
  * Report whether a module graph can run a property outside a `.prop` registration.
  *
  * **Details**
@@ -178,12 +149,21 @@ export interface ModuleGraph {
  * console.log(moduleGraphRunsPropertiesInline({ entry: "/t/a.test.ts", readSource: read, resolveCandidates: resolve })) // true
  * ```
  *
- * @param graph - The entry test file and how to read and resolve its relative imports.
+ * @param graph - The entry test file path, a read that returns a module's source (none when it
+ *   cannot be read), and a resolver from an importer path and relative specifier to candidate paths.
  * @returns Whether any module in the relative import graph runs a property inline.
  * @category testing
  * @since 0.0.0
  */
-export const moduleGraphRunsPropertiesInline = ({ entry, readSource, resolveCandidates }: ModuleGraph): boolean => {
+export const moduleGraphRunsPropertiesInline = ({
+  entry,
+  readSource,
+  resolveCandidates,
+}: {
+  readonly entry: string;
+  readonly readSource: (path: string) => O.Option<string>;
+  readonly resolveCandidates: (importer: string, specifier: string) => ReadonlyArray<string>;
+}): boolean => {
   const visited = MutableHashSet.empty<string>();
   const visit = (path: string, source: string): boolean => {
     MutableHashSet.add(visited, path);

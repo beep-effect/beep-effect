@@ -159,7 +159,6 @@ const stepAt = <T>(items: ReadonlyArray<T>, index: number): T => O.getOrThrow(A.
 const lastOf = <T>(items: ReadonlyArray<T>): T => O.getOrThrow(A.last(items));
 const isLocalCiLaneId = S.is(CiLaneId);
 const isWorkflowScript = S.is(S.String);
-const decodePartitionIds = S.decodeUnknownEffect(S.fromJsonString(S.Array(S.String)));
 const decodeShard = S.decodeUnknownOption(CiLanePartitionShard);
 
 const baseOptions = CiLaneRunOptions.make({
@@ -1148,8 +1147,8 @@ describe("CI lane partitions", () => {
       ] as const) {
         const fullPlan = yamlAt(workflow, ["jobs", "test-plan", "env", all]);
         assertTrue(isWorkflowScript(fullPlan));
-        const fullPlanIds = yield* decodePartitionIds(fullPlan);
-        expect(fullPlanIds).toEqual(lanePartitionIds(laneId));
+        // The list is JSON, which the workflow YAML reader parses as a flow sequence.
+        expect(parseWorkflowYaml(fullPlan)).toEqual(lanePartitionIds(laneId));
         expect(yamlAt(workflow, ["jobs", job, "strategy", "matrix", "partition"])).toBe(
           `\${{ fromJSON(needs.test-plan.outputs.${output}) }}`
         );
@@ -1427,33 +1426,34 @@ describe("partitioned CI lane execution", () => {
 
   it.layer(PartitionLaneLayer, { timeout: "10 seconds" })((it) => {
     it.effect("plans a lane from one selection dry run and executes nothing", () =>
-      withPartitionShim(
-        { dryRunOutput: turboDryRunOutput("test:integration:parallel", ["@beep/law-practice-server"]) },
-        ({ commandLogPath }) =>
-          Effect.gen(function* () {
-            const fs = yield* FileSystem.FileSystem;
-            const planned = yield* planCiLanePartitions(
-              "test-integration",
-              CiLaneRunOptions.make({ ...baseOptions, affected: true })
-            );
-            expect(planned).toEqual(
-              pipe(
-                CI_LANE_PARTITIONS,
-                A.filter((partition) => partition.lane === "test-integration"),
-                A.map((partition) => partition.id)
-              )
-            );
-
-            const commandLog = yield* fs.readFileString(commandLogPath);
-            const commands = pipe(commandLog, Str.split("\n"), A.filter(Str.isNonEmpty));
-            expect(commands).toHaveLength(1);
-            expect(firstOf(commands)).toContain("turbo run test:integration:parallel");
-            expect(firstOf(commands)).toContain("--affected --filter=!./apps/labs/** --only --dry-run=json");
-            const planLogLines = yield* TestConsole.logLines;
-            const output = A.join(A.filter(planLogLines, P.isString), "\n");
-            expect(output).toContain(`test-integration plan: ${A.length(planned)} partition(s) for 1 selected task(s)`);
-          })
-      )
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const { commands, planned } = yield* withPartitionShim(
+          { dryRunOutput: turboDryRunOutput("test:integration:parallel", ["@beep/law-practice-server"]) },
+          ({ commandLogPath }) =>
+            Effect.gen(function* () {
+              const planned = yield* planCiLanePartitions(
+                "test-integration",
+                CiLaneRunOptions.make({ ...baseOptions, affected: true })
+              );
+              const commandLog = yield* fs.readFileString(commandLogPath);
+              return { commands: pipe(commandLog, Str.split("\n"), A.filter(Str.isNonEmpty)), planned };
+            })
+        );
+        expect(planned).toEqual(
+          pipe(
+            CI_LANE_PARTITIONS,
+            A.filter((partition) => partition.lane === "test-integration"),
+            A.map((partition) => partition.id)
+          )
+        );
+        expect(commands).toHaveLength(1);
+        expect(firstOf(commands)).toContain("turbo run test:integration:parallel");
+        expect(firstOf(commands)).toContain("--affected --filter=!./apps/labs/** --only --dry-run=json");
+        const planLogLines = yield* TestConsole.logLines;
+        const output = A.join(A.filter(planLogLines, P.isString), "\n");
+        expect(output).toContain(`test-integration plan: ${A.length(planned)} partition(s) for 1 selected task(s)`);
+      })
     );
 
     it.effect("refuses to plan an unpartitioned lane or a single partition", () =>
@@ -2283,54 +2283,54 @@ it.layer(Layer.mergeAll(PartitionLaneLayer, NodeStdio.layer, NodeTerminal.layer)
   "partition plan command",
   (it) => {
     it.effect("publishes the planned partitions as one JSON step output and runs nothing", () =>
-      withPartitionShim(
-        { dryRunOutput: turboDryRunOutput("lint", [firstOf(partitionPackages("lint-b"))]) },
-        ({ commandLogPath }) =>
-          Effect.gen(function* () {
-            const fs = yield* FileSystem.FileSystem;
-            const output = yield* fs.makeTempFileScoped();
-            yield* Command.runWith(ciLaneCommand, { version: "0.0.0" })([
-              "lint",
-              "--plan-partitions",
-              "--affected",
-            ]).pipe(
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const output = yield* fs.makeTempFileScoped();
+        const commandLog = yield* withPartitionShim(
+          { dryRunOutput: turboDryRunOutput("lint", [firstOf(partitionPackages("lint-b"))]) },
+          ({ commandLogPath }) =>
+            Command.runWith(ciLaneCommand, { version: "0.0.0" })(["lint", "--plan-partitions", "--affected"]).pipe(
               Effect.provideService(
                 ConfigProvider.ConfigProvider,
                 ConfigProvider.fromUnknown({ GITHUB_OUTPUT: output })
-              )
-            );
-            const contents = yield* fs.readFileString(output);
-            expect(contents).toContain("partitions");
-            expect(contents).toContain('["lint-b"]');
-            const commandLog = yield* fs.readFileString(commandLogPath);
-            const commands = pipe(commandLog, Str.split("\n"), A.filter(Str.isNonEmpty));
-            expect(commands).toHaveLength(1);
-            expect(firstOf(commands)).toContain("--dry-run=json");
-          })
-      )
+              ),
+              Effect.andThen(fs.readFileString(commandLogPath))
+            )
+        );
+        const contents = yield* fs.readFileString(output);
+        expect(contents).toContain("partitions");
+        expect(contents).toContain('["lint-b"]');
+        const commands = pipe(commandLog, Str.split("\n"), A.filter(Str.isNonEmpty));
+        expect(commands).toHaveLength(1);
+        expect(firstOf(commands)).toContain("--dry-run=json");
+      })
     );
 
     it.effect("rejects a planned list that is not a JSON array of partition ids before running the lane", () =>
-      withPartitionShim({ dryRunOutput: turboDryRunOutput("lint", []) }, ({ commandLogPath }) =>
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          for (const planned of ["lint-a", '["not-a-partition"]', "{}"]) {
-            const exit = yield* Command.runWith(ciLaneCommand, { version: "0.0.0" })([
-              "lint",
-              "--partition",
-              "lint-a",
-              "--planned-partitions",
-              planned,
-            ]).pipe(Effect.exit);
-            expect(Exit.isFailure(exit)).toBe(true);
-          }
-          const ranAnything = yield* fs.exists(commandLogPath);
-          expect(ranAnything).toBe(false);
-          const errorLines = yield* TestConsole.errorLines;
-          const errors = A.join(A.filter(errorLines, P.isString), "\n");
-          expect(errors).toContain("--planned-partitions must be a JSON array of partition ids.");
-        })
-      )
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const ranAnything = yield* withPartitionShim(
+          { dryRunOutput: turboDryRunOutput("lint", []) },
+          ({ commandLogPath }) =>
+            Effect.gen(function* () {
+              for (const planned of ["lint-a", '["not-a-partition"]', "{}"]) {
+                // `Effect.flip` fails the test unless the command itself failed.
+                yield* Command.runWith(ciLaneCommand, { version: "0.0.0" })([
+                  "lint",
+                  "--partition",
+                  "lint-a",
+                  "--planned-partitions",
+                  planned,
+                ]).pipe(Effect.flip);
+              }
+              return yield* fs.exists(commandLogPath);
+            })
+        );
+        expect(ranAnything).toBe(false);
+        const errorLines = yield* TestConsole.errorLines;
+        const errors = A.join(A.filter(errorLines, P.isString), "\n");
+        expect(errors).toContain("--planned-partitions must be a JSON array of partition ids.");
+      })
     );
   }
 );

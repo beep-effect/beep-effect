@@ -8,43 +8,43 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/acp": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/agents-client": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/agents-domain": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/agents-server": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/agents-tables": {
@@ -56,27 +56,27 @@
       }
     },
     "@beep/agents-use-cases": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/ai-provider-cli": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/ai-sync": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/alchemy-postgres": {
@@ -88,11 +88,11 @@
       }
     },
     "@beep/anthropic": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/api-docs": {
@@ -104,11 +104,11 @@
       }
     },
     "@beep/api-transport": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/architecture-lab-client": {
@@ -120,59 +120,59 @@
       }
     },
     "@beep/architecture-lab-config": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/architecture-lab-domain": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/architecture-lab-proof": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/architecture-lab-server": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/architecture-lab-tables": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/architecture-lab-ui": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/architecture-lab-use-cases": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/beep-effect-web": {
@@ -184,11 +184,11 @@
       }
     },
     "@beep/box": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/box-provisioning": {
@@ -208,11 +208,11 @@
       }
     },
     "@beep/chalk": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/ciops": {
@@ -240,11 +240,11 @@
       }
     },
     "@beep/colors": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/commands": {
@@ -280,27 +280,27 @@
       }
     },
     "@beep/db-admin": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/discord": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/doc-text": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/dock": {
@@ -344,11 +344,11 @@
       }
     },
     "@beep/documents-tables": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/documents-use-cases": {
@@ -360,35 +360,35 @@
       }
     },
     "@beep/drizzle": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/duckdb": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/ecfr": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/editor": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/effect-drizzle": {
@@ -408,11 +408,11 @@
       }
     },
     "@beep/epistemic-domain": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/epistemic-server": {
@@ -424,11 +424,11 @@
       }
     },
     "@beep/epistemic-tables": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/epistemic-ui": {
@@ -440,11 +440,11 @@
       }
     },
     "@beep/epistemic-use-cases": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/epistemics": {
@@ -520,19 +520,19 @@
       }
     },
     "@beep/ffmpeg": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/file-processing": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/firecrawl": {
@@ -616,11 +616,11 @@
       }
     },
     "@beep/govinfo": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/graph-3d": {
@@ -632,27 +632,27 @@
       }
     },
     "@beep/html": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/hubspot": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/identity": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/infra": {
@@ -680,19 +680,19 @@
       }
     },
     "@beep/langextract": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/law-practice-domain": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/law-practice-server": {
@@ -712,11 +712,11 @@
       }
     },
     "@beep/law-practice-use-cases": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/lejeune-bolt-workbench": {
@@ -728,27 +728,27 @@
       }
     },
     "@beep/lexical-schema": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/libpff": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/lint-rules": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/lockfiles": {
@@ -760,19 +760,19 @@
       }
     },
     "@beep/m365": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/m365-mcp": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/managed-section": {
@@ -792,11 +792,11 @@
       }
     },
     "@beep/mcp-kit": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/mcpb-kit": {
@@ -808,11 +808,11 @@
       }
     },
     "@beep/md": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/memfs": {
@@ -832,27 +832,27 @@
       }
     },
     "@beep/nlp": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/nlp-mcp": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/nlp-processing": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/npm-spec": {
@@ -872,11 +872,11 @@
       }
     },
     "@beep/observability": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/occt": {
@@ -888,27 +888,27 @@
       }
     },
     "@beep/oip-web": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/onepassword-cli": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/ontology": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/ontology-client": {
@@ -936,11 +936,11 @@
       }
     },
     "@beep/ontology-server": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/ontology-ui": {
@@ -952,11 +952,11 @@
       }
     },
     "@beep/ontology-use-cases": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/openai": {
@@ -968,11 +968,11 @@
       }
     },
     "@beep/openai-compat": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/openclaw": {
@@ -992,11 +992,11 @@
       }
     },
     "@beep/pacer": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/package-json": {
@@ -1016,11 +1016,11 @@
       }
     },
     "@beep/pandoc-ast": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/party-domain": {
@@ -1056,19 +1056,19 @@
       }
     },
     "@beep/pglite": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/phoenix": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/poppler": {
@@ -1080,11 +1080,11 @@
       }
     },
     "@beep/postgres": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/practice-claude-mod": {
@@ -1160,19 +1160,19 @@
       }
     },
     "@beep/professional-desktop": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/provenance": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/public-site": {
@@ -1192,35 +1192,35 @@
       }
     },
     "@beep/rdf": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/rdf-canonize": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/repo-ai-metrics": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/repo-cli": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/repo-cli-kit": {
@@ -1232,19 +1232,19 @@
       }
     },
     "@beep/repo-configs": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/repo-docgen": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/repo-tsconfig": {
@@ -1256,11 +1256,11 @@
       }
     },
     "@beep/repo-utils": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/repo-workspaces": {
@@ -1272,11 +1272,11 @@
       }
     },
     "@beep/runpod": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/runtime-env": {
@@ -1288,11 +1288,11 @@
       }
     },
     "@beep/sanity": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/sbom": {
@@ -1304,11 +1304,11 @@
       }
     },
     "@beep/schema": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/schema-org": {
@@ -1328,11 +1328,11 @@
       }
     },
     "@beep/semantic-web": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/semantica": {
@@ -1360,11 +1360,11 @@
       }
     },
     "@beep/shared-domain": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/shared-tables": {
@@ -1440,19 +1440,19 @@
       }
     },
     "@beep/test-utils": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/tika": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/todox": {
@@ -1496,35 +1496,35 @@
       }
     },
     "@beep/ui": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/uspto": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/uspto-mcp": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/utils": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/walker": {
@@ -1544,43 +1544,43 @@
       }
     },
     "@beep/wink": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/workspace-domain": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/workspace-server": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/workspace-tables": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/workspace-use-cases": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2 (ci-lane-economics lane, claude/practical-poincare-021435)",
+      "reason": "Record the configuration drift of every test:property task after turbo.json declares vitest.property-runner.ts and fc-runs PropertySelection.ts as inputs; no qualification is granted.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/ci-lane-economics/research/cache-baseline-review-2026-11-09-property-sweep-inputs.md",
+        "sha256": "e42cc5afcfc7f018ebcfec6575b4c39a5ac1ae35f5de191ec0493c4035b9a435"
       }
     },
     "@beep/xdg": {
@@ -5118,12 +5118,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -5793,12 +5795,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -6383,12 +6387,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -7074,12 +7080,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -8269,12 +8277,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -8896,12 +8906,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -9533,12 +9545,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -10686,12 +10700,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -11851,12 +11867,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -13040,12 +13058,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -13675,12 +13695,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -14326,12 +14348,14 @@
             "!README.md",
             "../../.bun-version",
             "../../.nvmrc",
+            "../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../standards/root-package.projection.generated.json",
             "../../tsconfig.base.json",
             "../../tsconfig.json",
             "../../tsconfig.packages.json",
             "../../vite.shared.ts",
             "../../vitest.aliases.generated.json",
+            "../../vitest.property-runner.ts",
             "../../vitest.setup.ts",
             "../../vitest.shared.ts",
             ".env",
@@ -15051,12 +15075,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -15686,12 +15712,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -16337,12 +16365,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -16972,12 +17002,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -18179,12 +18211,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -19984,12 +20018,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -22260,12 +22296,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -25303,12 +25341,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -25922,12 +25962,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -26557,12 +26599,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -30238,12 +30282,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -31512,12 +31558,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -32095,12 +32143,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -32776,12 +32826,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -33483,12 +33535,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -35319,12 +35373,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -36695,12 +36751,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -37998,12 +38056,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -43912,12 +43972,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -44601,12 +44663,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -51149,12 +51213,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -52365,12 +52431,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -52992,12 +53060,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -53671,12 +53741,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -56055,12 +56127,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -56659,12 +56733,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -58822,12 +58898,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -60060,12 +60138,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -60740,12 +60820,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -61330,12 +61412,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -62599,12 +62683,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -63266,12 +63352,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -65168,12 +65256,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -66390,12 +66480,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -68129,12 +68221,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -68836,12 +68930,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -69488,12 +69584,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -71346,12 +71444,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -72554,12 +72654,14 @@
             "!README.md",
             "../../.bun-version",
             "../../.nvmrc",
+            "../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../standards/root-package.projection.generated.json",
             "../../tsconfig.base.json",
             "../../tsconfig.json",
             "../../tsconfig.packages.json",
             "../../vite.shared.ts",
             "../../vitest.aliases.generated.json",
+            "../../vitest.property-runner.ts",
             "../../vitest.setup.ts",
             "../../vitest.shared.ts",
             ".env",
@@ -73189,12 +73291,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -73887,12 +73991,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -76361,12 +76467,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -77619,12 +77727,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -78809,12 +78919,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -80596,12 +80708,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -82505,12 +82619,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -85536,12 +85652,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -86163,12 +86281,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -87418,12 +87538,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -93469,12 +93591,14 @@
             "!README.md",
             "../../.bun-version",
             "../../.nvmrc",
+            "../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../standards/root-package.projection.generated.json",
             "../../tsconfig.base.json",
             "../../tsconfig.json",
             "../../tsconfig.packages.json",
             "../../vite.shared.ts",
             "../../vitest.aliases.generated.json",
+            "../../vitest.property-runner.ts",
             "../../vitest.setup.ts",
             "../../vitest.shared.ts",
             ".env",
@@ -94097,12 +94221,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -95976,12 +96102,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -96566,12 +96694,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -97233,12 +97363,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -98456,6 +98588,7 @@
             "../../../../goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.test.py",
             "../../../../packages/_internal/db-admin/**",
             "../../../../packages/architecture-lab/**",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
@@ -98463,6 +98596,7 @@
             "../../../../turbo.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -99747,12 +99881,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -100393,12 +100529,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -101602,12 +101740,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -102949,12 +103089,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -104139,12 +104281,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -105359,12 +105503,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -106665,12 +106811,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -108927,12 +109075,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -114790,12 +114940,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -115470,12 +115622,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -118781,12 +118935,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -119461,12 +119617,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -120096,12 +120254,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -120724,12 +120884,14 @@
             "!README.md",
             "../../../../.bun-version",
             "../../../../.nvmrc",
+            "../../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../../standards/root-package.projection.generated.json",
             "../../../../tsconfig.base.json",
             "../../../../tsconfig.json",
             "../../../../tsconfig.packages.json",
             "../../../../vite.shared.ts",
             "../../../../vitest.aliases.generated.json",
+            "../../../../vitest.property-runner.ts",
             "../../../../vitest.setup.ts",
             "../../../../vitest.shared.ts",
             ".env",
@@ -122508,12 +122670,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -123105,12 +123269,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -123866,12 +124032,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -124493,12 +124661,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -125128,12 +125298,14 @@
             "!README.md",
             "../../../.bun-version",
             "../../../.nvmrc",
+            "../../../packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
             "../../../standards/root-package.projection.generated.json",
             "../../../tsconfig.base.json",
             "../../../tsconfig.json",
             "../../../tsconfig.packages.json",
             "../../../vite.shared.ts",
             "../../../vitest.aliases.generated.json",
+            "../../../vitest.property-runner.ts",
             "../../../vitest.setup.ts",
             "../../../vitest.shared.ts",
             ".env",
@@ -126987,7 +127159,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "0ad0392c31e48c89dfec6b37e1900c14af63c58d56e83e60bf3ae7215b1420e3"
+        "sha256": "5ec1246aea595fff147318b8f8a4470b58c357c313c9c3a2b9c704e4f98744f6"
       }
     ]
   }

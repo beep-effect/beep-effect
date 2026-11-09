@@ -7,8 +7,8 @@ import {
   runsPropertiesInline,
 } from "@beep/fc-runs/PropertySelection";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
-import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
 
@@ -186,6 +186,6 @@ describe("moduleGraphRunsPropertiesInline", () => {
     expect(
       moduleGraphRunsPropertiesInline({ entry: "/t/a.test.ts", readSource: read, resolveCandidates: resolve })
     ).toBe(false);
-    expect(O.isNone(read("/t/missing.json"))).toBe(true);
+    assertNone(read("/t/missing.json"));
   });
 });

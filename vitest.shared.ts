@@ -187,7 +187,7 @@ const propertySweepInclude = A.map(propertySweepFiles, (file) => toPosixRelative
 // absent, which keeps every test. Loaded only under an active floor so other runs never read it.
 const propertySweepPlainLines = (
   files: ReadonlyArray<string>,
-  Selection: typeof import("@beep/fc-runs/PropertySelection")
+  Selection: typeof import("./packages/tooling/test-kit/fc-runs/src/PropertySelection.ts")
 ): Readonly<Record<string, ReadonlyArray<number>>> => {
   const sources = MutableHashMap.empty<string, O.Option<string>>();
   const read = (file: string): O.Option<string> =>
@@ -214,7 +214,7 @@ const propertySweepPlainLines = (
 };
 const propertySweepSelection = fcDeepSweepActive
   ? await Effect.runPromise(
-      Effect.promise(() => import("@beep/fc-runs/PropertySelection")).pipe(
+      Effect.promise(() => import("./packages/tooling/test-kit/fc-runs/src/PropertySelection.ts")).pipe(
         Effect.map((Selection) => propertySweepPlainLines(propertySweepFiles, Selection))
       )
     )
