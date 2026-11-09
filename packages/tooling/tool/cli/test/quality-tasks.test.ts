@@ -10825,16 +10825,20 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       );
     });
 
-    it("lets the aggregate lint graph continue past a red package unless the caller chose a mode", () => {
-      const isContinueArg = (arg: string) => arg === "--continue" || Str.startsWith("--continue=")(arg);
-      // No caller mode: the aggregate graph carries exactly one injected flag, the repo-wide plan too.
-      for (const argv of [["lint"], ["lint", "--affected"]]) {
-        const lint = O.getOrThrow(A.head(rootQualityStepsForTesting("/repo", getInvocation(argv))));
-        expect(lint.label).toBe("lint");
-        expect(A.filter(lint.args, isContinueArg)).toEqual([AGGREGATE_LINT_CONTINUE_ARG]);
-      }
-      // A caller's own mode (Yeet repair forwards one through `bun run lint`) is never repeated:
-      // Turbo rejects a duplicate flag.
+    const isContinueArg = (arg: string) => arg === "--continue" || Str.startsWith("--continue=")(arg);
+    const firstRootStep = (argv: ReadonlyArray<string>) =>
+      O.getOrThrow(A.head(rootQualityStepsForTesting("/repo", getInvocation(argv))));
+    const continueArgsOf = (argv: ReadonlyArray<string>) => A.filter(firstRootStep(argv).args, isContinueArg);
+
+    it("lets the aggregate lint graph continue past a red package when the caller sets no mode", () => {
+      // The aggregate graph carries exactly one injected flag, the repo-wide plan too.
+      expect(firstRootStep(["lint"]).label).toBe("lint");
+      expect(continueArgsOf(["lint"])).toEqual([AGGREGATE_LINT_CONTINUE_ARG]);
+      expect(continueArgsOf(["lint", "--affected"])).toEqual([AGGREGATE_LINT_CONTINUE_ARG]);
+    });
+
+    it("never repeats a continue mode the caller already chose", () => {
+      // Yeet repair forwards one through `bun run lint`; Turbo rejects a duplicate flag.
       const yeetFeedback = [
         "--filter=@beep/schema",
         "--concurrency=3",
@@ -10842,21 +10846,21 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "--summarize",
         "--ui=stream",
       ];
-      for (const callerArgs of [
-        ["--continue"],
-        ["--continue=always"],
-        ["--affected", "--continue=never"],
-        yeetFeedback,
-      ]) {
-        const steps = rootQualityStepsForTesting("/repo", getInvocation(["lint", ...callerArgs]));
-        expect(steps[0]?.args).toEqual(expectedRootTurboArgs("lint", callerArgs));
-        expect(A.filter(steps[0]?.args ?? [], isContinueArg)).toEqual(A.filter(callerArgs, isContinueArg));
-      }
-      // `lint:fix` and the other root graphs keep the shared bounded args without the flag.
-      const fix = rootQualityStepsForTesting("/repo", getInvocation(["lint", "--fix", "--filter=@beep/schema"]));
-      expect(A.some(fix[0]?.args ?? [], isContinueArg)).toBe(false);
-      const check = rootQualityStepsForTesting("/repo", getInvocation(["check", "--filter=@beep/schema"]));
-      expect(A.some(check[0]?.args ?? [], isContinueArg)).toBe(false);
+      expect(firstRootStep(["lint", "--continue"]).args).toEqual(expectedRootTurboArgs("lint", ["--continue"]));
+      expect(firstRootStep(["lint", "--continue=always"]).args).toEqual(
+        expectedRootTurboArgs("lint", ["--continue=always"])
+      );
+      expect(firstRootStep(["lint", "--affected", "--continue=never"]).args).toEqual(
+        expectedRootTurboArgs("lint", ["--affected", "--continue=never"])
+      );
+      expect(firstRootStep(["lint", ...yeetFeedback]).args).toEqual(expectedRootTurboArgs("lint", yeetFeedback));
+      expect(continueArgsOf(["lint", ...yeetFeedback])).toEqual(["--continue=dependencies-successful"]);
+    });
+
+    it("keeps the continue flag off lint:fix and the other root graphs", () => {
+      // They keep the shared bounded args without the flag.
+      expect(continueArgsOf(["lint", "--fix", "--filter=@beep/schema"])).toEqual([]);
+      expect(continueArgsOf(["check", "--filter=@beep/schema"])).toEqual([]);
     });
 
     it.effect("limits root integration test filters to script-owning workspaces", () =>
