@@ -1,17 +1,16 @@
 # TypeScript toolchain: which compiler runs where
 
 Use this runbook when a tool, an editor, or a dependency bump asks "which
-TypeScript is this repo on?" The root uses TypeScript 7 under two names, with a separate
-TS6 bridge for classic API scripts. The Effect compiler patches both the native Go binary and the installed tsrs
+TypeScript is this repo on?" The root uses TypeScript 7 under two names; the only classic
+TypeScript 6 API left is the copy ts-morph bundles and infra's nested Pulumi compiler. The Effect compiler patches both the native Go binary and the installed tsrs
 binary; the Effect-patched tsrs is the build/check gate.
 
-## Installed compilers and API bridge
+## Installed compilers
 
 | Package (catalog) | Version | Role |
 | --- | --- | --- |
 | `typescript` | `^7.0.2` | Native TypeScript 7 package; no classic `lib/typescript.js` API. |
 | `@typescript/native` | `npm:typescript@^7.0.2` | The same TypeScript 7 package under the retained alias, used by patching and unstable API consumers. Alias consolidation is a separate follow-up. |
-| `@typescript/typescript6` | `6.0.2` (exact) | Microsoft’s classic JS API bridge for the schema-opaque codemod/fixup, scratchpad JSDoc census; declared at root and in scratchpad. |
 | `@effect/tsgo` (pins its seven `@effect/tsgo-<platform>` packages exactly) | `0.67.5` | The Effect language service build of TypeScript 7. Editors and the tsgo-only quality lanes use this reviewed pin. Since 0.59.0 the platform packages also ship the Effect build of one `tsrs` version each, so the `tsrs` pin moves with this one. |
 | `tsrs` + seven `@tsrs/<platform>` optional packages | `0.23.0-ts7.1.0-beta` | The Rust port of the TypeScript 7 compiler ([oxc-project/tsrs](https://github.com/oxc-project/tsrs)); the version tag names the TypeScript it ports (`7.1.0-beta`). `effect-tsgo patch --tsrs` replaces the installed `@tsrs/<platform>` binary with the Effect build of that exact tsrs version, which `@effect/tsgo` 0.67.5 ships for linux-x64, linux-arm64, darwin-arm64, darwin-x64 and win32-x64 (Effect-TS/tsgo #901, the 1:1 Rust port of the language service). Runs generated library `beep:build`, `beep:check` and `beep:check:tests` gates, the root `check:configs`, and infra's `-b` check. Framework apps retain their own build commands. |
 
@@ -362,17 +361,14 @@ Effect-patched tsrs.
   only this package/dependency divergence. Remove the preload once Pulumi's
   nodejs runtime supports TypeScript 7. An Alchemy migration was considered and
   rejected (`explorations/pulumi-to-alchemy`).
-- **Classic API scripts:** the schema-opaque goal codemod/fixup and scratchpad
-  JSDoc census import `@typescript/typescript6` explicitly. Microsoft's bridge
-  keeps these live tools usable without putting the classic API back under the
-  root `typescript` name. The census accepts `--help` without writing reports.
+- **Classic API scripts:** the schema-opaque goal codemod/fixup use the
+  TypeScript 6 `ts` namespace that ts-morph bundles (`import { ts } from
+  "ts-morph"`), so no classic `typescript` package is declared at the root.
+  Microsoft's `@typescript/typescript6` bridge and the scratchpad JSDoc census
+  that imported it were removed on 2026-11-09.
 - **Frozen ontology replay:** reproducing the frozen 2026-08-29
   `beep-ci-operational-ontology` TypeScript adapter needs a 6.x `typescript`
   (for example in a scratch install); preserve its bytes and digest.
-
-The bridge is supported on the repo's Bun pin: oven-sh/bun#33834 was fixed
-before Bun 1.4.0. Remove it when these scripts migrate to a supported native
-API or are explicitly retired.
 
 Effect-drizzle stays on exact tstyche `8.0.0-beta.0`. Its hosted matrix is
 `5.9.3 || 6.0.3`, both exact; explicit targets load compilers from tstyche's

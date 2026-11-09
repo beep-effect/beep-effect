@@ -69,7 +69,6 @@
     "@effect/vitest": "catalog:",
     "@types/n3": "catalog:",
     "@types/node": "catalog:",
-    "@typescript/typescript6": "catalog:",
     "drizzle-kit": "catalog:",
     "vitest": "catalog:"
   }

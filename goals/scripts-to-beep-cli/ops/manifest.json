@@ -51,13 +51,17 @@
       },
       {
         "number": 3022,
+        "role": "supporting"
+      },
+      {
+        "number": 3027,
         "role": "final"
       }
     ],
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/goals_scripts-to-beep-cli-refinal4-063116c51820/verdict.json",
+        "ref": ".beep/yeet/runs/goals_scripts-to-beep-cli-refinal5-942df9ab0b99/verdict.json",
         "gating": true
       }
     ]
@@ -132,6 +136,6 @@
   ],
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 3022
+    "finalPullRequest": 3027
   }
 }

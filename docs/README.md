@@ -18,7 +18,8 @@ Tracked, authored documentation for the beep-effect monorepo.
 Operational guidance: timer units, their refresh, and the agent-run post-merge closeout: [systemd timers](runbooks/systemd-timers.md). Where the CLI looks for the fleet, the authored seat registry, and the `worktree fleet --join`, `describe` and `register` views: [fleet roots and registry](runbooks/fleet-roots-and-registry.md). The 1Password `BEEP_SECRETS` item's section rule and rename debt: [BEEP_SECRETS layout](runbooks/onepassword-beep-secrets-layout.md).
 External research intake, source acquisition, provenance, and portable navigation:
 [research reference library](runbooks/research-library.md).
-Which TypeScript compiler runs where, how `typescript@7`, its native alias, and the TS6 bridge coexist, and
+Which TypeScript compiler runs where, how `typescript@7`, its native alias, ts-morph's bundled TypeScript 6 and infra's
+Pulumi compiler coexist, and
 how to wire the Effect compiler into WebStorm: [TypeScript toolchain](runbooks/typescript-toolchain.md).
 Measured check, CI and agent-overhead improvements, their validation, and rejected
 shortcuts: [repository performance](runbooks/repository-performance.md).
