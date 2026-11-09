@@ -370,10 +370,6 @@ Effect-patched tsrs.
   `beep-ci-operational-ontology` TypeScript adapter needs a 6.x `typescript`
   (for example in a scratch install); preserve its bytes and digest.
 
-The bridge is supported on the repo's Bun pin: oven-sh/bun#33834 was fixed
-before Bun 1.4.0. Remove it when these scripts migrate to a supported native
-API or are explicitly retired.
-
 Effect-drizzle stays on exact tstyche `8.0.0-beta.0`. Its hosted matrix is
 `5.9.3 || 6.0.3`, both exact; explicit targets load compilers from tstyche's
 own store and do not load root `typescript`. TypeScript 7 coverage is on demand:
