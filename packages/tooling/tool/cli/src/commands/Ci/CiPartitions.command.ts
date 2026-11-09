@@ -390,6 +390,16 @@ export const renderCiPartitionReport = (report: CiPartitionRebalanceReport): Rea
   ...A.map(report.warnings, (warning) => `warning: ${warning}`),
 ];
 
+// One line per shard: the planned file time and the table weight it should carry.
+const shardPlanLines = (partitions: ReadonlyArray<CiLanePartition>, plan: VitestShardPlan): ReadonlyArray<string> =>
+  A.map(
+    A.zip(partitions, plan.estimatedMilliseconds),
+    ([partition, milliseconds]) =>
+      `  ${partition.id}: ${formatSeconds(milliseconds / 1000)} s planned; table weightSeconds ${partition.weightSeconds}${
+        roundSeconds(milliseconds) === partition.weightSeconds ? "" : ` -> set ${roundSeconds(milliseconds)}`
+      }`
+  );
+
 const sharedFamilyFiles = (timings: CiPartitionRunTimings, source: CiShardedPartitionSource) =>
   A.filter(timings.files, (timing) => Str.startsWith(`${source.family}-`)(timing.partitionId));
 
@@ -417,13 +427,7 @@ const writeFamilyPlan = Effect.fn("CiPartitions.writeFamilyPlan")(function* (
   yield* writeShardPlan(repoRoot, shardSource, plan);
   return [
     `${shardSource.planPath}: ${A.length(A.flatten(plan.shards))} files over ${A.length(plan.shards)} shards from run ${timings.runId} (${timings.headSha})`,
-    ...A.map(
-      A.zip(partitions, plan.estimatedMilliseconds),
-      ([partition, milliseconds]) =>
-        `  ${partition.id}: ${formatSeconds(milliseconds / 1000)} s planned; table weightSeconds ${partition.weightSeconds}${
-          roundSeconds(milliseconds) === partition.weightSeconds ? "" : ` -> set ${roundSeconds(milliseconds)}`
-        }`
-    ),
+    ...shardPlanLines(partitions, plan),
   ];
 });
 
@@ -537,13 +541,7 @@ const pruneFamilyPlan = Effect.fn("CiPartitions.pruneFamilyPlan")(function* (
   yield* writeShardPlan(repoRoot, shardSource, pruned);
   return [
     `${shardSource.planPath}: ${A.length(files)} files over ${A.length(pruned.shards)} shards re-packed from the committed measurements of run ${plan.sourceRun} (${dropped} removed file(s) dropped)`,
-    ...A.map(
-      A.zip(partitions, pruned.estimatedMilliseconds),
-      ([partition, milliseconds]) =>
-        `  ${partition.id}: ${formatSeconds(milliseconds / 1000)} s planned; table weightSeconds ${partition.weightSeconds}${
-          roundSeconds(milliseconds) === partition.weightSeconds ? "" : ` -> set ${roundSeconds(milliseconds)}`
-        }`
-    ),
+    ...shardPlanLines(partitions, pruned),
   ];
 });
 
