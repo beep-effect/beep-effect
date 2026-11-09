@@ -15,6 +15,7 @@ import {
   canUseTurboCacheSecretSession,
   configStringEqualsSync,
   configStringOption,
+  configStringOptionSync,
   isCiSync,
   isUnresolvedSecretReference,
   readTurboCacheEnvironmentSync,
@@ -64,6 +65,7 @@ import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
+import { isHeavyDocsOnlyPath } from "../Ci/CiOperational.schemas.ts";
 import { discoverEffectImportSourceFiles, EffectImportRulesOptions } from "../Laws/EffectImports.ts";
 import { coverageEnvironment } from "./internal/CoverageEnvironment.ts";
 import { defaultJSDocTotalsBaselinePath } from "./internal/JSDocRatchet.ts";
@@ -2380,20 +2382,16 @@ const collectQualityTaskLaneRuns = Effect.fn("QualityTasks.collectQualityTaskLan
 
 type GithubCheckWaveLane = GithubCheckLaneWaveSpec["lanes"][number];
 
-// Deliberately narrower than hosted docs-only routing: these paths are prose
-// reports, never policy, package documentation, executable docs or tooling.
-const ReportOnlyPath = S.String.check(
-  S.isPattern(
-    /^docs\/reports\/(?!\.|AGENTS\.md$|CLAUDE\.md$)(?!.*\/(?:\.|AGENTS\.md$|CLAUDE\.md$))[^\\\u0000]+\.md$/su
-  ),
-  S.isEndingWith(".md")
-).pipe(
-  $RepoCliId.create("commands/Quality/Tasks").annoteSchema("ReportOnlyPath", {
-    description: "A Markdown report under docs/reports without hidden or agent-instruction segments.",
-  })
-);
-const isReportOnlyPath = S.is(ReportOnlyPath);
-const reportOnlySkipReason = "clean report-only diff; source-only lane inputs unchanged";
+// Reuse hosted path policy, then independently prove the selected scanners'
+// actual inputs unchanged. Documentation folders can contain scanner sources.
+const reportOnlySelectionEnabled = () =>
+  pipe(
+    configStringOptionSync("BEEP_QUALITY_REPORT_ONLY_SKIP"),
+    O.map((value) => value === "1"),
+    O.getOrElse(() => true)
+  );
+
+const reportOnlySkipReason = "clean docs-only diff; source-only lane inputs unchanged";
 
 const reportFilesAreOrdinary = Effect.fn("QualityTasks.reportFilesAreOrdinary")(function* (
   repoRoot: string,
@@ -2418,7 +2416,8 @@ const reportFilesAreOrdinary = Effect.fn("QualityTasks.reportFilesAreOrdinary")(
 const ordinaryTrackedScannerInputs = Effect.fn("QualityTasks.ordinaryTrackedScannerInputs")(function* (
   root: string,
   files: ReadonlyArray<string>,
-  git: GitShape
+  git: GitShape,
+  changedPaths: ReadonlyArray<string>
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -2430,6 +2429,15 @@ const ordinaryTrackedScannerInputs = Effect.fn("QualityTasks.ordinaryTrackedScan
       const relative = path.relative(root, file);
       return path.isAbsolute(relative) || Str.startsWith("..")(relative);
     })
+  )
+    return false;
+  if (
+    A.some(absolute, (file) =>
+      A.some(changedPaths, (changed) => {
+        const candidate = path.resolve(root, changed);
+        return candidate === file || Str.startsWith(`${file}${path.sep}`)(candidate);
+      })
+    )
   )
     return false;
   const ancestors = A.dedupe(
@@ -2447,7 +2455,7 @@ const ordinaryTrackedScannerInputs = Effect.fn("QualityTasks.ordinaryTrackedScan
 });
 
 const reportOnlyScannerInputsTracked = Effect.fn("QualityTasks.reportOnlyScannerInputsTracked")(
-  function* (root: string, git: GitShape) {
+  function* (root: string, git: GitShape, changedPaths: ReadonlyArray<string>) {
     const fs = yield* FsUtils;
     const fileSystem = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
@@ -2468,7 +2476,7 @@ const reportOnlyScannerInputsTracked = Effect.fn("QualityTasks.reportOnlyScanner
       ],
       projectOptions
     );
-    if (!(yield* ordinaryTrackedScannerInputs(root, rootMetadata, git))) return false;
+    if (!(yield* ordinaryTrackedScannerInputs(root, rootMetadata, git, changedPaths))) return false;
     const patterns = yield* WorkspacePatterns.read(root);
     const globs = yield* GlobSet.compile(WorkspacePatterns.forMatching(patterns));
     const workspaces = yield* enumerate(root, globs, { containWithinRoot: true, skipMissingBaseDirs: true });
@@ -2482,7 +2490,7 @@ const reportOnlyScannerInputsTracked = Effect.fn("QualityTasks.reportOnlyScanner
         ),
       { concurrency: 4 }
     );
-    if (!(yield* ordinaryTrackedScannerInputs(root, A.flatten(metadata), git))) return false;
+    if (!(yield* ordinaryTrackedScannerInputs(root, A.flatten(metadata), git, changedPaths))) return false;
     const customSources = yield* Effect.forEach(
       directories,
       Effect.fnUntraced(function* (directory) {
@@ -2505,7 +2513,7 @@ const reportOnlyScannerInputsTracked = Effect.fn("QualityTasks.reportOnlyScanner
     // Semantic scanners remain live: their transitive module inputs cannot be
     // proven from this bounded names-only discovery. No AST/project is built.
     const sources = yield* discoverEffectImportSourceFiles(EffectImportRulesOptions.make({ excludePaths: [] }), root);
-    return yield* ordinaryTrackedScannerInputs(root, [...sources, ...A.flatten(customSources)], git);
+    return yield* ordinaryTrackedScannerInputs(root, [...sources, ...A.flatten(customSources)], git, changedPaths);
   },
   (effect) =>
     Effect.scoped(
@@ -2519,7 +2527,7 @@ const reportOnlyScannerInputsTracked = Effect.fn("QualityTasks.reportOnlyScanner
 // Every unknown axis fails closed. Git owns NUL parsing, including Unicode and
 // newline filenames. noRenames retains the source-side deletion of a move.
 const cleanReportOnlyDiff = Effect.fn("QualityTasks.cleanReportOnlyDiff")(function* (repoRoot: string) {
-  if (!configStringEqualsSync("BEEP_QUALITY_REPORT_ONLY_SKIP", "1")) return false;
+  if (!reportOnlySelectionEnabled()) return false;
   const available = yield* Effect.serviceOption(Git);
   if (O.isNone(available)) return false;
   const git = available.value;
@@ -2536,7 +2544,7 @@ const cleanReportOnlyDiff = Effect.fn("QualityTasks.cleanReportOnlyDiff")(functi
     if (
       !A.every(
         entries,
-        (entry) => (entry.status === "added" || entry.status === "modified") && isReportOnlyPath(entry.path)
+        (entry) => (entry.status === "added" || entry.status === "modified") && isHeavyDocsOnlyPath(entry.path)
       )
     )
       return false;
@@ -2557,7 +2565,11 @@ const cleanReportOnlyDiff = Effect.fn("QualityTasks.cleanReportOnlyDiff")(functi
     // and its flags are never copied, refreshed or cleared.
     const headTree = yield* git.revParse(repoRoot, `${head}^{tree}`);
     const materializedTree = yield* laneProofVirtualTreeSha(repoRoot);
-    const scannerInputsTracked = yield* reportOnlyScannerInputsTracked(repoRoot, git);
+    const scannerInputsTracked = yield* reportOnlyScannerInputsTracked(
+      repoRoot,
+      git,
+      A.map(entries, (entry) => entry.path)
+    );
     const finalHead = yield* git.revParse(repoRoot, "HEAD", { peel: "commit" });
     const finalBase = yield* git.revParse(repoRoot, "origin/main", { peel: "commit" });
     const finalStatus = yield* git.status(repoRoot, { untrackedFiles: "all", noOptionalLocks: true });
@@ -2577,7 +2589,7 @@ const cleanReportOnlyDiff = Effect.fn("QualityTasks.cleanReportOnlyDiff")(functi
 // Admission only schedules possible skips; each lane still proves its complete
 // current input identity before omitting its subprocess.
 const reportOnlyWavesCandidate = (lanes: ReadonlyArray<GithubCheckWaveLane>): boolean => {
-  if (!configStringEqualsSync("BEEP_QUALITY_REPORT_ONLY_SKIP", "1")) return false;
+  if (!reportOnlySelectionEnabled()) return false;
   const repoRoot = O.map(A.head(lanes), (lane) => lane.step.cwd);
   return (
     O.isSome(repoRoot) &&

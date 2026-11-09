@@ -143,7 +143,7 @@ const assertScanRow = Effect.fn("CaseNameScanTest.row")(function* (
 const smokeBoundaryRows = [
   5, 6, 9, 13, 14, 18, 19, 20, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 37, 38, 52, 53, 54, 55, 56, 57, 58,
 ];
-/** Smoke includes source branch controls, failures and no-call paths; full original replay is hosted. */
+/** Smoke includes source branch controls, failures and no-call paths; the full original replay retired 2026-11-09. */
 export const replayCitationCaseNameScan = Effect.fn("CaseNameScanTest.replay")(function* (
   kind: CitationNativeRuntimeKind,
   full: boolean

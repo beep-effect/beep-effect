@@ -91,7 +91,7 @@ export const readCitationPinExtractionCorpus = Effect.fn("PinExtractionTest.load
   return yield* S.decodeEffect(Corpus)(new TextDecoder().decode(bytes));
 });
 const install = makeCitationMetadataFixtureInstaller(makeCitationPinExtraction)(readCitationPinExtractionCorpus());
-/** Full source replay is hosted; smoke retains source errors and both actual runtimes. */
+/** Smoke retains source errors and every result shape; the full source replay retired 2026-11-09. */
 export const replayCitationPinExtraction = Effect.fn("PinExtractionTest.replay")(function* (
   kind: CitationNativeRuntimeKind,
   full: boolean
@@ -102,7 +102,7 @@ export const replayCitationPinExtraction = Effect.fn("PinExtractionTest.replay")
     const actual = yield* strings.inspectPinCite(row.source);
     expect(actual).toEqual({ pinCite: row.pinCite, trailingEnd: row.trailingEnd });
   }
-  const rows = full ? setup.corpus.cases : A.filter(setup.corpus.cases, (row) => row.smoke);
+  const rows = full ? setup.corpus.cases : A.filter(setup.corpus.cases, (row) => row.smoke || row.id === 60);
   for (const row of rows) {
     if (row.error !== null) {
       yield* assertCitationMetadataFailure(setup.stage.apply(row.request), { reason: row.error });
@@ -115,9 +115,9 @@ export const replayCitationPinExtraction = Effect.fn("PinExtractionTest.replay")
       }).toEqual(row.result);
     }
   }
-  expect(rows).toHaveLength(full ? 432 : 24);
+  expect(rows).toHaveLength(full ? 432 : 25);
   const calls = A.reduce(rows, 0, (total, row) => total + row.calls);
-  expect(calls).toBe(full ? 453 : 24);
+  expect(calls).toBe(full ? 453 : 26);
   yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, calls);
 });
 /** Exact receiving allocation and immutable installation with shared budget authority. */

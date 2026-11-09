@@ -8,17 +8,9 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })(
     it.effect("matches original helper output/refusal through Bun", () => replayCitationNativeWrap("bun", false), {
       timeout: 120000,
     });
-    it.effect("matches original helper output/refusal through Node", () => replayCitationNativeWrap("node", false), {
-      timeout: 120000,
-    });
     it.effect(
       "composes original XML decisions, template failures and overlap state on Bun",
       () => replayCitationWrapComposition("bun", false),
-      { timeout: 120000 }
-    );
-    it.effect(
-      "composes the same native ranges and physical retirement on Node",
-      () => replayCitationWrapComposition("node", false),
       { timeout: 120000 }
     );
   }

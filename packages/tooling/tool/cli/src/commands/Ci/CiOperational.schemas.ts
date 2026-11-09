@@ -68,6 +68,54 @@ export const ciOperationalPatterns = CiOperationalPatterns.make({
 });
 
 /**
+ * The docs-only path classification, decided before the heavy call.
+ *
+ * **Details**
+ *
+ * `docs/**`, `goals/<packet>/**`, `explorations/**` and `research/**` are documentation
+ * and planning surfaces, including temporary goal helpers and verifier inputs.
+ * Root goal governance inventories retain verification. `.changeset/*.md` and Markdown
+ * outside product roots also qualify. Paths under `packages/`, `apps/` and
+ * `infra/` retain verification, including their Markdown files. The tier-1
+ * change profile and Yeet publication reuse this same schema-owned path rule.
+ *
+ * **Example** (Classify two paths)
+ *
+ * ```ts
+ * import { heavyDocsOnlyPattern } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(heavyDocsOnlyPattern.test("packages/a/README.md")) // false
+ * console.log(heavyDocsOnlyPattern.test("goals/x/scripts/run.sh")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const heavyDocsOnlyPattern: RegExp = new RegExp(
+  `^(?!${ciOperationalPatterns.codeRoots})(?:${ciOperationalPatterns.goals}|.*(?:${ciOperationalPatterns.docs}))`,
+  "u"
+);
+
+/**
+ * Whether one repo-relative path is docs-only under {@link heavyDocsOnlyPattern}.
+ *
+ * **Example** (Guard a path)
+ *
+ * ```ts
+ * import { isHeavyDocsOnlyPath } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(isHeavyDocsOnlyPath("docs/runbooks/ci.md")) // true
+ * console.log(isHeavyDocsOnlyPath("goals/x/ops/fixtures.json")) // true
+ * ```
+ *
+ * @param path - A repo-relative path as `git diff --name-only` prints it.
+ * @returns Whether the path carries no code the heavy matrix must prove.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isHeavyDocsOnlyPath = S.is(S.String.check(S.isPattern(heavyDocsOnlyPattern)));
+
+/**
  * Convention-owned goal prose accepted by the pre-runtime profile adapter.
  *
  * **Example** (Classify goal prose)

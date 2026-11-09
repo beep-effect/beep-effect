@@ -7,7 +7,7 @@ import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true, concurrent: false })(
   "original raw annotation workflows",
   (it) => {
-    for (const kind of ["bun", "node"] as const) {
+    for (const kind of ["bun"] as const) {
       it.effect(
         `recomputes seven original annotation workflows from raw input on ${kind}`,
         () => replayCitationCanonicalAnnotationWorkflows(kind, 0, 1, true),

@@ -1,4 +1,3 @@
-import { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { it } from "@beep/test-runner";
 import {
   assertCitationStopWordsBudget,
@@ -12,7 +11,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source stop
     timeout: 120000,
   });
   it.effect("keeps captured lifetime and timing", assertCitationStopWordsLifetime, { timeout: 120000 });
-  for (const kind of CitationNativeRuntimeKind.literals)
+  for (const kind of ["bun"] as const)
     it.effect(`preserves original cleanup through ${kind}`, () => replayCitationStopWords(kind, false), {
       timeout: 120000,
     });

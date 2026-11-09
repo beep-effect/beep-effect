@@ -1,5 +1,44 @@
 # Local report-only cheap-gate qualification
 
+## Automatic docs qualification (2026-11-09)
+
+The current selector runs automatically; `BEEP_QUALITY_REPORT_ONLY_SKIP=0`
+forces both scanners to execute. Explicit values other than `1` also retain
+scanning; only an absent flag enables the automatic default. The historical opt-in measurements below
+remain evidence for the earlier implementation.
+
+Path qualification now reuses `isHeavyDocsOnlyPath`, the hosted admission rule:
+`docs/`, goal packet folders (including DOT, SVG, data and helpers),
+`explorations/`, `research/`, and Markdown outside product roots qualify.
+Root goal governance and compiler configuration, standards inventories, and
+all paths under `packages/`, `apps/`, and `infra/` retain scanning.
+
+Only `quality:jsdoc-ratchet:regenerated` and `lint:effect-imports` may skip.
+Before each skip, the selector compares the merge-base diff with the actual
+selected scanner input names, metadata, and custom JSDoc source roots.
+A committed edit to a selected source inside a qualifying folder therefore
+runs the scanner. Both configuration discovery and scanner discovery retain
+the ordinary-file, ignored-input, linked-ancestor and containment checks.
+The clean status, fresh temporary index, file mode, deletion/rename,
+pinned-base, final HEAD/base/status and per-lane revalidation fences remain.
+Skipped rows contain no invented digest, timing, exit code or passing proof.
+
+Local regression evidence: the focused selector suite passed 68 cases in
+12.28 seconds before the malformed-flag refinement. The complete task-adapter
+suite then passed all 373 cases in 23.49 seconds with automatic defaults and
+malformed flags retaining execution. Each qualified fixture verifies absence
+of the scanner subprocess marker; controls verify execution and preserve
+honest skipped-row metadata. Package quick verification passed lint in
+1.7 seconds and check in 10.0 seconds. These are fixture and package timings,
+not a measured end-to-end publication speedup. Real publication savings depend
+on scanner cache state and the retained qualification cost.
+
+This change does not skip the final-check lint gate. Markdown import checks,
+document formatting, SVG parsing and accessibility checks remain necessary.
+The remaining gap is that docs-only final-check still replays its broader
+local lint gate; hosted docs-only product-lint allocation and this bounded
+local source-scanner selection do not make that entire gate unnecessary.
+
 Publication review superseded the original four-lane shortcut. Git cleanliness
 and a materialized tracked tree cannot establish the full inputs of the semantic
 Effect Vitest and schema-first scanners. Both now remain live. The explicit opt-in

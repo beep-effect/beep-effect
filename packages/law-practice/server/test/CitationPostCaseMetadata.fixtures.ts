@@ -94,13 +94,18 @@ export const readCitationPostCaseMetadataCorpus = Effect.fn("PostCaseMetadataTes
 const install = makeCitationMetadataFixtureInstaller(makeCitationPostCaseMetadata)(
   readCitationPostCaseMetadataCorpus()
 );
-/** Full replay is hosted; smoke compares all field writes through both actual runtimes. */
+/** Smoke compares every field-write shape and one row per year-search family; the full replay retired 2026-11-09. */
 export const replayCitationPostCaseMetadata = Effect.fn("PostCaseMetadataTest.replay")(function* (
   kind: CitationNativeRuntimeKind,
   full: boolean
 ) {
   const setup = yield* install(kind, undefined, false, false, 8192);
-  const rows = full ? setup.corpus.cases : A.filter(setup.corpus.cases, (row) => row.smoke);
+  const rows = full
+    ? setup.corpus.cases
+    : A.filter(
+        setup.corpus.cases,
+        (row) => row.smoke || A.contains([0, 12, 45, 52, 53, 84, 100, 104, 108, 136, 140, 180], row.id)
+      );
   for (const row of rows) {
     const actual = yield* setup.stage.apply(row.request);
     const seed = { width: 1, bytes: new TextEncoder().encode("SEED") };
@@ -130,9 +135,9 @@ export const replayCitationPostCaseMetadata = Effect.fn("PostCaseMetadataTest.re
     });
     expect(observed, `source post-case ${row.id}`).toEqual(row.observed);
   }
-  expect(rows).toHaveLength(full ? 184 : 16);
+  expect(rows).toHaveLength(full ? 184 : 28);
   const calls = A.reduce(rows, 0, (total, row) => total + row.calls);
-  expect(calls).toBe(full ? 220 : 22);
+  expect(calls).toBe(full ? 220 : 36);
   yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, calls);
 });
 

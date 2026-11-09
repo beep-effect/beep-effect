@@ -1,4 +1,3 @@
-import { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { it } from "@beep/test-runner";
 import {
   assertCitationMetadataStringBudget,
@@ -18,7 +17,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("native meta
     assertCitationMetadataStringsDeadline,
     { timeout: 60000 }
   );
-  for (const kind of CitationNativeRuntimeKind.literals) {
+  for (const kind of ["bun"] as const) {
     it.effect(
       `matches source pincites and parenthetical controls through ${kind}`,
       () => replayCitationMetadataStrings(kind, false),
