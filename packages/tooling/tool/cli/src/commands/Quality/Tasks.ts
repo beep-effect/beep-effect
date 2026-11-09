@@ -94,7 +94,6 @@ import {
   writeCoverageRegressionBaseline,
 } from "./internal/CoverageRegression.ts";
 import {
-  CoverageScopeMode,
   CoverageScopeOwner,
   coverageScopeWeightSeconds,
   planCoverageFullShards,
@@ -174,7 +173,7 @@ import type { PgliteTestcontainerResource } from "@beep/test-utils";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
-import type { CoverageBaselineRowDelta } from "./internal/CoverageScope.ts";
+import type { CoverageBaselineRowDelta, CoverageScopeMode } from "./internal/CoverageScope.ts";
 import type { FlakeQuarantineTask } from "./internal/FlakeQuarantine.ts";
 import type { LaneProofSession } from "./internal/LaneProofReuse.ts";
 import type { LintPolicyAffectedTargets } from "./internal/LintPolicyScope.ts";
@@ -1178,28 +1177,50 @@ const resolveDefaultCoverageBase = Effect.fn("QualityTasks.resolveDefaultCoverag
   return yield* originMainMergeBase(repoRoot);
 });
 
+const resolveDefaultAffectedCoverageTaskOptions = Effect.fn("QualityTasks.resolveDefaultAffectedCoverageTaskOptions")(
+  function* (
+    repoRoot: string,
+    args: ReadonlyArray<string>
+  ): Effect.fn.Return<CoverageTaskOptions, QualityTaskConfigurationError, QualityTaskEnvironment> {
+    const base = yield* resolveDefaultCoverageBase(repoRoot);
+    return yield* O.match(base, {
+      onNone: () =>
+        Console.log(
+          `[beep-cli] coverage: full fallback (TURBO_SCM_BASE is unset and no origin/main merge base resolves for HEAD; pass ${COVERAGE_FULL_ARG} to request the full proof explicitly)`
+        ).pipe(Effect.andThen(resolveCoverageTaskOptions(repoRoot, args))),
+      onSome: (resolved) =>
+        Console.log(
+          `[beep-cli] coverage: bare local run defaults to --affected against ${resolved}; pass ${COVERAGE_FULL_ARG} for the full sharded proof (hosted Test Unit is the proof of record)`
+        ).pipe(Effect.andThen(resolveCoverageTaskOptions(repoRoot, ["--affected", ...args], resolved))),
+    });
+  }
+);
+
+// `--full` beside a scope-pinning flag would print a full-proof line over a
+// scoped run; refusing it keeps the first `[beep-cli]` line truthful.
 const resolveRootCoverageTaskOptions = Effect.fn("QualityTasks.resolveRootCoverageTaskOptions")(function* (
   repoRoot: string,
   args: ReadonlyArray<string>
 ): Effect.fn.Return<CoverageTaskOptions, QualityTaskConfigurationError, QualityTaskEnvironment> {
   const mode = resolveCoverageScopeMode(args, isCiSync());
-  if (!CoverageScopeMode.is.affected(mode)) {
-    if (A.some(args, isCoverageFullArg)) {
-      yield* Console.log(`[beep-cli] coverage: ${COVERAGE_FULL_ARG} requested; running the full sharded proof`);
-    }
-    return yield* resolveCoverageTaskOptions(repoRoot, args);
-  }
-  const base = yield* resolveDefaultCoverageBase(repoRoot);
-  return yield* O.match(base, {
-    onNone: () =>
-      Console.log(
-        `[beep-cli] coverage: full fallback (TURBO_SCM_BASE is unset and no origin/main merge base resolves for HEAD; pass ${COVERAGE_FULL_ARG} to request the full proof explicitly)`
-      ).pipe(Effect.andThen(resolveCoverageTaskOptions(repoRoot, args))),
-    onSome: (resolved) =>
-      Console.log(
-        `[beep-cli] coverage: bare local run defaults to --affected against ${resolved}; pass ${COVERAGE_FULL_ARG} for the full sharded proof (hosted Test Unit is the proof of record)`
-      ).pipe(Effect.andThen(resolveCoverageTaskOptions(repoRoot, ["--affected", ...args], resolved))),
-  });
+  const fullRequested = A.some(args, isCoverageFullArg);
+  return yield* Match.value(mode).pipe(
+    Match.when("explicit", () =>
+      fullRequested
+        ? QualityTaskConfigurationError.new(
+            `${COVERAGE_FULL_ARG} cannot be combined with --filter, --since, --affected, ${COVERAGE_WRITE_BASELINE_ARG}, ${COVERAGE_REPLACE_ALL_ARG} or ${COVERAGE_ADD_MISSING_FILES_ONLY_ARG}; those arguments already decide the coverage scope.`
+          )
+        : resolveCoverageTaskOptions(repoRoot, args)
+    ),
+    Match.when("full", () =>
+      (fullRequested
+        ? Console.log(`[beep-cli] coverage: ${COVERAGE_FULL_ARG} requested; running the full sharded proof`)
+        : Effect.void
+      ).pipe(Effect.andThen(resolveCoverageTaskOptions(repoRoot, args)))
+    ),
+    Match.when("affected", () => resolveDefaultAffectedCoverageTaskOptions(repoRoot, args)),
+    Match.exhaustive
+  );
 });
 
 /**

@@ -8684,6 +8684,16 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             });
             expect(fullPassthrough.scoped).toBe(false);
             expect(fullPassthrough.args).toEqual(["--concurrency=1"]);
+            // --full beside a scope-pinning flag is refused rather than announced.
+            const fullFiltered = yield* Effect.exit(
+              resolveWith(["--full", "--filter=@beep/untouched"], localCi, { TURBO_SCM_BASE: "HEAD" })
+            );
+            fullFiltered.pipe(Exit.isFailure, assertTrue);
+            if (Exit.isFailure(fullFiltered)) {
+              assert.include(Cause.pretty(fullFiltered.cause), "--full cannot be combined with --filter");
+            }
+            const afterRefusal = yield* TestConsole.logLines;
+            expect(afterRefusal).toHaveLength(seen);
 
             // CI keeps the existing behaviour: a bare run is the full proof, silently.
             const [ci, ciLines] = yield* resolveAndLog([], { ...localCi, CI: "true" }, { TURBO_SCM_BASE: "HEAD" });
