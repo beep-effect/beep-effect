@@ -6,7 +6,7 @@ description: >
   Claude account hits its weekly limit, when `bun run beep accounts` shows the
   fleet's account used up, or on `/auth-environments`. Opens each host's OAuth
   page and a masked KDE code dialog together and verifies the admitted account.
-compatibility: KDE Plasma with kdialog and Python 3 on the workstation; the canonical fleet SSH wrappers in ~/.local/bin.
+compatibility: KDE Plasma with kdialog and Python 3 on the workstation, plus the canonical fleet SSH wrappers on its PATH.
 metadata:
   status: active
 ---
@@ -44,7 +44,7 @@ Run it in the foreground with a long timeout (about 25 minutes); it serializes
 hosts. Name the hosts or pass `--force` to limit or repeat the run. For each
 host it:
 
-1. opens a 1-hour SSH ControlMaster (`~/.ssh/cm-auth-<host>`) through the
+1. opens a 1-hour per-host SSH ControlMaster (socket `cm-auth-<host>`) through the
    host's canonical wrapper. YubiKey hosts need one touch per hour, and the
    script says when. Initializes the dankserver agent if it is missing;
 2. skips a host already on the account;

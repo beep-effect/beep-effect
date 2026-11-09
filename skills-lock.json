@@ -23,7 +23,7 @@
         ".claude/skills/auth-environments",
         ".agents/skills/auth-environments"
       ],
-      "installedTreeHash": "df21abdfdda0ae350954cff14e5cce14208c94a46bc83eaa9bddf7b6b9ce4fda"
+      "installedTreeHash": "df6ff8f842aa7912435e77bf3a56b51e32a513c5f7a97e977eb180e325cbaacf"
     },
     "browser-qa-loop": {
       "_tag": "local",
