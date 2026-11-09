@@ -25,6 +25,7 @@ import os
 import pty
 import re
 import select
+import shlex
 import signal
 import subprocess
 import sys
@@ -169,11 +170,16 @@ def drain(fd, keep):
     return True
 
 
+def login_command(email):
+    """Remote shell command; only the email is quoted so $HOME/$PATH still expand remotely."""
+    return f"{REMOTE_PATH} claude auth login --claudeai --email {shlex.quote(email)}"
+
+
 def login(host, email):
     open_master(host)
     master, slave = pty.openpty()
     proc = subprocess.Popen(
-        ssh_argv(host) + ["-tt", f"{REMOTE_PATH} claude auth login --claudeai --email {email}"],
+        ssh_argv(host) + ["-tt", login_command(email)],
         stdin=slave, stdout=slave, stderr=slave, start_new_session=True, close_fds=True)
     os.close(slave)
     dialog = None

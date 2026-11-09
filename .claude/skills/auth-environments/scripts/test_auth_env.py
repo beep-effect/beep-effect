@@ -39,6 +39,11 @@ class AuthEnvTest(unittest.TestCase):
             argv = auth_env.ssh_argv(host)
             self.assertIn(f"ControlPath={Path('~/.ssh').expanduser()}/cm-auth-{host}", argv)
 
+    def test_login_command_quotes_email(self):
+        cmd = auth_env.login_command("a'b;touch x@example.invalid")
+        self.assertTrue(cmd.startswith(auth_env.REMOTE_PATH + " claude auth login"))
+        self.assertTrue(cmd.endswith("""--email 'a'"'"'b;touch x@example.invalid'"""))
+
 
 if __name__ == "__main__":
     unittest.main()
