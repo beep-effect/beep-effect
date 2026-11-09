@@ -1112,3 +1112,47 @@ for (const selector of ["cli", "local-agent"]) {
     )
   );
 }
+// Runs the real helper's guarded serve() with a stand-in that fails after binding, and signals the
+// helper on the os.lstat call inside its socket cleanup. The parent closes stdin just before SIGTERM,
+// so a real helper can already be in that cleanup when the signal lands.
+const cleanupSignalHarness = `import ast, json, os, signal, socket, sys
+config = json.load(sys.stdin)
+tree = ast.parse(config["source"])
+guarded = [node for node in tree.body if isinstance(node, ast.Try)]
+tree.body = [node for node in tree.body if not isinstance(node, ast.Try)]
+exec(compile(tree, "owned-public-helper-fixture", "exec"))
+def serve():
+    global active_socket
+    server = socket.socket(socket.AF_UNIX)
+    server.bind(config["socketPath"])
+    active_socket = (config["socketPath"], identity(os.lstat(config["socketPath"])))
+    real_lstat = os.lstat
+    def signalled_lstat(path):
+        os.lstat = real_lstat
+        os.kill(os.getpid(), signal.SIGTERM)
+        return real_lstat(path)
+    os.lstat = signalled_lstat
+    raise ValueError("kernel-binding")
+tree.body = guarded
+exec(compile(tree, "owned-public-helper-fixture", "exec"))
+`;
+it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, NodeFileSystem.layer, platformLayer), {
+  timeout: "45 seconds",
+})((it) =>
+  it.effect("a SIGTERM landing during socket cleanup still removes the owned listener", () =>
+    Effect.gen(function* () {
+      const f = yield* fixture();
+      const fs = yield* FileSystem.FileSystem;
+      const body = yield* encode({ source: coworkPeerSource, socketPath: f.policy.socketPath });
+      const child = yield* ChildProcess.make(f.policy.pythonExecutable, ["-I", "-B", "-c", cleanupSignalHarness], {
+        extendEnv: false,
+        stdin: Stream.make(new TextEncoder().encode(body)),
+        stderr: "ignore",
+      });
+      const exitCode = yield* child.exitCode;
+      expect(exitCode).toBe(2);
+      const present = yield* fs.exists(f.policy.socketPath);
+      assertFalse(present);
+    })
+  )
+);

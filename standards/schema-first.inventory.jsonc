@@ -245,7 +245,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 44,
+      "line": 13,
       "owner": "@beep/eyecite",
       "reason": "Frozen independent recognizer labels, explicit count contradictions, blank-page regression and isolated-surrogate wire fixtures verify pinned donor behavior. Generated output values would not independently validate recognition or original UTF-16 fidelity; this file intentionally provides fixed regression coverage."
     },
@@ -1388,16 +1388,6 @@
       "reason": "Checks complete independently captured byte/Unicode hash vectors, explicit surrogate storage and seed behavior. Fixture decoding authenticates the source oracle; arbitrary target-produced hashes would not be independent evidence. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
     },
     {
-      "file": "packages/law-practice/server/test/CitationRecognizerWorker.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 72,
-      "owner": "@beep/law-practice-server",
-      "reason": "Actual Bun/Node child execution replays frozen independently labeled citations and terminal source, byte, diagnostic, exit and retirement controls. Schema decoding authenticates fixture input; arbitrary values cannot replace physical process observations or the fixed donor labels."
-    },
-    {
       "file": "packages/law-practice/server/test/CitationRegexCharacters.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
@@ -1473,7 +1463,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 25,
+      "line": 18,
       "owner": "@beep/law-practice-server",
       "reason": "Fixed semantic mentions are verified against real source capabilities to exercise independently specified local-link outcomes, barrier ordering, ambiguity, budgets and forged-proof rejection. Arbitrary structural values cannot mint genuine anchor capabilities or establish the expected antecedent relation."
     },
@@ -1571,7 +1561,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 32,
+      "line": 22,
       "owner": "@beep/law-practice-use-cases",
       "reason": "Fixed installation policy and artifact fixtures verify profile/version claims, exact resource-count refusal, server-only exports and source-free closed errors. These tests intentionally prove cross-field policy and privacy regressions rather than generic schema round trips."
     },

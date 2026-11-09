@@ -2799,6 +2799,72 @@
       "reason": "Owner: @beep/observability. runWithLayer scopes the layer so closing it flushes the OTLP exporters before the caller asserts on the captured requests; the helper comment says so. Without the shorter scope the exports arrive only at test teardown, after the assertions. Exit: retire when EV004 recognises a helper scope whose close the caller's later assertions observe (#1855 wave 4 register)."
     },
     {
+      "id": "EV004:packages/law-practice/server/test/CitationNativeSocket.test.ts:270:scoped@19#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/CitationNativeSocket.test.ts",
+      "line": 270,
+      "endLine": 284,
+      "symbol": "scoped",
+      "occurrence": "v2:4ed9ceb75ebc0cd4e07e17694057408185137d9d431e4519bd407890a8af0255",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const rpc = yield* client(child); yield* rpc.Echo({ text: \"ready\" }); const busy = yield* rpc.Busy().pipe(Effect.forkChild); const marker = yield* child.stderr",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Reviewed intentional shorter lifetime: this Effect.scoped closes only the RPC client on the owned child's socket, before the surrounding owned-process operation retires the child and the test asserts its physical retirement. Reviewed in goals/citation-extraction-engine."
+    },
+    {
+      "id": "EV004:packages/law-practice/server/test/CitationNativeSocket.test.ts:224:scoped@19#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/CitationNativeSocket.test.ts",
+      "line": 224,
+      "endLine": 241,
+      "symbol": "scoped",
+      "occurrence": "v2:b7b89b1ab8191771fbc53e1028eb4ca41fce1263656e74a1a08b22828190c915",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const rpc = yield* client(child); const echoed = yield* rpc.Echo({ text: \"ready\" }); expect(echoed).toBe(\"ready\"); const blocked = yield* rpc.Busy().pipe(Effec",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Reviewed intentional shorter lifetime: this Effect.scoped closes only the RPC client on the owned child's socket, before the surrounding owned-process operation retires the child and the test asserts its physical retirement. Reviewed in goals/citation-extraction-engine."
+    },
+    {
+      "id": "EV004:packages/law-practice/server/test/CitationNativeSocket.test.ts:102:scoped@26#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/CitationNativeSocket.test.ts",
+      "line": 102,
+      "endLine": 107,
+      "symbol": "scoped",
+      "occurrence": "v2:982f41a01f40d8a7781b6a99abf652388ec311d0736f930a1ccc3e2675be4122",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const rpc = yield* client(child); return yield* Effect.forEach(values, (text) => rpc.Echo({ text }), { concurrency: 1 }); }) )",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Reviewed intentional shorter lifetime: this Effect.scoped closes only the RPC client on the owned child's socket, before the surrounding owned-process operation retires the child and the test asserts its physical retirement. Reviewed in goals/citation-extraction-engine."
+    },
+    {
       "id": "EV004:packages/law-practice/server/test/ClaimInspection.lexical.test.ts:688:scoped@81#1",
       "lens": "resource",
       "ruleId": "EV004",
@@ -3599,7 +3665,7 @@
       "symbol": "it.live",
       "occurrence": "v2:c027e67dd880a2a8fe4d854ffa24710fb29e526922688554f73771e44f9220b0",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"never restores over a synchronous turn start (subscription races the dispatch)\", Effect.fnUntraced(function* () { // A submit whose write starts the turn synchronously inside the set \u2014 // th",
+      "evidence": "it.live( \"never restores over a synchronous turn start (subscription races the dispatch)\", Effect.fnUntraced(function* () { // A submit whose write starts the turn synchronously inside the set — // th",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -3643,7 +3709,7 @@
       "symbol": "it.live",
       "occurrence": "v2:839f4c06674803449cc12ea63d0ef0fe4c6c3b982ae7010cc7e7aa1039f70146",
       "class": "unjustified-live-test",
-      "evidence": "it.live( \"restores the draft when the dispatch is swallowed\", Effect.fnUntraced(function* () { // A submit whose write is silently dropped \u2014 the zombie-node failure // mode the QA 2026-08-26 P0 found:",
+      "evidence": "it.live( \"restores the draft when the dispatch is swallowed\", Effect.fnUntraced(function* () { // A submit whose write is silently dropped — the zombie-node failure // mode the QA 2026-08-26 P0 found:",
       "replacement": {
         "primitive": "it.effect",
         "sketch": "it.effect: Use for runtime-boundary-in-test candidates (EV001, candidate class runtime-boundary-in-test) and unjustified-live-test judgments (EV009, candidate class unjustified-live-test)."
@@ -7019,6 +7085,94 @@
       "reason": "The suite needs the real Bun FileSystem and Path: PGlite data, the db-admin migration SQL and temporary vault trees read by the production file store with its canonical-root and inode checks, which MemoryFileSystem cannot back. Owner: @beep/documents-server. Exit: retire when the platform-resource provenance review accepts PGlite-backed suites."
     },
     {
+      "id": "EV010:packages/drivers/eyecite/test/index.test.ts:4:@effect/platform-node/NodeFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/eyecite",
+      "file": "packages/drivers/eyecite/test/index.test.ts",
+      "line": 4,
+      "endLine": 4,
+      "symbol": "@effect/platform-node/NodeFileSystem",
+      "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as NodeFileSystem from \"@effect/platform-node/NodeFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Authenticates the committed frozen six-form profile through the real filesystem; a MemoryFileSystem has no committed artifact to replay. Reviewed in goals/citation-extraction-engine."
+    },
+    {
+      "id": "EV010:packages/law-practice/server/test/CitationExtractorControls.test.ts:18:@effect/platform-bun/BunServices@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/CitationExtractorControls.test.ts",
+      "line": 18,
+      "endLine": 18,
+      "symbol": "@effect/platform-bun/BunServices",
+      "occurrence": "v2:30f5ad27b3466e9087faebe94dfc83f5ea9ae5070b9af25a085792eb5bd68f2c",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import * as BunServices from \"@effect/platform-bun/BunServices\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Runs real worker children requiring OS-visible entrypoints, temporary files and/or cleanup markers; MemoryFileSystem is not visible to those children. Reviewed in goals/citation-extraction-engine."
+    },
+    {
+      "id": "EV010:packages/law-practice/server/test/CitationNativeSocket.test.ts:14:@effect/platform-bun/BunServices@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/CitationNativeSocket.test.ts",
+      "line": 14,
+      "endLine": 14,
+      "symbol": "@effect/platform-bun/BunServices",
+      "occurrence": "v2:30f5ad27b3466e9087faebe94dfc83f5ea9ae5070b9af25a085792eb5bd68f2c",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import * as BunServices from \"@effect/platform-bun/BunServices\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Runs real worker children requiring OS-visible entrypoints, temporary files and/or cleanup markers; MemoryFileSystem is not visible to those children. Reviewed in goals/citation-extraction-engine."
+    },
+    {
+      "id": "EV010:packages/law-practice/server/test/CitationRecognizerWorker.test.ts:13:@effect/platform-bun/BunServices@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/CitationRecognizerWorker.test.ts",
+      "line": 13,
+      "endLine": 13,
+      "symbol": "@effect/platform-bun/BunServices",
+      "occurrence": "v2:30f5ad27b3466e9087faebe94dfc83f5ea9ae5070b9af25a085792eb5bd68f2c",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import * as BunServices from \"@effect/platform-bun/BunServices\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Runs real worker children requiring OS-visible entrypoints, temporary files and/or cleanup markers; MemoryFileSystem is not visible to those children. Reviewed in goals/citation-extraction-engine."
+    },
+    {
       "id": "EV010:packages/law-practice/server/test/CitationResourceObjects.test.ts:36:@effect/platform-bun/BunFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -7105,6 +7259,28 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+    },
+    {
+      "id": "EV010:packages/law-practice/server/test/CitationSixFormProjection.test.ts:11:@effect/platform-bun/BunServices@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/CitationSixFormProjection.test.ts",
+      "line": 11,
+      "endLine": 11,
+      "symbol": "@effect/platform-bun/BunServices",
+      "occurrence": "v2:30f5ad27b3466e9087faebe94dfc83f5ea9ae5070b9af25a085792eb5bd68f2c",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import * as BunServices from \"@effect/platform-bun/BunServices\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Runs real worker children requiring OS-visible entrypoints, temporary files and/or cleanup markers; MemoryFileSystem is not visible to those children. Reviewed in goals/citation-extraction-engine."
     },
     {
       "id": "EV010:packages/law-practice/server/test/CitationTokenAssembly.test.ts:16:@effect/platform-bun/BunFileSystem@0#1",

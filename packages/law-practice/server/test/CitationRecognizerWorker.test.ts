@@ -30,6 +30,8 @@ import { makeCitationBundledTestRuntime, makeCitationObservedSpawner } from "./C
 import type { EyeciteRecognizeOutput } from "@beep/eyecite";
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 
+const encodeFailureJson = S.encodeEffect(S.fromJsonString(CitationRecognizerFailure));
+
 const Range = S.Struct({ start: S.Natural, end: S.Natural, quote: S.String });
 const Profile = S.fromJsonString(
   S.Struct({
@@ -310,7 +312,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("actual pinned recogn
       const failure = yield* worker.recognize("35 U.S.C. 101").pipe(Effect.flip);
       expect(failure).toMatchObject({ _tag: "CitationRecognizerFailure", reason: "worker-diagnostic" });
       if (!S.is(CitationRecognizerFailure)(failure)) return yield* Effect.die("Expected diagnostic refusal");
-      const json = yield* S.encodeEffect(S.fromJsonString(CitationRecognizerFailure))(failure);
+      const json = yield* encodeFailureJson(failure);
       expect(json).not.toContain("PRIVATE-WORKER-SOURCE-SENTINEL");
       expect(json).not.toContain(cwd);
       const physical = yield* observed.snapshot;
@@ -393,7 +395,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("actual pinned recogn
         expect(responseBytes).toBeGreaterThan(0);
         if (reason === "channel-failed") expect(O.getOrThrow(lastExit)).toBe(7);
         if (!S.is(CitationRecognizerFailure)(failure)) return yield* Effect.die("Expected terminal refusal");
-        const json = yield* S.encodeEffect(S.fromJsonString(CitationRecognizerFailure))(failure);
+        const json = yield* encodeFailureJson(failure);
         expect(json).not.toContain("PRIVATE-LATE-WORKER-SENTINEL");
         expect(json).not.toContain(cwd);
         const physical = yield* observed.snapshot;

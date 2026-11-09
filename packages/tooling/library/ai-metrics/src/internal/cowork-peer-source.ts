@@ -105,8 +105,21 @@ def observe(connection, policy):
 active_socket = None
 
 
+def release_socket():
+    if active_socket is not None:
+        try:
+            path, expected = active_socket
+            current = os.lstat(path)
+            if stat.S_ISSOCK(current.st_mode) and current.st_uid == os.getuid() and identity(current) == expected:
+                os.unlink(path)
+        except OSError:
+            pass
+
+
 def terminate(_signal, _frame):
-    # A controlled parent failure unwinds the exact-owned socket finalizer.
+    # The parent closes stdin just before SIGTERM, so this can land inside the finalizer
+    # below. Raising alone would abandon that cleanup, so release the exact-owned socket first.
+    release_socket()
     raise SystemExit(2)
 
 
@@ -175,12 +188,5 @@ except Exception:
     # No exception messages, callback bodies, or native process values are logged.
     sys.exit(2)
 finally:
-    if active_socket is not None:
-        try:
-            path, expected = active_socket
-            current = os.lstat(path)
-            if stat.S_ISSOCK(current.st_mode) and current.st_uid == os.getuid() and identity(current) == expected:
-                os.unlink(path)
-        except OSError:
-            pass
+    release_socket()
 `;
