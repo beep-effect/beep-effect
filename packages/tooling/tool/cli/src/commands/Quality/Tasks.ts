@@ -93,6 +93,7 @@ import {
   compareCoverageRegressionBaseline,
   coverageBaselineRowDeltaFromBase,
   coverageRegressionBaselinePath,
+  originMainMergeBase,
   writeCoverageRegressionBaseline,
 } from "./internal/CoverageRegression.ts";
 import {
@@ -175,7 +176,7 @@ import type { PgliteTestcontainerResource } from "@beep/test-utils";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
-import type { CoverageBaselineRowDelta } from "./internal/CoverageScope.ts";
+import type { CoverageBaselineRowDelta, CoverageScopeMode } from "./internal/CoverageScope.ts";
 import type { FlakeQuarantineTask } from "./internal/FlakeQuarantine.ts";
 import type { LaneProofSession } from "./internal/LaneProofReuse.ts";
 import type { LintPolicyAffectedTargets } from "./internal/LintPolicyScope.ts";
@@ -239,6 +240,10 @@ const COVERAGE_SELECTED_SINGLE_RUN_MAX_WEIGHT_SECONDS = 300;
 const COVERAGE_WRITE_BASELINE_ARG = "--write-baseline";
 const COVERAGE_REPLACE_ALL_ARG = "--replace-all";
 const COVERAGE_ADD_MISSING_FILES_ONLY_ARG = "--add-missing-files-only";
+// A bare local `bun run coverage` plans against the merge base like
+// `yeet final-check`; `--full` opts back into the sharded whole-workspace
+// proof. The flag is coverage-owned and never reaches turbo.
+const COVERAGE_FULL_ARG = "--full";
 // A single lost child-exit signal must fail with the command name while the
 // workflow still has time to report and clean up. The longest healthy policy
 // child is under eight minutes on the hosted heavy runner.
@@ -756,6 +761,7 @@ const explicitTurboFilterValues = (args: ReadonlyArray<string>): ReadonlyArray<s
 
 const isCoverageWriteBaselineArg = (arg: string): boolean => arg === COVERAGE_WRITE_BASELINE_ARG;
 const isCoverageReplaceAllArg = (arg: string): boolean => arg === COVERAGE_REPLACE_ALL_ARG;
+const isCoverageFullArg = (arg: string): boolean => arg === COVERAGE_FULL_ARG;
 
 const isCoveragePassthroughDelimiter = (arg: string): boolean => arg === "--";
 
@@ -763,6 +769,7 @@ const stripCoverageControlArgs: (args: ReadonlyArray<string>) => ReadonlyArray<s
   (arg) =>
     !isCoverageWriteBaselineArg(arg) &&
     !isCoverageReplaceAllArg(arg) &&
+    !isCoverageFullArg(arg) &&
     arg !== COVERAGE_ADD_MISSING_FILES_ONLY_ARG &&
     !isCoveragePassthroughDelimiter(arg)
 );
@@ -968,6 +975,7 @@ const isCoverageFullOwnedBooleanArg = (arg: string): boolean =>
   arg === COVERAGE_WRITE_BASELINE_ARG ||
   arg === COVERAGE_REPLACE_ALL_ARG ||
   arg === COVERAGE_ADD_MISSING_FILES_ONLY_ARG ||
+  isCoverageFullArg(arg) ||
   arg === "--only" ||
   Str.startsWith("--only=")(arg) ||
   arg === "--summarize" ||
@@ -1115,6 +1123,136 @@ const resolveCoverageTaskOptions = Effect.fn("QualityTasks.resolveCoverageTaskOp
     ),
     Match.exhaustive
   );
+});
+
+const isCoverageExplicitScopeArg = (arg: string): boolean =>
+  isExplicitTurboAffectedOrScopeArg(arg) ||
+  isCoverageWriteBaselineArg(arg) ||
+  isCoverageReplaceAllArg(arg) ||
+  arg === COVERAGE_ADD_MISSING_FILES_ONLY_ARG;
+
+/**
+ * Decide how a root `coverage` invocation scopes itself.
+ *
+ * **Details**
+ *
+ * Caller-pinned arguments (`--filter`, `--since`, `--affected`,
+ * `--write-baseline`, `--replace-all`, `--add-missing-files-only`) win and
+ * resolve as written. Otherwise CI and the `--full` opt-in take the sharded
+ * whole-workspace proof, and a bare local run plans against the merge base,
+ * the same affected plan `yeet final-check` trusts. Hosted Test Unit stays
+ * the proof of record either way; the local default only changes what a bare
+ * invocation measures, and it says so on its first `[beep-cli]` line.
+ *
+ * **Example** (A bare local run is affected, CI is full)
+ *
+ * ```ts
+ * import { resolveCoverageScopeMode } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(resolveCoverageScopeMode([], false)) // "affected"
+ * console.log(resolveCoverageScopeMode([], true)) // "full"
+ * console.log(resolveCoverageScopeMode(["--filter=@beep/schema"], false)) // "explicit"
+ * ```
+ *
+ * @param args - Root coverage arguments before any control flag is stripped.
+ * @param ci - Whether the process runs under CI.
+ * @returns The scope mode the root resolver applies.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const resolveCoverageScopeMode: {
+  (ci: boolean): (args: ReadonlyArray<string>) => CoverageScopeMode;
+  (args: ReadonlyArray<string>, ci: boolean): CoverageScopeMode;
+} = dual(2, (args: ReadonlyArray<string>, ci: boolean): CoverageScopeMode => {
+  const stripped = stripPassthroughDelimiter(args);
+  return A.some(stripped, isCoverageExplicitScopeArg)
+    ? "explicit"
+    : ci || A.some(stripped, isCoverageFullArg)
+      ? "full"
+      : "affected";
+});
+
+// The affected default pins the same base the explicit path does when the
+// caller configured one; otherwise the origin/main merge base of HEAD.
+const resolveDefaultCoverageBase = Effect.fn("QualityTasks.resolveDefaultCoverageBase")(function* (repoRoot: string) {
+  const configured = yield* configStringOption("TURBO_SCM_BASE");
+  if (O.isSome(configured)) return configured;
+  return yield* originMainMergeBase(repoRoot);
+});
+
+const resolveDefaultAffectedCoverageTaskOptions = Effect.fn("QualityTasks.resolveDefaultAffectedCoverageTaskOptions")(
+  function* (
+    repoRoot: string,
+    args: ReadonlyArray<string>
+  ): Effect.fn.Return<CoverageTaskOptions, QualityTaskConfigurationError, QualityTaskEnvironment> {
+    const base = yield* resolveDefaultCoverageBase(repoRoot);
+    return yield* O.match(base, {
+      onNone: () =>
+        Console.log(
+          `[beep-cli] coverage: full fallback (TURBO_SCM_BASE is unset and no origin/main merge base resolves for HEAD; pass ${COVERAGE_FULL_ARG} to request the full proof explicitly)`
+        ).pipe(Effect.andThen(resolveCoverageTaskOptions(repoRoot, args))),
+      onSome: (resolved) =>
+        Console.log(
+          `[beep-cli] coverage: bare local run defaults to --affected against ${resolved}; pass ${COVERAGE_FULL_ARG} for the full sharded proof (hosted Test Unit is the proof of record)`
+        ).pipe(Effect.andThen(resolveCoverageTaskOptions(repoRoot, ["--affected", ...args], resolved))),
+    });
+  }
+);
+
+// `--full` beside a scope-pinning flag would print a full-proof line over a
+// scoped run; refusing it keeps the first `[beep-cli]` line truthful.
+const resolveRootCoverageTaskOptions = Effect.fn("QualityTasks.resolveRootCoverageTaskOptions")(function* (
+  repoRoot: string,
+  args: ReadonlyArray<string>
+): Effect.fn.Return<CoverageTaskOptions, QualityTaskConfigurationError, QualityTaskEnvironment> {
+  const mode = resolveCoverageScopeMode(args, isCiSync());
+  const fullRequested = A.some(args, isCoverageFullArg);
+  return yield* Match.value(mode).pipe(
+    Match.when("explicit", () =>
+      fullRequested
+        ? QualityTaskConfigurationError.new(
+            `${COVERAGE_FULL_ARG} cannot be combined with --filter, --since, --affected, ${COVERAGE_WRITE_BASELINE_ARG}, ${COVERAGE_REPLACE_ALL_ARG} or ${COVERAGE_ADD_MISSING_FILES_ONLY_ARG}; those arguments already decide the coverage scope.`
+          )
+        : resolveCoverageTaskOptions(repoRoot, args)
+    ),
+    Match.when("full", () =>
+      (fullRequested
+        ? Console.log(`[beep-cli] coverage: ${COVERAGE_FULL_ARG} requested; running the full sharded proof`)
+        : Effect.void
+      ).pipe(Effect.andThen(resolveCoverageTaskOptions(repoRoot, args)))
+    ),
+    Match.when("affected", () => resolveDefaultAffectedCoverageTaskOptions(repoRoot, args)),
+    Match.exhaustive
+  );
+});
+
+/**
+ * Resolve root coverage arguments the way `bun run coverage` does at run time.
+ *
+ * **Details**
+ *
+ * Unlike {@link validateCoverageTaskArgsForTesting}, this applies the local
+ * scope default: a bare run outside CI plans against the merge base and
+ * `--full` opts back into the sharded full proof.
+ *
+ * **Example** (Build a root resolution effect)
+ *
+ * ```ts
+ * import { resolveRootCoverageTaskOptionsForTesting } from "@beep/repo-cli/test/Quality"
+ * import * as Effect from "effect/Effect";
+ * console.log(Effect.isEffect(resolveRootCoverageTaskOptionsForTesting("/repo", ["--full"]))) // true
+ * ```
+ *
+ * @param repoRoot - Repository root used for merge-base and workspace discovery.
+ * @param args - Root coverage passthrough arguments.
+ * @returns The resolved coverage options after the scope default is applied.
+ * @category testing
+ * @since 0.0.0
+ */
+export const resolveRootCoverageTaskOptionsForTesting = Effect.fn(
+  "QualityTasks.resolveRootCoverageTaskOptionsForTesting"
+)(function* (repoRoot: string, args: ReadonlyArray<string>) {
+  return yield* resolveRootCoverageTaskOptions(repoRoot, args);
 });
 
 /**
@@ -4657,7 +4795,7 @@ const runRootCoverageTask = Effect.fn("QualityTasks.runRootCoverageTask")(functi
   repoRoot: string,
   args: ReadonlyArray<string>
 ) {
-  const options = yield* resolveCoverageTaskOptions(repoRoot, args);
+  const options = yield* resolveRootCoverageTaskOptions(repoRoot, args);
   if (!options.writeBaseline && configStringEqualsSync("VITEST_COVERAGE_REPORT_ONLY", "1")) {
     return yield* QualityTaskConfigurationError.new(
       "VITEST_COVERAGE_REPORT_ONLY is only supported for coverage baseline regeneration. Run `bun run coverage:baseline:write` to regenerate the baseline, or unset it for the coverage gate."

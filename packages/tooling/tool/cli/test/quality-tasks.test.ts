@@ -52,6 +52,7 @@ import {
   CoverageFileBaseline,
   CoveragePackageBaseline,
   CoverageRegressionBaseline,
+  CoverageScopeMode,
   CoverageScopeOwner,
   CoverageSelfJudgeScope,
   CoverageSnapshotEntry,
@@ -142,9 +143,11 @@ import {
   renderCoverageLoweredFloors,
   renderCoverageMeasuredRowProposals,
   renderCoverageRemediation,
+  resolveCoverageScopeMode,
   resolveLaneInputDigestForTesting,
   resolveLiveQualityConcurrencyPlan,
   resolveQualityConcurrencyPlan,
+  resolveRootCoverageTaskOptionsForTesting,
   reviewFixDocgenLocalArgsForTesting,
   rootDocsCacheKey,
   rootLintPolicyStepsForTesting,
@@ -7526,7 +7529,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       );
 
       it("weighs a selection with the shard planner's per-package seconds, counting duplicates once", () => {
-        expect(coverageScopeWeightSeconds(["@beep/repo-cli", "@beep/repo-cli"])).toBe(720.62);
+        expect(coverageScopeWeightSeconds(["@beep/repo-cli", "@beep/repo-cli"])).toBe(1191.7);
         expect(coverageScopeWeightSeconds(["@beep/unknown-a", "@beep/unknown-b"])).toBe(30);
       });
 
@@ -8587,6 +8590,161 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         )
       );
 
+      it.effect("defaults a bare local run to the affected plan and lets --full, CI and pinned flags opt out", () =>
+        Effect.andThen(
+          temporaryRepository,
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const repoRoot = process.cwd();
+            const baselinePath = path.join(repoRoot, "standards/coverage.regression-baseline.jsonc");
+            yield* fs.makeDirectory(path.dirname(baselinePath), { recursive: true });
+            const rootManifest = yield* encodeJson({
+              name: "@beep/test-root",
+              private: true,
+              workspaces: ["packages/*"],
+            });
+            yield* fs.writeFileString(path.join(repoRoot, "package.json"), rootManifest);
+            yield* Effect.forEach(
+              ["touched", "untouched"],
+              Effect.fnUntraced(function* (name) {
+                yield* fs.makeDirectory(path.join(repoRoot, `packages/${name}/src`), { recursive: true });
+                const manifest = yield* encodeJson({
+                  name: `@beep/${name}`,
+                  private: true,
+                  scripts: { coverage: "vitest" },
+                });
+                yield* fs.writeFileString(path.join(repoRoot, `packages/${name}/package.json`), manifest);
+                yield* fs.writeFileString(
+                  path.join(repoRoot, `packages/${name}/src/Index.ts`),
+                  "export const v = 1;\n"
+                );
+              })
+            );
+            const baseline = yield* encodeCoverageRegressionBaseline(
+              withRows({
+                "@beep/touched": coveragePackageBaseline("packages/touched"),
+                "@beep/untouched": coveragePackageBaseline("packages/untouched"),
+              })
+            );
+            const encodedBaseline = yield* encodeJson(baseline);
+            yield* fs.writeFileString(baselinePath, encodedBaseline);
+            yield* runGit(repoRoot, ["init"]);
+            yield* runGit(repoRoot, ["config", "user.email", "coverage-default@example.test"]);
+            yield* runGit(repoRoot, ["config", "user.name", "Coverage Default Test"]);
+            yield* runGit(repoRoot, ["config", "commit.gpgsign", "false"]);
+            yield* runGit(repoRoot, ["add", "--all"]);
+            yield* runGit(repoRoot, ["commit", "-m", "seed"]);
+            // One dirty source file: the affected planner selects its owner only.
+            yield* fs.writeFileString(path.join(repoRoot, "packages/touched/src/Index.ts"), "export const v = 2;\n");
+
+            const localCi = { CI: "false", GITHUB_ACTIONS: "false", CONTINUOUS_INTEGRATION: "false" };
+            const resolveWith = (
+              args: ReadonlyArray<string>,
+              env: Readonly<Record<string, string | undefined>>,
+              config: Readonly<Record<string, string>>
+            ) =>
+              pipe(
+                R.toEntries(env),
+                A.reduce(resolveRootCoverageTaskOptionsForTesting(repoRoot, args), (use, [name, value]) =>
+                  withEnvVarEffect(name, value, use)
+                ),
+                Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(config))
+              );
+            const defaultLine = (lines: ReadonlyArray<string>) =>
+              A.findFirst(lines, Str.startsWith("[beep-cli] coverage: bare local run defaults to --affected against "));
+            let seen = 0;
+            const resolveAndLog = Effect.fnUntraced(function* (
+              args: ReadonlyArray<string>,
+              env: Readonly<Record<string, string | undefined>>,
+              config: Readonly<Record<string, string>>
+            ) {
+              const options = yield* resolveWith(args, env, config);
+              const logged = yield* TestConsole.logLines;
+              const lines = A.filter(A.drop(logged, seen), isString);
+              seen = A.length(logged);
+              return [options, lines] as const;
+            });
+
+            // Bare local run: affected against the configured base, one scope line.
+            const [bare, bareLines] = yield* resolveAndLog([], localCi, { TURBO_SCM_BASE: "HEAD" });
+            expect(bare.scoped).toBe(true);
+            expect(bare.skip).toBe(false);
+            expect(bare.expectedPackageNames).toEqual(["@beep/touched"]);
+            expect(bare.args).toContain("--filter=@beep/touched");
+            expect(bare.args).not.toContain("--affected");
+            assertSome(
+              defaultLine(bareLines),
+              "[beep-cli] coverage: bare local run defaults to --affected against HEAD; pass --full for the full sharded proof (hosted Test Unit is the proof of record)"
+            );
+            expect(A.some(bareLines, Str.startsWith("[beep-cli] coverage:affected: selected @beep/touched"))).toBe(
+              true
+            );
+
+            // --full opts back into the sharded full proof and never reaches turbo.
+            const [full, fullLines] = yield* resolveAndLog(["--full"], localCi, { TURBO_SCM_BASE: "HEAD" });
+            expect(full.scoped).toBe(false);
+            expect(full.args).not.toContain("--full");
+            expect(full.args).not.toContain("--affected");
+            assertNone(defaultLine(fullLines));
+            expect(fullLines).toContain("[beep-cli] coverage: --full requested; running the full sharded proof");
+            const [fullPassthrough] = yield* resolveAndLog(["--", "--full", "--concurrency=1"], localCi, {
+              TURBO_SCM_BASE: "HEAD",
+            });
+            expect(fullPassthrough.scoped).toBe(false);
+            expect(fullPassthrough.args).toEqual(["--concurrency=1"]);
+            // --full beside a scope-pinning flag is refused rather than announced.
+            const fullFiltered = yield* Effect.exit(
+              resolveWith(["--full", "--filter=@beep/untouched"], localCi, { TURBO_SCM_BASE: "HEAD" })
+            );
+            fullFiltered.pipe(Exit.isFailure, assertTrue);
+            if (Exit.isFailure(fullFiltered)) {
+              assert.include(Cause.pretty(fullFiltered.cause), "--full cannot be combined with --filter");
+            }
+            const afterRefusal = yield* TestConsole.logLines;
+            expect(afterRefusal).toHaveLength(seen);
+
+            // CI keeps the existing behaviour: a bare run is the full proof, silently.
+            const [ci, ciLines] = yield* resolveAndLog([], { ...localCi, CI: "true" }, { TURBO_SCM_BASE: "HEAD" });
+            expect(ci.scoped).toBe(false);
+            expect(ci.args).not.toContain("--affected");
+            expect(ciLines).toEqual([]);
+
+            // Pinned flags resolve as written: no default, no scope line.
+            const [filtered, filteredLines] = yield* resolveAndLog(["--filter=@beep/untouched"], localCi, {
+              TURBO_SCM_BASE: "HEAD",
+            });
+            expect(filtered.scoped).toBe(true);
+            expect(filtered.expectedPackageNames).toEqual([]);
+            expect(filtered.args).toContain("--filter=@beep/untouched");
+            expect(filteredLines).toEqual([]);
+            const [baselineWrite, baselineWriteLines] = yield* resolveAndLog(["--write-baseline"], localCi, {
+              TURBO_SCM_BASE: "HEAD",
+            });
+            expect(baselineWrite.writeBaseline).toBe(true);
+            expect(baselineWrite.scoped).toBe(false);
+            expect(baselineWriteLines).toEqual([]);
+
+            // No TURBO_SCM_BASE and no origin/main: fall back to full and say so.
+            const [fallback, fallbackLines] = yield* resolveAndLog([], localCi, {});
+            expect(fallback.scoped).toBe(false);
+            expect(fallbackLines).toEqual([
+              "[beep-cli] coverage: full fallback (TURBO_SCM_BASE is unset and no origin/main merge base resolves for HEAD; pass --full to request the full proof explicitly)",
+            ]);
+
+            // With origin/main present the merge base itself becomes the base.
+            yield* runGit(repoRoot, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
+            const [mergeBase, mergeBaseLines] = yield* resolveAndLog([], localCi, {});
+            expect(mergeBase.scoped).toBe(true);
+            expect(mergeBase.expectedPackageNames).toEqual(["@beep/touched"]);
+            assertSome(
+              O.map(defaultLine(mergeBaseLines), (line) => /against [0-9a-f]{40}; pass --full/.test(line)),
+              true
+            );
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+      );
+
       it("selects the packages named by a row-only baseline edit instead of the full workspace", () => {
         const owners = [
           CoverageScopeOwner.make({ packageName: "@beep/a", packagePath: "packages/a", hasCoverage: true }),
@@ -8859,6 +9017,71 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       expect(A.some(shards, (shard) => A.contains(shard.packageNames, "@beep/repo-cli"))).toBe(true);
     });
 
+    it("resolves the root coverage scope mode from the caller flags and CI", () => {
+      expect(resolveCoverageScopeMode([], false)).toBe("affected");
+      expect(resolveCoverageScopeMode(["--", "--concurrency=3"], false)).toBe("affected");
+      expect(resolveCoverageScopeMode([], true)).toBe("full");
+      expect(resolveCoverageScopeMode(["--full"], false)).toBe("full");
+      expect(resolveCoverageScopeMode(["--", "--full"], false)).toBe("full");
+      for (const pinned of [
+        ["--filter=@beep/schema"],
+        ["--filter", "@beep/schema"],
+        ["--since=origin/main"],
+        ["--affected"],
+        ["--write-baseline"],
+        ["--write-baseline", "--replace-all", "--filter=@beep/schema"],
+        ["--write-baseline", "--add-missing-files-only", "--filter=@beep/schema"],
+        ["--full", "--filter=@beep/schema"],
+      ]) {
+        expect(resolveCoverageScopeMode(pinned, false), A.join(pinned, " ")).toBe("explicit");
+        expect(resolveCoverageScopeMode(pinned, true), A.join(pinned, " ")).toBe("explicit");
+      }
+      expect(CoverageScopeMode.is.affected(resolveCoverageScopeMode([], false))).toBe(true);
+    });
+
+    it.effect("gives law-practice-server and repo-cli their own shards across the live workspace", () =>
+      Effect.gen(function* () {
+        const repoRoot = yield* findRepoRoot();
+        const owners = yield* workspaceCoverageScopeOwners(repoRoot);
+        const packageNames = pipe(
+          owners,
+          A.filter((owner) => owner.hasCoverage),
+          A.map((owner) => owner.packageName)
+        );
+        const shards = planCoverageFullShards(packageNames, 10);
+        const shardOf = (packageName: string) =>
+          pipe(
+            shards,
+            A.findFirst((shard) => A.contains(shard.packageNames, packageName)),
+            O.map((shard) => shard.packageNames)
+          );
+
+        expect(A.length(shards)).toBe(10);
+        // Every owner lands exactly once, whatever the weights say.
+        expect(
+          pipe(
+            shards,
+            A.flatMap((shard) => shard.packageNames),
+            A.sort(Order.String)
+          )
+        ).toEqual(A.sort(packageNames, Order.String));
+        // The two long poles are alone; law-practice-server keeps the one-worker
+        // mixed topology (a second worker would break writer/judge parity).
+        assertSome(shardOf("@beep/law-practice-server"), ["@beep/law-practice-server"]);
+        assertSome(shardOf("@beep/repo-cli"), ["@beep/repo-cli"]);
+        expect(coverageVitestTopologyArgs(["@beep/law-practice-server"])).toEqual([
+          "--",
+          "--fileParallelism=true",
+          "--maxWorkers=1",
+        ]);
+        const mixed = A.filter(shards, (shard) => A.length(shard.packageNames) > 1);
+        expect(A.length(mixed)).toBe(8);
+        expect(A.every(mixed, (shard) => shard.weightSeconds < coverageScopeWeightSeconds(["@beep/repo-cli"]))).toBe(
+          true
+        );
+      })
+    );
+
     it("isolates the two live long poles in the calibrated ten-shard plan", () => {
       const shards = planCoverageFullShards(
         [
@@ -8886,8 +9109,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         10
       );
 
-      expect(shards[0]?.packageNames).toEqual(["@beep/repo-cli"]);
-      expect(shards[1]?.packageNames).toEqual(["@beep/repo-utils"]);
+      expect(shards[0]?.packageNames).toEqual(["@beep/law-practice-server"]);
+      expect(shards[1]?.packageNames).toEqual(["@beep/repo-cli"]);
       expect(A.every(A.drop(shards, 2), (shard) => shard.weightSeconds < 300)).toBe(true);
     });
 
