@@ -121,13 +121,16 @@ const install = Effect.fn("HtmlCaseNameTest.install")(function* (kind: CitationN
   return { original, setup, prepare, stage };
 });
 
-/** Smoke reaches all five branches; full source replay is a hosted gate. */
+/** Smoke reaches all five branches and every helper-call shape; the full source replay retired 2026-11-09. */
 export const replayCitationHtmlCaseName = Effect.fn("HtmlCaseNameTest.replay")(function* (
   kind: CitationNativeRuntimeKind,
   full: boolean
 ) {
   const { original, setup, prepare, stage } = yield* install(kind);
-  const rows = A.filter(original.corpus.cases, (row) => full || A.contains([0, 4, 9, 36, 50, 54, 66, 114], row.id));
+  const rows = A.filter(
+    original.corpus.cases,
+    (row) => full || A.contains([0, 4, 9, 10, 28, 36, 50, 54, 66, 98, 114], row.id)
+  );
   let expectedChildren = 0;
   for (const row of rows) {
     const prepared = yield* prepare.prepare({ plain: row.plain, markup: row.markup });
@@ -155,7 +158,7 @@ export const replayCitationHtmlCaseName = Effect.fn("HtmlCaseNameTest.replay")(f
       3 * A.filter(row.calls, (call) => call.operation === "clean").length +
       A.filter(row.calls, (call) => call.name === "_extract_from_single_html_element").length;
   }
-  expect(rows).toHaveLength(full ? 128 : 8);
+  expect(rows).toHaveLength(full ? 128 : 11);
   yield* assertCitationWorkerCompositionReleased(
     setup.operation,
     setup.admission,

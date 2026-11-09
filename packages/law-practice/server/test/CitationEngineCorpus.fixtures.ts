@@ -21,6 +21,14 @@ import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/intern
 import type { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 
 const sameSource = S.toEquivalence(SourceTextIdentity);
+/** Odd corpus ids whose only difference from the preceding even row is `removeAmbiguous: true`
+ * with an identical expected document. The full replays skip them (deletion addendum G8,
+ * 2026-11-09); ids 5, 25 and 33 stay because their expected documents differ from their twins.
+ * @internal @category testing @since 0.0.0
+ */
+export const citationEngineCorpusAmbiguousTwins: ReadonlyArray<number> = [
+  1, 3, 7, 9, 11, 13, 15, 17, 19, 21, 23, 27, 29, 31,
+];
 /** Full and focused modes construct production owners through the default public
  * Layer and install every production pattern/helper. Only the
  * replay document set differs. Compare source kinds/components, represented
@@ -65,7 +73,9 @@ export const replayCitationEngineCorpus = Effect.fn("EngineCorpusTest.replay")(f
   expect(shortcut.report.extraction?.tokenizer).toBe(null);
   const before = yield* setup.observed.snapshot;
   expect(before).toEqual({ spawned: 0, confirmed: 0 });
-  const rows = A.filter(corpus.cases, (row) => full || A.contains([4, 14, 18, 20, 22, 26, 32], row.id));
+  const rows = A.filter(corpus.cases, (row) =>
+    full ? !A.contains(citationEngineCorpusAmbiguousTwins, row.id) : A.contains([4, 14, 18, 20, 22, 26, 32], row.id)
+  );
   let families = HashSet.empty<string>();
   const replayRow = Effect.fn("EngineCorpusTest.replayRow")(function* (row: (typeof corpus.cases)[number]) {
     const plain = yield* unicode.fromStorage(row.plain);
@@ -94,7 +104,7 @@ export const replayCitationEngineCorpus = Effect.fn("EngineCorpusTest.replay")(f
     expect(result.report.extraction?.verifiedMentions).toBe(row.expected.length);
   });
   for (const row of rows) yield* replayRow(row);
-  expect(rows).toHaveLength(full ? 36 : 7);
+  expect(rows).toHaveLength(full ? 22 : 7);
   expect(HashSet.size(families)).toBe(8);
   yield* assertCitationWorkerCompositionObserved(operation, admission, setup.observed.snapshot);
 });

@@ -71,7 +71,7 @@ export const replayCitationHtmlDiscovery = Effect.fn("HtmlDiscoveryTest.replay")
   full: boolean
 ) {
   const setup = yield* install(kind);
-  const smoke = [0, 1, 4, 6, 10, 12, 15, 28, 31, 36, 39, 140, 141, 142, 143, 249];
+  const smoke = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 28, 31, 36, 39, 140, 141, 142, 143, 249];
   const rows = A.filter(setup.corpus.cases, (row) => full || A.contains(smoke, row.id));
   for (const row of rows) {
     const run = setup.stage.discover(row.markup);
@@ -80,7 +80,7 @@ export const replayCitationHtmlDiscovery = Effect.fn("HtmlDiscoveryTest.replay")
     expect(result.placeholder, `${kind}:${row.id}:placeholder`).toEqual(row.placeholder);
     expect(result.tags, `${kind}:${row.id}:tags`).toEqual(row.tags);
   }
-  expect(rows).toHaveLength(full ? 250 : 16);
+  expect(rows).toHaveLength(full ? 250 : 23);
   yield* assertCitationWorkerCompositionReleased(
     setup.operation,
     setup.admission,

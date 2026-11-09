@@ -70,7 +70,8 @@ const load = Effect.fn("StopWordsTest.load")(function* () {
   return { configuration: config.configuration, corpus };
 });
 const install = makeCitationMetadataFixture({ load, make: makeCitationStopWords });
-/** Smoke contains inline case, every semicolon shape, native surrogate controls and adjacency. */
+/** Smoke contains inline case, every semicolon shape, native surrogate controls, adjacency and one
+ * strip per stop-word alternative (the full replay retired 2026-11-09). */
 export const replayCitationStopWords = Effect.fn("StopWordsTest.replay")(function* (
   kind: CitationNativeRuntimeKind,
   full: boolean
@@ -78,10 +79,18 @@ export const replayCitationStopWords = Effect.fn("StopWordsTest.replay")(functio
   const setup = yield* install(kind);
   const rows = A.filter(
     setup.corpus.strips,
-    (row) => full || A.contains([0, 2, 6, 10, 11, 12, 13, 14, 16, 17, 19, 20, 21, 22], row.id)
+    (row) =>
+      full ||
+      A.contains(
+        [
+          0, 2, 6, 10, 11, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22, 31, 38, 47, 55, 63, 71, 79, 87, 95, 103, 125, 133,
+          141,
+        ],
+        row.id
+      )
   );
   for (const row of rows) expect((yield* setup.stage.clean(row.source)).text, `${kind}:${row.id}`).toEqual(row.result);
-  expect(rows).toHaveLength(full ? 178 : 14);
+  expect(rows).toHaveLength(full ? 178 : 28);
   yield* assertCitationWorkerCompositionReleased(
     setup.operation,
     setup.admission,

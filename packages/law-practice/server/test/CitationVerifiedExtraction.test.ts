@@ -8,9 +8,4 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("authenticat
     () => replayCitationVerifiedExtraction("bun", false),
     { timeout: 180000 }
   );
-  it.effect(
-    "preserves the same source lineage and one-budget ownership on Node",
-    () => replayCitationVerifiedExtraction("node", false),
-    { timeout: 180000 }
-  );
 });

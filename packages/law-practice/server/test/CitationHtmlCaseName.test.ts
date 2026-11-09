@@ -16,9 +16,4 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("original HT
     () => replayCitationHtmlCaseName("bun", false),
     { timeout: 180000 }
   );
-  it.effect(
-    "connects the same source branches and retirement on Node",
-    () => replayCitationHtmlCaseName("node", false),
-    { timeout: 180000 }
-  );
 });

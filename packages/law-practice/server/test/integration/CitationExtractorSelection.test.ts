@@ -43,7 +43,7 @@ const Extractors = S.fromJsonString(
   })
 );
 
-// Full source configuration installation/replay stays in hosted integration.
+// Bun only; the sole replay of controls.canonical.cases (kept 2026-11-09, deletion-addendum review).
 it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestServices: true })(
   "source extractor selection",
   (it) => {

@@ -16,6 +16,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
+import { citationEngineCorpusAmbiguousTwins } from "./CitationEngineCorpus.fixtures.ts";
 import { assertCitationNativeRange, citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
 import { assertCitationTokenizedExtractionRow } from "./CitationTokenizedExtraction.fixtures.ts";
@@ -153,7 +154,9 @@ export const replayCitationVerifiedExtraction = Effect.fn("VerifiedExtractionTes
 ) {
   const installed = yield* installCitationDefaultConfigurationFixture(kind);
   const { corpus, setup, defaultConfiguration, engineArtifact, translated, provided } = installed;
-  const rows = A.filter(corpus.cases, (row) => full || A.contains([4, 26, 32], row.id));
+  const rows = A.filter(corpus.cases, (row) =>
+    full ? !A.contains(citationEngineCorpusAmbiguousTwins, row.id) : A.contains([4, 26, 32], row.id)
+  );
   const config = { engineArtifact, extraction: defaultConfiguration };
   const stage = yield* makeCitationVerifiedExtraction(setup.limits, setup.runtime, config).pipe(
     Effect.provideContext(provided),
@@ -194,6 +197,6 @@ export const replayCitationVerifiedExtraction = Effect.fn("VerifiedExtractionTes
     expect(actual.reservedUnits).toBeGreaterThan(actual.semantic.reservedUnits);
     if (!full) yield* assertResolvedRequest(installed, input, actual, row);
   }
-  expect(rows).toHaveLength(full ? 36 : 3);
+  expect(rows).toHaveLength(full ? 22 : 3);
   yield* assertCitationWorkerCompositionObserved(setup.operation, setup.admission, setup.observed.snapshot);
 });
