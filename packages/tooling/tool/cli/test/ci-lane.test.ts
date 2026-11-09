@@ -4,6 +4,7 @@ import {
   CI_LANE_DESCRIPTORS,
   CI_LANE_ID_VALUES,
   CI_LANE_PARTITIONS,
+  CI_SHARDED_PARTITION_FILE_BUDGET_SECONDS,
   CiLaneId,
   CiLanePartition,
   CiLanePartitionShard,
@@ -501,22 +502,25 @@ describe("CI lane partitions", () => {
       { id: "unit-e", packages: 27, weightSeconds: 582 },
       { id: "unit-f", packages: 27, weightSeconds: 583 },
       { id: "unit-g", packages: 28, weightSeconds: 582 },
-      { id: "lps-int-1", packages: 1, weightSeconds: 407 },
-      { id: "lps-int-2", packages: 1, weightSeconds: 394 },
-      { id: "lps-int-3", packages: 1, weightSeconds: 337 },
-      { id: "lps-int-4", packages: 1, weightSeconds: 327 },
-      { id: "lps-int-5", packages: 1, weightSeconds: 318 },
-      { id: "lps-int-6", packages: 1, weightSeconds: 320 },
-      { id: "lps-int-7", packages: 1, weightSeconds: 324 },
-      { id: "lps-int-8", packages: 1, weightSeconds: 367 },
-      { id: "lps-int-9", packages: 1, weightSeconds: 362 },
-      { id: "lps-int-10", packages: 1, weightSeconds: 362 },
-      { id: "lps-int-11", packages: 1, weightSeconds: 374 },
-      { id: "lps-int-12", packages: 1, weightSeconds: 392 },
-      { id: "lps-int-13", packages: 1, weightSeconds: 425 },
-      { id: "lps-int-14", packages: 1, weightSeconds: 419 },
-      { id: "lps-int-15", packages: 1, weightSeconds: 407 },
-      { id: "lps-int-16", packages: 1, weightSeconds: 411 },
+      { id: "lps-int-1", packages: 1, weightSeconds: 422 },
+      { id: "lps-int-2", packages: 1, weightSeconds: 400 },
+      { id: "lps-int-3", packages: 1, weightSeconds: 391 },
+      { id: "lps-int-4", packages: 1, weightSeconds: 366 },
+      { id: "lps-int-5", packages: 1, weightSeconds: 359 },
+      { id: "lps-int-6", packages: 1, weightSeconds: 356 },
+      { id: "lps-int-7", packages: 1, weightSeconds: 355 },
+      { id: "lps-int-8", packages: 1, weightSeconds: 347 },
+      { id: "lps-int-9", packages: 1, weightSeconds: 328 },
+      { id: "lps-int-10", packages: 1, weightSeconds: 324 },
+      { id: "lps-int-11", packages: 1, weightSeconds: 312 },
+      { id: "lps-int-12", packages: 1, weightSeconds: 308 },
+      { id: "lps-int-13", packages: 1, weightSeconds: 310 },
+      { id: "lps-int-14", packages: 1, weightSeconds: 342 },
+      { id: "lps-int-15", packages: 1, weightSeconds: 356 },
+      { id: "lps-int-16", packages: 1, weightSeconds: 353 },
+      { id: "lps-int-17", packages: 1, weightSeconds: 367 },
+      { id: "lps-int-18", packages: 1, weightSeconds: 391 },
+      { id: "lps-int-19", packages: 1, weightSeconds: 421 },
       { id: "int-rest", packages: 0, weightSeconds: 60 },
     ]);
   });
@@ -555,22 +559,25 @@ describe("CI lane partitions", () => {
       { id: "unit-e", shard: undefined },
       { id: "unit-f", shard: undefined },
       { id: "unit-g", shard: undefined },
-      { id: "lps-int-1", shard: CiLanePartitionShard.make({ index: 1, total: 16 }) },
-      { id: "lps-int-2", shard: CiLanePartitionShard.make({ index: 2, total: 16 }) },
-      { id: "lps-int-3", shard: CiLanePartitionShard.make({ index: 3, total: 16 }) },
-      { id: "lps-int-4", shard: CiLanePartitionShard.make({ index: 4, total: 16 }) },
-      { id: "lps-int-5", shard: CiLanePartitionShard.make({ index: 5, total: 16 }) },
-      { id: "lps-int-6", shard: CiLanePartitionShard.make({ index: 6, total: 16 }) },
-      { id: "lps-int-7", shard: CiLanePartitionShard.make({ index: 7, total: 16 }) },
-      { id: "lps-int-8", shard: CiLanePartitionShard.make({ index: 8, total: 16 }) },
-      { id: "lps-int-9", shard: CiLanePartitionShard.make({ index: 9, total: 16 }) },
-      { id: "lps-int-10", shard: CiLanePartitionShard.make({ index: 10, total: 16 }) },
-      { id: "lps-int-11", shard: CiLanePartitionShard.make({ index: 11, total: 16 }) },
-      { id: "lps-int-12", shard: CiLanePartitionShard.make({ index: 12, total: 16 }) },
-      { id: "lps-int-13", shard: CiLanePartitionShard.make({ index: 13, total: 16 }) },
-      { id: "lps-int-14", shard: CiLanePartitionShard.make({ index: 14, total: 16 }) },
-      { id: "lps-int-15", shard: CiLanePartitionShard.make({ index: 15, total: 16 }) },
-      { id: "lps-int-16", shard: CiLanePartitionShard.make({ index: 16, total: 16 }) },
+      { id: "lps-int-1", shard: CiLanePartitionShard.make({ index: 1, total: 19 }) },
+      { id: "lps-int-2", shard: CiLanePartitionShard.make({ index: 2, total: 19 }) },
+      { id: "lps-int-3", shard: CiLanePartitionShard.make({ index: 3, total: 19 }) },
+      { id: "lps-int-4", shard: CiLanePartitionShard.make({ index: 4, total: 19 }) },
+      { id: "lps-int-5", shard: CiLanePartitionShard.make({ index: 5, total: 19 }) },
+      { id: "lps-int-6", shard: CiLanePartitionShard.make({ index: 6, total: 19 }) },
+      { id: "lps-int-7", shard: CiLanePartitionShard.make({ index: 7, total: 19 }) },
+      { id: "lps-int-8", shard: CiLanePartitionShard.make({ index: 8, total: 19 }) },
+      { id: "lps-int-9", shard: CiLanePartitionShard.make({ index: 9, total: 19 }) },
+      { id: "lps-int-10", shard: CiLanePartitionShard.make({ index: 10, total: 19 }) },
+      { id: "lps-int-11", shard: CiLanePartitionShard.make({ index: 11, total: 19 }) },
+      { id: "lps-int-12", shard: CiLanePartitionShard.make({ index: 12, total: 19 }) },
+      { id: "lps-int-13", shard: CiLanePartitionShard.make({ index: 13, total: 19 }) },
+      { id: "lps-int-14", shard: CiLanePartitionShard.make({ index: 14, total: 19 }) },
+      { id: "lps-int-15", shard: CiLanePartitionShard.make({ index: 15, total: 19 }) },
+      { id: "lps-int-16", shard: CiLanePartitionShard.make({ index: 16, total: 19 }) },
+      { id: "lps-int-17", shard: CiLanePartitionShard.make({ index: 17, total: 19 }) },
+      { id: "lps-int-18", shard: CiLanePartitionShard.make({ index: 18, total: 19 }) },
+      { id: "lps-int-19", shard: CiLanePartitionShard.make({ index: 19, total: 19 }) },
       { id: "int-rest", shard: undefined },
     ]);
     for (const id of ["repo-cli-1", "repo-cli-2", "repo-cli-3", "repo-cli-4", "repo-cli-5", "repo-cli-6"] as const) {
@@ -600,6 +607,11 @@ describe("CI lane partitions", () => {
       );
       expect(A.map(shards, (partition) => partition.shard?.index)).toEqual(A.range(1, A.length(shards)));
       expect(A.map(shards, (partition) => partition.weightSeconds)).toEqual(A.map(plan.shardSeconds, Math.round));
+      // Worst measured file seconds per shard stay within the sharded file budget, so the slowest
+      // observed hosted runner still finishes the partition under the ten-minute job target.
+      for (const seconds of plan.shardSeconds) {
+        expect(seconds).toBeLessThanOrEqual(CI_SHARDED_PARTITION_FILE_BUDGET_SECONDS);
+      }
     })
   );
 
@@ -612,13 +624,13 @@ describe("CI lane partitions", () => {
         partition: "lps-int-3",
         packages: ["@beep/law-practice-server"],
         options,
-        shard: CiLanePartitionShard.make({ index: 3, total: 16 }),
+        shard: CiLanePartitionShard.make({ index: 3, total: 19 }),
       })
     );
     expect(sharded.command).toBe("bunx");
     expect([...sharded.args]).toContain("@beep/law-practice-server#test:integration:parallel");
     expect([...sharded.args]).toContain("--filter=@beep/law-practice-server");
-    expect([...sharded.args]).toContain("--shard=3/16");
+    expect([...sharded.args]).toContain("--shard=3/19");
     expect([...sharded.args]).toContain("--maxWorkers=1");
     expect([...sharded.args]).not.toContain("--force");
 

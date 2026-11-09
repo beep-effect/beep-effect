@@ -77,8 +77,8 @@ export type PartitionedCiLane = typeof PartitionedCiLane.Type;
  *
  * `repo-cli-1` to `repo-cli-11` and `law-practice-1` to `law-practice-12` are
  * Vitest `--shard` slices of the `@beep/repo-cli#test` and
- * `@beep/law-practice-server#test` tasks, `lps-int-1` to `lps-int-16` the
- * sixteen slices of `@beep/law-practice-server#test:integration:parallel`;
+ * `@beep/law-practice-server#test` tasks, `lps-int-1` to `lps-int-19` the
+ * nineteen slices of `@beep/law-practice-server#test:integration:parallel`;
  * `int-rest` is the integration catch-all bin and every other partition is a
  * package bin.
  *
@@ -142,6 +142,9 @@ export const CiLanePartitionId = LiteralKit([
   "lps-int-14",
   "lps-int-15",
   "lps-int-16",
+  "lps-int-17",
+  "lps-int-18",
+  "lps-int-19",
   "int-rest",
 ]).pipe(
   $I.annoteSchema("CiLanePartitionId", {
@@ -859,124 +862,149 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
       "@beep/workspace-domain",
     ],
   }),
-  // Hosted Test Integration partitions (goals/citation-extraction-engine, 2026-11-09). Sixteen
+  // Hosted Test Integration partitions (goals/citation-extraction-engine, 2026-11-09). Nineteen
   // Vitest shards of @beep/law-practice-server's integration suite, placed by the LPT plan in
-  // packages/law-practice/server/vitest.integration.shards.json over the per-file hosted seconds
-  // measured on PR #3005 run 42637925544 (ubuntu-24.04, one worker); the weight is each bin's
-  // file-second sum. The shard total must equal that plan's length or Vitest falls back to its
-  // hash split. Every other package with an integration task is default-placed into `int-rest`,
-  // which runs the root integration lane with the sharded packages filtered out.
+  // packages/law-practice/server/vitest.integration.shards.json. The weight is each bin's sum of
+  // its files' worst hosted seconds over eight green runs (PR #3005 run 42656046751, main runs
+  // 42662847801, 42675828132 and 42677073526, pull-request runs 42679893579, 42680346897,
+  // 42682725454 and 42690710476; ubuntu-24.04, one worker). The count is the smallest whose
+  // largest bin equals the largest single file (422 s), and every bin stays within
+  // CI_SHARDED_PARTITION_FILE_BUDGET_SECONDS, which test/ci-lane.test.ts enforces. The shard total
+  // must equal that plan's length or Vitest falls back to its hash split. Every other package with
+  // an integration task is default-placed into `int-rest`, which runs the root integration lane
+  // with the sharded packages filtered out.
   CiLanePartition.make({
     id: "lps-int-1",
     lane: "test-integration",
-    weightSeconds: 407,
+    weightSeconds: 422,
     packages: ["@beep/law-practice-server"],
-    shard: CiLanePartitionShard.make({ index: 1, total: 16 }),
+    shard: CiLanePartitionShard.make({ index: 1, total: 19 }),
   }),
   CiLanePartition.make({
     id: "lps-int-2",
     lane: "test-integration",
-    weightSeconds: 394,
+    weightSeconds: 400,
     packages: ["@beep/law-practice-server"],
-    shard: CiLanePartitionShard.make({ index: 2, total: 16 }),
+    shard: CiLanePartitionShard.make({ index: 2, total: 19 }),
   }),
   CiLanePartition.make({
     id: "lps-int-3",
     lane: "test-integration",
-    weightSeconds: 337,
+    weightSeconds: 391,
     packages: ["@beep/law-practice-server"],
-    shard: CiLanePartitionShard.make({ index: 3, total: 16 }),
+    shard: CiLanePartitionShard.make({ index: 3, total: 19 }),
   }),
   CiLanePartition.make({
     id: "lps-int-4",
     lane: "test-integration",
-    weightSeconds: 327,
+    weightSeconds: 366,
     packages: ["@beep/law-practice-server"],
-    shard: CiLanePartitionShard.make({ index: 4, total: 16 }),
+    shard: CiLanePartitionShard.make({ index: 4, total: 19 }),
   }),
   CiLanePartition.make({
     id: "lps-int-5",
     lane: "test-integration",
-    weightSeconds: 318,
+    weightSeconds: 359,
     packages: ["@beep/law-practice-server"],
-    shard: CiLanePartitionShard.make({ index: 5, total: 16 }),
+    shard: CiLanePartitionShard.make({ index: 5, total: 19 }),
   }),
   CiLanePartition.make({
     id: "lps-int-6",
     lane: "test-integration",
-    weightSeconds: 320,
+    weightSeconds: 356,
     packages: ["@beep/law-practice-server"],
-    shard: CiLanePartitionShard.make({ index: 6, total: 16 }),
+    shard: CiLanePartitionShard.make({ index: 6, total: 19 }),
   }),
   CiLanePartition.make({
     id: "lps-int-7",
     lane: "test-integration",
-    weightSeconds: 324,
+    weightSeconds: 355,
     packages: ["@beep/law-practice-server"],
-    shard: CiLanePartitionShard.make({ index: 7, total: 16 }),
+    shard: CiLanePartitionShard.make({ index: 7, total: 19 }),
   }),
   CiLanePartition.make({
     id: "lps-int-8",
     lane: "test-integration",
-    weightSeconds: 367,
+    weightSeconds: 347,
     packages: ["@beep/law-practice-server"],
-    shard: CiLanePartitionShard.make({ index: 8, total: 16 }),
+    shard: CiLanePartitionShard.make({ index: 8, total: 19 }),
   }),
   CiLanePartition.make({
     id: "lps-int-9",
     lane: "test-integration",
-    weightSeconds: 362,
+    weightSeconds: 328,
     packages: ["@beep/law-practice-server"],
-    shard: CiLanePartitionShard.make({ index: 9, total: 16 }),
+    shard: CiLanePartitionShard.make({ index: 9, total: 19 }),
   }),
   CiLanePartition.make({
     id: "lps-int-10",
     lane: "test-integration",
-    weightSeconds: 362,
+    weightSeconds: 324,
     packages: ["@beep/law-practice-server"],
-    shard: CiLanePartitionShard.make({ index: 10, total: 16 }),
+    shard: CiLanePartitionShard.make({ index: 10, total: 19 }),
   }),
   CiLanePartition.make({
     id: "lps-int-11",
     lane: "test-integration",
-    weightSeconds: 374,
+    weightSeconds: 312,
     packages: ["@beep/law-practice-server"],
-    shard: CiLanePartitionShard.make({ index: 11, total: 16 }),
+    shard: CiLanePartitionShard.make({ index: 11, total: 19 }),
   }),
   CiLanePartition.make({
     id: "lps-int-12",
     lane: "test-integration",
-    weightSeconds: 392,
+    weightSeconds: 308,
     packages: ["@beep/law-practice-server"],
-    shard: CiLanePartitionShard.make({ index: 12, total: 16 }),
+    shard: CiLanePartitionShard.make({ index: 12, total: 19 }),
   }),
   CiLanePartition.make({
     id: "lps-int-13",
     lane: "test-integration",
-    weightSeconds: 425,
+    weightSeconds: 310,
     packages: ["@beep/law-practice-server"],
-    shard: CiLanePartitionShard.make({ index: 13, total: 16 }),
+    shard: CiLanePartitionShard.make({ index: 13, total: 19 }),
   }),
   CiLanePartition.make({
     id: "lps-int-14",
     lane: "test-integration",
-    weightSeconds: 419,
+    weightSeconds: 342,
     packages: ["@beep/law-practice-server"],
-    shard: CiLanePartitionShard.make({ index: 14, total: 16 }),
+    shard: CiLanePartitionShard.make({ index: 14, total: 19 }),
   }),
   CiLanePartition.make({
     id: "lps-int-15",
     lane: "test-integration",
-    weightSeconds: 407,
+    weightSeconds: 356,
     packages: ["@beep/law-practice-server"],
-    shard: CiLanePartitionShard.make({ index: 15, total: 16 }),
+    shard: CiLanePartitionShard.make({ index: 15, total: 19 }),
   }),
   CiLanePartition.make({
     id: "lps-int-16",
     lane: "test-integration",
-    weightSeconds: 411,
+    weightSeconds: 353,
     packages: ["@beep/law-practice-server"],
-    shard: CiLanePartitionShard.make({ index: 16, total: 16 }),
+    shard: CiLanePartitionShard.make({ index: 16, total: 19 }),
+  }),
+  CiLanePartition.make({
+    id: "lps-int-17",
+    lane: "test-integration",
+    weightSeconds: 367,
+    packages: ["@beep/law-practice-server"],
+    shard: CiLanePartitionShard.make({ index: 17, total: 19 }),
+  }),
+  CiLanePartition.make({
+    id: "lps-int-18",
+    lane: "test-integration",
+    weightSeconds: 391,
+    packages: ["@beep/law-practice-server"],
+    shard: CiLanePartitionShard.make({ index: 18, total: 19 }),
+  }),
+  CiLanePartition.make({
+    id: "lps-int-19",
+    lane: "test-integration",
+    weightSeconds: 421,
+    packages: ["@beep/law-practice-server"],
+    shard: CiLanePartitionShard.make({ index: 19, total: 19 }),
   }),
   CiLanePartition.make({
     id: "int-rest",

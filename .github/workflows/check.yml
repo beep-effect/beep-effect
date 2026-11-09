@@ -870,8 +870,10 @@ jobs:
   # `lps-int-N` runs one Vitest shard of @beep/law-practice-server's integration
   # suite from the LPT plan in packages/law-practice/server/vitest.integration.shards.json;
   # `int-rest` runs the root integration lane for every other package. Each
-  # partition is sized to finish under ten minutes; the budget leaves room for
-  # a mis-sized shard to report its own failure instead of a cancellation.
+  # partition is sized at its files' worst measured seconds over several green
+  # runs so the slowest observed runner still finishes under ten minutes; the
+  # timeout leaves room for a mis-sized shard to report its own failure instead
+  # of a cancellation.
   test-integration-shard:
     name: Test Integration (${{ matrix.partition }})
     needs: [change-profile]
@@ -884,7 +886,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        partition: [lps-int-1, lps-int-2, lps-int-3, lps-int-4, lps-int-5, lps-int-6, lps-int-7, lps-int-8, lps-int-9, lps-int-10, lps-int-11, lps-int-12, lps-int-13, lps-int-14, lps-int-15, lps-int-16, int-rest]
+        partition: [lps-int-1, lps-int-2, lps-int-3, lps-int-4, lps-int-5, lps-int-6, lps-int-7, lps-int-8, lps-int-9, lps-int-10, lps-int-11, lps-int-12, lps-int-13, lps-int-14, lps-int-15, lps-int-16, lps-int-17, lps-int-18, lps-int-19, int-rest]
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
