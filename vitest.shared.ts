@@ -14,10 +14,12 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import { mergeConfig } from "vitest/config";
+import { BaseSequencer } from "vitest/node";
 import { appSourceAlias } from "./vite.shared.ts";
 import generatedAliasPaths from "./vitest.aliases.generated.json" with { type: "json" };
 import type { Plugin } from "vite";
 import type { ViteUserConfig } from "vitest/config";
+import type { TestSpecification } from "vitest/node";
 
 type AliasEntry = {
   readonly find: RegExp | string;
@@ -317,3 +319,67 @@ export const browserTestConfig = (moduleUrl: string): ViteUserConfig =>
   });
 
 export default config;
+
+/**
+ * The committed shape of a package's `vitest.shards.json`.
+ *
+ * **Details**
+ *
+ * `shards[i]` lists the package-relative test files hosted shard `i + 1` runs. The other fields
+ * are provenance and the measured estimate behind the assignment; `beep ci partitions rebalance`
+ * owns them and the sequencer reads only `shards`. The sequencer lives in this file, which every
+ * Vitest Turbo task already hashes, so a scheduling change invalidates cached shard results.
+ *
+ * **Example** (A two-shard plan)
+ *
+ * ```ts
+ * import type { MeasuredShardPlan } from "./vitest.shared.ts"
+ * const plan: MeasuredShardPlan = { shards: [["test/a.test.ts"], ["test/b.test.ts"]] }
+ * ```
+ */
+export interface MeasuredShardPlan {
+  readonly shards: ReadonlyArray<ReadonlyArray<string>>;
+}
+
+// The one-based shard a package-relative test file is planned into.
+const plannedShardIndex = (plan: MeasuredShardPlan, relativeFile: string): O.Option<number> =>
+  A.findFirstIndex(plan.shards, (entries) => A.contains(entries, relativeFile)).pipe(O.map((index) => index + 1));
+
+/**
+ * Build the Vitest sequencer class that applies a committed measured shard plan.
+ *
+ * **Details**
+ *
+ * The plan applies only when `--shard=<index>/<count>` names exactly `plan.shards.length` shards,
+ * so every hosted runner of the lane sees the same assignment. Files the plan does not know use
+ * Vitest's own hash partition over that unknown set, so a new test still runs exactly once; files
+ * the plan names but the package no longer has never enter collection. Other shard counts keep
+ * Vitest's default behaviour unchanged. Sorting within a shard is untouched: the plan changes
+ * scheduling only, never selection or assertions.
+ *
+ * **Example** (Install the sequencer)
+ *
+ * ```ts
+ * import { makeMeasuredSequencer } from "./vitest.shared.ts"
+ * import plan from "./vitest.shards.json" with { type: "json" }
+ * const sequencer = makeMeasuredSequencer(plan)
+ * ```
+ */
+export const makeMeasuredSequencer = (plan: MeasuredShardPlan): typeof BaseSequencer =>
+  class MeasuredSequencer extends BaseSequencer {
+    override shard(files: TestSpecification[]): Promise<TestSpecification[]> {
+      const shard = this.ctx.config.shard;
+      if (shard === undefined || shard.count !== plan.shards.length) return super.shard(files);
+      const assignment = (file: TestSpecification) =>
+        plannedShardIndex(plan, toPosixRelative(this.ctx.config.root, file.moduleId));
+      return Effect.promise(() => super.shard(A.filter(files, (file) => O.isNone(assignment(file))))).pipe(
+        Effect.map((unknown) =>
+          A.appendAll(
+            A.filter(files, (file) => O.contains(assignment(file), shard.index)),
+            unknown
+          )
+        ),
+        Effect.runPromise
+      );
+    }
+  };

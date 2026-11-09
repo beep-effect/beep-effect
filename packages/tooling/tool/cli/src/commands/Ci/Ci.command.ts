@@ -31,6 +31,7 @@ import { runCachePilotInputs } from "./CiCachePilotInputs.ts";
 import { ciCompileBinaryCommand } from "./CiCompileBinary.ts";
 import { ciGovernanceCommands } from "./CiGovernance.ts";
 import { ciLaneCommand, ciLocalCommand } from "./CiLane.ts";
+import { ciPartitionsCommand } from "./CiPartitions.command.ts";
 import { ciRerunRunnerLossCommand } from "./CiRerunRunnerLoss.ts";
 import { CiRunnerOutputsLive } from "./CiRunnerOutputs.ts";
 import { ciDependencyReviewCommand } from "./DependencyReviewCommand.ts";
@@ -400,6 +401,7 @@ export const ciCommand = Command.make("ci", {}, () =>
     "- bun run beep ci settings [--check]",
     "- bun run beep ci held-group",
     "- bun run beep ci job-env",
+    "- bun run beep ci partitions rebalance [--check] [--write --run <id> [--run <id>...]] [--prune]",
     "- bun run beep ci patterns [--write]",
     "- bun run beep ci pr-size <number>",
     "- bun run beep ci prune-apt [sources-dir]",
@@ -425,6 +427,7 @@ export const ciCommand = Command.make("ci", {}, () =>
     ciLaneCommand,
     ciLaneTimingsCommand,
     ciLocalCommand,
+    ciPartitionsCommand,
     ciRerunRunnerLossCommand,
     ciRouteCommand,
   ])

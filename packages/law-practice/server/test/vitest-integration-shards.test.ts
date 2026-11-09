@@ -9,8 +9,9 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
-import { IntegrationSequencer } from "../vitest.integration.sequencer.ts";
+import { LawPracticeSequencer } from "../vitest.integration.sequencer.ts";
 import integrationPlan from "../vitest.integration.shards.json" with { type: "json" };
+import unitPlan from "../vitest.shards.json" with { type: "json" };
 import type { TestSpecification } from "vitest/node";
 
 // The hosted integration partitions run this package's `test/integration` files
@@ -64,9 +65,9 @@ it.layer(NodeServices.layer)("integration shard plan", (it) => {
       const planned = A.map(A.flatten(integrationPlan.shards), specification);
       const unplanned = specification("test/integration/CitationUnplanned.test.ts");
       const sequencer = (index: number) =>
-        new IntegrationSequencer({
+        new LawPracticeSequencer({
           config: { root, shard: { index, count } },
-        } as unknown as ConstructorParameters<typeof IntegrationSequencer>[0]);
+        } as unknown as ConstructorParameters<typeof LawPracticeSequencer>[0]);
       let unplannedPlacements = 0;
       for (const index of A.range(1, count)) {
         const assigned = yield* Effect.promise(() => sequencer(index).shard([...planned, unplanned]));
@@ -92,6 +93,30 @@ it.layer(NodeServices.layer)("integration shard plan", (it) => {
         );
       }
       expect(unplannedPlacements).toBe(1);
+    })
+  );
+
+  // The same sequencer serves the hosted `law-practice-N` Test Unit shards: when the shard count is
+  // the unit plan's, the integration plan does not apply and the measured unit plan places the files.
+  it.effect("falls through to the unit plan when the shard count is the unit plan's", () =>
+    Effect.gen(function* () {
+      const path = yield* Path.Path;
+      const root = yield* path.fromFileUrl(new URL("../", import.meta.url));
+      const count = A.length(unitPlan.shards);
+      const specification = (file: string) => ({ moduleId: path.join(root, file) }) as unknown as TestSpecification;
+      const relative = (specification: { readonly moduleId: string }) =>
+        Str.replaceAll(path.sep, "/")(path.relative(root, specification.moduleId));
+      const planned = A.map(A.flatten(unitPlan.shards), specification);
+      expect(count).not.toBe(A.length(integrationPlan.shards));
+      for (const index of A.range(1, count)) {
+        const sequencer = new LawPracticeSequencer({
+          config: { root, shard: { index, count } },
+        } as unknown as ConstructorParameters<typeof LawPracticeSequencer>[0]);
+        const assigned = yield* Effect.promise(() => sequencer.shard([...planned]));
+        expect(A.sort(A.map(assigned, relative), Str.Order)).toEqual(
+          A.sort(unitPlan.shards[index - 1] ?? [], Str.Order)
+        );
+      }
     })
   );
 });

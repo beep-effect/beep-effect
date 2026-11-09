@@ -381,7 +381,11 @@ const discoverCoveragePackages = Effect.fn("CiCoverage.discoverCoveragePackages"
         })
       );
     }),
-    { concurrency: 2 }
+    // Discovery is one `vitest list` boot per invocation (about 1.4 s each on a hosted 4-vCPU
+    // runner). The Coverage Regression consumer discovers every owner (199 invocations took 139 s at
+    // two at a time on run 42554761567), so use the runner's cores; the boots are CPU-bound and
+    // small, and the producer side only ever discovers its own partition.
+    { concurrency: CI_COVERAGE_DISCOVERY_CONCURRENCY }
   );
   return A.flatten(selections);
 });
@@ -497,6 +501,8 @@ const runOrdinaryCoverageStep = Effect.fn("CiCoverage.runOrdinaryStep")(function
 // Hosted ubuntu runners expose 4 vCPUs; with `--maxWorkers=1` per producer, two producers fit beside the
 // step runner without exceeding the 16 GB the one-worker pin was sized for.
 const CI_COVERAGE_COMPOUND_STEP_CONCURRENCY = 2;
+/** Parallel `vitest list` discoveries: one per core of the hosted 4-vCPU runner. */
+const CI_COVERAGE_DISCOVERY_CONCURRENCY = 4;
 
 const runCompoundCoverageSteps = Effect.fn("CiCoverage.runCompoundSteps")(function* (
   repoRoot: string,
