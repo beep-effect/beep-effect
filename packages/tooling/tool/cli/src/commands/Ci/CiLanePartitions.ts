@@ -865,7 +865,7 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
   // Hosted Test Integration partitions (goals/citation-extraction-engine, 2026-11-09). Nineteen
   // Vitest shards of @beep/law-practice-server's integration suite, placed by the LPT plan in
   // packages/law-practice/server/vitest.integration.shards.json. The weight is each bin's sum of
-  // its files' worst hosted seconds over eight green runs (PR #3005 run 42656046751, main runs
+  // its files' worst passing hosted seconds over eight runs (PR #3005 run 42656046751, main runs
   // 42662847801, 42675828132 and 42677073526, pull-request runs 42679893579, 42680346897,
   // 42682725454 and 42690710476; ubuntu-24.04, one worker). The count is the smallest whose
   // largest bin equals the largest single file (422 s), and every bin stays within
