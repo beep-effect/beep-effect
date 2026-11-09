@@ -318,9 +318,9 @@ export class HeavyAdmission extends S.Opaque<HeavyAdmission, { readonly brand: u
  *
  * **Details**
  *
- * `docs/**`, `goals/**`, `explorations/**` and `research/**` are documentation
+ * `docs/**`, `goals/<packet>/**`, `explorations/**` and `research/**` are documentation
  * and planning surfaces, including temporary goal helpers and verifier inputs.
- * They do not trigger product verification. `.changeset/*.md` and Markdown
+ * Root goal governance inventories retain verification. `.changeset/*.md` and Markdown
  * outside product roots also qualify. Paths under `packages/`, `apps/` and
  * `infra/` retain verification, including their Markdown files. The tier-1
  * change profile and Yeet publication reuse this same schema-owned path rule.

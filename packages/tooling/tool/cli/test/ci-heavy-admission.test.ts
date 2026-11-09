@@ -305,6 +305,11 @@ describe("B8 heavy admission contracts", () => {
     const rows: ReadonlyArray<readonly [string, boolean]> = [
       ["goals/INDEX.md", true],
       ["goals/README.md", true],
+      ["goals/knowledge-doctor.baseline.jsonc", false],
+      ["goals/knowledge-doctor.leases.jsonc", false],
+      ["goals/knowledge-doctor.promotions.jsonc", false],
+      ["goals/goals-doctor.baseline.jsonc", false],
+      ["goals/tsconfig.ops.json", false],
       ["goals/time-to-certainty/GOAL.md", true],
       ["goals/time-to-certainty/PLAN.md", true],
       ["goals/time-to-certainty/README.md", true],

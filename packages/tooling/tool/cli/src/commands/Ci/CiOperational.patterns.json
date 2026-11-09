@@ -1,6 +1,6 @@
 {
   "goals": "^(goals/(INDEX|README)\\.md|goals/[^/]+/(GOAL|PLAN|README|SPEC|DECISIONS)\\.md|goals/[^/]+/ops/manifest\\.json|goals/[^/]+/(history(/reflections)?|research)/\\.gitkeep)$",
   "desktop": "^(apps/professional-desktop/src-tauri/|\\.github/workflows/check\\.yml$|packages/tooling/tool/cli/src/commands/Ci/(CiBootstrap\\.command\\.ts$|CiOperational))",
-  "docs": "^docs/|^goals/|^explorations/|^research/|^\\.changeset/[^/]+\\.md$|\\.md$",
+  "docs": "^docs/|^goals/[^/]+/|^explorations/|^research/|^\\.changeset/[^/]+\\.md$|\\.md$",
   "codeRoots": "^(packages|apps|infra)/"
 }

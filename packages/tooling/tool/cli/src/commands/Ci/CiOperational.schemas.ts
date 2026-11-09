@@ -61,9 +61,9 @@ export const ciOperationalPatterns = CiOperationalPatterns.make({
     "^(goals/(INDEX|README)\\.md|goals/[^/]+/(GOAL|PLAN|README|SPEC|DECISIONS)\\.md|goals/[^/]+/ops/manifest\\.json|goals/[^/]+/(history(/reflections)?|research)/\\.gitkeep)$",
   desktop:
     "^(apps/professional-desktop/src-tauri/|\\.github/workflows/check\\.yml$|packages/tooling/tool/cli/src/commands/Ci/(CiBootstrap\\.command\\.ts$|CiOperational))",
-  // These trees are planning/documentation surfaces, including temporary goal helpers.
+  // Goal packets include temporary helpers; root governance inventories retain verification.
   // Product roots remain excluded by codeRoots even when the file is Markdown.
-  docs: "^docs/|^goals/|^explorations/|^research/|^\\.changeset/[^/]+\\.md$|\\.md$",
+  docs: "^docs/|^goals/[^/]+/|^explorations/|^research/|^\\.changeset/[^/]+\\.md$|\\.md$",
   codeRoots: "^(packages|apps|infra)/",
 });
 

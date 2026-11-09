@@ -38,12 +38,15 @@ and is unchanged by admission (time-to-certainty ruling 57).
 
 ## Documentation and planning changes
 
-A PR confined to `docs/`, `goals/`, `explorations/` and `research/` takes the
+A PR confined to `docs/`, goal packet folders (`goals/<packet>/`),
+`explorations/` and `research/` takes the
 shared documentation route. Goal diagrams, attachments, temporary helper scripts
 and verifier data belong to that route too; they do not trigger product tests,
 builds, code lint or coverage collection. This folder policy avoids treating a
 new document format as a product change. The narrower `goals_only` profile still
-controls packet-specific repository checks independently.
+controls packet-specific repository checks independently. Root-level goal doctor
+baselines, leases, promotions and compiler configuration retain verification: they
+are shared enforcement inputs rather than packet helpers.
 
 Markdown outside `packages/`, `apps/` and `infra/` also takes this route, including
 `standards/ARCHITECTURE.md`. The entire `standards/` tree is not exempt: inventory
