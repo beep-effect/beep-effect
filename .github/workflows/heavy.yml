@@ -270,7 +270,7 @@ jobs:
           shape_args+=(--summarize)
 
           case "${{ env.BEEP_CI_LANE_ID }}" in
-            check|test-integration|build)
+            check|build)
               run_lane ci lane "${{ env.BEEP_CI_LANE_ID }}" "${shape_args[@]}"
               ;;
             lint-policy)
@@ -344,26 +344,9 @@ jobs:
       BEEP_DOCGEN_CONCURRENCY: "3"
     steps: *heavy-lane-steps
 
-  test-integration:
-    name: Test Integration
-    if: ${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}
-    runs-on: beep-ec2-heavy
-    # law-practice-server's integration suite is 21 files and about 68 min of
-    # file time after the 2026-11-09 deletion (goals/citation-extraction-engine
-    # decision of that date): 35 min of wall at two vitest workers locally, the
-    # largest file (CitationCanonicalExtraction) about 17 min. 60 min leaves the
-    # lane headroom to report real failures instead of a cancellation.
-    timeout-minutes: 60
-    environment: ${{ github.event_name == 'push' && inputs.admitted && 'turbo-cache-write' || null }}
-    permissions:
-      contents: read
-    env:
-      BEEP_CI_LANE_ID: test-integration
-      BEEP_CI_LANE_NAME: Test Integration
-      BEEP_CI_LANE_USES_TURBO: "true"
-      BEEP_CI_LANE_INSTALL_TYPOS: "false"
-      BEEP_DOCGEN_CONCURRENCY: "3"
-    steps: *heavy-lane-steps
+  # Test Integration left this pool on 2026-11-09: check.yml runs it as hosted
+  # `Test Integration (<partition>)` jobs and reports `Heavy / Test Integration`
+  # from a fail-closed aggregate (goals/citation-extraction-engine decision).
 
   docgen:
     name: Docgen

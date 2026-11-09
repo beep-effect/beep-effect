@@ -2,8 +2,8 @@ import * as NodeURL from "node:url";
 import { A, Str } from "@beep/utils";
 import { pipe } from "effect/Function";
 import { defineConfig, mergeConfig } from "vitest/config";
-import shared, { fcDeepSweepActive, makeMeasuredSequencer, vitestDoctestActive } from "../../../vitest.shared.ts";
-import shardPlan from "./vitest.shards.json" with { type: "json" };
+import shared, { fcDeepSweepActive, vitestDoctestActive } from "../../../vitest.shared.ts";
+import { LawPracticeSequencer } from "./vitest.integration.sequencer.ts";
 
 /**
  * Test files that keep the #2511 two-worker cap.
@@ -62,10 +62,12 @@ const config = mergeConfig(
       ],
     },
     test: {
-      // Hosted Test Unit runs `--shard=<i>/<n>` with `n` equal to the plan length; the committed
-      // LPT plan keeps every law-practice shard's file time near the others (run 42554761567
-      // measured sha1 shards at 1274 / 1779 / 1267 s). `beep ci partitions rebalance` refreshes it.
-      sequence: { sequencer: makeMeasuredSequencer(shardPlan) },
+      // Hosted Test Unit runs `--shard=<i>/<n>` with `n` equal to the unit plan length and the hosted
+      // Test Integration partitions `vitest run test/integration --shard=<i>/<m>` with `m` equal to the
+      // integration plan length; `LawPracticeSequencer` applies whichever committed LPT plan matches
+      // (vitest.integration.sequencer.ts) and falls back to Vitest's hash split otherwise.
+      // `beep ci partitions rebalance` refreshes the unit plan.
+      sequence: { sequencer: LawPracticeSequencer },
     },
   })
 );

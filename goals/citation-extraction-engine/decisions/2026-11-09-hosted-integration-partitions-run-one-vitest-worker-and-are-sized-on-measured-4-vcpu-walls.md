@@ -1,0 +1,11 @@
+---
+title: "Hosted integration partitions run one Vitest worker and are sized on measured 4-vCPU walls"
+date: 2026-11-09
+lane: "claude/integration-hosted-partitions-ba7e3b"
+pullRequest: 3005
+reversal: "Drop --maxWorkers=1 from the integration shard passthrough in CiLane.ts once a hosted runner class with more cores is measured to keep the native deadlines at two workers."
+---
+
+Measured on PR #3005 run 42600820554 (ubuntu-24.04, 4 vCPU, two Vitest workers, fifteen partitions sized from the 8-vCPU heavy timings): bodies ran 10.3 to 27.1 minutes. Single-file partitions took 1.12 to 1.49 times their 8-vCPU file seconds (1120 s -> 27.1 min, 844 s -> 15.8 min, 823 s -> 20.4 min); four-file partitions at two workers took 1.0 to 1.5 times their file-second sum (715 s -> 18.1 min, 708 s -> 11.8 min), so two workers on four cores gave almost no parallel gain, about one third of the heavy runner's throughput. Ten partitions failed: six on the 600 s per-test timeout of long single replays (SemanticExtraction, EngineCorpus, VerifiedExtraction, TokenizedExtraction, DocumentExtraction, ExtractionEntry, which the deletion lane removed or halved) and four on production operationDeadline / extractDeadline refusals from native replays (CanonicalExtraction ranges, Courts, ReferenceMarkup, CaseName, CaseNameScan) contending with a second worker; every single-file partition passed. The integration shards therefore pass --maxWorkers=1 to Vitest (CiLane.ts) so deadlines hold.
+
+Sizing. With one worker (run 42606323648) every partition passed and hosted wall was 0.92 to 1.87 times the 8-vCPU two-worker file-second sum, so 8-vCPU timings do not size hosted partitions. After the deletion lane merged, a plan projected from halved two-runtime seconds (fourteen bins, run 42637925544) ran green but three jobs crossed ten minutes: the bun side of a bun-only replay runs 1.6 to 1.8 times the halved figure. The shipped plan is therefore LPT over the per-file hosted seconds measured on that run, at the smallest bin count whose largest bin stays under 450 s: sixteen partitions, planned bodies 318 to 425 s, measured jobs 5.9 to 9.0 minutes (run 42642253640). Same-runner-class spread between runs was 3 to 5 percent on unchanged files, so the plan is sized without a further safety factor. The canonical replay runs as six range files (4/4/4/4/4/2 shards).

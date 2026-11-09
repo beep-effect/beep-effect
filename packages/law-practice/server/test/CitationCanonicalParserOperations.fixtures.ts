@@ -5,6 +5,7 @@ import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { readCitationCanonicalCaptures } from "./CitationCanonicalCaptures.fixtures.ts";
@@ -144,3 +145,48 @@ export const replayCitationCanonicalCourtExtraction = Effect.fn("CanonicalParser
   expect(selected.length).toBeGreaterThan(0);
   yield* replayRows(kind, selected);
 });
+
+/**
+ * Rows per replay group; the integration range files pass it as `size`.
+ * @internal @category testing @since 0.0.0
+ */
+export const CITATION_CANONICAL_PARSER_OPERATION_GROUP_SIZE = 10;
+
+/**
+ * Number of replay groups of `CITATION_CANONICAL_PARSER_OPERATION_GROUP_SIZE` rows that cover the table.
+ * @internal @category testing @since 0.0.0
+ */
+export const CITATION_CANONICAL_PARSER_OPERATION_GROUP_COUNT = 8;
+
+/**
+ * Number of integration range files the groups are split across.
+ * @internal @category testing @since 0.0.0
+ */
+export const CITATION_CANONICAL_PARSER_OPERATION_RANGE_COUNT = 2;
+
+/**
+ * Contiguous, disjoint group-index ranges whose concatenation is every group.
+ * One integration file replays one range
+ * (`test/integration/CitationCanonicalParserOperations*.test.ts`);
+ * `test/CitationCanonicalExtractionRanges.test.ts` guards the union and the
+ * file census, so a group is never dropped when a range file is added.
+ * @internal @category testing @since 0.0.0
+ */
+export const citationCanonicalParserOperationGroupRanges = A.chunksOf(
+  A.range(0, CITATION_CANONICAL_PARSER_OPERATION_GROUP_COUNT - 1),
+  Math.ceil(CITATION_CANONICAL_PARSER_OPERATION_GROUP_COUNT / CITATION_CANONICAL_PARSER_OPERATION_RANGE_COUNT)
+);
+
+/**
+ * One group range by zero-based index; throws when no such range exists so a
+ * stale range file fails at collection instead of replaying nothing.
+ * @internal @category testing @since 0.0.0
+ */
+export const citationCanonicalParserOperationGroupRange = (index: number) =>
+  O.getOrThrowWith(
+    A.get(citationCanonicalParserOperationGroupRanges, index),
+    () =>
+      new Error(
+        `CitationCanonicalParserOperations group range ${index} does not exist; the table has ${A.length(citationCanonicalParserOperationGroupRanges)} ranges.`
+      )
+  );

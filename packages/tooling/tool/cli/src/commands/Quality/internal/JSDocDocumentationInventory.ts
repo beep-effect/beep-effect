@@ -1641,10 +1641,12 @@ export const buildJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
   const hasGitMetadata = yield* fs
     .exists(path.join(repoRoot, ".git"))
     .pipe(QualityArtifactGeneratorError.mapError("Failed to inspect repository Git metadata.", { filePath: repoRoot }));
-  // Tracked plus untracked-but-not-ignored paths: the same file set Turbo hashes
-  // for `//#jsdoc:inventory:check` and the lane-proof tree (`git add -A`) seals.
-  // Tracked-only would let `git add` of an unchanged file reuse a cached
-  // inventory that never counted it.
+  // Tracked plus untracked-but-not-ignored paths: the file set the lane-proof tree
+  // (`git add -A`) seals. Tracked-only would let `git add` of an unchanged file
+  // reuse a cached inventory that never counted it. Turbo hashes every match of
+  // the `//#jsdoc:inventory:check` inputs, gitignored or not, so its hashed set is
+  // a superset of this one; the task negates known gitignored residue trees
+  // (`vitest-instrumentation/.runtime-*`) to keep the two close.
   const candidatePaths = hasGitMetadata
     ? yield* Effect.asSome(
         Effect.map(listGitVisiblePaths(repoRoot, A.empty(), gitCommandErrorAdapter), MutableHashSet.fromIterable)

@@ -125,6 +125,32 @@ describe("policy fingerprint import graph", () => {
     }
   });
 
+  it("routes the workspace-manifest family by the manifest walk's span, never by a bare package.json", () => {
+    const manifests = [
+      "!**/.beep/**/package.json",
+      "!**/.next/**/package.json",
+      "!**/.turbo/**/package.json",
+      "!**/build/**/package.json",
+      "!**/coverage/**/package.json",
+      "!**/dist/**/package.json",
+      "!**/node_modules/**/package.json",
+      "!**/storybook-static/**/package.json",
+      "packages/**/package.json",
+    ];
+    // The walk's span and its nested `.walk` span both name the family.
+    expect(
+      moduleRootFileReads("a.ts", 'const walk = Effect.fn("PackageTestImports.collectPackageSourceRoots")(body);')
+    ).toEqual(manifests);
+    expect(
+      moduleRootFileReads("b.ts", "const walk = Effect.fn(`PackageTestImports.collectPackageSourceRoots.walk`)(body);")
+    ).toEqual(manifests);
+    // Shared-seal modules name `package.json`; that literal alone routes nothing.
+    expect(moduleRootFileReads("c.ts", 'const manifest = path.join(root, "package.json");')).toEqual([]);
+    expect(
+      moduleRootFileReads("d.ts", "/** PackageTestImports.collectPackageSourceRoots */ export const x = 1;")
+    ).toEqual([]);
+  });
+
   it("resolves exports subpaths with wildcards and runtime conditions", () => {
     assertSome(resolvePackageSubpath({ ".": "./src/index.ts" }, "."), "./src/index.ts");
     assertSome(resolvePackageSubpath({ "./*": "./src/*.ts" }, "./A/B"), "./src/A/B.ts");

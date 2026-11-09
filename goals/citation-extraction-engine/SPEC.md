@@ -373,6 +373,16 @@ Lane `claude/amazing-fermi-223c68`
 
 Reverse: git revert the deletion PR, then restore the previous @beep/law-practice-server rows in standards/coverage.regression-baseline.jsonc from the parent commit (or rerun bun run coverage -- --filter=@beep/law-practice-server --write-baseline on the reverted tree).
 
+### Hosted integration partitions run one Vitest worker and are sized on measured 4-vCPU walls, 2026-11-09
+
+Measured on PR #3005 run 42600820554 (ubuntu-24.04, 4 vCPU, two Vitest workers, fifteen partitions sized from the 8-vCPU heavy timings): bodies ran 10.3 to 27.1 minutes. Single-file partitions took 1.12 to 1.49 times their 8-vCPU file seconds (1120 s -> 27.1 min, 844 s -> 15.8 min, 823 s -> 20.4 min); four-file partitions at two workers took 1.0 to 1.5 times their file-second sum (715 s -> 18.1 min, 708 s -> 11.8 min), so two workers on four cores gave almost no parallel gain, about one third of the heavy runner's throughput. Ten partitions failed: six on the 600 s per-test timeout of long single replays (SemanticExtraction, EngineCorpus, VerifiedExtraction, TokenizedExtraction, DocumentExtraction, ExtractionEntry, which the deletion lane removed or halved) and four on production operationDeadline / extractDeadline refusals from native replays (CanonicalExtraction ranges, Courts, ReferenceMarkup, CaseName, CaseNameScan) contending with a second worker; every single-file partition passed. The integration shards therefore pass --maxWorkers=1 to Vitest (CiLane.ts) so deadlines hold.
+
+Sizing. With one worker (run 42606323648) every partition passed and hosted wall was 0.92 to 1.87 times the 8-vCPU two-worker file-second sum, so 8-vCPU timings do not size hosted partitions. After the deletion lane merged, a plan projected from halved two-runtime seconds (fourteen bins, run 42637925544) ran green but three jobs crossed ten minutes: the bun side of a bun-only replay runs 1.6 to 1.8 times the halved figure. The shipped plan is therefore LPT over the per-file hosted seconds measured on that run, at the smallest bin count whose largest bin stays under 450 s: sixteen partitions, planned bodies 318 to 425 s, measured jobs 5.9 to 9.0 minutes (run 42642253640). Same-runner-class spread between runs was 3 to 5 percent on unchanged files, so the plan is sized without a further safety factor. The canonical replay runs as six range files (4/4/4/4/4/2 shards).
+
+Lane `claude/integration-hosted-partitions-ba7e3b` · PR #3005
+
+Reverse: Drop --maxWorkers=1 from the integration shard passthrough in CiLane.ts once a hosted runner class with more cores is measured to keep the native deadlines at two workers.
+
 ### Keep the 8 effect-vitest exceptions PR 2994 adds as reviewed PR 2966 debt, 2026-11-09
 
 PR 2994, the `unblocks-main` PR for episode ep70, adds 8 rows to `standards/effect-vitest.inventory.jsonc` for findings that PR 2966 introduced. S31 counts that as inventory growth. The rows stay as reviewed exceptions because none of them is a defect in the test code:
@@ -387,6 +397,28 @@ Lane `@chore/deps-update-11-8-26` · PR #2994
 
 Reverse: Delete the 8 rows from standards/effect-vitest.inventory.jsonc once EV004 and EV010 accept these tests or the tests are rewritten, then run bun run beep lint effect-vitest.
 
+### Run the law-practice-server integration suite as hosted partitions that report Heavy / Test Integration, 2026-11-09
+
+'Heavy / Test Integration' is reported by a hosted aggregate job that needs every integration partition and fails on failure, cancellation or skip; integration partitions run on GitHub-hosted runners on every non-docs PR.
+
+Mechanism. The required context used to be the reusable heavy.yml job (called from check.yml's Heavy job, so GitHub named it Heavy / Test Integration). check.yml now runs Test Integration (lps-int-N) on ubuntu-24.04, one Vitest --shard of @beep/law-practice-server's integration suite each (sixteen shards, one Vitest worker), placed by the LPT plan in packages/law-practice/server/vitest.integration.shards.json over the per-file hosted seconds measured on PR #3005 run 42637925544, plus Test Integration (int-rest), the root integration lane with the sharded package filtered out for every other package. The aggregate job is literally named 'Heavy / Test Integration', the same way Coverage Regression took its context over, so standards/branch-protection-contexts.json and ruleset 10240248 are unchanged; while the resolved heavy.yml@main still declares its Test Integration job the aggregate takes the migration name 'Test Integration Partitions' (admission output legacy_integration), and after this change merges the heavy job is gone and the aggregate owns the context. The lane leaves Heavy Admission (heavyRouteLanes no longer lists test-integration), so the two-instance beep-ec2-heavy pool no longer queues it; the remaining heavy lanes keep admission. Pull requests keep --affected, so a PR that does not touch an integration owner runs the partition proof only.
+
+Measured. The first plan projected partitions from 8-vCPU heavy timings; the hosted runs refuted that assumption (see the one-worker decision of the same date) and the shipped plan is sized on measured hosted seconds: sixteen partitions of 318 to 425 s of planned body ran 5.9 to 9.0 minutes of job on run 42642253640, the aggregate green 9.3 minutes after the first job started. The plan is regenerated whenever integration files change; test/vitest-integration-shards.test.ts fails until it matches the directory.
+
+Lane `claude/integration-hosted-partitions-ba7e3b`
+
+Reverse: Restore the test-integration job in heavy.yml and in the heavy route lanes, remove the check.yml partition matrix and aggregate, and drop the test-integration partitions from CiLanePartitions.ts and the sequencer plan from the package.
+
+### Split integration replay files into row-range chunks, 2026-11-09
+
+Integration replay files may be split into row-range chunks computed from the fixture row list; a guard test asserts the union equals the full set.
+
+Shipped splits. The canonical corpus replay (test/integration/CitationCanonicalExtraction.test.ts, 1096.8 s of file time on the 8-vCPU heavy runner, about 71.5 hosted seconds per shard) is chunked into six contiguous ranges of its 22-shard table (4/4/4/4/4/2 shards), one file each (CitationCanonicalExtraction.test.ts and CitationCanonicalExtractionRange2..Range6.test.ts), every row still replaying with full=true. After the deletion lane (#3009, bun-only full replays) merged, CitationCanonicalParserOperations (8 groups of 10 rows) and CitationCanonicalRemainingExtraction (7 groups) received the same treatment through range helpers exported by their fixtures: two files each, 4/4 and 4/3 groups. test/CitationCanonicalExtractionRanges.test.ts asserts, for all three corpora, that the ranges are disjoint, that their concatenation is the whole table, and that exactly one integration file replays each range. No single-runner arrangement gets Heavy / Test Integration under ten minutes while one file alone takes 1097 s; the split is what lets hosted partitions be sized under the budget (the largest single integration file is now CitationRegexCaseFlags at 407 hosted seconds).
+
+Lane `claude/integration-hosted-partitions-ba7e3b`
+
+Reverse: Merge the range files back into one CitationCanonicalExtraction.test.ts and drop the range exports from the fixture; the guard test then asserts a single range.
+
 ### Split law-practice-server tests into native-wallclock and replay Vitest projects, 2026-11-09
 
 #2511 capped the whole package at two Vitest workers because real native worker tests include cold module loading and a saturated runner could consume a production deadline. Twelve unit files run native workers against the real wall clock: their fixture closure reaches `CitationNativeSpawner.fixtures.ts` without installing `makeCitationNativeManualClock`, `makeCitationNativeSleepClock` or the fixed `makeCitationNativeWallClock` (`test/CitationBuiltinCleaners`, `CitationHtmlCleanerStage`, `CitationHtmlNativeInput`, `CitationHtmlWorkerCorpus` and `CitationLiteralUnicodeComposition` among them). The other 266 unit files drive every deadline through a substituted clock or spawn nothing. Integration files are a different case: the canonical replays substitute `regexDeadline` only, and PR #3007's first heavy run at Vitest's default width (seven workers plus native children on the 8-vCPU runner) failed them with `CitationSafetyLimitExceeded` on `extractDeadline`, so every `test/integration/**` file stays under the cap.
@@ -396,6 +428,14 @@ Reverse: Delete the 8 rows from standards/effect-vitest.inventory.jsonc once EV0
 Lane `claude/silly-brahmagupta-5a4fd5`
 
 Reverse: Restore the package-wide test: { maxWorkers: 2, maxConcurrency: 2 } in packages/law-practice/server/vitest.config.ts and drop the two projects.
+
+### Two-runtime integration replays may be split into one file per runtime, 2026-11-09
+
+An integration replay that runs the same corpus under both native runtimes may be split into one file per runtime over a shared fixture, so a hosted partition never carries both halves.
+
+Shipped split. test/integration/CitationRegexTranslator.test.ts ran the native regex-translator qualification (full program-shard sweep plus the three-witness smoke) under bun and node in one file: 589 hosted seconds, more than a partition budget. Its body moved to test/CitationRegexTranslator.fixtures.ts as qualifyCitationRegexTranslator(kind, smoke); CitationRegexTranslator.test.ts replays bun (327 s measured) and CitationRegexTranslatorNode.test.ts replays node (290 s), each with the same 14-minute qualification timeout. The two files are independent partition inputs with identical assertions, so coverage of both runtimes is unchanged. The split applies to any two-runtime replay that exceeds the budget; a bun-only replay (the deletion lane's choice for the canonical corpora) does not need it.
+
+Reverse: Merge the node twin back into the bun file's runtime loop and drop the shared fixture's kind parameter; regenerate vitest.integration.shards.json.
 
 <!-- beep:decisions:end -->
 <!-- markdownlint-enable MD013 MD034 -->

@@ -152,11 +152,12 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("Stage B l
           "lint:native-runtime:roots": "beep-cli laws native-runtime --check",
         },
       });
-      // Both law commands reach the helper; nothing else outside the fixture CLI.
+      // Both law commands reach the helper; only `lint laws` reaches the workspace-manifest walk,
+      // whose span literal routes `packages/**/package.json` onto the `lint-laws` seal.
       yield* writeFixtureFiles(
         root,
         policyCliFixtureFiles([
-          { group: "lint", leaves: [{ name: "laws", imports: ["@fixture/helper"] }] },
+          { group: "lint", leaves: [{ name: "laws", imports: ["@fixture/helper", "@fixture/manifest-walk"] }] },
           { group: "laws", leaves: [{ name: "native-runtime", imports: ["@fixture/helper"] }] },
         ])
       );
@@ -164,6 +165,15 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("Stage B l
         name: "@fixture/helper",
         exports: { ".": "./src/index.ts" },
       });
+      yield* writeJson(root, "packages/manifest-walk/package.json", {
+        name: "@fixture/manifest-walk",
+        exports: { ".": "./src/index.ts" },
+      });
+      yield* writeFile(
+        root,
+        "packages/manifest-walk/src/index.ts",
+        'export const value = Effect.fn("PackageTestImports.collectPackageSourceRoots")(function* () {});\n'
+      );
       yield* writeJson(root, "packages/consumer/package.json", {
         name: "@fixture/consumer",
         dependencies: { "@fixture/upstream": "workspace:*" },
@@ -226,13 +236,16 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("Stage B l
         [
           "packages/consumer/src/index.ts",
           "packages/consumer/test/example.tsx",
-          "packages/consumer/package.json",
           "packages/consumer/tsconfig.test.json",
           "tsconfig.proof.json",
-          "packages/upstream/package.json",
-          "packages/unrelated/package.json",
         ],
         (file) => assertMutation(file, [true, false, false])
+      );
+      // Workspace manifests reach every law task through the seal, which expands the glob once
+      // instead of once per package task.
+      yield* Effect.forEach(
+        ["packages/consumer/package.json", "packages/upstream/package.json", "packages/unrelated/package.json"],
+        (file) => assertMutation(file, [true, false, true])
       );
       yield* Effect.forEach(
         ["scratchpad/example.tsx", "packages/_internal/db-admin/effect-ontology/example.ts"],

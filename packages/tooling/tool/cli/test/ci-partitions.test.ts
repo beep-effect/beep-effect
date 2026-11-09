@@ -162,10 +162,14 @@ describe("partition table shape", () => {
     const sharded = A.filter(CI_LANE_PARTITIONS, (partition) => P.isNotUndefined(partition.shard));
     const ids = HashSet.fromIterable(A.map(sharded, (partition) => partition.id));
     expect(HashSet.size(ids)).toBe(A.length(sharded));
-    expect(A.length(A.filter(sharded, (partition) => A.contains(partition.packages, "@beep/repo-cli")))).toBe(9);
-    expect(
-      A.length(A.filter(sharded, (partition) => A.contains(partition.packages, "@beep/law-practice-server")))
-    ).toBe(12);
+    // The Test Unit families own the `vitest.shards.json` plans; the Test Integration family shares
+    // law-practice-server's package but runs the separate `vitest.integration.shards.json` plan.
+    const unit = A.filter(sharded, (partition) => partition.lane === "test-unit");
+    expect(A.length(A.filter(unit, (partition) => A.contains(partition.packages, "@beep/repo-cli")))).toBe(9);
+    expect(A.length(A.filter(unit, (partition) => A.contains(partition.packages, "@beep/law-practice-server")))).toBe(
+      12
+    );
+    expect(A.length(A.filter(sharded, (partition) => partition.lane === "test-integration"))).toBe(16);
     assertSome(
       O.map(
         A.findFirst(CI_LANE_PARTITIONS, (partition) => partition.id === "unit-g"),
