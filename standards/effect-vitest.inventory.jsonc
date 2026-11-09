@@ -7788,6 +7788,27 @@
       "reason": "Runs real worker children requiring OS-visible entrypoints, temporary files and/or cleanup markers; MemoryFileSystem is not visible to those children. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
     },
     {
+      "id": "EV010:packages/law-practice/server/test/integration/CitationRegexTranslatorNode.test.ts:2:@effect/platform-bun/BunServices@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/integration/CitationRegexTranslatorNode.test.ts",
+      "line": 2,
+      "endLine": 2,
+      "symbol": "@effect/platform-bun/BunServices",
+      "occurrence": "v2:30f5ad27b3466e9087faebe94dfc83f5ea9ae5070b9af25a085792eb5bd68f2c",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import * as BunServices from \"@effect/platform-bun/BunServices\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV010:packages/law-practice/server/test/integration/CitationRegexTranslator.test.ts:5:@effect/platform-bun/BunServices@0#1",
       "lens": "resource",
       "ruleId": "EV010",

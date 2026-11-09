@@ -399,5 +399,9 @@ Lane `claude/integration-hosted-partitions-ba7e3b`
 
 Reverse: Merge the range files back into one CitationCanonicalExtraction.test.ts and drop the range exports from the fixture; the guard test then asserts a single range.
 
+### Two-runtime integration replays may be split into one file per runtime, 2026-11-09
+
+Reverse: Merge the node twin back into the bun file's runtime loop and drop the shared fixture's kind parameter; regenerate vitest.integration.shards.json.
+
 <!-- beep:decisions:end -->
 <!-- markdownlint-enable MD013 MD034 -->
