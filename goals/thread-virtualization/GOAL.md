@@ -11,7 +11,7 @@ Read first:
 - `goals/thread-virtualization/SPEC.md`
 - `goals/thread-virtualization/PLAN.md`
 - `goals/thread-virtualization/ops/manifest.json`
-- `explorations/computable-workspace-geometry/MAP.md`
+- [explorations/computable-workspace-geometry/MAP.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/computable-workspace-geometry/MAP.md)
 - `AGENTS.md` and `CLAUDE.md`
 
 Scope:

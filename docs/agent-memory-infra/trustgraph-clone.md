@@ -130,7 +130,7 @@ Repo doctrine and fit context read:
 - `goals/agentic-professional-runtime/SPEC.md`
 - `standards/memory-architecture/03-saas-landscape-assessment.md`
 - `standards/memory-architecture/05-context-graph-capability-assessment.md`
-- `explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md`
+- [explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md)
 - [goals/trustgraph-port/README.md at 0044891dc9](https://github.com/beep-effect/beep-effect/blob/0044891dc98665fc8a410b0cf66440f13d100b07/goals/trustgraph-port/README.md)
 - [goals/trustgraph-port/SPEC.md at 0044891dc9](https://github.com/beep-effect/beep-effect/blob/0044891dc98665fc8a410b0cf66440f13d100b07/goals/trustgraph-port/SPEC.md)
 - [goals/trustgraph-port/PLAN.md at 0044891dc9](https://github.com/beep-effect/beep-effect/blob/0044891dc98665fc8a410b0cf66440f13d100b07/goals/trustgraph-port/PLAN.md)

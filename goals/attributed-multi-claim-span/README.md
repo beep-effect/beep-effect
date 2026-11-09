@@ -2,9 +2,14 @@
 
 ## Status
 
-Lifecycle: `paused`
+Lifecycle: `superseded`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
+
+Superseded on 2026-11-09 by
+[`text-knowledge-stack-rebuild`](../text-knowledge-stack-rebuild/README.md), whose L2 and
+L4 phases replace this packet's annotation aggregate and LangExtract-to-ClaimGate
+proof; see that packet's `SPEC.md` "Relationships".
 
 ## Mission
 

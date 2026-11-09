@@ -16,7 +16,7 @@ pass, preserving correct rendering and navigation as the thread grows.
 
 1. Operator decision dated 2026-08-13.
 2. `AGENTS.md`, `CLAUDE.md`, and required skills.
-3. [`explorations/computable-workspace-geometry/MAP.md`](../../explorations/computable-workspace-geometry/MAP.md), Goal 2.
+3. [explorations/computable-workspace-geometry/MAP.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/computable-workspace-geometry/MAP.md), Goal 2.
 4. This `SPEC.md`.
 5. `PLAN.md`, then `GOAL.md`.
 

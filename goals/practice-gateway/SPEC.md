@@ -11,7 +11,7 @@ a clean Windows VM with practice-kg, Box and Microsoft 365.
 
 Shaped in [`../../explorations/harness-the-harness/BRIEF.md`](../../explorations/harness-the-harness/BRIEF.md); decisions in
 [`../../explorations/harness-the-harness/DECISIONS.md`](../../explorations/harness-the-harness/DECISIONS.md); decomposition in
-[`../../explorations/harness-the-harness/MAP.md`](../../explorations/harness-the-harness/MAP.md).
+[../../explorations/harness-the-harness/MAP.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/harness-the-harness/MAP.md).
 
 ## Non-Goals
 

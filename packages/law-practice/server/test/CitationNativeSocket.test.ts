@@ -13,6 +13,7 @@ import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
@@ -20,7 +21,6 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
@@ -227,12 +227,16 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned process with s
                 const echoed = yield* rpc.Echo({ text: "ready" });
                 expect(echoed).toBe("ready");
                 const blocked = yield* rpc.Busy().pipe(Effect.forkChild);
-                const marker = yield* Stream.runHead(child.stderr).pipe(Effect.timeout(Duration.seconds(5)));
-                expect(O.isSome(marker)).toBe(true);
+                const marker = yield* child.stderr.pipe(
+                  Stream.decodeText(),
+                  Stream.runHead,
+                  Effect.timeout(Duration.seconds(5))
+                );
+                assertSome(marker, "busy");
                 const running = yield* child.isRunning;
                 expect(running).toBe(true);
                 const result = yield* Fiber.join(blocked).pipe(Effect.timeoutOption(Duration.millis(100)));
-                expect(O.isNone(result)).toBe(true);
+                assertNone(result);
               })
             );
           })
@@ -268,8 +272,12 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned process with s
                 const rpc = yield* client(child);
                 yield* rpc.Echo({ text: "ready" });
                 const busy = yield* rpc.Busy().pipe(Effect.forkChild);
-                const marker = yield* Stream.runHead(child.stderr).pipe(Effect.timeout(Duration.seconds(5)));
-                expect(O.isSome(marker)).toBe(true);
+                const marker = yield* child.stderr.pipe(
+                  Stream.decodeText(),
+                  Stream.runHead,
+                  Effect.timeout(Duration.seconds(5))
+                );
+                assertSome(marker, "busy");
                 yield* Deferred.succeed(ready, undefined);
                 yield* Fiber.join(busy);
               })

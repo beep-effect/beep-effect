@@ -24,7 +24,7 @@ floors, and print the exact lane command the doctrine implies, or `hold` with re
 
 1. [`GOAL.md`](./GOAL.md) 2. [`SPEC.md`](./SPEC.md) 3. [`PLAN.md`](./PLAN.md)
 4. [`ops/manifest.json`](./ops/manifest.json) 5. [`research/SOURCES.md`](./research/SOURCES.md)
-6. `goals/agent-pool-doctrine/SPEC.md` and `explorations/cursor-agent-pool/MAP.md`.
+6. `goals/agent-pool-doctrine/SPEC.md` and [explorations/cursor-agent-pool/MAP.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/cursor-agent-pool/MAP.md).
 
 ## Current Phase
 
@@ -33,7 +33,7 @@ Not started (gated on Goal A's merge).
 ## Latest Evidence
 
 Not started. The Codex meter probe it wraps is proven in
-`explorations/cursor-agent-pool/RESEARCH.md`.
+[explorations/cursor-agent-pool/RESEARCH.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/cursor-agent-pool/RESEARCH.md).
 
 ## Notes
 

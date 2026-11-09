@@ -3,10 +3,10 @@
 This implementation ledger reproduces the source-exploration corpus relevant
 to durable accepted-record projection dispatch, desktop freshness, licensing,
 and cross-packet ownership. The exploration ledger remains primary:
-[`explorations/local-first-projection-sync/research/SOURCES.md`](../../../explorations/local-first-projection-sync/research/SOURCES.md).
+[explorations/local-first-projection-sync/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/local-first-projection-sync/research/SOURCES.md).
 
 - **Source exploration:** `explorations/local-first-projection-sync`
-- **Primary provenance ledger:** `explorations/local-first-projection-sync/research/SOURCES.md`
+- **Primary provenance ledger:** [explorations/local-first-projection-sync/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/local-first-projection-sync/research/SOURCES.md)
 - **Ratified contract:** exploration `DECISIONS.md`, `BRIEF.md`, and `MAP.md`
 
 ## 1. Relevant mined source corpus
@@ -72,9 +72,9 @@ than an external web claim; it is recorded below.
   [`README`](../../../explorations/local-first-projection-sync/README.md) ·
   [`DECISIONS`](../../../explorations/local-first-projection-sync/DECISIONS.md) ·
   [`BRIEF`](../../../explorations/local-first-projection-sync/BRIEF.md) ·
-  [`MAP`](../../../explorations/local-first-projection-sync/MAP.md) ·
-  [`RESEARCH`](../../../explorations/local-first-projection-sync/RESEARCH.md) ·
-  [`primary ledger`](../../../explorations/local-first-projection-sync/research/SOURCES.md)
+  [`MAP`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/local-first-projection-sync/MAP.md) ·
+  [`RESEARCH`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/local-first-projection-sync/RESEARCH.md) ·
+  [`primary ledger`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/local-first-projection-sync/research/SOURCES.md)
 - Goal contract: [`SPEC.md`](../SPEC.md) and [`PLAN.md`](../PLAN.md).
 - Prerequisite: [`effect-v4-workflow-engine-spike`](../../effect-v4-workflow-engine-spike/).
 - Authority boundary: [`epistemic-bitemporal-edge-core`](../../epistemic-bitemporal-edge-core/).

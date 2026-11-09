@@ -255,7 +255,7 @@ sorting, HTML/callback modes and final annotation service remain open.
 - [`PARITY_METHOD.md`](./PARITY_METHOD.md)
 - [`EYECITE_BASELINE.md`](./EYECITE_BASELINE.md)
 - [Source exploration](../../../explorations/citation-grounding-hallucination-guard/README.md)
-- [Legal parser landscape](../../../explorations/citation-grounding-hallucination-guard/research/legal-citation-parser-landscape.md)
+- [Legal parser landscape](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/citation-grounding-hallucination-guard/research/legal-citation-parser-landscape.md)
 - [Verified-span sources](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/citation-verified-span-substrate/research/SOURCES.md)
 - [Court/reporter vocabulary audit](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/court-reporter-vocabulary/research/EYECITE_DATA_AUDIT.md)
 

@@ -1,7 +1,7 @@
 # Agentic Governance Laws — Sources & Provenance
 
 - **Source exploration:** `explorations/graphnosis-prior-art` — primary ledger:
-  [`explorations/graphnosis-prior-art/research/SOURCES.md`](../../../explorations/graphnosis-prior-art/research/SOURCES.md).
+  [explorations/graphnosis-prior-art/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/graphnosis-prior-art/research/SOURCES.md).
   That ledger is canonical and is **linked, not copied**: the mined corpus,
   upstream licenses, external citations, and the quantitative quarantine all
   live there and travel into this packet by reference.
@@ -46,7 +46,7 @@ Titles and URLs live in the exploration's ledger §3 — not duplicated. One
 correction from that exploration is load-bearing for this packet and is
 recorded there in full:
 
-- [`explorations/graphnosis-prior-art/RESEARCH.md`](../../../explorations/graphnosis-prior-art/RESEARCH.md)
+- [explorations/graphnosis-prior-art/RESEARCH.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/graphnosis-prior-art/RESEARCH.md)
   **2026-08-06 addendum** — the mining's claim that `runLawScan` is "the single
   choke point every repo law goes through (7 scanners)" was wrong at mining
   time. Ground truth: two scanners route through it; three more scan paths
@@ -92,8 +92,8 @@ paths the exploration verified.
   [`explorations/graphnosis-prior-art/README.md`](../../../explorations/graphnosis-prior-art/README.md)
   · [`BRIEF.md`](../../../explorations/graphnosis-prior-art/BRIEF.md) ·
   [`DECISIONS.md`](../../../explorations/graphnosis-prior-art/DECISIONS.md) ·
-  [`RESEARCH.md`](../../../explorations/graphnosis-prior-art/RESEARCH.md) ·
-  [`research/AMENDMENTS.json`](../../../explorations/graphnosis-prior-art/research/AMENDMENTS.json)
+  [`RESEARCH.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/graphnosis-prior-art/RESEARCH.md) ·
+  [`research/AMENDMENTS.json`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/graphnosis-prior-art/research/AMENDMENTS.json)
 - Sibling graduation: `goals/epistemic-contradiction-detection` — the same
   exploration's first graduation. Independent of this packet.
 - Adjacent territory, deliberately not owned here:

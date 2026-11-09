@@ -12,7 +12,7 @@ July cutover folder is retired.
 
 Shaped in [`explorations/git-history-rewrite/BRIEF.md`](../../explorations/git-history-rewrite/BRIEF.md);
 decisions in [`explorations/git-history-rewrite/DECISIONS.md`](../../explorations/git-history-rewrite/DECISIONS.md);
-evidence in [`explorations/git-history-rewrite/RESEARCH.md`](../../explorations/git-history-rewrite/RESEARCH.md).
+evidence in [explorations/git-history-rewrite/RESEARCH.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/git-history-rewrite/RESEARCH.md).
 
 ## Non-Goals
 

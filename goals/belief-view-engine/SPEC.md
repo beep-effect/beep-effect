@@ -1,7 +1,7 @@
 # SPEC — Belief View Engine
 
 Normative contract, seeded 2026-08-17 from the ratified
-[`MAP`](../../explorations/epistemic-belief-view-revision/MAP.md) (candidate
+[`MAP`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/epistemic-belief-view-revision/MAP.md) (candidate
 1) **including its four adversarial amendments** — back-links, not copies.
 
 ## Mission

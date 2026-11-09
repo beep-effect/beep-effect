@@ -90,7 +90,7 @@ D7-S1 supersedes only D7's validator with the real `@beep/shacl` driver;
 [goals/semantic-foundation/PLAN.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantic-foundation/PLAN.md) M4 remains gated. The bounded engine in
 [goals/epistemic-claim-lifecycle-gate/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/epistemic-claim-lifecycle-gate/SPEC.md) therefore cannot be assumed to
 cover G3's final shapes. G3 must pin a ready validator and shape version.
-`explorations/ingestion-security-secret-governance/research/secret-pii-scrub-and-audit.md`
+[explorations/ingestion-security-secret-governance/research/secret-pii-scrub-and-audit.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/ingestion-security-secret-governance/research/secret-pii-scrub-and-audit.md)
 uses “validator score” as design vocabulary, not an authoritative schema.
 `explorations/gpu-document-ocr/RESEARCH.md` is the parallel reader investigation;
 this lane does not adopt its unmeasured quality claims as thresholds.

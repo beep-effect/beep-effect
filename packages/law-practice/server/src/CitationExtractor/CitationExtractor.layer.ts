@@ -34,6 +34,8 @@ import { makeCitationSixFormProjection } from "../internal/Citation/SixFormProje
 import { captureCitationSnapshot } from "../internal/Citation/Snapshot.ts";
 import { makeCitationSourceEvidence } from "../internal/Citation/SourceEvidence.ts";
 
+const decodeExtractorResult = S.decodeUnknownEffect(S.toType(CitationExtractorResult));
+
 const $I = $LawPracticeServerId.create("CitationExtractor/CitationExtractor.layer");
 /** Trusted installation claims and explicit process launch capability. The
  * installer authenticates implementation/runtime bytes; hashing its claims does
@@ -119,9 +121,7 @@ const make = Effect.fn("Citation.makeExtractor")(function* (raw: unknown) {
         recognizedMentions: A.length(mentions),
         outsideProfile: output.outsideProfile,
       });
-      return yield* S.decodeUnknownEffect(S.toType(CitationExtractorResult))({ source, document, report }).pipe(
-        Effect.mapError(invalidObservation)
-      );
+      return yield* decodeExtractorResult({ source, document, report }).pipe(Effect.mapError(invalidObservation));
     }).pipe(timing.timed);
     return operation.run("extract", body).pipe(Effect.catchCause(normalize));
   });

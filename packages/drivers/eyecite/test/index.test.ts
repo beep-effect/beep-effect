@@ -10,6 +10,8 @@ import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
+const decodeRecognizeInput = S.decodeUnknownEffect(S.toType(EyeciteRecognizeInput));
+
 const Profile = S.fromJsonString(
   S.Struct({
     cases: S.Array(
@@ -106,7 +108,7 @@ layer(NodeFileSystem.layer)("pinned raw recognition", (it) => {
   );
   it.effect("uses provided codecs to preserve isolated UTF-16 surrogates on the wire", () =>
     Effect.gen(function* () {
-      const input = yield* S.decodeUnknownEffect(S.toType(EyeciteRecognizeInput))({
+      const input = yield* decodeRecognizeInput({
         source: "😀e\u0301\ud800x\udc00",
         sourceUtf16: 100,
         candidates: 10,

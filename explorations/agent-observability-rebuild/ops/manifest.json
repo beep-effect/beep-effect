@@ -17,6 +17,14 @@
       "supersededBy": null
     },
     "created": "2026-10-27",
-    "updated": "2026-10-27"
+    "updated": "2026-10-27",
+    "archive": {
+      "repo": "beep-effect/beep-effect-goals-archive",
+      "path": "explorations/agent-observability-rebuild",
+      "commit": "28c4a59943cf5392c4a85d3b4fa8815373b36aaf",
+      "contentHash": "f2e3b20b8e4794f41e69f9da3379e543d18b2df3",
+      "archivedAt": "2026-11-09T06:36:23.435Z",
+      "sourceCommit": "deb7d0c5efd56b6b073ab43be6ec5a6f6074fdd6"
+    }
   }
 }

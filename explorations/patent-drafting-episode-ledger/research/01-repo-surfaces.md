@@ -577,7 +577,7 @@ this checkout, all eight seed symbols:
 
 | Symbol | Files in `packages/**/src/**` | Files repo-wide |
 | --- | --- | --- |
-| `DraftingEpisode` | **0** | 12 (all docs: `standards/memory-architecture/04-decision-log.md`, `explorations/ATLAS.md`, `explorations/lynx-lkg-ontology-grounding/research/04-beep-effect-grounding.md`, this packet's 4 files, `legal-patent-kg-deepening`'s 5) |
+| `DraftingEpisode` | **0** | 12 (all docs: `standards/memory-architecture/04-decision-log.md`, `explorations/ATLAS.md`, [explorations/lynx-lkg-ontology-grounding/research/04-beep-effect-grounding.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/lynx-lkg-ontology-grounding/research/04-beep-effect-grounding.md), this packet's 4 files, `legal-patent-kg-deepening`'s 5) |
 | `MemoryProjection` | **0** | 9 (docs only) |
 | `AnswerProvenanceAnnex` | **0** | 5 (docs only) |
 | `LegalInferenceEvent` | **0** | 5 (docs only) |

@@ -20,6 +20,9 @@ import {
 } from "./Eyecite.models.ts";
 import type { Citation, Span } from "eyecite-ts";
 
+const decodeRecognizeInput = S.decodeUnknownEffect(S.toType(EyeciteRecognizeInput));
+const decodeRecognizeOutput = S.decodeUnknownEffect(S.toType(EyeciteRecognizeOutput));
+
 const range = (span: Span) => ({ start: span.originalStart, end: span.originalEnd });
 const text = (value: string | number | undefined) =>
   O.getOrNull(O.map(O.fromUndefinedOr(value), (value) => `${value}`));
@@ -104,7 +107,7 @@ const project = (token: Citation) =>
  * @since 0.0.0
  */
 export const recognizeEyecite = Effect.fn("Eyecite.recognize")(function* (input: unknown) {
-  const request = yield* S.decodeUnknownEffect(S.toType(EyeciteRecognizeInput))(input).pipe(
+  const request = yield* decodeRecognizeInput(input).pipe(
     Effect.mapError(() => EyeciteFailure.make({ reason: "invalid-input" }))
   );
   if (Str.length(request.source) > request.sourceUtf16) return yield* EyeciteFailure.make({ reason: "source-limit" });
@@ -121,7 +124,7 @@ export const recognizeEyecite = Effect.fn("Eyecite.recognize")(function* (input:
   const excludedRanges = A.getSomes(
     A.map(observations, (value) => (O.isNone(value.token) ? O.some(value.range) : O.none()))
   );
-  return yield* S.decodeUnknownEffect(S.toType(EyeciteRecognizeOutput))({
+  return yield* decodeRecognizeOutput({
     tokens,
     outsideProfile: A.length(excludedRanges),
     excludedRanges,

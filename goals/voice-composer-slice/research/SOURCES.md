@@ -1,7 +1,7 @@
 # Voice Composer Slice — Implementation Sources & Provenance
 
 - **Primary ledger:**
-  [`explorations/local-first-voice/research/SOURCES.md`](../../../explorations/local-first-voice/research/SOURCES.md).
+  [explorations/local-first-voice/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/local-first-voice/research/SOURCES.md).
   Corrections begin there and are synchronized here.
 - **Origin:** the exploration research was captured 2026-06-27 and de-drifted
   2026-07-14. P0 must re-verify runtime behavior, selected model artifacts, versions,
@@ -55,9 +55,9 @@ Direct ONNX Runtime claims or reuse remain **NEEDS-REVERIFICATION** before P1.
 ## 4. Cross-links
 
 - Primary exploration ledger:
-  `explorations/local-first-voice/research/SOURCES.md`.
+  [explorations/local-first-voice/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/local-first-voice/research/SOURCES.md).
 - Research and capability inventory:
-  `explorations/local-first-voice/RESEARCH.md`.
+  [explorations/local-first-voice/RESEARCH.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/local-first-voice/RESEARCH.md).
 - Locked decisions: `explorations/local-first-voice/DECISIONS.md`.
 - Shaped boundary and dependency map:
   `explorations/local-first-voice/{BRIEF,MAP}.md`.

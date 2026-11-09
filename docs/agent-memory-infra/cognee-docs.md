@@ -331,7 +331,7 @@ beside Graphiti.
   [DataPoints](https://docs.cognee.ai/core-concepts/building-blocks/datapoints)).
   The caveat is that "leads" is a UX/donor conclusion, not evidence that Cognee
   should own durable memory truth.
-- `explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md`:
+- [explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md):
   **mostly confirmed, but one point is stale**. The donor doc correctly frames
   Cognee as a memory-UX/ontology-ergonomics donor with poly-store architecture,
   `DataPoint` modeling, and Apache-2.0 licensing
@@ -435,5 +435,5 @@ Repo files read for doctrine and cross-checking:
 - `standards/memory-architecture/01-memory-layer-taxonomy.md`
 - `goals/agentic-professional-runtime/README.md`
 - `standards/memory-architecture/05-context-graph-capability-assessment.md`
-- `explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md`
+- [explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/atlas-synthesis/synthesis/21-external-memory-kg-donors.md)
 - `standards/memory-architecture/03-saas-landscape-assessment.md`

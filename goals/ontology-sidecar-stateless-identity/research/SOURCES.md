@@ -1,6 +1,6 @@
 # Sources
 
-Carried from the exploration ledger `explorations/effect-mcp-2026-07-28/research/SOURCES.md` (primary); this copy
+Carried from the exploration ledger [explorations/effect-mcp-2026-07-28/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/effect-mcp-2026-07-28/research/SOURCES.md) (primary); this copy
 reproduces the corpus for implementation.
 
 ## In-repo bricks
@@ -25,6 +25,6 @@ reproduces the corpus for implementation.
 
 ## Exploration lanes to read
 
-`explorations/effect-mcp-2026-07-28/research/22-r3-governance-identity.md` (options and risks, verified),
+[explorations/effect-mcp-2026-07-28/research/22-r3-governance-identity.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/effect-mcp-2026-07-28/research/22-r3-governance-identity.md) (options and risks, verified),
 `24-r5-http-security-observability.md` (Origin, CORS, correlation), `11-u2-stateless-runtime.md`
 (cancellation gap, `clientId` per-POST).

@@ -38,7 +38,7 @@ measurement/capture boundary before implementation.
 ## Latest Evidence
 
 2026-08-13 operator ownership confirmation and the Goal 2 row in
-[`computable-workspace-geometry/MAP.md`](../../explorations/computable-workspace-geometry/MAP.md).
+[`computable-workspace-geometry/MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/computable-workspace-geometry/MAP.md).
 
 ## Notes
 

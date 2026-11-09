@@ -275,15 +275,15 @@ Pandoc graph.
   `Schema.decodeUnknownSync`: `struct-wire` (no transformations) jit-selective 3.72×, jit-global 3.67×,
   aot 3.69×; `struct` with transformations 1.19× / 1.43× / 1.46×; `schema-class` 1.39× / 1.23× / 1.23×;
   `model-class` (SqlModel) 1.29× / 1.32× / 1.34×; `jit-blocked` (Function throws, production CSP)
-  ~1.0× or worse. — [compiler-evaluation.md](../../../../explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md)
+  ~1.0× or worse. — [compiler-evaluation.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md)
 - Same spike, recursive Pandoc decode (395-node class graph, 102 Declarations, 7 Suspends): every mode
   straddled 1.0×; AOT on the `model` path 0.69–0.78× (possible small regression from 270 installed
   entries, "not proven under this load"); the AOT module targeting all 89 direct exports was 92 KB with
   56 factories. Cold costs: JIT 1–3 ms codegen per row graph; AOT compile 0.7–2.1 ms at build, import +
-  install 2.7–4.9 ms at startup. — [compiler-evaluation.md](../../../../explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md)
+  install 2.7–4.9 ms at startup. — [compiler-evaluation.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md)
 - Same spike: "The class wrapper costs about 30–35% of throughput, and the compiler does not remove
   it" (model-class 496 → struct 762 arrays/s interp; 743 → 1,100 under JIT). —
-  [compiler-evaluation.md](../../../../explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md)
+  [compiler-evaluation.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md)
 
 ### Inferences
 - The upstream headline numbers are for shapes the compiler fully specializes (plain primitives,
@@ -336,12 +336,12 @@ only the exploration packet that recorded a DEFER verdict.
   decoding transformation-free wire shapes (≥10k rows), upstream lifting the Declaration exclusion or
   following Suspend in AOT, or the API leaving `unstable`; "the cheapest experiment is the global
   side-effect import on one server entry point, behind a flag." —
-  [compiler-evaluation.md](../../../../explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md)
+  [compiler-evaluation.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md)
 - Repo CSP facts from the evaluation: oip-web production `script-src 'self' 'nonce-…'` with
   `'unsafe-eval'` only outside production (`apps/oip-web/src/proxy.ts:23-24`); the Tauri shells and
   api-docs lab also block eval — "JIT works in dev and silently falls back in prod"; "AOT output served
   as a same-origin static module satisfies `'self'`". —
-  [compiler-evaluation.md](../../../../explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md)
+  [compiler-evaluation.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md)
 
 ### Inferences
 - The absence of any bundler plugin after three weeks, plus `unstable` status, means a beep adoption
@@ -413,16 +413,16 @@ lookup; `S.Class` roots never get generated code though their field struct does.
   Pandoc (395 nodes) — 36 fast-validator, 136 generated-loop, 129 interpreted-orchestration, 94
   interpreter. "The compilers never generate code for a Declaration... Only the Declaration's encoding
   link is compiled." —
-  [compiler-evaluation.md](../../../../explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md)
+  [compiler-evaluation.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md)
 - Ordering hazard relevant to `@beep/schema`: `withCodecStatics` builds bound `Schema.*` functions at
   class-definition time; "They capture but do not invoke. They are safe under a later enable unless
   module-load code calls them"; any decode/`make` during module initialization "freezes that AST's
   interpreted entry for good". Also `SchemaParser.decodeUnknownSync` picks its adapter at capture time
   from `compilerAdaptersEnabled`. —
-  [compiler-evaluation.md](../../../../explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md)
+  [compiler-evaluation.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md)
 - D10: "the per-AST registry moots the hoisting rationale for `withCodecStatics`... A free-function call
   at the use site reuses the same compiled entry that a hoisted static would hold." —
-  [compiler-evaluation.md](../../../../explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md)
+  [compiler-evaluation.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md)
 
 ### Inferences
 - For `@beep/schema`: `LiteralKit` unions (literal `Union`) are ideal fast-path material (Set lookup);
@@ -460,24 +460,24 @@ or Effect change, must be kept side-effectful by the bundler, and carries no `.d
   compiler, but module-private schemas and anything only reachable through `Suspend` are not, so
   "Neither selective JIT nor AOT can reach private schemas... Only the global JIT reaches them." —
   `Build.ts` (local checkout `~/YeeBois/references/effect/effect/packages/effect/src/schema/SchemaAOTCompiler/Build.ts`);
-  [compiler-evaluation.md](../../../../explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md)
+  [compiler-evaluation.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md)
 - Emitted module import specifier is the bare `effect/schema/SchemaCompiler/runtime`, which "does not
   resolve outside a package tree. The spike rewrites it to a file URL"; a first `Build.build` smoke
   "deadlocked. The entry module imported itself while its top-level await was pending" — schema
   modules must be separate from the build entry. —
-  [compiler-evaluation.md Friction](../../../../explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md)
+  [compiler-evaluation.md Friction](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md)
 - Repo-fit analysis: an AOT step as a `@beep/codegen-kit` `ExtraRenderer` is "possible, but a shape
   stretch" (kit is spec→TS; AOT is live-modules→JS); what transfers is `CodegenKit.drift` with
   `--check` lanes; "A `.gen.ts` wrapper, or a dedicated `beep` generate step with its own drift check,
   fits better." The repo convention is `_generated/*.gen.ts` with no `.aot.js` precedent. —
-  [compiler-evaluation.md](../../../../explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md)
+  [compiler-evaluation.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md)
 - Upstream's own pattern for benchmarks: generate in a separate child process
   (`execFileSync(process.execPath, [generate.mts, file])`) then `import()` + `install(roots)` in the
   parent, so generator code never loads in the measured process. —
   `compiler-rebuild/fixtures/aot.ts` (local checkout `~/YeeBois/references/effect/effect/packages/effect/runtimeperf/suites/compiler-rebuild/fixtures/aot.ts`)
 - Startup cost measured by the repo: AOT import + install 2.7–4.9 ms for a 14-function row graph; a
   Pandoc-wide module was 92 KB / 56 factories / 270 installed nodes with a 0.69–0.78× result on the
-  recursive path. — [compiler-evaluation.md](../../../../explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md)
+  recursive path. — [compiler-evaluation.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md)
 - Bundle delta upstream: AOT +2.12 KB min+gz over no-compiler for the runtime helpers (excluding the
   generated module itself), JIT +6.77 KB. — [PR #7908](https://github.com/Effect-TS/effect/pull/7908)
 

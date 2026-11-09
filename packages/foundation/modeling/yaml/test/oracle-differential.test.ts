@@ -20,6 +20,11 @@
 // - Value-less flow mapping key group: authored 2026-10-23 against
 //   `yaml@2.9.1` the same way (#2142); the `!!set` row expects this parser's
 //   plain-object projection of the oracle's two-member `Set`
+// - Compact explicit key group: authored 2026-11-08 against `yaml@2.9.1` the
+//   same way. Its deeper-`:` rows are invalid under the spec's s-indent(n) rule
+//   and pin the oracle's tolerance. A collection key has no comparable
+//   plain-object projection, so those shapes are pinned at the AST level in
+//   composer-regressions.test.ts.
 // - Case matrix extended from the savvy-web-systems dogfood sweep of the same
 //   date (51 cases, double-oracle: yaml@2.9.0 + js-yaml@4.3.1, a case counted
 //   only where both agreed)
@@ -481,6 +486,27 @@ const flowValuelessKeyCases: ReadonlyArray<OracleCase> = [
   { name: "tagged empty value (control)", input: "{a: !!str , b}\n", expected: { a: "", b: null } },
 ];
 
+// A `?` that opens its mapping mid-line, after a sequence indicator, and the
+// `:` that has to find it again from a later line.
+const compactExplicitKeyCases: ReadonlyArray<OracleCase> = [
+  { name: "in a sequence item", input: "- ? k\n  : v\n", expected: [{ k: "v" }] },
+  { name: "two entries in a sequence item", input: "- ? k\n  : v\n  ? l\n  : w\n", expected: [{ k: "v", l: "w" }] },
+  { name: "in a nested sequence item", input: "x:\n  - ? k\n    : v\n", expected: { x: [{ k: "v" }] } },
+  {
+    name: "after an implicit entry, with a compact sequence value",
+    input: "- a: 1\n  ? b\n  : - 2\n",
+    expected: [{ a: 1, b: [2] }],
+  },
+  { name: "value indicator deeper than the key", input: "? k\n : v\n", expected: { k: "v" } },
+  { name: "value indicator deeper than a compact key", input: "- ? k\n   : v\n", expected: [{ k: "v" }] },
+  {
+    name: "value indicator deeper, after an implicit entry",
+    input: "- a: 1\n  ? k\n    : v\n",
+    expected: [{ a: 1, k: "v" }],
+  },
+  { name: "value-less key after a deeper value indicator", input: "? k\n  : v\n? l\n", expected: { k: "v", l: null } },
+];
+
 const groups: ReadonlyArray<readonly [string, ReadonlyArray<OracleCase>]> = [
   ["controls", controlCases],
   ["dedent after a trailing comment", dedentCases],
@@ -493,6 +519,7 @@ const groups: ReadonlyArray<readonly [string, ReadonlyArray<OracleCase>]> = [
   ["compact sequence values in sequence-item mappings", compactSequenceInItemCases],
   ["block scalar sequence items before a sibling", blockScalarItemCases],
   ["value-less flow mapping keys", flowValuelessKeyCases],
+  ["compact explicit keys", compactExplicitKeyCases],
 ];
 
 describe("oracle-differential (yaml@2.9.0 semantic expectations)", () => {

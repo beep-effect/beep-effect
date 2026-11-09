@@ -1,6 +1,6 @@
 # Sources
 
-Carried from the exploration ledger `explorations/cursor-agent-pool/research/SOURCES.md` (primary);
+Carried from the exploration ledger [explorations/cursor-agent-pool/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/cursor-agent-pool/research/SOURCES.md) (primary);
 this copy reproduces the corpus for implementation. Lane reports live in the exploration packet.
 
 ## In-repo bricks
