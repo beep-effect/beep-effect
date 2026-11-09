@@ -9,6 +9,7 @@ import {
   loadYeetMonitorCommentWatermark,
   openYeetMonitorCommentStream,
   RepoRunContext,
+  ReviewBodyCoderabbit,
   ReviewBodyGreptile,
   readYeetReviewLaneLedger,
   renderYeetMonitorCommentReplay,
@@ -439,6 +440,20 @@ describe("yeet monitor comment lines", () => {
         })
       ),
       "greptile: confidence unknown, new P0:0 P1:1 P2:2 (advisory)"
+    );
+    // The minor count is printed only when a body summarises one.
+    assertSome(
+      renderYeetMonitorReviewBodySignal(
+        ReviewBodyCoderabbit.make({
+          signal: "coderabbit",
+          actionable: 4,
+          nitpicks: 0,
+          outsideDiff: 0,
+          minor: 18,
+          items: [],
+        })
+      ),
+      "coderabbit: 4 actionable, 0 nitpick(s), 0 outside diff, 18 minor (advisory)"
     );
   });
 });

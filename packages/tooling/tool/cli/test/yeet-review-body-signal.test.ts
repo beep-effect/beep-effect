@@ -304,6 +304,14 @@ describe("current CodeRabbit body format", () => {
     ).toEqual(A.map(wraps, () => [["src/a.ts", 57, null]]));
   });
 
+  it("drops a lead-in whose location never closes", () => {
+    // A lead-in still open at the end of the body was not a location.
+    const parsed = signal("coderabbitai[bot]", "**Actionable comments posted: 1**\nReview comment at\n@src/a.ts");
+
+    expect(parsed.signal === "coderabbit" && parsed.actionable).toBe(1);
+    expect(itemShape(parsed)).toEqual([]);
+  });
+
   it("keeps two findings a fix-all section places on one line", () => {
     // PR #2917 listed three distinct findings at one line of one file; only
     // the second listing of a finding is a duplicate.

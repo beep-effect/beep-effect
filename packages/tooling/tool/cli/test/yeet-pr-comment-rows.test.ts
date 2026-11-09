@@ -72,6 +72,7 @@ type Endpoint = "issues" | "reviews" | "review-comments" | "threads";
 // a test that serves none leaves them out.
 type Payloads = Readonly<Record<Exclude<Endpoint, "threads">, ReadonlyArray<unknown>>> & {
   readonly threads?: ReadonlyArray<unknown>;
+  readonly threadsRefused?: boolean;
 };
 
 const noPayloads: Payloads = { issues: [], reviews: [], "review-comments": [] };
@@ -105,9 +106,11 @@ const ghSpawner = (payloads: Ref.Ref<Payloads>) =>
   ScriptedSpawner.make((command, args) => {
     const endpoint = endpointOf(A.join([command, ...args], " "));
     const served = Ref.getUnsafe(payloads);
-    return {
-      stdout: encodeJson(endpoint === "threads" ? threadsResponse(served.threads ?? []) : [served[endpoint]]),
-    };
+    return endpoint === "threads" && served.threadsRefused === true
+      ? { exit: 1, stderr: "gh: Bad Gateway (HTTP 502)" }
+      : {
+          stdout: encodeJson(endpoint === "threads" ? threadsResponse(served.threads ?? []) : [served[endpoint]]),
+        };
   });
 
 const issue = (id: number, login: string | null, createdAt: string, body = "Please rebase onto main.") => ({
@@ -600,6 +603,17 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("bot review-body finding rows
     })
   );
 
+  it.effect("names a first finding the body lists with no line by its path alone", () =>
+    Effect.sync(() => {
+      const body = A.join(["<summary>Nitpick comments: 1</summary>", "Nitpick comments:", "In `@src/a.ts`:"], "\n");
+
+      assertSome(
+        O.map(yeetPrBotReviewBodyCapsule(reviewBody(56, CODERABBIT, body), windowFor(), []), (value) => value.excerpt),
+        "coderabbit: 0 actionable, 1 nitpick(s), 0 outside diff (advisory); 1 not on a review thread; first: src/a.ts"
+      );
+    })
+  );
+
   it.effect("tells the owner to read a body whose findings Yeet could not parse", () =>
     Effect.gen(function* () {
       const body = yield* readFixture("coderabbit-nitpick-current-format.md");
@@ -637,6 +651,32 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("bot review-body finding rows
         expect(
           A.filter(spawner.spawns, (spawn) => Str.includes("api graphql")(A.join([spawn.command, ...spawn.args], " ")))
         ).toHaveLength(1);
+      })
+    )
+  );
+
+  it.effect("fails the poll and holds the watermark when the thread read is refused", () =>
+    withCheckout((root, payloads) =>
+      Effect.gen(function* () {
+        const context = contextFor(root);
+        const body = yield* readFixture("coderabbit-nitpick-current-format.md");
+        yield* Ref.set(payloads, {
+          ...noPayloads,
+          reviews: [review(63, CODERABBIT, AFTER_SUBMIT, body)],
+          threadsRefused: true,
+        });
+
+        const failure = yield* Effect.flip(pollYeetPrCommentRows(context, windowFor(), POLLED_AT));
+        expect(failure.message).toContain(`review thread read for PR #${PR} failed`);
+        const rows = yield* commentRows(root);
+        expect(rows).toStrictEqual([]);
+        const held = yield* loadYeetMonitorCommentWatermark(context, PR, "until-ready");
+        expect(O.exists(held, (watermark) => watermark.reviewBody.id === 63)).toBe(false);
+
+        // The next poll, with threads readable again, writes the row it held back.
+        yield* Ref.set(payloads, { ...noPayloads, reviews: [review(63, CODERABBIT, AFTER_SUBMIT, body)] });
+        const appended = yield* pollYeetPrCommentRows(context, windowFor(), POLLED_AT);
+        expect(A.map(appended, (row) => row.capsule.commentId)).toStrictEqual([63]);
       })
     )
   );

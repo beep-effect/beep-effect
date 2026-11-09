@@ -404,14 +404,14 @@ export const yeetPrCommentCapsule: {
     )
 );
 
-// What a bot review body's row says: the body's own summary, how many of its
-// findings no review thread carries, and where the first of those sits.
+// What a bot review body's row says after the body's own summary: how many
+// of its findings no review thread carries, and where the first of those sits.
 const botReviewBodyExcerpt = (
   comment: Extract<YeetMonitorComment, { readonly _tag: "review-body" }>,
+  summary: string,
   advisories: number,
   threads: ReadonlyArray<YeetReviewBodyThreadLocation>
 ): string => {
-  const summary = O.getOrElse(renderYeetMonitorReviewBodySignal(comment.signal), () => comment.author);
   const first = pipe(
     A.head(yeetReviewBodyUnthreadedItems(comment.signal, threads)),
     O.map((item) =>
@@ -510,23 +510,29 @@ export const yeetPrBotReviewBodyCapsule: {
     Match.value(comment).pipe(
       Match.tag("review-body", (body) => {
         const advisories = yeetReviewBodyAdvisoryCount(body.signal, threads);
-        return advisories > 0 &&
-          yeetMonitorCommentFromBot(body) &&
-          notActingLogin(body, window) &&
-          createdAfter(body.submittedAt, window.since)
-          ? O.some(
-              YeetPrCommentCapsule.make({
-                author: body.author,
-                commentId: body.id,
-                createdAt: body.submittedAt,
-                excerpt: rowExcerpt(botReviewBodyExcerpt(body, advisories, threads)),
-                headSha: window.headSha,
-                link: body.url,
-                prNumber: window.prNumber,
-                source: YeetPrCommentSource.Enum["review-body"],
-              })
-            )
-          : O.none<YeetPrCommentCapsule>();
+        // Only a structured body has a summary; a plain one never qualifies.
+        return pipe(
+          renderYeetMonitorReviewBodySignal(body.signal),
+          O.filter(
+            () =>
+              advisories > 0 &&
+              yeetMonitorCommentFromBot(body) &&
+              notActingLogin(body, window) &&
+              createdAfter(body.submittedAt, window.since)
+          ),
+          O.map((summary) =>
+            YeetPrCommentCapsule.make({
+              author: body.author,
+              commentId: body.id,
+              createdAt: body.submittedAt,
+              excerpt: rowExcerpt(botReviewBodyExcerpt(body, summary, advisories, threads)),
+              headSha: window.headSha,
+              link: body.url,
+              prNumber: window.prNumber,
+              source: YeetPrCommentSource.Enum["review-body"],
+            })
+          )
+        );
       }),
       Match.orElse(() => O.none<YeetPrCommentCapsule>())
     )

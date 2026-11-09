@@ -52,7 +52,7 @@
  * across 24 pull requests, November 2026) plus the older ones the tests pin:
  * `**Actionable comments posted: N**`; `Nitpick comments (N)` and
  * `Nitpick comments: N`; `Outside diff range comments (N)`; `Minor comments: N`;
- * fix-prompt items introduced by `` In `@path`: ``, by
+ * fix-prompt items introduced by `In @path:` (the path in backticks), by
  * `Review comments at @path:` or by a hard-wrapped
  * `Review comment at @path at line N:` / `... around lines N - M:`, each
  * followed by `- Line N:` or `- Around line N-M:`. The current format lists
@@ -490,7 +490,7 @@ const codeFencePattern = /^```/u;
 // or low value; they are not a section Yeet counts, so they are not evidence.
 const findingsSummaryPattern =
   /(?<name>[A-Za-z][A-Za-z -]*?)\s*comments(?:\s*\((?<count>\d+)\)|:[ \t]*(?<colonCount>\d+))/gu;
-const additionalCommentsPattern = /\bAdditional$/u;
+const additionalCommentsPattern = /\bAdditional\s*comments/u;
 // A wrapped location never runs past a few lines; a lead-in that does was not one.
 const maxLocationClauseLines = 4;
 // A heading or a bolded lead-in that names Greptile. Line-anchored on purpose:
@@ -718,7 +718,7 @@ const isFixPromptEvidence = (line: string): boolean =>
   reviewCommentLeadPattern.test(line) || anySectionHeadingPattern.test(line);
 
 const isFindingsSummaryEvidence = (match: RegExpMatchArray): boolean =>
-  matchedCount(match) > 0 && !additionalCommentsPattern.test(Str.trim(match.groups?.name ?? Str.empty));
+  matchedCount(match) > 0 && !additionalCommentsPattern.test(match[0]);
 
 // What shows a body carries findings, whatever their spelling: a per-finding
 // prompt or a fix-prompt marker first, then a summary title with a positive
