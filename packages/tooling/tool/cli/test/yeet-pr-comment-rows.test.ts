@@ -1,9 +1,11 @@
+import * as NodeURL from "node:url";
 import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import {
   acknowledgeYeetMonitorComments,
   collectNewYeetMonitorComments,
   loadYeetMonitorCommentWatermark,
   openYeetMonitorCommentStream,
+  parseYeetReviewBodySignal,
   pollYeetPrCommentRows,
   RepoRunContext,
   replayYeetMonitorComments,
@@ -15,11 +17,15 @@ import {
   YeetMonitorCommentStateJson,
   YeetMonitorCommentWatermark,
   YeetMonitorIssueComment,
+  YeetMonitorReviewBody,
   YeetMonitorReviewComment,
   YeetPrCommentCapsule,
   YeetPrCommentWindow,
+  YeetReviewBodySignalInput,
+  YeetReviewBodyThreadLocation,
   yeetMonitorCommentStateFileName,
   yeetMonitorCommentStatePath,
+  yeetPrBotReviewBodyCapsule,
   yeetPrCommentCapsule,
   yeetPrCommentRowId,
 } from "@beep/repo-cli/test/Yeet";
@@ -61,26 +67,48 @@ const AFTER_SUBMIT = "2026-09-25T00:05:00Z";
 const LATER = "2026-09-25T00:09:00Z";
 const POLLED_AT = "2026-09-25T00:10:00.000Z";
 
-type Endpoint = "issues" | "reviews" | "review-comments";
-type Payloads = Readonly<Record<Endpoint, ReadonlyArray<unknown>>>;
+type Endpoint = "issues" | "reviews" | "review-comments" | "threads";
+// Review threads are read only for a CodeRabbit body that lists locations, so
+// a test that serves none leaves them out.
+type Payloads = Readonly<Record<Exclude<Endpoint, "threads">, ReadonlyArray<unknown>>> & {
+  readonly threads?: ReadonlyArray<unknown>;
+};
 
 const noPayloads: Payloads = { issues: [], reviews: [], "review-comments": [] };
 
 const endpointOf = (commandLine: string): Endpoint =>
-  Str.includes("/issues/")(commandLine)
-    ? "issues"
-    : Str.includes("/reviews")(commandLine)
-      ? "reviews"
-      : "review-comments";
+  Str.includes("api graphql")(commandLine)
+    ? "threads"
+    : Str.includes("/issues/")(commandLine)
+      ? "issues"
+      : Str.includes("/reviews")(commandLine)
+        ? "reviews"
+        : "review-comments";
 
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
+
+// The review-thread read is one GraphQL page holding every thread.
+const threadsResponse = (threads: ReadonlyArray<unknown>) => ({
+  data: {
+    repository: {
+      pullRequest: {
+        author: { login: ACTING },
+        reviewThreads: { pageInfo: { hasNextPage: false, endCursor: null }, nodes: threads },
+      },
+    },
+  },
+});
 
 // `gh api --paginate --slurp` answers with one array of pages; the stub serves
 // whatever the test last put in `payloads` for the endpoint and records the call.
 const ghSpawner = (payloads: Ref.Ref<Payloads>) =>
-  ScriptedSpawner.make((command, args) => ({
-    stdout: encodeJson([Ref.getUnsafe(payloads)[endpointOf(A.join([command, ...args], " "))]]),
-  }));
+  ScriptedSpawner.make((command, args) => {
+    const endpoint = endpointOf(A.join([command, ...args], " "));
+    const served = Ref.getUnsafe(payloads);
+    return {
+      stdout: encodeJson(endpoint === "threads" ? threadsResponse(served.threads ?? []) : [served[endpoint]]),
+    };
+  });
 
 const issue = (id: number, login: string | null, createdAt: string, body = "Please rebase onto main.") => ({
   body,
@@ -108,6 +136,33 @@ const review = (id: number, login: string, submittedAt: string, body: string) =>
   state: "COMMENTED",
   submitted_at: submittedAt,
   user: { login },
+});
+
+const threadComment = (path: string, line: number) => ({
+  id: `PRRC_${path}_${line}`,
+  databaseId: line,
+  author: { __typename: "User", login: ACTING },
+  body: "Fixed in the next push.",
+  path,
+  line,
+  originalLine: line,
+  createdAt: AFTER_SUBMIT,
+  url: `https://github.com/o/r/pull/${PR}#discussion_r${line}`,
+});
+
+// A resolved thread still carries its finding: the owner already answered it.
+const thread = (path: string, line: number) => ({
+  id: `PRRT_${path}_${line}`,
+  isResolved: true,
+  isOutdated: false,
+  isCollapsed: true,
+  path,
+  line,
+  startLine: null,
+  diffSide: "RIGHT",
+  resolvedBy: { login: ACTING },
+  comments: { pageInfo: { hasNextPage: false, endCursor: null }, nodes: [threadComment(path, line)] },
+  latest: { nodes: [threadComment(path, line)] },
 });
 
 const contextFor = (root: string) =>
@@ -463,6 +518,142 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("until-ready comment rows", (
         expect(pollYeetPrCommentRows17).toStrictEqual([]);
         const commentRows18 = yield* commentRows(root);
         expect(A.map(commentRows18, (value) => value.id)).toStrictEqual([row.id]);
+      })
+    )
+  );
+});
+
+// PR #3013: CodeRabbit's one valid finding lived only in its review body, as a
+// nitpick no thread carried, and no row ever said so. A bot's body findings
+// that no thread carries now arm one P1 row, linking the review.
+const NITPICK_PATH = "packages/tooling/library/agent-memory-store/src/MemoryIndexes.service.ts";
+const CODERABBIT = "coderabbitai[bot]";
+
+const readFixture = Effect.fnUntraced(function* (name: string) {
+  const fs = yield* FileSystem.FileSystem;
+  return yield* fs.readFileString(
+    NodeURL.fileURLToPath(new URL(`./fixtures/pr-review-bodies/${name}`, import.meta.url))
+  );
+});
+
+const reviewBody = (id: number, author: string, body: string, submittedAt = AFTER_SUBMIT) =>
+  YeetMonitorReviewBody.make({
+    author,
+    body,
+    id,
+    signal: parseYeetReviewBodySignal(YeetReviewBodySignalInput.make({ authorLogin: author, body })),
+    state: "COMMENTED",
+    submittedAt,
+    url: `https://github.com/o/r/pull/${PR}#pullrequestreview-${id}`,
+  });
+
+const RATE_LIMIT_BODY = A.join(
+  [
+    "<!-- This is an auto-generated comment: rate limited by coderabbit.ai -->",
+    "> [!WARNING]",
+    "> ## Rate limit exceeded",
+    "> Please wait 12 minutes before requesting another review.",
+  ],
+  "\n"
+);
+
+it.layer(PlatformLayer, { timeout: "30 seconds" })("bot review-body finding rows", (it) => {
+  it.effect("names the counts and the first unthreaded finding of a CodeRabbit body", () =>
+    Effect.gen(function* () {
+      const body = yield* readFixture("coderabbit-nitpick-current-format.md");
+      const capsule = yeetPrBotReviewBodyCapsule(reviewBody(5830285995, CODERABBIT, body), windowFor(), []);
+
+      assertSome(
+        O.map(capsule, (value) => [value.source, value.author, value.link, value.excerpt]),
+        [
+          "review-body",
+          CODERABBIT,
+          `https://github.com/o/r/pull/${PR}#pullrequestreview-5830285995`,
+          `coderabbit: 0 actionable, 1 nitpick(s), 0 outside diff (advisory); 1 not on a review thread; first: ${NITPICK_PATH}:57`,
+        ]
+      );
+    })
+  );
+
+  it.effect("writes no row when a thread already carries every finding", () =>
+    Effect.gen(function* () {
+      const body = yield* readFixture("coderabbit-nitpick-current-format.md");
+      const threads = [YeetReviewBodyThreadLocation.make({ path: NITPICK_PATH, line: O.some(57) })];
+
+      assertNone(yeetPrBotReviewBodyCapsule(reviewBody(51, CODERABBIT, body), windowFor(), threads));
+    })
+  );
+
+  it.effect("writes no row for a rate-limit notice, the acting login's own body or one before the window", () =>
+    Effect.gen(function* () {
+      const body = yield* readFixture("coderabbit-nitpick-current-format.md");
+
+      assertNone(yeetPrBotReviewBodyCapsule(reviewBody(52, CODERABBIT, RATE_LIMIT_BODY), windowFor(), []));
+      assertNone(
+        yeetPrBotReviewBodyCapsule(
+          reviewBody(53, ACTING, "### Greptile Review\nConfidence: 4/5\n**NEW:** 1×P2"),
+          windowFor(),
+          []
+        )
+      );
+      assertNone(yeetPrBotReviewBodyCapsule(reviewBody(54, CODERABBIT, body, BEFORE_SUBMIT), windowFor(), []));
+    })
+  );
+
+  it.effect("tells the owner to read a body whose findings Yeet could not parse", () =>
+    Effect.gen(function* () {
+      const body = yield* readFixture("coderabbit-nitpick-current-format.md");
+      const drifted = Str.replace(
+        /Review comments? at/gu,
+        "Finding in"
+      )(Str.replace(/Nitpick comments/gu, "Nitpicks")(body));
+
+      assertSome(
+        O.map(
+          yeetPrBotReviewBodyCapsule(reviewBody(55, CODERABBIT, drifted), windowFor(), []),
+          (value) => value.excerpt
+        ),
+        "coderabbit: body has findings Yeet could not parse (fix-prompt) and must be read"
+      );
+    })
+  );
+
+  it.effect("arms one P1 row per bot body from a poll, reading threads only for a located body", () =>
+    withCheckout((root, payloads, spawner) =>
+      Effect.gen(function* () {
+        const context = contextFor(root);
+        const body = yield* readFixture("coderabbit-nitpick-current-format.md");
+        yield* Ref.set(payloads, {
+          ...noPayloads,
+          reviews: [review(60, CODERABBIT, AFTER_SUBMIT, body), review(61, CODERABBIT, LATER, RATE_LIMIT_BODY)],
+        });
+
+        const appended = yield* pollYeetPrCommentRows(context, windowFor(), POLLED_AT);
+        expect(A.map(appended, (row) => [row.severity, row.capsule.commentId, row.capsule.source])).toStrictEqual([
+          ["P1", 60, "review-body"],
+        ]);
+        const rows = yield* commentRows(root);
+        expect(A.map(rows, (row) => row.capsule.commentId)).toStrictEqual([60]);
+        expect(
+          A.filter(spawner.spawns, (spawn) => Str.includes("api graphql")(A.join([spawn.command, ...spawn.args], " ")))
+        ).toHaveLength(1);
+      })
+    )
+  );
+
+  it.effect("arms no row from a poll when a resolved thread carries the finding", () =>
+    withCheckout((root, payloads) =>
+      Effect.gen(function* () {
+        const context = contextFor(root);
+        const body = yield* readFixture("coderabbit-nitpick-current-format.md");
+        yield* Ref.set(payloads, {
+          ...noPayloads,
+          reviews: [review(62, CODERABBIT, AFTER_SUBMIT, body)],
+          threads: [thread(NITPICK_PATH, 57)],
+        });
+
+        const appended = yield* pollYeetPrCommentRows(context, windowFor(), POLLED_AT);
+        expect(appended).toStrictEqual([]);
       })
     )
   );

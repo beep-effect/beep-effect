@@ -586,6 +586,81 @@ describe("yeet monitor comment replay", () => {
     );
   });
 
+  // PR #3013: the replay printed `0 actionable, 0 nitpick(s)` for a body in
+  // CodeRabbit's current format that carried one nitpick. Two bodies: the
+  // current format, and one whose markers no known spelling matches.
+  const CURRENT_FORMAT_BODY = A.join(
+    [
+      '<summary><picture><img alt=""></picture> Nitpick comments: 1</summary><blockquote>',
+      "<summary>Prompt for AI Agents</summary>",
+      "Review comment at",
+      "@src/Monitor.ts at",
+      "line 57:",
+      "Rename the parameter.",
+      "<summary>Prompt to fix all issues</summary>",
+      "Nitpick comments:",
+      "Review comments at",
+      "@src/Monitor.ts:",
+      "- Line 57: Rename the parameter.",
+    ],
+    "\n"
+  );
+  const DRIFTED_BODY = Str.replace(
+    /Review comments? at/gu,
+    "Finding in"
+  )(Str.replace(/Nitpick comments/gu, "Nitpicks")(CURRENT_FORMAT_BODY));
+  const currentFormatStub = (commandLine: string): CommandStub =>
+    endpointOf(commandLine) === "reviews"
+      ? {
+          exitCode: 0,
+          output: pages(
+            A.map(
+              [
+                [7001, CURRENT_FORMAT_BODY, "2026-08-16T12:32:00.000Z"],
+                [7002, DRIFTED_BODY, "2026-08-16T12:33:00.000Z"],
+              ] as const,
+              ([id, body, submittedAt]) => ({
+                body,
+                html_url: `https://github.com/o/r/pull/${PR_NUMBER}#pullrequestreview-${id}`,
+                id,
+                state: "COMMENTED",
+                submitted_at: submittedAt,
+                user: { login: "coderabbitai[bot]" },
+              })
+            )
+          ),
+        }
+      : { exitCode: 0, output: EMPTY_PAGE };
+
+  it.layer(
+    Layer.provideMerge(
+      Git.layer,
+      Layer.mergeAll(PlatformLayer, TestConsole.layer, recordingSpawnerLayer(currentFormatStub))
+    ),
+    { timeout: "30 seconds" }
+  )((it) => {
+    it.effect("replays a current-format CodeRabbit body's counts and names an unparsed one's review", () =>
+      Effect.acquireUseRelease(
+        makeTempDirectory,
+        (root) =>
+          Effect.gen(function* () {
+            const context = monitorContext(root);
+            yield* writeStateText(context, stateTextV1(PR_NUMBER, MISSED_AT, 1));
+
+            yield* replayYeetMonitorComments(context, PR_NUMBER);
+
+            const logLines = yield* TestConsole.logLines;
+            const printed = A.join(A.map(logLines, String), "\n");
+            expect(printed).toContain("coderabbit: 0 actionable, 1 nitpick(s), 0 outside diff (advisory)");
+            expect(printed).toContain(
+              `coderabbit: body has findings Yeet could not parse (fix-prompt) and must be read: https://github.com/o/r/pull/${PR_NUMBER}#pullrequestreview-7002`
+            );
+          }),
+        removeTempDirectory
+      )
+    );
+  });
+
   it.layer(Layer.mergeAll(PlatformLayer, recordingSpawnerLayer(missedStub)), { timeout: "30 seconds" })((it) => {
     it.effect("seeds a v1 review-body cursor from the earlier of the two it carried", () =>
       Effect.acquireUseRelease(
