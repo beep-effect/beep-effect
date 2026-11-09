@@ -16,6 +16,7 @@ import {
   renderCiPartitionReport,
   testUnitJobPartition,
   VitestShardPlan,
+  worstCaseRunTimings,
 } from "@beep/repo-cli/commands/Ci";
 import { findRepoRoot } from "@beep/repo-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
@@ -237,6 +238,35 @@ const fixtureTimings = CiPartitionRunTimings.make({
   ],
 });
 
+describe("worst-case fold over runs", () => {
+  it("keeps every measurement and the newest run's provenance", () => {
+    const older = CiPartitionRunTimings.make({
+      runId: 7,
+      headSha: "older",
+      files: [file("repo-cli-1", "test/a.test.ts", 3000)],
+      packages: [],
+    });
+    const newer = CiPartitionRunTimings.make({
+      runId: 9,
+      headSha: "newer",
+      files: [file("repo-cli-2", "test/a.test.ts", 1000), file("repo-cli-2", "test/b.test.ts", 500)],
+      packages: [],
+    });
+    const folded = worstCaseRunTimings([newer, older]);
+    strictEqual(folded.runId, 9);
+    strictEqual(folded.headSha, "newer");
+    const plan = buildVitestShardPlan(
+      BuildVitestShardPlanOptions.make({
+        files: folded.files,
+        total: 1,
+        sourceRun: folded.runId,
+        sourceCommit: folded.headSha,
+      })
+    );
+    deepStrictEqual(plan.fileMilliseconds, { "test/a.test.ts": 3000, "test/b.test.ts": 500 });
+  });
+});
+
 const timingSource = (timings: CiPartitionRunTimings) =>
   CiPartitionTimingSource.of({
     collect: Effect.fn("CiPartitionsTest.collect")(() => Effect.succeed(timings)),
@@ -269,7 +299,7 @@ it.layer(Layer.merge(NodeServices.layer, NodeCrypto.layer))("rebalance from a me
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* fixtureRepo();
-      const lines = yield* rebalanceCiPartitions(root, 7, fixtureTable).pipe(
+      const lines = yield* rebalanceCiPartitions(root, [7], fixtureTable).pipe(
         Effect.provideService(CiPartitionTimingSource, timingSource(fixtureTimings))
       );
       const repoPlan = yield* fs
@@ -305,7 +335,7 @@ it.layer(Layer.merge(NodeServices.layer, NodeCrypto.layer))("rebalance from a me
         ...fixtureTimings,
         files: A.filter(fixtureTimings.files, (timing) => !Str.startsWith("law-practice-")(timing.partitionId)),
       });
-      const error = yield* rebalanceCiPartitions(root, 7, fixtureTable).pipe(
+      const error = yield* rebalanceCiPartitions(root, [7], fixtureTable).pipe(
         Effect.provideService(CiPartitionTimingSource, timingSource(timings)),
         Effect.flip
       );

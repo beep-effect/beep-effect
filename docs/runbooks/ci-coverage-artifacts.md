@@ -14,8 +14,9 @@ The twenty-eight Test Unit partitions keep stable identities: `unit-a` to
 four before 2026-11-02; the lane-timings census knows every layout). The
 sharded partitions follow the committed `vitest.shards.json` plan of their
 package, packed by `bun run beep ci partitions rebalance --write --run <id>`
-from a green main run and judged by `rebalance --check` against the budgets in
-`CiPartitions.schemas.ts`. Each unit partition runs its packages two at a
+from green runs (repeat `--run` to pack each file at its worst measurement
+across them; hosted durations swing between runs) and judged by
+`rebalance --check` against the budgets in `CiPartitions.schemas.ts`. Each unit partition runs its packages two at a
 time with buffered output. They run each package's canonical coverage
 commands, preserving environment assignments, configuration and test selection.
 Node invocations use V8; Bun invocations use Istanbul. The CLI's nine partitions

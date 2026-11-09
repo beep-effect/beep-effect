@@ -424,56 +424,56 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
   CiLanePartition.make({
     id: "repo-cli-2",
     lane: "test-unit",
-    weightSeconds: 335,
+    weightSeconds: 375,
     packages: ["@beep/repo-cli"],
     shard: CiLanePartitionShard.make({ index: 2, total: 9 }),
   }),
   CiLanePartition.make({
     id: "repo-cli-3",
     lane: "test-unit",
-    weightSeconds: 335,
+    weightSeconds: 375,
     packages: ["@beep/repo-cli"],
     shard: CiLanePartitionShard.make({ index: 3, total: 9 }),
   }),
   CiLanePartition.make({
     id: "repo-cli-4",
     lane: "test-unit",
-    weightSeconds: 335,
+    weightSeconds: 375,
     packages: ["@beep/repo-cli"],
     shard: CiLanePartitionShard.make({ index: 4, total: 9 }),
   }),
   CiLanePartition.make({
     id: "repo-cli-5",
     lane: "test-unit",
-    weightSeconds: 335,
+    weightSeconds: 375,
     packages: ["@beep/repo-cli"],
     shard: CiLanePartitionShard.make({ index: 5, total: 9 }),
   }),
   CiLanePartition.make({
     id: "repo-cli-6",
     lane: "test-unit",
-    weightSeconds: 335,
+    weightSeconds: 375,
     packages: ["@beep/repo-cli"],
     shard: CiLanePartitionShard.make({ index: 6, total: 9 }),
   }),
   CiLanePartition.make({
     id: "repo-cli-7",
     lane: "test-unit",
-    weightSeconds: 335,
+    weightSeconds: 375,
     packages: ["@beep/repo-cli"],
     shard: CiLanePartitionShard.make({ index: 7, total: 9 }),
   }),
   CiLanePartition.make({
     id: "repo-cli-8",
     lane: "test-unit",
-    weightSeconds: 335,
+    weightSeconds: 375,
     packages: ["@beep/repo-cli"],
     shard: CiLanePartitionShard.make({ index: 8, total: 9 }),
   }),
   CiLanePartition.make({
     id: "repo-cli-9",
     lane: "test-unit",
-    weightSeconds: 335,
+    weightSeconds: 375,
     packages: ["@beep/repo-cli"],
     shard: CiLanePartitionShard.make({ index: 9, total: 9 }),
   }),
@@ -481,92 +481,95 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
   // Bun/Istanbul file time once #2847 registered the canonical citation
   // corpora. Three sha1-hash shards ran 23.0 / 31.6 / 22.8 min on green main run
   // 42554761567 (file time 1274 / 1779 / 1267 s); twelve LPT shards planned by
-  // packages/law-practice/server/vitest.shards.json from PR run 42607991192 hold
-  // about 309 s of file time each (326 s before #3009 deleted two files; `rebalance --prune`): hosted shards varied 0.6x to 1.3x around the
-  // plan on that run, so the 480 s budget leaves room for the variance. The
-  // weights are the planned file sums; `beep ci partitions rebalance --check`
-  // fails when they drift from the plan.
+  // packages/law-practice/server/vitest.shards.json hold about 371 s of file
+  // time each at every file's worst measurement over PR #3007's four green runs
+  // (42607991192, 42615698428, 42626103000, 42637312401; `rebalance --write`
+  // with repeated `--run`, then `--prune` for the two files #3009 deleted):
+  // hosted shards varied 0.6x to 1.3x around a single-run plan, so the plan
+  // carries the worst case and the 480 s budget the rest. The weights are the
+  // planned file sums; `beep ci partitions rebalance --check` fails when they
+  // drift from the plan.
   CiLanePartition.make({
     id: "law-practice-1",
     lane: "test-unit",
-    weightSeconds: 309,
+    weightSeconds: 371,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 1, total: 12 }),
   }),
   CiLanePartition.make({
     id: "law-practice-2",
     lane: "test-unit",
-    weightSeconds: 309,
+    weightSeconds: 371,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 2, total: 12 }),
   }),
   CiLanePartition.make({
     id: "law-practice-3",
     lane: "test-unit",
-    weightSeconds: 309,
+    weightSeconds: 371,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 3, total: 12 }),
   }),
   CiLanePartition.make({
     id: "law-practice-4",
     lane: "test-unit",
-    weightSeconds: 309,
+    weightSeconds: 371,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 4, total: 12 }),
   }),
   CiLanePartition.make({
     id: "law-practice-5",
     lane: "test-unit",
-    weightSeconds: 309,
+    weightSeconds: 371,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 5, total: 12 }),
   }),
   CiLanePartition.make({
     id: "law-practice-6",
     lane: "test-unit",
-    weightSeconds: 309,
+    weightSeconds: 371,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 6, total: 12 }),
   }),
   CiLanePartition.make({
     id: "law-practice-7",
     lane: "test-unit",
-    weightSeconds: 309,
+    weightSeconds: 371,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 7, total: 12 }),
   }),
   CiLanePartition.make({
     id: "law-practice-8",
     lane: "test-unit",
-    weightSeconds: 309,
+    weightSeconds: 371,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 8, total: 12 }),
   }),
   CiLanePartition.make({
     id: "law-practice-9",
     lane: "test-unit",
-    weightSeconds: 309,
+    weightSeconds: 371,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 9, total: 12 }),
   }),
   CiLanePartition.make({
     id: "law-practice-10",
     lane: "test-unit",
-    weightSeconds: 309,
+    weightSeconds: 371,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 10, total: 12 }),
   }),
   CiLanePartition.make({
     id: "law-practice-11",
     lane: "test-unit",
-    weightSeconds: 309,
+    weightSeconds: 371,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 11, total: 12 }),
   }),
   CiLanePartition.make({
     id: "law-practice-12",
     lane: "test-unit",
-    weightSeconds: 309,
+    weightSeconds: 371,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 12, total: 12 }),
   }),

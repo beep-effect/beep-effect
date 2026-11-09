@@ -45,12 +45,13 @@ import {
   CiPartitionBudgetRow,
   CiPartitionFileTiming,
   CiPartitionRebalanceReport,
+  CiPartitionRunTimings,
   VitestShardPlan,
 } from "./CiPartitions.schemas.ts";
 import { CiPartitionTimingSource, CiPartitionTimingSourceLive } from "./CiPartitions.service.ts";
 import { withCiGithub } from "./LaneTimings.ts";
 import type { CiLanePartition } from "./CiLanePartitions.ts";
-import type { CiPartitionRunTimings, CiShardedPartitionSource } from "./CiPartitions.schemas.ts";
+import type { CiShardedPartitionSource } from "./CiPartitions.schemas.ts";
 
 /**
  * One weighted item for {@link lptAssign}.
@@ -582,7 +583,50 @@ export const pruneCiPartitionPlans = Effect.fn("CiPartitions.prune")(function* (
 });
 
 /**
- * Repack every sharded family from one green run and write the plan files; propose the bin repack.
+ * Fold several runs' measurements into one worst-case collection.
+ *
+ * **Details**
+ *
+ * The plan builder and the bin proposal already keep the largest measurement per file and per
+ * package, so the fold is a concatenation; the provenance (`runId`, `headSha`) is the newest run's.
+ * Hosted test durations swing between runs (the research-library suites by 1.6x to 2.2x), so a plan
+ * packed from one run under-weights whichever file happened to run fast that day.
+ *
+ * **Example** (Fold two runs)
+ *
+ * ```ts
+ * import { CiPartitionRunTimings, worstCaseRunTimings } from "@beep/repo-cli/commands/Ci"
+ *
+ * const older = CiPartitionRunTimings.make({ runId: 1, headSha: "a", files: [], packages: [] })
+ * const newer = CiPartitionRunTimings.make({ runId: 2, headSha: "b", files: [], packages: [] })
+ * console.log(worstCaseRunTimings([older, newer]).headSha) // "b"
+ * ```
+ *
+ * @param runs - The collections to fold, in any order.
+ * @returns One collection carrying every measurement and the newest run's provenance.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const worstCaseRunTimings = (runs: A.NonEmptyReadonlyArray<CiPartitionRunTimings>): CiPartitionRunTimings => {
+  const newest = A.max(
+    runs,
+    Order.mapInput(Order.Number, (run: CiPartitionRunTimings) => run.runId)
+  );
+  return CiPartitionRunTimings.make({
+    runId: newest.runId,
+    headSha: newest.headSha,
+    files: A.flatMap(runs, (run) => run.files),
+    packages: A.flatMap(runs, (run) => run.packages),
+  });
+};
+
+/**
+ * Repack every sharded family from green runs and write the plan files; propose the bin repack.
+ *
+ * **Details**
+ *
+ * With several runs every file and package is packed at its largest measurement across them
+ * (see `worstCaseRunTimings`), so a shard's wall holds when a volatile suite has a slow day.
  *
  * **Example** (Inspect the rebalance effect)
  *
@@ -590,11 +634,11 @@ export const pruneCiPartitionPlans = Effect.fn("CiPartitions.prune")(function* (
  * import { rebalanceCiPartitions } from "@beep/repo-cli/commands/Ci"
  * import * as Effect from "effect/Effect"
  *
- * console.log(Effect.isEffect(rebalanceCiPartitions("/repo", 42554761567)))
+ * console.log(Effect.isEffect(rebalanceCiPartitions("/repo", [42554761567])))
  * ```
  *
  * @param repoRoot - The checkout to write plans into.
- * @param runId - The green `main` run to measure.
+ * @param runIds - The green runs to measure; several pack each file at its worst measurement.
  * @param table - The partition table whose shard and bin counts are the targets.
  * @returns Lines describing the new plans and the proposed bin table.
  * @category use-cases
@@ -602,16 +646,21 @@ export const pruneCiPartitionPlans = Effect.fn("CiPartitions.prune")(function* (
  */
 export const rebalanceCiPartitions = Effect.fn("CiPartitions.rebalance")(function* (
   repoRoot: string,
-  runId: number,
+  runIds: A.NonEmptyReadonlyArray<number>,
   table: ReadonlyArray<CiLanePartition> = CI_LANE_PARTITIONS
 ) {
   const source = yield* CiPartitionTimingSource;
-  const timings = yield* source.collect(runId);
+  const collected = yield* Effect.forEach(runIds, source.collect);
+  const timings = worstCaseRunTimings(collected);
+  const provenance =
+    A.length(runIds) > 1
+      ? [`worst measurement per file and package over runs ${A.join(A.map(runIds, String), ", ")}`]
+      : [];
   const planLines = yield* Effect.forEach(CI_SHARDED_PARTITION_SOURCES, (shardSource) =>
     writeFamilyPlan(repoRoot, table, timings, shardSource)
   );
   const binLines = yield* binProposalLines(repoRoot, table, timings);
-  return A.appendAll(A.flatten(planLines), binLines);
+  return A.appendAll(provenance, A.appendAll(A.flatten(planLines), binLines));
 });
 
 const rebalanceCommand = Command.make(
@@ -625,7 +674,12 @@ const rebalanceCommand = Command.make(
       Flag.withDefault(false),
       Flag.withDescription("Rewrite every vitest.shards.json from the --run timings and print the bin proposal")
     ),
-    run: Flag.Int("run").pipe(Flag.withDescription("Green main run id whose Test Unit logs to measure"), Flag.optional),
+    run: Flag.Int("run").pipe(
+      Flag.withDescription(
+        "Green run id whose Test Unit logs to measure; repeat it to pack each file at its worst measurement"
+      ),
+      Flag.atLeast(0)
+    ),
     prune: Flag.Boolean("prune").pipe(
       Flag.withDefault(false),
       Flag.withDescription(
@@ -640,14 +694,13 @@ const rebalanceCommand = Command.make(
       yield* printLines(lines);
     }
     if (write) {
-      const runId = yield* O.match(run, {
-        onNone: () => CiCommandError.make({ message: "--write needs --run <id> naming a green main run." }),
-        onSome: Effect.succeed,
-      });
+      const runIds = yield* A.isReadonlyArrayNonEmpty(run)
+        ? Effect.succeed(run)
+        : CiCommandError.make({ message: "--write needs --run <id> naming at least one green run." });
       // Build the timing source for this command's scope and hand its context to the program; the
       // GitHub client and repository come from the same scope through `withCiGithub`.
       const lines = yield* Layer.build(CiPartitionTimingSourceLive).pipe(
-        Effect.flatMap((context) => Effect.provideContext(rebalanceCiPartitions(repoRoot, runId), context)),
+        Effect.flatMap((context) => Effect.provideContext(rebalanceCiPartitions(repoRoot, runIds), context)),
         Effect.scoped,
         withCiGithub(repoRoot)
       );

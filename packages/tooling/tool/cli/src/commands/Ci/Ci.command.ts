@@ -401,7 +401,7 @@ export const ciCommand = Command.make("ci", {}, () =>
     "- bun run beep ci settings [--check]",
     "- bun run beep ci held-group",
     "- bun run beep ci job-env",
-    "- bun run beep ci partitions rebalance [--check] [--write --run <id>]",
+    "- bun run beep ci partitions rebalance [--check] [--write --run <id> [--run <id>...]] [--prune]",
     "- bun run beep ci patterns [--write]",
     "- bun run beep ci pr-size <number>",
     "- bun run beep ci prune-apt [sources-dir]",
