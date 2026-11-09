@@ -1,0 +1,20 @@
+{
+  "previous": "672c15f284dce84ae2c1e4029b8d26de1f73175218a91fef6932f67addebd8af",
+  "review": {
+    "reviewer": "Codex GPT-6.1-Sol medium, citation-extraction-engine",
+    "reason": "Record the canonical generated root policy-seal input addition for the new recognizer workspace manifest. Preserve commands, cache flags, outputs, environment, epoch and qualification scope; no qualification or exception. Retain the earlier reviewed dependency/main-input changes and restamp their shared amended basis.",
+    "basis": {
+      "path": "goals/citation-extraction-engine/research/2026-11-08-recognizer-cache-review.md",
+      "sha256": "e82d0beede4a7425815c0c9718d3359eaa0de1568f9fc26411c3d6fe64e37da7"
+    }
+  },
+  "subjects": [
+    "//",
+    "@beep/eyecite",
+    "@beep/law-practice-server",
+    "@beep/repo-cli"
+  ],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

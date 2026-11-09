@@ -1332,6 +1332,22 @@
         "bun-types": "catalog:",
       },
     },
+    "packages/drivers/eyecite": {
+      "name": "@beep/eyecite",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "effect": "catalog:",
+        "eyecite-ts": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/platform-node": "catalog:",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
     "packages/drivers/ffmpeg": {
       "name": "@beep/ffmpeg",
       "version": "0.0.2",
@@ -3534,6 +3550,7 @@
         "@beep/epistemic-server": "workspace:^",
         "@beep/epistemic-tables": "workspace:^",
         "@beep/epistemic-use-cases": "workspace:^",
+        "@beep/eyecite": "workspace:^",
         "@beep/file-processing": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/langextract": "workspace:^",
@@ -4728,6 +4745,7 @@
     "embla-carousel-react": "^8.6.0",
     "emojibase-data": "18.0.0",
     "esbuild": "^0.28.2",
+    "eyecite-ts": "0.34.2",
     "eyereasoner": "21.1.28",
     "fallow": "3.34.1",
     "fast-check": "^4.10.2",
@@ -5063,6 +5081,8 @@
     "@beep/execution-authority-use-cases": ["@beep/execution-authority-use-cases@workspace:packages/execution-authority/use-cases"],
 
     "@beep/exiftool": ["@beep/exiftool@workspace:packages/drivers/exiftool"],
+
+    "@beep/eyecite": ["@beep/eyecite@workspace:packages/drivers/eyecite"],
 
     "@beep/fc-runs": ["@beep/fc-runs@workspace:packages/tooling/test-kit/fc-runs"],
 
@@ -7895,6 +7915,8 @@
     "exsolve": ["exsolve@1.2.0", "", {}, "sha512-h1pQPR9XoeSMdntRNCjyTznaume4UpfXrULBnlkZ2CUM/G5eSa+pBByGldO5uR8dxbPC+OuJXsPPNf+JZ81ADg=="],
 
     "extend": ["extend@3.0.2", "", {}, "sha512-fjquC59cD7CyW6urNXK0FBufkZcoiGG80wTuPujX590cB5Ttln20E2UB4S/WARVqhXffZl2LNgS+gQdPIIim/g=="],
+
+    "eyecite-ts": ["eyecite-ts@0.34.2", "", {}, "sha512-QPTLaIX32YDsD666fjJjODQ7qHIbwEx1I1Lko98Ps5ssPtK7Wy2/WuHqi1V0CwsIw6DqaVF5EXLs8/yE6MdShg=="],
 
     "eyereasoner": ["eyereasoner@21.1.28", "", { "dependencies": { "n3": "^2.0.1", "swipl-wasm": "7.0.10" }, "peerDependencies": { "@rdfjs/types": "^1.1.0" }, "bin": { "eyereasoner": "dist/bin/index.js" } }, "sha512-ofunxJNwv975v0TpReJ4aDdzeHVQlxMVfu29rzJzSy02zZ8DN9+Qg5MYTn98/8ecdw2Adv97d975NzZ0e6S43w=="],
 

@@ -1,0 +1,38 @@
+import { ResolvedSourceText, SourceTextResolver } from '@beep/file-processing/SourceText';
+import { CitationEngineSourcePairInput } from '@beep/law-practice-use-cases/server';
+import * as BunCrypto from '@effect/platform-bun/BunCrypto';
+import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
+import * as S from 'effect/Schema';
+import { installCitationDefaultConfigurationFixture } from '../../packages/law-practice/server/test/CitationDefaultConfiguration.fixtures.ts';
+import { buildCitationDefaultEngineFixture } from '../../packages/law-practice/server/test/CitationEngineLayer.fixtures.ts';
+import { citationFixtureSourceProof } from '../../packages/law-practice/server/test/CitationOccurrenceProjection.fixtures.ts';
+import { citationTokenizerTestLayer } from '../../packages/law-practice/server/test/CitationTokenizer.fixtures.ts';
+const profile=await Bun.file(new URL('./profile.frozen.json',import.meta.url)).json();
+const decode=S.decodeEffect(CitationEngineSourcePairInput);
+const selected=profile.cases;
+const program=Effect.gen(function*(){
+ console.log('Installing authenticated configuration and the actual default Layer once.');
+ const proofs=[];
+ for(const row of selected)proofs.push(yield* citationFixtureSourceProof(row.text));
+ let active=proofs[0];
+ const resolver=SourceTextResolver.of({resolve:Effect.fnUntraced(function*(){return ResolvedSourceText.make({identity:active.source,text:active.sourceText})})});
+ const installed=yield* installCitationDefaultConfigurationFixture('bun');
+ const built=yield* buildCitationDefaultEngineFixture(installed,resolver);
+ const rows=[];
+ for(let i=0;i<selected.length;i++){
+  active=proofs[i];console.log('Probing',selected[i].id);
+  const request=yield* decode({plain:{source:active.source,sourceText:active.sourceText},cleanSteps:[]});
+  const result=yield* built.engine.extract(request).pipe(Effect.result);
+  rows.push({id:selected[i].id,result});
+ }
+ return rows;
+}).pipe(Effect.scoped,Effect.provide(Layer.merge(citationTokenizerTestLayer,BunCrypto.layer)));
+try {
+ const rows=await Effect.runPromise(program);
+ await Bun.write(new URL('./native-full.raw.json',import.meta.url),JSON.stringify({scope:'All 29 frozen profile rows through actual default Layer with test host dependencies; not deployment attestation or complete profile qualification.',rows},null,2));
+ console.log('Saved actual Layer diagnostics.');
+}catch(error){
+ await Bun.write(new URL('./native-full.failure.txt',import.meta.url),String(error));
+ console.error(String(error));process.exitCode=1;
+}

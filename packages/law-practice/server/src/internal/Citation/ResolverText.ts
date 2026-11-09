@@ -49,6 +49,8 @@ export class CitationResolverTextFailure extends S.TaggedError<
   })
 ) {}
 
+const invalidInput = () => CitationResolverTextFailure.make({ reason: "invalid-input" });
+
 /**
  * Exact frozen Python str.isdigit behavior, including non-decimal digit forms.
  * @internal
@@ -121,11 +123,9 @@ const missingCasePage = (citation: Citation, page: O.Option<string | null>) =>
 export const hasInvalidCitationPinCite = Effect.fn("Citation.hasInvalidPinCite")(function* (
   input: unknown
 ): Effect.fn.Return<boolean, CitationResolverTextFailure> {
-  const decoded = yield* S.decodeUnknownEffect(InputType)(input).pipe(
-    Effect.mapError(() => CitationResolverTextFailure.make({ reason: "invalid-input" }))
-  );
+  const decoded = yield* S.decodeUnknownEffect(InputType)(input).pipe(Effect.mapError(invalidInput));
   const components = yield* S.encodeEffect(CitationComponents)(decoded.fullCitation.components).pipe(
-    Effect.mapError(() => CitationResolverTextFailure.make({ reason: "invalid-input" }))
+    Effect.mapError(invalidInput)
   );
   const pageEntry = R.get(components, "page");
   const page = O.getOrElse(pageEntry, () => "");

@@ -280,12 +280,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## eyecite-ts — MIT reference material
+## eyecite-ts — MIT recognizer and reference material
 
 Upstream: <https://github.com/medelman17/eyecite-ts>
 
 Pinned commit: `34133d03143ea65861f48a5ed0eb32c931581666`.
-Affected material: citation-engine donor baseline logs and the U.S. Reports Bluebook layout reference fixture and schema transformation in `packages/law-practice/domain/src/values/Citation/Citation.bluebook.ts`. The three constructed layout observations come from `src/utils/bluebook.ts` at the pinned commit. No donor runtime dependency is introduced.
+Affected material: citation-engine donor baseline logs and the U.S. Reports Bluebook layout reference fixture and schema transformation in `packages/law-practice/domain/src/values/Citation/Citation.bluebook.ts`. The three constructed layout observations come from `src/utils/bluebook.ts` at the pinned commit. The bounded recognizer driver at `packages/drivers/eyecite` also uses the exact npm runtime dependency `eyecite-ts@0.34.2`. Its registry SHA-512 integrity is pinned in `bun.lock` and recorded with the distributed-artifact selection receipt. The npm artifact has no gitHead metadata; this does not assert a reproducible build from the reference source commit. Domain citation identities, verified source anchors and local linking remain repository-owned.
 
 MIT License
 
@@ -314,7 +314,7 @@ SOFTWARE.
 Upstream: <https://github.com/beshkenadze/eyecite-js>
 
 Pinned commit: `53a49f2412da668aaf262e5f92584c2c3781043b`.
-Affected material: citation-engine donor baseline logs. No donor runtime dependency is introduced.
+Affected material: citation-engine donor baseline logs.
 
 BSD 2-Clause License
 

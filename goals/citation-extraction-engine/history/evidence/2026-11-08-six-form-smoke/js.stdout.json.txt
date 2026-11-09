@@ -1,0 +1,1217 @@
+{
+  "lane": "js",
+  "importMs": 69.89092699999999,
+  "results": [
+    {
+      "id": "full",
+      "text": "Roe v. Wade, 410 U.S. 113, 120 (1973).",
+      "elapsedMs": 347.404226,
+      "citations": [
+        {
+          "kind": "FullCaseCitation",
+          "span": {
+            "start": 13,
+            "end": 25
+          },
+          "raw": {
+            "token": {
+              "data": "410 U.S. 113",
+              "start": 13,
+              "end": 25,
+              "groups": {
+                "volume": "410",
+                "reporter": "U.S.",
+                "page": "113"
+              },
+              "exactEditions": [
+                {
+                  "reporter": {
+                    "shortName": "U.S.",
+                    "name": "United States Supreme Court Reports",
+                    "citeType": "federal",
+                    "source": "reporters",
+                    "isScotus": true
+                  },
+                  "reporterFound": "U.S."
+                }
+              ],
+              "variationEditions": [],
+              "short": false
+            },
+            "index": 7,
+            "fullSpanStart": 0,
+            "fullSpanEnd": 37,
+            "groups": {
+              "volume": "410",
+              "reporter": "U.S.",
+              "page": "113"
+            },
+            "metadata": {
+              "pinCite": "120",
+              "year": "1973",
+              "court": "scotus",
+              "plaintiff": "Roe",
+              "defendant": "Wade",
+              "yearRange": "1973"
+            },
+            "document": {
+              "plainText": "Roe v. Wade, 410 U.S. 113, 120 (1973).",
+              "markupText": "",
+              "citationTokens": [
+                [
+                  2,
+                  {
+                    "data": "v",
+                    "start": 4,
+                    "end": 5,
+                    "groups": {
+                      "stop_word": "v"
+                    }
+                  }
+                ],
+                [
+                  7,
+                  {
+                    "data": "410 U.S. 113",
+                    "start": 13,
+                    "end": 25,
+                    "groups": {
+                      "volume": "410",
+                      "reporter": "U.S.",
+                      "page": "113"
+                    },
+                    "exactEditions": [
+                      {
+                        "reporter": {
+                          "shortName": "U.S.",
+                          "name": "United States Supreme Court Reports",
+                          "citeType": "federal",
+                          "source": "reporters",
+                          "isScotus": true
+                        },
+                        "reporterFound": "U.S."
+                      }
+                    ],
+                    "variationEditions": [],
+                    "short": false
+                  }
+                ]
+              ],
+              "words": [
+                "Roe",
+                " ",
+                {
+                  "data": "v",
+                  "start": 4,
+                  "end": 5,
+                  "groups": {
+                    "stop_word": "v"
+                  }
+                },
+                ".",
+                " ",
+                "Wade,",
+                " ",
+                {
+                  "data": "410 U.S. 113",
+                  "start": 13,
+                  "end": 25,
+                  "groups": {
+                    "volume": "410",
+                    "reporter": "U.S.",
+                    "page": "113"
+                  },
+                  "exactEditions": [
+                    {
+                      "reporter": {
+                        "shortName": "U.S.",
+                        "name": "United States Supreme Court Reports",
+                        "citeType": "federal",
+                        "source": "reporters",
+                        "isScotus": true
+                      },
+                      "reporterFound": "U.S."
+                    }
+                  ],
+                  "variationEditions": [],
+                  "short": false
+                },
+                ",",
+                " ",
+                "120",
+                " ",
+                "(1973)."
+              ],
+              "emphasisTags": [],
+              "sourceText": "Roe v. Wade, 410 U.S. 113, 120 (1973)."
+            },
+            "exactEditions": [
+              {
+                "reporter": {
+                  "shortName": "U.S.",
+                  "name": "United States Supreme Court Reports",
+                  "citeType": "federal",
+                  "source": "reporters",
+                  "isScotus": true
+                },
+                "reporterFound": "U.S."
+              }
+            ],
+            "variationEditions": [],
+            "allEditions": [
+              {
+                "reporter": {
+                  "shortName": "U.S.",
+                  "name": "United States Supreme Court Reports",
+                  "citeType": "federal",
+                  "source": "reporters",
+                  "isScotus": true
+                },
+                "reporterFound": "U.S."
+              }
+            ],
+            "editionGuess": {
+              "reporter": {
+                "shortName": "U.S.",
+                "name": "United States Supreme Court Reports",
+                "citeType": "federal",
+                "source": "reporters",
+                "isScotus": true
+              },
+              "reporterFound": "U.S."
+            },
+            "year": 1973
+          }
+        }
+      ]
+    },
+    {
+      "id": "short",
+      "text": "See 410 U.S. at 120.",
+      "elapsedMs": 8.49964399999999,
+      "citations": [
+        {
+          "kind": "ShortCaseCitation",
+          "span": {
+            "start": 4,
+            "end": 19
+          },
+          "raw": {
+            "token": {
+              "data": "410 U.S. at 120",
+              "start": 4,
+              "end": 19,
+              "groups": {
+                "volume": "410",
+                "reporter": "U.S.",
+                "page": "120"
+              },
+              "exactEditions": [
+                {
+                  "reporter": {
+                    "shortName": "U.S.",
+                    "name": "United States Supreme Court Reports",
+                    "citeType": "federal",
+                    "source": "reporters",
+                    "isScotus": true
+                  },
+                  "reporterFound": "U.S."
+                }
+              ],
+              "variationEditions": [],
+              "short": true
+            },
+            "index": 2,
+            "spanEnd": 19,
+            "fullSpanStart": 4,
+            "fullSpanEnd": 19,
+            "groups": {
+              "volume": "410",
+              "reporter": "U.S.",
+              "page": "120"
+            },
+            "metadata": {
+              "pinCite": "120",
+              "court": "scotus"
+            },
+            "document": {
+              "plainText": "See 410 U.S. at 120.",
+              "markupText": "",
+              "citationTokens": [
+                [
+                  0,
+                  {
+                    "data": "See",
+                    "start": 0,
+                    "end": 3,
+                    "groups": {
+                      "stop_word": "see"
+                    }
+                  }
+                ],
+                [
+                  2,
+                  {
+                    "data": "410 U.S. at 120",
+                    "start": 4,
+                    "end": 19,
+                    "groups": {
+                      "volume": "410",
+                      "reporter": "U.S.",
+                      "page": "120"
+                    },
+                    "exactEditions": [
+                      {
+                        "reporter": {
+                          "shortName": "U.S.",
+                          "name": "United States Supreme Court Reports",
+                          "citeType": "federal",
+                          "source": "reporters",
+                          "isScotus": true
+                        },
+                        "reporterFound": "U.S."
+                      }
+                    ],
+                    "variationEditions": [],
+                    "short": true
+                  }
+                ]
+              ],
+              "words": [
+                {
+                  "data": "See",
+                  "start": 0,
+                  "end": 3,
+                  "groups": {
+                    "stop_word": "see"
+                  }
+                },
+                " ",
+                {
+                  "data": "410 U.S. at 120",
+                  "start": 4,
+                  "end": 19,
+                  "groups": {
+                    "volume": "410",
+                    "reporter": "U.S.",
+                    "page": "120"
+                  },
+                  "exactEditions": [
+                    {
+                      "reporter": {
+                        "shortName": "U.S.",
+                        "name": "United States Supreme Court Reports",
+                        "citeType": "federal",
+                        "source": "reporters",
+                        "isScotus": true
+                      },
+                      "reporterFound": "U.S."
+                    }
+                  ],
+                  "variationEditions": [],
+                  "short": true
+                },
+                "."
+              ],
+              "emphasisTags": [],
+              "sourceText": "See 410 U.S. at 120."
+            },
+            "exactEditions": [
+              {
+                "reporter": {
+                  "shortName": "U.S.",
+                  "name": "United States Supreme Court Reports",
+                  "citeType": "federal",
+                  "source": "reporters",
+                  "isScotus": true
+                },
+                "reporterFound": "U.S."
+              }
+            ],
+            "variationEditions": [],
+            "allEditions": [
+              {
+                "reporter": {
+                  "shortName": "U.S.",
+                  "name": "United States Supreme Court Reports",
+                  "citeType": "federal",
+                  "source": "reporters",
+                  "isScotus": true
+                },
+                "reporterFound": "U.S."
+              }
+            ],
+            "editionGuess": {
+              "reporter": {
+                "shortName": "U.S.",
+                "name": "United States Supreme Court Reports",
+                "citeType": "federal",
+                "source": "reporters",
+                "isScotus": true
+              },
+              "reporterFound": "U.S."
+            },
+            "short": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "id",
+      "text": "Id. at 120.",
+      "elapsedMs": 40.037882000000025,
+      "citations": [
+        {
+          "kind": "IdCitation",
+          "span": {
+            "start": 0,
+            "end": 10
+          },
+          "raw": {
+            "token": {
+              "data": "Id.",
+              "start": 0,
+              "end": 3,
+              "groups": {}
+            },
+            "index": 0,
+            "spanEnd": 10,
+            "fullSpanStart": 0,
+            "fullSpanEnd": 10,
+            "groups": {},
+            "metadata": {
+              "pinCite": "at 120"
+            },
+            "document": {
+              "plainText": "Id. at 120.",
+              "markupText": "",
+              "citationTokens": [
+                [
+                  0,
+                  {
+                    "data": "Id.",
+                    "start": 0,
+                    "end": 3,
+                    "groups": {}
+                  }
+                ],
+                [
+                  4,
+                  {
+                    "data": "120",
+                    "start": 7,
+                    "end": 10,
+                    "groups": {
+                      "page": "120"
+                    }
+                  }
+                ]
+              ],
+              "words": [
+                {
+                  "data": "Id.",
+                  "start": 0,
+                  "end": 3,
+                  "groups": {}
+                },
+                " ",
+                "at",
+                " ",
+                {
+                  "data": "120",
+                  "start": 7,
+                  "end": 10,
+                  "groups": {
+                    "page": "120"
+                  }
+                },
+                "."
+              ],
+              "emphasisTags": [],
+              "sourceText": "Id. at 120."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "supra",
+      "text": "Smith, supra, at 3.",
+      "elapsedMs": 7.965150999999992,
+      "citations": [
+        {
+          "kind": "SupraCitation",
+          "span": {
+            "start": 0,
+            "end": 18
+          },
+          "raw": {
+            "token": {
+              "data": "Smith, supra,",
+              "start": 0,
+              "end": 13,
+              "groups": {
+                "antecedent": "Smith"
+              }
+            },
+            "index": 0,
+            "spanEnd": 18,
+            "fullSpanStart": 0,
+            "fullSpanEnd": 18,
+            "groups": {
+              "antecedent": "Smith"
+            },
+            "metadata": {
+              "pinCite": "at 3",
+              "antecedentGuess": "Smith"
+            },
+            "document": {
+              "plainText": "Smith, supra, at 3.",
+              "markupText": "",
+              "citationTokens": [
+                [
+                  0,
+                  {
+                    "data": "Smith, supra,",
+                    "start": 0,
+                    "end": 13,
+                    "groups": {
+                      "antecedent": "Smith"
+                    }
+                  }
+                ]
+              ],
+              "words": [
+                {
+                  "data": "Smith, supra,",
+                  "start": 0,
+                  "end": 13,
+                  "groups": {
+                    "antecedent": "Smith"
+                  }
+                },
+                " ",
+                "at",
+                " ",
+                "3."
+              ],
+              "emphasisTags": [],
+              "sourceText": "Smith, supra, at 3."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "usc",
+      "text": "35 U.S.C. § 101.",
+      "elapsedMs": 83.18035400000002,
+      "citations": [
+        {
+          "kind": "FullLawCitation",
+          "span": {
+            "start": 0,
+            "end": 15
+          },
+          "raw": {
+            "token": {
+              "data": "35 U.S.C. § 101",
+              "start": 0,
+              "end": 15,
+              "groups": {
+                "title": "35",
+                "reporter": "U.S.C.",
+                "section": "101"
+              },
+              "reporter": "U.S.C.",
+              "lawType": "leg_statute"
+            },
+            "index": 0,
+            "groups": {
+              "title": "35",
+              "reporter": "U.S.C.",
+              "section": "101"
+            },
+            "metadata": {
+              "reporter": "U.S.C.",
+              "section": "101",
+              "title": "35"
+            },
+            "document": {
+              "plainText": "35 U.S.C. § 101.",
+              "markupText": "",
+              "citationTokens": [
+                [
+                  0,
+                  {
+                    "data": "35 U.S.C. § 101",
+                    "start": 0,
+                    "end": 15,
+                    "groups": {
+                      "title": "35",
+                      "reporter": "U.S.C.",
+                      "section": "101"
+                    },
+                    "reporter": "U.S.C.",
+                    "lawType": "leg_statute"
+                  }
+                ]
+              ],
+              "words": [
+                {
+                  "data": "35 U.S.C. § 101",
+                  "start": 0,
+                  "end": 15,
+                  "groups": {
+                    "title": "35",
+                    "reporter": "U.S.C.",
+                    "section": "101"
+                  },
+                  "reporter": "U.S.C.",
+                  "lawType": "leg_statute"
+                },
+                "."
+              ],
+              "emphasisTags": [],
+              "sourceText": "35 U.S.C. § 101."
+            },
+            "exactEditions": [],
+            "variationEditions": [],
+            "allEditions": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "cfr",
+      "text": "37 C.F.R. § 1.56.",
+      "elapsedMs": 4.7154990000000225,
+      "citations": [
+        {
+          "kind": "FullLawCitation",
+          "span": {
+            "start": 0,
+            "end": 16
+          },
+          "raw": {
+            "token": {
+              "data": "37 C.F.R. § 1.56",
+              "start": 0,
+              "end": 16,
+              "groups": {
+                "chapter": "37",
+                "reporter": "C.F.R.",
+                "part": "1",
+                "section": "56"
+              },
+              "reporter": "C.F.R.",
+              "lawType": "admin_compilation"
+            },
+            "index": 0,
+            "groups": {
+              "chapter": "37",
+              "reporter": "C.F.R.",
+              "part": "1",
+              "section": "56"
+            },
+            "metadata": {
+              "reporter": "C.F.R.",
+              "chapter": "37",
+              "section": "56"
+            },
+            "document": {
+              "plainText": "37 C.F.R. § 1.56.",
+              "markupText": "",
+              "citationTokens": [
+                [
+                  0,
+                  {
+                    "data": "37 C.F.R. § 1.56",
+                    "start": 0,
+                    "end": 16,
+                    "groups": {
+                      "chapter": "37",
+                      "reporter": "C.F.R.",
+                      "part": "1",
+                      "section": "56"
+                    },
+                    "reporter": "C.F.R.",
+                    "lawType": "admin_compilation"
+                  }
+                ]
+              ],
+              "words": [
+                {
+                  "data": "37 C.F.R. § 1.56",
+                  "start": 0,
+                  "end": 16,
+                  "groups": {
+                    "chapter": "37",
+                    "reporter": "C.F.R.",
+                    "part": "1",
+                    "section": "56"
+                  },
+                  "reporter": "C.F.R.",
+                  "lawType": "admin_compilation"
+                },
+                "."
+              ],
+              "emphasisTags": [],
+              "sourceText": "37 C.F.R. § 1.56."
+            },
+            "exactEditions": [],
+            "variationEditions": [],
+            "allEditions": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "unicode",
+      "text": "😀 See 410 U.S. 113 (1973).",
+      "elapsedMs": 6.249259999999936,
+      "citations": [
+        {
+          "kind": "FullCaseCitation",
+          "span": {
+            "start": 7,
+            "end": 19
+          },
+          "raw": {
+            "token": {
+              "data": "410 U.S. 113",
+              "start": 7,
+              "end": 19,
+              "groups": {
+                "volume": "410",
+                "reporter": "U.S.",
+                "page": "113"
+              },
+              "exactEditions": [
+                {
+                  "reporter": {
+                    "shortName": "U.S.",
+                    "name": "United States Supreme Court Reports",
+                    "citeType": "federal",
+                    "source": "reporters",
+                    "isScotus": true
+                  },
+                  "reporterFound": "U.S."
+                }
+              ],
+              "variationEditions": [],
+              "short": false
+            },
+            "index": 4,
+            "fullSpanEnd": 26,
+            "groups": {
+              "volume": "410",
+              "reporter": "U.S.",
+              "page": "113"
+            },
+            "metadata": {
+              "year": "1973",
+              "court": "scotus",
+              "yearRange": "1973"
+            },
+            "document": {
+              "plainText": "😀 See 410 U.S. 113 (1973).",
+              "markupText": "",
+              "citationTokens": [
+                [
+                  2,
+                  {
+                    "data": "See",
+                    "start": 3,
+                    "end": 6,
+                    "groups": {
+                      "stop_word": "see"
+                    }
+                  }
+                ],
+                [
+                  4,
+                  {
+                    "data": "410 U.S. 113",
+                    "start": 7,
+                    "end": 19,
+                    "groups": {
+                      "volume": "410",
+                      "reporter": "U.S.",
+                      "page": "113"
+                    },
+                    "exactEditions": [
+                      {
+                        "reporter": {
+                          "shortName": "U.S.",
+                          "name": "United States Supreme Court Reports",
+                          "citeType": "federal",
+                          "source": "reporters",
+                          "isScotus": true
+                        },
+                        "reporterFound": "U.S."
+                      }
+                    ],
+                    "variationEditions": [],
+                    "short": false
+                  }
+                ]
+              ],
+              "words": [
+                "😀",
+                " ",
+                {
+                  "data": "See",
+                  "start": 3,
+                  "end": 6,
+                  "groups": {
+                    "stop_word": "see"
+                  }
+                },
+                " ",
+                {
+                  "data": "410 U.S. 113",
+                  "start": 7,
+                  "end": 19,
+                  "groups": {
+                    "volume": "410",
+                    "reporter": "U.S.",
+                    "page": "113"
+                  },
+                  "exactEditions": [
+                    {
+                      "reporter": {
+                        "shortName": "U.S.",
+                        "name": "United States Supreme Court Reports",
+                        "citeType": "federal",
+                        "source": "reporters",
+                        "isScotus": true
+                      },
+                      "reporterFound": "U.S."
+                    }
+                  ],
+                  "variationEditions": [],
+                  "short": false
+                },
+                " ",
+                "(1973)."
+              ],
+              "emphasisTags": [],
+              "sourceText": "😀 See 410 U.S. 113 (1973)."
+            },
+            "exactEditions": [
+              {
+                "reporter": {
+                  "shortName": "U.S.",
+                  "name": "United States Supreme Court Reports",
+                  "citeType": "federal",
+                  "source": "reporters",
+                  "isScotus": true
+                },
+                "reporterFound": "U.S."
+              }
+            ],
+            "variationEditions": [],
+            "allEditions": [
+              {
+                "reporter": {
+                  "shortName": "U.S.",
+                  "name": "United States Supreme Court Reports",
+                  "citeType": "federal",
+                  "source": "reporters",
+                  "isScotus": true
+                },
+                "reporterFound": "U.S."
+              }
+            ],
+            "editionGuess": {
+              "reporter": {
+                "shortName": "U.S.",
+                "name": "United States Supreme Court Reports",
+                "citeType": "federal",
+                "source": "reporters",
+                "isScotus": true
+              },
+              "reporterFound": "U.S."
+            },
+            "year": 1973
+          }
+        }
+      ]
+    },
+    {
+      "id": "negative",
+      "text": "The ordinary document has no legal citation.",
+      "elapsedMs": 4.800098999999932,
+      "citations": []
+    },
+    {
+      "id": "context",
+      "text": "Roe v. Wade, 410 U.S. 113 (1973). Id. at 120.",
+      "elapsedMs": 8.470508999999993,
+      "citations": [
+        {
+          "kind": "FullCaseCitation",
+          "span": {
+            "start": 13,
+            "end": 25
+          },
+          "raw": {
+            "token": {
+              "data": "410 U.S. 113",
+              "start": 13,
+              "end": 25,
+              "groups": {
+                "volume": "410",
+                "reporter": "U.S.",
+                "page": "113"
+              },
+              "exactEditions": [
+                {
+                  "reporter": {
+                    "shortName": "U.S.",
+                    "name": "United States Supreme Court Reports",
+                    "citeType": "federal",
+                    "source": "reporters",
+                    "isScotus": true
+                  },
+                  "reporterFound": "U.S."
+                }
+              ],
+              "variationEditions": [],
+              "short": false
+            },
+            "index": 7,
+            "fullSpanStart": 0,
+            "fullSpanEnd": 32,
+            "groups": {
+              "volume": "410",
+              "reporter": "U.S.",
+              "page": "113"
+            },
+            "metadata": {
+              "year": "1973",
+              "court": "scotus",
+              "plaintiff": "Roe",
+              "defendant": "Wade",
+              "yearRange": "1973"
+            },
+            "document": {
+              "plainText": "Roe v. Wade, 410 U.S. 113 (1973). Id. at 120.",
+              "markupText": "",
+              "citationTokens": [
+                [
+                  2,
+                  {
+                    "data": "v",
+                    "start": 4,
+                    "end": 5,
+                    "groups": {
+                      "stop_word": "v"
+                    }
+                  }
+                ],
+                [
+                  7,
+                  {
+                    "data": "410 U.S. 113",
+                    "start": 13,
+                    "end": 25,
+                    "groups": {
+                      "volume": "410",
+                      "reporter": "U.S.",
+                      "page": "113"
+                    },
+                    "exactEditions": [
+                      {
+                        "reporter": {
+                          "shortName": "U.S.",
+                          "name": "United States Supreme Court Reports",
+                          "citeType": "federal",
+                          "source": "reporters",
+                          "isScotus": true
+                        },
+                        "reporterFound": "U.S."
+                      }
+                    ],
+                    "variationEditions": [],
+                    "short": false
+                  }
+                ],
+                [
+                  11,
+                  {
+                    "data": "Id.",
+                    "start": 34,
+                    "end": 37,
+                    "groups": {}
+                  }
+                ],
+                [
+                  15,
+                  {
+                    "data": "120",
+                    "start": 41,
+                    "end": 44,
+                    "groups": {
+                      "page": "120"
+                    }
+                  }
+                ]
+              ],
+              "words": [
+                "Roe",
+                " ",
+                {
+                  "data": "v",
+                  "start": 4,
+                  "end": 5,
+                  "groups": {
+                    "stop_word": "v"
+                  }
+                },
+                ".",
+                " ",
+                "Wade,",
+                " ",
+                {
+                  "data": "410 U.S. 113",
+                  "start": 13,
+                  "end": 25,
+                  "groups": {
+                    "volume": "410",
+                    "reporter": "U.S.",
+                    "page": "113"
+                  },
+                  "exactEditions": [
+                    {
+                      "reporter": {
+                        "shortName": "U.S.",
+                        "name": "United States Supreme Court Reports",
+                        "citeType": "federal",
+                        "source": "reporters",
+                        "isScotus": true
+                      },
+                      "reporterFound": "U.S."
+                    }
+                  ],
+                  "variationEditions": [],
+                  "short": false
+                },
+                " ",
+                "(1973).",
+                " ",
+                {
+                  "data": "Id.",
+                  "start": 34,
+                  "end": 37,
+                  "groups": {}
+                },
+                " ",
+                "at",
+                " ",
+                {
+                  "data": "120",
+                  "start": 41,
+                  "end": 44,
+                  "groups": {
+                    "page": "120"
+                  }
+                },
+                "."
+              ],
+              "emphasisTags": [],
+              "sourceText": "Roe v. Wade, 410 U.S. 113 (1973). Id. at 120."
+            },
+            "exactEditions": [
+              {
+                "reporter": {
+                  "shortName": "U.S.",
+                  "name": "United States Supreme Court Reports",
+                  "citeType": "federal",
+                  "source": "reporters",
+                  "isScotus": true
+                },
+                "reporterFound": "U.S."
+              }
+            ],
+            "variationEditions": [],
+            "allEditions": [
+              {
+                "reporter": {
+                  "shortName": "U.S.",
+                  "name": "United States Supreme Court Reports",
+                  "citeType": "federal",
+                  "source": "reporters",
+                  "isScotus": true
+                },
+                "reporterFound": "U.S."
+              }
+            ],
+            "editionGuess": {
+              "reporter": {
+                "shortName": "U.S.",
+                "name": "United States Supreme Court Reports",
+                "citeType": "federal",
+                "source": "reporters",
+                "isScotus": true
+              },
+              "reporterFound": "U.S."
+            },
+            "year": 1973
+          }
+        },
+        {
+          "kind": "IdCitation",
+          "span": {
+            "start": 34,
+            "end": 44
+          },
+          "raw": {
+            "token": {
+              "data": "Id.",
+              "start": 34,
+              "end": 37,
+              "groups": {}
+            },
+            "index": 11,
+            "spanEnd": 44,
+            "fullSpanStart": 34,
+            "fullSpanEnd": 44,
+            "groups": {},
+            "metadata": {
+              "pinCite": "at 120"
+            },
+            "document": {
+              "plainText": "Roe v. Wade, 410 U.S. 113 (1973). Id. at 120.",
+              "markupText": "",
+              "citationTokens": [
+                [
+                  2,
+                  {
+                    "data": "v",
+                    "start": 4,
+                    "end": 5,
+                    "groups": {
+                      "stop_word": "v"
+                    }
+                  }
+                ],
+                [
+                  7,
+                  {
+                    "data": "410 U.S. 113",
+                    "start": 13,
+                    "end": 25,
+                    "groups": {
+                      "volume": "410",
+                      "reporter": "U.S.",
+                      "page": "113"
+                    },
+                    "exactEditions": [
+                      {
+                        "reporter": {
+                          "shortName": "U.S.",
+                          "name": "United States Supreme Court Reports",
+                          "citeType": "federal",
+                          "source": "reporters",
+                          "isScotus": true
+                        },
+                        "reporterFound": "U.S."
+                      }
+                    ],
+                    "variationEditions": [],
+                    "short": false
+                  }
+                ],
+                [
+                  11,
+                  {
+                    "data": "Id.",
+                    "start": 34,
+                    "end": 37,
+                    "groups": {}
+                  }
+                ],
+                [
+                  15,
+                  {
+                    "data": "120",
+                    "start": 41,
+                    "end": 44,
+                    "groups": {
+                      "page": "120"
+                    }
+                  }
+                ]
+              ],
+              "words": [
+                "Roe",
+                " ",
+                {
+                  "data": "v",
+                  "start": 4,
+                  "end": 5,
+                  "groups": {
+                    "stop_word": "v"
+                  }
+                },
+                ".",
+                " ",
+                "Wade,",
+                " ",
+                {
+                  "data": "410 U.S. 113",
+                  "start": 13,
+                  "end": 25,
+                  "groups": {
+                    "volume": "410",
+                    "reporter": "U.S.",
+                    "page": "113"
+                  },
+                  "exactEditions": [
+                    {
+                      "reporter": {
+                        "shortName": "U.S.",
+                        "name": "United States Supreme Court Reports",
+                        "citeType": "federal",
+                        "source": "reporters",
+                        "isScotus": true
+                      },
+                      "reporterFound": "U.S."
+                    }
+                  ],
+                  "variationEditions": [],
+                  "short": false
+                },
+                " ",
+                "(1973).",
+                " ",
+                {
+                  "data": "Id.",
+                  "start": 34,
+                  "end": 37,
+                  "groups": {}
+                },
+                " ",
+                "at",
+                " ",
+                {
+                  "data": "120",
+                  "start": 41,
+                  "end": 44,
+                  "groups": {
+                    "page": "120"
+                  }
+                },
+                "."
+              ],
+              "emphasisTags": [],
+              "sourceText": "Roe v. Wade, 410 U.S. 113 (1973). Id. at 120."
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

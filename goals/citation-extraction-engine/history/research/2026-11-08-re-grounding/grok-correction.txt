@@ -1,0 +1,157 @@
+# Decision critique — citation extraction re-grounding
+
+Date: 2026-11-08
+Author: grok-4.7
+Status: decision correction of the first-pass fact report
+Fact report, preserved unchanged: workflow `deep-research` scratch `report.md` for run `wf_01a1ba45b7ef7260969c7eb5b53a1f52`
+
+This file does not amend `GOAL.md`, `SPEC.md`, or `DECISIONS.md`. It does not rank libraries by version string, star count, lines of code, or upstream suite size. Those figures appear in the fact report as repository metadata only. They are not quality evidence here.
+
+No new search, fetch, or inventory was run for this correction.
+
+## How to read a sentence
+
+| Tag | Means |
+| --- | --- |
+| Repository fact | A sentence in this checkout's goal, spec, decision, product, or evidence files, cited below. |
+| Source evidence | A claim the fact report or the landscape note attributes to an upstream file, with the limits that report already recorded. |
+| Inference | A conclusion drawn from those two, including the four corrections in the request. |
+| Product hypothesis | A proposed cut, gate, or adoption rule. It is not a locked decision until the packet says so. |
+
+## Correction
+
+The fact report's opening treats exhaustive observable parity with Free Law Project eyecite 2.7.6 (`clean_text`, `get_citations`, `resolve_citations`, `annotate_citations`, every upstream fixture) as the contract still to be completed.
+
+Repository fact: that contract is what `goals/citation-extraction-engine/GOAL.md` lines 3–6 and `SPEC.md` lines 5–11 and 95–116 still say. Oracle pin: `04d82c032ad5fd0f9ab72a61c87110c46ee8f52e`. `SPEC.md` lines 455–457 say the current full/short case, `Id.`, supra, 35 U.S.C., and 37 C.F.R. fixtures are an implementation order, and the completion boundary is every phase. `SPEC.md` lines 468–478 already exclude a Python runtime, hosted parsing, citator/good-law, claim lifecycle, matter-wall orchestration, editor UI, and MPEP patterns unless separately accepted.
+
+Product hypothesis: the operator has put that exhaustive contract under reconsideration. Completing it is not the recommendation. The written files stay in force until a later decision edits them. This critique recommends a smaller extraction-only target and states what would show that target is wrong.
+
+## 1. Pre-1.0 and alpha do not show that a bounded v1 is out of reach
+
+Repository fact: the 2026-10-28 donor receipt pins eyecite-ts `0.34.2` at `34133d03143ea65861f48a5ed0eb32c931581666` and eyecite-js `2.7.6-alpha.28` at `53a49f2412da668aaf262e5f92584c2c3781043b`. It says all 5,674 disposition obligations remain unresolved, none is claimed as target parity, and the successful runtime record proves the donor case only (`goals/citation-extraction-engine/history/evidence/2026-10-28-typescript-donor-accounting.md` lines 3–6 and 74–76).
+
+Source evidence, with the report's own limits: the fact report records eyecite-js git head as a pre-release and eyecite-ts npm latest as `0.34.2` described there as pre-1.0. It also records that maintainer claims of Python 2.7.6 parity were not independently benchmarked, and that a rename between the npm repository field and the git head was not checked.
+
+Inference: a pre-1.0 or alpha label means the bounded extractor is **unverified** against the fixture this critique defines. It does not mean the extractor is **demonstrably inferior** to a custom one. Demonstrably inferior requires a recorded disagreement on that fixture, or a failed safety trial. Neither result is in the gathered evidence. The fact report's sentence that the ports "do not close that parity gap" is fair only as "exhaustive parity is unverified." Read as "unable to satisfy a smaller v1," it overclaims.
+
+Passed donor tests are the same kind of metadata. They show those suites ran. They are not evidence about the bounded tuple below.
+
+## 2. An Effect timeout around `RegExp` is not a safety acceptance
+
+Source evidence: the landscape note says to skip native Hyperscan, use a literal-substring prefilter plus per-extractor JavaScript `RegExp`, and wrap the parse in an Effect timeout or interrupt and/or a linear-time engine (`explorations/citation-grounding-hallucination-guard/research/legal-citation-parser-landscape.md` lines 40–41). The same note quotes the JOSS limitation: extraction and annotation may take exponentially long on worst-case inputs, so external time limits are recommended for possibly malicious input (line 41). The fact report's verification note on its excluded claim 5 says the spec's regex identity is `python-re | python-regex-v0`, the worker defaults to a native child, the spec still prefers static-safe JavaScript patterns, and both the spec and the landscape reject native Hyperscan. That note also says the worker command was not traced to a binary.
+
+Inference: the landscape's Effect-timeout sentence does not preempt a synchronous catastrophic match. JOSS asked for an **external** limit. An in-process fiber timeout assumes the matching work yields. A synchronous `RegExp` on the calling thread does not yield. Until someone shows that this runtime interrupts that call, the timeout advice is not a safety mechanism.
+
+Product hypothesis: no extractor, adopted or custom, passes a safety gate on that advice. Pass requires one of the two mechanisms in gate 3 below, demonstrated by execution. "Static-safe" as a preference, and "native child" as an untraced default, are unresolved, not a pass.
+
+## 3. The exhaustive GOAL is the old contract
+
+Repository fact: `DECISIONS.md` Q2 (lines 270–294), locked 2026-07-14, keeps extraction and resolution together as lane (b) and rejects court-data ingestion, claim-admission vocabulary changes, matter-wall enforcement, general prompt-injection defense, citator/"good law", rich-text annotation, and hosted enrichment in v1. Q8 (lines 419–435) locks v1 forms to full and short case citations, `Id.` and supra, plus `StatuteCitation` / `RegulationCitation` patterns for 35 U.S.C. and 37 C.F.R., and rejects case-only v1. `docs/product/citation-grounding.md` lines 69–88 orders verified-span, then an eyecite-parity extraction engine, then ground-before-cite, and leaves MPEP, hosted enrichment, matter-wall enforcement, and rich-text annotation as gated follow-ons. The fact report's excluded claims 17, 20, 22, and 23 correctly refused to turn span equality, audit records, or a proposed supports/refutes outcome into extra extraction gates. This critique does not reopen them.
+
+Product hypothesis: under the current reconsideration, exhaustive four-operation parity is historical scope. Q8's case-only rejection and Q2's inclusion of resolution inside lane (b) remain written locks. They are why this file proposes a cut instead of pretending the cut is already locked. Claim-fitness and entailment stay out of the proposal.
+
+## 4. Smallest extraction-only comparison, and the cuts around it
+
+### Comparison (the adoption instrument)
+
+Product hypothesis. One finite differential, extraction only:
+
+| Item | Bound |
+| --- | --- |
+| Operation | `get_citations` only |
+| Forms | Full case citations that yield volume, reporter, and page |
+| Input | A frozen list of raw strings. If a string needs cleaning before the oracle emits the cite, store the cleaned string as the input. Cleaning is not scored. |
+| Oracle | Pinned eyecite 2.7.6 at `04d82c032ad5fd0f9ab72a61c87110c46ee8f52e`, `get_citations` on those strings |
+| Candidates | The two donors already pinned in the 2026-10-28 receipt. No quality prior between them. |
+| Compared tuple | Matched-citation span start, span end, volume, reporter, page. The landscape note's `span()` description (lines 29–30) is the intended span: the matched citation text, not `full_span()` and not pin-cite extension. |
+| Result row | `agree`, or `diverge` with both tuples. No rollup by test count. |
+| Out of this comparison | `clean_text` as a scored operation, `resolve_citations`, `annotate_citations`, short-case authority grouping, `Id.` / supra / reference antecedent binding, journals, statutes, regulations, MPEP, unknown-citation taxonomy, court identity, HTML, overlap modes, hosted lookup |
+
+Source evidence for keeping resolution out of this tuple: the fact report, from pinned `eyecite/resolve.py`, says resolution drops a citation that does not resolve to exactly one resource and does not record an ambiguous or failed state. CourtListener lookup, which can return status 300 with multiple clusters, is a different surface and does not look up statutes, journals, id, or supra. Copying either behavior would be a resolution product, not an extraction comparison.
+
+### Scope cuts for the reconsidered extraction slice
+
+Product hypothesis. The slice that may be built after the comparison is the same full-case tuple and nothing else.
+
+| Cut | Where it goes |
+| --- | --- |
+| `resolve_citations`, including unique-resource drop and antecedent binding for short case, `Id.`, supra, and reference | Out. Later lane, own decision. |
+| `annotate_citations`, plain and HTML, rich text | Out. Q2 already rejects rich-text annotation; `SPEC.md` lines 104–107 still require annotation. Record the conflict. Do not implement it in this slice. |
+| `clean_text` as a parity surface | Out of the completion claim. Allowed only as unscoped preparation of fixture input. |
+| Journals, general statutory forms, MPEP | Out. |
+| 35 U.S.C. and 37 C.F.R. | Out of the comparison and out of this slice. Q8 still locks them. They can be a later extraction slice with the same tuple shape (`reporter`, `chapter`, `section` per the landscape note line 25) and the same safety gate. They do not decide adoption. |
+| Short case, `Id.`, supra token detection without binding | Out of the first comparison. A later extraction slice may score token span only. Binding stays in resolution. |
+| Court-data ingestion, citator / good law, claim admission, entailment, matter wall, prompt-injection defense, hosted enrichment, editor UI | Out. Already excluded by Q2, the product note, or `SPEC.md` non-goals. |
+| Native Hyperscan | Out. Landscape and spec already agree. |
+| Parity with eyecite newer than the pin, including the 2.7.8 the fact report observed | Out. `SPEC.md` line 478 already says this. |
+| Exhaustive upstream fixtures and the 5,674 unresolved dispositions | Out of this decision. They remain the old contract's ledger. |
+
+Inference: the landscape note's "statutory and journal forms are optional V1" (line 20) and Q8's lock disagree. This critique follows the reconsideration request and leaves both texts standing. It does not call either one already amended.
+
+## Recommendation
+
+**Adoption, by vendoring a bounded slice, conditional on the comparison and the safety gate. Custom only if that condition fails. Dependency adoption is the loser. Exhaustive completion is not a candidate.**
+
+Product hypothesis, stated as the strongest rule the gathered evidence can carry:
+
+1. Do not implement the exhaustive GOAL as the next build.
+2. Do not add `eyecite`, `eyecite-js`, or `eyecite-ts` as a runtime dependency. A dependency cannot drop or replace a catastrophic pattern without taking the whole package. `SPEC.md` lines 156–158 and 470 already forbid that runtime dependency; this recommendation keeps the forbid for the safety reason, not because the packages are pre-1.0.
+3. Run the full-case comparison on both pinned donors. There is no quality basis for starting with one of them.
+4. Vendor the bounded full-case `get_citations` path from a donor that returns `agree` on every non-waived fixture row and passes gate 3. BSD-2-Clause attribution stays with the vendored text. The landscape note's licensing section (lines 12–13) is the source for "the algorithm and reporter data may be ported with attribution; CourtListener AGPL glue may not be copied." The fact report did not re-fetch the license files. Treat that as the note's claim.
+5. If both donors diverge, or both fail the safety gate, write a custom extractor for that same tuple only, under the same gate. Custom work does not add operations to "make the rewrite worth it."
+6. If both agree and both pass the safety gate, vendor either slice. Choose by which slice the safety boundary can kill or prove. Do not choose by release label or suite size. Which slice is smaller in source was not measured; measuring it would be an inventory this correction refused.
+
+Inference: recommending a custom engine because the donors are alpha would repeat the error in section 1. Recommending a custom engine that still calls synchronous `RegExp` behind an Effect timeout would repeat the error in section 2.
+
+## Falsifier
+
+The adoption rule is false if any of these is recorded:
+
+- On the frozen full-case fixture, the vendored slice's tuple disagrees with pinned eyecite 2.7.6 `get_citations` on a row that was not waived in writing before the run.
+- A known catastrophic pattern, run under the proposed guard, keeps the caller thread busy past the external limit. That kills both "Effect timeout is enough" and any vendor or custom path that relied on it.
+- The vendored slice pulls in `resolve_citations`, annotation, or a resource id in order to emit volume, reporter, and page. The slice is then larger than extraction, and the adoption claim fails even if the tuples match.
+- A later decision restores exhaustive four-operation parity as the completion target. This recommendation then stops applying. The written GOAL already says that today; the falsifier fires if reconsideration is withdrawn.
+
+The custom alternative is false under the first two bullets as well. A custom extractor does not get a softer oracle.
+
+What would show a donor is demonstrably inferior: the first bullet, on this fixture, with the other candidate or a custom extractor agreeing. Until that row exists, the donor is unverified.
+
+## Concessions
+
+- The written GOAL, SPEC, Q2, and Q8 still describe a larger engine. This critique is a recommendation to change that contract, not a finding that the contract already changed.
+- Either pinned donor may already extract the bounded tuple correctly. Nothing gathered here shows a miss.
+- Green donor suites, version labels, and the fact report's activity metadata are real records. They are unused as quality evidence, which is a choice about what they can prove, not a claim that the runs failed.
+- Q8's rejection of case-only v1 is a real lock. The proposed slice is case-only on purpose, and it conflicts with that lock.
+- Q2 names resolution inside the extraction lane. Cutting resolution out of the first gate conflicts with that sentence. The cut is still the right extraction comparison, because pinned resolution drops unresolved cites without an ambiguous state (fact report on `resolve.py`). Shipping that drop would hide extraction hits.
+- `SPEC.md` lines 104–107 require `annotate_citations` while Q2 rejects rich-text annotation. The fact report's excluded claim 4 was right: no cited source says those sentences must be edited. This proposal cuts annotation anyway and leaves the conflict for the decision that edits the spec.
+- The landscape note's 10 MB/s and 99.9977% figures, and the fact report's restatement of them, are not a throughput target and not a quality score. The only JOSS sentence used here is the exponential-time limitation.
+- CourtListener status 300 is not an extraction requirement and not an argument for recording ambiguity inside `get_citations`.
+- Licensing was not re-verified in the fact report. A vendor step still has to carry the license text it copies. This critique does not reopen the AGPL-versus-BSD survey.
+- Verified-span equality (`source.slice(start, end) === quote`) belongs to the prerequisite lane. It is not an extraction-quality score and not an entailment score. The fact report's excluded claim 17 stands.
+
+## Proposed acceptance gates
+
+A build of this slice is accepted only when all five are true. These replace the exhaustive SPEC checklist for this decision. They do not delete that checklist.
+
+1. **Scope.** The completion statement names full-case `get_citations` tuples only. The output schema has span start, span end, volume, reporter, and page. It has no resolved resource, no good-law flag, no supports/refutes/insufficient label, and no annotation markup.
+2. **Differential.** Every frozen fixture row is `agree` with pinned eyecite 2.7.6, or a written waiver names the row and the reason before the run. Waivers are rows, not percentages. Suite pass counts do not substitute.
+3. **Safety.** One of these is demonstrated on a catastrophic pattern, and the record includes the command and the observed caller behavior:
+   - every pattern the slice can execute is in a proved linear-time subset, and the proof identifies the pattern source; or
+   - the match runs inside an execution boundary that a supervisor outside the matching thread can kill on a wall clock, and the caller remains responsive after the kill.
+   An in-process Effect timeout or interrupt around a synchronous `RegExp` is a fail. Skipping Hyperscan is not a pass.
+4. **Dependency.** The host runtime does not load Python, eyecite, eyecite-js, eyecite-ts, a hosted parser, or native Hyperscan. Vendored source with the retained BSD copyright and license text is allowed. CourtListener application glue is not vendored.
+5. **Non-expansion.** Implementing the slice does not add short-case grouping, `Id.` or supra binding, journals, statutes, regulations, MPEP, court ingestion, or claim-admission changes. Those need their own decision.
+
+## Unresolved evidence
+
+Left open on purpose. None of these is filled by version labels or suite counts.
+
+- No full-case tuple differential against the pin has been recorded for either donor or for a custom extractor. Both donors are unverified, not inferior.
+- The native worker command was not traced to a binary (fact report). It is unknown whether that child is the external kill boundary gate 3 requires.
+- No gathered source shows a proved linear-time subset for the reporter patterns the donors run. The landscape names RE2 as an upgrade. Whether this repo has a binding was not checked.
+- eyecite-js npm `2.7.6` versus git `2.7.6-alpha.28` was not tied together by the fact report. The comparison uses the receipt's pinned git commit, not the npm dist-tag.
+- Maintainer parity claims for eyecite-js were not benchmarked. They stay claims.
+- The fact report did not re-fetch eyecite or reporters-db license files. Attribution text for a vendor still has to be checked at vendor time.
+- Q6/Q7 wording in `DECISIONS.md`, the BRIEF versus MAP ratification conflict, and the support/entailment dispatch note remain unresolved. They do not decide this extraction cut, and this critique does not resolve them.
+- No throughput number for an Effect-native engine or either TypeScript donor was in the gathered sources. Gate 3 is a kill trial, not a throughput target.
+- `goals/citation-verified-span-substrate` is a prerequisite in `GOAL.md` lines 14–22, and the fact report only saw an archive tombstone. This extraction comparison does not wait on that substrate and does not replace it.

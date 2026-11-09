@@ -1,0 +1,23 @@
+{
+  "purpose": "Historical operability screen; not accuracy, safety, resolution or throughput proof.",
+  "files": {
+    "history/evidence/2026-11-08-six-form-smoke/screen.ts.txt": "31758c8ca6981e632c297c65848c4eb598f4bb0e6096193c6ab0c2f505a9feeb",
+    "history/evidence/2026-11-08-six-form-smoke/screen.py.txt": "dde76bb0957b34b15708f230d1034cb9dadf0be8bef9549b428d9fadcfa28525",
+    "history/evidence/2026-11-08-six-form-smoke/cases.json": "2dffe15956d47a8d51e8e69fa3ac01cae3a809f6cf1e4876d461195e19823d76",
+    "history/evidence/2026-11-08-six-form-smoke/ts.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "history/evidence/2026-11-08-six-form-smoke/js.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "history/evidence/2026-11-08-six-form-smoke/python.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "history/evidence/2026-11-08-six-form-smoke/normalized-observations.json": "5042697b8f77c47f7d543352517a5d063bb8bf21025a42b9707be8db92a1508c",
+    "history/evidence/2026-11-08-six-form-smoke/README.md": "26be648764806dc3ae2317949760d8290c1e6e5239be90c08623d3cbd8971df5",
+    "history/evidence/2026-11-08-six-form-smoke/ts.stdout.json.txt": "187071c2c3b09f03753962adfa5d70fb3a363553f039386150d58d6e1ca2dbb4",
+    "history/evidence/2026-11-08-six-form-smoke/js.stdout.json.txt": "37eb4f6fecbb24b6b6d1d5b5c15063d4f70176ced54cf886136c80a84273e410",
+    "history/evidence/2026-11-08-six-form-smoke/python.stdout.json.txt": "388b7291b0b8aa60573b1de3d82a3132ef9491ceddd4ae6714d7c76bb843e789",
+    "history/research/2026-11-08-re-grounding/claude-first-pass.txt": "52e718fd41c430e885e2072ceb7b5d1c1de949ee959ac4fb2cf4a2f37c5cb921",
+    "history/research/2026-11-08-re-grounding/claude-debate.txt": "efe36b55210d379547ddbce451bd0ed13fdba9bd8ba32e68fad42c4e73357ab8",
+    "history/research/2026-11-08-re-grounding/grok-first-pass.txt": "2f540c62e44daa60d24be1b09bebca508f52353ffdc3aa31f9f712fea5cd6a06",
+    "history/research/2026-11-08-re-grounding/grok-correction.txt": "78b1fe5e3860f5c5ae022cef5cd91e493b6e82a61fbce947eedb220890bf10cd",
+    "history/research/2026-11-08-re-grounding/grok-debate.txt": "8e56eacfdc6eade2d6887b05e7087b14515354783e2512fd2b55da3700666885",
+    "history/research/2026-11-08-re-grounding/kimi-first-pass.txt": "7ad475d7021d8eeec5758ce436b64cc80d01473f019e75340ddef34923175ce1",
+    "history/research/2026-11-08-re-grounding/adhd.txt": "a2ae838710928c33506d85ea5ad61e4875e09df5801ef2cb58fee975cad345e8"
+  }
+}

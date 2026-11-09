@@ -1,0 +1,1882 @@
+{
+  "lane": "ts",
+  "runtime": "1.4.4",
+  "profileStatus": "frozen-before-selection-run",
+  "purpose": "Diagnostic projection of captured parser fields, not a normalized or passing contract result.",
+  "originalLocalRawSha256": "7c04d34ac0ad87bc2f610d7aa33e56d3e33a4611bbe5b28a4c8b594244e29632",
+  "rows": [
+    {
+      "id": "public-full-doe",
+      "citations": [
+        {
+          "kind": "case",
+          "span": {
+            "cleanStart": 15,
+            "cleanEnd": 27,
+            "originalStart": 15,
+            "originalEnd": 28
+          },
+          "observed": {
+            "type": "case",
+            "text": "410 U.S. 179",
+            "confidence": 0.95,
+            "matchedText": "410 U.S. 179",
+            "processTimeMs": 6.050995,
+            "patternsChecked": 1,
+            "volume": 410,
+            "reporter": "U.S.",
+            "page": 179,
+            "pincite": 198,
+            "court": "scotus",
+            "normalizedCourt": "scotus",
+            "year": 1973,
+            "caseName": "Doe v. Bolton",
+            "plaintiff": "Doe",
+            "plaintiffNormalized": "doe",
+            "defendant": "Bolton",
+            "defendantNormalized": "bolton",
+            "id": "c0",
+            "spans": {
+              "volume": {
+                "cleanStart": 15,
+                "cleanEnd": 18,
+                "originalStart": 15,
+                "originalEnd": 18
+              },
+              "reporter": {
+                "cleanStart": 19,
+                "cleanEnd": 23,
+                "originalStart": 19,
+                "originalEnd": 24
+              },
+              "page": {
+                "cleanStart": 24,
+                "cleanEnd": 27,
+                "originalStart": 25,
+                "originalEnd": 28
+              },
+              "pincite": {
+                "cleanStart": 29,
+                "cleanEnd": 32,
+                "originalStart": 30,
+                "originalEnd": 33
+              },
+              "metadataParenthetical": {
+                "cleanStart": 33,
+                "cleanEnd": 39,
+                "originalStart": 34,
+                "originalEnd": 40
+              },
+              "year": {
+                "cleanStart": 34,
+                "cleanEnd": 38,
+                "originalStart": 35,
+                "originalEnd": 39
+              },
+              "caseName": {
+                "cleanStart": 0,
+                "cleanEnd": 13,
+                "originalStart": 0,
+                "originalEnd": 13
+              },
+              "plaintiff": {
+                "cleanStart": 0,
+                "cleanEnd": 3,
+                "originalStart": 0,
+                "originalEnd": 3
+              },
+              "defendant": {
+                "cleanStart": 7,
+                "cleanEnd": 13,
+                "originalStart": 7,
+                "originalEnd": 13
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "public-short-roe",
+      "citations": [
+        {
+          "kind": "shortFormCase",
+          "span": {
+            "cleanStart": 0,
+            "cleanEnd": 20,
+            "originalStart": 0,
+            "originalEnd": 21
+          },
+          "observed": {
+            "type": "shortFormCase",
+            "text": "410 U.S., at 154-155",
+            "confidence": 0.7,
+            "matchedText": "410 U.S., at 154-155",
+            "processTimeMs": 0.23404999999999632,
+            "patternsChecked": 1,
+            "volume": 410,
+            "reporter": "U.S.",
+            "pincite": 154,
+            "id": "c0",
+            "spans": {
+              "pincite": {
+                "cleanStart": 13,
+                "cleanEnd": 20,
+                "originalStart": 14,
+                "originalEnd": 21
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "public-supra-roe",
+      "citations": [
+        {
+          "kind": "supra",
+          "span": {
+            "cleanStart": 0,
+            "cleanEnd": 18,
+            "originalStart": 0,
+            "originalEnd": 18
+          },
+          "observed": {
+            "type": "supra",
+            "text": "Roe, supra, at 162",
+            "confidence": 0.9,
+            "matchedText": "Roe, supra, at 162",
+            "processTimeMs": 0.19440900000000028,
+            "patternsChecked": 1,
+            "partyName": "Roe",
+            "pincite": 162,
+            "id": "c0",
+            "spans": {
+              "pincite": {
+                "cleanStart": 15,
+                "cleanEnd": 18,
+                "originalStart": 15,
+                "originalEnd": 18
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "public-id-orphan",
+      "citations": [
+        {
+          "kind": "id",
+          "span": {
+            "cleanStart": 0,
+            "cleanEnd": 11,
+            "originalStart": 0,
+            "originalEnd": 11
+          },
+          "observed": {
+            "type": "id",
+            "text": "Id., at 163",
+            "confidence": 0.9,
+            "matchedText": "Id., at 163",
+            "processTimeMs": 2.243314000000005,
+            "patternsChecked": 1,
+            "pincite": 163,
+            "id": "c0",
+            "spans": {
+              "pincite": {
+                "cleanStart": 8,
+                "cleanEnd": 11,
+                "originalStart": 8,
+                "originalEnd": 11
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "public-usc-context",
+      "citations": [
+        {
+          "kind": "statute",
+          "span": {
+            "cleanStart": 123,
+            "cleanEnd": 136,
+            "originalStart": 123,
+            "originalEnd": 136
+          },
+          "observed": {
+            "type": "statute",
+            "text": "35 U.S.C. 101",
+            "confidence": 1,
+            "matchedText": "35 U.S.C. 101",
+            "processTimeMs": 0.7131280000000046,
+            "patternsChecked": 1,
+            "title": 35,
+            "code": "U.S.C.",
+            "section": "101",
+            "jurisdiction": "US",
+            "id": "c0",
+            "spans": {
+              "title": {
+                "cleanStart": 123,
+                "cleanEnd": 125,
+                "originalStart": 123,
+                "originalEnd": 125
+              },
+              "code": {
+                "cleanStart": 126,
+                "cleanEnd": 132,
+                "originalStart": 126,
+                "originalEnd": 132
+              },
+              "section": {
+                "cleanStart": 133,
+                "cleanEnd": 136,
+                "originalStart": 133,
+                "originalEnd": 136
+              }
+            }
+          }
+        },
+        {
+          "kind": "statute",
+          "span": {
+            "cleanStart": 158,
+            "cleanEnd": 174,
+            "originalStart": 158,
+            "originalEnd": 174
+          },
+          "observed": {
+            "type": "statute",
+            "text": "35 U.S.C. 102(f)",
+            "confidence": 1,
+            "matchedText": "35 U.S.C. 102(f)",
+            "processTimeMs": 0.7557430000000025,
+            "patternsChecked": 1,
+            "title": 35,
+            "code": "U.S.C.",
+            "section": "102",
+            "subsection": "(f)",
+            "pincite": "(f)",
+            "jurisdiction": "US",
+            "id": "c1",
+            "spans": {
+              "title": {
+                "cleanStart": 158,
+                "cleanEnd": 160,
+                "originalStart": 158,
+                "originalEnd": 160
+              },
+              "code": {
+                "cleanStart": 161,
+                "cleanEnd": 167,
+                "originalStart": 161,
+                "originalEnd": 167
+              },
+              "section": {
+                "cleanStart": 168,
+                "cleanEnd": 171,
+                "originalStart": 168,
+                "originalEnd": 171
+              },
+              "subsection": {
+                "cleanStart": 171,
+                "cleanEnd": 174,
+                "originalStart": 171,
+                "originalEnd": 174
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "public-cfr-context",
+      "citations": [
+        {
+          "kind": "regulation",
+          "span": {
+            "cleanStart": 40,
+            "cleanEnd": 51,
+            "originalStart": 40,
+            "originalEnd": 51
+          },
+          "observed": {
+            "type": "regulation",
+            "text": "37 CFR 1.56",
+            "confidence": 1,
+            "matchedText": "37 CFR 1.56",
+            "processTimeMs": 0.2041550000000001,
+            "patternsChecked": 1,
+            "title": 37,
+            "code": "C.F.R.",
+            "section": "1.56",
+            "jurisdiction": "US",
+            "id": "c0",
+            "spans": {
+              "title": {
+                "cleanStart": 40,
+                "cleanEnd": 42,
+                "originalStart": 40,
+                "originalEnd": 42
+              },
+              "code": {
+                "cleanStart": 43,
+                "cleanEnd": 46,
+                "originalStart": 43,
+                "originalEnd": 46
+              },
+              "section": {
+                "cleanStart": 47,
+                "cleanEnd": 51,
+                "originalStart": 47,
+                "originalEnd": 51
+              }
+            }
+          }
+        },
+        {
+          "kind": "regulation",
+          "span": {
+            "cleanStart": 124,
+            "cleanEnd": 136,
+            "originalStart": 124,
+            "originalEnd": 136
+          },
+          "observed": {
+            "type": "regulation",
+            "text": "37 CFR 1.105",
+            "confidence": 1,
+            "matchedText": "37 CFR 1.105",
+            "processTimeMs": 0.2106239999999957,
+            "patternsChecked": 1,
+            "title": 37,
+            "code": "C.F.R.",
+            "section": "1.105",
+            "jurisdiction": "US",
+            "id": "c1",
+            "spans": {
+              "title": {
+                "cleanStart": 124,
+                "cleanEnd": 126,
+                "originalStart": 124,
+                "originalEnd": 126
+              },
+              "code": {
+                "cleanStart": 127,
+                "cleanEnd": 130,
+                "originalStart": 127,
+                "originalEnd": 130
+              },
+              "section": {
+                "cleanStart": 131,
+                "cleanEnd": 136,
+                "originalStart": 131,
+                "originalEnd": 136
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "regression-full",
+      "citations": [
+        {
+          "kind": "case",
+          "span": {
+            "cleanStart": 13,
+            "cleanEnd": 25,
+            "originalStart": 13,
+            "originalEnd": 25
+          },
+          "observed": {
+            "type": "case",
+            "text": "410 U.S. 113",
+            "confidence": 0.95,
+            "matchedText": "410 U.S. 113",
+            "processTimeMs": 0.5621960000000001,
+            "patternsChecked": 1,
+            "volume": 410,
+            "reporter": "U.S.",
+            "page": 113,
+            "pincite": 120,
+            "court": "scotus",
+            "normalizedCourt": "scotus",
+            "year": 1973,
+            "caseName": "Roe v. Wade",
+            "plaintiff": "Roe",
+            "plaintiffNormalized": "roe",
+            "defendant": "Wade",
+            "defendantNormalized": "wade",
+            "id": "c0",
+            "spans": {
+              "volume": {
+                "cleanStart": 13,
+                "cleanEnd": 16,
+                "originalStart": 13,
+                "originalEnd": 16
+              },
+              "reporter": {
+                "cleanStart": 17,
+                "cleanEnd": 21,
+                "originalStart": 17,
+                "originalEnd": 21
+              },
+              "page": {
+                "cleanStart": 22,
+                "cleanEnd": 25,
+                "originalStart": 22,
+                "originalEnd": 25
+              },
+              "pincite": {
+                "cleanStart": 27,
+                "cleanEnd": 30,
+                "originalStart": 27,
+                "originalEnd": 30
+              },
+              "metadataParenthetical": {
+                "cleanStart": 31,
+                "cleanEnd": 37,
+                "originalStart": 31,
+                "originalEnd": 37
+              },
+              "year": {
+                "cleanStart": 32,
+                "cleanEnd": 36,
+                "originalStart": 32,
+                "originalEnd": 36
+              },
+              "caseName": {
+                "cleanStart": 0,
+                "cleanEnd": 11,
+                "originalStart": 0,
+                "originalEnd": 11
+              },
+              "plaintiff": {
+                "cleanStart": 0,
+                "cleanEnd": 3,
+                "originalStart": 0,
+                "originalEnd": 3
+              },
+              "defendant": {
+                "cleanStart": 7,
+                "cleanEnd": 11,
+                "originalStart": 7,
+                "originalEnd": 11
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "regression-short",
+      "citations": [
+        {
+          "kind": "shortFormCase",
+          "span": {
+            "cleanStart": 4,
+            "cleanEnd": 19,
+            "originalStart": 4,
+            "originalEnd": 19
+          },
+          "observed": {
+            "type": "shortFormCase",
+            "text": "410 U.S. at 120",
+            "confidence": 0.7,
+            "matchedText": "410 U.S. at 120",
+            "processTimeMs": 0.11102100000000092,
+            "patternsChecked": 1,
+            "volume": 410,
+            "reporter": "U.S.",
+            "pincite": 120,
+            "id": "c0",
+            "signal": "see",
+            "spans": {
+              "pincite": {
+                "cleanStart": 16,
+                "cleanEnd": 19,
+                "originalStart": 16,
+                "originalEnd": 19
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "regression-id",
+      "citations": [
+        {
+          "kind": "id",
+          "span": {
+            "cleanStart": 0,
+            "cleanEnd": 10,
+            "originalStart": 0,
+            "originalEnd": 10
+          },
+          "observed": {
+            "type": "id",
+            "text": "Id. at 120",
+            "confidence": 1,
+            "matchedText": "Id. at 120",
+            "processTimeMs": 0.07692800000000233,
+            "patternsChecked": 1,
+            "pincite": 120,
+            "id": "c0",
+            "spans": {
+              "pincite": {
+                "cleanStart": 7,
+                "cleanEnd": 10,
+                "originalStart": 7,
+                "originalEnd": 10
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "regression-supra",
+      "citations": [
+        {
+          "kind": "supra",
+          "span": {
+            "cleanStart": 0,
+            "cleanEnd": 18,
+            "originalStart": 0,
+            "originalEnd": 18
+          },
+          "observed": {
+            "type": "supra",
+            "text": "Smith, supra, at 3",
+            "confidence": 0.9,
+            "matchedText": "Smith, supra, at 3",
+            "processTimeMs": 0.05893100000000118,
+            "patternsChecked": 1,
+            "partyName": "Smith",
+            "pincite": 3,
+            "id": "c0",
+            "spans": {
+              "pincite": {
+                "cleanStart": 17,
+                "cleanEnd": 18,
+                "originalStart": 17,
+                "originalEnd": 18
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "regression-usc",
+      "citations": [
+        {
+          "kind": "statute",
+          "span": {
+            "cleanStart": 0,
+            "cleanEnd": 15,
+            "originalStart": 0,
+            "originalEnd": 15
+          },
+          "observed": {
+            "type": "statute",
+            "text": "35 U.S.C. § 101",
+            "confidence": 1,
+            "matchedText": "35 U.S.C. § 101",
+            "processTimeMs": 0.5783600000000035,
+            "patternsChecked": 1,
+            "title": 35,
+            "code": "U.S.C.",
+            "section": "101",
+            "jurisdiction": "US",
+            "id": "c0",
+            "spans": {
+              "title": {
+                "cleanStart": 0,
+                "cleanEnd": 2,
+                "originalStart": 0,
+                "originalEnd": 2
+              },
+              "code": {
+                "cleanStart": 3,
+                "cleanEnd": 9,
+                "originalStart": 3,
+                "originalEnd": 9
+              },
+              "section": {
+                "cleanStart": 12,
+                "cleanEnd": 15,
+                "originalStart": 12,
+                "originalEnd": 15
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "regression-cfr",
+      "citations": [
+        {
+          "kind": "regulation",
+          "span": {
+            "cleanStart": 0,
+            "cleanEnd": 16,
+            "originalStart": 0,
+            "originalEnd": 16
+          },
+          "observed": {
+            "type": "regulation",
+            "text": "37 C.F.R. § 1.56",
+            "confidence": 1,
+            "matchedText": "37 C.F.R. § 1.56",
+            "processTimeMs": 0.06773400000000152,
+            "patternsChecked": 1,
+            "title": 37,
+            "code": "C.F.R.",
+            "section": "1.56",
+            "jurisdiction": "US",
+            "id": "c0",
+            "spans": {
+              "title": {
+                "cleanStart": 0,
+                "cleanEnd": 2,
+                "originalStart": 0,
+                "originalEnd": 2
+              },
+              "code": {
+                "cleanStart": 3,
+                "cleanEnd": 9,
+                "originalStart": 3,
+                "originalEnd": 9
+              },
+              "section": {
+                "cleanStart": 12,
+                "cleanEnd": 16,
+                "originalStart": 12,
+                "originalEnd": 16
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "astral-prefix",
+      "citations": [
+        {
+          "kind": "case",
+          "span": {
+            "cleanStart": 7,
+            "cleanEnd": 19,
+            "originalStart": 7,
+            "originalEnd": 19
+          },
+          "observed": {
+            "type": "case",
+            "text": "410 U.S. 113",
+            "confidence": 0.8,
+            "matchedText": "410 U.S. 113",
+            "processTimeMs": 0.4406880000000015,
+            "patternsChecked": 1,
+            "volume": 410,
+            "reporter": "U.S.",
+            "page": 113,
+            "court": "scotus",
+            "normalizedCourt": "scotus",
+            "year": 1973,
+            "signal": "see",
+            "id": "c0",
+            "spans": {
+              "volume": {
+                "cleanStart": 7,
+                "cleanEnd": 10,
+                "originalStart": 7,
+                "originalEnd": 10
+              },
+              "reporter": {
+                "cleanStart": 11,
+                "cleanEnd": 15,
+                "originalStart": 11,
+                "originalEnd": 15
+              },
+              "page": {
+                "cleanStart": 16,
+                "cleanEnd": 19,
+                "originalStart": 16,
+                "originalEnd": 19
+              },
+              "metadataParenthetical": {
+                "cleanStart": 20,
+                "cleanEnd": 26,
+                "originalStart": 20,
+                "originalEnd": 26
+              },
+              "year": {
+                "cleanStart": 21,
+                "cleanEnd": 25,
+                "originalStart": 21,
+                "originalEnd": 25
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "combining-prefix",
+      "citations": [
+        {
+          "kind": "case",
+          "span": {
+            "cleanStart": 11,
+            "cleanEnd": 23,
+            "originalStart": 12,
+            "originalEnd": 24
+          },
+          "observed": {
+            "type": "case",
+            "text": "410 U.S. 113",
+            "confidence": 0.8,
+            "matchedText": "410 U.S. 113",
+            "processTimeMs": 0.18906099999999526,
+            "patternsChecked": 1,
+            "volume": 410,
+            "reporter": "U.S.",
+            "page": 113,
+            "court": "scotus",
+            "normalizedCourt": "scotus",
+            "year": 1973,
+            "id": "c0",
+            "spans": {
+              "volume": {
+                "cleanStart": 11,
+                "cleanEnd": 14,
+                "originalStart": 12,
+                "originalEnd": 15
+              },
+              "reporter": {
+                "cleanStart": 15,
+                "cleanEnd": 19,
+                "originalStart": 16,
+                "originalEnd": 20
+              },
+              "page": {
+                "cleanStart": 20,
+                "cleanEnd": 23,
+                "originalStart": 21,
+                "originalEnd": 24
+              },
+              "metadataParenthetical": {
+                "cleanStart": 24,
+                "cleanEnd": 30,
+                "originalStart": 25,
+                "originalEnd": 31
+              },
+              "year": {
+                "cleanStart": 25,
+                "cleanEnd": 29,
+                "originalStart": 26,
+                "originalEnd": 30
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "usc-subsection",
+      "citations": [
+        {
+          "kind": "statute",
+          "span": {
+            "cleanStart": 6,
+            "cleanEnd": 24,
+            "originalStart": 6,
+            "originalEnd": 24
+          },
+          "observed": {
+            "type": "statute",
+            "text": "35 U.S.C. § 112(a)",
+            "confidence": 1,
+            "matchedText": "35 U.S.C. § 112(a)",
+            "processTimeMs": 0.09506599999999565,
+            "patternsChecked": 1,
+            "title": 35,
+            "code": "U.S.C.",
+            "section": "112",
+            "subsection": "(a)",
+            "pincite": "(a)",
+            "jurisdiction": "US",
+            "id": "c0",
+            "spans": {
+              "title": {
+                "cleanStart": 6,
+                "cleanEnd": 8,
+                "originalStart": 6,
+                "originalEnd": 8
+              },
+              "code": {
+                "cleanStart": 9,
+                "cleanEnd": 15,
+                "originalStart": 9,
+                "originalEnd": 15
+              },
+              "section": {
+                "cleanStart": 18,
+                "cleanEnd": 21,
+                "originalStart": 18,
+                "originalEnd": 21
+              },
+              "subsection": {
+                "cleanStart": 21,
+                "cleanEnd": 24,
+                "originalStart": 21,
+                "originalEnd": 24
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "usc-nested-subsection",
+      "citations": [
+        {
+          "kind": "statute",
+          "span": {
+            "cleanStart": 0,
+            "cleanEnd": 21,
+            "originalStart": 0,
+            "originalEnd": 21
+          },
+          "observed": {
+            "type": "statute",
+            "text": "35 U.S.C. § 102(a)(1)",
+            "confidence": 1,
+            "matchedText": "35 U.S.C. § 102(a)(1)",
+            "processTimeMs": 0.0580890000000025,
+            "patternsChecked": 1,
+            "title": 35,
+            "code": "U.S.C.",
+            "section": "102",
+            "subsection": "(a)(1)",
+            "pincite": "(a)(1)",
+            "jurisdiction": "US",
+            "id": "c0",
+            "spans": {
+              "title": {
+                "cleanStart": 0,
+                "cleanEnd": 2,
+                "originalStart": 0,
+                "originalEnd": 2
+              },
+              "code": {
+                "cleanStart": 3,
+                "cleanEnd": 9,
+                "originalStart": 3,
+                "originalEnd": 9
+              },
+              "section": {
+                "cleanStart": 12,
+                "cleanEnd": 15,
+                "originalStart": 12,
+                "originalEnd": 15
+              },
+              "subsection": {
+                "cleanStart": 15,
+                "cleanEnd": 21,
+                "originalStart": 15,
+                "originalEnd": 21
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cfr-subsection",
+      "citations": [
+        {
+          "kind": "regulation",
+          "span": {
+            "cleanStart": 6,
+            "cleanEnd": 25,
+            "originalStart": 6,
+            "originalEnd": 25
+          },
+          "observed": {
+            "type": "regulation",
+            "text": "37 C.F.R. § 1.56(c)",
+            "confidence": 1,
+            "matchedText": "37 C.F.R. § 1.56(c)",
+            "processTimeMs": 0.05427399999999949,
+            "patternsChecked": 1,
+            "title": 37,
+            "code": "C.F.R.",
+            "section": "1.56",
+            "subsection": "(c)",
+            "pincite": "(c)",
+            "jurisdiction": "US",
+            "id": "c0",
+            "spans": {
+              "title": {
+                "cleanStart": 6,
+                "cleanEnd": 8,
+                "originalStart": 6,
+                "originalEnd": 8
+              },
+              "code": {
+                "cleanStart": 9,
+                "cleanEnd": 15,
+                "originalStart": 9,
+                "originalEnd": 15
+              },
+              "section": {
+                "cleanStart": 18,
+                "cleanEnd": 22,
+                "originalStart": 18,
+                "originalEnd": 22
+              },
+              "subsection": {
+                "cleanStart": 22,
+                "cleanEnd": 25,
+                "originalStart": 22,
+                "originalEnd": 25
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "duplicate-cfr",
+      "citations": [
+        {
+          "kind": "regulation",
+          "span": {
+            "cleanStart": 0,
+            "cleanEnd": 11,
+            "originalStart": 0,
+            "originalEnd": 11
+          },
+          "observed": {
+            "type": "regulation",
+            "text": "37 CFR 1.56",
+            "confidence": 1,
+            "matchedText": "37 CFR 1.56",
+            "processTimeMs": 0.06855600000000095,
+            "patternsChecked": 1,
+            "title": 37,
+            "code": "C.F.R.",
+            "section": "1.56",
+            "jurisdiction": "US",
+            "id": "c0",
+            "stringCitationGroupId": "sc-0",
+            "stringCitationIndex": 0,
+            "stringCitationGroupSize": 2,
+            "spans": {
+              "title": {
+                "cleanStart": 0,
+                "cleanEnd": 2,
+                "originalStart": 0,
+                "originalEnd": 2
+              },
+              "code": {
+                "cleanStart": 3,
+                "cleanEnd": 6,
+                "originalStart": 3,
+                "originalEnd": 6
+              },
+              "section": {
+                "cleanStart": 7,
+                "cleanEnd": 11,
+                "originalStart": 7,
+                "originalEnd": 11
+              }
+            }
+          }
+        },
+        {
+          "kind": "regulation",
+          "span": {
+            "cleanStart": 13,
+            "cleanEnd": 24,
+            "originalStart": 13,
+            "originalEnd": 24
+          },
+          "observed": {
+            "type": "regulation",
+            "text": "37 CFR 1.56",
+            "confidence": 1,
+            "matchedText": "37 CFR 1.56",
+            "processTimeMs": 0.073083000000004,
+            "patternsChecked": 1,
+            "title": 37,
+            "code": "C.F.R.",
+            "section": "1.56",
+            "jurisdiction": "US",
+            "id": "c1",
+            "stringCitationGroupId": "sc-0",
+            "stringCitationIndex": 1,
+            "stringCitationGroupSize": 2,
+            "spans": {
+              "title": {
+                "cleanStart": 13,
+                "cleanEnd": 15,
+                "originalStart": 13,
+                "originalEnd": 15
+              },
+              "code": {
+                "cleanStart": 16,
+                "cleanEnd": 19,
+                "originalStart": 16,
+                "originalEnd": 19
+              },
+              "section": {
+                "cleanStart": 20,
+                "cleanEnd": 24,
+                "originalStart": 20,
+                "originalEnd": 24
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "negative-empty",
+      "citations": []
+    },
+    {
+      "id": "negative-prose",
+      "citations": []
+    },
+    {
+      "id": "negative-numbers",
+      "citations": []
+    },
+    {
+      "id": "negative-section",
+      "citations": []
+    },
+    {
+      "id": "outside-usc-title",
+      "citations": [
+        {
+          "kind": "statute",
+          "span": {
+            "cleanStart": 0,
+            "cleanEnd": 16,
+            "originalStart": 0,
+            "originalEnd": 16
+          },
+          "observed": {
+            "type": "statute",
+            "text": "42 U.S.C. § 1983",
+            "confidence": 1,
+            "matchedText": "42 U.S.C. § 1983",
+            "processTimeMs": 0.050387000000000626,
+            "patternsChecked": 1,
+            "title": 42,
+            "code": "U.S.C.",
+            "section": "1983",
+            "jurisdiction": "US",
+            "id": "c0",
+            "spans": {
+              "title": {
+                "cleanStart": 0,
+                "cleanEnd": 2,
+                "originalStart": 0,
+                "originalEnd": 2
+              },
+              "code": {
+                "cleanStart": 3,
+                "cleanEnd": 9,
+                "originalStart": 3,
+                "originalEnd": 9
+              },
+              "section": {
+                "cleanStart": 12,
+                "cleanEnd": 16,
+                "originalStart": 12,
+                "originalEnd": 16
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "outside-journal",
+      "citations": [
+        {
+          "kind": "journal",
+          "span": {
+            "cleanStart": 0,
+            "cleanEnd": 21,
+            "originalStart": 0,
+            "originalEnd": 21
+          },
+          "observed": {
+            "type": "journal",
+            "text": "123 Harv. L. Rev. 456",
+            "confidence": 0.6,
+            "matchedText": "123 Harv. L. Rev. 456",
+            "processTimeMs": 0.1997870000000006,
+            "patternsChecked": 1,
+            "volume": 123,
+            "journal": "Harv. L. Rev.",
+            "abbreviation": "Harv. L. Rev.",
+            "page": 456,
+            "id": "c0",
+            "spans": {
+              "volume": {
+                "cleanStart": 0,
+                "cleanEnd": 3,
+                "originalStart": 0,
+                "originalEnd": 3
+              },
+              "journal": {
+                "cleanStart": 4,
+                "cleanEnd": 17,
+                "originalStart": 4,
+                "originalEnd": 17
+              },
+              "page": {
+                "cleanStart": 18,
+                "cleanEnd": 21,
+                "originalStart": 18,
+                "originalEnd": 21
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "local-id",
+      "citations": [
+        {
+          "kind": "case",
+          "span": {
+            "cleanStart": 13,
+            "cleanEnd": 25,
+            "originalStart": 13,
+            "originalEnd": 25
+          },
+          "observed": {
+            "type": "case",
+            "text": "410 U.S. 113",
+            "confidence": 0.95,
+            "matchedText": "410 U.S. 113",
+            "processTimeMs": 0.33853100000000325,
+            "patternsChecked": 1,
+            "volume": 410,
+            "reporter": "U.S.",
+            "page": 113,
+            "court": "scotus",
+            "normalizedCourt": "scotus",
+            "year": 1973,
+            "caseName": "Roe v. Wade",
+            "plaintiff": "Roe",
+            "plaintiffNormalized": "roe",
+            "defendant": "Wade",
+            "defendantNormalized": "wade",
+            "id": "c0",
+            "spans": {
+              "volume": {
+                "cleanStart": 13,
+                "cleanEnd": 16,
+                "originalStart": 13,
+                "originalEnd": 16
+              },
+              "reporter": {
+                "cleanStart": 17,
+                "cleanEnd": 21,
+                "originalStart": 17,
+                "originalEnd": 21
+              },
+              "page": {
+                "cleanStart": 22,
+                "cleanEnd": 25,
+                "originalStart": 22,
+                "originalEnd": 25
+              },
+              "metadataParenthetical": {
+                "cleanStart": 26,
+                "cleanEnd": 32,
+                "originalStart": 26,
+                "originalEnd": 32
+              },
+              "year": {
+                "cleanStart": 27,
+                "cleanEnd": 31,
+                "originalStart": 27,
+                "originalEnd": 31
+              },
+              "caseName": {
+                "cleanStart": 0,
+                "cleanEnd": 11,
+                "originalStart": 0,
+                "originalEnd": 11
+              },
+              "plaintiff": {
+                "cleanStart": 0,
+                "cleanEnd": 3,
+                "originalStart": 0,
+                "originalEnd": 3
+              },
+              "defendant": {
+                "cleanStart": 7,
+                "cleanEnd": 11,
+                "originalStart": 7,
+                "originalEnd": 11
+              }
+            }
+          }
+        },
+        {
+          "kind": "id",
+          "span": {
+            "cleanStart": 34,
+            "cleanEnd": 44,
+            "originalStart": 34,
+            "originalEnd": 44
+          },
+          "observed": {
+            "type": "id",
+            "text": "Id. at 120",
+            "confidence": 1,
+            "matchedText": "Id. at 120",
+            "processTimeMs": 0.39346600000000365,
+            "patternsChecked": 1,
+            "pincite": 120,
+            "id": "c1",
+            "spans": {
+              "pincite": {
+                "cleanStart": 41,
+                "cleanEnd": 44,
+                "originalStart": 41,
+                "originalEnd": 44
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "local-short",
+      "citations": [
+        {
+          "kind": "case",
+          "span": {
+            "cleanStart": 13,
+            "cleanEnd": 25,
+            "originalStart": 13,
+            "originalEnd": 25
+          },
+          "observed": {
+            "type": "case",
+            "text": "410 U.S. 113",
+            "confidence": 0.95,
+            "matchedText": "410 U.S. 113",
+            "processTimeMs": 0.26103200000000015,
+            "patternsChecked": 1,
+            "volume": 410,
+            "reporter": "U.S.",
+            "page": 113,
+            "court": "scotus",
+            "normalizedCourt": "scotus",
+            "year": 1973,
+            "caseName": "Roe v. Wade",
+            "plaintiff": "Roe",
+            "plaintiffNormalized": "roe",
+            "defendant": "Wade",
+            "defendantNormalized": "wade",
+            "id": "c0",
+            "spans": {
+              "volume": {
+                "cleanStart": 13,
+                "cleanEnd": 16,
+                "originalStart": 13,
+                "originalEnd": 16
+              },
+              "reporter": {
+                "cleanStart": 17,
+                "cleanEnd": 21,
+                "originalStart": 17,
+                "originalEnd": 21
+              },
+              "page": {
+                "cleanStart": 22,
+                "cleanEnd": 25,
+                "originalStart": 22,
+                "originalEnd": 25
+              },
+              "metadataParenthetical": {
+                "cleanStart": 26,
+                "cleanEnd": 32,
+                "originalStart": 26,
+                "originalEnd": 32
+              },
+              "year": {
+                "cleanStart": 27,
+                "cleanEnd": 31,
+                "originalStart": 27,
+                "originalEnd": 31
+              },
+              "caseName": {
+                "cleanStart": 0,
+                "cleanEnd": 11,
+                "originalStart": 0,
+                "originalEnd": 11
+              },
+              "plaintiff": {
+                "cleanStart": 0,
+                "cleanEnd": 3,
+                "originalStart": 0,
+                "originalEnd": 3
+              },
+              "defendant": {
+                "cleanStart": 7,
+                "cleanEnd": 11,
+                "originalStart": 7,
+                "originalEnd": 11
+              }
+            }
+          }
+        },
+        {
+          "kind": "shortFormCase",
+          "span": {
+            "cleanStart": 34,
+            "cleanEnd": 49,
+            "originalStart": 34,
+            "originalEnd": 49
+          },
+          "observed": {
+            "type": "shortFormCase",
+            "text": "410 U.S. at 120",
+            "confidence": 0.7,
+            "matchedText": "410 U.S. at 120",
+            "processTimeMs": 0.2692949999999996,
+            "patternsChecked": 1,
+            "volume": 410,
+            "reporter": "U.S.",
+            "pincite": 120,
+            "id": "c1",
+            "spans": {
+              "pincite": {
+                "cleanStart": 46,
+                "cleanEnd": 49,
+                "originalStart": 46,
+                "originalEnd": 49
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "local-supra",
+      "citations": [
+        {
+          "kind": "case",
+          "span": {
+            "cleanStart": 13,
+            "cleanEnd": 25,
+            "originalStart": 13,
+            "originalEnd": 25
+          },
+          "observed": {
+            "type": "case",
+            "text": "410 U.S. 113",
+            "confidence": 0.95,
+            "matchedText": "410 U.S. 113",
+            "processTimeMs": 0.21589200000000375,
+            "patternsChecked": 1,
+            "volume": 410,
+            "reporter": "U.S.",
+            "page": 113,
+            "court": "scotus",
+            "normalizedCourt": "scotus",
+            "year": 1973,
+            "caseName": "Roe v. Wade",
+            "plaintiff": "Roe",
+            "plaintiffNormalized": "roe",
+            "defendant": "Wade",
+            "defendantNormalized": "wade",
+            "id": "c0",
+            "spans": {
+              "volume": {
+                "cleanStart": 13,
+                "cleanEnd": 16,
+                "originalStart": 13,
+                "originalEnd": 16
+              },
+              "reporter": {
+                "cleanStart": 17,
+                "cleanEnd": 21,
+                "originalStart": 17,
+                "originalEnd": 21
+              },
+              "page": {
+                "cleanStart": 22,
+                "cleanEnd": 25,
+                "originalStart": 22,
+                "originalEnd": 25
+              },
+              "metadataParenthetical": {
+                "cleanStart": 26,
+                "cleanEnd": 32,
+                "originalStart": 26,
+                "originalEnd": 32
+              },
+              "year": {
+                "cleanStart": 27,
+                "cleanEnd": 31,
+                "originalStart": 27,
+                "originalEnd": 31
+              },
+              "caseName": {
+                "cleanStart": 0,
+                "cleanEnd": 11,
+                "originalStart": 0,
+                "originalEnd": 11
+              },
+              "plaintiff": {
+                "cleanStart": 0,
+                "cleanEnd": 3,
+                "originalStart": 0,
+                "originalEnd": 3
+              },
+              "defendant": {
+                "cleanStart": 7,
+                "cleanEnd": 11,
+                "originalStart": 7,
+                "originalEnd": 11
+              }
+            }
+          }
+        },
+        {
+          "kind": "supra",
+          "span": {
+            "cleanStart": 34,
+            "cleanEnd": 52,
+            "originalStart": 34,
+            "originalEnd": 52
+          },
+          "observed": {
+            "type": "supra",
+            "text": "Roe, supra, at 162",
+            "confidence": 0.9,
+            "matchedText": "Roe, supra, at 162",
+            "processTimeMs": 0.22274200000000377,
+            "patternsChecked": 1,
+            "partyName": "Roe",
+            "pincite": 162,
+            "id": "c1",
+            "spans": {
+              "pincite": {
+                "cleanStart": 49,
+                "cleanEnd": 52,
+                "originalStart": 49,
+                "originalEnd": 52
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ambiguous-short",
+      "citations": [
+        {
+          "kind": "case",
+          "span": {
+            "cleanStart": 15,
+            "cleanEnd": 27,
+            "originalStart": 15,
+            "originalEnd": 27
+          },
+          "observed": {
+            "type": "case",
+            "text": "410 U.S. 113",
+            "confidence": 0.95,
+            "matchedText": "410 U.S. 113",
+            "processTimeMs": 0.29194899999999535,
+            "patternsChecked": 1,
+            "volume": 410,
+            "reporter": "U.S.",
+            "page": 113,
+            "court": "scotus",
+            "normalizedCourt": "scotus",
+            "year": 1973,
+            "caseName": "Alpha v. Beta",
+            "plaintiff": "Alpha",
+            "plaintiffNormalized": "alpha",
+            "defendant": "Beta",
+            "defendantNormalized": "beta",
+            "id": "c0",
+            "spans": {
+              "volume": {
+                "cleanStart": 15,
+                "cleanEnd": 18,
+                "originalStart": 15,
+                "originalEnd": 18
+              },
+              "reporter": {
+                "cleanStart": 19,
+                "cleanEnd": 23,
+                "originalStart": 19,
+                "originalEnd": 23
+              },
+              "page": {
+                "cleanStart": 24,
+                "cleanEnd": 27,
+                "originalStart": 24,
+                "originalEnd": 27
+              },
+              "metadataParenthetical": {
+                "cleanStart": 28,
+                "cleanEnd": 34,
+                "originalStart": 28,
+                "originalEnd": 34
+              },
+              "year": {
+                "cleanStart": 29,
+                "cleanEnd": 33,
+                "originalStart": 29,
+                "originalEnd": 33
+              },
+              "caseName": {
+                "cleanStart": 0,
+                "cleanEnd": 13,
+                "originalStart": 0,
+                "originalEnd": 13
+              },
+              "plaintiff": {
+                "cleanStart": 0,
+                "cleanEnd": 5,
+                "originalStart": 0,
+                "originalEnd": 5
+              },
+              "defendant": {
+                "cleanStart": 9,
+                "cleanEnd": 13,
+                "originalStart": 9,
+                "originalEnd": 13
+              }
+            }
+          }
+        },
+        {
+          "kind": "case",
+          "span": {
+            "cleanStart": 52,
+            "cleanEnd": 64,
+            "originalStart": 52,
+            "originalEnd": 64
+          },
+          "observed": {
+            "type": "case",
+            "text": "410 U.S. 114",
+            "confidence": 0.95,
+            "matchedText": "410 U.S. 114",
+            "processTimeMs": 0.399284999999999,
+            "patternsChecked": 1,
+            "volume": 410,
+            "reporter": "U.S.",
+            "page": 114,
+            "court": "scotus",
+            "normalizedCourt": "scotus",
+            "year": 1973,
+            "caseName": "Alpha v. Gamma",
+            "plaintiff": "Alpha",
+            "plaintiffNormalized": "alpha",
+            "defendant": "Gamma",
+            "defendantNormalized": "gamma",
+            "id": "c1",
+            "spans": {
+              "volume": {
+                "cleanStart": 52,
+                "cleanEnd": 55,
+                "originalStart": 52,
+                "originalEnd": 55
+              },
+              "reporter": {
+                "cleanStart": 56,
+                "cleanEnd": 60,
+                "originalStart": 56,
+                "originalEnd": 60
+              },
+              "page": {
+                "cleanStart": 61,
+                "cleanEnd": 64,
+                "originalStart": 61,
+                "originalEnd": 64
+              },
+              "metadataParenthetical": {
+                "cleanStart": 65,
+                "cleanEnd": 71,
+                "originalStart": 65,
+                "originalEnd": 71
+              },
+              "year": {
+                "cleanStart": 66,
+                "cleanEnd": 70,
+                "originalStart": 66,
+                "originalEnd": 70
+              },
+              "caseName": {
+                "cleanStart": 36,
+                "cleanEnd": 50,
+                "originalStart": 36,
+                "originalEnd": 50
+              },
+              "plaintiff": {
+                "cleanStart": 36,
+                "cleanEnd": 41,
+                "originalStart": 36,
+                "originalEnd": 41
+              },
+              "defendant": {
+                "cleanStart": 45,
+                "cleanEnd": 50,
+                "originalStart": 45,
+                "originalEnd": 50
+              }
+            }
+          }
+        },
+        {
+          "kind": "shortFormCase",
+          "span": {
+            "cleanStart": 73,
+            "cleanEnd": 88,
+            "originalStart": 73,
+            "originalEnd": 88
+          },
+          "observed": {
+            "type": "shortFormCase",
+            "text": "410 U.S. at 120",
+            "confidence": 0.7,
+            "matchedText": "410 U.S. at 120",
+            "processTimeMs": 0.40409199999999856,
+            "patternsChecked": 1,
+            "volume": 410,
+            "reporter": "U.S.",
+            "pincite": 120,
+            "id": "c2",
+            "spans": {
+              "pincite": {
+                "cleanStart": 85,
+                "cleanEnd": 88,
+                "originalStart": 85,
+                "originalEnd": 88
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "ambiguous-supra",
+      "citations": [
+        {
+          "kind": "case",
+          "span": {
+            "cleanStart": 15,
+            "cleanEnd": 27,
+            "originalStart": 15,
+            "originalEnd": 27
+          },
+          "observed": {
+            "type": "case",
+            "text": "410 U.S. 113",
+            "confidence": 0.95,
+            "matchedText": "410 U.S. 113",
+            "processTimeMs": 0.17455799999999755,
+            "patternsChecked": 1,
+            "volume": 410,
+            "reporter": "U.S.",
+            "page": 113,
+            "court": "scotus",
+            "normalizedCourt": "scotus",
+            "year": 1973,
+            "caseName": "Alpha v. Beta",
+            "plaintiff": "Alpha",
+            "plaintiffNormalized": "alpha",
+            "defendant": "Beta",
+            "defendantNormalized": "beta",
+            "id": "c0",
+            "spans": {
+              "volume": {
+                "cleanStart": 15,
+                "cleanEnd": 18,
+                "originalStart": 15,
+                "originalEnd": 18
+              },
+              "reporter": {
+                "cleanStart": 19,
+                "cleanEnd": 23,
+                "originalStart": 19,
+                "originalEnd": 23
+              },
+              "page": {
+                "cleanStart": 24,
+                "cleanEnd": 27,
+                "originalStart": 24,
+                "originalEnd": 27
+              },
+              "metadataParenthetical": {
+                "cleanStart": 28,
+                "cleanEnd": 34,
+                "originalStart": 28,
+                "originalEnd": 34
+              },
+              "year": {
+                "cleanStart": 29,
+                "cleanEnd": 33,
+                "originalStart": 29,
+                "originalEnd": 33
+              },
+              "caseName": {
+                "cleanStart": 0,
+                "cleanEnd": 13,
+                "originalStart": 0,
+                "originalEnd": 13
+              },
+              "plaintiff": {
+                "cleanStart": 0,
+                "cleanEnd": 5,
+                "originalStart": 0,
+                "originalEnd": 5
+              },
+              "defendant": {
+                "cleanStart": 9,
+                "cleanEnd": 13,
+                "originalStart": 9,
+                "originalEnd": 13
+              }
+            }
+          }
+        },
+        {
+          "kind": "case",
+          "span": {
+            "cleanStart": 52,
+            "cleanEnd": 64,
+            "originalStart": 52,
+            "originalEnd": 64
+          },
+          "observed": {
+            "type": "case",
+            "text": "410 U.S. 114",
+            "confidence": 0.95,
+            "matchedText": "410 U.S. 114",
+            "processTimeMs": 0.24177199999999743,
+            "patternsChecked": 1,
+            "volume": 410,
+            "reporter": "U.S.",
+            "page": 114,
+            "court": "scotus",
+            "normalizedCourt": "scotus",
+            "year": 1973,
+            "caseName": "Alpha v. Gamma",
+            "plaintiff": "Alpha",
+            "plaintiffNormalized": "alpha",
+            "defendant": "Gamma",
+            "defendantNormalized": "gamma",
+            "id": "c1",
+            "spans": {
+              "volume": {
+                "cleanStart": 52,
+                "cleanEnd": 55,
+                "originalStart": 52,
+                "originalEnd": 55
+              },
+              "reporter": {
+                "cleanStart": 56,
+                "cleanEnd": 60,
+                "originalStart": 56,
+                "originalEnd": 60
+              },
+              "page": {
+                "cleanStart": 61,
+                "cleanEnd": 64,
+                "originalStart": 61,
+                "originalEnd": 64
+              },
+              "metadataParenthetical": {
+                "cleanStart": 65,
+                "cleanEnd": 71,
+                "originalStart": 65,
+                "originalEnd": 71
+              },
+              "year": {
+                "cleanStart": 66,
+                "cleanEnd": 70,
+                "originalStart": 66,
+                "originalEnd": 70
+              },
+              "caseName": {
+                "cleanStart": 36,
+                "cleanEnd": 50,
+                "originalStart": 36,
+                "originalEnd": 50
+              },
+              "plaintiff": {
+                "cleanStart": 36,
+                "cleanEnd": 41,
+                "originalStart": 36,
+                "originalEnd": 41
+              },
+              "defendant": {
+                "cleanStart": 45,
+                "cleanEnd": 50,
+                "originalStart": 45,
+                "originalEnd": 50
+              }
+            }
+          }
+        },
+        {
+          "kind": "supra",
+          "span": {
+            "cleanStart": 73,
+            "cleanEnd": 93,
+            "originalStart": 73,
+            "originalEnd": 93
+          },
+          "observed": {
+            "type": "supra",
+            "text": "Alpha, supra, at 120",
+            "confidence": 0.9,
+            "matchedText": "Alpha, supra, at 120",
+            "processTimeMs": 0.24712999999999852,
+            "patternsChecked": 1,
+            "partyName": "Alpha",
+            "pincite": 120,
+            "id": "c2",
+            "spans": {
+              "pincite": {
+                "cleanStart": 90,
+                "cleanEnd": 93,
+                "originalStart": 90,
+                "originalEnd": 93
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -2327,5 +2327,12 @@
   ],
   "@beep/repo-cli/commands/Compute": [
     "./packages/tooling/tool/cli/src/commands/Compute/index.ts"
+  ],
+  "@beep/eyecite": ["./packages/drivers/eyecite/src/index.ts"],
+  "@beep/eyecite/protocol": [
+    "./packages/drivers/eyecite/src/Eyecite.protocol.ts"
+  ],
+  "@beep/eyecite/recognize": [
+    "./packages/drivers/eyecite/src/Eyecite.recognize.ts"
   ]
 }

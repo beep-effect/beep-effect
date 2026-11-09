@@ -4,17 +4,19 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
-import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
-import * as A from "effect/Array";
+import { Sha256Hex } from "@beep/schema";
 import * as Effect from "effect/Effect";
-import * as Order from "effect/Order";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { CitationDefaultAssetIdentities, makeCitationDefaultConfiguration } from "./DefaultConfiguration.ts";
 import { CitationMetadataYearBound } from "./MetadataYear.ts";
 import { CitationNativeRuntimeKind } from "./NativeProcess.ts";
 import { decodeCitationRegexPolicy } from "./RegexPolicy.ts";
-import { snapshotCitationValue } from "./Snapshot.ts";
+import {
+  captureCitationSnapshot,
+  citationArtifactPolicyEntries,
+  digestCitationArtifactText,
+  snapshotCitationValue,
+} from "./Snapshot.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/EngineArtifact");
 const Version = S.NonEmptyString.check(S.isMaxLength(128));
@@ -93,7 +95,6 @@ const DescriptorType = S.toType(CitationEngineArtifactDescriptor);
 const DescriptorJson = CitationEngineArtifactDescriptor.pipe(S.toCodecJson, S.fromJsonString);
 const BuildJson = CitationEngineBuildIdentity.pipe(S.toCodecJson, S.fromJsonString);
 const LimitsJson = CitationEngineLimits.pipe(S.toCodecJson, S.fromJsonString);
-const encodeLimits = S.encodeEffect(CitationEngineLimits);
 const encodePreimage = S.encodeEffect(Preimage);
 /** Snapshot schema data before hashing. Tuple positions and sorted policy keys
  * remove property insertion-order dependence; no generic serializer is added.
@@ -101,13 +102,8 @@ const encodePreimage = S.encodeEffect(Preimage);
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationEngineArtifact = Effect.fn("Citation.makeEngineArtifact")(function* (input: unknown) {
-  const decoded = yield* S.decodeUnknownEffect(DescriptorType)(input).pipe(Effect.mapError(invalid));
-  const descriptor = yield* snapshotCitationValue(DescriptorJson, decoded, invalid);
-  const limits = yield* encodeLimits(descriptor.limits).pipe(Effect.mapError(invalid));
-  const entries = A.sort(
-    R.toEntries(limits),
-    Order.mapInput(Order.String, (row: readonly [string, number]) => row[0])
-  );
+  const descriptor = yield* captureCitationSnapshot(DescriptorType, DescriptorJson, input, invalid);
+  const entries = yield* citationArtifactPolicyEntries(descriptor.limits, invalid);
   const build = descriptor.build;
   const text = yield* encodePreimage([
     "citation-engine-artifact/v1",
@@ -124,10 +120,7 @@ export const makeCitationEngineArtifact = Effect.fn("Citation.makeEngineArtifact
     descriptor.highestValidYear,
     entries,
   ]).pipe(Effect.mapError(invalid));
-  return yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(text)).pipe(
-    Effect.mapError(invalid),
-    Effect.catchDefect(() => Effect.fail(invalid()))
-  );
+  return yield* digestCitationArtifactText(text, invalid);
 });
 /** Bind identity to configuration actually installed from authenticated assets.
  * The trusted installer supplies build metadata. Its runtime kind must match the

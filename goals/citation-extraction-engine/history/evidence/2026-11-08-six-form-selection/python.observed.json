@@ -1,0 +1,922 @@
+{
+  "lane": "python",
+  "runtime": "3.11.15",
+  "profileStatus": "frozen-before-selection-run",
+  "purpose": "Diagnostic projection of captured parser fields, not a normalized or passing contract result.",
+  "originalLocalRawSha256": "db864d36d0b42579e8ae7d723659e8ab61ca104056e2687a80df58bd6f368f78",
+  "rows": [
+    {
+      "id": "public-full-doe",
+      "citations": [
+        {
+          "kind": "FullCaseCitation",
+          "span": [15, 28],
+          "observed": {
+            "kind": "FullCaseCitation",
+            "tokenText": "410 U. S. 179",
+            "groups": {
+              "volume": "410",
+              "reporter": "U. S.",
+              "page": "179"
+            },
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": "198",
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": 33,
+              "year": "1973",
+              "month": null,
+              "day": null,
+              "court": "scotus",
+              "plaintiff": "Doe",
+              "defendant": "Bolton",
+              "extra": null,
+              "antecedent_guess": null,
+              "resolved_case_name_short": null,
+              "resolved_case_name": null
+            },
+            "spanCodePoints": [15, 28],
+            "spanUtf16": [15, 28]
+          }
+        }
+      ],
+      "resolvedGroups": [[0]]
+    },
+    {
+      "id": "public-short-roe",
+      "citations": [
+        {
+          "kind": "ShortCaseCitation",
+          "span": [0, 14],
+          "observed": {
+            "kind": "ShortCaseCitation",
+            "tokenText": "410 U. S., at 154",
+            "groups": {
+              "volume": "410",
+              "reporter": "U. S.",
+              "page": "154"
+            },
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": null,
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "court": "scotus",
+              "antecedent_guess": null
+            },
+            "spanCodePoints": [0, 14],
+            "spanUtf16": [0, 14]
+          }
+        }
+      ],
+      "resolvedGroups": []
+    },
+    {
+      "id": "public-supra-roe",
+      "citations": [
+        {
+          "kind": "SupraCitation",
+          "span": [5, 18],
+          "observed": {
+            "kind": "SupraCitation",
+            "tokenText": "supra,",
+            "groups": {},
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": "at 162",
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": null,
+              "antecedent_guess": "Roe",
+              "volume": null
+            },
+            "spanCodePoints": [5, 18],
+            "spanUtf16": [5, 18]
+          }
+        }
+      ],
+      "resolvedGroups": []
+    },
+    {
+      "id": "public-id-orphan",
+      "citations": [
+        {
+          "kind": "IdCitation",
+          "span": [0, 11],
+          "observed": {
+            "kind": "IdCitation",
+            "tokenText": "Id.,",
+            "groups": {},
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": "at 163",
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": null
+            },
+            "spanCodePoints": [0, 11],
+            "spanUtf16": [0, 11]
+          }
+        }
+      ],
+      "resolvedGroups": []
+    },
+    {
+      "id": "public-usc-context",
+      "citations": [],
+      "resolvedGroups": []
+    },
+    {
+      "id": "public-cfr-context",
+      "citations": [],
+      "resolvedGroups": []
+    },
+    {
+      "id": "regression-full",
+      "citations": [
+        {
+          "kind": "FullCaseCitation",
+          "span": [13, 25],
+          "observed": {
+            "kind": "FullCaseCitation",
+            "tokenText": "410 U.S. 113",
+            "groups": {
+              "volume": "410",
+              "reporter": "U.S.",
+              "page": "113"
+            },
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": "120",
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": 30,
+              "year": "1973",
+              "month": null,
+              "day": null,
+              "court": "scotus",
+              "plaintiff": "Roe",
+              "defendant": "Wade",
+              "extra": null,
+              "antecedent_guess": null,
+              "resolved_case_name_short": null,
+              "resolved_case_name": null
+            },
+            "spanCodePoints": [13, 25],
+            "spanUtf16": [13, 25]
+          }
+        }
+      ],
+      "resolvedGroups": [[0]]
+    },
+    {
+      "id": "regression-short",
+      "citations": [
+        {
+          "kind": "ShortCaseCitation",
+          "span": [4, 19],
+          "observed": {
+            "kind": "ShortCaseCitation",
+            "tokenText": "410 U.S. at 120",
+            "groups": {
+              "volume": "410",
+              "reporter": "U.S.",
+              "page": "120"
+            },
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": "120",
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "court": "scotus",
+              "antecedent_guess": null
+            },
+            "spanCodePoints": [4, 19],
+            "spanUtf16": [4, 19]
+          }
+        }
+      ],
+      "resolvedGroups": []
+    },
+    {
+      "id": "regression-id",
+      "citations": [
+        {
+          "kind": "IdCitation",
+          "span": [0, 10],
+          "observed": {
+            "kind": "IdCitation",
+            "tokenText": "Id.",
+            "groups": {},
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": "at 120",
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": null
+            },
+            "spanCodePoints": [0, 10],
+            "spanUtf16": [0, 10]
+          }
+        }
+      ],
+      "resolvedGroups": []
+    },
+    {
+      "id": "regression-supra",
+      "citations": [
+        {
+          "kind": "SupraCitation",
+          "span": [7, 18],
+          "observed": {
+            "kind": "SupraCitation",
+            "tokenText": "supra,",
+            "groups": {},
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": "at 3",
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": null,
+              "antecedent_guess": "Smith",
+              "volume": null
+            },
+            "spanCodePoints": [7, 18],
+            "spanUtf16": [7, 18]
+          }
+        }
+      ],
+      "resolvedGroups": []
+    },
+    {
+      "id": "regression-usc",
+      "citations": [
+        {
+          "kind": "FullLawCitation",
+          "span": [0, 15],
+          "observed": {
+            "kind": "FullLawCitation",
+            "tokenText": "35 U.S.C. § 101",
+            "groups": {
+              "title": "35",
+              "reporter": "U.S.C.",
+              "section": "101"
+            },
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": null,
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "publisher": null
+            },
+            "spanCodePoints": [0, 15],
+            "spanUtf16": [0, 15]
+          }
+        }
+      ],
+      "resolvedGroups": [[0]]
+    },
+    {
+      "id": "regression-cfr",
+      "citations": [
+        {
+          "kind": "FullLawCitation",
+          "span": [0, 16],
+          "observed": {
+            "kind": "FullLawCitation",
+            "tokenText": "37 C.F.R. § 1.56",
+            "groups": {
+              "chapter": "37",
+              "reporter": "C.F.R.",
+              "section": "1.56"
+            },
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": null,
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "publisher": null
+            },
+            "spanCodePoints": [0, 16],
+            "spanUtf16": [0, 16]
+          }
+        }
+      ],
+      "resolvedGroups": [[0]]
+    },
+    {
+      "id": "astral-prefix",
+      "citations": [
+        {
+          "kind": "FullCaseCitation",
+          "span": [7, 19],
+          "observed": {
+            "kind": "FullCaseCitation",
+            "tokenText": "410 U.S. 113",
+            "groups": {
+              "volume": "410",
+              "reporter": "U.S.",
+              "page": "113"
+            },
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": null,
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": null,
+              "year": "1973",
+              "month": null,
+              "day": null,
+              "court": "scotus",
+              "plaintiff": null,
+              "defendant": null,
+              "extra": null,
+              "antecedent_guess": null,
+              "resolved_case_name_short": null,
+              "resolved_case_name": null
+            },
+            "spanCodePoints": [6, 18],
+            "spanUtf16": [7, 19]
+          }
+        }
+      ],
+      "resolvedGroups": [[0]]
+    },
+    {
+      "id": "combining-prefix",
+      "citations": [
+        {
+          "kind": "FullCaseCitation",
+          "span": [12, 24],
+          "observed": {
+            "kind": "FullCaseCitation",
+            "tokenText": "410 U.S. 113",
+            "groups": {
+              "volume": "410",
+              "reporter": "U.S.",
+              "page": "113"
+            },
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": null,
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": null,
+              "year": "1973",
+              "month": null,
+              "day": null,
+              "court": "scotus",
+              "plaintiff": null,
+              "defendant": null,
+              "extra": null,
+              "antecedent_guess": null,
+              "resolved_case_name_short": null,
+              "resolved_case_name": null
+            },
+            "spanCodePoints": [12, 24],
+            "spanUtf16": [12, 24]
+          }
+        }
+      ],
+      "resolvedGroups": [[0]]
+    },
+    {
+      "id": "usc-subsection",
+      "citations": [
+        {
+          "kind": "FullLawCitation",
+          "span": [6, 21],
+          "observed": {
+            "kind": "FullLawCitation",
+            "tokenText": "35 U.S.C. § 112",
+            "groups": {
+              "title": "35",
+              "reporter": "U.S.C.",
+              "section": "112"
+            },
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": "(a)",
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "publisher": null
+            },
+            "spanCodePoints": [6, 21],
+            "spanUtf16": [6, 21]
+          }
+        }
+      ],
+      "resolvedGroups": [[0]]
+    },
+    {
+      "id": "usc-nested-subsection",
+      "citations": [
+        {
+          "kind": "FullLawCitation",
+          "span": [0, 15],
+          "observed": {
+            "kind": "FullLawCitation",
+            "tokenText": "35 U.S.C. § 102",
+            "groups": {
+              "title": "35",
+              "reporter": "U.S.C.",
+              "section": "102"
+            },
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": "(a)(1)",
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "publisher": null
+            },
+            "spanCodePoints": [0, 15],
+            "spanUtf16": [0, 15]
+          }
+        }
+      ],
+      "resolvedGroups": [[0]]
+    },
+    {
+      "id": "cfr-subsection",
+      "citations": [
+        {
+          "kind": "FullLawCitation",
+          "span": [6, 22],
+          "observed": {
+            "kind": "FullLawCitation",
+            "tokenText": "37 C.F.R. § 1.56",
+            "groups": {
+              "chapter": "37",
+              "reporter": "C.F.R.",
+              "section": "1.56"
+            },
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": "(c)",
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "publisher": null
+            },
+            "spanCodePoints": [6, 22],
+            "spanUtf16": [6, 22]
+          }
+        }
+      ],
+      "resolvedGroups": [[0]]
+    },
+    {
+      "id": "duplicate-cfr",
+      "citations": [],
+      "resolvedGroups": []
+    },
+    {
+      "id": "negative-empty",
+      "citations": [],
+      "error": "Both `markup_text` and `plain_text` are empty"
+    },
+    {
+      "id": "negative-prose",
+      "citations": [],
+      "resolvedGroups": []
+    },
+    {
+      "id": "negative-numbers",
+      "citations": [],
+      "resolvedGroups": []
+    },
+    {
+      "id": "negative-section",
+      "citations": [],
+      "resolvedGroups": []
+    },
+    {
+      "id": "outside-usc-title",
+      "citations": [
+        {
+          "kind": "FullLawCitation",
+          "span": [0, 16],
+          "observed": {
+            "kind": "FullLawCitation",
+            "tokenText": "42 U.S.C. § 1983",
+            "groups": {
+              "title": "42",
+              "reporter": "U.S.C.",
+              "section": "1983"
+            },
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": null,
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "publisher": null
+            },
+            "spanCodePoints": [0, 16],
+            "spanUtf16": [0, 16]
+          }
+        }
+      ],
+      "resolvedGroups": [[0]]
+    },
+    {
+      "id": "outside-journal",
+      "citations": [
+        {
+          "kind": "FullJournalCitation",
+          "span": [0, 21],
+          "observed": {
+            "kind": "FullJournalCitation",
+            "tokenText": "123 Harv. L. Rev. 456",
+            "groups": {
+              "volume": "123",
+              "reporter": "Harv. L. Rev.",
+              "page": "456"
+            },
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": null,
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": null,
+              "year": null,
+              "month": null,
+              "day": null
+            },
+            "spanCodePoints": [0, 21],
+            "spanUtf16": [0, 21]
+          }
+        }
+      ],
+      "resolvedGroups": [[0]]
+    },
+    {
+      "id": "local-id",
+      "citations": [
+        {
+          "kind": "FullCaseCitation",
+          "span": [13, 25],
+          "observed": {
+            "kind": "FullCaseCitation",
+            "tokenText": "410 U.S. 113",
+            "groups": {
+              "volume": "410",
+              "reporter": "U.S.",
+              "page": "113"
+            },
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": null,
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": null,
+              "year": "1973",
+              "month": null,
+              "day": null,
+              "court": "scotus",
+              "plaintiff": "Roe",
+              "defendant": "Wade",
+              "extra": null,
+              "antecedent_guess": null,
+              "resolved_case_name_short": null,
+              "resolved_case_name": null
+            },
+            "spanCodePoints": [13, 25],
+            "spanUtf16": [13, 25]
+          }
+        },
+        {
+          "kind": "IdCitation",
+          "span": [34, 44],
+          "observed": {
+            "kind": "IdCitation",
+            "tokenText": "Id.",
+            "groups": {},
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": "at 120",
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": null
+            },
+            "spanCodePoints": [34, 44],
+            "spanUtf16": [34, 44]
+          }
+        }
+      ],
+      "resolvedGroups": [[0, 1]]
+    },
+    {
+      "id": "local-short",
+      "citations": [
+        {
+          "kind": "FullCaseCitation",
+          "span": [13, 25],
+          "observed": {
+            "kind": "FullCaseCitation",
+            "tokenText": "410 U.S. 113",
+            "groups": {
+              "volume": "410",
+              "reporter": "U.S.",
+              "page": "113"
+            },
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": null,
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": null,
+              "year": "1973",
+              "month": null,
+              "day": null,
+              "court": "scotus",
+              "plaintiff": "Roe",
+              "defendant": "Wade",
+              "extra": null,
+              "antecedent_guess": null,
+              "resolved_case_name_short": null,
+              "resolved_case_name": null
+            },
+            "spanCodePoints": [13, 25],
+            "spanUtf16": [13, 25]
+          }
+        },
+        {
+          "kind": "ShortCaseCitation",
+          "span": [34, 49],
+          "observed": {
+            "kind": "ShortCaseCitation",
+            "tokenText": "410 U.S. at 120",
+            "groups": {
+              "volume": "410",
+              "reporter": "U.S.",
+              "page": "120"
+            },
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": "120",
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": null,
+              "year": "1973",
+              "month": null,
+              "day": null,
+              "court": "scotus",
+              "antecedent_guess": "Wade"
+            },
+            "spanCodePoints": [34, 49],
+            "spanUtf16": [34, 49]
+          }
+        }
+      ],
+      "resolvedGroups": [[0, 1]]
+    },
+    {
+      "id": "local-supra",
+      "citations": [
+        {
+          "kind": "FullCaseCitation",
+          "span": [13, 25],
+          "observed": {
+            "kind": "FullCaseCitation",
+            "tokenText": "410 U.S. 113",
+            "groups": {
+              "volume": "410",
+              "reporter": "U.S.",
+              "page": "113"
+            },
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": null,
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": null,
+              "year": "1973",
+              "month": null,
+              "day": null,
+              "court": "scotus",
+              "plaintiff": "Roe",
+              "defendant": "Wade",
+              "extra": null,
+              "antecedent_guess": null,
+              "resolved_case_name_short": null,
+              "resolved_case_name": null
+            },
+            "spanCodePoints": [13, 25],
+            "spanUtf16": [13, 25]
+          }
+        },
+        {
+          "kind": "SupraCitation",
+          "span": [39, 52],
+          "observed": {
+            "kind": "SupraCitation",
+            "tokenText": "supra,",
+            "groups": {},
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": "at 162",
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": null,
+              "antecedent_guess": "Roe",
+              "volume": null
+            },
+            "spanCodePoints": [39, 52],
+            "spanUtf16": [39, 52]
+          }
+        }
+      ],
+      "resolvedGroups": [[0, 1]]
+    },
+    {
+      "id": "ambiguous-short",
+      "citations": [
+        {
+          "kind": "FullCaseCitation",
+          "span": [15, 27],
+          "observed": {
+            "kind": "FullCaseCitation",
+            "tokenText": "410 U.S. 113",
+            "groups": {
+              "volume": "410",
+              "reporter": "U.S.",
+              "page": "113"
+            },
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": null,
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": null,
+              "year": "1973",
+              "month": null,
+              "day": null,
+              "court": "scotus",
+              "plaintiff": "Alpha",
+              "defendant": "Beta",
+              "extra": null,
+              "antecedent_guess": null,
+              "resolved_case_name_short": null,
+              "resolved_case_name": null
+            },
+            "spanCodePoints": [15, 27],
+            "spanUtf16": [15, 27]
+          }
+        },
+        {
+          "kind": "FullCaseCitation",
+          "span": [52, 64],
+          "observed": {
+            "kind": "FullCaseCitation",
+            "tokenText": "410 U.S. 114",
+            "groups": {
+              "volume": "410",
+              "reporter": "U.S.",
+              "page": "114"
+            },
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": null,
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": null,
+              "year": "1973",
+              "month": null,
+              "day": null,
+              "court": "scotus",
+              "plaintiff": "",
+              "defendant": "Beta",
+              "extra": null,
+              "antecedent_guess": null,
+              "resolved_case_name_short": null,
+              "resolved_case_name": null
+            },
+            "spanCodePoints": [52, 64],
+            "spanUtf16": [52, 64]
+          }
+        },
+        {
+          "kind": "ShortCaseCitation",
+          "span": [73, 88],
+          "observed": {
+            "kind": "ShortCaseCitation",
+            "tokenText": "410 U.S. at 120",
+            "groups": {
+              "volume": "410",
+              "reporter": "U.S.",
+              "page": "120"
+            },
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": "120",
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": null,
+              "year": "1973",
+              "month": null,
+              "day": null,
+              "court": "scotus",
+              "antecedent_guess": "Beta"
+            },
+            "spanCodePoints": [73, 88],
+            "spanUtf16": [73, 88]
+          }
+        }
+      ],
+      "resolvedGroups": [[0], [1]]
+    },
+    {
+      "id": "ambiguous-supra",
+      "citations": [
+        {
+          "kind": "FullCaseCitation",
+          "span": [15, 27],
+          "observed": {
+            "kind": "FullCaseCitation",
+            "tokenText": "410 U.S. 113",
+            "groups": {
+              "volume": "410",
+              "reporter": "U.S.",
+              "page": "113"
+            },
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": null,
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": null,
+              "year": "1973",
+              "month": null,
+              "day": null,
+              "court": "scotus",
+              "plaintiff": "Alpha",
+              "defendant": "Beta",
+              "extra": null,
+              "antecedent_guess": null,
+              "resolved_case_name_short": null,
+              "resolved_case_name": null
+            },
+            "spanCodePoints": [15, 27],
+            "spanUtf16": [15, 27]
+          }
+        },
+        {
+          "kind": "FullCaseCitation",
+          "span": [52, 64],
+          "observed": {
+            "kind": "FullCaseCitation",
+            "tokenText": "410 U.S. 114",
+            "groups": {
+              "volume": "410",
+              "reporter": "U.S.",
+              "page": "114"
+            },
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": null,
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": null,
+              "year": "1973",
+              "month": null,
+              "day": null,
+              "court": "scotus",
+              "plaintiff": "",
+              "defendant": "Beta",
+              "extra": null,
+              "antecedent_guess": null,
+              "resolved_case_name_short": null,
+              "resolved_case_name": null
+            },
+            "spanCodePoints": [52, 64],
+            "spanUtf16": [52, 64]
+          }
+        },
+        {
+          "kind": "SupraCitation",
+          "span": [80, 93],
+          "observed": {
+            "kind": "SupraCitation",
+            "tokenText": "supra,",
+            "groups": {},
+            "metadata": {
+              "parenthetical": null,
+              "pin_cite": "at 120",
+              "pin_cite_span_start": null,
+              "pin_cite_span_end": null,
+              "antecedent_guess": "Alpha",
+              "volume": null
+            },
+            "spanCodePoints": [80, 93],
+            "spanUtf16": [80, 93]
+          }
+        }
+      ],
+      "resolvedGroups": [[0, 2], [1]]
+    }
+  ]
+}

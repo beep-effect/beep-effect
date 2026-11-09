@@ -1,0 +1,12 @@
+{
+  "purpose": "Finite adapter diagnostics, not production or resource acceptance",
+  "files": {
+    "README.md": "965ba7580fce3dedf861410dd37e0864991866abc878aac02b2840058a4a4e74",
+    "capture-provenance.json": "c719a9a95b54ac5760b07f3eb336ecd14c940e7293c306cf64bee3c0b7f4752e",
+    "effect-boundary-audit.md.txt": "286cb1de7df1d0eeb2911b587ae6915e20d55ae617d688ffb955cfeddcf2a0da",
+    "native-full.ts.txt": "9bcf93d475b5fceb50aa17342eb132c11748969db378d8cdecaab2146dbf8b2c",
+    "native.observed.json": "c0a684d37ec229c28cc3d78b127474ac2615044cf3760cce59fe1b206d544e87",
+    "typed-prototype.observed.json": "8ffc928380396eacb1bfae283e4e9822b392af43f8afdb3ceac40821cc0de96d",
+    "typed-prototype.ts.txt": "960fb16ebb5f8d2f059a489e8c2fa3c9c9d53cbaddd41095fc32701f5a078887"
+  }
+}

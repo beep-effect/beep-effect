@@ -105,3 +105,13 @@ export {
   CitationEngineDefaultLive,
   CitationEngineLive,
 } from "./CitationEngine/CitationEngine.layer.ts";
+/** Six-form plain-text extraction with verified original source and local links.
+ * **Example** (Inspect the bounded extraction Layer)
+ * ```ts
+ * import { CitationExtractorLive } from "@beep/law-practice-server/layer"
+ * console.log(typeof CitationExtractorLive) // "function"
+ * ```
+ * @category layers
+ * @since 0.0.0
+ */
+export { CitationExtractorConfiguration, CitationExtractorLive } from "./CitationExtractor/CitationExtractor.layer.ts";
