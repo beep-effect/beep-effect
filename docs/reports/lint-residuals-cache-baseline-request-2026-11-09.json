@@ -1,5 +1,5 @@
 {
-  "previous": "f4891045b05bbf9b19ac245e8a938e35f27dd3ef2110113b1a9030f8a6def135",
+  "previous": "7faffafad5c3ac1e544377b8a090b11adbf7d2fbe212e686189e2fde08dc1696",
   "review": {
     "reviewer": "Claude Opus 5.5 (perf/lint-residuals seal stage)",
     "reason": "Negate dot-directory residue in lint:effect-vitest to match its scanner, derive both effect-imports rows from the scanner's corpus constants (631 code and 4479 Markdown sources were read but unhashed), and make lint:schema-tag-idioms, lint:jsdoc-module-tags and lint:effect-imports-markdown uncached tracked-discovery tasks, and hash the vitest configs the effect-vitest browser-mode filter parses; no qualification change.",

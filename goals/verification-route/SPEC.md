@@ -222,7 +222,7 @@ _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions wr
 
 Census rank 2 narrowed to the two lanes where the absence is provable from the checkout: packet markdown is root-owned (outside every workspace glob), turbo registers no //#build or //#check, and no non-test source imports .md/.mdx. Both lanes read the tree only, so the commits atom is removed too. Packet data stays in both footprints. Fixtures: test/ci-route-refinements.test.ts; replay: research/slice-2-replay.md.
 
-Lane `feat/verification-route-slice-2`
+Lane feat/verification-route-slice-2
 
 Reverse: Set the refinement's mode to shadow, or revoke it in standards/verification-route.sentinel.json
 
@@ -230,7 +230,7 @@ Reverse: Set the refinement's mode to shadow, or revoke it in standards/verifica
 
 tsconfig-sync writes standards/root-package.projection.generated.json (every top-level field but catalog, scripts included) and config-sync:check drift-checks it; turbo.json global.inputs carries the projection instead of package.json, in one commit. Measured under turbo 2.11.10: a catalog bump of a dependency the root does not itself depend on invalidates only its dependents (fixture: verification-layer1-turbo.test.ts, gated by BEEP_LAYER1_DRYRUN). A bump of a root dependency (the Biome case in SPEC's acceptance row) still invalidates every task because turbo hashes the root's external dependencies into each task; moving Biome out of the root manifest is outside this goal. SPEC's row is met as written, since every lane's footprint still names pkg:catalog. The 25 package-local turbo.json files were swept and none re-adds the root manifest.
 
-Lane `feat/verification-route-slice-2`
+Lane feat/verification-route-slice-2
 
 Reverse: Restore package.json in turbo.json global.inputs and drop the projection section from tsconfig-sync
 
@@ -238,7 +238,7 @@ Reverse: Restore package.json in turbo.json global.inputs and drop the projectio
 
 No slice-2 refinement selects lanes from affected packages; every decision comes from atoms whose owners already resolve at the commit. The SPEC row about the head graph applies only once a lane selects from affected packages, which slice 2 does not do.
 
-Lane `feat/verification-route-slice-2`
+Lane feat/verification-route-slice-2
 
 Reverse: Read the workspace graph at the head (batched git cat-file) when a lane first selects from affected packages
 
@@ -246,7 +246,7 @@ Reverse: Read the workspace graph at the head (batched git cat-file) when a lane
 
 ROUTE_REFINEMENTS beside ROUTE_FOOTPRINTS; each row's kinds are derived from it so a refinement and its footprint effect cannot drift. Only enforced refinements not listed in the tracked standards/verification-route.sentinel.json skip a lane (routeLaneDecision); revoking is a one-line commit.
 
-Lane `feat/verification-route-slice-2`
+Lane feat/verification-route-slice-2
 
 Reverse: Inline the removals into ROUTE_FOOTPRINTS and delete the sentinel file
 
@@ -254,7 +254,7 @@ Reverse: Inline the removals into ROUTE_FOOTPRINTS and delete the sentinel file
 
 Census rank 3 is unsound as stated: apps/docket-intake, apps/labs/ciops and others build with tsrs -p tsconfig.check.json, which includes test/, and their package-local turbo.json re-includes test/ in build inputs.
 
-Lane `feat/verification-route-slice-2`
+Lane feat/verification-route-slice-2
 
 Reverse: Admit it per package once app builds stop type-checking test/
 
@@ -270,7 +270,7 @@ The research-intake-2026-11 intake routed 252 findings to this packet (123 affir
 
 This amendment adds evidence only; it changes no acceptance criterion. The owning lane decides whether any finding changes its plan.
 
-Lane `feat/research-intake-2026-11`
+Lane feat/research-intake-2026-11
 
 Reverse: Delete this decision file and regenerate the block; the findings stay in the library and in research-intake-2026-11/research/routing.jsonl
 
@@ -278,7 +278,7 @@ Reverse: Delete this decision file and regenerate the block; the findings stay i
 
 Census rank 1. New kinds are on every footprint, so the change is sound by construction. src:test no longer matches a file under the owner's src/ (packages/foundation/modeling/schema/src/internal/test/Markdown.test-kit.ts compiles into dist), and packet roots win over the test rule (goals/**/test/items.json is packet data).
 
-Lane `feat/verification-route-slice-2`
+Lane feat/verification-route-slice-2
 
 Reverse: Drop the three kinds and restore the directory-anywhere src:test rule
 

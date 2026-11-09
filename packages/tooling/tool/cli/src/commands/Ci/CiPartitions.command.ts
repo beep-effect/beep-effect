@@ -42,6 +42,7 @@ import {
   CI_SHARDED_PARTITION_FILE_BUDGET_SECONDS,
   CI_SHARDED_PARTITION_SOURCES,
   CI_UNIT_BIN_SERIAL_BUDGET_SECONDS,
+  CI_UNIT_BIN_START_FIRST_SECONDS,
   CiPartitionBudgetRow,
   CiPartitionFileTiming,
   CiPartitionRebalanceReport,
@@ -488,14 +489,24 @@ const binProposalLines = Effect.fn("CiPartitions.binProposalLines")(function* (
     A.flatMap(bins, (bin) => bin.packages),
     (name) => !A.contains(measuredNames, name)
   );
-  const proposal = lptAssign(
+  const proposal: ReadonlyArray<LptBin<string>> = lptAssign(
     A.map(measured, ([name, seconds]) => ({ key: name, weight: seconds, value: name })),
     A.length(bins)
   );
+  const secondsByName = HashMap.fromIterable(measured);
+  const secondsOf = (name: string) => O.getOrElse(HashMap.get(secondsByName, name), () => 0);
   return [
     `bin proposal: ${A.length(measured)} measured packages over ${A.length(bins)} bins (serial sums; budget ${CI_UNIT_BIN_SERIAL_BUDGET_SECONDS} s)`,
     ...A.flatMap(A.zip(bins, proposal), ([bin, packed]) => [
       `  ${bin.id}: weightSeconds ${Math.round(packed.load)} (table ${bin.weightSeconds})`,
+      // Items arrive heaviest first, which is the start order.
+      `    startFirst: [${A.join(
+        A.map(
+          A.filter(packed.items, (name: string) => secondsOf(name) >= CI_UNIT_BIN_START_FIRST_SECONDS),
+          (name: string) => `"${name}" /* ${Math.round(secondsOf(name))} s */`
+        ),
+        ", "
+      )}],`,
       ...A.map(A.sort(packed.items, Order.String), (name) => `    "${name}",`),
     ]),
     ...(A.isReadonlyArrayNonEmpty(unmeasured)

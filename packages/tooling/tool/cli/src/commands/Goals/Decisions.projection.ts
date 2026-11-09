@@ -20,11 +20,13 @@ import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Struct from "effect/Struct";
 import {
   GOAL_DECISIONS_DIR,
   GoalDecision,
@@ -36,6 +38,7 @@ import {
   GoalDecisionProjection,
   GoalDecisionTarget,
 } from "./Decisions.schemas.ts";
+import type * as SchemaIssue from "effect/SchemaIssue";
 import type { GoalPacketRecord } from "./Inventory.ts";
 
 /**
@@ -120,7 +123,33 @@ export interface GoalDecisionReader<E, R> {
 }
 
 const isDecisionFileName = S.is(GoalDecisionFileName);
-const decodeFrontmatter = S.decodeUnknownEffect(GoalDecisionFrontmatter);
+const decodeFrontmatter = S.decodeUnknownEffect(GoalDecisionFrontmatter, { onExcessProperty: "error", errors: "all" });
+
+const allowedFrontmatterKeys = A.join(Struct.keys(GoalDecisionFrontmatter.fields), ", ");
+
+// OneOf is a leaf in effect/SchemaIssue (it carries successes, not child issues), so the
+// walk only descends through Pointer, Composite, AnyOf, Filter and Encoding.
+const unexpectedKeysMatcher = Match.type<SchemaIssue.Issue>().pipe(
+  Match.tag(
+    "Pointer",
+    (pointer) => (path: ReadonlyArray<PropertyKey>) => unexpectedKeys(pointer.issue, A.appendAll(path, pointer.path))
+  ),
+  Match.tag(
+    "Composite",
+    "AnyOf",
+    (group) => (path: ReadonlyArray<PropertyKey>) => A.flatMap(group.issues, (child) => unexpectedKeys(child, path))
+  ),
+  Match.tag(
+    "Filter",
+    "Encoding",
+    (wrapper) => (path: ReadonlyArray<PropertyKey>) => unexpectedKeys(wrapper.issue, path)
+  ),
+  Match.tag("UnexpectedKey", () => (path: ReadonlyArray<PropertyKey>) => A.of(pipe(path, A.map(String), A.join(".")))),
+  Match.orElse(() => (_path: ReadonlyArray<PropertyKey>) => A.empty<string>())
+);
+
+const unexpectedKeys = (issue: SchemaIssue.Issue, path: ReadonlyArray<PropertyKey>): ReadonlyArray<string> =>
+  unexpectedKeysMatcher(issue)(path);
 
 const invalid = (file: string, message: string): Result.Result<GoalDecision, GoalDecisionFileInvalid> =>
   Result.fail(GoalDecisionFileInvalid.make({ file, message }));
@@ -130,6 +159,13 @@ const fileDate = (file: string): string => Str.slice(0, 10)(file);
 /**
  * Parses one decision file: name grammar, YAML frontmatter and the
  * name/frontmatter date agreement.
+ *
+ * **Details**
+ *
+ * Frontmatter decodes with `onExcessProperty: "error"`: a key outside
+ * {@link GoalDecisionFrontmatter} (a misspelled `pr` for `pullRequest`, say)
+ * rejects the file with a message naming every such key, instead of being
+ * stripped and silently dropping the attribution.
  *
  * **Example** (Parse a valid file)
  *
@@ -161,7 +197,14 @@ export const parseGoalDecision = Effect.fn("Goals.parseGoalDecision")(function* 
     Effect.result
   );
   if (Result.isFailure(decoded)) {
+    const unknownKeys = S.isSchemaError(decoded.failure) ? unexpectedKeys(decoded.failure.issue, A.empty()) : A.empty();
     const issue = pipe(String(decoded.failure.message), Str.replace(/\s+/g, " "), Str.slice(0, 200));
+    if (A.isReadonlyArrayNonEmpty(unknownKeys)) {
+      return invalid(
+        file,
+        `frontmatter has key(s) outside GoalDecisionFrontmatter: ${A.join(unknownKeys, ", ")} (allowed: ${allowedFrontmatterKeys}). All decode issues: ${issue}`
+      );
+    }
     return invalid(file, `frontmatter does not decode as GoalDecisionFrontmatter: ${issue}`);
   }
   const frontmatter = decoded.success;
@@ -176,9 +219,11 @@ const byDateThenFile: Order.Order<GoalDecision> = Order.combine(
   Order.mapInput(Order.String, (decision: GoalDecision) => decision.file)
 );
 
+// The lane is a branch name, not a tracked path: it stays plain text so the knowledge gates never
+// probe it as a repository path once the lane branch is gone.
 const attribution = (decision: GoalDecision): O.Option<string> => {
   const parts = A.getSomes([
-    O.map(O.fromUndefinedOr(decision.frontmatter.lane), (lane) => `Lane \`${lane}\``),
+    O.map(O.fromUndefinedOr(decision.frontmatter.lane), (lane) => `Lane ${lane}`),
     O.map(O.fromUndefinedOr(decision.frontmatter.pullRequest), (pr) => `PR #${pr}`),
   ]);
   return A.isReadonlyArrayNonEmpty(parts) ? O.some(A.join(parts, " · ")) : O.none();

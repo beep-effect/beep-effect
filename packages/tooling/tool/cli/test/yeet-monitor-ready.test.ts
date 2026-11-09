@@ -9,11 +9,16 @@ import {
   readYeetAckState,
   runYeetMonitorUntilMerged,
   writeYeetAckReceipt,
+  YEET_MONITOR_POLL_ERROR_BUDGET,
+  YEET_MONITOR_RATE_LIMIT_BUDGET,
   YeetAckFixResolution,
   YeetAckReceipt,
   YeetCheckFailedRow,
   YeetCommandError,
   YeetFailureCapsule,
+  YeetGithubRateLimitBucket,
+  YeetGithubRateLimitResources,
+  YeetGithubRateLimitSnapshot,
   YeetInboxRowJson,
   YeetMergeReady,
   YeetMergeReadyCriteria,
@@ -69,6 +74,14 @@ const url = "https://github.com/beep/repo/pull/7";
 const head = "aaaaaaa1111111";
 const nextHead = "bbbbbbb2222222";
 const failure = YeetCommandError.make({ message: "read unavailable", exitCode: 1 });
+// A `GET /rate_limit` read whose resets are long past, so a pause clamps to the poll interval.
+const rateLimitRead = (core: number, graphql: number) =>
+  YeetGithubRateLimitSnapshot.make({
+    resources: YeetGithubRateLimitResources.make({
+      core: YeetGithubRateLimitBucket.make({ remaining: core, reset: 1 }),
+      graphql: YeetGithubRateLimitBucket.make({ remaining: graphql, reset: 1 }),
+    }),
+  });
 const check = (name = "Lint", outcome: typeof YeetWatchCheck.Type.outcome = "pass", required = true) =>
   YeetWatchCheck.make({ name, outcome, required });
 const contextFor = (root: string) =>
@@ -606,6 +619,86 @@ it.layer(platform, { timeout: "30 seconds" })("B7 readiness loop", (test) => {
         })
       )
     );
+  test.effect("sleeps through rate-limited polls without spending the poll-error budget", () =>
+    fixture((root) =>
+      Effect.gen(function* () {
+        const calls = yield* Ref.make(0);
+        const reads = yield* Ref.make(0);
+        const rateLimited = YeetCommandError.make({
+          message: "HTTP 403: API rate limit exceeded for user ID 106790222.",
+          exitCode: 1,
+        });
+        const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
+          ...options,
+          // The ordinary failures read healthy buckets; the rate-limited ones an
+          // empty core bucket whose past reset clamps the pause to the zero
+          // test interval.
+          readRateLimit: Ref.updateAndGet(reads, (n) => n + 1).pipe(
+            Effect.map((n) => rateLimitRead(n <= 4 ? 10 : 0, 10))
+          ),
+          // Four ordinary failures, then rate limits until the cap demotes them.
+          collectStatus: () =>
+            Ref.getAndUpdate(calls, (n) => n + 1).pipe(
+              Effect.flatMap((n) => Effect.fail(n < 4 ? failure : rateLimited))
+            ),
+        });
+        expect(terminal).toBe("poll-error-budget");
+        const got = yield* Ref.get(calls);
+        expect(got).toBe(4 + YEET_MONITOR_RATE_LIMIT_BUDGET + 1);
+        const read = yield* Ref.get(reads);
+        expect(read).toBe(got);
+        const errorLines38 = yield* TestConsole.errorLines;
+        const errorLines = A.join(A.map(errorLines38, String), "\n");
+        expect(errorLines).toContain("[yeet] GitHub rate limit (primary, core): sleeping until");
+        expect(errorLines).toContain("poll failed (4/5): read unavailable");
+        expect(errorLines).toContain("poll failed (5/5): HTTP 403: API rate limit exceeded");
+      })
+    )
+  );
+  test.effect("sleeps through a census failure that lost its text while the GraphQL bucket is empty", () =>
+    fixture((root) =>
+      Effect.gen(function* () {
+        const before = yield* TestConsole.errorLines;
+        const previousErrors = A.length(before);
+        const calls = yield* Ref.make(0);
+        const census = YeetCommandError.make({
+          message: "Failed to read the complete pull request check census.",
+          exitCode: 1,
+        });
+        // More census failures than the poll-error budget, then the PR merges.
+        const failing = YEET_MONITOR_POLL_ERROR_BUDGET + 2;
+        const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
+          ...options,
+          onMerged: () => Effect.void,
+          readRateLimit: Effect.succeed(rateLimitRead(4000, 0)),
+          collectStatus: () =>
+            Ref.getAndUpdate(calls, (n) => n + 1).pipe(
+              Effect.map((n) =>
+                n >= failing
+                  ? snapshot(root, [], false, head, "MERGED")
+                  : YeetStatusSnapshot.make({
+                      ...snapshot(root, [], false),
+                      remote: YeetStatusRemote.make({
+                        available: false,
+                        checked: true,
+                        detail: census.message,
+                        readFailure: O.some(census),
+                      }),
+                      mergeReady: O.none(),
+                    })
+              )
+            ),
+        });
+        expect(terminal).toBe("merged");
+        const got = yield* Ref.get(calls);
+        expect(got).toBe(failing + 1);
+        const errorLines39 = yield* TestConsole.errorLines;
+        const errorLines = A.join(A.map(A.drop(errorLines39, previousErrors), String), "\n");
+        expect(errorLines).toContain("[yeet] GitHub rate limit (primary, graphql): sleeping until");
+        expect(errorLines).not.toContain("poll failed (");
+      })
+    )
+  );
   for (const reset of [false, true])
     test.effect(`budgets embedded remote read failures, reset=${reset}`, () =>
       fixture((root) =>

@@ -109,7 +109,7 @@ _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions wr
 
 historyNoteBody strips trailing newlines from the map value and appends one \n, which is what git notes add -m stores (a real-git integration test asserts hashObject(body) equals the -m note blob). Map rows all end with \n; the message schema also rejects trailing whitespace and doubled blank lines because git's cleanup would rewrite them, so --check compares blob ids exactly. Map keys decode with onExcessProperty error so a short SHA fails instead of being dropped.
 
-Lane `git-history-rewrite` · PR #2785
+Lane git-history-rewrite · PR #2785
 
 Reverse: Change historyNoteBody in commands/History/History.schemas.ts and rebuild refs/notes/history with --write
 
@@ -117,7 +117,7 @@ Reverse: Change historyNoteBody in commands/History/History.schemas.ts and rebui
 
 Map and validators move into docs/history/; scripts, curation, decision sheet, fleet inventory and research reports go to $HOME/.local/state/beep/archive/beep-effect-cutover/ and the folder is removed, closing goals/legacy-drain's archive line. The inventory names local paths and stays out of the public repo. Source: explorations/git-history-rewrite/DECISIONS.md (2026-11-06).
 
-Lane `git-history-rewrite`
+Lane git-history-rewrite
 
 Reverse: Restore the folder from $HOME/.local/state/beep/archive/beep-effect-cutover/
 
@@ -125,7 +125,7 @@ Reverse: Restore the folder from $HOME/.local/state/beep/archive/beep-effect-cut
 
 Git.replaceNotes streams git fast-import one parentless commit with a fixed identity (beep history notes, noreply@beep-effect.com), fixed time 1793923200 and a fixed message, one inline note per sorted row. The commit id depends only on the map: two writes and a write from a different prior ref state all gave b40fd076d8 on this clone, and the check with require-published then matched 940/940. Consequence for slice 3: each changed overlay replaces the ref with an unrelated commit, so publication force-pushes refs/notes/history (a notes ref, never a branch) and the sync fetch refspec carries the + prefix.
 
-Lane `git-history-rewrite` · PR #2785
+Lane git-history-rewrite · PR #2785
 
 Reverse: Switch Git.replaceNotes to git notes add per row and drop the determinism guarantee
 
@@ -133,7 +133,7 @@ Reverse: Switch Git.replaceNotes to git notes add per row and drop the determini
 
 The map outlives the goal packet so it lives in docs/history/ with a README; beep refs already means the .repos reference workspace, so a new History family owns the command. Source: explorations/git-history-rewrite/DECISIONS.md (2026-11-06).
 
-Lane `git-history-rewrite`
+Lane git-history-rewrite
 
 Reverse: Move the map file and re-point the command; no SHAs depend on the location
 
@@ -141,7 +141,7 @@ Reverse: Move the map file and re-point the command; no SHAs depend on the locat
 
 Keep every SHA. Publish the July map as a git notes overlay; size relief via blobless clones. A force-push cannot clean GitHub (read-only refs/pull, 14 forks), drops 5,326 signatures and stales SHA citations. honest-repo-signal D6 stands. Source: explorations/git-history-rewrite/DECISIONS.md (2026-11-06).
 
-Lane `git-history-rewrite`
+Lane git-history-rewrite
 
 Reverse: Reopen explorations/git-history-rewrite at align; the July cutover scripts are archived under $HOME/.local/state/beep/archive/beep-effect-cutover/
 
@@ -149,7 +149,7 @@ Reverse: Reopen explorations/git-history-rewrite at align; the July cutover scri
 
 Dedicated ref shown through notes.displayRef; beep worktree new, scripts/cloud/bootstrap.sh and beep history notes sync set the fetch refspec and display ref. Source: explorations/git-history-rewrite/DECISIONS.md (2026-11-06).
 
-Lane `git-history-rewrite`
+Lane git-history-rewrite
 
 Reverse: Delete refs/notes/history on origin and drop the fetch refspec and notes.displayRef via the sync command
 
@@ -157,7 +157,7 @@ Reverse: Delete refs/notes/history on origin and drop the fetch refspec and note
 
 beep history notes --write builds the ref deterministically from docs/history/commit-message-map.json; --check fails on drift; a post-merge workflow on main is origin's only writer. A refs/notes/* ruleset is optional later hardening. Source: explorations/git-history-rewrite/DECISIONS.md (2026-11-06).
 
-Lane `git-history-rewrite`
+Lane git-history-rewrite
 
 Reverse: Remove the workflow and the History command; the tracked map stays as plain data
 
@@ -165,7 +165,7 @@ Reverse: Remove the workflow and the History command; the tracked map stays as p
 
 worktree new calls syncHistoryNotesConfig (config only, no fetch); scripts/cloud/bootstrap.sh step 4 runs bun run beep history notes sync. Both turn failures into warnings. sync adds the +refs/notes/history fetch refspec and the notes.displayRef only when absent.
 
-Lane `git-history-rewrite` · PR #2785
+Lane git-history-rewrite · PR #2785
 
 Reverse: Remove syncHistoryNotesConfig from runWorktreeNew and step 4 from scripts/cloud/bootstrap.sh
 
@@ -173,7 +173,7 @@ Reverse: Remove syncHistoryNotesConfig from runWorktreeNew and step 4 from scrip
 
 Refines the cutover-folder decision. Only the map data moves to docs/history/ (commit-message-map.json, commit-message-map.excluded.json, README.md). The July .mjs validators (merge-map, validate-map, build-dossier) go to the archive: beep history notes --check owns validation (decode, ancestry, drift), and loose scripts in the tree run against the scripts-to-beep-cli direction. Also adds the one saving commit the July map missed (6f33208961, a pure .repos/effect-tsgo deletion).
 
-Lane `git-history-rewrite`
+Lane git-history-rewrite
 
 Reverse: Copy census/*.mjs from $HOME/.local/state/beep/archive/beep-effect-cutover/ into docs/history/
 

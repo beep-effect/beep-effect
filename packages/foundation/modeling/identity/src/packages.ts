@@ -253,7 +253,9 @@ const generatedComposers = $I.compose(
   "execution-authority-tables",
   "execution-authority-server",
   "execution-authority-config",
-  "eyecite"
+  "eyecite",
+  "agent-memory-store",
+  "sqlite"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -3752,3 +3754,37 @@ export const $ExecutionAuthorityConfigId: Identity.IdentityComposer<"@beep/execu
  * @since 0.0.0
  */
 export const $EyeciteId: Identity.IdentityComposer<"@beep/eyecite"> = composers.$EyeciteId;
+
+/**
+ * Identity composer for `@beep/agent-memory-store`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $AgentMemoryStoreId } from "@beep/identity/packages"
+ *
+ * const id = $AgentMemoryStoreId.make("AgentMemoryStore")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $AgentMemoryStoreId: Identity.IdentityComposer<"@beep/agent-memory-store"> = composers.$AgentMemoryStoreId;
+
+/**
+ * Identity composer for `@beep/sqlite`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $SqliteId } from "@beep/identity/packages"
+ *
+ * const id = $SqliteId.make("Sqlite")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $SqliteId: Identity.IdentityComposer<"@beep/sqlite"> = composers.$SqliteId;
