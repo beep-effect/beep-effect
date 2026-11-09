@@ -2,22 +2,33 @@ import {
   BuildVitestShardPlanOptions,
   buildVitestShardPlan,
   CI_LANE_PARTITIONS,
+  CiLanePartition,
+  CiLanePartitionShard,
   CiPartitionFileTiming,
+  CiPartitionPackageTiming,
+  CiPartitionRunTimings,
+  CiPartitionTimingSource,
   checkCiPartitions,
   lptAssign,
   parseHostedTestUnitLog,
+  rebalanceCiPartitions,
   renderCiPartitionReport,
   testUnitJobPartition,
+  VitestShardPlan,
 } from "@beep/repo-cli/commands/Ci";
 import { findRepoRoot } from "@beep/repo-utils";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const esc = "\u001b";
@@ -161,4 +172,143 @@ describe("partition table shape", () => {
       "unit-g"
     );
   });
+});
+
+const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
+const decodePlan = S.decodeUnknownEffect(S.fromJsonString(VitestShardPlan));
+
+const fixturePackages: ReadonlyArray<readonly [string, string]> = [
+  ["@beep/repo-cli", "packages/tooling/tool/cli"],
+  ["@beep/law-practice-server", "packages/law-practice/server"],
+  ["@beep/glob", "packages/foundation/modeling/glob"],
+  ["@beep/yaml", "packages/foundation/modeling/yaml"],
+];
+
+const shard = (
+  id: "repo-cli-1" | "repo-cli-2" | "law-practice-1" | "law-practice-2",
+  packageName: string,
+  index: number
+) =>
+  CiLanePartition.make({
+    id,
+    lane: "test-unit",
+    weightSeconds: 0,
+    packages: [packageName],
+    shard: CiLanePartitionShard.make({ index, total: 2 }),
+  });
+
+const fixtureTable: ReadonlyArray<CiLanePartition> = [
+  shard("repo-cli-1", "@beep/repo-cli", 1),
+  shard("repo-cli-2", "@beep/repo-cli", 2),
+  shard("law-practice-1", "@beep/law-practice-server", 1),
+  shard("law-practice-2", "@beep/law-practice-server", 2),
+  CiLanePartition.make({ id: "unit-a", lane: "test-unit", weightSeconds: 0, packages: ["@beep/glob"] }),
+  CiLanePartition.make({ id: "unit-b", lane: "test-unit", weightSeconds: 0, packages: ["@beep/yaml"] }),
+];
+
+const file = (
+  partitionId: "repo-cli-1" | "repo-cli-2" | "law-practice-1" | "law-practice-2",
+  name: string,
+  ms: number
+) => CiPartitionFileTiming.make({ partitionId, file: name, milliseconds: ms });
+
+const fixtureTimings = CiPartitionRunTimings.make({
+  runId: 7,
+  headSha: "b80e11050714191c6d0ff58e8371e9d4c3f17880",
+  files: [
+    file("repo-cli-1", "test/a.test.ts", 3000),
+    file("repo-cli-2", "test/b.test.ts", 1000),
+    file("repo-cli-1", "test/c.test.ts", 1000),
+    file("law-practice-1", "test/x.test.ts", 2000),
+    file("law-practice-2", "test/y.test.ts", 2000),
+  ],
+  packages: [
+    CiPartitionPackageTiming.make({
+      partitionId: "unit-a",
+      packagePath: "packages/foundation/modeling/glob",
+      seconds: 30,
+    }),
+    CiPartitionPackageTiming.make({
+      partitionId: "unit-b",
+      packagePath: "packages/foundation/modeling/yaml",
+      seconds: 10,
+    }),
+  ],
+});
+
+const timingSource = (timings: CiPartitionRunTimings) =>
+  CiPartitionTimingSource.of({
+    collect: Effect.fn("CiPartitionsTest.collect")(() => Effect.succeed(timings)),
+  });
+
+/** A bare workspace checkout: a root manifest naming the packages and one manifest per package. */
+const fixtureRepo = Effect.fn("CiPartitionsTest.fixtureRepo")(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "beep-ci-partitions-" });
+  const rootManifest = yield* encodeJson({
+    name: "fixture",
+    private: true,
+    workspaces: A.map(fixturePackages, ([, packagePath]) => packagePath),
+  });
+  yield* fs.writeFileString(path.join(root, "package.json"), rootManifest);
+  yield* Effect.forEach(fixturePackages, ([name, packagePath]) =>
+    Effect.gen(function* () {
+      yield* fs.makeDirectory(path.join(root, packagePath), { recursive: true });
+      const manifest = yield* encodeJson({ name, version: "0.0.0" });
+      yield* fs.writeFileString(path.join(root, packagePath, "package.json"), manifest);
+    })
+  );
+  return root;
+});
+
+it.layer(Layer.merge(NodeServices.layer, NodeCrypto.layer))("rebalance from a measured run", (it) => {
+  it.effect("repacks both sharded families into the table's shard counts and proposes the bins", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fixtureRepo();
+      const lines = yield* rebalanceCiPartitions(root, 7, fixtureTable).pipe(
+        Effect.provideService(CiPartitionTimingSource, timingSource(fixtureTimings))
+      );
+      const repoPlan = yield* fs
+        .readFileString(path.join(root, "packages/tooling/tool/cli/vitest.shards.json"))
+        .pipe(Effect.flatMap(decodePlan));
+      deepStrictEqual(repoPlan.shards, [["test/a.test.ts"], ["test/b.test.ts", "test/c.test.ts"]]);
+      deepStrictEqual(repoPlan.estimatedMilliseconds, [3000, 2000]);
+      strictEqual(repoPlan.sourceRun, 7);
+      const lawPlan = yield* fs
+        .readFileString(path.join(root, "packages/law-practice/server/vitest.shards.json"))
+        .pipe(Effect.flatMap(decodePlan));
+      deepStrictEqual(lawPlan.estimatedMilliseconds, [2000, 2000]);
+      assertTrue(A.some(lines, Str.includes("repo-cli-1: 3.0 s planned; table weightSeconds 0 -> set 3")));
+      assertTrue(A.some(lines, Str.includes("bin proposal: 2 measured packages over 2 bins")));
+      // LPT puts the heavier package (@beep/glob, 30 s) in the first bin and the lighter one in the second.
+      const proposal = A.dropWhile(lines, (line) => !Str.startsWith("bin proposal")(line));
+      deepStrictEqual(
+        A.filter(proposal, (line) => Str.startsWith("  unit-")(line) || Str.startsWith('    "@beep/')(line)),
+        [
+          "  unit-a: weightSeconds 30 (table 0)",
+          '    "@beep/glob",',
+          "  unit-b: weightSeconds 10 (table 0)",
+          '    "@beep/yaml",',
+        ]
+      );
+    })
+  );
+
+  it.effect("refuses a run that carries no timings for a sharded family", () =>
+    Effect.gen(function* () {
+      const root = yield* fixtureRepo();
+      const timings = CiPartitionRunTimings.make({
+        ...fixtureTimings,
+        files: A.filter(fixtureTimings.files, (timing) => !Str.startsWith("law-practice-")(timing.partitionId)),
+      });
+      const error = yield* rebalanceCiPartitions(root, 7, fixtureTable).pipe(
+        Effect.provideService(CiPartitionTimingSource, timingSource(timings)),
+        Effect.flip
+      );
+      assertTrue(Str.includes("has no law-practice file timings")(error.message));
+    })
+  );
 });

@@ -229,7 +229,10 @@ const writeShardPlan = Effect.fn("CiPartitions.writeShardPlan")(function* (
     .writeFileString(path.join(repoRoot, source.planPath), `${text}\n`)
     .pipe(CiCommandError.mapError(`Cannot write ${source.planPath}.`));
   // The package lint runs Biome over the plan, and Biome's JSON layout (inline numeric arrays
-  // wrapped at the line width) is not JSON.stringify's; format the file the way lint expects.
+  // wrapped at the line width) is not JSON.stringify's; format the file the way lint expects when
+  // the checkout carries the repository's Biome configuration (a bare fixture checkout does not).
+  const configured = yield* fs.exists(path.join(repoRoot, "biome.jsonc")).pipe(Effect.orElseSucceed(() => false));
+  if (!configured) return;
   const formatted = yield* runCaptured({
     command: "bunx",
     args: ["biome", "format", "--write", source.planPath],
