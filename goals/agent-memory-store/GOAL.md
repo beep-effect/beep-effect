@@ -34,7 +34,7 @@ Scope:
 
 Workflow:
 
-1. P0 first: confirm or reverse the five packet-decidable items in `SPEC.md`
+1. P0 first: confirm or reverse the six packet-decidable items in `SPEC.md`
    "Resolved Design Items for P0" by decision file; route the package home by
    specific-home-first; land schemas, then `Context.Service` contracts.
 2. Follow `PLAN.md` phase order: log and L0 projection, admission, identity

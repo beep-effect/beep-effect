@@ -16,7 +16,7 @@ bars are green on `main`. Nothing here changes the 2026-11-09 rulings.
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Design and grill | pending | Confirm or reverse the five packet-decidable design items by decision file (the two rulings stay fixed); route the package home by specific-home-first; land the schemas and `Context.Service` contracts with no implementation. | Decision files exist for every item and the home; the store package exists via `create-package`; schemas and service contracts compile and are documented; `package-verify` green. |
+| P0 Design and grill | pending | Confirm or reverse the six packet-decidable design items by decision file (the entry's three rulings stay fixed); route the package home by specific-home-first; land the schemas and `Context.Service` contracts with no implementation. | Decision files exist for every item and the home; the store package exists via `create-package`; schemas and service contracts compile and are documented; `package-verify` green. |
 | P1 Log and L0 projection | pending | Append-only event log; raw-slice Markdown projection with reparse check; byte-identity export. | AC-1 green on the `goals/**` fixture. |
 | P2 Admission | pending | Op capture against the exported base; per-node CAS at row and list-item granularity; three-way merge on disjoint nodes; held conflicts with both texts; per-op admission; typed status fields with lifecycle guard. | AC-2 and AC-3 green on the adversarial fixture. |
 | P3 Identity and observation | pending | Tiered identity with abstention and link capture at write time; observation log with typed events and distinct-lineage counts; exact-hash deferral; near-duplicate flags. | AC-4, AC-5 and AC-7 green. |

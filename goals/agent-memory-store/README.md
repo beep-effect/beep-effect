@@ -39,8 +39,8 @@ Use this command for execution-capable sessions:
 
 1. [`GOAL.md`](./GOAL.md) - compact `/goal` launcher.
 2. [`SPEC.md`](./SPEC.md) - normative source of truth: objective, relationships
-   to the decision log and the text-knowledge rebuild, non-goals, the two
-   fixed rulings and five design items P0 confirms, acceptance criteria AC-1 to AC-9 with
+   to the decision log and the text-knowledge rebuild, non-goals, the entry's
+   three fixed rulings and six design items P0 confirms, acceptance criteria AC-1 to AC-9 with
    their spike numbers, the verification matrix.
 3. [`PLAN.md`](./PLAN.md) - active execution plan: design, five build phases,
    yeet, close, with observable exit criteria.
@@ -58,7 +58,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Design and grill — not started. First action: confirm or reverse the five
+P0 Design and grill — not started. First action: confirm or reverse the six
 packet-decidable design items by decision file and route the package home.
 
 ## Latest Evidence

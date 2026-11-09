@@ -130,35 +130,41 @@ Higher sources outrank lower sources when they conflict.
 
 ## Resolved Design Items for P0
 
-Two items are rulings of the 2026-11-09 entry and are fixed here; a change to
-them is a new decision-log entry, not a packet decision:
+The three rulings of the 2026-11-09 entry (the log is the sole authority;
+store-side admission with no CRDT merge on agent write paths; prevalence is an
+observation log that never ranks or gates) are fixed here; a change to any of
+them is a new decision-log entry, not a packet decision. Ruling 1 also fixes
+the vocabulary: the store is "the agent memory store"; its log is Layer 2's
+exact episodic records, its indexes are Layer 2 projections, the memory files
+are the Layer 1 projection.
 
-- Vocabulary: the store is "the agent memory store"; its log is Layer 2's
-  exact episodic records, its indexes are Layer 2 projections, the memory
-  files are the Layer 1 projection.
-- Node identity: own `NodeId` minted at admission; occurrence-preimage span
-  anchoring; adopt `@beep/text` when it exists.
+Six items were settled by the 2026-11-09 grill and left to the packet: five
+by the entry's "Not decided here" paragraph, and typed status fields by the
+S14b follow-up the entry cites without listing. P0 confirms or reverses each
+by decision file, not by re-litigation in prose:
 
-Five items were settled by the 2026-11-09 grill but left to the packet by the
-entry's "Not decided here" paragraph; P0 confirms or reverses each by decision
-file, not by re-litigation in prose:
-
-3. Node granularity: row and list-item nodes, not top-level blocks (S1: block
+1. Node identity and identity tiers: the entry's stated starting position is
+   an own `NodeId` minted at admission, span anchoring expressed as the
+   occurrence preimage of `text-knowledge-stack-rebuild` (source identity,
+   unit, range, quote) so the two schemes do not diverge, and `@beep/text`
+   adopted when that rename lands; the tier boundaries (exact hash, SCIP
+   symbol, fused text) are set in P3 (S2, S9, S10).
+2. Node granularity: row and list-item nodes, not top-level blocks (S1: block
    spans are about 33 times the real change; S14: list markers in trivia make
    the `leaf` model unsafe under merge).
-4. Typed status fields with a lifecycle guard against backward moves (S14b:
+3. Typed status fields with a lifecycle guard against backward moves (S14b:
    10/10 status conflicts leave the held path, 0/14 wrong; order flips regress
    12/14 without the guard). Counters are generated projections already
    (the generated goals index); the `## Current Phase` paragraph gets a single owner or
    generation from the manifest, never last-writer.
-5. Retrieval order: authoritative filters, BM25-leaning convex fusion (S7:
+4. Retrieval order: authoritative filters, BM25-leaning convex fusion (S7:
    64/71 recall at 5 against RRF's 59/71), cross-encoder, admissibility gate
    with typed findings including the typed identity lookup, then budgets.
-6. Dedupe: exact hash defers to tier 0 with nothing dropped (S10: 73.0% of
+5. Dedupe: exact hash defers to tier 0 with nothing dropped (S10: 73.0% of
    duplicates carried a tier-0 pointer); near-duplicates flag only (S10:
    simhash at t=2 false-flagged 1.78%, 18/1010; t=4 reached 9.01%, past the
    kill).
-7. Symbol liveness for code-referencing notes: SCIP resolves identity; a
+6. Symbol liveness for code-referencing notes: SCIP resolves identity; a
    normalized span hash marks re-verify, never stale (S35: 109/129 hash flags
    were on intact claims).
 
@@ -259,7 +265,7 @@ _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions wr
 
 ### Program shape: design first, then log, admission, identity, retrieval, agent loop; bars are the spike measurements, 2026-11-09
 
-The packet builds the 2026-11-09 decision in the order the evidence suggests: P0 lands schemas and Context.Service contracts and confirms or reverses the five packet-decidable design items by decision file (granularity, status fields, retrieval order, dedupe, symbol liveness) and routes the package home by specific-home-first (working hypothesis a tooling package); the vocabulary and node-identity items are rulings of the entry and stay fixed; P1 the append-only log and raw-slice Markdown projection (AC-1, S1); P2 store-side admission with held conflicts and typed status fields (AC-2, AC-3, S14, S14b); P3 tiered identity and the observation log (AC-4, AC-5, AC-7, S2, S9, S10); P4 retrieval with no relevance stage (AC-6, S7); P5 the agent loop and runbook (AC-8). Every bar is the spike's pre-registered or measured number; a missed bar is remediated on route or re-baselined by a decision file citing a new measurement, per the S14b lesson. A phase opens only when the previous phase's bars are green on main.
+The packet builds the 2026-11-09 decision in the order the evidence suggests: P0 lands schemas and Context.Service contracts and confirms or reverses the six packet-decidable design items by decision file (node identity and identity tiers, granularity, status fields, retrieval order, dedupe, symbol liveness) and routes the package home by specific-home-first (working hypothesis a tooling package); the entry's three rulings stay fixed and ruling 1 fixes the vocabulary; P1 the append-only log and raw-slice Markdown projection (AC-1, S1); P2 store-side admission with held conflicts and typed status fields (AC-2, AC-3, S14, S14b); P3 tiered identity and the observation log (AC-4, AC-5, AC-7, S2, S9, S10); P4 retrieval with no relevance stage (AC-6, S7); P5 the agent loop and runbook (AC-8). Every bar is the spike's pre-registered or measured number; a missed bar is remediated on route or re-baselined by a decision file citing a new measurement, per the S14b lesson. A phase opens only when the previous phase's bars are green on main.
 
 Reverse: Reorder or merge phases by a new decision file; the rulings of the 2026-11-09 decision-log entry are not reversible here
 
