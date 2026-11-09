@@ -106,10 +106,12 @@ a reviewer correction with the date, so the record never contradicts the constra
   from a successful producer; skipping the job would leave the comparator without it.
 - **PERIL-01 (fold Fallow envelopes into Labs), packet 5:** fork PR tokens are read-only and Labs has
   `contents: read` only, so the folded step cannot publish a commit status for fork runs, and commit
-  statuses have no `skipped` state. The host job must carry `statuses: write` (Labs runs with
-  `contents: read` today, for same-repository PRs too), and the standalone Fallow job stays whenever
-  publication is unavailable: fork PRs, or any host job without that permission. The folded step must
-  also produce a check run, not only a commit status: Yeet's merge gate reads check runs
+  statuses have no `skipped` state. The host job must carry `checks: write`, because a step can only
+  create a check run through the Checks API (and `statuses: write` as well only if a commit status is
+  also posted); Labs runs with `contents: read` today, for same-repository PRs too, and no workflow
+  declares `checks: write`. The standalone Fallow job stays whenever publication is unavailable: fork
+  PRs, or any host job lacking the needed permission. The folded step must produce a check run, not
+  only a commit status: Yeet's merge gate reads check runs
   (`commands/Yeet/internal/GhOps.ts`) and `GateTable.ts` reports a failed status without holding
   `GATE-MET`, so a status alone would weaken the gate; the seeded-failure fixture must show the merge
   gate refusing the PR. Only then may the standalone job be removed.
