@@ -3011,17 +3011,28 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       for (const [name, changedPath, accepted] of [
         ["ordinary report", "docs/reports/probe.md", true],
         ["Unicode and newline report", "docs/reports/日本語\nreport.md", true],
-        ["executable docs source", "docs/run.ts", false],
+        ["unselected docs source", "docs/run.ts", true],
+        ["selected goal source", "goals/demo/run.ts", false],
+        ["selected research source", "research/demo/run.js", false],
         ["package source", "packages/probe.ts", false],
         ["root config", "turbo.json", false],
-        ["standard", "standards/policy.md", false],
-        ["root Markdown", "README.md", false],
-        ["policy docs", "docs/runbooks/policy.md", false],
-        ["hidden report tooling", "docs/reports/.tool/probe.md", false],
-        ["hidden tooling after newline directory", "docs/reports/new\nline/.tool/probe.md", false],
-        ["terminal newline after Markdown suffix", "docs/reports/probe.md\n", false],
-        ["agent instructions", "docs/reports/AGENTS.md", false],
-        ["MDX", "docs/reports/probe.mdx", false],
+        ["standard", "standards/policy.md", true],
+        ["standards inventory", "standards/inventory.json", false],
+        ["goal DOT", "goals/demo/diagram.dot", true],
+        ["goal SVG", "goals/demo/diagram.svg", true],
+        ["goal helper", "goals/demo/scripts/render.py", true],
+        ["goal data", "goals/demo/ops/data.json", true],
+        ["root goal governance", "goals/manifest.jsonc", false],
+        ["root compiler", "tsconfig.json", false],
+        ["exploration", "explorations/demo/data.json", true],
+        ["research", "research/demo/chart.svg", true],
+        ["root Markdown", "README.md", true],
+        ["policy docs", "docs/runbooks/policy.md", true],
+        ["hidden report tooling", "docs/reports/.tool/probe.md", true],
+        ["hidden tooling after newline directory", "docs/reports/new\nline/.tool/probe.md", true],
+        ["terminal newline after Markdown suffix", "docs/reports/probe.md\n", true],
+        ["agent instructions", "docs/reports/AGENTS.md", true],
+        ["MDX", "docs/reports/probe.mdx", true],
       ] as const) {
         it.effect(`classifies ${name} without inventing proof evidence`, () =>
           Effect.gen(function* () {
@@ -3052,7 +3063,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               withEnvVarEffect(
                 "BEEP_YEET_LANE_PROOF_MODE",
                 "off",
-                withEnvVarEffect("BEEP_QUALITY_REPORT_ONLY_SKIP", "1", run)
+                withEnvVarEffect("BEEP_QUALITY_REPORT_ONLY_SKIP", undefined, run)
               )
             );
             expect(A.map(result.report.lanes, (lane) => lane.status)).toEqual([
@@ -3068,7 +3079,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             expect(invoked).toBe(!accepted);
             if (accepted) {
               const skipped = O.getOrThrow(A.head(result.laneReport.lanes));
-              assertSome(skipped.reason, "clean report-only diff; source-only lane inputs unchanged");
+              assertSome(skipped.reason, "clean docs-only diff; source-only lane inputs unchanged");
               assertNone(skipped.startedAt);
               assertNone(skipped.endedAt);
               assertNone(skipped.durationMs);
@@ -3314,6 +3325,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
       for (const [name, srcDir, kind] of [
         ["literal metachar root", "src[one]", "tracked"],
+        ["changed docs source", "../../docs/custom", "changed"],
+        ["changed goal source", "../../goals/demo/custom", "changed"],
         ["ignored metachar source", "src[one]", "ignored"],
         ["linked metachar root", "src[one]", "linked"],
         ["explicit node_modules root", "node_modules/custom", "ignored"],
@@ -3331,7 +3344,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             const config = yield* encodeJson({ srcDir });
             yield* fs.writeFileString(path.join(root, "packages/example/docgen.json"), config);
             yield* fs.writeFileString(path.join(root, ".git/info/exclude"), ".beep/\nordinary.ts\n");
-            if (kind === "tracked" || kind === "denied") {
+            if (kind === "tracked" || kind === "denied" || kind === "changed") {
               yield* fs.makeDirectory(source, { recursive: true });
               yield* fs.writeFileString(file, "export const value = 1;\n");
               yield* runGit(root, ["add", "-f", path.relative(root, file)]);
@@ -3349,6 +3362,17 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             yield* fs.writeFileString(path.join(root, "docs/reports/probe.md"), "report\n");
             yield* runGit(root, ["add", "."]);
             yield* runGit(root, ["commit", "-m", "custom source report"]);
+            yield* Match.value(kind).pipe(
+              Match.when("changed", () =>
+                fs
+                  .writeFileString(file, "export const value = 2;\n")
+                  .pipe(
+                    Effect.andThen(runGit(root, ["add", "."])),
+                    Effect.andThen(runGit(root, ["commit", "-m", "changed custom scanner input"]))
+                  )
+              ),
+              Match.orElse(() => Effect.void)
+            );
             if (kind === "ignored") {
               yield* fs.makeDirectory(source, { recursive: true });
               yield* fs.writeFileString(file, "export const value = 1;\n");
@@ -3430,7 +3454,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "between selected",
         "mixed checkouts",
         "opt-out",
-        "default disabled",
+        "automatic default",
         "unknown opt-in",
         "missing base",
       ] as const) {
@@ -3480,7 +3504,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                   "BEEP_QUALITY_REPORT_ONLY_SKIP",
                   Match.value(control).pipe(
                     Match.when("opt-out", () => "0"),
-                    Match.when("default disabled", () => undefined),
+                    Match.when("automatic default", () => undefined),
                     Match.when("unknown opt-in", () => "true"),
                     Match.orElse(() => "1")
                   ),
@@ -3490,7 +3514,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             );
             const opted = A.filter(result.laneReport.lanes, (lane) => S.is(ReportOnlyInertLaneId)(lane.id));
             const statuses = Match.value(control).pipe(
-              Match.whenOr("all selected", "restored generator", () => ["skipped", "skipped"]),
+              Match.whenOr("all selected", "restored generator", "automatic default", () => ["skipped", "skipped"]),
               Match.when("between selected", () => ["skipped", "failed"]),
               Match.orElse(() => ["failed", "failed"])
             );
