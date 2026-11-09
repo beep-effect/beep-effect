@@ -18,6 +18,14 @@
       "supersededBy": null
     },
     "created": "2026-08-27",
-    "updated": "2026-08-27"
+    "updated": "2026-08-27",
+    "archive": {
+      "repo": "beep-effect/beep-effect-goals-archive",
+      "path": "explorations/todox-wealth-management-site",
+      "commit": "1604d5144ca9118523ea2de34057d06a2f478bb6",
+      "contentHash": "b4b346ccc6ed769382d302d87af1e4f88cb22d40",
+      "archivedAt": "2026-11-09T08:44:38.484Z",
+      "sourceCommit": "0b459d8674f24af3a7267e31f78050835dda3f65"
+    }
   }
 }

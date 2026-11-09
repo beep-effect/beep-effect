@@ -1,7 +1,7 @@
 # Slice Topology Audit — Sources & Provenance
 
 - **Source exploration:** `explorations/v3-consistency-audit` — primary ledger:
-  [`explorations/v3-consistency-audit/research/SOURCES.md`](../../../explorations/v3-consistency-audit/research/SOURCES.md).
+  [explorations/v3-consistency-audit/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/v3-consistency-audit/research/SOURCES.md).
   This file reproduces that corpus for implementation; the exploration's
   ledger stays canonical.
 - **Cluster / origin:** operator brief (2026-08-29) + a multi-phase workflow

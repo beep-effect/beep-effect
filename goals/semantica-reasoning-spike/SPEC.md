@@ -25,17 +25,17 @@ oracle on that fixture.
 Scope is defined by reference, not restated:
 
 - **Phases, classes, probes and kills** —
-  [`MAP.md` §R](../../explorations/semantica-lab/MAP.md#r-semantica-reasoning-spike--the-fixture-is-the-spikes-first-slice-not-its-gate)
+  [`MAP.md` §R](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/MAP.md#r-semantica-reasoning-spike--the-fixture-is-the-spikes-first-slice-not-its-gate)
   (v1.1, ratified 2026-09-03 with amendments applied inline).
 - **The ratified sub-decisions** —
   [`DECISIONS.md`](../../explorations/semantica-lab/DECISIONS.md) "2026-09-03
   (ratification grill)": R0.a, R1.g, R2.a–R2.g; the Current law table wins
   over any log entry.
 - **The opportunity space the probes come from** —
-  [`research/adhd-reasoning.md`](../../explorations/semantica-lab/research/adhd-reasoning.md)
+  [`research/adhd-reasoning.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/adhd-reasoning.md)
   §Focus 1–3 (D15).
 - **The v3 salvage verdict** —
-  [`research/grounding-v3-logos.md` §5](../../explorations/semantica-lab/research/grounding-v3-logos.md#5-verdict-for-the-new-lab).
+  [`research/grounding-v3-logos.md` §5](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/grounding-v3-logos.md#5-verdict-for-the-new-lab).
 - **What C2 already proved** — the ρdf runtime, content-addressed
   `InferenceEvent` proof DAGs and the EYE oracle wiring
   ([goals/semantica-canary/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/SPEC.md), C2 pass).
@@ -81,9 +81,9 @@ This spike adds:
    [`standards/architecture/15-lab-apps.md`](../../standards/architecture/15-lab-apps.md).
 4. The exploration contracts in force:
    [`BRIEF.md`](../../explorations/semantica-lab/BRIEF.md) v1.1,
-   [`MAP.md`](../../explorations/semantica-lab/MAP.md) v1.1 §R,
-   [`research/adhd-reasoning.md`](../../explorations/semantica-lab/research/adhd-reasoning.md),
-   [`research/grounding-v3-logos.md`](../../explorations/semantica-lab/research/grounding-v3-logos.md).
+   [`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/MAP.md) v1.1 §R,
+   [`research/adhd-reasoning.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/adhd-reasoning.md),
+   [`research/grounding-v3-logos.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/grounding-v3-logos.md).
 5. [`goals/semantica-storage-inversion/SPEC.md`](../semantica-storage-inversion/SPEC.md)
    for the tombstone law R-c and P4 inherit, and
    [goals/semantica-canary/SPEC.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/semantica-canary/SPEC.md) for the
@@ -111,7 +111,7 @@ DECISIONS entry amends it.
   under `history/`, the closeout reflection.
 - [`explorations/semantica-lab/DECISIONS.md`](../../explorations/semantica-lab/DECISIONS.md):
   the dated reasoning-spike verdict (or park).
-- [`explorations/semantica-lab/research/SOURCES.md`](../../explorations/semantica-lab/research/SOURCES.md):
+- [explorations/semantica-lab/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/SOURCES.md):
   the `beep-effect-logos` row flips from reference-only when the archive is
   located.
 - No other package changes; `src-tauri` stays frozen (S4).
@@ -143,7 +143,7 @@ Each line cites the sub-decision or law it inherits.
    only after the storage spike's P-S1 has landed; R-a, R-b, R-d, R-e build in
    parallel with it (R2.e, R1.g).
 6. **Kill criteria are the probes' first steps unchanged**
-   ([`research/adhd-reasoning.md`](../../explorations/semantica-lab/research/adhd-reasoning.md)):
+   ([`research/adhd-reasoning.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/adhd-reasoning.md)):
    canonicalization drift (P2); certificate unsoundness, unsound admission or
    bounds that reject real rules (P3); unstable identity or invalidation
    across re-extraction and replay (P4) (R2.f).
@@ -200,7 +200,7 @@ The rows below are the ones this spike executes against, one line each.
 ## Acceptance Criteria
 
 Class definitions and probe gates are quoted from
-[`MAP.md` §R](../../explorations/semantica-lab/MAP.md#r-semantica-reasoning-spike--the-fixture-is-the-spikes-first-slice-not-its-gate).
+[`MAP.md` §R](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/MAP.md#r-semantica-reasoning-spike--the-fixture-is-the-spikes-first-slice-not-its-gate).
 
 - [ ] **P1 schema** — the `g-entailment-rules/v1` family (case, expectation,
       witness) lands before any case is written; `RdfsRuleId` and

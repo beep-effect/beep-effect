@@ -50,7 +50,7 @@ weight; remaining non-empty channel weights are renormalized deterministically.
 4. This `SPEC.md`.
 5. `PLAN.md`, then `GOAL.md`.
 6. Exploration [`DECISIONS.md`](../../explorations/rag-retrieval-projection/DECISIONS.md),
-   [`MAP.md`](../../explorations/rag-retrieval-projection/MAP.md), and research.
+   [`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/rag-retrieval-projection/MAP.md), and research.
 
 ## Target Surfaces
 
@@ -155,7 +155,7 @@ weight; remaining non-empty channel weights are renormalized deterministically.
   ratified in the exploration
   [`DECISIONS.md`](../../explorations/rag-retrieval-projection/DECISIONS.md).
 - The approved decomposition and fixture set are in
-  [`MAP.md`](../../explorations/rag-retrieval-projection/MAP.md); this goal alone
+  [`MAP.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/rag-retrieval-projection/MAP.md); this goal alone
   graduates now, while all four satellites remain queued.
 - Migration and license-of-record details are in
   [`research/SOURCES.md`](./research/SOURCES.md).

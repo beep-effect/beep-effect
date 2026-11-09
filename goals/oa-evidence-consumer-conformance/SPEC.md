@@ -11,7 +11,7 @@ fixture scope. This is a named execution checkpoint, not claimed owner consent.
 Order: AGENTS.md and required skills; architecture/doctrine; this SPEC; PLAN;
 GOAL; supporting research. Provenance:
 [research-corpus-synthesis](../../explorations/research-corpus-synthesis/README.md),
-[independent admission](../../explorations/research-corpus-synthesis/research/ADMISSION-REVIEW.md).
+[independent admission](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/research-corpus-synthesis/research/ADMISSION-REVIEW.md).
 
 ## Outcome and value
 

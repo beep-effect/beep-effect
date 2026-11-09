@@ -45,7 +45,7 @@ three (D-C0-9).
 - Two mid-set aborts were xAI-side generation drops (~6 and ~15 minutes in)
   on the same entity job; the third attempt succeeded in 12.6 minutes through
   a diagnostic logging proxy. Failure class and prevention are recorded in the
-  exploration ledger (`explorations/semantica-lab/research/OPPORTUNITIES.md`,
+  exploration ledger ([explorations/semantica-lab/research/OPPORTUNITIES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/OPPORTUNITIES.md),
   2026-08-26 receipts), including the anchor-offset re-derivation fix that
   raised acceptance from near-zero to 97.9%.
 - The proposer never sees extractor output; the extractor never sees gold

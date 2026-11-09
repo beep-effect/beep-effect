@@ -1,7 +1,7 @@
 # Packet Archive Mechanics — Sources & Provenance
 
 - **Source exploration:** `explorations/packet-archive-and-alpha-harvest` — primary ledger:
-  `explorations/packet-archive-and-alpha-harvest/research/SOURCES.md`.
+  [explorations/packet-archive-and-alpha-harvest/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/packet-archive-and-alpha-harvest/research/SOURCES.md).
 
 ## 1. Mined source corpus
 

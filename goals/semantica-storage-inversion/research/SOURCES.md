@@ -3,16 +3,16 @@
 - **Source exploration:**
   [`explorations/semantica-lab`](../../../explorations/semantica-lab/README.md)
 - **Primary ledger:**
-  [`explorations/semantica-lab/research/SOURCES.md`](../../../explorations/semantica-lab/research/SOURCES.md)
+  [explorations/semantica-lab/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/SOURCES.md)
   — this file is the goal-side mirror; when the two disagree, the exploration
   ledger wins and this copy is corrected.
 - **Decision authority:**
   [`explorations/semantica-lab/DECISIONS.md`](../../../explorations/semantica-lab/DECISIONS.md)
   (Current law table; 2026-09-03 ratification grill R0.a, R1.a–R1.i).
 - **Design source:**
-  [`MAP.md` §S](../../../explorations/semantica-lab/MAP.md#s-semantica-storage-inversion--what-delete-and-compaction-must-mean)
+  [`MAP.md` §S](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/MAP.md#s-semantica-storage-inversion--what-delete-and-compaction-must-mean)
   v1.1; adversarial review
-  [`reviews/2026-09-03-sol-reentry-review.md`](../../../explorations/semantica-lab/research/reviews/2026-09-03-sol-reentry-review.md).
+  [`reviews/2026-09-03-sol-reentry-review.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/reviews/2026-09-03-sol-reentry-review.md).
 - **Carry-forward date:** 2026-09-03
 
 The tables below reproduce the rows of the exploration's corpus this spike
@@ -22,7 +22,7 @@ composes. Machine-local paths are rendered as out-of-repo locations by name.
 
 The D5 extraction IR (`scratchpad/semantica-ir`, 6,105 records, SHA-256
 stamped; stats in
-[`ir-extraction-report.md`](../../../explorations/semantica-lab/research/ir-extraction-report.md))
+[`ir-extraction-report.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/ir-extraction-report.md))
 is not on this spike's path. Its determinism discipline is the model for the
 probe digests.
 
@@ -30,8 +30,8 @@ probe digests.
 
 | Repo | License | Port discipline | What this spike takes |
 | --- | --- | --- | --- |
-| `semantica-agi/semantica` (out-of-repo workstation clone, `danklocal` branch at `add1c006`) | MIT (Hawksight AI, verified in its `LICENSE`) | port-with-attribution (ideas ported schema-first, not vendored code) | the shape being inverted: `ProvenanceEntry` invalidation fields + checksum chain, `change_management` snapshot/rollback ([`grounding-semantica-repo.md`](../../../explorations/semantica-lab/research/grounding-semantica-repo.md)) — reference only |
-| `scratchpad/effect-ontology` (in-repo quarantined experiment) | in-repo; upstream was MIT per its ledger | borrow-shape / pattern only; non-importable | `ClaimWithRank` transactionTime split, `CurationAction`/`CurationEvent` command-vs-event split, `ConflictTransition` ([`effect-ontology-map.md`](../../../explorations/semantica-lab/research/effect-ontology-map.md) rows 102, 105, 148); its in-place `deprecateClaim` UPDATE is the anti-pattern (row 27) |
+| `semantica-agi/semantica` (out-of-repo workstation clone, `danklocal` branch at `add1c006`) | MIT (Hawksight AI, verified in its `LICENSE`) | port-with-attribution (ideas ported schema-first, not vendored code) | the shape being inverted: `ProvenanceEntry` invalidation fields + checksum chain, `change_management` snapshot/rollback ([`grounding-semantica-repo.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/grounding-semantica-repo.md)) — reference only |
+| `scratchpad/effect-ontology` (in-repo quarantined experiment) | in-repo; upstream was MIT per its ledger | borrow-shape / pattern only; non-importable | `ClaimWithRank` transactionTime split, `CurationAction`/`CurationEvent` command-vs-event split, `ConflictTransition` ([`effect-ontology-map.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/effect-ontology-map.md) rows 102, 105, 148); its in-place `deprecateClaim` UPDATE is the anti-pattern (row 27) |
 
 ## 3. External research sources
 

@@ -1,7 +1,7 @@
 # Design Figure Review Loop — Sources & Provenance
 
 - **Source exploration:** `explorations/patent-drawing-pipeline` — primary ledger:
-  `explorations/patent-drawing-pipeline/research/SOURCES.md` (re-graduated 2026-10-13).
+  [explorations/patent-drawing-pipeline/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/patent-drawing-pipeline/research/SOURCES.md) (re-graduated 2026-10-13).
 - **Predecessor ledger:** `goals/design-figure-generation/research/SOURCES.md` (kernel, rules,
   upstream licenses); rows there are not repeated here.
 - **Provenance:** the attorney's 2026-10-10 review, the operator's 2026-10-13 request, and the

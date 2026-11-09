@@ -1,7 +1,7 @@
 # Retire ./scripts into beep CLI commands and a compiled beep binary for CI — Sources & Provenance
 
 - **Source exploration:** `explorations/pulumi-to-alchemy` — primary ledger:
-  `explorations/pulumi-to-alchemy/research/SOURCES.md`.
+  [explorations/pulumi-to-alchemy/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/pulumi-to-alchemy/research/SOURCES.md).
 
 ## 1. Mined source corpus
 

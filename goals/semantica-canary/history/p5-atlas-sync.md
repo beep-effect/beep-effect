@@ -36,7 +36,7 @@ the `semantica-atlas-sync` re-entry (DECISIONS O3/M4, "Atlas backlog" law row).
 | Semantic Extract — Extraction Methods | `ml` | empty | `park` | extraction park list; C0 Extraction verdict |
 
 Park lists are the `## Park list` sections of `bakeoff-{storage,embeddings,input,extraction}.md`
-under `explorations/semantica-lab/research/`; verdict entries are the dated `DECISIONS.md` sections. Page identifiers live in the
+under [explorations/semantica-lab/research/](https://github.com/beep-effect/beep-effect-goals-archive/tree/main/explorations/semantica-lab/research); verdict entries are the dated `DECISIONS.md` sections. Page identifiers live in the
 Notion workspace; each row's page history is the rollback surface.
 
 ## Not written, and why

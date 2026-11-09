@@ -1,7 +1,7 @@
 # Harness Emitters for All Providers — Sources & Provenance
 
 - **Source exploration:** `explorations/observability-palantiri` — primary ledger:
-  `explorations/observability-palantiri/research/SOURCES.md`.
+  [explorations/observability-palantiri/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/observability-palantiri/research/SOURCES.md).
 
 ## 1. Mined source corpus
 
@@ -15,11 +15,11 @@
 
 ## 3. External research sources
 
-Carried from the exploration ledger [`explorations/observability-palantiri/research/SOURCES.md`](../../../explorations/observability-palantiri/research/SOURCES.md) and the notes it lists; no URL is reproduced here that is not on disk there.
+Carried from the exploration ledger [explorations/observability-palantiri/research/SOURCES.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/observability-palantiri/research/SOURCES.md) and the notes it lists; no URL is reproduced here that is not on disk there.
 
 ## 4. In-repo capability references
 
-See the `harness-emitters-all-providers` row of [`explorations/observability-palantiri/MAP.md`](../../../explorations/observability-palantiri/MAP.md) and the capability map in [`in-repo-inventory.md`](../../../explorations/observability-palantiri/research/in-repo-inventory.md).
+See the `harness-emitters-all-providers` row of [explorations/observability-palantiri/MAP.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/observability-palantiri/MAP.md) and the capability map in [`in-repo-inventory.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/observability-palantiri/research/in-repo-inventory.md).
 
 ## 5. Cross-links & provenance
 

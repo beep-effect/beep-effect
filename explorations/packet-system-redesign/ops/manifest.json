@@ -16,6 +16,14 @@
       "supersededBy": null
     },
     "created": "2026-08-10",
-    "updated": "2026-08-30"
+    "updated": "2026-08-30",
+    "archive": {
+      "repo": "beep-effect/beep-effect-goals-archive",
+      "path": "explorations/packet-system-redesign",
+      "commit": "1604d5144ca9118523ea2de34057d06a2f478bb6",
+      "contentHash": "bc083128f46ecc20e388b3dbd6d3153809f4ad41",
+      "archivedAt": "2026-11-09T08:44:38.484Z",
+      "sourceCommit": "0b459d8674f24af3a7267e31f78050835dda3f65"
+    }
   }
 }

@@ -43,13 +43,13 @@ Use this command for execution-capable sessions:
 5. [`research/SOURCES.md`](./research/SOURCES.md) - goal-side mirror of the
    exploration's provenance ledger.
 6. Exploration contracts in force:
-   [`MAP.md` §R](../../explorations/semantica-lab/MAP.md#r-semantica-reasoning-spike--the-fixture-is-the-spikes-first-slice-not-its-gate)
+   [`MAP.md` §R](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/MAP.md#r-semantica-reasoning-spike--the-fixture-is-the-spikes-first-slice-not-its-gate)
    v1.1,
    [`DECISIONS.md`](../../explorations/semantica-lab/DECISIONS.md) (Current
    law table + the 2026-09-03 ratification grill),
-   [`research/adhd-reasoning.md`](../../explorations/semantica-lab/research/adhd-reasoning.md)
+   [`research/adhd-reasoning.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/adhd-reasoning.md)
    §Focus 1–3,
-   [`research/grounding-v3-logos.md`](../../explorations/semantica-lab/research/grounding-v3-logos.md)
+   [`research/grounding-v3-logos.md`](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/semantica-lab/research/grounding-v3-logos.md)
    §5.
 7. [`goals/semantica-storage-inversion/SPEC.md`](../semantica-storage-inversion/SPEC.md)
    - the tombstone law R-c and P4 inherit;
