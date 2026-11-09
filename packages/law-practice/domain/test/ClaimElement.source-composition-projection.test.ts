@@ -8,18 +8,22 @@ import {
   ClaimSourceElementPlan,
   ClaimSourceProofRef,
   ClaimSourceTokenOwnership,
+  decomposeClaim,
   decomposePreparedClaimRoles,
   inspectPreparedClaimRoles,
   prepareClaimInspection,
 } from "@beep/law-practice-domain/values/ClaimElement";
+import { normalizePatentClaims } from "@beep/law-practice-domain/values/PatentDocument";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { it } from "@beep/test-runner";
 import { assert, describe } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
+import type { ClaimInputDecomposition } from "@beep/law-practice-domain/values/ClaimElement";
 
 const sourceKey = "synthetic-source-composition-projection";
 const lexical = HashMap.fromIterable<string, readonly [string, string]>([
@@ -95,6 +99,25 @@ const validates = (plan: ClaimSourceElementPlan): boolean => {
   });
   assert.isAbove(remaining, 0, "the ownership result must not be caused by exhaustion");
   return accepted;
+};
+
+const assertAtomicProjection = (
+  actual: ClaimInputDecomposition,
+  complete: ClaimInputDecomposition,
+  fallback: ClaimInputDecomposition,
+  text: string,
+  remaining: number
+): void => {
+  if (actual.status !== "decomposed" || complete.status !== "decomposed" || fallback.status !== "decomposed")
+    assert.fail("projection refusal must retain a decomposed fallback");
+  const expected = actual.tree.elements.length === complete.tree.elements.length ? complete.tree : fallback.tree;
+  assert.deepStrictEqual(actual.tree, expected);
+  if (remaining === 0) assert.deepStrictEqual(actual.tree, fallback.tree);
+  if (remaining === 4096) assert.deepStrictEqual(actual.tree, complete.tree);
+  for (const element of actual.tree.elements) {
+    assert.strictEqual(Str.slice(element.anchor.startChar, element.anchor.endChar)(text), element.anchor.quote);
+    assert.isFalse(A.some(actual.tree.edges, (edge) => edge.kind === "part-of" && edge.child === edge.parent));
+  }
 };
 
 describe("source composition public projection", () => {
@@ -198,6 +221,107 @@ describe("source composition public projection", () => {
           A.map(source.elements, ({ extent }) => extent)
         );
         assert.isTrue(validates(source));
+      }
+    })
+  );
+
+  it.effect("keeps projection atomic across the remaining source-work boundary", () =>
+    Effect.gen(function* () {
+      for (const text of [
+        "A fixture comprising a module; the module includes a bracket and a bushing.",
+        `A fixture comprising ${A.join(A.replicate("a plate", 29), "; ")}.`,
+      ]) {
+        const prepared = yield* prepareTexts([text]);
+        const evidence = evidenceOf([text]);
+        const baseline = yield* decomposePreparedClaimRoles(prepared, evidence);
+        const source = O.getOrThrow(A.head(baseline.plans)).sourcePlan;
+        const complete = yield* inspectPreparedClaimRoles(prepared, evidence);
+        const exhausted = A.map(evidence, (fact) =>
+          ClaimLexicalEvidence.cases.aligned.make({ ...fact, lexicalWorkConsumed: 262144 })
+        );
+        const fallback = yield* inspectPreparedClaimRoles(prepared, exhausted);
+        const expectedComplete = O.getOrThrow(A.head(complete.records)).decomposition;
+        const expectedFallback = O.getOrThrow(A.head(fallback.records)).decomposition;
+        for (const remaining of A.filter(A.range(0, 4096), (remaining) => remaining % 8 === 0)) {
+          const bounded = A.map(evidence, (fact) =>
+            ClaimLexicalEvidence.cases.aligned.make({
+              ...fact,
+              lexicalWorkConsumed: source.remainingWork - remaining,
+            })
+          );
+          const report = yield* inspectPreparedClaimRoles(prepared, bounded);
+          const actual = O.getOrThrow(A.head(report.records)).decomposition;
+          assertAtomicProjection(actual, expectedComplete, expectedFallback, text, remaining);
+        }
+      }
+    })
+  );
+
+  it.effect("assigns distinct public paths beyond the first alphabet of siblings", () =>
+    Effect.gen(function* () {
+      const text = `A fixture comprising ${A.join(A.replicate("a plate", 29), "; ")}.`;
+      const result = yield* compile([text]);
+      assert.strictEqual(result.plans.length, 1);
+      const outcome = O.getOrThrow(A.head(result.decompositions));
+      assert.strictEqual(outcome.status, "decomposed");
+      if (outcome.status !== "decomposed") return;
+      assert.isTrue(A.some(outcome.tree.elements, ({ path }) => path === "1.aa"));
+      assert.isTrue(A.some(outcome.tree.elements, ({ path }) => path === "1.ac"));
+      assert.strictEqual(
+        HashSet.size(HashSet.fromIterable(A.map(outcome.tree.elements, ({ path }) => path))),
+        outcome.tree.elements.length
+      );
+    })
+  );
+
+  it.effect("excludes an explicit claim-number phrase from legacy term ownership", () =>
+    Effect.gen(function* () {
+      const claims = yield* normalizePatentClaims([["1", "A fixture comprising the claim 1; a module."]]);
+      const tree = yield* decomposeClaim(O.getOrThrow(A.head(claims)), claims);
+      const terms = A.flatMap(tree.elements, ({ terms }) => terms);
+      assert.isFalse(A.some(terms, ({ head }) => head === "claim 1"));
+      assert.isTrue(A.some(terms, ({ head }) => head === "module"));
+      const text = "A fixture comprising the claim 1; a module.";
+      const prepared = yield* prepareTexts([text]);
+      const numericNounEvidence = A.map(evidenceOf([text]), (fact) =>
+        ClaimLexicalEvidence.cases.aligned.make({
+          ...fact,
+          lexicalWorkConsumed: 262144,
+          tokens: A.map(fact.tokens, (token) =>
+            token.anchor.quote === "1" ? ClaimLexicalToken.make({ ...token, pos: "NOUN" }) : token
+          ),
+        })
+      );
+      const report = yield* inspectPreparedClaimRoles(prepared, numericNounEvidence);
+      const result = O.getOrThrow(A.head(report.records)).decomposition;
+      assert.strictEqual(result.status, "decomposed");
+      if (result.status === "decomposed")
+        assert.isFalse(
+          A.some(
+            A.flatMap(result.tree.elements, ({ terms }) => terms),
+            ({ head }) => head === "claim 1"
+          )
+        );
+    })
+  );
+
+  it.effect("retains nonflat source children in canonical inspection", () =>
+    Effect.gen(function* () {
+      for (const text of [
+        "A fixture comprising a module; the module includes a bracket, a bushing, and a washer.",
+        "A fixture comprising a module; the module includes a bracket and a bushing that is rigid.",
+      ]) {
+        const prepared = yield* prepareTexts([text]);
+        const evidence = evidenceOf([text]);
+        const detailed = yield* decomposePreparedClaimRoles(prepared, evidence);
+        assert.strictEqual(detailed.plans.length, 1);
+        const report = yield* inspectPreparedClaimRoles(prepared, evidence);
+        const original = O.getOrThrow(A.head(detailed.decompositions));
+        const inspected = O.getOrThrow(A.head(report.records)).decomposition;
+        assert.strictEqual(original.status, "decomposed");
+        assert.strictEqual(inspected.status, "decomposed");
+        if (original.status === "decomposed" && inspected.status === "decomposed")
+          assert.deepStrictEqual(inspected.tree, original.tree);
       }
     })
   );

@@ -2628,7 +2628,7 @@ const flatCompositionChild = (
   index: number
 ): boolean => {
   const item = O.getOrThrow(A.get(declaration.items, index));
-  const childTerms = O.getOrElse(A.get(terms, child.ordinal - 1), () => []);
+  const childTerms = O.getOrThrow(A.get(terms, child.ordinal - 1));
   const frames = A.filter(structural.frames, (frame) => frame.publicOwner === child.ordinal);
   return (
     flatCompositionChildShape(child, item, declaration.owner) &&
@@ -2648,7 +2648,7 @@ const closedFlatCompositionChildren = (
   if (A.filter(structural.declarationPlans, (candidate) => candidate.owner === declaration.owner).length !== 1)
     return O.none();
   const children = A.getSomes(A.map(declaration.items, (item) => A.get(structural.elements, item.child - 1)));
-  const headerTerms = O.getOrElse(A.get(terms, owner.ordinal - 1), () => []);
+  const headerTerms = O.getOrThrow(A.get(terms, owner.ordinal - 1));
   if (
     children.length !== 2 ||
     headerTerms.length !== 1 ||
@@ -2657,7 +2657,7 @@ const closedFlatCompositionChildren = (
     return O.none();
   const merged = A.appendAll(
     headerTerms,
-    A.flatMap(children, (child) => O.getOrElse(A.get(terms, child.ordinal - 1), () => []))
+    A.flatMap(children, (child) => O.getOrThrow(A.get(terms, child.ordinal - 1)))
   );
   const span = { start: owner.extent.startChar, text: owner.extent.quote };
   return closedCompositionEnumeration(span, merged, tokensIn(span)) ? O.some(children) : O.none();
@@ -2794,15 +2794,13 @@ const sourcePublicContainment = (
   charge: (amount: number) => boolean
 ): O.Option<ReadonlyArray<EncodedEdge>> => {
   const containment: Array<EncodedEdge> = [];
-  let seen = HashSet.empty<string>();
+  // Validated children have one parent. Grouped children are leaves whose
+  // self-mapped edges are omitted, so every remaining public child is unique.
   for (const element of sourceElements) {
     const endpoints = sourceContainmentPaths(element, owners, paths);
     if (O.isNone(endpoints)) continue;
     const [child, parent] = endpoints.value;
-    const key = `${child}:${parent}`;
-    if (!charge(key.length + 8)) return O.none();
-    if (HashSet.has(seen, key)) continue;
-    seen = HashSet.add(seen, key);
+    if (!charge(child.length + parent.length + 9)) return O.none();
     containment.push({ kind: "part-of", child, parent });
   }
   return O.some(containment);
