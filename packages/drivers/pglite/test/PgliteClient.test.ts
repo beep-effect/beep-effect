@@ -3,6 +3,7 @@ import { makeLayer, PgliteClient, PgliteError, PgliteTestLayer } from "@beep/pgl
 import { it } from "@beep/test-runner";
 import * as Pg from "@effect/sql-pg/PgClient";
 import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
@@ -49,6 +50,28 @@ describe("PgliteError", () => {
     expect(error._tag).toBe("PgliteError");
     expect(error.operation).toBe("connect");
     expect(O.getOrNull(error.message)).toBe("boom");
+  });
+
+  it("keeps an Error cause instead of dropping it", () => {
+    const cause = new Error("boom");
+    const error = PgliteError.fromUnknown("connect", cause);
+
+    assertSome(error.cause, cause);
+    assertSome(error.message, "boom");
+  });
+
+  it("keeps a non-Error cause without inventing a message", () => {
+    const error = PgliteError.fromUnknown("connect", "socket closed");
+
+    assertSome(error.cause, "socket closed");
+    assertNone(error.message);
+  });
+
+  it("leaves cause and message empty when no failure was supplied", () => {
+    const error = PgliteError.fromUnknown("connect");
+
+    assertNone(error.cause);
+    assertNone(error.message);
   });
 
   it.prop(
