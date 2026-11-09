@@ -82,7 +82,9 @@ export const replayCitationPreCaseMetadata = Effect.fn("PreCaseMetadataTest.repl
   full: boolean
 ) {
   const setup = yield* install(kind);
-  const rows = full ? setup.corpus.cases : A.filter(setup.corpus.cases, (row) => row.smoke || row.calls === 0);
+  const rows = full
+    ? setup.corpus.cases
+    : A.filter(setup.corpus.cases, (row) => row.smoke || row.calls === 0 || A.contains([460, 500, 520], row.id));
   let calls = 0;
   for (const row of rows) {
     const result = yield* setup.stage.apply(row.request);
@@ -90,8 +92,8 @@ export const replayCitationPreCaseMetadata = Effect.fn("PreCaseMetadataTest.repl
     if (row.calls === 0) expect(result.reservedUnits).toBe(0);
     calls += row.calls;
   }
-  expect(rows).toHaveLength(full ? 540 : 230);
-  expect(calls).toBe(full ? 324 : 14);
+  expect(rows).toHaveLength(full ? 540 : 233);
+  expect(calls).toBe(full ? 324 : 17);
   yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, calls);
 });
 /** Exact reservation, immutable installation and skip-before-word decoding. */

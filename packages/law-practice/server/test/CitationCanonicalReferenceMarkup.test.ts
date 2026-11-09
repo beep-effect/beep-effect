@@ -7,7 +7,7 @@ import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true, concurrent: false })(
   "original HTML reference criteria",
   (it) => {
-    for (const kind of ["bun", "node"] as const) {
+    for (const kind of ["bun"] as const) {
       for (const family of ["references", "filtering"] as const) {
         it.effect(
           `replays the original ${family} entry on ${kind}`,

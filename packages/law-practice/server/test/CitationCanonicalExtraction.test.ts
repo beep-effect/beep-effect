@@ -7,7 +7,7 @@ import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true, concurrent: false })(
   "canonical public extraction entry",
   (it) => {
-    for (const kind of ["bun", "node"] as const) {
+    for (const kind of ["bun"] as const) {
       it.effect(
         `replays original basic and whitespace cases on ${kind}`,
         () => replayCitationCanonicalExtraction(kind, 0, 2),

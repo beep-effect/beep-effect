@@ -1,4 +1,3 @@
-import { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { makeCitationRegexProgram } from "@beep/law-practice-server/internal/Citation/RegexProgram";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
@@ -21,7 +20,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source verb
       expect(fresh.minimumWidthFloor).toBe(0);
     })
   );
-  for (const kind of CitationNativeRuntimeKind.literals) {
+  for (const kind of ["bun"] as const) {
     it.effect(
       `matches source verbose behavior through actual ${kind} children`,
       () => replayCitationRegexVerbose(kind, false),

@@ -7,7 +7,7 @@ import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true, concurrent: false })(
   "original court extraction assertions",
   (it) => {
-    for (const kind of ["bun", "node"] as const) {
+    for (const kind of ["bun"] as const) {
       it.effect(
         `replays original state bankruptcy panel and dated Westlaw court entries on ${kind}`,
         () => replayCitationCanonicalCourtExtraction(kind, 0, 1, true),

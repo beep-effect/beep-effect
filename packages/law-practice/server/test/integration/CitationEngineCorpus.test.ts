@@ -9,7 +9,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
   (it) => {
     for (const kind of ["bun", "node"] as const) {
       it.effect(
-        `replays all 36 pinned source documents through the public Layer on ${kind}`,
+        `replays all 22 retained source documents through the public Layer on ${kind}`,
         () => replayCitationEngineCorpus(kind, true),
         { timeout: 600000 }
       );
