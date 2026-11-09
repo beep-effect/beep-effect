@@ -688,6 +688,8 @@
     {"name":"CiPartitionTimingSource.readShardLog","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CiPartitions.binProposalLines","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CiPartitions.check","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"CiPartitions.prune","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"CiPartitions.pruneFamilyPlan","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CiPartitions.readShardPlan","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CiPartitions.rebalance","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CiPartitions.shardedSourceReport","owner":"@beep/repo-cli","family":"tooling","conforms":true},

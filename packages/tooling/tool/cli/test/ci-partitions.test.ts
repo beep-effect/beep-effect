@@ -11,6 +11,7 @@ import {
   checkCiPartitions,
   lptAssign,
   parseHostedTestUnitLog,
+  pruneCiPartitionPlans,
   rebalanceCiPartitions,
   renderCiPartitionReport,
   testUnitJobPartition,
@@ -309,6 +310,39 @@ it.layer(Layer.merge(NodeServices.layer, NodeCrypto.layer))("rebalance from a me
         Effect.flip
       );
       assertTrue(Str.includes("has no law-practice file timings")(error.message));
+    })
+  );
+});
+
+it.layer(Layer.merge(NodeServices.layer, NodeCrypto.layer))("prune committed plans", (it) => {
+  it.effect("drops files that no longer exist and re-packs the survivors from their own measurements", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fixtureRepo();
+      for (const [, packagePath] of A.take(fixturePackages, 2)) {
+        yield* fs.makeDirectory(path.join(root, packagePath, "test"), { recursive: true });
+        yield* fs.writeFileString(path.join(root, packagePath, "test/a.test.ts"), "");
+        yield* fs.writeFileString(path.join(root, packagePath, "test/b.test.ts"), "");
+      }
+      const committed = yield* encodeJson({
+        sourceRun: 11,
+        sourceCommit: "b80e11050714191c6d0ff58e8371e9d4c3f17880",
+        estimatedMilliseconds: [5000, 3000],
+        shards: [["test/a.test.ts", "test/gone.test.ts"], ["test/b.test.ts"]],
+        fileMilliseconds: { "test/a.test.ts": 1000, "test/b.test.ts": 3000, "test/gone.test.ts": 4000 },
+      });
+      yield* fs.writeFileString(path.join(root, "packages/tooling/tool/cli/vitest.shards.json"), committed);
+      yield* fs.writeFileString(path.join(root, "packages/law-practice/server/vitest.shards.json"), committed);
+      const lines = yield* pruneCiPartitionPlans(root, fixtureTable);
+      const plan = yield* fs
+        .readFileString(path.join(root, "packages/tooling/tool/cli/vitest.shards.json"))
+        .pipe(Effect.flatMap(decodePlan));
+      deepStrictEqual(plan.shards, [["test/b.test.ts"], ["test/a.test.ts"]]);
+      deepStrictEqual(plan.estimatedMilliseconds, [3000, 1000]);
+      strictEqual(plan.sourceRun, 11);
+      assertTrue(A.some(lines, Str.includes("(1 removed file(s) dropped)")));
+      assertTrue(A.some(lines, Str.includes("repo-cli-1: 3.0 s planned; table weightSeconds 0 -> set 3")));
     })
   );
 });

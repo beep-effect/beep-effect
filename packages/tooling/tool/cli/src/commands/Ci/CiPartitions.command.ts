@@ -43,6 +43,7 @@ import {
   CI_SHARDED_PARTITION_SOURCES,
   CI_UNIT_BIN_SERIAL_BUDGET_SECONDS,
   CiPartitionBudgetRow,
+  CiPartitionFileTiming,
   CiPartitionRebalanceReport,
   VitestShardPlan,
 } from "./CiPartitions.schemas.ts";
@@ -500,6 +501,88 @@ const binProposalLines = Effect.fn("CiPartitions.binProposalLines")(function* (
   ];
 });
 
+const pruneFamilyPlan = Effect.fn("CiPartitions.pruneFamilyPlan")(function* (
+  repoRoot: string,
+  table: ReadonlyArray<CiLanePartition>,
+  shardSource: CiShardedPartitionSource
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const plan = yield* readShardPlan(repoRoot, shardSource);
+  const partitions = shardedPartitionsOf(table, shardSource);
+  const measured = O.fromUndefinedOr(plan.fileMilliseconds);
+  if (O.isNone(measured)) {
+    return yield* CiCommandError.make({
+      message: `${shardSource.planPath} carries no fileMilliseconds; refresh it with --write --run <id> instead.`,
+    });
+  }
+  const partitionId = O.map(A.head(partitions), (partition) => partition.id);
+  if (O.isNone(partitionId)) {
+    return yield* CiCommandError.make({ message: `The table has no ${shardSource.family} shards to prune for.` });
+  }
+  const files = yield* Effect.filter(R.toEntries(measured.value), ([file]) =>
+    fs.exists(path.join(repoRoot, shardSource.packagePath, file)).pipe(Effect.orElseSucceed(() => false))
+  );
+  const dropped = A.length(R.keys(measured.value)) - A.length(files);
+  const pruned = buildVitestShardPlan(
+    BuildVitestShardPlanOptions.make({
+      files: A.map(files, ([file, milliseconds]) =>
+        CiPartitionFileTiming.make({ partitionId: partitionId.value, file, milliseconds })
+      ),
+      total: A.length(partitions),
+      sourceRun: plan.sourceRun,
+      sourceCommit: plan.sourceCommit,
+    })
+  );
+  yield* writeShardPlan(repoRoot, shardSource, pruned);
+  return [
+    `${shardSource.planPath}: ${A.length(files)} files over ${A.length(pruned.shards)} shards re-packed from the committed measurements of run ${plan.sourceRun} (${dropped} removed file(s) dropped)`,
+    ...A.map(
+      A.zip(partitions, pruned.estimatedMilliseconds),
+      ([partition, milliseconds]) =>
+        `  ${partition.id}: ${formatSeconds(milliseconds / 1000)} s planned; table weightSeconds ${partition.weightSeconds}${
+          roundSeconds(milliseconds) === partition.weightSeconds ? "" : ` -> set ${roundSeconds(milliseconds)}`
+        }`
+    ),
+  ];
+});
+
+/**
+ * Re-pack every committed plan from its own measurements after dropping files that no longer exist.
+ *
+ * **Details**
+ *
+ * A deletion lane removes test files faster than a green run can re-measure the rest. Pruning
+ * keeps every surviving file's last hosted measurement, re-runs the LPT packing into the table's
+ * shard count and rewrites the plan, so the shard estimates (and the table weights `--check`
+ * compares them with) stay honest without a GitHub read. The source run and commit are kept as
+ * provenance of the measurements.
+ *
+ * **Example** (Inspect the prune effect)
+ *
+ * ```ts
+ * import { pruneCiPartitionPlans } from "@beep/repo-cli/commands/Ci"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(pruneCiPartitionPlans("/repo")))
+ * ```
+ *
+ * @param repoRoot - The checkout holding the plan files.
+ * @param table - The partition table whose shard counts are the targets.
+ * @returns Lines describing the re-packed plans and any weight to set.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const pruneCiPartitionPlans = Effect.fn("CiPartitions.prune")(function* (
+  repoRoot: string,
+  table: ReadonlyArray<CiLanePartition> = CI_LANE_PARTITIONS
+) {
+  const lines = yield* Effect.forEach(CI_SHARDED_PARTITION_SOURCES, (source) =>
+    pruneFamilyPlan(repoRoot, table, source)
+  );
+  return A.flatten(lines);
+});
+
 /**
  * Repack every sharded family from one green run and write the plan files; propose the bin repack.
  *
@@ -545,9 +628,19 @@ const rebalanceCommand = Command.make(
       Flag.withDescription("Rewrite every vitest.shards.json from the --run timings and print the bin proposal")
     ),
     run: Flag.Int("run").pipe(Flag.withDescription("Green main run id whose Test Unit logs to measure"), Flag.optional),
+    prune: Flag.Boolean("prune").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription(
+        "Re-pack each committed plan from its own measurements after dropping files that no longer exist (no GitHub read)"
+      )
+    ),
   },
-  Effect.fnUntraced(function* ({ check, run, write }) {
+  Effect.fnUntraced(function* ({ check, prune, run, write }) {
     const repoRoot = yield* findRepoRoot().pipe(Effect.orElseSucceed(() => process.cwd()));
+    if (prune) {
+      const lines = yield* pruneCiPartitionPlans(repoRoot);
+      yield* printLines(lines);
+    }
     if (write) {
       const runId = yield* O.match(run, {
         onNone: () => CiCommandError.make({ message: "--write needs --run <id> naming a green main run." }),
@@ -562,7 +655,7 @@ const rebalanceCommand = Command.make(
       );
       yield* printLines(lines);
     }
-    if (check || !write) {
+    if (check || (!write && !prune)) {
       const report = yield* checkCiPartitions(repoRoot);
       yield* printLines(renderCiPartitionReport(report));
       const failing = A.filter(report.rows, (row) => row.status !== "within");
@@ -598,6 +691,7 @@ export const ciPartitionsCommand = Command.make("partitions", {}, () =>
     "Test Unit partition commands:",
     "- bun run beep ci partitions rebalance [--check] (offline budget check of the committed plans and table)",
     "- bun run beep ci partitions rebalance --write --run <id> (repack from a green main run, then check)",
+    "- bun run beep ci partitions rebalance --prune (re-pack the committed plans after test deletions; no GitHub read)",
   ])
 ).pipe(
   Command.withDescription("Hosted Test Unit partition plans and budgets"),
