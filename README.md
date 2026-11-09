@@ -24,9 +24,9 @@ until the exact source span checks out and the attorney says yes.
 The product is the reason this repo exists. The engineering practice is what a
 visitor can actually read today.
 
-- **Every change passes gates before it lands.** Change profiling, a PR-size
-  gate, coverage regression, property laws, a JSDoc ratchet, secrets and
-  security scans, SAST
+- **Every change passes gates before it lands.** Change profiling and
+  heavy-tier admission, coverage regression, property laws, a JSDoc ratchet,
+  secrets and security scans, SAST
   ([`.github/workflows/check.yml`](.github/workflows/check.yml)). Ratchets
   only tighten ([`goals/quality-gate-ratchets/`](goals/quality-gate-ratchets/README.md)).
   In October 2026 that let 900+ agent-authored PRs merge to `main`, up from
@@ -46,7 +46,7 @@ visitor can actually read today.
 - **Third-party SDKs live only in drivers.** Retries, rate limits and error
   translation stop at that boundary; the domain never imports a vendor
   ([`03-driver-boundaries.md`](standards/architecture/03-driver-boundaries.md),
-  57 driver packages so far).
+  56 driver packages so far).
 - **Errors are typed and translated at every boundary**, so an API client or an
   MCP tool never sees a stack trace or somebody else's identifier
   ([`09-errors-across-boundaries.md`](standards/architecture/09-errors-across-boundaries.md)).

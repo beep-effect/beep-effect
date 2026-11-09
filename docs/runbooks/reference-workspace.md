@@ -8,7 +8,8 @@ Effect APIs against; nothing there is part of the tracked tree.
 ## Layout
 
 The reference workspace holds `effect` and `effect-tsgo` child clones.
-`bun run beep refs provision` provisions it from
+By default it lives at `$HOME/YeeBois/references/effect` (the manifest's
+`rootDefault`). `bun run beep refs provision` provisions it from
 `packages/tooling/policy-pack/repo-configs/data/references.json`;
 `BEEP_REFERENCES_ROOT` overrides the workspace root.
 
