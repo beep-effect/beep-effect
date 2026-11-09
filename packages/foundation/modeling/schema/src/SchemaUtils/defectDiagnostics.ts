@@ -69,20 +69,19 @@ export const optionalDefectMessage = (description: string) =>
  * @category models
  * @since 0.0.0
  */
-export class DefectDiagnostics extends S.Class<DefectDiagnostics, { readonly brand: unique symbol }>(
-  $I`DefectDiagnostics`
-)(
-  {
+export class DefectDiagnostics extends S.Opaque<DefectDiagnostics, { readonly brand: unique symbol }>()(
+  S.Struct({
     cause: S.Option(S.Unknown).annotateKey({
       description: "Original failure when one was supplied; none when the cause was undefined.",
     }),
     message: S.Option(S.NonEmptyString).annotateKey({
       description: "Non-empty message extracted from an Error cause.",
     }),
-  },
-  $I.annote("DefectDiagnostics", {
-    description: "Optional cause and message recovered from an unknown failure for tagged-error constructors.",
-  })
+  }).pipe(
+    $I.annoteSchema("DefectDiagnostics", {
+      description: "Optional cause and message recovered from an unknown failure for tagged-error constructors.",
+    })
+  )
 ) {}
 
 /**

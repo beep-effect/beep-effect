@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-09T14:07:08.051Z",
+  "generatedAt": "2026-11-09T14:21:18.870Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -40989,8 +40989,8 @@
           "exportKind": "const",
           "filePath": "src/SchemaUtils/defectDiagnostics.ts",
           "repoPath": "packages/foundation/modeling/schema/src/SchemaUtils/defectDiagnostics.ts",
-          "line": 112,
-          "anchor": "packages-foundation-modeling-schema-src-schemautils-defectdiagnostics-ts-112-defectdiagnostics",
+          "line": 111,
+          "anchor": "packages-foundation-modeling-schema-src-schemautils-defectdiagnostics-ts-111-defectdiagnostics",
           "currentTags": [
             "@param",
             "@returns",
