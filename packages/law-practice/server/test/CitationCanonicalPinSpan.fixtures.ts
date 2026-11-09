@@ -45,7 +45,7 @@ const readRows = Effect.fn("CanonicalPinSpanTest.read")(function* () {
     operations.cases,
     (row) => row.operation === "get_citations" && Str.startsWith(prefix)(row.id)
   );
-  expect(calls).toHaveLength(5);
+  expect(calls).toHaveLength(citationCanonicalPinSpanCalls);
   let offset = 0;
   return yield* Effect.forEach(
     calls,
@@ -84,15 +84,20 @@ const readRows = Effect.fn("CanonicalPinSpanTest.read")(function* () {
   ).pipe(Effect.tap(() => Effect.sync(() => expect(offset).toBe(9))));
 });
 
-/** Recompute original pure builtin cleaning and all nine verified pin-span substrings.
+/** Original parser calls in the pin-span cohort; replay slices must cover every call. */
+export const citationCanonicalPinSpanCalls = 5;
+/** Recompute original pure builtin cleaning and the verified pin-span substrings of one slice.
  * The raw-input extraction pipeline runs the same ordered cleaners before parsing;
  * no retained callback or document-protocol equivalence is inferred.
  * @internal @category testing @since 0.0.0
  */
 export const replayCitationCanonicalPinSpan = Effect.fn("CanonicalPinSpanTest.replay")(function* (
-  kind: CitationNativeRuntimeKind
+  kind: CitationNativeRuntimeKind,
+  from: number,
+  count: number
 ) {
-  const rows = yield* readRows();
+  const all = yield* readRows();
+  const rows = A.take(A.drop(all, from), count);
   const replay = yield* makeCitationCanonicalExtractionReplay(kind);
   for (const row of rows) {
     const actual = yield* replay.extract(row.raw, "plain", row.models, row.id, row.steps);

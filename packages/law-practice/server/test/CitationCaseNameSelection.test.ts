@@ -6,9 +6,4 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("original HT
   it.effect("preserves source fallback and empty fields on Bun", () => replayCitationCaseNameSelection("bun", false), {
     timeout: 180000,
   });
-  it.effect(
-    "preserves the same selection and confirmed retirement on Node",
-    () => replayCitationCaseNameSelection("node", false),
-    { timeout: 180000 }
-  );
 });

@@ -4,8 +4,9 @@ import * as Layer from "effect/Layer";
 import { citationCanonicalExtractionShards } from "../CitationCanonicalExtraction.fixtures.ts";
 import { citationTokenizerTestLayer } from "../CitationTokenizer.fixtures.ts";
 
-// Bun runtime only; CitationCanonicalExtractionNode.test.ts replays the same
-// shards on node so the two files run on separate vitest workers.
+// Bun runtime only. The node replay of these shards (CitationCanonicalExtractionNode.test.ts) was
+// deleted on 2026-11-09 (deletion addendum G1); integration/CitationEngineCorpus.test.ts is the node
+// full-corpus scene.
 it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true })(
   "all canonical builtin extraction inputs",
   (it) => {

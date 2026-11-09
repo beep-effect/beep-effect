@@ -1,4 +1,3 @@
-import { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { it } from "@beep/test-runner";
 import { assertCitationHtmlDiscoveryOwnership, replayCitationHtmlDiscovery } from "./CitationHtmlDiscovery.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
@@ -9,7 +8,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("original HT
     assertCitationHtmlDiscoveryOwnership,
     { timeout: 120000 }
   );
-  for (const kind of CitationNativeRuntimeKind.literals)
+  for (const kind of ["bun"] as const)
     it.effect(`preserves source discovery through ${kind}`, () => replayCitationHtmlDiscovery(kind, false), {
       timeout: 120000,
     });

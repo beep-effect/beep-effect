@@ -1,4 +1,3 @@
-import { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { it } from "@beep/test-runner";
 import {
   assertCitationJournalMetadataBudget,
@@ -19,7 +18,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source full
   it.effect("rejects closed lifetime and owns its deadline", assertCitationJournalMetadataLifetime, {
     timeout: 120000,
   });
-  for (const kind of CitationNativeRuntimeKind.literals) {
+  for (const kind of ["bun"] as const) {
     it.effect(
       `matches source journal changes and selection through ${kind}`,
       () => replayCitationJournalMetadata(kind, false),

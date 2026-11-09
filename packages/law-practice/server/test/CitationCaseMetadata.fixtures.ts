@@ -201,10 +201,13 @@ export const replayCitationCaseMetadata = Effect.fn("CaseMetadataTest.replay")(f
   full: boolean
 ) {
   const installed = yield* install(kind);
-  const rows = A.filter(installed.corpus.cases, (row) => full || A.contains([0, 6, 10, 18, 22, 48, 60, 66], row.id));
+  const rows = A.filter(
+    installed.corpus.cases,
+    (row) => full || A.contains([0, 1, 3, 4, 5, 6, 7, 8, 10, 17, 18, 22, 27, 48, 60, 61, 63, 66], row.id)
+  );
   let children = 0;
   for (const row of rows) children += yield* assertRow(installed, row);
-  expect(rows).toHaveLength(full ? 80 : 8);
+  expect(rows).toHaveLength(full ? 80 : 18);
   yield* assertCitationWorkerCompositionReleased(
     installed.setup.operation,
     installed.setup.admission,

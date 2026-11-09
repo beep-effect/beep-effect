@@ -8,7 +8,4 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("live Docume
     () => replayCitationDocumentExtraction("bun", false),
     { timeout: 180000 }
   );
-  it.effect("preserves the same owned composition on Node", () => replayCitationDocumentExtraction("node", false), {
-    timeout: 180000,
-  });
 });

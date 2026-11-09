@@ -8,9 +8,4 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("raw semanti
     () => replayCitationSemanticExtraction("bun", false),
     { timeout: 180000 }
   );
-  it.effect(
-    "retains the same source behavior and budget on Node",
-    () => replayCitationSemanticExtraction("node", false),
-    { timeout: 180000 }
-  );
 });
