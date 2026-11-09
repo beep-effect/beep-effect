@@ -2799,17 +2799,17 @@
       "reason": "Owner: @beep/observability. runWithLayer scopes the layer so closing it flushes the OTLP exporters before the caller asserts on the captured requests; the helper comment says so. Without the shorter scope the exports arrive only at test teardown, after the assertions. Exit: retire when EV004 recognises a helper scope whose close the caller's later assertions observe (#1855 wave 4 register)."
     },
     {
-      "id": "EV004:packages/law-practice/server/test/CitationNativeSocket.test.ts:267:scoped@19#1",
+      "id": "EV004:packages/law-practice/server/test/CitationNativeSocket.test.ts:270:scoped@19#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationNativeSocket.test.ts",
-      "line": 267,
-      "endLine": 277,
+      "line": 270,
+      "endLine": 284,
       "symbol": "scoped",
-      "occurrence": "v2:9481ed9db2ca286a43e30584a342acf197615dd232be19e4811e6667a826a08b",
+      "occurrence": "v2:4ed9ceb75ebc0cd4e07e17694057408185137d9d431e4519bd407890a8af0255",
       "class": "shorter-scope-lifetime-review",
-      "evidence": "Effect.scoped( Effect.gen(function* () { const rpc = yield* client(child); yield* rpc.Echo({ text: \"ready\" }); const busy = yield* rpc.Busy().pipe(Effect.forkChild); const marker = yield* Stream.runHe",
+      "evidence": "Effect.scoped( Effect.gen(function* () { const rpc = yield* client(child); yield* rpc.Echo({ text: \"ready\" }); const busy = yield* rpc.Busy().pipe(Effect.forkChild); const marker = yield* child.stderr",
       "replacement": {
         "primitive": "readme.resource-safety",
         "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
@@ -2821,15 +2821,15 @@
       "reason": "Reviewed intentional shorter lifetime: this Effect.scoped closes only the RPC client on the owned child's socket, before the surrounding owned-process operation retires the child and the test asserts its physical retirement. Reviewed in goals/citation-extraction-engine."
     },
     {
-      "id": "EV004:packages/law-practice/server/test/CitationNativeSocket.test.ts:225:scoped@19#1",
+      "id": "EV004:packages/law-practice/server/test/CitationNativeSocket.test.ts:224:scoped@19#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationNativeSocket.test.ts",
-      "line": 225,
-      "endLine": 238,
+      "line": 224,
+      "endLine": 241,
       "symbol": "scoped",
-      "occurrence": "v2:3be83f863bc7ea356aa99a992fafc454187374f8f85a14538acc4a21cbdea8ef",
+      "occurrence": "v2:b7b89b1ab8191771fbc53e1028eb4ca41fce1263656e74a1a08b22828190c915",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped( Effect.gen(function* () { const rpc = yield* client(child); const echoed = yield* rpc.Echo({ text: \"ready\" }); expect(echoed).toBe(\"ready\"); const blocked = yield* rpc.Busy().pipe(Effec",
       "replacement": {
@@ -2843,13 +2843,13 @@
       "reason": "Reviewed intentional shorter lifetime: this Effect.scoped closes only the RPC client on the owned child's socket, before the surrounding owned-process operation retires the child and the test asserts its physical retirement. Reviewed in goals/citation-extraction-engine."
     },
     {
-      "id": "EV004:packages/law-practice/server/test/CitationNativeSocket.test.ts:103:scoped@26#1",
+      "id": "EV004:packages/law-practice/server/test/CitationNativeSocket.test.ts:102:scoped@26#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationNativeSocket.test.ts",
-      "line": 103,
-      "endLine": 108,
+      "line": 102,
+      "endLine": 107,
       "symbol": "scoped",
       "occurrence": "v2:982f41a01f40d8a7781b6a99abf652388ec311d0736f930a1ccc3e2675be4122",
       "class": "shorter-scope-lifetime-review",
@@ -7107,13 +7107,13 @@
       "reason": "Authenticates the committed frozen six-form profile through the real filesystem; a MemoryFileSystem has no committed artifact to replay. Reviewed in goals/citation-extraction-engine."
     },
     {
-      "id": "EV010:packages/law-practice/server/test/CitationExtractorControls.test.ts:17:@effect/platform-bun/BunServices@0#1",
+      "id": "EV010:packages/law-practice/server/test/CitationExtractorControls.test.ts:18:@effect/platform-bun/BunServices@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationExtractorControls.test.ts",
-      "line": 17,
-      "endLine": 17,
+      "line": 18,
+      "endLine": 18,
       "symbol": "@effect/platform-bun/BunServices",
       "occurrence": "v2:30f5ad27b3466e9087faebe94dfc83f5ea9ae5070b9af25a085792eb5bd68f2c",
       "class": "platform-resource-provenance-review",
