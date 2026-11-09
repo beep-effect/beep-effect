@@ -948,7 +948,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     { scenario: "packet prose" },
     { scenario: "nested fixture paths" },
     { scenario: "documentation and push" },
-    { scenario: "executable and mixed" },
+    { scenario: "goal helpers and mixed" },
   ] as const)("classifies $scenario without suppressing mixed or push runs", ({ scenario }) =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -1093,7 +1093,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
             assert.strictEqual(profile("pull_request").docs_only, "false");
           })
         ),
-        Match.when("executable and mixed", () =>
+        Match.when("goal helpers and mixed", () =>
           Effect.gen(function* () {
             const metadataHead = yield* metadata;
             git(["reset", "--hard", metadataHead]);
@@ -1111,7 +1111,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
             git(["commit", "-m", "goal executable"]);
             const executableProfile = profile("pull_request");
             assert.strictEqual(executableProfile.goals_only, "false");
-            assert.strictEqual(executableProfile.docs_only, "false");
+            assert.strictEqual(executableProfile.docs_only, "true");
             yield* fs.makeDirectory(path.join(tempRoot, "src"));
             yield* fs.writeFileString(path.join(tempRoot, "src", "index.ts"), "export {}\n");
             git(["add", "."]);

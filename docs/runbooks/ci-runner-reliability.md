@@ -36,6 +36,28 @@ still heavy duration times queue depth. Pool sizing — `runners_maximum_count`,
 Spot versus On-Demand, the two-worker cap above — remains the operator's lever
 and is unchanged by admission (time-to-certainty ruling 57).
 
+## Documentation and planning changes
+
+A PR confined to `docs/`, `goals/`, `explorations/` and `research/` takes the
+shared documentation route. Goal diagrams, attachments, temporary helper scripts
+and verifier data belong to that route too; they do not trigger product tests,
+builds, code lint or coverage collection. This folder policy avoids treating a
+new document format as a product change. The narrower `goals_only` profile still
+controls packet-specific repository checks independently.
+
+Markdown outside `packages/`, `apps/` and `infra/` also takes this route, including
+`standards/ARCHITECTURE.md`. The entire `standards/` tree is not exempt: inventory
+JSON/JSONC and configuration can alter verification and retain applicable checks.
+A mixed PR containing product code or CI configuration retains verification.
+Missing or unreadable diff evidence never grants the documentation exemption.
+Security checks and required aggregate contexts remain in place.
+
+The schema-owned patterns in `CiOperational.schemas.ts`, their generated JSON
+projection, the pre-install change profile and Yeet's publication classifier use
+the same path policy. Regenerate the projection with `bun run beep ci patterns
+--write` after changing that policy. A compiled CI binary reads the checkout's
+projection, so this routing update does not require a new binary release.
+
 ## Attribute a runner loss
 
 1. Read every relevant attempt with

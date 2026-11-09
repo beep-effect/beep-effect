@@ -249,12 +249,55 @@ describe("B8 heavy admission contracts", () => {
       "goals/research-library-routes/research/SOURCES.md",
     ];
     expect(decideHeavyAdmission(event({ changedPaths }))).toMatchObject({ docsOnly: true, verdict: "skip-satisfied" });
-    for (const executable of [
-      "goals/research-intake-2026-11/ops/run.sh",
-      "goals/research-intake-2026-11/research/fixture.json",
-      "packages/a/src/index.ts",
-    ]) {
+    for (const executable of ["packages/a/src/index.ts"]) {
       expect(decideHeavyAdmission(event({ changedPaths: [...changedPaths, executable] })).docsOnly).toBe(false);
+    }
+  });
+
+  it("routes the complete PR 2993 goal packet without product verification", () => {
+    const changedPaths = [
+      "docs/ROADMAP.md",
+      "goals/attributed-multi-claim-span/README.md",
+      "goals/attributed-multi-claim-span/ops/manifest.json",
+      "goals/text-knowledge-stack-rebuild/GOAL.md",
+      "goals/text-knowledge-stack-rebuild/PLAN.md",
+      "goals/text-knowledge-stack-rebuild/README.md",
+      "goals/text-knowledge-stack-rebuild/SPEC.md",
+      "goals/text-knowledge-stack-rebuild/decisions/2026-11-08-program-shape-one-packet-design-first-layers-bottom-up-folds-by-census.md",
+      "goals/text-knowledge-stack-rebuild/decisions/2026-11-09-breaking-changes-accepted-the-best-core-outranks-compatibility.md",
+      "goals/text-knowledge-stack-rebuild/decisions/2026-11-09-open-questions-1-5-resolved-toward-the-clean-core-p0-confirms-or-reverses.md",
+      "goals/text-knowledge-stack-rebuild/history/.gitkeep",
+      "goals/text-knowledge-stack-rebuild/history/reflections/.gitkeep",
+      "goals/text-knowledge-stack-rebuild/ops/manifest.json",
+      "goals/text-knowledge-stack-rebuild/research/.gitkeep",
+      "goals/text-knowledge-stack-rebuild/research/2026-11-08-critic-1-theory.md",
+      "goals/text-knowledge-stack-rebuild/research/2026-11-08-critic-2-doctrine.md",
+      "goals/text-knowledge-stack-rebuild/research/2026-11-08-critic-3-product.md",
+      "goals/text-knowledge-stack-rebuild/research/2026-11-08-reader-a-law-practice.md",
+      "goals/text-knowledge-stack-rebuild/research/2026-11-08-reader-b-modeling-audit.md",
+      "goals/text-knowledge-stack-rebuild/research/2026-11-08-reader-c-agent-surfaces.md",
+      "goals/text-knowledge-stack-rebuild/research/2026-11-08-reader-d-standards-vision.md",
+      "goals/text-knowledge-stack-rebuild/research/2026-11-08-rebuild-report.md",
+      "goals/text-knowledge-stack-rebuild/research/OPPORTUNITIES.md",
+      "goals/text-knowledge-stack-rebuild/research/SOURCES.md",
+      "goals/text-knowledge-stack-rebuild/research/figures/anchored-annotation.dot",
+      "goals/text-knowledge-stack-rebuild/research/figures/anchored-annotation.svg",
+      "goals/text-knowledge-stack-rebuild/research/figures/boundary-worlds.dot",
+      "goals/text-knowledge-stack-rebuild/research/figures/boundary-worlds.svg",
+      "goals/text-knowledge-stack-rebuild/research/figures/stack-layers.dot",
+      "goals/text-knowledge-stack-rebuild/research/figures/stack-layers.svg",
+      "goals/text-knowledge-stack-rebuild/research/law-test-plan.md",
+    ];
+    expect(decideHeavyAdmission(event({ changedPaths }))).toMatchObject({
+      docsOnly: true,
+      verdict: "skip-satisfied",
+    });
+    for (const input of [
+      "packages/a/src/index.ts",
+      ".github/workflows/check.yml",
+      "standards/schema-first.inventory.jsonc",
+    ]) {
+      expect(decideHeavyAdmission(event({ changedPaths: [...changedPaths, input] })).docsOnly).toBe(false);
     }
   });
 
@@ -272,13 +315,26 @@ describe("B8 heavy admission contracts", () => {
       ["goals/x/history/.gitkeep", true],
       ["goals/x/history/reflections/.gitkeep", true],
       ["goals/x/research/.gitkeep", true],
-      ["goals/x/ops/.gitkeep", false],
-      ["goals/x/scripts/.gitkeep", false],
-      ["goals/x/research/.gitkeep.sh", false],
-      ["goals/x/research/fixture.json", false],
-      ["goals/x/scripts/run.sh", false],
-      ["goals/x/ops/fixtures.json", false],
-      ["goals/x/ops/manifest.json.bak", false],
+      ["goals/x/ops/.gitkeep", true],
+      ["goals/x/scripts/.gitkeep", true],
+      ["goals/x/research/.gitkeep.sh", true],
+      ["goals/x/research/figures/diagram.dot", true],
+      ["goals/x/research/figures/diagram.svg", true],
+      ["goals/x/decisions/assets/diagram.png", true],
+      ["goals/x/designs/diagram.mermaid", true],
+      ["goals/x/research/reference.pdf", true],
+      ["goals/x/research/diagram.svg.ts", true],
+      ["goals/x/research/verify.sh", true],
+      ["goals/x/research/tool.py", true],
+      ["goals/x/research/tool", true],
+      ["goals/x/research/figures/tsconfig.json", true],
+      ["goals/x/research/fixtures/input.svg", true],
+      ["goals/x/scripts/input.svg", true],
+      ["goals/x/ops/input.svg", true],
+      ["goals/x/research/fixture.json", true],
+      ["goals/x/scripts/run.sh", true],
+      ["goals/x/ops/fixtures.json", true],
+      ["goals/x/ops/manifest.json.bak", true],
       ["docs/runbooks/ci-runner-reliability.md", true],
       ["docs/assets/diagram.svg", true],
       ["explorations/INBOX.md", true],
@@ -290,6 +346,10 @@ describe("B8 heavy admission contracts", () => {
       ["packages/a/src/index.ts", false],
       ["packages/a/src/index.md.ts", false],
       ["README.md", true],
+      ["standards/ARCHITECTURE.md", true],
+      ["standards/architecture/DECISIONS.md", true],
+      ["standards/schema-first.inventory.jsonc", false],
+      ["standards/schema-first.inventory.json", false],
       [".github/workflows/check.yml", false],
       ["scripts/cloud/bootstrap.sh", false],
       ["mydocs/file.ts", false],

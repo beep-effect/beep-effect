@@ -318,13 +318,12 @@ export class HeavyAdmission extends S.Opaque<HeavyAdmission, { readonly brand: u
  *
  * **Details**
  *
- * The schema-owned goals pattern consumed by the pre-runtime profile adapter
- * (packet prose: `GOAL|PLAN|README|SPEC|DECISIONS.md`, `ops/manifest.json`,
- * `goals/INDEX|README.md`), widened by `docs/**`, `explorations/**`,
- * `research/**`, `.changeset/*.md`, and `*.md` anywhere, except under the
- * code roots (`packages/`, `apps/`, `infra/`). Executables, fixtures, JSON and
- * scripts under `goals/**` stay code-bearing. The tier-1 change profile
- * (`ci change-profile` and its pre-runtime adapter) reuses this path rule.
+ * `docs/**`, `goals/**`, `explorations/**` and `research/**` are documentation
+ * and planning surfaces, including temporary goal helpers and verifier inputs.
+ * They do not trigger product verification. `.changeset/*.md` and Markdown
+ * outside product roots also qualify. Paths under `packages/`, `apps/` and
+ * `infra/` retain verification, including their Markdown files. The tier-1
+ * change profile and Yeet publication reuse this same schema-owned path rule.
  *
  * **Example** (Classify two paths)
  *
@@ -332,7 +331,7 @@ export class HeavyAdmission extends S.Opaque<HeavyAdmission, { readonly brand: u
  * import { heavyDocsOnlyPattern } from "@beep/repo-cli/commands/Ci"
  *
  * console.log(heavyDocsOnlyPattern.test("packages/a/README.md")) // false
- * console.log(heavyDocsOnlyPattern.test("goals/x/scripts/run.sh")) // false
+ * console.log(heavyDocsOnlyPattern.test("goals/x/scripts/run.sh")) // true
  * ```
  *
  * @category constants
@@ -352,7 +351,7 @@ export const heavyDocsOnlyPattern: RegExp = new RegExp(
  * import { isHeavyDocsOnlyPath } from "@beep/repo-cli/commands/Ci"
  *
  * console.log(isHeavyDocsOnlyPath("docs/runbooks/ci.md")) // true
- * console.log(isHeavyDocsOnlyPath("goals/x/ops/fixtures.json")) // false
+ * console.log(isHeavyDocsOnlyPath("goals/x/ops/fixtures.json")) // true
  * ```
  *
  * @param path - A repo-relative path as `git diff --name-only` prints it.
