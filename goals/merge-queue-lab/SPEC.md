@@ -46,7 +46,8 @@ Higher sources outrank lower sources when they conflict.
 ## Target Surfaces
 
 - A long-lived lab branch `queue-lab`, cut from `main`.
-- `.github/workflows/queue-lab.yml` on `queue-lab` only: a toy required check
+- A `queue-lab.yml` workflow under `.github/workflows` on `queue-lab` only: a
+  toy required check
   that reports on `pull_request` and `merge_group` and can be told to pass,
   fail, skip, cancel or hang.
 - A second repository ruleset that targets `refs/heads/queue-lab` exactly,
@@ -56,8 +57,8 @@ Higher sources outrank lower sources when they conflict.
   the existing `enablePullRequestAutoMerge`.
 - `goals/merge-queue-lab/ops/`: the lab driver script, registered in the
   manifest's `opsScripts`.
-- `goals/merge-queue-lab/research/findings.md` and
-  `research/evidence/`: the findings ledger and the saved responses.
+- A `findings.md` ledger and an `evidence` directory under
+  `goals/merge-queue-lab/research`: the findings and the saved responses.
 - `explorations/github-merge-queue/`: the verdict fed back at closeout.
 
 ## Constraints
@@ -95,7 +96,7 @@ Higher sources outrank lower sources when they conflict.
 
 Identifiers match
 [`research/github-semantics.md`](../../explorations/github-merge-queue/research/github-semantics.md)
-in the exploration. Each gets a row in `research/findings.md`: what was done,
+in the exploration. Each gets a row in the findings ledger: what was done,
 what happened, the evidence, what it means for the design.
 
 | Id | Question |
@@ -163,7 +164,7 @@ post-merge run can shrink, and go to `merge-group-parity`.
 | Whitespace | `git diff --check -- goals/merge-queue-lab` | Passes |
 | `main` ruleset untouched | `bun run beep ci ruleset --check` | Passes |
 | Driver package | `bun run beep quality package-verify @beep/github` | Passes |
-| Findings complete | every Observations id appears in `research/findings.md` | All present |
+| Findings complete | every Observations id appears in the findings ledger | All present |
 | Decisions projected | `bun run beep goals decisions check --slug merge-queue-lab` | Passes |
 
 ## Stop Conditions
