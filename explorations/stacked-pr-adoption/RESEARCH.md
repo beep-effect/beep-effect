@@ -6,7 +6,160 @@ repo (cited), and what exists inside it (so we compose bricks instead of
 rebuilding them). Date sections; research goes stale.
 -->
 
-## 2026-10-13 — Refresh for align (read this first)
+## 2026-11-09 — Reground after four weeks parked (read this first)
+
+Re-measured in one session. Where it disagrees with the 10-13 refresh, this
+section is current; the older sections stay as written. Windows end
+2026-11-10T01:40Z. Method notes are at the end of the section.
+
+- **`stacks-reopen-gate`: demand is met, health is just short.**
+  - Health, 14 days from 2026-10-27: `main` was required-green 73.6% of
+    wall-clock time, and on 167 of the 215 Check runs that reached a
+    verdict (77.7%). The bar is 80%.
+  - Week one (10-27..11-02) passed at 86.2% of time. Week two fell to
+    61.5%, and the last three days to 41.5%.
+  - Demand: 12 live dependency structures in 14 days, 5 in week one and 7
+    in week two. The bar is 3 a week. A structure is live when the child PR
+    opened while its parent was unlanded.
+- **A third of the live structures are not linear.** Of the 12:
+  - 8 are two-PR chains, which a native stack can express;
+  - 2 are joins, one child on two parents (#2361 and #2363 into #2367;
+    #2745 and #2746 into #2747);
+  - 2 are fans, one parent with two children (#2728; #2797).
+  - A native stack is linear, so it models 8 of 12.
+- **Lanes break the dependent-lane rule about one time in four.**
+  - 18 parent/child pairs were live; 46 pairs followed the rule and
+    published the child after the parent landed.
+  - Every live child targeted `main` and carried the parent's commits.
+    Median overlap was 2.2 hours; the longest was 25.
+  - In 4 structures the parent was closed and the child landed both
+    changes (#2304, #2361, #2363, #2734).
+- **The repo is nearly three times busier.** 782 PRs opened in 14 days (56
+  a day; 21 a day on 10-13), 734 merged, 770 from one login. `main`
+  received 733 Check runs and 513 were cancelled, so 70% of merges never
+  got a verdict of their own. The cause was not split between a newer push
+  superseding the run in the `Check-refs/heads/main` group and a
+  cancellation by hand.
+- **The CI cost premise from 10-05 is gone.** Three green `main` runs on
+  11-09:
+  - 74 jobs with a runner, 378–408 runner-min per head;
+  - 69 of them on GitHub-hosted `ubuntu-24.04`, 5 on `beep-ec2-heavy`;
+  - the seven `Heavy /` jobs total 22–28 runner-min (53 on 10-13);
+  - longest job 10.6–18.6 min; queue wait p50 0.1–2.7 min and p90
+    0.2–7.6 min (p90 60–68 min on 10-13).
+  - A cascade re-run now costs about 400 hosted minutes and about 25
+    self-hosted ones. It no longer starves anything.
+- **Required contexts: 15, down from 16.** Codegen Drift, Commitlint, Heavy
+  / Check, Heavy / Docgen, Heavy / Doctest, Heavy / Test Integration, JSDoc
+  Ratchet, Lint, Nix Shell, Professional Desktop IPC Stdio, Repo Sanity,
+  SAST, Secret Scanning, Security, Test Unit. The ruleset has no
+  `merge_queue` rule.
+  - Of the 108 failing `main` runs, 83 failed Heavy / Coverage Regression
+    and 53 failed Heavy / Lint Policy. Both are still non-required.
+  - Required failures: Test Unit 28, Heavy / Test Integration 12, Heavy /
+    Check 8, Heavy / Docgen 6, Repo Sanity 5, Security 3, six others once.
+- **Fewer merges bypass.** 211 of 492 pushes to `main` in the 7 days to
+  11-09 evaluated `bypass` (42.9%); 279 passed. After S11 on 10-13 it was
+  30 of 36. A top-of-stack merge needs a merge without bypass, so it is now
+  available more than half the time.
+- **Inherited reds are the larger problem.** 151 of the 782 PRs carry
+  `unblocks-main` (19%), 139 of them merged, against about 24 required-red
+  episodes read from the verdict sequence. Decision `unblocker-label` set
+  one labelled PR per episode. An unblocker's median open-to-merge time is
+  27 minutes (p90 206).
+- **Doctrine now says two things about stacking.**
+  - The Yeet skill, step 2c: never open a PR against a non-`main` base.
+  - Ruling B3 of 2026-11-05: a fourth change to a packet is "sequenced
+    through one lane or stacked on it and retargeted when the parent
+    merges". It is in `AGENTS.md:207`, the orchestrate skill, the Yeet
+    `references/merge-loop.md`, `goals/README.md:37` and
+    `goals/agent-pool-doctrine/history/2026-11-05-base-conflict-merge-main.md`.
+  - Two PRs were opened on a non-`main` base since 10-13, both informal
+    (no `stack` object). #2697 merged into its parent's branch six minutes
+    after it opened; no workflow fired and CodeRabbit skipped it. #2981 was
+    retargeted to `main` after 13 minutes, then closed as absorbed by
+    #2979.
+- **Yeet, re-read on `6eb2e0588e`**
+  (`packages/tooling/tool/cli/src/commands/Yeet/internal/`):
+  - The PR-base defect is fixed (#1624). New PRs are created through REST
+    on the default branch only (`PullRequest.ts:652-655`).
+  - `merge-gate --relaxed`, the S11 mode, holds when no required context
+    has run on the head (`MergeGate.ts:835-846`). That closes the #1502
+    mode at the gate.
+  - The gate still merges through the synchronous endpoint
+    (`GithubRest.mergePullRequest`; `GhOps.ts:1447`, `Merge.ts:226`), which
+    cannot merge a stack.
+  - `Settle.ts:366` still reads `rules/branches/<base>`, and the review
+    window still keys on `head_ref_force_pushed` (`ReviewWindow.ts:380`).
+  - New since 10-13: `yeet ready` refuses a head without a passing
+    `yeet final-check` receipt. A cascade rewrites the head, so every
+    cascade costs a local final-check replay. This is a new cost for the
+    gated stack work, and local compute is the constrained resource
+    (AGENTS.md, operator 2026-10-24).
+  - New since 10-13: `yeet siblings` and the merge-gate broadcast (B2)
+    tell open PRs on the same packet to merge `main` after a sibling
+    lands. It is a dependency notice keyed on shared packet files.
+  - There is still no stack model in Yeet (NOT FOUND).
+- **GitHub, re-read 2026-11-09.**
+  - `gh stack` is at v0.3.0 (2026-10-26): pushes are atomic by default,
+    partially merged stacks work with `unstack`, `modify` and `submit`,
+    and `rebase` and `sync` no longer replay merged commits. This
+    workstation has v0.1.0.
+  - `PUT /repos/{owner}/{repo}/pulls/{n}/merge-async` takes `merge_action`
+    (`default`, `direct_merge`, `merge_queue`), `merge_method`,
+    `commit_title`, `commit_message`, `sha` and `bypass_rules` (default
+    `false`). It answers 202; the result is polled at
+    `GET .../merge-async/{uuid}` (`pending`, `merged`, `enqueued`,
+    `failed`; kept 24 hours).
+  - The legacy `PUT .../merge` supports neither stacks nor merge queues.
+    One async endpoint therefore serves ordinary PRs, stacks and a queue,
+    and it makes a bypass an explicit request.
+  - The PR `stack` object carries `base.ref`, `base.sha`, `size`,
+    `position`, `id` and `number`. GraphQL has read-only `stack` and
+    `stackEntry` fields.
+  - The `pull_request` webhook gained a `stacked` action for a PR joining
+    a stack.
+  - Bypass still merges only the lowest unmerged layer.
+  - Auto-merge for stacks was "rolling out over the next few weeks" on
+    10-06, and the current docs pages do not mention it (UNVERIFIED).
+  - The docs still do not state a layer's `GITHUB_BASE_REF` or the
+    cascade's `pull_request` activity. The six facts in decision
+    `stack-test-terms` remain unverified on this repo.
+- **What this changes in the 10-13 reasoning.**
+  - Stacks were never a CI saving, and CI cost is no longer the reason to
+    avoid them either.
+  - The cost of a cascade is now wall-clock time (a Check run of 11–19
+    minutes plus the 20-minute review window) and one local final-check
+    replay per rewritten head.
+  - The async-merge port serves the merge queue as well, so it is worth
+    doing whichever way stacks go.
+  - The main-red hold's premise, unblockers starved of Heavy runners, no
+    longer holds, and its census key (`unblocks-main`) is on one PR in
+    five.
+  - The larger measured waste is inherited reds and unproven merges. That
+    is the merge queue's ground, so the figures are also filed in
+    `explorations/github-merge-queue/CAPTURE.md`.
+
+Method, all read-only:
+
+- Health: `actions/workflows/check.yml/runs` for `main` pushes in three
+  date windows (the list caps at 1,000 rows), then the failed check runs
+  of each failing run's check suite through GraphQL `nodes(ids:)`. A run
+  is required-green when none of its failed check runs is a required
+  context. Time share carries each verdict forward to the next completed
+  run; cancelled runs give no verdict.
+- Demand: 800 PRs with up to 100 commit ids each (GraphQL). Two PRs form a
+  pair when they share a commit id and have different head branches. The
+  pair is live when the child opened before the parent merged or closed.
+  Six PRs had more than 100 commits and were truncated. A child that was
+  rebased or cherry-picked onto its parent is not detected, so the count
+  is a floor.
+- Bypass: `rulesets/rule-suites?ref=refs/heads/main&time_period=week`.
+- Cost: `actions/runs/<id>/jobs` for three green `main` runs
+  (42698992669, 42706451011, 42715880410), jobs with a runner only. PR
+  heads were not sampled.
+
+## 2026-10-13 — Refresh for align
 
 This section was re-measured for the align session. It supersedes the 10-05
 headline that a main-red admission hold is the biggest lever. The 10-05

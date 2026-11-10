@@ -398,3 +398,141 @@ restate gated candidates, and a goal would stay open indefinitely while
   - Staying active and writing BRIEF and MAP now: ceremony with nothing
     promised now.
   - Killing the packet: the triggers would die with it.
+
+Reground session 2026-11-09, one `/grill-with-docs` round through
+AskUserQuestion after the packet had been parked four weeks. The evidence is
+the 2026-11-09 section of [`RESEARCH.md`](./RESEARCH.md).
+
+## 2026-11-09 — reopen-and-test-now
+
+**Question:** The demand half of `stacks-reopen-gate` is met and the health
+half is at 73.6% against 80%. What happens to the packet?
+
+**Answer:** Reopen it at align and run the supervised native-stack test
+now. Routine stacks stay off until the test passes and its results have
+been through align.
+- This supersedes the park in `packet-outcome` and the timing in
+  `stack-test-terms` ("run it when the gate fires").
+- The health half no longer blocks the test. Whether it blocks routine use
+  is decided with the test results.
+
+**Rationale:**
+- Demand: 5 and 7 live dependency chains in the two weeks, against a bar
+  of 3. Lanes built 18 live parent/child pairs by carrying the parent's
+  commits onto a `main`-based PR, which the dependent-lane rule forbids.
+- Health passed in week one (86.2%) and sits at 73.6% over 14 days.
+  Nothing measured either half for four weeks, so the gate was never going
+  to fire on its own.
+- The cost objection is gone. A Check run is about 400 hosted runner-min
+  and 25 self-hosted, with queue waits of minutes. On 10-13 the test was
+  priced at three Heavy matrices on a saturated fleet.
+- GitHub's side settled: GA is five weeks old, `gh stack` v0.3.0 fixed
+  partially merged stacks, and the async merge endpoint is documented.
+- Rejected:
+  - Staying parked with a re-measure date (2026-11-23): it repairs the
+    unmeasured gate but leaves the six facts unknown while lanes keep
+    building chains by copy.
+  - Shaping the Yeet stack slice now: it would rest on six facts nobody
+    has verified on this repository.
+  - Killing native stacks: 4 of the 12 structures are joins or fans a
+    stack cannot express, but 8 are linear, and the test is cheap.
+
+## 2026-11-09 — stack-test-shape
+
+**Question:** What exactly does the test build and merge? This amends
+`stack-test-terms`. Agent-decided under the autonomy charter.
+
+**Answer:**
+- **Three layers, not two.** L1 merges alone, so GitHub cascades over L2
+  and L3. Then L2 and L3 merge together from the top.
+- **A probe file as payload, labelled `ready-for-heavy`.** L1 creates
+  `research/stack-probe.md` in this packet, L2 edits it, L3 deletes it.
+  `main` ends with no net change.
+- **Merges go through `PUT pulls/{n}/merge-async`**, squash, pinned with
+  `sha`, `bypass_rules=false` first. If an inherited required red blocks
+  the bottom layer, that refusal is recorded and the bottom layer alone is
+  retried with `bypass_rules=true`.
+- **This session runs it**, not the orchestrator. It owns the three PRs,
+  keeps them draft until each merge step, and tells the orchestrator
+  beforehand.
+- **Facts recorded**, in `research/stack-test-2026-11.md`:
+  - the six in `stack-test-terms`;
+  - what `yeet final-check`, `yeet ready` and a `yeet merge-gate` read do
+    on a layer, before and after the cascade;
+  - the squash commits an atomic merge writes, and whether their messages
+    pass server-side commitlint;
+  - which Actions run, if any, the `stacked` activity starts.
+- **Pass** means all three layers land through the async endpoint with no
+  agent-side force-push, and every fact above has an observed answer.
+
+**Rationale:**
+- Two layers can show a cascade or an atomic top merge, never both. The
+  third layer costs one more Check run on hosted runners.
+- The admission label wins over the docs-only classification
+  (`HeavyAdmission.ts:349-353`), so a labelled probe file exercises Heavy
+  admission and its re-admission after the cascade. A code payload would
+  add ratchet and coverage gates that say nothing about stacks, and would
+  leave synthetic code on `main`.
+- Each layer depends textually on the one below, so the cascade rebases a
+  real dependency.
+- AGENTS.md lets an agent merge its own PRs once mergeable. The
+  orchestrator's gate merges through the legacy endpoint, which cannot
+  merge a stack.
+- The two-layer cap in `stack-layer-heavy` still governs routine use.
+- Reversal: close the three PRs unmerged and delete their branches; if L1
+  has landed, one PR deleting `research/stack-probe.md` restores `main`.
+- Rejected:
+  - A code payload, as `stack-test-terms` worded it: more gate noise and a
+    revert PR afterwards.
+  - Two layers in two rounds: twice the supervision for the same facts.
+  - Waiting for a natural chain: its owner would carry the test's risk.
+
+## 2026-11-09 — fan-out-stacking-doctrine
+
+**Question:** Doctrine says two things. The Yeet skill, step 2c, forbids a
+PR on a non-`main` base. Ruling B3 of 2026-11-05 lets a fourth change to a
+packet be "stacked on it and retargeted when the parent merges". Which
+stands?
+
+**Answer:** Step 2c stands. "Or stacked" is struck from `AGENTS.md`, the
+orchestrate skill, the Yeet `references/merge-loop.md` and
+`goals/README.md`, and the 11-05 record carries a dated amendment. A fourth
+change is sequenced through an existing lane until native stacks are
+admitted.
+
+**Rationale:**
+- Every PR workflow filters on `branches: [main]`, so nothing runs on a
+  non-`main` base. #2697 was opened on its parent's branch the day B3
+  landed and merged into it six minutes later with no check run; CodeRabbit
+  skipped it for the same reason.
+- B3's purpose, the cap of three open PRs a packet, does not depend on the
+  stacking alternative.
+- Rejected:
+  - B3 standing, with 2c amended to admit a base that is retargeted before
+    final: nothing proves the PR until the retarget, and the retarget
+    fires `edited`, which starts no workflow.
+  - Leaving both: the next lane picks whichever line it reads first.
+
+## 2026-11-09 — automated-hold-retired
+
+**Question:** What happens to `automated-hold-trigger`, the deferred
+automated main-red Heavy hold?
+
+**Answer:** It is retired. The hold design is closed in this packet. The
+inherited-red figures are filed in `explorations/github-merge-queue`, which
+owns that problem.
+
+**Rationale:**
+- The hold existed to stop waiting PRs from starving an unblocker of Heavy
+  runners. The seven `Heavy /` jobs now total 22–28 runner-min a head, and
+  queue wait is p50 under 3 minutes and p90 under 8.
+- Its census key no longer identifies an episode's unblocker:
+  `unblocks-main` is on 151 of 782 PRs, against about 24 required-red
+  episodes.
+- S11 still stands, so the third arm ("S11 ends") has not fired.
+- Rejected:
+  - Re-keying the census on episode numbers: a measurement for a hold
+    whose premise is gone.
+  - Keeping it as written: nothing measures it.
+- Reversal: restore the trigger if Heavy queue wait on unblockers returns
+  to tens of minutes.

@@ -267,7 +267,8 @@ a goal packet has at most three concurrently open PRs. Every merge forces every
 other open sibling on the packet into a catch-up merge (k siblings cost
 k(k-1)/2 catch-ups; the eleven siblings of 2026-11-04 stalled 43 hours), so a
 fourth change to a packet is sequenced behind one of the three in the same
-lane or stacked on it and retargeted when the parent merges. Refuse a brief
+lane. It is never opened on a non-`main` base: no workflow fires there (Yeet
+step 2c; amended 2026-11-09, `explorations/stacked-pr-adoption`). Refuse a brief
 that would open a fourth sibling; route the work to an existing lane instead.
 `bun run beep yeet siblings <pr>` lists a PR's open packet siblings and the
 files each would conflict on against `origin/main`.
