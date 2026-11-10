@@ -3,18 +3,17 @@
   "exploration": {
     "slug": "skillopt-corpus-headroom",
     "title": "SkillOpt Corpus Headroom",
-    "status": "parked",
-    "stage": "capture",
-    "openQuestions": [
-      "What corpus gives a measurable gap at the current target model: more validation items, harder tasks, or both?"
-    ],
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": ["goals/skill-effect-probe"],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-10-01",
-    "updated": "2026-10-01"
+    "updated": "2026-11-10",
+    "retentionReason": "MAP.md holds three gated candidates; the packet reopens at decompose when goals/skill-effect-probe reports."
   }
 }
