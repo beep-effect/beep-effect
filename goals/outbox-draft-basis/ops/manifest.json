@@ -78,11 +78,13 @@
     "jq . goals/outbox-draft-basis/ops/manifest.json",
     "rg -n \"outbox-draft-basis|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/outbox-draft-basis",
     "git diff --check -- goals/outbox-draft-basis",
+    "bun run beep quality package-verify @beep/m365-mcp",
     "bun run beep lint reflection-artifacts"
   ],
   "stopConditions": [
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "statusNote": "Authored 2026-11-10 from explorations/semantic-agent-graph-stack, not started: P0 is next. Shares files with m365-agent-outbox slice 3; the tenant category proof needs one message sent by a person."
 }

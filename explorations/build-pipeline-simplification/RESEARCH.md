@@ -203,6 +203,43 @@ Not answered here.
 3. Should a shared build-kit package own the generated `beep:build` script?
 4. Is tsdown worth adopting only for `publishConfig.access: "public"` packages?
 
+## 2026-11-10: Re-verification on `main` @ 6d47006fa1d and Experiment 3
+
+Full note: [`research/experiments/2026-11-10-reverification-and-check-sweep.md`](./research/experiments/2026-11-10-reverification-and-check-sweep.md).
+Raw sweep rows: [`2026-11-10-check-sweep.tsv`](./research/experiments/2026-11-10-check-sweep.tsv).
+The sections above are the 2026-10-09 record and are left as written; where
+they disagree with this one, this one is current.
+
+What changed under the research:
+
+- The build and check gates run the Effect-patched `tsrs` 0.23 (Rust), not effect-tsgo. "Keep tsgo emitting" now reads "keep the compiler emitting".
+- 220 tracked manifests; 169 run `tsrs -p tsconfig.json && bun run babel`. Defaults live at `packages/tooling/library/repo-cli-kit/src/package-scripts/PackageScripts.schemas.ts:1375,1399,1419,1480`.
+- #1874 (2026-10-18) put tsbuildinfo inside `dist` and added `packages/tooling/tool/cli/test/build-turbo-outputs.test.ts`. Constraint 7 above (coherence) is largely closed without a build-kit.
+- `publishConfig.access: "public"` is on 172 of 210 workspace manifests and none has `private: false`. `standards/architecture/14-ecosystem-packages.md` ("Release Lane") calls the field a dormant template setting. It cannot be the publishable-tier predicate.
+
+What Experiment 3 measured:
+
+| Finding | Value |
+| --- | --- |
+| `@beep/schema` emit vs Babel, best of six | 0.27 s vs 0.64 s |
+| Manifest fields pointing at `dist` outside `publishConfig` | 0 |
+| Check projects passing with references / source-resolved | 198 / 187 of 199 |
+| Serial wall, with references / source-resolved | 31.9 s / 87.4 s |
+| Median per-project ratio, wall / RSS | 2.3x / 1.46x |
+| `tsconfig.check.json` files equal to the build config except emit options | 197 of 199 |
+
+In-repo bricks found this pass:
+
+| Brick | Path (verified) | Relation |
+| --- | --- | --- |
+| Check-program census | `packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts`, `CheckCensusGate.ts` | Already measures each check program against a reference-keeping overlay and counts `buildOverlapFiles`. Reuse for the check-once proof. |
+| Build output contract test | `packages/tooling/tool/cli/test/build-turbo-outputs.test.ts` | Asserts incremental state sits under a declared build output. Extend for declaration-only output. |
+| Package scaffolds carrying the `babel` key | `packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts:1941`, `Architecture/OperationPlanPackageJson.ts:109` | Edit with the policy. |
+| Release Lane rule | `standards/architecture/14-ecosystem-packages.md` ("Artifact And Peer Policy", "Release Lane") | Constraint: owns when a publish lane exists. |
+
+The four questions carried to align on 2026-10-09 are answered in
+[`DECISIONS.md`](./DECISIONS.md).
+
 [report]: ./research/deep-research/REPORT.md
 [report-pipeline]: ./research/deep-research/REPORT.md#the-build-is-a-declaration-pipeline-and-the-pain-is-coherence-not-compile-time
 [report-tsdown]: ./research/deep-research/REPORT.md#tsdown-is-the-only-credible-alternative-emitter-and-it-buys-hygiene-not-speed

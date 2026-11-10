@@ -20,8 +20,17 @@ prose when they conflict.
 
 Scope:
 
-- In: <paths, packages, docs, workflows, or artifacts this goal may change>.
-- Out: <non-goals and areas not to touch>.
+- In: `packages/drivers/m365-mcp`; `packages/drivers/m365` only for a
+  missing selected field; `docs/runbooks/m365-agent-outbox-registration.md`;
+  this packet.
+- Out: agent sending (`version-unbound` stays), pins outside Microsoft
+  Graph, any slice import from the driver, shared-kernel or foundation pin
+  schemas, a timer inside the server, edits to a draft's subject or body.
+
+Start at P0: freeze the schemas, record the tenant proof that a draft
+category does not reach recipients (the operator or the attorney sends that
+one message, never an agent), and decide the message pin. Write no category
+before that proof is recorded.
 
 Workflow:
 
@@ -44,6 +53,7 @@ Acceptance:
 Verification:
 
 ```sh
+bun run beep quality package-verify @beep/m365-mcp
 test "$(wc -m < goals/outbox-draft-basis/GOAL.md)" -le 4000
 jq . goals/outbox-draft-basis/ops/manifest.json
 git diff --check -- goals/outbox-draft-basis

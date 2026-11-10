@@ -3,14 +3,12 @@
   "exploration": {
     "slug": "semantic-agent-graph-stack",
     "title": "Semantic agent graph stack",
-    "status": "active",
-    "stage": "align",
-    "openQuestions": [
-      "The outbox send tool refuses every send with version-unbound and the attorney sends prepared drafts in Outlook. Where does a changed-basis check attach: on the draft the attorney reviews, on a reopened version-bound send, or on a different action beep releases itself?"
-    ],
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": ["goals/outbox-draft-basis"],
       "docs": [],
       "supersededBy": null
     },

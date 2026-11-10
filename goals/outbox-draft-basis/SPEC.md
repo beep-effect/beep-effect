@@ -213,7 +213,35 @@ generated from that directory and never edited by hand.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug outbox-draft-basis`; add a `kind: decision` file there, never edit this block._
 
-_No decision files yet._
+### The basis check attaches to the draft, and send stays closed, 2026-11-10
+
+The outbox send tool refuses every send with version-unbound (PR 1728), so the attorney's Send in Outlook is the release point. The check records what a draft rested on at create time, reports it on read and flags a stale draft in Outlook. It is advisory: beep cannot block Outlook's Send. Rejected: a promised second slice that reopens agent sending, moving the first consumer to the docket reminder, and parking. Source: explorations/semantic-agent-graph-stack/DECISIONS.md, entries first-consumer and attach-point (operator, 2026-11-10).
+
+Reverse: Reopen the exploration at decompose and fire the version-bound send gate in its MAP.md; the pins recorded here are what that send would recheck.
+
+### A pin compares a digest of named fields; changeKey is recorded and never compared, 2026-11-10
+
+The driver schema documents changeKey as changing on every edit, and mail tagging writes categories onto inbound messages. A changeKey pin would report a draft stale after a tag, a reminder change or a read-state write. The server hashes only what the draft relied on: for an event, subject, start, end with zone, all-day and cancelled; for a message, its message id and whether a later message from another sender is in the conversation. Rejected: changeKey as the comparison. Source: exploration DECISIONS.md, entry pin-comparison (operator, 2026-11-10).
+
+Reverse: Switch the comparison to changeKey in the pure function and drop the view schemas; recorded pins already carry changeKey, so no journal migration is needed.
+
+### A pin points only at a Microsoft Graph item the server re-reads itself, 2026-11-10
+
+The outbox is a driver and a driver imports no slice, so it cannot ask the epistemic slice whether a claim changed. It can re-read Graph, which lets it detect a change without trusting the caller, as it already does for attachment bytes. First kinds: the Outlook calendar event a date came from and the message being answered. Rejected: a digest the agent restates for outside facts, and wiring a second driver into the outbox binary in the first slice. Source: exploration DECISIONS.md, entry basis-source (operator, 2026-11-10).
+
+Reverse: Add a pin kind by decision file once the outbox server has its own read path to the new source; the pin shape does not change.
+
+### This is its own goal, not a fourth slice of m365-agent-outbox, 2026-11-10
+
+m365-agent-outbox is active with no code since 2026-10-31 and no live session; its slice 3 edits the same handlers, tools and audit log. A separate goal does not wait behind that slice and does not hold that packet's closeout open. The dependency is on merged code, so the manifest declares no requirement on that packet. Whichever of the two opens a pull request second merges main first. Source: exploration DECISIONS.md, entry goal-home (operator, 2026-11-10).
+
+Reverse: Fold the remaining work into m365-agent-outbox as a slice by a decision file there, mark this packet superseded and move its decision files across.
+
+### Appetite is two pull requests, and the message pin is the named cut, 2026-11-10
+
+Shaped as a small bet: schemas, comparison, audit field, create and get in the first pull request; the check-drafts tool, the category mark and the docs in the second. If a third would be needed, or a later-message check costs more than one list call, the message pin is cut and the event pin ships alone. Source: exploration BRIEF.md (Appetite) and DECISIONS.md, entry shape-accepted (operator, 2026-11-10).
+
+Reverse: Record a decision file that raises the appetite and names what the third pull request carries.
 
 <!-- beep:decisions:end -->
 
