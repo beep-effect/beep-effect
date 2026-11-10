@@ -185,6 +185,8 @@ export const defaultYeetAsyncMergePoll = YeetAsyncMergePoll.make({ attempts: 60,
  * - `Merged`: GitHub merged the pull request as `sha`. `attached` is true when
  *   another request for it was already in flight (HTTP 409) and this merge
  *   waited on that one, whose commit title may differ from the one sent here.
+ *   `bypassRules` is whether the merging request asked GitHub to bypass the
+ *   base's rules; always false on `legacy`, which cannot send one.
  * - `Failed`: GitHub refused or abandoned the merge; `message` is GitHub's own
  *   sentence. Nothing merged.
  * - `Unsettled`: GitHub accepted the request but no terminal outcome was seen:
@@ -207,7 +209,13 @@ export const defaultYeetAsyncMergePoll = YeetAsyncMergePoll.make({ attempts: 60,
  * @since 0.0.0
  */
 export const YeetMergeSettlement = S.TaggedUnion({
-  Merged: { endpoint: YeetMergeEndpoint, sha: S.NonEmptyString, message: S.String, attached: S.Boolean },
+  Merged: {
+    endpoint: YeetMergeEndpoint,
+    sha: S.NonEmptyString,
+    message: S.String,
+    attached: S.Boolean,
+    bypassRules: S.Boolean,
+  },
   Failed: { endpoint: YeetMergeEndpoint, message: S.String },
   Unsettled: { endpoint: YeetMergeEndpoint, message: S.String, uuid: S.Option(S.String) },
 }).pipe(
@@ -227,9 +235,9 @@ export type YeetMergeSettlement = typeof YeetMergeSettlement.Type;
 const Settlement = YeetMergeSettlement.cases;
 
 // Every non-pending outcome, as the settlement it ends a merge with.
-const settleOutcome = (outcome: AsyncOutcome, attached: boolean): YeetMergeSettlement =>
+const settleOutcome = (outcome: AsyncOutcome, attached: boolean, bypassRules: boolean): YeetMergeSettlement =>
   GithubAsyncMergeOutcome.match(outcome, {
-    Merged: ({ sha, message }) => Settlement.Merged.make({ endpoint: "async", sha, message, attached }),
+    Merged: ({ sha, message }) => Settlement.Merged.make({ endpoint: "async", sha, message, attached, bypassRules }),
     Failed: ({ message }) => Settlement.Failed.make({ endpoint: "async", message }),
     Pending: ({ uuid, message }) =>
       Settlement.Unsettled.make({
@@ -247,6 +255,22 @@ const settleOutcome = (outcome: AsyncOutcome, attached: boolean): YeetMergeSettl
       }),
   });
 
+// How an in-flight request (from a 409) differs from the one this caller asked for, if it does.
+// A field GitHub did not report counts as a difference: the caller cannot vouch for it.
+const inFlightMismatch = (
+  inFlight: typeof GithubAsyncMergeOutcome.cases.Pending.Type,
+  request: GithubAsyncMergeRequest
+): O.Option<string> => {
+  const head = O.getOrElse(inFlight.expectedHeadSha, () => "an unreported head");
+  const bypass = O.match(inFlight.bypassRules, {
+    onNone: () => "an unreported bypass",
+    onSome: (bypassRules) => `bypass_rules ${bypassRules}`,
+  });
+  const sameHead = O.exists(inFlight.expectedHeadSha, (sha) => sha === request.sha);
+  const sameBypass = O.exists(inFlight.bypassRules, (bypassRules) => bypassRules === request.bypassRules);
+  return sameHead && sameBypass ? O.none() : O.some(`head ${head} and ${bypass}`);
+};
+
 const settleAsync = Effect.fn("Yeet.settleAsyncMerge")(function* (
   pullRequestNumber: number,
   request: GithubAsyncMergeRequest,
@@ -255,20 +279,41 @@ const settleAsync = Effect.fn("Yeet.settleAsyncMerge")(function* (
   const rest = yield* GithubRest;
   const accepted = yield* rest.requestAsyncMerge(pullRequestNumber, request);
   yield* Effect.annotateCurrentSpan({ pullRequestNumber, accepted: accepted._tag, bypassRules: request.bypassRules });
-  if (!GithubAsyncMergeOutcome.guards.Pending(accepted)) return settleOutcome(accepted, false);
+  if (!GithubAsyncMergeOutcome.guards.Pending(accepted)) return settleOutcome(accepted, false, request.bypassRules);
   if (accepted.inFlight) {
+    // Attach only to a request this caller could have sent itself: the same pinned head and the
+    // same bypass. Anything else is another session's merge, which this one must not report as its own.
+    const mismatch = inFlightMismatch(accepted, request);
+    if (O.isSome(mismatch)) {
+      return Settlement.Unsettled.make({
+        endpoint: "async",
+        message: `another merge request is in flight with ${mismatch.value}`,
+        uuid: O.some(accepted.uuid),
+      });
+    }
     yield* Console.log(
       `[yeet] #${pullRequestNumber}: a merge request was already in flight (${accepted.uuid}); waiting on it`
     );
   }
-  const final = yield* rest.asyncMergeResult(pullRequestNumber, accepted.uuid).pipe(
+  // GitHub holds the accepted request: a poll that cannot be read leaves it unsettled, never failed,
+  // because the merge may still land.
+  return yield* rest.asyncMergeResult(pullRequestNumber, accepted.uuid).pipe(
     Effect.repeat({
       schedule: Schedule.spaced(poll.interval),
       times: poll.attempts,
       while: GithubAsyncMergeOutcome.guards.Pending,
-    })
+    }),
+    Effect.map((final) => settleOutcome(final, accepted.inFlight, request.bypassRules)),
+    Effect.catch((error) =>
+      Effect.succeed(
+        Settlement.Unsettled.make({
+          endpoint: "async",
+          message: `accepted, but its result could not be read: ${error.message}`,
+          uuid: O.some(accepted.uuid),
+        })
+      )
+    )
   );
-  return settleOutcome(final, accepted.inFlight);
 });
 
 const settleLegacy = Effect.fn("Yeet.settleLegacyMerge")(function* (
@@ -283,7 +328,13 @@ const settleLegacy = Effect.fn("Yeet.settleLegacyMerge")(function* (
     method: request.method,
   });
   return merged.merged
-    ? Settlement.Merged.make({ endpoint: "legacy", sha: merged.sha, message: merged.message, attached: false })
+    ? Settlement.Merged.make({
+        endpoint: "legacy",
+        sha: merged.sha,
+        message: merged.message,
+        attached: false,
+        bypassRules: false,
+      })
     : Settlement.Failed.make({ endpoint: "legacy", message: merged.message });
 });
 

@@ -1499,13 +1499,14 @@ export const executeMergeGate = Effect.fn("Yeet.executeMergeGate")(function* (
     })
   ).pipe(Effect.mapError(yeetGithubFailure(`gh api merge-async #${decision.prNumber}`)));
   return YeetMergeSettlement.match(settled, {
-    Merged: ({ endpoint, sha }): MergeGateMerged | MergeGateHold =>
+    Merged: ({ endpoint, sha, bypassRules }): MergeGateMerged | MergeGateHold =>
       MergeGateMerged.make({
         prNumber: decision.prNumber,
         mergeSha: sha,
         commitTitle: decision.commitTitle,
         endpoint,
-        bypassRequested,
+        // What the merging request sent: the legacy call cannot send a bypass at all.
+        bypassRequested: bypassRules,
       }),
     Failed: () => hold(decision.prNumber, "merge-failed", renderYeetMergeSettlement(settled)),
     Unsettled: () => hold(decision.prNumber, "merge-unsettled", renderYeetMergeSettlement(settled)),

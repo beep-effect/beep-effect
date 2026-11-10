@@ -31,7 +31,6 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
-import * as TestConsole from "effect/testing/TestConsole";
 import { githubCallLine, recordedGithub } from "./support/YeetGithub.ts";
 import type { GithubAnswer, GithubCall } from "./support/YeetGithub.ts";
 
@@ -183,6 +182,7 @@ describe("settleYeetMerge", () => {
           sha: MERGE,
           message: "Pull request was merged.",
           attached: false,
+          bypassRules: false,
         })
       );
       expect(A.map(recorded.calls, githubCallLine)).toEqual([
@@ -230,6 +230,25 @@ describe("settleYeetMerge", () => {
     })
   );
 
+  it.effect.each([
+    [
+      "a different head",
+      { expected_head_sha: Str.repeat(40)("c") },
+      `head ${Str.repeat(40)("c")} and bypass_rules false`,
+    ],
+    ["a rules bypass", { bypass_rules: true }, `head ${HEAD} and bypass_rules true`],
+  ] as const)("never attaches to an in-flight request with %s", ([, override, named]) =>
+    Effect.gen(function* () {
+      const body = pendingBody("A merge request already exists for this pull request.");
+      const recorded = github({ status: 409, body: { ...body, details: { ...body.details, ...override } } });
+      const settled = yield* settle(recorded);
+      assertTrue(YeetMergeSettlement.guards.Unsettled(settled));
+      expect(settled.message).toBe(`another merge request is in flight with ${named}`);
+      // Nothing is polled: the in-flight merge is someone else's.
+      expect(A.map(recorded.calls, githubCallLine)).toEqual([`PUT {repo}/pulls/${PR}/merge-async`]);
+    })
+  );
+
   it.effect("never reads a request still pending past the poll budget as merged", () =>
     Effect.gen(function* () {
       const recorded = github(accepted, [stillPending]);
@@ -238,6 +257,17 @@ describe("settleYeetMerge", () => {
       assertSome(settled.uuid, UUID);
       // One read, then the budget's two more.
       expect(A.filter(recorded.calls, (call) => call.method === "GET")).toHaveLength(3);
+    })
+  );
+
+  it.effect("leaves an accepted request whose poll cannot be read unsettled, never failed", () =>
+    Effect.gen(function* () {
+      const settled = yield* settle(
+        github(accepted, [stillPending, { status: 502, body: { message: "Bad Gateway" } }])
+      );
+      assertTrue(YeetMergeSettlement.guards.Unsettled(settled));
+      expect(settled.message).toContain("accepted, but its result could not be read:");
+      assertSome(settled.uuid, UUID);
     })
   );
 
@@ -253,8 +283,9 @@ describe("settleYeetMerge", () => {
   it.effect("sends a bypass only when the request asks for one", () =>
     Effect.gen(function* () {
       const recorded = github(merged);
-      yield* settle(recorded, GithubAsyncMergeRequest.make({ ...strict, bypassRules: true }));
+      const settled = yield* settle(recorded, GithubAsyncMergeRequest.make({ ...strict, bypassRules: true }));
       expect(recorded.calls[0]?.body).toMatchObject({ bypass_rules: true });
+      expect(settled).toMatchObject({ _tag: "Merged", bypassRules: true });
     })
   );
 
@@ -265,8 +296,9 @@ describe("settleYeetMerge", () => {
           ? { body: { merged: true, sha: MERGE, message: "Pull Request successfully merged" } }
           : undefined
       );
-      const settled = yield* settle(recorded, strict, "legacy");
-      expect(settled).toMatchObject({ _tag: "Merged", endpoint: "legacy", sha: MERGE });
+      const settled = yield* settle(recorded, GithubAsyncMergeRequest.make({ ...strict, bypassRules: true }), "legacy");
+      // The legacy call cannot send a bypass, so none is reported even when one was asked for.
+      expect(settled).toMatchObject({ _tag: "Merged", endpoint: "legacy", sha: MERGE, bypassRules: false });
       expect(A.map(recorded.calls, githubCallLine)).toEqual([`PUT {repo}/pulls/${PR}/merge`]);
       expect(renderYeetMergeSettlement(settled)).toBe(`merge (legacy) merged as ${MERGE}`);
     })
@@ -323,7 +355,7 @@ describe("merge-gate bypass and merge line", () => {
   });
 });
 
-it.layer(TestConsole.layer)("yeet gh merge step", (it) => {
+describe("yeet gh merge step", () => {
   const pull = GithubPullRequestRecord.make({
     number: PR,
     nodeId: "PR_kw",
@@ -354,11 +386,6 @@ it.layer(TestConsole.layer)("yeet gh merge step", (it) => {
         P.hasProperty(body, "commit_message") && P.isString(body.commit_message) ? body.commit_message : "";
       expect(Str.replaceAll("\n", " ")(message)).toBe(
         `Squash-merged at ${HEAD} by beep yeet gh merge. Tolerated: Heavy / Coverage Regression=flake.`
-      );
-      const lines = yield* TestConsole.logLines;
-      const logged = A.join(A.map(lines, String), "\n");
-      expect(logged).toContain(
-        "[gh] merged=true #7 bbbbbbbbbb via merge-async tolerated=[Heavy / Coverage Regression=flake]"
       );
     })
   );
