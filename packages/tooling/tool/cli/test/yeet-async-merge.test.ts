@@ -2,13 +2,20 @@
 // (goals/yeet-async-merge-and-stacks, slice A). The answers are the bodies
 // GitHub sent on 2026-11-10 (research/merge-async-p0-probes-2026-11.md),
 // served to the real `@beep/github` client through a recorded `fetch`.
-import { GithubAsyncMergeOutcome, GithubAsyncMergeRequest, GithubRest } from "@beep/repo-cli/test/SharedInternals";
+import {
+  GithubAsyncMergeOutcome,
+  GithubAsyncMergeRequest,
+  GithubPullRequestRecord,
+  GithubRest,
+} from "@beep/repo-cli/test/SharedInternals";
 import {
   MergeGateCheckAtMerge,
   MergeGateMerge,
   MergeGateMerged,
   mergeGateRequestsBypass,
+  mergeYeetGhAtHead,
   renderMergeGateMergedLine,
+  renderYeetMergeEndpoint,
   renderYeetMergeSettlement,
   settleYeetMerge,
   YeetAsyncMergePoll,
@@ -18,9 +25,13 @@ import { describe, expect, it } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
+import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Str from "effect/String";
+import * as TestConsole from "effect/testing/TestConsole";
 import { githubCallLine, recordedGithub } from "./support/YeetGithub.ts";
 import type { GithubAnswer, GithubCall } from "./support/YeetGithub.ts";
 
@@ -309,5 +320,74 @@ describe("merge-gate bypass and merge line", () => {
     expect(renderMergeGateMergedLine(merge(true))).toBe(
       'MERGED #7 -> bbbbbbbbbb "fix: x (#7)" via merge-async, rules bypass requested (S11)'
     );
+  });
+});
+
+it.layer(TestConsole.layer)("yeet gh merge step", (it) => {
+  const pull = GithubPullRequestRecord.make({
+    number: PR,
+    nodeId: "PR_kw",
+    title: "feat: x",
+    body: "",
+    state: "open",
+    draft: false,
+    merged: false,
+    mergeableState: O.some("clean"),
+    headRef: "feat/x",
+    headSha: HEAD,
+    baseRef: "main",
+    htmlUrl: "https://github.com/o/r/pull/7",
+    author: "octocat",
+    labels: [],
+    createdAt: DateTime.makeUnsafe("2026-11-10T00:00:00Z"),
+    updatedAt: DateTime.makeUnsafe("2026-11-10T00:00:00Z"),
+  });
+
+  it.effect("merges through merge-async with the titled, folded body and the tolerated checks", () =>
+    Effect.gen(function* () {
+      const recorded = github(merged);
+      yield* mergeYeetGhAtHead(PR, pull, ["Heavy / Coverage Regression=flake"]).pipe(recorded.provide);
+      const body = recorded.calls[0]?.body;
+      expect(body).toMatchObject({ sha: HEAD, commit_title: "feat: x (#7)", bypass_rules: false });
+      // The body is folded under 100 characters per line for server-side commitlint.
+      const message =
+        P.hasProperty(body, "commit_message") && P.isString(body.commit_message) ? body.commit_message : "";
+      expect(Str.replaceAll("\n", " ")(message)).toBe(
+        `Squash-merged at ${HEAD} by beep yeet gh merge. Tolerated: Heavy / Coverage Regression=flake.`
+      );
+      const lines = yield* TestConsole.logLines;
+      const logged = A.join(A.map(lines, String), "\n");
+      expect(logged).toContain(
+        "[gh] merged=true #7 bbbbbbbbbb via merge-async tolerated=[Heavy / Coverage Regression=flake]"
+      );
+    })
+  );
+
+  it.effect("exits as a hold with GitHub's sentence when the merge fails", () =>
+    Effect.gen(function* () {
+      const sentence = "A conversation must be resolved before this pull request can be merged.";
+      const error = yield* mergeYeetGhAtHead(PR, pull, []).pipe(
+        github(accepted, [failed(sentence)]).provide,
+        Effect.flip
+      );
+      expect(error.message).toBe(`[gh] not merged #7: merge-async failed: ${sentence}`);
+      expect(P.hasProperty(error, "exitCode") ? error.exitCode : undefined).toBe(75);
+    })
+  );
+
+  it("names both endpoints", () => {
+    expect(renderYeetMergeEndpoint("async")).toBe("merge-async");
+    expect(renderYeetMergeEndpoint("legacy")).toBe("merge (legacy)");
+    expect(
+      renderMergeGateMergedLine(
+        MergeGateMerged.make({
+          prNumber: PR,
+          mergeSha: MERGE,
+          commitTitle: "fix: x (#7)",
+          endpoint: "legacy",
+          bypassRequested: false,
+        })
+      )
+    ).toBe('MERGED #7 -> bbbbbbbbbb "fix: x (#7)" via merge (legacy)');
   });
 });

@@ -1782,6 +1782,36 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
       )
     );
 
+    it.effect("a merge GitHub never settles holds as merge-unsettled and is never read as merged", () =>
+      withScriptedGh(
+        {
+          ...defaultScript,
+          mergeResponse: encodeJson({
+            status: "enqueued",
+            details: { message: "Pull request was added to the queue." },
+          }),
+        },
+        () =>
+          Effect.gen(function* () {
+            const failure = yield* runMergeGate(
+              context,
+              MergeGateRunOptions.make({
+                prNumber: pullFixture.number,
+                wantSha: headSha,
+                tolerate: [],
+                forceWindow: false,
+                relaxed: false,
+                dryRun: false,
+              })
+            ).pipe(Effect.flip);
+            expect(failure.message).toBe(
+              `#${pullFixture.number} HOLD merge-unsettled: merge-async unsettled: enqueued, not merged: Pull request was added to the queue.`
+            );
+            expect(failure.exitCode).toBe(1);
+          })
+      )
+    );
+
     it.effect("a hold exits non-zero with the routed reason and never merges", () =>
       withScriptedGh(defaultScript, (calls) =>
         Effect.gen(function* () {
@@ -1908,6 +1938,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
         Effect.gen(function* () {
           expect((yield* relaxedRun(false))._tag).toBe("merge");
           const lines = yield* Ref.get(calls);
+          // Relaxed with every check green records no red, so it asks for no bypass.
+          expect(lines[indexOf(lines, "/merge-async")]).toContain("bypass_rules=false");
           const listings = A.filter(lines, Str.includes("/actions/runs?"));
           expect(listings).toHaveLength(1);
           expect(listings[0]).toContain("per_page=100");

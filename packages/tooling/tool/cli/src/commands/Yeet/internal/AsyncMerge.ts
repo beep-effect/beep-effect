@@ -89,6 +89,27 @@ export const YeetMergeEndpoint = LiteralKit(["async", "legacy"]).pipe(
 export type YeetMergeEndpoint = typeof YeetMergeEndpoint.Type;
 
 /**
+ * The name a log line or hold gives an endpoint: `merge-async`, or
+ * `merge (legacy)`.
+ *
+ * **Example** (Name both endpoints)
+ *
+ * ```ts
+ * import { renderYeetMergeEndpoint } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(renderYeetMergeEndpoint("async")) // "merge-async"
+ * console.log(renderYeetMergeEndpoint("legacy")) // "merge (legacy)"
+ * ```
+ *
+ * @param endpoint - The endpoint that merged or refused.
+ * @returns Its display name.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderYeetMergeEndpoint = (endpoint: YeetMergeEndpoint): string =>
+  YeetMergeEndpoint.match(endpoint, { async: () => "merge-async", legacy: () => "merge (legacy)" });
+
+/**
  * The configured merge endpoint: `BEEP_YEET_MERGE_ENDPOINT`, else `async`.
  *
  * **Example** (Resolve without an override)
@@ -342,7 +363,7 @@ const oneLine = flow(Str.replace(/\s+/gu, " "), Str.trim);
  * @since 0.0.0
  */
 export const renderYeetMergeSettlement = (settlement: YeetMergeSettlement): string => {
-  const endpoint = settlement.endpoint === "async" ? "merge-async" : "merge (legacy)";
+  const endpoint = renderYeetMergeEndpoint(settlement.endpoint);
   return YeetMergeSettlement.match(settlement, {
     Merged: ({ sha, attached }) =>
       `${endpoint} merged as ${sha}${attached ? " (attached to an in-flight request)" : ""}`,

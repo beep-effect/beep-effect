@@ -68,7 +68,13 @@ import { GithubAsyncMergeRequest, GithubRest } from "../../../internal/github/in
 import { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import { enforceReviewerGate, withReviewerOperatorClient } from "../../Reviewer/ReviewerRuleset.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import { renderYeetMergeSettlement, settleYeetMerge, YeetMergeEndpoint, YeetMergeSettlement } from "./AsyncMerge.ts";
+import {
+  renderYeetMergeEndpoint,
+  renderYeetMergeSettlement,
+  settleYeetMerge,
+  YeetMergeEndpoint,
+  YeetMergeSettlement,
+} from "./AsyncMerge.ts";
 import {
   parseYeetInheritedRedsRecord,
   provideYeetGhLogin,
@@ -1571,16 +1577,16 @@ const warnAfterMerge = (what: string) => (error: YeetCommandError) =>
  * @since 0.0.0
  */
 export const renderMergeGateMergedLine = (merged: MergeGateMerged): string =>
-  `MERGED #${merged.prNumber} -> ${Str.slice(0, 10)(merged.mergeSha)} "${merged.commitTitle}" via ${
-    merged.endpoint === "async" ? "merge-async" : "merge (legacy)"
-  }${merged.bypassRequested ? ", rules bypass requested (S11)" : ""}`;
+  `MERGED #${merged.prNumber} -> ${Str.slice(0, 10)(merged.mergeSha)} "${merged.commitTitle}" via ${renderYeetMergeEndpoint(
+    merged.endpoint
+  )}${merged.bypassRequested ? ", rules bypass requested (S11)" : ""}`;
 
 const s11MergeComment = (decision: MergeGateMerge, merged: MergeGateMerged, windowForced: boolean): string =>
   A.join(
     [
-      `yeet merge-gate (S11): merged ${Str.slice(0, 10)(decision.headSha)} as ${Str.slice(0, 10)(merged.mergeSha)} via ${
-        merged.endpoint === "async" ? "merge-async" : "merge (legacy)"
-      }${merged.bypassRequested ? ", with a rules bypass requested over the checks below" : ", with no rules bypass"}.`,
+      `yeet merge-gate (S11): merged ${Str.slice(0, 10)(decision.headSha)} as ${Str.slice(0, 10)(merged.mergeSha)} via ${renderYeetMergeEndpoint(merged.endpoint)}${
+        merged.bypassRequested ? ", with a rules bypass requested over the checks below" : ", with no rules bypass"
+      }.`,
       ...atMergeLists(decision.atMerge),
       `Merged under operator ruling S11 (AGENTS.md "Mergeable"): threads addressed, no conflict, ${
         windowForced ? "review window forced (a fix that unblocks main)" : "review window elapsed"
