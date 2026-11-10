@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "declaration-only-builds",
+    "packetId": "goal-packet/v1:585ff4d7e6367f0e5b61f8b495587b00b2ec5ac07fdf7a63202cfa013822607e",
+    "title": "Declaration-Only Builds",
+    "status": "active",
+    "created": "2026-11-10",
+    "updated": "2026-11-10",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/declaration-only-builds",
+  "lifecycle": "active",
+  "mission": "Library package builds emit declarations only: remove the Babel pass and JavaScript emit from generated builds, and type-check each package source once per run if the check-program census proves build and check agree.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/build-pipeline-simplification",
+    "graduated": "2026-11-10"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/declaration-only-builds/README.md",
+    "goals/declaration-only-builds/SPEC.md",
+    "goals/declaration-only-builds/PLAN.md",
+    "goals/declaration-only-builds/GOAL.md",
+    "goals/declaration-only-builds/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/declaration-only-builds/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/declaration-only-builds/GOAL.md)\" -le 4000",
+    "jq . goals/declaration-only-builds/ops/manifest.json",
+    "rg -n \"declaration-only-builds|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/declaration-only-builds",
+    "git diff --check -- goals/declaration-only-builds",
+    "bun run beep lint reflection-artifacts",
+    "bun run beep lint package-scripts",
+    "bun run beep quality check-census"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "statusNote": "Authored 2026-11-10 from explorations/build-pipeline-simplification, not started. Startable now: PR 1 (baseline and proof harness, no behaviour change). PR 3 (check once) is conditional on PR 1."
+}

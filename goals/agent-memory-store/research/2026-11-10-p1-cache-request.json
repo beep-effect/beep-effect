@@ -1,0 +1,15 @@
+{
+  "previous": "1a7673542165eb6fda16ace9680f269af954238add9a0f4e98417378530e242e",
+  "review": {
+    "reviewer": "Claude Opus 5.5 medium, feat/agent-memory-store-p1",
+    "reason": "Record the P1 manifest drift of the @beep/agent-memory-store task slots: the new @beep/sqlite workspace dependency adds @beep/sqlite#build upstream, and the coverage script now runs under bunx --bun. Re-stamp // only for origin/main's unchanged turbo.json bytes, which main's baseline lags. Preserve commands, cache flags, inputs, outputs, environment, epoch and qualification scope; no qualification or exception.",
+    "basis": {
+      "path": "goals/agent-memory-store/research/2026-11-10-p1-cache-review.md",
+      "sha256": "3694f39eee2e4084308d4c80ea801bb911af427e7a95aab5e3d99cf33f682983"
+    }
+  },
+  "subjects": ["//", "@beep/agent-memory-store"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

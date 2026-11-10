@@ -2,14 +2,14 @@
 
 ## Status
 
-Status: `pending`
+Status: `active`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Confirm the lever status table in `SPEC.md` against the checkout, take the baseline from `yeet economics --fleet` and `quality scheduler status`, and record which upstream prerequisites (SCHE-09, MEAS-02, MEAS-07, PERIL-11, COVE-02, COVE-03, COVE-04) have landed. | Baseline and prerequisite state recorded as a checkpoint file; slices 1 to 3 ready to open. |
-| P1 Implement | pending | Land the slices below in order, at most three open at once, each with its gate. | Every slice merged or recorded as held with its blocker; enforcement slices still shadow while the R2 pause holds. |
+| P0 Research | complete | Confirm the lever status table in `SPEC.md` against the checkout, take the baseline from `yeet economics --fleet` and `quality scheduler status`, and record which upstream prerequisites (SCHE-09, MEAS-02, MEAS-07, PERIL-11, COVE-02, COVE-03, COVE-04) have landed. | Baseline and prerequisite state recorded as a checkpoint file; slices 1 to 3 ready to open. |
+| P1 Implement | in-progress | Land the slices below in order, at most three open at once, each with its gate. | Every slice merged or recorded as held with its blocker; enforcement slices still shadow while the R2 pause holds. |
 | P2 Verify | pending | Run the Verification Matrix and read the target from certainty-scorecard over 7 days. | Publish p95 at most 8 min, verify p50 at most 10 min, zero killed admitted gates, every stale-green fixture green, or the residual recorded. |
 | P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
@@ -104,6 +104,18 @@ git diff --check -- goals/local-proof-under-ten
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug local-proof-under-ten`; add a `kind: checkpoint` file there, never edit this block._
 
-_No checkpoint files yet._
+### P0 baseline: fleet economics, scheduler status and open prerequisites, 2026-11-10
+
+P0 baseline, taken 2026-11-10 against `origin/main` `b757bd0400f`.
+
+`bun run beep yeet economics --fleet` (yeet-economics/v2, window 2026-08-04 to 2026-11-10, 341 journals, 0 unreadable): 2606 attempts (failure 1324, success 901, unknown 381). Wrapper lanes 316.06 h measured; `full:01-pre-push` 529 runs, p50 15.6 min, p95 39.8 min (49.67%); `full:00-cheap-gates` 551 runs, p50 3.7 min, p95 10.0 min; `full:02-ci-parity` (the merged-preview step) 27 runs, p50 21.6 min, p95 46.1 min, last started 2026-10-05. Red to green (M1, comparable24h) 277 episodes, p50 35.4 min, p95 5.59 h. Terminations (M5): 2620 starts, 18 without a terminal row; interrupted 244, lease-eviction 5, owner-dead 5.
+
+`bun run beep quality scheduler status`: capacity 3/5 tokens (MemAvailable 38.8 GiB), one live `full-proof(3)` lease, 2068 quarantine lines printed one per entry (PERIL-10's target). The admission journal holds 600 rows from 2026-11-08 to 2026-11-10 with zero `merged-preview` grants; `admissionTokenWeight("merged-preview")` is 5.
+
+Upstream prerequisites, all still open on `origin/main`: SCHE-09, MEAS-02 and MEAS-07 (certainty-scorecard); PERIL-11 (certainty-scorecard); COVE-02, COVE-03 and COVE-04 (route-soundness-repair). Slices 1 to 3 do not wait on them; slice 1 (PERIL-13) lands in this PR.
+
+Lane claude/adoring-payne-d7ed34
+
+Reverse: Delete this checkpoint file and re-run goals decisions write; the baseline is a measurement, not a change.
 
 <!-- beep:decisions:end -->

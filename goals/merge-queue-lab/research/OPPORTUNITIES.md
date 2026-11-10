@@ -20,3 +20,47 @@ Friction receipts, recorded when they happen.
   docs-policy job that `explorations/ten-minute-certainty` decision D8 already
   plans (ROUT-02). Until then: after committing a new packet, run
   `bun run beep knowledge semantic-delta` before pushing.
+
+## 2026-11-10 — the SPEC's synthetic branch prefix cannot exist beside the lab branch
+
+- **Doing:** opening the first synthetic pull request (P1).
+- **Evidence:** `git switch -c queue-lab/s1` failed with "cannot lock ref
+  'refs/heads/queue-lab/s1': 'refs/heads/queue-lab' exists". A branch name is
+  a file under `refs/heads/`, so `queue-lab` and `queue-lab/<x>` cannot both
+  exist.
+- **What would have prevented it:** a packet lint (or the explore graduation
+  step) that checks planned branch names against planned base branches.
+  Synthetic branches use `queue-lab-<slug>` (decision file of 2026-11-10).
+
+## 2026-11-10 — the ghapp.sh merge-reservation guard refuses any GraphQL file input
+
+- **Doing:** enqueueing a `queue-lab` pull request as the orchestrator App.
+- **Evidence:** `ghapp.sh api graphql -F query=@<file>` exited with
+  "merge-reservations: owner holds exist: GraphQL merge/ready or opaque input
+  refused; use explicit PR route". The guard models `main` merges only; the
+  pull request targeted `queue-lab`.
+- **What would have prevented it:** the guard reading the target base of the
+  pull request before refusing, or an explicit enqueue route. The lab mints the
+  same App token through `gh-app-token.sh` (decision file of 2026-11-10).
+
+## 2026-11-10 — workflow_dispatch probes need the workflow on the default branch
+
+- **Doing:** observing whether an enqueue made with `GITHUB_TOKEN` starts a
+  merge-group run (10c).
+- **Evidence:** `gh workflow run queue-lab-enqueue.yml --ref queue-lab`
+  returned "HTTP 404: workflow queue-lab-enqueue.yml not found on the default
+  branch". The packet forbids workflow edits on `main`, so the probe moved into
+  a job of the lab's `pull_request` run, enqueueing its own pull request.
+- **What would have prevented it:** naming in the SPEC that a lab on a
+  non-default branch cannot use `workflow_dispatch`, `issue_comment` or
+  `schedule` triggers.
+
+## 2026-11-10 — gh pull-request commands outside a checkout loop silently
+
+- **Doing:** running a lab batch script from the session scratchpad.
+- **Evidence:** `gh pr checks <n>` printed "failed to determine base repo:
+  ... not a git repository" to stderr inside an `until ... grep` loop, which
+  therefore never ended; ten minutes passed before the stall was noticed.
+- **What would have prevented it:** `ops/queue-lab.sh` now exports `GH_REPO`
+  for every `gh` call it makes; scripts that loop on `gh` output should fail
+  on a non-zero `gh` exit instead of treating it as "not yet".

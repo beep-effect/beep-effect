@@ -3905,9 +3905,11 @@
         "@beep/markdown": "workspace:^",
         "@beep/provenance": "workspace:^",
         "@beep/schema": "workspace:^",
+        "@beep/sqlite": "workspace:^",
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "bun-types": "catalog:",

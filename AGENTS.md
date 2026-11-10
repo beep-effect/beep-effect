@@ -199,7 +199,9 @@ needed only for the escalation list below.
   tell dependent lanes to merge `main` once; do not copy the fix into each
   lane. The orchestrator declares one consolidated unblocker per red episode
   (`unblocks-main` label) and cancels runs, running ones included, on PRs
-  that must re-run anyway so the unblocker gets runners and merges first.
+  that must re-run anyway so the unblocker gets runners and merges first;
+  it cancels pull-request runs only, never a `refs/heads/main` run, queued
+  or running.
 - A base-conflict P0 inbox row is an unconditional "merge `origin/main` into
   the lane now" for the lane owner, whatever the acceptance or merge
   arrangement says; no brief or delegation model may forbid a lane from

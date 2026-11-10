@@ -2891,6 +2891,7 @@
     {"name":"QualityTasks.collectStepOutput","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityTasks.collectStreamingStepFailures","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityTasks.collectStreamingStepOutcomes","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"QualityTasks.compareRootCoverageForTesting","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityTasks.emitLaneRunReport","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityTasks.failQualityTaskFailures","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"QualityTasks.failQualityTaskGroup","owner":"@beep/repo-cli","family":"tooling","conforms":true},

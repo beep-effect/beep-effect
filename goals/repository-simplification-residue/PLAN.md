@@ -1,6 +1,6 @@
 # Repository simplification residue plan
 
-Status: `in-progress`. Lifecycle: `active`.
+Status: `complete`. Lifecycle: `completed-retained`.
 
 ## Phases
 
@@ -9,8 +9,8 @@ Status: `in-progress`. Lifecycle: `active`.
 | P0 Research and admission | complete | Fifteen contracts reconciled; one closeout PR admitted by the fleet orchestrator. |
 | P1 Implement waves | complete | Fifteen closed source issues and merged implementation receipts. |
 | P2 Verify program acceptance | complete | Exact-head acceptance reconciliation, fresh scans and current drift attribution. |
-| P3 Yeet and merge | in-progress | Publish through Yeet, final-check, until-ready monitor, then orchestrator S11 gate. |
-| P4 Close | in-progress | Validated reflection and proposed closeout in final work PR; verified adoption after merge in a packet-state PR. |
+| P3 Yeet and merge | complete | #3073 and re-final #3094 published through Yeet and merged; both merges preceded recorded readiness (operator ruling below). |
+| P4 Close | complete | Validated reflection in #3073; `completed-retained` adopted by operator ruling, with hosted required checks at #3094's head as the gating evidence. |
 
 ## Accepted work and evidence
 
@@ -30,7 +30,14 @@ remediation lane for all of them, with source-PR attribution retained in the
 reconciliation receipt. It includes harness-ledger, which was already open at
 #2586's merge. No exception or baseline row is added by this closeout.
 
-## Remaining executable steps
+## Closeout steps (as executed)
+
+Steps 1-4 ran as written for #3073. Steps 5-6 did not: #3073 and the re-final
+#3094 were merged by hand before any `merge-ready: yes` line, and completion
+refresh reported the readiness verdict unknown. The operator then ruled the goal
+closed without that verdict
+([decision](decisions/2026-11-10-operator-ruling-close-without-readiness-verdict.md)),
+and step 7 adopted `completed-retained` without a verified readiness receipt.
 
 1. Validate the reflection, packet projections, references and docs formatting.
 2. Publish the admitted closeout PR with `yeet publish` on this workstation.

@@ -126,7 +126,7 @@ Status from the lever check of 2026-11-09, re-read on `origin/main` c90929b1ff1.
 
 | Id | What | Status | Admission gate before landing | Depends on |
 | --- | --- | --- | --- | --- |
-| HOST-01 a | AGENTS.md and orchestrate skill: never cancel a `refs/heads/main` run | open: `AGENTS.md:198-202` unchanged | none (policy text); batched with other always-loaded edits only if one is ready the same day | nothing |
+| HOST-01 a | AGENTS.md and orchestrate skill: never cancel a `refs/heads/main` run | landed (slice 1, `docs(agents): never cancel refs/heads/main runs`): the AGENTS.md Inherited-reds clause and the skill's Red check and Queue starved rows; start date 2026-11-10 (checkpoint `cancel-ban-start-anchor`) | none (policy text); batched with other always-loaded edits only if one is ready the same day | nothing |
 | HOST-01 b | Throughput layout for main push runs: fewer, coarser push partitions from the same generator, full profile | open: #3030 kept full allocation on push (`check.yml:798`) | census of canonical test ids equals the full profile exactly; every push leg projected, from measured file seconds, to finish inside its 20-minute shard timeout (`check.yml:825`, `:1014`); Coverage Regression receives a manifest from every push partition; the replay with the layout shows PR first-wave pickup p95 and heavy-wait p95 regressed by at most 1 min and reports projected heavy slot-hours per day | scorecard queue numbers |
 | HOST-01 c | Re-dispatch of missing or cancelled non-docs main verdicts | open: `rerun-runner-loss.yml` handles failures only | decision tests per case; never displaces a pending main run; attempt ceiling; kill switch; the replay with re-dispatch shows PR first-wave pickup p95 and heavy-wait p95 regressed by at most 1 min | replay; scorecard main census |
 | HOST-01 d | Per-SHA verdict for every main commit | handed to `merge-queue-activation` (`verdict-placement`, D28): delivered as the merge-group run | not built here | b (the queue's gate waits on the landed layout) |
@@ -201,7 +201,7 @@ Status from the lever check of 2026-11-09, re-read on `origin/main` c90929b1ff1.
 
 Read from the certainty scorecard unless stated; windows are UTC days.
 
-- [ ] `AGENTS.md` (Autonomy, "Inherited reds") and `.claude/skills/orchestrate/SKILL.md` (the "Red check" and
+- [x] `AGENTS.md` (Autonomy, "Inherited reds") and `.claude/skills/orchestrate/SKILL.md` (the "Red check" and
       "Queue starved" rows) forbid cancelling any `refs/heads/main` run, queued or running.
 - [ ] Zero agent-initiated main cancels over the 7 days after the cancel ban lands, and over the final 7-day
       window: no `refs/heads/main` Check run, queued or in progress, cancelled by any actor other than

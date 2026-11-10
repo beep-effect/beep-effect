@@ -3,8 +3,8 @@
 ## Status
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
-Stage: `research`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -18,13 +18,12 @@ under `research/deep-research/` says: keep tsgo emitting, bundle only what ships
 
 ## Next Open Question
 
-Align round 1: does the operator accept the two-tier framing now that both
-experiments agree with it (Bun 1.4.2 builds effect-drizzle correctly, bun#18008
-still live; no bundler beats effect-tsgo emit on `@beep/schema` by more than
-run-to-run noise, Babel is the
-only pure-annotation source)? And the SchemaCompiler dispute: which mechanism or
-numbers support larger wins than the +2 KB AOT / +7 KB JIT over an 18 KB
-baseline, and 1.2x-1.5x on S.Class rows, that are on file?
+None. Graduated on 2026-11-10 into
+[`goals/declaration-only-builds`](../../goals/declaration-only-builds/README.md).
+The bundler question closed as "none"; the goal removes the Babel pass and
+JavaScript emit from library builds. Three gated candidates stay in
+[`MAP.md`](./MAP.md) as re-entry points (a publish lane, source-resolved
+checking, a bundler); a fired gate reopens this packet at `decompose`.
 
 ## Read This First
 
@@ -38,6 +37,15 @@ baseline, and 1.2x-1.5x on S.Class rows, that are on file?
 
 ## Trail
 
+- 2026-11-10: operator-requested review found the packet a month stale (gates
+  now on `tsrs`, 220 manifests, #1874 landed) and its publishable-tier predicate
+  void. Looped to research: Experiment 3 re-verified the census and swept all
+  199 check projects with and without project references. Align in two rounds
+  plus a shape review (nine DECISIONS entries): no bundler, no tsdown tier, no
+  build-kit, Babel removed after proof, declarations-only emit with a
+  conditional check-once, source-resolved checking measured and rejected,
+  SchemaCompiler handed back to its DEFER ruling, app-side aims to INBOX. Wrote
+  BRIEF.md and MAP.md; graduated one goal, `declaration-only-builds`.
 - 2026-10-09 (later): ran both experiments (Bun 1.4.2 tree-shake probe: 1.3.14
   finding RETIRED, fixed in 1.4.1, bun#18008 CONFIRMED; `@beep/schema` timed four
   ways: emit-only 0.65-0.88 s fastest, no bundler wins, Babel sole PURE source);

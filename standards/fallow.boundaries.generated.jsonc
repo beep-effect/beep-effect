@@ -1248,7 +1248,8 @@
           "@beep/identity",
           "@beep/markdown",
           "@beep/provenance",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/sqlite"
         ],
         "allowTypeOnly": [
           "@beep/agent-memory-store",
@@ -1256,7 +1257,8 @@
           "@beep/identity",
           "@beep/markdown",
           "@beep/provenance",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/sqlite"
         ]
       },
       {
