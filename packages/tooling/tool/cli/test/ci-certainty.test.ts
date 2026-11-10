@@ -1,7 +1,6 @@
 // Replays the committed certainty corpora (test/fixtures/ci-certainty, decision `in-repo-fixture-corpus`
 // in goals/certainty-scorecard) and pins the per-head cases, monotonicity and api-partial refusal.
 
-import * as NodeURL from "node:url";
 import {
   buildCiCertaintyReport,
   CiCertaintyCorpus,
@@ -13,29 +12,28 @@ import {
   ciCertaintyLatencyStat,
   ciCertaintyRunnerMinutes,
   collectCiWorkflowRunAttemptJobs,
-  decodeCiCertaintyCorpus,
   renderCiCertaintyMarkdown,
 } from "@beep/repo-cli/commands/Ci";
 import { A, O, Str } from "@beep/utils";
-import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { describe, expect, it } from "@effect/vitest";
 import { assertFalse, assertNone, assertSome, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
-import * as Layer from "effect/Layer";
+import * as S from "effect/Schema";
+import baselineCorpus from "./fixtures/ci-certainty/baseline-2026-11-09.json" with { type: "json" };
+import plannedCorpus from "./fixtures/ci-certainty/planned-2026-11-10.json" with { type: "json" };
 import type { CiCertaintyHeadRow } from "@beep/repo-cli/commands/Ci";
 
-const testLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
+const testLayer = NodeCrypto.layer;
 
-const fixturePath = (name: string): string =>
-  NodeURL.fileURLToPath(new URL(`./fixtures/ci-certainty/${name}`, import.meta.url));
+const decodeCorpus = S.decodeUnknownEffect(CiCertaintyCorpus);
 
-const loadCorpus = (name: string) =>
-  FileSystem.FileSystem.use((fs) => fs.readFileString(fixturePath(name))).pipe(Effect.flatMap(decodeCiCertaintyCorpus));
+const FIXTURES = { baseline: baselineCorpus as unknown, planned: plannedCorpus as unknown };
 
-const BASELINE = "baseline-2026-11-09.json";
-const PLANNED = "planned-2026-11-10.json";
+const loadCorpus = (name: keyof typeof FIXTURES) => decodeCorpus(FIXTURES[name]).pipe(Effect.orDie);
+
+const BASELINE = "baseline";
+const PLANNED = "planned";
 
 const headStartingWith = (heads: ReadonlyArray<CiCertaintyHeadRow>, prefix: string): CiCertaintyHeadRow =>
   O.getOrThrow(A.findFirst(heads, (head) => Str.startsWith(prefix)(head.headSha)));
