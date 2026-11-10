@@ -1206,6 +1206,76 @@ export class KnowledgePathRemoval extends S.Opaque<KnowledgePathRemoval, { reado
 ) {}
 
 /**
+ * One commit of the tree-only removal walk: its id and every path it deleted, renames read as deletions.
+ *
+ * **Details**
+ *
+ * The walk is `git log --diff-filter=D --no-renames`, which compares trees and never reads a blob, so
+ * it costs no object fetch in a blobless partial clone. A commit that renames a path lists the source
+ * here as a deletion; the rename-detecting read of {@link KnowledgePathRemoval} lists the same paths
+ * for the same commit.
+ *
+ * **Example** (One commit that removed two paths)
+ *
+ * ```ts
+ * import { KnowledgeRemovalCommit } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.schemas"
+ *
+ * const commit = KnowledgeRemovalCommit.make({
+ *   commit: "1111111111111111111111111111111111111111",
+ *   paths: ["docs/old.md", "packages/gone/package.json"],
+ * })
+ *
+ * console.log(commit.paths.length) // 2
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class KnowledgeRemovalCommit extends S.Opaque<KnowledgeRemovalCommit, { readonly brand: unique symbol }>()(
+  S.Struct({
+    commit: KnowledgeCommitSha,
+    paths: S.Array(S.String),
+  }).pipe(
+    $I.annoteSchema("KnowledgeRemovalCommit", {
+      description: "A commit of the tree-only removal walk with every path it deleted or renamed away.",
+    })
+  )
+) {}
+
+/**
+ * What a reader of the tree's path removals will look up, so only the commits it reads are resolved.
+ *
+ * **Details**
+ *
+ * `targets` are the paths whose newest removal (of the path itself or of a file under it) the cause
+ * grouping attributes. The mint's retired-package names need no query: they come from the tree-only
+ * walk's removed paths, which name every deleted or renamed-away `package.json` without a blob.
+ *
+ * **Example** (Ask for one target)
+ *
+ * ```ts
+ * import { KnowledgePathRemovalQuery } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.schemas"
+ * import * as HashSet from "effect/HashSet"
+ *
+ * const query = KnowledgePathRemovalQuery.make({ targets: HashSet.make("docs/gone.md") })
+ *
+ * console.log(HashSet.size(query.targets)) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class KnowledgePathRemovalQuery extends S.Opaque<KnowledgePathRemovalQuery, { readonly brand: unique symbol }>()(
+  S.Struct({
+    targets: S.HashSet(S.String),
+  }).pipe(
+    $I.annoteSchema("KnowledgePathRemovalQuery", {
+      description: "The target paths whose newest removals one reader will look up.",
+    })
+  )
+) {}
+
+/**
  * The authoring commit of a cause group's root: the commit that removed the missing target.
  *
  * **Details**

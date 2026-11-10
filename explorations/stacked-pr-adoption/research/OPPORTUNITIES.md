@@ -165,3 +165,54 @@ machine or session identifiers.
   list runs in date windows, then read only the failing runs' failed
   check runs through `nodes(ids:)` in batches of 12. The whole read took
   nine REST calls and nine GraphQL requests.
+
+## 2026-11-10 — A skill-text edit sent final-check into a full coverage run
+
+- **Doing:** `yeet final-check` on #3044, a docs PR that edited four
+  doctrine files and this packet.
+- **Evidence:**
+  - `coverage:affected: full fallback (.claude/skills/orchestrate/SKILL.md:
+    no current workspace owner; ...)`, then `coverage:full` in 10 shards.
+  - Nine shards finished in 5 to 6 minutes each and `repo-cli` took 22m42s.
+    The `law-practice-server` shard was still running after 35 minutes.
+  - The PR was merged at the gate while the check ran, so the run proved
+    nothing anyone read.
+- **Would have prevented it:** treating paths with no workspace owner that
+  are Markdown as docs for coverage planning, the way Heavy admission
+  already does.
+
+## 2026-11-10 — `yeet ready` cannot be used on a stack layer below the top
+
+- **Doing:** flipping three stack layers ready for the native-stack test.
+- **Evidence:** after the flip, `yeet ready` pushes an empty
+  `chore: re-request beep-reviewer (S32)` commit
+  (`.claude/skills/yeet/references/merge-loop.md`). On a lower layer that
+  moves the head off the base of the layer above, and the stack then needs
+  a rebase, which is a force-push. The layers were flipped with
+  `gh pr ready`, so none had a final-check receipt.
+- **Would have prevented it:** re-requesting the reviewer through the API
+  instead of a commit, or pushing the S32 commit on the top layer only.
+
+## 2026-11-10 — A decision rested on a code comment the workflow overrides
+
+- **Doing:** choosing a docs probe with the `ready-for-heavy` label so the
+  stack test would exercise Heavy admission.
+- **Evidence:** `HeavyAdmission.ts` documents "the label always wins over
+  the docs-only classification". In hosted CI the labelled docs-only
+  layers got `verdict=skip-satisfied` from Change Profile's `docs_only`,
+  in the Check run and in the label-triggered Heavy Admit run, and every
+  `Heavy /` job skipped.
+- **Would have prevented it:** reading the workflow's admission step as
+  well as the function it calls, or one sentence in that doc comment
+  saying the workflow short-circuits docs-only changes first.
+
+## 2026-11-10 — `gh stack submit` refuses a clone with several remotes
+
+- **Doing:** creating the test stack from a lane of this clone, which has
+  three remotes.
+- **Evidence:** `multiple remotes configured; set remote.pushDefault or use
+  an interactive terminal`. It ran with `GIT_CONFIG_COUNT=1
+  GIT_CONFIG_KEY_0=remote.pushDefault GIT_CONFIG_VALUE_0=origin` in the
+  environment, which changes no config file.
+- **Would have prevented it:** any Yeet stack command setting that
+  variable itself.
