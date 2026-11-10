@@ -106,3 +106,113 @@ machine or session identifiers.
 - **Would have prevented it:** the sweep reporting `already deleted (by
   retire)` when the tip is absent, instead of a "blocked ... exists"
   reason.
+
+## 2026-11-09 — A re-entry gate that needs a census nobody runs
+
+- **Doing:** regrounding this packet after four weeks parked.
+- **Evidence:**
+  - `stacks-reopen-gate` and `automated-hold-trigger` are both defined on a
+    weekly census. No command or schedule produces one, so nothing checked
+    either gate between 2026-10-13 and 2026-11-09.
+  - The demand half was already met in the week of 10-27 (5 live chains
+    against a bar of 3), and `main` passed the health half that same week
+    (86.2% required-green). Nobody saw it.
+- **Would have prevented it:** a gate stated as a command that prints it,
+  run on a schedule, or a parked packet with a calendar re-check date in
+  place of a measured trigger.
+
+## 2026-11-09 — A later ruling contradicted a parked packet's doctrine line
+
+- **Doing:** checking that the Yeet skill's dependent-lane rule (step 2c)
+  is still the only doctrine on stacking.
+- **Evidence:**
+  - Ruling B3 of 2026-11-05 added "or stacked on it and retargeted when
+    the parent merges" to `AGENTS.md`, the orchestrate skill, the Yeet
+    `references/merge-loop.md` and `goals/README.md`.
+  - Step 2c, in the same Yeet skill, says never to open a PR against a
+    non-`main` base.
+  - #2697 was opened on a parent branch that day and merged into it six
+    minutes later with no workflow run.
+- **Would have prevented it:** a search of the doctrine files for the term
+  before a ruling adds a line about it (`rg -n -i stack AGENTS.md
+  .claude/skills goals/README.md` returns step 2c).
+
+## 2026-11-09 — `unblocks-main` is on one PR in five
+
+- **Doing:** using the label as the census key that decision
+  `automated-hold-trigger` names.
+- **Evidence:** 151 of 782 PRs opened since 2026-10-27 carry the label,
+  against about 24 required-red episodes on `main`. Decision
+  `unblocker-label` set one labelled PR per episode. The label also
+  exempts a PR from the merge gate's `own-red` hold and admits
+  `--force-window`, so applying it has become the way to merge a fix
+  quickly.
+- **Would have prevented it:** separating the census key from the merge
+  privilege, or recording the episode number on the label
+  (`unblocks-main/ep75`) so one episode's PRs can be counted.
+
+## 2026-11-09 — Two API limits shaped the `main` health read
+
+- **Doing:** reading 14 days of `main` Check verdicts per required context.
+- **Evidence:**
+  - One GraphQL query over commit history with nested check suites and
+    filtered check runs failed with `Resource limits for this query
+    exceeded` at 30 commits a page.
+  - `actions/workflows/check.yml/runs` returns at most 1,000 rows per
+    query. Fourteen days of `main` pushes is 733, so a 20-day window would
+    be cut short without an error.
+- **Would have prevented it:** the route that worked, kept as a command:
+  list runs in date windows, then read only the failing runs' failed
+  check runs through `nodes(ids:)` in batches of 12. The whole read took
+  nine REST calls and nine GraphQL requests.
+
+## 2026-11-10 — A skill-text edit sent final-check into a full coverage run
+
+- **Doing:** `yeet final-check` on #3044, a docs PR that edited four
+  doctrine files and this packet.
+- **Evidence:**
+  - `coverage:affected: full fallback (.claude/skills/orchestrate/SKILL.md:
+    no current workspace owner; ...)`, then `coverage:full` in 10 shards.
+  - Nine shards finished in 5 to 6 minutes each and `repo-cli` took 22m42s.
+    The `law-practice-server` shard was still running after 35 minutes.
+  - The PR was merged at the gate while the check ran, so the run proved
+    nothing anyone read.
+- **Would have prevented it:** treating paths with no workspace owner that
+  are Markdown as docs for coverage planning, the way Heavy admission
+  already does.
+
+## 2026-11-10 — `yeet ready` cannot be used on a stack layer below the top
+
+- **Doing:** flipping three stack layers ready for the native-stack test.
+- **Evidence:** after the flip, `yeet ready` pushes an empty
+  `chore: re-request beep-reviewer (S32)` commit
+  (`.claude/skills/yeet/references/merge-loop.md`). On a lower layer that
+  moves the head off the base of the layer above, and the stack then needs
+  a rebase, which is a force-push. The layers were flipped with
+  `gh pr ready`, so none had a final-check receipt.
+- **Would have prevented it:** re-requesting the reviewer through the API
+  instead of a commit, or pushing the S32 commit on the top layer only.
+
+## 2026-11-10 — A decision rested on a code comment the workflow overrides
+
+- **Doing:** choosing a docs probe with the `ready-for-heavy` label so the
+  stack test would exercise Heavy admission.
+- **Evidence:** `HeavyAdmission.ts` documents "the label always wins over
+  the docs-only classification". In hosted CI the labelled docs-only
+  layers got `verdict=skip-satisfied` from Change Profile's `docs_only`,
+  in the Check run and in the label-triggered Heavy Admit run, and every
+  `Heavy /` job skipped.
+- **Would have prevented it:** reading the workflow's admission step as
+  well as the function it calls, or one sentence in that doc comment
+  saying the workflow short-circuits docs-only changes first.
+
+## 2026-11-10 — `gh stack submit` refuses a clone with several remotes
+
+- **Doing:** creating the test stack from a lane of this clone, which has
+  three remotes.
+- **Evidence:** `multiple remotes configured; set remote.pushDefault or use
+  an interactive terminal`. It ran with `GIT_CONFIG_COUNT=1
+  GIT_CONFIG_KEY_0=remote.pushDefault GIT_CONFIG_VALUE_0=origin` in the
+  environment, which changes no config file.
+- **Would have prevented it:** any Yeet stack command setting that
+  variable itself.

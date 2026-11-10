@@ -226,8 +226,8 @@ recorder changes.
 
 On a breach, launch on the first host in this order that `t3_environment_links` lists
 `reachable`, that is below its job limit, and that has the checkout, credentials and data
-boundary the work needs (`tom-pc-1` has no beep-effect checkout today, so beep-effect work
-skips it):
+boundary the work needs (`tom-pc-1` has a beep-effect checkout and GitHub push but no
+1Password agent credential, so work that reads `BEEP_SECRETS` skips it):
 
 1. `beep-worker`
 2. `tbk-worker`
@@ -267,7 +267,8 @@ a goal packet has at most three concurrently open PRs. Every merge forces every
 other open sibling on the packet into a catch-up merge (k siblings cost
 k(k-1)/2 catch-ups; the eleven siblings of 2026-11-04 stalled 43 hours), so a
 fourth change to a packet is sequenced behind one of the three in the same
-lane or stacked on it and retargeted when the parent merges. Refuse a brief
+lane. It is never opened on a non-`main` base: no workflow fires there (Yeet
+step 2c; amended 2026-11-09, `explorations/stacked-pr-adoption`). Refuse a brief
 that would open a fourth sibling; route the work to an existing lane instead.
 `bun run beep yeet siblings <pr>` lists a PR's open packet siblings and the
 files each would conflict on against `origin/main`.

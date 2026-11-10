@@ -3,7 +3,7 @@ name: update-harnesses
 description: >
   Update every agent harness on every fleet host: T3 Code, Codex, Claude Code,
   Grok Build, Kimi Code, Junie, Cursor Agent and Muse on DankStation,
-  beep-worker, dankserver, tbk-worker and the grok-bot VM, plus the desktop
+  beep-worker, dankserver, tbk-worker, tom-pc-1-wsl and the grok-bot VM, plus the desktop
   apps (ChatGPT and Claude Desktop on DankStation and grok-bot; Cursor and Kimi
   Desktop on DankStation). Use on `/update-harnesses`, when a harness is out of
   date somewhere, or to audit which versions and install methods each host runs.
@@ -28,7 +28,7 @@ python3 $s update --host dankserver --harness codex --harness junie
 ```
 
 `--host` and `--harness` repeat and accept aliases (`chatgpt`, `cursor`,
-`claude-code`, `grok-bot-vm`, `hub`...). Each run writes a JSON receipt and a
+`claude-code`, `grok-bot-vm`, `tom-pc-1`, `hub`...). Each run writes a JSON receipt and a
 full log under `~/.local/state/beep/update-harnesses/`.
 
 ## 1. Before an update
@@ -43,12 +43,18 @@ full log under `~/.local/state/beep/update-harnesses/`.
    candidates are only known after the root `apt-get update` that `update` runs.
 2. grok-bot sleeps. If its rows come back `unreachable`, ask the operator to
    open the Grok Bot app's computer view, then rerun with `--host grok-bot`.
+   tom-pc-1-wsl is a WSL distro on an in-use Windows PC: it is reachable only
+   while the PC is on and its Windows user is signed in, because the `T3AgentWSL`
+   logon task is what keeps the distro running. If its rows come back
+   `unreachable` after a good touch, ask the operator to check the PC, then rerun
+   with `--host tom-pc-1`.
 3. Announce the touches before starting. Expect one YubiKey touch per SSH host
-   (beep-worker, dankserver, tbk-worker), again only if its 2-hour master expired
-   during the hub's T3 build. With `--system-upgrade`, add one for the hub's
-   `pacman -Syu`. Each admin step takes two, one for its SSH login and one for
-   sudo: the beep-worker sandbox repin, and grok-bot apt (twice more if Debian
-   pool files have to be pushed). Only the main thread authenticates, one touch
+   (beep-worker, dankserver, tbk-worker, tom-pc-1-wsl), again only if its 2-hour
+   master expired during the hub's T3 build. With `--system-upgrade`, add one for
+   the hub's `pacman -Syu`. Each admin step takes two, one for its SSH login and
+   one for sudo: a Cursor sandbox repin on a host with the pinned AppArmor profile
+   (beep-worker today), and grok-bot apt (twice more if Debian pool files have to
+   be pushed). Only the main thread authenticates, one touch
    at a time, retrying a missed touch up to three times; worker threads reuse
    the open masters and never start a login.
 4. Updating `t3code` restarts the T3 server on any worker whose version
@@ -85,7 +91,7 @@ changing a method or adding a host.
 | `installed` / `absent` | status only: no upstream check for this row / not installed on that host | nothing; `absent` is never auto-installed |
 | `skipped` | not writable, unknown method, stale node version, or migration declined | read the note; root-owned copies need the host's admin route, not this account |
 | `failed` | updater or auth failed | read the log; rerun that host/harness once the cause is fixed. Never rerun an uncertain privileged step blindly |
-| `unreachable` | SSH master did not open | missed touch or asleep (grok-bot) |
+| `unreachable` | SSH master did not open | missed touch, asleep (grok-bot), or the PC off or signed out (tom-pc-1-wsl) |
 | `pending` | a newer version exists: status rows behind upstream (see step 1), hub desktop apps left without `--system-upgrade`, or a T3 pull still running | run `update`, with the flag if needed |
 
 Also:
@@ -98,6 +104,11 @@ Also:
   The previous entry is kept under `~/.local/state/beep/update-harnesses/`.
   `--no-junie-migrate` keeps the old install.
 - Desktop apps that are open keep running the old version until restarted.
+- A `muse` note about `schema_version` means that host's Muse settings file
+  (`~/.config/muse/settings.json`) lacks it, so `muse serve` exits 3 and T3's
+  Muse provider shows "could not read the model catalog". The script only
+  reports it; fix it on that host as the T3 fleet runbook's Gotchas describe
+  (`docs/runbooks/t3code-fleet.md`).
 
 ## 4. After
 

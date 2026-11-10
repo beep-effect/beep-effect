@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "route-soundness-repair",
+    "packetId": "goal-packet/v1:3c1b2634465d0243bf549813e53be830bcc23adfffe99bcb835bcd1abfc0cf30",
+    "title": "Route Soundness Repair",
+    "status": "active",
+    "created": "2026-11-09",
+    "updated": "2026-11-09",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/route-soundness-repair",
+  "lifecycle": "active",
+  "mission": "Close the routing and proof soundness holes the ten-minute-certainty audit found, each with a mutation fixture or replay, so later narrowing levers are admitted on a sound base: goal-data consumers on the code route, knowledge policy on docs-only PRs, the @beep/glob setup closure, the bare-coverage self-judge, versioned final-check receipts, Node 22 local coverage, base-ref CI patterns and one relevance model.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/ten-minute-certainty",
+    "graduated": "2026-11-09"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/route-soundness-repair/README.md",
+    "goals/route-soundness-repair/SPEC.md",
+    "goals/route-soundness-repair/PLAN.md",
+    "goals/route-soundness-repair/GOAL.md",
+    "goals/route-soundness-repair/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/route-soundness-repair/GOAL.md"
+    }
+  ],
+  "provides": ["ci/route-soundness"],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/route-soundness-repair/GOAL.md)\" -le 4000",
+    "jq . goals/route-soundness-repair/ops/manifest.json",
+    "rg -n \"route-soundness-repair|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/route-soundness-repair",
+    "git diff --check -- goals/route-soundness-repair",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "statusNote": "Authored 2026-11-09 from explorations/ten-minute-certainty, not started: the first wave (ROUT-03 slice 1, COVE-02, YEET-08 slice 1) is startable now; ROUT-03 slice 1 must land by 2026-11-16 or the #2999 widening is rolled back. ROUT-02 (the D8 docs-policy job) waits on heavy-pool-diet's HOST-06, PERIH-10 on its PERIH-11 pin bumps, ROUT-07 on certainty-scorecard's ROUT-05 partition mapping, and YEET-08 slices 2-3 on local-proof-under-ten's SCHE-02."
+}

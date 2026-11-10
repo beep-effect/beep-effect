@@ -58,7 +58,8 @@ a wrong skip costs one hosted red and never a stale green on `main`.
    and api-partial heads counted as misses, runner-minutes per run beside it, time-to-mergeable reported
    separately, main verdict rate; per-attempt job reads; the attribution fix; partition-job mapping in the
    route corpus; journals retained on retire and read from T3 lanes and fleet hosts.
-2. *Repair the eight soundness holes.* Main verdicts (cancel ban, throughput layout, then per-SHA groups);
+2. *Repair the eight soundness holes.* Main verdicts (cancel ban, throughput layout, then per-SHA groups;
+   the per-SHA stage moved to `merge-queue-activation` in `explorations/github-merge-queue`, D28);
    the setup-closure key on `@beep/glob`; goal-data consumers back on the code route plus a docs-policy
    job; the bare-coverage self-judge; versioned final-check receipts with an explicit obligation registry;
    local coverage on Node 22.23.4; base-ref CI patterns. Each lands with a mutation fixture or replay.
@@ -89,7 +90,7 @@ with controls for scheduling, none for pure waste removal.
 - Moving Lint Policy to standard hosted runners (32 to 36 GiB peaks against 16 GB).
 - Sharding Property Laws before the file split lands (compute for a tail-only latency gain).
 - Per-SHA main groups before the throughput layout (20 to 36k runner-minutes a day against a ~60-job ceiling).
-- A merge queue or stacked PRs before their recorded flip conditions (80% main required-green over 14 days).
+- A merge queue before the activation gate in `explorations/github-merge-queue/DECISIONS.md` (`gate-restatement`, 2026-11-09, which supersedes the 80% bar), or stacked PRs before the stacks-reopen gate in `explorations/stacked-pr-adoption`.
 - Trusting the hosted concurrent-job ceiling without an admin-side read; it is a documented default, not a measurement.
 - Treating the 2026-08 lock era, the 10-31 pkill incident and the scheduler as one problem.
 

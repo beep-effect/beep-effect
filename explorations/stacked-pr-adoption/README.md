@@ -3,8 +3,8 @@
 ## Status
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
-Stage: `align`
-Status: `parked`
+Stage: `graduate`
+Status: `graduated`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -19,23 +19,31 @@ dependencies?
 
 ## Next Open Question
 
-None while parked. The packet reopens when either trigger in
-[`DECISIONS.md`](./DECISIONS.md) fires:
+None. The packet graduated on 2026-11-10 into
+[`goals/yeet-async-merge-and-stacks`](../../goals/yeet-async-merge-and-stacks/README.md).
 
-- `stacks-reopen-gate`: `main` required-green at least 80% of the time over
-  14 days, and at least 3 live dependency chains a week. The first step is
-  the supervised two-layer stack test.
-- `automated-hold-trigger`: unblocker starvation or inherited-red waste over
-  the measured thresholds, or S11 ending.
+It reopens at decompose when one of the gated candidates in
+[`MAP.md`](./MAP.md) fires:
+
+- merge-queue routing, when `explorations/github-merge-queue` meets its
+  flip condition;
+- Heavy on the lowest unmerged layer only, once stacks are routine;
+- a dependency edge for joins and fans, if the goal's pilot shows they
+  still matter.
+
+The goal's pilot also reports back here: it settles whether GitHub restacks
+a partially merged stack when its trunk moves.
 
 ## Read This First
 
 1. [`ops/manifest.json`](./ops/manifest.json) - machine state: stage, status, open questions.
-2. [`DECISIONS.md`](./DECISIONS.md) - the 2026-10-13 align rulings and re-entry triggers.
-3. [`RESEARCH.md`](./RESEARCH.md) - 2026-10-13 refresh, then the 2026-10-05 recommendation, Q0–Q4 answers and Heavy measurement.
-4. [`CAPTURE.md`](./CAPTURE.md) - the operator's request and why-now.
-5. [`research/SOURCES.md`](./research/SOURCES.md) - citations and tool licenses.
-6. [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md) - friction receipts.
+2. [`BRIEF.md`](./BRIEF.md) and [`MAP.md`](./MAP.md) - the shaped pitch and its decomposition into one goal and three gated candidates.
+3. [`research/stack-test-2026-11.md`](./research/stack-test-2026-11.md) - the native-stack test of 2026-11-10.
+4. [`DECISIONS.md`](./DECISIONS.md) - the 2026-11-09 and 2026-11-10 rulings, then the 2026-10-13 align rulings they amend.
+5. [`RESEARCH.md`](./RESEARCH.md) - the 2026-11-09 reground, then the 2026-10-13 refresh and the 2026-10-05 recommendation.
+6. [`CAPTURE.md`](./CAPTURE.md) - the operator's request and why-now.
+7. [`research/SOURCES.md`](./research/SOURCES.md) - citations and tool licenses.
+8. [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md) - friction receipts.
 
 ## Trail
 
@@ -60,3 +68,19 @@ None while parked. The packet reopens when either trigger in
   non-required Heavy lanes finding is now in
   `goals/ci-lane-economics/research/OPPORTUNITIES.md`. Everything else in
   the packet waits on its re-entry gates.
+- 2026-11-09: regrounded after four weeks parked. Demand is met (5 and 7
+  live chains a week) and `main` health is just short (73.6% against 80%);
+  a Check run now costs about 400 hosted runner-minutes and queues for
+  minutes. One grill round settled three rulings: the packet reopens at
+  align and the stack test runs now, in a three-layer shape; ruling B3's
+  "or stacked" is struck, so the Yeet skill's non-`main`-base ban is the
+  only doctrine; the automated main-red hold is retired. The inherited-red
+  figures went to `explorations/github-merge-queue`. Stage loop: align to
+  research (the test) and back.
+- 2026-11-10: the stack test ran and passed. Three probe layers (#3049,
+  #3050, #3051) landed through the async merge endpoint, layer 1 alone and
+  layers 2 and 3 together, with no force-push by the lane. Every blocker it
+  found is in Yeet. Two more grill rounds settled the next step and the
+  shape; `BRIEF.md` and `MAP.md` were written and the packet graduated into
+  `goals/yeet-async-merge-and-stacks`. Stage path: align, research (the
+  test), align, shape, decompose, graduate.

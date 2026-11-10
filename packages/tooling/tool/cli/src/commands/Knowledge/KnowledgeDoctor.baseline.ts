@@ -497,6 +497,39 @@ const readSealFile = <Schema extends S.Top & { readonly DecodingServices: never 
   );
 
 /**
+ * Every repository path {@link readKnowledgeSealFiles} reads, and nothing else.
+ *
+ * **Details**
+ *
+ * A caller that needs only a tree's seal inputs (the gate's merge-base side, the lease listing, the
+ * mint verifier's HEAD) extracts these paths alone from the tree's archive instead of the whole tree.
+ * A test pins that the reader touches exactly this list, so a new seal input cannot be added to the
+ * reader without being added here.
+ *
+ * **Example** (The baseline is a seal input)
+ *
+ * ```ts
+ * import {
+ *   KNOWLEDGE_DOCTOR_BASELINE_PATH,
+ *   KNOWLEDGE_SEAL_FILE_PATHS,
+ * } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.baseline"
+ * import * as A from "effect/Array"
+ *
+ * console.log(A.contains(KNOWLEDGE_SEAL_FILE_PATHS, KNOWLEDGE_DOCTOR_BASELINE_PATH)) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const KNOWLEDGE_SEAL_FILE_PATHS: ReadonlyArray<string> = [
+  KNOWLEDGE_DOCTOR_BASELINE_PATH,
+  KNOWLEDGE_DOCTOR_PROMOTIONS_PATH,
+  KNOWLEDGE_DOCTOR_LEASES_PATH,
+  KNOWLEDGE_DOCTOR_IDENTITY_PATH,
+  KNOWLEDGE_CODEOWNERS_PATH,
+];
+
+/**
  * Reads and decodes every seal input of one tree: baseline, promotions, leases, identity sidecar, and
  * CODEOWNERS.
  *

@@ -304,7 +304,7 @@ const config: ViteUserConfig = {
     // reading entries, failing their suites with `ENOENT ... node_modules/.vitest-cache/<key>`.
     // The vitest root is the package directory (the scripts run vitest from there).
     fsModuleCachePath: NodePath.join(process.cwd(), "node_modules", ".vitest-cache"),
-    // The coverage producers pin `--maxWorkers=1` (2 for repo-cli), so with isolation every test file
+    // The coverage producers pin `--maxWorkers=1` (2 for a sharded partition), so with isolation every test file
     // re-evaluates the shared module graph inside that one worker. Measured 2026-09-24 on
     // @beep/schema under the coverage topology: 69s isolated vs 13s shared, 717 tests passing either
     // way and an identical per-file coverage summary. Unit and doctest runs keep the default

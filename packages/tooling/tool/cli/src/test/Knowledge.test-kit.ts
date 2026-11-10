@@ -16,6 +16,11 @@ export {
 } from "../commands/Knowledge/Knowledge.command.ts";
 export { KnowledgeCommandSurface } from "../commands/Knowledge/Knowledge.command-surface.ts";
 export {
+  baseSharingHeadCommandSurfaceForTesting,
   gitRefSpanNamesForTesting,
+  inSequenceOrderForTesting,
+  knowledgeTrackedPathExistsForTesting,
   makeKnowledgeArchiveOracle,
+  sharesStaticCommandSurfaceForTesting,
 } from "../commands/Knowledge/Knowledge.service.ts";
+export { readKnowledgeDoctorCheckSidesForTesting } from "../commands/Knowledge/KnowledgeDoctor.service.ts";

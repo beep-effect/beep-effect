@@ -1,4 +1,12 @@
 import { lintCommand } from "@beep/repo-cli";
+import {
+  DeprecatedApiPartition,
+  DeprecatedApiPartitionName,
+  deprecatedApiPartitionArgs,
+  deprecatedApiPartitionCovers,
+  deprecatedApiSweepPartitions,
+  deprecatedApiSweepRoots,
+} from "@beep/repo-cli/commands/Lint/LintDeprecatedApis.schemas";
 import { LintCommandTestKit } from "@beep/repo-cli/test/Lint";
 import { localQualityConcurrencyPlan } from "@beep/repo-cli/test/Quality";
 import { findRepoRoot, TSMorphServiceLive } from "@beep/repo-utils";
@@ -15,6 +23,7 @@ import * as FileSystem from "effect/FileSystem";
 import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
@@ -282,27 +291,98 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
     });
   });
 
+  describe("deprecated-apis full-sweep partition plan", () => {
+    const covering = (file: string) =>
+      A.filter(deprecatedApiSweepPartitions, (partition) => deprecatedApiPartitionCovers(partition)(file));
+    // One probe per root, per claimed family, per unclaimed family and per family that does not exist yet.
+    const probes = [
+      "apps/oip-web/src/index.ts",
+      "apps/labs/ciops/src/index.ts",
+      "infra/src/CiFleetController.ts",
+      "infra/lambda/turbo-cache/src/handler.ts",
+      "packages/foundation/capability/walker/src/index.ts",
+      "packages/tooling/tool/cli/src/bin.ts",
+      "packages/drivers/acp/src/AcpAgent.service.ts",
+      "packages/law-practice/server/src/index.ts",
+      "packages/shared/domain/src/index.ts",
+      "packages/_internal/db-admin/src/index.ts",
+      "packages/a-family-added-later/kit/src/index.ts",
+      "packages/foundation-adjacent/kit/src/index.ts",
+      "packages/root-file.ts",
+    ];
+
+    it("names every partition exactly once", () => {
+      const names = A.map(deprecatedApiSweepPartitions, (partition) => partition.name);
+      expect(A.dedupe(names)).toEqual(names);
+      expect(A.sort(names, Order.String)).toEqual(A.sort(DeprecatedApiPartitionName.literals, Order.String));
+    });
+
+    it("covers every file under the three roots with exactly one partition", () => {
+      for (const probe of probes) {
+        expect({ probe, owners: A.length(covering(probe)) }).toEqual({ probe, owners: 1 });
+      }
+    });
+
+    it("covers nothing outside the three roots", () => {
+      for (const outside of ["goals/x/README.md", "scripts/cloud/bootstrap.ts", "appsx/a.ts", "infrastructure/a.ts"]) {
+        expect(covering(outside)).toEqual([]);
+      }
+    });
+
+    it("keeps every target and exclude inside a root, and excludes only directories other partitions lint", () => {
+      const underRoot = (directory: string) =>
+        A.some(deprecatedApiSweepRoots, (root) => directory === root || Str.startsWith(`${root}/`)(directory));
+      const targets = A.flatMap(deprecatedApiSweepPartitions, (partition) => partition.targets);
+      const excludes = A.flatMap(deprecatedApiSweepPartitions, (partition) => partition.excludes);
+      expect(A.every([...targets, ...excludes], underRoot)).toBe(true);
+      // Every root is a target of some partition, so the union reaches all three.
+      expect(A.every(deprecatedApiSweepRoots, (root) => A.contains(targets, root))).toBe(true);
+      // An exclude is a directory another partition targets, never a hole in the cover.
+      expect(A.every(excludes, (exclude) => A.contains(targets, exclude))).toBe(true);
+    });
+
+    it("renders excludes as oxlint ignore patterns after the targets", () => {
+      expect(
+        deprecatedApiPartitionArgs(
+          DeprecatedApiPartition.make({ name: "remainder", targets: ["infra", "packages"], excludes: ["packages/a"] })
+        )
+      ).toEqual(["infra", "packages", "--ignore-pattern", "packages/a/**"]);
+    });
+  });
+
   describe("deprecated-apis lint command", { concurrent: false }, () => {
-    it.effect("executes one bounded native full sweep without ESLint caching", () =>
+    // The full sweep runs one bounded native process per partition, one after another.
+    const partitionPaths = [
+      "packages/foundation packages/tooling",
+      "packages/drivers apps",
+      "infra packages --ignore-pattern packages/foundation/** --ignore-pattern packages/tooling/** --ignore-pattern packages/drivers/**",
+    ];
+    it.effect("executes one bounded native process per full-sweep partition without ESLint caching", () =>
       Effect.gen(function* () {
         yield* temporaryWorkingDirectory;
         yield* writeDeprecatedApiLintFixture(false, false);
         yield* runLintCommand(["deprecated-apis", "--full"]);
         const calls = yield* nativeInvocations();
-        expect(calls).toHaveLength(1);
-        expect(calls[0]).toContain(`--disable-nested-config ${oxlintThreadsArg} apps packages infra`);
-        expect(calls[0]).toContain(".oxlintrc.deprecated-apis.jsonc");
-        expect(calls[0]).not.toContain("--cache");
-      })
+        expect(calls).toHaveLength(partitionPaths.length);
+        A.forEach(partitionPaths, (paths, index) => {
+          expect(calls[index]).toContain(`--disable-nested-config ${oxlintThreadsArg} ${paths}`);
+          expect(calls[index]).toContain(".oxlintrc.deprecated-apis.jsonc");
+          expect(calls[index]).not.toContain("--cache");
+        });
+        const logs = yield* TestConsole.logLines;
+        expect(A.filter(logs, (line) => Str.includes("] partition ")(String(line)))).toHaveLength(
+          partitionPaths.length
+        );
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
-    it.effect("propagates the native process exit code", () =>
+    it.effect("runs every partition and propagates the native process exit code", () =>
       Effect.gen(function* () {
         yield* temporaryWorkingDirectory;
         yield* writeDeprecatedApiLintFixture(true, false);
         const exit = yield* Effect.exit(runLintCommand(["deprecated-apis", "--full"]));
         expectReportedExit(exit, 7);
         const nativeInvocations4 = yield* nativeInvocations();
-        expect(nativeInvocations4).toHaveLength(1);
+        expect(nativeInvocations4).toHaveLength(partitionPaths.length);
       })
     );
     it.effect("keeps the full apps scope when the labs directory is absent", () =>
@@ -311,8 +391,9 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
         yield* writeDeprecatedApiLintFixture(false, true);
         yield* runLintCommand(["deprecated-apis", "--full"]);
         const calls = yield* nativeInvocations();
-        expect(calls).toHaveLength(1);
-        expect(calls[0]).toContain("apps packages infra");
+        expect(calls).toHaveLength(partitionPaths.length);
+        expect(calls[1]).toContain("packages/drivers apps");
+        expect(calls[1]).not.toContain("--no-error-on-unmatched-pattern");
       })
     );
     it.effect("uses the same bounded worker for a package scope", () =>

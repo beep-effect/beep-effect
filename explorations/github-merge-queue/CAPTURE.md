@@ -122,3 +122,24 @@ skipped `Heavy / matrix.name` context instead of the lanes. #1165 fixed it,
 and the re-run on `heavy.yml@main` (head `c43cf7618a`) passed: every lane
 passed without work on a hosted runner and `--until-ready` exited 0. The
 evidence is in `goals/time-to-certainty/research/b8-implementation.md`.
+
+## 2026-11-09 — Figures from the stacked-pr-adoption reground
+
+Measured for [`../stacked-pr-adoption/RESEARCH.md`](../stacked-pr-adoption/RESEARCH.md)
+(2026-11-09 section, method included). They bear on this packet's flip
+condition and on why a queue would matter now.
+
+- `main` required-green, 14 days from 2026-10-27: 73.6% of wall-clock time,
+  77.7% of the 215 Check runs that reached a verdict. Week one 86.2%, week
+  two 61.5%. Whole-run green was 111 of 215 (51.6%); Heavy / Coverage
+  Regression and Heavy / Lint Policy, both non-required, fail most often.
+- 513 of 733 Check runs on `main` were cancelled, so 70% of merges never
+  got a verdict of their own.
+- 151 of 782 PRs opened in the window carry `unblocks-main` (19%).
+- 211 of 492 pushes to `main` in the 7 days to 11-09 evaluated `bypass`
+  (42.9%).
+- `PUT pulls/{n}/merge-async` takes `merge_action=merge_queue`, `sha` and
+  `bypass_rules`. The legacy merge endpoint that `yeet merge-gate` uses
+  supports neither a queue nor a stack, so the gate's port to the async
+  endpoint is a shared first step for both packets.
+- A stack enters the queue as one merge group (GA changelog, 2026-10-06).

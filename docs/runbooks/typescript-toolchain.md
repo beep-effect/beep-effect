@@ -165,6 +165,30 @@ backend's pruning predicate. The full `packages`, `apps`, `infra` sweep passed
 this guard and lint. `BEEP_LINT_TSGOLINT=true` restores the old Go backend and
 its debug-summary guard for comparison or rollback.
 
+`lint deprecated-apis --full` runs as three sequential Oxlint processes, named in
+`LintDeprecatedApis.schemas.ts`: `foundation-tooling` (`packages/foundation`,
+`packages/tooling`), `drivers-apps` (`packages/drivers`, `apps`) and
+`remainder` (`infra` and `packages` with `--ignore-pattern` for the claimed
+families, so a new family lands there). tsrs-lint keeps every program it builds
+until it exits: 261 programs grew one process's resident set monotonically to
+26.9-27.4 GiB at four threads and still 25.7 GiB at one thread. The partitions
+peaked at 11.5, 10.9 and 8.5 GiB. A 2026-11-09 workstation measurement with a
+load average of 50-110 put the four-thread command at 11.3-11.4 GiB against
+26.4-27.2 GiB (22.3 GiB in a run that swapped). Wall and CPU time did not improve reliably. Four of five
+partitioned runs took 56-64 s and 132-158 CPU-s, against 61-65 s and
+153-154 CPU-s for the two comparable single-process runs. The fifth took 90 s
+and 193 CPU-s at load 108 with 28 GiB available, and one partitioned run used
+more CPU than either comparable single run. Each mode had one heavily
+contended run (the single-process one swapped: 165 s, 209 CPU-s). Wall time on
+the hosted 4-vCPU runner has not been measured, and sequential partitions may
+lose parallel overlap there. `TSRS_MAX_MEMORY`, `TSRS_MEM_SPLIT` and `TSRS_FAST=1` did not lower the
+lint peak. The proof inventories each partition beside the single-run
+selection. It fails if a partition selects nothing, if two partitions overlap,
+or if their union differs from the single-run inventory, and then proves
+ownership of that inventory. Every partition runs even after one fails, so the
+command still reports the complete set of findings. `--package` and `--target`
+remain single-process runs.
+
 Keep Effect compiler diagnostics enabled: they already gate through Check,
 including the repository's explicit severity map. The upgrade adds the new
 `matchToResultOrOption` rule at error severity to every copied profile (146

@@ -348,6 +348,34 @@ describe("knowledge doctor causal grouping", () => {
         assert.deepStrictEqual(forEach2, ["present", "present", "absent", "escapes", "escapes", "present"]);
       })
     );
+    it.effect(
+      "lists only the direct decision files of a packet, in tree order",
+      Effect.fnUntraced(function* () {
+        const tree = makeKnowledgeDoctorMemoryTree({
+          files: {
+            "goals/demo/decisions/b.md": "x",
+            "goals/demo/decisions/a.md": "x",
+            "goals/demo/decisions/nested/c.md": "x",
+            "goals/demo/decisionsX/d.md": "x",
+            "goals/demo/decisions.md": "x",
+            "goals/demo-two/decisions/e.md": "x",
+          },
+        });
+        const reader = makeKnowledgeGoalPacketReader(tree);
+        const inTreeOrder = A.filter(
+          A.map(tree.trackedEntries, (entry) => entry.path),
+          (path) => path === "goals/demo/decisions/a.md" || path === "goals/demo/decisions/b.md"
+        );
+        const decisions = yield* reader.decisionFiles("goals/demo");
+        assert.deepStrictEqual(
+          A.map(decisions, (name) => `goals/demo/decisions/${name}`),
+          inTreeOrder
+        );
+        assert.deepStrictEqual(A.sort(decisions, Order.String), ["a.md", "b.md"]);
+        const none = yield* reader.decisionFiles("goals/absent");
+        assert.deepStrictEqual(none, []);
+      })
+    );
   });
 });
 

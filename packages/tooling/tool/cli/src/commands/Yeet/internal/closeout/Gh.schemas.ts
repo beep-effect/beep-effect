@@ -300,6 +300,9 @@ export class GhReviewThread extends S.Opaque<GhReviewThread, { readonly brand: u
     line: S.NullOr(S.Finite),
     path: S.NullOr(S.String),
     resolvedBy: GhActor.pipe(S.NullOr, S.optionalKey),
+    // The first line of a multi-line thread, whose `line` is its last.
+    // Optional so a payload recorded before the field existed keeps decoding.
+    startLine: S.NullOr(S.Finite).pipe(S.optionalKey),
   }).pipe(
     $I.annoteSchema("GhReviewThread", {
       description: "Pull request review thread returned by GitHub GraphQL, optionally naming who resolved it.",

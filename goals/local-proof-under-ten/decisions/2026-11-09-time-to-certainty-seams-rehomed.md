@@ -1,0 +1,9 @@
+---
+title: "time-to-certainty stays paused; its C4.2 enforcement, WaveOrder re-seed and gate-order fixtures move here"
+date: 2026-11-09
+reversal: "Un-pause goals/time-to-certainty by a new decision and move YEET-06, YEET-07 and the gate-order fixtures back to it."
+---
+
+`goals/time-to-certainty` stays paused. Its pointer to this goal (a "Re-homed 2026-11-09" paragraph in its README and a sentence in its manifest statusNote) landed with the graduation PR, and no slice of this goal edits that packet. Its open seams move here: ProofLedger C4.2 enforcement for cheap-tier lanes (YEET-06, bar READY), the WaveOrder re-seed (YEET-07) and the gate-order fixtures. Its rulings 76 to 83 bind this goal as constraints: a re-seed is a new seed literal under ruling 76, its provenance is pinned under ruling 77, the handoff stays one fixture-guarded `gate-order-handoff/v1` document under ruling 78, and enforcement flips only on ruling 80's bar as restarted by ruling 83 (200 attempts, 10 branches, 0 disagreements, 0 malformed rows, every C5 fixture green). Its artifacts, including `goals/time-to-certainty/research/gate-order-handoff.json` and its `economics.json`, are not edited: a re-seed writes a new handoff document under this packet's `research/` and moves the fixture pin there. Under ruling 80 the enforcement flip PR keeps ruling 82's ruling-69 root-input lock (#2625, f5552fcd812) green among the C5 fixtures, then deletes LaneProofReuse.ts and the lane-proofs.json store with a retirement receipt and re-runs the economics close, so YEET-05's shadow moves onto the ProofLedger path before or in that PR. Rejected: un-pausing time-to-certainty (its 200-attempt sample is hard to accumulate under push-first) and leaving the seams parked (the READY bar goes unused and the 2026-09-03 seed stays in force).
+
+Source: exploration `explorations/ten-minute-certainty/DECISIONS.md` (D13).

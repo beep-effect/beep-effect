@@ -186,8 +186,7 @@ describe("lint policy plan stages", () => {
     });
     expect(labels(stages)).toEqual([
       ["lint:policy:cheap"],
-      ["lint:policy:medium", "lint:policy:state"],
-      ["knowledge:doctor"],
+      ["lint:policy:medium", "lint:policy:state", "knowledge:doctor"],
       ["lint:jsdoc"],
       ["lint:deprecated-apis"],
       ["quality:test-tsgo"],
@@ -199,13 +198,11 @@ describe("lint policy plan stages", () => {
     expect(medium.env?.TURBO_SCM_BASE).toBe("origin/main");
     expect(turboTaskNames(medium)).not.toContain("lint:jsdoc");
     expect(turboTaskNames(medium)).toEqual(
-      expect.arrayContaining([
-        "lint:jsdoc:root",
-        "lint:jsdoc-module-tags",
-        "jsdoc:inventory:check",
-        "jsdoc:ratchet:check",
-      ])
+      expect.arrayContaining(["lint:jsdoc:root", "jsdoc:inventory:check", "jsdoc:ratchet:check"])
     );
+    expect(turboTaskNames(medium)).not.toContain("lint:jsdoc-module-tags");
+    expect(turboTaskNames(medium)).not.toContain("lint:schema-tag-idioms");
+    expect(turboTaskNames(medium)).not.toContain("lint:effect-imports-markdown");
     expect(state.args).toContain("--concurrency=1");
     expect(state.args).not.toContain("--affected");
     expect(state.env?.TURBO_SCM_BASE).toBeUndefined();
@@ -223,6 +220,9 @@ describe("lint policy plan stages", () => {
       "lint:private-home-paths",
       "lint:tracked-shell-allowlist",
       "lint:opaque-roundtrips",
+      "lint:schema-tag-idioms",
+      "lint:jsdoc-module-tags",
+      "lint:effect-imports-markdown",
     ]);
   });
 
@@ -269,8 +269,7 @@ describe("lint policy plan stages", () => {
     // The tail shares no inputs or outputs, so its three steps form one stage (perf plan P6).
     expect(labels(stages)).toEqual([
       ["lint:policy:cheap"],
-      ["lint:policy:medium"],
-      ["knowledge:doctor"],
+      ["lint:policy:medium", "knowledge:doctor"],
       ["lint:jsdoc", "lint:deprecated-apis", "quality:test-tsgo"],
     ]);
     expect(stepLabelled(stages, "lint:policy:medium").args).toContain(`--concurrency=${width}`);
@@ -293,6 +292,32 @@ describe("lint policy plan stages", () => {
     ]);
   });
 
+  it("runs the knowledge doctor abreast of the medium graph in both scopes, never in a stage of its own", () => {
+    const cases = [
+      {
+        stages: rootLintPolicyStagesForTesting("/repo", { base: "origin/main", hosted: true, targets }),
+        holding: ["lint:policy:medium", "lint:policy:state", "knowledge:doctor"],
+        args: ["knowledge", "doctor", "ci", "--base", "origin/main"],
+        mediumWidth: Math.max(1, width - 1),
+      },
+      {
+        stages: rootLintPolicyStagesForTesting("/repo", { hosted: true }),
+        holding: ["lint:policy:medium", "knowledge:doctor"],
+        args: ["knowledge", "doctor", "ci"],
+        mediumWidth: width,
+      },
+    ];
+    for (const { stages, holding, args, mediumWidth } of cases) {
+      const withDoctor = A.filter(stages, (stage) => A.some(stage, (step) => step.label === "knowledge:doctor"));
+      // One stage holds the doctor, and it renders after the graphs it runs beside.
+      expect(A.map(withDoctor, (stage) => A.map(stage, (step) => step.label))).toEqual([holding]);
+      // The argv is the standalone command.
+      expect(A.drop(stepLabelled(stages, "knowledge:doctor").args, 3)).toEqual(args);
+      // It takes no Turbo slot: the medium graph keeps the width it had while the doctor ran alone.
+      expect(stepLabelled(stages, "lint:policy:medium").args).toContain(`--concurrency=${mediumWidth}`);
+    }
+  });
+
   it("keeps the Turbo deprecated-API rollback sweep in a stage of its own", () => {
     const stages = rootLintPolicyStagesForTesting("/repo", {
       hosted: true,
@@ -301,8 +326,7 @@ describe("lint policy plan stages", () => {
     // The rollback graph takes the whole policy width, so it never runs abreast of another graph.
     expect(labels(stages)).toEqual([
       ["lint:policy:cheap"],
-      ["lint:policy:medium"],
-      ["knowledge:doctor"],
+      ["lint:policy:medium", "knowledge:doctor"],
       ["lint:jsdoc", "quality:test-tsgo"],
       ["lint:deprecated-apis"],
     ]);

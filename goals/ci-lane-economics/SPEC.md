@@ -116,6 +116,20 @@ Lane perf/unit-bins-fold-main-run
 
 Reverse: Remove the startFirst lists from the unit bins in CiLanePartitions.ts and the ciLaneStartOrder call in CiCoverage.ts; steps then run in name order again. Undo the split by moving the tests of research-library-evidence.test.ts back into research-library-views.test.ts and pruning the plan.
 
+### Create a run's test shards before its non-test lanes and cap shard timeouts at 20 minutes, 2026-11-10
+
+A full Check run asks for about 75 hosted jobs against a 60-job concurrency cap, so a run queues on itself even when the pool is free. GitHub creates a job when its `needs` finish and hands out runners roughly in creation order (about 90 percent of job pairs created more than a minute apart are admitted in order). The test shards wait on Change Profile and Test Plan, while eleven non-test lanes waited on Change Profile alone, so they were created first: on quiet main run 42726850927 eight test shards waited 0.4 to 1.3 min while twelve of that run's own non-test jobs took runners.
+
+- Repo Sanity, Ecosystem Contracts, Shadcn Lint, Codegen Drift, Labs, the Lint shards, Professional Desktop IPC Stdio, the Property Laws shards, Fallow Advisory Envelopes, JSDoc Ratchet and Nix Shell now also wait on Test Plan and Heavy Admission, so they are created no earlier than the Test Unit and Test Integration shards.
+- The lanes depend on neither job's result. Each condition is `!cancelled()`, an explicit check that Change Profile succeeded, and the lane's former condition: a failed Test Plan or Heavy Admission still lets the lane run, and a failed Change Profile skips it as before.
+- The jobs with no `needs` (Commitlint, Secret Scanning, Security, SAST, PR Size Label) are unchanged, as are check names, required contexts and the planned-partition logic.
+- Shard timeouts drop to 20 min (Test Unit and Property Laws from 60, Test Integration from 30); the slowest measured shard ran 11.2 min. Rerun Runner Loss re-runs only jobs annotated as having lost communication with the server, so a timeout is not re-run.
+- Expected effect: up to 1.2 min less shard queue on a quiet run, 0 to 0.4 min on a busy one. The non-test required checks report about 1.3 to 1.5 min later. This does not bring busy-period verdicts under ten minutes.
+
+Lane perf/ci-shards-before-lanes
+
+Reverse: In check.yml restore needs: [change-profile] and the bare docs_only condition on the eleven lanes, and restore the 60, 30 and 60 minute shard timeouts. One commit, no state.
+
 ### Run sharded Test Unit jobs on two Vitest workers and split the 344 s replay file, 2026-11-10
 
 The same plan ran `repo-cli-3` in 7.5, 8.3 and 11.2 min on three main runs. Over the eight green runs since PR 3028 (240 Test Unit job logs) a hosted runner is between 0.45 and 1.44 times the median speed (p90 1.19, p95 1.28, 184 shard jobs); once the runner is removed, a file varies by 6 percent at p90. So the variance is the runner, and a plan sized for the median runner breaks on a slow one.
@@ -124,11 +138,31 @@ The same plan ran `repo-cli-3` in 7.5, 8.3 and 11.2 min on three main runs. Over
 - Sharded Test Unit jobs now run two Vitest workers. A sharded job runs one coverage producer and used one of the four vCPUs (run 42726850927, `repo-cli-3`: 562 s of Vitest for 452 s of file time). A unit bin already runs two one-worker producers side by side on the same runner, so the worker count and memory are the ones the bins use.
 - Integration shards keep one worker: two workers gave them no gain and pushed native replays past their deadlines (PR 3005).
 - `test/research-library-replay.test.ts` was 344 s on a median runner, more than a ten-minute job can hold on a slow runner at any shard count. It is split in two with no test body changed.
-- The first push keeps the 11 / 12 / 7 layout so its run measures two-worker contention against the one-worker medians. The counts are cut from that measurement.
+- The first push kept the 11 / 12 / 7 layout to measure. Run 42732848457: all 30 Test Unit jobs green, no memory kill and no flake. File seconds rose 1.19 times for repo-cli and 1.30 times for law-practice-server against the one-worker medians, and Vitest finished in 0.66 and 0.73 of the one-worker time (2,678 s for repo-cli, 2,421 s for law-practice-server).
+- The counts are cut to what a p95 runner (1.28 times the median) finishes inside ten minutes with 10 percent of plan imbalance: nine repo-cli shards (about 298 s of Vitest each, 9.0 min at p95, 10.0 at the slowest runner seen) and eight law-practice-server shards (303 s, 8.8 and 9.8 min). The seven unit bins are unchanged: 9.5 min at p95; unit-b reaches 10.6 min at 1.44 times the median because one package (ai-metrics, 298 s) bounds it. Test Unit drops from 30 to 24 jobs and a full run from 76 to 70 hosted jobs.
+- Each sharded family carries its own file budget (490 and 690 planned seconds), derived from the Vitest seconds one planned second cost on that run. The one-worker 480 s budget still governs the integration shards.
 - Rejected: sizing one-worker shards for the slowest runner (33 jobs: 13 repo-cli, 10 law-practice-server, 8 unit bins and a two-shard pair for the ai-metrics package). It holds ten minutes at 1.44 times the median but adds queueing. It stays the fallback if two workers show contention above 1.3, a memory kill or a deadline flake.
 
 Lane perf/unit-shards-two-workers
 
-Reverse: Set CI_COVERAGE_SHARD_WORKERS_ARG in CiCoverage.ts back to --maxWorkers=1 and re-plan the shards for one worker (13 repo-cli, 10 law-practice-server, 8 unit bins plus a two-shard pair for the ai-metrics package). Undo the split by moving the tests of research-library-replay-integrity.test.ts back into research-library-replay.test.ts and pruning the plan.
+Reverse: Set CI_COVERAGE_SHARD_WORKERS_ARG in CiCoverage.ts back to --maxWorkers=1, restore the removed partition ids in CiLanePartitions.ts and check.yml, and re-plan the shards for one worker (13 repo-cli, 10 law-practice-server, 8 unit bins plus a two-shard pair for the ai-metrics package). Undo the split by moving the tests of research-library-replay-integrity.test.ts back into research-library-replay.test.ts and pruning the plan.
+
+### Split Property Laws into four slices and create them with the test shards, 2026-11-10
+
+Property Laws was the last test verdict over ten minutes on main: +11.2 min on run 42742264509 while Test Unit landed at +9.3 and Test Integration at +8.7. Two causes, both measured over the 21 completed Check runs since PR 3030.
+
+- The slices had no headroom. `repo-cli` ran 5.7 to 7.9 min (median 7.1, 17 runs with its sweep selected) and a full `rest` 8.0 to 9.5 min (four full runs). Hosted runners vary up to 1.44 times the median, so neither fits ten minutes on a slow runner.
+- PR 3046 put the Property Laws shards behind Heavy Admission with the non-test lanes, so they were created at +1.5 min on that run.
+
+Changes:
+
+- Four slices instead of two. `repo-cli-1` and `repo-cli-2` are the two Vitest shards of the repo-cli sweep (335 s of Vitest as one). `foundation-drivers` takes the foundation and drivers package directories and `rest` everything else: 835 and 812 of the 1,647 serial seconds the 85 other packages took on run 42742264509. The directory filters are complements, so no package table is needed; a Turbo dry run selects 51, 34 and 1 packages with no overlap and none missing out of 86.
+- The lane command takes several Turbo filters separated by commas and a Vitest shard, forwarded behind Turbo's separator.
+- The Property Laws shards wait on Change Profile and Test Plan, like the Test Unit and Test Integration shards, and keep the explicit fail-closed condition. The aggregate and its name are unchanged.
+- Projection: each slice about 4.5 to 5.5 min on a median runner, under 8.5 min at 1.5 times that. Cost: two more hosted jobs on a full run (72 requested).
+
+Lane perf/property-laws-under-ten
+
+Reverse: In check.yml restore the two-slice matrix [repo-cli, rest] with its two filters and put admission back in the shard job's needs; the comma-separated filter and shard options of the lane command can stay unused.
 
 <!-- beep:decisions:end -->

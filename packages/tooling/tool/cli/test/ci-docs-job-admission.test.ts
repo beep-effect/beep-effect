@@ -10,6 +10,13 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
 
+// Non-test hosted lanes also wait on Test Plan and Heavy Admission so GitHub creates them no earlier
+// than the test shards, and they depend on neither result: `!cancelled()` keeps a lane running when
+// either fails and the explicit Change Profile check keeps the fail-closed skip.
+const afterShardsNeeds = ["change-profile", "test-plan", "admission"];
+const afterShardsGuard = "${{ !cancelled() && needs.change-profile.result == 'success' }}";
+const afterShardsDocsGuard =
+  "${{ !cancelled() && needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only != 'true' }}";
 const heavyGuard =
   "${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}";
 const heavyLaneContracts = [
@@ -27,28 +34,28 @@ const verificationLaneContracts = [
     timeout: 30,
     // No job guard: a goals_only diff skips the lane body but still runs the
     // private home path law (see the lane gate's home_paths_only output).
-    guard: undefined,
+    guard: afterShardsGuard,
   },
   {
     job: "ecosystem",
     id: "ecosystem",
     name: "Ecosystem Contracts",
     timeout: 30,
-    guard: "needs.change-profile.outputs.docs_only != 'true'",
+    guard: afterShardsDocsGuard,
   },
   {
     job: "shadcn-lint",
     id: "shadcn-lint",
     name: "Shadcn Lint",
     timeout: 20,
-    guard: "needs.change-profile.outputs.docs_only != 'true'",
+    guard: afterShardsDocsGuard,
   },
   {
     job: "codegen",
     id: "codegen",
     name: "Codegen Drift",
     timeout: 30,
-    guard: "needs.change-profile.outputs.docs_only != 'true'",
+    guard: afterShardsDocsGuard,
   },
 ];
 
@@ -168,10 +175,14 @@ it.effect(
       }
       assert.deepEqual(yamlAt(workflow, ["jobs", job, "needs"]), ["change-profile", shard]);
     }
-    for (const job of ["lint-shard", "labs", "property-laws-shard", "fallow-advisory"]) {
-      assert.deepEqual(yamlAt(workflow, ["jobs", job, "needs"]), ["change-profile"]);
-      assert.strictEqual(yamlAt(workflow, ["jobs", job, "if"]), "needs.change-profile.outputs.docs_only != 'true'");
+    for (const job of ["lint-shard", "labs", "fallow-advisory"]) {
+      assert.deepEqual(yamlAt(workflow, ["jobs", job, "needs"]), afterShardsNeeds);
+      assert.strictEqual(yamlAt(workflow, ["jobs", job, "if"]), afterShardsDocsGuard);
     }
+    // Property Laws is a test lane: its slices wait on what the test shards wait on, not on Heavy
+    // Admission, and keep the same fail-closed condition.
+    assert.deepEqual(yamlAt(workflow, ["jobs", "property-laws-shard", "needs"]), ["change-profile", "test-plan"]);
+    assert.strictEqual(yamlAt(workflow, ["jobs", "property-laws-shard", "if"]), afterShardsDocsGuard);
     assert.isUndefined(yamlAt(workflow, ["jobs", "security", "if"]));
     assert.isUndefined(yamlAt(workflow, ["jobs", "secrets", "if"]));
     assert.isUndefined(yamlAt(workflow, ["jobs", "sast", "if"]));

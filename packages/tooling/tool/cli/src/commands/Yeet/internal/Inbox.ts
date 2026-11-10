@@ -574,7 +574,8 @@ export const YeetPrCommentSource = LiteralKit(["issue", "review-body"]).pipe(
 export type YeetPrCommentSource = typeof YeetPrCommentSource.Type;
 
 /**
- * One top-level pull request comment from a person other than the acting login.
+ * One top-level pull request comment from a person other than the acting
+ * login, or a bot review body whose findings no review thread carries.
  *
  * **Details**
  *
@@ -618,7 +619,7 @@ export class YeetPrCommentCapsule extends S.Opaque<YeetPrCommentCapsule, { reado
   }).pipe(
     $I.annoteSchema("YeetPrCommentCapsule", {
       description:
-        "One top-level pull request comment from a person other than the acting login: URL, author and a bounded excerpt.",
+        "One top-level pull request comment from a person other than the acting login, or a bot review body with findings no thread carries: URL, author and a bounded excerpt.",
     })
   )
 ) {}
@@ -630,7 +631,10 @@ export class YeetPrCommentCapsule extends S.Opaque<YeetPrCommentCapsule, { reado
  *
  * The `--until-ready` merge loop appends one per qualifying comment: a
  * conversation comment or review body, written by a person (not a bot) other
- * than the acting login, and created after the monitor job was submitted. A
+ * than the acting login, and created after the monitor job was submitted; or
+ * a bot's review body whose findings no review thread carries, whose excerpt
+ * names the counts and the first such finding's path and line. Neither kind
+ * gates a merge: no merge verdict reads the inbox. A
  * comment is answered, not outdated, so the row is wave-exempt: it stays live
  * across a push and never joins the per-head wave record. It joins the
  * `yeet job wait` wave through its capsule's PR number, so a new comment wakes

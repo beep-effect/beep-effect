@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "certainty-scorecard",
+    "packetId": "goal-packet/v1:886cba4664eb501ccd0489d0e253b4b240da9d29f2a9dd58aecb7cc5c30d9563",
+    "title": "Certainty Scorecard",
+    "status": "active",
+    "created": "2026-11-09",
+    "updated": "2026-11-09",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/certainty-scorecard",
+  "lifecycle": "active",
+  "mission": "Report the ten-minute target nightly per PR head SHA (p95 push to every required context green on code heads, red, held and api-partial heads counted as misses) beside runner-minutes per run, time to Yeet-mergeable and the main verdict rate, and make local publish and verify economics attributable across retired lanes, T3 lanes and fleet hosts, so every sibling goal reads its acceptance numbers from one instrument.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/ten-minute-certainty",
+    "graduated": "2026-11-09"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/certainty-scorecard/README.md",
+    "goals/certainty-scorecard/SPEC.md",
+    "goals/certainty-scorecard/PLAN.md",
+    "goals/certainty-scorecard/GOAL.md",
+    "goals/certainty-scorecard/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/certainty-scorecard/GOAL.md"
+    }
+  ],
+  "provides": ["ci/certainty-scorecard"],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/certainty-scorecard/GOAL.md)\" -le 4000",
+    "jq . goals/certainty-scorecard/ops/manifest.json",
+    "rg -n \"certainty-scorecard|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/certainty-scorecard",
+    "git diff --check -- goals/certainty-scorecard",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "statusNote": "Authored 2026-11-09 from explorations/ten-minute-certainty, not started: no upstream dependency and goes first. Startable now: MEAS-01 slice 1 with MEAS-04 (beep ci certainty CLI), ROUT-05 slice 1 (partition job mapping) and MEAS-02 (refusal attribution). The nightly workflow waits on slice 1. route-soundness-repair runs alongside; main-verdict-every-commit, heavy-pool-diet, hosted-setup-tax and local-proof-under-ten read their acceptance numbers from this goal."
+}

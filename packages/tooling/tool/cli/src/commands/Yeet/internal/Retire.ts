@@ -38,6 +38,7 @@ import { describeInotifyWatcher, invokerExemption } from "../../Worktree/Worktre
 import { WorktreeRemovalRequest } from "../../Worktree/Worktree.schemas.ts";
 import { WorktreeRemovalService } from "../../Worktree/Worktree.service.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
+import { packetFromPath } from "./PacketProvenance.ts";
 import { isSettledProofJob, isTerminalProofJobPhase } from "./ProofJob.ts";
 import { ProofJobLauncher } from "./ProofJobLauncher.ts";
 import { StoppedLaneJob, YeetRetirePlan, YeetRetireVerdict } from "./Retire.schemas.ts";
@@ -502,10 +503,12 @@ const isOpenWithoutContext = (manifest: typeof PacketLifecycleProbe.Type): boole
 const PullRequestFiles = S.Struct({ files: S.Array(S.Struct({ path: S.String })) });
 const decodePullRequestFiles = S.decodeUnknownEffect(S.fromJsonString(PullRequestFiles));
 
-const packetSlugFromPath = (relativePath: string): O.Option<string> => {
-  const segments = Str.split(relativePath, "/");
-  return A.length(segments) >= 3 && Eq.equals(A.get(segments, 0), O.some("goals")) ? A.get(segments, 1) : O.none();
-};
+const packetSlugFromPath = (relativePath: string): O.Option<string> =>
+  pipe(
+    packetFromPath(relativePath),
+    O.filter((packet) => packet.root === "goals"),
+    O.map((packet) => packet.slug)
+  );
 
 // GitHub's own list of the pull request's files is independent of how the
 // merge landed; a failed or truncated read contributes nothing.

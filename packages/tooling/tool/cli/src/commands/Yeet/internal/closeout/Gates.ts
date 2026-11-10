@@ -441,7 +441,13 @@ const closeoutReviewAdvisoriesImpl = (
     A.flatMap((thread) =>
       pipe(
         O.fromNullishOr(thread.path),
-        O.map((path) => YeetReviewBodyThreadLocation.make({ path, line: O.fromNullishOr(thread.line) })),
+        O.map((path) =>
+          YeetReviewBodyThreadLocation.make({
+            path,
+            line: O.fromNullishOr(thread.line),
+            startLine: O.fromNullishOr(thread.startLine),
+          })
+        ),
         O.toArray
       )
     )

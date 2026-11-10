@@ -3,16 +3,17 @@
   "exploration": {
     "slug": "stacked-pr-adoption",
     "title": "Stacked PR Adoption",
-    "status": "parked",
-    "stage": "align",
+    "status": "graduated",
+    "stage": "graduate",
     "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": ["goals/yeet-async-merge-and-stacks"],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-10-05",
-    "updated": "2026-10-13"
+    "updated": "2026-11-10",
+    "retentionReason": "Three gated MAP candidates reopen this packet at decompose, and the graduated goal's pilot reports back here."
   }
 }

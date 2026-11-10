@@ -219,6 +219,104 @@ describe("thin lint workers", { concurrent: false }, () => {
       })
     );
 
+    // The full sweep runs one process per partition; its proof inventories each partition and the
+    // single-run selection, and holds them to an exact, disjoint cover before proving ownership.
+    const partitionFiles = {
+      "foundation-tooling": ["packages/tooling/tool/cli/src/commands/Lint/Lint.errors.ts"],
+      "drivers-apps": ["packages/drivers/acp/src/AcpAgent.service.ts"],
+      remainder: ["infra/src/CiFleetController.ts"],
+    };
+    const inventoryPartition = (args: ReadonlyArray<string>) =>
+      A.contains(args, "--ignore-pattern")
+        ? O.some("remainder" as const)
+        : A.contains(args, "packages/drivers")
+          ? O.some("drivers-apps" as const)
+          : A.contains(args, "packages/foundation")
+            ? O.some("foundation-tooling" as const)
+            : O.none();
+    const mockPartitionedSweep = (options: {
+      readonly full?: ReadonlyArray<string>;
+      readonly partitions?: Partial<Record<keyof typeof partitionFiles, ReadonlyArray<string>>>;
+      readonly sweepExitCode?: (args: ReadonlyArray<string>) => number;
+    }) =>
+      captured.mockImplementation((call) =>
+        Effect.succeed(
+          StepExec.CapturedStep.make(
+            isOwnershipProof(call)
+              ? {
+                  exitCode: 0,
+                  output: A.join(
+                    O.match(inventoryPartition(call.args), {
+                      onNone: () => options.full ?? A.flatten(R.values(partitionFiles)),
+                      onSome: (name) => options.partitions?.[name] ?? partitionFiles[name],
+                    }),
+                    "\n"
+                  ),
+                  truncated: false,
+                }
+              : { exitCode: options.sweepExitCode?.(call.args) ?? 0, output: "", truncated: false }
+          )
+        )
+      );
+    it.effect(
+      "runs the Rust full sweep one partition at a time behind an exact-cover proof",
+      Effect.fnUntraced(function* () {
+        mockPartitionedSweep({});
+        yield* run(["deprecated-apis", "--full"], { BEEP_LINT_TSGOLINT: "false" });
+        // Three partition inventories plus the single-run inventory.
+        expect(ownershipProofCalls()).toHaveLength(4);
+        const sweeps = A.map(sweepCalls(), ([call]) => call.args);
+        expect(sweeps).toHaveLength(3);
+        expect(A.map(sweeps, (args) => O.getOrUndefined(inventoryPartition(args)))).toEqual([
+          "foundation-tooling",
+          "drivers-apps",
+          "remainder",
+        ]);
+        expect(
+          A.some(ownershipProofCalls(), ([call]) => Str.endsWith(" apps packages infra")(A.join(call.args, " ")))
+        ).toBe(true);
+      })
+    );
+    it.effect(
+      "runs every partition after a red one and reports the first red partition's exit code",
+      Effect.fnUntraced(function* () {
+        mockPartitionedSweep({ sweepExitCode: (args) => (A.contains(args, "packages/drivers") ? 3 : 0) });
+        const error = yield* run(["deprecated-apis", "--full"], { BEEP_LINT_TSGOLINT: "false" }).pipe(Effect.flip);
+        expect(error).toMatchObject({
+          _tag: "CliReportedExit",
+          exitCode: 3,
+          message: "lint deprecated-apis: partition drivers-apps: failed with exit code 3.",
+        });
+        expect(sweepCalls()).toHaveLength(3);
+      })
+    );
+    for (const [label, mock, message] of [
+      [
+        "overlapping partitions",
+        {
+          partitions: { remainder: ["infra/src/CiFleetController.ts", "packages/drivers/acp/src/AcpAgent.service.ts"] },
+        },
+        "partitions overlap",
+      ],
+      [
+        "a file only the single run selects",
+        { full: [...A.flatten(R.values(partitionFiles)), "packages/party/src/index.ts"] },
+        "packages/party/src/index.ts",
+      ],
+      ["a partition that selects nothing", { partitions: { "drivers-apps": [] } }, "select no files: drivers-apps"],
+    ] as const) {
+      it.effect(`rejects ${label} before trusting the partitioned sweep`, () =>
+        Effect.gen(function* () {
+          mockPartitionedSweep(mock);
+          const error = yield* run(["deprecated-apis", "--full"], { BEEP_LINT_TSGOLINT: "false" }).pipe(Effect.flip);
+          expect(error).toMatchObject({
+            _tag: "LintProgramAssignmentError",
+            message: expect.stringContaining(message),
+          });
+        })
+      );
+    }
+
     it.effect(
       "fails closed on every unmatched TypeScript extension, including labs",
       Effect.fnUntraced(function* () {
@@ -475,36 +573,52 @@ describe("thin lint workers", { concurrent: false }, () => {
   });
   it.layer(platform, { timeout: "30 seconds" })((it) => {
     it.effect(
-      "runs the full standalone deprecated API command through one bounded Oxlint process",
+      "runs the full standalone deprecated API command through one bounded Oxlint process per partition",
       Effect.fnUntraced(function* () {
         const root = yield* findRepoRoot();
         yield* run(["deprecated-apis", "--full"], {});
-        expect(captured).toHaveBeenCalledExactlyOnceWith({
-          command: `${root}/node_modules/.bin/oxlint`,
-          args: [
-            "--config",
-            `${root}/.oxlintrc.deprecated-apis.jsonc`,
-            "--disable-nested-config",
-            oxlintThreadsArg,
-            "apps",
-            "packages",
-            "infra",
-          ],
-          cwd: root,
-          extendEnv: true,
-          env: { OXC_LOG: "debug" },
-          bound: expect.anything(),
-          tee: true,
-        });
+        const options = [
+          "--config",
+          `${root}/.oxlintrc.deprecated-apis.jsonc`,
+          "--disable-nested-config",
+          oxlintThreadsArg,
+        ];
+        expect(A.map(captured.mock.calls, ([call]) => call)).toEqual(
+          A.map(
+            [
+              ["packages/foundation", "packages/tooling"],
+              ["packages/drivers", "apps"],
+              [
+                "infra",
+                "packages",
+                "--ignore-pattern",
+                "packages/foundation/**",
+                "--ignore-pattern",
+                "packages/tooling/**",
+                "--ignore-pattern",
+                "packages/drivers/**",
+              ],
+            ],
+            (paths) => ({
+              command: `${root}/node_modules/.bin/oxlint`,
+              args: [...options, ...paths],
+              cwd: root,
+              extendEnv: true,
+              env: { OXC_LOG: "debug" },
+              bound: expect.anything(),
+              tee: true,
+            })
+          )
+        );
       })
     );
   });
   it.layer(platform, { timeout: "30 seconds" })((it) => {
     it.effect(
-      "runs the hosted standalone deprecated API command through the same Oxlint process",
+      "runs the hosted standalone deprecated API command through the same partitioned Oxlint processes",
       Effect.fnUntraced(function* () {
         yield* run(["deprecated-apis", "--base", "refs/heads/caller-base"], { CI: "true" });
-        expect(captured).toHaveBeenCalledTimes(1);
+        expect(captured).toHaveBeenCalledTimes(3);
         expect(captured.mock.calls[0]?.[0].command).toBe(`${yield* findRepoRoot()}/node_modules/.bin/oxlint`);
         expect(captured.mock.calls[0]?.[0].args).not.toContain("--affected");
       })
