@@ -1,0 +1,95 @@
+# Heavy Pool Diet Plan
+
+## Status
+
+Status: `pending`
+
+## Phases
+
+| Phase | Status | Goal | Exit criteria |
+| --- | --- | --- | --- |
+| P0 Research | pending | Re-check lever status against `origin/main` (#3041, the Test Unit layout, PERIH-10) and fix the baseline window. | Lever table in `SPEC.md` current; scorecard baseline window (or interim `bun run beep ci lane-timings` readings) recorded under `history/`. |
+| P1 Implement | pending | Land slices 1 to 12 below in order, at most three open PRs. | Every open lever landed behind its admission gate, or stopped with a decision file. |
+| P2 Verify | pending | Read the acceptance numbers from the certainty scorecard over at least 7 days of code-head PR runs after the last diet lever. | Lint Policy p95, heavy slot-min per code run, admission-to-Heavy start and the post-diet heavy-queue p95 recorded under `history/`. |
+| P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P4 Close | pending | Write the closeout reflection and flip packet state; hand the heavy-queue p95 to the operator. | Packet status and evidence are updated; a closeout reflection exists. |
+
+## Slices
+
+PR-sized, in landing order. "Open now" means the slice needs nothing else from this or another goal. At most
+three of this packet's PRs are open at once; slices 1 to 3 are the first three.
+
+| # | Slice (PR title) | Levers | Size | Admission gate | Depends on |
+| --- | --- | --- | --- | --- | --- |
+| 1 | `ci: delete the dead coverage-rollout probe` | PERIH-01 slice 1 | S | In one PR: the probe step, the `legacy_integration` output and the `test-integration` job's name conditional on `legacy_integration` (`check.yml` line 1133), and the `LEGACY_COVERAGE` env line and assertion removed; Shared rule with COVE-08: COVE-08 (route-soundness-repair) owns making the Coverage Regression job name in `.github/workflows/check.yml` a literal. PERIH-01's probe-deletion slice owns the probe step, the `legacy_integration` output, the Test Integration name conditional and the LEGACY_COVERAGE env line and assertion. The `legacy_coverage` output has one consumer on each side, so whichever of the two lands second deletes it in that PR: if the probe deletion lands first it sets `legacy_coverage` to 'false' and COVE-08 then deletes the output together with its last consumer; if COVE-08 lands first, the probe deletion removes the output outright. Whichever lands second merges `main` first. Each updates `packages/tooling/tool/cli/test/ci-runner-security.test.ts` for the lines it changes. `ci-lane.test.ts` updated as well; Coverage Regression and Test Integration report under their exact required names on a code head and a docs head. Workflow PR: cache-policy baseline re-record. | Open now |
+| 2 | `ci: gate binary releases on a closure projection` | PERIH-11 slice 1 (absorbs PERIH-08) | M | Closure mutation fixtures: a change inside the binary's import closure triggers a release, one outside it does not; `bun run beep ci compile-binary` sha256 unchanged for an unchanged closure. | Open now |
+| 3 | `perf(ci): run required heavy lanes first and decide heavy skips at job level` (first `heavy.yml` PR, additive under a migration name) | ORDER (D11), HOST-06 PR 1 | M | Heavy Admission emits the goals-only and Docgen decisions beside `route_skips`; route replay plus mutation fixtures (docs, goals, no-diff, unreadable base); ruleset parity ledger shows every required `Heavy / *` context reporting; Lint Policy still runs when Check is red. | Open now |
+| 4 | `test(repo-cli): pin the noResolve JSDoc inventory contract with fixtures` | LINT-01 residual | S | New merged-namespace and module-augmentation (of an imported package) fixtures; a noResolve parity assertion over the existing star-export, named re-export and overload fixtures in `jsdoc-inventory-detector-fixes.test.ts`; inventory byte parity minus `generatedAt`; one hosted JSDoc Ratchet timing recorded. | A free PR slot |
+| 4b | `test(repo-cli): pay the PR C checker parity gates` | LINT-04 residual | M | S2 prefilter generated from the retired-host rows and tested against them; P55 planted fixtures; S4 findings diff; P12/P11 814-assertion digest, diagnostics sha 44b7c59c9033de74 and an aliased-assertion fixture; P28 census and a WORKSPACE_MANIFEST_WALK re-key probe; per-file coverage floors hold. | A free PR slot |
+| 5 | `perf(repo-cli): leave the JSDoc inventory to the required JSDoc Ratchet lane` | LINT-05 | S | Plan test: the hosted plan omits `jsdoc:inventory:check` and `jsdoc:ratchet:check` only while JSDoc Ratchet is required; seeded-red draft PR shows JSDoc Ratchet red and neither task in the Lint Policy log; identical Lint Policy findings otherwise. | #3041 merged; merge `main` after PERIH-02 if it landed first |
+| 6 | `perf(ci): retire the heavy migration job names` (second `heavy.yml` PR) | ORDER (D11), HOST-06 PR 2 | S | `main` resolves the slice 3 workflow; parity ledger unchanged after the retirement. | Slice 3 merged and resolved on `main` |
+| 7 | `ci: open a pin-bump PR on closure change` | PERIH-11 slice 2 | S | A closure change on `main` opens one reviewed pin-bump PR that passes its own Check; no PR for a release with an unchanged closure. | Slice 2 |
+| 8 | `perf(repo-cli): derive the changed-scope state width from the remaining slots` | LINT-02 slice 2 (absorbs LINT-03) | S | Plan-shape test: summed width at most `policyLint`, medium at least 2 for every profile, doctor present in both scopes with unchanged argv; then the hosted A/B for LINT-02 (at least 10 runs per arm, p50 and p95 each at least 90 s better, memory.peak under 24 GB) recorded under `history/`. | Slice 5; #3041 merged |
+| 9 | `ci: bundle ci admission in the CI binary with a closure-digest fallback` | PERIH-01 slice 2 | M | Replay of recorded events (draft, label, fork, docs, push, error) through binary and source gives byte-identical `verdict`, `route_skips` and `route_receipt`; a closure-digest mismatch fixture forces the head-install fallback. | Slice 7; PERIH-10 landed by `route-soundness-repair` |
+| 10 | Pin-bump PR for the admission binary (opened by slice 7's automation) | PERIH-11, PERIH-01 | S | Passes its own Check on the new pin. | Slice 9 merged and released |
+| 11 | `ci: switch Admission to the pinned binary after the pin bump` | PERIH-01 slice 3 | S | Heavy Admission in `check.yml` and `heavy-admit.yml` runs the binary without the workspace install; admission-to-Heavy start read on the scorecard; tested revert in the PR body. Workflow PR: cache-policy baseline re-record. | Slice 10 |
+| 12 | `chore(ci): queue-inclusive leg-width A/B harness for Test Unit` | HOST-08 | M | Hosted A/B under 1, 2 and 4+ concurrent PRs: push-to-Test-Unit p95 at most 9.5 min per run, runner-minutes beside it, no queued-job growth at the ceiling; the adopt-or-not result is a decision file. | Test Unit steady state (decision file); MEAS-04 (`certainty-scorecard`); ROUT-01 already met (landed in #3030; `hosted-setup-tax`) |
+
+The final PR of the goal carries the scorecard readings, `proposedCloseout` and the reflection; it may ride with
+slice 12 or follow it.
+
+## Closeout Checklist
+
+Before marking the packet closed:
+
+1. Write a closeout reflection via the `/reflect` skill to
+   `history/reflections/<YYYY-MM-DD>-<agent>.md`. Its YAML frontmatter must
+   validate against `ReflectionFrontmatter`.
+2. Run `bun run beep lint reflection-artifacts`.
+3. Update `README.md` (status, latest evidence) and `ops/manifest.json` phase
+   statuses and a typed `proposedCloseout` with status `completed-retained`
+   and finalPullRequest. Keep `initiative.status` operative until completion
+   evidence verifies; do not close the external execution/session ledger from a proposal.
+
+## Execution Notes
+
+- Preserve unrelated worktree changes.
+- Keep `SPEC.md` normative and update it only when the contract changes.
+- Keep this plan current; archive old run outputs under `history/`.
+- Status checkpoints are `kind: checkpoint` files under `decisions/`
+  (`bun run beep goals decisions add heavy-pool-diet --kind checkpoint ...`),
+  rendered into the Checkpoints block at the end of this plan.
+- **Already landed:** LINT-01 and LINT-04 in #3019 (027664ba178); LINT-02 slice 1 rides open #3041. Re-check
+  #3041 at P0: if it closes unmerged, its doctor placement becomes a slice here before slice 5.
+- **Not blocked:** `requires: ci/certainty-scorecard` gates the acceptance numbers and the capacity hand-off,
+  not slices 1 to 8. Until the scorecard reports, record interim readings with `bun run beep ci lane-timings`
+  and never claim an acceptance number from them.
+- **Two-PR and three-PR rules:** every `heavy.yml` change is two PRs (slices 3 and 6); every binary change is
+  three (slices 9, 10, 11). Batch workflow edits where gates allow, because each workflow PR freezes coverage
+  floors and needs a cache-policy baseline re-record.
+- **Cross-goal waits:** slice 9 waits on PERIH-10 (`route-soundness-repair`); slice 12 waits on MEAS-04
+  (`certainty-scorecard`) and the Test Unit layout owned by `ci-lane-economics` (its ROUT-01 dependency is met:
+  the skips landed in #3030). Slice 1 shares `check.yml` with COVE-08 (`route-soundness-repair`) under the rule in
+  slice 1: whichever lands second deletes `legacy_coverage` and merges `main` first.
+- **Feeds the merge-queue candidates (D28):** HOST-06 is this goal's job-removing lever; its consumers are
+  `merge-group-parity` and the gated `merge-queue-activation` in `explorations/github-merge-queue`:
+  `merge-group-parity` waits on this goal (with route-soundness-repair and hosted-setup-tax) merging, and
+  `merge-queue-activation` waits on `merge-group-parity`.
+
+## Verification Commands
+
+```sh
+test "$(wc -m < goals/heavy-pool-diet/GOAL.md)" -le 4000
+jq . goals/heavy-pool-diet/ops/manifest.json
+rg -n "heavy-pool-diet|GOAL.md|agentLaunchers|packetAnchorDocument" goals/heavy-pool-diet
+git diff --check -- goals/heavy-pool-diet
+```
+
+## Checkpoints
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug heavy-pool-diet`; add a `kind: checkpoint` file there, never edit this block._
+
+_No checkpoint files yet._
+
+<!-- beep:decisions:end -->

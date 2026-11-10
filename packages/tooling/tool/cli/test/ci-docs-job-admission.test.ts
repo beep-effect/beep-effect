@@ -175,10 +175,14 @@ it.effect(
       }
       assert.deepEqual(yamlAt(workflow, ["jobs", job, "needs"]), ["change-profile", shard]);
     }
-    for (const job of ["lint-shard", "labs", "property-laws-shard", "fallow-advisory"]) {
+    for (const job of ["lint-shard", "labs", "fallow-advisory"]) {
       assert.deepEqual(yamlAt(workflow, ["jobs", job, "needs"]), afterShardsNeeds);
       assert.strictEqual(yamlAt(workflow, ["jobs", job, "if"]), afterShardsDocsGuard);
     }
+    // Property Laws is a test lane: its slices wait on what the test shards wait on, not on Heavy
+    // Admission, and keep the same fail-closed condition.
+    assert.deepEqual(yamlAt(workflow, ["jobs", "property-laws-shard", "needs"]), ["change-profile", "test-plan"]);
+    assert.strictEqual(yamlAt(workflow, ["jobs", "property-laws-shard", "if"]), afterShardsDocsGuard);
     assert.isUndefined(yamlAt(workflow, ["jobs", "security", "if"]));
     assert.isUndefined(yamlAt(workflow, ["jobs", "secrets", "if"]));
     assert.isUndefined(yamlAt(workflow, ["jobs", "sast", "if"]));

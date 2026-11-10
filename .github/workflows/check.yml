@@ -1418,13 +1418,22 @@ jobs:
     # addition) is a P4 close criterion after a stable green history. The
     # nightly sweep (property-laws-nightly.yml) covers ALL suites at 1000+.
     #
-    # Two complementary Turbo filters (goals/ci-lane-economics, 2026-11-09):
-    # `repo-cli` runs @beep/repo-cli's sweep alone and `rest` runs every other
-    # package, so the two cover each package exactly once without a table. As
-    # one job the lane ran 17 to 23 minutes cold: repo-cli's 12 to 15 minute
-    # task started about six minutes in, behind the other 85 packages.
+    # Complementary Turbo filters (goals/ci-lane-economics, 2026-11-09): the
+    # slices cover each package exactly once without a table. As one job the
+    # lane ran 17 to 23 minutes cold: repo-cli's 12 to 15 minute task started
+    # about six minutes in, behind the other 85 packages.
+    #
+    # Four slices since 2026-11-10. As two, `repo-cli` ran 5.7 to 7.9 min and a
+    # full `rest` 8.0 to 9.5 min, so one slow runner put the verdict past ten
+    # minutes. `repo-cli-1` and `repo-cli-2` are the two Vitest shards of
+    # @beep/repo-cli's sweep; `foundation-drivers` takes packages/foundation
+    # and packages/drivers (835 of the other packages' 1,647 serial seconds on
+    # main run 42742264509) and `rest` takes everything else.
+    #
+    # A test lane, so it is created with the other test shards: it waits on
+    # Test Plan, which they wait on, and not on Heavy Admission.
     name: Property Laws (${{ matrix.partition }})
-    needs: [change-profile, test-plan, admission]
+    needs: [change-profile, test-plan]
     if: ${{ !cancelled() && needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only != 'true' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -1434,7 +1443,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        partition: [repo-cli, rest]
+        partition: [repo-cli-1, repo-cli-2, foundation-drivers, rest]
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -1500,8 +1509,10 @@ jobs:
           shape_args+=(--summarize)
 
           case "${{ matrix.partition }}" in
-            repo-cli) shape_args+=(--filter "@beep/repo-cli") ;;
-            rest) shape_args+=(--filter "!@beep/repo-cli") ;;
+            repo-cli-1) shape_args+=(--filter "@beep/repo-cli" --shard 1/2) ;;
+            repo-cli-2) shape_args+=(--filter "@beep/repo-cli" --shard 2/2) ;;
+            foundation-drivers) shape_args+=(--filter "./packages/foundation/**,./packages/drivers/**") ;;
+            rest) shape_args+=(--filter "!./packages/foundation/**,!./packages/drivers/**,!@beep/repo-cli") ;;
             *) echo "Unknown Property Laws partition"; exit 1 ;;
           esac
 

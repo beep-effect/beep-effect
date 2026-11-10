@@ -76,7 +76,7 @@ Every URL below appears on disk in
 | `enqueuePullRequest`, `dequeuePullRequest`, queue-entry read | `packages/drivers/github/src/PullRequest.ts` | NET-NEW |
 | Token resolution for the merging identities | `packages/tooling/tool/cli/src/commands/Yeet/internal/GhOps.ts` (`provideYeetGhLogin`) | reuse |
 | Probe-workflow precedent | `.github/workflows/fleet-lane-probe.yml` | reference |
-| Toy required-check workflow | `.github/workflows/queue-lab.yml` on `queue-lab` only | NET-NEW |
+| Toy required-check workflow | a `queue-lab.yml` workflow under `.github/workflows`, on `queue-lab` only | NET-NEW |
 | Lab driver script | `goals/merge-queue-lab/ops/` | NET-NEW |
 | Readiness and completion readers the R1 and R2 observations exercise | `.../Yeet/internal/MergeReadiness.policy.ts`, `.../Goals/CompletionEvidence.ts` | reference |
 

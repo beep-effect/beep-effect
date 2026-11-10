@@ -3,12 +3,19 @@
   "exploration": {
     "slug": "ten-minute-certainty",
     "title": "Ten-Minute Certainty",
-    "status": "active",
-    "stage": "decompose",
+    "status": "graduated",
+    "stage": "graduate",
     "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": [
+        "goals/certainty-scorecard",
+        "goals/route-soundness-repair",
+        "goals/main-verdict-every-commit",
+        "goals/heavy-pool-diet",
+        "goals/hosted-setup-tax",
+        "goals/local-proof-under-ten"
+      ],
       "docs": [],
       "supersededBy": null,
       "related": [
@@ -21,6 +28,7 @@
       ]
     },
     "created": "2026-11-09",
-    "updated": "2026-11-09"
+    "updated": "2026-11-09",
+    "retentionReason": "Retained until the six graduated goals (certainty-scorecard, route-soundness-repair, main-verdict-every-commit, heavy-pool-diet, hosted-setup-tax, local-proof-under-ten) close: their SPEC.md, PLAN.md and research/SOURCES.md link BRIEF.md, MAP.md, DECISIONS.md, research/phase2/PLAN.md and research/SOURCES.md here, and MAP.md holds the gated re-entry points. Archive with bun run beep goals archive --kind explorations after they close."
   }
 }

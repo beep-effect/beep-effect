@@ -1217,18 +1217,29 @@ describe("CI lane partitions", () => {
       expect(unitGate).toContain("false:some:success)");
       expect(unitGate).toContain('*) echo "Unexpected classification, plan or shard result"; exit 1');
 
-      // Property Laws keeps one context over two slices whose Turbo filters are complements, so
-      // every package runs in exactly one of them.
+      // Property Laws keeps one context over four slices: the two Vitest shards of repo-cli's sweep
+      // and two directory slices whose Turbo filters are complements, so every package and file runs
+      // in exactly one of them.
       expect(yamlAt(workflow, ["jobs", "property-laws", "name"])).toBe("Property Laws");
       expect(yamlAt(workflow, ["jobs", "property-laws", "if"])).toBe("${{ !cancelled() }}");
       expect(yamlAt(workflow, ["jobs", "property-laws", "needs"])).toEqual(["change-profile", "property-laws-shard"]);
       expect(yamlAt(workflow, ["jobs", "property-laws-shard", "strategy", "fail-fast"])).toBe(false);
       expect(yamlAt(workflow, ["jobs", "property-laws-shard", "strategy", "matrix", "partition"])).toEqual([
-        "repo-cli",
+        "repo-cli-1",
+        "repo-cli-2",
+        "foundation-drivers",
         "rest",
       ]);
-      expect(workflowText).toContain('repo-cli) shape_args+=(--filter "@beep/repo-cli") ;;');
-      expect(workflowText).toContain('rest) shape_args+=(--filter "!@beep/repo-cli") ;;');
+      // A test lane: created with the other test shards, never behind Heavy Admission.
+      expect(yamlAt(workflow, ["jobs", "property-laws-shard", "needs"])).toEqual(["change-profile", "test-plan"]);
+      expect(workflowText).toContain('repo-cli-1) shape_args+=(--filter "@beep/repo-cli" --shard 1/2) ;;');
+      expect(workflowText).toContain('repo-cli-2) shape_args+=(--filter "@beep/repo-cli" --shard 2/2) ;;');
+      expect(workflowText).toContain(
+        'foundation-drivers) shape_args+=(--filter "./packages/foundation/**,./packages/drivers/**") ;;'
+      );
+      expect(workflowText).toContain(
+        'rest) shape_args+=(--filter "!./packages/foundation/**,!./packages/drivers/**,!@beep/repo-cli") ;;'
+      );
       const propertyGate = yamlAt(workflow, ["jobs", "property-laws", "steps", 0, "run"]);
       assertTrue(isWorkflowScript(propertyGate));
       expect(propertyGate).toContain('[[ "${{ needs.change-profile.result }}" == "success" ]]');
@@ -2070,6 +2081,27 @@ describe("ciLaneStepsForTesting", () => {
       ciLaneStepsForTesting(REPO_ROOT, "property", CiLaneRunOptions.make({ ...baseOptions, runs: "1000" }))
     );
     expect(deep.env).toEqual({ BEEP_FC_NUM_RUNS: "1000", BEEP_FC_SEED: "20260708" });
+
+    // Commas separate several Turbo filters, and a Vitest shard rides behind Turbo's `--`, so hosted
+    // slices split the sweep by directory and by shard without a package table.
+    const sliced = firstOf(
+      ciLaneStepsForTesting(
+        REPO_ROOT,
+        "property",
+        CiLaneRunOptions.make({
+          ...baseOptions,
+          filter: "!./packages/foundation/**, !./packages/drivers/**,!@beep/repo-cli",
+          shard: CiLanePartitionShard.make({ index: 2, total: 2 }),
+        })
+      )
+    );
+    expect(A.takeRight(sliced.args, 5)).toEqual([
+      "--filter=!./packages/foundation/**",
+      "--filter=!./packages/drivers/**",
+      "--filter=!@beep/repo-cli",
+      "--",
+      "--shard=2/2",
+    ]);
 
     // A blank or whitespace-only --runs must fall back to the 400 floor,
     // never reach the lane as BEEP_FC_NUM_RUNS="" (which parsers read as

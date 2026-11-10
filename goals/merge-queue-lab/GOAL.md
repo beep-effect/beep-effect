@@ -42,8 +42,7 @@ Workflow:
 3. P2: land the driver calls, write the lab script under `ops/`, work the
    rest of the Observations table.
 4. Preserve unrelated user/worktree changes.
-5. Tie every finding to a run or API response saved under
-   `research/evidence/`.
+5. Tie every finding to a saved run or API response.
 6. At P4 Close, record the verdict, clean up synthetic pull requests, and
    write a closeout reflection to
    `history/reflections/<YYYY-MM-DD>-<agent>.md` via the `/reflect` skill (see
