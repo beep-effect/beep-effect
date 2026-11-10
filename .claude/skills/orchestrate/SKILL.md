@@ -226,8 +226,8 @@ recorder changes.
 
 On a breach, launch on the first host in this order that `t3_environment_links` lists
 `reachable`, that is below its job limit, and that has the checkout, credentials and data
-boundary the work needs (`tom-pc-1` has no beep-effect checkout today, so beep-effect work
-skips it):
+boundary the work needs (`tom-pc-1` has a beep-effect checkout and GitHub push but no
+1Password agent credential, so work that reads `BEEP_SECRETS` skips it):
 
 1. `beep-worker`
 2. `tbk-worker`

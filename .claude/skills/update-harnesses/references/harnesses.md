@@ -46,7 +46,32 @@ behind the worker's nvm copy on the service PATH.
 | `junie-legacy` / npm Junie | anything else under `$HOME` | migrate (below) |
 
 `status` sets `MUSE_NO_AUTO_UPDATE=1` so reading Muse's version does not start
-its background self-update.
+its background self-update. In both modes the host agent also reads the Muse
+settings file (`~/.config/muse/settings.json`) and adds a note to the `muse`
+row when it has no `schema_version`: `muse serve` then exits 3 and T3's Muse
+provider cannot read its model catalog. The script never rewrites the file.
+
+### tom-pc-1-wsl
+
+Inventory of the WSL distro's `agent` account, 2026-11-09 (`status` over
+`ssh-tom-pc-1-wsl`). The active entry of every harness is in the home
+directory's `.local/bin`:
+
+| Harness | Installed by | Real path | Method |
+| --- | --- | --- | --- |
+| node, npm | Node tarball at `~/.local/opt/node`, linked from `.local/bin`; mise holds the global bun and node and the checkout pins | `~/.local/opt/node/bin/node` | not a harness |
+| claude | native installer | `~/.local/share/claude/versions/<v>` | `native` |
+| codex | npm, prefix `~/.local` | `~/.local/lib/node_modules/@openai/codex` | `npm` |
+| junie | npm, prefix `~/.local` (frozen 1468.30) | `~/.local/lib/node_modules/@jetbrains/junie-cli` | `npm`; the first `update` migrates it to the managed launcher |
+| cursor-agent | `cursor.com/install` | `~/.local/share/cursor-agent/versions/<v>` | `cursor-agent` |
+| grok | x.ai installer | `~/.grok/downloads/grok-linux-x86_64` | `native` |
+| muse | Meta's Muse launcher | `.local/bin/muse` (launcher script) | `muse` |
+| kimi | `code.kimi.ai` installer | `~/.kimi-code/bin/kimi` | `kimi` |
+| t3code | fork pull | `~/.t3/runtime/versions/<v>/t3` | `fork-pull-unit` |
+
+The wrapper keeps its own dedicated agent for the login and for `--admin`
+forwarding, so the script never starts the dankserver agent for this host.
+No Cursor sandbox profile is installed there, so no repin runs.
 
 ### Junie migration
 
@@ -140,8 +165,6 @@ preflight failure; the script does not, because that would end running turns.
 
 ## Not in scope
 
-- tom-pc-1-wsl is a linked host but not in this skill's host list. Adding it
-  takes one `HOSTS` entry with its canonical wrapper.
 - Installing a harness that a host lacks. `absent` rows are reported, not fixed.
 - Root-owned or system-package CLI installs on workers (no sudo there).
 - Stale beep-worker leftovers outside the scope, such as the October nightly
