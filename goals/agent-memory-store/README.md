@@ -73,7 +73,7 @@ rebuild from the log alone; 3,096 generated node edits with 0 outside the
 touched span (3/n = 0.097%); 0 of 2,940 concurrent insertions read as
 deletions. The AC-8 import, aborted-import and export-refusal tests are green;
 AC-8 itself stays open until P5. The opt-in run over the whole live goals tree
-reproduced 3,593 of 3,593 files. The measured numbers are in the 2026-11-10
+reproduced 3,597 of 3,597 files. The measured numbers are in the 2026-11-10
 checkpoint in `PLAN.md`.
 
 ## Notes

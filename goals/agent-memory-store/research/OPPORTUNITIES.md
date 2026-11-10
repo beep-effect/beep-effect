@@ -56,3 +56,19 @@ identifiers are redacted.
   until the test itself passed `{ timeout: 900_000 }`.
 - **Would have prevented it:** an effect-vitest checklist line on where test
   measurements go and which timeout option applies to the test body.
+
+## 2026-11-10: the opt-in full-tree test reads the live goals tree twice and races edits to it
+
+- **Doing:** re-running the opt-in AC-1 full-tree test after the P1 review
+  fixes (lane agent-memory-store-p1) while writing decision files under
+  `goals/agent-memory-store/decisions/`.
+- **Evidence:** `expected [ Array(3588) ] to have a length of 3594`: the test
+  imports `goals/`, rebuilds it, then snapshots `goals/` again to compare, so
+  six decision files written during the 58 s run differed from the bytes the
+  log imported. A rerun with no concurrent edits passed 3,597/3,597.
+- **Would have prevented it:** snapshotting the source folder before the
+  import, or a note in the test header that the tree must not change during
+  the run.
+- **Fixed in the same change:** the test now snapshots the source right
+  before the import and its header says the tree must not change during the
+  run.
