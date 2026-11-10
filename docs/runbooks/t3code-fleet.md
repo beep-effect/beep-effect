@@ -231,15 +231,20 @@ upserts the same environment id.
 `t3code-fleet-renewal-reminder.timer` on DankStation notifies on 2027-04-23. After
 renewing, set the unit's `OnCalendar` two weeks before the next expiry.
 
-**Keep entries configured.** A daily host-side `harness-ensure` user timer keeps every
-harness's `t3-code` entry and the unsupervised permission defaults
-(`docs/runbooks/agent-pools.md`, "Child permission mode") in place. Its script and units
+**Keep entries configured.** A daily host-side user timer, `fleet-harness-ensure.timer`
+(it starts `fleet-harness-ensure.service`, which runs the `fleet-harness-ensure` command
+in the account's `.local/bin`), keeps every harness's `t3-code` entry and the unsupervised
+permission defaults (`docs/runbooks/agent-pools.md`, "Child permission mode") in place. Its
+script and units
 are maintained in the operator's private operations records, next to the hosts'
 unattended-update routine, not in this repository. It mints a token only for an entry
-that is missing, rejected by the server (401 or `invalid_mcp_credential`) or inside the
-renewal window, and never touches links: blanket automatic renewal was declined on
-2026-11-08, and the operator's 2026-11-09 instruction asks only that the entries stay
-configured. Installed on tom-pc-1 first; other hosts follow when the operator asks.
+that is missing, rejected by the server (HTTP 401 or 403 on MCP `initialize`) or expiring
+within the renewal window (`--renew-days`, default 21 days), and never touches links:
+blanket automatic renewal was declined on 2026-11-08, and the operator's 2026-11-09
+instruction asks only that the entries stay configured. `fleet-harness-ensure --check`
+reports without writing (exit 0 clean, 2 drift, 1 failed); receipts are under
+`$HOME/.local/state/beep/harness-ensure/`. Installed on tom-pc-1 first; other hosts follow
+when the operator asks.
 
 **Verify.** A headless turn in an empty directory (a repository's `.mcp.json` can stall
 one at "Pending approval"): ask the harness to call `t3_thread_list` with

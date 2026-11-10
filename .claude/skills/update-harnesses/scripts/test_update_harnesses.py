@@ -150,6 +150,13 @@ class Parsing(unittest.TestCase):
         rows, _ = uh.rows_from_records("tom-pc-1-wsl", recs, "status")
         notes = {r.harness: r.note for r in rows}
         self.assertEqual(notes, {"muse": "active; no schema_version", "claude": "active"})
+        # update mode: harness_host.sh's clean() emits "-" for an empty @@RESULT note
+        recs = uh.parse_records("@@RESULT\tmuse\tcurrent\t1.4.14\t1.4.14\tmuse\t/m\t-\n"
+                                "@@RESULT\tclaude\tupdated\t2.1.1\t2.1.2\tnative\t/c\t-\n"
+                                "@@NOTE\tmuse\tno schema_version\n")
+        rows, _ = uh.rows_from_records("tom-pc-1-wsl", recs, "update")
+        self.assertEqual({r.harness: r.note for r in rows}, {"muse": "no schema_version", "claude": ""})
+        self.assertNotIn("-;", uh.render(rows))
 
     def test_admin_route_starts_only_the_agent_it_forwards(self):
         class FakeRun:

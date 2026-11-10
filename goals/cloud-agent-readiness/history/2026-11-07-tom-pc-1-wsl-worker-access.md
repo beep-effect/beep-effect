@@ -26,10 +26,9 @@ identity in a dedicated workstation agent, and `libpam_rssh` touch-to-sudo,
 the same module dankserver and tbk use. Account passwords are locked, so no
 password fallback exists.
 
-Reverse: remove the two sshd drop-ins and the PAM line, delete `agentadmin`
-and the key files under `/etc/ssh/authorized_keys` and
-`/etc/security/authorized_keys`, delete the workstation key handle and wrapper,
-and fall back to the PC's Windows SSH route.
+The decision, with its reversal path, is recorded as
+`goals/cloud-agent-readiness/decisions/2026-11-08-tom-pc-1-wsl-takes-the-tbk-worker-access-model-separate-agentadmin-with-touch-to-sudo-agent-without-sudo.md`
+and projected into this packet's `SPEC.md` decision log.
 
 ## What landed
 

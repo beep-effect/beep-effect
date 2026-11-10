@@ -334,6 +334,14 @@ Lane goals/cloud-agent-readiness-fleet-toolset
 
 Reverse: Unmask the root docker units or remove docker-ce on tom-pc-1-wsl; on grok-bot, a later decision can add a daemon to its service script.
 
+### tom-pc-1-wsl takes the tbk-worker access model: separate agentadmin with touch-to-sudo, agent without sudo, 2026-11-08
+
+The distro runs its own ED25519-SK-only sshd on its tailnet node with tailnet-source AllowUsers. Development and the T3 service run as agent (no sudo, no agent forwarding); administration uses the separate agentadmin account, a distro-only YubiKey identity in a dedicated workstation agent, and libpam_rssh touch-to-sudo, the same module dankserver and tbk use. Account passwords are locked, so no password fallback exists. The checkout is the public clone; 1Password credentials remain an operator grant (GitHub push was added through a gh login on 2026-11-08). Taken on 2026-11-07 and filed on 2026-11-08 in a lane for goals/t3code-fleet-rollout that never published; recorded here on 2026-11-09 because that packet is archived. Receipt: history/2026-11-07-tom-pc-1-wsl-worker-access.md.
+
+Lane goals/t3code-fleet-rollout-tom-pc-1-wsl-access
+
+Reverse: Remove the two sshd drop-ins and the PAM line, delete agentadmin and the key files under /etc/ssh/authorized_keys and /etc/security/authorized_keys, delete the workstation key handle and wrapper, and fall back to the PC's Windows SSH route.
+
 ### Add tom-pc-1-wsl to update-harnesses and refresh fleet docs, 2026-11-09
 
 tom-pc-1-wsl joins /update-harnesses through its canonical wrapper ssh-tom-pc-1-wsl (YubiKey login, --admin -tt for agentadmin touch-to-sudo), with a host-specific unreachable note for a PC that is off, signed out or missing its T3AgentWSL keep-alive. The admin route starts the dankserver agent only for routes that forward it (beep-worker, grok-bot); tom-pc-1-wsl's wrapper keeps its own agent, so starting the dankserver agent there was wrong. A read-only check reports a Muse settings file without schema_version, which made muse serve exit 3 and broke T3's Muse provider on tom-pc-1-wsl. The fleet docs now match the host's live state, and the stranded 2026-11-07 access receipt moves into this packet because goals/t3code-fleet-rollout is archived. Receipt: history/2026-11-09-tom-pc-1-wsl-fleet-parity.md.

@@ -163,7 +163,9 @@ def rows_from_records(host: str, records: list[list[str]], mode: str) -> tuple[l
         elif kind == "@@NOTE" and len(rec) >= 3:
             notes.setdefault(rec[1], []).append(rec[2])
     for r in results:  # read-only findings about a harness's config ride on its rows
-        r.note = "; ".join(n for n in (r.note, *notes.get(r.harness, ())) if n)
+        # harness_host.sh's clean() turns an empty @@RESULT note into "-"; drop it so a
+        # note does not render as "-; <note>"
+        r.note = "; ".join(n for n in (r.note, *notes.get(r.harness, ())) if n and n != "-")
     return results, apparmor
 
 

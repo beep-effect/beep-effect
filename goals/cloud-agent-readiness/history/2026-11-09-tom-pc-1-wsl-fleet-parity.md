@@ -36,6 +36,11 @@ signed in to the operator's chosen account.
 - A `gh` login for git push (token expires 2027-11-09), the fork T3 pull timer,
   the fleet developer toolset and rootless Docker.
 - No 1Password agent credential: an operator grant, out of scope here.
+- The `fleet-harness-ensure` routine from the operator's private operations
+  records: the `fleet-harness-ensure` command in `.local/bin` with
+  `fleet-harness-ensure.{service,timer}` (timer enabled, next run 2026-11-10
+  07:39 CST), byte-identical to its source by SHA-256; the 19:17 check and
+  apply runs reported 21 items `ok`, none fixed, failed or drifted.
 
 `/update-harnesses` status over `ssh-tom-pc-1-wsl` (read-only) found Claude
 2.1.321 native, Codex 0.167.0 npm, Grok 1.0.77 native, Kimi 2.5.2, Junie
@@ -58,9 +63,11 @@ pull unit.
 - Docs: the update-harnesses skill and its harness reference, the remote
   development host profiles, the orchestrator's spill note and
   `docs/runbooks/t3code-fleet.md` (link at `full-access`, Kimi and Muse MCP
-  rows, the daily `harness-ensure` timer, four new gotchas).
+  rows, the daily `fleet-harness-ensure` timer, four new gotchas).
 - `goals/cloud-agent-readiness/history/2026-11-07-tom-pc-1-wsl-worker-access.md`:
-  the access receipt from a stranded 2026-11-07 lane, corrected.
+  the access receipt from a stranded 2026-11-07 lane, corrected; its access-model
+  decision is recorded as
+  `goals/cloud-agent-readiness/decisions/2026-11-08-tom-pc-1-wsl-takes-the-tbk-worker-access-model-separate-agentadmin-with-touch-to-sudo-agent-without-sudo.md`.
 
 ## Still open (operator-owned)
 

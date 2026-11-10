@@ -66,7 +66,7 @@ directory's `.local/bin`:
 | cursor-agent | `cursor.com/install` | `~/.local/share/cursor-agent/versions/<v>` | `cursor-agent` |
 | grok | x.ai installer | `~/.grok/downloads/grok-linux-x86_64` | `native` |
 | muse | Meta's Muse launcher | `.local/bin/muse` (launcher script) | `muse` |
-| kimi | `code.kimi.ai` installer | `~/.kimi-code/bin/kimi` | `kimi` |
+| kimi | CLI installer `https://code.kimi.ai/kimi-code/install.sh` (the desktop feed is on `code.kimi.com`), linked from `.local/bin` | `~/.kimi-code/bin/kimi` | `kimi` |
 | t3code | fork pull | `~/.t3/runtime/versions/<v>/t3` | `fork-pull-unit` |
 
 The wrapper keeps its own dedicated agent for the login and for `--admin`
