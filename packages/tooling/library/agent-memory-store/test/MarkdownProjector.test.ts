@@ -316,7 +316,7 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector import rules and projectNode (
     );
 
     it.effect(
-      "a first import that loses the race to another folder's import fails with ForeignFolderError",
+      "a first import that loses the race to another folder's import fails with ForeignFolderError, keeps no fence rows and is never exported into",
       Effect.fnUntraced(function* () {
         const workspace = yield* tempDirectory("beep-import-race-other-");
         const mine = `${workspace}/mine`;
@@ -334,6 +334,44 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector import rules and projectNode (
         expect(refused).toMatchObject({ root: theirs });
         const entries = yield* loser.log.entriesAfter(LogCursor.make(0));
         expect(folderImportCount(entries)).toBe(1);
+
+        // The refused batch rolled its fence rows back, so the log's folder is
+        // never written into the loser's folder.
+        const before = yield* snapshotFolder(theirs);
+        const exported = yield* Effect.flip(loser.projector.exportFolder(PosixPath.make(theirs)));
+        expect(exported).toBeInstanceOf(UnimportedFolderError);
+        const after = yield* snapshotFolder(theirs);
+        expect(after).toEqual(before);
+        expect(A.map(after, (file) => textOf(file.bytes))).toEqual(["# Theirs\n"]);
+      })
+    );
+
+    it.effect(
+      "an import whose append fails keeps no fence rows, so a folder imported later is never exported into it",
+      Effect.fnUntraced(function* () {
+        const workspace = yield* tempDirectory("beep-import-append-fails-");
+        const failing = `${workspace}/failing`;
+        const mine = `${workspace}/mine`;
+        yield* writeFiles(failing, [["MEMORY.md", "# Failing\n"]]);
+        yield* writeFiles(mine, [["MEMORY.md", "# Mine\n"]]);
+        const database = `${workspace}/memory.db`;
+        const store = yield* openStore(database);
+        // A missing heads table fails the NodeCreated handler inside the batch.
+        yield* store.sql.unsafe("ALTER TABLE agent_memory_heads RENAME TO agent_memory_heads_away");
+        const failed = yield* Effect.flip(store.projector.importFolder(PosixPath.make(failing)));
+        expect(failed).toBeInstanceOf(ProjectionError);
+        const rows = yield* store.sql.unsafe<{ readonly rows: number }>(
+          "SELECT COUNT(*) AS rows FROM agent_memory_folder_files"
+        );
+        expect(rows).toEqual([{ rows: 0 }]);
+
+        yield* store.sql.unsafe("ALTER TABLE agent_memory_heads_away RENAME TO agent_memory_heads");
+        yield* store.projector.importFolder(PosixPath.make(mine));
+        const before = yield* snapshotFolder(failing);
+        const exported = yield* Effect.flip(store.projector.exportFolder(PosixPath.make(failing)));
+        expect(exported).toBeInstanceOf(UnimportedFolderError);
+        const after = yield* snapshotFolder(failing);
+        expect(after).toEqual(before);
       })
     );
 

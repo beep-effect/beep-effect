@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-10T06:33:42.054Z",
+  "generatedAt": "2026-11-10T06:42:30.430Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -266588,8 +266588,8 @@
           "exportKind": "const",
           "filePath": "src/MarkdownProjector.layer.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MarkdownProjector.layer.ts",
-          "line": 657,
-          "anchor": "packages-tooling-library-agent-memory-store-src-markdownprojector-layer-ts-657-markdownprojectorlayer",
+          "line": 666,
+          "anchor": "packages-tooling-library-agent-memory-store-src-markdownprojector-layer-ts-666-markdownprojectorlayer",
           "currentTags": [
             "@category",
             "@since"
@@ -266610,8 +266610,8 @@
           "exportKind": "const",
           "filePath": "src/MarkdownProjector.layer.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MarkdownProjector.layer.ts",
-          "line": 687,
-          "anchor": "packages-tooling-library-agent-memory-store-src-markdownprojector-layer-ts-687-makemarkdownstoresqlitelayer",
+          "line": 696,
+          "anchor": "packages-tooling-library-agent-memory-store-src-markdownprojector-layer-ts-696-makemarkdownstoresqlitelayer",
           "currentTags": [
             "@param",
             "@returns",

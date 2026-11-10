@@ -494,11 +494,19 @@ const make = Effect.gen(function* () {
   });
 
   // A first import that lost the race to another writer's first import: the
-  // same folder bytes are the same import, any other folder is foreign.
-  const lostImport = Effect.fnUntraced(function* (root: PosixPath, refused: FolderAlreadyImportedError) {
+  // same folder bytes are the same import, so this folder's bytes are the
+  // log's and its fence rows are recorded now; any other folder is foreign
+  // and keeps none.
+  const lostImport = Effect.fnUntraced(function* (
+    root: PosixPath,
+    key: string,
+    disk: ReadonlyArray<DiskFile>,
+    refused: FolderAlreadyImportedError
+  ) {
     if (refused.folderDigest !== refused.importedFolderDigest) {
       return yield* ForeignFolderError.make({ root, folderDigest: refused.folderDigest });
     }
+    yield* recordFolderFiles("importFolder", key, disk);
     return yield* currentBase("importFolder");
   });
 
@@ -513,14 +521,15 @@ const make = Effect.gen(function* () {
       return yield* reimport(root, disk);
     }
     const events = yield* importEvents(disk);
-    // The folder's rows say only that it held these bytes, which stays true
-    // if the append below fails.
     const key = yield* folderKeyOf("importFolder", root);
-    yield* recordFolderFiles("importFolder", key, disk);
-    // The log refuses a second FolderImported in the writer transaction, so of
-    // two first imports racing on one database exactly one lands.
-    const refused = yield* log
-      .appendMany(events)
+    // The fence rows and the import batch commit in one transaction: the
+    // journal's writer transaction runs on this fiber's connection as a
+    // savepoint inside it, so a refused or failed append rolls the rows back
+    // and a folder holds fence rows only when its import landed. The log
+    // refuses a second FolderImported in that transaction, so of two first
+    // imports racing on one database exactly one lands.
+    const refused = yield* sql
+      .withTransaction(Effect.andThen(recordFolderFiles("importFolder", key, disk), log.appendMany(events)))
       .pipe(
         Effect.as(O.none<FolderAlreadyImportedError>()),
         Effect.catchTag("FolderAlreadyImportedError", flow(O.some, Effect.succeed)),
@@ -529,7 +538,7 @@ const make = Effect.gen(function* () {
     yield* catchUp("importFolder");
     return yield* O.match(refused, {
       onNone: () => currentBase("importFolder"),
-      onSome: (error) => lostImport(root, error),
+      onSome: (error) => lostImport(root, key, disk, error),
     });
   });
 
