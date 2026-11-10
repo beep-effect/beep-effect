@@ -87,7 +87,7 @@ it.layer(services, { timeout: "30 seconds" })("github app mint command", (it) =>
       const logged = yield* Effect.map(TestConsole.logLines, A.map(String));
       const printed = yield* Ref.get(written);
       const checkedIn = yield* fs.readFileString(path.join(root, gitHubAppManifestPath("beep-knowledge-mint")));
-      expect(logged).toContain("github commands: app");
+      expect(logged).toContain("github commands: app, ledger");
       expect(logged).toContain("github app commands: mint");
       expect(printed).toBe(checkedIn);
     })
