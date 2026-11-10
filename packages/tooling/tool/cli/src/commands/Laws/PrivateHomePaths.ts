@@ -212,11 +212,7 @@ const isAllowedHomeUser =
  */
 const trimTrailingDots = (user: string): string => F.pipe(user, Str.replace(/\.+$/u, ""));
 
-const firstEncodedSegment = (tail: string): string =>
-  F.pipe(
-    A.head(F.pipe(tail, Str.split("-"))),
-    O.getOrElse(() => tail)
-  );
+const firstEncodedSegment = (tail: string): string => A.headNonEmpty(F.pipe(tail, Str.split("-")));
 
 /**
  * An encoded tail is allowed when its first segment is, or when it starts with
@@ -262,10 +258,11 @@ type HomePathMatch = {
 const homePathMatches = (content: string, allowed: (user: string) => boolean): ReadonlyArray<HomePathMatch> =>
   A.getSomes(
     A.map(A.fromIterable(F.pipe(content, Str.matchAll(HOME_PATH_PATTERN))), (match) =>
-      O.map(O.fromNullishOr(match.index), (index) => ({
+      // The pattern's user group is mandatory, so a match always carries it.
+      O.map(O.all([O.fromNullishOr(match.index), O.fromNullishOr(match[1])]), ([index, user]) => ({
         index,
         text: trimTrailingDots(match[0]),
-        leaked: !allowed(trimTrailingDots(match[1] ?? "")),
+        leaked: !allowed(trimTrailingDots(user)),
       }))
     )
   );
@@ -273,16 +270,19 @@ const homePathMatches = (content: string, allowed: (user: string) => boolean): R
 const encodedHomeMatches = (content: string, allowed: (user: string) => boolean): ReadonlyArray<HomePathMatch> =>
   A.getSomes(
     A.map(A.fromIterable(F.pipe(content, Str.matchAll(ENCODED_HOME_PATTERN))), (match) =>
-      O.map(O.fromNullishOr(match.index), (index) => {
-        const tail = match[2] ?? "";
-        const isPathComponent =
-          F.pipe(tail, Str.includes("-")) || isEncodedDirectory(content, index, index + match[0].length);
-        return {
-          index,
-          text: `${match[1] ?? ""}${firstEncodedSegment(tail)}`,
-          leaked: isPathComponent && !isAllowedEncodedTail(allowed, tail),
-        };
-      })
+      // Both groups of the encoded pattern are mandatory, so a match always carries them.
+      O.map(
+        O.all([O.fromNullishOr(match.index), O.fromNullishOr(match[1]), O.fromNullishOr(match[2])]),
+        ([index, prefix, tail]) => {
+          const isPathComponent =
+            F.pipe(tail, Str.includes("-")) || isEncodedDirectory(content, index, index + match[0].length);
+          return {
+            index,
+            text: `${prefix}${firstEncodedSegment(tail)}`,
+            leaked: isPathComponent && !isAllowedEncodedTail(allowed, tail),
+          };
+        }
+      )
     )
   );
 

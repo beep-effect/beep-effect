@@ -5664,15 +5664,12 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:identity-registry",
         "lint:circular",
         "lint:effect-imports",
-        "lint:effect-imports-markdown",
-        "lint:schema-tag-idioms",
         "lint:holds",
         "lint:tsconfig-overlay",
         "lint:package-test-typecheck",
         "lint:effect-vitest",
         "lint:jsdoc",
         "lint:jsdoc:root",
-        "lint:jsdoc-module-tags",
         "jsdoc:inventory:check",
         "jsdoc:ratchet:check",
       ]);
@@ -5691,6 +5688,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:private-home-paths",
         "lint:tracked-shell-allowlist",
         "lint:opaque-roundtrips",
+        "lint:schema-tag-idioms",
+        "lint:jsdoc-module-tags",
+        "lint:effect-imports-markdown",
       ]);
       for (const index of [0, 1, 4]) {
         const step = O.getOrThrow(A.get(local, index));
@@ -5733,15 +5733,12 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:identity-registry",
         "lint:circular",
         "lint:effect-imports",
-        "lint:effect-imports-markdown",
-        "lint:schema-tag-idioms",
         "lint:holds",
         "lint:tsconfig-overlay",
         "lint:package-test-typecheck",
         "lint:effect-vitest",
         "knowledge:semantic-delta",
         "knowledge:refs-check",
-        "lint:jsdoc-module-tags",
         "goals:doctor",
         "lint:oxlint",
         "lint:shadcn",
@@ -5755,6 +5752,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:private-home-paths",
         "lint:tracked-shell-allowlist",
         "lint:opaque-roundtrips",
+        "lint:schema-tag-idioms",
+        "lint:jsdoc-module-tags",
+        "lint:effect-imports-markdown",
       ]);
       // A local full-scope plan (no review base) leaves the two git-delta knowledge checks and the
       // knowledge doctor (report-only until the first seal) to the hosted plan; the changed-scope
@@ -6008,7 +6008,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               "local:rw",
               Effect.gen(function* () {
                 for (const full of [false, true]) {
-                  for (const failedLabel of ["lint:policy:cheap", full ? "lint:policy:medium" : "lint:policy:state"]) {
+                  // The knowledge doctor runs abreast of the medium and state graphs; its red fails the
+                  // group with every step of the plan still spawned.
+                  for (const failedLabel of full
+                    ? ["lint:policy:cheap", "lint:policy:medium"]
+                    : ["lint:policy:cheap", "lint:policy:state", "knowledge:doctor"]) {
                     const plan = rootLintPolicyStepsForTesting(root, undefined, full ? undefined : "review-base");
                     const failed = pipe(
                       plan,

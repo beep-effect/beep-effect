@@ -87,3 +87,15 @@ What the episode confirms: the P0 row plus the merged-sibling signal gives the o
 concrete, immediate catch-up; a regenerated file is the only safe resolution for a
 generated conflict; and a shared GitHub identity needs REST-first polling budgets
 (the `orchestrate` skill's "REST first" ruling) or the monitors starve each other.
+
+## Amendment 2026-11-09: B3 no longer offers stacking
+
+Operator ruling of 2026-11-09, taken in the `explorations/stacked-pr-adoption` reground
+(decision `fan-out-stacking-doctrine` in that packet's `DECISIONS.md`). B3's alternative
+"or stacked on it and retargeted when the parent merges" is withdrawn. A fourth change to a
+packet is sequenced behind one of the three in the same lane. The Yeet skill's step 2c already
+forbade a pull request on a non-`main` base, because no workflow fires there: #2697 was opened
+on its parent's branch on 2026-11-05 and merged into it six minutes later with no check run.
+The cap of three, B1, B2 and B4 are unchanged. The sentence was struck from `AGENTS.md`, the
+`orchestrate` skill, the Yeet `references/merge-loop.md` and `goals/README.md`. Reversal:
+restore it in those four places, and amend step 2c to admit a non-`main` base.

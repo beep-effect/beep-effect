@@ -81,6 +81,7 @@ export {
   browserModeIncludeGlobs,
   countEffectVitestSourceLines,
   diffEffectVitestFindings,
+  discoverEffectVitestBrowserModePaths,
   discoverEffectVitestSourcePaths,
   formatEffectVitestIntroducedReport,
   preserveEffectVitestExceptions,

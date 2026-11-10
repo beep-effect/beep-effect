@@ -85,7 +85,9 @@ Two separate planes:
 ## Pair a host in the desktop app (client plane)
 
 A host linked on the agent plane does not appear in the composer's "Run on"
-list until the desktop app has also paired with it. On the host:
+list until the desktop app has also paired with it, and the list shows only
+environments that hold a project with the same repository key as the one the
+composer is in (see Gotchas). On the host:
 
 ```sh
 t3 pair --ttl 15m --label dankstation-desktop
@@ -136,8 +138,16 @@ listener (decision 2026-11-06). All steps run over the PC's key-auth SSH
    staged `$HOME/t3-finish.sh` does exactly this once Tailscale is up.
 6. Publish and link: `t3 pair --tailscale --ttl 15m` inside the distro (Serve
    on the distro's own node, no Funnel); on the hub
-   `t3 environment link https://tom-pc-1-wsl.<tailnet>.ts.net --pairing-code <code> --access auto`.
-   Then pair the desktop app the same way as the other hosts.
+   `t3 environment link https://tom-pc-1-wsl.<tailnet>.ts.net --pairing-code <code> --access full-access`
+   (fleet links are Full access). Then pair the desktop app the same way as
+   the other hosts and register the checkout with `t3 project add <checkout>`
+   in the distro, so the host shows up in "Run on".
+7. Access and worker setup (2026-11-07): the distro's own YubiKey-only sshd,
+   the `agent` and `agentadmin` accounts, touch-to-sudo for `agentadmin`, and
+   the workstation wrapper `ssh-tom-pc-1-wsl`. The route and its boundaries
+   are in `.claude/skills/remote-development-agents/references/hosts.md`; the
+   build steps and proofs are in
+   `goals/cloud-agent-readiness/history/2026-11-07-tom-pc-1-wsl-worker-access.md`.
 
 Rollback: `wsl --unregister t3-agent`, delete the `T3AgentWSL` task and
 `C:\WSL`, and delete the `tom-pc-1-wsl` node in the Tailscale admin console.
@@ -200,6 +210,8 @@ carry calls on to the other hosts. This replaced the planned shared `t3-hub` ent
 | Grok | `~/.grok/config.toml`, `[mcp_servers.t3-code]` | `headers.Authorization` |
 | cursor-agent | `~/.cursor/mcp.json`, then `cursor-agent mcp enable t3-code` | `headers.Authorization` |
 | Junie | `~/.junie/mcp/mcp.json` | `headers.Authorization` |
+| Kimi Code | `~/.kimi-code/mcp.json`, `mcpServers` | `headers.Authorization` |
+| Muse | `~/.config/muse/settings.json`, `mcpServers` with `"type": "streamable-http"` | `headers.Authorization` |
 
 **Authorize or renew.** `/mcp` accepts only MCP OAuth tokens; `t3 auth session issue`
 tokens fail with `invalid_mcp_credential`. The token has no refresh, so each harness
@@ -216,9 +228,23 @@ upserts the same environment id.
 
 **Expiry.** Tokens and links both ride the fork's `MCP_CLIENT_SESSION_TTL`, 180 days
 (`beep-effect/t3code#2`), and the current set expires **2027-05-07**. The one-shot
-`t3code-fleet-renewal-reminder.timer` on DankStation notifies on 2027-04-23. It only
-reminds; automatic renewal was declined on 2026-11-08. After renewing, set the unit's
-`OnCalendar` two weeks before the next expiry.
+`t3code-fleet-renewal-reminder.timer` on DankStation notifies on 2027-04-23. After
+renewing, set the unit's `OnCalendar` two weeks before the next expiry.
+
+**Keep entries configured.** A daily host-side user timer, `fleet-harness-ensure.timer`
+(it starts `fleet-harness-ensure.service`, which runs the `fleet-harness-ensure` command
+in the account's `.local/bin`), keeps every harness's `t3-code` entry and the unsupervised
+permission defaults (`docs/runbooks/agent-pools.md`, "Child permission mode") in place. Its
+script and units
+are maintained in the operator's private operations records, next to the hosts'
+unattended-update routine, not in this repository. It mints a token only for an entry
+that is missing, rejected by the server (HTTP 401 or 403 on MCP `initialize`) or expiring
+within the renewal window (`--renew-days`, default 21 days), and never touches links:
+blanket automatic renewal was declined on 2026-11-08, and the operator's 2026-11-09
+instruction asks only that the entries stay configured. `fleet-harness-ensure --check`
+reports without writing (exit 0 clean, 2 drift, 1 failed); receipts are under
+`$HOME/.local/state/beep/harness-ensure/`. Installed on tom-pc-1 first; other hosts follow
+when the operator asks.
 
 **Verify.** A headless turn in an empty directory (a repository's `.mcp.json` can stall
 one at "Pending approval"): ask the harness to call `t3_thread_list` with
@@ -263,6 +289,23 @@ qualifier, and p1 for available memory, as
 - WSL terminates a distro once its last `wsl.exe` session ends, even with
   systemd running inside it; the T3 service on tom-pc-1 survives only while the
   `T3AgentWSL` keep-alive task holds a session open.
+- The desktop composer's "Run on" list shows only environments that hold a
+  project with the same repository key as the composer's project. A linked and
+  paired host with no matching project is absent from the list, not broken:
+  register the checkout on the host with `t3 project add <checkout>`.
+- Muse's settings file (`~/.config/muse/settings.json`) needs a top-level
+  `"schema_version": 1`. Without it `muse serve` exits 3 on every T3 probe and T3
+  reports that it could not read the model catalog. tom-pc-1's fixed file also
+  names the provider (`meta`), the model (`muse-wonder-1.0`) and
+  `reasoning_effort: medium`. `/update-harnesses` reports a missing
+  `schema_version` as a note on the `muse` row.
+- T3's Cursor provider runs on `@cursor/sdk` with its own credential, separate
+  from the CLI's `cursor-agent login`. A host where the CLI is signed in still
+  needs a Cursor sign-in inside T3 (Settings → Providers on that environment).
+- Providers that come from the ACP registry (Junie, Kimi) are not active in an
+  environment until someone presses Install for them in that environment's
+  Settings → Providers. Installing the CLI on the host is not enough. Kimi's T3
+  sign-in waits on `beep-effect/t3code#1`.
 - A delegated Claude turn that fails with "Claude timed out while registering
   its MCP tools" after 90 s points at the target project's `.mcp.json`: servers
   the host's Claude config has neither approved nor disabled for that checkout

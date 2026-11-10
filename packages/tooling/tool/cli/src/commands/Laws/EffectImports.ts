@@ -333,7 +333,28 @@ const EFFECT_FUNCTION_BINDINGS = ["absurd", "cast", "flow", "hole", "identity", 
 
 const EFFECT_PACKAGE_JSON_PATH = NodeURL.fileURLToPath(import.meta.resolve("effect/package.json"));
 
-const CODE_GLOBS = [
+/**
+ * The code-mode corpus globs: every repository source family plus root-level sources.
+ *
+ * **Details**
+ *
+ * The walk runs with `dot: false`, so `**` never enters a dot directory; the dot
+ * roots the law covers (`.claude`, `.github`, `apps/storybook/.storybook`) are
+ * listed explicitly. The `//#lint:effect-imports` Turbo inputs restate these
+ * globs, and `root-tasks-turbo-inputs.test.ts` fails when the two drift.
+ *
+ * **Example** (Inspect the code corpus)
+ *
+ * ```ts
+ * import { EffectImportsCodeGlobs } from "@beep/repo-cli/commands/Laws/EffectImports"
+ *
+ * console.log(EffectImportsCodeGlobs.includes("scratchpad/**\/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}")) // true
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const EffectImportsCodeGlobs = [
   "apps/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
   "apps/storybook/.storybook/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
   "packages/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
@@ -349,46 +370,57 @@ const CODE_GLOBS = [
   "*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
 ] as const;
 
-// One walk: under the dot dialect `**` enters every directory, so the dot-leading
-// roots (`.claude`, `.github`, `.changeset`, ...) that used to be listed beside it
-// are already covered and would only be walked a second time.
-const MARKDOWN_GLOBS = ["**/*.{md,mdx}"] as const;
+/**
+ * The Markdown-mode corpus glob: every `.md` and `.mdx` file, dot directories included.
+ *
+ * **Details**
+ *
+ * One walk: under the dot dialect `**` enters every directory, so the dot
+ * roots (`.claude`, `.github`, `.changeset`) need no glob of their own. The
+ * walk keeps only git-visible paths (tracked, or untracked and not ignored),
+ * so the corpus is every authored Markdown document outside the excluded
+ * directories, not only the documentation roots. The
+ * `//#lint:effect-imports-markdown` Turbo inputs restate this glob.
+ *
+ * **Example** (Inspect the Markdown corpus)
+ *
+ * ```ts
+ * import { EffectImportsMarkdownGlobs } from "@beep/repo-cli/commands/Laws/EffectImports"
+ *
+ * console.log(EffectImportsMarkdownGlobs.length) // 1
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const EffectImportsMarkdownGlobs = ["**/*.{md,mdx}"] as const;
 
 const NESTED_WORKTREE_SEGMENT = "/.claude/worktrees/";
-// `build` holds bundler output such as infra/lambda/turbo-cache/build: gitignored, and the
-// repository tracks no file under any directory of that name (`git ls-files | grep -c
-// '/build/'` is 0), so it is excluded beside `dist`.
-const GENERATED_OR_VENDOR_SEGMENTS = ["/.repos/", "/node_modules/", "/dist/", "/build/", "/vendor/"] as const;
-// `coverage` and `storybook-static` hold test-coverage reports (lcov HTML plus its `prettify.js`
-// and `sorter.js`) and static Storybook bundles: gitignored output that the repository never
-// tracks (`git ls-files | grep -cE '(^|/)(coverage|storybook-static)/'` is 0). A coverage run
-// rewrites hundreds of timestamped report files, so walking them made a local report fail or
-// re-run the law; the Turbo inputs of `//#lint:effect-imports*` negate the same trees.
-const EXCLUDED_DIRECTORY_GLOBS = [
-  "**/.repos",
-  "**/node_modules",
-  "**/dist",
-  "**/build",
-  "**/vendor",
-  "**/coverage",
-  "**/storybook-static",
-  "**/.claude/worktrees",
-] as const;
-const CODE_EXCLUSION_GLOBS = A.flatMap(EXCLUDED_DIRECTORY_GLOBS, (directory) => [directory, `${directory}/**`]);
-const MARKDOWN_EXCLUSION_GLOBS = A.appendAll(
-  CODE_EXCLUSION_GLOBS,
-  A.flatMap(["**/.git", "**/.beep", "**/docs/modules", "docs/generated", "docs/_internal"], (directory) => [
-    directory,
-    `${directory}/**`,
-  ])
-);
-// The name-shaped exclusions above, which the walk never enters at any depth, plus
-// `worktrees`: a populated `.claude/worktrees/<lane>` is a whole checkout that the
-// `**/.claude/worktrees` exclusion would otherwise walk before discarding. The
-// repository tracks no other directory of that name (`git ls-files | grep -c
-// '/worktrees/'` is 0), so the pruned set equals the excluded set over the tree. `coverage`
-// and `storybook-static` are name-shaped exclusions like `dist`, so they are pruned too.
-const PRUNED_DIRECTORY_NAMES = [
+/**
+ * Generated and vendored directory names no `effect-imports` corpus reads at any depth.
+ *
+ * **Details**
+ *
+ * `build` holds bundler output such as `infra/lambda/turbo-cache/build`;
+ * `coverage` and `storybook-static` hold test-coverage reports (lcov HTML plus
+ * its `prettify.js` and `sorter.js`) and static Storybook bundles. All are
+ * gitignored output the repository never tracks (a `git ls-files` count of
+ * paths under any of them is 0). Both walks prune them,
+ * the code scope filter rejects an explicit path inside one, and both
+ * `effect-imports` Turbo rows negate each name.
+ *
+ * **Example** (Classify a generated directory)
+ *
+ * ```ts
+ * import { EffectImportsGeneratedOrVendorDirectory } from "@beep/repo-cli/commands/Laws/EffectImports"
+ *
+ * console.log(EffectImportsGeneratedOrVendorDirectory.literals.includes("coverage")) // true
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const EffectImportsGeneratedOrVendorDirectory = LiteralKit([
   ".repos",
   "node_modules",
   "dist",
@@ -396,10 +428,107 @@ const PRUNED_DIRECTORY_NAMES = [
   "vendor",
   "coverage",
   "storybook-static",
-  ".git",
-  ".beep",
-  "worktrees",
+]).pipe(
+  $I.annoteSchema("EffectImportsGeneratedOrVendorDirectory", {
+    description: "Generated or vendored directory names that no effect-imports corpus reads.",
+  })
+);
+/**
+ * A generated or vendored directory name that no `effect-imports` corpus reads.
+ *
+ * **Example** (Annotate a pruned directory name)
+ *
+ * ```ts
+ * import type { EffectImportsGeneratedOrVendorDirectory } from "@beep/repo-cli/commands/Laws/EffectImports"
+ *
+ * const name: EffectImportsGeneratedOrVendorDirectory = "coverage"
+ * console.log(name)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export type EffectImportsGeneratedOrVendorDirectory = typeof EffectImportsGeneratedOrVendorDirectory.Type;
+const GENERATED_OR_VENDOR_SEGMENTS = A.map(EffectImportsGeneratedOrVendorDirectory.literals, (name) => `/${name}/`);
+const EXCLUDED_DIRECTORY_GLOBS = A.append(
+  A.map(EffectImportsGeneratedOrVendorDirectory.literals, (name) => `**/${name}`),
+  "**/.claude/worktrees"
+);
+const toDirectoryExclusions = A.flatMap((directory: string) => [directory, `${directory}/**`]);
+/**
+ * Path-shaped directories the code walk excludes beyond the name-shaped ones.
+ *
+ * **Details**
+ *
+ * `packages/<pkg>/docs` is gitignored docgen output (`**\/docs` in the root
+ * `.gitignore`); the code walk does not filter by git visibility, so it skips
+ * the tree explicitly, and the `//#lint:effect-imports` inputs negate it.
+ * Markdown discovery keeps its own list.
+ *
+ * **Example** (Inspect the code-only exclusions)
+ *
+ * ```ts
+ * import { EffectImportsCodeOnlyExcludedDirectories } from "@beep/repo-cli/commands/Laws/EffectImports"
+ *
+ * console.log(EffectImportsCodeOnlyExcludedDirectories) // ["packages/**\/docs"]
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const EffectImportsCodeOnlyExcludedDirectories = ["packages/**/docs"] as const;
+/**
+ * Path-shaped directories the Markdown walk excludes beyond the name-shaped ones.
+ *
+ * **Example** (Inspect the Markdown-only exclusions)
+ *
+ * ```ts
+ * import { EffectImportsMarkdownOnlyExcludedDirectories } from "@beep/repo-cli/commands/Laws/EffectImports"
+ *
+ * console.log(EffectImportsMarkdownOnlyExcludedDirectories.includes("docs/_internal")) // true
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const EffectImportsMarkdownOnlyExcludedDirectories = [
+  "**/.git",
+  "**/.beep",
+  "**/docs/modules",
+  "docs/generated",
+  "docs/_internal",
 ] as const;
+const CODE_EXCLUSION_GLOBS = toDirectoryExclusions(
+  A.appendAll(EXCLUDED_DIRECTORY_GLOBS, EffectImportsCodeOnlyExcludedDirectories)
+);
+const MARKDOWN_EXCLUSION_GLOBS = toDirectoryExclusions(
+  A.appendAll(EXCLUDED_DIRECTORY_GLOBS, EffectImportsMarkdownOnlyExcludedDirectories)
+);
+/**
+ * Directory names both `effect-imports` walks never enter at any depth.
+ *
+ * **Details**
+ *
+ * The generated and vendored names plus `.git`, `.beep` and `worktrees` (a
+ * populated `.claude/worktrees/<lane>` is a whole checkout). The repository
+ * tracks no other directory named `worktrees`, so pruning by name equals the
+ * path exclusion over the tree. Each name is negated in both `effect-imports` Turbo rows.
+ *
+ * **Example** (Inspect the pruned names)
+ *
+ * ```ts
+ * import { EffectImportsPrunedDirectoryNames } from "@beep/repo-cli/commands/Laws/EffectImports"
+ *
+ * console.log(EffectImportsPrunedDirectoryNames.includes("worktrees")) // true
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const EffectImportsPrunedDirectoryNames: ReadonlyArray<string> = A.appendAll(
+  EffectImportsGeneratedOrVendorDirectory.literals,
+  [".git", ".beep", "worktrees"]
+);
 
 const hasPathPrefix = (prefix: string, filePath: string): boolean =>
   filePath === prefix || Str.startsWith(Str.endsWith("/")(prefix) ? prefix : `${prefix}/`)(filePath);
@@ -1725,7 +1854,7 @@ const isPathInActiveScope = (
 
 const codeGlobsFor = (options: EffectImportRulesOptions): ReadonlyArray<string> => {
   if (P.isUndefined(options.includePaths) && A.isReadonlyArrayEmpty(options.includePrefixes)) {
-    return CODE_GLOBS;
+    return EffectImportsCodeGlobs;
   }
   const prefixGlobs = A.map(
     options.includePrefixes,
@@ -1769,7 +1898,7 @@ const discoverFilesWithGlob = Effect.fn("EffectImports.discoverFilesWithGlob")(f
     compileAndExpand({
       cwd,
       glob: { dot },
-      prune: PRUNED_DIRECTORY_NAMES,
+      prune: EffectImportsPrunedDirectoryNames,
       followSymlinks: false,
       onUnreadable: "skip",
     })
@@ -1913,7 +2042,7 @@ export const discoverEffectImportMarkdownFiles = Effect.fn("EffectImports.discov
       );
     }
     const walked = yield* discoverFilesWithGlob(
-      MARKDOWN_GLOBS,
+      EffectImportsMarkdownGlobs,
       MARKDOWN_EXCLUSION_GLOBS,
       true,
       "Could not discover Markdown source files."

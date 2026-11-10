@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "heavy-pool-diet",
+    "packetId": "goal-packet/v1:455dc45cba87054f60bb8f778b1d131ba9e0b97cd165b943cec296a7781dd3df",
+    "title": "Heavy Pool Diet",
+    "status": "active",
+    "created": "2026-11-09",
+    "updated": "2026-11-09",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/heavy-pool-diet",
+  "lifecycle": "active",
+  "mission": "Cut heavy-pool occupancy and the admission chain on code PRs without reducing proof depth: Lint Policy drops its duplicate JSDoc chain and runs the knowledge doctor abreast, required heavy lanes start first, heavy route skips are decided before a Spot VM boots, and Heavy Admission runs from a closure-pinned CI binary kept current by reviewed pin-bump PRs.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/ten-minute-certainty",
+    "graduated": "2026-11-09"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/heavy-pool-diet/README.md",
+    "goals/heavy-pool-diet/SPEC.md",
+    "goals/heavy-pool-diet/PLAN.md",
+    "goals/heavy-pool-diet/GOAL.md",
+    "goals/heavy-pool-diet/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/heavy-pool-diet/GOAL.md"
+    }
+  ],
+  "provides": ["ci/heavy-pool-diet"],
+  "requires": ["ci/certainty-scorecard"],
+  "statusNote": "Authored 2026-11-09 from explorations/ten-minute-certainty, not started: LINT-01 and LINT-04 landed in #3019 and LINT-02 slice 1 rides open #3041, each keeping its unpaid gate items (D26); startable now are LINT-05 (after #3041 merges), the PERIH-01 probe deletion (whichever of it and COVE-08 lands second deletes the legacy_coverage output), the LINT-01 and LINT-04 gate slices, the PERIH-11 closure-digest release trigger and the HOST-06 and required-lanes-first heavy.yml migrations. The acceptance numbers and the capacity question wait on certainty-scorecard; the binary-dependent PERIH-01 switch waits on route-soundness-repair PERIH-10; HOST-08 waits on Test Unit steady state (its ROUT-01 dependency landed in #3030).",
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/heavy-pool-diet/GOAL.md)\" -le 4000",
+    "jq . goals/heavy-pool-diet/ops/manifest.json",
+    "rg -n \"heavy-pool-diet|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/heavy-pool-diet",
+    "git diff --check -- goals/heavy-pool-diet",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

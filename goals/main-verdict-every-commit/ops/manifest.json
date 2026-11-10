@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "main-verdict-every-commit",
+    "packetId": "goal-packet/v1:2f3619eb9422a04eec80880b9732275c87085053c7e8a48d1f14d94a2f8cc1ad",
+    "title": "Main Verdict Every Commit",
+    "status": "active",
+    "created": "2026-11-09",
+    "updated": "2026-11-09",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/main-verdict-every-commit",
+  "lifecycle": "active",
+  "mission": "Deliver the prerequisites for a per-commit main verdict and raise the interim verdict rate without regressing pull-request latency: forbid agent cancels of main runs, land a throughput layout for main push runs with a published merge-timestamp replay, and re-dispatch missing verdicts. The per-commit verdict itself arrives as the merge-group run under the gated merge-queue-activation candidate (verdict-placement, D28).",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/ten-minute-certainty",
+    "graduated": "2026-11-09"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/main-verdict-every-commit/README.md",
+    "goals/main-verdict-every-commit/SPEC.md",
+    "goals/main-verdict-every-commit/PLAN.md",
+    "goals/main-verdict-every-commit/GOAL.md",
+    "goals/main-verdict-every-commit/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/main-verdict-every-commit/GOAL.md"
+    }
+  ],
+  "provides": ["ci/main-verdict"],
+  "requires": ["ci/certainty-scorecard"],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/main-verdict-every-commit/GOAL.md)\" -le 4000",
+    "jq . goals/main-verdict-every-commit/ops/manifest.json",
+    "rg -n \"main-verdict-every-commit|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/main-verdict-every-commit",
+    "git diff --check -- goals/main-verdict-every-commit",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "statusNote": "Authored 2026-11-09 from explorations/ten-minute-certainty, re-checked at c90929b1ff1, not started: the AGENTS.md and orchestrate-skill ban on cancelling refs/heads/main runs is startable now and needs no scorecard. The merge-timestamp replay and the main throughput layout wait for certainty-scorecard (ci/certainty-scorecard) to report the main verdict rate and the hosted and heavy queue numbers; re-dispatch of missing verdicts reads its main census and comes after them. ci/main-verdict means the landed throughput layout, which merge-queue-activation (explorations/github-merge-queue) waits on; the merge-timestamp replay, published as input for that candidate's owner whether or not its gate names it (D28); and the interim main verdict rate after the layout and re-dispatch; per-SHA verdicts are that candidate's, not this goal's (D28)."
+}

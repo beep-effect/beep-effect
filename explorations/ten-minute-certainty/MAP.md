@@ -9,11 +9,25 @@ and the per-area records under `research/phase2/merged/`.
 | # | Slug | Mission | Levers | Depends on |
 | --- | --- | --- | --- | --- |
 | 1 | `certainty-scorecard` | Report the target nightly per head SHA and make every other packet's claim checkable: push-to-every-required-green on code heads (misses counted), runner-minutes per run, main verdict rate, time-to-mergeable beside it; attributable local economics across the fleet. | MEAS-01, MEAS-04, MEAS-02, MEAS-03, MEAS-05, MEAS-06, MEAS-07, MEAS-08, PERIL-11, ROUT-05, SCHE-09 | none |
-| 2 | `route-soundness-repair` | Close the soundness holes the audit found so narrowing can be admitted on a sound base: goal-data consumers on the code route, knowledge policy on docs-only PRs, the `@beep/glob` setup closure, the bare-coverage self-judge, versioned final-check receipts, Node 22 local coverage, base-ref CI patterns, one relevance model. | ROUT-03, ROUT-02, TEST-10, COVE-02, YEET-08, COVE-03, PERIH-10, ROUT-07 | none |
+| 2 | `route-soundness-repair` | Close the soundness holes the audit found so narrowing can be admitted on a sound base: goal-data consumers on the code route, knowledge policy on docs-only PRs, the `@beep/glob` setup closure, the bare-coverage self-judge, versioned final-check receipts, Node 22 local coverage, base-ref CI patterns, one relevance model. | ROUT-03, ROUT-02, TEST-10, COVE-02, YEET-08, COVE-03, PERIH-10, ROUT-07, COVE-08, COVE-04 | none |
 | 3 | `main-verdict-every-commit` | Give every non-docs main SHA a completed hosted verdict without regressing PR latency: cancel ban in AGENTS.md, a throughput layout for main pushes, per-SHA concurrency groups, re-dispatch of missing verdicts. | HOST-01 | 1 |
 | 4 | `heavy-pool-diet` | Cut heavy-pool occupancy and the admission chain on code PRs: JSDoc inventory `noResolve`, drop the duplicate JSDoc chain from Lint Policy, knowledge doctor abreast, PR C checker algorithms, job-level route and docs skips, Heavy Admission on the pinned CI binary, automated pin bumps. | LINT-01, LINT-05, LINT-02, LINT-04, HOST-06, PERIH-01, PERIH-11, HOST-08 | 1 |
 | 5 | `hosted-setup-tax` | Remove duplicate hosted work and the setup tax with no proof-depth change: owner rows for generated standards files, the Property Laws file split, Fallow into Labs, one `lint:shadcn` owner, lane-relevance skips, Nix, Security and SAST without the install, `trustedDependencies`, PR Size into Change Profile, empty-leg skips. | TURB-01, TEST-01, PERIL-01, PERIH-02, PERIH-04, PERIH-05, PERIH-06, HOST-09, DEPS-01, PERIL-04, ROUT-01 | 1, 2 |
-| 6 | `local-proof-under-ten` | Make local publish and verify predictable under agent fan-out through the existing QualityScheduler: admission units of lane or package, measured weights, final-check and agent-shell work admitted, the bounded in-publish advisory ratchet, hosted partitions run locally in shadow, monitor back-off and REST budgeting, C4.2 enforcement and wave re-seed re-homed, merged-preview marked dormant. | SCHE-08, SCHE-09, SCHE-07, SCHE-02, SCHE-01, SCHE-06, SCHE-05, COVE-01, TEST-04, TEST-08, YEET-02, YEET-05, YEET-06, YEET-07, TURB-05, PERIL-02, PERIL-03, PERIL-10, PERIL-13 | 1, 2 |
+| 6 | `local-proof-under-ten` | Make local publish and verify predictable under agent fan-out through the existing QualityScheduler: admission units of lane or package, measured weights, final-check and agent-shell work admitted, the bounded in-publish advisory ratchet, hosted partitions run locally in shadow, monitor back-off and REST budgeting, C4.2 enforcement and wave re-seed re-homed, merged-preview marked dormant. | SCHE-08, SCHE-07, SCHE-02, SCHE-01, SCHE-06, SCHE-05, COVE-01, TEST-04, TEST-08, YEET-02, YEET-05, YEET-06, YEET-07, TURB-05, TURB-10, PERIL-02, PERIL-03, PERIL-09, PERIL-10, PERIL-13 | 1, 2 |
+
+Amended at graduation, 2026-11-09 (D23): COVE-08 and COVE-04 joined packet 2, PERIL-09 and TURB-10 joined
+packet 6, and SCHE-09 has one owner, packet 1 (packet 6 consumes it). Rulings D6, D12 and D14 name
+COVE-08, PERIL-09 and TURB-10, and the first draft of this table had left them without a home. Packet 3
+no longer builds per-SHA concurrency groups (D28): the operator's `verdict-placement` ruling in
+`explorations/github-merge-queue` folds them into that packet's gated `merge-queue-activation`.
+
+Capability edges in the goal manifests: `certainty-scorecard` provides `ci/certainty-scorecard`;
+`route-soundness-repair` provides `ci/route-soundness`; `main-verdict-every-commit` provides
+`ci/main-verdict`; `heavy-pool-diet` provides `ci/heavy-pool-diet`; `hosted-setup-tax` provides
+`ci/hosted-setup-tax`; `local-proof-under-ten` provides `quality/local-proof-admission`. Packets 3 and 4
+require `ci/certainty-scorecard`; packets 5 and 6 require it and `ci/route-soundness`. A requirement gates a
+packet's acceptance numbers and its narrowing levers, not its first slices: each goal's `statusNote` says
+what is startable now.
 
 ## Sequencing and rationale
 
@@ -32,6 +46,11 @@ and the per-area records under `research/phase2/merged/`.
    only against the post-diet heavy-queue residual the scorecard reports.
 6. **Local proof last but started early** (packet 6): the schema (AdmissionUnit) and retention land first
    because every scheduler claim needs them; enforcement stays shadow under the R2 pause.
+
+Amended at graduation, 2026-11-09 (D28): items 3 and 4 were approved with per-SHA groups as packet 3's
+last stage. That stage moved to `merge-queue-activation` in `explorations/github-merge-queue`. Packets 4
+and 5 now land their removals before the merge group adds jobs (`merge-group-parity` there), and packet
+3's throughput layout still waits for the merge-timestamp replay against the ceiling and the heavy pool.
 
 Lever-order constraints inherited from the critic: LINT-01 before LINT-05 before LINT-02 before LINT-04;
 COVE-03 before COVE-01 and TEST-04; SCHE-09 and SCHE-08 before SCHE-07 before SCHE-01/02; ROUT-05 before
@@ -63,7 +82,7 @@ required-green and main-verdict report` (MEAS-01 slice 1, M).
 | Bare-coverage self-judge | `commands/Quality/internal/CoverageRegression.ts` (`base` parameter exists, unused on this path), `commands/Quality/Tasks.ts`; no new code |
 | Final-check obligation registry | `commands/Yeet/internal/FinalCheck.schemas.ts`, `FinalCheck.ts`, `ReadyGate.ts`; NET-NEW: versioned receipt digest and registry schema |
 | Node 22 local coverage | `check.yml` coverage runtime pin, `commands/Quality/internal/CoverageEnvironment.ts`; NET-NEW: shared pin source and drift test |
-| Main throughput layout and per-SHA groups | `check.yml` concurrency, `commands/Ci/CiRerunRunnerLoss.ts` and `.github/workflows/rerun-runner-loss.yml` (re-dispatch pattern); NET-NEW: main layout and missing-verdict re-dispatch |
+| Main throughput layout and re-dispatch | `check.yml` concurrency, `commands/Ci/CiRerunRunnerLoss.ts` and `.github/workflows/rerun-runner-loss.yml` (re-dispatch pattern); NET-NEW: main layout and missing-verdict re-dispatch |
 | JSDoc inventory `noResolve` | `commands/Quality/internal/JSDocDocumentationInventory.ts`; small option |
 | Lint Policy plan and widths | `commands/Quality/Tasks.ts`, `commands/Quality/internal/LintPolicyScope.ts`; no new code |
 | Heavy Admission on the binary | `commands/Ci/HeavyAdmission.ts`, `CiBinary.ts`, `.github/workflows/beep-ci-binary.yml`, `.github/actions/fetch-beep-ci`; NET-NEW: closure-digest release trigger and pin-bump PRs |
@@ -116,6 +135,61 @@ a reviewer correction with the date, so the record never contradicts the constra
   `GATE-MET`, so a status alone would weaken the gate; the seeded-failure fixture must show the merge
   gate refusing the PR. Only then may the standalone job be removed.
 
+## State at graduation (2026-11-09)
+
+The plan was synthesized around 17:30Z on 2026-11-09 and other lanes kept merging. Each goal's author
+re-read its levers from `origin/main` at 6eb2e0588e2 and again at c90929b1ff1, eleven commits later, where
+this graduation was rebased; the per-lever table with its evidence is in each goal's `SPEC.md`. What had
+moved:
+
+- **The per-commit verdict moved to the merge group (D28).** #3047 landed
+  `explorations/github-merge-queue` with the operator's `verdict-placement` ruling: one run per commit,
+  placed before the merge. Per-SHA main groups are no longer packet 3's last slice; they are folded into
+  that packet's gated `merge-queue-activation`, whose gate includes packet 3's throughput layout. Its
+  `gate-restatement` ruling supersedes the 80% bar `BRIEF.md` cites for a merge queue, and its
+  `merge-group-parity` candidate waits on packets 2, 4 and 5 merging.
+- **Landed.** LINT-01 and LINT-04 in #3019 (JSDoc inventory `noResolve`, the checker algorithms). ROUT-01's
+  empty-partition skips in #3030, with a Test Plan job. Each goal keeps the unpaid part of the lever's
+  admission gate and its reading in the scorecard.
+- **Partly landed.** TEST-01: #3030 made the deep sweep skip provably plain tests at collection time, with
+  no oracle census; a file split remains only where module-scope or hook cost still dominates (D26).
+  PERIL-03: #3032 set a 90 s poll and a sleep through rate limits; the state-aware back-off and the
+  ref-change wake are open. MEAS-03: a terminations line exists, and terminated attempts still count as
+  red. LINT-02 slice 1 is in open #3041, which is not landed until it merges.
+- **Open.** Every other lever.
+- **Property Laws runs as two slices** under one context since #3030, ahead of D10's order (D26).
+- **The monitor's GitHub read path** now belongs to the three goals graduated from
+  `explorations/github-api-quota` (D27).
+- **Figures that moved.** Test Integration has 20 partitions since #3029 (19 law-practice-server shards plus
+  int-rest), where the plan says 16 or 17. Test Unit runs 24 jobs since #3043, down from 30; its 17 sharded jobs use two Vitest workers since #3040. #3046 creates the
+  test shards before the non-test lanes and caps shard timeouts at 20 minutes; its message puts a full
+  Check run at about 75 hosted jobs against the 60-job cap, above the 62 that D7's costing used. The 264
+  runner-minute baseline predates #3028, #3029, #3030, #3040, #3043 and #3046. `heavy.yml` holds five heavy
+  lanes today, where `BRIEF.md` counts six.
+- **Also landed since.** #3039 added the private-home-paths law to the cheap gates and to hosted Repo
+  Sanity, which runs it alone on goals-only diffs. #3045 moved Vercel deployments to an Actions workflow
+  that deploys only when Turbo says the app changed, which bears on backlog row PERIH-12.
+- **D7's first-stage estimate is at risk.** The 55 to 65% verdict rate after the cancel ban rests on a
+  sample of hand cancels. `goals/ci-lane-economics` later found most cancelled main runs were pending runs
+  displaced by newer merges, which a ban does not prevent. The staging stands; the scorecard's main verdict
+  rate decides whether stage one delivered.
+- **The corpora behind the MEAS-01 gate figures are not repo artifacts.** Slice 1 commits its own fixture
+  corpus.
+
+## Plan rows with no goal home (backlog, not goals)
+
+Seventeen rows of `research/phase2/PLAN.md` are neither parked there nor assigned above (D24). They stay
+in the plan as backlog. The goal named beside each row may adopt it with a decision file of its own; none
+is promised by this graduation.
+
+| Natural home | Rows |
+| --- | --- |
+| `hosted-setup-tax` | DEPS-05, DEPS-06, DEPS-08, HOST-10, PERIH-07, PERIH-09, PERIH-12, TURB-03, TURB-07, TURB-09 |
+| `local-proof-under-ten` | PERIL-06, PERIL-07, PERIL-08, PERIL-12, TEST-09, YEET-09, COVE-09 |
+
+Rows the plan itself parks (TEST-07, ROUT-04, LINT-07, COVE-07, LINT-09, DEPS-09) and HOST-05 are covered
+by the gated candidates below or stay parked.
+
 ## Gated candidates (re-entry points, not goals)
 
 | Candidate | Gate that reopens it |
@@ -124,8 +198,9 @@ a reviewer correction with the date, so the record never contradicts the constra
 | Property Laws sharding (HOST-05) | Property Laws p95 over 10 min after the file split, and a ruling that mergeable contexts bind |
 | Coverage Regression as a required context | scorecard shows coverage-verdict p95 under 10 min; fixed context name landed |
 | Smoke-per-PR corpus replay | main verdict rate at or above 95% for 14 days |
-| Per-SHA main groups | throughput layout landed and the merge-timestamp replay shows PR p95 regressing under one minute |
+| Per-SHA main groups | merged into `merge-queue-activation` in [`explorations/github-merge-queue/MAP.md`](../github-merge-queue/MAP.md) (operator ruling `verdict-placement`, 2026-11-09): the per-commit verdict runs as a merge group before the merge. The throughput layout and the merge-timestamp replay stay its prerequisites |
 | Enforced cache reuse (TURB-05, YEET-05, YEET-06 beyond cheap lanes) | the R2 pause lifts |
 | Hub `^transit` narrowing (TEST-07) | module-graph evidence plus a qualified affected-route refinement |
 | File-level test selection as a receipt (TEST-08) | 100% recall over at least 50 red episodes |
-| Merge queue, stacked PRs | their recorded flip conditions (80% main required-green over 14 days) |
+| Merge queue | owned by `explorations/github-merge-queue`; the 80% bar is superseded (ruling `gate-restatement`, 2026-11-09) by parity, p90 merge-group wall time at or under 15 minutes and false ejections at or under 5% over 100 entries |
+| Stacked PRs | the stacks-reopen gate in `explorations/stacked-pr-adoption/DECISIONS.md` |

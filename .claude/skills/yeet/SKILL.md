@@ -69,7 +69,8 @@ git fetch origin && git merge origin/main
    Never open a PR against a non-`main` base: no workflow fires on it.
    Never merge an unlanded PR's branch into yours. A lane blocked by red
    `main` waits for the declared `unblocks-main` PR, then merges `main`
-   once. Native stacks stay deferred until that packet's reopen gate fires.
+   once. Native stacks stay off until that packet's supervised stack test
+   passes (reopened 2026-11-09); the test's own PRs are the one exception.
 3. If the worktree contains unrelated changes, stage only the intended files.
    Never publish unrelated paths silently.
 4. Check for already-running heavyweight quality commands before starting a
@@ -221,9 +222,9 @@ bun run beep yeet publish --push-only --reuse-verified
 bun run beep yeet monitor
 ```
 
-`yeet monitor` records the current agent locally and re-asserts the registry-backed
-provenance footer once before polling. This restores a missing or drifted footer
-without treating the PR body's public JSON twin as trusted state.
+`yeet monitor` records the current agent and its branch's active packets, then
+re-asserts the registry-backed provenance footer once before polling, without
+trusting the body's public JSON twin (`references/monitor-and-inbox.md`).
 
 - Keep monitoring across pushes until the PR merges or closes. This announces
   readiness once per head, writes the `pr-merge-ready` inbox row, and keeps

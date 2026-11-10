@@ -69,6 +69,11 @@ export const verifiedPackageExportColumns: {
     entries: ReadonlyArray<KnowledgeTrackedEntry>
   ): HashSet.HashSet<number> => {
     const spans = knowledgeInlineSpans(lineText);
+    // Only a `./` span can be a verified claim, and the owner search below scans every workspace
+    // package per line: a line without one answers empty before paying for it.
+    if (!A.some(spans, ({ span }) => Str.startsWith("./")(span))) {
+      return HashSet.empty<number>();
+    }
     const localOwners = A.filter(packages, (pkg) =>
       A.some(
         spans,

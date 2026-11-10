@@ -52,6 +52,8 @@ class Host:
     touch: bool  # YubiKey touch to open the SSH master
     agent_init: str | None  # dedicated agent to start first when its socket is missing
     admin: tuple[str, ...] | None  # argv of the administrative route, for sudo steps
+    admin_agent: str | None = None  # dedicated agent the admin route forwards, started first
+    down: str = "SSH master failed (missed touch or host down)"  # note on unreachable rows
 
 
 # Never put IPs, tailnet names or environment ids here: the repository is public.
@@ -59,10 +61,17 @@ class Host:
 HOSTS: dict[str, Host] = {
     "dankstation": Host("dankstation", None, False, None, None),
     "beep-worker": Host("beep-worker", "ssh-beep-worker-yubi", True, "dankserver-agent",
-                        ("ssh-beep-worker-yubi", "--admin", "-tt")),
+                        ("ssh-beep-worker-yubi", "--admin", "-tt"), admin_agent="dankserver-agent"),
     "dankserver": Host("dankserver", "ssh-dankserver-worker", True, "dankserver-agent", None),
     "tbk-worker": Host("tbk-worker", "ssh-tbk-worker", True, None, None),
-    "grok-bot": Host("grok-bot", "ssh-grok-bot", False, None, ("ssh-grok-bot", "--admin", "-tt")),
+    # The wrapper keeps its own dedicated agent (login and --admin forwarding alike).
+    "tom-pc-1-wsl": Host("tom-pc-1-wsl", "ssh-tom-pc-1-wsl", True, None,
+                         ("ssh-tom-pc-1-wsl", "--admin", "-tt"),
+                         down="SSH master failed: missed touch, or the PC is off, its Windows user is "
+                              "signed out or the T3AgentWSL keep-alive task is not running"),
+    "grok-bot": Host("grok-bot", "ssh-grok-bot", False, None, ("ssh-grok-bot", "--admin", "-tt"),
+                     admin_agent="dankserver-agent",
+                     down="asleep or unreachable; open its computer view in the Grok Bot app"),
 }
 HUB = "dankstation"
 
@@ -82,6 +91,7 @@ ALIASES = {
     "muse-code": "muse", "meta-muse": "muse", "chatgpt": "chatgpt-desktop",
     "cursor": "cursor-desktop", "kimi-app": "kimi-desktop", "claude-app": "claude-desktop",
     "grok-bot-vm": "grok-bot", "hub": "dankstation", "local": "dankstation",
+    "tom-pc-1": "tom-pc-1-wsl",
 }
 PACMAN = {"chatgpt-desktop": "chatgpt-bin", "claude-desktop": "claude-desktop",
           "cursor-desktop": "cursor-bin"}
@@ -133,9 +143,11 @@ def parse_records(text: str) -> list[list[str]]:
 
 
 def rows_from_records(host: str, records: list[list[str]], mode: str) -> tuple[list[Row], dict]:
-    """Turn host-agent records into summary rows; also return the APPARMOR record if any."""
+    """Turn host-agent records into summary rows; also return the APPARMOR record if any.
+    NOTE records (read-only config findings) are appended to that harness's rows."""
     results: list[Row] = []
     apparmor: dict = {}
+    notes: dict[str, list[str]] = {}
     for rec in records:
         kind = rec[0]
         if kind == "@@INSTALL" and len(rec) >= 7 and mode == "status":
@@ -148,6 +160,12 @@ def rows_from_records(host: str, records: list[list[str]], mode: str) -> tuple[l
             results.append(Row(host, rec[1], rec[2], rec[3], rec[4], rec[5], rec[6], rec[7]))
         elif kind == "@@APPARMOR" and len(rec) >= 4:
             apparmor = {"drift": rec[1] == "1", "sdk": rec[2], "cli": rec[3]}
+        elif kind == "@@NOTE" and len(rec) >= 3:
+            notes.setdefault(rec[1], []).append(rec[2])
+    for r in results:  # read-only findings about a harness's config ride on its rows
+        # harness_host.sh's clean() turns an empty @@RESULT note into "-"; drop it so a
+        # note does not render as "-; <note>"
+        r.note = "; ".join(n for n in (r.note, *notes.get(r.harness, ())) if n and n != "-")
     return results, apparmor
 
 
@@ -341,7 +359,8 @@ def admin_run(run: Run, host: str, script: str, args: list[str]) -> tuple[int, s
     """Main thread only. A sudo script over the host's admin route (its own SSH login).
     sudo authenticates only through the forwarded YubiKey agent: askpass /bin/false refuses
     a password fallback. The SSH login is retried only if the script never started."""
-    ensure_dankserver_agent(run)  # both admin routes forward it
+    if HOSTS[host].admin_agent == "dankserver-agent":
+        ensure_dankserver_agent(run)
     cmd = shlex.join(["bash", "-c", ADMIN_PRELUDE + script, "admin", *args])
     out = ""
     for attempt in range(1, 4):
@@ -716,9 +735,7 @@ def execute(run: Run, matrix: dict[str, list[str]]):
         if open_master(run, host):
             reachable.append(host)
         else:
-            why = ("asleep or unreachable; open its computer view in the Grok Bot app" if host == "grok-bot"
-                   else "SSH master failed (missed touch or host down)")
-            run.add(*(Row(host, h, "unreachable", note=why) for h in matrix[host]))
+            run.add(*(Row(host, h, "unreachable", note=HOSTS[host].down) for h in matrix[host]))
     for host in reachable:
         if cli := [h for h in matrix[host] if h in CLI]:
             spawn(host, cli, agent_phase, run, host, cli, apparmor)

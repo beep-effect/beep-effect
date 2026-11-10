@@ -1,0 +1,257 @@
+name: Vercel Deploy
+
+# Deploys the Vercel apps that a change actually affects. Git-triggered
+# Vercel deployments are off (`git.deploymentEnabled: false` in
+# apps/todox/vercel.json and apps/oip-web/vercel.json): with three projects
+# connected to one high-velocity repository, every push to every branch built
+# all of them and the Hobby team ran out of its 100 deployments a day, so
+# almost every PR head carried "Deployment rate limited" statuses. Vercel's
+# native "skip unaffected projects" cannot help here because it treats every
+# change outside a workspace package (goals/, standards/, docs/, .github/...)
+# as global, and an Ignored Build Step still counts against the quota.
+#
+#   push to main      production deploy of each app whose `build` task Turbo
+#                     reports affected since that project's last READY
+#                     production deployment (fails open: no base, or a Turbo
+#                     error, deploys).
+#   pull_request      preview deploy of each app whose own directory the PR
+#                     changes (apps/<app>/**).
+#   workflow_dispatch any project (including oip-web-staging), any ref,
+#                     preview or production, unconditionally.
+#
+# Runbook: docs/runbooks/vercel-deploys.md.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      project:
+        description: Vercel project to deploy from the selected ref.
+        type: choice
+        options: [oip-web, oip-web-staging, todox]
+        default: oip-web
+      production:
+        description: Deploy to the project's production target (oip-web-staging production is staging.oip.law).
+        type: boolean
+        default: false
+
+# Main pushes are never cancelled: a newer push replaces only the pending run,
+# and its plan diffs against the last READY production deployment, so the
+# replaced run's changes are still deployed.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  VERCEL_ORG_ID: team_0UZv1AlMu4u7ClZIEX4tpwy2
+  # Project ids are not secret; the token is.
+  VERCEL_APPS: >-
+    [
+      {"project": "todox", "package": "@beep/todox", "root": "apps/todox", "projectId": "prj_eoEEF4dQsjyQM809EwAcVKtwQBNr", "auto": true},
+      {"project": "oip-web", "package": "@beep/oip-web", "root": "apps/oip-web", "projectId": "prj_J5xqp5jg7POGvoIwOj7e1axpoPxb", "auto": true},
+      {"project": "oip-web-staging", "package": "@beep/oip-web", "root": "apps/oip-web", "projectId": "prj_orJn2nvxflBiJqPF0VWLOD0RFAzE", "auto": false}
+    ]
+
+jobs:
+  plan:
+    name: Plan Vercel deploys
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      any: ${{ steps.plan.outputs.any }}
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Plan affected deploys
+        id: plan
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BRANCH: ${{ github.head_ref || github.ref_name }}
+          INPUT_PROJECT: ${{ inputs.project }}
+          INPUT_PRODUCTION: ${{ inputs.production }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -euo pipefail
+          summary() { echo "$1" >> "$GITHUB_STEP_SUMMARY"; }
+          include='[]'
+          add() { # project projectId target reason
+            include="$(jq -c --arg project "$1" --arg projectId "$2" --arg target "$3" --arg reason "$4" \
+              --arg sha "$HEAD_SHA" --arg branch "$BRANCH" \
+              '. + [{project: $project, projectId: $projectId, target: $target, reason: $reason, sha: $sha, branch: $branch}]' <<<"$include")"
+          }
+          summary "| Project | Target | Decision |"
+          summary "| --- | --- | --- |"
+
+          if [[ -z "$VERCEL_TOKEN" ]]; then
+            echo "::notice::VERCEL_TOKEN is unavailable (fork pull request?); no Vercel deploys planned."
+            summary "| all | - | skipped: no VERCEL_TOKEN |"
+            echo "any=false" >> "$GITHUB_OUTPUT"
+            echo 'matrix=[]' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          turbo_version="$(jq -r '.catalog.turbo' package.json | tr -d '^~')"
+
+          # Last READY production deployment commit for a project, or empty.
+          last_production_sha() {
+            curl -fsS --retry 3 --retry-all-errors -H "Authorization: Bearer $VERCEL_TOKEN" \
+              "https://api.vercel.com/v6/deployments?projectId=$1&teamId=$VERCEL_ORG_ID&target=production&state=READY&limit=1" |
+              jq -r '.deployments[0].meta | (.beepCommitSha // .githubCommitSha // empty)' || true
+          }
+
+          # 0 = affected (or unknown: fail open), 1 = not affected.
+          build_affected() { # package base
+            local out
+            if ! out="$(npx --yes "turbo@$turbo_version" query affected --skip-infer --tasks build \
+              --packages "$1" --base "$2" --head "$HEAD_SHA" 2>/dev/null)"; then
+              echo "turbo query failed"
+              return 0
+            fi
+            jq -er --arg task "$1#build" \
+              '(.errors // []) | length == 0' <<<"$out" >/dev/null || { echo "turbo query errored"; return 0; }
+            local reason
+            reason="$(jq -r --arg task "$1#build" \
+              '[.data.affectedTasks.items[]? | select(.fullName == $task) | .reason.__typename // "affected"] | first // empty' <<<"$out")"
+            if [[ -n "$reason" ]]; then echo "$reason"; return 0; fi
+            return 1
+          }
+
+          case "$EVENT_NAME" in
+            workflow_dispatch)
+              target=preview
+              [[ "$INPUT_PRODUCTION" == "true" ]] && target=production
+              pid="$(jq -r --arg p "$INPUT_PROJECT" '.[] | select(.project == $p) | .projectId' <<<"$VERCEL_APPS")"
+              add "$INPUT_PROJECT" "$pid" "$target" "manual"
+              summary "| $INPUT_PROJECT | $target | deploy: manual dispatch |"
+              ;;
+            push)
+              while IFS=$'\t' read -r project pkg pid; do
+                base="$(last_production_sha "$pid")"
+                if [[ -z "$base" ]]; then
+                  add "$project" "$pid" production "no previous production deployment"
+                  summary "| $project | production | deploy: no previous production deployment |"
+                elif [[ "$base" == "$HEAD_SHA" ]]; then
+                  summary "| $project | production | skip: \`${HEAD_SHA:0:10}\` already deployed |"
+                elif ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+                  add "$project" "$pid" production "previous deployment ${base:0:10} not in history"
+                  summary "| $project | production | deploy: \`${base:0:10}\` not in history |"
+                elif reason="$(build_affected "$pkg" "$base")"; then
+                  add "$project" "$pid" production "$reason since ${base:0:10}"
+                  summary "| $project | production | deploy: $reason since \`${base:0:10}\` |"
+                else
+                  summary "| $project | production | skip: build unaffected since \`${base:0:10}\` |"
+                fi
+              done < <(jq -r '.[] | select(.auto) | [.project, .package, .projectId] | @tsv' <<<"$VERCEL_APPS")
+              ;;
+            pull_request)
+              merge_base="$(git merge-base "$PR_BASE_SHA" "$HEAD_SHA")"
+              while IFS=$'\t' read -r project root pid; do
+                if git diff --quiet "$merge_base" "$HEAD_SHA" -- "$root/"; then
+                  summary "| $project | preview | skip: PR does not change \`$root/\` |"
+                else
+                  add "$project" "$pid" preview "PR changes $root/"
+                  summary "| $project | preview | deploy: PR changes \`$root/\` |"
+                fi
+              done < <(jq -r '.[] | select(.auto) | [.project, .root, .projectId] | @tsv' <<<"$VERCEL_APPS")
+              ;;
+          esac
+
+          if [[ "$(jq 'length' <<<"$include")" -gt 0 ]]; then
+            echo "any=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "any=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "matrix=$(jq -c . <<<"$include")" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    name: Deploy ${{ matrix.project }} (${{ matrix.target }})
+    needs: plan
+    if: needs.plan.outputs.any == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    environment:
+      name: vercel-${{ matrix.project }}-${{ matrix.target }}
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      # The monorepo install plus a Next.js build outgrows the hosted image's
+      # free disk; drop the preinstalled stacks first (same set as
+      # setup-monorepo-ci's free-disk input).
+      - name: Free runner disk
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo rm -rf /opt/ghc /usr/local/.ghcup /usr/local/lib/android /usr/local/share/boost /usr/share/dotnet
+          df -h /
+
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ matrix.sha }}
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+
+      # vercel.json's installCommand/buildCommand run here exactly as on
+      # Vercel's builders (pinned Bun via npx), so the uploaded output is the
+      # build Vercel would have produced.
+      - name: Build and deploy
+        id: deploy
+        shell: bash
+        env:
+          VERCEL_CLI_VERSION: 62.7.0
+          VERCEL_PROJECT_ID: ${{ matrix.projectId }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          TARGET: ${{ matrix.target }}
+          BRANCH: ${{ matrix.branch }}
+          SHA: ${{ matrix.sha }}
+          REASON: ${{ matrix.reason }}
+        run: |
+          set -euo pipefail
+          vercel() { npx --yes "vercel@$VERCEL_CLI_VERSION" "$@" --token="$VERCEL_TOKEN"; }
+          echo "Deploying $VERCEL_PROJECT_ID ($TARGET) at ${SHA:0:10}: $REASON"
+          prod=()
+          pull=(--yes --environment=preview --git-branch="$BRANCH")
+          if [[ "$TARGET" == "production" ]]; then
+            prod=(--prod)
+            pull=(--yes --environment=production)
+          fi
+          vercel pull "${pull[@]}"
+          vercel build "${prod[@]}"
+          set +e
+          url="$(vercel deploy --prebuilt --archive=tgz "${prod[@]}" --meta beepCommitSha="$SHA" 2>deploy.err)"
+          status=$?
+          set -e
+          if (( status != 0 )); then
+            cat deploy.err >&2
+            # Quota exhaustion is not a defect in the change: the next main
+            # push diffs against the last READY deployment and picks it up.
+            if grep -qiE 'rate.?limit|api-deployments-free-per-day|too many' deploy.err; then
+              echo "::warning::Vercel deployment quota exhausted; $VERCEL_PROJECT_ID ($TARGET) was not deployed."
+              exit 0
+            fi
+            exit "$status"
+          fi
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Deployed $TARGET: $url" >> "$GITHUB_STEP_SUMMARY"

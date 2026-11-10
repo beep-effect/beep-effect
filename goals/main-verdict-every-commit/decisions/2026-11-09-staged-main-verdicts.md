@@ -1,0 +1,8 @@
+---
+title: "Main verdicts are staged: cancel ban, throughput layout and replay, then re-dispatch; per-SHA verdicts move to the merge queue"
+date: 2026-11-09
+reversal: "Restore the per-SHA stage here only after a ruling that the merge queue will not carry the verdict (D28's reversal); revert the AGENTS.md clause to re-allow main cancels."
+---
+
+D7 staged main verdicts as a cancel ban, a throughput layout for main pushes, then per-SHA concurrency groups. The operator's `verdict-placement` ruling, applied by D28, amends it: the merge group is the per-commit verdict, so D7's third stage folds into the gated `merge-queue-activation` candidate of `explorations/github-merge-queue`, after D7's throughput layout lands. This goal therefore lands three stages: (1) amend AGENTS.md and the orchestrate skill to forbid cancelling `refs/heads/main` runs (D7's estimate: verdict rate to about 55 to 65%, now at risk, see the exploration's MAP.md "State at graduation"), (2) a throughput layout for main push runs with the merge-timestamp replay, and (3) re-dispatch of missing verdicts, this goal's addition, which only fills idle time in the shared main group. D7 put per-SHA groups after the throughput layout because the full per-SHA profile costs about 20 to 36k runner-min/day and about 62 jobs per run against a roughly 60-job ceiling (more today); `verdict-placement` accepts that cost and moves the stage into the merge-group run; coalesced verdicts were never ruled to satisfy every commit and are not built.
+Source: exploration `explorations/ten-minute-certainty/DECISIONS.md` (D7, as amended by D28) and `explorations/github-merge-queue/DECISIONS.md` (`verdict-placement`).
