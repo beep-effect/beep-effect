@@ -58,7 +58,8 @@ a wrong skip costs one hosted red and never a stale green on `main`.
    and api-partial heads counted as misses, runner-minutes per run beside it, time-to-mergeable reported
    separately, main verdict rate; per-attempt job reads; the attribution fix; partition-job mapping in the
    route corpus; journals retained on retire and read from T3 lanes and fleet hosts.
-2. *Repair the eight soundness holes.* Main verdicts (cancel ban, throughput layout, then per-SHA groups);
+2. *Repair the eight soundness holes.* Main verdicts (cancel ban, throughput layout, then per-SHA groups;
+   the per-SHA stage moved to `merge-queue-activation` in `explorations/github-merge-queue`, D28);
    the setup-closure key on `@beep/glob`; goal-data consumers back on the code route plus a docs-policy
    job; the bare-coverage self-judge; versioned final-check receipts with an explicit obligation registry;
    local coverage on Node 22.23.4; base-ref CI patterns. Each lands with a mutation fixture or replay.

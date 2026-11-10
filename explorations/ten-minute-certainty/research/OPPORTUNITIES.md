@@ -4,6 +4,18 @@ Record friction the moment it happens: what you were doing, the evidence (comman
 file), and what would have prevented it. Redact secrets, rewrite home paths to `~`, drop session and
 machine identifiers; this repository is public.
 
+## 2026-11-09 — three ruled levers had no packet until graduation
+
+- **What was happening:** scaffolding the six goals from `MAP.md`'s candidate table.
+- **Evidence:** a set difference of the lever ids in the `research/phase2/PLAN.md` row headings against the
+  ids in the candidate table left 28 rows unassigned. Three of them are named by rulings: COVE-08 (D6,
+  "now"), PERIL-09 (D12) and TURB-10 (D14). Seventeen more are unparked rows nobody had listed, and SCHE-09
+  sat under two packets. The map had been approved as drafted (D21) with those gaps, and nothing in the
+  decompose stage or in the `explore graduate` plan compares the two files.
+- **What would have prevented it:** a decompose-stage check that every lever id cited in `DECISIONS.md` and
+  every unparked plan row appears exactly once in the map, as a candidate, a gated candidate or a named
+  backlog row. D23 and D24 record the repair.
+
 ## 2026-11-09 — efficiency plans lived outside the repo
 
 - **What was happening:** briefing the phase 1 readers on prior art.

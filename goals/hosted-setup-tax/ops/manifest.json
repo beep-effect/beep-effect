@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "hosted-setup-tax",
+    "packetId": "goal-packet/v1:64c4876f26de2fb9205402f20b24ccae0ca498bb8b91a1c03584c4912bd1607a",
+    "title": "Hosted Setup Tax",
+    "status": "active",
+    "created": "2026-11-09",
+    "updated": "2026-11-09",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/hosted-setup-tax",
+  "lifecycle": "active",
+  "mission": "Remove duplicate hosted CI work and the per-job setup tax with no proof-depth change: owner rows for generated standards files, the Property Laws oracle census and the residual file split, one hosted lint:shadcn owner, Fallow folded into Labs, Nix, Security and SAST without the workspace install, an explicit trustedDependencies list, PR Size folded into Change Profile and job-level lane-relevance skips, proven by the certainty scorecard's runner-minutes per green code run.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/ten-minute-certainty",
+    "graduated": "2026-11-09"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/hosted-setup-tax/README.md",
+    "goals/hosted-setup-tax/SPEC.md",
+    "goals/hosted-setup-tax/PLAN.md",
+    "goals/hosted-setup-tax/GOAL.md",
+    "goals/hosted-setup-tax/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/hosted-setup-tax/GOAL.md"
+    }
+  ],
+  "provides": ["ci/hosted-setup-tax"],
+  "requires": ["ci/certainty-scorecard", "ci/route-soundness"],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/hosted-setup-tax/GOAL.md)\" -le 4000",
+    "jq . goals/hosted-setup-tax/ops/manifest.json",
+    "rg -n \"hosted-setup-tax|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/hosted-setup-tax",
+    "git diff --check -- goals/hosted-setup-tax",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "statusNote": "Authored 2026-11-09 from explorations/ten-minute-certainty, not started: startable now are TURB-01 slice 1 (coverage owners for generated standards inventories) and the pure waste removals with no selector change (PERIH-02 one lint:shadcn owner, PERIL-04, PERIH-05 Nix, DEPS-01, PERIH-06 slice 1, the HOST-09 CLI), plus TEST-01's remainder: the oracle census, then the residual file split with its outcome recorded (D26). ROUT-01 landed in #3030 and keeps only its gate and measurement. PERIH-04 waits on route-soundness-repair's PERIH-10 and ROUT-07 and on heavy-pool-diet's PERIH-11; HOST-09's fold and PERIH-06 slice 2 wait on PERIH-11 and PERIH-10; PERIL-01 follows PERIH-04; the acceptance number waits on certainty-scorecard."
+}

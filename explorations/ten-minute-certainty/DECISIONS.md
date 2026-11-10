@@ -4,8 +4,118 @@
 Stage 2 log. Dated entries, newest first: Question / Answer / Rationale, with
 rejected options named. D1 to D4 were the operator's phase 1 closeout rulings;
 D5 to D19 closed the align frontier in four grill rounds on 2026-11-09; D20 to
-D22 approved the brief, the map and the landing order.
+D22 approved the brief, the map and the landing order. D23 onward were taken by
+the graduating agent under the autonomy charter (AGENTS.md, Autonomy): each
+names its reversal, and the operator reviews them asynchronously.
 -->
+
+## 2026-11-09 — graduation (agent-decided)
+
+### D28. Per-SHA main groups after the merge-queue ruling
+
+- **Question.** D7 stages main verdicts as a cancel ban, a throughput layout, then per-SHA concurrency
+  groups, and `MAP.md` gave all three to `main-verdict-every-commit`. While this graduation was being
+  written, #3047 landed `explorations/github-merge-queue` with the operator's `verdict-placement` ruling:
+  the merge group is the per-commit verdict, one run per commit placed before the merge, and "Per-SHA main
+  groups" and "Merge queue" become one gated candidate there, `merge-queue-activation`, after D7's
+  throughput layout lands.
+- **Answer.** The newer operator ruling governs D7's third stage. `main-verdict-every-commit` keeps the
+  cancel ban, the throughput layout with its merge-timestamp replay, and re-dispatch of missing verdicts,
+  and it provides the landed layout that `merge-queue-activation` waits on. It no longer builds per-SHA
+  groups. Its acceptance is restated to what those slices can deliver; the 95% per-commit verdict rate is
+  reported by the scorecard as a residual and reached, if the lab ends in go, by the merge queue. The
+  job-removing levers in `heavy-pool-diet` and `hosted-setup-tax` now land ahead of that packet's
+  `merge-group-parity`, which waits on `route-soundness-repair`, `heavy-pool-diet` and `hosted-setup-tax`
+  merging.
+- **Rationale.** `verdict-placement` says D7's first two steps stay with this program and assigns the
+  third to the merge-queue packet; two packets building the same verdict would pay for two full runs per
+  commit, which that ruling rejects. Rejected: keep per-SHA groups here as a fallback slice (it would be
+  built against a ruling; if the merge-queue lab ends in park or kill, that packet's candidate reopens and
+  this decision is revisited then). Reversal: a decision file in `main-verdict-every-commit` restoring the
+  per-SHA slice, after a ruling that the merge queue will not carry the verdict.
+- **Open edges, left with the merge-queue packet.** The layout is built for `main` push runs, and
+  `verdict-placement` later shrinks that run to cache writes; whether merge-group runs reuse the layout is
+  `merge-group-parity`'s question. That packet's `merge-queue-activation` gate names the landed layout
+  only, while the row #3047 wrote into `MAP.md` here names the layout and the merge-timestamp replay;
+  this program publishes the replay either way. If the lab ends in park or kill, the 95% bar has no owner
+  until this decision is revisited, and `main-verdict-every-commit` lists that as a stop condition.
+
+### D27. Monitor levers after the github-api-quota graduation
+
+- **Question.** D16 gave this program the readiness monitors' cadence, the one-monitor rule and a REST
+  budgeting rule. On 2026-11-09 `explorations/github-api-quota` graduated three goals that own the GitHub
+  read path: a request ledger with a 15% reserve signal, a per-host state worker that monitors read
+  snapshots from, and a read-only monitor identity.
+- **Answer.** Those goals own the monitor's GitHub reads, per-call attribution and the reserve signal.
+  `local-proof-under-ten` keeps what they do not cover: one live monitor per PR per checkout (PERIL-02),
+  the monitor loop's own sleep and its wake on a local ref change (the rest of PERIL-03), and the budgeting
+  rule in the yeet skill, written against the ledger's signal. `certainty-scorecard` budgets its nightly
+  reads against the same signal.
+- **Rationale.** Two packets claiming one read path would produce two budgets. D16's intent (bounded
+  notice lag, less load, no aborted census) is met by either owner. Rejected: keep all of D16 here
+  (duplicates the worker); drop PERIL-02 and PERIL-03 (the loop's sleep and the singleton are local and
+  unowned). Reversal: a decision file in `local-proof-under-ten` taking a piece back.
+
+### D26. Levers that landed between synthesis and graduation, and the Property Laws split
+
+- **Question.** Between the plan's synthesis and this graduation, #3019, #3030 and #3032 landed work the
+  plan lists as open, and #3030 runs Property Laws as two slices under one context, although D10 orders the
+  file split first and sharding only if p95 stays over 10 minutes.
+- **Answer.** Record the landed state and keep only the residual. A landed lever stays in its goal as
+  landed, with its evidence, the unpaid part of its admission gate (fixtures, replays) and its reading in
+  the scorecard. The two-slice Property Laws layout is accepted as it stands on `main`. D10 still binds
+  what follows. #3030 also made the deep sweep skip provably plain tests at collection time, which does
+  the file split's job at test grain, so TEST-01's remainder is the oracle-checked census (the tripwire)
+  and then a file split wherever the census and per-file timings show module-scope or hook cost still
+  dominating a property file. That slice records its outcome either way. No further shard lands unless
+  Property Laws p95 stays over 10 minutes after both (HOST-05 remains a gated candidate, read only then).
+- **Rationale.** Reverting merged, measured work to restore an order would spend hosted runs to lose time.
+  The order was a cost judgement (compute for a tail-only gain), and the cost is already paid. Splitting
+  every single-property file after test-level selection landed would move code for no measured gain.
+  Rejected: revert the two-slice layout; split every file regardless (D10's purpose, a sweep that runs only
+  property-executing tests, is already met); delete landed levers from the goals (their gates were not all
+  paid: LINT-01 landed without the merged-namespace and module-augmentation fixtures its gate names).
+  Reversal: a decision file in `hosted-setup-tax` returning Property Laws to one slice.
+
+### D25. Capability edges between the six goals
+
+- **Question.** `MAP.md` says packets 3 and 4 depend on packet 1 and packets 5 and 6 on packets 1 and 2,
+  yet D19 opens ROUT-03, TURB-01 and MEAS-01 at once, and the sequencing starts the AdmissionUnit schema
+  and the main cancel ban early. What does a dependency mean in the goal manifests?
+- **Answer.** Each goal provides one capability (`ci/certainty-scorecard`, `ci/route-soundness`,
+  `ci/main-verdict`, `ci/heavy-pool-diet`, `ci/hosted-setup-tax`, `quality/local-proof-admission`).
+  `requires` records the MAP edges. No goal sets `blockedBy`: a requirement gates the dependent goal's
+  acceptance numbers and its narrowing or enforcing levers, and each goal's `statusNote` and PLAN name the
+  slices that start now.
+- **Rationale.** A hard block on packets 3 to 6 would contradict D19 and the map's own sequencing notes.
+  Rejected: `blockedBy` on every dependent goal (holds work the rulings start now); no edges (loses the
+  soundness-before-narrowing order). Reversal: set `blockedBy` in a goal's manifest.
+
+### D24. Plan rows with no goal home
+
+- **Question.** Seventeen rows of `research/phase2/PLAN.md` are not parked there and appear in none of the
+  six lever lists the operator approved (D21).
+- **Answer.** They stay in the plan as backlog and are listed in `MAP.md` beside the goal that would
+  naturally hold each. A goal adopts one only with its own decision file.
+- **Rationale.** D21 approved the lever lists as drafted, and D19's "whole program" names the six packets,
+  not every plan row; these are low-yield tail rows without a ruling. Rejected: adopt all seventeen now
+  (grows two packets by half with unreviewed scope); leave them unlisted (nobody would know they are
+  unowned). Reversal: a decision file in the adopting goal.
+
+### D23. Homes for ruled levers the map left out, and one owner for SCHE-09
+
+- **Question.** D6 lands the fixed coverage context name (COVE-08) "now", D12 rules the patch-id
+  review-window anchor (PERIL-09) and D14 names TURB-10, but the candidate table in `MAP.md` assigned none
+  of them. SCHE-09 was listed under two packets.
+- **Answer.** COVE-08 and COVE-04 (labelled coverage rows, which the D15 advisory ratchet needs) go to
+  `route-soundness-repair`, beside COVE-02 and COVE-03. PERIL-09 and TURB-10 go to `local-proof-under-ten`,
+  beside the monitor and merge-gate levers and the other levers D14 holds in shadow. SCHE-09 is owned by
+  `certainty-scorecard` and consumed by `local-proof-under-ten`.
+- **Rationale.** A ruled lever with no packet has no owner and no acceptance. The coverage trust chain
+  stays in one packet so COVE-01 has every prerequisite upstream; retention of admission history is
+  measurement. Rejected: a seventh packet for the stragglers (three levers do not make a goal); PERIL-09
+  under `main-verdict-every-commit` (both amend AGENTS.md, but PERIL-09 changes Yeet's readiness code, which
+  packet 6 already touches). Reversal: move the lever with a decision file in both goals.
 
 ## 2026-11-09 — shape and decompose review
 
