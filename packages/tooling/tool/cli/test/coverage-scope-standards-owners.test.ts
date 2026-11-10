@@ -2,6 +2,7 @@ import {
   COVERAGE_GENERATED_STANDARDS_OWNER_ROWS,
   CoverageReaderSource,
   CoverageScopeOwner,
+  coverageReaderBasename,
   coverageReaderOwners,
   coverageReaderStringTokens,
   coverageSourceReadsPath,
@@ -142,6 +143,12 @@ describe("coverage owners for generated standards inventories", () => {
           "standards/cache-qualification-baseline.json"
         )
       ).toBe(false);
+    });
+
+    it("takes the last non-empty segment and falls back on degenerate paths", () => {
+      expect(coverageReaderBasename("standards/instrumentation-catalog/")).toBe("instrumentation-catalog");
+      expect(coverageReaderBasename("")).toBe("");
+      expect(coverageSourceReadsPath(source("a.ts", 'const p = "x/...";'), "standards/...")).toBe(true);
     });
 
     it("tokenises TSX sources", () => {
