@@ -178,7 +178,11 @@ with `bun run beep create-package`.
       `GITHUB_TOKEN` is linked in `history/`: a natural hosted flake, or, if
       none occurs within the goal window, a seeded proof (a `workflow_dispatch`
       or deliberately failed run carrying a monitor-class signature) whose
-      decision and rerun are recorded.
+      decision and rerun are recorded. Either way, the failed run must belong
+      to a workflow listed in `rerun-runner-loss.yml`'s `workflow_run.workflows`,
+      and the rerun decision and the rerun itself must come from
+      `rerun-runner-loss.yml` through its `workflow_run` trigger, not from a
+      manual or out-of-band rerun.
 - [ ] 3b: The worker reads with an App installation token minted from a
       `LoadCredential=` credential; its unit file has no token or key in
       `Environment=` or `ExecStart=` (checked by a unit-render test).
