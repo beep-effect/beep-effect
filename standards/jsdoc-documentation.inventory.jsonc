@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-10T06:42:30.430Z",
+  "generatedAt": "2026-11-10T06:44:19.889Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 15,
     "publicModules": 3886,
-    "publicExports": 27736,
+    "publicExports": 27740,
     "openModules": 114,
     "openExports": 88,
     "missingExportExamples": 0,
@@ -507036,7 +507036,7 @@
         "srcDir": "src",
         "sourceFileCount": 572,
         "publicModuleCount": 568,
-        "publicExportCount": 5227
+        "publicExportCount": 5231
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -509174,7 +509174,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 13,
+          "exportCount": 17,
           "remediationStatus": "resolved"
         },
         {
@@ -535432,8 +535432,96 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 33,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-33-cioperationalpatterns",
+          "line": 34,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-34-cioperationalpatterns",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiGoalDataConsumerMode",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiOperational.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
+          "line": 62,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-62-cigoaldataconsumermode",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiGoalDataConsumerMode",
+          "exportKind": "type",
+          "filePath": "src/commands/Ci/CiOperational.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
+          "line": 74,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-74-cigoaldataconsumermode",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "CiGoalDataConsumer",
+          "exportKind": "class",
+          "filePath": "src/commands/Ci/CiOperational.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
+          "line": 104,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-104-cigoaldataconsumer",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ciGoalDataConsumers",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiOperational.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
+          "line": 142,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-142-cigoaldataconsumers",
           "currentTags": [
             "@category",
             "@since"
@@ -535454,8 +535542,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 59,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-59-cioperationalpatterns",
+          "line": 219,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-219-cioperationalpatterns",
           "currentTags": [
             "@category",
             "@since"
@@ -535476,8 +535564,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 94,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-94-heavydocsonlypattern",
+          "line": 256,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-256-heavydocsonlypattern",
           "currentTags": [
             "@category",
             "@since"
@@ -535498,8 +535586,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 116,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-116-isheavydocsonlypath",
+          "line": 278,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-278-isheavydocsonlypath",
           "currentTags": [
             "@param",
             "@returns",
@@ -535522,8 +535610,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 132,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-132-cigoaldocument",
+          "line": 294,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-294-cigoaldocument",
           "currentTags": [
             "@category",
             "@since"
@@ -535544,8 +535632,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 149,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-149-cigoaldocument",
+          "line": 311,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-311-cigoaldocument",
           "currentTags": [
             "@category",
             "@since"
@@ -535566,8 +535654,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 165,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-165-cidesktopinput",
+          "line": 327,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-327-cidesktopinput",
           "currentTags": [
             "@category",
             "@since"
@@ -535588,8 +535676,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 182,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-182-cidesktopinput",
+          "line": 344,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-344-cidesktopinput",
           "currentTags": [
             "@category",
             "@since"
@@ -535610,8 +535698,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 198,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-198-ciresourcelane",
+          "line": 360,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-360-ciresourcelane",
           "currentTags": [
             "@category",
             "@since"
@@ -535632,8 +535720,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 215,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-215-ciresourcelane",
+          "line": 377,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-377-ciresourcelane",
           "currentTags": [
             "@category",
             "@since"
@@ -535654,8 +535742,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 230,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-230-cichangeprofile",
+          "line": 392,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-392-cichangeprofile",
           "currentTags": [
             "@category",
             "@since"
@@ -535676,8 +535764,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 249,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-249-ciresourcesample",
+          "line": 411,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-411-ciresourcesample",
           "currentTags": [
             "@category",
             "@since"
@@ -535698,8 +535786,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiOperational.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts",
-          "line": 283,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-283-cienvironmentselection",
+          "line": 445,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cioperational-schemas-ts-445-cienvironmentselection",
           "currentTags": [
             "@category",
             "@since"
