@@ -8,7 +8,7 @@
 Every row is a lever row in the exploration's ranked plan
 (`explorations/ten-minute-certainty/research/phase2/PLAN.md`, found with `grep -n '^#### .*<ID>'`) and its
 merged area record under `explorations/ten-minute-certainty/research/phase2/merged/`. Status evidence is from
-the lever check of 2026-11-09 against `origin/main` 6eb2e0588e2, re-checked at c90929b1ff1.
+the lever check of 2026-11-09 against `origin/main` 6eb2e0588e2, re-checked at c90929b1ff1 and at 5e09d90a6da.
 
 | Source | Title | Upstream (repo) | Location (`file:line`) | Theme | Disposition |
 |--------|-------|-----------------|------------------------|-------|-------------|
@@ -69,5 +69,5 @@ None. The exploration ledger records no external source for these levers.
 - Related goals: [`goals/ci-lane-economics`](../../ci-lane-economics/README.md) (partition layout, #3030,
   #3040, #3043), [`goals/yeet-monitor-app-identity`](../../yeet-monitor-app-identity/README.md) (rerun-runner-loss),
   [`goals/turborepo-quality-cache-adoption`](../../turborepo-quality-cache-adoption/README.md) (paused, R2).
-- Shipped precursors: #3005, #3028, #3029, #3030, #3039, #3040, #3043, #3045, #3046. Open PR on shared files: #3041.
+- Shipped precursors: #3005, #3028, #3029, #3030, #3039, #3040, #3041, #3043, #3045, #3046, #3056.
 - Downstream: `explorations/github-merge-queue` (gated `merge-group-parity` waits on this goal merging, D28).
