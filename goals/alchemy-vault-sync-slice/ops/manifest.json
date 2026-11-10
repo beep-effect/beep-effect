@@ -6,7 +6,7 @@
     "title": "Alchemy Vault-Sync Slice",
     "status": "active",
     "created": "2026-11-05",
-    "updated": "2026-11-08",
+    "updated": "2026-11-10",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/alchemy-vault-sync-slice",
@@ -27,7 +27,7 @@
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/docs_alchemy-vault-sync-refinal-f8fff805ea7a/verdict.json",
+        "ref": ".beep/yeet/runs/docs_alchemy-vault-sync-refinal3-e71c09ad3693/verdict.json",
         "gating": true
       }
     ],

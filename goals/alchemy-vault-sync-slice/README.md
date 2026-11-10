@@ -33,10 +33,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement — in progress (first PR: lockstep pin + driver scaffold + P0 spikes + doctrine + entity-kit freeze, per D16). P0 Research complete 2026-11-06.
+P4 Close: all implementation PRs are merged. The closeout is proposed through a third goals-only re-final PR, because #2933 and #2962 both merged before their readiness was recorded. Remaining: that PR merges on `merge-ready: yes`, `goals completion refresh` verifies it, and a packet-state PR adopts `completed-retained`.
 
 ## Latest Evidence
 
+- 2026-11-10: `goals completion refresh` for #2962 reports `unknown` (hosted required checks verified; readiness recovery refused, "status was recorded after job end"). A third goals-only re-final takes over as the final PR; see [`decisions/2026-11-10-third-goals-only-re-final-after-2962-merged-before-readiness.md`](./decisions/2026-11-10-third-goals-only-re-final-after-2962-merged-before-readiness.md).
 - 2026-11-07: PR 2a #2825 merged (cc3fef7c02). PR 2b completes the Postgres driver: views, projections, streams, Backfill catch-up, upcasting, Cluster workflow engine with crash-and-resume; conformance on InMemory and PGlite (79 tests) and real Postgres 17 (32 scenarios).
 - 2026-11-06: PR 1 #2810 merged (7f7cb719ba). PR 2a adds the Postgres Platform for aggregates and policies with a conformance suite green on InMemory and PGlite.
 - 2026-11-06: P0 spikes recorded in [`research/01-p0-spikes.md`](./research/01-p0-spikes.md) with executable tests under `packages/drivers/alchemy-postgres/test/spikes/`; seven decision files under `decisions/`; `@alchemy.run/domain` 2.0.0-beta.85 pinned (plus `foldkit`); `@beep/alchemy-postgres` scaffolded; `standards/ARCHITECTURE.md`, `standards/architecture/DECISIONS.md`, `standards/architecture/GLOSSARY.md` amended; `beep laws entity-kit-freeze` lint lane added.
