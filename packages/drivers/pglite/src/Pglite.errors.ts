@@ -6,18 +6,11 @@
  */
 
 import { $PgliteId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
-import { O } from "@beep/utils";
-import * as Effect from "effect/Effect";
+import { defectDiagnostics, optionalDefectMessage } from "@beep/schema/SchemaUtils/defectDiagnostics";
+import { optionalDefect } from "@beep/schema/SchemaUtils/optionalDefect";
 import * as S from "effect/Schema";
 
 const $I = $PgliteId.create("Pglite.errors");
-
-const decodeDefectOption = S.decodeUnknownOption(S.Defect({ includeStack: true }));
-const decodeMessageOption = S.decodeUnknownOption(S.NonEmptyString);
-
-const getErrorMessage = (value: unknown): O.Option<string> =>
-  value instanceof Error ? decodeMessageOption(value.message) : O.none();
 
 /**
  * Technical failure raised by the `@beep/pglite` driver boundary.
@@ -47,20 +40,8 @@ export class PgliteError extends S.TaggedError<PgliteError, { readonly brand: un
     operation: S.NonEmptyString.annotateKey({
       description: "Driver operation that failed.",
     }),
-    cause: S.OptionFromOptionalKey(
-      S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))
-    ).pipe(
-      S.withConstructorDefault(Effect.succeedNone),
-      S.annotateKey({
-        description: "Original native or third-party defect when one was available.",
-      })
-    ),
-    message: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
-      S.withConstructorDefault(Effect.succeedNone),
-      S.annotateKey({
-        description: "Non-empty message extracted from the originating failure.",
-      })
-    ),
+    cause: optionalDefect("Original native or third-party defect when one was available."),
+    message: optionalDefectMessage("Non-empty message extracted from the originating failure."),
   },
   $I.annoteError<PgliteError>("PgliteError", {
     description: "Technical PGlite driver failure scoped to a driver operation.",
@@ -82,9 +63,5 @@ export class PgliteError extends S.TaggedError<PgliteError, { readonly brand: un
    * @since 0.0.0
    */
   static readonly fromUnknown = (operation: string, cause?: unknown): PgliteError =>
-    PgliteError.make({
-      operation,
-      cause: decodeDefectOption(cause),
-      message: getErrorMessage(cause),
-    });
+    PgliteError.make({ operation, ...defectDiagnostics(cause) });
 }
