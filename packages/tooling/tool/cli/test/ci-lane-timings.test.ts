@@ -1222,7 +1222,7 @@ describe("ci lane timing admission window", () => {
       });
     const subset = (run: CiWorkflowWindowRun, conclusion = "success") => [
       shard(run, run.id * 10 + 1, "repo-cli-7", "2026-11-10T00:03:00Z"),
-      shard(run, run.id * 10 + 2, "law-practice-12", "2026-11-10T00:02:00Z", conclusion),
+      shard(run, run.id * 10 + 2, "law-practice-8", "2026-11-10T00:02:00Z", conclusion),
       shard(run, run.id * 10 + 3, "unit-g", "2026-11-10T00:04:00Z"),
     ];
 
