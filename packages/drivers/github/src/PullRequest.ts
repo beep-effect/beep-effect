@@ -4,7 +4,8 @@
  * **Details**
  *
  * Reads, lists, creates, updates, upserts, merges and labels pull requests,
- * requests reviewers, and turns auto-merge on or off. REST answers are
+ * requests reviewers, turns auto-merge on or off, and adds to, removes from
+ * and reads merge-queue entries. REST answers are
  * projected to `PullRequestInfo`, the only pull-request type the package exports.
  *
  * @packageDocumentation
@@ -226,6 +227,189 @@ const DisableAutoMerge = GraphQLDocument.make({
 const GRAPHQL_MERGE_METHOD = { merge: "MERGE", squash: "SQUASH", rebase: "REBASE" } as const;
 
 /**
+ * Where a pull request stands in a merge queue.
+ *
+ * **Details**
+ *
+ * GitHub's `MergeQueueEntryState`. An entry is `QUEUED` until the queue builds
+ * its merge group, `AWAITING_CHECKS` while the group's required checks run,
+ * `MERGEABLE` once they pass, `UNMERGEABLE` when it cannot merge, and `LOCKED`
+ * while the queue is merging it.
+ *
+ * **Example** (Validate a queued state)
+ *
+ * ```ts
+ * import { MergeQueueEntryState } from "@beep/github/PullRequest";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(MergeQueueEntryState)("AWAITING_CHECKS")) // true
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MergeQueueEntryState = LiteralKit([
+  "AWAITING_CHECKS",
+  "LOCKED",
+  "MERGEABLE",
+  "QUEUED",
+  "UNMERGEABLE",
+]).pipe($I.annoteSchema("MergeQueueEntryState", { description: "Where a pull request stands in a merge queue." }));
+
+/**
+ * The values accepted by {@link MergeQueueEntryState}.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export type MergeQueueEntryState = typeof MergeQueueEntryState.Type;
+
+/**
+ * A pull request's entry in a merge queue, projected to what callers read.
+ *
+ * **Details**
+ *
+ * `headOid` and `baseOid` are the merge group's commits. GitHub leaves them
+ * empty while the entry is `QUEUED` and fills them once the group is built, so
+ * they are `Option`s. With a squash queue the landed commit is `headOid`.
+ *
+ * **Example** (Build a queued entry fixture)
+ *
+ * ```ts
+ * import { MergeQueueEntry } from "@beep/github/PullRequest";
+ * import * as DateTime from "effect/DateTime";
+ * import * as O from "effect/Option";
+ *
+ * const entry = MergeQueueEntry.make({
+ *   id: "MQE_1", pullRequestNumber: 123, state: "QUEUED", position: 1,
+ *   enqueuedAt: DateTime.makeUnsafe("2026-11-10T04:54:37Z"), estimatedTimeToMerge: O.none(),
+ *   jump: false, solo: false, enqueuer: O.some("beep-fleet-orchestrator"),
+ *   headOid: O.none(), baseOid: O.none(),
+ * });
+ * console.log(entry.state) // QUEUED
+ * ```
+ *
+ * @public
+ * @category models
+ * @since 0.0.0
+ */
+export class MergeQueueEntry extends S.Opaque<MergeQueueEntry, { readonly brand: unique symbol }>()(
+  S.Struct({
+    id: S.String.pipe(
+      $I.annoteKey("MergeQueueEntry.id", { description: "The entry's GraphQL node id, which dequeue needs." })
+    ),
+    pullRequestNumber: S.Int.pipe(
+      $I.annoteKey("MergeQueueEntry.pullRequestNumber", { description: "The queued pull request's number." })
+    ),
+    state: MergeQueueEntryState,
+    position: S.Int.pipe(
+      $I.annoteKey("MergeQueueEntry.position", { description: "The entry's place in the queue, counting from 1." })
+    ),
+    enqueuedAt: S.DateTimeUtcFromString.pipe(
+      $I.annoteKey("MergeQueueEntry.enqueuedAt", { description: "When the pull request joined the queue." })
+    ),
+    estimatedTimeToMerge: S.Option(S.Int).pipe(
+      $I.annoteKey("MergeQueueEntry.estimatedTimeToMerge", {
+        description: "GitHub's estimate, in seconds, of when the entry merges, when it gives one.",
+      })
+    ),
+    jump: S.Boolean.pipe(
+      $I.annoteKey("MergeQueueEntry.jump", { description: "Whether the entry was put at the front of the queue." })
+    ),
+    solo: S.Boolean.pipe(
+      $I.annoteKey("MergeQueueEntry.solo", { description: "Whether the entry merges alone, outside any group." })
+    ),
+    enqueuer: S.Option(S.String).pipe(
+      $I.annoteKey("MergeQueueEntry.enqueuer", { description: "The login that queued the pull request." })
+    ),
+    headOid: S.Option(S.String).pipe(
+      $I.annoteKey("MergeQueueEntry.headOid", {
+        description: "The merge group's head commit, once the queue has built the group.",
+      })
+    ),
+    baseOid: S.Option(S.String).pipe(
+      $I.annoteKey("MergeQueueEntry.baseOid", {
+        description: "The base commit the merge group was built on, once the queue has built the group.",
+      })
+    ),
+  }).pipe(
+    $I.annoteSchema("MergeQueueEntry", {
+      description: "A pull request's entry in a merge queue, projected to what callers read.",
+    })
+  )
+) {}
+
+/** The `MergeQueueEntry` wire shape every queue document selects. */
+const WireQueueEntry = S.Struct({
+  id: S.String,
+  state: MergeQueueEntryState,
+  position: S.Int,
+  enqueuedAt: S.DateTimeUtcFromString,
+  estimatedTimeToMerge: S.OptionFromNullOr(S.Int),
+  jump: S.Boolean,
+  solo: S.Boolean,
+  enqueuer: S.OptionFromNullOr(S.Struct({ login: S.String })),
+  headCommit: S.OptionFromNullOr(S.Struct({ oid: S.String })),
+  baseCommit: S.OptionFromNullOr(S.Struct({ oid: S.String })),
+});
+
+const QUEUE_ENTRY_FIELDS =
+  "id state position enqueuedAt estimatedTimeToMerge jump solo enqueuer { login } headCommit { oid } baseCommit { oid }";
+
+const EnqueuePullRequest = GraphQLDocument.make({
+  name: "enqueuePullRequest",
+  document: `mutation ($pullRequestId: ID!, $expectedHeadOid: GitObjectID, $jump: Boolean) {
+  enqueuePullRequest(input: { pullRequestId: $pullRequestId, expectedHeadOid: $expectedHeadOid, jump: $jump }) {
+    mergeQueueEntry { ${QUEUE_ENTRY_FIELDS} }
+  }
+}`,
+  response: S.Struct({ enqueuePullRequest: S.Struct({ mergeQueueEntry: S.OptionFromNullOr(WireQueueEntry) }) }),
+})<{ readonly pullRequestId: string; readonly expectedHeadOid: string; readonly jump: boolean }>();
+
+const DequeuePullRequest = GraphQLDocument.make({
+  name: "dequeuePullRequest",
+  document: `mutation ($id: ID!) {
+  dequeuePullRequest(input: { id: $id }) {
+    mergeQueueEntry { ${QUEUE_ENTRY_FIELDS} }
+  }
+}`,
+  response: S.Struct({ dequeuePullRequest: S.Struct({ mergeQueueEntry: S.OptionFromNullOr(WireQueueEntry) }) }),
+})<{ readonly id: string }>();
+
+const ReadQueueEntry = GraphQLDocument.make({
+  name: "pullRequestMergeQueueEntry",
+  document: `query ($owner: String!, $name: String!, $number: Int!) {
+  repository(owner: $owner, name: $name) {
+    pullRequest(number: $number) {
+      mergeQueueEntry { ${QUEUE_ENTRY_FIELDS} }
+    }
+  }
+}`,
+  response: S.Struct({
+    repository: S.OptionFromNullOr(
+      S.Struct({ pullRequest: S.OptionFromNullOr(S.Struct({ mergeQueueEntry: S.OptionFromNullOr(WireQueueEntry) })) })
+    ),
+  }),
+})<{ readonly owner: string; readonly name: string; readonly number: number }>();
+
+const entryOf = (pullRequestNumber: number, wire: typeof WireQueueEntry.Type): MergeQueueEntry =>
+  MergeQueueEntry.make({
+    id: wire.id,
+    pullRequestNumber,
+    state: wire.state,
+    position: wire.position,
+    enqueuedAt: wire.enqueuedAt,
+    estimatedTimeToMerge: wire.estimatedTimeToMerge,
+    jump: wire.jump,
+    solo: wire.solo,
+    enqueuer: O.map(wire.enqueuer, (actor) => actor.login),
+    headOid: O.map(wire.headCommit, (commit) => commit.oid),
+    baseOid: O.map(wire.baseCommit, (commit) => commit.oid),
+  });
+
+/**
  * Read, list, create, update, merge and label pull requests, and control
  * auto-merge.
  *
@@ -283,6 +467,93 @@ export interface PullRequestShape {
     readonly body?: string | undefined;
     readonly draft?: boolean | undefined;
   }) => Effect.Effect<PullRequestInfo, GitHubError, Repo>;
+  /**
+   * Remove a queue entry from its merge queue.
+   *
+   * **Details**
+   *
+   * Takes the entry, as {@link PullRequestShape.mergeQueueEntry} or
+   * {@link PullRequestShape.enqueuePullRequest} returned it, because GitHub's
+   * mutation is keyed by the entry's id. Answers the entry GitHub reports back,
+   * if it reports one. Removing an entry rebuilds every group behind it.
+   *
+   * **Example** (Dequeue an entry)
+   *
+   * ```ts
+   * import { MergeQueueEntry, PullRequest } from "@beep/github/PullRequest";
+   * import * as DateTime from "effect/DateTime";
+   * import * as Effect from "effect/Effect";
+   * import * as O from "effect/Option";
+   *
+   * const entry = MergeQueueEntry.make({
+   *   id: "MQE_1", pullRequestNumber: 123, state: "QUEUED", position: 1,
+   *   enqueuedAt: DateTime.makeUnsafe("2026-11-10T04:54:37Z"), estimatedTimeToMerge: O.none(),
+   *   jump: false, solo: false, enqueuer: O.none(), headOid: O.none(), baseOid: O.none(),
+   * });
+   *
+   * const program = Effect.gen(function* () {
+   *   const pulls = yield* PullRequest;
+   *   return yield* pulls.dequeuePullRequest(entry);
+   * });
+   * console.log(Effect.isEffect(program)) // true
+   * ```
+   *
+   * @category commands
+   * @since 0.0.0
+   */
+  readonly dequeuePullRequest: (
+    entry: MergeQueueEntry
+  ) => Effect.Effect<O.Option<MergeQueueEntry>, GitHubGraphQLError, Repo>;
+  /**
+   * Add a pull request to its base branch's merge queue.
+   *
+   * **Details**
+   *
+   * The queue is pinned to `pullRequest.headSha` unless `expectedHeadOid` says
+   * otherwise, so a push after the caller read the pull request fails the call
+   * instead of queueing a head nobody proved. GitHub refuses the call, as a
+   * `GitHubGraphQLError`, when the pull request cannot be queued now; there is
+   * no auto-merge fallback. `jump` puts the entry at the front and rebuilds
+   * every group already building.
+   *
+   * **Gotchas**
+   *
+   * The queue writes the squash commit itself: merge-method, title and body
+   * inputs do not exist on this call. An App installation token can enqueue
+   * without a "merge queues" permission, and the queue merges a pull request
+   * that edits workflow files even when the enqueuer has no `workflows`
+   * permission (`goals/merge-queue-lab` findings 10c).
+   *
+   * **Example** (Queue a pull request at its read head)
+   *
+   * ```ts
+   * import { PullRequest, PullRequestInfo } from "@beep/github/PullRequest";
+   * import * as Effect from "effect/Effect";
+   * import * as O from "effect/Option";
+   *
+   * const pullRequest = PullRequestInfo.make({
+   *   number: 123, nodeId: "PR_123", url: "https://github.com/effect-ts/effect/pull/123",
+   *   title: "Fix a bug", state: "open", head: "fix", headSha: "abc",
+   *   base: "main", baseSha: "def", draft: false, merged: false, mergedAt: O.none(),
+   * });
+   *
+   * const program = Effect.gen(function* () {
+   *   const pulls = yield* PullRequest;
+   *   return yield* pulls.enqueuePullRequest(pullRequest);
+   * });
+   * console.log(Effect.isEffect(program)) // true
+   * ```
+   *
+   * @category commands
+   * @since 0.0.0
+   */
+  readonly enqueuePullRequest: (
+    pullRequest: PullRequestInfo,
+    options?: {
+      readonly expectedHeadOid?: string | undefined;
+      readonly jump?: boolean | undefined;
+    }
+  ) => Effect.Effect<O.Option<MergeQueueEntry>, GitHubGraphQLError, Repo>;
   /**
    * Read one pull request. Fails `notFound` when it does not exist.
    *
@@ -444,6 +715,32 @@ export interface PullRequestShape {
       readonly commitMessage?: string | undefined;
     }): (number: number) => Effect.Effect<string, GitHubError, Repo>;
   };
+  /**
+   * Read a pull request's merge-queue entry, if it is queued.
+   *
+   * **Details**
+   *
+   * One GraphQL read. `Option.none()` means the pull request is not in a queue
+   * (never queued, merged, or removed) or does not exist; GitHub has no REST
+   * read of a queue.
+   *
+   * **Example** (Read a queue entry)
+   *
+   * ```ts
+   * import { PullRequest } from "@beep/github/PullRequest";
+   * import * as Effect from "effect/Effect";
+   *
+   * const program = Effect.gen(function* () {
+   *   const pulls = yield* PullRequest;
+   *   return yield* pulls.mergeQueueEntry(123);
+   * });
+   * console.log(Effect.isEffect(program)) // true
+   * ```
+   *
+   * @category queries
+   * @since 0.0.0
+   */
+  readonly mergeQueueEntry: (number: number) => Effect.Effect<O.Option<MergeQueueEntry>, GitHubGraphQLError, Repo>;
   /**
    * Request reviews from users and/or teams (team slugs).
    *
@@ -713,6 +1010,9 @@ const unstubbedShape = (): PullRequestShape => ({
   addLabels: () => unstubbed("addLabels"),
   requestReviewers: () => unstubbed("requestReviewers"),
   setAutoMerge: () => unstubbed("setAutoMerge"),
+  enqueuePullRequest: () => unstubbed("enqueuePullRequest"),
+  dequeuePullRequest: () => unstubbed("dequeuePullRequest"),
+  mergeQueueEntry: () => unstubbed("mergeQueueEntry"),
 });
 
 /**
@@ -990,5 +1290,40 @@ const make = (client: GitHubClient["Service"]): PullRequestShape => {
         });
       })
     ),
+
+    enqueuePullRequest: Effect.fn("PullRequest.enqueuePullRequest")(function* (
+      pullRequest: PullRequestInfo,
+      options?: {
+        readonly expectedHeadOid?: string | undefined;
+        readonly jump?: boolean | undefined;
+      }
+    ) {
+      const expectedHeadOid = options?.expectedHeadOid ?? pullRequest.headSha;
+      const jump = options?.jump ?? false;
+      yield* Effect.annotateCurrentSpan({ number: pullRequest.number, expectedHeadOid, jump });
+      const response = yield* client.graphql(EnqueuePullRequest, {
+        pullRequestId: pullRequest.nodeId,
+        expectedHeadOid,
+        jump,
+      });
+      return O.map(response.enqueuePullRequest.mergeQueueEntry, (wire) => entryOf(pullRequest.number, wire));
+    }),
+
+    dequeuePullRequest: Effect.fn("PullRequest.dequeuePullRequest")(function* (entry: MergeQueueEntry) {
+      yield* Effect.annotateCurrentSpan({ number: entry.pullRequestNumber, entry: entry.id });
+      const response = yield* client.graphql(DequeuePullRequest, { id: entry.id });
+      return O.map(response.dequeuePullRequest.mergeQueueEntry, (wire) => entryOf(entry.pullRequestNumber, wire));
+    }),
+
+    mergeQueueEntry: Effect.fn("PullRequest.mergeQueueEntry")(function* (number: number) {
+      const { owner, repo } = yield* Repo;
+      yield* Effect.annotateCurrentSpan({ owner, repo, number });
+      const response = yield* client.graphql(ReadQueueEntry, { owner, name: repo, number });
+      return response.repository.pipe(
+        O.flatMap((repository) => repository.pullRequest),
+        O.flatMap((pull) => pull.mergeQueueEntry),
+        O.map((wire) => entryOf(number, wire))
+      );
+    }),
   };
 };

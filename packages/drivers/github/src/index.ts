@@ -119,6 +119,8 @@ export {
 export { GitHubGraphQLError, GraphQLDocument, GraphQLErrorEntry } from "./GraphQL.ts";
 export {
   MergeMethod,
+  MergeQueueEntry,
+  MergeQueueEntryState,
   PullRequest,
   PullRequestInfo,
   type PullRequestShape,
