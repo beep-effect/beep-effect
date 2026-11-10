@@ -36,7 +36,7 @@
     "explorations/github-merge-queue/DECISIONS.md",
     "explorations/github-merge-queue/research/github-semantics.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
