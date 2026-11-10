@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "canonical-digest-owner",
+    "packetId": "goal-packet/v1:73bb856d1a550694f85d5d2b5120e0ee36eb9c86a765d74b2d07bfce0221e0f2",
+    "title": "Canonical Digest Owner",
+    "status": "active",
+    "created": "2026-11-10",
+    "updated": "2026-11-10",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/canonical-digest-owner",
+  "lifecycle": "active",
+  "mission": "RFC 8785 is the one canonical byte form, @beep/jsonc owns it, digests share one sha256: grammar, and the hand-rolled encoders are replaced with proof that no stored digest changes.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/protocol-as-value",
+    "graduated": "2026-11-10"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/canonical-digest-owner/README.md",
+    "goals/canonical-digest-owner/SPEC.md",
+    "goals/canonical-digest-owner/PLAN.md",
+    "goals/canonical-digest-owner/GOAL.md",
+    "goals/canonical-digest-owner/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/canonical-digest-owner/GOAL.md"
+    }
+  ],
+  "provides": ["foundation/canonical-bytes", "schema/prefixed-digest"],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/canonical-digest-owner/GOAL.md)\" -le 4000",
+    "jq . goals/canonical-digest-owner/ops/manifest.json",
+    "rg -n \"canonical-digest-owner|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/canonical-digest-owner",
+    "git diff --check -- goals/canonical-digest-owner",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
