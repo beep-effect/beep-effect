@@ -49,7 +49,7 @@
       "mappedFiles": ["standards/schema-first.inventory.jsonc"],
       "before": "full",
       "after": "selected 14+12",
-      "afterPackages": [
+      "selectedPackages": [
         "@beep/db-admin",
         "@beep/docket-intake",
         "@beep/law-practice-domain",
@@ -63,7 +63,9 @@
         "@beep/practice-m365-contacts",
         "@beep/practice-mail-tagging",
         "@beep/practice-review-hub",
-        "@beep/repo-cli",
+        "@beep/repo-cli"
+      ],
+      "dependentPackages": [
         "@beep/db-admin",
         "@beep/docket-intake",
         "@beep/law-practice-server",
@@ -83,7 +85,7 @@
       "mappedFiles": ["standards/schema-first.inventory.jsonc"],
       "before": "full",
       "after": "selected 15+12",
-      "afterPackages": [
+      "selectedPackages": [
         "@beep/db-admin",
         "@beep/docket-intake",
         "@beep/law-practice-domain",
@@ -98,7 +100,9 @@
         "@beep/practice-mail-tagging",
         "@beep/practice-review-hub",
         "@beep/repo-cli",
-        "@beep/repo-cli-kit",
+        "@beep/repo-cli-kit"
+      ],
+      "dependentPackages": [
         "@beep/db-admin",
         "@beep/docket-intake",
         "@beep/law-practice-server",
@@ -120,15 +124,14 @@
       ],
       "before": "full",
       "after": "selected 5+2",
-      "afterPackages": [
+      "selectedPackages": [
         "@beep/infra",
         "@beep/palantiri",
         "@beep/repo-ai-metrics",
         "@beep/repo-cli",
-        "@beep/repo-cli-kit",
-        "@beep/infra",
-        "@beep/palantiri"
-      ]
+        "@beep/repo-cli-kit"
+      ],
+      "dependentPackages": ["@beep/infra", "@beep/palantiri"]
     },
     {
       "sha": "878d43b2a08d8097e767ef07f3a44997d833fda5",
@@ -137,7 +140,8 @@
       ],
       "before": "full",
       "after": "selected 1+0",
-      "afterPackages": ["@beep/repo-cli"]
+      "selectedPackages": ["@beep/repo-cli"],
+      "dependentPackages": []
     },
     {
       "sha": "c33934c606962a9821c449591b3b6e63754e89e7",
@@ -146,7 +150,8 @@
       ],
       "before": "full",
       "after": "selected 1+0",
-      "afterPackages": ["@beep/repo-cli"]
+      "selectedPackages": ["@beep/repo-cli"],
+      "dependentPackages": []
     },
     {
       "sha": "eacb89d6c680596cf1f305069b2646d9962dfc30",
@@ -156,15 +161,14 @@
       ],
       "before": "full",
       "after": "selected 5+2",
-      "afterPackages": [
+      "selectedPackages": [
         "@beep/infra",
         "@beep/palantiri",
         "@beep/repo-ai-metrics",
         "@beep/repo-cli",
-        "@beep/repo-cli-kit",
-        "@beep/infra",
-        "@beep/palantiri"
-      ]
+        "@beep/repo-cli-kit"
+      ],
+      "dependentPackages": ["@beep/infra", "@beep/palantiri"]
     },
     {
       "sha": "d956d74ee5a30913aa86db72514f75a8ea61fa67",
@@ -173,15 +177,14 @@
       ],
       "before": "full",
       "after": "selected 5+2",
-      "afterPackages": [
+      "selectedPackages": [
         "@beep/infra",
         "@beep/palantiri",
         "@beep/repo-ai-metrics",
         "@beep/repo-cli",
-        "@beep/repo-cli-kit",
-        "@beep/infra",
-        "@beep/palantiri"
-      ]
+        "@beep/repo-cli-kit"
+      ],
+      "dependentPackages": ["@beep/infra", "@beep/palantiri"]
     },
     {
       "sha": "62335855fb41cc7c781044b2aa53d339ddced420",
@@ -190,7 +193,7 @@
       ],
       "before": "full",
       "after": "selected 197+195",
-      "afterPackages": [
+      "selectedPackages": [
         "@beep/acp",
         "@beep/agent-memory-store",
         "@beep/agents-client",
@@ -387,7 +390,9 @@
         "@beep/workspace-use-cases",
         "@beep/xdg",
         "@beep/xstate",
-        "@beep/yaml",
+        "@beep/yaml"
+      ],
+      "dependentPackages": [
         "@beep/acp",
         "@beep/agent-memory-store",
         "@beep/agents-client",
@@ -592,7 +597,8 @@
       ],
       "before": "full",
       "after": "selected 1+0",
-      "afterPackages": ["@beep/repo-cli"]
+      "selectedPackages": ["@beep/repo-cli"],
+      "dependentPackages": []
     },
     {
       "sha": "68d37217c6ab10f6b1ca70316ab6544c87d23c38",
@@ -601,7 +607,8 @@
       ],
       "before": "full",
       "after": "selected 2+0",
-      "afterPackages": ["@beep/palantiri", "@beep/repo-cli"]
+      "selectedPackages": ["@beep/palantiri", "@beep/repo-cli"],
+      "dependentPackages": []
     },
     {
       "sha": "393f3410ca865e00c3e22921026bd35197828fd0",
@@ -610,14 +617,16 @@
       ],
       "before": "full",
       "after": "selected 1+0",
-      "afterPackages": ["@beep/repo-cli"]
+      "selectedPackages": ["@beep/repo-cli"],
+      "dependentPackages": []
     },
     {
       "sha": "0e5ebacd753cda588939711eef4c7fc0936a08c8",
       "mappedFiles": ["standards/cache-qualification-baseline.json"],
       "before": "full",
       "after": "selected 1+0",
-      "afterPackages": ["@beep/repo-cli"]
+      "selectedPackages": ["@beep/repo-cli"],
+      "dependentPackages": []
     },
     {
       "sha": "b8d5999f3a85eb2657df48fb6ae63a59ea53751d",
@@ -626,7 +635,8 @@
       ],
       "before": "full",
       "after": "selected 1+0",
-      "afterPackages": ["@beep/repo-cli"]
+      "selectedPackages": ["@beep/repo-cli"],
+      "dependentPackages": []
     },
     {
       "sha": "7fb4970306dc45b41e7f8863ede50cbf17ea1398",
@@ -635,7 +645,8 @@
       ],
       "before": "full",
       "after": "selected 1+0",
-      "afterPackages": ["@beep/repo-cli"]
+      "selectedPackages": ["@beep/repo-cli"],
+      "dependentPackages": []
     },
     {
       "sha": "ebded2d7c3bae82db89e2ea1109049df0187cda6",
@@ -644,7 +655,7 @@
       ],
       "before": "full",
       "after": "selected 11+7",
-      "afterPackages": [
+      "selectedPackages": [
         "@beep/docket-intake",
         "@beep/law-practice-server",
         "@beep/law-practice-use-cases",
@@ -655,7 +666,9 @@
         "@beep/practice-mail-tagging",
         "@beep/practice-review-hub",
         "@beep/repo-cli",
-        "@beep/repo-cli-kit",
+        "@beep/repo-cli-kit"
+      ],
+      "dependentPackages": [
         "@beep/docket-intake",
         "@beep/practice-gateway",
         "@beep/practice-identify",
@@ -672,14 +685,16 @@
       ],
       "before": "full",
       "after": "selected 2+0",
-      "afterPackages": ["@beep/repo-cli", "@beep/repo-cli-kit"]
+      "selectedPackages": ["@beep/repo-cli", "@beep/repo-cli-kit"],
+      "dependentPackages": []
     },
     {
       "sha": "f0c6a0c0decb142af47d9a17ab74d3ddb8325480",
       "mappedFiles": ["standards/cache-qualification-baseline.json"],
       "before": "full",
       "after": "selected 1+0",
-      "afterPackages": ["@beep/repo-cli"]
+      "selectedPackages": ["@beep/repo-cli"],
+      "dependentPackages": []
     },
     {
       "sha": "31d8efc09b14d558df48fc3ba75add397a3d2ac1",
@@ -688,7 +703,7 @@
       ],
       "before": "full",
       "after": "selected 11+7",
-      "afterPackages": [
+      "selectedPackages": [
         "@beep/docket-intake",
         "@beep/law-practice-server",
         "@beep/law-practice-use-cases",
@@ -699,7 +714,9 @@
         "@beep/practice-mail-tagging",
         "@beep/practice-review-hub",
         "@beep/repo-cli",
-        "@beep/repo-cli-kit",
+        "@beep/repo-cli-kit"
+      ],
+      "dependentPackages": [
         "@beep/docket-intake",
         "@beep/practice-gateway",
         "@beep/practice-identify",
@@ -717,7 +734,8 @@
       ],
       "before": "full",
       "after": "selected 2+0",
-      "afterPackages": ["@beep/repo-cli", "@beep/repo-cli-kit"]
+      "selectedPackages": ["@beep/repo-cli", "@beep/repo-cli-kit"],
+      "dependentPackages": []
     },
     {
       "sha": "d763390518d7f912fe7f8a7be8aab32ed987a2dd",
@@ -727,15 +745,14 @@
       ],
       "before": "full",
       "after": "selected 5+2",
-      "afterPackages": [
+      "selectedPackages": [
         "@beep/infra",
         "@beep/palantiri",
         "@beep/repo-ai-metrics",
         "@beep/repo-cli",
-        "@beep/repo-cli-kit",
-        "@beep/infra",
-        "@beep/palantiri"
-      ]
+        "@beep/repo-cli-kit"
+      ],
+      "dependentPackages": ["@beep/infra", "@beep/palantiri"]
     },
     {
       "sha": "bf36ecd46346423501a82342272fbe8620e62b7a",
@@ -744,7 +761,8 @@
       ],
       "before": "full",
       "after": "selected 1+0",
-      "afterPackages": ["@beep/repo-cli"]
+      "selectedPackages": ["@beep/repo-cli"],
+      "dependentPackages": []
     },
     {
       "sha": "4975e2916860c8b9abafe2d47fca9df5ced97efd",
@@ -756,7 +774,7 @@
       ],
       "before": "full",
       "after": "selected 15+9",
-      "afterPackages": [
+      "selectedPackages": [
         "@beep/db-admin",
         "@beep/docket-intake",
         "@beep/law-practice-domain",
@@ -771,7 +789,9 @@
         "@beep/practice-mail-tagging",
         "@beep/practice-review-hub",
         "@beep/repo-cli",
-        "@beep/repo-cli-kit",
+        "@beep/repo-cli-kit"
+      ],
+      "dependentPackages": [
         "@beep/db-admin",
         "@beep/docket-intake",
         "@beep/law-practice-tables",
@@ -790,7 +810,7 @@
       ],
       "before": "full",
       "after": "selected 15+12",
-      "afterPackages": [
+      "selectedPackages": [
         "@beep/db-admin",
         "@beep/docket-intake",
         "@beep/law-practice-domain",
@@ -805,7 +825,9 @@
         "@beep/practice-mail-tagging",
         "@beep/practice-review-hub",
         "@beep/repo-cli",
-        "@beep/repo-cli-kit",
+        "@beep/repo-cli-kit"
+      ],
+      "dependentPackages": [
         "@beep/db-admin",
         "@beep/docket-intake",
         "@beep/law-practice-server",
@@ -827,7 +849,8 @@
       ],
       "before": "full",
       "after": "selected 1+0",
-      "afterPackages": ["@beep/repo-cli"]
+      "selectedPackages": ["@beep/repo-cli"],
+      "dependentPackages": []
     },
     {
       "sha": "e81a5399b577235753c95afc7d772f66603f419e",
@@ -838,14 +861,16 @@
       ],
       "before": "full",
       "after": "selected 2+0",
-      "afterPackages": ["@beep/repo-cli", "@beep/repo-cli-kit"]
+      "selectedPackages": ["@beep/repo-cli", "@beep/repo-cli-kit"],
+      "dependentPackages": []
     },
     {
       "sha": "432dbaa8678da5cd6bceaad91cb7bab0698e566d",
       "mappedFiles": ["standards/jsdoc-documentation.inventory.jsonc"],
       "before": "full",
       "after": "selected 2+0",
-      "afterPackages": ["@beep/repo-cli", "@beep/tailscale"]
+      "selectedPackages": ["@beep/repo-cli", "@beep/tailscale"],
+      "dependentPackages": []
     },
     {
       "sha": "453364b0af8f2646a97eb4c550cc323a90d97575",
@@ -854,7 +879,7 @@
       ],
       "before": "full",
       "after": "selected 89+86",
-      "afterPackages": [
+      "selectedPackages": [
         "@beep/acp",
         "@beep/agents-client",
         "@beep/agents-domain",
@@ -943,7 +968,9 @@
         "@beep/workspace-domain",
         "@beep/workspace-server",
         "@beep/workspace-tables",
-        "@beep/workspace-use-cases",
+        "@beep/workspace-use-cases"
+      ],
+      "dependentPackages": [
         "@beep/acp",
         "@beep/agents-client",
         "@beep/agents-domain",
@@ -1039,14 +1066,16 @@
       ],
       "before": "full",
       "after": "selected 2+0",
-      "afterPackages": ["@beep/repo-cli", "@beep/repo-cli-kit"]
+      "selectedPackages": ["@beep/repo-cli", "@beep/repo-cli-kit"],
+      "dependentPackages": []
     },
     {
       "sha": "1c9337e83584d7440c1e752c8624d2487e64f737",
       "mappedFiles": ["standards/jsdoc-documentation.inventory.jsonc"],
       "before": "full",
       "after": "selected 2+0",
-      "afterPackages": ["@beep/repo-cli", "@beep/repo-cli-kit"]
+      "selectedPackages": ["@beep/repo-cli", "@beep/repo-cli-kit"],
+      "dependentPackages": []
     },
     {
       "sha": "afea997d890d376fbde5a51b177cb030c799e8d2",
@@ -1056,7 +1085,8 @@
       ],
       "before": "full",
       "after": "selected 2+0",
-      "afterPackages": ["@beep/repo-cli", "@beep/repo-cli-kit"]
+      "selectedPackages": ["@beep/repo-cli", "@beep/repo-cli-kit"],
+      "dependentPackages": []
     },
     {
       "sha": "7b45990ffcc8967309cf97487fe0a7a52661ebde",
@@ -1066,7 +1096,8 @@
       ],
       "before": "full",
       "after": "selected 2+0",
-      "afterPackages": ["@beep/repo-cli", "@beep/repo-cli-kit"]
+      "selectedPackages": ["@beep/repo-cli", "@beep/repo-cli-kit"],
+      "dependentPackages": []
     },
     {
       "sha": "9ada08e85acbef7d0d3bdd46d598865d705a8c1b",
@@ -1076,15 +1107,14 @@
       ],
       "before": "full",
       "after": "selected 5+2",
-      "afterPackages": [
+      "selectedPackages": [
         "@beep/github",
         "@beep/github-actions",
         "@beep/github-reporting",
         "@beep/repo-cli",
-        "@beep/repo-cli-kit",
-        "@beep/github-actions",
-        "@beep/github-reporting"
-      ]
+        "@beep/repo-cli-kit"
+      ],
+      "dependentPackages": ["@beep/github-actions", "@beep/github-reporting"]
     },
     {
       "sha": "930758e06bf4442d721d818fcba6a40301471784",
@@ -1094,29 +1124,30 @@
       ],
       "before": "full",
       "after": "selected 5+2",
-      "afterPackages": [
+      "selectedPackages": [
         "@beep/github",
         "@beep/github-actions",
         "@beep/github-reporting",
         "@beep/repo-cli",
-        "@beep/repo-cli-kit",
-        "@beep/github-actions",
-        "@beep/github-reporting"
-      ]
+        "@beep/repo-cli-kit"
+      ],
+      "dependentPackages": ["@beep/github-actions", "@beep/github-reporting"]
     },
     {
       "sha": "6dd9b92e2f88268c37e9541215c79c9edcf0d497",
       "mappedFiles": ["standards/jsdoc-documentation.inventory.jsonc"],
       "before": "full",
       "after": "selected 7+4",
-      "afterPackages": [
+      "selectedPackages": [
         "@beep/git",
         "@beep/infra",
         "@beep/palantiri",
         "@beep/repo-ai-metrics",
         "@beep/repo-cli",
         "@beep/repo-cli-kit",
-        "@beep/repo-workspaces",
+        "@beep/repo-workspaces"
+      ],
+      "dependentPackages": [
         "@beep/infra",
         "@beep/palantiri",
         "@beep/repo-ai-metrics",
@@ -1128,7 +1159,8 @@
       "mappedFiles": ["standards/jsdoc-documentation.inventory.jsonc"],
       "before": "full",
       "after": "selected 1+0",
-      "afterPackages": ["@beep/repo-cli"]
+      "selectedPackages": ["@beep/repo-cli"],
+      "dependentPackages": []
     },
     {
       "sha": "be80899ddb0ddb083b9185762ce84da99b4cef80",
@@ -1137,7 +1169,8 @@
       ],
       "before": "full",
       "after": "selected 1+0",
-      "afterPackages": ["@beep/repo-cli"]
+      "selectedPackages": ["@beep/repo-cli"],
+      "dependentPackages": []
     },
     {
       "sha": "c8019cd9996fa454dc0f03b539960bc3ae2532ec",
@@ -1146,21 +1179,24 @@
       ],
       "before": "full",
       "after": "selected 1+0",
-      "afterPackages": ["@beep/repo-cli"]
+      "selectedPackages": ["@beep/repo-cli"],
+      "dependentPackages": []
     },
     {
       "sha": "a7104ce55891eb4adc5ecddaac0fc751e3c96e31",
       "mappedFiles": ["standards/jsdoc-documentation.inventory.jsonc"],
       "before": "full",
       "after": "selected 7+5",
-      "afterPackages": [
+      "selectedPackages": [
         "@beep/git",
         "@beep/infra",
         "@beep/palantiri",
         "@beep/repo-ai-metrics",
         "@beep/repo-cli",
         "@beep/repo-cli-kit",
-        "@beep/repo-workspaces",
+        "@beep/repo-workspaces"
+      ],
+      "dependentPackages": [
         "@beep/infra",
         "@beep/palantiri",
         "@beep/repo-ai-metrics",
@@ -1175,14 +1211,15 @@
       ],
       "before": "full",
       "after": "selected 2+0",
-      "afterPackages": ["@beep/repo-cli", "@beep/repo-cli-kit"]
+      "selectedPackages": ["@beep/repo-cli", "@beep/repo-cli-kit"],
+      "dependentPackages": []
     },
     {
       "sha": "bb2134fcb952e07580c4cebf2586c901f090ef5b",
       "mappedFiles": ["standards/jsdoc-documentation.inventory.jsonc"],
       "before": "full",
       "after": "selected 89+87",
-      "afterPackages": [
+      "selectedPackages": [
         "@beep/agent-memory-store",
         "@beep/agents-client",
         "@beep/agents-domain",
@@ -1271,7 +1308,9 @@
         "@beep/workspace-tables",
         "@beep/workspace-use-cases",
         "@beep/xdg",
-        "@beep/yaml",
+        "@beep/yaml"
+      ],
+      "dependentPackages": [
         "@beep/agent-memory-store",
         "@beep/agents-client",
         "@beep/agents-domain",
@@ -1366,26 +1405,28 @@
       "mappedFiles": ["standards/jsdoc-documentation.inventory.jsonc"],
       "before": "full",
       "after": "selected 1+0",
-      "afterPackages": ["@beep/repo-cli"]
+      "selectedPackages": ["@beep/repo-cli"],
+      "dependentPackages": []
     },
     {
       "sha": "337c460c7147e730581cd24b403bbb4922d09de3",
       "mappedFiles": ["standards/schema-first.inventory.jsonc"],
       "before": "full",
       "after": "selected 1+0",
-      "afterPackages": ["@beep/repo-cli"]
+      "selectedPackages": ["@beep/repo-cli"],
+      "dependentPackages": []
     },
     {
       "sha": "a37ab294f6cad4769deed98b2469c819f965e71f",
       "mappedFiles": ["standards/jsdoc-documentation.inventory.jsonc"],
       "before": "full",
       "after": "selected 3+1",
-      "afterPackages": [
+      "selectedPackages": [
         "@beep/repo-cli",
         "@beep/repo-cli-kit",
-        "@beep/repo-workspaces",
-        "@beep/repo-cli-kit"
-      ]
+        "@beep/repo-workspaces"
+      ],
+      "dependentPackages": ["@beep/repo-cli-kit"]
     },
     {
       "sha": "26aba057e3be352949f8fb825e50989b8a2eb61a",
@@ -1396,41 +1437,45 @@
       ],
       "before": "full",
       "after": "selected 1+0",
-      "afterPackages": ["@beep/repo-cli"]
+      "selectedPackages": ["@beep/repo-cli"],
+      "dependentPackages": []
     },
     {
       "sha": "850a5bb47b1f7792c06d4cbcbf44db37d3e177b4",
       "mappedFiles": ["standards/jsdoc-documentation.inventory.jsonc"],
       "before": "full",
       "after": "selected 4+1",
-      "afterPackages": [
+      "selectedPackages": [
         "@beep/documents-server",
         "@beep/professional-desktop",
         "@beep/repo-cli",
-        "@beep/repo-cli-kit",
-        "@beep/professional-desktop"
-      ]
+        "@beep/repo-cli-kit"
+      ],
+      "dependentPackages": ["@beep/professional-desktop"]
     },
     {
       "sha": "c3808bfd4e2856bea4211ed8a867c5f494050832",
       "mappedFiles": ["standards/schema-first.inventory.jsonc"],
       "before": "full",
       "after": "selected 1+0",
-      "afterPackages": ["@beep/repo-cli"]
+      "selectedPackages": ["@beep/repo-cli"],
+      "dependentPackages": []
     },
     {
       "sha": "c67424f9e233715925cb50be8db4d7900b1af7ac",
       "mappedFiles": ["standards/schema-first.inventory.jsonc"],
       "before": "full",
       "after": "selected 1+0",
-      "afterPackages": ["@beep/repo-cli"]
+      "selectedPackages": ["@beep/repo-cli"],
+      "dependentPackages": []
     },
     {
       "sha": "e733f61bbb39ed1cb0740643f4a53e745312789c",
       "mappedFiles": ["standards/jsdoc-documentation.inventory.jsonc"],
       "before": "full",
       "after": "selected 1+0",
-      "afterPackages": ["@beep/repo-cli"]
+      "selectedPackages": ["@beep/repo-cli"],
+      "dependentPackages": []
     },
     {
       "sha": "2c1ff256c12b8b9071617c094cfe48ffaf6b4671",
@@ -1441,7 +1486,12 @@
       ],
       "before": "full",
       "after": "selected 3+0",
-      "afterPackages": ["@beep/infra", "@beep/repo-cli", "@beep/repo-cli-kit"]
+      "selectedPackages": [
+        "@beep/infra",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit"
+      ],
+      "dependentPackages": []
     },
     {
       "sha": "60f2567fb77195df69764c4b426e3f0e9475b988",
@@ -1451,7 +1501,8 @@
       ],
       "before": "full",
       "after": "selected 1+0",
-      "afterPackages": ["@beep/repo-cli"]
+      "selectedPackages": ["@beep/repo-cli"],
+      "dependentPackages": []
     },
     {
       "sha": "524a5fad6fd422919f00d388ecea17ae4d3e501d",
@@ -1461,14 +1512,20 @@
       ],
       "before": "full",
       "after": "selected 3+0",
-      "afterPackages": ["@beep/infra", "@beep/repo-cli", "@beep/repo-cli-kit"]
+      "selectedPackages": [
+        "@beep/infra",
+        "@beep/repo-cli",
+        "@beep/repo-cli-kit"
+      ],
+      "dependentPackages": []
     },
     {
       "sha": "427cd9ae887bda1c3287774b3dd3aa818f8edfbb",
       "mappedFiles": ["standards/jsdoc-documentation.inventory.jsonc"],
       "before": "full",
       "after": "selected 1+0",
-      "afterPackages": ["@beep/repo-cli"]
+      "selectedPackages": ["@beep/repo-cli"],
+      "dependentPackages": []
     },
     {
       "sha": "9e06ce011505c859d69e210a2084fa9cfd27efb8",
@@ -1477,7 +1534,8 @@
       ],
       "before": "full",
       "after": "selected 2+0",
-      "afterPackages": ["@beep/repo-cli", "@beep/repo-cli-kit"]
+      "selectedPackages": ["@beep/repo-cli", "@beep/repo-cli-kit"],
+      "dependentPackages": []
     },
     {
       "sha": "6893291966e4bd0485477c7556f6ef2eed5988aa",
@@ -1486,7 +1544,8 @@
       ],
       "before": "full",
       "after": "selected 1+0",
-      "afterPackages": ["@beep/repo-cli"]
+      "selectedPackages": ["@beep/repo-cli"],
+      "dependentPackages": []
     },
     {
       "sha": "2bcb2b687560d6f364a297696a88a7fe4798f95b",
@@ -1496,7 +1555,8 @@
       ],
       "before": "full",
       "after": "selected 1+0",
-      "afterPackages": ["@beep/repo-cli"]
+      "selectedPackages": ["@beep/repo-cli"],
+      "dependentPackages": []
     },
     {
       "sha": "0e25603ed6fea4757f9368bcf25f149bb784a8fc",
@@ -1505,21 +1565,24 @@
       ],
       "before": "full",
       "after": "selected 2+0",
-      "afterPackages": ["@beep/repo-cli", "@beep/repo-cli-kit"]
+      "selectedPackages": ["@beep/repo-cli", "@beep/repo-cli-kit"],
+      "dependentPackages": []
     },
     {
       "sha": "47fd523d4001fb68b735af3913a2d2d4ce704053",
       "mappedFiles": ["standards/jsdoc-documentation.inventory.jsonc"],
       "before": "full",
       "after": "selected 2+0",
-      "afterPackages": ["@beep/repo-cli", "@beep/repo-cli-kit"]
+      "selectedPackages": ["@beep/repo-cli", "@beep/repo-cli-kit"],
+      "dependentPackages": []
     },
     {
       "sha": "322993072aac253d5034067ead66214e841c5a66",
       "mappedFiles": ["standards/jsdoc-documentation.inventory.jsonc"],
       "before": "full",
       "after": "selected 1+0",
-      "afterPackages": ["@beep/repo-cli"]
+      "selectedPackages": ["@beep/repo-cli"],
+      "dependentPackages": []
     },
     {
       "sha": "8f19a8ad84a531ee4073d8521c51d37776aa2d2d",
@@ -1529,7 +1592,7 @@
       ],
       "before": "full",
       "after": "selected 84+61",
-      "afterPackages": [
+      "selectedPackages": [
         "@beep/agents-client",
         "@beep/agents-domain",
         "@beep/agents-server",
@@ -1613,7 +1676,9 @@
         "@beep/workspace-domain",
         "@beep/workspace-server",
         "@beep/workspace-tables",
-        "@beep/workspace-use-cases",
+        "@beep/workspace-use-cases"
+      ],
+      "dependentPackages": [
         "@beep/agents-client",
         "@beep/agents-domain",
         "@beep/agents-server",
@@ -1682,7 +1747,7 @@
       "mappedFiles": ["standards/jsdoc-documentation.inventory.jsonc"],
       "before": "full",
       "after": "selected 72+66",
-      "afterPackages": [
+      "selectedPackages": [
         "@beep/agent-memory-store",
         "@beep/api-docs",
         "@beep/db-admin",
@@ -1754,7 +1819,9 @@
         "@beep/tesseract",
         "@beep/tika",
         "@beep/wink",
-        "@beep/workspace-server",
+        "@beep/workspace-server"
+      ],
+      "dependentPackages": [
         "@beep/agent-memory-store",
         "@beep/api-docs",
         "@beep/db-admin",
@@ -1828,14 +1895,15 @@
       "mappedFiles": ["standards/jsdoc-documentation.inventory.jsonc"],
       "before": "full",
       "after": "selected 1+0",
-      "afterPackages": ["@beep/repo-cli"]
+      "selectedPackages": ["@beep/repo-cli"],
+      "dependentPackages": []
     },
     {
       "sha": "b3c3c1c0f410f7a63d57b0efea181ca4f9b910bf",
       "mappedFiles": ["standards/jsdoc-documentation.inventory.jsonc"],
       "before": "full",
       "after": "selected 53+51",
-      "afterPackages": [
+      "selectedPackages": [
         "@beep/agents-client",
         "@beep/agents-domain",
         "@beep/agents-server",
@@ -1888,7 +1956,9 @@
         "@beep/workspace-domain",
         "@beep/workspace-server",
         "@beep/workspace-tables",
-        "@beep/workspace-use-cases",
+        "@beep/workspace-use-cases"
+      ],
+      "dependentPackages": [
         "@beep/agents-client",
         "@beep/agents-domain",
         "@beep/agents-server",
@@ -1947,21 +2017,23 @@
       "mappedFiles": ["standards/jsdoc-documentation.inventory.jsonc"],
       "before": "full",
       "after": "selected 2+0",
-      "afterPackages": ["@beep/ontology", "@beep/repo-cli"]
+      "selectedPackages": ["@beep/ontology", "@beep/repo-cli"],
+      "dependentPackages": []
     },
     {
       "sha": "f2930e52eec31bff03c93d8a47f26e3fc3006cbc",
       "mappedFiles": ["standards/jsdoc-documentation.inventory.jsonc"],
       "before": "full",
       "after": "selected 2+0",
-      "afterPackages": ["@beep/repo-cli", "@beep/skill-contract"]
+      "selectedPackages": ["@beep/repo-cli", "@beep/skill-contract"],
+      "dependentPackages": []
     },
     {
       "sha": "7743f94153a46de648f52badaf2840ab774ce9ae",
       "mappedFiles": ["standards/jsdoc-documentation.inventory.jsonc"],
       "before": "full",
       "after": "selected 52+50",
-      "afterPackages": [
+      "selectedPackages": [
         "@beep/agents-client",
         "@beep/agents-domain",
         "@beep/agents-server",
@@ -2013,7 +2085,9 @@
         "@beep/workspace-domain",
         "@beep/workspace-server",
         "@beep/workspace-tables",
-        "@beep/workspace-use-cases",
+        "@beep/workspace-use-cases"
+      ],
+      "dependentPackages": [
         "@beep/agents-client",
         "@beep/agents-domain",
         "@beep/agents-server",
@@ -2071,7 +2145,7 @@
       "mappedFiles": ["standards/jsdoc-documentation.inventory.jsonc"],
       "before": "full",
       "after": "selected 60+48",
-      "afterPackages": [
+      "selectedPackages": [
         "@beep/agents-client",
         "@beep/agents-server",
         "@beep/alchemy-postgres",
@@ -2131,7 +2205,9 @@
         "@beep/technical-drawing",
         "@beep/uspto-mcp",
         "@beep/wink",
-        "@beep/workspace-server",
+        "@beep/workspace-server"
+      ],
+      "dependentPackages": [
         "@beep/agents-client",
         "@beep/agents-server",
         "@beep/alchemy-postgres",
@@ -2187,7 +2263,7 @@
       "mappedFiles": ["standards/jsdoc-documentation.inventory.jsonc"],
       "before": "full",
       "after": "selected 192+190",
-      "afterPackages": [
+      "selectedPackages": [
         "@beep/acp",
         "@beep/agent-memory-store",
         "@beep/agents-client",
@@ -2379,7 +2455,9 @@
         "@beep/workspace-use-cases",
         "@beep/xdg",
         "@beep/xstate",
-        "@beep/yaml",
+        "@beep/yaml"
+      ],
+      "dependentPackages": [
         "@beep/acp",
         "@beep/agent-memory-store",
         "@beep/agents-client",

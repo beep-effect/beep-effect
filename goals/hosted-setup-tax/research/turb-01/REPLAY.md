@@ -38,9 +38,12 @@ bun goals/hosted-setup-tax/ops/turb-01-replay.ts --out goals/hosted-setup-tax/re
 The 67 commits whose only full trigger was a mapped file, by mapped file (a commit can count twice):
 instrumentation catalog 43, JSDoc inventory 31, schema-first inventory 9, cache-qualification baseline 4.
 The policy fingerprint and `fallow.boundaries.generated.jsonc` were never the only full trigger in this
-window; their rows hold for the commits where they are. Median selection after the shrink is 2 packages
-(40 of the 67 select at most 2); the widest is a repo-utils catalog regeneration at 392 owners and
-dependents, where the commit's own source changes, not the row, set the scope.
+window; their rows hold for the commits where they are. The receipt lists each shrunk commit's
+`selectedPackages` and `dependentPackages` as the planner emits them. In 25 commits a directly changed owner
+is also a dependent of another changed seed, so it appears in both lists; consumers take their union
+(`CoverageRegression.ts`). Counted as unique packages, the median shrunk commit selects 2 (40 of the 67
+select at most 2). The widest is a repo-utils catalog regeneration at 197 packages, where the commit's own
+source changes, not the row, set the scope.
 
 ## Caveats
 

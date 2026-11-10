@@ -95,7 +95,8 @@ const changed: Array<{
   readonly mappedFiles: ReadonlyArray<string>;
   readonly before: string;
   readonly after: string;
-  readonly afterPackages: ReadonlyArray<string>;
+  readonly selectedPackages: ReadonlyArray<string>;
+  readonly dependentPackages: ReadonlyArray<string>;
 }> = [];
 const violations: Array<{ readonly sha: string; readonly reason: string }> = [];
 let fullBefore = 0;
@@ -134,7 +135,8 @@ for (const { sha, files } of corpus) {
     mappedFiles,
     before: describeScope(before),
     after: describeScope(after),
-    afterPackages: after._tag === "selected" ? [...after.packageNames, ...after.dependentPackageNames] : [],
+    selectedPackages: after._tag === "selected" ? after.packageNames : [],
+    dependentPackages: after._tag === "selected" ? after.dependentPackageNames : [],
   });
 }
 
