@@ -1,4 +1,5 @@
 import { identity } from "effect/Function";
+import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -111,16 +112,31 @@ export const scriptedFetch = (replies: ReadonlyArray<Reply>): ScriptedFetch => {
 /** A `Link` header pointing at the next page of the same route. */
 export const linkNext = (url: string): Record<string, string> => ({ link: `<${url}>; rel="next"` });
 
-/** GitHub's rate-limit header triple. */
+/**
+ * GitHub's rate-limit header triple, plus `x-ratelimit-used` and
+ * `x-ratelimit-resource` when given.
+ *
+ * `used` also accepts a snapshot's `Option`, so a `RateLimitSnapshot` can be
+ * passed back in to reproduce the headers it was parsed from.
+ */
 export const rateLimitHeaders = (options: {
   remaining: number;
   limit?: number;
   resetEpochSeconds?: number;
-}): Record<string, string> => ({
-  "x-ratelimit-remaining": String(options.remaining),
-  "x-ratelimit-limit": String(options.limit ?? 5000),
-  "x-ratelimit-reset": String(options.resetEpochSeconds ?? 1_700_000_000),
-});
+  used?: number | O.Option<number>;
+  resource?: string;
+}): Record<string, string> => {
+  const used = O.isOption(options.used) ? O.getOrUndefined(options.used) : options.used;
+  return {
+    "x-ratelimit-remaining": String(options.remaining),
+    "x-ratelimit-limit": String(options.limit ?? 5000),
+    "x-ratelimit-reset": String(options.resetEpochSeconds ?? 1_700_000_000),
+    ...(used === undefined ? {} : { "x-ratelimit-used": String(used) }),
+    ...(options.resource === undefined || options.resource === "unknown"
+      ? {}
+      : { "x-ratelimit-resource": options.resource }),
+  };
+};
 
 /** The account projection GitHub embeds as a repository owner or user. */
 const simpleUserFixture = () => ({

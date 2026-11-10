@@ -1,19 +1,23 @@
 import { GitHubError } from "@beep/github/GitHubError";
 import { GitHubGraphQLError } from "@beep/github/GraphQL";
 import { makeTransport } from "@beep/github/internal/octokit";
-import { RateLimitSnapshot, RetryPolicy } from "@beep/github/Resilience";
+import { RateLimitSink, RateLimitSnapshot, RetryPolicy } from "@beep/github/Resilience";
 import { assert, describe, it } from "@effect/vitest";
 import { assertFailure, assertNone, assertSome } from "@effect/vitest/utils";
 import { Octokit } from "@octokit/core";
 import * as A from "effect/Array";
+import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as TestClock from "effect/testing/TestClock";
 import { linkNext, rateLimitHeaders, scriptedFetch } from "./support/fixtures.ts";
-import type { Transport } from "@beep/github/internal/octokit";
+import type { Transport, TransportOptions } from "@beep/github/internal/octokit";
+import type { RateLimitObservation, RateLimitSinkShape } from "@beep/github/Resilience";
 import type { OctokitResponse } from "@octokit/types";
 import type { Reply } from "./support/fixtures.ts";
 
@@ -144,7 +148,10 @@ describe("transport thrown headers and classification", () => {
       assert.strictEqual(error.errors[0]?.message, "missing");
       assert.isDefined(error.cause);
       const snapshot = yield* transport.rateLimit;
-      assertSome(snapshot, RateLimitSnapshot.make({ remaining: 12, limit: 5000, resetEpochSeconds: 1_700_000_090 }));
+      assertSome(
+        snapshot,
+        RateLimitSnapshot.make({ remaining: 12, limit: 5000, resetEpochSeconds: 1_700_000_090, resource: "graphql" })
+      );
       assert.strictEqual(script.count(), 1);
     })
   );
@@ -498,6 +505,309 @@ describe("transport write retry safety", () => {
       const transport = yield* makeTransport({ retry: twoRetries, fetch: script.fetch });
       yield* transport.graphql("read", "query { viewer { login } }", {});
       assert.strictEqual(script.count(), 2);
+    })
+  );
+});
+
+/** A transport built under a sink that keeps every observation, in order. */
+const observing = Effect.fnUntraced(function* (options: TransportOptions.Encoded) {
+  const seen = yield* Ref.make<ReadonlyArray<RateLimitObservation>>([]);
+  const sink: RateLimitSinkShape = { record: (observation) => Ref.update(seen, A.append(observation)) };
+  const transport = yield* makeTransport(options).pipe(Effect.provideService(RateLimitSink, sink));
+  return { transport, observations: Ref.get(seen) };
+});
+
+const TEST_TOKEN = Redacted.make("test-token");
+const VIEWER = "query { viewer { login } }";
+
+describe("transport rate-limit observations", () => {
+  it.effect("emits one observation for a REST success with resource, used, credential and label", () =>
+    Effect.gen(function* () {
+      const script = scriptedFetch([
+        { status: 200, body: {}, headers: rateLimitHeaders({ remaining: 4_990, used: 10, resource: "core" }) },
+      ]);
+      const { transport, observations } = yield* observing({
+        retry: RetryPolicy.none,
+        fetch: script.fetch,
+        token: TEST_TOKEN,
+        budgetLabel: "user:octocat",
+      });
+      yield* transport.request("GET /answer", "GET /answer", {});
+      const [observation, ...rest] = yield* observations;
+      assert.lengthOf(rest, 0);
+      assert.isDefined(observation);
+      assert.strictEqual(observation?.snapshot.resource, "core");
+      assertSome(observation?.snapshot.used ?? O.none(), 10);
+      assert.strictEqual(observation?.snapshot.remaining, 4_990);
+      assert.strictEqual(observation?.status, 200);
+      assert.strictEqual(observation?.outcome, "ok");
+      assert.strictEqual(observation?.kind, "rest");
+      assert.strictEqual(observation?.credential, "token");
+      assert.strictEqual(observation?.operation, "GET /answer");
+      assertSome(observation?.budgetLabel ?? O.none(), "user:octocat");
+    })
+  );
+
+  it.effect("observes a GraphQL success as the graphql bucket without the header, through options.fetch", () =>
+    Effect.gen(function* () {
+      const script = scriptedFetch([
+        {
+          status: 200,
+          body: { data: { viewer: { login: "octocat" } } },
+          headers: rateLimitHeaders({ remaining: 4_999 }),
+        },
+      ]);
+      const { transport, observations } = yield* observing({ retry: RetryPolicy.none, fetch: script.fetch });
+      const data = yield* transport.graphql("viewer", VIEWER, {});
+      assert.deepStrictEqual(data, { viewer: { login: "octocat" } });
+      const seen = yield* observations;
+      assert.lengthOf(seen, 1);
+      assert.strictEqual(seen[0]?.snapshot.resource, "graphql");
+      assert.strictEqual(seen[0]?.kind, "graphql");
+      assert.strictEqual(seen[0]?.status, 200);
+      assert.strictEqual(seen[0]?.outcome, "ok");
+      assert.strictEqual(seen[0]?.operation, "viewer");
+      assertNone(seen[0]?.budgetLabel ?? O.some("unexpected"));
+      // The per-attempt fetch wraps the configured one rather than bypassing it.
+      assert.strictEqual(script.count(), 1);
+      const rateLimit = yield* transport.rateLimit;
+      assert.deepStrictEqual(rateLimit, O.fromUndefinedOr(seen[0]?.snapshot));
+    })
+  );
+
+  it.effect("labels a GraphQL 200 RATE_LIMITED entry rate-limited with status 200", () =>
+    Effect.gen(function* () {
+      const script = scriptedFetch([
+        {
+          status: 200,
+          body: { data: null, errors: [{ type: "RATE_LIMITED", message: "API rate limit exceeded" }] },
+          headers: rateLimitHeaders({ remaining: 0, resource: "graphql" }),
+        },
+      ]);
+      const { transport, observations } = yield* observing({ retry: RetryPolicy.none, fetch: script.fetch });
+      const error = yield* transport.graphql("viewer", VIEWER, {}).pipe(Effect.flip, Effect.orDie);
+      assert.strictEqual(error.kind, "rateLimited");
+      const seen = yield* observations;
+      assert.lengthOf(seen, 1);
+      assert.strictEqual(seen[0]?.outcome, "rate-limited");
+      assert.strictEqual(seen[0]?.status, 200);
+      assert.strictEqual(seen[0]?.snapshot.resource, "graphql");
+    })
+  );
+
+  it.effect("labels a GraphQL 200 secondary-rate-limit message secondary-limited, leaving the error kind alone", () =>
+    Effect.gen(function* () {
+      const script = scriptedFetch([
+        {
+          status: 200,
+          body: { data: null, errors: [{ message: "You have exceeded a secondary rate limit. Please wait." }] },
+          headers: rateLimitHeaders({ remaining: 4_000 }),
+        },
+      ]);
+      const { transport, observations } = yield* observing({ retry: RetryPolicy.none, fetch: script.fetch });
+      const error = yield* transport.graphql("viewer", VIEWER, {}).pipe(Effect.flip, Effect.orDie);
+      assert.strictEqual(error.kind, "rejected");
+      const seen = yield* observations;
+      assert.strictEqual(seen[0]?.outcome, "secondary-limited");
+      assert.strictEqual(seen[0]?.status, 200);
+    })
+  );
+
+  const classification: ReadonlyArray<
+    readonly [string, number, Record<string, string>, string, RateLimitObservation["outcome"]]
+  > = [
+    ["403 with an empty bucket", 403, {}, "API rate limit exceeded", "rate-limited"],
+    ["429 with an empty bucket", 429, {}, "API rate limit exceeded", "rate-limited"],
+    ["429 with budget left", 429, { "x-ratelimit-remaining": "5" }, "slow down", "secondary-limited"],
+    ["403 with retry-after", 403, { "x-ratelimit-remaining": "5", "retry-after": "1" }, "slow", "secondary-limited"],
+    [
+      "403 saying secondary rate limit",
+      403,
+      { "x-ratelimit-remaining": "5" },
+      "You have exceeded a secondary rate limit",
+      "secondary-limited",
+    ],
+    ["any other 403", 403, { "x-ratelimit-remaining": "5" }, "Resource not accessible by integration", "error"],
+    ["a 304", 304, { "x-ratelimit-remaining": "5" }, "", "not-modified"],
+  ];
+  for (const [name, status, extra, message, outcome] of classification) {
+    it.effect(`classifies ${name} as ${outcome}`, () =>
+      Effect.gen(function* () {
+        const headers = { ...rateLimitHeaders({ remaining: 0, resource: "core" }), ...extra };
+        const script = scriptedFetch([{ status, body: status === 304 ? undefined : { message }, headers }]);
+        const { transport, observations } = yield* observing({ retry: RetryPolicy.none, fetch: script.fetch });
+        yield* transport.request("GET /answer", "GET /answer", {}).pipe(Effect.flip);
+        const seen = yield* observations;
+        assert.lengthOf(seen, 1);
+        assert.strictEqual(seen[0]?.outcome, outcome);
+        assert.strictEqual(seen[0]?.status, status);
+      })
+    );
+  }
+
+  it.effect("records every retry attempt", () =>
+    Effect.gen(function* () {
+      const retry = RetryPolicy.make({
+        ...RetryPolicy.none,
+        maxRetries: 2,
+        baseDelay: Duration.zero,
+        maxDelay: Duration.zero,
+      });
+      const script = scriptedFetch([
+        { status: 502, body: { message: "Bad Gateway" }, headers: rateLimitHeaders({ remaining: 10 }) },
+        { status: 200, body: {}, headers: rateLimitHeaders({ remaining: 9 }) },
+      ]);
+      const { transport, observations } = yield* observing({ retry, fetch: script.fetch });
+      yield* transport.request("GET /answer", "GET /answer", {});
+      const seen = yield* observations;
+      assert.deepStrictEqual(
+        A.map(seen, (observation) => [observation.status, observation.outcome, observation.snapshot.remaining]),
+        [
+          [502, "error", 10],
+          [200, "ok", 9],
+        ]
+      );
+    })
+  );
+
+  it.effect("records every page", () =>
+    Effect.gen(function* () {
+      const script = scriptedFetch([
+        {
+          status: 200,
+          body: [{ id: 1 }],
+          headers: { ...rateLimitHeaders({ remaining: 8 }), ...linkNext("https://api.github.com/answers?page=2") },
+        },
+        { status: 200, body: [{ id: 2 }], headers: rateLimitHeaders({ remaining: 7 }) },
+      ]);
+      const { transport, observations } = yield* observing({ retry: RetryPolicy.none, fetch: script.fetch });
+      const source = transport.pageSource<{ readonly id: number }>("pages", "GET /answers", {});
+      yield* source.next;
+      yield* source.next;
+      const exhausted = yield* source.next;
+      assertNone(exhausted);
+      const seen = yield* observations;
+      assert.deepStrictEqual(
+        A.map(seen, (observation) => [observation.kind, observation.operation, observation.snapshot.remaining]),
+        [
+          ["rest", "pages", 8],
+          ["rest", "pages", 7],
+        ]
+      );
+    })
+  );
+
+  for (const [name, sink] of [
+    ["dies", { record: () => Effect.die("sink defect") }],
+    [
+      "throws",
+      {
+        record: () =>
+          Effect.sync(() => {
+            throw new Error("sink threw");
+          }),
+      },
+    ],
+  ] as const) {
+    it.effect(`leaves the request result unchanged when the sink ${name}`, () =>
+      Effect.gen(function* () {
+        const script = scriptedFetch([
+          { status: 200, body: { answer: 42 }, headers: rateLimitHeaders({ remaining: 3 }) },
+        ]);
+        const transport = yield* makeTransport({ retry: RetryPolicy.none, fetch: script.fetch }).pipe(
+          Effect.provideService(RateLimitSink, sink)
+        );
+        const response = yield* transport.request<{ readonly answer: number }>("answer", "GET /answer", {});
+        assert.deepStrictEqual(response.data, { answer: 42 });
+        const rateLimit = yield* transport.rateLimit;
+        assert.strictEqual(O.getOrThrow(rateLimit).remaining, 3);
+      })
+    );
+  }
+
+  it.effect("bounds a slow sink to its timeout", () =>
+    Effect.gen(function* () {
+      const started = yield* Deferred.make<void>();
+      const sink: RateLimitSinkShape = {
+        record: () => Deferred.succeed(started, undefined).pipe(Effect.andThen(Effect.sleep(Duration.seconds(1)))),
+      };
+      const script = scriptedFetch([
+        { status: 200, body: { answer: 42 }, headers: rateLimitHeaders({ remaining: 3 }) },
+      ]);
+      const transport = yield* makeTransport({ retry: RetryPolicy.none, fetch: script.fetch }).pipe(
+        Effect.provideService(RateLimitSink, sink)
+      );
+      const fiber = yield* Effect.forkChild(
+        transport.request<{ readonly answer: number }>("answer", "GET /answer", {})
+      );
+      yield* Deferred.await(started);
+      yield* TestClock.adjust(Duration.millis(300));
+      const response = yield* Fiber.join(fiber);
+      assert.deepStrictEqual(response.data, { answer: 42 });
+    })
+  );
+
+  it.effect("keeps a snapshot whose resource it does not recognise, as unknown", () =>
+    Effect.gen(function* () {
+      const script = scriptedFetch([
+        {
+          status: 200,
+          body: {},
+          headers: { ...rateLimitHeaders({ remaining: 3 }), "x-ratelimit-resource": "brand_new" },
+        },
+      ]);
+      const { transport, observations } = yield* observing({ retry: RetryPolicy.none, fetch: script.fetch });
+      yield* transport.request("GET /answer", "GET /answer", {});
+      const seen = yield* observations;
+      assert.strictEqual(seen[0]?.snapshot.resource, "unknown");
+      const rateLimit = yield* transport.rateLimit;
+      assert.strictEqual(O.getOrThrow(rateLimit).resource, "unknown");
+    })
+  );
+
+  for (const [name, token] of [
+    ["no token", undefined],
+    ["an empty token", Redacted.make("")],
+  ] as const) {
+    it.effect(`reports ${name} as unauthenticated`, () =>
+      Effect.gen(function* () {
+        const script = scriptedFetch([
+          { status: 200, body: {}, headers: rateLimitHeaders({ remaining: 59, limit: 60 }) },
+        ]);
+        const { transport, observations } = yield* observing({
+          retry: RetryPolicy.none,
+          fetch: script.fetch,
+          ...(token === undefined ? {} : { token }),
+        });
+        yield* transport.request("GET /answer", "GET /answer", {});
+        const seen = yield* observations;
+        assert.strictEqual(seen[0]?.credential, "unauthenticated");
+      })
+    );
+  }
+
+  it.effect("keeps an explicit credential over the derived one", () =>
+    Effect.gen(function* () {
+      const script = scriptedFetch([{ status: 200, body: {}, headers: rateLimitHeaders({ remaining: 3 }) }]);
+      const { transport, observations } = yield* observing({
+        retry: RetryPolicy.none,
+        fetch: script.fetch,
+        token: TEST_TOKEN,
+        credential: "app-jwt",
+      });
+      yield* transport.request("GET /app", "GET /app", {});
+      const seen = yield* observations;
+      assert.strictEqual(seen[0]?.credential, "app-jwt");
+    })
+  );
+
+  it.effect("records nothing when a response carries no rate-limit headers", () =>
+    Effect.gen(function* () {
+      const script = scriptedFetch([{ status: 200, body: {} }]);
+      const { transport, observations } = yield* observing({ retry: RetryPolicy.none, fetch: script.fetch });
+      yield* transport.request("GET /answer", "GET /answer", {});
+      const seen = yield* observations;
+      assert.lengthOf(seen, 0);
     })
   );
 });

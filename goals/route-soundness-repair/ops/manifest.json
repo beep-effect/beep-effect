@@ -50,12 +50,12 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",
@@ -85,5 +85,5 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Authored 2026-11-09 from explorations/ten-minute-certainty, not started: the first wave (ROUT-03 slice 1, COVE-02, YEET-08 slice 1) is startable now; ROUT-03 slice 1 must land by 2026-11-16 or the #2999 widening is rolled back. ROUT-02 (the D8 docs-policy job) waits on heavy-pool-diet's HOST-06, PERIH-10 on its PERIH-11 pin bumps, ROUT-07 on certainty-scorecard's ROUT-05 partition mapping, and YEET-08 slices 2-3 on local-proof-under-ten's SCHE-02."
+  "statusNote": "P0 complete (lever status re-checked at origin/main 5e09d90a6da); P1 in progress: ROUT-03 slice 1 (goal-data consumer census, consumer rows in codeRoots) landed in #3064, ahead of the 2026-11-16 D8 deadline; COVE-02 and YEET-08 slice 1 complete the first wave. The operator kept the D8 docs-policy job for ROUT-02 on 2026-11-09, closing the Repo Sanity hosting proposal; ROUT-02 still waits on heavy-pool-diet's HOST-06, PERIH-10 on its PERIH-11 pin bumps, ROUT-07 on certainty-scorecard's ROUT-05 partition mapping, and YEET-08 slices 2-3 on local-proof-under-ten's SCHE-02."
 }

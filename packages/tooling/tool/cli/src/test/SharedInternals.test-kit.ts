@@ -26,5 +26,6 @@ export * from "../internal/github/index.ts";
 export * from "../internal/quality/SchemaFirstPolicyFinding.ts";
 export * from "../internal/quality/TestTypecheckCoverage.ts";
 export * from "../internal/repo-run/ChangedFiles.ts";
+export * from "../internal/repo-run/GhSpawnSink.ts";
 export * from "../internal/state/JsonLinesStore.ts";
 export * from "../internal/state/WorkstationState.ts";

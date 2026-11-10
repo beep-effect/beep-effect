@@ -2,14 +2,14 @@
 
 ## Status
 
-Status: `pending`
+Status: `active` (P0 and P1 in progress; TURB-01 slice 1 in review)
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Re-check lever status against `origin/main`, rebuild the TURB-01 replay corpus in-repo, take the scorecard re-baseline once certainty-scorecard reports runner-minutes per green code head. | Lever table in SPEC current; re-baseline recorded as a checkpoint. |
-| P1 Implement | pending | Land the slices below in order, each behind its admission gate, three open PRs at most. | Every slice merged or dropped by a decision file. |
+| P0 Research | in-progress | Re-check lever status against `origin/main`, rebuild the TURB-01 replay corpus in-repo, take the scorecard re-baseline once certainty-scorecard reports runner-minutes per green code head. | Lever table in SPEC current; re-baseline recorded as a checkpoint. |
+| P1 Implement | in-progress | Land the slices below in order, each behind its admission gate, three open PRs at most. | Every slice merged or dropped by a decision file. |
 | P2 Verify | pending | Read a 7-day scorecard cohort of green code heads after the last slice; record parity ledgers under `history/`. | p50 at most 244 runner-min with each of this goal's levers' minutes attributed once in dedup order (minutes from #3028, #3029, #3030, #3040, #3043, #3046 and sibling goals reported beside, never counted), all 15 required contexts present, ledgers green. |
 | P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
@@ -38,13 +38,14 @@ the PR body and a decision file. At most three of these are open at once.
    `GithubChecks.ts` lane stays: it is the only local graph check). Gate: planted shadcn violation red on PR
    and push and green when removed, the one-owner unit test, no masking by an earlier Repo Sanity failure, a
    plan-label test showing one `changeset-graph` execution, a corrupt `.changeset` fixture still red. Touches
-   `RouteFootprints.ts` and `WaveOrder.ts` lane rows. Merges `main` after #3041 (`Tasks.ts`, `quality-tasks.test.ts`)
-   and after any heavy-pool-diet change to `policyStateTasks`. Revert: restore the job and lane
+   `RouteFootprints.ts` and `WaveOrder.ts` lane rows. Merges `main` after any heavy-pool-diet change to
+   `policyStateTasks`. Revert: restore the job and lane
    arm.
 3. **feat(fc-runs): oracle-checked property census and drift join** (TEST-01, the tripwire) [M]. An oracle
    wrapper on `effect/Arbitrary` and the `@effect/vitest` prop registration through the Vitest setup records
    (file, test, runs, seed) with per-file collection and hook time; old and new logs must be identical in
-   (file, test, runs, seed) on 3 heads; fixtures for module-scope
+   (file, test, runs, seed) on 3 heads, joined across the four Property Laws slices of #3056 (union equals the
+   full sweep, no test in two slices, the repo-cli Vitest shard boundary included); fixtures for module-scope
    `fcRuns`, props without `fcRuns`, renamed tests, and a `passWithNoTests` override. It checks the #3030
    selection in `packages/tooling/test-kit/fc-runs/src/PropertySelection.ts`; it does not change floors or
    seeds. A global input only if it edits root `vitest.shared.ts` or `vitest.config.ts`; plan for that.
@@ -151,6 +152,12 @@ git diff --check -- goals/hosted-setup-tax
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug hosted-setup-tax`; add a `kind: checkpoint` file there, never edit this block._
 
-_No checkpoint files yet._
+### P0 lever re-check at 5e09d90a6da; TURB-01 slice 1 implemented, 2026-11-10
+
+Lever table re-checked against origin/main 5e09d90a6da: #3041 merged (no open PR on shared files remains), #3056 split Property Laws into four slices (recorded as a decision; TEST-01 row corrected). TURB-01's cited lines (`CoverageScope.ts:76-98`, `:772`) were still accurate before this slice. TURB-01 slice 1 lands in this PR: owner rows for six generated standards paths, the reader scan and its live drift check, and an in-repo first-parent replay (67 of 727 commits shrink, 0 violations). P0's scorecard re-baseline still waits on certainty-scorecard. Next startable slices: 2 (PERIH-02 and PERIL-04) and 3 (TEST-01 oracle census); slice 4 follows slice 3.
+
+Lane feat/turb-01-standards-coverage-owners
+
+Reverse: Revert this PR; the packet returns to the c90929b1ff1 lever check.
 
 <!-- beep:decisions:end -->

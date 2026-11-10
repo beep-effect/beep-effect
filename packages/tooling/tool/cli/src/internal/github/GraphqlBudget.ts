@@ -16,6 +16,12 @@
  * remaining points as zero; REST misreports the remaining GraphQL points, so
  * the probe is the truth whenever it answers.
  *
+ * With a GitHub budget ledger bound, the guard first consults the ledger's
+ * newest `graphql` reading for the client's identity and skips the probe when
+ * that reading came from GraphQL response headers, is at most 60 s old and its
+ * reset is still ahead. A sample reading never stands in for the probe, for
+ * the same reason the REST fallback reports zero.
+ *
  * @internal
  * @packageDocumentation
  * @since 0.0.0
@@ -31,9 +37,14 @@ import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { graphqlErrorToGitHubError } from "./GithubGraphql.ts";
+import { GithubBudgetIdentity } from "./GithubIdentity.ts";
+import { BucketKey } from "./GithubLedger.schemas.ts";
+import { GithubBudgetLedger } from "./GithubLedger.service.ts";
 import type { GitHubError } from "@beep/github/GitHubError";
+import type { BucketReading } from "./GithubLedger.schemas.ts";
 
 const $I = $RepoCliId.create("internal/github/GraphqlBudget");
 
@@ -43,7 +54,7 @@ const $I = $RepoCliId.create("internal/github/GraphqlBudget");
  * @category models
  * @since 0.0.0
  */
-export const GraphqlBudgetSource = LiteralKit(["graphql-probe", "rest-fallback"]).pipe(
+export const GraphqlBudgetSource = LiteralKit(["graphql-probe", "rest-fallback", "ledger"]).pipe(
   $I.annoteSchema("GraphqlBudgetSource", { description: "Where a GraphQL budget snapshot came from." })
 );
 
@@ -272,8 +283,33 @@ export interface GraphqlBudgetShape {
  */
 export class GraphqlBudget extends Context.Service<GraphqlBudget, GraphqlBudgetShape>()($I`GraphqlBudget`) {}
 
+const LEDGER_READING_MAX_AGE = Duration.seconds(60);
+
 const makeGraphqlBudget = Effect.gen(function* () {
   const client = yield* GitHubClient;
+  const ledger = yield* Effect.serviceOption(GithubBudgetLedger);
+  const identity = yield* GithubBudgetIdentity;
+
+  // A fresh GraphQL-header reading of this identity's bucket, from memory or
+  // latest/transport-*.json; never a REST sample, which misreports GraphQL.
+  const fromLedger: Effect.Effect<O.Option<GraphqlBudgetSnapshot>> = Effect.gen(function* () {
+    if (O.isNone(ledger) || O.isNone(identity)) return O.none<GraphqlBudgetSnapshot>();
+    const now = yield* DateTime.now;
+    const reading = yield* ledger.value
+      .latest(BucketKey.make({ identity: identity.value, resource: "graphql" }))
+      .pipe(Effect.orElseSucceed(O.none<BucketReading>));
+    return reading.pipe(
+      O.filter(
+        (fresh) =>
+          fresh.basis === "transport" &&
+          Duration.isLessThanOrEqualTo(DateTime.distance(fresh.asOf, now), LEDGER_READING_MAX_AGE) &&
+          DateTime.isGreaterThan(fresh.resetAt, now)
+      ),
+      O.map((fresh) =>
+        GraphqlBudgetSnapshot.make({ remaining: fresh.remaining, resetAt: fresh.resetAt, source: "ledger" })
+      )
+    );
+  });
 
   const restFallback = Effect.suspend(() => client.requestDecoded("GET /rate_limit", {}, RestGraphqlBucket)).pipe(
     Effect.map((wire) =>
@@ -300,10 +336,15 @@ const makeGraphqlBudget = Effect.gen(function* () {
     )
   );
 
+  const budgetRead: Effect.Effect<GraphqlBudgetSnapshot, GitHubError> = Effect.flatMap(
+    fromLedger,
+    O.match({ onNone: () => probe, onSome: Effect.succeed })
+  );
+
   const guard = (operation: string, policy: GraphqlBudgetPolicy) =>
     Effect.fnUntraced(function* <A, E, R>(self: Effect.Effect<A, E, R>) {
       for (let attempt = 0; attempt < 2; attempt++) {
-        const snapshot = yield* probe;
+        const snapshot = yield* budgetRead;
         const decision = decideGraphqlBudget(
           GraphqlBudgetDecisionInput.make({ snapshot, policy, now: yield* DateTime.now })
         );

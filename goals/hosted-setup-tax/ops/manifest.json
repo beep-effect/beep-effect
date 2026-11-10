@@ -34,7 +34,11 @@
     "goals/hosted-setup-tax/GOAL.md",
     "goals/hosted-setup-tax/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/turb-01/REPLAY.md",
+    "research/turb-01/replay-5e09d90a6da.json"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -50,12 +54,12 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",
@@ -85,5 +89,11 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Authored 2026-11-09 from explorations/ten-minute-certainty, not started: startable now are TURB-01 slice 1 (coverage owners for generated standards inventories) and the pure waste removals with no selector change (PERIH-02 one lint:shadcn owner, PERIL-04, PERIH-05 Nix, DEPS-01, PERIH-06 slice 1, the HOST-09 CLI), plus TEST-01's remainder: the oracle census, then the residual file split with its outcome recorded (D26). ROUT-01 landed in #3030 and keeps only its gate and measurement. PERIH-04 waits on route-soundness-repair's PERIH-10 and ROUT-07 and on heavy-pool-diet's PERIH-11; HOST-09's fold and PERIH-06 slice 2 wait on PERIH-11 and PERIH-10; PERIL-01 follows PERIH-04; the acceptance number waits on certainty-scorecard."
+  "statusNote": "Authored 2026-11-09 from explorations/ten-minute-certainty, not started: startable now are TURB-01 slice 1 (coverage owners for generated standards inventories) and the pure waste removals with no selector change (PERIH-02 one lint:shadcn owner, PERIL-04, PERIH-05 Nix, DEPS-01, PERIH-06 slice 1, the HOST-09 CLI), plus TEST-01's remainder: the oracle census, then the residual file split with its outcome recorded (D26). ROUT-01 landed in #3030 and keeps only its gate and measurement. PERIH-04 waits on route-soundness-repair's PERIH-10 and ROUT-07 and on heavy-pool-diet's PERIH-11; HOST-09's fold and PERIH-06 slice 2 wait on PERIH-11 and PERIH-10; PERIL-01 follows PERIH-04; the acceptance number waits on certainty-scorecard.",
+  "opsScripts": [
+    {
+      "path": "ops/turb-01-replay.ts",
+      "purpose": "TURB-01 slice 1 first-parent replay: rebuild the commit corpus from git and prove the generated-standards owner rows shrink only commits whose sole full trigger is a mapped file."
+    }
+  ]
 }
