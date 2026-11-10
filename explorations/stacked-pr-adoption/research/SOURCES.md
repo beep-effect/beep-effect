@@ -89,3 +89,7 @@ to 11-09; `actions/runs/<id>/jobs` for three green `main` runs;
   (pr-topology), `explorations/beep-ci-operational-ontology/DECISIONS.md`
   (Ruling 21).
 - Ledger items: `goals/speed-loop/research/OPPORTUNITIES.md` #22, #62, #80.
+- Stack test record: [`stack-test-2026-11.md`](./stack-test-2026-11.md)
+  (#3049, #3050, #3051; stack #3052).
+- Graduated goal: `goals/yeet-async-merge-and-stacks`, which carries this
+  ledger as its primary source.

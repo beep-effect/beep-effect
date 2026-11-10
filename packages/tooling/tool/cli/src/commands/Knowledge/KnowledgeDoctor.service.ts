@@ -26,6 +26,7 @@ import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
@@ -100,8 +101,12 @@ import {
 import {
   groupKnowledgeDoctorFindings,
   KNOWLEDGE_PATH_REMOVAL_LOG,
+  KNOWLEDGE_REMOVAL_WALK_LOG,
   knowledgeDelegatedRow,
   knowledgePathRemovalsFromLog,
+  knowledgeRemovalCommitsFromLog,
+  knowledgeRemovalTargets,
+  selectKnowledgeRemovalCommits,
 } from "./KnowledgeDoctor.grouping.ts";
 import {
   evaluateKnowledgeLeases,
@@ -125,6 +130,7 @@ import {
   KnowledgeDocumentExtraction,
   KnowledgeEvaluationOutcome,
   KnowledgeHistoricalCitation,
+  KnowledgePathRemovalQuery,
   KnowledgeProducerOutput,
   KnowledgeSpan,
   KnowledgeSpanClass,
@@ -158,6 +164,7 @@ import type {
   KnowledgeEvaluationFailure,
   KnowledgeEvaluatorId,
   KnowledgePathRemoval,
+  KnowledgeRemovalCommit,
   KnowledgeSpanForm,
   KnowledgeWorkspacePackage,
 } from "./KnowledgeDoctor.schemas.ts";
@@ -186,8 +193,13 @@ type KnowledgeTreeEntryIndex = {
  * global flags. `isAncestor` and `atCommit` answer historical-citation questions: whether a cited
  * commit is an ancestor of this tree, and the doctor tree of that commit. `domain` holds the goal
  * packet, workspace package, and skill facts the domain evaluators read, derived from tree bytes.
- * `pathRemovals` is the tree's history of deleted and renamed-away paths, newest first, used only to
- * attribute cause-group roots; it is `O.none()` when history is unavailable and never fails.
+ * `pathRemovals` reads the tree's history of deleted and renamed-away paths, newest first, used only
+ * to attribute cause-group roots; it resolves only the commits its {@link KnowledgePathRemovalQuery}
+ * reads, so a reader passes the targets of the findings it will group. `removedPaths` is every path
+ * that history deleted or renamed away, read without rename detection, which the mint reads to name
+ * retired packages. Both are `O.none()` when history is unavailable and never fail; once one read of
+ * a tree finds its history unavailable, every later read of that tree is `O.none()` too, so every
+ * consumer of one tree sees the same answer.
  *
  * Every field is data or a lookup over data, which is what lets {@link overlayWithout} remove one
  * resolution witness and hand the evaluators an otherwise identical tree.
@@ -205,8 +217,11 @@ export interface KnowledgeDoctorTree extends KnowledgeTreeOracle {
   readonly gitRefNames: HashSet.HashSet<string>;
   readonly globalOptions: ReadonlyArray<KnowledgeStaticCommandFlag>;
   readonly isAncestor: (commit: KnowledgeCommitSha) => Effect.Effect<boolean, KnowledgeOperationalError>;
-  readonly pathRemovals: Effect.Effect<O.Option<ReadonlyArray<KnowledgePathRemoval>>>;
+  readonly pathRemovals: (
+    query: KnowledgePathRemovalQuery
+  ) => Effect.Effect<O.Option<ReadonlyArray<KnowledgePathRemoval>>>;
   readonly producers: ReadonlyArray<KnowledgeProducerOutput>;
+  readonly removedPaths: Effect.Effect<O.Option<ReadonlyArray<string>>>;
 }
 
 /**
@@ -1357,6 +1372,10 @@ const citationAncestry = Effect.fn("KnowledgeDoctor.citationAncestry")(function*
   return HashMap.fromIterable(verdicts);
 });
 
+// The tree's removals for exactly the targets one grouping of these findings looks up.
+const findingRemovals = (tree: KnowledgeDoctorTree, findings: ReadonlyArray<KnowledgeDoctorFinding>) =>
+  tree.pathRemovals(KnowledgePathRemovalQuery.make({ targets: knowledgeRemovalTargets(findings) }));
+
 /**
  * Scans one doctor tree into the read-only report: extraction, classification, evaluation.
  *
@@ -1462,7 +1481,7 @@ export const scanKnowledgeDoctorTree = Effect.fn("KnowledgeDoctor.scanTree")(fun
   );
   const delegated = yield* delegatedFindings(tree);
   const all = A.sort(A.appendAll(owned, delegated), doctorFindingOrder);
-  const removals = yield* tree.pathRemovals;
+  const removals = yield* findingRemovals(tree, all);
   const countOf = (spanClass: KnowledgeSpanClass) =>
     S.Natural.make(O.getOrElse(HashMap.get(counts, spanClass), () => 0));
   return KnowledgeDoctorReport.make({
@@ -1503,7 +1522,10 @@ export interface KnowledgeDoctorMemoryTreeInput {
   readonly globalOptions?: ReadonlyArray<KnowledgeStaticCommandFlag> | undefined;
   /** Doctor trees of historical commits, keyed by commit. */
   readonly history?: Readonly<Record<string, KnowledgeDoctorTree>> | undefined;
-  /** Deleted and renamed-away paths, newest first; `O.none()` simulates unavailable history. */
+  /**
+   * Deleted and renamed-away paths, newest first, whatever the query; `removedPaths` is their paths.
+   * `O.none()` simulates unavailable history.
+   */
   readonly pathRemovals?: O.Option<ReadonlyArray<KnowledgePathRemoval>> | undefined;
   readonly producers?: ReadonlyArray<KnowledgeProducerOutput> | undefined;
 }
@@ -1518,7 +1540,8 @@ const textEncoder = new TextEncoder();
  *
  * Every file is a regular tracked blob. The command surface defaults to none, the global flags to
  * {@link KNOWLEDGE_CLI_GLOBAL_FLAGS}, the producers to {@link KNOWLEDGE_PRODUCER_OUTPUTS}, and the path
- * removals to an available, empty history.
+ * removals to an available, empty history; every removal query returns the configured list, and
+ * `removedPaths` its paths.
  * `atCommit` serves `history` and fails closed for any other commit, like an absent object. The
  * domain facts are derived from `files`, uncached.
  *
@@ -1545,6 +1568,7 @@ export const makeKnowledgeDoctorMemoryTree = (input: KnowledgeDoctorMemoryTreeIn
   );
   const ancestors = HashSet.fromIterable(input.ancestors ?? A.empty());
   const history = HashMap.fromIterable(R.toEntries(input.history ?? {}));
+  const removals = input.pathRemovals ?? O.some(A.empty<KnowledgePathRemoval>());
   const oracle: KnowledgeTreeOracle = {
     treeish: commit,
     commit,
@@ -1567,7 +1591,13 @@ export const makeKnowledgeDoctorMemoryTree = (input: KnowledgeDoctorMemoryTreeIn
     commandTree: Effect.succeed(input.commandTree ?? O.none()),
     globalOptions: input.globalOptions ?? KNOWLEDGE_CLI_GLOBAL_FLAGS,
     isAncestor: (sha) => Effect.succeed(HashSet.has(ancestors, sha)),
-    pathRemovals: Effect.succeed(input.pathRemovals ?? O.some(A.empty())),
+    pathRemovals: () => Effect.succeed(removals),
+    removedPaths: Effect.succeed(
+      O.map(
+        removals,
+        A.map((removal) => removal.path)
+      )
+    ),
     atCommit: (sha) =>
       Effect.fromOption(HashMap.get(history, sha)).pipe(
         Effect.mapError(() => KnowledgeOperationalError.make({ message: `Fixture has no tree for commit ${sha}.` }))
@@ -1600,28 +1630,205 @@ const isAncestorLive = Effect.fn("KnowledgeDoctor.isAncestor")(function* (
     : false;
 });
 
-// The whole-history path-removal log measured 21.3 MB in November 2026, past the kit's default 16 MiB
-// bound, and it walks every commit with rename detection: read it on its own instance with a 64 MiB
-// fail-closed bound and the patient deadline, so it never goes partial.
+// Both history reads run on their own instance with a 64 MiB fail-closed bound and the patient
+// deadline, so neither goes partial. The tree-only walk measured 19.8 MB on this repository in
+// November 2026 (the whole-history rename-detecting log it replaced, 22.4 MB), past the kit's default
+// 16 MiB bound; the rename-detecting resolution prints only its selected commits, at most that much.
 const KNOWLEDGE_HISTORY_GIT_OPTIONS = GitOptions.make({
   maxOutputBytes: 64 * 1024 * 1024,
   timeout: PATIENT_GIT_OPTIONS.timeout,
 });
 
-// The tree's deleted and renamed-away paths, newest first. History is optional evidence for root
-// attribution: a shallow clone or any failed git run (an overflow of the 64 MiB bound included)
-// yields `O.none()`, never a failure.
-const pathRemovalsLive = Effect.fn("KnowledgeDoctor.pathRemovals")(function* (repoRoot: string, treeCommit: string) {
+// The tree-only removal walk, newest first. History is optional evidence: a shallow clone or any
+// failed git run (an overflow of the 64 MiB bound included) yields `O.none()`, never a failure.
+const removalWalkLive = Effect.fn("KnowledgeDoctor.removalWalk")(function* (repoRoot: string, treeCommit: string) {
   const git = yield* Git;
   const shallow = yield* git.isShallow(repoRoot).pipe(Effect.option);
   if (O.getOrElse(shallow, constTrue)) {
-    return O.none<ReadonlyArray<KnowledgePathRemoval>>();
+    return O.none<ReadonlyArray<KnowledgeRemovalCommit>>();
   }
   const history = yield* Git.makeWith(KNOWLEDGE_HISTORY_GIT_OPTIONS);
   return yield* history
-    .log(repoRoot, { ...KNOWLEDGE_PATH_REMOVAL_LOG, revisions: [treeCommit] })
+    .log(repoRoot, { ...KNOWLEDGE_REMOVAL_WALK_LOG, revisions: [treeCommit] })
+    .pipe(Effect.map(knowledgeRemovalCommitsFromLog), Effect.option);
+});
+
+// The rename-detecting removals of the named commits only (`--no-walk`, so git never walks their
+// ancestry), read exactly as the whole-history walk would print them; any failed git run yields
+// `O.none()`.
+const resolveRemovalCommitsLive = Effect.fn("KnowledgeDoctor.resolveRemovalCommits")(function* (
+  repoRoot: string,
+  commits: A.NonEmptyReadonlyArray<KnowledgeCommitSha>
+) {
+  const history = yield* Git.makeWith(KNOWLEDGE_HISTORY_GIT_OPTIONS);
+  return yield* history
+    .log(repoRoot, { ...KNOWLEDGE_PATH_REMOVAL_LOG, revisions: commits, noWalk: true })
     .pipe(Effect.map(knowledgePathRemovalsFromLog), Effect.option);
 });
+
+type KnowledgeRemovalWalk = Effect.Effect<O.Option<ReadonlyArray<KnowledgeRemovalCommit>>>;
+
+type KnowledgeRemovalResolver = (
+  commits: A.NonEmptyReadonlyArray<KnowledgeCommitSha>
+) => Effect.Effect<O.Option<ReadonlyArray<KnowledgePathRemoval>>>;
+
+type KnowledgeRemovalReader = Pick<KnowledgeDoctorTree, "pathRemovals" | "removedPaths">;
+
+// One reader's memory: the removals of every commit it resolved, and the latch a failed resolution
+// sets, after which every read of the reader is `O.none()`.
+type KnowledgeRemovalReaderState = {
+  readonly resolved: MutableHashMap.MutableHashMap<string, ReadonlyArray<KnowledgePathRemoval>>;
+  readonly failed: MutableRef.MutableRef<boolean>;
+};
+
+// Files each resolved removal under its commit, every asked commit included (a commit can resolve to
+// no removal rows).
+const cacheResolved = (
+  state: KnowledgeRemovalReaderState,
+  commits: ReadonlyArray<KnowledgeCommitSha>,
+  removals: ReadonlyArray<KnowledgePathRemoval>
+): void => {
+  const byCommit = MutableHashMap.empty<string, Array<KnowledgePathRemoval>>();
+  for (const removal of removals) {
+    O.match(MutableHashMap.get(byCommit, removal.commit), {
+      onNone: () => MutableHashMap.set(byCommit, removal.commit, [removal]),
+      onSome: (rows) => rows.push(removal),
+    });
+  }
+  for (const commit of commits) {
+    MutableHashMap.set(state.resolved, commit, O.getOrElse(MutableHashMap.get(byCommit, commit), A.empty));
+  }
+};
+
+const readRemovals = Effect.fn("KnowledgeDoctor.pathRemovals")(function* (
+  state: KnowledgeRemovalReaderState,
+  walk: KnowledgeRemovalWalk,
+  resolve: KnowledgeRemovalResolver,
+  query: KnowledgePathRemovalQuery
+) {
+  const history = yield* walk;
+  if (O.isNone(history) || MutableRef.get(state.failed)) {
+    return O.none<ReadonlyArray<KnowledgePathRemoval>>();
+  }
+  const selected = selectKnowledgeRemovalCommits(history.value, query);
+  const missing = A.filter(selected, (commit) => !MutableHashMap.has(state.resolved, commit));
+  if (A.isReadonlyArrayNonEmpty(missing)) {
+    const read = yield* resolve(missing);
+    if (O.isNone(read)) {
+      MutableRef.set(state.failed, true);
+      return O.none<ReadonlyArray<KnowledgePathRemoval>>();
+    }
+    cacheResolved(state, missing, read.value);
+  }
+  return O.some(A.flatMap(selected, (commit) => O.getOrElse(MutableHashMap.get(state.resolved, commit), A.empty)));
+});
+
+const readRemovedPaths = Effect.fn("KnowledgeDoctor.removedPaths")(function* (
+  state: KnowledgeRemovalReaderState,
+  walk: KnowledgeRemovalWalk
+) {
+  const history = yield* walk;
+  return MutableRef.get(state.failed)
+    ? O.none<ReadonlyArray<string>>()
+    : O.map(
+        history,
+        A.flatMap((commit) => commit.paths)
+      );
+});
+
+/**
+ * Builds a doctor tree's `pathRemovals` and `removedPaths` reads from its two history reads.
+ *
+ * **Details**
+ *
+ * `walk` is the tree-only removal walk ({@link KNOWLEDGE_REMOVAL_WALK_LOG}), read once and cached by
+ * the caller; `resolve` reads the rename-detecting removals ({@link KNOWLEDGE_PATH_REMOVAL_LOG}) of the
+ * named commits. Each query resolves only the commits {@link selectKnowledgeRemovalCommits} picks for
+ * it that no earlier query resolved, and returns their removals in walk order, which gives every
+ * query target the attribution the whole-history walk gives it. `removedPaths` is every path of the
+ * walk and resolves nothing.
+ *
+ * **Gotchas**
+ *
+ * An unavailable walk is `O.none()` for every read. A failed resolution is `O.none()` and latches:
+ * every later read of the reader, `removedPaths` included, is `O.none()` and spawns nothing, so the
+ * scan, the check's regroup and the mint of one tree never see different histories.
+ *
+ * **Example** (No history, no removals)
+ *
+ * ```ts
+ * import { KnowledgePathRemovalQuery } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.schemas"
+ * import { makeKnowledgePathRemovalReader } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.service"
+ * import * as Effect from "effect/Effect"
+ * import * as HashSet from "effect/HashSet"
+ * import * as O from "effect/Option"
+ *
+ * const reader = makeKnowledgePathRemovalReader(Effect.succeed(O.none()), () => Effect.succeed(O.none()))
+ * const removals = reader.pathRemovals(KnowledgePathRemovalQuery.make({ targets: HashSet.empty() }))
+ * console.log(O.isNone(Effect.runSync(removals))) // true
+ * ```
+ *
+ * @param walk - The cached tree-only removal walk, newest first.
+ * @param resolve - Reads the rename-detecting removals of the named commits.
+ * @returns The tree's `pathRemovals` and `removedPaths` reads.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const makeKnowledgePathRemovalReader: {
+  (resolve: KnowledgeRemovalResolver): (walk: KnowledgeRemovalWalk) => KnowledgeRemovalReader;
+  (walk: KnowledgeRemovalWalk, resolve: KnowledgeRemovalResolver): KnowledgeRemovalReader;
+} = dual(2, (walk: KnowledgeRemovalWalk, resolve: KnowledgeRemovalResolver): KnowledgeRemovalReader => {
+  const state: KnowledgeRemovalReaderState = {
+    resolved: MutableHashMap.empty(),
+    failed: MutableRef.make(false),
+  };
+  return {
+    pathRemovals: (query) => readRemovals(state, walk, resolve, query),
+    removedPaths: readRemovedPaths(state, walk),
+  };
+});
+
+/**
+ * Builds the live `pathRemovals` and `removedPaths` reads of one commit of a repository.
+ *
+ * **Details**
+ *
+ * The tree-only walk from `treeCommit` runs once, on first use, and is shared by every read; each
+ * query then resolves its own commits through {@link makeKnowledgePathRemovalReader}. A shallow clone
+ * or any failed git run yields `O.none()`, never a failure.
+ *
+ * **Example** (Read is effectful)
+ *
+ * ```ts
+ * import { makeKnowledgeLivePathRemovals } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.service"
+ *
+ * console.log(typeof makeKnowledgeLivePathRemovals) // "function"
+ * ```
+ *
+ * @param repoRoot - The repository whose history is read.
+ * @param treeCommit - The commit the walk starts at.
+ * @returns The tree's `pathRemovals` and `removedPaths` reads.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const makeKnowledgeLivePathRemovals: {
+  (
+    treeCommit: string
+  ): (repoRoot: string) => Effect.Effect<KnowledgeRemovalReader, never, Git | ChildProcessSpawner.ChildProcessSpawner>;
+  (
+    repoRoot: string,
+    treeCommit: string
+  ): Effect.Effect<KnowledgeRemovalReader, never, Git | ChildProcessSpawner.ChildProcessSpawner>;
+} = dual(
+  2,
+  Effect.fnUntraced(function* (repoRoot: string, treeCommit: string) {
+    const runtime = yield* Effect.context<Git | ChildProcessSpawner.ChildProcessSpawner>();
+    const walk = yield* Effect.cached(removalWalkLive(repoRoot, treeCommit).pipe(Effect.provide(runtime)));
+    return makeKnowledgePathRemovalReader(walk, (commits) =>
+      resolveRemovalCommitsLive(repoRoot, commits).pipe(Effect.provide(runtime))
+    );
+  })
+);
 
 type LiveTreeRequirements =
   | SecureRandom.SecureRandom
@@ -1644,9 +1851,7 @@ const liveDoctorTree = Effect.fn("KnowledgeDoctor.liveTree")(function* (
   const runtime = yield* Effect.context<LiveTreeRequirements>();
   const commandTree = yield* Effect.cached(liveCommandTree(materialized).pipe(Effect.provide(runtime)));
   const domain = yield* cacheKnowledgeDoctorDomain(deriveKnowledgeDoctorDomain(materialized.oracle));
-  const pathRemovals = yield* Effect.cached(
-    pathRemovalsLive(materialized.repoRoot, materialized.oracle.commit).pipe(Effect.provide(runtime))
-  );
+  const removals = yield* makeKnowledgeLivePathRemovals(materialized.repoRoot, materialized.oracle.commit);
   const tree: KnowledgeDoctorTree = {
     ...materialized.oracle,
     domain,
@@ -1655,7 +1860,8 @@ const liveDoctorTree = Effect.fn("KnowledgeDoctor.liveTree")(function* (
     producers: KNOWLEDGE_PRODUCER_OUTPUTS,
     commandTree,
     globalOptions: KNOWLEDGE_CLI_GLOBAL_FLAGS,
-    pathRemovals,
+    pathRemovals: removals.pathRemovals,
+    removedPaths: removals.removedPaths,
     isAncestor: (cited) =>
       isAncestorLive(materialized.repoRoot, materialized.oracle.commit, cited).pipe(Effect.provide(runtime)),
     atCommit: (cited) =>
@@ -1900,7 +2106,8 @@ const mintInputAt = Effect.fn("KnowledgeDoctor.mintInputAt")(function* (commit: 
   return {
     tree,
     report,
-    removals: yield* tree.pathRemovals,
+    // After the scan, so a history the scan found unavailable fails the mint closed.
+    removedPaths: yield* tree.removedPaths,
     files,
     previousPromotions: yield* previousPromotions(tree, files),
   } satisfies KnowledgeMintInput;
@@ -1960,10 +2167,11 @@ const readDoctorCheckSides = <E1, R1, E2, R2>(
       Effect.gen(function* () {
         yield* progress("materialize-head");
         const tree = yield* headTree;
-        // The history walk behind `pathRemovals` never fails and depends only on the head commit, so it
-        // starts here and its `git log` runs beside the scan; later reads join the same cached run.
+        // The tree-only history walk behind `removedPaths` and `pathRemovals` never fails and depends
+        // only on the head commit, so it starts here and its `git log` runs beside the scan; later
+        // reads join the same cached walk.
         yield* progress("read-removals");
-        yield* Effect.forkScoped(tree.pathRemovals);
+        yield* Effect.forkScoped(tree.removedPaths);
         yield* progress("read-head-seal");
         const head = yield* readKnowledgeSealFiles(tree);
         yield* progress("read-head-seal-done");
@@ -1980,10 +2188,11 @@ const readDoctorCheckSides = <E1, R1, E2, R2>(
       tree,
       scanTree: {
         ...tree,
-        pathRemovals: progress("join-removals").pipe(
-          Effect.andThen(tree.pathRemovals),
-          Effect.tap(() => progress("removals-joined"))
-        ),
+        pathRemovals: (query) =>
+          progress("join-removals").pipe(
+            Effect.andThen(tree.pathRemovals(query)),
+            Effect.tap(() => progress("removals-joined"))
+          ),
       } satisfies KnowledgeDoctorTree,
       head,
       baseTree,
@@ -2054,8 +2263,11 @@ const checkLive = Effect.fn("KnowledgeDoctor.checkLive")(function* (options: Kno
       );
       yield* progress("scan-tree");
       const report = yield* scanKnowledgeDoctorTree(scanTree);
-      // The scan already joined the history walk, so this read is the cached result.
-      const removals = yield* tree.pathRemovals;
+      // The scan read these same targets, so this read spawns nothing: it is the scan's resolved
+      // commits, or the `O.none()` a failed scan resolution latched. The check regroups the report's
+      // findings with governance rows, whose cause keys (`seal:`, `lease:`, or an expired lease's
+      // report cause key) name no target the report's findings do not.
+      const removals = yield* findingRemovals(tree, report.findings);
       const adapter = doctorGitAdapter(`mintedAt ${baseline.mintedAt}`);
       yield* progress("read-renames");
       const renames = yield* readGitRenames(refs.repoRoot, baseline.mintedAt, refs.head, [], adapter, () =>

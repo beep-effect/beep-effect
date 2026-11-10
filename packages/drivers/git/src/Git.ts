@@ -333,6 +333,10 @@ type LogOptions = {
   readonly diffFilter?: string;
   /** `--find-renames=<n>%`: the rename-detection similarity threshold, a whole percent 1..100. */
   readonly findRenames?: number;
+  /** `--no-renames`: no rename detection, so no blob is read to pair a move. Excludes `findRenames`. Default `false`. */
+  readonly noRenames?: boolean;
+  /** `--no-walk=unsorted`: list exactly `revisions`, in the given order, without their ancestry. Default `false`. */
+  readonly noWalk?: boolean;
   /** `false` prepends the global `-c core.quotePath=false`. */
   readonly quotePath?: false;
   /** Start the walk here instead of `HEAD`: refs, ranges, `^`-exclusions. */
@@ -1347,6 +1351,8 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
         limit,
         nameStatus = false,
         noMerges = false,
+        noRenames = false,
+        noWalk = false,
         omitPaths = false,
         paths = [],
         quotePath,
@@ -1375,6 +1381,12 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
         ["--name-status"],
         "log cannot read name-status changes while omitting paths"
       );
+      yield* rejectCombination(
+        cwd,
+        noRenames && findRenames !== undefined,
+        ["--no-renames", "--find-renames"],
+        "log cannot combine noRenames with findRenames"
+      );
       const invocation = GitCommand.log(paths, follow, limit, firstParentDiffMerges, {
         ...O.getSomesStruct({
           diffFilter: O.fromUndefinedOr(diffFilter),
@@ -1385,6 +1397,8 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
         includeBody,
         nameStatus,
         noMerges,
+        noRenames,
+        noWalk,
         omitPaths,
         reverse,
         revisions,
@@ -3345,7 +3359,11 @@ export interface GitShape {
    * `paths` is the NEW path of every change. `diffFilter` and `findRenames`
    * apply in either mode and are validated pre-spawn exactly as `nameStatus`
    * validates them; a commit whose diff the filter empties is dropped from
-   * the walk by git itself. `quotePath: false` prepends the global
+   * the walk by git itself. `noRenames` turns rename detection off (a move
+   * lists as a deletion plus an addition, and git reads no blob to pair it);
+   * it is refused with `findRenames`. `noWalk` lists exactly `revisions`, in
+   * the order given, without walking their ancestry; each listed commit
+   * carries the same changes the walk would have given it. `quotePath: false` prepends the global
    * `-c core.quotePath=false` for a consumer whose argv contract names it;
    * under `-z` the paths are already raw. Every entry carries `subject` in
    * both modes.

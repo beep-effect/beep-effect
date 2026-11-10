@@ -90,6 +90,12 @@ describe("epistemic-use-cases tagged-error declared equivalence", () => {
       SupersessionConflict.backstop(logicalKey, otherExpectedVersion, { code: "cause-a" })
     );
     expectDeclaredEquivalence(
+      SupersessionConflict,
+      SupersessionConflict.staleVersion(logicalKey, expectedVersion, otherExpectedVersion),
+      SupersessionConflict.staleVersion(logicalKey, expectedVersion, otherExpectedVersion),
+      SupersessionConflict.lockLoser(logicalKey, expectedVersion)
+    );
+    expectDeclaredEquivalence(
       EdgeConstraintViolation,
       EdgeConstraintViolation.on("record", "epistemic_edge_valid_ordered"),
       EdgeConstraintViolation.on("record", "epistemic_edge_valid_ordered"),

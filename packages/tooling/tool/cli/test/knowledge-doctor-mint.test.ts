@@ -71,7 +71,7 @@ const mintText = Effect.fnUntraced(function* (
   return yield* mintKnowledgeBaselineText({
     tree: doctorTree,
     report: yield* scanKnowledgeDoctorTree(doctorTree),
-    removals: O.some([]),
+    removedPaths: O.some([]),
     files,
     previousPromotions,
   });

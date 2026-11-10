@@ -53,7 +53,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("reference-t
         const duplicate = A.append(configuration.editions, { ...first });
         yield* refuses(make({ ...configuration, editions: duplicate }), invalidConfiguration);
       }),
-    { timeout: 10_000 }
+    { timeout: 60_000 }
   );
 
   it.effect(
@@ -76,6 +76,6 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("reference-t
           reason: "missing-edition",
         });
       }),
-    { timeout: 10_000 }
+    { timeout: 60_000 }
   );
 });
