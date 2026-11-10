@@ -431,6 +431,36 @@ describe("Git.log", () => {
       })
     );
 
+    it.effect("passes noRenames and noWalk into the argv and refuses noRenames with findRenames WITHOUT spawning", () =>
+      Effect.gen(function* () {
+        let seen: ReadonlyArray<string> = [];
+        yield* run(log({ diffFilter: "D", noRenames: true, noWalk: true, revisions: [SHA_B, SHA_A] }), (args) => {
+          seen = args;
+          return { stdout: "" };
+        });
+        assert.deepStrictEqual(seen, [
+          "log",
+          "--no-show-signature",
+          "-z",
+          "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s",
+          "--name-only",
+          "--diff-filter=D",
+          "--no-renames",
+          "--no-walk=unsorted",
+          "--end-of-options",
+          SHA_B,
+          SHA_A,
+          "--",
+        ]);
+        const error = yield* Effect.flip(run(log({ noRenames: true, findRenames: 50 }), neverSpawn));
+        assert.strictEqual(S.is(GitCommandError)(error) ? error.kind : undefined, "refused");
+        assert.deepStrictEqual(S.is(GitCommandError)(error) ? error.args : undefined, [
+          "--no-renames",
+          "--find-renames",
+        ]);
+      })
+    );
+
     it.effect("refuses an out-of-domain diffFilter or findRenames through the shared guards, WITHOUT spawning", () =>
       Effect.gen(function* () {
         for (const options of [{ diffFilter: "Q" }, { diffFilter: "" }, { findRenames: 0 }, { findRenames: 50.5 }]) {
