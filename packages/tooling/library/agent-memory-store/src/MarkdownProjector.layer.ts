@@ -18,12 +18,16 @@
  *   `folder-import-is-one-journal-transaction`). It never writes to the folder.
  * - `exportFolder` writes only files whose bytes differ, each through a
  *   temporary file and a rename, and first checks that every memory file in
- *   the folder holds bytes the log imported or this store projected; otherwise
- *   it fails with `UnimportedFolderError` before writing anything (decision
- *   `export-fence-is-per-file-known-bytes`).
+ *   the folder holds bytes this store imported from or wrote to that same
+ *   folder, identified by its resolved path; otherwise it fails with
+ *   `UnimportedFolderError` before writing anything (decision
+ *   `export-fence-is-bound-to-the-folder`).
+ * - A second `importFolder` passes the same fence and returns the current
+ *   base; any other folder fails with `ForeignFolderError`.
  * - `projectNode` returns the raw-slice edit from the node's state before its
  *   latest event to its current state and refuses an edit the reparse check
- *   finds disturbing (decision `projectnode-refuses-a-disturbing-edit-in-p1`).
+ *   finds disturbing with `ReparseRefusedError` (decision
+ *   `projector-refusals-are-typed-errors`).
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -48,7 +52,12 @@ import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
-import { ProjectionError, UnimportedFolderError } from "./AgentMemoryStore.errors.ts";
+import {
+  ForeignFolderError,
+  ProjectionError,
+  ReparseRefusedError,
+  UnimportedFolderError,
+} from "./AgentMemoryStore.errors.ts";
 import { applyEntries, fileNodes, filePaths, joinText, makeProjection } from "./internal/MarkdownProjection.ts";
 import { NodeReplacement } from "./MarkdownPartition.models.ts";
 import { checkReplacement, partition } from "./MarkdownPartition.parser.ts";
@@ -147,8 +156,8 @@ interface BuiltFile {
 const FolderListing = S.Array(S.Tuple([MemoryFilePath, Sha256Hex]));
 const encodeFolderListing = S.encodeEffect(S.fromJsonString(FolderListing));
 
-const ProjectedFileRows = S.Array(S.Struct({ file_path: S.String, file_digest: S.String }));
-const decodeProjectedFileRows = S.decodeUnknownEffect(ProjectedFileRows);
+const FolderFileRows = S.Array(S.Struct({ file_path: S.String, file_digest: S.String }));
+const decodeFolderFileRows = S.decodeUnknownEffect(FolderFileRows);
 
 const utf8 = new TextEncoder();
 // `ignoreBOM` keeps a leading byte order mark in the text, so it becomes the
@@ -181,11 +190,14 @@ const failure = (operation: string, path: O.Option<MemoryFilePath>) => (cause: u
 
 const createTables = Effect.fnUntraced(function* () {
   const sql = yield* SqlClient.SqlClient;
+  // Bytes this store imported from or wrote to each folder, keyed by the
+  // folder's resolved path.
   yield* sql`
-    CREATE TABLE IF NOT EXISTS agent_memory_projected_files (
+    CREATE TABLE IF NOT EXISTS agent_memory_folder_files (
+      root TEXT NOT NULL,
       file_path TEXT NOT NULL,
       file_digest TEXT NOT NULL,
-      PRIMARY KEY (file_path, file_digest)
+      PRIMARY KEY (root, file_path, file_digest)
     )`;
 });
 
@@ -287,29 +299,59 @@ const make = Effect.gen(function* () {
   const listingOf = (files: ReadonlyArray<{ readonly path: MemoryFilePath; readonly digest: Sha256Hex }>) =>
     A.map(files, (file) => [file.path, file.digest] as const);
 
-  // Bytes this store has written or imported for each path.
-  const knownBytes = Effect.fnUntraced(function* (operation: string) {
-    const rows = yield* sql`SELECT file_path, file_digest FROM agent_memory_projected_files`.pipe(
-      Effect.flatMap(decodeProjectedFileRows),
+  // A folder is identified by its resolved path, so two spellings of one
+  // folder share their records and a copy elsewhere shares none.
+  const folderKeyOf = (operation: string, root: PosixPath) =>
+    fs.realPath(root).pipe(Effect.mapError(failure(operation, O.none())));
+
+  // Bytes this store imported from or wrote to the folder `key` names.
+  const knownBytes = Effect.fnUntraced(function* (operation: string, key: string) {
+    const rows = yield* sql`SELECT file_path, file_digest FROM agent_memory_folder_files WHERE root = ${key}`.pipe(
+      Effect.flatMap(decodeFolderFileRows),
       Effect.mapError(failure(operation, O.none()))
     );
     const known = MutableHashSet.empty<string>();
     for (const row of rows) {
       MutableHashSet.add(known, knownKey(row.file_path, row.file_digest));
     }
-    for (const file of MutableHashMap.values(projection.files)) {
-      MutableHashSet.add(known, knownKey(file.filePath, file.fileDigest));
-    }
     return known;
   });
 
+  // Records the bytes of `files` as known in the folder `key` names. The rows
+  // land before the bytes they describe, so a write cut short leaves every
+  // file at bytes the fence knows.
+  const recordFolderFiles = (
+    operation: string,
+    key: string,
+    files: ReadonlyArray<{ readonly path: MemoryFilePath; readonly digest: Sha256Hex }>
+  ) =>
+    A.match(files, {
+      onEmpty: () => Effect.void,
+      onNonEmpty: (rows) =>
+        sql`
+          INSERT INTO agent_memory_folder_files ${sql.insert(
+            A.map(rows, (file) => ({ root: key, file_path: file.path, file_digest: file.digest }))
+          )}
+          ON CONFLICT DO NOTHING`.pipe(Effect.asVoid, Effect.mapError(failure(operation, O.none()))),
+    });
+
   // The fence of AC-8: the log imported a folder, and every memory file in
-  // this folder holds bytes the log imported or this store projected there.
-  const isProjectedFolder = Effect.fnUntraced(function* (operation: string, disk: ReadonlyArray<DiskFile>) {
+  // this folder holds bytes this store imported from or wrote to this same
+  // folder. A folder with no memory files passes, so the log can be rebuilt
+  // into an empty folder.
+  const isProjectedFolder = Effect.fnUntraced(function* (
+    operation: string,
+    root: PosixPath,
+    disk: ReadonlyArray<DiskFile>
+  ) {
     if (MutableHashSet.size(projection.folders) === 0) {
       return false;
     }
-    const known = yield* knownBytes(operation);
+    if (!A.isReadonlyArrayNonEmpty(disk)) {
+      return true;
+    }
+    const key = yield* folderKeyOf(operation, root);
+    const known = yield* knownBytes(operation, key);
     return A.every(disk, (file) => MutableHashSet.has(known, knownKey(file.path, file.digest)));
   });
 
@@ -444,16 +486,18 @@ const make = Effect.gen(function* () {
     const disk = yield* scanFolder("importFolder", root);
     if (MutableHashSet.size(projection.folders) > 0) {
       // Decision `second-import-is-idempotent-on-a-projected-folder`.
-      const projected = yield* isProjectedFolder("importFolder", disk);
+      const projected = yield* isProjectedFolder("importFolder", root, disk);
       if (!projected) {
-        return yield* failure(
-          "importFolder",
-          O.none()
-        )(`the log already holds an imported folder and ${root} holds bytes it did not import or project`);
+        const folderDigest = yield* folderDigestOf("importFolder", listingOf(disk));
+        return yield* ForeignFolderError.make({ root, folderDigest });
       }
       return yield* currentBase("importFolder");
     }
     const events = yield* importEvents(disk);
+    // The folder's rows say only that it held these bytes, which stays true
+    // if the append below fails.
+    const key = yield* folderKeyOf("importFolder", root);
+    yield* recordFolderFiles("importFolder", key, disk);
     yield* A.match(events, {
       onEmpty: () => Effect.void,
       onNonEmpty: (batch) => log.appendMany(batch),
@@ -474,10 +518,10 @@ const make = Effect.gen(function* () {
   const exportFolderUnlocked = Effect.fnUntraced(function* (root: PosixPath) {
     yield* catchUp("exportFolder");
     const disk = yield* scanFolder("exportFolder", root);
-    const projected = yield* isProjectedFolder("exportFolder", disk);
+    const projected = yield* isProjectedFolder("exportFolder", root, disk);
     if (!projected) {
       const folderDigest = yield* folderDigestOf("exportFolder", listingOf(disk));
-      return yield* UnimportedFolderError.make({ root, folderDigest });
+      return yield* UnimportedFolderError.make({ root: O.some(root), folderDigest: O.some(folderDigest) });
     }
     const onDisk = MutableHashMap.empty<MemoryFilePath, DiskFile>();
     for (const file of disk) {
@@ -494,15 +538,11 @@ const make = Effect.gen(function* () {
     );
     // The fence rows land before the bytes, in one statement, so a write cut
     // short leaves either the old bytes or the new ones, both known.
-    yield* A.match(changed, {
-      onEmpty: () => Effect.void,
-      onNonEmpty: (files) =>
-        sql`
-          INSERT INTO agent_memory_projected_files ${sql.insert(
-            A.map(files, (file) => ({ file_path: file.path, file_digest: file.digest }))
-          )}
-          ON CONFLICT DO NOTHING`.pipe(Effect.asVoid, Effect.mapError(failure("exportFolder", O.none()))),
-    });
+    if (A.isReadonlyArrayNonEmpty(changed)) {
+      yield* fs.makeDirectory(root, { recursive: true }).pipe(Effect.mapError(failure("exportFolder", O.none())));
+      const key = yield* folderKeyOf("exportFolder", root);
+      yield* recordFolderFiles("exportFolder", key, changed);
+    }
     for (const file of changed) {
       yield* writeAtomically(root, file).pipe(Effect.mapError(failure("exportFolder", O.some(file.path))));
     }
@@ -515,8 +555,8 @@ const make = Effect.gen(function* () {
       Effect.mapError(() => failure("projectNode", O.none())(`node ${nodeId} is not in the log`))
     );
     if (MutableHashSet.size(projection.folders) === 0) {
-      const folderDigest = yield* folderDigestOf("projectNode", []);
-      return yield* UnimportedFolderError.make({ root: PosixPath.make(parentOf(node.filePath)), folderDigest });
+      // projectNode names no folder, so the refusal names none either.
+      return yield* UnimportedFolderError.make({});
     }
     const nodes = fileNodes(projection, node.filePath);
     const index = O.getOrElse(
@@ -540,12 +580,7 @@ const make = Effect.gen(function* () {
       onSuccess: Effect.succeed,
     });
     if (!check.stable) {
-      return yield* failure(
-        "reparseCheck",
-        O.some(node.filePath)
-      )(
-        `the edit of node ${nodeId} changes how nodes ${A.join(A.map(check.disturbed, String), ", ")} of ${node.filePath} parse`
-      );
+      return yield* ReparseRefusedError.make({ nodeId, path: node.filePath, disturbed: check.disturbed });
     }
     return edit;
   });

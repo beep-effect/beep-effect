@@ -14,6 +14,7 @@ import { PosixPath } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import { folderDigest, holdId, nodeId, revisionA, revisionB } from "./fixtures.ts";
 
 const constructors = [
@@ -55,12 +56,18 @@ describe("AgentMemoryStore errors", () => {
     assertNone(SymbolResolutionError.fromUnknown("resolve").symbol);
   });
 
-  it("refuses an unimported folder with its root and digest", () => {
-    const error = UnimportedFolderError.make({ root: PosixPath.make("memory"), folderDigest });
+  it("refuses an unimported folder with its root and digest, or with neither when no folder was named", () => {
+    const error = UnimportedFolderError.make({
+      root: O.some(PosixPath.make("memory")),
+      folderDigest: O.some(folderDigest),
+    });
 
     expect(error._tag).toBe("UnimportedFolderError");
-    expect(error.root).toBe("memory");
-    expect(error.folderDigest).toBe(folderDigest);
+    assertSome(error.root, PosixPath.make("memory"));
+    assertSome(error.folderDigest, folderDigest);
+    const unnamed = UnimportedFolderError.make({});
+    assertNone(unnamed.root);
+    assertNone(unnamed.folderDigest);
   });
 
   it("refuses a stale node event with the parents it named and the heads the log held", () => {

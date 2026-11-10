@@ -327,13 +327,66 @@ export class HoldNotOpenError extends S.TaggedError<HoldNotOpenError, { readonly
 ) {}
 
 /**
+ * Refusal to append a `NodeCreated` whose predecessor is not a node of the
+ * same file.
+ *
+ * **Details**
+ *
+ * Like the per-node compare-and-set, this is checked inside the journal's
+ * writer transaction, so a refused batch appends nothing. A file is the
+ * concatenation of its nodes placed by their predecessors (decision
+ * `file-is-an-ordered-node-partition`), so a node whose `after` names an
+ * unknown node, or a node of another file, would be held by the log but shown
+ * by no projection. `afterFilePath` is the file the named predecessor belongs
+ * to, or none when the log holds no such node.
+ *
+ * **Example** (Refuse an insert after a node of another file)
+ *
+ * ```ts
+ * import { MemoryFilePath, NodeId, UnplacedNodeError } from "@beep/agent-memory-store"
+ * import * as O from "effect/Option"
+ *
+ * const error = UnplacedNodeError.make({
+ *   nodeId: NodeId.make("018f9c3e-7d2a-7b4c-9e1f-2a3b4c5d6e7f"),
+ *   filePath: MemoryFilePath.make("notes.md"),
+ *   after: NodeId.make("018f9c3e-7d2a-7b4c-9e1f-2a3b4c5d6e80"),
+ *   afterFilePath: O.some(MemoryFilePath.make("MEMORY.md")),
+ * })
+ * console.log(error._tag)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class UnplacedNodeError extends S.TaggedError<UnplacedNodeError, { readonly brand: unique symbol }>(
+  $I`UnplacedNodeError`
+)(
+  "UnplacedNodeError",
+  {
+    nodeId: NodeId.annotateKey({ description: "Node the refused NodeCreated would have created." }),
+    filePath: MemoryFilePath.annotateKey({ description: "File the refused node names." }),
+    after: NodeId.annotateKey({ description: "Predecessor the refused node names." }),
+    afterFilePath: S.OptionFromOptionalKey(MemoryFilePath).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
+      S.annotateKey({ description: "File the predecessor belongs to; none when the log holds no such node." })
+    ),
+  },
+  $I.annoteError<UnplacedNodeError>("UnplacedNodeError", {
+    description: "Refusal to append a NodeCreated whose predecessor is not a node of the same file.",
+  })
+) {}
+
+/**
  * Refusal to project over a memory folder the log has not imported (AC-8).
  *
  * **Details**
  *
- * This is a typed refusal, not an I/O failure: the projector checked the log
- * for a `FolderImported` record of `folderDigest` and found none, so it wrote
- * nothing and no existing file was replaced or emptied.
+ * This is a typed refusal, not an I/O failure. `exportFolder` raises it when
+ * the log holds no `FolderImported`, or when a memory file in `root` holds
+ * bytes the store never imported from or wrote to that folder; it wrote
+ * nothing and no existing file was replaced or emptied. `projectNode` raises
+ * it when the log holds no `FolderImported` at all; it names no folder, so
+ * `root` and `folderDigest` are none.
  *
  * **Example** (Refuse an unimported folder)
  *
@@ -341,10 +394,11 @@ export class HoldNotOpenError extends S.TaggedError<HoldNotOpenError, { readonly
  * import { UnimportedFolderError } from "@beep/agent-memory-store"
  * import { PosixPath } from "@beep/schema/PosixPath"
  * import { Sha256Hex } from "@beep/schema/Sha256"
+ * import * as O from "effect/Option"
  *
  * const error = UnimportedFolderError.make({
- *   root: PosixPath.make("memory"),
- *   folderDigest: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+ *   root: O.some(PosixPath.make("memory")),
+ *   folderDigest: O.some(Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")),
  * })
  * console.log(error.root)
  * ```
@@ -357,11 +411,101 @@ export class UnimportedFolderError extends S.TaggedError<UnimportedFolderError, 
 )(
   "UnimportedFolderError",
   {
-    root: PosixPath.annotateKey({ description: "Memory folder the projector refused." }),
-    folderDigest: Sha256Hex.annotateKey({ description: "Digest of the folder that has no import record." }),
+    root: S.OptionFromOptionalKey(PosixPath).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
+      S.annotateKey({ description: "Memory folder the projector refused; none when the operation names no folder." })
+    ),
+    folderDigest: S.OptionFromOptionalKey(Sha256Hex).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
+      S.annotateKey({ description: "Digest of the refused folder's memory files; none when no folder was named." })
+    ),
   },
   $I.annoteError<UnimportedFolderError>("UnimportedFolderError", {
     description: "Refusal to project over a memory folder the log has not imported.",
+  })
+) {}
+
+/**
+ * Refusal to import a folder into a log that already holds a different one.
+ *
+ * **Details**
+ *
+ * One log holds one memory folder (decision
+ * `second-import-is-idempotent-on-a-projected-folder`). A second
+ * `importFolder` of the folder the store imported or projected returns the
+ * current base; any other folder, or the same folder holding bytes the store
+ * never saw there, is refused with this error and nothing is appended.
+ *
+ * **Example** (Refuse a foreign folder)
+ *
+ * ```ts
+ * import { ForeignFolderError } from "@beep/agent-memory-store"
+ * import { PosixPath } from "@beep/schema/PosixPath"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
+ *
+ * const error = ForeignFolderError.make({
+ *   root: PosixPath.make("other-memory"),
+ *   folderDigest: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+ * })
+ * console.log(error._tag)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class ForeignFolderError extends S.TaggedError<ForeignFolderError, { readonly brand: unique symbol }>(
+  $I`ForeignFolderError`
+)(
+  "ForeignFolderError",
+  {
+    root: PosixPath.annotateKey({ description: "Memory folder the import refused." }),
+    folderDigest: Sha256Hex.annotateKey({ description: "Digest of the refused folder's memory files." }),
+  },
+  $I.annoteError<ForeignFolderError>("ForeignFolderError", {
+    description: "Refusal to import a folder into a log that already holds a different one.",
+  })
+) {}
+
+/**
+ * Refusal to return a node edit that changes how other nodes of its file parse.
+ *
+ * **Details**
+ *
+ * `projectNode` runs the reparse check on every edit (decision
+ * `projectnode-refuses-a-disturbing-edit-in-p1`). When nodes outside the run
+ * the edit touches would change kind or text, it refuses with this error;
+ * `disturbed` lists those nodes' indices in the file before the edit. The log
+ * stays exact, so `exportFolder` still writes the file's bytes.
+ *
+ * **Example** (Refuse a disturbing edit)
+ *
+ * ```ts
+ * import { MemoryFilePath, NodeId, ReparseRefusedError } from "@beep/agent-memory-store"
+ *
+ * const error = ReparseRefusedError.make({
+ *   nodeId: NodeId.make("018f9c3e-7d2a-7b4c-9e1f-2a3b4c5d6e7f"),
+ *   path: MemoryFilePath.make("notes.md"),
+ *   disturbed: [2],
+ * })
+ * console.log(error.disturbed)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class ReparseRefusedError extends S.TaggedError<ReparseRefusedError, { readonly brand: unique symbol }>(
+  $I`ReparseRefusedError`
+)(
+  "ReparseRefusedError",
+  {
+    nodeId: NodeId.annotateKey({ description: "Node whose edit was refused." }),
+    path: MemoryFilePath.annotateKey({ description: "File the node belongs to." }),
+    disturbed: S.Array(S.Natural).annotateKey({
+      description: "Indices, in the file before the edit, of the nodes whose parse the edit would change.",
+    }),
+  },
+  $I.annoteError<ReparseRefusedError>("ReparseRefusedError", {
+    description: "Refusal to return a node edit that changes how other nodes of its file parse.",
   })
 ) {}
 

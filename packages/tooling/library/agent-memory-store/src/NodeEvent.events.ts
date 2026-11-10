@@ -29,7 +29,7 @@ import * as EventGroup from "effect/eventlog/EventGroup";
 import * as EventLog from "effect/eventlog/EventLog";
 import * as S from "effect/Schema";
 import { ConflictResolution, HoldId, MemoryGateViolation } from "./Admission.models.ts";
-import { HoldNotOpenError, StaleParentsError } from "./AgentMemoryStore.errors.ts";
+import { HoldNotOpenError, StaleParentsError, UnplacedNodeError } from "./AgentMemoryStore.errors.ts";
 import { ContentHash, MemoryFilePath, NodeId, NodeKind, RevisionId } from "./NodeIdentity.models.ts";
 import { LineageId } from "./Observation.events.ts";
 import { NodeOperation } from "./Operation.models.ts";
@@ -348,6 +348,8 @@ export class HoldResolved extends S.Opaque<HoldResolved, { readonly brand: uniqu
  * The four node event definitions declare `StaleParentsError` as their error
  * schema, so the handler that enforces the per-node compare-and-set can fail
  * with it and the typed failure reaches the caller of the log write.
+ * `NodeCreated` also declares `UnplacedNodeError`: its handler refuses a
+ * predecessor that is not a node of the same file.
  *
  * **Example** (Read the event tag)
  *
@@ -364,7 +366,7 @@ export const NodeCreatedEvent = Event.make({
   tag: "NodeCreated",
   primaryKey: (payload: NodeCreated) => payload.nodeId,
   payload: NodeCreated,
-  error: StaleParentsError,
+  error: S.Union([StaleParentsError, UnplacedNodeError]),
 });
 
 /**

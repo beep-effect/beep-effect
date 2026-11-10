@@ -9,7 +9,7 @@
  *
  * It imports the repository's `goals` folder (the import never writes to it),
  * rebuilds every file from the log alone into an empty folder and compares
- * the bytes. Labeller: the agent-memory-store-p1 lane; the live tree is its
+ * the bytes; the tree must not change while the import runs. Labeller: the agent-memory-store-p1 lane; the live tree is its
  * own fixture and carries no labels.
  */
 import { LogCursor } from "@beep/agent-memory-store";
@@ -37,7 +37,7 @@ import {
 const enabled = isBunRuntime && P.isNotUndefined(Bun.env.BEEP_TEST_AGENT_MEMORY_FULL_TREE);
 
 describe.skipIf(!enabled)("MarkdownProjector AC-1 over the live goals tree (opt-in)", () => {
-  it.layer(TestPlatform, { timeout: "900 seconds" })("live goals tree", (it) => {
+  it.layer(TestPlatform)("live goals tree", (it) => {
     it.effect(
       "AC-1 byte identity on the live goals tree: a rebuild from the log alone reproduces every Markdown file",
       Effect.fnUntraced(function* () {
@@ -45,6 +45,9 @@ describe.skipIf(!enabled)("MarkdownProjector AC-1 over the live goals tree (opt-
         const goalsFolder = yield* path.fromFileUrl(new URL("../../../../../goals", import.meta.url));
         const workspace = yield* tempDirectory("beep-ac1-full-tree-");
         const store = yield* openStore(`${workspace}/memory.db`);
+        // The source bytes are read right before the import, so an edit to the
+        // tree after the import cannot read as a rebuild mismatch.
+        const source = yield* snapshotFolder(goalsFolder);
         const importStart = yield* TestClock.withLive(Clock.currentTimeMillis);
         const imported = yield* store.projector.importFolder(PosixPath.make(goalsFolder));
         const importEnd = yield* TestClock.withLive(Clock.currentTimeMillis);
@@ -54,7 +57,6 @@ describe.skipIf(!enabled)("MarkdownProjector AC-1 over the live goals tree (opt-
         yield* fresh.projector.exportFolder(PosixPath.make(rebuilt));
         const exportEnd = yield* TestClock.withLive(Clock.currentTimeMillis);
 
-        const source = yield* snapshotFolder(goalsFolder);
         const output = yield* snapshotFolder(rebuilt);
         const rebuiltBytes = HashMap.fromIterable(A.map(output, (file) => [file.path, file.bytes] as const));
         const importedPaths = HashSet.fromIterable(A.map(imported.files, (record) => record.path as string));

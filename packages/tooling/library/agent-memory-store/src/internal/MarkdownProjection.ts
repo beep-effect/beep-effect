@@ -215,8 +215,9 @@ const stackOrder = (
  *
  * A pre-order walk of the predecessor tree: a node, then the nodes naming it
  * as predecessor newest first, each followed by its own successors. Only
- * nodes of the file are visited; a node naming a predecessor the log does not
- * hold is not placed.
+ * nodes of the file are visited. The memory log refuses a `NodeCreated` whose
+ * predecessor is unknown or in another file (`UnplacedNodeError`), so every
+ * node the log holds is reached from its file's roots.
  */
 export const fileNodes: {
   (filePath: MemoryFilePath): (projection: Projection) => ReadonlyArray<ProjectedNode>;

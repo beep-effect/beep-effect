@@ -11,7 +11,12 @@ import * as Context from "effect/Context";
 import type * as A from "effect/Array";
 import type * as Effect from "effect/Effect";
 import type { Entry } from "effect/eventlog/EventJournal";
-import type { HoldNotOpenError, MemoryLogError, StaleParentsError } from "./AgentMemoryStore.errors.ts";
+import type {
+  HoldNotOpenError,
+  MemoryLogError,
+  StaleParentsError,
+  UnplacedNodeError,
+} from "./AgentMemoryStore.errors.ts";
 import type { MemoryEvent } from "./NodeEvent.events.ts";
 import type { LogCursor, NodeId, RevisionId } from "./NodeIdentity.models.ts";
 
@@ -49,6 +54,10 @@ export type { Entry } from "effect/eventlog/EventJournal";
  * - A `HoldResolved` lands only while its hold is open, checked in the same
  *   transaction; otherwise the batch fails with `HoldNotOpenError`, so two
  *   resolvers cannot both settle one hold.
+ * - A `NodeCreated` whose `after` names a predecessor lands only when the log
+ *   holds that node in the same file, checked in the same transaction;
+ *   otherwise the batch fails with `UnplacedNodeError`, so the log never
+ *   holds a node that no file projection shows.
  * - The check applies to appends made through this service, which are the
  *   only writes any phase of this packet makes, so every node keeps one head.
  *   A remote replay is a set-union and must not be refused: it would bypass
@@ -82,10 +91,12 @@ export type { Entry } from "effect/eventlog/EventJournal";
 export class MemoryLog extends Context.Service<
   MemoryLog,
   {
-    readonly append: (event: MemoryEvent) => Effect.Effect<void, MemoryLogError | StaleParentsError | HoldNotOpenError>;
+    readonly append: (
+      event: MemoryEvent
+    ) => Effect.Effect<void, MemoryLogError | StaleParentsError | HoldNotOpenError | UnplacedNodeError>;
     readonly appendMany: (
       events: A.NonEmptyReadonlyArray<MemoryEvent>
-    ) => Effect.Effect<void, MemoryLogError | StaleParentsError | HoldNotOpenError>;
+    ) => Effect.Effect<void, MemoryLogError | StaleParentsError | HoldNotOpenError | UnplacedNodeError>;
     readonly heads: (nodeId: NodeId) => Effect.Effect<ReadonlyArray<RevisionId>, MemoryLogError>;
     readonly cursor: Effect.Effect<LogCursor, MemoryLogError>;
     readonly entriesAfter: (cursor: LogCursor) => Effect.Effect<ReadonlyArray<Entry>, MemoryLogError>;

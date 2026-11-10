@@ -11,21 +11,24 @@
  */
 import {
   FolderImportedEvent,
+  ForeignFolderError,
   isMemoryFilePath,
   LogCursor,
   MemoryFilePath,
   NodeId,
   ProjectionError,
+  ReparseRefusedError,
   UnimportedFolderError,
 } from "@beep/agent-memory-store";
 import { MarkdownEdit } from "@beep/markdown";
 import { PosixPath } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { loadGoalsMarkdownSample, writeSampleFolder } from "./fixtures/goals-markdown-sample.ts";
 import {
@@ -72,7 +75,7 @@ describe("isMemoryFilePath", () => {
 });
 
 describe.skipIf(!isBunRuntime)("MarkdownProjector AC-8 (Bun runtime)", () => {
-  it.layer(TestPlatform, { timeout: "60 seconds" })("memory folders", (it) => {
+  it.layer(TestPlatform)("memory folders", (it) => {
     it.effect(
       "AC-8 nonempty-folder import: every file is imported before any projection, the folder is untouched, and the re-export is byte-identical",
       Effect.fnUntraced(function* () {
@@ -103,7 +106,8 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector AC-8 (Bun runtime)", () => {
         expect(spy.writes).toBe(0);
         expect(afterExport).toEqual(before);
         expect(exported.folderDigest).toBe(imported.folderDigest);
-      })
+      }),
+      { timeout: 60_000 }
     );
 
     it.effect(
@@ -139,7 +143,8 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector AC-8 (Bun runtime)", () => {
         yield* store.sql.unsafe("DROP TRIGGER inject_import_failure");
         const retried = yield* store.projector.importFolder(PosixPath.make(folder));
         expect(retried.files).toHaveLength(sample.files.length);
-      })
+      }),
+      { timeout: 60_000 }
     );
 
     it.effect(
@@ -161,7 +166,8 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector AC-8 (Bun runtime)", () => {
         expect(after).toEqual(before);
         expect(cursor).toBe(LogCursor.make(0));
         expect(spy.writes).toBe(0);
-      })
+      }),
+      { timeout: 60_000 }
     );
 
     it.effect(
@@ -178,7 +184,7 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector AC-8 (Bun runtime)", () => {
         // An empty log has imported nothing, so even an existing folder is refused.
         const empty = yield* Effect.flip(store.projector.exportFolder(PosixPath.make(folder)));
         expect(empty).toBeInstanceOf(UnimportedFolderError);
-        expect(empty).toMatchObject({ root: folder });
+        assertSome(S.is(UnimportedFolderError)(empty) ? empty.root : O.none(), PosixPath.make(folder));
         expect(spy.writes + spy.renames).toBe(0);
         const snapshot1 = yield* snapshotFolder(folder);
         expect(snapshot1).toEqual(before);
@@ -211,13 +217,26 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector AC-8 (Bun runtime)", () => {
         expect(spy.writes + spy.renames).toBe(0);
         const snapshot3 = yield* snapshotFolder(exact);
         expect(snapshot3).toEqual(exactBefore);
-      })
+
+        // A different folder whose only memory file matches an imported file
+        // byte for byte is still not the imported folder: the fence is bound
+        // to the folder, so nothing is replaced and no file is created.
+        const copy = `${workspace}/copy`;
+        yield* writeFiles(copy, [[shared.path, shared.text]]);
+        const copyBefore = yield* snapshotFolder(copy);
+        const copied = yield* Effect.flip(store.projector.exportFolder(PosixPath.make(copy)));
+        expect(copied).toBeInstanceOf(UnimportedFolderError);
+        expect(spy.writes + spy.renames).toBe(0);
+        const snapshot5 = yield* snapshotFolder(copy);
+        expect(snapshot5).toEqual(copyBefore);
+      }),
+      { timeout: 60_000 }
     );
   });
 });
 
 describe.skipIf(!isBunRuntime)("MarkdownProjector import rules and projectNode (Bun runtime)", () => {
-  it.layer(TestPlatform, { timeout: "30 seconds" })("synthetic folders", (it) => {
+  it.layer(TestPlatform)("synthetic folders", (it) => {
     it.effect(
       "a second import of the imported folder appends nothing and returns the current base; a foreign folder is refused",
       Effect.fnUntraced(function* () {
@@ -238,9 +257,44 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector import rules and projectNode (
         const other = `${workspace}/other`;
         yield* writeFiles(other, [["MEMORY.md", "# Someone else's index\n"]]);
         const refused = yield* Effect.flip(store.projector.importFolder(PosixPath.make(other)));
-        expect(refused).toBeInstanceOf(ProjectionError);
+        expect(refused).toBeInstanceOf(ForeignFolderError);
+        expect(refused).toMatchObject({ root: other });
         const cursor = yield* store.log.cursor;
         expect(cursor).toBe(first.cursor);
+      })
+    );
+
+    it.effect(
+      "a foreign folder whose only memory file matches an imported file byte for byte is refused by export and by import",
+      Effect.fnUntraced(function* () {
+        const workspace = yield* tempDirectory("beep-foreign-copy-");
+        const mine = `${workspace}/mine`;
+        const theirs = `${workspace}/theirs`;
+        yield* writeFiles(mine, [
+          ["MEMORY.md", "# Memory\n"],
+          ["notes.md", "Private note.\n"],
+        ]);
+        yield* writeFiles(theirs, [["MEMORY.md", "# Memory\n"]]);
+        const store = yield* openStore(`${workspace}/memory.db`);
+        yield* store.projector.importFolder(PosixPath.make(mine));
+        const entries = yield* store.log.entriesAfter(LogCursor.make(0));
+        const created = yield* createdNodes(entries);
+        const heading = O.getOrThrow(A.findFirst(created, ([, node]) => node.text === "# Memory"))[1];
+        const revise = yield* reviseEvent(heading.nodeId, heading.revisionId, "# Memory of repo A");
+        yield* store.log.append(revise.event);
+
+        const before = yield* snapshotFolder(theirs);
+        const exported = yield* Effect.flip(store.projector.exportFolder(PosixPath.make(theirs)));
+        expect(exported).toBeInstanceOf(UnimportedFolderError);
+        const imported = yield* Effect.flip(store.projector.importFolder(PosixPath.make(theirs)));
+        expect(imported).toBeInstanceOf(ForeignFolderError);
+        const after = yield* snapshotFolder(theirs);
+        expect(after).toEqual(before);
+
+        // The imported folder itself still exports, under any spelling of its path.
+        yield* store.projector.exportFolder(PosixPath.make(`${workspace}/theirs/../mine`));
+        const projected = yield* snapshotFolder(mine);
+        expect(A.map(projected, (file) => textOf(file.bytes))).toEqual(["# Memory of repo A\n", "Private note.\n"]);
       })
     );
 
@@ -296,7 +350,7 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector import rules and projectNode (
         yield* fs.writeFile(`${folder}/broken.md`, new Uint8Array([0x23, 0x20, 0xff, 0xfe, 0x0a]));
         const broken = yield* Effect.flip(store.projector.importFolder(PosixPath.make(folder)));
         expect(broken).toBeInstanceOf(ProjectionError);
-        assertSome(broken.path, MemoryFilePath.make("broken.md"));
+        assertSome(S.is(ProjectionError)(broken) ? broken.path : O.none(), MemoryFilePath.make("broken.md"));
         const cursor = yield* store.log.cursor;
         expect(cursor).toBe(LogCursor.make(0));
       })
@@ -343,7 +397,7 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector import rules and projectNode (
     );
 
     it.effect(
-      "projectNode refuses with ProjectionError reparseCheck an edit that changes how a neighbouring node parses",
+      "projectNode refuses with ReparseRefusedError an edit that changes how a neighbouring node parses",
       Effect.fnUntraced(function* () {
         const workspace = yield* tempDirectory("beep-project-refuse-");
         const folder = `${workspace}/memory`;
@@ -358,8 +412,8 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector import rules and projectNode (
         const revise = yield* reviseEvent(separator.nodeId, separator.revisionId, "\n");
         yield* store.log.append(revise.event);
         const refused = yield* Effect.flip(store.projector.projectNode(separator.nodeId));
-        expect(refused).toBeInstanceOf(ProjectionError);
-        expect(refused).toMatchObject({ operation: "reparseCheck" });
+        expect(refused).toBeInstanceOf(ReparseRefusedError);
+        expect(refused).toMatchObject({ nodeId: separator.nodeId, path: separator.filePath, disturbed: [0, 2] });
       })
     );
 
@@ -376,6 +430,11 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector import rules and projectNode (
         yield* store.log.append(insert.event);
         const refused = yield* Effect.flip(store.projector.projectNode(nodeId));
         expect(refused).toBeInstanceOf(UnimportedFolderError);
+        // projectNode names no folder, so the refusal names none.
+        const named = S.is(UnimportedFolderError)(refused)
+          ? O.orElse(refused.root, () => O.map(refused.folderDigest, String))
+          : O.some("not an UnimportedFolderError");
+        assertNone(named);
       })
     );
   });

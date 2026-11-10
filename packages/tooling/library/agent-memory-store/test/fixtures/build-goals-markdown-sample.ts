@@ -3,12 +3,14 @@
  * a deterministic, structurally stratified sample of the tracked
  * `goals/**` Markdown files plus a few synthetic edge files.
  *
- * Run it from the repository root and commit the output:
+ * Run it from the repository root and commit the output; the optional
+ * argument names the commit to sample (default `HEAD`):
  *
- *   bun packages/tooling/library/agent-memory-store/test/fixtures/build-goals-markdown-sample.ts
+ *   bun packages/tooling/library/agent-memory-store/test/fixtures/build-goals-markdown-sample.ts [commit]
  *
- * Only files `git ls-files` reports are read, so untracked local notes never
- * reach the fixture. Within each stratum files are taken in the order of the
+ * The file list comes from `git ls-tree` of that commit and every file's bytes
+ * from `git show <commit>:<path>`, so untracked notes and uncommitted edits
+ * never reach the fixture and the recorded commit regenerates it exactly. Within each stratum files are taken in the order of the
  * SHA-256 of their path until the stratum's byte budget is spent, so the same
  * tree always yields the same sample. The fixture is one gzipped JSON file so
  * repository scanners and formatters do not walk its Markdown.
@@ -24,6 +26,7 @@ import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
 import * as MutableHashSet from "effect/MutableHashSet";
+import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
@@ -81,10 +84,13 @@ const program = Effect.gen(function* () {
   const root = path.resolve(import.meta.dirname, "..", "..", "..", "..", "..", "..");
   const git = (args: ReadonlyArray<string>) => spawner.string(ChildProcess.make("git", [...args], { cwd: root }));
 
-  const head = yield* git(["rev-parse", "HEAD"]);
-  const commit = Str.trim(head);
-  const lsFiles = yield* git(["ls-files", "-z", "--", "goals"]);
-  const listed = Str.split(lsFiles, "\u0000");
+  // The file list and every byte come from the commit's tree, never from the
+  // index or the working tree, so the recorded commit regenerates the fixture.
+  const requested = O.getOrElse(A.get(process.argv, 2), () => "HEAD");
+  const resolved = yield* git(["rev-parse", "--verify", `${requested}^{commit}`]);
+  const commit = Str.trim(resolved);
+  const lsTree = yield* git(["ls-tree", "-r", "-z", "--name-only", commit, "--", "goals"]);
+  const listed = Str.split(lsTree, "\u0000");
   const tracked = A.filter(listed, (file) => Str.endsWith(".md")(file));
   const ranked = yield* Effect.forEach(tracked, (file) =>
     Effect.map(digest.digestHex(Digest.sha256, new TextEncoder().encode(file)), (rank) => ({ file, rank }))
@@ -96,8 +102,10 @@ const program = Effect.gen(function* () {
     ),
     (entry) => entry.file
   );
-  const texts = yield* Effect.forEach(ordered, (file) =>
-    Effect.map(fs.readFileString(path.join(root, file)), (text) => ({ file, text }))
+  const texts = yield* Effect.forEach(
+    ordered,
+    (file) => Effect.map(git(["show", `${commit}:${file}`]), (text) => ({ file, text })),
+    { concurrency: 16 }
   );
 
   const chosen = MutableHashSet.empty<string>();

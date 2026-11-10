@@ -12,7 +12,7 @@
  * Set `BEEP_TEST_AGENT_MEMORY_REPORT` to a file path to append the measured
  * numbers there; the tests assert them either way.
  */
-import { LogCursor, NodeId, NodeKind } from "@beep/agent-memory-store";
+import { LogCursor, NodeId, NodeKind, ReparseRefusedError } from "@beep/agent-memory-store";
 import { MarkdownEdit } from "@beep/markdown";
 import { PosixPath } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
@@ -25,7 +25,7 @@ import * as HashMap from "effect/HashMap";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
-import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { loadGoalsMarkdownSample, sampleBytes, writeSampleFolder } from "./fixtures/goals-markdown-sample.ts";
 import {
@@ -74,6 +74,11 @@ interface TouchedSpan {
 type Operation = "revise" | "insert" | "retire";
 
 const EDIT_TARGET = 3_000;
+// Revisions, retirements and inserts after a node, each, of every node kind
+// the sample holds. `html` and `thematicBreak` nodes are the scarcest kinds in
+// the sample (a handful of files hold them), which sets this floor; the
+// common kinds take hundreds of each operation.
+const PER_KIND_OPERATION_MIN = 3;
 const PROJECT_NODE_STRIDE = 4;
 const SEED = 20_261_110;
 const operations: ReadonlyArray<Operation> = ["revise", "insert", "retire"];
@@ -92,10 +97,7 @@ const nodesOf = (model: Model, path: MemoryFilePath): Array<ModelNode> =>
   });
 
 const isReparseRefusal = (exit: Exit.Exit<unknown, unknown>): boolean =>
-  O.exists(
-    Exit.findErrorOption(exit),
-    (error) => P.hasProperty(error, "operation") && error.operation === "reparseCheck"
-  );
+  O.exists(Exit.findErrorOption(exit), S.is(ReparseRefusedError));
 
 const counter = () => {
   const counts = MutableHashMap.empty<string, number>();
@@ -158,7 +160,7 @@ const isConfined = (exported: string, edit: TouchedSpan): boolean =>
   Str.slice(edit.start, edit.start + edit.newText.length)(exported) === edit.newText;
 
 describe.skipIf(!isBunRuntime)("MarkdownProjector AC-1 (Bun runtime)", () => {
-  it.layer(TestPlatform, { timeout: "120 seconds" })("goals Markdown sample", (it) => {
+  it.layer(TestPlatform)("goals Markdown sample", (it) => {
     it.effect(
       "AC-1 byte identity: import then export reproduces every byte of every sample file, and a rebuild from the log alone matches every FileImported digest",
       Effect.fnUntraced(function* () {
@@ -217,7 +219,8 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector AC-1 (Bun runtime)", () => {
           O.map(emptyRecord, (record) => record.nodeCount),
           0
         );
-      })
+      }),
+      { timeout: 120_000 }
     );
 
     it.effect(
@@ -231,6 +234,12 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector AC-1 (Bun runtime)", () => {
         yield* store.projector.importFolder(PosixPath.make(folder));
         const imported = yield* store.log.entriesAfter(LogCursor.make(0));
         const model = yield* modelFromLog(imported);
+        const sampleKinds = model.pipe(
+          MutableHashMap.values,
+          A.fromIterable,
+          A.flatMap((nodes) => A.map(nodes, (node) => node.kind)),
+          A.dedupe
+        );
         // Every file takes one edit per round; the empty file takes inserts at the top.
         const paths = A.sort(
           A.map(sample.files, (file) => file.path as MemoryFilePath),
@@ -258,26 +267,33 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector AC-1 (Bun runtime)", () => {
               A.map(nodes, (node, index) => [index, node] as const),
               ([, node]) => node.live && Str.isNonEmpty(node.text)
             );
-            // Rotate the target kind so every kind present in the file is edited.
-            const wanted = O.getOrElse(
-              A.get(NodeKind.literals, (round + fileIndex) % NodeKind.literals.length),
-              () => "paragraph" as const
+            // Rotate through every (kind, operation) pair of the kinds this
+            // file holds: slot k names kind k mod m and operation
+            // floor(k / m) mod 3, so each kind the file holds takes each
+            // operation and neither choice is tied to the other.
+            const kinds = A.filter(NodeKind.literals, (kind) => A.some(live, ([, node]) => node.kind === kind));
+            const slot = round + fileIndex;
+            const width = Math.max(kinds.length, 1);
+            const wanted = O.getOrElse(A.get(kinds, slot % width), () => "paragraph" as const);
+            const planned = O.getOrElse(
+              A.get(operations, Math.floor(slot / width) % operations.length),
+              () => "insert" as const
             );
             const ofKind = A.filter(live, ([, node]) => node.kind === wanted);
             const pool = A.isReadonlyArrayNonEmpty(ofKind) ? ofKind : live;
-            const planned = O.getOrElse(
-              A.get(operations, (round + fileIndex) % operations.length),
-              () => "insert" as const
-            );
             const pick = A.get(pool, Math.floor(random() * pool.length));
             const operation: Operation =
               O.isNone(pick) || (planned === "retire" && live.length <= 2) ? "insert" : planned;
             const serial = edits;
 
             if (operation === "insert" || O.isNone(pick)) {
-              // Insert after a random node of any kind, tombstones and gaps
-              // included, or at the top of the file.
-              const position = Math.floor(random() * (nodes.length + 1));
+              // Insert after the picked node; one insert in ten goes to any
+              // position instead, tombstones, gaps and the top of the file
+              // included.
+              const anywhere = O.isNone(pick) || random() < 0.1;
+              const position = anywhere
+                ? Math.floor(random() * (nodes.length + 1))
+                : O.match(pick, { onNone: () => 0, onSome: ([index]) => index + 1 });
               const after = O.map(A.get(nodes, position - 1), (node) => node.nodeId);
               const nodeId = NodeId.make(replayNodeId(minted));
               minted += 1;
@@ -289,7 +305,15 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector AC-1 (Bun runtime)", () => {
               const start = modelText(A.take(nodes, position)).length;
               nodes.splice(position, 0, { kind, live: true, nodeId, revisionId: insert.revisionId, text });
               touched.push({ path, start, oldLength: 0, newText: text, previous, nodeId, operation });
-              perKind.bump(wanted);
+              // An insert counts against the kind of the node it follows.
+              perKind.bump(
+                anywhere
+                  ? "insert:anywhere"
+                  : `insert:${O.getOrElse(
+                      O.map(pick, ([, node]) => node.kind),
+                      () => "top"
+                    )}`
+              );
             } else {
               const [index, node] = pick.value;
               const start = modelText(A.take(nodes, index)).length;
@@ -309,7 +333,7 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector AC-1 (Bun runtime)", () => {
                 nodeId: node.nodeId,
                 operation,
               });
-              perKind.bump(node.kind);
+              perKind.bump(`${operation}:${node.kind}`);
             }
             perOperation.bump(operation);
             edits += 1;
@@ -357,9 +381,16 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector AC-1 (Bun runtime)", () => {
         expect(bound).toBeLessThanOrEqual(0.001);
         expect(projectMismatches).toBe(0);
         expect(projectChecks).toBeGreaterThanOrEqual(edits / PROJECT_NODE_STRIDE - 1);
-        // Every node kind took edits, gap nodes included.
-        expect(A.filter(NodeKind.literals, (kind) => perKind.get(kind) === 0)).toEqual([]);
-      })
+        // Every node kind of the sample was revised, retired and inserted
+        // after, by the node actually touched, gap nodes included.
+        expect(A.sort(sampleKinds, Order.String)).toEqual(A.sort(NodeKind.literals, Order.String));
+        const thin = A.filter(
+          A.flatMap(sampleKinds, (kind) => A.map(operations, (operation) => `${operation}:${kind}`)),
+          (key) => perKind.get(key) < PER_KIND_OPERATION_MIN
+        );
+        expect(thin).toEqual([]);
+      }),
+      { timeout: 120_000 }
     );
 
     it.effect(
@@ -468,7 +499,8 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector AC-1 (Bun runtime)", () => {
         expect(positions).toBeGreaterThanOrEqual(1_000);
         expect(failures).toBe(0);
         expect(fileMismatches).toEqual([]);
-      })
+      }),
+      { timeout: 120_000 }
     );
   });
 });

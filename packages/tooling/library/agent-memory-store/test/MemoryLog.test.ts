@@ -14,6 +14,7 @@ import {
   HoldNotOpenError,
   HoldResolved,
   LogCursor,
+  MemoryFilePath,
   MemoryLog,
   MemoryLogError,
   MemoryLogTestLayer,
@@ -25,9 +26,11 @@ import {
   NodeRevised,
   RevisionId,
   StaleParentsError,
+  UnplacedNodeError,
   WriteHeld,
 } from "@beep/agent-memory-store";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -49,6 +52,7 @@ const isBunRuntime = P.isNotUndefined(process.versions.bun);
 const nodeA = NodeId.make("018f9c3e-7d2a-7b4c-9e1f-2a3b4c5d6e01");
 const nodeB = NodeId.make("018f9c3e-7d2a-7b4c-9e1f-2a3b4c5d6e02");
 const unknownNode = NodeId.make("018f9c3e-7d2a-7b4c-9e1f-2a3b4c5d6e03");
+const absentNode = NodeId.make("018f9c3e-7d2a-7b4c-9e1f-2a3b4c5d6e04");
 const holdA = HoldId.make("018f9c3e-7d2a-7b4c-9e1f-2a3b4c5d6ea1");
 const unknownHold = HoldId.make("018f9c3e-7d2a-7b4c-9e1f-2a3b4c5d6ea2");
 
@@ -148,6 +152,43 @@ const freshLog = Effect.fnUntraced(function* () {
 });
 
 describe.skipIf(!isBunRuntime)("MemoryLog live layer (Bun runtime)", () => {
+  it.effect(
+    "a NodeCreated placed after a node of another file or after an unknown node fails with UnplacedNodeError and appends nothing",
+    Effect.fnUntraced(function* () {
+      const log = yield* freshLog();
+      yield* log.append(created(nodeA, r1));
+      const cursor = yield* log.cursor;
+      const otherFile = MemoryFilePath.make("notes/other.md");
+      const after = (nodeId: NodeId, revisionId: RevisionId, predecessor: NodeId, path: MemoryFilePath) => {
+        const event = created(nodeId, revisionId);
+        return event._tag === "NodeCreated"
+          ? { ...event, payload: NodeCreated.make({ ...event.payload, filePath: path, after: O.some(predecessor) }) }
+          : event;
+      };
+
+      const crossFile = yield* Effect.flip(log.append(after(nodeB, r2, nodeA, otherFile)));
+      expect(crossFile).toBeInstanceOf(UnplacedNodeError);
+      expect(crossFile).toMatchObject({ nodeId: nodeB, filePath: otherFile, after: nodeA });
+      assertSome(S.is(UnplacedNodeError)(crossFile) ? crossFile.afterFilePath : O.none(), filePath);
+
+      // A refused event rolls back its whole batch, earlier events included.
+      const missing = yield* Effect.flip(
+        log.appendMany([after(nodeB, r2, nodeA, filePath), after(unknownNode, r3, absentNode, filePath)])
+      );
+      expect(missing).toMatchObject({ _tag: "UnplacedNodeError", nodeId: unknownNode, after: absentNode });
+      assertNone(S.is(UnplacedNodeError)(missing) ? missing.afterFilePath : O.some(filePath));
+      const unchanged = yield* log.cursor;
+      const headsB = yield* log.heads(nodeB);
+      expect(unchanged).toBe(cursor);
+      expect(headsB).toEqual([]);
+
+      // A predecessor created earlier in the same batch places the node.
+      yield* log.appendMany([after(nodeB, r2, nodeA, filePath), after(unknownNode, r3, nodeB, filePath)]);
+      const placed = yield* log.heads(unknownNode);
+      expect(placed).toEqual([r3]);
+    })
+  );
+
   it.effect(
     "append then heads: a created node has its root revision as head and a revision replaces it",
     Effect.fnUntraced(function* () {
@@ -335,7 +376,7 @@ describe.skipIf(!isBunRuntime)("MemoryLog live layer (Bun runtime)", () => {
     })
   );
 
-  it.layer(TestPlatform, { timeout: "30 seconds" })("database files", (it) => {
+  it.layer(TestPlatform)("database files", (it) => {
     it.effect(
       "two connections to one database file both try the same compare-and-set and exactly one wins",
       Effect.fnUntraced(function* () {

@@ -10,9 +10,12 @@
  * `memory-log-checks-parents-in-the-journal-transaction`: the event handlers
  * run inside the journal's writer transaction (`SqlEventJournal.writeMany`
  * calls them inside `sql.withTransaction`, before it inserts the batch), and
- * in that same transaction they maintain three store tables:
+ * in that same transaction they maintain four store tables:
  *
  * - `agent_memory_heads`: the head revisions of every node;
+ * - `agent_memory_nodes`: the file of every node, so a `NodeCreated` whose
+ *   predecessor is unknown or in another file is refused with
+ *   `UnplacedNodeError`;
  * - `agent_memory_holds`: every held write and whether it is still open
  *   (decision `held-writes-are-log-events`);
  * - `agent_memory_order`: the commit-order number of every entry, which is the
@@ -50,7 +53,7 @@ import * as Reactivity from "effect/reactivity/Reactivity";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as SqlError from "effect/sql/SqlError";
-import { HoldNotOpenError, MemoryLogError, StaleParentsError } from "./AgentMemoryStore.errors.ts";
+import { HoldNotOpenError, MemoryLogError, StaleParentsError, UnplacedNodeError } from "./AgentMemoryStore.errors.ts";
 import { MemoryLog } from "./MemoryLog.service.ts";
 import {
   MemoryEvents,
@@ -60,7 +63,7 @@ import {
   NodeRevisedEvent,
   NodeStatusChangedEvent,
 } from "./NodeEvent.events.ts";
-import { LogCursor, RevisionId } from "./NodeIdentity.models.ts";
+import { LogCursor, MemoryFilePath, RevisionId } from "./NodeIdentity.models.ts";
 import type { SqliteClientConfig } from "@beep/sqlite";
 import type * as Arr from "effect/Array";
 import type { Entry } from "effect/eventlog/EventJournal";
@@ -99,11 +102,13 @@ const HeadRows = S.Array(S.Struct({ revision_id: RevisionId }));
 const HoldRows = S.Array(S.Struct({ open: S.Literals([0, 1]) }));
 const OrderRows = S.Array(S.Struct({ entry_id: EventJournal.EntryId }));
 const CursorRows = S.Array(S.Struct({ cursor: LogCursor }));
+const NodeFileRows = S.Array(S.Struct({ file_path: MemoryFilePath }));
 
 const decodeHeadRows = S.decodeUnknownEffect(HeadRows);
 const decodeHoldRows = S.decodeUnknownEffect(HoldRows);
 const decodeOrderRows = S.decodeUnknownEffect(OrderRows);
 const decodeCursorRows = S.decodeUnknownEffect(CursorRows);
+const decodeNodeFileRows = S.decodeUnknownEffect(NodeFileRows);
 
 const createTables = Effect.fnUntraced(function* () {
   const sql = yield* SqlClient.SqlClient;
@@ -112,6 +117,11 @@ const createTables = Effect.fnUntraced(function* () {
       node_id TEXT NOT NULL,
       revision_id TEXT NOT NULL,
       PRIMARY KEY (node_id, revision_id)
+    )`;
+  yield* sql`
+    CREATE TABLE IF NOT EXISTS agent_memory_nodes (
+      node_id TEXT PRIMARY KEY,
+      file_path TEXT NOT NULL
     )`;
   yield* sql`
     CREATE TABLE IF NOT EXISTS agent_memory_holds (
@@ -158,14 +168,47 @@ const recordOrder = Effect.fnUntraced(function* (entry: Entry) {
 const sameRevisions = (left: ReadonlyArray<RevisionId>, right: ReadonlyArray<RevisionId>): boolean =>
   Equal.equals(HashSet.fromIterable(left), HashSet.fromIterable(right));
 
+const fileOfNode = Effect.fnUntraced(function* (nodeId: NodeId) {
+  const sql = yield* SqlClient.SqlClient;
+  const rows = yield* sql`SELECT file_path FROM agent_memory_nodes WHERE node_id = ${nodeId}`.pipe(
+    Effect.flatMap(decodeNodeFileRows)
+  );
+  return O.map(A.head(rows), (row) => row.file_path);
+});
+
+// A created node is placed after a predecessor of its own file, or opens the
+// file; earlier events of the same batch are already in the nodes table.
+const checkPlacement = Effect.fnUntraced(function* (payload: {
+  readonly nodeId: NodeId;
+  readonly filePath: MemoryFilePath;
+  readonly after: O.Option<NodeId>;
+}) {
+  if (O.isNone(payload.after)) {
+    return;
+  }
+  const after = payload.after.value;
+  const afterFilePath = yield* fileOfNode(after);
+  if (!O.contains(afterFilePath, payload.filePath)) {
+    return yield* UnplacedNodeError.make({ nodeId: payload.nodeId, filePath: payload.filePath, after, afterFilePath });
+  }
+});
+
 const createNode = Effect.fnUntraced(function* (
-  payload: { readonly nodeId: NodeId; readonly revisionId: RevisionId },
+  payload: {
+    readonly nodeId: NodeId;
+    readonly revisionId: RevisionId;
+    readonly filePath: MemoryFilePath;
+    readonly after: O.Option<NodeId>;
+  },
   entry: Entry
 ) {
   const heads = yield* readHeads(payload.nodeId);
   if (A.isReadonlyArrayNonEmpty(heads)) {
     return yield* StaleParentsError.make({ nodeId: payload.nodeId, parents: [], heads });
   }
+  yield* checkPlacement(payload);
+  const sql = yield* SqlClient.SqlClient;
+  yield* sql`INSERT INTO agent_memory_nodes ${sql.insert({ node_id: payload.nodeId, file_path: payload.filePath })}`;
   yield* writeHead(payload.nodeId, payload.revisionId);
   yield* recordOrder(entry);
 });
