@@ -16,6 +16,7 @@ export {
 } from "../commands/Knowledge/Knowledge.command.ts";
 export { KnowledgeCommandSurface } from "../commands/Knowledge/Knowledge.command-surface.ts";
 export {
+  baseSharingHeadCommandSurfaceForTesting,
   gitRefSpanNamesForTesting,
   inSequenceOrderForTesting,
   knowledgeTrackedPathExistsForTesting,

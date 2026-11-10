@@ -18,6 +18,7 @@ import {
   resolveKnowledgeProbePolicy,
 } from "@beep/repo-cli/commands/Knowledge";
 import {
+  baseSharingHeadCommandSurfaceForTesting,
   gitRefSpanNamesForTesting,
   inSequenceOrderForTesting,
   KnowledgeCommandSurface,
@@ -508,6 +509,25 @@ describe("knowledge semantic-delta golden paired fixtures", () => {
                 }),
               ],
             }
+          )
+        );
+        const inherited = yield* expectedId("broken-tracked-path", "base:docs/old.md", "repo-path:docs/missing.md");
+        expect(introducedIds(report)).toEqual([]);
+        expect(unchangedIds(report)).toEqual([inherited]);
+      })
+    );
+  });
+
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("the first rename naming a target decides the lineage", () =>
+      Effect.gen(function* () {
+        const rename = (sourcePath: string) =>
+          KnowledgeRename.make({ sourcePath, targetPath: "docs/new.md", score: S.Natural.make(100) });
+        const report = yield* scan(
+          fixture(
+            { "docs/old.md": "Use `docs/missing.md`.\n", "docs/older.md": "Plain.\n" },
+            { "docs/new.md": "Use `docs/missing.md`.\n" },
+            { renames: [rename("docs/old.md"), rename("docs/older.md")] }
           )
         );
         const inherited = yield* expectedId("broken-tracked-path", "base:docs/old.md", "repo-path:docs/missing.md");
@@ -2266,6 +2286,36 @@ describe("knowledge semantic-delta shared static command surface", () => {
         ]);
 
         assert.deepStrictEqual(shared, [true, false, false, false]);
+      })
+    );
+
+    it.effect("refuses the reuse when an attribute file is not a regular blob on both sides", () =>
+      Effect.gen(function* () {
+        const linked = makeOracle(
+          { ...SIDE_FILES, ".gitattributes": "docs/attributes\n" },
+          { modes: { ".gitattributes": "120000" } }
+        );
+
+        const shared = yield* sharesStaticCommandSurfaceForTesting(linked.trackedEntries, linked);
+
+        assert.strictEqual(shared, false);
+      })
+    );
+
+    it.effect("hands the base side HEAD's command tree only when the surface is shared", () =>
+      Effect.gen(function* () {
+        const head = makeOracle(SIDE_FILES);
+        const sharing = makeOracle({ ...SIDE_FILES, "docs/a.md": "changed outside the reader\n" });
+        const differing = makeOracle(SIDE_FILES, { objectIds: { [COMMAND_FILE]: "oid:changed" } });
+
+        const reused = yield* baseSharingHeadCommandSurfaceForTesting(sharing, head);
+        const kept = yield* baseSharingHeadCommandSurfaceForTesting(differing, head);
+
+        assert.strictEqual(reused.commandTree, head.commandTree);
+        assert.notStrictEqual(sharing.commandTree, head.commandTree);
+        assert.strictEqual(reused.trackedEntries, sharing.trackedEntries);
+        assert.strictEqual(reused.readBytes, sharing.readBytes);
+        assert.strictEqual(kept, differing);
       })
     );
   });

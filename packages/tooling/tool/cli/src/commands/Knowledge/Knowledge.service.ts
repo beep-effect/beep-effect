@@ -449,6 +449,11 @@ const documentIdForBase = (repoPath: string): string => nfc(`base:${repoPath}`);
  *
  * The rename lookups and the base path set are built once per comparison rather than once per HEAD
  * document. The first rename naming a target wins, exactly as a front-to-back search would pick it.
+ *
+ * @param baseEntries - Tracked entries of the base tree; only their paths are read.
+ * @param renames - Renames between base and HEAD, in the order `git diff` reported them.
+ * @returns The identity of a HEAD entry: its rename source's base identity, its own base identity
+ *   when the path exists on both sides and was not renamed away, or a HEAD-only identity.
  */
 const makeHeadDocumentIdResolver = (
   baseEntries: ReadonlyArray<KnowledgeTrackedEntry>,
@@ -1776,6 +1781,10 @@ export const resolveKnowledgeProbePolicy = Effect.fn("Knowledge.resolveProbePoli
  *
  * Both always run to completion; the first failure in sequence order wins, so callers keep the error
  * precedence of the sequential program they replace.
+ *
+ * @param first - The effect whose failure takes precedence.
+ * @param second - The effect whose failure is reported only when `first` succeeds.
+ * @returns Both successes as a pair, or the first failure in sequence order.
  */
 const inSequenceOrder = <A, B, E1, E2, R1, R2>(
   first: Effect.Effect<A, E1, R1>,
@@ -1930,6 +1939,56 @@ const sharesStaticCommandSurface = Effect.fn("Knowledge.sharesStaticCommandSurfa
  */
 export const sharesStaticCommandSurfaceForTesting = sharesStaticCommandSurface;
 
+/**
+ * The base oracle a comparison scans: carrying HEAD's command tree when the static surface is
+ * provably shared, and unchanged otherwise.
+ *
+ * @param base - The base side's oracle.
+ * @param head - The HEAD side's oracle, whose command tree is reused when the surface is shared.
+ * @returns `base` itself when the surfaces differ, or a copy whose `commandTree` is HEAD's.
+ */
+const baseSharingHeadCommandSurface = (
+  base: KnowledgeArchiveOracle,
+  head: KnowledgeArchiveOracle
+): Effect.Effect<KnowledgeArchiveOracle> =>
+  Effect.map(sharesStaticCommandSurface(base.trackedEntries, head), (shared) =>
+    shared ? { ...base, commandTree: head.commandTree } : base
+  );
+
+/**
+ * Applies the shared-surface decision to a base oracle, as the live comparison does.
+ *
+ * **Example** (Two empty trees share one command tree)
+ *
+ * ```ts
+ * import { KnowledgeIndexBytes } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
+ * import type { KnowledgeArchiveOracle } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
+ * import { baseSharingHeadCommandSurfaceForTesting } from "@beep/repo-cli/test/Knowledge"
+ * import * as Effect from "effect/Effect"
+ *
+ * const side: KnowledgeArchiveOracle = {
+ *   commandTree: Effect.die("unused"),
+ *   currentCommandTree: Effect.die("unused"),
+ *   indexBytes: Effect.succeed(KnowledgeIndexBytes.make({ expected: new Uint8Array(), archived: new Uint8Array() })),
+ *   probeCommands: () => Effect.succeed([]),
+ *   readBytes: () => Effect.succeed(new Uint8Array()),
+ *   trackedEntries: [],
+ * }
+ *
+ * console.log(Effect.isEffect(baseSharingHeadCommandSurfaceForTesting(side, side))) // true
+ * ```
+ *
+ * @param base - The base side's oracle.
+ * @param head - The HEAD side's oracle.
+ * @returns `base` itself when the surfaces differ, or a copy whose `commandTree` is HEAD's.
+ * @category testing
+ * @since 0.0.0
+ */
+export const baseSharingHeadCommandSurfaceForTesting: {
+  (head: KnowledgeArchiveOracle): (base: KnowledgeArchiveOracle) => Effect.Effect<KnowledgeArchiveOracle>;
+  (base: KnowledgeArchiveOracle, head: KnowledgeArchiveOracle): Effect.Effect<KnowledgeArchiveOracle>;
+} = dual(2, baseSharingHeadCommandSurface);
+
 const semanticDeltaLive = Effect.fn("Knowledge.semanticDelta")(function* (baseRef: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -2007,9 +2066,8 @@ const semanticDeltaLive = Effect.fn("Knowledge.semanticDelta")(function* (baseRe
       );
       const headCommandTree = yield* Effect.cached(headOracle.commandTree);
       const head = { ...headOracle, commandTree: headCommandTree } satisfies KnowledgeArchiveOracle;
-      const sharedSurface = yield* sharesStaticCommandSurface(baseEntries, head);
       return yield* scanKnowledgePair({
-        base: sharedSurface ? { ...base, commandTree: headCommandTree } : base,
+        base: yield* baseSharingHeadCommandSurface(base, head),
         gitRefNames,
         head,
         probePolicy,

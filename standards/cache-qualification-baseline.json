@@ -8,11 +8,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (fix/redact-ten-minute-certainty-home-path)",
-      "reason": "Re-record the root lint:private-home-paths script, its uncached //#lint:private-home-paths Turbo task and the regenerated policy-fingerprint seals; no existing command, input, output, env or cache flag changes and no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (perf/lint-residuals seal stage)",
+      "reason": "Negate dot-directory residue and build output (!**/dist/**) in lint:effect-vitest to match its scanner, re-record its inventory after stale split-test rows were removed, derive both effect-imports rows from the scanner's corpus constants (631 code and 4479 Markdown sources were read but unhashed), make lint:schema-tag-idioms, lint:jsdoc-module-tags and lint:effect-imports-markdown uncached tracked-discovery tasks, hash the vitest configs the effect-vitest browser-mode filter parses, and make that config walk ignore the row's dist and dot-directory negations; no qualification change.",
       "basis": {
-        "path": "docs/reports/private-home-paths-cache-review-2026-11-09.md",
-        "sha256": "bc0a827320291df9233216dc7480e5c3333d4486f77ca165eb4ea8771a3e197c"
+        "path": "docs/reports/lint-residuals-cache-review-2026-11-09.md",
+        "sha256": "28723fd24119abdb7ea8576eabf911cc84c3978739cb29e4fa613e7760a33a56"
       }
     },
     "@beep/acp": {
@@ -2741,23 +2741,42 @@
         "configuration": {
           "cache": true,
           "inputs": [
+            "!**/.beep/**",
+            "!**/.git/**",
             "!**/.next/**",
+            "!**/.repos/**",
+            "!**/build/**",
             "!**/coverage/**",
             "!**/dist/**",
             "!**/node_modules/**",
             "!**/storybook-static/**",
+            "!**/vendor/**",
+            "!**/worktrees/**",
             "!./package.json",
+            "!.claude/worktrees/**",
             "!packages/**/docs/**",
             "!packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/.runtime-*/**",
+            "*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
             "./.bun-version",
             "./.nvmrc",
             "./standards/root-package.projection.generated.json",
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
+            ".claude/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+            ".github/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+            "apps/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+            "apps/storybook/.storybook/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+            "explorations/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+            "goals/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+            "infra/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+            "packages/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
             "packages/foundation/**/package.json",
             "packages/foundation/**/src/**",
-            "{apps,packages,infra}/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}"
+            "research/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+            "scratchpad/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+            "scripts/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+            "tools/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}"
           ],
           "env": [],
           "passThroughEnv": [],
@@ -2779,34 +2798,38 @@
           "@beep/repo-cli#lint:policy-fingerprint:laws"
         ],
         "configuration": {
-          "cache": true,
+          "cache": false,
           "inputs": [
+            "!**/.beep/**",
+            "!**/.git/**",
             "!**/.next/**",
+            "!**/.repos/**",
+            "!**/build/**",
             "!**/coverage/**",
+            "!**/dist/**",
+            "!**/docs/modules/**",
+            "!**/node_modules/**",
             "!**/storybook-static/**",
+            "!**/vendor/**",
+            "!**/worktrees/**",
             "!./package.json",
+            "!.claude/worktrees/**",
+            "!docs/_internal/**",
+            "!docs/generated/**",
             "!packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/.runtime-*/**",
-            "!{.patterns,standards,.claude/skills,docs,goals}/**/.repos/**",
-            "!{.patterns,standards,.claude/skills,docs,goals}/**/_generated/**",
-            "!{.patterns,standards,.claude/skills,docs,goals}/**/dist/**",
-            "!{.patterns,standards,.claude/skills,docs,goals}/**/generated/**",
-            "!{.patterns,standards,.claude/skills,docs,goals}/**/node_modules/**",
-            "!{.patterns,standards,.claude/skills,docs,goals}/**/vendor/**",
+            "**/*.{md,mdx}",
             "./.bun-version",
             "./.nvmrc",
             "./standards/root-package.projection.generated.json",
             "./tsconfig.base.json",
             "./tsconfig.json",
             "./tsconfig.packages.json",
-            ".claude/skills/**/*.{md,mdx}",
-            ".patterns/**/*.{md,mdx}",
-            "docs/**/*.{md,mdx}",
-            "goals/*/[A-Z]*.md",
             "packages/foundation/**/package.json",
-            "packages/foundation/**/src/**",
-            "standards/**/*.{md,mdx}"
+            "packages/foundation/**/src/**"
           ],
-          "env": [],
+          "env": [
+            "BEEP_CACHE_TOOLCHAIN_DIGEST"
+          ],
           "passThroughEnv": [],
           "outputs": [],
           "dependsOn": [
@@ -2828,7 +2851,9 @@
         "configuration": {
           "cache": true,
           "inputs": [
+            "!**/dist/**",
             "!./package.json",
+            "!{apps,packages,infra}/**/.*/**",
             "!{apps,packages,infra}/**/node_modules/**",
             "./.bun-version",
             "./.nvmrc",
@@ -2839,7 +2864,8 @@
             "standards/effect-vitest.inventory.jsonc",
             "standards/effect-vitest.primitives.jsonc",
             "{apps,packages,infra}/**/*.{test,spec}.{ts,tsx,js,jsx,mts,cts,mjs,cjs}",
-            "{apps,packages,infra}/**/test/**/*.ts"
+            "{apps,packages,infra}/**/test/**/*.ts",
+            "{apps,packages,infra}/**/vitest*.config.{ts,mts,js,mjs}"
           ],
           "env": [],
           "passThroughEnv": [],
@@ -2995,7 +3021,7 @@
           "@beep/repo-cli#lint:policy-fingerprint:quality-jsdoc-module-tags"
         ],
         "configuration": {
-          "cache": true,
+          "cache": false,
           "inputs": [
             "!**/.beep/**",
             "!**/.next/**",
@@ -3016,7 +3042,9 @@
             "./tsconfig.packages.json",
             "{.patterns,apps,packages,tooling}/**/*.{hbs,md,ts,tsx}"
           ],
-          "env": [],
+          "env": [
+            "BEEP_CACHE_TOOLCHAIN_DIGEST"
+          ],
           "passThroughEnv": [],
           "outputs": [],
           "dependsOn": [
@@ -3957,7 +3985,7 @@
           "@beep/repo-cli#lint:policy-fingerprint:laws"
         ],
         "configuration": {
-          "cache": true,
+          "cache": false,
           "inputs": [
             "!**/.beep/**",
             "!**/.next/**",
@@ -3982,7 +4010,9 @@
             "./tsconfig.json",
             "./tsconfig.packages.json"
           ],
-          "env": [],
+          "env": [
+            "BEEP_CACHE_TOOLCHAIN_DIGEST"
+          ],
           "passThroughEnv": [],
           "outputs": [],
           "dependsOn": [
@@ -128362,7 +128392,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "14a7b2bb3550dc66f384110498a00a6a4c03b36fd21b1508f89f7ee1ea8b1285"
+        "sha256": "d952d9ac43e96765c0f84bc1c5f66a13930e6adf5ecb3dfa093f5e3ade7cbc8b"
       }
     ]
   }

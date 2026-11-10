@@ -171,6 +171,8 @@ const isWithin = (directory: string) => (file: string) => file === directory || 
  * console.log(deprecatedApiPartitionCovers(foundationTooling)("packages/tooling/a.ts")) // true
  * ```
  *
+ * @param partition - The partition whose targets and excludes decide membership.
+ * @returns A predicate over repo-relative paths; separators are normalized before matching.
  * @category predicates
  * @since 0.0.0
  */
@@ -200,6 +202,8 @@ export const deprecatedApiPartitionCovers =
  * console.log(deprecatedApiPartitionArgs(partition)) // ["packages", "--ignore-pattern", "packages/a/**"]
  * ```
  *
+ * @param partition - The partition to render.
+ * @returns Targets in declared order, then `--ignore-pattern <exclude>/**` for each exclude.
  * @category utilities
  * @since 0.0.0
  */
