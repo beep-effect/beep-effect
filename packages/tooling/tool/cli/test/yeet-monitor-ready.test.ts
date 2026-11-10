@@ -1,5 +1,6 @@
 import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
+import { GithubRateLimitSampler } from "@beep/repo-cli/test/SharedInternals";
 import {
   appendYeetInboxRow,
   GreptileSummary,
@@ -1579,6 +1580,57 @@ it.layer(platform, { timeout: "30 seconds" })("W4 until-ready comment rows", (te
         expect(A.join(A.map(errorLines62, String), "\n")).toContain(
           "[yeet] comment rows wait: gh could not name the acting login"
         );
+      })
+    )
+  );
+});
+
+// A sampler whose sample never finishes: it counts starts and notes the interrupt.
+const hangingSampler = Effect.fnUntraced(function* () {
+  const starts = yield* Ref.make(0);
+  const interrupted = yield* Ref.make(false);
+  const sampler = GithubRateLimitSampler.of({
+    sampleAll: Effect.fnUntraced(function* () {
+      return A.empty();
+    }),
+    calibrate: Effect.fnUntraced(function* () {
+      return A.empty();
+    }),
+    sampleIfDue: Effect.fnUntraced(
+      function* () {
+        yield* Ref.update(starts, (n) => n + 1);
+        return yield* Effect.never;
+      },
+      Effect.onInterrupt(() => Ref.set(interrupted, true))
+    ),
+  });
+  return { sampler, starts, interrupted };
+});
+
+it.layer(platform, { timeout: "30 seconds" })("monitor /rate_limit sampling", (test) => {
+  test.effect("forks one sample at a time, never waits for it, and interrupts it when the loop ends", () =>
+    fixture((root) =>
+      Effect.gen(function* () {
+        const { sampler, starts, interrupted } = yield* hangingSampler();
+        const polls = yield* Ref.make(0);
+        const terminal = yield* runYeetMonitorUntilMerged(contextFor(root), {
+          ...options,
+          policy: YeetUntilMergedPolicy.make({}),
+          onMerged: () => Effect.void,
+          collectStatus: () =>
+            Ref.getAndUpdate(polls, (n) => n + 1).pipe(
+              Effect.map((n) =>
+                n >= 2 ? snapshot(root, [], false, head, "MERGED") : snapshot(root, [check("Lint", "pending")], false)
+              )
+            ),
+        }).pipe(Effect.provideService(GithubRateLimitSampler, sampler));
+        expect(terminal).toBe("merged");
+        const pollCount = yield* Ref.get(polls);
+        expect(pollCount).toBe(3);
+        const started = yield* Ref.get(starts);
+        expect(started).toBe(1);
+        const stopped = yield* Ref.get(interrupted);
+        expect(stopped).toBe(true);
       })
     )
   );

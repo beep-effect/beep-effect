@@ -4,7 +4,7 @@
   "generatedBy": "bun run beep observability catalog --write",
   "package": "@beep/palantiri",
   "attributes": [
-    {"key":"beep.parcel","type":"string","signals":["span"],"cardinality":"static","minTier":"shape-only","values":["account-headroom","lane-reds","host-pressure","app-error-classes","since-last-check"],"owner":"@beep/palantiri","description":"Parcel a Palantiri read served."},
+    {"key":"beep.parcel","type":"string","signals":["span"],"cardinality":"static","minTier":"shape-only","values":["account-headroom","lane-reds","host-pressure","app-error-classes","since-last-check","github-headroom"],"owner":"@beep/palantiri","description":"Parcel a Palantiri read served."},
     {"key":"beep.parcel_freshness","type":"string","signals":["span"],"cardinality":"static","minTier":"shape-only","values":["fresh","unknown"],"owner":"@beep/palantiri","description":"Whether the parcel read was fresh or unknown."},
     {"key":"beep.resource","type":"string","signals":["metric","span"],"cardinality":"static","minTier":"shape-only","values":["cpu","memory","io"],"owner":"@beep/palantiri","description":"Resource a pressure stall reading measures."},
     {"key":"beep.window","type":"string","signals":["metric","span"],"cardinality":"static","minTier":"shape-only","values":["session","weekly","weekly-scoped","cycle","cycle-scoped"],"owner":"@beep/palantiri","description":"Plan-limit window a quota reading measures."},

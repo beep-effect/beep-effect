@@ -94,6 +94,11 @@ const appErrorClassesTool = parcelTool(
   "App error classes; always Unknown{no-source} until a telemetry query adapter exists."
 );
 
+const githubHeadroomTool = parcelTool(
+  "palantiri_github_headroom",
+  "Remaining GitHub requests per identity and resource on this host, the reserve state and the last hour's top spenders."
+);
+
 const sinceLastCheckTool = annotateFourHints(
   Tool.make("palantiri_since_last_check", {
     description:
@@ -112,7 +117,7 @@ const sinceLastCheckTool = annotateFourHints(
  * ```ts
  * import { PalantiriToolkit } from "@beep/repo-cli/test/Palantiri"
  *
- * console.log(Object.keys(PalantiriToolkit.tools).length) // 6
+ * console.log(Object.keys(PalantiriToolkit.tools).length) // 7
  * ```
  *
  * @category models
@@ -124,7 +129,8 @@ export const PalantiriToolkit = Toolkit.make(
   laneRedsTool,
   hostPressureTool,
   appErrorClassesTool,
-  sinceLastCheckTool
+  sinceLastCheckTool,
+  githubHeadroomTool
 );
 
 const listingOf = (spec: ParcelSpec): ParcelListing =>
@@ -171,6 +177,7 @@ export const layerPalantiriToolHandlers = PalantiriToolkit.toLayer(
       palantiri_lane_reds: read("lane-reds"),
       palantiri_host_pressure: read("host-pressure"),
       palantiri_app_error_classes: read("app-error-classes"),
+      palantiri_github_headroom: read("github-headroom"),
       palantiri_since_last_check: Effect.fn("PalantiriTools.sinceLastCheck")(function* (input) {
         const session = yield* resolveParcelSession(O.fromUndefinedOr(input.session));
         return yield* readWith("since-last-check", parcelReadOptions(O.fromUndefinedOr(input.budget), session));
@@ -192,7 +199,7 @@ export const layerPalantiriToolHandlers = PalantiriToolkit.toLayer(
  * ```
  *
  * @param runtime - The in-process client, with its sources and telemetry.
- * @returns A stdio MCP server layer exposing the six Palantiri tools.
+ * @returns A stdio MCP server layer exposing the seven Palantiri tools.
  * @category layers
  * @since 0.0.0
  */

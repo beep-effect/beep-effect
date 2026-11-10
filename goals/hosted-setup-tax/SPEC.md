@@ -113,13 +113,13 @@ No new workspace package is planned.
 
 ## Levers
 
-Status is from the lever check of 2026-11-09 against `origin/main` 6eb2e0588e2, re-checked at c90929b1ff1 (evidence in
+Status is from the lever check of 2026-11-09 against `origin/main` 6eb2e0588e2, re-checked at c90929b1ff1 and at 5e09d90a6da (evidence in
 [`decisions/`](./decisions/) and [`research/SOURCES.md`](./research/SOURCES.md)).
 
 | Id | What | Status | Admission gate before landing | Depends on |
 | --- | --- | --- | --- | --- |
-| TURB-01 | Owner rows in `CoverageScope.ts` for generated standards inventories (instrumentation catalog, JSDoc and schema-first inventories, policy fingerprint, cache-qualification baseline, `fallow.boundaries.generated.jsonc`) so they stop forcing a full Test Unit fallback | open: rows at `CoverageScope.ts:76-98` cover none of them; `:772` returns "no current workspace owner" | Per-file planner fixtures select exactly the scanned readers; an unmapped standards file still returns full; an in-repo first-parent replay shrinks only commits whose sole full trigger is a mapped file; a token- and segment-aware reader drift check proven by a seeded `path.join` fixture; policy fingerprint resealed | ROUT-05 (soft, corpus) |
-| TEST-01 | Property sweep runs only property-executing tests, then an oracle-checked census | partly landed: #3030 (f818c6e52bf) test-level selection; open: the oracle census, then a file split where the census and its per-file collection and hook timings show module-scope or hook cost still dominating (D26) | Old and new oracle logs identical in (file, test, runs, seed) on 3 heads, with per-file collection and hook time recorded; `passWithNoTests` override; fixtures for module-scope `fcRuns`, props without `fcRuns`, renamed tests; the split slice records its outcome (files split, or none qualifies) in a decision file | none |
+| TURB-01 | Owner rows in `CoverageScope.ts` for generated standards inventories (instrumentation catalog, JSDoc and schema-first inventories, policy fingerprint, cache-qualification baseline, `fallow.boundaries.generated.jsonc`) so they stop forcing a full Test Unit fallback | slice 1 in review (feat/turb-01-standards-coverage-owners): before it, rows at `CoverageScope.ts:76-98` covered none of them and `:772` returned "no current workspace owner"; now `COVERAGE_GENERATED_STANDARDS_OWNER_ROWS` with a reader scan and live drift check (decision file); replay: 67 of 727 first-parent commits shrink (`research/turb-01/REPLAY.md`); slice 2 (scorecard conversion share) open | Per-file planner fixtures select exactly the scanned readers; an unmapped standards file still returns full; an in-repo first-parent replay shrinks only commits whose sole full trigger is a mapped file; a token- and segment-aware reader drift check proven by a seeded `path.join` fixture; policy fingerprint resealed | ROUT-05 (soft, corpus) |
+| TEST-01 | Property sweep runs only property-executing tests, then an oracle-checked census | partly landed: #3030 (f818c6e52bf) test-level selection; #3056 (741b1492b2a) runs the sweep as four slices, two of them Vitest shards of repo-cli (decision file); open: the oracle census, then a file split where the census and its per-file collection and hook timings show module-scope or hook cost still dominating (D26) | Old and new oracle logs identical in (file, test, runs, seed) on 3 heads, with per-file collection and hook time recorded; `passWithNoTests` override; fixtures for module-scope `fcRuns`, props without `fcRuns`, renamed tests; the split slice records its outcome (files split, or none qualifies) in a decision file | none |
 | PERIL-01 | Fold the Fallow advisory envelopes into Labs after its coverage body | open: standalone `fallow-advisory` job; Labs has `contents: read` only | Shadow on a draft PR for at least 10 runs with matching envelope fields; seeded finding gives a failed check run and the merge gate refuses the PR; a check-run post without `checks: write` is visible; a Labs failure still posts; Coverage Regression green with a red Fallow step; RouteCensus keeps a Fallow row | PERIH-04 |
 | PERIH-02 | One hosted `lint:shadcn` owner in required Repo Sanity; retire Shadcn Lint; drop it from the hosted Lint Policy plan | open: `shadcn-lint` job in `check.yml`; `lint:shadcn` in `policyStateTasks` (`Tasks.ts:3706`) | Planted violation turns Repo Sanity red on PR and push, green when removed; a unit test asserts exactly one hosted owner; an earlier Repo Sanity failure cannot mask the step | none |
 | PERIH-04 | Job-level lane-relevance skips for Codegen, Ecosystem, Nix and IPC from Change Profile outputs (Labs excluded) | open: Change Profile outputs only `docs_only` and `goals_only`; the four lanes gate at step level | Offline replay of historical PR heads: zero heads where the old gate runs and the new one skips; push events emit all-true; an old-binary/new-workflow fixture shows guards written `!= 'false'` still run the lane | PERIH-11, PERIH-10 (route-soundness-repair), ROUT-07 |
@@ -170,10 +170,14 @@ Status is from the lever check of 2026-11-09 against `origin/main` 6eb2e0588e2, 
   base-ref patterns (PERIH-10). Each binary change is three PRs: CLI, pin bump, then the workflow switch.
   A guard written `== 'true'` against a binary that predates the new keys would skip required Codegen, Nix
   and IPC on every PR and on main.
-- **Property Laws layout (D26).** Property Laws runs as two Turbo-filter slices (repo-cli, rest) under one
-  aggregate since #3030, accepted as is, ahead of D10's order. No further Property Laws shard lands unless p95
-  stays over 10 minutes after the oracle census and the residual file split slice; returning Property Laws to
-  one slice is a decision file in this goal.
+- **Property Laws layout (D26, #3056).** #3030 ran Property Laws as two Turbo-filter slices (repo-cli, rest),
+  accepted by D26 ahead of D10's order. Since #3056 (741b1492b2a, ci-lane-economics) it runs as four slices
+  under the same aggregate: `repo-cli-1` and `repo-cli-2` (two Vitest shards of the repo-cli sweep),
+  `foundation-drivers` and `rest`. This goal accepts that layout as landed and does not revert it (decision
+  file). D10's order still binds what follows: no further Property Laws shard or slice lands unless p95 stays
+  over 10 minutes after the oracle census and the residual file split slice, and the census joins its log
+  across all four slices. A return to fewer slices is ci-lane-economics' recorded reversal, which this goal
+  may ask for by a decision file.
 - **Narrowing waits on soundness.** ROUT-01's residual and PERIH-04 are route narrowing: neither lands (or, for
   ROUT-01, is declared done) before route-soundness-repair's classifier differential (ROUT-07) reports zero
   unadmitted disagreements for the classifiers they read.
@@ -205,18 +209,16 @@ Status is from the lever check of 2026-11-09 against `origin/main` 6eb2e0588e2, 
   and SAST stay present on every head, skipped jobs included.
 - **Ownership with other goals.** `goals/ci-lane-economics` owns the Test Unit and Test Integration
   partition layout (#3030, #3040, #3043); ROUT-01's residual and TEST-01's census do not change shard counts. The
-  two-slice Property Laws layout is accepted landed state under D26, and its reversal is this goal's. `goals/yeet-monitor-app-identity` owns
+  four-slice Property Laws layout of #3056 is accepted landed state; its reversal is ci-lane-economics'. `goals/yeet-monitor-app-identity` owns
   `.github/workflows/rerun-runner-loss.yml` and `CiRerunRunnerLoss.ts`; HOST-09's rerun slice waits for it.
   heavy-pool-diet owns the Lint Policy plan's JSDoc and knowledge-doctor tasks in `Tasks.ts`; PERIH-02 touches
   only the `lint:shadcn` entry and merges `main` after any heavy-pool-diet change to the same list.
   `goals/turborepo-quality-cache-adoption` is paused (R2); no slice here requests a cache-policy re-record
   beyond the qualification baseline a global-input PR must carry.
-- **Open PRs on shared files.** #3038, #3039, #3040, #3043, #3045 and #3046 have merged and are part of
-  the base. #3041 is still open and edits `Tasks.ts`, `turbo.json`, `quality-tasks.test.ts`, the
-  cache-qualification baseline and the policy fingerprint, so it collides with the PERIH-02 slice
-  (`policyStateTasks`) and with every slice that reseals the fingerprint (TURB-01) or re-records the
-  baseline (global-input slices). Such a slice merges `origin/main` after #3041 lands, and reseals or
-  re-records rather than hand-merging generated files.
+- **Shared generated files.** #3038, #3039, #3040, #3041, #3043, #3045, #3046 and #3056 have merged and are
+  part of the base (checked at 5e09d90a6da). A slice that reseals the policy fingerprint or re-records the
+  cache-qualification baseline while another PR touches them merges `origin/main` and reseals or re-records,
+  never hand-merging generated files.
 - **Numbers carry their caveats.** TURB-01's "15-19% of PR runs" is from a replay that is not a repo artifact;
   the skeptic's sample says about 8% fully convert, and the 727-commit corpus must be rebuilt in-repo before
   the replay gate can run. DEPS-01's "4-12 s per job" is a confounded cross-job comparison (within one run
@@ -372,6 +374,35 @@ Reverse: Restore the Shadcn Lint job in check.yml and its lane arm, and remove t
 Source: exploration `explorations/ten-minute-certainty/DECISIONS.md` (D26, D10); this goal's lever check of commit f818c6e52bf.
 
 Reverse: Return Property Laws to one slice, or revert the #3030 selection to file-level selection, by a new decision in this goal if the census shows the selection or the two-slice layout unsound.
+
+### #3056 landed four Property Laws slices; this goal accepts the layout and keeps D10's order for everything after it, 2026-11-10
+
+#3056 (741b1492b2a, ci-lane-economics, 2026-11-10) replaced the two Turbo-filter slices that D26 accepted with four: `repo-cli-1` and `repo-cli-2` are the two Vitest shards (`--shard 1/2`, `--shard 2/2`) of the @beep/repo-cli sweep, `foundation-drivers` takes `./packages/foundation/**` and `./packages/drivers/**`, and `rest` takes every other package, by complementary filters under the unchanged Property Laws aggregate. The shards now wait on Change Profile and Test Plan instead of Heavy Admission. The cause was latency: as two slices, repo-cli ran 5.7 to 7.9 min and a full rest 8.0 to 9.5 min, so one slow runner put the verdict past ten minutes. Run floors and seeds did not change.
+
+This goes further than D26, and splitting the repo-cli sweep into two Vitest shards is the shape HOST-05 described, landed before the oracle census and the residual file split that D10 put first. This goal does not revert it: the layout is ci-lane-economics' landed state and its reversal is recorded there. D10's order still binds what follows. No further Property Laws shard or slice lands before the oracle census and the residual file split slice, and HOST-05 is read as the gate for any shard beyond these four, still only after the split slice and with the D5 ruling. The census slice must now join its (file, test, runs, seed) log across all four slices and prove the union equals the full sweep with no test in two slices, including the Vitest shard boundary inside repo-cli. The p95 that the HOST-05 gate reads is the aggregate's, over the four-slice layout.
+
+Rejected: revert to two slices (undoes a measured latency fix owned by another goal for no proof gain); treat HOST-05 as done (the census aggregate it required has not landed).
+
+Source: commit 741b1492b2a (`.github/workflows/check.yml` Property Laws matrix, `CiLane.ts` lane filters and `--shard`), `goals/ci-lane-economics/decisions/2026-11-10-split-property-laws-into-four-slices-and-create-them-with-the-test-shards.md`; exploration `explorations/ten-minute-certainty/DECISIONS.md` (D10, D26).
+
+Lane feat/turb-01-standards-coverage-owners
+
+Reverse: Return Property Laws to two slices by ci-lane-economics' recorded reversal (restore the [repo-cli, rest] matrix and its two filters); this goal may ask for it by a new decision if the census shows the four-slice layout loses or duplicates a property-executing test.
+
+### TURB-01 slice 1: generated standards files get owner rows that a reader scan derives and a live drift check holds, 2026-11-10
+
+Six generated standards paths fell through to the `no current workspace owner` fallback in `CoverageScope.ts` (rows at `:76-98`, fallback at `:772` on 5e09d90a6da): the instrumentation catalog directory, the JSDoc and schema-first inventories, the policy fingerprint, the cache-qualification baseline and `fallow.boundaries.generated.jsonc`. They now have rows in `COVERAGE_GENERATED_STANDARDS_OWNER_ROWS`, each `[readerPath, ownerPattern, packageName]`, spread into the repository fixture rows, so a change selects its owner as a fixture owner (no dependents seeded).
+
+The owners are derived, not asserted. `CoverageScopeReaders.ts` holds a reader scan: a workspace source reads a path when one of its string tokens (TypeScript parser via ts-morph, so comments never count; folded `+` chains of literals and template parts do) has the path's basename as one whole path segment. A read outside a package's `test/` tree also makes that package's coverage-bearing dependents owners. The live drift check in `test/coverage-scope-standards-owners.test.ts` scans every `packages/**` and `apps/**` source and fails when a row and the scan disagree in either direction; seeding a wrong owner turned it red. On this head the scan finds @beep/repo-cli alone for all six (repo-cli-kit and repo-configs mention three of them only in comments or a schema tag). Basename-segment matching over-approximates on purpose: a stale-looking extra owner costs a test run, a missed reader would cost a green it did not earn.
+
+Gates: planner fixtures select exactly @beep/repo-cli for each row and keep `standards/fallow.boundaries.provenance.jsonc` (unmapped) and prefix look-alikes on full; the seeded `path.join` fixture and the comment and longer-segment negatives pin the scan; the first-parent replay over 727 commits rebuilt from git (`ops/turb-01-replay.ts`, `research/turb-01/REPLAY.md`) shrinks 67 commits from full to owner-scoped with zero violations. `beep lint policy-fingerprint --check` reports the seal current with these changes (CoverageScope.ts is not a sealed input), so the reseal wrote nothing; the PR touches no `turbo.json`, `bun.lock`, root `package.json` or workflow file, so it is not a global input and re-records no cache-qualification baseline.
+
+Rejected: hand-asserted rows (they drift as readers move); scanning raw text with ripgrep (counts comments and misses `path.join` splits); deriving owners at plan time (the planner would parse the workspace on every run).
+Source: `packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts` at 5e09d90a6da; this PR's replay receipt `research/turb-01/replay-5e09d90a6da.json`.
+
+Lane feat/turb-01-standards-coverage-owners
+
+Reverse: Delete COVERAGE_GENERATED_STANDARDS_OWNER_ROWS and its spread from CoverageScope.ts (the files return to the full fallback), and delete CoverageScopeReaders.ts with its test; no generated file or seal changes.
 
 <!-- beep:decisions:end -->
 

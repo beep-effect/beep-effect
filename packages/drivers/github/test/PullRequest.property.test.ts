@@ -1,5 +1,11 @@
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
-import { MergeMethod, PullRequestInfo, UpsertedPullRequest } from "@beep/github/PullRequest";
+import {
+  MergeMethod,
+  MergeQueueEntry,
+  MergeQueueEntryState,
+  PullRequestInfo,
+  UpsertedPullRequest,
+} from "@beep/github/PullRequest";
 import { describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -25,4 +31,6 @@ describe("PullRequest schema property floor", () => {
   roundTrips("MergeMethod", MergeMethod);
   roundTrips("PullRequestInfo", PullRequestInfo);
   roundTrips("UpsertedPullRequest", UpsertedPullRequest);
+  roundTrips("MergeQueueEntryState", MergeQueueEntryState);
+  roundTrips("MergeQueueEntry", MergeQueueEntry);
 });

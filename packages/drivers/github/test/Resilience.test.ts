@@ -1,10 +1,15 @@
+import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { GitHubError } from "@beep/github/GitHubError";
-import { RateLimitSnapshot, RetryPolicy } from "@beep/github/Resilience";
+import { GitHubRateLimitResource, RateLimitSnapshot, RetryPolicy } from "@beep/github/Resilience";
 import { assert, describe, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
+import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
+import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import type { RetryableFailure } from "@beep/github/Resilience";
 
@@ -27,6 +32,72 @@ describe("RateLimitSnapshot", () => {
   it("reports exhaustion on a zero or negative remaining count", () => {
     assert.isTrue(RateLimitSnapshot.make({ remaining: 0, limit: 60, resetEpochSeconds: 1 }).isExhausted);
     assert.isFalse(RateLimitSnapshot.make({ remaining: 1, limit: 60, resetEpochSeconds: 1 }).isExhausted);
+  });
+
+  it("defaults resource to unknown and used to none when constructed without them", () => {
+    const snapshot = RateLimitSnapshot.make({ remaining: 1, limit: 60, resetEpochSeconds: 1 });
+    assert.strictEqual(snapshot.resource, "unknown");
+    assertNone(snapshot.used);
+  });
+
+  it.effect("defaults resource and used when decoding the three-field encoded form", () =>
+    Effect.gen(function* () {
+      const snapshot = yield* S.decodeEffect(RateLimitSnapshot)({
+        remaining: 1,
+        limit: 60,
+        resetEpochSeconds: 1,
+      });
+      assert.strictEqual(snapshot.resource, "unknown");
+      assertNone(snapshot.used);
+    })
+  );
+
+  it.effect("round-trips resource and used through the encoded form", () =>
+    Effect.gen(function* () {
+      const snapshot = RateLimitSnapshot.make({
+        remaining: 4_000,
+        limit: 5_000,
+        resetEpochSeconds: 1,
+        resource: "graphql",
+        used: O.some(1_000),
+      });
+      const encoded = yield* S.encodeEffect(RateLimitSnapshot)(snapshot);
+      assert.deepStrictEqual(encoded, {
+        remaining: 4_000,
+        limit: 5_000,
+        resetEpochSeconds: 1,
+        resource: "graphql",
+        used: 1_000,
+      });
+      const decoded = yield* S.decodeEffect(RateLimitSnapshot)(encoded);
+      assert.strictEqual(decoded.resource, "graphql");
+      assertSome(decoded.used, 1_000);
+    })
+  );
+});
+
+describe("RateLimitSnapshot codec", () => {
+  it.effect.prop(
+    "round-trips any snapshot through its encoded form",
+    [Arbitrary.schema(RateLimitSnapshot)],
+    Effect.fnUntraced(function* ([snapshot]) {
+      const encoded = yield* S.encodeEffect(RateLimitSnapshot)(snapshot);
+      const decoded = yield* S.decodeEffect(RateLimitSnapshot)(encoded);
+      const reencoded = yield* S.encodeEffect(RateLimitSnapshot)(decoded);
+      assert.deepStrictEqual(reencoded, encoded);
+    }),
+    { arbitrary: fcRuns(50) }
+  );
+});
+
+describe("GitHubRateLimitResource", () => {
+  it("accepts documented buckets and the closed unknown, and rejects anything else", () => {
+    const is = S.is(GitHubRateLimitResource);
+    assert.isTrue(is("core"));
+    assert.isTrue(is("audit_log_streaming"));
+    assert.isTrue(is("unknown"));
+    assert.isFalse(is("brand_new"));
+    assert.isTrue(GitHubRateLimitResource.is.graphql("graphql"));
   });
 });
 

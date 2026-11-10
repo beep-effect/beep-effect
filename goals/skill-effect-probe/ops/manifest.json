@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "skill-effect-probe",
+    "packetId": "goal-packet/v1:01b93319ad6f50e1a810cbe47a205cc26756300e1fa48c00fb7177a48612c059",
+    "title": "Skill Effect Probe",
+    "status": "active",
+    "created": "2026-11-10",
+    "updated": "2026-11-10",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/skill-effect-probe",
+  "lifecycle": "active",
+  "mission": "Measure whether the schema-first-development skill changes Opus 5.5 output on the 12 archived SkillOpt tasks across bare, code-laws and code-laws-plus-skill cells, and return a verdict against a rule fixed before any scored run.",
+  "statusNote": "Authored 2026-11-10, not started. Next: launch and run the P0 slice (one task, three cells, two runs each).",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/skillopt-corpus-headroom",
+    "graduated": "2026-11-10"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/skill-effect-probe/README.md",
+    "goals/skill-effect-probe/SPEC.md",
+    "goals/skill-effect-probe/PLAN.md",
+    "goals/skill-effect-probe/GOAL.md",
+    "goals/skill-effect-probe/research/SOURCES.md",
+    "explorations/skillopt-corpus-headroom/BRIEF.md",
+    "explorations/skillopt-corpus-headroom/DECISIONS.md",
+    "explorations/skillopt-corpus-headroom/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/skill-effect-probe/GOAL.md"
+    }
+  ],
+  "provides": ["tooling/skill-effect-probe"],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/skill-effect-probe/GOAL.md)\" -le 4000",
+    "jq . goals/skill-effect-probe/ops/manifest.json",
+    "rg -n \"skill-effect-probe|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/skill-effect-probe",
+    "git diff --check -- goals/skill-effect-probe",
+    "bun run beep quality package-verify @beep/repo-cli",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation.",
+    "The harness cannot tie a kept run directory to its case, cell and run.",
+    "claude plugin eval is unavailable or the plan limit blocks the scored run; hold and report, never substitute a runner or model."
+  ]
+}
