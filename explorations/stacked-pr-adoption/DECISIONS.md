@@ -445,9 +445,11 @@ been through align.
 **Answer:**
 - **Three layers, not two.** L1 merges alone, so GitHub cascades over L2
   and L3. Then L2 and L3 merge together from the top.
-- **A probe file as payload, labelled `ready-for-heavy`.** L1 creates
-  `research/stack-probe.md` in this packet, L2 edits it, L3 deletes it.
-  `main` ends with no net change.
+- **Probe files as payload, labelled `ready-for-heavy`.** L1 adds
+  `research/stack-probe-a.md` in this packet, L2 adds
+  `research/stack-probe-b.md`, L3 deletes both. `main` ends with no net
+  change. (Corrected 2026-11-10 to what ran: the first wording had one
+  file that L2 edited, which would have hidden the diff base.)
 - **Merges go through `PUT pulls/{n}/merge-async`**, squash, pinned with
   `sha`, `bypass_rules=false` first. If an inherited required red blocks
   the bottom layer, that refusal is recorded and the bottom layer alone is
@@ -480,7 +482,7 @@ been through align.
   merge a stack.
 - The two-layer cap in `stack-layer-heavy` still governs routine use.
 - Reversal: close the three PRs unmerged and delete their branches; if L1
-  has landed, one PR deleting `research/stack-probe.md` restores `main`.
+  has landed, one PR deleting `research/stack-probe-a.md` restores `main`.
 - Rejected:
   - A code payload, as `stack-test-terms` worded it: more gate noise and a
     revert PR afterwards.
@@ -536,3 +538,83 @@ owns that problem.
   - Keeping it as written: nothing measures it.
 - Reversal: restore the trigger if Heavy queue wait on unblockers returns
   to tens of minutes.
+
+## 2026-11-10 — stack-test-result
+
+**Question:** Did the supervised native-stack test pass, and what did it
+settle?
+
+**Answer:** It passed. #3049 merged alone and #3050 with #3051 merged
+together, all through `merge-async`, with no force-push by the lane, and
+`main` ended with no net change. The record is
+[`research/stack-test-2026-11.md`](./research/stack-test-2026-11.md).
+
+- Settled on this repository:
+  - `GITHUB_BASE_REF` is `main` on every layer, while the event payload's
+    base is the direct parent;
+  - the cascade restarts CI and, under today's law, the review window;
+  - a thread on any layer in the merge blocks the whole merge;
+  - an atomic merge writes one squash commit per PR in one push.
+- Not observed: Greptile's and Codex's review diff, a Heavy lane running
+  on a layer, and the cause of a second server-side rewrite 38 seconds
+  after `main` moved.
+- One line of `stack-test-shape`'s rationale was wrong. Hosted admission
+  gives a labelled docs-only layer `skip-satisfied`, so the probe did not
+  exercise Heavy.
+
+**Rationale:**
+- The pass condition in `stack-test-shape` was met: three layers through
+  the async endpoint, no agent-side force-push, an observed answer or an
+  explicit NOT OBSERVED for every listed fact.
+- Nothing on GitHub's side blocked a stack. Every blocker found is in
+  Yeet: the legacy merge endpoint, the S32 push in `yeet ready`, the
+  head-bound final-check receipt, and a review window that restarted twice
+  in 30 minutes for a diff that never changed.
+- Rejected: calling the test incomplete until the unobserved facts are
+  filled in. They need a code layer and working review-bot quota, and the
+  first real two-layer stack will supply both.
+
+## 2026-11-10 — graduate-one-goal
+
+**Question:** The test passed and every blocker it found is in Yeet. What
+does the packet do next?
+
+**Answer:** Shape, decompose and graduate one goal,
+`yeet-async-merge-and-stacks`, in four phases: the async merge port, proof
+that survives a rewrite with unchanged patch-ids, two-layer stack support,
+and a measured pilot with kill criteria. The operator confirmed the shape
+in [`BRIEF.md`](./BRIEF.md) the same session.
+
+**Rationale:**
+- The first two phases pay off with stacks off: the async endpoint is the
+  merge queue's first step and makes a bypass an explicit request, and the
+  rewrite rule removes a wait the test measured at 29 minutes.
+- Demand is about four linear chains a week, built today by copying the
+  parent's commits. That is too little to justify hand-run stacks with
+  doctrine exceptions, and enough to justify one bounded week.
+- This answers the three questions left open on 2026-11-09. The port is
+  P0. The rest of the slice is P1 to P3 of the same goal. The 80% health
+  bar no longer gates anything: the pilot rule is to open a stack only
+  while `main`'s required checks are green.
+- Rejected:
+  - The async port alone, with stacks parked: it leaves the 18 live pairs
+    a fortnight on the copy pattern.
+  - Parking with the results: the blockers are known and small.
+  - Killing native stacks: nothing in the test argues for it.
+- Reversal: close the goal after P1 and restore the park.
+
+## 2026-11-10 — second-rewrite-unattributed
+
+**Question:** Who rebased layers 2 and 3 onto the new `main` at 02:54:20Z,
+38 seconds after #3041 landed?
+
+**Answer:** Unattributed. The operator did not, this session did not, and
+no repo tooling calls a branch update. It is recorded as either another
+session on the shared login or GitHub restacking a partially merged stack
+when its trunk moves. The pilot (P3) has to settle which.
+
+**Rationale:** The two readings lead to different designs. If GitHub does
+it, a stack is rewritten about as often as `main` lands a PR, and the
+rewrite rule in P1 is a precondition for any stack. If a session did it,
+the do-not-rebase notice on the PRs did not hold and the rule needs
+enforcing. One observation cannot tell them apart.
