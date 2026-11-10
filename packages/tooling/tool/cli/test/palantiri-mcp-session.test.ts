@@ -2,6 +2,9 @@ import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   AccountHeadroomSource,
   AdmissionSlotsInput,
+  GithubHeadroomBucketInput,
+  GithubHeadroomInput,
+  GithubHeadroomSource,
   HostMemoryInput,
   HostPressureInput,
   HostPressureSource,
@@ -87,7 +90,7 @@ const noFiles = Layer.mergeAll(FileSystem.layerNoop({}), Path.layer);
 
 const memoryFiles = Layer.mergeAll(MemoryFileSystem.layer, Path.layer);
 
-const offline = (parcel: "account-headroom" | "lane-reds" | "host-pressure" | "since-last-check") =>
+const offline = (parcel: "account-headroom" | "lane-reds" | "host-pressure" | "since-last-check" | "github-headroom") =>
   Effect.fail(SourceFailed.make({ parcel, detail: "not wired in this test" }));
 
 const CPU = "some avg10=2.13 avg60=1.05 avg300=0.48 total=987654321\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0\n";
@@ -132,6 +135,31 @@ const lanesAt = (now: DateTime.Utc) =>
     ],
   });
 
+const githubAt = (now: DateTime.Utc) =>
+  GithubHeadroomInput.cases.Present.make({
+    generatedAt: now,
+    buckets: [
+      GithubHeadroomBucketInput.make({
+        identity: "user:octocat",
+        resource: "core",
+        limit: 5000,
+        remaining: 4000,
+        used: 1000,
+        resetsAt: DateTime.add(now, { minutes: 30 }),
+        asOf: now,
+        basis: "transport",
+        reserve: "clear",
+        reserveFloor: 750,
+        unattributedLastHour: O.none(),
+      }),
+    ],
+    spenders: [],
+    summaryAsOf: O.some(now),
+    lastRowAt: O.some(now),
+  });
+
+const githubFresh = Layer.succeed(GithubHeadroomSource, { snapshot: Effect.map(DateTime.now, githubAt) });
+
 const sinceLastCheckOffline = Layer.succeed(SinceLastCheckSource, {
   read: Effect.fn("SinceLastCheckSource.stub.read")(() => offline("since-last-check")),
   advance: Effect.fn("SinceLastCheckSource.stub.advance")(() => offline("since-last-check")),
@@ -142,7 +170,8 @@ const workingSources = Layer.mergeAll(
   Layer.succeed(AccountHeadroomSource, { snapshot: offline("account-headroom") }),
   Layer.succeed(LaneRedsSource, { snapshot: Effect.map(DateTime.now, lanesAt) }),
   Layer.succeed(HostPressureSource, { snapshot: Effect.map(DateTime.now, pressureAt) }),
-  sinceLastCheckOffline
+  sinceLastCheckOffline,
+  githubFresh
 );
 
 // Lane reds never answers.
@@ -150,11 +179,15 @@ const hangingSources = Layer.mergeAll(
   Layer.succeed(AccountHeadroomSource, { snapshot: offline("account-headroom") }),
   Layer.succeed(LaneRedsSource, { snapshot: Effect.never }),
   Layer.succeed(HostPressureSource, { snapshot: Effect.map(DateTime.now, pressureAt) }),
-  sinceLastCheckOffline
+  sinceLastCheckOffline,
+  githubFresh
 );
 
 const runtimeOver = <E>(
-  sources: Layer.Layer<AccountHeadroomSource | LaneRedsSource | HostPressureSource | SinceLastCheckSource, E>
+  sources: Layer.Layer<
+    AccountHeadroomSource | LaneRedsSource | HostPressureSource | SinceLastCheckSource | GithubHeadroomSource,
+    E
+  >
 ) => sources.pipe(layerPalantiriRuntime(Layer.empty), Layer.provide(noFiles));
 
 const NOON = DateTime.makeUnsafe("2026-10-15T12:00:00.000Z");
@@ -185,6 +218,7 @@ describe("beep palantiri mcp", () => {
           ["host-pressure", "palantiri_host_pressure"],
           ["app-error-classes", "palantiri_app_error_classes"],
           ["account-headroom", "palantiri_account_headroom"],
+          ["github-headroom", "palantiri_github_headroom"],
         ];
         yield* Effect.forEach(
           parcels,
@@ -243,6 +277,7 @@ describe("beep session open hot parcels", () => {
         "- account-headroom: account headroom unavailable: not wired in this test (unknown (unreachable): not wired in this test)",
         expect.stringMatching(/^- lane-reds: .+ \(fresh as of 2026-10-15T12:00:00\.000Z\)$/),
         expect.stringMatching(/^- host-pressure: .+ \(fresh as of 2026-10-15T12:00:00\.000Z\)$/),
+        "- github-headroom: user:octocat core 4000/5000 ↺12:30Z; top 1h here: none (fresh as of 2026-10-15T12:00:00.000Z)",
       ]);
     })
   );
@@ -254,7 +289,7 @@ describe("beep session open hot parcels", () => {
       yield* TestClock.adjust("3 seconds");
       const join4 = yield* Fiber.join(fiber);
       const lines = renderHotBlock(join4);
-      expect(lines).toHaveLength(4);
+      expect(lines).toHaveLength(5);
       expect(lines[2]).toBe("- lane-reds: Unknown (timed out after 2s)");
       expect(lines[3]).toMatch(/^- host-pressure: .+ \(fresh as of /);
     })
@@ -284,7 +319,8 @@ describe("beep session open hot parcels", () => {
           Layer.succeed(HostPressureSource, {
             snapshot: Effect.map(DateTime.now, (now) => pressureAt(DateTime.subtract(now, { minutes: 10 }))),
           }),
-          sinceLastCheckOffline
+          sinceLastCheckOffline,
+          githubFresh
         );
         const result = yield* tenMinutesOld.pipe(runtimeOver, hotParcels(HOT_PARCELS_TIMEOUT));
         const lines = yield* Result.match(result, { onFailure: Effect.die, onSuccess: Effect.succeed });
@@ -322,13 +358,18 @@ describe("beep session open hot parcels", () => {
         const exists8 = yield* fs.exists(file);
         expect(exists8).toBe(false);
         const printed = yield* workingSources.pipe(runtimeOver, printHotParcels(HOT_PARCELS_TIMEOUT), captureOutput);
-        expect(A.length(Str.split("\n")(printed))).toBe(4);
+        expect(A.length(Str.split("\n")(printed))).toBe(5);
         expect(((yield* fs.stat(file)).mode & 0o777).toString(8)).toBe("600");
         expect(((yield* fs.stat(root)).mode & 0o777).toString(8)).toBe("700");
         const argument = S.decodeEffect(HotParcelsJson);
         const readFileString1 = yield* fs.readFileString(file);
         const staged = yield* argument(readFileString1);
-        expect(A.map(staged.lines, (line) => line.parcel)).toEqual(["account-headroom", "lane-reds", "host-pressure"]);
+        expect(A.map(staged.lines, (line) => line.parcel)).toEqual([
+          "account-headroom",
+          "lane-reds",
+          "host-pressure",
+          "github-headroom",
+        ]);
         expect(DateTime.formatIso(staged.writtenAt)).toBe("2026-10-15T12:00:00.000Z");
         // A parcel that keeps timing out carries its last read line as stale,
         // never as fresh, and only MAX_HOT_LINE_CARRIES times in a row.

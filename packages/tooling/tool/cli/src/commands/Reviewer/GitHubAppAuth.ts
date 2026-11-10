@@ -295,6 +295,8 @@ export const makeGitHubAppAuth: {
     credentials: ReviewerCredentials,
     options: Omit<GitHubAppOptions.Encoded, "refreshSkew"> = {}
   ): Layer.Layer<GitHubAppAuth | GitHubClient, ReviewerError> => {
+    // The budget ledger keys the reviewer App's requests by its installation bucket.
+    const labelled = { budgetLabel: `app:${credentials.appId}/${credentials.installationId}`, ...options };
     const auth = Layer.effect(
       GitHubAppAuth,
       Effect.gen(function* () {
@@ -303,9 +305,9 @@ export const makeGitHubAppAuth: {
         yield* GitHubApp.use((app) => app.revoke(checked.token)).pipe(Effect.ignore);
         return GitHubAppAuth.of({ appId: credentials.appId });
       })
-    ).pipe(Layer.provide(GitHubApp.layerWith(options)));
+    ).pipe(Layer.provide(GitHubApp.layerWith(labelled)));
     const client = GitHubApp.clientLayer(reviewerTokenRequest(credentials), {
-      ...options,
+      ...labelled,
       refreshSkew: REVIEWER_TOKEN_REFRESH_SKEW,
     }).pipe(
       Layer.catchTag("GitHubAppError", (error) => Layer.effect(GitHubClient, error.pipe(tokenFailure, Effect.fail)))

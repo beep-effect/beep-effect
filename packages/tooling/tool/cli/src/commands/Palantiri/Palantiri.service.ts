@@ -12,6 +12,12 @@ import {
   AccountHeadroomSpec,
   AccountsReportInputJson,
   AdmissionSlotsInput,
+  GithubBucketName,
+  GithubHeadroomBucketInput,
+  GithubHeadroomInput,
+  GithubHeadroomSource,
+  GithubIdentityName,
+  GithubSpender,
   HostMemoryInput,
   HostPressureInput,
   HostPressureSource,
@@ -45,7 +51,10 @@ import * as Path from "effect/Path";
 import * as Random from "effect/Random";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { bucketKeyString, ReserveState, reserveFloor } from "../../internal/github/GithubLedger.schemas.ts";
+import { GithubBudgetLedger, layerGithubBudgetLedgerLive } from "../../internal/github/GithubLedger.service.ts";
 import { admissionStatus, MemoryStats } from "../../internal/repo-run/QualityScheduler.ts";
+import { writePrivateFile } from "../../internal/state/PrivateFile.ts";
 import { resolveWorkstationStateDir } from "../../internal/state/WorkstationState.ts";
 import {
   AccountsStatusReport,
@@ -70,6 +79,13 @@ import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as HttpClient from "effect/http/HttpClient";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type {
+  BucketReading,
+  CommandSpend,
+  GithubLedgerError,
+  LedgerSummary,
+  ReserveSignal,
+} from "../../internal/github/GithubLedger.schemas.ts";
 import type { SessionLedgerError } from "../Session/Session.errors.ts";
 import type { SessionCheckoutFacts } from "../Session/SessionLedger.service.ts";
 import type { YeetInboxRow } from "../Yeet/internal/Inbox.ts";
@@ -100,43 +116,14 @@ export const palantiriStateDir = resolveWorkstationStateDir({
 });
 
 /**
- * Write a file only its owner can read: the directory is created (or
- * narrowed to) `0700`, the text goes to a uniquely named `0600` temporary
- * file beside the target, and a rename puts it in place.
+ * Write a file only its owner can read, atomically. Moved to
+ * `internal/state/PrivateFile.ts` so the GitHub ledger can share it without
+ * importing a command module; re-exported here for existing callers.
  *
- * **Details**
- *
- * A reader sees the old file or the new one, never a torn write; a failed
- * write removes its temporary file.
- *
- * **Example** (Build the write effect)
- *
- * ```ts
- * import { writePrivateFile } from "@beep/repo-cli/test/Palantiri"
- * import * as Effect from "effect/Effect"
- *
- * console.log(Effect.isEffect(writePrivateFile("/state/palantiri/hot.json", "{}"))) // true
- * ```
- *
- * @param file - Absolute path of the file to replace.
- * @param text - The file's new contents.
- * @returns An effect that writes the file.
  * @category utilities
  * @since 0.0.0
  */
-export const writePrivateFile = Effect.fn("PalantiriSource.writePrivateFile")(function* (file: string, text: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const dir = path.dirname(file);
-  yield* fs.makeDirectory(dir, { recursive: true, mode: 0o700 });
-  yield* fs.chmod(dir, 0o700);
-  const temporary = `${file}.${yield* Random.nextIntBetween(0, 2_147_483_647)}.tmp`;
-  yield* Effect.gen(function* () {
-    yield* fs.writeFileString(temporary, text, { mode: 0o600 });
-    yield* fs.chmod(temporary, 0o600);
-    yield* fs.rename(temporary, file);
-  }).pipe(Effect.onError(() => fs.remove(temporary).pipe(Effect.ignore)));
-});
+export { writePrivateFile };
 
 const readAccountSnapshot = Effect.fnUntraced(function* (file: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -1010,9 +997,146 @@ export const layerSinceLastCheckSourceLive = Layer.effect(
   )
 );
 
+const githubHeadroomFailed = (error: GithubLedgerError) =>
+  SourceFailed.make({ parcel: "github-headroom", detail: `the GitHub ledger ${error.reason} failed` });
+
+const reserveNameOf = ReserveState.match({
+  Clear: () => "clear" as const,
+  Below: () => "below" as const,
+  Unknown: () => "unknown" as const,
+});
+
+const floorOf = (state: ReserveState, limit: number): number =>
+  ReserveState.match(state, {
+    Clear: (clear) => clear.floor,
+    Below: (below) => below.floor,
+    Unknown: () => reserveFloor(limit),
+  });
+
+const isIdentityName = S.is(GithubIdentityName);
+const isBucketName = S.is(GithubBucketName);
+
+const unattributedOf = (summary: O.Option<LedgerSummary>, signal: ReserveSignal): O.Option<number> =>
+  O.flatMap(summary, (present) =>
+    O.flatMap(
+      A.findFirst(present.unattributedLastHour, (spend) => bucketKeyString(spend.key) === bucketKeyString(signal.key)),
+      (spend) => spend.unattributed
+    )
+  );
+
+const bucketInputOf =
+  (summary: O.Option<LedgerSummary>) =>
+  ([signal, reading]: readonly [ReserveSignal, BucketReading]): O.Option<GithubHeadroomBucketInput> =>
+    isIdentityName(reading.key.identity) && isBucketName(reading.key.resource)
+      ? O.some(
+          GithubHeadroomBucketInput.make({
+            identity: reading.key.identity,
+            resource: reading.key.resource,
+            limit: reading.limit,
+            remaining: reading.remaining,
+            used: O.getOrElse(reading.used, () => reading.limit - reading.remaining),
+            resetsAt: reading.resetAt,
+            asOf: reading.asOf,
+            basis: reading.basis,
+            reserve: reserveNameOf(signal.state),
+            reserveFloor: floorOf(signal.state, reading.limit),
+            unattributedLastHour: unattributedOf(summary, signal),
+          })
+        )
+      : O.none();
+
+const spenderOf = (spend: CommandSpend): GithubSpender =>
+  GithubSpender.make({
+    command: spend.command,
+    requests: spend.requests,
+    estimatedPoints: spend.estimatedPoints,
+    ghSpawns: spend.ghSpawns,
+  });
+
+/**
+ * The github-headroom source over a {@link GithubBudgetLedger}: the reserve
+ * signal of each bucket, the newest reading that signal rests on, and the
+ * precomputed summary.
+ *
+ * **Details**
+ *
+ * It reads the ledger's `latest/` files and calibration file only: no network
+ * call, no spawn and no raw rows, so it fits the hot block's 2-second budget.
+ * A `graphql` bucket with only uncalibrated `/rate_limit` samples has no
+ * usable reading and is left out, because REST misreports that bucket. A ledger with no
+ * bucket reading and no summary is `Missing`. A ledger read failure is a
+ * `SourceFailed` naming only the failure reason, never a path.
+ *
+ * **Example** (Build the source effect)
+ *
+ * ```ts
+ * import { makeGithubHeadroomSource } from "@beep/repo-cli/test/Palantiri"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(makeGithubHeadroomSource)) // true
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const makeGithubHeadroomSource = Effect.gen(function* () {
+  const ledger = yield* GithubBudgetLedger;
+  const snapshot = Effect.gen(function* () {
+    const signals = yield* ledger.reserves;
+    const summary = yield* ledger.summary;
+    const readings = yield* Effect.forEach(signals, (signal) =>
+      // The reading the verdict rests on, so a bucket's numbers and its reserve agree.
+      Effect.map(
+        ledger.latestUsable(signal.key),
+        O.map((reading) => [signal, reading] as const)
+      )
+    );
+    const buckets = A.getSomes(A.map(A.getSomes(readings), bucketInputOf(summary)));
+    if (A.isArrayEmpty(buckets) && O.isNone(summary)) {
+      return GithubHeadroomInput.cases.Missing.make({ detail: "no GitHub ledger readings on this host" });
+    }
+    return GithubHeadroomInput.cases.Present.make({
+      generatedAt: yield* DateTime.now,
+      buckets,
+      spenders: O.match(summary, {
+        onNone: A.empty<GithubSpender>,
+        onSome: (present) => A.map(present.spenders, spenderOf),
+      }),
+      summaryAsOf: O.map(summary, (present) => present.generatedAt),
+      lastRowAt: O.flatMap(summary, (present) => present.lastRowAt),
+    });
+  }).pipe(Effect.mapError(githubHeadroomFailed));
+  return GithubHeadroomSource.of({ snapshot });
+});
+
+/**
+ * The live github-headroom source: {@link makeGithubHeadroomSource} over this
+ * host's ledger files.
+ *
+ * **Details**
+ *
+ * It provides its own ledger reader, so it reads the host's ledger even where
+ * the process-wide ledger sink is disabled (CI, `BEEP_GITHUB_LEDGER=off`).
+ *
+ * **Example** (Provide the live source)
+ *
+ * ```ts
+ * import { layerGithubHeadroomSourceLive } from "@beep/repo-cli/test/Palantiri"
+ * import * as Layer from "effect/Layer"
+ *
+ * console.log(Layer.isLayer(layerGithubHeadroomSourceLive)) // true
+ * ```
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const layerGithubHeadroomSourceLive = Layer.effect(GithubHeadroomSource, makeGithubHeadroomSource).pipe(
+  Layer.provide(layerGithubBudgetLedgerLive())
+);
+
 /**
  * Every live Palantiri source port: account headroom, lane reds, host
- * pressure and since-last-check.
+ * pressure, since-last-check and github headroom.
  *
  * **Example** (Provide every live source)
  *
@@ -1030,7 +1154,8 @@ export const layerPalantiriSourcesLive = Layer.mergeAll(
   layerAccountHeadroomSourceLive,
   layerLaneRedsSourceLive,
   layerHostPressureSourceLive,
-  layerSinceLastCheckSourceLive
+  layerSinceLastCheckSourceLive,
+  layerGithubHeadroomSourceLive
 );
 
 /**
@@ -1052,5 +1177,6 @@ export const layerPalantiriSourcesHot = Layer.mergeAll(
   accountHeadroomLayer(makeAccountHeadroomSourceCached),
   layerLaneRedsSourceLive,
   layerHostPressureSourceLive,
-  layerSinceLastCheckSourceLive
+  layerSinceLastCheckSourceLive,
+  layerGithubHeadroomSourceLive
 );

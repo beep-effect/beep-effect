@@ -240,10 +240,22 @@ const commandProgram = (target: DispatchTarget) =>
         Effect.flatMap(
           Effect.fnUntraced(function* (context) {
             const commands = yield* Dispatch.loadDispatchTarget(target);
-            return yield* Command.run(Dispatch.makeRootCommand(commands), { version: "0.0.0" }).pipe(
-              withHostTurboCacheDefaults,
-              Effect.provide(context)
+            const { githubLedgerDisabled } = yield* Effect.promise(
+              () => import("./internal/github/GithubLedgerSwitch.ts")
             );
+            const root = Dispatch.makeRootCommand(commands);
+            const program = Command.run(root, { version: "0.0.0" });
+            // Innermost, so the ledger is built under the rebuilt ConfigProvider and the platform context.
+            // Its wiring (and the GitHub client it pulls in) loads only when the ledger is on.
+            const withLedger = Effect.flatMap(githubLedgerDisabled, (disabled) =>
+              disabled
+                ? program
+                : Effect.flatMap(
+                    Effect.promise(() => import("./internal/github/GithubLedgerRoot.ts")),
+                    ({ withGithubLedger }) => program.pipe(withGithubLedger({ argv, root }))
+                  )
+            );
+            return yield* withLedger.pipe(withHostTurboCacheDefaults, Effect.provide(context));
           })
         )
       )
