@@ -327,9 +327,6 @@ describe("GithubLedger reserve", () => {
       reading({ key: graphqlAlice, remaining: 750, asOf: T0 + 9 * MINUTE }),
     ]);
     expect(below.state._tag).toBe("Below");
-    expect(below.admits("background")).toBe(false);
-    expect(below.admits("interactive")).toBe(true);
-    expect(below.admits("merge-critical")).toBe(true);
     expect(clear.state._tag).toBe("Clear");
   });
 
@@ -354,8 +351,8 @@ describe("GithubLedger reserve", () => {
       reading({ key: graphqlAlice, remaining: 10, asOf: T0 + 9 * MINUTE }),
       reading({ key: key(app, "graphql"), remaining: 4000, asOf: T0 + 9 * MINUTE }),
     ];
-    expect(reserveOf({ now, admitGraphqlSamples: false })(graphqlAlice, readings).belowReserve).toBe(true);
-    expect(reserveOf({ now, admitGraphqlSamples: false })(key(app, "graphql"), readings).belowReserve).toBe(false);
+    expect(reserveOf({ now, admitGraphqlSamples: false })(graphqlAlice, readings).state._tag).toBe("Below");
+    expect(reserveOf({ now, admitGraphqlSamples: false })(key(app, "graphql"), readings).state._tag).toBe("Clear");
   });
 });
 

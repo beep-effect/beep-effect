@@ -990,6 +990,33 @@ export const summaryOf = ({
 const GRAPHQL_GH_COMMANDS: ReadonlyArray<string> = ["pr", "issue", "repo", "release"];
 const CORE_GH_COMMANDS: ReadonlyArray<string> = ["run", "workflow", "cache", "secret", "variable", "label"];
 
+type GhSpawnFields = { readonly subcommand: GhSubcommand; readonly resource: GitHubRateLimitResource };
+
+const isPlainGhWord = (word: string): boolean => /^[a-z][a-z-]{0,31}$/.test(word);
+
+const ghApiFieldsOf = (args: ReadonlyArray<string>): GhSpawnFields => {
+  const graphql = O.exists(A.get(args, 1), (word) => word === "graphql");
+  if (graphql) return { subcommand: GhSubcommand.make("api graphql"), resource: "graphql" };
+  const endpoint = O.getOrElse(
+    A.findFirst(A.drop(args, 1), (word) => !Str.startsWith("-")(word)),
+    () => ""
+  );
+  return { subcommand: GhSubcommand.make("api rest"), resource: /^\/?search\//.test(endpoint) ? "search" : "core" };
+};
+
+const ghCommandResourceOf = (first: string): GitHubRateLimitResource =>
+  A.contains(GRAPHQL_GH_COMMANDS, first) ? "graphql" : A.contains(CORE_GH_COMMANDS, first) ? "core" : "unknown";
+
+const ghCommandFieldsOf = (first: string, second: O.Option<string>): GhSpawnFields => {
+  const subcommand = isPlainGhWord(first)
+    ? O.match(O.filter(second, isPlainGhWord), {
+        onNone: () => first,
+        onSome: (word) => `${first} ${word}`,
+      })
+    : "unknown";
+  return { subcommand: GhSubcommand.make(subcommand), resource: ghCommandResourceOf(first) };
+};
+
 /**
  * Reduce a `gh` argv to the persisted subcommand and its inferred resource.
  *
@@ -1019,31 +1046,5 @@ export const ghSpawnFieldsOf = (
   args: ReadonlyArray<string>
 ): { readonly subcommand: GhSubcommand; readonly resource: GitHubRateLimitResource } => {
   const first = O.getOrElse(A.get(args, 0), () => "");
-  const second = A.get(args, 1);
-  const plainWord = (word: string) => /^[a-z][a-z-]{0,31}$/.test(word);
-  if (first === "api") {
-    const graphql = O.exists(second, (word) => word === "graphql");
-    const endpoint = O.getOrElse(
-      A.findFirst(A.drop(args, 1), (word) => !Str.startsWith("-")(word)),
-      () => ""
-    );
-    return {
-      subcommand: GhSubcommand.make(graphql ? "api graphql" : "api rest"),
-      resource: graphql ? "graphql" : /^\/?search\//.test(endpoint) ? "search" : "core",
-    };
-  }
-  const subcommand = plainWord(first)
-    ? O.match(O.filter(second, plainWord), {
-        onNone: () => first,
-        onSome: (word) => `${first} ${word}`,
-      })
-    : "unknown";
-  return {
-    subcommand: GhSubcommand.make(subcommand),
-    resource: A.contains(GRAPHQL_GH_COMMANDS, first)
-      ? "graphql"
-      : A.contains(CORE_GH_COMMANDS, first)
-        ? "core"
-        : "unknown",
-  };
+  return first === "api" ? ghApiFieldsOf(args) : ghCommandFieldsOf(first, A.get(args, 1));
 };

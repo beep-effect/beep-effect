@@ -30,6 +30,14 @@ const $I = $RepoCliId.create("commands/Github/GithubLedger.timer");
 /**
  * The base name of the ledger sampler's service and timer units.
  *
+ * **Example** (Name the timer unit)
+ *
+ * ```ts
+ * import { GITHUB_LEDGER_TIMER_UNIT } from "@beep/repo-cli/commands/Github"
+ *
+ * console.log(`${GITHUB_LEDGER_TIMER_UNIT}.timer`) // "beep-github-ledger-sample.timer"
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -37,6 +45,14 @@ export const GITHUB_LEDGER_TIMER_UNIT = "beep-github-ledger-sample";
 
 /**
  * The sampler timer's calendar: every five minutes.
+ *
+ * **Example** (Render the OnCalendar line)
+ *
+ * ```ts
+ * import { GITHUB_LEDGER_TIMER_CALENDAR } from "@beep/repo-cli/commands/Github"
+ *
+ * console.log(`OnCalendar=${GITHUB_LEDGER_TIMER_CALENDAR}`) // "OnCalendar=*:0/5"
+ * ```
  *
  * @category constants
  * @since 0.0.0
@@ -68,6 +84,15 @@ export class GithubLedgerTimerOptions extends S.Opaque<GithubLedgerTimerOptions,
 
 /**
  * One rendered systemd unit file.
+ *
+ * **Example** (Build a unit file)
+ *
+ * ```ts
+ * import { GithubLedgerUnitFile } from "@beep/repo-cli/commands/Github"
+ *
+ * const unit = GithubLedgerUnitFile.make({ fileName: "beep-github-ledger-sample.timer", text: "[Timer]\n" })
+ * console.log(unit.fileName) // "beep-github-ledger-sample.timer"
+ * ```
  *
  * @category models
  * @since 0.0.0

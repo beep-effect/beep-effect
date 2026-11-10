@@ -160,6 +160,50 @@ const lookupUser = Effect.fnUntraced(function* (
   );
 }, Effect.scoped);
 
+const appLabelOf = (input: GithubIdentityLabelInput): GithubIdentityLabel =>
+  pipe(
+    O.all({ appId: input.appId, installationId: input.installationId }),
+    O.flatMap(({ appId, installationId }) => GithubIdentityLabel.makeOption(`app:${appId}/${installationId}`)),
+    O.getOrElse(() => UNRESOLVED_IDENTITY)
+  );
+
+// gh's own login describes the gh token only when no env token overrides it.
+const ghCliLoginOf = Effect.fnUntraced(function* (input: GithubIdentityLabelInput) {
+  const envToken = yield* ghEnvToken;
+  return input.kind === "gh-cli" && O.isNone(envToken)
+    ? yield* readGhCliLogin(input.cwd)
+    : O.none<GithubIdentityLabel>();
+});
+
+const opRefLoginOf = Effect.fnUntraced(function* (input: GithubIdentityLabelInput) {
+  if (input.kind !== "op-ref" || O.isNone(input.tokenRef)) return O.none<GithubIdentityLabel>();
+  const tokenRef = input.tokenRef.value;
+  const entries = yield* Effect.flatten(GithubConfiguredIdentities);
+  return pipe(
+    entries,
+    A.findFirst((entry) => ConfiguredGithubIdentity.guards.OpRef(entry) && entry.tokenRef === tokenRef),
+    O.flatMap((entry) => (ConfiguredGithubIdentity.guards.OpRef(entry) ? userLabelOf(entry.login) : O.none()))
+  );
+});
+
+const resolveTokenLabel = Effect.fnUntraced(function* (
+  ledger: GithubBudgetLedger["Service"],
+  input: GithubIdentityLabelInput,
+  token: Redacted.Redacted<string>
+) {
+  const hash = yield* tokenHashLabel(token);
+  const remember = (user: GithubIdentityLabel) => Effect.as(ledger.recordAlias(hash, user), O.some(user));
+  const login = yield* ghCliLoginOf(input);
+  if (O.isSome(login)) return yield* remember(login.value);
+  const known = yield* ledger.aliases;
+  const aliased = canonicalIdentity(known)(hash);
+  if (aliased !== hash) return O.some(aliased);
+  const configured = yield* opRefLoginOf(input);
+  if (O.isSome(configured)) return yield* remember(configured.value);
+  const looked = yield* lookupUser(token, hash, input.transport);
+  return O.isSome(looked) ? yield* remember(looked.value) : O.some(hash);
+});
+
 /**
  * Resolve the budget label of a client's identity, or none when no ledger is
  * provided (then nothing is spawned and no request is made).
@@ -188,38 +232,7 @@ export const resolveGithubIdentityLabel = Effect.fn("GithubIdentityLabel.resolve
 ): Effect.fn.Return<O.Option<GithubIdentityLabel>, never, ChildProcessSpawner.ChildProcessSpawner | Digest.Digest> {
   const ledger = yield* Effect.serviceOption(GithubBudgetLedger);
   if (O.isNone(ledger)) return O.none();
-  if (input.kind === "github-app") {
-    return O.some(
-      pipe(
-        O.all({ appId: input.appId, installationId: input.installationId }),
-        O.flatMap(({ appId, installationId }) => GithubIdentityLabel.makeOption(`app:${appId}/${installationId}`)),
-        O.getOrElse(() => UNRESOLVED_IDENTITY)
-      )
-    );
-  }
+  if (input.kind === "github-app") return O.some(appLabelOf(input));
   if (O.isNone(input.token)) return O.some(UNRESOLVED_IDENTITY);
-  const token = input.token.value;
-  const hash = yield* tokenHashLabel(token);
-  const remember = (user: GithubIdentityLabel) => Effect.as(ledger.value.recordAlias(hash, user), O.some(user));
-  // gh's own login describes the gh token only when no env token overrides it.
-  const envToken = yield* ghEnvToken;
-  if (input.kind === "gh-cli" && O.isNone(envToken)) {
-    const login = yield* readGhCliLogin(input.cwd);
-    if (O.isSome(login)) return yield* remember(login.value);
-  }
-  const known = yield* ledger.value.aliases;
-  const aliased = canonicalIdentity(known)(hash);
-  if (aliased !== hash) return O.some(aliased);
-  if (input.kind === "op-ref" && O.isSome(input.tokenRef)) {
-    const tokenRef = input.tokenRef.value;
-    const entries = yield* Effect.flatten(GithubConfiguredIdentities);
-    const configured = pipe(
-      entries,
-      A.findFirst((entry) => ConfiguredGithubIdentity.guards.OpRef(entry) && entry.tokenRef === tokenRef),
-      O.flatMap((entry) => (ConfiguredGithubIdentity.guards.OpRef(entry) ? userLabelOf(entry.login) : O.none()))
-    );
-    if (O.isSome(configured)) return yield* remember(configured.value);
-  }
-  const looked = yield* lookupUser(token, hash, input.transport);
-  return O.isSome(looked) ? yield* remember(looked.value) : O.some(hash);
+  return yield* resolveTokenLabel(ledger.value, input, input.token.value);
 });

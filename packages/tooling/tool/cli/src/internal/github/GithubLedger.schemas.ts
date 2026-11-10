@@ -303,26 +303,30 @@ const isPlaceholder = (segment: string): boolean => Str.startsWith("{")(segment)
 const isDigits = (segment: string): boolean => /^\d+$/.test(segment);
 const isSha = (segment: string): boolean => /^[0-9a-f]{7,40}$/.test(segment);
 
+type SegmentRule = readonly [
+  matches: (segment: string, previous: string, beforePrevious: string) => boolean,
+  placeholder: string,
+];
+
+// First match wins; a segment no rule matches stays as it is.
+const SEGMENT_RULES: ReadonlyArray<SegmentRule> = [
+  [(_, previous) => previous === "repos", "{owner}"],
+  [(_, __, beforePrevious) => beforePrevious === "repos", "{repo}"],
+  [(_, previous) => previous === "users", "{user}"],
+  [(_, previous) => previous === "orgs", "{org}"],
+  [(_, previous) => A.contains(NAMED_SEGMENT_PARENTS, previous), "{name}"],
+  [isDigits, "{id}"],
+  [isSha, "{sha}"],
+];
+
 const normalizeSegment = (segments: ReadonlyArray<string>) => (segment: string, index: number) => {
+  if (isPlaceholder(segment)) return segment;
   const previous = O.getOrElse(A.get(segments, index - 1), () => "");
   const beforePrevious = O.getOrElse(A.get(segments, index - 2), () => "");
-  return isPlaceholder(segment)
-    ? segment
-    : previous === "repos"
-      ? "{owner}"
-      : beforePrevious === "repos"
-        ? "{repo}"
-        : previous === "users"
-          ? "{user}"
-          : previous === "orgs"
-            ? "{org}"
-            : A.contains(NAMED_SEGMENT_PARENTS, previous)
-              ? "{name}"
-              : isDigits(segment)
-                ? "{id}"
-                : isSha(segment)
-                  ? "{sha}"
-                  : segment;
+  return O.match(
+    A.findFirst(SEGMENT_RULES, ([matches]) => matches(segment, previous, beforePrevious)),
+    { onNone: () => segment, onSome: ([, placeholder]) => placeholder }
+  );
 };
 
 /**
@@ -1063,10 +1067,11 @@ export type ReserveState = typeof ReserveState.Type;
  *
  * **Details**
  *
- * Background callers back off while the bucket is `Below`; interactive and
- * merge-critical callers are never refused here. `Unknown` admits everyone.
+ * The bucket is below its reserve while `state` is `Below`. Background callers
+ * back off then; interactive and merge-critical callers are never refused here.
+ * `Unknown` admits everyone.
  *
- * **Example** (Ask whether a background call may run)
+ * **Example** (Read an unknown reserve)
  *
  * ```ts
  * import { BucketKey, GithubIdentityLabel, ReserveSignal, ReserveState } from "@beep/repo-cli/test/SharedInternals"
@@ -1076,38 +1081,17 @@ export type ReserveState = typeof ReserveState.Type;
  *   key: BucketKey.make({ identity: GithubIdentityLabel.make("user:octocat"), resource: "graphql" }),
  *   state: ReserveState.cases.Unknown.make({ reason: "no-reading", asOf: O.none() })
  * })
- * console.log(signal.admits("background")) // true
+ * console.log(signal.state._tag) // "Unknown"
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export class ReserveSignal extends S.Class<ReserveSignal, { readonly brand: unique symbol }>($I`ReserveSignal`)(
-  { key: BucketKey, state: ReserveState },
-  $I.annote("ReserveSignal", { description: "The reserve signal of one GitHub bucket." })
-) {
-  /**
-   * True while the bucket is below its reserve floor.
-   *
-   * @category predicates
-   * @since 0.0.0
-   */
-  get belowReserve(): boolean {
-    return this.state._tag === "Below";
-  }
-
-  /**
-   * Whether a call of `priority` may run now. Only background calls are refused, and only while `Below`.
-   *
-   * @param priority - The call's priority.
-   * @returns Whether to run it.
-   * @category predicates
-   * @since 0.0.0
-   */
-  admits(priority: GithubCallPriority): boolean {
-    return priority !== "background" || this.state._tag !== "Below";
-  }
-}
+export class ReserveSignal extends S.Opaque<ReserveSignal, { readonly brand: unique symbol }>()(
+  S.Struct({ key: BucketKey, state: ReserveState }).pipe(
+    $I.annoteSchema("ReserveSignal", { description: "The reserve signal of one GitHub bucket." })
+  )
+) {}
 
 /**
  * One configured identity of `identities.json`.
