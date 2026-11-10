@@ -1740,7 +1740,8 @@ deleted without merging; the detailed receipt is in
 
 ## 2026-08-27: Merge Queue Stays Off Until the Recorded Reliability Gate
 
-- **Status:** Active
+- **Status:** Superseded
+- **Superseded by:** [2026-11-09: Merge Queue Activation Is Gated On The Merge-Group Run](#2026-11-09-merge-queue-activation-is-gated-on-the-merge-group-run)
 
 Decision:
 
@@ -2614,3 +2615,49 @@ Rejected:
   slice's PR bounded.
 - Tracking alchemy betas continuously. 84 betas in 203 days with breaking
   changes; each bump is a named task with a migration note.
+
+## 2026-11-09: Merge Queue Activation Is Gated On The Merge-Group Run
+
+- **Status:** Active
+- **Supersedes:** 2026-08-27 "Merge Queue Stays Off Until the Recorded Reliability Gate"
+
+Decision:
+
+The `main` merge queue stays disabled and `strict_required_status_checks_policy`
+stays `false`. The activation gate is no longer the share of green `check.yml`
+push runs on `main`. The queue may be enabled when all three hold, measured on
+merge-group runs:
+
+- **Parity.** Every required context reports on a merge-group commit and proves
+  what it proves on a pull request. No required job skips or degrades under
+  `merge_group`.
+- **Speed.** p90 wall time of a code entry's merge-group run is at or under 15
+  minutes.
+- **Reliability.** False ejections are at or under 5% over at least 100 entries.
+
+At activation the queue is the only door to `main` and the S11 exception in
+`AGENTS.md` is retired; until then S11 stands unchanged. The merge-group run is
+the per-commit `main` verdict, placed before the merge. The strict-status-check
+flip is no longer a step on the way.
+
+Rationale:
+
+Read on 2026-11-09 over 14.2 days, 163 of 221 tested `main` runs had all 15
+required contexts green (73.8%), falling from 89.1% to 62.8% in the week merge
+volume doubled; 524 of 746 runs were cancelled before finishing. The old bar
+counted reds that merges over failing checks and stale-base merges put on
+`main`, which a queue removes, and it was read on three commits in ten. What a
+queue is sensitive to is how long a merge-group run takes and how often it
+fails on a good tree. GitHub builds every queue entry separately, and one full
+run now peaks near the hosted concurrent-job ceiling, so the queue builds one
+entry at a time; 15 minutes is 96 entries a day against a measured peak of
+about 95 code merges. At 53 merges a day a strict up-to-date policy would
+stale every open pull request on every merge. Evidence and the operator's
+rulings: `explorations/github-merge-queue/RESEARCH.md` and `DECISIONS.md`.
+
+Rejected:
+
+- Keeping the 80% bar on the required-contexts basis. It waits on a number the
+  S11 exception holds down.
+- Running S11 and a queue together. A bypass merge moves the base under every
+  group being built.

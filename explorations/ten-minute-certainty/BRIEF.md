@@ -89,7 +89,7 @@ with controls for scheduling, none for pure waste removal.
 - Moving Lint Policy to standard hosted runners (32 to 36 GiB peaks against 16 GB).
 - Sharding Property Laws before the file split lands (compute for a tail-only latency gain).
 - Per-SHA main groups before the throughput layout (20 to 36k runner-minutes a day against a ~60-job ceiling).
-- A merge queue or stacked PRs before their recorded flip conditions (80% main required-green over 14 days).
+- A merge queue before the activation gate in `explorations/github-merge-queue/DECISIONS.md` (`gate-restatement`, 2026-11-09, which supersedes the 80% bar), or stacked PRs before the stacks-reopen gate in `explorations/stacked-pr-adoption`.
 - Trusting the hosted concurrent-job ceiling without an admin-side read; it is a documented default, not a measurement.
 - Treating the 2026-08 lock era, the 10-31 pkill incident and the scheduler as one problem.
 
