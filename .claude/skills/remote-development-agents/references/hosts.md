@@ -1,7 +1,7 @@
 # Host profiles
 
 These are routing records, not live health attestations. Last reconciled:
-2026-11-08 (all five hosts at Full access, links and `t3-code` MCP tokens renew by 2027-05-07; grok-bot host in scope; tbk-worker linked; fork T3 build everywhere). The canonical Beep packet is `goals/cloud-agent-readiness` at the
+2026-11-09 (tom-pc-1 gets its SSH/sudo wrapper, a beep-effect checkout registered as a T3 project, GitHub push and update-harnesses coverage; all five hosts at Full access, links and `t3-code` MCP tokens renew by 2027-05-07; grok-bot host in scope; fork T3 build everywhere). The canonical Beep packet is `goals/cloud-agent-readiness` at the
 repository containing this skill's real path. Read `SPEC.md` before changing a
 boundary. Host-specific receipts are under that packet's `history/` directory.
 
@@ -10,7 +10,7 @@ boundary. Host-specific receipts are under that packet's `history/` directory.
 | `beep-worker` | `environmentId: <beep-worker>` (Full access, renew by 2027-05-07; id in the private handoff) | `ssh-beep-worker-yubi` | Existing headless development worker; default wrapper disables forwarding. Runs the fork T3 build as `t3code.service` (pulled from the DankStation mirror by `t3code-fork-pull.timer`; `docs/runbooks/t3code-fleet.md`). Recheck current provider and workload readiness. |
 | `tbk-worker` | `environmentId: <tbk-worker>` (Full access, renew by 2027-05-07; id in the private handoff) | `ssh-tbk-worker` | Separate KVM guest, account `worker`, no sudo; initial serialized development verified. Runs the fork T3 build as `t3code.service` on loopback under `agent-runs.slice`, reached through Serve on the guest's own tailnet node; its tagged node has grants only for hub SSH, hub to Serve, and guest to the hub mirror (`history/2026-11-07-tbk-worker-link.md` in `goals/t3code-fleet-rollout`). |
 | `dankserver` | `environmentId: <dankserver>` (Full access, renew by 2027-05-07; id in the private handoff) | `ssh-dankserver-worker` | Dedicated bare-metal account `worker`; initial serialized development verified. Runs the fork T3 build as `t3code.service` on loopback (same pull timer), reached through an administrator-owned tailnet-only Serve route on HTTPS 8448. Claude, Codex, Grok and Cursor signed in; Junie registered, not signed in. |
-| `tom-pc-1` | `environmentId: <tom-pc-1-wsl>` (Full access, renew by 2027-05-07; id in the private handoff) | key-auth SSH to the PC (`<windows-user>@tom-pc-1`), then `wsl -d t3-agent -u agent` | Dedicated WSL distro `t3-agent` (user `agent`, automount and interop off, own tailnet node `tom-pc-1-wsl`), kept alive by the `T3AgentWSL` logon task; runs the fork T3 build as `t3code.service` with the same pull timer. Claude, Codex, Grok and Cursor signed in; Junie registered, not signed in. Only the `receipt` project exists (no beep-effect checkout: no GitHub credential granted). Strict tier: no client data in the repo. |
+| `tom-pc-1` | `environmentId: <tom-pc-1-wsl>` (Full access, renew by 2027-05-07; id in the private handoff) | `ssh-tom-pc-1-wsl` (account `agent`, no sudo, nothing forwarded); `ssh-tom-pc-1-wsl --admin -tt` for the separate `agentadmin` account with touch-to-sudo | Dedicated WSL distro `t3-agent` (user `agent`, automount and interop off, own tailnet node `tom-pc-1-wsl`), kept alive by the `T3AgentWSL` logon task; runs the fork T3 build as `t3code.service` under `agent-runs.slice` with the same pull timer. Public beep-effect clone with the pinned toolchain, registered as a T3 project; GitHub push through a `gh` login; no 1Password agent credential. Claude, Codex, Grok and Muse signed in; the Cursor CLI is signed in, but T3's Cursor provider needs its own sign-in; Junie and Kimi need Install in T3's Settings → Providers. One job at a time on an in-use PC. Strict tier: no client data in the repo. |
 | `grok-bot` (the Grok Bot computer) | `environmentId: <grok-bot>` (Full access, renew by 2027-05-07; id in the private handoff) | `ssh-grok-bot` (Tailscale SSH as `box`; `--admin` forwards the YubiKey agent for `pam_rssh` sudo) | Cursor-hosted Debian 13 microVM, 8 cores / 15 GiB, no systemd, sleeps minutes after the Grok Bot app's computer view closes; in scope since 2026-11-08 (decision `grok-bot-vm-in-scope`). T3 runs as `t3 serve` reconciled from the hub's `grok-bot-ensure.timer` while awake; everything re-runnable from `/workspace/bootstrap`. Attended worker only; see the runbook's grok-bot section. |
 
 ## T3 route
@@ -145,6 +145,43 @@ listener). The existing `Ubuntu` distro is untouched. A logon scheduled task
 (`T3AgentWSL`) keeps the distro running, which is also how it returns after a
 reboot. Strict-tier rules apply: no Funnel, a tailnet-only or loopback
 listener, no client data in the repo. Provisioning, the T3 service and the
-link belong to `goals/t3code-fleet-rollout`; its runbook has the steps. Linked
-2026-11-06 with Claude Code signed in; the host has no beep-effect checkout
-until a credential for the `agent` user is granted.
+link were `goals/t3code-fleet-rollout` work (now archived); the steps are in
+`docs/runbooks/t3code-fleet.md`. The host is reachable only while the PC is on
+and its Windows user is signed in.
+
+Access (2026-11-07, receipt
+`goals/cloud-agent-readiness/history/2026-11-07-tom-pc-1-wsl-worker-access.md`):
+the distro runs its own sshd on its tailnet node, ED25519-SK keys only with
+touch required, no password or keyboard-interactive login, no root login, and
+`AllowUsers` limited to tailnet source addresses. Authorized keys live under
+`/etc/ssh/authorized_keys/`, not in home directories. Two accounts, like
+tbk-worker:
+
+- `agent`: the development and T3 service account; no sudo, no agent
+  forwarding, local forwards to loopback only. `ssh-tom-pc-1-wsl` logs in here
+  with a dedicated distro-only YubiKey identity (its own `ssh-agent`, one key)
+  and never forwards it. The PC's drives are not mounted, so the checkout never
+  sees the attorney's files.
+- `agentadmin`: the separate administrator; `ssh-tom-pc-1-wsl --admin -tt`
+  forwards the dedicated agent and sudo authenticates through the same
+  `libpam_rssh.so` module as dankserver and tbk (root-owned key file under
+  `/etc/security/authorized_keys/`), one more touch per sudo. Account
+  passwords are locked, so a missed touch has no password fallback. End the
+  administrative shell before launching an agent.
+
+Worker state (2026-11-09, receipt
+`goals/cloud-agent-readiness/history/2026-11-09-tom-pc-1-wsl-fleet-parity.md`):
+the public beep-effect clone sits at the same home-relative path as on
+DankStation and is registered with `t3 project add`, which is what lists the
+host in the desktop composer's "Run on". Push goes through a `gh` login for
+`agent`; there is no 1Password agent credential, so `BEEP_SECRETS` reads are
+not available there. Harness defaults follow the unsupervised child mode in
+`docs/runbooks/agent-pools.md`, and every harness carries the host's own
+`t3-code` MCP entry. `/update-harnesses` covers the host through
+`ssh-tom-pc-1-wsl`.
+
+The PC's own key-auth SSH (`<windows-user>@tom-pc-1`, then `wsl -d t3-agent`)
+remains the recovery route if the distro's sshd or Tailscale is down; it is
+not an agent launch route. Workloads: 4 CPUs and 8 GiB in the WSL VM,
+`agent-runs.slice` at 6 GiB max / 5 GiB high / 300% CPU, one substantive job
+at a time.

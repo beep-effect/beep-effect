@@ -17,6 +17,7 @@
 #   @@INSTALL  <harness> <active 1|0|stale> <method> <writable 1|0> <version> <path>
 #   @@RESULT   <harness> <status> <before> <after> <method> <path> <note>
 #   @@APPARMOR <drift 0|1> <sdk-path> <cli-path>
+#   @@NOTE     <harness> <text>   (read-only config finding, both modes)
 #
 # status is one of: updated current failed skipped absent
 set -uo pipefail
@@ -302,6 +303,16 @@ apparmor_check() {
   tab @@APPARMOR "$drift" "$sdk" "$cli"
 }
 
+# ---------------------------------------------------------------- Muse settings (read-only)
+# `muse serve` exits 3 when settings.json lacks schema_version, and T3's Muse provider then
+# reports that it could not read the model catalog. Report it; never rewrite the file here.
+muse_settings_check() {
+  local f="$HOME/.config/muse/settings.json"
+  [[ -n "$(installs_of muse)" && -r "$f" ]] || return 0
+  grep -qE '"schema_version"[[:space:]]*:' "$f" && return 0
+  tab @@NOTE muse "~/.config/muse/settings.json has no schema_version: muse serve exits 3 and T3 cannot read its model catalog"
+}
+
 # ---------------------------------------------------------------- main
 . /etc/os-release 2>/dev/null || true
 [[ "$(ps -o comm= -p 1 2>/dev/null)" == systemd ]] && sd=1 || sd=0
@@ -309,7 +320,8 @@ tab @@HOST "$(hostname)" "$(id -un)" "$(clean "${PRETTY_NAME:-unknown}")" "$sd"
 for h in "${harnesses[@]}"; do
   case "$h" in
     t3code) do_t3 ;;
-    claude|codex|grok|kimi|junie|cursor-agent|muse) do_cli "$h" ;;
+    claude|codex|grok|kimi|junie|cursor-agent) do_cli "$h" ;;
+    muse) do_cli muse; muse_settings_check ;;
     *) tab @@RESULT "$h" skipped - - - - "unknown harness" ;;
   esac
 done

@@ -11,6 +11,7 @@ import tempfile
 import textwrap
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import update_harnesses as uh  # noqa: E402
@@ -26,7 +27,7 @@ class Selection(unittest.TestCase):
         self.assertIn("chatgpt-desktop", m["grok-bot"])
         self.assertIn("claude-desktop", m["grok-bot"])
         self.assertNotIn("cursor-desktop", m["grok-bot"])
-        for host in ("beep-worker", "dankserver", "tbk-worker"):
+        for host in ("beep-worker", "dankserver", "tbk-worker", "tom-pc-1-wsl"):
             self.assertFalse(set(uh.DESKTOP) & set(m[host]), host)
             self.assertEqual(m[host], ["t3code", *uh.CLI])
 
@@ -34,6 +35,7 @@ class Selection(unittest.TestCase):
         self.assertEqual(uh.canonical("ChatGPT", uh.HARNESSES), "chatgpt-desktop")
         self.assertEqual(uh.canonical("claude-code", uh.HARNESSES), "claude")
         self.assertEqual(uh.canonical("grok-bot-vm", uh.HOSTS), "grok-bot")
+        self.assertEqual(uh.canonical("tom-pc-1", uh.HOSTS), "tom-pc-1-wsl")
         with self.assertRaises(SystemExit):
             uh.canonical("vscode", uh.HARNESSES)
 
@@ -44,8 +46,18 @@ class Selection(unittest.TestCase):
 
     def test_hosts_carry_no_addresses(self):
         for host in uh.HOSTS.values():
-            for part in (host.wrapper or "", *(host.admin or ())):
+            for part in (host.wrapper or "", *(host.admin or ()), host.down):
                 self.assertNotRegex(part, r"\d+\.\d+\.\d+\.\d+|\.ts\.net|tail[0-9a-f]{6}")
+
+    def test_tom_pc_1_wsl_uses_its_wrapper(self):
+        h = uh.HOSTS["tom-pc-1-wsl"]
+        self.assertEqual((h.wrapper, h.touch, h.agent_init, h.admin, h.admin_agent),
+                         ("ssh-tom-pc-1-wsl", True, None, ("ssh-tom-pc-1-wsl", "--admin", "-tt"), None))
+
+    def test_unreachable_notes_name_the_host_specific_cause(self):
+        self.assertIn("T3AgentWSL", uh.HOSTS["tom-pc-1-wsl"].down)
+        self.assertIn("Grok Bot app", uh.HOSTS["grok-bot"].down)
+        self.assertEqual(uh.HOSTS["tbk-worker"].down, "SSH master failed (missed touch or host down)")
 
 
 class Parsing(unittest.TestCase):
@@ -130,6 +142,45 @@ class Parsing(unittest.TestCase):
         ])
         self.assertEqual(uh.vetted_debs(out), [{"url": "http://deb.debian.org/debian/pool/main/g/gtk_1_amd64.deb",
                                                 "name": "gtk_1_amd64.deb", "sha256": sha}])
+
+    def test_notes_ride_on_their_harness_rows(self):
+        recs = uh.parse_records("@@INSTALL\tmuse\t1\tmuse\t1\t1.4.14\t/m\n"
+                                "@@INSTALL\tclaude\t1\tnative\t1\t2.1.1\t/c\n"
+                                "@@NOTE\tmuse\tno schema_version\n")
+        rows, _ = uh.rows_from_records("tom-pc-1-wsl", recs, "status")
+        notes = {r.harness: r.note for r in rows}
+        self.assertEqual(notes, {"muse": "active; no schema_version", "claude": "active"})
+        # update mode: harness_host.sh's clean() emits "-" for an empty @@RESULT note
+        recs = uh.parse_records("@@RESULT\tmuse\tcurrent\t1.4.14\t1.4.14\tmuse\t/m\t-\n"
+                                "@@RESULT\tclaude\tupdated\t2.1.1\t2.1.2\tnative\t/c\t-\n"
+                                "@@NOTE\tmuse\tno schema_version\n")
+        rows, _ = uh.rows_from_records("tom-pc-1-wsl", recs, "update")
+        self.assertEqual({r.harness: r.note for r in rows}, {"muse": "no schema_version", "claude": ""})
+        self.assertNotIn("-;", uh.render(rows))
+
+    def test_admin_route_starts_only_the_agent_it_forwards(self):
+        class FakeRun:
+            def __init__(self):
+                self.argv = []
+
+            def say(self, *_):
+                pass
+
+            def log(self, *_):
+                pass
+
+            def sh(self, argv, **_):
+                self.argv.append([str(a) for a in argv])
+                return subprocess.CompletedProcess(argv, 0, b"@@ADMIN start\n", b"")
+
+        for host, forwards in (("tom-pc-1-wsl", False), ("beep-worker", True), ("grok-bot", True)):
+            with mock.patch.object(uh, "ensure_dankserver_agent") as ensure:
+                run = FakeRun()
+                rc, _ = uh.admin_run(run, host, "true", [])
+                self.assertEqual(rc, 0)
+                self.assertEqual(ensure.called, forwards, host)
+                self.assertEqual(run.argv[0][:3], [str(uh.BIN / uh.HOSTS[host].admin[0]),
+                                                   *uh.HOSTS[host].admin[1:]])
 
     def test_mux_argv_cannot_authenticate(self):
         argv = uh.mux_argv("dankserver")
@@ -244,6 +295,26 @@ class HostAgent(unittest.TestCase):
             (home / ".local/bin/grok").symlink_to(home / ".grok/bin/grok")
             recs, _ = self.run_agent(home, "status", "grok")
             self.assertEqual([x for x in recs if x[0] == "@@INSTALL"][0][5], "-")
+
+    def test_muse_settings_without_schema_version_is_reported_not_fixed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            _exe(home / ".local/bin/muse", "#!/bin/sh\n# muse-code/channels launcher\necho 1.4.14\n")
+            settings = home / ".config/muse/settings.json"
+            settings.parent.mkdir(parents=True)
+            settings.write_text('{"provider": "meta", "model": "muse-wonder-1.0"}\n')
+            before = settings.read_text()
+            env = {"PATH": f"{home / '.local/bin'}:/usr/bin:/bin"}
+            recs, res = self.run_agent(home, "status", "muse", env_extra=env)
+            self.assertEqual([r[0:2] for r in recs if r[0] == "@@INSTALL"], [["@@INSTALL", "muse"]], res.stderr)
+            notes = [r for r in recs if r[0] == "@@NOTE"]
+            self.assertEqual(len(notes), 1)
+            self.assertEqual(notes[0][1], "muse")
+            self.assertIn("schema_version", notes[0][2])
+            self.assertEqual(settings.read_text(), before)
+            settings.write_text('{"schema_version": 1, "provider": "meta"}\n')
+            recs, _ = self.run_agent(home, "status", "muse", env_extra=env)
+            self.assertFalse([r for r in recs if r[0] == "@@NOTE"])
 
     def test_junie_migrates_only_its_own_entry(self):
         with tempfile.TemporaryDirectory() as tmp:
