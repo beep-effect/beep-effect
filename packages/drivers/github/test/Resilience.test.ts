@@ -1,7 +1,9 @@
+import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { GitHubError } from "@beep/github/GitHubError";
 import { GitHubRateLimitResource, RateLimitSnapshot, RetryPolicy } from "@beep/github/Resilience";
 import { assert, describe, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -71,6 +73,20 @@ describe("RateLimitSnapshot", () => {
       assert.strictEqual(decoded.resource, "graphql");
       assertSome(decoded.used, 1_000);
     })
+  );
+});
+
+describe("RateLimitSnapshot codec", () => {
+  it.effect.prop(
+    "round-trips any snapshot through its encoded form",
+    [Arbitrary.schema(RateLimitSnapshot)],
+    Effect.fnUntraced(function* ([snapshot]) {
+      const encoded = yield* S.encodeEffect(RateLimitSnapshot)(snapshot);
+      const decoded = yield* S.decodeEffect(RateLimitSnapshot)(encoded);
+      const reencoded = yield* S.encodeEffect(RateLimitSnapshot)(decoded);
+      assert.deepStrictEqual(reencoded, encoded);
+    }),
+    { arbitrary: fcRuns(50) }
   );
 });
 

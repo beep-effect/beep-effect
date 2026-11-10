@@ -43,9 +43,11 @@ import {
   SampleBucket,
   windowsOf,
 } from "@beep/repo-cli/test/SharedInternals";
+import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as DateTime from "effect/DateTime";
@@ -292,6 +294,24 @@ describe("GithubLedger schemas", () => {
     expect(label("ghp_secret", "token")).toBe("unresolved");
     expect(label(undefined, "token")).toBe("unresolved");
   });
+});
+
+describe("GithubLedger codecs", () => {
+  it.effect.prop(
+    "round-trips any persisted row and bucket reading through its JSON codec",
+    [Arbitrary.schema(GithubLedgerRow), Arbitrary.schema(BucketReading)],
+    Effect.fnUntraced(function* ([row, bucket]) {
+      const rowText = yield* S.encodeEffect(GithubLedgerRowJson)(row);
+      const rowBack = yield* S.decodeEffect(GithubLedgerRowJson)(rowText);
+      const rowAgain = yield* S.encodeEffect(GithubLedgerRowJson)(rowBack);
+      expect(rowAgain).toBe(rowText);
+      const bucketText = yield* S.encodeEffect(BucketReadingJson)(bucket);
+      const bucketBack = yield* S.decodeEffect(BucketReadingJson)(bucketText);
+      const bucketAgain = yield* S.encodeEffect(BucketReadingJson)(bucketBack);
+      expect(bucketAgain).toBe(bucketText);
+    }),
+    { arbitrary: fcRuns(24) }
+  );
 });
 
 describe("GithubLedger reserve", () => {

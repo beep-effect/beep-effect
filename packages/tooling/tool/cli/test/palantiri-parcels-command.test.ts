@@ -2,6 +2,7 @@ import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   AccountHeadroomSource,
+  GithubHeadroomSource,
   HostPressureSource,
   InboxRowInput,
   LaneCheckoutInput,
@@ -90,7 +91,7 @@ const withEnv = (env: Record<string, string>) =>
 
 const noFiles = Layer.mergeAll(FileSystem.layerNoop({}), Path.layer);
 
-const offline = (parcel: "account-headroom" | "lane-reds" | "host-pressure" | "since-last-check") =>
+const offline = (parcel: "account-headroom" | "lane-reds" | "host-pressure" | "since-last-check" | "github-headroom") =>
   Effect.fail(SourceFailed.make({ parcel, detail: "not wired in this test" }));
 
 const offlineSources = Layer.mergeAll(
@@ -100,7 +101,8 @@ const offlineSources = Layer.mergeAll(
   Layer.succeed(SinceLastCheckSource, {
     read: Effect.fn("SinceLastCheckSource.stub.read")(() => offline("since-last-check")),
     advance: Effect.fn("SinceLastCheckSource.stub.advance")(() => offline("since-last-check")),
-  })
+  }),
+  Layer.succeed(GithubHeadroomSource, { snapshot: offline("github-headroom") })
 );
 
 const runtimeWith = <ROut, E>(source: Layer.Layer<ROut, E>) =>
@@ -439,6 +441,7 @@ describe("beep palantiri parcels", () => {
       "host-pressure  key=host  bound=60s  sources=proc-pressure, proc-meminfo, admission-slots",
       "app-error-classes  key=app  bound=900s  sources=grafana-query",
       "since-last-check  key=session  bound=none (event-sourced)  sources=session-ledger, yeet-inbox, session-cursor",
+      "github-headroom  key=account  bound=900s  sources=github-ledger, github-rate-limit-sample",
     ]);
   });
 });

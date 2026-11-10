@@ -315,10 +315,8 @@ export type RateLimitCredential = typeof RateLimitCredential.Type;
  * @category models
  * @since 0.0.0
  */
-export class RateLimitObservation extends S.Class<RateLimitObservation, { readonly brand: unique symbol }>(
-  $I`RateLimitObservation`
-)(
-  {
+export class RateLimitObservation extends S.Opaque<RateLimitObservation, { readonly brand: unique symbol }>()(
+  S.Struct({
     /** The parsed rate-limit headers. */
     snapshot: RateLimitSnapshot.pipe(
       $I.annoteKey("RateLimitObservation.snapshot", { description: "The parsed rate-limit headers." })
@@ -361,8 +359,9 @@ export class RateLimitObservation extends S.Class<RateLimitObservation, { readon
         description: "When the response or the failure was seen, by the Effect clock.",
       })
     ),
-  },
-  $I.annote("RateLimitObservation", { description: "One GitHub response's rate-limit headers, in context." })
+  }).pipe(
+    $I.annoteSchema("RateLimitObservation", { description: "One GitHub response's rate-limit headers, in context." })
+  )
 ) {}
 
 /**

@@ -65,7 +65,6 @@ import type { GithubIdentity } from "./GithubIdentity.ts";
 import type {
   CalibrationRow,
   GithubIdentityLabel,
-  GithubLedgerCommandLabel,
   GithubLedgerError,
   SampleRow,
   SampleTrigger,
@@ -150,41 +149,34 @@ export const selfCostOf: {
  * import * as S from "effect/Schema"
  *
  * const bucket = { limit: 5000, used: 7, remaining: 4993, reset: 1 }
- * const row = sampleRowOf({
- *   at: DateTime.makeUnsafe(0),
- *   host: HostLabel.make("hub"),
- *   command: GithubLedgerCommandLabel.make("beep"),
- *   identity: GithubIdentityLabel.make("user:octocat"),
- *   trigger: "manual",
- *   selfCost: "confirmed-free",
- *   wire: S.decodeUnknownSync(GithubRateLimitWire)({ resources: { core: bucket, graphql: bucket } })
- * })
+ * const row = sampleRowOf(
+ *   {
+ *     at: DateTime.makeUnsafe(0),
+ *     host: HostLabel.make("hub"),
+ *     command: GithubLedgerCommandLabel.make("beep"),
+ *     identity: GithubIdentityLabel.make("user:octocat"),
+ *     trigger: "manual",
+ *     selfCost: "confirmed-free"
+ *   },
+ *   S.decodeUnknownSync(GithubRateLimitWire)({ resources: { core: bucket, graphql: bucket } })
+ * )
  * console.log(row.buckets.length) // 2
  * ```
  *
- * @param input - When, where, for whom and what was read.
+ * @param fields - When, where, for whom and why the body was read.
+ * @param wire - The `/rate_limit` body.
  * @returns The row.
  * @category constructors
  * @since 0.0.0
  */
-export const sampleRowOf = (input: {
-  readonly at: DateTime.Utc;
-  readonly command: GithubLedgerCommandLabel;
-  readonly host: HostLabel;
-  readonly identity: GithubIdentityLabel;
-  readonly selfCost: SelfCost;
-  readonly trigger: SampleTrigger;
-  readonly wire: GithubRateLimitWire;
-}): SampleRow =>
-  GithubLedgerRow.cases.Sample.make({
-    at: input.at,
-    host: input.host,
-    command: input.command,
-    identity: input.identity,
-    trigger: input.trigger,
-    selfCost: input.selfCost,
-    buckets: sampleBucketsOf(input.wire),
-  });
+export const sampleRowOf: {
+  (wire: GithubRateLimitWire): (fields: Omit<SampleRow, "_tag" | "buckets">) => SampleRow;
+  (fields: Omit<SampleRow, "_tag" | "buckets">, wire: GithubRateLimitWire): SampleRow;
+} = dual(
+  2,
+  (fields: Omit<SampleRow, "_tag" | "buckets">, wire: GithubRateLimitWire): SampleRow =>
+    GithubLedgerRow.cases.Sample.make({ ...fields, buckets: sampleBucketsOf(wire) })
+);
 
 /**
  * Record a `/rate_limit` body the caller already read as a sample with an
@@ -221,15 +213,10 @@ export const recordRateLimitRead = Effect.fnUntraced(function* (wire: GithubRate
   const at = yield* DateTime.now;
   const command = yield* GithubLedgerCommand;
   yield* ledger.value.recordSample(
-    sampleRowOf({
-      at,
-      host: hostLabelOf(NodeOS.hostname()),
-      command,
-      identity: identity.value,
-      trigger,
-      selfCost: "unconfirmed",
-      wire,
-    })
+    sampleRowOf(
+      { at, host: hostLabelOf(NodeOS.hostname()), command, identity: identity.value, trigger, selfCost: "unconfirmed" },
+      wire
+    )
   );
 });
 
@@ -594,7 +581,7 @@ export const makeGithubRateLimitSampler = Effect.fn("GithubRateLimitSampler.make
       const at = yield* DateTime.now;
       const command = yield* GithubLedgerCommand;
       yield* ledger.recordSample(
-        sampleRowOf({ at, host, command, identity, trigger, selfCost: read.selfCost, wire: read.wire })
+        sampleRowOf({ at, host, command, identity, trigger, selfCost: read.selfCost }, read.wire)
       );
       return SampleOutcome.cases.Sampled.make({ identity, at, selfCost: read.selfCost });
     }).pipe(Effect.scoped);
