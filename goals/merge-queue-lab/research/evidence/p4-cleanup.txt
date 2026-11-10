@@ -1,0 +1,11 @@
+# 2026-11-10 closeout cleanup (ops/queue-lab.sh cleanup)
+closed: #3097 #3091 #3089 #3076 #3075 #3074 #3070 (every other synthetic entry merged into queue-lab and its branch was deleted on merge)
+deleted: queue-lab-probe/run-42764505721-1 (left by the 4h cancel), queue-lab-s17, -s19, -s22, -s5, -s6, -s7, -s8
+open synthetic pull requests after: 0
+refs/heads/queue-lab* after: refs/heads/queue-lab
+refs/heads/gh-readonly-queue/* after: 0
+in-progress Queue Lab runs: 0
+# lab ruleset 26917133 parked (go verdict): build concurrency 0
+{"id":26917133,"updated_at":"2026-11-10T00:55:54.843-06:00","conditions":{"ref_name":{"exclude":[],"include":["refs/heads/queue-lab"]}},"merge_queue":{"merge_method":"SQUASH","max_entries_to_build":0,"min_entries_to_merge":1,"max_entries_to_merge":1,"min_entries_to_merge_wait_minutes":0,"grouping_strategy":"ALLGREEN","check_response_timeout_minutes":10},"bypass_actors":[]}
+# main ruleset 10240248 (unchanged since 2026-10-27)
+{"id":10240248,"rules":["deletion","non_fast_forward","pull_request","required_status_checks"],"updated_at":"2026-10-27T04:49:40.154-05:00"}

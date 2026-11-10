@@ -1,0 +1,75 @@
+# enqueuePullRequest as the orchestrator App (beep-fleet-orchestrator), PR #3061 (entry file only)
+{
+  "data": {
+    "enqueuePullRequest": {
+      "mergeQueueEntry": {
+        "id": "MQE_lQDOPbO_N88AAAABOBdP6c4ABVx3zgPbQtI",
+        "state": "QUEUED",
+        "position": 1,
+        "enqueuedAt": "2026-11-10T04:54:37Z",
+        "jump": false,
+        "solo": false,
+        "enqueuer": {
+          "login": "beep-fleet-orchestrator"
+        },
+        "headCommit": null,
+        "baseCommit": null,
+        "pullRequest": {
+          "number": 3061
+        }
+      }
+    }
+  }
+}
+
+# enqueuePullRequest as the App, PR #3062 (adds .github/workflows/queue-lab-touch-s2.yml)
+{
+  "data": {
+    "enqueuePullRequest": {
+      "mergeQueueEntry": {
+        "id": "MQE_lQDOPbO_N88AAAABOBfskM4ABVx3zgPbRiY",
+        "state": "QUEUED",
+        "position": 1,
+        "enqueuedAt": "2026-11-10T04:58:16Z",
+        "jump": false,
+        "solo": false,
+        "enqueuer": {
+          "login": "beep-fleet-orchestrator"
+        },
+        "headCommit": null,
+        "baseCommit": null,
+        "pullRequest": {
+          "number": 3062
+        }
+      }
+    }
+  }
+}
+# poll until merged
+{"t":"2026-11-10T04:58:23Z","n":3062,"state":"OPEN","mergeable":"MERGEABLE","mergeStateStatus":"CLEAN","inQueue":true,"entry":{"state":"QUEUED","position":1,"head":null,"base":null},"queue":[{"n":3062,"state":"QUEUED","position":1}]}
+{"t":"2026-11-10T04:58:53Z","n":3062,"state":"OPEN","mergeable":"MERGEABLE","mergeStateStatus":"CLEAN","inQueue":true,"entry":{"state":"AWAITING_CHECKS","position":1,"head":"822c189fb824aa6a429751a70f59168dd6eb9d8b","base":"01ad0c0b42c54ef9c269380345f3ad517e0f6e99"},"queue":[{"n":3062,"state":"AWAITING_CHECKS","position":1}]}
+{"t":"2026-11-10T04:59:24Z","n":3062,"state":"MERGED","mergeable":"UNKNOWN","mergeStateStatus":"UNKNOWN","inQueue":false,"entry":null,"queue":[]}
+
+# enqueuePullRequest as the fleet fine-grained PAT (tom-pc-1-wsl-beep-development, login kriegcloud), PR #3065 (adds a workflow file)
+{
+  "data": {
+    "enqueuePullRequest": {
+      "mergeQueueEntry": {
+        "id": "MQE_lQDOPbO_N88AAAABOBhK4M4ABVx3zgPbSC8",
+        "state": "QUEUED",
+        "position": 1,
+        "enqueuedAt": "2026-11-10T05:00:41Z",
+        "jump": false,
+        "solo": false,
+        "enqueuer": {
+          "login": "kriegcloud"
+        },
+        "headCommit": null,
+        "baseCommit": null,
+        "pullRequest": {
+          "number": 3065
+        }
+      }
+    }
+  }
+}

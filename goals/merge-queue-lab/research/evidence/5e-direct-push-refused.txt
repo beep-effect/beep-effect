@@ -1,0 +1,4 @@
+remote: error: GH013: Repository rule violations found for refs/heads/queue-lab.
+remote: Review all repository rules at https://github.com/beep-effect/beep-effect/rules?ref=refs%2Fheads%2Fqueue-lab
+remote: - Required status check "queue-lab-gate" is expected.
+remote: - Changes must be made through the merge queue

@@ -5,7 +5,7 @@
     "title": "Merge Queue Lab",
     "status": "active",
     "created": "2026-11-09",
-    "updated": "2026-11-09",
+    "updated": "2026-11-10",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/merge-queue-lab",
@@ -22,7 +22,28 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 3072,
+        "role": "supporting"
+      },
+      {
+        "number": 3112,
+        "role": "final"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/docs_merge-queue-lab-findings-394c47069af5/verdict.json",
+        "gating": true
+      }
+    ]
+  },
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 3112
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -36,7 +57,36 @@
     "explorations/github-merge-queue/DECISIONS.md",
     "explorations/github-merge-queue/research/github-semantics.md"
   ],
-  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
+  "researchReports": [
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md",
+    "research/evidence/10a-strict-behind-batch.txt",
+    "research/evidence/10b-ruleset-create.txt",
+    "research/evidence/10c-app-installation-permissions.json",
+    "research/evidence/10c-enqueue-by-identity.txt",
+    "research/evidence/10c-github-token-enqueue-3070.txt",
+    "research/evidence/2a-pause-resume-batch.txt",
+    "research/evidence/3e-6d-headgreen-groups-batch.txt",
+    "research/evidence/4d-rerun-after-ejection-3074.txt",
+    "research/evidence/4e-batch.txt",
+    "research/evidence/4f-path-filter-batch.txt",
+    "research/evidence/4h-batch.txt",
+    "research/evidence/4i-batch.txt",
+    "research/evidence/5c-5e-bypass-merge-batch.txt",
+    "research/evidence/5d-jump-batch.txt",
+    "research/evidence/5e-direct-push-refused.txt",
+    "research/evidence/6c-batch.txt",
+    "research/evidence/6e-6f-runs-3061.ndjson",
+    "research/evidence/6f-push-run-42758873922.txt",
+    "research/evidence/7c-7e-7f-8c-merge-group-run-42758817366.txt",
+    "research/evidence/8d-shared-concurrency-batch.txt",
+    "research/evidence/9a-gh-pr-merge-all.txt",
+    "research/evidence/9c-rest-listing-probe.txt",
+    "research/evidence/p4-cleanup.txt",
+    "research/evidence/r1-6e-pr-3061-lifecycle.txt",
+    "research/evidence/r2-rule-suites.txt",
+    "research/findings.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -50,27 +100,27 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Stand up the lab",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Observe",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -88,5 +138,11 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation.",
     "An observation would require enabling a queue on main, editing a workflow on main, or merging to main over a failing required check."
+  ],
+  "opsScripts": [
+    {
+      "path": "ops/queue-lab.sh",
+      "purpose": "Drive synthetic pull requests through the queue-lab merge queue as the App, a fleet PAT or the gh login; read entries, change the lab ruleset's parameters, and clean up lab residue."
+    }
   ]
 }
