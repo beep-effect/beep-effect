@@ -47,7 +47,6 @@ import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Str from "effect/String";
@@ -173,16 +172,12 @@ const sameBytes = (left: Uint8Array, right: Uint8Array): boolean =>
 const joinPath = (root: string, relative: string): string =>
   Str.endsWith("/")(root) ? `${root}${relative}` : `${root}/${relative}`;
 
-const parentOf = (path: string): string =>
+// A memory file path's folder (empty for a file at the folder's top) and its
+// file name.
+const splitFilePath = (path: MemoryFilePath): readonly [folder: string, name: string] =>
   O.match(Str.lastIndexOf("/")(path), {
-    onNone: () => ".",
-    onSome: (slash) => (slash === 0 ? "/" : Str.slice(0, slash)(path)),
-  });
-
-const nameOf = (path: string): string =>
-  O.match(Str.lastIndexOf("/")(path), {
-    onNone: () => path,
-    onSome: (slash) => Str.slice(slash + 1)(path),
+    onNone: () => ["", path] as const,
+    onSome: (slash) => [Str.slice(0, slash)(path), Str.slice(slash + 1)(path)] as const,
   });
 
 const failure = (operation: string, path: O.Option<MemoryFilePath>) => (cause: unknown) =>
@@ -465,7 +460,8 @@ const make = Effect.gen(function* () {
       });
     }
     const folderDigest = yield* folderDigestOf("importFolder", listingOf(disk));
-    events.push({
+    // The FolderImported event closes every import, so the batch is never empty.
+    const folderImported: MemoryEvent = {
       _tag: "FolderImported",
       payload: FolderImported.make({
         folderDigest,
@@ -473,8 +469,8 @@ const make = Effect.gen(function* () {
         nodeCount,
         author: MarkdownImportLineage,
       }),
-    });
-    return events;
+    };
+    return A.append(events, folderImported);
   });
 
   const importFolderUnlocked = Effect.fnUntraced(function* (root: PosixPath) {
@@ -498,18 +494,16 @@ const make = Effect.gen(function* () {
     // if the append below fails.
     const key = yield* folderKeyOf("importFolder", root);
     yield* recordFolderFiles("importFolder", key, disk);
-    yield* A.match(events, {
-      onEmpty: () => Effect.void,
-      onNonEmpty: (batch) => log.appendMany(batch),
-    }).pipe(Effect.mapError(failure("importFolder", O.none())));
+    yield* log.appendMany(events).pipe(Effect.mapError(failure("importFolder", O.none())));
     yield* catchUp("importFolder");
     return yield* currentBase("importFolder");
   });
 
   const writeAtomically = Effect.fnUntraced(function* (root: PosixPath, file: BuiltFile) {
     const target = joinPath(root, file.path);
-    const directory = parentOf(target);
-    const temporary = joinPath(directory, `.${nameOf(target)}.agent-memory-store-tmp`);
+    const [folder, name] = splitFilePath(file.path);
+    const directory = Str.isEmpty(folder) ? root : joinPath(root, folder);
+    const temporary = joinPath(directory, `.${name}.agent-memory-store-tmp`);
     yield* fs.makeDirectory(directory, { recursive: true });
     yield* fs.writeFile(temporary, file.bytes);
     yield* fs.rename(temporary, target);
@@ -559,13 +553,11 @@ const make = Effect.gen(function* () {
       return yield* UnimportedFolderError.make({});
     }
     const nodes = fileNodes(projection, node.filePath);
-    const index = O.getOrElse(
-      A.findFirstIndex(nodes, (candidate) => candidate.nodeId === nodeId),
-      () => -1
+    // The log refuses a NodeCreated whose predecessor is not in its file, so
+    // every logged node has a place in its file's node order.
+    const index = yield* Effect.fromOption(A.findFirstIndex(nodes, (candidate) => candidate.nodeId === nodeId)).pipe(
+      Effect.mapError(failure("projectNode", O.some(node.filePath)))
     );
-    if (index < 0) {
-      return yield* failure("projectNode", O.some(node.filePath))(`node ${nodeId} has no place in its file`);
-    }
     const previousText = O.getOrElse(node.previousText, () => "");
     const before = joinText(A.take(nodes, index));
     const after = joinText(A.drop(nodes, index + 1));
@@ -575,10 +567,10 @@ const make = Effect.gen(function* () {
     const baseText = `${before}${previousText}${after}`;
     const base = partition(baseText);
     const replacement = replacementRun(base, baseText, edit.offset, edit.length, edit.content);
-    const check = yield* Result.match(checkReplacement(base, replacement), {
-      onFailure: (error) => Effect.fail(error.pipe(failure("reparseCheck", O.some(node.filePath)))),
-      onSuccess: Effect.succeed,
-    });
+    // replacementRun names a run inside `base`, so the range check passes.
+    const check = yield* Effect.fromResult(checkReplacement(base, replacement)).pipe(
+      Effect.mapError(failure("reparseCheck", O.some(node.filePath)))
+    );
     if (!check.stable) {
       return yield* ReparseRefusedError.make({ nodeId, path: node.filePath, disturbed: check.disturbed });
     }

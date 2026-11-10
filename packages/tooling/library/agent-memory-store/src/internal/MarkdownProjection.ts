@@ -115,11 +115,10 @@ const updateNode = (
 
 const applyEntry = (projection: Projection, entry: Entry) =>
   Match.value(entry.event).pipe(
+    // The log refuses a second NodeCreated for a node, so each node is created
+    // once here.
     Match.when(NodeCreatedEvent.tag, () =>
       Effect.map(decodeCreated(entry.payload), (payload) => {
-        if (MutableHashMap.has(projection.nodes, payload.nodeId)) {
-          return;
-        }
         MutableHashMap.set(
           projection.nodes,
           payload.nodeId,

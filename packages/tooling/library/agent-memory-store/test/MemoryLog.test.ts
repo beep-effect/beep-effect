@@ -19,13 +19,17 @@ import {
   MemoryLogError,
   MemoryLogTestLayer,
   makeMemoryLogSqliteLayer,
+  makeMemorySqlClientLayer,
   NodeCreated,
   NodeId,
   NodeOperation,
   NodeRetired,
   NodeRevised,
+  NodeStatusChanged,
   RevisionId,
   StaleParentsError,
+  StatusTransition,
+  StatusValue,
   UnplacedNodeError,
   WriteHeld,
 } from "@beep/agent-memory-store";
@@ -103,6 +107,27 @@ const retired = (
   payload: NodeRetired.make({ nodeId, revisionId, parents: A.copy(parents), author }),
 });
 
+const statusChanged = (
+  nodeId: NodeId,
+  revisionId: RevisionId,
+  parents: A.NonEmptyReadonlyArray<RevisionId>
+): MemoryEvent => ({
+  _tag: "NodeStatusChanged",
+  payload: NodeStatusChanged.make({
+    nodeId,
+    revisionId,
+    parents: A.copy(parents),
+    contentHash: ContentHash.make(Str.repeat(64)("b")),
+    text: "status: completed\n",
+    transition: StatusTransition.make({
+      field: "status",
+      from: O.some(StatusValue.make("active")),
+      to: StatusValue.make("completed"),
+    }),
+    author,
+  }),
+});
+
 const folderImported: MemoryEvent = {
   _tag: "FolderImported",
   payload: FolderImported.make({ folderDigest, fileCount: 1, nodeCount: 2, author }),
@@ -146,6 +171,17 @@ const openLog = Effect.fnUntraced(function* (filename: string) {
   return Context.get(context, MemoryLog);
 });
 
+// A second SQL connection to the database file, open for the rest of the test.
+const sqlOn = (filename: string) =>
+  Effect.map(Layer.build(makeMemorySqlClientLayer({ filename })), Context.get(SqlClient.SqlClient));
+
+// The MemoryLogError that opening a log on `filename` fails with.
+const openFailure = (filename: string) =>
+  openLog(filename).pipe(
+    Effect.flip,
+    Effect.map((error) => [S.is(MemoryLogError)(error), error.operation] as const)
+  );
+
 // Each call builds MemoryLogTestLayer in the test's scope: a fresh in-memory database.
 const freshLog = Effect.fnUntraced(function* () {
   const context = yield* Layer.build(MemoryLogTestLayer);
@@ -187,6 +223,24 @@ describe.skipIf(!isBunRuntime)("MemoryLog live layer (Bun runtime)", () => {
       yield* log.appendMany([after(nodeB, r2, nodeA, filePath), after(unknownNode, r3, nodeB, filePath)]);
       const placed = yield* log.heads(unknownNode);
       expect(placed).toEqual([r3]);
+    })
+  );
+
+  it.effect(
+    "a NodeStatusChanged on the current head moves the head and a status change on a stale head is refused",
+    Effect.fnUntraced(function* () {
+      const log = yield* freshLog();
+      yield* log.append(created(nodeA, r1));
+      yield* log.append(statusChanged(nodeA, r2, [r1]));
+      const heads = yield* log.heads(nodeA);
+      expect(heads).toEqual([r2]);
+      const stale = yield* Effect.flip(log.append(statusChanged(nodeA, r3, [r1])));
+      expect(stale).toBeInstanceOf(StaleParentsError);
+      const history = yield* log.history(nodeA);
+      expect(entryShape(history)).toEqual([
+        ["NodeCreated", nodeA],
+        ["NodeStatusChanged", nodeA],
+      ]);
     })
   );
 
@@ -441,6 +495,69 @@ describe.skipIf(!isBunRuntime)("MemoryLog live layer (Bun runtime)", () => {
         yield* log.append(created(nodeA, r1));
         const heads = yield* log.heads(nodeA);
         expect(heads).toEqual([r1]);
+      })
+    );
+
+    it.effect(
+      "a database that cannot be opened fails with the MemoryLogError of the step that refused: connect, openJournal or openTables",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const directory = yield* fs.makeTempDirectoryScoped({ prefix: "beep-memory-log-open-" });
+
+        const missingDirectory = yield* openFailure(path.join(directory, "missing", "memory.db"));
+        expect(missingDirectory).toEqual([true, "connect"]);
+
+        const notADatabase = path.join(directory, "not-a-database.db");
+        yield* fs.writeFileString(notADatabase, Str.repeat(16)("not a SQLite database file. "));
+        const garbage = yield* openFailure(notADatabase);
+        expect(garbage).toEqual([true, "connect"]);
+
+        // A view holding a table's name survives CREATE TABLE IF NOT EXISTS,
+        // and the index built next cannot be built on a view: the journal's
+        // entry table fails the journal, the order table fails the store tables.
+        const journalViewed = path.join(directory, "journal-viewed.db");
+        const journalSql = yield* sqlOn(journalViewed);
+        yield* journalSql.unsafe("CREATE VIEW agent_memory_journal AS SELECT 1 AS id");
+        const journal = yield* openFailure(journalViewed);
+        expect(journal).toEqual([true, "openJournal"]);
+
+        const viewed = path.join(directory, "viewed.db");
+        const viewedSql = yield* sqlOn(viewed);
+        yield* viewedSql.unsafe("CREATE VIEW agent_memory_order AS SELECT 1 AS sequence");
+        const tables = yield* openFailure(viewed);
+        expect(tables).toEqual([true, "openTables"]);
+      })
+    );
+
+    it.effect(
+      "a store table or journal entry lost under an open log fails reads and appends with MemoryLogError naming the operation",
+      Effect.fnUntraced(function* () {
+        const filename = yield* tempDatabase;
+        const log = yield* openLog(filename);
+        const fresh = yield* log.cursor;
+        expect(fresh).toBe(LogCursor.make(0));
+        yield* log.appendMany([created(nodeA, r1), created(nodeB, r2)]);
+        const raw = yield* sqlOn(filename);
+
+        // An ordered entry whose journal row is gone cannot be read back.
+        yield* raw.unsafe(
+          "DELETE FROM agent_memory_journal WHERE id = (SELECT entry_id FROM agent_memory_order WHERE sequence = 1)"
+        );
+        const missingEntry = yield* Effect.flip(log.entriesAfter(LogCursor.make(0)));
+        expect(missingEntry).toMatchObject({ _tag: "MemoryLogError", operation: "entriesAfter" });
+
+        yield* raw.unsafe("DROP TABLE agent_memory_heads");
+        const heads = yield* Effect.flip(log.heads(nodeA));
+        expect(heads).toMatchObject({ _tag: "MemoryLogError", operation: "heads" });
+
+        // The journal's own insert fails after the handlers ran: the journal
+        // error becomes an append failure and the batch commits nothing.
+        yield* raw.unsafe("DROP TABLE agent_memory_journal");
+        const append = yield* Effect.flip(log.append(holdResolved(unknownHold)));
+        expect(append).toMatchObject({ _tag: "MemoryLogError", operation: "append" });
+        const cursor = yield* log.cursor;
+        expect(cursor).toBe(LogCursor.make(2));
       })
     );
 

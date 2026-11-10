@@ -16,7 +16,10 @@ import {
   NodeCreatedEvent,
   NodeRetired,
   NodeRevised,
+  NodeStatusChanged,
   revisionIdOf,
+  StatusTransition,
+  StatusValue,
   TombstoneContentHash,
 } from "@beep/agent-memory-store";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
@@ -173,6 +176,36 @@ export const reviseEvent = Effect.fnUntraced(function* (nodeId: NodeId, head: Re
   const event: MemoryEvent = {
     _tag: "NodeRevised",
     payload: NodeRevised.make({ nodeId, revisionId, parents: [head], contentHash, text, author: editor }),
+  };
+  return { event, revisionId };
+});
+
+/** A `NodeStatusChanged` event on the node's current head moving `status` from `from` to `to`. */
+export const statusEvent = Effect.fnUntraced(function* (
+  nodeId: NodeId,
+  head: RevisionId,
+  text: string,
+  from: string,
+  to: string
+) {
+  const contentHash = yield* contentHashOf(text);
+  const revisionId = yield* revisionIdOf(nodeId, [head], contentHash);
+  const transition = StatusTransition.make({
+    field: "status",
+    from: O.some(StatusValue.make(from)),
+    to: StatusValue.make(to),
+  });
+  const event: MemoryEvent = {
+    _tag: "NodeStatusChanged",
+    payload: NodeStatusChanged.make({
+      nodeId,
+      revisionId,
+      parents: [head],
+      contentHash,
+      text,
+      transition,
+      author: editor,
+    }),
   };
   return { event, revisionId };
 });

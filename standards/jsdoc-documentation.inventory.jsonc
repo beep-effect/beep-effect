@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-10T03:59:04.687Z",
+  "generatedAt": "2026-11-10T04:58:24.323Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -266426,8 +266426,8 @@
           "exportKind": "const",
           "filePath": "src/MarkdownPartition.parser.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MarkdownPartition.parser.ts",
-          "line": 362,
-          "anchor": "packages-tooling-library-agent-memory-store-src-markdownpartition-parser-ts-362-partition",
+          "line": 358,
+          "anchor": "packages-tooling-library-agent-memory-store-src-markdownpartition-parser-ts-358-partition",
           "currentTags": [
             "@param",
             "@returns",
@@ -266450,8 +266450,8 @@
           "exportKind": "const",
           "filePath": "src/MarkdownPartition.parser.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MarkdownPartition.parser.ts",
-          "line": 405,
-          "anchor": "packages-tooling-library-agent-memory-store-src-markdownpartition-parser-ts-405-partitiontree",
+          "line": 401,
+          "anchor": "packages-tooling-library-agent-memory-store-src-markdownpartition-parser-ts-401-partitiontree",
           "currentTags": [
             "@param",
             "@returns",
@@ -266474,8 +266474,8 @@
           "exportKind": "const",
           "filePath": "src/MarkdownPartition.parser.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MarkdownPartition.parser.ts",
-          "line": 483,
-          "anchor": "packages-tooling-library-agent-memory-store-src-markdownpartition-parser-ts-483-checkreplacement",
+          "line": 479,
+          "anchor": "packages-tooling-library-agent-memory-store-src-markdownpartition-parser-ts-479-checkreplacement",
           "currentTags": [
             "@param",
             "@returns",
@@ -266498,8 +266498,8 @@
           "exportKind": "const",
           "filePath": "src/MarkdownProjector.layer.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MarkdownProjector.layer.ts",
-          "line": 93,
-          "anchor": "packages-tooling-library-agent-memory-store-src-markdownprojector-layer-ts-93-markdownimportlineage",
+          "line": 92,
+          "anchor": "packages-tooling-library-agent-memory-store-src-markdownprojector-layer-ts-92-markdownimportlineage",
           "currentTags": [
             "@category",
             "@since"
@@ -266520,8 +266520,8 @@
           "exportKind": "const",
           "filePath": "src/MarkdownProjector.layer.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MarkdownProjector.layer.ts",
-          "line": 109,
-          "anchor": "packages-tooling-library-agent-memory-store-src-markdownprojector-layer-ts-109-markdownpartitionextractor",
+          "line": 108,
+          "anchor": "packages-tooling-library-agent-memory-store-src-markdownprojector-layer-ts-108-markdownpartitionextractor",
           "currentTags": [
             "@category",
             "@since"
@@ -266542,8 +266542,8 @@
           "exportKind": "const",
           "filePath": "src/MarkdownProjector.layer.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MarkdownProjector.layer.ts",
-          "line": 137,
-          "anchor": "packages-tooling-library-agent-memory-store-src-markdownprojector-layer-ts-137-ismemoryfilepath",
+          "line": 136,
+          "anchor": "packages-tooling-library-agent-memory-store-src-markdownprojector-layer-ts-136-ismemoryfilepath",
           "currentTags": [
             "@param",
             "@returns",
@@ -266566,8 +266566,8 @@
           "exportKind": "const",
           "filePath": "src/MarkdownProjector.layer.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MarkdownProjector.layer.ts",
-          "line": 631,
-          "anchor": "packages-tooling-library-agent-memory-store-src-markdownprojector-layer-ts-631-markdownprojectorlayer",
+          "line": 623,
+          "anchor": "packages-tooling-library-agent-memory-store-src-markdownprojector-layer-ts-623-markdownprojectorlayer",
           "currentTags": [
             "@category",
             "@since"
@@ -266588,8 +266588,8 @@
           "exportKind": "const",
           "filePath": "src/MarkdownProjector.layer.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MarkdownProjector.layer.ts",
-          "line": 661,
-          "anchor": "packages-tooling-library-agent-memory-store-src-markdownprojector-layer-ts-661-makemarkdownstoresqlitelayer",
+          "line": 653,
+          "anchor": "packages-tooling-library-agent-memory-store-src-markdownprojector-layer-ts-653-makemarkdownstoresqlitelayer",
           "currentTags": [
             "@param",
             "@returns",
@@ -266656,8 +266656,8 @@
           "exportKind": "const",
           "filePath": "src/MemoryLog.layer.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MemoryLog.layer.ts",
-          "line": 89,
-          "anchor": "packages-tooling-library-agent-memory-store-src-memorylog-layer-ts-89-memorylogjournaltables",
+          "line": 91,
+          "anchor": "packages-tooling-library-agent-memory-store-src-memorylog-layer-ts-91-memorylogjournaltables",
           "currentTags": [
             "@category",
             "@since"
@@ -266678,8 +266678,8 @@
           "exportKind": "const",
           "filePath": "src/MemoryLog.layer.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MemoryLog.layer.ts",
-          "line": 415,
-          "anchor": "packages-tooling-library-agent-memory-store-src-memorylog-layer-ts-415-memoryloglayer",
+          "line": 425,
+          "anchor": "packages-tooling-library-agent-memory-store-src-memorylog-layer-ts-425-memoryloglayer",
           "currentTags": [
             "@category",
             "@since"
@@ -266700,8 +266700,8 @@
           "exportKind": "const",
           "filePath": "src/MemoryLog.layer.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MemoryLog.layer.ts",
-          "line": 450,
-          "anchor": "packages-tooling-library-agent-memory-store-src-memorylog-layer-ts-450-makememorysqlclientlayer",
+          "line": 460,
+          "anchor": "packages-tooling-library-agent-memory-store-src-memorylog-layer-ts-460-makememorysqlclientlayer",
           "currentTags": [
             "@param",
             "@returns",
@@ -266724,8 +266724,8 @@
           "exportKind": "const",
           "filePath": "src/MemoryLog.layer.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MemoryLog.layer.ts",
-          "line": 499,
-          "anchor": "packages-tooling-library-agent-memory-store-src-memorylog-layer-ts-499-makememorylogsqlitelayer",
+          "line": 508,
+          "anchor": "packages-tooling-library-agent-memory-store-src-memorylog-layer-ts-508-makememorylogsqlitelayer",
           "currentTags": [
             "@param",
             "@returns",

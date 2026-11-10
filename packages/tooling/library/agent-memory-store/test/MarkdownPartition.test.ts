@@ -5,7 +5,7 @@ import {
   partition,
   partitionTree,
 } from "@beep/agent-memory-store";
-import { List, ListItem, Markdown, Paragraph, Root } from "@beep/markdown";
+import { Blockquote, List, ListItem, Markdown, Paragraph, Root, Table, TableRow } from "@beep/markdown";
 import { describe, expect, it } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -321,6 +321,10 @@ describe("MarkdownPartition reparse check", () => {
       O.map(failure, (error) => [error.start, error.end, error.nodeCount]),
       [1, 0, 2]
     );
+    assertSome(
+      O.map(failure, (error) => error.message),
+      "Node replacement [1, 0) is outside a partition of 2 nodes"
+    );
   });
 });
 
@@ -382,6 +386,73 @@ describe("MarkdownPartition fallback", () => {
       expect(result.fallback).toBe("file");
       expect(A.map(result.nodes, (node) => [node.kind, node.text])).toEqual([["paragraph", text]]);
     }
+  });
+
+  it("keeps a CRLF table's delimiter row with its header row", () => {
+    expect(cut("| a |\r\n|---|\r\n| 1 |\r\n")).toEqual([
+      ["tableRow", "| a |\r\n|---|"],
+      ["gap", "\r\n"],
+      ["tableRow", "| 1 |"],
+      ["gap", "\r\n"],
+    ]);
+  });
+
+  it("cuts a table with no rows as one tableRow node", () => {
+    const text = "| a |\n|---|\n\nend\n";
+    const root = Root.make({
+      children: [Table.make({ align: [], children: [], position: span(0, 11) })],
+      position: span(0, text.length),
+    });
+    const result = partitionTree(text, root);
+    expect(result.fallback).toBe("none");
+    expect(A.map(result.nodes, (node) => [node.kind, node.text])).toEqual([
+      ["tableRow", "| a |\n|---|"],
+      ["gap", "\n\nend\n"],
+    ]);
+  });
+
+  it("cuts a table whose rows run past the file as one tableRow node", () => {
+    const text = "| a |\n|---|\n\nend\n";
+    const root = Root.make({
+      children: [
+        Table.make({
+          align: [],
+          children: [
+            TableRow.make({ children: [], position: span(0, 30) }),
+            TableRow.make({ children: [], position: span(35, 36) }),
+          ],
+          position: span(0, 11),
+        }),
+      ],
+      position: span(0, text.length),
+    });
+    const result = partitionTree(text, root);
+    expect(result.fallback).toBe("block");
+    expect(A.map(result.nodes, (node) => [node.kind, node.text])).toEqual([
+      ["tableRow", "| a |\n|---|"],
+      ["gap", "\n\nend\n"],
+    ]);
+    assertExactPartition(text, result);
+  });
+
+  it("cuts a block quote as one paragraph node and leaves a zero-width block to the gap", () => {
+    const text = "> quoted\n\nend\n";
+    const root = Root.make({
+      children: [
+        Blockquote.make({ children: [], position: span(0, 8) }),
+        Paragraph.make({ children: [], position: span(9, 9) }),
+        Paragraph.make({ children: [], position: span(10, 13) }),
+      ],
+      position: span(0, text.length),
+    });
+    const result = partitionTree(text, root);
+    expect(result.fallback).toBe("none");
+    expect(A.map(result.nodes, (node) => [node.kind, node.text])).toEqual([
+      ["paragraph", "> quoted"],
+      ["gap", "\n\n"],
+      ["paragraph", "end"],
+      ["gap", "\n"],
+    ]);
   });
 
   it("never puts a boundary inside a surrogate pair", () => {

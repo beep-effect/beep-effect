@@ -84,24 +84,20 @@ const splitsSurrogatePair = (text: string, offset: number): boolean => {
 };
 
 // The kind a block takes when it is one node: its own construct, or the
-// coarse form of a list (`listItem`) or table (`tableRow`).
+// coarse form of a list (`listItem`) or table (`tableRow`). Every other block
+// (block quotes, definitions, footnote definitions and the MDX blocks a
+// hand-built tree may hold) is a paragraph node.
 const coarseKind: (block: Block) => NodeKind = Match.type<Block>().pipe(
-  Match.discriminatorsExhaustive("type")({
+  Match.discriminators("type")({
     frontmatter: () => "frontmatter" as const,
     heading: () => "heading" as const,
-    paragraph: () => "paragraph" as const,
     code: () => "codeFence" as const,
     html: () => "html" as const,
     thematicBreak: () => "thematicBreak" as const,
     list: () => "listItem" as const,
     table: () => "tableRow" as const,
-    blockquote: () => "paragraph" as const,
-    definition: () => "paragraph" as const,
-    footnoteDefinition: () => "paragraph" as const,
-    mdxjsEsm: () => "paragraph" as const,
-    mdxFlowExpression: () => "paragraph" as const,
-    mdxJsxFlowElement: () => "paragraph" as const,
-  })
+  }),
+  Match.orElse(() => "paragraph" as const)
 );
 
 // Blocks whose children are other blocks; a list item opening with one of

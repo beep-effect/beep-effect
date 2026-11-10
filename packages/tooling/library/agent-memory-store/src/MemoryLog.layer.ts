@@ -37,13 +37,15 @@
  */
 
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as EventJournal from "effect/eventlog/EventJournal";
 import * as EventLog from "effect/eventlog/EventLog";
 import * as EventLogEncryption from "effect/eventlog/EventLogEncryption";
 import * as SqlEventJournal from "effect/eventlog/SqlEventJournal";
-import { pipe } from "effect/Function";
+import * as Filter from "effect/Filter";
+import { flow, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
@@ -255,6 +257,16 @@ const resolveHold = Effect.fnUntraced(function* (holdId: HoldId, entry: Entry) {
 const isStoreFailure = (error: unknown): error is SqlError.SqlError | S.SchemaError =>
   SqlError.isSqlError(error) || S.isSchemaError(error);
 
+// The first defect of a cause when it is a store failure a handler raised;
+// any other cause passes through unchanged.
+const storeFailureDefect = Filter.composePassthrough(Cause.findDefect, Filter.fromPredicate(isStoreFailure));
+
+// The MemoryLogError a failed store operation becomes.
+const failedWith =
+  (operation: string) =>
+  (cause: unknown): MemoryLogError =>
+    MemoryLogError.fromUnknown(operation, cause);
+
 // Store-table failures inside a handler abort the journal transaction; they
 // surface as defects and `appendMany` turns them back into `MemoryLogError`.
 const handlers = EventLog.group(MemoryEvents, (group) =>
@@ -294,7 +306,7 @@ const toWriteItem = (event: MemoryEvent) =>
   });
 
 const make = Effect.gen(function* () {
-  yield* createTables().pipe(Effect.mapError((cause) => MemoryLogError.fromUnknown("openTables", cause)));
+  yield* createTables().pipe(Effect.mapError(failedWith("openTables")));
   const sql = yield* SqlClient.SqlClient;
   const log = yield* EventLog.EventLog;
   const journal = yield* EventJournal.EventJournal;
@@ -302,16 +314,16 @@ const make = Effect.gen(function* () {
   const readFailure =
     (operation: string) =>
     <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, MemoryLogError, R> =>
-      Effect.mapError(effect, (cause) => MemoryLogError.fromUnknown(operation, cause));
+      Effect.mapError(effect, failedWith(operation));
 
   const appendMany = (events: Arr.NonEmptyReadonlyArray<MemoryEvent>) =>
-    log.writeMany({ schema: MemoryLogSchema, events: A.map(events, toWriteItem) }).pipe(
-      Effect.asVoid,
-      Effect.catchTag("EventJournalError", (cause) => Effect.fail(MemoryLogError.fromUnknown("append", cause))),
-      Effect.catchDefect((defect) =>
-        isStoreFailure(defect) ? Effect.fail(MemoryLogError.fromUnknown("append", defect)) : Effect.die(defect)
-      )
-    );
+    log
+      .writeMany({ schema: MemoryLogSchema, events: A.map(events, toWriteItem) })
+      .pipe(
+        Effect.asVoid,
+        Effect.catchTag("EventJournalError", flow(failedWith("append"), Effect.fail)),
+        Effect.catchCauseFilter(storeFailureDefect, flow(failedWith("append"), Effect.fail))
+      );
 
   const entriesOf = (operation: string, ids: ReadonlyArray<EventJournal.EntryId>) =>
     journal.entriesById(ids).pipe(
@@ -357,7 +369,7 @@ const make = Effect.gen(function* () {
     heads: Effect.fn("MemoryLog.heads")((nodeId: NodeId) =>
       readHeads(nodeId).pipe(Effect.provideService(SqlClient.SqlClient, sql), readFailure("heads"))
     ),
-    cursor: sql`SELECT COALESCE(MAX(sequence), 0) AS cursor FROM agent_memory_order`.pipe(
+    cursor: sql`SELECT sequence AS cursor FROM agent_memory_order ORDER BY sequence DESC LIMIT 1`.pipe(
       Effect.flatMap(decodeCursorRows),
       Effect.map((rows) =>
         pipe(A.head(rows), O.match({ onNone: () => LogCursor.make(0), onSome: (row) => row.cursor }))
@@ -375,9 +387,7 @@ const identity = Layer.effect(EventLog.Identity, EventLog.makeIdentity).pipe(
 
 const journal = Layer.effect(
   EventJournal.EventJournal,
-  SqlEventJournal.make(MemoryLogJournalTables).pipe(
-    Effect.mapError((cause) => MemoryLogError.fromUnknown("openJournal", cause))
-  )
+  SqlEventJournal.make(MemoryLogJournalTables).pipe(Effect.mapError(failedWith("openJournal")))
 );
 
 const runtime = handlers.pipe(
@@ -453,13 +463,12 @@ export const makeMemorySqlClientLayer = (
   Layer.unwrap(
     Effect.tryPromise({
       try: () => import("@beep/sqlite"),
-      catch: (cause) => MemoryLogError.fromUnknown("loadDriver", cause),
+      catch: failedWith("loadDriver"),
     }).pipe(
       Effect.map((driver) =>
-        Layer.effect(
-          SqlClient.SqlClient,
-          driver.make(config).pipe(Effect.mapError((cause) => MemoryLogError.fromUnknown("connect", cause)))
-        ).pipe(Layer.provide(Reactivity.layer))
+        Layer.effect(SqlClient.SqlClient, driver.make(config).pipe(Effect.mapError(failedWith("connect")))).pipe(
+          Layer.provide(Reactivity.layer)
+        )
       )
     )
   );

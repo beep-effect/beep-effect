@@ -10,27 +10,37 @@
  * The suite runs under Bun only (the SQLite driver imports `bun:sqlite`).
  */
 import {
+  ConflictResolution,
   FolderImportedEvent,
   ForeignFolderError,
+  HoldId,
+  HoldResolved,
   isMemoryFilePath,
   LogCursor,
+  MarkdownProjector,
   MemoryFilePath,
+  makeMarkdownStoreSqliteLayer,
   NodeId,
+  NodeOperation,
   ProjectionError,
   ReparseRefusedError,
   UnimportedFolderError,
+  WriteHeld,
 } from "@beep/agent-memory-store";
 import { MarkdownEdit } from "@beep/markdown";
 import { PosixPath } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { loadGoalsMarkdownSample, writeSampleFolder } from "./fixtures/goals-markdown-sample.ts";
+import { author, staleRevision } from "./fixtures.ts";
 import {
   createdNodes,
   insertEvent,
@@ -41,6 +51,7 @@ import {
   reviseEvent,
   snapshotFolder,
   spiedFileSystem,
+  statusEvent,
   TestPlatform,
   tempDirectory,
   textOf,
@@ -393,6 +404,115 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector import rules and projectNode (
         expect(A.map(afterInsert, (file) => textOf(file.bytes))).toEqual([
           "# Notes\n\n- one\n- two, revised\n- three\n\nClosing paragraph.\n",
         ]);
+      })
+    );
+
+    it.effect(
+      "a root spelled with a trailing slash names the same folder, and a directory named like a memory file is not read as one",
+      Effect.fnUntraced(function* () {
+        const workspace = yield* tempDirectory("beep-root-spelling-");
+        const folder = `${workspace}/memory`;
+        yield* writeFiles(folder, [
+          ["top.md", "Top note.\n"],
+          ["archive.md/inner.md", "Inner note.\n"],
+        ]);
+        const store = yield* openStore(`${workspace}/memory.db`);
+        const imported = yield* store.projector.importFolder(PosixPath.make(`${folder}/`));
+        expect(A.map(imported.files, (file) => file.path)).toEqual(["archive.md/inner.md", "top.md"]);
+
+        const copy = `${workspace}/copy/`;
+        const exported = yield* store.projector.exportFolder(PosixPath.make(copy));
+        expect(exported.folderDigest).toBe(imported.folderDigest);
+        const copied = yield* snapshotFolder(copy);
+        expect(A.map(copied, (file) => [file.path, textOf(file.bytes)])).toEqual([
+          ["archive.md/inner.md", "Inner note.\n"],
+          ["top.md", "Top note.\n"],
+        ]);
+      })
+    );
+
+    it.effect(
+      "a file the parser rejects imports as one paragraph node and exports byte for byte",
+      Effect.fnUntraced(function* () {
+        const workspace = yield* tempDirectory("beep-import-unparsed-");
+        const folder = `${workspace}/memory`;
+        const deep = `${Str.repeat(300)("> ")}deep\n`;
+        yield* writeFiles(folder, [["deep.md", deep]]);
+        const store = yield* openStore(`${workspace}/memory.db`);
+        yield* store.projector.importFolder(PosixPath.make(folder));
+        const entries = yield* store.log.entriesAfter(LogCursor.make(0));
+        const created = yield* createdNodes(entries);
+        expect(A.map(created, ([, node]) => [node.kind, node.text])).toEqual([["paragraph", deep]]);
+
+        const copy = `${workspace}/copy`;
+        yield* store.projector.exportFolder(PosixPath.make(copy));
+        const copied = yield* snapshotFolder(copy);
+        expect(A.map(copied, (file) => textOf(file.bytes))).toEqual([deep]);
+      })
+    );
+
+    it.effect(
+      "a NodeStatusChanged event rewrites its node in the export and projectNode, and a held write with its resolution changes nothing",
+      Effect.fnUntraced(function* () {
+        const workspace = yield* tempDirectory("beep-project-status-");
+        const folder = `${workspace}/memory`;
+        yield* writeFiles(folder, [["tasks.md", "# Tasks\n\nstatus: active\n"]]);
+        const store = yield* openStore(`${workspace}/memory.db`);
+        yield* store.projector.importFolder(PosixPath.make(folder));
+        const entries = yield* store.log.entriesAfter(LogCursor.make(0));
+        const created = yield* createdNodes(entries);
+        const status = O.getOrThrow(A.findFirst(created, ([, node]) => node.text === "status: active"))[1];
+
+        const moved = yield* statusEvent(status.nodeId, status.revisionId, "status: completed", "active", "completed");
+        const holdId = HoldId.make("018f9c3e-7d2a-7b4c-9e1f-2a3b4c5d6eb1");
+        yield* store.log.appendMany([
+          moved.event,
+          {
+            _tag: "WriteHeld",
+            payload: WriteHeld.make({
+              holdId,
+              operation: NodeOperation.cases.delete.make({
+                nodeId: status.nodeId,
+                expectedRevision: status.revisionId,
+              }),
+              author,
+              headRevision: O.some(moved.revisionId),
+              violations: [staleRevision],
+            }),
+          },
+          {
+            _tag: "HoldResolved",
+            payload: HoldResolved.make({
+              holdId,
+              resolution: ConflictResolution.cases.ours.make({}),
+              author,
+              revisionId: O.none(),
+            }),
+          },
+        ]);
+
+        const edit = yield* store.projector.projectNode(status.nodeId);
+        expect(MarkdownEdit.applyAll("# Tasks\n\nstatus: active\n", [edit])).toBe("# Tasks\n\nstatus: completed\n");
+        yield* store.projector.exportFolder(PosixPath.make(folder));
+        const files = yield* snapshotFolder(folder);
+        expect(A.map(files, (file) => textOf(file.bytes))).toEqual(["# Tasks\n\nstatus: completed\n"]);
+      })
+    );
+
+    it.effect(
+      "makeMarkdownStoreSqliteLayer opens the log and the projector on one database file: an import there re-exports byte for byte",
+      Effect.fnUntraced(function* () {
+        const workspace = yield* tempDirectory("beep-markdown-store-layer-");
+        const folder = `${workspace}/memory`;
+        yield* writeFiles(folder, [["MEMORY.md", "# Memory\n\n- one\n- two\n"]]);
+        const context = yield* Layer.build(makeMarkdownStoreSqliteLayer({ filename: `${workspace}/memory.db` }));
+        const projector = Context.get(context, MarkdownProjector);
+        const imported = yield* projector.importFolder(PosixPath.make(folder));
+        const copy = `${workspace}/copy`;
+        const exported = yield* projector.exportFolder(PosixPath.make(copy));
+        expect(exported.folderDigest).toBe(imported.folderDigest);
+        const copied = yield* snapshotFolder(copy);
+        expect(A.map(copied, (file) => textOf(file.bytes))).toEqual(["# Memory\n\n- one\n- two\n"]);
       })
     );
 
