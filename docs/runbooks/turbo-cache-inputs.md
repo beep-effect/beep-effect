@@ -59,9 +59,10 @@ them excludes them (quality audit M8, 2026-11-02):
   `EffectImportsGeneratedOrVendorDirectory` names `.repos`, `node_modules`,
   `dist`, `build`, `vendor`, `coverage`, `storybook-static`, plus `.git`,
   `.beep`, `worktrees`) is negated as `!**/<name>/**`, and each path-shaped
-  exclusion (`packages/**/docs` for code; `docs/modules`, `docs/generated`,
-  `docs/_internal` for Markdown) as `!<dir>/**`. The only other negations are
-  `.claude/worktrees`, `.next` and the `.runtime-*` residue: dot directories the
+  exclusion as `!<dir>/**` (`packages/**/docs` for code; `!**/docs/modules/**`,
+  `!docs/generated/**`, `!docs/_internal/**` for Markdown). The only other
+  negations are `!.claude/worktrees/**`, `.next` and the `.runtime-*` residue:
+  dot directories the
   code walk (`dot: false`) never enters and git ignores, so the git-visible
   Markdown walk drops them. Until then the code row hashed only
   `{apps,packages,infra}`, so 631 tracked `goals`, `scratchpad`, `explorations`,
@@ -232,7 +233,7 @@ maintained representation of the scanner's workspace discovery.
 | `lint:roadmap-refs` | Read the roadmap and goal/exploration targets; retain arbitrary referenced target existence. Other repository trees are irrelevant. |
 | `lint:judge-rubric` | Precise rubric input and policy implementation dependency retained. |
 | `lint:circular`, `lint:ecosystem-polarity`, `lint:reflection-artifacts` | Keep precise source/reflection globs; do not exclude legitimate nested source by directory name. |
-| `lint:effect-imports-markdown` | Every Markdown file the scanner walks: `**/*.{md,mdx}` minus the scanner's pruned names and path exclusions (derived; see the rules above). `docs/_internal` is excluded on both sides. The walk then keeps only git-visible paths, so the task is a tracked-discovery task (next row): uncached, `env: ["BEEP_CACHE_TOOLCHAIN_DIGEST"]`, outside affected filtering. |
+| `lint:effect-imports-markdown` | Every Markdown file the scanner walks: `**/*.{md,mdx}` minus the scanner's pruned names and path exclusions (derived; see the rules above). The `!docs/_internal/**` exclusion applies on both sides. The walk then keeps only git-visible paths, so the task is a tracked-discovery task (next row): uncached, `env: ["BEEP_CACHE_TOOLCHAIN_DIGEST"]`, outside affected filtering. |
 | `lint:markdown-fences`, `lint:retired-effect-paths`, `lint:entity-kit-freeze`, `lint:retired-iri-authorities`, `lint:tracked-shell-allowlist`, `lint:opaque-roundtrips`, `lint:schema-tag-idioms`, `lint:jsdoc-module-tags`, `lint:effect-imports-markdown` | Uncached since #2826 (2026-11, "bind Git discovery to observed runtime identity"). Each lists tracked files with `git ls-files` and reads their working-tree bytes. A membership change that touches only the index (staging an unchanged file, `git rm --cached`) changes what the scanner reads without changing any hashed byte, so a cache hit could replay a result for the wrong file set. The tasks stay `cache: false` and outside affected filtering (`policyTrackedDiscoveryTasks` in `Quality/Tasks.ts`) until the index state is bound into the key. They were cached from 2026-11-02 (audit G10; `lint:entity-kit-freeze` from 2026-11-06) until that change. `lint:schema-tag-idioms` and `lint:jsdoc-module-tags` have the same discovery shape and joined the list on 2026-11-09: with a copy of the index that stages one untracked `.patterns/` probe carrying `@module` (`GIT_INDEX_FILE`), both dry-run hashes stayed identical while `jsdoc-module-tags` went from pass to fail and `schema-tag-idioms` from 10,778 to 10,779 scanned files. Standalone cost on a loaded host (load 35-39): `lint:schema-tag-idioms` about 12.4-12.8 s wall, 18.6-19.0 CPU-s, 0.5 GB peak RSS; `lint:jsdoc-module-tags` about 1.4-1.6 s wall, 2.5-2.8 CPU-s. `lint:effect-imports-markdown` joined on the same day. It walks Markdown with `dot: true` and keeps only paths that `git ls-files` (tracked plus untracked, not ignored) lists, and Turbo hashes a gitignored file that matches a declared input. With an ignored `tmp/` probe carrying a root `effect` import, `git add -f` on a copy of the index left the dry-run hash unchanged while the scan went from no finding to one touched file. Editing `.gitignore` changes visibility the same way, and `.gitignore` is not an input. Standalone cost (load 23-38): about 3.7-3.8 s wall warm (10 s on the first, cold run), 6.3-7.1 CPU-s, 0.45-0.53 GB peak RSS. `lint:markdown-fences` also spawns the repository's `tsrs` against the root `tsconfig.json`; `lint:entity-kit-freeze` also reads its committed baseline `standards/entity-kit-freeze.baseline.jsonc`. |
 | `goals:index-check` | Retain goal inputs and implementation dependency. |
 | `knowledge:semantic-delta`, `knowledge:refs-check`, `goals:doctor`, `changeset:status` | Remain uncached; Git state and reference/packet checks are not qualified for result replay. `goals:doctor` in particular runs `git log --since=<days>` and `git log -n 4000`: its staleness and completion-gate advisories depend on the clock and on git history, neither of which is a Turbo input (audit G10 verdict, 2026-11-02). |
@@ -244,7 +245,7 @@ maintained representation of the scanner's workspace discovery.
 | `lint:tsconfig-overlay` | Every `tsconfig*.json` under `apps`, `infra` and `packages` (overlays, owners and build configs), artifact directories excluded. |
 | `lint:package-test-typecheck` | Workspace manifests, `tsconfig*.json`, test sources under `test/` and the committed blind-spot baseline. |
 | `lint:schema-catalog` | The schema-first source globs (`SchemaFirstIncludedGlobs`, `docs` trees excluded), every workspace manifest the owner resolver reads, the root `tsconfig.json`, and the committed per-package shards under `standards/schema-catalog/` plus the retired single-file catalog path. Added 2026-11-02 so the cheap-gates lane restores from cache instead of re-walking the tree (~25 s). The hosted Repo Sanity lane still calls the CLI directly. |
-| `lint:effect-vitest` | Exactly the scanner's D9 globs (`EffectVitestSourceFileGlobs`: `*.test`/`*.spec` files and `test/**/*.ts` under `apps`, `packages`, `infra`, fixtures included, `node_modules` and every dot directory excluded, the latter because the walk runs with `dot: false`) plus the vitest configs the browser-mode filter parses (`EffectVitestConfigFileGlobs`: `vitest*.config.{ts,mts,js,mjs}` under the same roots; a project with `browser: { enabled: true }` drops the `node:assert` replacement rows for the files its `include` globs match, so editing a config changes the result) and the committed inventory and primitives graph the pin checks read; a tripwire pins the inputs to those constants. Check mode writes nothing. |
+| `lint:effect-vitest` | Exactly the scanner's D9 globs (`EffectVitestSourceFileGlobs`: `*.test`/`*.spec` files and `test/**/*.ts` under `apps`, `packages`, `infra`, fixtures included, `node_modules` and every dot directory excluded, the latter because the walk runs with `dot: false`, and build output excluded by `!**/dist/**`, the prunable shape the shared walk skips outright, so the `dist/test/*.d.ts` declarations `tsc` emits never re-key the task between a built and an unbuilt checkout) plus the vitest configs the browser-mode filter parses (`EffectVitestConfigFileGlobs`: `vitest*.config.{ts,mts,js,mjs}` under the same roots; a project with `browser: { enabled: true }` drops the `node:assert` replacement rows for the files its `include` globs match, so editing a config changes the result) and the committed inventory and primitives graph the pin checks read; a tripwire pins the inputs to those constants. Check mode writes nothing. |
 | `fallow:health:check`, `fallow:health:advisory`, `fallow:boundaries:advisory`, `fallow:flags:advisory`, `fallow:security:advisory`, `fallow:fix-preview:advisory`, `fallow:dead-code:check`, `fallow:boundaries:config-check` | Cached since 2026-11-02 (quality audit K2). The nine Fallow rows share one input set: every code file Fallow can discover (`**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,html,css}`), manifests, tsconfigs, `.gitignore` files, the root tool configuration its plugins read (`*.{json,jsonc,yml,yaml,toml}`, `.*.{json,jsonc,toml}`, `.changeset/config.json`), `standards/fallow.*.jsonc` (both regression baselines and the generated boundaries config), `bun.lock`, and the source trees, minus Git-ignored build output. The outputs restore the envelope and the raw report it cites, `BEEP_PROOF_BASE` stays in the key, and a tool failure exits non-zero even in advisory mode, so Turbo never caches one. `packages/tooling/tool/cli/test/fallow-turbo-cache.test.ts` replays two runs against a fixture built from these rows and checks the live repository: every file `fallow list --files` reports must be a hashed input. |
 | `fallow:audit:check` | Remains uncached: it diffs against the commit behind `BEEP_PROOF_BASE`, a ref name such as `origin/main` that can move while the key stays the same. |
 | `repo-sanity:bun-audit` | Remains uncached because vulnerability data can change independently of source. |
@@ -281,6 +282,16 @@ zero seconds. Three decisions follow:
   outputs in that order. The Turbo deprecated-API rollback sweep
   (`standards/lint-policy.sweeps.jsonc`) keeps a stage of its own because it takes the whole
   policy width.
+  The knowledge doctor (`knowledge:doctor`, `knowledge doctor ci`) runs abreast of the medium
+  graph in both scopes, wherever the semantic delta runs (hosted full scope and every
+  changed-scope plan). It reads only committed Git state through its own archives of HEAD and
+  the merge-base, never the working tree or a Turbo output, and it takes no Turbo slot. Its
+  overlapped archive extractions and history walk average about 1.7 cores over a local run
+  (CPU seconds over wall, git children included), so budget that beside a graph capped at the
+  policy width. Its block prints after the medium (and state) graphs' blocks. Until 2026-11-09
+  it held a stage of its own between the medium graph and the tail, about 195-225 s of hosted
+  Lint Policy wall over six hosted runs (193.5, 196.7, 209.8, 214.3, 214.8 and 225.3 s). The
+  medium stage is expected to outlast it on hosted runs; no hosted run has measured that yet.
   Turbo owns package and non-workspace documentation caching: inputs include the docs config,
   `tsdoc.json` and `@beep/lint-rules` source. The documentation input digest includes the
   dependency lock and plugin manifest. Deprecated-API shards use the dedicated oxlint
@@ -323,7 +334,7 @@ binary walkers (`knowledge:semantic-delta`, `knowledge:refs-check`,
 discovery tasks (`policyTrackedDiscoveryTasks`) stay unfiltered. They run in a second Turbo graph alongside the
 medium one, with one slot of the policy width (the medium graph keeps the rest),
 so the inventory and semantic-delta long poles overlap as they do in the single
-full-scope graph. `lint-policy-scope.test.ts` fails if a task's `cache` flag and
+full-scope graph. The knowledge doctor runs in the same stage, beside both graphs. `lint-policy-scope.test.ts` fails if a task's `cache` flag and
 its graph disagree.
 
 `lint:jsdoc` and `lint:deprecated-apis` are package tasks. Changed scope does not

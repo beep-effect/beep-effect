@@ -1714,7 +1714,12 @@ export const isEffectVitestTestFilePath = S.is(EffectVitestTestFilePath);
  * (gitignored `.runtime-*` Vitest residue, `.turbo`, `.next`). The dot-directory
  * exclusion states that boundary explicitly, so the `//#lint:effect-vitest`
  * Turbo inputs, which are pinned to this list and would otherwise hash every
- * dot directory, exclude exactly what the walk skips.
+ * dot directory, exclude exactly what the walk skips. Build output is excluded
+ * too: `tsc` emits `dist/test/*.d.ts` declarations that the `test/**` glob
+ * would otherwise match, so a checkout with built dists scanned and hashed
+ * generated files a fresh checkout lacks. The exclusion is spelled
+ * `**\/dist/**` because the shared walk prunes a directory named by exactly
+ * that shape instead of descending into it.
  *
  * **Example** (Inspect the test-root glob)
  *
@@ -1732,6 +1737,7 @@ export const EffectVitestSourceFileGlobs: ReadonlyArray<string> = A.fromIterable
   "{apps,packages,infra}/**/test/**/*.ts",
   "!{apps,packages,infra}/**/node_modules/**",
   "!{apps,packages,infra}/**/.*/**",
+  "!**/dist/**",
 ]);
 
 /**
@@ -1743,9 +1749,10 @@ export const EffectVitestSourceFileGlobs: ReadonlyArray<string> = A.fromIterable
  * `browser: { enabled: true }`, drops the `node:assert` replacement rows of the
  * test files its `include` globs match. A config edit therefore changes the
  * result, so the `//#lint:effect-vitest` Turbo inputs, pinned to this list
- * beside `EffectVitestSourceFileGlobs`, hash every file it names. The walk runs
- * with `dot: false` and ignores `node_modules`, which the source globs'
- * exclusions already state.
+ * beside `EffectVitestSourceFileGlobs`, hash every file it names. Turbo applies
+ * that row's `!` negations (`node_modules`, dot directories, `dist`) to these
+ * globs too, so the config walk ignores the same set and never reads a config
+ * the key leaves out.
  *
  * **Example** (Inspect the config glob)
  *

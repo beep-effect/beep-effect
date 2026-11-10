@@ -894,6 +894,34 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
     );
 
     it.effect(
+      "keeps build output out of the effect-vitest inputs while a real test edit re-keys them",
+      Effect.fnUntraced(function* () {
+        const { root, binary } = yield* fixture();
+        // `tsc` emits `dist/test/*.d.ts` beside a built package, which the `test/**` glob would
+        // otherwise match. The scanner's pinned scope negates `**/dist/**`, so a local build
+        // never re-keys the row and a hosted cache entry still serves a built lane.
+        const id = "//#lint:effect-vitest";
+        yield* writeFile(root, ".gitignore", "node_modules\n.turbo\ndist/\n");
+        const baseline = yield* dryRun(root, binary, [id], false);
+        const built = [
+          "packages/fixture/dist/test/c3-probe.test-kit.d.ts",
+          "packages/fixture/dist/internal/test/c3-probe.d.ts",
+          "apps/fixture/dist/c3-probe.test.js",
+        ];
+        yield* Effect.forEach(built, (file) => writeFile(root, file, "export declare const built: 1;\n"));
+        const withBuild = yield* dryRun(root, binary, [id], false);
+        expect(rowFor(withBuild, id).hash).toBe(rowFor(baseline, id).hash);
+        for (const file of built) expect(R.has(rowFor(withBuild, id).inputs, file), file).toBe(false);
+        const authored = "packages/fixture/test/c3-dist-control.test.ts";
+        yield* writeFile(root, authored, "export const authored = 1;\n");
+        const edited = yield* dryRun(root, binary, [id], false);
+        expect(R.has(rowFor(edited, id).inputs, authored)).toBe(true);
+        expect(rowFor(edited, id).hash).not.toBe(rowFor(withBuild, id).hash);
+      }),
+      { timeout: 60_000 }
+    );
+
+    it.effect(
       "keeps .turbo trees out of the typos inputs",
       Effect.fnUntraced(function* () {
         const { root, binary } = yield* fixture();
@@ -1006,6 +1034,8 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           EffectVitestInventoryPath,
           EffectVitestPrimitiveGraphPath,
         ]);
+        // Build output is negated in the prunable `**/<name>/**` shape the shared walk skips outright.
+        expect(effectVitest.inputs).toContain("!**/dist/**");
         // The ratchet's input glob and the gate's predicate must agree on fixture sources.
         const fixtureSource = "packages/tooling/fixture/test/fixtures/pkg/src/index.ts";
         expect(isPackageSourceFile(fixtureSource)).toBe(true);

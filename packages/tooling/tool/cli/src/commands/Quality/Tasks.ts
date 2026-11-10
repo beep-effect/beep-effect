@@ -3811,11 +3811,22 @@ export const rootDocsCacheKey = Effect.fn("QualityTasks.rootDocsCacheKey")(
   Effect.orElseSucceed(() => UNKEYED_ROOT_DOCS_CACHE)
 );
 
-// The Stage-2 knowledge doctor follows the semantic delta wherever that runs. `doctor ci` stays
-// report-only (exit 0 on findings) until the merge-base tracks the sealed baseline the CI mint
-// opens; a branch touching the baseline or promotions gets the gate and its seal guard even before
-// then. Under the gate only promoted kinds and governance findings block (K24). A local full-scope
-// plan leaves it to the hosted plan.
+// The Stage-2 knowledge doctor runs wherever the semantic delta runs (hosted full scope, and every
+// changed-scope plan with its base). `doctor ci` stays report-only (exit 0 on findings) until the
+// merge-base tracks the sealed baseline the CI mint opens; a branch touching the baseline or
+// promotions gets the gate and its seal guard even before then. Under the gate only promoted kinds
+// and governance findings block (K24). A local full-scope plan leaves it to the hosted plan.
+//
+// It runs abreast of the medium graph rather than in a stage of its own. It reads only committed Git
+// state (its own `git archive` extractions of HEAD and the merge-base, `ls-tree`, `log`, the ref
+// census) and never the working tree or a Turbo output, and the medium and state graphs write
+// nothing it reads (the git-delta tasks declare no outputs), so no medium task can change its
+// verdict. It does not take a Turbo slot. Its overlapped archive extractions and history walk
+// average about 1.7 cores over a local run (CPU seconds over wall, git children included), beside a
+// graph capped at the policy width on a hosted heavy runner of 8 or 16 vCPUs for a width of 4. The
+// medium stage is expected to outlast it on hosted runs; no hosted run of this placement has measured
+// that yet. The stage still renders the doctor's block after the graphs' blocks and collects its
+// failure with theirs.
 const knowledgeDoctorPolicySteps = (repoRoot: string, base: string | undefined, hosted: boolean) =>
   O.match(O.fromUndefinedOr(base), {
     onNone: () => (hosted ? [repoCliStep(repoRoot, "knowledge:doctor", ["knowledge", "doctor", "ci"])] : []),
@@ -3884,9 +3895,9 @@ const fullScopePolicyStages = (
       [...policyMediumTasks, ...fullScopeStateTasks(hosted)],
       undefined,
       plan
-    )
+    ),
+    ...knowledgeDoctorPolicySteps(repoRoot, undefined, hosted)
   ),
-  ...A.map(knowledgeDoctorPolicySteps(repoRoot, undefined, hosted), (step) => policyStage(step)),
   ...fullScopeTailStages(repoRoot, sweeps, docsConfig, plan),
 ];
 
@@ -3964,9 +3975,9 @@ const changedScopePolicyStages = (
       undefined,
       plan,
       POLICY_UNSCOPED_STATE_WIDTH
-    )
+    ),
+    ...knowledgeDoctorPolicySteps(repoRoot, base, hosted)
   ),
-  ...A.map(knowledgeDoctorPolicySteps(repoRoot, base, hosted), (step) => policyStage(step)),
   ...changedScopeDocsStages(repoRoot, docsConfig, targets),
   ...changedScopeDeprecatedApisStages(repoRoot, base, sweeps, targets, plan),
   testTsgoPolicyStage(repoRoot),

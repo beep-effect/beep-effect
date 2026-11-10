@@ -22,3 +22,4 @@ export {
   makeKnowledgeArchiveOracle,
   sharesStaticCommandSurfaceForTesting,
 } from "../commands/Knowledge/Knowledge.service.ts";
+export { readKnowledgeDoctorCheckSidesForTesting } from "../commands/Knowledge/KnowledgeDoctor.service.ts";

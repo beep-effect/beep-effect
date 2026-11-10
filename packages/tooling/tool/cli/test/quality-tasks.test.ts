@@ -6001,7 +6001,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               "local:rw",
               Effect.gen(function* () {
                 for (const full of [false, true]) {
-                  for (const failedLabel of ["lint:policy:cheap", full ? "lint:policy:medium" : "lint:policy:state"]) {
+                  // The knowledge doctor runs abreast of the medium and state graphs; its red fails the
+                  // group with every step of the plan still spawned.
+                  for (const failedLabel of full
+                    ? ["lint:policy:cheap", "lint:policy:medium"]
+                    : ["lint:policy:cheap", "lint:policy:state", "knowledge:doctor"]) {
                     const plan = rootLintPolicyStepsForTesting(root, undefined, full ? undefined : "review-base");
                     const failed = pipe(
                       plan,

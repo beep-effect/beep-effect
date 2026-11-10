@@ -1,6 +1,7 @@
 # Cache review for the lint residuals wave
 
-Reviewed against `c8fab679000e` on branch `perf/lint-residuals` (the residuals
+Reviewed against `c8fab679000e` (first wave) and `34818446d0c` (second wave,
+after the `origin/main` merge) on branch `perf/lint-residuals` (the residuals
 lane of the 2026-11-09 lint efficiency plan, following PR #3014). Reviewer:
 Claude Opus 5.5 (perf/lint-residuals seal stage).
 
@@ -79,6 +80,49 @@ The `//#lint:deprecated-apis` command now runs `--full` as three sequential
 oxlint partitions instead of one process; its Turbo row, command, outputs and
 environment are unchanged, and the run re-proves that the partitions' file
 inventories union to the single-run inventory.
+
+## Second residuals wave (seal after the `origin/main` merge)
+
+The lane merged `origin/main` at `fda98a2c4bd`; the merge took `main`'s
+`standards/cache-qualification-baseline.json`, so this request re-records the
+first wave above together with the change below. After the second wave,
+`bun run beep cache audit` reports two configuration-drift findings,
+`//#lint:effect-imports` (first wave, unchanged) and `//#lint:effect-vitest`,
+plus the non-blocking `configuration-source-drift` on `turbo.json`.
+
+- `//#lint:effect-vitest`: adds `!**/dist/**` to the row and to
+  `EffectVitestSourceFileGlobs`, which the row is pinned to; the inventory
+  `scope` array carries the same line. `tsc` emits `dist/test/*.d.ts`
+  declarations that the `{apps,packages,infra}/**/test/**/*.ts` glob matched, so
+  a checkout with built dists scanned and hashed generated files a fresh
+  checkout lacks (47 such files in this checkout, all gitignored, none named by
+  an inventory row). The exclusion is spelled `**/dist/**` because the shared
+  `FsUtils` walk prunes a directory named by exactly that shape. Measured by the
+  implementing track: the scanner read 3,744 files instead of 3,791 (exactly 47
+  fewer) and the sorted 533-row finding list was byte-identical before and
+  after. Before the change the dry-run hash differed between a checkout with a
+  built `dist/test` and one without (`4ba26b46…` vs `7acf7bfe…`); after it the
+  two agree, and editing a real test file still re-keys the task. At seal time
+  the dry run hashes 3,959 inputs with none under `dist/`. Turbo applies the
+  row's negations to its config globs too, so the browser-mode config walk now
+  ignores the same `!` entries as the source walk (it ignored only
+  `node_modules` before): a `dist` or dot-directory vitest config is neither
+  hashed nor read, which a discovery fixture pins. The inputs only lose
+  generated files the scanner no longer reads.
+- `standards/effect-vitest.inventory.jsonc` is re-written by
+  `bun run beep lint effect-vitest --write`: two stale exception rows whose
+  findings moved into support files when test files were split (#3005, #3028)
+  are removed, and about 20 rows have their `id`/`line` refreshed. It is a
+  committed input of the same task, so this re-keys it once; no exception or
+  reason is added.
+- The knowledge doctor (`knowledge doctor ci`) now runs abreast of the medium
+  graph in the Lint Policy plan instead of in a stage of its own, and its
+  merge-base side extracts only the seal inputs. It is a plan step, not a Turbo
+  task, so no Turbo row, input, output or environment changes.
+- The `@beep/repo-cli` source edits (`Knowledge*.ts`, `Lint.schemas.ts`,
+  `EffectVitestScan.ts`, `Quality/Tasks.ts`) stay inside existing seal input sets:
+  `bun run beep lint policy-fingerprint --write` produced no change to
+  `standards/policy-tools.fingerprint.json` or to the generated seal rows.
 
 ## Scope
 

@@ -18,7 +18,7 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { dual, identity, pipe } from "effect/Function";
+import { constTrue, dual, identity, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
@@ -1669,7 +1669,11 @@ const READABLE_ARCHIVE_ENTRY_TYPES = HashSet.make("File", "Directory");
 const isReadableArchiveEntry = (_path: string, entry: unknown): boolean =>
   P.hasProperty(entry, "type") && P.isString(entry.type) && HashSet.has(READABLE_ARCHIVE_ENTRY_TYPES, entry.type);
 
-const extractArchive = Effect.fn("Knowledge.extractArchive")(function* (archivePath: string, archiveRoot: string) {
+const extractArchive = Effect.fn("Knowledge.extractArchive")(function* (
+  archivePath: string,
+  archiveRoot: string,
+  admitsPath: (repoPath: string) => boolean = constTrue
+) {
   yield* Effect.tryPromise({
     try: () =>
       extractTar({
@@ -1681,7 +1685,9 @@ const extractArchive = Effect.fn("Knowledge.extractArchive")(function* (archiveP
         // Extracted files are data read for their bytes only; nothing reads a timestamp, so skipping
         // one `utimes` call per entry is free.
         noMtime: true,
-        filter: isReadableArchiveEntry,
+        // The type filter always applies; a path selection only ever narrows it further.
+        filter: (entryPath: string, entry: unknown) =>
+          isReadableArchiveEntry(entryPath, entry) && admitsPath(entryPath),
       }),
     catch: KnowledgeOperationalError.new(`Failed to safely extract Git archive "${archivePath}".`),
   });
@@ -1778,6 +1784,40 @@ const inSequenceOrder = <A, B, E1, E2, R1, R2>(
   Effect.flatMap(Effect.all([Effect.exit(first), Effect.exit(second)], { concurrency: 2 }), ([firstExit, secondExit]) =>
     Effect.flatMap(firstExit, (a) => Effect.map(secondExit, (b) => [a, b] as const))
   );
+
+/**
+ * Runs two independent knowledge steps at once and replays their outcomes in sequence order.
+ *
+ * **Details**
+ *
+ * Both steps always run to completion, and the first failure in sequence order is the one reported,
+ * so a caller that overlaps two steps keeps the error precedence of the sequence it replaces. The
+ * knowledge doctor's gate uses it to read the merge-base seal inputs beside the HEAD tree.
+ *
+ * **Example** (Both succeed in order)
+ *
+ * ```ts
+ * import { knowledgeInSequenceOrder } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(knowledgeInSequenceOrder(Effect.succeed("head"), Effect.succeed("base")))) // true
+ * ```
+ *
+ * @param first - The step whose failure takes precedence.
+ * @param second - The step run beside it.
+ * @returns Both results in order, or the first failure in sequence order.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const knowledgeInSequenceOrder: {
+  <B, E2, R2>(
+    second: Effect.Effect<B, E2, R2>
+  ): <A, E1, R1>(first: Effect.Effect<A, E1, R1>) => Effect.Effect<readonly [A, B], E1 | E2, R1 | R2>;
+  <A, B, E1, E2, R1, R2>(
+    first: Effect.Effect<A, E1, R1>,
+    second: Effect.Effect<B, E2, R2>
+  ): Effect.Effect<readonly [A, B], E1 | E2, R1 | R2>;
+} = dual(2, inSequenceOrder);
 
 /**
  * Runs two effects at once and replays their outcomes in sequence order, as semantic-delta's archive
@@ -2032,6 +2072,65 @@ export interface KnowledgeMaterializedTree {
   readonly repoRoot: string;
 }
 
+// The archive step shared by the full and the path-selected tree. `selection` narrows extraction and
+// reads only; resolution, the archive itself, the ls-tree entry list and their order never change.
+const materializeTreeWith = Effect.fnUntraced(function* (
+  treeish: string,
+  selection: O.Option<HashSet.HashSet<string>>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const runtime = yield* Effect.context<FileSystem.FileSystem | Path.Path>();
+  const repoRoot = yield* findRepoRoot().pipe(
+    KnowledgeOperationalError.mapError("Failed to locate the repository root for the reference census.")
+  );
+  yield* guardKnowledgeCloneAttributes(repoRoot);
+  const commit = yield* resolveGitCommit(repoRoot, treeish, treeGitAdapter(treeish));
+  const tempRoot = yield* fs
+    .makeTempDirectoryScoped({ prefix: "beep-knowledge-refs-" })
+    .pipe(KnowledgeOperationalError.mapError("Failed to create a reference-census temporary root."));
+  const archiveRoot = path.join(tempRoot, "tree");
+  const archivePath = path.join(tempRoot, "tree.tar");
+  yield* fs
+    .makeDirectory(archiveRoot)
+    .pipe(KnowledgeOperationalError.mapError("Failed to create the reference-census archive root."));
+  yield* writeGitArchive(repoRoot, commit, archivePath, gitAdapter);
+  yield* extractArchive(
+    archivePath,
+    archiveRoot,
+    O.match(selection, {
+      onNone: () => constTrue,
+      onSome: (paths) => (repoPath: string) => HashSet.has(paths, repoPath),
+    })
+  );
+  yield* fs
+    .remove(archivePath)
+    .pipe(KnowledgeOperationalError.mapError("Failed to release the extracted reference-census archive."));
+  const tree = yield* readGitTree(repoRoot, commit, gitAdapter, () =>
+    KnowledgeOperationalError.make({ message: "Malformed NUL-delimited census ls-tree output." })
+  );
+  const readBytes = Effect.fn("Knowledge.treeReadBytes")(function* (repoPath: string) {
+    if (O.exists(selection, (paths) => !HashSet.has(paths, repoPath))) {
+      return yield* KnowledgeOperationalError.make({
+        message: `Tracked file "${repoPath}" is outside the paths materialized from ${commit}.`,
+      });
+    }
+    return yield* fs
+      .readFile(path.join(archiveRoot, repoPath))
+      .pipe(KnowledgeOperationalError.mapError(`Failed to read archived tracked file "${repoPath}".`));
+  });
+
+  const oracle: KnowledgeTreeOracle = {
+    treeish,
+    commit,
+    trackedEntries: A.map(tree, (entry) =>
+      KnowledgeTrackedEntry.make({ path: entry.path, mode: entry.mode, objectId: entry.objectId })
+    ),
+    readBytes: (repoPath: string) => readBytes(repoPath).pipe(Effect.provide(runtime)),
+  };
+  return { archiveRoot, oracle, repoRoot } satisfies KnowledgeMaterializedTree;
+});
+
 /**
  * Materializes one commit-ish as a scoped archive and returns the oracle plus its archive root.
  *
@@ -2059,47 +2158,48 @@ export interface KnowledgeMaterializedTree {
  * @category use-cases
  * @since 0.0.0
  */
-export const materializeKnowledgeTree = Effect.fn("Knowledge.materializeTree")(function* (treeish: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const runtime = yield* Effect.context<FileSystem.FileSystem | Path.Path>();
-  const repoRoot = yield* findRepoRoot().pipe(
-    KnowledgeOperationalError.mapError("Failed to locate the repository root for the reference census.")
-  );
-  yield* guardKnowledgeCloneAttributes(repoRoot);
-  const commit = yield* resolveGitCommit(repoRoot, treeish, treeGitAdapter(treeish));
-  const tempRoot = yield* fs
-    .makeTempDirectoryScoped({ prefix: "beep-knowledge-refs-" })
-    .pipe(KnowledgeOperationalError.mapError("Failed to create a reference-census temporary root."));
-  const archiveRoot = path.join(tempRoot, "tree");
-  const archivePath = path.join(tempRoot, "tree.tar");
-  yield* fs
-    .makeDirectory(archiveRoot)
-    .pipe(KnowledgeOperationalError.mapError("Failed to create the reference-census archive root."));
-  yield* writeGitArchive(repoRoot, commit, archivePath, gitAdapter);
-  yield* extractArchive(archivePath, archiveRoot);
-  yield* fs
-    .remove(archivePath)
-    .pipe(KnowledgeOperationalError.mapError("Failed to release the extracted reference-census archive."));
-  const tree = yield* readGitTree(repoRoot, commit, gitAdapter, () =>
-    KnowledgeOperationalError.make({ message: "Malformed NUL-delimited census ls-tree output." })
-  );
-  const readBytes = Effect.fn("Knowledge.treeReadBytes")(function* (repoPath: string) {
-    return yield* fs
-      .readFile(path.join(archiveRoot, repoPath))
-      .pipe(KnowledgeOperationalError.mapError(`Failed to read archived tracked file "${repoPath}".`));
-  });
+export const materializeKnowledgeTree = Effect.fn("Knowledge.materializeTree")((treeish: string) =>
+  materializeTreeWith(treeish, O.none())
+);
 
-  const oracle: KnowledgeTreeOracle = {
-    treeish,
-    commit,
-    trackedEntries: A.map(tree, (entry) =>
-      KnowledgeTrackedEntry.make({ path: entry.path, mode: entry.mode, objectId: entry.objectId })
-    ),
-    readBytes: (repoPath: string) => readBytes(repoPath).pipe(Effect.provide(runtime)),
-  };
-  return { archiveRoot, oracle, repoRoot } satisfies KnowledgeMaterializedTree;
-});
+/**
+ * Materializes only the named paths of one commit-ish and returns an oracle over them.
+ *
+ * **Details**
+ *
+ * The same clone-attributes guard, commit resolution, full `git archive` and `git ls-tree` entry list
+ * as {@link materializeKnowledgeTree}, in the same order, so the bytes of every selected path are the
+ * bytes the full tree would hold and every failure is the one the full tree would raise. Only the
+ * extraction narrows: entries outside `paths` are read past in the tar stream instead of written to
+ * disk, and the link and type filter applies as before. `trackedEntries` stays the whole tree.
+ *
+ * **Gotchas**
+ *
+ * `readBytes` of a path outside `paths` fails loudly with an operational error rather than reading a
+ * file that was never extracted. A caller may use this only when it provably reads a known path list,
+ * such as the knowledge doctor's seal inputs; anything that walks the archive root must use the full
+ * tree. The archive root is returned so the narrowed extraction itself can be inspected, holds only
+ * the selected paths, and is scoped like the full tree's.
+ *
+ * **Example** (Materialize the seal inputs of the working commit)
+ *
+ * ```ts
+ * import { materializeKnowledgeTreePaths } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(Effect.scoped(materializeKnowledgeTreePaths("HEAD", [".github/CODEOWNERS"])))) // true
+ * ```
+ *
+ * @param treeish - Any commit-ish; no fetch ever occurs.
+ * @param paths - Repository paths to extract; absent or untracked ones are simply not extracted.
+ * @returns The oracle over the whole tracked tree whose bytes cover `paths` only, its archive root
+ * holding just those paths, and the repository root.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const materializeKnowledgeTreePaths = Effect.fn("Knowledge.materializeTreePaths")(
+  (treeish: string, paths: ReadonlyArray<string>) => materializeTreeWith(treeish, O.some(HashSet.fromIterable(paths)))
+);
 
 const refsTreeLive = (treeish: string) =>
   Effect.scoped(Effect.flatMap(makeKnowledgeTreeOracle(treeish), scanKnowledgeRefsTree));

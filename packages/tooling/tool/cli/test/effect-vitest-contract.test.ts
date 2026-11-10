@@ -6,6 +6,7 @@ import {
   decodeEffectVitestFindingJson,
   detectEffectVitestFindings,
   diffEffectVitestFindings,
+  discoverEffectVitestBrowserModePaths,
   discoverEffectVitestSourcePaths,
   EffectVitestCensusPath,
   EffectVitestCensusRow,
@@ -36,6 +37,7 @@ import * as Console from "effect/Console";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -404,6 +406,10 @@ it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it)
         "goals/effect-vitest-canon/test/Packet.test.ts",
         "packages/demo/node_modules/dep/test/Dependency.test.ts",
         "packages/demo/src/Subject.ts",
+        // `tsc` build output: declarations a built package emits beside its tests.
+        "packages/demo/dist/test/Example.test-kit.d.ts",
+        "packages/demo/dist/internal/test/Support.d.ts",
+        "apps/labs/demo/dist/App.test.js",
       ];
       yield* Effect.forEach(
         [...included, ...excluded],
@@ -425,6 +431,40 @@ it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it)
         projectPaths.length === included.length &&
           A.every(included, (relativePath) => A.contains(projectPaths, relativePath))
       );
+    })
+  );
+
+  it.effect(
+    "reads browser-mode configs only where the source walk and the Turbo row look",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "effect-vitest-browser-discovery-" });
+      const browserConfig = (include: string) =>
+        `export default { test: { include: ["${include}"], browser: { enabled: true, instances: [{ browser: "chromium" }] } } };\n`;
+      const files: ReadonlyArray<readonly [string, string]> = [
+        ["packages/live/vitest.config.ts", browserConfig("test/**/*.test.ts")],
+        ["packages/live/test/Live.test.ts", "export const fixture = true;\n"],
+        // A `dist` or dot-directory config is outside the `//#lint:effect-vitest` key, so it must not
+        // reach real tests either: the Turbo row negates both for the config globs too.
+        ["packages/built/dist/vitest.config.js", browserConfig("../test/**/*.test.ts")],
+        ["packages/built/.cache/vitest.config.ts", browserConfig("../test/**/*.test.ts")],
+        ["packages/built/test/Built.test.ts", "export const fixture = true;\n"],
+      ];
+      yield* Effect.forEach(
+        files,
+        Effect.fnUntraced(function* ([relativePath, text]) {
+          const absolutePath = path.join(root, relativePath);
+          yield* fs.makeDirectory(path.dirname(absolutePath), { recursive: true });
+          yield* fs.writeFileString(absolutePath, text);
+        }),
+        { concurrency: 1, discard: true }
+      );
+
+      const browserMode = yield* discoverEffectVitestBrowserModePaths(root);
+      assertTrue(HashSet.has(browserMode, path.join(root, "packages/live/test/Live.test.ts")));
+      assertFalse(HashSet.has(browserMode, path.join(root, "packages/built/test/Built.test.ts")));
+      assertTrue(HashSet.size(browserMode) === 1);
     })
   );
 

@@ -2,10 +2,10 @@
   "previous": "7faffafad5c3ac1e544377b8a090b11adbf7d2fbe212e686189e2fde08dc1696",
   "review": {
     "reviewer": "Claude Opus 5.5 (perf/lint-residuals seal stage)",
-    "reason": "Negate dot-directory residue in lint:effect-vitest to match its scanner, derive both effect-imports rows from the scanner's corpus constants (631 code and 4479 Markdown sources were read but unhashed), and make lint:schema-tag-idioms, lint:jsdoc-module-tags and lint:effect-imports-markdown uncached tracked-discovery tasks, and hash the vitest configs the effect-vitest browser-mode filter parses; no qualification change.",
+    "reason": "Negate dot-directory residue and build output (!**/dist/**) in lint:effect-vitest to match its scanner, re-record its inventory after stale split-test rows were removed, derive both effect-imports rows from the scanner's corpus constants (631 code and 4479 Markdown sources were read but unhashed), make lint:schema-tag-idioms, lint:jsdoc-module-tags and lint:effect-imports-markdown uncached tracked-discovery tasks, hash the vitest configs the effect-vitest browser-mode filter parses, and make that config walk ignore the row's dist and dot-directory negations; no qualification change.",
     "basis": {
       "path": "docs/reports/lint-residuals-cache-review-2026-11-09.md",
-      "sha256": "b58cdfdcbb1297603642c9f5a3ab0b94f93fb11e72734c64589cfca98910f8fe"
+      "sha256": "28723fd24119abdb7ea8576eabf911cc84c3978739cb29e4fa613e7760a33a56"
     }
   },
   "subjects": ["//"],
