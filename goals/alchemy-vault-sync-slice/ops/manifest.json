@@ -94,6 +94,10 @@
       },
       {
         "number": 2962,
+        "role": "supporting"
+      },
+      {
+        "number": 3101,
         "role": "final"
       }
     ]
@@ -218,6 +222,6 @@
   "retentionReason": "Documents a live system: the documents vault-sync slice on @alchemy.run/domain (aggregates, sagas, policies, Views and the Box ExternalSystem), the @beep/alchemy-postgres Platform driver, the Session-gated VaultSyncApi over HTTP, CLI and views-only MCP, the desktop offline-intents client, the single-writer cutover with its reversal, and the D17 span catalog and PII audit.",
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 2962
+    "finalPullRequest": 3101
   }
 }
