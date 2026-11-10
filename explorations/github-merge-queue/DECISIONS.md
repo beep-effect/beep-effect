@@ -303,3 +303,36 @@ inside the job, re-enqueue on runner loss, on-demand runners for group runs
 **Rationale:** It needs the lab's answer on whether a rerun rescues an ejected
 entry, and `ten-minute-certainty`'s heavy-pool diet may move the lanes first.
 
+
+## 2026-11-10 — lab-verdict
+
+Decided by the agent under the autonomy charter; reversal is a superseding
+park or kill decision in `goals/merge-queue-lab` with this packet's status
+flipped and the reason recorded.
+
+**Question:** What did `goals/merge-queue-lab` find, and does the design go
+on?
+
+**Answer:** Go. The App, the fleet fine-grained PAT and the operator login can
+all enqueue; the App can jump and can enqueue pull requests that edit
+workflow files. The lab ran on `queue-lab` in this repository (ruleset
+26917133). The landed commit is the group's head commit, so the group's checks
+are checks on what lands. The four gated candidates in `MAP.md` keep their
+gates.
+
+**Rationale:**
+- The verdict rule in `goals/merge-queue-lab/SPEC.md` is met on all three
+  counts; the ledger is `goals/merge-queue-lab/research/findings.md`, with
+  every row tied to a saved run or API response.
+- `unblocker-under-a-queue` stands with two adjustments: pausing is a ruleset
+  write, which the App installation cannot make, so pause and resume run as a
+  fleet PAT; resume took about 2.5 minutes to dispatch.
+- The two DEFERRED entries above now have their lab inputs. `cache-writer`:
+  a group run sees repository secrets and gets a write token on request, so
+  the remaining question is policy. `spot-eviction-handling`: a green rerun of
+  an ejected group does not re-admit the entry, so runner loss must
+  re-enqueue.
+- An enqueue made with `GITHUB_TOKEN` creates no merge-group run and ends in a
+  timeout ejection, and a workflow `concurrency` group shared across entries
+  causes timeout ejections and full rebuilds. Both are carried to
+  `yeet-queue-states` and `merge-group-parity` in the findings ledger.

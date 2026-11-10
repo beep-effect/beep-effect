@@ -38,8 +38,9 @@ Use this command for execution-capable sessions:
 ## Current Phase
 
 P1 Implement — slice 1 (ROUT-03 census, `fix(ci): keep goal ops scripts, fixtures and research inputs on the
-code route`) landed in #3064; P0 re-checked lever status at `origin/main` 5e09d90a6da. Slices 2 and 3 complete the first wave;
-slice 4 opens when slice 1 merges.
+code route`) landed in #3064; slice 2 (COVE-02, bare coverage judges against its planned merge base) landed; P0
+re-checked lever status at `origin/main` 5e09d90a6da. Slice 3 (YEET-08 slice 1) completes the first wave; slice 4
+(ROUT-03 slice 2) is unblocked.
 
 ## Latest Evidence
 

@@ -4,13 +4,13 @@
     "id": "repository-simplification-residue",
     "packetId": "goal-packet/v1:b1dcb2a4d1a6aca3a978ef72290f478a9e3898deb7948c472c54722f090fad5e",
     "title": "Repository simplification residue",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-10-17",
     "updated": "2026-11-10",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/repository-simplification-residue",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Finish the fifteen size-only unmet repository-simplification outcomes without inventory growth or parking.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -39,7 +39,7 @@
       {
         "kind": "yeet-verdict",
         "ref": ".beep/yeet/runs/docs_residue-closeout-refinal-bf743b3a425c/verdict.json",
-        "gating": true
+        "gating": false
       }
     ]
   },
@@ -199,9 +199,6 @@
       "status": "complete"
     }
   ],
-  "statusNote": "All fifteen historical source acceptances reconciled on 2026-11-10 at 6d47006fa1; all source issues closed, canon verified completed-retained via #2586. Current scan: 533 rows, 15 open, 518 exceptions; 59 reasons lack literal Owner/Exit. Fleet orchestrator owns one separate current-drift remediation lane, including the harness-ledger row already open at the canon merge. No current-zero claim. This docs lane adds no standards rows or coverage changes. Final PR publication/readiness and post-merge completion refresh remain; adopt completed-retained only in the subsequent packet-state PR. #3073 landed the reconciliation but merged before its readiness was recorded; proposed completed-retained via goals-only re-final PR #3094, with completion refresh and packet-state adoption remaining after its merge.",
-  "proposedCloseout": {
-    "status": "completed-retained",
-    "finalPullRequest": 3094
-  }
+  "statusNote": "All fifteen historical source acceptances reconciled on 2026-11-10 at 6d47006fa1 (#3073); all source issues closed, canon verified completed-retained via #2586. Scan at reconciliation: 533 rows, 15 open, 518 exceptions; 59 reasons lack literal Owner/Exit. The fleet orchestrator owns the current-drift remediation lane, including the harness-ledger row already open at the canon merge; no current-zero claim. Completed-retained on 2026-11-10 by operator ruling: #3073 and re-final #3094 were merged by hand before readiness was recorded, so the Yeet readiness verdict is a non-gating record and hosted required checks at #3094's accepted head 091ee20b85 are the gating evidence.",
+  "retentionReason": "Retained: the 2026-11-10 acceptance-reconciliation receipt is the source-PR attribution for the fleet orchestrator's open effect-vitest drift remediation (15 open rows, 59 exception reasons without Owner/Exit), and the operator ruling that closed this goal without a Yeet readiness verdict lives in decisions/. Archive with `bun run beep goals archive` once that remediation merges."
 }

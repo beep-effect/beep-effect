@@ -51,7 +51,11 @@ test/smoke extras, and the secrets/security/SAST/Nix lanes. The command is
 literally the one CI runs, so a green `yeet verify` should predict green CI on
 the first push. What it does not
 yet replay is CI's *environment* (`CI=true`, blank PR secrets, PR cache posture)
-or the merged tree — use `verify --merged` for the tree.
+or the merged tree. `verify --merged` covers the tree, but it is supported
+and dormant: the merged-preview admission kind (`admissionTokenWeight` 5) has
+had no run since 2026-10-05, and the flag is kept as the only merged-tree
+proof, not retired. Use it when a base change needs the merged tree proven
+locally; removing it needs a new operator ruling (local-proof-under-ten D17).
 
 The full verify tier and every publish push path also run
 `publish:00-head-install-preflight`: a frozen-lockfile install in a detached,

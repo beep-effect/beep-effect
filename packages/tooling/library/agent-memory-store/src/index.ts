@@ -43,6 +43,34 @@ export * from "./Dedupe.models.ts";
  */
 export * from "./Embedder.service.ts";
 /**
+ * Markdown node partition error exports.
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export * from "./MarkdownPartition.errors.ts";
+/**
+ * Markdown node partition model exports.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./MarkdownPartition.models.ts";
+/**
+ * Markdown node partition and reparse check exports.
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
+export * from "./MarkdownPartition.parser.ts";
+/**
+ * Live Markdown projector layer exports.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export * from "./MarkdownProjector.layer.ts";
+/**
  * Markdown projector service contract exports.
  *
  * @category services
@@ -57,6 +85,13 @@ export * from "./MarkdownProjector.service.ts";
  */
 export * from "./MemoryIndexes.service.ts";
 /**
+ * Live memory log layer exports.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export * from "./MemoryLog.layer.ts";
+/**
  * Memory log service contract exports.
  *
  * @category services
@@ -64,12 +99,26 @@ export * from "./MemoryIndexes.service.ts";
  */
 export * from "./MemoryLog.service.ts";
 /**
+ * In-memory memory log test layer exports.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export * from "./MemoryLog.test-layer.ts";
+/**
  * Memory log event exports.
  *
  * @category events
  * @since 0.0.0
  */
 export * from "./NodeEvent.events.ts";
+/**
+ * Node identity digest exports.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export * from "./NodeIdentity.digest.ts";
 /**
  * Node identity schema exports.
  *

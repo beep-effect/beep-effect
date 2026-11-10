@@ -170,24 +170,44 @@ export declare namespace RevisionId {
   export type Encoded = typeof RevisionId.Encoded;
 }
 
+// One or more `/`-separated segments, none empty and none starting with `.`,
+// the last ending in `.md`.
+const MEMORY_FILE_PATH_PATTERN = /^(?:[^/.][^/]*\/)*[^/.][^/]*\.md$/;
+
 /**
  * POSIX path of a memory file, relative to the imported memory folder.
  *
- * **Example** (Brand a memory file path)
+ * **Details**
+ *
+ * Decision `memory-files-are-md-files-outside-dot-segments`: the path is
+ * relative, ends in `.md`, and every segment is non-empty and does not start
+ * with `.`. So an absolute path, a `..` segment, a hidden folder such as
+ * `.git`, the projector's own temporary files and a non-Markdown file are not
+ * memory file paths, and every event payload, store row and projection that
+ * carries one refuses them at decode. Backslashes are refused by `PosixPath`.
+ *
+ * **Example** (Check memory file paths)
  *
  * ```ts
  * import { MemoryFilePath } from "@beep/agent-memory-store"
+ * import * as S from "effect/Schema"
  *
- * const path = MemoryFilePath.make("notes/decisions.md")
- * console.log(path)
+ * console.log(MemoryFilePath.make("notes/decisions.md"))
+ * console.log(S.is(MemoryFilePath)("../escape.md")) // false
+ * console.log(S.is(MemoryFilePath)(".git/notes.md")) // false
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const MemoryFilePath = PosixPath.check(S.isNonEmpty()).pipe(
+export const MemoryFilePath = PosixPath.check(
+  S.isPattern(MEMORY_FILE_PATH_PATTERN, {
+    expected: "a relative .md path whose segments are non-empty and do not start with '.'",
+  })
+).pipe(
   $I.annoteSchema("MemoryFilePath", {
-    description: "Non-empty POSIX path of a memory file relative to the imported memory folder.",
+    description:
+      "Relative POSIX path of a Markdown memory file inside the imported memory folder, with no empty or dot-prefixed segment.",
   })
 );
 

@@ -28,6 +28,7 @@ import {
   StatusTransition,
   StatusValue,
   TombstoneContentHash,
+  UnplacedNodeError,
   WriteHeld,
   WriteHeldEvent,
 } from "@beep/agent-memory-store";
@@ -144,9 +145,16 @@ describe("NodeEvent events", () => {
       const decoded = yield* S.decodeEffect(NodeCreatedEvent.payloadSchemaBinary)(bytes);
       expect(decoded).toEqual(written);
 
-      expect(
-        A.map([NodeCreatedEvent, NodeRevisedEvent, NodeStatusChangedEvent, NodeRetiredEvent], (event) => event.error)
-      ).toEqual([StaleParentsError, StaleParentsError, StaleParentsError, StaleParentsError]);
+      expect(A.map([NodeRevisedEvent, NodeStatusChangedEvent, NodeRetiredEvent], (event) => event.error)).toEqual([
+        StaleParentsError,
+        StaleParentsError,
+        StaleParentsError,
+      ]);
+      // NodeCreated also refuses a predecessor outside its file.
+      const placement = UnplacedNodeError.make({ nodeId, filePath, after: otherNodeId });
+      const isCreatedError = S.is(NodeCreatedEvent.error);
+      const stale = StaleParentsError.make({ nodeId, parents: [], heads: [revisionA] });
+      expect(A.every([placement, stale], isCreatedError)).toBe(true);
     })
   );
 

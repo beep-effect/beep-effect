@@ -27,7 +27,7 @@
     "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
     "build": "bun run beep:build",
     "check": "bun run beep:check",
-    "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
+    "coverage": "bunx --bun vitest run --coverage --exclude=test/integration/**",
     "docgen": "bun run beep:docgen",
     "lint": "bun run beep:lint",
     "lint:deprecated-apis": "beep-cli lint deprecated-apis --package .",
@@ -68,9 +68,11 @@
     "@beep/markdown": "workspace:^",
     "@beep/provenance": "workspace:^",
     "@beep/schema": "workspace:^",
+    "@beep/sqlite": "workspace:^",
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
     "bun-types": "catalog:"

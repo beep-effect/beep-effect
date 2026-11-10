@@ -58,15 +58,23 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Design and grill — in progress. The six packet-decidable items are confirmed
-by decision file (2026-11-09), the package home is `packages/tooling/library/agent-memory-store`
-with a new `@beep/sqlite` driver, and the schemas and `Context.Service`
-contracts are landing; no implementation has started.
+P1 Log and L0 projection — in progress. P0 landed the decisions, schemas,
+`Context.Service` contracts and the `@beep/sqlite` driver (PR #3013). P1 builds
+the live `MemoryLog` (effect/eventlog over SQLite, per-node compare-and-set in
+the journal transaction), the Markdown node partition with its reparse check,
+and the live `MarkdownProjector` (folder import in one journal transaction,
+fenced byte-identical export, raw-slice `projectNode`).
 
 ## Latest Evidence
 
-Packet opened 2026-11-09 from the merged decision entry (PR #2996, commit
-1e0b8c107c0). No package code has changed.
+2026-11-10, P1 lane: AC-1 green on the frozen goals sample (172 files,
+1,065,752 bytes): every file byte-identical after import and export and after a
+rebuild from the log alone; 3,096 generated node edits with 0 outside the
+touched span (3/n = 0.097%); 0 of 2,940 concurrent insertions read as
+deletions. The AC-8 import, aborted-import and export-refusal tests are green;
+AC-8 itself stays open until P5. The opt-in run over the whole live goals tree
+reproduced 3,597 of 3,597 files. The measured numbers are in the 2026-11-10
+checkpoint in `PLAN.md`.
 
 ## Notes
 

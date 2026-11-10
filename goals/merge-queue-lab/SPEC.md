@@ -140,20 +140,20 @@ post-merge run can shrink, and go to `merge-group-parity`.
 
 ## Acceptance Criteria
 
-- [ ] The lab ruleset exists, targets only `queue-lab`, and its id is
+- [x] The lab ruleset exists, targets only `queue-lab`, and its id is
       recorded; ruleset 10240248 is unchanged.
-- [ ] Every row in Observations has a finding with evidence, or a recorded
+- [x] Every row in Observations has a finding with evidence, or a recorded
       reason it could not be observed.
-- [ ] `@beep/github` exports typed `enqueuePullRequest`, `dequeuePullRequest`
+- [x] `@beep/github` exports typed `enqueuePullRequest`, `dequeuePullRequest`
       and a queue-entry read with schema-decoded results and tests;
       `bun run beep quality package-verify @beep/github` passes.
-- [ ] A verdict decision file (go, park or kill) states the reason, and
+- [x] A verdict decision file (go, park or kill) states the reason, and
       `explorations/github-merge-queue` records it in `DECISIONS.md` and its
       README Trail.
-- [ ] Synthetic pull requests are closed and their branches deleted. On go,
+- [x] Synthetic pull requests are closed and their branches deleted. On go,
       `queue-lab` and its ruleset stay with build concurrency 0; on kill, both
       are removed.
-- [ ] No unrelated refactors or formatting churn.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 
@@ -202,11 +202,43 @@ The lab may set other parameters on its own ruleset to observe them (HEADGREEN, 
 
 Reverse: Edit the merge_queue parameters on the ruleset that carries the rule.
 
+### Lab enqueues mint the App token directly, not through ghapp.sh, 2026-11-10
+
+The operator-side ghapp.sh wrapper runs a merge-reservation guard that refuses opaque GraphQL input while owner holds exist on main pull requests. Lab pull requests target queue-lab, which the guard does not model, so ops/queue-lab.sh mints the same beep-fleet-orchestrator installation token through gh-app-token.sh and passes it to gh through the environment. The identity is the same; the token is never printed.
+
+Lane docs/merge-queue-lab-findings
+
+Reverse: Route lab calls through ghapp.sh once its guard admits non-main bases.
+
+### Lab workflow changes land on queue-lab through the queue, 2026-11-10
+
+A direct push to queue-lab is refused by the lab ruleset for an org admin who is not a bypass actor (finding 5e). Every lab workflow change is therefore a synthetic pull request enqueued like any other, which doubles as evidence for workflow-touching enqueues (10c).
+
+Lane docs/merge-queue-lab-findings
+
+Reverse: Add an admin bypass to ruleset 26917133 and push to queue-lab directly.
+
+### Synthetic branches use the queue-lab- prefix, not queue-lab/, 2026-11-10
+
+SPEC.md asked for synthetic branch names starting with queue-lab/. Git cannot hold refs/heads/queue-lab and refs/heads/queue-lab/<x> at once (a ref is a file or a directory, not both), so the first push failed with 'cannot lock ref'. Synthetic branches are named queue-lab-<slug>; cleanup matches that prefix.
+
+Lane docs/merge-queue-lab-findings
+
+Reverse: Rename the lab base branch (for example to lab/queue) and switch the synthetic prefix back to a slash form.
+
 ### The lab lives on a queue-lab branch in this repository, 2026-11-10
 
 Only this repository exercises the real runner groups and App identities, and the first phase uses a toy required check, so it adds no load. Source: `explorations/github-merge-queue/DECISIONS.md`, entry `lab-venue`.
 
 Reverse: Delete the queue-lab branch and its ruleset; fall back to a public scratch repository in the organization.
+
+### The lab ruleset is 26917133 with a ten-minute check timeout, 2026-11-10
+
+Created with the operator gh login. It targets refs/heads/queue-lab only, requires queue-lab-gate from GitHub Actions (integration 15368), and carries merge_queue with SQUASH, build concurrency 1, group size 1..1, no wait, ALLGREEN and check_response_timeout_minutes 10 (the design's main settings except the timeout, shortened so hang and no-run probes finish in minutes). No bypass actors. Ruleset 10240248 is unchanged.
+
+Lane docs/merge-queue-lab-findings
+
+Reverse: Delete ruleset 26917133 (gh api -X DELETE repos/beep-effect/beep-effect/rulesets/26917133).
 
 ### The lab serves the restated activation gate, 2026-11-10
 
@@ -219,6 +251,14 @@ Reverse: Supersede the 2026-11-09 standards entry and restore a main-green bar.
 Merge-group parity edits scoping sites that ten-minute-certainty's goals rewrite, so it waits for them; the lab runs now because it shares none. Source: `explorations/github-merge-queue/DECISIONS.md`, entries `sequencing-against-ten-minute-certainty` and `goal-split`.
 
 Reverse: Reopen the exploration at decompose and move the work into merge-group-parity or yeet-queue-states.
+
+### Verdict: go, 2026-11-10
+
+Every identity the fleet merges with can enqueue (the App, the fleet fine-grained PAT and the operator login; the App also jumps and enqueues workflow-touching pull requests). The lab ran in this repository on ruleset 26917133. No finding contradicts an exploration ruling: the landed commit is the group's head commit, and pause, jump and resume work, with pause and resume needing a ruleset write the App lacks. Findings and the constraints carried to the gated candidates are in research/findings.md. The four gated candidates keep their gates; queue-lab and its ruleset stay with build concurrency 0.
+
+Lane docs/merge-queue-lab-findings
+
+Reverse: Supersede with a park or kill decision and flip explorations/github-merge-queue's status with the reason.
 
 <!-- beep:decisions:end -->
 

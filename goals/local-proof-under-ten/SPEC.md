@@ -163,7 +163,7 @@ every citation below was re-checked at c90929b1ff1). Ids are the rows in
 | PERIL-03 | State-aware monitor cadence with a wake on a local ref change | partly landed (#3032, fda98a2c4bd: 90 s default at `MonitorLoop.ts:210`, rate-limit sleep in `MonitorRateLimit.ts`) | TestClock mutation fixtures: the first terminal after each mutation follows a full read taken after it; a dirty-file re-edit still flags stale gates; then a 7-day A/B of polls per monitor-hour | PERIL-02 |
 | PERIL-09 | Keep the review-window anchor across a diff-preserving merge of main | open (`ReviewWindow.ts` anchors on first check-suite receipt, a later force-push or the ready flip) | Ruling D12 (given); replay fixtures: clean merge keeps, conflict touching PR lines re-arms | none |
 | PERIL-10 | Summarize scheduler quarantine in status, archive-reap aged entries, retire the `beep-heavy` doctrine (merges SCHE-10) | open (`Quality.command.ts:3881` prints one line per quarantined path; `.claude/skills/orchestrate/SKILL.md` still cites `beep-heavy`) | Renderer and reaper age-gate tests, an archive-restore fixture; live lease count unchanged | none |
-| PERIL-13 | Mark merged-preview admission dormant | open (no dormancy note in the yeet skill) | Ruling D17 (given) | none |
+| PERIL-13 | Mark merged-preview admission dormant | landed (dormancy note in `.claude/skills/yeet/references/gates-and-proof.md`) | Ruling D17 (given) | none |
 
 SCHE-09 (admission history retention) was listed under this goal in MAP.md's first draft; D23 assigns it to
 certainty-scorecard and this goal consumes it.
@@ -281,7 +281,8 @@ certainty-scorecard and this goal consumes it.
 - [ ] PERIL-09 lands with its replay fixtures and the AGENTS.md amendment in the same PR.
 - [ ] PERIL-10: `quality scheduler status` renders the quarantine as one summary line, aged entries are archived
       before reaping, the live lease count is unchanged, and the `beep-heavy` doctrine is retired from the
-      orchestrate skill. PERIL-13: the yeet skill documents merged-preview as supported and dormant.
+      orchestrate skill.
+- [x] PERIL-13: the yeet skill documents merged-preview as supported and dormant (landed with PLAN.md slice 1).
 - [ ] TURB-05, TURB-10 and YEET-05 record shadow receipts and attribution only, while the R2 pause holds.
 - [ ] No unrelated refactors or formatting churn.
 

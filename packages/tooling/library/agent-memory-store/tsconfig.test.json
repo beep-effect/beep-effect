@@ -11,9 +11,15 @@
     "outDir": "dist-test",
     "rootDir": ".",
     "sourceMap": false,
-    "types": ["node", "bun-types"]
+    "types": ["node", "bun-types"],
+    "paths": {
+      "@beep/agent-memory-store/internal/*": ["./src/internal/*.ts"]
+    }
   },
   "references": [
+    {
+      "path": "../../../drivers/sqlite/tsconfig.json"
+    },
     {
       "path": "../../../foundation/modeling/epistemics/tsconfig.json"
     },

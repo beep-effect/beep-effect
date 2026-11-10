@@ -39,17 +39,20 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+P0 Research — in progress: slice 1 (the main cancel ban, HOST-01 a) landed 2026-11-10; the remaining P0 facts and slice 2 wait on the certainty scorecard's numbers.
 
 ## Latest Evidence
 
-Not started.
+- 2026-11-10: slice 1 `docs(agents): never cancel refs/heads/main runs` adds the ban to the AGENTS.md
+  Inherited-reds bullet and the orchestrate skill's Red check and Queue starved rows. No scorecard is on `main`
+  yet, so the ban's start date is recorded as the anchor for the before/after verdict reads and the first
+  zero-agent-cancel window (checkpoint `cancel-ban-start-anchor`).
 
 ## Notes
 
-- First slice, startable now: amend the AGENTS.md "Inherited reds" bullet and the orchestrate skill so no agent
-  cancels a `refs/heads/main` run, queued or running. Docs only, S, mergeable by the orchestrator's App token.
-- Nothing of HOST-01 has landed (decision `host-01-open-push-runs-still-full`, re-checked at c90929b1ff1):
+- Slice 1 landed 2026-11-10: no agent cancels a `refs/heads/main` run, queued or running. Slice 2 (the replay)
+  waits on the scorecard's main verdict rate, per-run job counts, PR first-wave pickup and heavy wait.
+- Of HOST-01 only slice 1 (the cancel ban) has landed; at c90929b1ff1 (decision `host-01-open-push-runs-still-full`):
   `.github/workflows/check.yml` lines 12 to 14 still group main pushes per ref, and a push still allocates
   every partition.
 - Order: cancel ban, then (with scorecard numbers) the merge-timestamp replay and the main throughput layout,
