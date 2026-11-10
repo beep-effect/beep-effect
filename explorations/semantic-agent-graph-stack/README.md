@@ -3,7 +3,7 @@
 ## Status
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
-Stage: `research`
+Stage: `align`
 Status: `active`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
@@ -20,9 +20,11 @@ use, and which existing bricks already cover them.
 
 ## Next Open Question
 
-Which existing beep decision should be the first consumer: a corrected
-claim that must reach a later action, ontology-session authoring, or
-agent-run memory?
+The first consumer is the outbox send (operator, 2026-11-10). The send
+tool refuses every send with `version-unbound`, and the attorney sends
+prepared drafts in Outlook. Where does a changed-basis check attach:
+on the draft the attorney reviews, on a reopened version-bound send,
+or on a different action beep releases itself?
 
 ## Read This First
 
@@ -31,9 +33,17 @@ agent-run memory?
 3. [`RESEARCH.md`](./RESEARCH.md) - prior art + capability inventory (stage 1).
 4. [`research/01-source-cards.md`](./research/01-source-cards.md) - one card per source.
 5. [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger.
+6. [`DECISIONS.md`](./DECISIONS.md) - align log (stage 2).
 
 ## Trail
 
+- 2026-11-10: review and re-baseline. `RESEARCH.md` gained a dated
+  section that corrects four NOT FOUND rows and records three packets
+  opened since 2026-11-06. Align started: two of the three open
+  questions closed from the repo, nine ranked patterns closed by
+  reference, and the operator named the outbox send as first
+  consumer. The send tool turned out to refuse every send, so one
+  question remains. See [`DECISIONS.md`](./DECISIONS.md).
 - 2026-11-06: machine-local clone paths stay in
   `research/SOURCES.md`. The live capture names the clones without
   a home path, so the knowledge-ref gate can read it.

@@ -3,7 +3,7 @@
 ## Status
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
-Stage: `capture`
+Stage: `align`
 Status: `active`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
