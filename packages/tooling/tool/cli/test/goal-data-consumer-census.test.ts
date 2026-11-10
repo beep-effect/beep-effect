@@ -237,7 +237,7 @@ it.layer(Layer.provideMerge(Git.layer, NodeServices.layer), { timeout: "120 seco
       Effect.fnUntraced(function* () {
         const { paths } = yield* census;
         const opsScript = A.findFirst(paths, (file) => /^goals\/[^/]+\/ops\/.+\.ts$/u.test(file));
-        assertTrue(O.isSome(opsScript));
+        assertTrue(opsScript.pipe(O.isSome));
         const named = A.append(mutations, ["`.ts` ops script", O.getOrElse(opsScript, () => "")] as const);
         for (const [label, mutated] of named) {
           expect(A.contains(paths, mutated), `${label}: ${mutated} is tracked`).toBe(true);
