@@ -475,7 +475,13 @@ export interface PullRequestShape {
    * Takes the entry, as {@link PullRequestShape.mergeQueueEntry} or
    * {@link PullRequestShape.enqueuePullRequest} returned it, because GitHub's
    * mutation is keyed by the entry's id. Answers the entry GitHub reports back,
-   * if it reports one. Removing an entry rebuilds every group behind it.
+   * if it reports one. Removing an entry rebuilds every group behind it, and
+   * the timeline records the removal with reason `manual`.
+   *
+   * **Gotchas**
+   *
+   * GitHub does not cancel the merge-group workflow run of a removed entry; it
+   * keeps running until it ends or the caller cancels it.
    *
    * **Example** (Dequeue an entry)
    *
@@ -721,8 +727,9 @@ export interface PullRequestShape {
    * **Details**
    *
    * One GraphQL read. `Option.none()` means the pull request is not in a queue
-   * (never queued, merged, or removed) or does not exist; GitHub has no REST
-   * read of a queue.
+   * (never queued, merged, or removed). Fails `notFound` when the pull request
+   * does not exist: GitHub answers with a `NOT_FOUND` error, not a null pull
+   * request. GitHub has no REST read of a queue.
    *
    * **Example** (Read a queue entry)
    *

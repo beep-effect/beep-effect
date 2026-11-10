@@ -67,7 +67,19 @@ describe("PullRequest merge queue", () => {
     { status: 200, body: { data: { enqueuePullRequest: { mergeQueueEntry: null } } } },
     { status: 200, body: { data: { repository: { pullRequest: { mergeQueueEntry: buildingWire } } } } },
     { status: 200, body: { data: { repository: { pullRequest: { mergeQueueEntry: null } } } } },
-    { status: 200, body: { data: { repository: { pullRequest: null } } } },
+    {
+      status: 200,
+      body: {
+        data: { repository: { pullRequest: null } },
+        errors: [
+          {
+            type: "NOT_FOUND",
+            path: ["repository", "pullRequest"],
+            message: "Could not resolve to a PullRequest with the number of 9999.",
+          },
+        ],
+      },
+    },
     { status: 200, body: { data: { dequeuePullRequest: { mergeQueueEntry: queuedWire } } } },
     {
       status: 200,
@@ -112,8 +124,8 @@ describe("PullRequest merge queue", () => {
 
         const notQueued = yield* pulls.mergeQueueEntry(3061);
         assertNone(notQueued);
-        const missing = yield* pulls.mergeQueueEntry(9999);
-        assertNone(missing);
+        const missing = yield* Effect.flip(pulls.mergeQueueEntry(9999));
+        assert.strictEqual(missing.kind, "notFound");
 
         const removed = yield* pulls.dequeuePullRequest(queued);
         assertSome(removed, queued);
