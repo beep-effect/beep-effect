@@ -1,93 +1,91 @@
 {
-  "sourceRun": 42637925544,
-  "sourceCommit": "ccc7c122ea3e89d71a3222c460afdd110413f55e",
-  "note": "Per-file HOSTED seconds measured directly on PR #3005 run 42637925544 (ubuntu-24.04, 4 vCPU, one Vitest worker, commit ccc7c122ea, the post-#3009 file list with the canonical, parser-operations, remaining-extraction and regex-translator splits). Bins are LPT (heaviest first into the lightest bin) at the smallest count whose largest bin stays under 450 s, so a partition body stays under about 7.5 minutes and the job under about 9 with setup; same-runner-class spread between runs was 3 to 5 percent. Regenerate when integration files change; test/vitest-integration-shards.test.ts fails until the plan matches the directory.",
+  "sourceRun": 42677073526,
+  "sourceCommit": "0ae245d5da8ac396d15a4a5171461125b8fdd98b",
+  "sourceRuns": [
+    42656046751, 42662847801, 42675828132, 42677073526, 42679893579,
+    42680346897, 42682725454, 42690710476
+  ],
+  "note": "Each file's WORST passing hosted seconds over eight runs of the sixteen-shard layout (ubuntu-24.04, 4 vCPU, one Vitest worker): PR #3005 run 42656046751, main runs 42662847801, 42675828132 and 42677073526, and pull-request runs 42679893579, 42680346897, 42682725454 and 42690710476. One run is not a measurement: a shard's test time moved 0.64x to 1.51x against the single-run plan across runners and Azure regions, and 10 of 127 partition jobs in those runs reached ten minutes. Bins are LPT (heaviest first into the lightest bin) at the smallest count whose largest bin equals the largest single file, so no pairing sets the ceiling: the worst planned body is 422 s, and with the measured 66 to 109 s (mean 83) of checkout, setup and Turbo around the Vitest body the worst planned job is under 9 minutes. Every bin also stays within the 480 s sharded file budget (CI_SHARDED_PARTITION_FILE_BUDGET_SECONDS). Regenerate from several green runs when integration files change, packing each file at its worst measurement; test/vitest-integration-shards.test.ts fails until the plan matches the directory.",
   "shardSeconds": [
-    406.7, 393.6, 336.6, 327.2, 318, 320.2, 323.9, 366.8, 362.2, 361.9, 373.6,
-    392.4, 424.8, 418.8, 406.7, 411.4
+    422.0, 399.9, 391.4, 366.2, 359.4, 356.4, 355.2, 346.5, 328.1, 323.7, 311.8,
+    308.0, 310.1, 341.6, 356.4, 352.9, 367.4, 390.6, 421.2
   ],
   "fileSeconds": {
-    "test/integration/CitationCanonicalAnnotationWorkflow.test.ts": 177.1,
-    "test/integration/CitationCanonicalCourts.test.ts": 197.6,
-    "test/integration/CitationCanonicalExtraction.test.ts": 306.7,
-    "test/integration/CitationCanonicalExtractionRange2.test.ts": 393.6,
-    "test/integration/CitationCanonicalExtractionRange3.test.ts": 318,
-    "test/integration/CitationCanonicalExtractionRange4.test.ts": 277.3,
-    "test/integration/CitationCanonicalExtractionRange5.test.ts": 224.9,
-    "test/integration/CitationCanonicalExtractionRange6.test.ts": 86.8,
-    "test/integration/CitationCanonicalParserOperations.test.ts": 310.8,
-    "test/integration/CitationCanonicalParserOperationsRange2.test.ts": 241.7,
-    "test/integration/CitationCanonicalReferenceMarkup.test.ts": 60.1,
-    "test/integration/CitationCanonicalRemainingExtraction.test.ts": 297.3,
-    "test/integration/CitationCanonicalRemainingExtractionRange2.test.ts": 286.8,
-    "test/integration/CitationCanonicalTokenizer.test.ts": 64.9,
-    "test/integration/CitationCleanerNamedHtml.test.ts": 71.4,
-    "test/integration/CitationCleanerNativeCustom.test.ts": 4,
-    "test/integration/CitationDiffWorker.test.ts": 153.7,
+    "test/integration/CitationCanonicalAnnotationWorkflow.test.ts": 240.0,
+    "test/integration/CitationCanonicalCourts.test.ts": 356.4,
+    "test/integration/CitationCanonicalExtraction.test.ts": 346.5,
+    "test/integration/CitationCanonicalExtractionRange2.test.ts": 399.9,
+    "test/integration/CitationCanonicalExtractionRange3.test.ts": 328.1,
+    "test/integration/CitationCanonicalExtractionRange4.test.ts": 277.7,
+    "test/integration/CitationCanonicalExtractionRange5.test.ts": 304.7,
+    "test/integration/CitationCanonicalExtractionRange6.test.ts": 150.6,
+    "test/integration/CitationCanonicalParserOperations.test.ts": 355.2,
+    "test/integration/CitationCanonicalParserOperationsRange2.test.ts": 323.7,
+    "test/integration/CitationCanonicalReferenceMarkup.test.ts": 79.8,
+    "test/integration/CitationCanonicalRemainingExtraction.test.ts": 366.2,
+    "test/integration/CitationCanonicalRemainingExtractionRange2.test.ts": 288.7,
+    "test/integration/CitationCanonicalTokenizer.test.ts": 62.3,
+    "test/integration/CitationCleanerNamedHtml.test.ts": 78.7,
+    "test/integration/CitationCleanerNativeCustom.test.ts": 4.0,
+    "test/integration/CitationDiffWorker.test.ts": 197.5,
     "test/integration/CitationEditionInference.test.ts": 2.4,
-    "test/integration/CitationEngineCorpus.test.ts": 307.7,
-    "test/integration/CitationExtractorSelection.test.ts": 3,
-    "test/integration/CitationFullLawMetadata.test.ts": 213.8,
-    "test/integration/CitationHtmlUnicode.test.ts": 115.1,
-    "test/integration/CitationInputDocument.test.ts": 16.2,
-    "test/integration/CitationJournalMetadata.test.ts": 336.6,
-    "test/integration/CitationRegexBoundaries.test.ts": 271.1,
-    "test/integration/CitationRegexCaseFlags.test.ts": 406.7,
-    "test/integration/CitationRegexTranslator.test.ts": 327.2,
-    "test/integration/CitationRegexTranslatorNode.test.ts": 290.5,
-    "test/integration/CitationVerifiedExtraction.test.ts": 181.8
+    "test/integration/CitationEngineCorpus.test.ts": 391.4,
+    "test/integration/CitationExtractorSelection.test.ts": 3.3,
+    "test/integration/CitationFullLawMetadata.test.ts": 251.1,
+    "test/integration/CitationHtmlUnicode.test.ts": 116.3,
+    "test/integration/CitationInputDocument.test.ts": 15.0,
+    "test/integration/CitationJournalMetadata.test.ts": 359.4,
+    "test/integration/CitationRegexBoundaries.test.ts": 273.1,
+    "test/integration/CitationRegexCaseFlags.test.ts": 422.0,
+    "test/integration/CitationRegexTranslator.test.ts": 311.8,
+    "test/integration/CitationRegexTranslatorNode.test.ts": 279.3,
+    "test/integration/CitationVerifiedExtraction.test.ts": 223.7
   },
   "shards": [
     ["test/integration/CitationRegexCaseFlags.test.ts"],
     ["test/integration/CitationCanonicalExtractionRange2.test.ts"],
+    ["test/integration/CitationEngineCorpus.test.ts"],
+    ["test/integration/CitationCanonicalRemainingExtraction.test.ts"],
     ["test/integration/CitationJournalMetadata.test.ts"],
-    ["test/integration/CitationRegexTranslator.test.ts"],
+    ["test/integration/CitationCanonicalCourts.test.ts"],
+    ["test/integration/CitationCanonicalParserOperations.test.ts"],
+    ["test/integration/CitationCanonicalExtraction.test.ts"],
     ["test/integration/CitationCanonicalExtractionRange3.test.ts"],
+    ["test/integration/CitationCanonicalParserOperationsRange2.test.ts"],
+    ["test/integration/CitationRegexTranslator.test.ts"],
     [
-      "test/integration/CitationCanonicalParserOperations.test.ts",
-      "test/integration/CitationCleanerNativeCustom.test.ts",
-      "test/integration/CitationEditionInference.test.ts",
+      "test/integration/CitationCanonicalExtractionRange5.test.ts",
       "test/integration/CitationExtractorSelection.test.ts"
     ],
     [
-      "test/integration/CitationEngineCorpus.test.ts",
-      "test/integration/CitationInputDocument.test.ts"
+      "test/integration/CitationCanonicalRemainingExtractionRange2.test.ts",
+      "test/integration/CitationInputDocument.test.ts",
+      "test/integration/CitationCleanerNativeCustom.test.ts",
+      "test/integration/CitationEditionInference.test.ts"
     ],
     [
-      "test/integration/CitationCanonicalExtraction.test.ts",
-      "test/integration/CitationCanonicalReferenceMarkup.test.ts"
-    ],
-    [
-      "test/integration/CitationCanonicalRemainingExtraction.test.ts",
+      "test/integration/CitationRegexTranslatorNode.test.ts",
       "test/integration/CitationCanonicalTokenizer.test.ts"
     ],
     [
-      "test/integration/CitationCleanerNamedHtml.test.ts",
-      "test/integration/CitationRegexTranslatorNode.test.ts"
-    ],
-    [
-      "test/integration/CitationCanonicalExtractionRange6.test.ts",
-      "test/integration/CitationCanonicalRemainingExtractionRange2.test.ts"
-    ],
-    [
       "test/integration/CitationCanonicalExtractionRange4.test.ts",
+      "test/integration/CitationCleanerNamedHtml.test.ts"
+    ],
+    [
+      "test/integration/CitationRegexBoundaries.test.ts",
+      "test/integration/CitationCanonicalReferenceMarkup.test.ts"
+    ],
+    [
+      "test/integration/CitationFullLawMetadata.test.ts",
       "test/integration/CitationHtmlUnicode.test.ts"
     ],
     [
-      "test/integration/CitationDiffWorker.test.ts",
-      "test/integration/CitationRegexBoundaries.test.ts"
-    ],
-    [
       "test/integration/CitationCanonicalAnnotationWorkflow.test.ts",
-      "test/integration/CitationCanonicalParserOperationsRange2.test.ts"
+      "test/integration/CitationCanonicalExtractionRange6.test.ts"
     ],
     [
-      "test/integration/CitationCanonicalExtractionRange5.test.ts",
-      "test/integration/CitationVerifiedExtraction.test.ts"
-    ],
-    [
-      "test/integration/CitationCanonicalCourts.test.ts",
-      "test/integration/CitationFullLawMetadata.test.ts"
+      "test/integration/CitationVerifiedExtraction.test.ts",
+      "test/integration/CitationDiffWorker.test.ts"
     ]
   ]
 }
