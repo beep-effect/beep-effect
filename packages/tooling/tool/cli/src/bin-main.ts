@@ -240,7 +240,11 @@ const commandProgram = (target: DispatchTarget) =>
         Effect.flatMap(
           Effect.fnUntraced(function* (context) {
             const commands = yield* Dispatch.loadDispatchTarget(target);
-            return yield* Command.run(Dispatch.makeRootCommand(commands), { version: "0.0.0" }).pipe(
+            // Innermost, so the ledger is built under the rebuilt ConfigProvider and the platform context.
+            const { withGithubLedger } = yield* Effect.promise(() => import("./internal/github/GithubLedgerRoot.ts"));
+            const root = Dispatch.makeRootCommand(commands);
+            return yield* Command.run(root, { version: "0.0.0" }).pipe(
+              withGithubLedger({ argv, root }),
               withHostTurboCacheDefaults,
               Effect.provide(context)
             );

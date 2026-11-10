@@ -27,6 +27,7 @@ import { configStringOption } from "@beep/repo-cli-kit/cli/EnvConfig";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
@@ -37,9 +38,13 @@ import * as Redacted from "effect/Redacted";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { GithubAppId, GithubInstallationId, GithubPrivateKeyRef, GithubTokenRef } from "./GithubIdentity.fields.ts";
+import { resolveGithubIdentityLabel } from "./GithubIdentityLabel.ts";
+import { ConfiguredGithubIdentity } from "./GithubLedger.schemas.ts";
 import type { CommandFailedError, CommandOutputError } from "@beep/commands/Run";
 import type { GitHubClientOptions } from "@beep/github/GitHubClient";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import type { GithubIdentityLabel } from "./GithubLedger.schemas.ts";
 
 const $I = $RepoCliId.create("internal/github/GithubIdentity");
 
@@ -128,10 +133,10 @@ export type GithubIdentityKind = typeof GithubIdentityKind.Type;
 export class GithubIdentity extends S.Opaque<GithubIdentity, { readonly brand: unique symbol }>()(
   S.Struct({
     kind: GithubIdentityKind,
-    tokenRef: S.Option(S.String),
-    appId: S.Option(S.String),
-    installationId: S.Option(S.Int),
-    privateKeyRef: S.Option(S.String),
+    tokenRef: S.Option(GithubTokenRef),
+    appId: S.Option(GithubAppId),
+    installationId: S.Option(GithubInstallationId),
+    privateKeyRef: S.Option(GithubPrivateKeyRef),
   }).pipe($I.annoteSchema("GithubIdentity", { description: "A selected GitHub identity, as references only." }))
 ) {}
 
@@ -211,6 +216,12 @@ export const selectGithubIdentity = Effect.fn("GithubIdentity.select")(function*
     O.filter(Str.isNonEmpty)
   );
   if (O.isSome(tokenRef)) {
+    if (!S.is(GithubTokenRef)(tokenRef.value)) {
+      return yield* identityError(
+        "op-read-failed",
+        `the GitHub token reference (--token-ref or ${GITHUB_TOKEN_REF_ENV}) must be an op:// reference`
+      );
+    }
     return GithubIdentity.make({
       kind: "op-ref",
       tokenRef,
@@ -236,7 +247,9 @@ export const selectGithubIdentity = Effect.fn("GithubIdentity.select")(function*
     const parsed = Number(Str.trim(raw));
     return Number.isSafeInteger(parsed) && parsed > 0 ? O.some(parsed) : O.none();
   });
-  if (present < 3 || O.isNone(installationId)) {
+  const validKeyRef = O.exists(privateKeyRef, S.is(GithubPrivateKeyRef));
+  const validAppId = O.exists(appId, S.is(GithubAppId));
+  if (present < 3 || O.isNone(installationId) || !validKeyRef || !validAppId) {
     return yield* identityError(
       "app-config",
       `a GitHub App identity needs ${GITHUB_APP_ENV.appId}, a numeric ${GITHUB_APP_ENV.installationId}, and ${GITHUB_APP_ENV.privateKeyRef} (an op:// reference to the PEM key)`
@@ -300,6 +313,34 @@ const readOpReference = (reference: string, cwd: string, what: string) =>
 export const GithubTransportFetch: Context.Reference<O.Option<typeof globalThis.fetch>> = Context.Reference(
   $I`GithubTransportFetch`,
   { defaultValue: () => O.none<typeof globalThis.fetch>() }
+);
+
+/**
+ * The budget label of the client {@link layerGithubClientFor} built, when a
+ * GitHub budget ledger was present to label it.
+ *
+ * **Details**
+ *
+ * A reference, so the client layer's output stays `GitHubClient` and no caller
+ * signature changes. `GraphqlBudget` and the rate-limit sampler read it to find
+ * the bucket the client draws on.
+ *
+ * **Example** (Read the default)
+ *
+ * ```ts
+ * import { GithubBudgetIdentity } from "@beep/repo-cli/test/SharedInternals"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.isNone(Effect.runSync(Effect.service(GithubBudgetIdentity)))) // true
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export const GithubBudgetIdentity: Context.Reference<O.Option<GithubIdentityLabel>> = Context.Reference(
+  $I`GithubBudgetIdentity`,
+  { defaultValue: () => O.none<GithubIdentityLabel>() }
 );
 
 /**
@@ -369,10 +410,23 @@ export const layerGithubClientFor: {
     Layer.unwrap(
       Effect.gen(function* () {
         const GithubTransportFetch1 = yield* GithubTransportFetch;
-        const transport = O.match(GithubTransportFetch1, {
+        const base = O.match(GithubTransportFetch1, {
           onNone: () => options,
           onSome: (fetch) => ({ fetch, ...options }),
         });
+        // With a ledger in context, the client carries its bucket owner's label; without one nothing is resolved.
+        const labelled = (label: O.Option<GithubIdentityLabel>) => ({
+          transport: O.match(label, { onNone: () => base, onSome: (budgetLabel) => ({ ...base, budgetLabel }) }),
+          identityLayer: Layer.succeed(GithubBudgetIdentity, label),
+        });
+        const labelInput = {
+          kind: identity.kind,
+          tokenRef: identity.tokenRef,
+          appId: identity.appId,
+          installationId: identity.installationId,
+          cwd,
+          transport: base,
+        };
         if (identity.kind === "github-app") {
           const appId = yield* Effect.fromOption(identity.appId, () => identityError("app-config", "missing app id"));
           const installationId = yield* Effect.fromOption(identity.installationId, () =>
@@ -382,6 +436,8 @@ export const layerGithubClientFor: {
             identityError("app-config", "missing private key reference")
           );
           const privateKey = yield* readOpReference(keyRef, cwd, "the GitHub App private key");
+          const appLabel = yield* resolveGithubIdentityLabel({ ...labelInput, token: O.none() });
+          const { transport, identityLayer } = labelled(appLabel);
           return GitHubApp.clientLayer({ appId, privateKey, installationId }, transport).pipe(
             Layer.catchTag("GitHubAppError", (error) =>
               Layer.effect(
@@ -390,7 +446,8 @@ export const layerGithubClientFor: {
                   identityError("app-token-failed", `could not mint a GitHub App installation token: ${error.message}`)
                 )
               )
-            )
+            ),
+            Layer.merge(identityLayer)
           );
         }
         const token =
@@ -401,9 +458,100 @@ export const layerGithubClientFor: {
                 "the GitHub token"
               )
             : yield* readSecretOutput("gh", ["auth", "token"], cwd, "token-unavailable", "a gh login token");
-        return GitHubClient.layerFromToken({ ...transport, token });
+        const tokenLabel = yield* resolveGithubIdentityLabel({ ...labelInput, token: O.some(token) });
+        const { transport, identityLayer } = labelled(tokenLabel);
+        return GitHubClient.layerFromToken({ ...transport, token }).pipe(Layer.merge(identityLayer));
       })
-    )
+    ).pipe(Layer.provide(Digest.layerWebCrypto))
+);
+
+/**
+ * Convert a configured identity to the selected-identity shape the client seam takes.
+ *
+ * **Example** (Convert a gh entry)
+ *
+ * ```ts
+ * import { ConfiguredGithubIdentity, toGithubIdentity } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * console.log(toGithubIdentity(ConfiguredGithubIdentity.cases.GhCli.make({})).kind) // "gh-cli"
+ * ```
+ *
+ * @param entry - A configured identity.
+ * @returns The equivalent selected identity.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const toGithubIdentity = (entry: ConfiguredGithubIdentity): GithubIdentity =>
+  ConfiguredGithubIdentity.match(entry, {
+    GhCli: () =>
+      GithubIdentity.make({
+        kind: "gh-cli",
+        tokenRef: O.none(),
+        appId: O.none(),
+        installationId: O.none(),
+        privateKeyRef: O.none(),
+      }),
+    OpRef: ({ tokenRef }) =>
+      GithubIdentity.make({
+        kind: "op-ref",
+        tokenRef: O.some(tokenRef),
+        appId: O.none(),
+        installationId: O.none(),
+        privateKeyRef: O.none(),
+      }),
+    GithubApp: ({ appId, installationId, privateKeyRef }) =>
+      GithubIdentity.make({
+        kind: "github-app",
+        tokenRef: O.none(),
+        appId: O.some(appId),
+        installationId: O.some(installationId),
+        privateKeyRef: O.some(privateKeyRef),
+      }),
+  });
+
+/**
+ * Convert a selected identity to its configured form. An `op-ref` needs a
+ * login, which a selected identity does not carry, so it converts only when
+ * one is given; an incomplete App converts to none.
+ *
+ * **Example** (Convert the gh identity)
+ *
+ * ```ts
+ * import { GithubIdentity, fromGithubIdentity } from "@beep/repo-cli/test/SharedInternals"
+ * import * as O from "effect/Option"
+ *
+ * const identity = GithubIdentity.make({ kind: "gh-cli", tokenRef: O.none(), appId: O.none(), installationId: O.none(), privateKeyRef: O.none() })
+ * console.log(O.map(fromGithubIdentity(identity, O.none()), (entry) => entry._tag)) // { _id: "Option", _tag: "Some", value: "GhCli" }
+ * ```
+ *
+ * @param identity - A selected identity.
+ * @param login - The login an `op-ref` token belongs to, when known.
+ * @returns The configured form, or none.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const fromGithubIdentity: {
+  (login: O.Option<string>): (identity: GithubIdentity) => O.Option<ConfiguredGithubIdentity>;
+  (identity: GithubIdentity, login: O.Option<string>): O.Option<ConfiguredGithubIdentity>;
+} = dual(
+  2,
+  (identity: GithubIdentity, login: O.Option<string>): O.Option<ConfiguredGithubIdentity> =>
+    GithubIdentityKind.match(identity.kind, {
+      "gh-cli": () => O.some(ConfiguredGithubIdentity.cases.GhCli.make({})),
+      "op-ref": () =>
+        O.flatMap(O.all({ tokenRef: identity.tokenRef, login }), (fields) =>
+          ConfiguredGithubIdentity.cases.OpRef.makeOption(fields)
+        ),
+      "github-app": () =>
+        O.flatMap(
+          O.all({
+            appId: identity.appId,
+            installationId: identity.installationId,
+            privateKeyRef: identity.privateKeyRef,
+          }),
+          (fields) => ConfiguredGithubIdentity.cases.GithubApp.makeOption(fields)
+        ),
+    })
 );
 
 const remotePattern =
