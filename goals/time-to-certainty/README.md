@@ -21,3 +21,9 @@ The KPI's formal definition and the eventual planner belong to the
 [beep-ci-operational-ontology](../../explorations/beep-ci-operational-ontology/README.md)
 exploration; this packet moves the operational proxies and feeds that packet's next corpus capture.
 Evidence and receipts live under [research/](research/).
+
+Re-homed 2026-11-09 (ruling D13 of
+[ten-minute-certainty](../../explorations/ten-minute-certainty/DECISIONS.md)): this packet stays paused.
+Its open seams, ProofLedger C4.2 enforcement, the WaveOrder re-seed and the gate-order fixtures, are owned
+by [local-proof-under-ten](../local-proof-under-ten/README.md), which carries rulings 76 to 83 as
+constraints and edits none of this packet's artifacts.

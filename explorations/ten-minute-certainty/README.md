@@ -3,8 +3,8 @@
 ## Status
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
-Stage: `decompose`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -22,12 +22,23 @@ through the existing QualityScheduler.
 
 ## Next Open Question
 
-Graduate in a follow-up PR (ruling D22): scaffold the six goal packets named in `MAP.md` from
-`goals/_template/` (SPEC seeded from `BRIEF.md`: no-gos to non-goals, rabbit holes to constraints; one
-decision file per relevant ruling through `bun run beep goals decisions add`; `research/SOURCES.md`
-carried over; manifests cross-linked), flip this packet to `graduated`, then open the three ready
-implementation PRs (ROUT-03, TURB-01, MEAS-01) from their goal lanes. Brief and map were approved on
-2026-11-09 (D20, D21); no open questions remain.
+None: the packet graduated on 2026-11-09 into six goals, and the work continues there.
+
+- [`goals/certainty-scorecard`](../../goals/certainty-scorecard/README.md) and
+  [`goals/route-soundness-repair`](../../goals/route-soundness-repair/README.md) go first and have no
+  upstream.
+- [`goals/main-verdict-every-commit`](../../goals/main-verdict-every-commit/README.md),
+  [`goals/heavy-pool-diet`](../../goals/heavy-pool-diet/README.md),
+  [`goals/hosted-setup-tax`](../../goals/hosted-setup-tax/README.md) and
+  [`goals/local-proof-under-ten`](../../goals/local-proof-under-ten/README.md) each name in their
+  `statusNote` what starts now and what waits on the first two.
+
+The three first PRs open from their goal lanes: ROUT-03 slice 1 (`route-soundness-repair`), TURB-01 slice 1
+(`hosted-setup-tax`) and MEAS-01 slice 1 with MEAS-04 (`certainty-scorecard`). D8's rollback clause is dated:
+if the ROUT-03 census PR has not landed by 2026-11-16, the #2999 widening is rolled back in full.
+
+This packet reopens at `decompose` when a gate in `MAP.md` (Gated candidates) fires. It also holds the
+seventeen backlog rows no goal owns.
 
 ## Read This First
 
@@ -36,12 +47,23 @@ implementation PRs (ROUT-03, TURB-01, MEAS-01) from their goal lanes. Brief and 
 3. [`RESEARCH.md`](./RESEARCH.md) - the in-repo inventory and constraints (stage 1).
 4. [`research/phase1/SURFACE-INVENTORY.md`](./research/phase1/SURFACE-INVENTORY.md) - the phase 1 surface map
    (12 areas, 147 components, 111 levers, 120 rejections on record, critic gaps, Astra diff).
-5. [`DECISIONS.md`](./DECISIONS.md) - the 22 rulings of 2026-11-09 (D1 to D22).
+5. [`DECISIONS.md`](./DECISIONS.md) - the operator's 22 rulings of 2026-11-09 (D1 to D22) and the six
+   graduation decisions the agent took (D23 to D28).
 6. [`BRIEF.md`](./BRIEF.md) - the shaped pitch (approved D20).
-7. [`MAP.md`](./MAP.md) - six goal packets, sequencing, first slice, capability check (approved D21).
+7. [`MAP.md`](./MAP.md) - six goal packets, sequencing, first slice, capability check (approved D21), the
+   state at graduation, backlog rows and gated candidates.
 8. [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger.
 
 ## Trail
+
+- 2026-11-09 (graduated): six goals scaffolded through `explore graduate` and authored from the brief, the
+  map and the rulings: `certainty-scorecard`, `route-soundness-repair`, `main-verdict-every-commit`,
+  `heavy-pool-diet`, `hosted-setup-tax`, `local-proof-under-ten`. Every lever was re-read from `main`
+  first: LINT-01, LINT-04 and ROUT-01 had landed, TEST-01, PERIL-03 and MEAS-03 in part (`MAP.md`, State at
+  graduation). Six agent decisions logged (D23 to D28): homes for COVE-08, COVE-04, PERIL-09 and TURB-10,
+  seventeen backlog rows, capability edges, landed levers and the Property Laws split, the monitor split
+  with the github-api-quota goals, and per-SHA main groups handed to the merge-queue packet after the
+  operator's `verdict-placement` ruling there. Retained whole until the six goals close.
 
 - 2026-11-09 (shape and decompose): BRIEF.md and MAP.md approved as drafted (D20, D21); landing ruled
   as exploration first, graduation in a follow-up PR (D22). Stage `decompose`; graduation pending.
