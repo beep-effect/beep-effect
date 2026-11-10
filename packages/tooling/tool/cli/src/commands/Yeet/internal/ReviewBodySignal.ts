@@ -920,8 +920,10 @@ const itemHasThread = (item: YeetReviewBodyItem, threads: ReadonlyArray<YeetRevi
  *
  * **Details**
  *
- * A finding matches a thread at the same path, and at the same line when both
- * sides know one. Only a CodeRabbit body lists locations; every other signal
+ * A finding matches a thread at the same path whose `startLine..line` range
+ * overlaps the finding's `line..endLine` range. A side with no start or end
+ * counts as its single line, and when either side has no line at all the path
+ * alone decides. Only a CodeRabbit body lists locations; every other signal
  * has none.
  *
  * **Example** (A threaded finding is dropped)
@@ -998,9 +1000,9 @@ const coderabbitAdvisoryCount = (
  *
  * A CodeRabbit finding that also opened an inline review thread is already on
  * the operator's worklist, so it is not counted twice: only body findings with
- * no thread at the same path — and the same line, when both are known — are
- * advisories, alongside the nitpick, outside-diff and minor counts the body
- * summarises. A finding the fix prompt lists under one of those body-only
+ * no thread at the same path whose line range overlaps the finding's (the path
+ * alone decides when either side has no line) are advisories, alongside the
+ * nitpick, outside-diff and minor counts the body summarises. A finding the fix prompt lists under one of those body-only
  * sections is the same finding its count summarises, so the two readings are
  * not added: the larger one stands. A Greptile-format body contributes its new
  * findings at every severity. A plain body contributes nothing. A CodeRabbit
