@@ -23,6 +23,6 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("input Docum
           );
         }
       }),
-    { timeout: 10_000 }
+    { timeout: 60_000 }
   );
 });

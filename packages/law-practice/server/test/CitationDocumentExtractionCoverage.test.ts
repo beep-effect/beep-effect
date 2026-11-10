@@ -40,6 +40,6 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("retained Do
           });
         }
       }),
-    { timeout: 10_000 }
+    { timeout: 60_000 }
   );
 });

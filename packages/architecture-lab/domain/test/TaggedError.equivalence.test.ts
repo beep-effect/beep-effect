@@ -34,7 +34,7 @@ describe("architecture-lab-domain tagged-error declared equivalence", () => {
     expectDeclaredEquivalence(
       WorkItemInvalidTransition,
       WorkItemInvalidTransition.make({ workItemId, from: "open", to: "assigned" }),
-      WorkItemInvalidTransition.make({ workItemId, from: "open", to: "assigned" }),
+      WorkItemInvalidTransition.fromStatus({ workItemId, from: "open", to: "assigned" }),
       WorkItemInvalidTransition.make({ workItemId, from: "assigned", to: "completed" })
     );
     expectDeclaredEquivalence(
