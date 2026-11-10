@@ -19,7 +19,25 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "All fifteen source acceptances have source-bound receipts and merged implementations. Final reconciliation and reflection must pass Yeet final-check and the fleet orchestrator thread/window/conflict gate. After merge, completion refresh verifies the accepted head; a subsequent packet-state PR adopts completed-retained. Current effect-vitest drift is explicitly owned by the orchestrator and is not represented as current zero.",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 3073,
+        "role": "final"
+      }
+    ],
+    "acceptanceEvidence": [
+      {
+        "kind": "hosted-required-checks",
+        "ref": "required",
+        "gating": true
+      },
+      {
+        "kind": "yeet-verdict",
+        "ref": ".beep/yeet/runs/docs_residue-closeout-3542e74b5bef/verdict.json",
+        "gating": true
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -177,5 +195,9 @@
       "status": "complete"
     }
   ],
-  "statusNote": "All fifteen historical source acceptances reconciled on 2026-11-10 at 6d47006fa1; all source issues closed, canon verified completed-retained via #2586. Current scan: 533 rows, 15 open, 518 exceptions; 59 reasons lack literal Owner/Exit. Fleet orchestrator owns one separate current-drift remediation lane, including the harness-ledger row already open at the canon merge. No current-zero claim. This docs lane adds no standards rows or coverage changes. Final PR publication/readiness and post-merge completion refresh remain; adopt completed-retained only in the subsequent packet-state PR."
+  "statusNote": "All fifteen historical source acceptances reconciled on 2026-11-10 at 6d47006fa1; all source issues closed, canon verified completed-retained via #2586. Current scan: 533 rows, 15 open, 518 exceptions; 59 reasons lack literal Owner/Exit. Fleet orchestrator owns one separate current-drift remediation lane, including the harness-ledger row already open at the canon merge. No current-zero claim. This docs lane adds no standards rows or coverage changes. Final PR publication/readiness and post-merge completion refresh remain; adopt completed-retained only in the subsequent packet-state PR. Proposed completed-retained via final PR #3073; completion refresh and packet-state adoption remain after merge.",
+  "proposedCloseout": {
+    "status": "completed-retained",
+    "finalPullRequest": 3073
+  }
 }

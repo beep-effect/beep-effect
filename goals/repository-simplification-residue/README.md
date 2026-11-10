@@ -16,8 +16,7 @@ harness-ledger row already open in #2586's merge tree. This closeout distinguish
 the accepted snapshot from current drift and claims no current-zero inventory.
 
 P0 research, P1 implementation and P2 acceptance reconciliation are complete.
-P3 publication/readiness and P4 lifecycle closeout are in progress. The final
-work PR carries the validated reflection and a proposed `completed-retained`
+P3 publication/readiness and P4 lifecycle closeout are in progress. [Final work PR #3073](https://github.com/beep-effect/beep-effect/pull/3073) carries the validated reflection and a proposed `completed-retained`
 closeout. Current AGENTS requires completion refresh after its merge, followed
 by a separate packet-state PR adopting the verified status. The lifecycle stays
 active until that adoption merges.
