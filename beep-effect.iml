@@ -292,6 +292,8 @@
       <excludeFolder url="file://$MODULE_DIR$/explorations/t3code-fleet-driver" />
       <excludeFolder url="file://$MODULE_DIR$/goals/agent-observability-foundation" />
       <excludeFolder url="file://$MODULE_DIR$/goals/party-slice" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/catalog-writer-incremental" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/fleet-root-registry" />
       <excludePattern pattern=".beep" />
       <excludePattern pattern=".next" />
       <excludePattern pattern=".turbo" />
