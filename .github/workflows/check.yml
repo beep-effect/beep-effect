@@ -97,8 +97,9 @@ jobs:
       docs_only: ${{ steps.decide.outputs.docs_only || steps.docs.outputs.docs_only }}
       route_skips: ${{ steps.decide.outputs.route_skips }}
       route_receipt: ${{ steps.decide.outputs.route_receipt }}
-      legacy_coverage: ${{ steps.docs.outputs.verdict == 'skip-satisfied' && 'false' || steps.coverage-rollout.outputs.legacy_coverage }}
-      legacy_integration: ${{ steps.docs.outputs.verdict == 'skip-satisfied' && 'false' || steps.coverage-rollout.outputs.legacy_integration }}
+      # heavy.yml@main no longer declares Coverage Regression, so this is a
+      # constant until COVE-08 makes that job name a literal and deletes it.
+      legacy_coverage: 'false'
     steps:
       - name: Satisfy documentation-only admission
         id: docs
@@ -134,38 +135,6 @@ jobs:
         id: decide
         shell: bash
         run: bun run beep ci admission --github-output
-
-      # Inspect the reusable revision GitHub actually resolved for this run,
-      # rather than this PR's edited workflow or a moving main branch.
-      - name: Determine coverage rollout context
-        if: steps.docs.outputs.verdict != 'skip-satisfied'
-        id: coverage-rollout
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          heavy_sha="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
-            --jq '[.referenced_workflows[]? | select(.path == "beep-effect/beep-effect/.github/workflows/heavy.yml@main" and .ref == "refs/heads/main")] | if length == 1 then .[0].sha else error("Expected exactly one resolved trusted Heavy workflow") end')"
-          [[ "$heavy_sha" =~ ^[0-9a-f]{40}$ ]]
-          git fetch --quiet --no-tags origin "$heavy_sha"
-          heavy_file="${RUNNER_TEMP}/coverage-heavy-${GITHUB_RUN_ID}.yml"
-          git show "${heavy_sha}:.github/workflows/heavy.yml" > "$heavy_file"
-          bun --eval '
-            import { workflowJobContexts } from "@beep/repo-cli/commands/Ci";
-            import * as A from "effect/Array";
-            import * as Effect from "effect/Effect";
-            await Effect.promise(() => Bun.file(Bun.argv[1]).text()).pipe(
-              Effect.flatMap((text) => workflowJobContexts("heavy.yml", text)),
-              Effect.tap((contexts) =>
-                Effect.sync(() => {
-                  console.log(`legacy_coverage=${A.contains(contexts, "Heavy / Coverage Regression")}`);
-                  console.log(`legacy_integration=${A.contains(contexts, "Heavy / Test Integration")}`);
-                })
-              ),
-              Effect.runPromise
-            );
-          ' "$heavy_file" >> "$GITHUB_OUTPUT"
 
       # A push after the label admits the new head here, while the previous
       # head's label-triggered `Heavy Admit` matrix may still be queued or
@@ -1121,16 +1090,13 @@ jobs:
             infra/r2-cache/adapter.sh stop-ci
           fi
 
-  # Reports the required context the heavy pool used to own. While the
-  # resolved heavy.yml@main still declares its Test Integration job, this
-  # aggregate takes a migration name so one run never carries two check runs
-  # under one context; once that job is gone it becomes the exact required
-  # context without a ruleset edit. It fails on any partition failure,
-  # cancellation or skip, and on an admission, plan or classification failure.
+  # Reports the required context the heavy pool used to own. It fails on any
+  # partition failure, cancellation or skip, and on an admission, plan or
+  # classification failure.
   # The plan always allocates `int-rest`, so outside a documentation-only diff
   # an empty plan is a failure, never a skip.
   test-integration:
-    name: ${{ needs.admission.outputs.legacy_integration == 'true' && 'Test Integration Partitions' || 'Heavy / Test Integration' }}
+    name: Heavy / Test Integration
     timeout-minutes: 5
     needs: [admission, change-profile, test-plan, test-integration-shard]
     if: ${{ !cancelled() }}
@@ -1188,11 +1154,9 @@ jobs:
         env:
           ADMISSION_RESULT: ${{ needs.admission.result }}
           UNIT_RESULT: ${{ needs.test-unit.result }}
-          LEGACY_COVERAGE: ${{ needs.admission.outputs.legacy_coverage }}
         run: |
           set -euo pipefail
           [[ "$ADMISSION_RESULT" == "success" ]]
-          [[ "$LEGACY_COVERAGE" == "true" || "$LEGACY_COVERAGE" == "false" ]]
           [[ "$UNIT_RESULT" == "success" ]]
           eval "$(beep ci change-profile)"
           echo "should_run=$([[ "$docs_only" == "true" ]] && echo false || echo true)" >> "$GITHUB_OUTPUT"

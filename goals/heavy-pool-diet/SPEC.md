@@ -68,13 +68,14 @@ Higher sources outrank lower sources when they conflict.
 
 - `packages/tooling/tool/cli` (`@beep/repo-cli`):
   - `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts`: the hosted Lint Policy plan.
-    `policyStateTasks` (lines 3701 to 3711) still carries `jsdoc:inventory:check` and `jsdoc:ratchet:check`, and
-    `policyCachedStateTasks` (line 3720) carries them into the changed-scope medium graph (LINT-05). The
-    knowledge doctor is its own stage at lines 3887 and 3967 on main (LINT-02 slice 1, carried by open #3041).
-    The changed-scope state width is the fixed `POLICY_UNSCOPED_STATE_WIDTH = 1` at line 3724, with the medium
-    width `policyLint - 1` at line 3956 (LINT-02 slice 2). `lint:shadcn` is at line 3706 (PERIH-02's), and
-    #3039 added `lint:private-home-paths` to `policyTrackedDiscoveryTasks` (line 3692), which the state list
-    spreads.
+    `policyStateTasks` (lines 3705 to 3714) still carries `jsdoc:inventory:check` and `jsdoc:ratchet:check`
+    (lines 3711 and 3712), and `policyCachedStateTasks` (line 3723) carries them into the changed-scope medium
+    graph (LINT-05). #3041 (merged as e8c9a47971b) runs the knowledge doctor abreast of the medium graph in both
+    scopes (`knowledgeDoctorPolicySteps`, line 3831, spread at lines 3900 and 3980; LINT-02 slice 1). The
+    changed-scope state width is the fixed `POLICY_UNSCOPED_STATE_WIDTH = 1` at line 3727, with the medium
+    width `policyLint - 1` at line 3970 (LINT-02 slice 2). `lint:shadcn` is at line 3709 (PERIH-02's), and
+    #3039 added `lint:private-home-paths` (line 3693) to `policyTrackedDiscoveryTasks` (line 3688), which the
+    state list spreads.
   - `packages/tooling/tool/cli/src/commands/Quality/internal/LintPolicyScope.ts`: changed-scope widening
     classes and the Turbo target probe; read by the plan-shape tests, changed only if a slice needs it.
   - `packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts`: the inventory
@@ -91,18 +92,18 @@ Higher sources outrank lower sources when they conflict.
     readings before the scorecard reports.
   - Tests under `packages/tooling/tool/cli/test`: `quality-tasks.test.ts`, `lint-policy-scope.test.ts`,
     `ci-heavy-admission.test.ts`, `ci-binary-commands.test.ts`, `ci-docs-job-admission.test.ts`,
-    `ci-lane.test.ts` (asserts the Test Integration name conditional), `ci-runner-security.test.ts` (asserts
-    both legacy outputs), `ci-lane-timings.test.ts`.
+    `ci-lane.test.ts` (asserts the literal Test Integration name), `ci-runner-security.test.ts` (asserts the
+    probe is gone and `legacy_coverage` is 'false'), `ci-lane-timings.test.ts`.
 - `packages/tooling/library/repo-cli-kit/src/tsmorph/ProjectFactory.ts`: the `compilerOptions` parameter #3019
   added; reused, not changed.
-- `.github/workflows/check.yml`: the Heavy Admission job (`admission`, line 87) with its workspace install
-  (`Setup monorepo CI`, line 126), its `bun run beep ci admission` step (line 136) and the coverage-rollout probe
-  (`Determine coverage rollout context`, line 140); the probe's outputs `legacy_coverage` and
-  `legacy_integration` (lines 100 and 101) and their consumers on this goal's side, the `test-integration` job's
-  name conditional on `legacy_integration` (line 1133) and the `coverage-regression` job's `LEGACY_COVERAGE` env
-  line (line 1191) and assertion (line 1195); the `heavy.yml@main` call (line 214); the JSDoc Ratchet job
-  (line 1705). The `coverage-regression` job's name conditional on `legacy_coverage` (line 1160) is not this
-  goal's surface: COVE-08 (`route-soundness-repair`) owns it.
+- `.github/workflows/check.yml`: the Heavy Admission job (`admission`, line 86) with its workspace install
+  (`Setup monorepo CI`, line 127) and its `bun run beep ci admission` step (line 137); the `heavy.yml@main` call
+  (line 183); the JSDoc Ratchet job (line 1679). PERIH-01 slice 1 deleted the coverage-rollout probe, the
+  `legacy_integration` output, the `test-integration` job's name conditional (now the literal
+  `Heavy / Test Integration`, line 1099) and the `coverage-regression` job's `LEGACY_COVERAGE` env line and
+  assertion; `legacy_coverage` is the literal `'false'` (line 102) until COVE-08 deletes it. The
+  `coverage-regression` job's name conditional on `legacy_coverage` (line 1126) is not this goal's surface:
+  COVE-08 (`route-soundness-repair`) owns it.
 - `.github/workflows/heavy-admit.yml`: runs the same admission job when the `ready-for-heavy` label lands; it
   switches to the binary with `check.yml`.
 - `.github/workflows/heavy.yml`: the Lint Policy job (`verify`, lines 102 to 107, `runs-on: beep-ec2-heavy`) and
@@ -127,13 +128,13 @@ and the open PR heads named.
 | Lever | What | Status | Admission gate before landing | Depends on |
 | --- | --- | --- | --- | --- |
 | LINT-01 | JSDoc inventory programs built with `noResolve` | Landed, #3019 (027664ba178): `JSDocDocumentationInventory.ts:1342`. Existing fixtures in `jsdoc-inventory-detector-fixes.test.ts`: star export (lines 388, 1084), local named re-export (line 842), overload groups (lines 643, 700, 762). Residual: merged-namespace and module-augmentation fixtures, a noResolve parity assertion over the existing three, one hosted JSDoc Ratchet timing, scorecard reading. | Inventory jsonc and md byte-identical minus `generatedAt` across 194 packages; fixtures for a local re-export, a star export, a merged namespace, an overload and a module augmentation of an imported package (three exist; the gate is unpaid for the other two and for parity); one hosted JSDoc Ratchet timing. | none |
-| LINT-05 | Drop the duplicate JSDoc inventory and ratchet from the hosted Lint Policy plan | Open: `Tasks.ts:3708-3709` and `:3720`. Not in #3041. | A plan test shows the hosted plan omits both tasks only while JSDoc Ratchet is a required context; on a seeded-red draft PR, JSDoc Ratchet fails and the Lint Policy log shows neither task. | LINT-01; #3041 merged (same task lists) |
-| LINT-02 | Knowledge doctor abreast of medium; changed-scope state width derived from the remaining slots | Slice 1 carried by open #3041 (not landed). Slice 2 open: `Tasks.ts:3724`, `:3956`. | Plan-shape test: doctor present in both scopes with unchanged argv, summed width at most `policyLint`, medium at least 2 for every profile; a red doctor fails the lane; hosted A/B of at least 10 runs per arm with p50 and p95 each at least 90 s better and memory.peak under 24 GB. | LINT-01, LINT-05 |
+| LINT-05 | Drop the duplicate JSDoc inventory and ratchet from the hosted Lint Policy plan | Open: `Tasks.ts:3711-3712` and `:3723`. Not in #3041. | A plan test shows the hosted plan omits both tasks only while JSDoc Ratchet is a required context; on a seeded-red draft PR, JSDoc Ratchet fails and the Lint Policy log shows neither task. | LINT-01; #3041 merged (same task lists) |
+| LINT-02 | Knowledge doctor abreast of medium; changed-scope state width derived from the remaining slots | Slice 1 landed in #3041 (e8c9a47971b); its hosted A/B is unpaid. Slice 2 open: `Tasks.ts:3727`, `:3970`. | Plan-shape test: doctor present in both scopes with unchanged argv, summed width at most `policyLint`, medium at least 2 for every profile; a red doctor fails the lane; hosted A/B of at least 10 runs per arm with p50 and p95 each at least 90 s better and memory.peak under 24 GB. | LINT-01, LINT-05 |
 | LINT-04 | PR C checker algorithms: P55, S4, P12/P11, P28, S2 | Landed, #3019 (027664ba178), all five families. Residual: the unpaid per-family gate items (S2 prefilter generated from the retired-host rows (#3019 ships a hand-written regex); P55 planted fixtures; S4 findings diff; P12/P11 814-assertion digest, diagnostics sha 44b7c59c9033de74 and aliased-assertion fixture; P28 census and WORKSPACE_MANIFEST_WALK re-key probe) and the scorecard reading. | Those per-family items (the #3019 commit message asserts byte-for-byte output but records none of them); per-file coverage floors hold. | LINT-01, LINT-05 (credit order only) |
 | ORDER (D11) | Required heavy lanes (Check, Docgen, Doctest) first; Lint Policy `needs:` them with `if: !cancelled()` | Open: `heavy.yml` has no `needs:` on `verify`. | On the same heads, push-to-start of Check, Docgen and Doctest on the cap-2 pool is no slower and Lint Policy still runs and reports when Check is red; two-PR `heavy.yml@main` rollout. | none |
 | HOST-06 | Route skips, goals-only and Docgen decisions hoisted to job-level `if` before Spot boot | Open: decided in the lane-gate step, `heavy.yml:137` onward. | Route replay plus mutation fixtures (docs, goals, no-diff, unreadable base); hosted ruleset parity ledger (every required `Heavy / *` context still reports); two-PR `heavy.yml@main` rollout. | none (decision outputs computed in Heavy Admission) |
 | PERIH-11 | Closure-digest binary releases and reviewed pin-bump PRs (merges PERIH-08) | Open: `beep-ci-binary.yml:11-22` path trigger, pin at `.github/actions/fetch-beep-ci/action.yml` line 20 unchanged since #2906. | Closure mutation fixtures; the pin-bump PR proves itself through its own Check. | none |
-| PERIH-01 | Heavy Admission from the pinned CI binary with a closure-digest fallback; delete the dead coverage-rollout probe (absorbs DEPS-02 admission half) | Open: `check.yml:126` installs, admission not in `ciBootstrapCommands`; probe at `check.yml:140` is dead (no `Heavy / Coverage Regression` or `Heavy / Test Integration` job in `heavy.yml`). | Replay of recorded events (draft, label, fork, docs, push, error) through binary and source gives byte-identical `verdict`, `route_skips` and `route_receipt`; a closure-digest mismatch fixture forces the head-install fallback; slice 1 removes the probe, the `legacy_integration` output and its Test Integration name conditional, and the `LEGACY_COVERAGE` env line and assertion together, and sets `legacy_coverage` to 'false' if it lands before COVE-08 (COVE-08 then deletes it) or removes it outright if COVE-08 landed first. | PERIH-11, PERIH-10 (route-soundness-repair); slice 1 coordinates with COVE-08 |
+| PERIH-01 | Heavy Admission from the pinned CI binary with a closure-digest fallback; delete the dead coverage-rollout probe (absorbs DEPS-02 admission half) | Slice 1 (probe deletion) landed before COVE-08: probe, `legacy_integration`, the Test Integration name conditional and the LEGACY_COVERAGE env line and assertion removed; `legacy_coverage` set to 'false' for COVE-08 to delete. Open: `check.yml:127` installs, admission not in `ciBootstrapCommands`. | Replay of recorded events (draft, label, fork, docs, push, error) through binary and source gives byte-identical `verdict`, `route_skips` and `route_receipt`; a closure-digest mismatch fixture forces the head-install fallback; slice 1 removes the probe, the `legacy_integration` output and its Test Integration name conditional, and the `LEGACY_COVERAGE` env line and assertion together, and sets `legacy_coverage` to 'false' if it lands before COVE-08 (COVE-08 then deletes it) or removes it outright if COVE-08 landed first. | PERIH-11, PERIH-10 (route-soundness-repair); slice 1 coordinates with COVE-08 |
 | HOST-08 | Queue-aware Test Unit leg-width A/B | Open; the Test Unit layout changed again in #3043 and #3046, so it is not yet at steady state. | Hosted A/B: push-to-Test-Unit p95 at most 9.5 min per run from lane timings, runner-minutes beside it, no queued-job growth at the ceiling. | MEAS-04 (certainty-scorecard), Test Unit steady state; ROUT-01 already met (landed in #3030; hosted-setup-tax) |
 
 ## Constraints
@@ -181,8 +182,8 @@ and the open PR heads named.
   candidate in `explorations/github-merge-queue`: `merge-group-parity` waits on this goal,
   route-soundness-repair and hosted-setup-tax merging, and `merge-queue-activation` waits on
   `merge-group-parity`; job-removing levers land first because a merge-group run adds the most jobs.
-- **Shared file with open #3041:** LINT-05 and LINT-02 slice 2 start after #3041 merges; this goal opens no
-  competing doctor-placement PR.
+- **Shared file with #3041:** #3041 merged (e8c9a47971b), so LINT-05 and LINT-02 slice 2 can start; this goal
+  opens no competing doctor-placement PR.
 - **Job ceiling (PLAN, "Conflicts"):** HOST-08 is the only lever here that may add legs. It lands after the
   job-removing levers and inside the unverified ~60 concurrent hosted job ceiling, and only once the Test Unit
   layout owned by `ci-lane-economics` is at steady state.

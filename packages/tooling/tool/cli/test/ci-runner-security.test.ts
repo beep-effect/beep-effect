@@ -2857,88 +2857,26 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     );
   }
 
-  it.effect("binds coverage rollout naming to GitHub's resolved reusable SHA and fails closed", () =>
+  it.effect("reports Heavy coverage and integration contexts without a resolved reusable workflow probe", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* findRepoRoot();
-      const readFileString35 = yield* fs.readFileString(path.join(root, ".github/workflows/check.yml"));
-      const workflow = parseWorkflowYaml(readFileString35);
+      const text = yield* fs.readFileString(path.join(root, ".github/workflows/check.yml"));
+      const workflow = parseWorkflowYaml(text);
       const jobs = yield* workflowJobs(workflow);
-      const rollout = stepByName(jobSteps(jobs, "admission"), "Determine coverage rollout context");
-      const script = rollout.run ?? "";
-      expect(script).toContain(".referenced_workflows[]?");
-      expect(script).toContain("length == 1");
-      expect(script).toContain('git show "${heavy_sha}:.github/workflows/heavy.yml"');
-      expect(script).not.toContain('git show "HEAD:');
-      const temp = yield* fs.makeTempDirectoryScoped();
-      const output = path.join(temp, "github-output");
-      const fixture = path.join(temp, "resolved-heavy.yml");
-      const calls = path.join(temp, "git-calls");
-      const sha = "8086a42233ab3eab7265c8deb7a6f3816686d445";
-      yield* fs.writeFileString(
-        path.join(temp, "gh"),
-        '#!/bin/bash\n[[ "${FAIL_API:-false}" != "true" ]] || exit 23\nprintf "%s\\n" "$RESOLVED_HEAVY_SHA"\n'
-      );
-      yield* fs.writeFileString(
-        path.join(temp, "git"),
-        '#!/bin/bash\nprintf "%s\\n" "$*" >> "$GIT_CALLS"\ncase "$1" in\n  fetch) exit 0 ;;\n  show) [[ "$2" == "$RESOLVED_HEAVY_SHA:.github/workflows/heavy.yml" ]] || exit 24; cat "$HEAVY_FIXTURE" ;;\n  *) exit 25 ;;\nesac\n'
-      );
-      yield* fs.chmod(path.join(temp, "gh"), 0o700);
-      yield* fs.chmod(path.join(temp, "git"), 0o700);
-      const ambientPath = yield* Config.String("PATH");
-      for (const legacy of [true, false]) {
-        yield* fs.writeFileString(
-          fixture,
-          legacy
-            ? "on: push\njobs:\n  verify:\n    name: ${{ matrix.name }}\n    strategy:\n      matrix:\n        include:\n          - id: coverage\n            name: Coverage Regression\n  test-integration:\n    name: Test Integration\n"
-            : "on: push\njobs:\n  verify:\n    name: Check\n"
-        );
-        yield* fs.writeFileString(output, "");
-        const result = Bun.spawnSync(["bash", "-c", script], {
-          cwd: root,
-          env: {
-            ...process.env,
-            PATH: `${temp}:${ambientPath}`,
-            RUNNER_TEMP: temp,
-            GITHUB_OUTPUT: output,
-            GITHUB_RUN_ID: "1",
-            GITHUB_REPOSITORY: "beep-effect/beep-effect",
-            RESOLVED_HEAVY_SHA: sha,
-            HEAVY_FIXTURE: fixture,
-            GIT_CALLS: calls,
-          },
-          stdout: "pipe",
-          stderr: "pipe",
-        });
-        expect(result.stderr.toString()).toBe("");
-        expect(result.exitCode).toBe(0);
-        const readFileString36 = yield* fs.readFileString(output);
-        expect(readFileString36).toBe(`legacy_coverage=${legacy}\nlegacy_integration=${legacy}\n`);
-      }
-      yield* fs.writeFileString(output, "");
-      const failed = Bun.spawnSync(["bash", "-c", script], {
-        cwd: root,
-        env: {
-          ...process.env,
-          PATH: `${temp}:${ambientPath}`,
-          RUNNER_TEMP: temp,
-          GITHUB_OUTPUT: output,
-          GITHUB_RUN_ID: "1",
-          GITHUB_REPOSITORY: "beep-effect/beep-effect",
-          RESOLVED_HEAVY_SHA: sha,
-          HEAVY_FIXTURE: fixture,
-          GIT_CALLS: calls,
-          FAIL_API: "true",
-        },
-        stdout: "pipe",
-        stderr: "pipe",
-      });
-      expect(failed.exitCode).toBe(23);
-      const readFileString37 = yield* fs.readFileString(output);
-      expect(readFileString37).toBe("");
-      const readFileString38 = yield* fs.readFileString(calls);
-      expect(readFileString38).toContain(`show ${sha}:.github/workflows/heavy.yml`);
+      // heavy.yml@main declares neither context any more, so admission no longer
+      // reads the resolved reusable revision to choose a migration name.
+      const admission = jobSteps(jobs, "admission");
+      expect(A.some(admission, (step) => step.name === "Determine coverage rollout context")).toBe(false);
+      expect(text).not.toContain("steps.coverage-rollout");
+      expect(text).not.toContain(".referenced_workflows[]?");
+      expect(text).not.toContain("legacy_integration");
+      expect(yamlAt(workflow, ["jobs", "admission", "outputs", "legacy_coverage"])).toBe("false");
+      expect(yamlAt(workflow, ["jobs", "test-integration", "name"])).toBe("Heavy / Test Integration");
+      const laneGate = stepByName(jobSteps(jobs, "coverage-regression"), "Determine comparison execution");
+      expect(laneGate.env).not.toHaveProperty("LEGACY_COVERAGE");
+      expect(laneGate.run ?? "").not.toContain("LEGACY_COVERAGE");
     })
   );
   it.effect("executes local and signed pilots with the private activation creation mask", () =>
