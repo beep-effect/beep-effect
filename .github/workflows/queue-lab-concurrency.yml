@@ -1,0 +1,31 @@
+# Queue Lab shared concurrency probe (goals/merge-queue-lab, observation 8d).
+#
+# Every merge-group run joins one workflow `concurrency` group. With build
+# concurrency above one, a later entry's run waits behind the running one and
+# replaces any earlier pending run; the lab records what the queue does with
+# the entry whose run was replaced. Reports `queue-lab-shared`, required only
+# while the probe runs.
+name: Queue Lab Concurrency
+
+on:
+  pull_request:
+    branches: [queue-lab]
+  merge_group:
+    branches: [queue-lab]
+
+concurrency:
+  group: queue-lab-shared-${{ github.event_name }}
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  shared:
+    name: queue-lab-shared
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Hold the group
+        run: |
+          echo "event=$GITHUB_EVENT_NAME ref=$GITHUB_REF sha=$GITHUB_SHA"
+          if [ "$GITHUB_EVENT_NAME" = merge_group ]; then sleep 120; fi

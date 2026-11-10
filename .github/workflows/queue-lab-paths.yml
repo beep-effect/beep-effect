@@ -1,0 +1,25 @@
+# Queue Lab path-filter probe (goals/merge-queue-lab, observation 4f).
+#
+# The pull_request trigger is path-filtered to a directory no synthetic entry
+# touches, so on a pull request the workflow is skipped as a whole. The
+# merge_group trigger accepts no path filter. Reports `queue-lab-paths`,
+# required only while the probe runs.
+name: Queue Lab Paths
+
+on:
+  pull_request:
+    branches: [queue-lab]
+    paths: [".queue-lab/never/**"]
+  merge_group:
+    branches: [queue-lab]
+
+permissions: {}
+
+jobs:
+  paths:
+    name: queue-lab-paths
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Report
+        run: echo "event=$GITHUB_EVENT_NAME ref=$GITHUB_REF sha=$GITHUB_SHA"
