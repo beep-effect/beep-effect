@@ -115,6 +115,24 @@ jobs:
             *) echo "unknown mode"; exit 1 ;;
           esac
 
+  self-enqueue:
+    name: queue-lab-self-enqueue
+    needs: [resolve, gate]
+    if: "github.event_name == 'pull_request' && contains(github.event.pull_request.body, 'queue-lab-self-enqueue: yes')"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Enqueue this pull request with GITHUB_TOKEN (observation 10c)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_ID: ${{ github.event.pull_request.node_id }}
+          PR_OID: ${{ github.event.pull_request.head.sha }}
+        run: |
+          gh api graphql -F id="$PR_ID" -F oid="$PR_OID" -f query='mutation($id:ID!,$oid:GitObjectID){ enqueuePullRequest(input:{pullRequestId:$id, expectedHeadOid:$oid}){ mergeQueueEntry{ state position enqueuer{login} } } }' || true
+
   token-probe:
     name: queue-lab-token-probe
     needs: resolve
