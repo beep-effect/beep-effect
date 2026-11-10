@@ -842,7 +842,10 @@ const program = Effect.gen(function* () {
       old: oldExecuteMergeGate(context, OldMergeGateMerge.make(decision)),
       new: executeMergeGate(MergeGateMerge.make({ ...decision, commitMessage: "" })),
       projectOld: (merged: { readonly mergeSha: string }) => merged.mergeSha,
-      projectNew: (merged: { readonly mergeSha: string }) => merged.mergeSha,
+      // Since the async merge port (goals/yeet-async-merge-and-stacks, slice A) a refusal GitHub
+      // reports after acceptance is a hold, not a merge.
+      projectNew: (merged: { readonly mergeSha: string } | { readonly reason: string }) =>
+        "mergeSha" in merged ? merged.mergeSha : `hold ${merged.reason}`,
       ...(classified === undefined ? {} : { classified }),
     });
   }
