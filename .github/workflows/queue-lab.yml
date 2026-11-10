@@ -1,0 +1,152 @@
+# Queue Lab: the toy required check for goals/merge-queue-lab.
+#
+# Lives on the `queue-lab` branch only, never on `main`. It reports one
+# required context, `queue-lab-gate`, on `pull_request` and `merge_group`
+# for pull requests that target `queue-lab`, and records the event shape,
+# secret presence (never values) and token scope a merge-group run gets.
+#
+# Mode: a synthetic pull request's body carries `queue-lab-pr: <mode>` (its
+# pull-request run) and `queue-lab-mg: <mode>` (its merge-group run), where
+# <mode> is pass, fail, skip, cancel or hang. The mode is read at run time,
+# so editing the body and re-running a job changes the outcome.
+name: Queue Lab
+
+on:
+  pull_request:
+    branches: [queue-lab]
+  merge_group:
+    branches: [queue-lab]
+  push:
+    branches: [queue-lab]
+
+permissions:
+  contents: read
+  pull-requests: read
+  actions: write
+
+jobs:
+  resolve:
+    name: queue-lab-resolve
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      mode: ${{ steps.mode.outputs.mode }}
+      pr: ${{ steps.mode.outputs.pr }}
+    steps:
+      - name: Record the event shape
+        env:
+          MG_HEAD_SHA: ${{ github.event.merge_group.head_sha }}
+          MG_HEAD_REF: ${{ github.event.merge_group.head_ref }}
+          MG_BASE_SHA: ${{ github.event.merge_group.base_sha }}
+          MG_BASE_REF: ${{ github.event.merge_group.base_ref }}
+          CTX_HEAD_REF: ${{ github.head_ref }}
+          CTX_BASE_REF: ${{ github.base_ref }}
+        run: |
+          echo "event=$GITHUB_EVENT_NAME action=$(jq -r '.action // ""' "$GITHUB_EVENT_PATH")"
+          echo "GITHUB_REF=$GITHUB_REF"
+          echo "GITHUB_SHA=$GITHUB_SHA"
+          echo "github.head_ref=[$CTX_HEAD_REF] github.base_ref=[$CTX_BASE_REF]"
+          echo "payload keys: $(jq -c 'keys' "$GITHUB_EVENT_PATH")"
+          if [ "$GITHUB_EVENT_NAME" = merge_group ]; then
+            echo "merge_group keys: $(jq -c '.merge_group | keys' "$GITHUB_EVENT_PATH")"
+            echo "merge_group.head_commit keys: $(jq -c '.merge_group.head_commit | keys' "$GITHUB_EVENT_PATH")"
+            echo "head_sha=$MG_HEAD_SHA head_ref=$MG_HEAD_REF"
+            echo "base_sha=$MG_BASE_SHA base_ref=$MG_BASE_REF"
+            echo "head_commit.message<<"
+            jq -r '.merge_group.head_commit.message' "$GITHUB_EVENT_PATH"
+            echo ">>"
+          fi
+      - name: Record secret presence
+        env:
+          TURBO_READ_TOKEN: ${{ secrets.TURBO_READ_TOKEN }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          KNOWLEDGE_MINT_APP_PRIVATE_KEY: ${{ secrets.KNOWLEDGE_MINT_APP_PRIVATE_KEY }}
+        run: |
+          for name in TURBO_READ_TOKEN VERCEL_TOKEN KNOWLEDGE_MINT_APP_PRIVATE_KEY; do
+            if [ -n "${!name}" ]; then echo "secret $name=present"; else echo "secret $name=absent"; fi
+          done
+      - name: Resolve the mode
+        id: mode
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          MG_HEAD_REF: ${{ github.event.merge_group.head_ref }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = merge_group ]; then
+            key=queue-lab-mg
+            number=$(printf '%s' "$MG_HEAD_REF" | sed -n 's|.*/pr-\([0-9][0-9]*\)-.*|\1|p')
+          else
+            key=queue-lab-pr
+            number=$PR_NUMBER
+          fi
+          mode=pass
+          if [ -n "$number" ]; then
+            body=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$number" --jq '.body // ""')
+            found=$(printf '%s\n' "$body" | sed -n "s/^$key: *\([a-z]*\).*/\1/p" | head -n 1)
+            [ -n "$found" ] && mode=$found
+          else
+            echo "no pull request number found in the ref; defaulting to pass"
+          fi
+          echo "pr=$number key=$key mode=$mode"
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          echo "pr=$number" >> "$GITHUB_OUTPUT"
+
+  gate:
+    name: queue-lab-gate
+    needs: resolve
+    if: needs.resolve.outputs.mode != 'skip'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Act on the mode
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MODE: ${{ needs.resolve.outputs.mode }}
+        run: |
+          echo "mode=$MODE run=$GITHUB_RUN_ID attempt=$GITHUB_RUN_ATTEMPT sha=$GITHUB_SHA"
+          case "$MODE" in
+            pass) exit 0 ;;
+            fail) exit 1 ;;
+            hang) sleep 1500 ;;
+            cancel)
+              gh run cancel "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY"
+              sleep 300 ;;
+            *) echo "unknown mode"; exit 1 ;;
+          esac
+
+  token-probe:
+    name: queue-lab-token-probe
+    needs: resolve
+    if: github.event_name == 'merge_group'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Probe what the merge-group token may write
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ref="queue-lab-probe/run-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          code=$(gh api -X POST "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/heads/$ref" -f sha="$GITHUB_SHA" --silent -i 2>/dev/null | head -n 1)
+          echo "create ref: $code"
+          del=$(gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$ref" --silent -i 2>/dev/null | head -n 1)
+          echo "delete ref: $del"
+
+  called:
+    name: queue-lab-reusable
+    needs: resolve
+    uses: ./.github/workflows/queue-lab-called.yml
+
+  push-observer:
+    name: queue-lab-push
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Record the push
+        run: |
+          echo "GITHUB_REF=$GITHUB_REF GITHUB_SHA=$GITHUB_SHA"
+          jq -c '{before, after, created, forced, pusher: .pusher.name, sender: .sender.login, head_message: .head_commit.message}' "$GITHUB_EVENT_PATH"

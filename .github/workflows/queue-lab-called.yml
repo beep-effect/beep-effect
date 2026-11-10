@@ -1,0 +1,20 @@
+# Queue Lab reusable workflow (goals/merge-queue-lab, observation 8c).
+#
+# Declares only `workflow_call`: whether it runs on a merge group through its
+# caller alone, and which check name it reports, is what the lab observes.
+name: Queue Lab Called
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  inner:
+    name: inner
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Report the caller's event
+        run: echo "event=$GITHUB_EVENT_NAME ref=$GITHUB_REF sha=$GITHUB_SHA"
