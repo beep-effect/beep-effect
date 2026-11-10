@@ -169,7 +169,7 @@ describe("partition table shape", () => {
     expect(A.length(A.filter(unit, (partition) => A.contains(partition.packages, "@beep/law-practice-server")))).toBe(
       12
     );
-    expect(A.length(A.filter(sharded, (partition) => partition.lane === "test-integration"))).toBe(16);
+    expect(A.length(A.filter(sharded, (partition) => partition.lane === "test-integration"))).toBe(19);
     assertSome(
       O.map(
         A.findFirst(CI_LANE_PARTITIONS, (partition) => partition.id === "unit-g"),
