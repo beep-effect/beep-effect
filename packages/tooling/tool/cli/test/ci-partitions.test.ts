@@ -81,7 +81,7 @@ describe("hosted Test Unit log parsing", () => {
   });
 
   it("maps shard job names onto table partitions and ignores other jobs", () => {
-    assertSome(testUnitJobPartition("Test Unit (law-practice-12)"), "law-practice-12");
+    assertSome(testUnitJobPartition("Test Unit (law-practice-8)"), "law-practice-8");
     assertNone(testUnitJobPartition("Test Unit"));
     assertNone(testUnitJobPartition("Lint (lint-a)"));
     assertNone(testUnitJobPartition("Test Unit (law-practice-13)"));
@@ -165,9 +165,9 @@ describe("partition table shape", () => {
     // The Test Unit families own the `vitest.shards.json` plans; the Test Integration family shares
     // law-practice-server's package but runs the separate `vitest.integration.shards.json` plan.
     const unit = A.filter(sharded, (partition) => partition.lane === "test-unit");
-    expect(A.length(A.filter(unit, (partition) => A.contains(partition.packages, "@beep/repo-cli")))).toBe(11);
+    expect(A.length(A.filter(unit, (partition) => A.contains(partition.packages, "@beep/repo-cli")))).toBe(9);
     expect(A.length(A.filter(unit, (partition) => A.contains(partition.packages, "@beep/law-practice-server")))).toBe(
-      12
+      8
     );
     expect(A.length(A.filter(sharded, (partition) => partition.lane === "test-integration"))).toBe(19);
     assertSome(

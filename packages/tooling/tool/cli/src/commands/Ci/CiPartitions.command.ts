@@ -39,7 +39,6 @@ import { CiCommandError } from "./Ci.errors.ts";
 import { CI_LANE_PARTITIONS } from "./CiLanePartitions.ts";
 import {
   BuildVitestShardPlanOptions,
-  CI_SHARDED_PARTITION_FILE_BUDGET_SECONDS,
   CI_SHARDED_PARTITION_SOURCES,
   CI_UNIT_BIN_SERIAL_BUDGET_SECONDS,
   CI_UNIT_BIN_START_FIRST_SECONDS,
@@ -265,7 +264,8 @@ const formatSeconds = (seconds: number) => (Math.round(seconds * 10) / 10).toFix
 
 const shardedSourceRows = (
   plan: VitestShardPlan,
-  partitions: ReadonlyArray<CiLanePartition>
+  partitions: ReadonlyArray<CiLanePartition>,
+  budgetSeconds: number
 ): ReadonlyArray<CiPartitionBudgetRow> => {
   const stalePlan = A.length(plan.shards) !== A.length(partitions);
   return A.map(partitions, (partition, index) => {
@@ -273,7 +273,7 @@ const shardedSourceRows = (
     const estimatedSeconds = milliseconds / 1000;
     const status = stalePlan
       ? "stale-plan"
-      : estimatedSeconds > CI_SHARDED_PARTITION_FILE_BUDGET_SECONDS
+      : estimatedSeconds > budgetSeconds
         ? "over"
         : roundSeconds(milliseconds) !== partition.weightSeconds
           ? "stale-weight"
@@ -282,7 +282,7 @@ const shardedSourceRows = (
       partitionId: partition.id,
       estimatedSeconds,
       weightSeconds: partition.weightSeconds,
-      budgetSeconds: CI_SHARDED_PARTITION_FILE_BUDGET_SECONDS,
+      budgetSeconds,
       status,
     });
   });
@@ -297,7 +297,7 @@ const shardedSourceReport = Effect.fn("CiPartitions.shardedSourceReport")(functi
   const path = yield* Path.Path;
   const plan = yield* readShardPlan(repoRoot, source);
   const partitions = shardedPartitionsOf(table, source);
-  const rows = shardedSourceRows(plan, partitions);
+  const rows = shardedSourceRows(plan, partitions, source.fileBudgetSeconds);
   const missing = yield* Effect.filter(A.flatten(plan.shards), (file) =>
     fs.exists(path.join(repoRoot, source.packagePath, file)).pipe(
       Effect.map((exists) => !exists),

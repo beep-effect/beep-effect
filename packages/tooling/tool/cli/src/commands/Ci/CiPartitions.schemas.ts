@@ -21,13 +21,15 @@ import { CiLanePartitionId } from "./CiLanePartitions.ts";
 const $I = $RepoCliId.create("commands/Ci/CiPartitions.schemas");
 
 /**
- * File-time budget of one sharded Test Unit partition, in seconds.
+ * File-time budget of one sharded partition that runs a single Vitest worker, in seconds.
  *
  * **Details**
  *
- * Hosted coverage producers run one worker, so a shard's wall is its file-time sum plus about
- * 110 s of job overhead (checkout, install, discovery, artifact upload; law-practice-1..3 on run
- * 42554761567 measured 101-120 s). 480 s of file time keeps a shard under the ten-minute target.
+ * With one worker a shard's wall is its file-time sum plus about 110 s of job overhead (checkout,
+ * install, discovery, artifact upload; law-practice-1..3 on run 42554761567 measured 101-120 s),
+ * so 480 s of file time keeps a shard under the ten-minute target. The integration shards run this
+ * way. Sharded Test Unit families run two workers and carry their own budget
+ * (`CiShardedPartitionSource.fileBudgetSeconds`).
  *
  * **Example** (Judge a shard estimate)
  *
@@ -182,7 +184,16 @@ export const CiShardedPartitionFamily = LiteralKit(["repo-cli", "law-practice"])
 export type CiShardedPartitionFamily = typeof CiShardedPartitionFamily.Type;
 
 /**
- * Where one sharded family's package and committed plan live.
+ * Where one sharded family's package and committed plan live, and how much a shard may plan.
+ *
+ * **Details**
+ *
+ * `fileBudgetSeconds` is the most planned file time one shard may hold. A sharded Test Unit job
+ * runs two Vitest workers, so the budget is what a p95 hosted runner (1.28 times the median)
+ * finishes inside ten minutes: 373 s of Vitest after 90 s of checkout and setup and 25 s before
+ * Vitest starts, divided by the Vitest seconds one planned second cost on the first two-worker
+ * run (42732848457: repo-cli 2,678 s for 3,526 planned, 0.76; law-practice 2,421 s for 4,512
+ * planned, 0.54). Re-derive both after a rebalance changes what a planned second means.
  *
  * **Example** (Describe the repo-cli family)
  *
@@ -194,6 +205,7 @@ export type CiShardedPartitionFamily = typeof CiShardedPartitionFamily.Type;
  *   packageName: "@beep/repo-cli",
  *   packagePath: "packages/tooling/tool/cli",
  *   planPath: "packages/tooling/tool/cli/vitest.shards.json",
+ *   fileBudgetSeconds: 490,
  * })
  * console.log(source.planPath)
  * ```
@@ -207,9 +219,10 @@ export class CiShardedPartitionSource extends S.Opaque<CiShardedPartitionSource,
     packageName: S.String,
     packagePath: S.String,
     planPath: S.String,
+    fileBudgetSeconds: S.Finite,
   }).pipe(
     $I.annoteSchema("CiShardedPartitionSource", {
-      description: "Package and committed shard-plan path of one sharded Test Unit family.",
+      description: "Package, committed shard-plan path and per-shard file budget of one sharded Test Unit family.",
     })
   )
 ) {}
@@ -235,12 +248,14 @@ export const CI_SHARDED_PARTITION_SOURCES: ReadonlyArray<CiShardedPartitionSourc
     packageName: "@beep/repo-cli",
     packagePath: "packages/tooling/tool/cli",
     planPath: "packages/tooling/tool/cli/vitest.shards.json",
+    fileBudgetSeconds: 490,
   }),
   CiShardedPartitionSource.make({
     family: "law-practice",
     packageName: "@beep/law-practice-server",
     packagePath: "packages/law-practice/server",
     planPath: "packages/law-practice/server/vitest.shards.json",
+    fileBudgetSeconds: 690,
   }),
 ];
 
