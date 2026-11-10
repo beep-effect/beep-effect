@@ -12,11 +12,9 @@ import {
   AccountHeadroomSpec,
   AccountsReportInputJson,
   AdmissionSlotsInput,
-  GithubBucketName,
   GithubHeadroomBucketInput,
   GithubHeadroomInput,
   GithubHeadroomSource,
-  GithubIdentityName,
   GithubSpender,
   HostMemoryInput,
   HostPressureInput,
@@ -1013,9 +1011,6 @@ const floorOf = (state: ReserveState, limit: number): number =>
     Unknown: () => reserveFloor(limit),
   });
 
-const isIdentityName = S.is(GithubIdentityName);
-const isBucketName = S.is(GithubBucketName);
-
 const unattributedOf = (summary: O.Option<LedgerSummary>, signal: ReserveSignal): O.Option<number> =>
   O.flatMap(summary, (present) =>
     O.flatMap(
@@ -1026,24 +1021,20 @@ const unattributedOf = (summary: O.Option<LedgerSummary>, signal: ReserveSignal)
 
 const bucketInputOf =
   (summary: O.Option<LedgerSummary>) =>
-  ([signal, reading]: readonly [ReserveSignal, BucketReading]): O.Option<GithubHeadroomBucketInput> =>
-    isIdentityName(reading.key.identity) && isBucketName(reading.key.resource)
-      ? O.some(
-          GithubHeadroomBucketInput.make({
-            identity: reading.key.identity,
-            resource: reading.key.resource,
-            limit: reading.limit,
-            remaining: reading.remaining,
-            used: O.getOrElse(reading.used, () => reading.limit - reading.remaining),
-            resetsAt: reading.resetAt,
-            asOf: reading.asOf,
-            basis: reading.basis,
-            reserve: reserveNameOf(signal.state),
-            reserveFloor: floorOf(signal.state, reading.limit),
-            unattributedLastHour: unattributedOf(summary, signal),
-          })
-        )
-      : O.none();
+  ([signal, reading]: readonly [ReserveSignal, BucketReading]): GithubHeadroomBucketInput =>
+    GithubHeadroomBucketInput.make({
+      identity: reading.key.identity,
+      resource: reading.key.resource,
+      limit: reading.limit,
+      remaining: reading.remaining,
+      used: O.getOrElse(reading.used, () => reading.limit - reading.remaining),
+      resetsAt: reading.resetAt,
+      asOf: reading.asOf,
+      basis: reading.basis,
+      reserve: reserveNameOf(signal.state),
+      reserveFloor: floorOf(signal.state, reading.limit),
+      unattributedLastHour: unattributedOf(summary, signal),
+    });
 
 const spenderOf = (spend: CommandSpend): GithubSpender =>
   GithubSpender.make({
@@ -1091,7 +1082,7 @@ export const makeGithubHeadroomSource = Effect.gen(function* () {
         O.map((reading) => [signal, reading] as const)
       )
     );
-    const buckets = A.getSomes(A.map(A.getSomes(readings), bucketInputOf(summary)));
+    const buckets = A.map(A.getSomes(readings), bucketInputOf(summary));
     if (A.isArrayEmpty(buckets) && O.isNone(summary)) {
       return GithubHeadroomInput.cases.Missing.make({ detail: "no GitHub ledger readings on this host" });
     }

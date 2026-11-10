@@ -1,5 +1,10 @@
-import { GithubHeadroomSource } from "@beep/palantiri";
-import { makeGithubHeadroomSource } from "@beep/repo-cli/test/Palantiri";
+import {
+  GithubHeadroomBucketInput,
+  GithubHeadroomInput,
+  GithubHeadroomSource,
+  reduceGithubHeadroom,
+} from "@beep/palantiri";
+import { makeGithubHeadroomSource, renderParcel } from "@beep/repo-cli/test/Palantiri";
 import {
   BucketKey,
   BucketReading,
@@ -22,11 +27,12 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
-import type { GithubHeadroomInput } from "@beep/palantiri";
 import type { GithubLedgerStoreShape } from "@beep/repo-cli/test/SharedInternals";
 
 const NOW = DateTime.makeUnsafe("2026-11-10T21:00:00.000Z");
@@ -209,4 +215,42 @@ describe("makeGithubHeadroomSource", () => {
       expect(failure.detail).toBe("the GitHub ledger read failed");
     })
   );
+});
+
+describe("renderParcel github-headroom", () => {
+  const headroomBucket = (identity: string, remaining: number, minutesAgo: number, unattributed: O.Option<number>) =>
+    GithubHeadroomBucketInput.make({
+      identity,
+      resource: "graphql",
+      limit: 5000,
+      remaining,
+      used: 5000 - remaining,
+      resetsAt: DateTime.add(NOW, { minutes: 30 }),
+      asOf: DateTime.subtract(NOW, { minutes: minutesAgo }),
+      basis: "transport",
+      reserve: "below",
+      reserveFloor: 750,
+      unattributedLastHour: unattributed,
+    });
+
+  it("renders each bucket with its reserve, reset, unattributed spend and staleness", () => {
+    const envelope = reduceGithubHeadroom(
+      GithubHeadroomInput.cases.Present.make({
+        generatedAt: NOW,
+        buckets: [headroomBucket("user:alice", 412, 1, O.some(230)), headroomBucket("user:bob", 4000, 30, O.none())],
+        spenders: [],
+        summaryAsOf: O.none(),
+        lastRowAt: O.none(),
+      }),
+      NOW,
+      20
+    );
+    const lines = pipe(renderParcel(envelope), Str.split("\n"));
+    expect(lines[0]).toBe(`github-headroom: ${envelope.summary}`);
+    expect(A.drop(lines, 2)).toEqual([
+      "  user:alice graphql  412/5000  reserve below (floor 750)  resets 2026-11-10T21:30:00.000Z  unattributed 1h 230",
+      "  user:bob graphql  4000/5000  reserve below (floor 750)  resets 2026-11-10T21:30:00.000Z  [stale]",
+      "  showing 2 of 2",
+    ]);
+  });
 });
