@@ -38,6 +38,9 @@
     "research/2026-11-08-validation-scoreboard.md",
     "research/2026-11-09-p0-cache-request.json",
     "research/2026-11-09-p0-cache-review.md",
+    "research/2026-11-10-p1-cache-request.json",
+    "research/2026-11-10-p1-cache-review.md",
+    "research/OPPORTUNITIES.md",
     "research/SOURCES.md"
   ],
   "agentLaunchers": [
@@ -55,12 +58,12 @@
     {
       "id": "P0",
       "name": "Design and grill",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Log and L0 projection",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",
@@ -110,5 +113,5 @@
     "A ruling of the 2026-11-09 decision-log entry cannot be met by the phase as designed: the phase stops and reports; the ruling is not routed around.",
     "A spike-derived bar is missed: remediation on the current route, or a decision file re-baselining the bar with a new measurement; never a silent threshold edit."
   ],
-  "statusNote": "P0 Design and grill in progress (2026-11-09): the six packet-decidable design items and the package home are decided by decision file (tooling/library/agent-memory-store, new drivers/sqlite, effect/eventlog log, @beep/provenance identity, @beep/epistemics findings, Reranker and SymbolResolver ports, status prose generated from the manifest); schemas and Context.Service contracts are landing in the P0 PR; no implementation has started."
+  "statusNote": "P1 Log and L0 projection in progress (2026-11-10): the live MemoryLog over effect/eventlog and @beep/sqlite, the Markdown node partition with its reparse check, and the live MarkdownProjector (importFolder, exportFolder, projectNode) are built; AC-1 (byte identity, edit confinement, concurrent insertions) and the AC-8 nonempty-folder import tests are green locally on the frozen goals sample; P0 completed in PR #3013."
 }

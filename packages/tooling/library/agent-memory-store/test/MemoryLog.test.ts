@@ -1,0 +1,676 @@
+/**
+ * Live memory log over `effect/eventlog` and `@beep/sqlite`.
+ *
+ * The driver imports `bun:sqlite`, so the suite runs under Bun only and is
+ * skipped under Node; run it with `bunx --bun vitest`. Every test builds its
+ * own database: `MemoryLogTestLayer` opens a fresh `":memory:"` database per
+ * build, and the file-backed tests use a scoped temporary directory.
+ */
+import {
+  ConflictResolution,
+  ContentHash,
+  FileImported,
+  FolderAlreadyImportedError,
+  FolderImported,
+  HoldId,
+  HoldNotOpenError,
+  HoldResolved,
+  LogCursor,
+  MemoryFilePath,
+  MemoryLog,
+  MemoryLogError,
+  MemoryLogTestLayer,
+  makeMemoryLogSqliteLayer,
+  makeMemorySqlClientLayer,
+  NodeCreated,
+  NodeId,
+  NodeOperation,
+  NodeRetired,
+  NodeRevised,
+  NodeStatusChanged,
+  RevisionId,
+  StaleParentsError,
+  StatusTransition,
+  StatusValue,
+  UnplacedNodeError,
+  WriteHeld,
+} from "@beep/agent-memory-store";
+import { Sha256Hex } from "@beep/schema";
+import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
+import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import * as SqlClient from "effect/sql/SqlClient";
+import { author, contentHash, filePath, folderDigest, staleRevision } from "./fixtures.ts";
+import { TestPlatform } from "./projector-support.ts";
+import type { MemoryEvent } from "@beep/agent-memory-store";
+
+const isBunRuntime = P.isNotUndefined(process.versions.bun);
+const isRacedWriteError = S.is(S.Union([StaleParentsError, MemoryLogError]));
+
+const nodeA = NodeId.make("018f9c3e-7d2a-7b4c-9e1f-2a3b4c5d6e01");
+const nodeB = NodeId.make("018f9c3e-7d2a-7b4c-9e1f-2a3b4c5d6e02");
+const unknownNode = NodeId.make("018f9c3e-7d2a-7b4c-9e1f-2a3b4c5d6e03");
+const absentNode = NodeId.make("018f9c3e-7d2a-7b4c-9e1f-2a3b4c5d6e04");
+const holdA = HoldId.make("018f9c3e-7d2a-7b4c-9e1f-2a3b4c5d6ea1");
+const unknownHold = HoldId.make("018f9c3e-7d2a-7b4c-9e1f-2a3b4c5d6ea2");
+
+const revision = (digit: string): RevisionId => RevisionId.make(Str.repeat(64)(digit));
+const r1 = revision("1");
+const r2 = revision("2");
+const r3 = revision("3");
+const r4 = revision("4");
+
+const created = (nodeId: NodeId, revisionId: RevisionId): MemoryEvent => ({
+  _tag: "NodeCreated",
+  payload: NodeCreated.make({
+    nodeId,
+    kind: "paragraph",
+    contentHash,
+    revisionId,
+    text: "A synthetic fact.\n",
+    anchor: O.none(),
+    filePath,
+    after: O.none(),
+    author,
+  }),
+});
+
+const revised = (
+  nodeId: NodeId,
+  revisionId: RevisionId,
+  parents: A.NonEmptyReadonlyArray<RevisionId>
+): MemoryEvent => ({
+  _tag: "NodeRevised",
+  payload: NodeRevised.make({
+    nodeId,
+    revisionId,
+    parents: A.copy(parents),
+    contentHash: ContentHash.make(Str.repeat(64)("a")),
+    text: "A revised synthetic fact.\n",
+    author,
+  }),
+});
+
+const retired = (
+  nodeId: NodeId,
+  revisionId: RevisionId,
+  parents: A.NonEmptyReadonlyArray<RevisionId>
+): MemoryEvent => ({
+  _tag: "NodeRetired",
+  payload: NodeRetired.make({ nodeId, revisionId, parents: A.copy(parents), author }),
+});
+
+const statusChanged = (
+  nodeId: NodeId,
+  revisionId: RevisionId,
+  parents: A.NonEmptyReadonlyArray<RevisionId>
+): MemoryEvent => ({
+  _tag: "NodeStatusChanged",
+  payload: NodeStatusChanged.make({
+    nodeId,
+    revisionId,
+    parents: A.copy(parents),
+    contentHash: ContentHash.make(Str.repeat(64)("b")),
+    text: "status: completed\n",
+    transition: StatusTransition.make({
+      field: "status",
+      from: O.some(StatusValue.make("active")),
+      to: StatusValue.make("completed"),
+    }),
+    author,
+  }),
+});
+
+const folderImported: MemoryEvent = {
+  _tag: "FolderImported",
+  payload: FolderImported.make({ folderDigest, fileCount: 1, nodeCount: 2, author }),
+};
+
+const writeHeld = (holdId: HoldId, nodeId: NodeId): MemoryEvent => ({
+  _tag: "WriteHeld",
+  payload: WriteHeld.make({
+    holdId,
+    operation: NodeOperation.cases.delete.make({ nodeId, expectedRevision: r1 }),
+    author,
+    headRevision: O.some(r2),
+    violations: [staleRevision],
+  }),
+});
+
+const holdResolved = (holdId: HoldId): MemoryEvent => ({
+  _tag: "HoldResolved",
+  payload: HoldResolved.make({
+    holdId,
+    resolution: ConflictResolution.cases.ours.make({}),
+    author,
+    revisionId: O.none(),
+  }),
+});
+
+const entryShape = A.map((entry: { readonly event: string; readonly primaryKey: string }) => [
+  entry.event,
+  entry.primaryKey,
+]);
+
+const tempDatabase = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const directory = yield* fs.makeTempDirectoryScoped({ prefix: "beep-memory-log-" });
+  return path.join(directory, "memory.db");
+});
+
+const openLog = Effect.fnUntraced(function* (filename: string) {
+  const context = yield* Layer.build(makeMemoryLogSqliteLayer({ filename }));
+  return Context.get(context, MemoryLog);
+});
+
+// A second SQL connection to the database file, open for the rest of the test.
+const sqlOn = (filename: string) =>
+  Effect.map(Layer.build(makeMemorySqlClientLayer({ filename })), Context.get(SqlClient.SqlClient));
+
+// The MemoryLogError that opening a log on `filename` fails with.
+const openFailure = (filename: string) =>
+  openLog(filename).pipe(
+    Effect.flip,
+    Effect.map((error) => [S.is(MemoryLogError)(error), error.operation] as const)
+  );
+
+// Each call builds MemoryLogTestLayer in the test's scope: a fresh in-memory database.
+const freshLog = Effect.fnUntraced(function* () {
+  const context = yield* Layer.build(MemoryLogTestLayer);
+  return Context.get(context, MemoryLog);
+});
+
+describe.skipIf(!isBunRuntime)("MemoryLog live layer (Bun runtime)", () => {
+  it.effect(
+    "a NodeCreated placed after a node of another file or after an unknown node fails with UnplacedNodeError and appends nothing",
+    Effect.fnUntraced(function* () {
+      const log = yield* freshLog();
+      yield* log.append(created(nodeA, r1));
+      const cursor = yield* log.cursor;
+      const otherFile = MemoryFilePath.make("notes/other.md");
+      const after = (nodeId: NodeId, revisionId: RevisionId, predecessor: NodeId, path: MemoryFilePath) => {
+        const event = created(nodeId, revisionId);
+        return event._tag === "NodeCreated"
+          ? { ...event, payload: NodeCreated.make({ ...event.payload, filePath: path, after: O.some(predecessor) }) }
+          : event;
+      };
+
+      const crossFile = yield* Effect.flip(log.append(after(nodeB, r2, nodeA, otherFile)));
+      expect(crossFile).toBeInstanceOf(UnplacedNodeError);
+      expect(crossFile).toMatchObject({ nodeId: nodeB, filePath: otherFile, after: nodeA });
+      assertSome(S.is(UnplacedNodeError)(crossFile) ? crossFile.afterFilePath : O.none(), filePath);
+
+      // A refused event rolls back its whole batch, earlier events included.
+      const missing = yield* Effect.flip(
+        log.appendMany([after(nodeB, r2, nodeA, filePath), after(unknownNode, r3, absentNode, filePath)])
+      );
+      expect(missing).toMatchObject({ _tag: "UnplacedNodeError", nodeId: unknownNode, after: absentNode });
+      assertNone(S.is(UnplacedNodeError)(missing) ? missing.afterFilePath : O.some(filePath));
+      const unchanged = yield* log.cursor;
+      const headsB = yield* log.heads(nodeB);
+      expect(unchanged).toBe(cursor);
+      expect(headsB).toEqual([]);
+
+      // A predecessor created earlier in the same batch places the node.
+      yield* log.appendMany([after(nodeB, r2, nodeA, filePath), after(unknownNode, r3, nodeB, filePath)]);
+      const placed = yield* log.heads(unknownNode);
+      expect(placed).toEqual([r3]);
+    })
+  );
+
+  it.effect(
+    "a NodeCreated or FileImported whose path breaks the memory-file rule fails the append with MemoryLogError and appends nothing",
+    Effect.fnUntraced(function* () {
+      const log = yield* freshLog();
+      const outside = ["../escape.md", ".git/x.md", "notes.txt", "/abs.md", "notes//x.md", "notes\\x.md", ""];
+      for (const path of outside) {
+        expect(S.is(MemoryFilePath)(path)).toBe(false);
+        const event = created(nodeA, r1);
+        // An unchecked payload stands in for a writer that skipped the schema.
+        const unchecked: MemoryEvent =
+          event._tag === "NodeCreated"
+            ? {
+                _tag: "NodeCreated",
+                payload: NodeCreated.make(
+                  { ...event.payload, filePath: path as MemoryFilePath },
+                  { disableChecks: true }
+                ),
+              }
+            : event;
+        const refused = yield* Effect.flip(log.append(unchecked));
+        expect(refused).toMatchObject({ _tag: "MemoryLogError", operation: "append" });
+        // The schema error names the field that broke the rule.
+        const message = S.is(MemoryLogError)(refused) ? refused.message : O.none();
+        assertTrue(O.exists(message, Str.includes("filePath")));
+      }
+      const imported = yield* Effect.flip(
+        log.append({
+          _tag: "FileImported",
+          payload: FileImported.make(
+            { filePath: "../escape.md" as MemoryFilePath, fileDigest: folderDigest, nodeCount: 0, author },
+            { disableChecks: true }
+          ),
+        })
+      );
+      expect(imported).toMatchObject({ _tag: "MemoryLogError", operation: "append" });
+      const cursor = yield* log.cursor;
+      const heads = yield* log.heads(nodeA);
+      expect(cursor).toBe(LogCursor.make(0));
+      expect(heads).toEqual([]);
+    })
+  );
+
+  it.effect(
+    "a second FolderImported fails its whole batch with FolderAlreadyImportedError naming both folders",
+    Effect.fnUntraced(function* () {
+      const log = yield* freshLog();
+      yield* log.appendMany([created(nodeA, r1), folderImported]);
+      const otherFolder = Sha256Hex.make(Str.repeat(64)("5"));
+      const second: MemoryEvent = {
+        _tag: "FolderImported",
+        payload: FolderImported.make({ folderDigest: otherFolder, fileCount: 1, nodeCount: 1, author }),
+      };
+      const refused = yield* Effect.flip(log.appendMany([created(nodeB, r2), second]));
+      expect(refused).toBeInstanceOf(FolderAlreadyImportedError);
+      expect(refused).toMatchObject({ folderDigest: otherFolder, importedFolderDigest: folderDigest });
+      // The refused batch's NodeCreated rolled back with it.
+      const headsB = yield* log.heads(nodeB);
+      const cursor = yield* log.cursor;
+      expect(headsB).toEqual([]);
+      expect(cursor).toBe(LogCursor.make(2));
+      // The same folder digest is refused too: one log holds one folder import.
+      const repeat = yield* Effect.flip(log.append(folderImported));
+      expect(repeat).toMatchObject({
+        _tag: "FolderAlreadyImportedError",
+        folderDigest,
+        importedFolderDigest: folderDigest,
+      });
+    })
+  );
+
+  it.effect(
+    "a NodeStatusChanged on the current head moves the head and a status change on a stale head is refused",
+    Effect.fnUntraced(function* () {
+      const log = yield* freshLog();
+      yield* log.append(created(nodeA, r1));
+      yield* log.append(statusChanged(nodeA, r2, [r1]));
+      const heads = yield* log.heads(nodeA);
+      expect(heads).toEqual([r2]);
+      const stale = yield* Effect.flip(log.append(statusChanged(nodeA, r3, [r1])));
+      expect(stale).toBeInstanceOf(StaleParentsError);
+      const history = yield* log.history(nodeA);
+      expect(entryShape(history)).toEqual([
+        ["NodeCreated", nodeA],
+        ["NodeStatusChanged", nodeA],
+      ]);
+    })
+  );
+
+  it.effect(
+    "append then heads: a created node has its root revision as head and a revision replaces it",
+    Effect.fnUntraced(function* () {
+      const log = yield* freshLog();
+      const empty = yield* log.heads(nodeA);
+      expect(empty).toEqual([]);
+
+      yield* log.append(created(nodeA, r1));
+      const root = yield* log.heads(nodeA);
+      expect(root).toEqual([r1]);
+
+      yield* log.append(revised(nodeA, r2, [r1]));
+      const next = yield* log.heads(nodeA);
+      const unknown = yield* log.heads(unknownNode);
+      expect(next).toEqual([r2]);
+      expect(unknown).toEqual([]);
+    })
+  );
+
+  it.effect(
+    "stale parents rejected: a revision naming a superseded or unknown head fails with StaleParentsError",
+    Effect.fnUntraced(function* () {
+      const log = yield* freshLog();
+      yield* log.appendMany([created(nodeA, r1), revised(nodeA, r2, [r1])]);
+
+      const stale = yield* Effect.flip(log.append(revised(nodeA, r3, [r1])));
+      expect(stale).toBeInstanceOf(StaleParentsError);
+      expect(stale).toMatchObject({ nodeId: nodeA, parents: [r1], heads: [r2] });
+
+      const unknown = yield* Effect.flip(log.append(retired(unknownNode, r3, [r1])));
+      expect(unknown).toMatchObject({ _tag: "StaleParentsError", nodeId: unknownNode, heads: [] });
+
+      const heads = yield* log.heads(nodeA);
+      const cursor = yield* log.cursor;
+      expect(heads).toEqual([r2]);
+      expect(cursor).toBe(LogCursor.make(2));
+    })
+  );
+
+  it.effect(
+    "NodeCreated on an existing node rejected with the node's heads",
+    Effect.fnUntraced(function* () {
+      const log = yield* freshLog();
+      yield* log.append(created(nodeA, r1));
+
+      const error = yield* Effect.flip(log.append(created(nodeA, r2)));
+      expect(error).toBeInstanceOf(StaleParentsError);
+      expect(error).toMatchObject({ nodeId: nodeA, parents: [], heads: [r1] });
+
+      const heads = yield* log.heads(nodeA);
+      expect(heads).toEqual([r1]);
+    })
+  );
+
+  it.effect(
+    "a batch where a later event depends on an earlier one in the same batch lands",
+    Effect.fnUntraced(function* () {
+      const log = yield* freshLog();
+      yield* log.appendMany([created(nodeA, r1), revised(nodeA, r2, [r1]), retired(nodeA, r3, [r2])]);
+
+      const heads = yield* log.heads(nodeA);
+      const cursor = yield* log.cursor;
+      expect(heads).toEqual([r3]);
+      expect(cursor).toBe(LogCursor.make(3));
+    })
+  );
+
+  it.effect(
+    "a batch with one stale event commits nothing: heads, cursor and entries are unchanged",
+    Effect.fnUntraced(function* () {
+      const log = yield* freshLog();
+      yield* log.append(created(nodeA, r1));
+      const before = yield* log.entriesAfter(LogCursor.make(0));
+
+      const error = yield* Effect.flip(
+        log.appendMany([
+          created(nodeB, r4),
+          folderImported,
+          writeHeld(holdA, nodeA),
+          revised(nodeA, r2, [r1]),
+          revised(nodeA, r3, [r1]),
+        ])
+      );
+      expect(error).toMatchObject({ _tag: "StaleParentsError", nodeId: nodeA, parents: [r1], heads: [r2] });
+
+      const headsA = yield* log.heads(nodeA);
+      const headsB = yield* log.heads(nodeB);
+      const cursor = yield* log.cursor;
+      const after = yield* log.entriesAfter(LogCursor.make(0));
+      expect(headsA).toEqual([r1]);
+      expect(headsB).toEqual([]);
+      expect(cursor).toBe(LogCursor.make(1));
+      expect(entryShape(after)).toEqual(entryShape(before));
+
+      // The hold of the failed batch never opened either.
+      const notOpen = yield* Effect.flip(log.append(holdResolved(holdA)));
+      expect(notOpen).toBeInstanceOf(HoldNotOpenError);
+    })
+  );
+
+  it.effect(
+    "HoldResolved on an unknown hold is rejected, an open hold resolves once, and a second resolve is rejected",
+    Effect.fnUntraced(function* () {
+      const log = yield* freshLog();
+      const unknown = yield* Effect.flip(log.append(holdResolved(unknownHold)));
+      expect(unknown).toBeInstanceOf(HoldNotOpenError);
+      expect(unknown).toMatchObject({ holdId: unknownHold });
+
+      yield* log.append(writeHeld(holdA, nodeA));
+      yield* log.append(holdResolved(holdA));
+
+      const closed = yield* Effect.flip(log.append(holdResolved(holdA)));
+      expect(closed).toBeInstanceOf(HoldNotOpenError);
+      expect(closed).toMatchObject({ holdId: holdA });
+
+      // A repeated WriteHeld for a settled hold does not reopen it.
+      yield* log.append(writeHeld(holdA, nodeA));
+      const stillClosed = yield* Effect.flip(log.append(holdResolved(holdA)));
+      expect(stillClosed).toBeInstanceOf(HoldNotOpenError);
+
+      const cursor = yield* log.cursor;
+      expect(cursor).toBe(LogCursor.make(3));
+    })
+  );
+
+  it.effect(
+    "cursor counts committed entries and entriesAfter reads them in commit order",
+    Effect.fnUntraced(function* () {
+      const log = yield* freshLog();
+      const emptyCursor = yield* log.cursor;
+      const emptyLog = yield* log.entriesAfter(LogCursor.make(0));
+      expect(emptyCursor).toBe(LogCursor.make(0));
+      expect(emptyLog).toEqual([]);
+
+      yield* log.append(folderImported);
+      yield* log.append(created(nodeA, r1));
+      yield* log.append(created(nodeB, r2));
+      yield* log.appendMany([revised(nodeB, r3, [r2]), writeHeld(holdA, nodeA)]);
+
+      const cursor = yield* log.cursor;
+      const all = yield* log.entriesAfter(LogCursor.make(0));
+      const tail = yield* log.entriesAfter(LogCursor.make(3));
+      const none = yield* log.entriesAfter(LogCursor.make(5));
+      expect(cursor).toBe(LogCursor.make(5));
+      expect(entryShape(all)).toEqual([
+        ["FolderImported", folderDigest],
+        ["NodeCreated", nodeA],
+        ["NodeCreated", nodeB],
+        ["NodeRevised", nodeB],
+        ["WriteHeld", holdA],
+      ]);
+      expect(entryShape(tail)).toEqual([
+        ["NodeRevised", nodeB],
+        ["WriteHeld", holdA],
+      ]);
+      expect(none).toEqual([]);
+    })
+  );
+
+  it.effect(
+    "history reads only the entries keyed by one node, oldest first",
+    Effect.fnUntraced(function* () {
+      const log = yield* freshLog();
+      yield* log.append(folderImported);
+      yield* log.append(created(nodeA, r1));
+      yield* log.append(created(nodeB, r2));
+      yield* log.append(writeHeld(holdA, nodeA));
+      yield* log.append(revised(nodeA, r3, [r1]));
+      yield* log.append(retired(nodeB, r4, [r2]));
+      yield* log.append(retired(nodeA, r4, [r3]));
+
+      const historyA = yield* log.history(nodeA);
+      const historyB = yield* log.history(nodeB);
+      const historyUnknown = yield* log.history(unknownNode);
+      expect(entryShape(historyA)).toEqual([
+        ["NodeCreated", nodeA],
+        ["NodeRevised", nodeA],
+        ["NodeRetired", nodeA],
+      ]);
+      expect(entryShape(historyB)).toEqual([
+        ["NodeCreated", nodeB],
+        ["NodeRetired", nodeB],
+      ]);
+      expect(historyUnknown).toEqual([]);
+    })
+  );
+
+  it.layer(TestPlatform)("database files", (it) => {
+    it.effect(
+      "two connections to one database file both try the same compare-and-set and exactly one wins",
+      Effect.fnUntraced(function* () {
+        const filename = yield* tempDatabase;
+        const first = yield* openLog(filename);
+        const second = yield* openLog(filename);
+
+        yield* first.append(created(nodeA, r1));
+        // Both connections observe the same head before either writes.
+        const seenByFirst = yield* first.heads(nodeA);
+        const seenBySecond = yield* second.heads(nodeA);
+        expect(seenByFirst).toEqual([r1]);
+        expect(seenBySecond).toEqual([r1]);
+
+        const exits = yield* Effect.all(
+          [Effect.exit(first.append(revised(nodeA, r2, [r1]))), Effect.exit(second.append(revised(nodeA, r3, [r1])))],
+          { concurrency: "unbounded" }
+        );
+        const wins = A.filter(exits, Exit.isSuccess);
+        const losses = A.getSomes(A.map(exits, Exit.findErrorOption));
+        expect(wins).toHaveLength(1);
+        expect(losses).toHaveLength(1);
+        // The loser either waited for the winner's commit and saw its head, or
+        // timed out on the write lock; both are typed and commit nothing.
+        expect(A.every(losses, isRacedWriteError)).toBe(true);
+
+        const winner = Exit.isSuccess(exits[0]) ? r2 : r3;
+        const headsFirst = yield* first.heads(nodeA);
+        const headsSecond = yield* second.heads(nodeA);
+        const cursorFirst = yield* first.cursor;
+        const cursorSecond = yield* second.cursor;
+        expect(headsFirst).toEqual([winner]);
+        expect(headsSecond).toEqual([winner]);
+        expect(cursorFirst).toBe(LogCursor.make(2));
+        expect(cursorSecond).toBe(LogCursor.make(2));
+
+        // Sequentially, a connection that names the replaced head is refused.
+        const stale = yield* Effect.flip(second.append(revised(nodeA, r4, [r1])));
+        expect(stale).toMatchObject({ _tag: "StaleParentsError", heads: [winner] });
+      })
+    );
+
+    it.effect(
+      "a database write lock held by another connection fails the append with MemoryLogError and commits nothing",
+      Effect.fnUntraced(function* () {
+        const filename = yield* tempDatabase;
+        const driver = yield* Effect.promise(() => import("@beep/sqlite"));
+        const holderContext = yield* Layer.build(driver.makeLayer({ filename }));
+        const holder = Context.get(holderContext, SqlClient.SqlClient);
+        const logContext = yield* Layer.build(makeMemoryLogSqliteLayer({ filename, busyTimeout: 0 }));
+        const log = Context.get(logContext, MemoryLog);
+
+        yield* holder.unsafe("BEGIN IMMEDIATE");
+        const error = yield* Effect.flip(log.append(created(nodeA, r1)));
+        yield* holder.unsafe("COMMIT");
+        expect(error).toBeInstanceOf(MemoryLogError);
+        expect(error).toMatchObject({ operation: "append" });
+
+        const cursor = yield* log.cursor;
+        expect(cursor).toBe(LogCursor.make(0));
+        yield* log.append(created(nodeA, r1));
+        const heads = yield* log.heads(nodeA);
+        expect(heads).toEqual([r1]);
+      })
+    );
+
+    it.effect(
+      "a database that cannot be opened fails with the MemoryLogError of the step that refused: connect, openJournal or openTables",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const directory = yield* fs.makeTempDirectoryScoped({ prefix: "beep-memory-log-open-" });
+
+        const missingDirectory = yield* openFailure(path.join(directory, "missing", "memory.db"));
+        expect(missingDirectory).toEqual([true, "connect"]);
+
+        const notADatabase = path.join(directory, "not-a-database.db");
+        yield* fs.writeFileString(notADatabase, Str.repeat(16)("not a SQLite database file. "));
+        const garbage = yield* openFailure(notADatabase);
+        expect(garbage).toEqual([true, "connect"]);
+
+        // A view holding a table's name survives CREATE TABLE IF NOT EXISTS,
+        // and the index built next cannot be built on a view: the journal's
+        // entry table fails the journal, the order table fails the store tables.
+        const journalViewed = path.join(directory, "journal-viewed.db");
+        const journalSql = yield* sqlOn(journalViewed);
+        yield* journalSql.unsafe("CREATE VIEW agent_memory_journal AS SELECT 1 AS id");
+        const journal = yield* openFailure(journalViewed);
+        expect(journal).toEqual([true, "openJournal"]);
+
+        const viewed = path.join(directory, "viewed.db");
+        const viewedSql = yield* sqlOn(viewed);
+        yield* viewedSql.unsafe("CREATE VIEW agent_memory_order AS SELECT 1 AS sequence");
+        const tables = yield* openFailure(viewed);
+        expect(tables).toEqual([true, "openTables"]);
+      })
+    );
+
+    it.effect(
+      "a store table or journal entry lost under an open log fails reads and appends with MemoryLogError naming the operation",
+      Effect.fnUntraced(function* () {
+        const filename = yield* tempDatabase;
+        const log = yield* openLog(filename);
+        const fresh = yield* log.cursor;
+        expect(fresh).toBe(LogCursor.make(0));
+        yield* log.appendMany([created(nodeA, r1), created(nodeB, r2)]);
+        const raw = yield* sqlOn(filename);
+
+        // An ordered entry whose journal row is gone cannot be read back.
+        yield* raw.unsafe(
+          "DELETE FROM agent_memory_journal WHERE id = (SELECT entry_id FROM agent_memory_order WHERE sequence = 1)"
+        );
+        const missingEntry = yield* Effect.flip(log.entriesAfter(LogCursor.make(0)));
+        expect(missingEntry).toMatchObject({ _tag: "MemoryLogError", operation: "entriesAfter" });
+
+        yield* raw.unsafe("DROP TABLE agent_memory_heads");
+        const heads = yield* Effect.flip(log.heads(nodeA));
+        expect(heads).toMatchObject({ _tag: "MemoryLogError", operation: "heads" });
+
+        // The journal's own insert fails after the handlers ran: the journal
+        // error becomes an append failure and the batch commits nothing.
+        yield* raw.unsafe("DROP TABLE agent_memory_journal");
+        const append = yield* Effect.flip(log.append(holdResolved(unknownHold)));
+        expect(append).toMatchObject({ _tag: "MemoryLogError", operation: "append" });
+        const cursor = yield* log.cursor;
+        expect(cursor).toBe(LogCursor.make(2));
+      })
+    );
+
+    it.effect(
+      "reopening the database file preserves heads, cursor and entries",
+      Effect.fnUntraced(function* () {
+        const filename = yield* tempDatabase;
+        const before = yield* Effect.scoped(
+          Effect.gen(function* () {
+            const log = yield* openLog(filename);
+            yield* log.appendMany([created(nodeA, r1), revised(nodeA, r2, [r1]), writeHeld(holdA, nodeA)]);
+            yield* log.append(created(nodeB, r3));
+            const entries = yield* log.entriesAfter(LogCursor.make(0));
+            return entryShape(entries);
+          })
+        );
+
+        const log = yield* openLog(filename);
+        const headsA = yield* log.heads(nodeA);
+        const headsB = yield* log.heads(nodeB);
+        const cursor = yield* log.cursor;
+        const entries = yield* log.entriesAfter(LogCursor.make(0));
+        const historyA = yield* log.history(nodeA);
+        expect(headsA).toEqual([r2]);
+        expect(headsB).toEqual([r3]);
+        expect(cursor).toBe(LogCursor.make(4));
+        expect(entryShape(entries)).toEqual(before);
+        expect(entryShape(historyA)).toEqual([
+          ["NodeCreated", nodeA],
+          ["NodeRevised", nodeA],
+        ]);
+
+        // The reopened tables still enforce the compare-and-set and the open hold.
+        const stale = yield* Effect.flip(log.append(revised(nodeA, r4, [r1])));
+        expect(stale).toBeInstanceOf(StaleParentsError);
+        yield* log.append(holdResolved(holdA));
+        yield* log.append(revised(nodeA, r4, [r2]));
+        const reopenedCursor = yield* log.cursor;
+        expect(reopenedCursor).toBe(LogCursor.make(6));
+      })
+    );
+  });
+});

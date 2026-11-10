@@ -1,0 +1,10 @@
+---
+title: "exportFolder writes only over memory files whose bytes the log imported or the store projected"
+date: 2026-11-10
+lane: "agent-memory-store-p1"
+reversal: "Replace the projected-file table with a FolderExported log event by decision file if the fence must survive a rebuilt database"
+---
+
+Superseded by decision export-fence-is-bound-to-the-folder: review found that this fence names no folder, so a foreign folder whose memory files all match imported files at the same paths passed it. The text below records the first design.
+
+AC-8 requires that the projector refuse to write over a folder the log has not imported. FolderImported names the folder only by its digest at import time, so a digest comparison alone would refuse every export after the first edit. exportFolder therefore checks, before it writes anything, that the log holds a FolderImported and that every memory file in the target folder holds bytes the log knows for its path: the FileImported digest, or a digest this store wrote there before. The second set lives in agent_memory_projected_files (file_path, file_digest) in the log's database; its rows are inserted in one statement before the files are written, so an export cut short leaves each file at old or new bytes, both known. A folder with no memory files passes (a rebuild from the log alone into an empty folder), a folder with one unknown file is refused whole with UnimportedFolderError naming the root and the folder digest, and nothing is replaced or emptied. Files are written to a temporary sibling and renamed, and only files whose bytes differ are written. The table is a safety record, not authority: losing it can only refuse an export, never permit a wrong one. Code: packages/tooling/library/agent-memory-store/src/MarkdownProjector.layer.ts; tests: the AC-8 export refusal case (empty log, a foreign folder sharing a path, a folder mixing an imported file with a foreign one) in test/MarkdownProjector.test.ts. Rejected: comparing the folder digest with FolderImported only (refuses every second export) and keeping the last export digest in memory (a fresh process would refuse its own folder).

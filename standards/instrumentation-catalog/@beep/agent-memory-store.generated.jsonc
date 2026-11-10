@@ -7,6 +7,11 @@
   "instruments": [],
   "spans": [
     {"name":"Embedder.unavailable.embed","owner":"@beep/agent-memory-store","family":"tooling","conforms":false},
+    {"name":"MarkdownProjector.exportFolder","owner":"@beep/agent-memory-store","family":"tooling","conforms":true},
+    {"name":"MarkdownProjector.importFolder","owner":"@beep/agent-memory-store","family":"tooling","conforms":true},
+    {"name":"MarkdownProjector.projectNode","owner":"@beep/agent-memory-store","family":"tooling","conforms":true},
+    {"name":"MemoryLog.append","owner":"@beep/agent-memory-store","family":"tooling","conforms":true},
+    {"name":"MemoryLog.heads","owner":"@beep/agent-memory-store","family":"tooling","conforms":true},
     {"name":"Reranker.passThrough.rerank","owner":"@beep/agent-memory-store","family":"tooling","conforms":false}
   ]
 }
