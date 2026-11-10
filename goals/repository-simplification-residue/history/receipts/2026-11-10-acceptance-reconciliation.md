@@ -66,3 +66,21 @@ The orchestrator admitted one main-targeting PR on 2026-11-10 with five main-tar
 Recovery: revert this documentation PR; all source, original recovery paths and immutable wave receipts remain intact. The source implementation reversals stay in the linked receipts. Unrelated staged OSDK files and the IDE change in the original clone are preserved by using an isolated sibling worktree.
 
 Remaining goal work: publish through Yeet, run final-check and the until-ready monitor on this workstation, send the exact-head final line to the orchestrator, then run completion refresh after merge. Current AGENTS requires a second packet-state PR to adopt the verified proposed closeout; initiative status remains active until that adoption merges. External #1868 windows and the eighteen predecessor cross-references are not accepted by this closeout.
+
+## Final-check resource limit
+
+The first exact-head final-check on `b831572fe88e33e1bcb07ef02740b7b62abc7c9f`
+passed cheap gates, lint policy, lint, repo sanity, affected check, docgen and
+Fallow. Its planner selected the full repo-cli coverage suite despite this
+packet-only diff. Admission reported other runs holding 3/5 tokens; coverage used
+two workers and exceeded ten minutes without a terminal result. Only this lane's
+coverage process subtree was terminated. This is incomplete local coverage,
+not a passing measurement or evidence of a test failure.
+
+The final-check receipt records a local coverage skip under the current Quality
+Operator constrained-compute rule, and the PR body names it. No package source,
+coverage floor or baseline is changed. The fifteen historical runtime/coverage
+acceptances remain bound to their original receipts. Current hosted checks are
+independent proof of this documentation PR; their docs-only routing does not
+establish a fresh coverage result. Final head and readiness are in the canonical
+Yeet verdict and final-check receipt rather than predicted in this document.
