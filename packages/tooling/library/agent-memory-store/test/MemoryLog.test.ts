@@ -48,6 +48,7 @@ import { TestPlatform } from "./projector-support.ts";
 import type { MemoryEvent } from "@beep/agent-memory-store";
 
 const isBunRuntime = P.isNotUndefined(process.versions.bun);
+const isRacedWriteError = S.is(S.Union([StaleParentsError, MemoryLogError]));
 
 const nodeA = NodeId.make("018f9c3e-7d2a-7b4c-9e1f-2a3b4c5d6e01");
 const nodeB = NodeId.make("018f9c3e-7d2a-7b4c-9e1f-2a3b4c5d6e02");
@@ -401,7 +402,7 @@ describe.skipIf(!isBunRuntime)("MemoryLog live layer (Bun runtime)", () => {
         expect(losses).toHaveLength(1);
         // The loser either waited for the winner's commit and saw its head, or
         // timed out on the write lock; both are typed and commit nothing.
-        expect(A.every(losses, S.is(S.Union([StaleParentsError, MemoryLogError])))).toBe(true);
+        expect(A.every(losses, isRacedWriteError)).toBe(true);
 
         const winner = Exit.isSuccess(exits[0]) ? r2 : r3;
         const headsFirst = yield* first.heads(nodeA);

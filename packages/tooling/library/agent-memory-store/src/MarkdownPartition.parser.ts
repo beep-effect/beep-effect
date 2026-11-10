@@ -383,7 +383,7 @@ export const partition = (text: string): MarkdownPartition => {
  *
  * ```ts
  * import { partitionTree } from "@beep/agent-memory-store"
- * import { Markdown } from "@beep/markdown"
+ * import { Markdown } from "@beep/markdown/Markdown"
  * import * as Result from "effect/Result"
  *
  * const text = "| a |\n|---|\n| 1 |\n"

@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-10T03:43:47.241Z
+Generated: 2026-11-10T03:49:42.809Z
 
 ## Scope
 
@@ -11,19 +11,19 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | Metric | Count |
 |---|---:|
 | packages | 196 |
-| cleanPackages | 178 |
+| cleanPackages | 179 |
 | packagesWithoutPublicSrcSurface | 2 |
-| packagesNeedingRemediation | 16 |
+| packagesNeedingRemediation | 15 |
 | publicModules | 3886 |
 | publicExports | 27727 |
 | openModules | 114 |
-| openExports | 90 |
+| openExports | 88 |
 | missingExportExamples | 0 |
 | missingExportCategories | 0 |
 | missingExportSince | 0 |
 | forbiddenTagFindings | 0 |
 | malformedConditionalTagFindings | 0 |
-| exampleImportFindings | 46 |
+| exampleImportFindings | 44 |
 | unsafeExampleFindings | 0 |
 | schemaAnnotationFindings | 0 |
 | undescribed-see | 1 |
@@ -40,7 +40,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | duplicate-example | 0 |
 | loose-ts-fence | 0 |
 | forbidden-remarks | 0 |
-| no-root-package-import | 43 |
+| no-root-package-import | 41 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -155,7 +155,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 97 | `@beep/practice-setup` | `apps/practice-setup` | clean | 6 | 38 | 0 | 0 |
 | 98 | `@beep/repo-tsconfig` | `packages/tooling/library/repo-tsconfig` | clean | 5 | 24 | 0 | 0 |
 | 99 | `@beep/uspto-mcp` | `packages/drivers/uspto-mcp` | clean | 7 | 31 | 0 | 0 |
-| 100 | `@beep/agent-memory-store` | `packages/tooling/library/agent-memory-store` | needs-remediation | 28 | 167 | 0 | 2 |
+| 100 | `@beep/agent-memory-store` | `packages/tooling/library/agent-memory-store` | clean | 28 | 167 | 0 | 0 |
 | 101 | `@beep/cli-kit` | `packages/foundation/capability/cli-kit` | clean | 29 | 196 | 0 | 0 |
 | 102 | `@beep/doc-text` | `packages/drivers/doc-text` | clean | 3 | 11 | 0 | 0 |
 | 103 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | clean | 6 | 112 | 0 | 0 |
@@ -354,14 +354,6 @@ Path: `packages/tooling/policy-pack/repo-configs`
 
 Export findings:
 - `src/next/models/ImageConfig.schema.ts:241` `ImageConfigComplete` (class) - 1 documentation section/link violation(s)
-
-### @beep/agent-memory-store
-
-Path: `packages/tooling/library/agent-memory-store`
-
-Export findings:
-- `src/MarkdownPartition.models.ts:48` `PartitionNode` (class) - 1 example import violation(s)
-- `src/MarkdownPartition.parser.ts:400` `partitionTree` (const) - 1 example import violation(s)
 
 ### @beep/repo-utils
 

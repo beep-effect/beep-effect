@@ -40,7 +40,7 @@ import type { Entry } from "effect/eventlog/EventJournal";
 
 export const isBunRuntime = P.isNotUndefined(process.versions.bun);
 
-export const editor = LineageId.make("agent-memory-store-p1:edit-replay");
+const editor = LineageId.make("agent-memory-store-p1:edit-replay");
 
 /** Mutable counters a spied file system updates. */
 export interface FileSystemSpy {
@@ -112,7 +112,7 @@ export const tempDirectory = (prefix: string) =>
   FileSystem.FileSystem.use((fs) => fs.makeTempDirectoryScoped({ prefix }));
 
 /** One file of a folder snapshot. */
-export interface SnapshotFile {
+interface SnapshotFile {
   readonly bytes: Uint8Array;
   readonly mtime: number;
   readonly path: string;

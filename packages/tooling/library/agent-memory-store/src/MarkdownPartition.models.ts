@@ -32,7 +32,7 @@ const $I = $AgentMemoryStoreId.create("MarkdownPartition.models");
  *
  * ```ts
  * import { PartitionNode } from "@beep/agent-memory-store"
- * import { MarkdownRange } from "@beep/markdown"
+ * import { MarkdownRange } from "@beep/markdown/MarkdownEdit"
  *
  * const node = PartitionNode.make({
  *   kind: "heading",

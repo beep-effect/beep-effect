@@ -76,6 +76,8 @@ const synthetic: ReadonlyArray<SampleFile> = [
   }),
 ];
 
+const encodeSampleJson = S.encodeEffect(S.fromJsonString(GoalsMarkdownSample));
+
 const program = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -136,7 +138,7 @@ const program = Effect.gen(function* () {
   files.push(...synthetic);
 
   const sample = GoalsMarkdownSample.make({ commit, files: A.sort(files, SampleFile.byPath) });
-  const json = yield* S.encodeEffect(S.fromJsonString(GoalsMarkdownSample))(sample);
+  const json = yield* encodeSampleJson(sample);
   const packed = yield* Effect.promise(() =>
     new Response(new Blob([json]).stream().pipeThrough(new CompressionStream("gzip"))).arrayBuffer()
   );

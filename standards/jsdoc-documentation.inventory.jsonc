@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-10T03:43:47.241Z",
+  "generatedAt": "2026-11-10T03:49:42.809Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -62,19 +62,19 @@
   },
   "totals": {
     "packages": 196,
-    "cleanPackages": 178,
+    "cleanPackages": 179,
     "packagesWithoutPublicSrcSurface": 2,
-    "packagesNeedingRemediation": 16,
+    "packagesNeedingRemediation": 15,
     "publicModules": 3886,
     "publicExports": 27727,
     "openModules": 114,
-    "openExports": 90,
+    "openExports": 88,
     "missingExportExamples": 0,
     "missingExportCategories": 0,
     "missingExportSince": 0,
     "forbiddenTagFindings": 0,
     "malformedConditionalTagFindings": 0,
-    "exampleImportFindings": 46,
+    "exampleImportFindings": 44,
     "unsafeExampleFindings": 0,
     "schemaAnnotationFindings": 0,
     "undescribed-see": 1,
@@ -91,7 +91,7 @@
     "duplicate-example": 0,
     "loose-ts-fence": 0,
     "forbidden-remarks": 0,
-    "no-root-package-import": 43,
+    "no-root-package-import": 41,
     "rootPolicyOpen": 0
   },
   "packages": [
@@ -264987,7 +264987,7 @@
       "packageName": "@beep/agent-memory-store",
       "packagePath": "packages/tooling/library/agent-memory-store",
       "topoOrder": 100,
-      "status": "needs-remediation",
+      "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
         "sourceFileCount": 28,
@@ -265002,14 +265002,14 @@
       },
       "counts": {
         "openModules": 0,
-        "openExports": 2,
+        "openExports": 0,
         "missingExportExamples": 0,
         "missingExportCategories": 0,
         "missingExportSince": 0,
         "missingExportSummaries": 0,
         "forbiddenTagFindings": 0,
         "malformedConditionalTagFindings": 0,
-        "exampleImportFindings": 2,
+        "exampleImportFindings": 0,
         "unsafeExampleFindings": 0,
         "schemaAnnotationFindings": 0,
         "documentationRuleFindings": {
@@ -265027,7 +265027,7 @@
           "duplicate-example": 0,
           "loose-ts-fence": 0,
           "forbidden-remarks": 0,
-          "no-root-package-import": 2
+          "no-root-package-import": 0
         }
       },
       "modules": [
@@ -266304,18 +266304,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/markdown package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "PartitionFallback",
@@ -266468,18 +266462,12 @@
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
-          "exampleImportViolations": [
-            {
-              "example": 1,
-              "rule": "no-root-package-import",
-              "detail": "Import stable public modules instead of the @beep/markdown package root."
-            }
-          ],
+          "exampleImportViolations": [],
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "checkReplacement",
