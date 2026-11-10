@@ -1,0 +1,636 @@
+{
+  "observedAt": "2026-11-10T05:26:01.418241+00:00",
+  "sourceHead": "6d47006fa1da777a8c0f4aae6a2722fa3d577068",
+  "issues": [
+    {
+      "issue": 1851,
+      "state": "closed",
+      "closedAt": "2026-10-26T22:01:30Z",
+      "receipt": "goals/repository-simplification-residue/history/receipts/a-retire-consumer-census.md",
+      "receiptCommit": "33b9f1cb31afc67366929e630fa7815625a9b580",
+      "receiptSha256": "b9c2008268f02ccb797b58b287afd1c0235fce873d913bfbeff8d052b262bb6b"
+    },
+    {
+      "issue": 1853,
+      "state": "closed",
+      "closedAt": "2026-10-22T10:31:31Z",
+      "receipt": "goals/repository-simplification-residue/history/receipts/patch-proofs-record.md",
+      "receiptCommit": "33b9f1cb31afc67366929e630fa7815625a9b580",
+      "receiptSha256": "ab21902faf1421043d2e846433ba971e0886e8ae6aa0baed4a8ba89af84aac61"
+    },
+    {
+      "issue": 1855,
+      "state": "closed",
+      "closedAt": "2026-10-28T07:34:13Z",
+      "receipt": "goals/repository-simplification-residue/history/receipts/detectors-closeout.md",
+      "receiptCommit": "d3c684edea26987cea6384b296d86960b0bb5d1a",
+      "receiptSha256": "94d287d1e549c2e899aab303e2a646afebdbfa3e42f7ab373ee9f157b8a1e545"
+    },
+    {
+      "issue": 1856,
+      "state": "closed",
+      "closedAt": "2026-10-23T16:15:45Z",
+      "receipt": "goals/repository-simplification-residue/history/receipts/guidance-wave-3.md",
+      "receiptCommit": "ff6f2c37670e26ba35a6a583460d292289c0587d",
+      "receiptSha256": "720a34aa5e6e5f09ac5499909ad31ce1837ec60ae6d0a55385cda3d498ee5cca"
+    },
+    {
+      "issue": 1860,
+      "state": "closed",
+      "closedAt": "2026-10-21T02:59:57Z",
+      "receipt": "goals/repository-simplification-residue/history/receipts/catalog-removals-record.md",
+      "receiptCommit": "33b9f1cb31afc67366929e630fa7815625a9b580",
+      "receiptSha256": "7b9bd61e3872e4b82b7f9a83b66bf525d2117f34bfa99b8cd12f85d4a0f5b83c"
+    },
+    {
+      "issue": 1861,
+      "state": "closed",
+      "closedAt": "2026-10-22T10:31:33Z",
+      "receipt": "goals/repository-simplification-residue/history/receipts/hold-register.md",
+      "receiptCommit": "33b9f1cb31afc67366929e630fa7815625a9b580",
+      "receiptSha256": "ca92562b84dc19776990acc7dd2300b7186337e405aa562d1382ea2b1c3eeeb5"
+    },
+    {
+      "issue": 1869,
+      "state": "closed",
+      "closedAt": "2026-10-21T02:59:57Z",
+      "receipt": "goals/repository-simplification-residue/history/receipts/telemetry-completeness.md",
+      "receiptCommit": "33b9f1cb31afc67366929e630fa7815625a9b580",
+      "receiptSha256": "b63aa46c9e32163d6c95d65251fc4fd0537fa81045ccebcacb2b7f75674d92dd"
+    },
+    {
+      "issue": 1874,
+      "state": "closed",
+      "closedAt": "2026-10-21T02:59:57Z",
+      "receipt": "goals/repository-simplification-residue/history/receipts/build-restore.md",
+      "receiptCommit": "33b9f1cb31afc67366929e630fa7815625a9b580",
+      "receiptSha256": "83aa750e3af0e17614854f22471a197217bf4254af1d716be9011641294a574f"
+    },
+    {
+      "issue": 1875,
+      "state": "closed",
+      "closedAt": "2026-11-02T03:02:42Z",
+      "receipt": "goals/repository-simplification-residue/history/receipts/vitest-canon-wave-21.md",
+      "receiptCommit": "9eb4e79733cbb35ae6a96dddb2cf44fac0ffee50",
+      "receiptSha256": "9077dd779945a287c9f0963e41921212b1a221a788e6519cbd5c5a6bc3128ca9"
+    },
+    {
+      "issue": 1876,
+      "state": "closed",
+      "closedAt": "2026-10-21T02:59:56Z",
+      "receipt": "goals/repository-simplification-residue/history/receipts/rdf-pacer-ports.md",
+      "receiptCommit": "33b9f1cb31afc67366929e630fa7815625a9b580",
+      "receiptSha256": "d85b34f078e051183fb78e72416bffbb0e71e53d5a557eda5a02ac2ae8b20fdc"
+    },
+    {
+      "issue": 1878,
+      "state": "closed",
+      "closedAt": "2026-10-22T10:31:35Z",
+      "receipt": "goals/repository-simplification-residue/history/receipts/completion-evidence.md",
+      "receiptCommit": "d00ecbb1bbee61afd789bbd06707ef1e8b9939b1",
+      "receiptSha256": "ccc2754b3cef282b94eebe2202ce2e569e32665c20ee71428f855b98495d64e2"
+    },
+    {
+      "issue": 1879,
+      "state": "closed",
+      "closedAt": "2026-10-22T10:31:37Z",
+      "receipt": "goals/repository-simplification-residue/history/receipts/target-exchange.md",
+      "receiptCommit": "33b9f1cb31afc67366929e630fa7815625a9b580",
+      "receiptSha256": "574f3398d3d3a0b8cd84ad0e1703040950d4df91a86ee4e83df2481353a5276c"
+    },
+    {
+      "issue": 1880,
+      "state": "closed",
+      "closedAt": "2026-10-21T14:13:54Z",
+      "receipt": "goals/repository-simplification-residue/history/receipts/exchange-recovery.md",
+      "receiptCommit": "33b9f1cb31afc67366929e630fa7815625a9b580",
+      "receiptSha256": "abdb767b83efb2d9e5f281932154706f5fc895f940cf53494d62f9169a050c1a"
+    },
+    {
+      "issue": 1881,
+      "state": "closed",
+      "closedAt": "2026-10-21T16:45:17Z",
+      "receipt": "goals/repository-simplification-residue/history/receipts/skill-publication.md",
+      "receiptCommit": "33b9f1cb31afc67366929e630fa7815625a9b580",
+      "receiptSha256": "47beb2daf572ff861efe59117d0928b3d07da05ba33c3f8866d6e624c02a8666"
+    },
+    {
+      "issue": 1882,
+      "state": "closed",
+      "closedAt": "2026-10-21T21:30:54Z",
+      "receipt": "goals/repository-simplification-residue/history/receipts/dependency-review.md",
+      "receiptCommit": "b11ba93ad131d58a5cb5912ec112587f3d962d75",
+      "receiptSha256": "ab382096e66a925cef7117e28c04cd00569f2bb37948565b6b16b535cef4c422"
+    }
+  ],
+  "canonFinal": {
+    "pr": 2586,
+    "mergeCommit": "40098e3cf4b6f8b4352872d94189bfbab2e100c2",
+    "rows": 446,
+    "statuses": {
+      "exception": 445,
+      "open": 1
+    }
+  },
+  "currentInventory": {
+    "rows": 533,
+    "statuses": {
+      "exception": 518,
+      "open": 15
+    },
+    "openRows": [
+      {
+        "id": "EV002:packages/tooling/tool/cli/test/person-match-portability.test.ts:264:provideScopedLayer@12#1",
+        "ruleId": "EV002",
+        "file": "packages/tooling/tool/cli/test/person-match-portability.test.ts",
+        "occurrence": "v2:0d71f2c9f889fb356f4b0281615fe4a4eba9b3b36961467155e549dcb7c3e270",
+        "sourcePr": 1380,
+        "canonMergeStatus": "identity-absent",
+        "owner": "fleet orchestrator remediation lane"
+      },
+      {
+        "id": "EV003:packages/law-practice/server/test/evaluation/allowed.main.ts:55:program@27#1",
+        "ruleId": "EV003",
+        "file": "packages/law-practice/server/test/evaluation/allowed.main.ts",
+        "occurrence": "v2:fda458703660bb9afe5338b87e87e5c9f58011dfde07fe1a086c308b4c30a2fc",
+        "sourcePr": 2411,
+        "canonMergeStatus": "identity-absent",
+        "owner": "fleet orchestrator remediation lane"
+      },
+      {
+        "id": "EV003:packages/law-practice/server/test/evaluation/positive.main.ts:86:program@27#1",
+        "ruleId": "EV003",
+        "file": "packages/law-practice/server/test/evaluation/positive.main.ts",
+        "occurrence": "v2:46d9bbc9794ad16284562e589302bf941a82ab42b34aa7f6410f4a98d693bb48",
+        "sourcePr": 2411,
+        "canonMergeStatus": "identity-absent",
+        "owner": "fleet orchestrator remediation lane"
+      },
+      {
+        "id": "EV003:packages/tooling/tool/cli/test/ci-lane.test.ts:240:withPartitionShim@26#1",
+        "ruleId": "EV003",
+        "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
+        "occurrence": "v2:9a46ab35a4049d5b8428aad35023ba5a16799f5fe44fef5e7df2bbddc6f36f14",
+        "sourcePr": 1509,
+        "canonMergeStatus": "identity-absent",
+        "owner": "fleet orchestrator remediation lane"
+      },
+      {
+        "id": "EV007:packages/tooling/tool/cli/test/cache-accept-cli.test.ts:163:checkEffect@43#1",
+        "ruleId": "EV007",
+        "file": "packages/tooling/tool/cli/test/cache-accept-cli.test.ts",
+        "occurrence": "v2:05be48c9ad4f236eb324c1ddb95c74b74a05068e3676bbfdbc4ae8c2211deabd",
+        "sourcePr": 1389,
+        "canonMergeStatus": "identity-absent",
+        "owner": "fleet orchestrator remediation lane"
+      },
+      {
+        "id": "EV007:packages/tooling/tool/cli/test/cache-operational-acceptance.test.ts:386:checkEffect@38#1",
+        "ruleId": "EV007",
+        "file": "packages/tooling/tool/cli/test/cache-operational-acceptance.test.ts",
+        "occurrence": "v2:3eb2c64f5ef5b23138fd45fc829b338018ff06b8e9b01345449a0a6fd8aecd30",
+        "sourcePr": 1389,
+        "canonMergeStatus": "identity-absent",
+        "owner": "fleet orchestrator remediation lane"
+      },
+      {
+        "id": "EV009:packages/foundation/modeling/schema/test/LocalDate.test.ts:346:it.live@4#1",
+        "ruleId": "EV009",
+        "file": "packages/foundation/modeling/schema/test/LocalDate.test.ts",
+        "occurrence": "v2:bc49d94ab8529ef6fe89b35836bf941fac1b75069d9c749b6ac964b3aa8847c6",
+        "sourcePr": 1067,
+        "canonMergeStatus": "identity-absent",
+        "owner": "fleet orchestrator remediation lane"
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationCanonicalExtractionRanges.test.ts:2:@effect/platform-node@0#1",
+        "ruleId": "EV010",
+        "file": "packages/law-practice/server/test/CitationCanonicalExtractionRanges.test.ts",
+        "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+        "sourcePr": 3005,
+        "canonMergeStatus": "identity-absent",
+        "owner": "fleet orchestrator remediation lane"
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationHtmlWorkerProgram.test.ts:11:@effect/platform-bun/BunServices@0#1",
+        "ruleId": "EV010",
+        "file": "packages/law-practice/server/test/CitationHtmlWorkerProgram.test.ts",
+        "occurrence": "v2:30f5ad27b3466e9087faebe94dfc83f5ea9ae5070b9af25a085792eb5bd68f2c",
+        "sourcePr": 2743,
+        "canonMergeStatus": "identity-absent",
+        "owner": "fleet orchestrator remediation lane"
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/integration/CitationRegexTranslatorNode.test.ts:2:@effect/platform-bun/BunServices@0#1",
+        "ruleId": "EV010",
+        "file": "packages/law-practice/server/test/integration/CitationRegexTranslatorNode.test.ts",
+        "occurrence": "v2:30f5ad27b3466e9087faebe94dfc83f5ea9ae5070b9af25a085792eb5bd68f2c",
+        "sourcePr": 3005,
+        "canonMergeStatus": "identity-absent",
+        "owner": "fleet orchestrator remediation lane"
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/vitest-integration-shards.test.ts:2:@effect/platform-node@0#1",
+        "ruleId": "EV010",
+        "file": "packages/law-practice/server/test/vitest-integration-shards.test.ts",
+        "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+        "sourcePr": 3005,
+        "canonMergeStatus": "identity-absent",
+        "owner": "fleet orchestrator remediation lane"
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/vitest-shards-plan.test.ts:3:@effect/platform-node@0#1",
+        "ruleId": "EV010",
+        "file": "packages/law-practice/server/test/vitest-shards-plan.test.ts",
+        "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+        "sourcePr": 3007,
+        "canonMergeStatus": "identity-absent",
+        "owner": "fleet orchestrator remediation lane"
+      },
+      {
+        "id": "EV010:packages/tooling/tool/cli/test/Research/research-library-mine-pdf.test.ts:46:@effect/platform-node@0#1",
+        "ruleId": "EV010",
+        "file": "packages/tooling/tool/cli/test/Research/research-library-mine-pdf.test.ts",
+        "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
+        "sourcePr": 2892,
+        "canonMergeStatus": "identity-absent",
+        "owner": "fleet orchestrator remediation lane"
+      },
+      {
+        "id": "EV010:packages/tooling/tool/cli/test/ci-partitions.test.ts:22:@effect/platform-node@0#1",
+        "ruleId": "EV010",
+        "file": "packages/tooling/tool/cli/test/ci-partitions.test.ts",
+        "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
+        "sourcePr": 3007,
+        "canonMergeStatus": "identity-absent",
+        "owner": "fleet orchestrator remediation lane"
+      },
+      {
+        "id": "EV010:packages/tooling/tool/cli/test/harness-ledger.test.ts:41:@effect/platform-node@0#1",
+        "ruleId": "EV010",
+        "file": "packages/tooling/tool/cli/test/harness-ledger.test.ts",
+        "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+        "sourcePr": 2496,
+        "canonMergeStatus": "open",
+        "owner": "fleet orchestrator remediation lane"
+      }
+    ],
+    "exceptionReasonsMissingLiteralOwnerExit": [
+      {
+        "id": "EV004:packages/law-practice/server/test/CitationNativeSocket.test.ts:102:scoped@26#1",
+        "file": "packages/law-practice/server/test/CitationNativeSocket.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Reviewed intentional shorter lifetime: this Effect.scoped closes only the RPC client on the owned child's socket, before the surrounding owned-process operation retires the child and the test asserts its physical retirement. Reviewed in goals/citation-extraction-engine."
+      },
+      {
+        "id": "EV004:packages/law-practice/server/test/CitationNativeSocket.test.ts:224:scoped@19#1",
+        "file": "packages/law-practice/server/test/CitationNativeSocket.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Reviewed intentional shorter lifetime: this Effect.scoped closes only the RPC client on the owned child's socket, before the surrounding owned-process operation retires the child and the test asserts its physical retirement. Reviewed in goals/citation-extraction-engine."
+      },
+      {
+        "id": "EV004:packages/law-practice/server/test/CitationNativeSocket.test.ts:270:scoped@19#1",
+        "file": "packages/law-practice/server/test/CitationNativeSocket.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Reviewed intentional shorter lifetime: this Effect.scoped closes only the RPC client on the owned child's socket, before the surrounding owned-process operation retires the child and the test asserts its physical retirement. Reviewed in goals/citation-extraction-engine."
+      },
+      {
+        "id": "EV004:packages/law-practice/server/test/ClaimInspection.lexical.test.ts:752:scoped@81#1",
+        "file": "packages/law-practice/server/test/ClaimInspection.lexical.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Reviewed intentional shorter lifetime: this Effect.scoped closes only one successful borrowed-provider family helper before finalizer assertions; outer tokenizer ownership remains alive. Removing or hoisting the scope invalidates the acquisition/finalizer subject. No source-code fix or semantic waiver required. Owner: claim-check-performance provider-lifetime implementation owner. Source binding: fb03f12659e739089e5587621ca1d88583031773c416d95e5fd1080b6a0527c4. Expiry: Re-review on any change to test SHA256 fb03f12659e739089e5587621ca1d88583031773c416d95e5fd1080b6a0527c4 or to the deliberate family-versus-outer provider lifetime invariant. Independent review: provider-lifetime-implementation-independent-review-001/delivery-ratchet-addendum.md."
+      },
+      {
+        "id": "EV004:packages/law-practice/server/test/ClaimInspection.lexical.test.ts:828:scoped@88#1",
+        "file": "packages/law-practice/server/test/ClaimInspection.lexical.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Reviewed intentional shorter lifetime: this Effect.scoped closes only one typed-unavailable borrowed-provider family helper before finalizer assertions; outer tokenizer ownership remains alive. Removing or hoisting the scope invalidates the acquisition/finalizer subject. No source-code fix or semantic waiver required. Owner: claim-check-performance provider-lifetime implementation owner. Source binding: fb03f12659e739089e5587621ca1d88583031773c416d95e5fd1080b6a0527c4. Expiry: Re-review on any change to test SHA256 fb03f12659e739089e5587621ca1d88583031773c416d95e5fd1080b6a0527c4 or to the deliberate family-versus-outer provider lifetime invariant. Independent review: provider-lifetime-implementation-independent-review-001/delivery-ratchet-addendum.md."
+      },
+      {
+        "id": "EV010:packages/drivers/eyecite/test/index.test.ts:4:@effect/platform-node/NodeFileSystem@0#1",
+        "file": "packages/drivers/eyecite/test/index.test.ts",
+        "package": "@beep/eyecite",
+        "reason": "Authenticates the committed frozen six-form profile through the real filesystem; a MemoryFileSystem has no committed artifact to replay. Reviewed in goals/citation-extraction-engine."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationBuiltinCleaners.test.ts:16:@effect/platform-bun/BunServices@0#1",
+        "file": "packages/law-practice/server/test/CitationBuiltinCleaners.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Runs real worker children requiring OS-visible entrypoints, temporary files and/or cleanup markers; MemoryFileSystem is not visible to those children. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationCallbackMutations.test.ts:40:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationCallbackMutations.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationCallbackRuntimeIndex.test.ts:42:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationCallbackRuntimeIndex.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationCallbackSession.test.ts:36:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationCallbackSession.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationCaseResourceHash.test.ts:11:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationCaseResourceHash.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationCleanerPipeline.test.ts:18:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationCleanerPipeline.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationCleanerUnicodeValues.test.ts:11:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationCleanerUnicodeValues.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationCleanerValues.test.ts:17:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationCleanerValues.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationDefaultCallbacks.test.ts:44:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationDefaultCallbacks.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationDictionaryReentrancy.test.ts:12:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationDictionaryReentrancy.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationDiffKernel.test.ts:6:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationDiffKernel.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Reads the committed authenticated WASM asset and sealed original-source diff corpus through the actual filesystem. Seeding MemoryFileSystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-06-reference-token-extraction.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationExtractorControls.test.ts:18:@effect/platform-bun/BunServices@0#1",
+        "file": "packages/law-practice/server/test/CitationExtractorControls.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Runs real worker children requiring OS-visible entrypoints, temporary files and/or cleanup markers; MemoryFileSystem is not visible to those children. Reviewed in goals/citation-extraction-engine."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationFrozenEditions.test.ts:12:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationFrozenEditions.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationHostResources.test.ts:47:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationHostResources.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationHtmlBytes.test.ts:9:@effect/platform-bun/BunServices@0#1",
+        "file": "packages/law-practice/server/test/CitationHtmlBytes.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Runs real worker children requiring OS-visible entrypoints, temporary files and/or cleanup markers; MemoryFileSystem is not visible to those children. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationHtmlCleanerStage.test.ts:11:@effect/platform-bun/BunServices@0#1",
+        "file": "packages/law-practice/server/test/CitationHtmlCleanerStage.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Runs real worker children requiring OS-visible entrypoints, temporary files and/or cleanup markers; MemoryFileSystem is not visible to those children. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationHtmlCompletion.test.ts:7:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationHtmlCompletion.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationHtmlInput.test.ts:14:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationHtmlInput.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationHtmlKernel.test.ts:10:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationHtmlKernel.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationHtmlNativeInput.test.ts:15:@effect/platform-bun/BunServices@0#1",
+        "file": "packages/law-practice/server/test/CitationHtmlNativeInput.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationHtmlWorker.test.ts:9:@effect/platform-bun/BunServices@0#1",
+        "file": "packages/law-practice/server/test/CitationHtmlWorker.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Runs real worker children requiring OS-visible entrypoints, temporary files and/or cleanup markers; MemoryFileSystem is not visible to those children. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationHtmlWorkerCorpus.test.ts:18:@effect/platform-bun/BunServices@0#1",
+        "file": "packages/law-practice/server/test/CitationHtmlWorkerCorpus.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Runs real worker children requiring OS-visible entrypoints, temporary files and/or cleanup markers; MemoryFileSystem is not visible to those children. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationHtmlWorkerProtocol.test.ts:19:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationHtmlWorkerProtocol.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationLiteralCleaners.test.ts:14:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationLiteralCleaners.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationLiteralUnicodeComposition.test.ts:8:@effect/platform-bun/BunServices@0#1",
+        "file": "packages/law-practice/server/test/CitationLiteralUnicodeComposition.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationMixedResourceObjects.test.ts:33:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationMixedResourceObjects.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationModelMutation.test.ts:18:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationModelMutation.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationNativeProcess.test.ts:6:@effect/platform-bun/BunServices@0#1",
+        "file": "packages/law-practice/server/test/CitationNativeProcess.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Exercises real child process creation and independent OS PID exit acknowledgement; the regex worker also needs an OS-visible entrypoint and temporary working directory. MemoryFileSystem cannot preserve this subject. Owner: @beep/law-practice-server. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-03-native-regex-worker.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationNativeSocket.test.ts:14:@effect/platform-bun/BunServices@0#1",
+        "file": "packages/law-practice/server/test/CitationNativeSocket.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Runs real worker children requiring OS-visible entrypoints, temporary files and/or cleanup markers; MemoryFileSystem is not visible to those children. Reviewed in goals/citation-extraction-engine."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationPriorFulls.test.ts:18:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationPriorFulls.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationPublicationResourceHash.test.ts:11:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationPublicationResourceHash.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationPythonHash.test.ts:7:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationPythonHash.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationPythonUnicode.test.ts:9:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationPythonUnicode.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationRecognizerWorker.test.ts:13:@effect/platform-bun/BunServices@0#1",
+        "file": "packages/law-practice/server/test/CitationRecognizerWorker.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Runs real worker children requiring OS-visible entrypoints, temporary files and/or cleanup markers; MemoryFileSystem is not visible to those children. Reviewed in goals/citation-extraction-engine."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationRegexWorker.test.ts:27:@effect/platform-bun/BunServices@0#1",
+        "file": "packages/law-practice/server/test/CitationRegexWorker.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Exercises real child process creation and independent OS PID exit acknowledgement; the regex worker also needs an OS-visible entrypoint and temporary working directory. MemoryFileSystem cannot preserve this subject. Owner: @beep/law-practice-server. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-03-native-regex-worker.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationResolutionLimit.test.ts:12:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationResolutionLimit.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "These resolver integration tests load the authenticated committed frozen-edition bundle and source-bound callback fixtures from disk. A MemoryFileSystem without those independent assets changes the subject; the real filesystem is scoped by it.layer and performs no application writes."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationResolve.test.ts:6:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationResolve.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationResolverBoundary.test.ts:19:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationResolverBoundary.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "These resolver integration tests load the authenticated committed frozen-edition bundle and source-bound callback fixtures from disk. A MemoryFileSystem without those independent assets changes the subject; the real filesystem is scoped by it.layer and performs no application writes."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationResourceObjects.test.ts:36:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationResourceObjects.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationRuntimeDictionary.test.ts:13:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationRuntimeDictionary.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationRuntimeSet.test.ts:12:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationRuntimeSet.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationSessionDescriptors.test.ts:34:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationSessionDescriptors.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationSixFormProjection.test.ts:11:@effect/platform-bun/BunServices@0#1",
+        "file": "packages/law-practice/server/test/CitationSixFormProjection.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Runs real worker children requiring OS-visible entrypoints, temporary files and/or cleanup markers; MemoryFileSystem is not visible to those children. Reviewed in goals/citation-extraction-engine."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/CitationUnicodeDictionary.test.ts:12:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/CitationUnicodeDictionary.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/ClaimInspection.projection-fixtures.test.ts:5:@effect/platform-bun/BunFileSystem@0#1",
+        "file": "packages/law-practice/server/test/ClaimInspection.projection-fixtures.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "The invariant is the exact bytes on disk of two immutable authored fixture artifacts. Native BunFileSystem is provided once with it.layer alongside BunCrypto and BunPath; replacing it with a test filesystem would sever the evidence from actual frozen bytes. There is no production filesystem use or per-test platform provisioning. Owner: @beep/law-practice-server. Valid only for source SHA a2b5f71a0070d0750460ef64143a75b840f394af8ecb0c54afb7b501c26b5ce8; re-review on source or invariant change. Independent review: structural-projection-implementation-independent-review-001."
+      },
+      {
+        "id": "EV010:packages/law-practice/server/test/integration/CitationHtmlUnicode.test.ts:13:@effect/platform-bun/BunServices@0#1",
+        "file": "packages/law-practice/server/test/integration/CitationHtmlUnicode.test.ts",
+        "package": "@beep/law-practice-server",
+        "reason": "Runs real worker children requiring OS-visible entrypoints, temporary files and/or cleanup markers; MemoryFileSystem is not visible to those children. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md."
+      },
+      {
+        "id": "EV010:packages/tooling/tool/cli/test/agent-runs-slice.test.ts:7:@effect/platform-node@0#1",
+        "file": "packages/tooling/tool/cli/test/agent-runs-slice.test.ts",
+        "package": "@beep/repo-cli",
+        "reason": "The --install cases spawn the real CLI bin with a scoped temp HOME and assert the unit files it writes; a child process sees only the real filesystem, and the temp directory is scoped by it.layer."
+      },
+      {
+        "id": "EV010:packages/tooling/tool/cli/test/github-app-mint.test.ts:4:@effect/platform-node@0#1",
+        "file": "packages/tooling/tool/cli/test/github-app-mint.test.ts",
+        "package": "@beep/repo-cli",
+        "reason": "The handler spawns a real bash pipeline into a fake op and op-doctor on PATH through ChildProcessSpawner, and the dry run reads the committed repo-configs manifests; a live child process sees only the real filesystem."
+      },
+      {
+        "id": "EV010:packages/tooling/tool/cli/test/gitleaks-observation-digest.test.ts:10:@effect/platform-node@0#1",
+        "file": "packages/tooling/tool/cli/test/gitleaks-observation-digest.test.ts",
+        "package": "@beep/repo-cli",
+        "reason": "Each case runs the pinned gitleaks binary over a scoped temp directory with the repository's real .gitleaks.toml; an external scanner sees only the real filesystem."
+      },
+      {
+        "id": "EV010:packages/tooling/tool/cli/test/toolchain-prune-tsgo-backups.test.ts:3:@effect/platform-node@0#1",
+        "file": "packages/tooling/tool/cli/test/toolchain-prune-tsgo-backups.test.ts",
+        "package": "@beep/repo-cli",
+        "reason": "The CLI cases spawn the real bin with a scoped temp node_modules fixture as cwd, as root prepare does; a child process sees only the real filesystem, and the temp directory is scoped by it.layer."
+      },
+      {
+        "id": "EV010:packages/tooling/tool/cli/test/vitest-bun-exit-cleanup.test.ts:2:@effect/platform-node@0#1",
+        "file": "packages/tooling/tool/cli/test/vitest-bun-exit-cleanup.test.ts",
+        "package": "@beep/repo-cli",
+        "reason": "This regression exercises real Node process exit and HTTP server port-lock cleanup: the child reads the bundled setup/probe from a native temporary directory, creates real reservation files, and the parent verifies their removal after natural child exit. MemoryFileSystem would hide the child's files and change the subject. NodeServices.layer is scoped by it.layer; no worker is terminated. Owner: @beep/repo-cli. Retire this exception when the native Bun shim and its port-reservation filesystem contract retire."
+      },
+      {
+        "id": "EV012:packages/tooling/tool/cli/test/lint-workers.test.ts:46:vi.mock@0#1",
+        "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
+        "package": "@beep/repo-cli",
+        "reason": "The hoisted mock replaces runToExit and the oxlint branch of runCaptured so lint dispatch tests assert the worker command lines without spawning oxlint; every other capture runs the original implementation."
+      },
+      {
+        "id": "EV012:packages/tooling/tool/cli/test/lint-workers.test.ts:55:vi.mock@0#1",
+        "file": "packages/tooling/tool/cli/test/lint-workers.test.ts",
+        "package": "@beep/repo-cli",
+        "reason": "The hoisted mock stubs the ambient Turbo secret-session and environment-health probes so dispatch tests own process execution without reading the operator's 1Password or Turbo environment."
+      }
+    ]
+  },
+  "scope": "Historical acceptance reconciliation; current drift is owned by the fleet orchestrator. No current-zero claim."
+}

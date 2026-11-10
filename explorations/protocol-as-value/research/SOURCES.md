@@ -18,6 +18,7 @@
 |--------|-------|-----------------|----------|-------|-------------|
 | mining-2026-08-23 | Seven-area foldlab-concept audit of beep-effect (~60 findings, file:line cites) | this repo | [`../assets/mining-findings-2026-08-23.txt`](../assets/mining-findings-2026-08-23.txt) | five journal/register/fold/digest instances | reuse (in-repo) |
 | effect-engine-keying | Activity results keyed by `${executionId}/${activity.name}`; executionId digest of payload | [Effect-TS/effect-smol](https://github.com/Effect-TS/effect-smol) at `3a1128c7684e04d34d9f541f77adaac38a513056` (verified against a local checkout at that revision) | `packages/effect/src/cluster/ClusterWorkflowEngine.ts:510`; `workflow/WorkflowEngine.ts:693`; `workflow/Workflow.ts:317` | rename-re-executes verification | reference (MIT; upstream API, not vendored) |
+| encoder-differential-2026-11-10 | Differential run of four in-repo canonical-JSON encoders over 20,000 plain-JSON values | this repo | [`encoder-differential-2026-11-10.md`](./encoder-differential-2026-11-10.md) | byte equality on JSON; silent coercion off it | reuse (seeds the `canonical-digest-owner` property test) |
 
 ## 2. Upstream repositories & licenses
 
@@ -124,6 +125,12 @@ Papers/articles cited in RESEARCH.md (full per-claim URLs in
 - MLST, "Data and Code are one and the same" (Lessard) —
   https://www.youtube.com/watch?v=rie-9AEhYdY&t=3583s
 
+### Added 2026-11-10
+
+- RFC 8785, JSON Canonicalization Scheme (JCS), IETF, June 2020:
+  <https://www.rfc-editor.org/rfc/rfc8785>. The byte form the 2026-11-10
+  decision names.
+
 ## 4. In-repo capability references
 
 | Brick | Path | Status |
@@ -145,6 +152,11 @@ Papers/articles cited in RESEARCH.md (full per-claim URLs in
 | Canonical-JSON encoders (×3, no owner) | epistemic `CanonicalJson.ts`; PacketCore `PacketDigest.ts`; `OpenclawRender.ts` | seam to resolve |
 | drivers/workflow landing zone | reserved by `goals/effect-v4-workflow-engine-spike` | NET-NEW (reserved) |
 | Fibered kit + IdentityRegistry | design-locked, zero code | owned by `goals/identity-iri-fibered` (blocked) |
+| RFC 8785 emitter with typed refusals (added 2026-11-10) | `packages/foundation/modeling/jsonc/src/JsoncFingerprint.ts` | reuse; the canonical-bytes owner |
+| Epistemics encoder, current home (added 2026-11-10) | `packages/foundation/modeling/epistemics/src/internal/CanonicalJson.ts` | replace body with the owner |
+| `sha256:` digest schemas (added 2026-11-10) | `packages/foundation/capability/file-processing/src/Artifact/Artifact.schema.ts`; `packages/foundation/modeling/provenance/src/SourceTextIdentity.ts` | reuse; one grammar owner in `@beep/schema` |
+| Fibered kit, shipped (added 2026-11-10; supersedes the row above) | `packages/foundation/modeling/identity/src/Fibered.ts` | reuse when the protocol kit's gate fires |
+| Effect event log in use (added 2026-11-10) | `packages/tooling/library/agent-memory-store/src/MemoryLog.service.ts`; `packages/drivers/duckdb/src/DuckDbEventJournal.service.ts` | compare before any chain kit |
 
 ## 5. Cross-links & provenance
 
@@ -162,3 +174,7 @@ Papers/articles cited in RESEARCH.md (full per-claim URLs in
 - This packet: [`../RESEARCH.md`](../RESEARCH.md), [`../CAPTURE.md`](../CAPTURE.md);
   One Mechanism artifact [`../assets/one-mechanism.html`](../assets/one-mechanism.html)
   (live: https://claude.ai/code/artifact/81a980d8-2861-44a5-b173-424e5e257fc5).
+- Graduated goal (2026-11-10):
+  [`goals/canonical-digest-owner`](../../../goals/canonical-digest-owner/README.md).
+  `goals/identity-iri-fibered` has since completed; the entry above records
+  its state in August.
