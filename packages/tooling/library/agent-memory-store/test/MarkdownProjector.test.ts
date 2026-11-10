@@ -43,6 +43,7 @@ import { loadGoalsMarkdownSample, writeSampleFolder } from "./fixtures/goals-mar
 import { author, staleRevision } from "./fixtures.ts";
 import {
   createdNodes,
+  fileSystemRunningFirst,
   insertEvent,
   isBunRuntime,
   makeSpy,
@@ -82,6 +83,10 @@ describe("isMemoryFilePath", () => {
     expect(isMemoryFilePath(".git/notes.md")).toBe(false);
     expect(isMemoryFilePath("notes/.decisions.md.agent-memory-store-tmp")).toBe(false);
     expect(isMemoryFilePath("notes/.swap.md")).toBe(false);
+    expect(isMemoryFilePath("../escape.md")).toBe(false);
+    expect(isMemoryFilePath("/abs.md")).toBe(false);
+    expect(isMemoryFilePath("notes//x.md")).toBe(false);
+    expect(isMemoryFilePath("notes\\x.md")).toBe(false);
   });
 });
 
@@ -272,6 +277,119 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector import rules and projectNode (
         expect(refused).toMatchObject({ root: other });
         const cursor = yield* store.log.cursor;
         expect(cursor).toBe(first.cursor);
+      })
+    );
+
+    it.effect(
+      "a first import that loses the race to the same folder's import returns that import's base and appends nothing",
+      Effect.fnUntraced(function* () {
+        const workspace = yield* tempDirectory("beep-import-race-same-");
+        const folder = `${workspace}/memory`;
+        yield* writeFiles(folder, [["MEMORY.md", "# Index\n\n- one\n"]]);
+        const database = `${workspace}/memory.db`;
+        const winner = yield* openStore(database);
+        // The loser catches up on an empty log; the winner's import commits
+        // before the loser's first read, so the loser appends a second first import.
+        let won = O.none<{ readonly cursor: LogCursor; readonly folderDigest: string }>();
+        const loser = yield* openStore(
+          database,
+          fileSystemRunningFirst(
+            Effect.map(winner.projector.importFolder(PosixPath.make(folder)), (base) => {
+              won = O.some(base);
+            })
+          )
+        );
+        const lost = yield* loser.projector.importFolder(PosixPath.make(folder));
+        assertSome(
+          O.map(won, (base) => [base.cursor, base.folderDigest]),
+          [lost.cursor, lost.folderDigest]
+        );
+        const entries = yield* loser.log.entriesAfter(LogCursor.make(0));
+        expect(folderImportCount(entries)).toBe(1);
+        const created = yield* createdNodes(entries);
+        expect(created).toHaveLength(4);
+
+        yield* loser.projector.exportFolder(PosixPath.make(folder));
+        const files = yield* snapshotFolder(folder);
+        expect(A.map(files, (file) => textOf(file.bytes))).toEqual(["# Index\n\n- one\n"]);
+      })
+    );
+
+    it.effect(
+      "a first import that loses the race to another folder's import fails with ForeignFolderError",
+      Effect.fnUntraced(function* () {
+        const workspace = yield* tempDirectory("beep-import-race-other-");
+        const mine = `${workspace}/mine`;
+        const theirs = `${workspace}/theirs`;
+        yield* writeFiles(mine, [["MEMORY.md", "# Mine\n"]]);
+        yield* writeFiles(theirs, [["MEMORY.md", "# Theirs\n"]]);
+        const database = `${workspace}/memory.db`;
+        const winner = yield* openStore(database);
+        const loser = yield* openStore(
+          database,
+          fileSystemRunningFirst(winner.projector.importFolder(PosixPath.make(mine)))
+        );
+        const refused = yield* Effect.flip(loser.projector.importFolder(PosixPath.make(theirs)));
+        expect(refused).toBeInstanceOf(ForeignFolderError);
+        expect(refused).toMatchObject({ root: theirs });
+        const entries = yield* loser.log.entriesAfter(LogCursor.make(0));
+        expect(folderImportCount(entries)).toBe(1);
+      })
+    );
+
+    it.effect(
+      "a folder of more files than one fence insert holds is recorded whole: its second import returns the base",
+      Effect.fnUntraced(function* () {
+        const workspace = yield* tempDirectory("beep-import-chunks-");
+        const folder = `${workspace}/memory`;
+        yield* writeFiles(
+          folder,
+          A.makeBy(301, (index) => [`notes/note-${index}.md`, `Note ${index}.\n`] as const)
+        );
+        const store = yield* openStore(`${workspace}/memory.db`);
+        const first = yield* store.projector.importFolder(PosixPath.make(folder));
+        expect(first.files).toHaveLength(301);
+        const known = yield* store.sql.unsafe<{ readonly rows: number }>(
+          "SELECT COUNT(*) AS rows FROM agent_memory_folder_files"
+        );
+        expect(known).toEqual([{ rows: 301 }]);
+        const second = yield* store.projector.importFolder(PosixPath.make(folder));
+        expect(second.folderDigest).toBe(first.folderDigest);
+        expect(second.cursor).toBe(first.cursor);
+      })
+    );
+
+    it.effect(
+      "a log entry whose file path breaks the memory-file rule fails export with ProjectionError before anything is written",
+      Effect.fnUntraced(function* () {
+        const workspace = yield* tempDirectory("beep-export-escape-");
+        const folder = `${workspace}/memory`;
+        yield* writeFiles(folder, [["MEMORY.md", "# Memory\n"]]);
+        const database = `${workspace}/memory.db`;
+        const store = yield* openStore(database);
+        yield* store.projector.importFolder(PosixPath.make(folder));
+        const insert = yield* insertEvent(
+          NodeId.make(replayNodeId(1)),
+          O.none(),
+          MemoryFilePath.make("aa/escape.md"),
+          "paragraph",
+          "Escaped."
+        );
+        yield* store.log.append(insert.event);
+        // Rewrite the committed payload in place, the way a writer that skips
+        // the schema or a damaged database would: the path now leaves the folder.
+        yield* store.sql.unsafe(
+          "UPDATE agent_memory_journal SET payload = CAST(replace(CAST(payload AS TEXT), 'aa/escape.md', '../escape.md') AS BLOB) WHERE event = 'NodeCreated'"
+        );
+        const before = yield* snapshotFolder(workspace);
+
+        const fresh = yield* openStore(database);
+        const refused = yield* Effect.flip(fresh.projector.exportFolder(PosixPath.make(folder)));
+        expect(refused).toBeInstanceOf(ProjectionError);
+        expect(refused).toMatchObject({ operation: "exportFolder" });
+        const after = yield* snapshotFolder(workspace);
+        expect(A.map(after, (file) => file.path)).toEqual(A.map(before, (file) => file.path));
+        expect(A.some(after, (file) => Str.endsWith("escape.md")(file.path))).toBe(false);
       })
     );
 

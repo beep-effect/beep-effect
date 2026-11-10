@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-10T05:36:08.641Z
+Generated: 2026-11-10T06:33:42.054Z
 
 ## Scope
 
@@ -15,7 +15,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 15 |
 | publicModules | 3886 |
-| publicExports | 27735 |
+| publicExports | 27736 |
 | openModules | 114 |
 | openExports | 88 |
 | missingExportExamples | 0 |
@@ -155,7 +155,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 97 | `@beep/practice-setup` | `apps/practice-setup` | clean | 6 | 38 | 0 | 0 |
 | 98 | `@beep/repo-tsconfig` | `packages/tooling/library/repo-tsconfig` | clean | 5 | 24 | 0 | 0 |
 | 99 | `@beep/uspto-mcp` | `packages/drivers/uspto-mcp` | clean | 7 | 31 | 0 | 0 |
-| 100 | `@beep/agent-memory-store` | `packages/tooling/library/agent-memory-store` | clean | 28 | 167 | 0 | 0 |
+| 100 | `@beep/agent-memory-store` | `packages/tooling/library/agent-memory-store` | clean | 28 | 168 | 0 | 0 |
 | 101 | `@beep/cli-kit` | `packages/foundation/capability/cli-kit` | clean | 29 | 196 | 0 | 0 |
 | 102 | `@beep/doc-text` | `packages/drivers/doc-text` | clean | 3 | 11 | 0 | 0 |
 | 103 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | clean | 6 | 112 | 0 | 0 |

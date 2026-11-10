@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-10T05:36:08.641Z",
+  "generatedAt": "2026-11-10T06:33:42.054Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 15,
     "publicModules": 3886,
-    "publicExports": 27735,
+    "publicExports": 27736,
     "openModules": 114,
     "openExports": 88,
     "missingExportExamples": 0,
@@ -264992,7 +264992,7 @@
         "srcDir": "src",
         "sourceFileCount": 28,
         "publicModuleCount": 28,
-        "publicExportCount": 167
+        "publicExportCount": 168
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -265094,7 +265094,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 13,
+          "exportCount": 14,
           "remediationStatus": "resolved"
         },
         {
@@ -266114,12 +266114,34 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "FolderAlreadyImportedError",
+          "exportKind": "class",
+          "filePath": "src/AgentMemoryStore.errors.ts",
+          "repoPath": "packages/tooling/library/agent-memory-store/src/AgentMemoryStore.errors.ts",
+          "line": 407,
+          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-407-folderalreadyimportederror",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "UnimportedFolderError",
           "exportKind": "class",
           "filePath": "src/AgentMemoryStore.errors.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/AgentMemoryStore.errors.ts",
-          "line": 409,
-          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-409-unimportedfoldererror",
+          "line": 451,
+          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-451-unimportedfoldererror",
           "currentTags": [
             "@category",
             "@since"
@@ -266140,8 +266162,8 @@
           "exportKind": "class",
           "filePath": "src/AgentMemoryStore.errors.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/AgentMemoryStore.errors.ts",
-          "line": 456,
-          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-456-foreignfoldererror",
+          "line": 498,
+          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-498-foreignfoldererror",
           "currentTags": [
             "@category",
             "@since"
@@ -266162,8 +266184,8 @@
           "exportKind": "class",
           "filePath": "src/AgentMemoryStore.errors.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/AgentMemoryStore.errors.ts",
-          "line": 496,
-          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-496-reparserefusederror",
+          "line": 538,
+          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-538-reparserefusederror",
           "currentTags": [
             "@category",
             "@since"
@@ -266184,8 +266206,8 @@
           "exportKind": "class",
           "filePath": "src/AgentMemoryStore.errors.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/AgentMemoryStore.errors.ts",
-          "line": 527,
-          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-527-observationerror",
+          "line": 569,
+          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-569-observationerror",
           "currentTags": [
             "@category",
             "@since"
@@ -266206,8 +266228,8 @@
           "exportKind": "class",
           "filePath": "src/AgentMemoryStore.errors.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/AgentMemoryStore.errors.ts",
-          "line": 569,
-          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-569-symbolresolutionerror",
+          "line": 611,
+          "anchor": "packages-tooling-library-agent-memory-store-src-agentmemorystore-errors-ts-611-symbolresolutionerror",
           "currentTags": [
             "@category",
             "@since"
@@ -266542,8 +266564,8 @@
           "exportKind": "const",
           "filePath": "src/MarkdownProjector.layer.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MarkdownProjector.layer.ts",
-          "line": 136,
-          "anchor": "packages-tooling-library-agent-memory-store-src-markdownprojector-layer-ts-136-ismemoryfilepath",
+          "line": 137,
+          "anchor": "packages-tooling-library-agent-memory-store-src-markdownprojector-layer-ts-137-ismemoryfilepath",
           "currentTags": [
             "@param",
             "@returns",
@@ -266566,8 +266588,8 @@
           "exportKind": "const",
           "filePath": "src/MarkdownProjector.layer.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MarkdownProjector.layer.ts",
-          "line": 623,
-          "anchor": "packages-tooling-library-agent-memory-store-src-markdownprojector-layer-ts-623-markdownprojectorlayer",
+          "line": 657,
+          "anchor": "packages-tooling-library-agent-memory-store-src-markdownprojector-layer-ts-657-markdownprojectorlayer",
           "currentTags": [
             "@category",
             "@since"
@@ -266588,8 +266610,8 @@
           "exportKind": "const",
           "filePath": "src/MarkdownProjector.layer.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MarkdownProjector.layer.ts",
-          "line": 653,
-          "anchor": "packages-tooling-library-agent-memory-store-src-markdownprojector-layer-ts-653-makemarkdownstoresqlitelayer",
+          "line": 687,
+          "anchor": "packages-tooling-library-agent-memory-store-src-markdownprojector-layer-ts-687-makemarkdownstoresqlitelayer",
           "currentTags": [
             "@param",
             "@returns",
@@ -266656,8 +266678,8 @@
           "exportKind": "const",
           "filePath": "src/MemoryLog.layer.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MemoryLog.layer.ts",
-          "line": 91,
-          "anchor": "packages-tooling-library-agent-memory-store-src-memorylog-layer-ts-91-memorylogjournaltables",
+          "line": 99,
+          "anchor": "packages-tooling-library-agent-memory-store-src-memorylog-layer-ts-99-memorylogjournaltables",
           "currentTags": [
             "@category",
             "@since"
@@ -266678,8 +266700,8 @@
           "exportKind": "const",
           "filePath": "src/MemoryLog.layer.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MemoryLog.layer.ts",
-          "line": 425,
-          "anchor": "packages-tooling-library-agent-memory-store-src-memorylog-layer-ts-425-memoryloglayer",
+          "line": 452,
+          "anchor": "packages-tooling-library-agent-memory-store-src-memorylog-layer-ts-452-memoryloglayer",
           "currentTags": [
             "@category",
             "@since"
@@ -266700,8 +266722,8 @@
           "exportKind": "const",
           "filePath": "src/MemoryLog.layer.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MemoryLog.layer.ts",
-          "line": 460,
-          "anchor": "packages-tooling-library-agent-memory-store-src-memorylog-layer-ts-460-makememorysqlclientlayer",
+          "line": 487,
+          "anchor": "packages-tooling-library-agent-memory-store-src-memorylog-layer-ts-487-makememorysqlclientlayer",
           "currentTags": [
             "@param",
             "@returns",
@@ -266724,8 +266746,8 @@
           "exportKind": "const",
           "filePath": "src/MemoryLog.layer.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MemoryLog.layer.ts",
-          "line": 508,
-          "anchor": "packages-tooling-library-agent-memory-store-src-memorylog-layer-ts-508-makememorylogsqlitelayer",
+          "line": 535,
+          "anchor": "packages-tooling-library-agent-memory-store-src-memorylog-layer-ts-535-makememorylogsqlitelayer",
           "currentTags": [
             "@param",
             "@returns",
@@ -266748,8 +266770,8 @@
           "exportKind": "re-export",
           "filePath": "src/MemoryLog.service.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MemoryLog.service.ts",
-          "line": 32,
-          "anchor": "packages-tooling-library-agent-memory-store-src-memorylog-service-ts-32-export-type-entry-from-effect-eventlog-eventjournal",
+          "line": 33,
+          "anchor": "packages-tooling-library-agent-memory-store-src-memorylog-service-ts-33-export-type-entry-from-effect-eventlog-eventjournal",
           "currentTags": [
             "@category",
             "@since"
@@ -266770,8 +266792,8 @@
           "exportKind": "class",
           "filePath": "src/MemoryLog.service.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MemoryLog.service.ts",
-          "line": 91,
-          "anchor": "packages-tooling-library-agent-memory-store-src-memorylog-service-ts-91-memorylog",
+          "line": 100,
+          "anchor": "packages-tooling-library-agent-memory-store-src-memorylog-service-ts-100-memorylog",
           "currentTags": [
             "@category",
             "@since"
@@ -266814,8 +266836,8 @@
           "exportKind": "class",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 66,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-66-nodecreated",
+          "line": 71,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-71-nodecreated",
           "currentTags": [
             "@category",
             "@since"
@@ -266836,8 +266858,8 @@
           "exportKind": "class",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 102,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-102-noderevised",
+          "line": 107,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-107-noderevised",
           "currentTags": [
             "@category",
             "@since"
@@ -266858,8 +266880,8 @@
           "exportKind": "class",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 140,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-140-nodestatuschanged",
+          "line": 145,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-145-nodestatuschanged",
           "currentTags": [
             "@category",
             "@since"
@@ -266880,8 +266902,8 @@
           "exportKind": "class",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 176,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-176-noderetired",
+          "line": 181,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-181-noderetired",
           "currentTags": [
             "@category",
             "@since"
@@ -266902,8 +266924,8 @@
           "exportKind": "class",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 215,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-215-folderimported",
+          "line": 220,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-220-folderimported",
           "currentTags": [
             "@category",
             "@since"
@@ -266924,8 +266946,8 @@
           "exportKind": "class",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 256,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-256-fileimported",
+          "line": 261,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-261-fileimported",
           "currentTags": [
             "@category",
             "@since"
@@ -266946,8 +266968,8 @@
           "exportKind": "class",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 291,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-291-writeheld",
+          "line": 296,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-296-writeheld",
           "currentTags": [
             "@category",
             "@since"
@@ -266968,8 +266990,8 @@
           "exportKind": "class",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 328,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-328-holdresolved",
+          "line": 333,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-333-holdresolved",
           "currentTags": [
             "@category",
             "@since"
@@ -266990,8 +267012,8 @@
           "exportKind": "const",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 365,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-365-nodecreatedevent",
+          "line": 370,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-370-nodecreatedevent",
           "currentTags": [
             "@category",
             "@since"
@@ -267012,8 +267034,8 @@
           "exportKind": "const",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 386,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-386-noderevisedevent",
+          "line": 391,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-391-noderevisedevent",
           "currentTags": [
             "@category",
             "@since"
@@ -267034,8 +267056,8 @@
           "exportKind": "const",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 407,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-407-nodestatuschangedevent",
+          "line": 412,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-412-nodestatuschangedevent",
           "currentTags": [
             "@category",
             "@since"
@@ -267056,8 +267078,8 @@
           "exportKind": "const",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 428,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-428-noderetiredevent",
+          "line": 433,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-433-noderetiredevent",
           "currentTags": [
             "@category",
             "@since"
@@ -267078,8 +267100,8 @@
           "exportKind": "const",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 449,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-449-folderimportedevent",
+          "line": 460,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-460-folderimportedevent",
           "currentTags": [
             "@category",
             "@since"
@@ -267100,8 +267122,8 @@
           "exportKind": "const",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 469,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-469-fileimportedevent",
+          "line": 481,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-481-fileimportedevent",
           "currentTags": [
             "@category",
             "@since"
@@ -267122,8 +267144,8 @@
           "exportKind": "const",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 489,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-489-writeheldevent",
+          "line": 501,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-501-writeheldevent",
           "currentTags": [
             "@category",
             "@since"
@@ -267144,8 +267166,8 @@
           "exportKind": "const",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 515,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-515-holdresolvedevent",
+          "line": 527,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-527-holdresolvedevent",
           "currentTags": [
             "@category",
             "@since"
@@ -267166,8 +267188,8 @@
           "exportKind": "const",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 543,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-543-memoryevents",
+          "line": 555,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-555-memoryevents",
           "currentTags": [
             "@category",
             "@since"
@@ -267188,8 +267210,8 @@
           "exportKind": "type",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 559,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-559-memoryevent",
+          "line": 571,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-571-memoryevent",
           "currentTags": [
             "@category",
             "@since"
@@ -267210,8 +267232,8 @@
           "exportKind": "const",
           "filePath": "src/NodeEvent.events.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeEvent.events.ts",
-          "line": 581,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-581-memorylogschema",
+          "line": 593,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeevent-events-ts-593-memorylogschema",
           "currentTags": [
             "@category",
             "@since"
@@ -267480,8 +267502,8 @@
           "exportKind": "const",
           "filePath": "src/NodeIdentity.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeIdentity.models.ts",
-          "line": 188,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-188-memoryfilepath",
+          "line": 203,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-203-memoryfilepath",
           "currentTags": [
             "@category",
             "@since"
@@ -267502,8 +267524,8 @@
           "exportKind": "type",
           "filePath": "src/NodeIdentity.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeIdentity.models.ts",
-          "line": 200,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-200-memoryfilepath",
+          "line": 220,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-220-memoryfilepath",
           "currentTags": [
             "@category",
             "@since"
@@ -267524,8 +267546,8 @@
           "exportKind": "const",
           "filePath": "src/NodeIdentity.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeIdentity.models.ts",
-          "line": 233,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-233-logcursor",
+          "line": 253,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-253-logcursor",
           "currentTags": [
             "@category",
             "@since"
@@ -267546,8 +267568,8 @@
           "exportKind": "type",
           "filePath": "src/NodeIdentity.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeIdentity.models.ts",
-          "line": 246,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-246-logcursor",
+          "line": 266,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-266-logcursor",
           "currentTags": [
             "@category",
             "@since"
@@ -267568,8 +267590,8 @@
           "exportKind": "const",
           "filePath": "src/NodeIdentity.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeIdentity.models.ts",
-          "line": 271,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-271-nodekind",
+          "line": 291,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-291-nodekind",
           "currentTags": [
             "@category",
             "@since"
@@ -267590,8 +267612,8 @@
           "exportKind": "type",
           "filePath": "src/NodeIdentity.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeIdentity.models.ts",
-          "line": 293,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-293-nodekind",
+          "line": 313,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-313-nodekind",
           "currentTags": [
             "@category",
             "@since"
@@ -267612,8 +267634,8 @@
           "exportKind": "class",
           "filePath": "src/NodeIdentity.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeIdentity.models.ts",
-          "line": 319,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-319-revisionpreimage",
+          "line": 339,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-339-revisionpreimage",
           "currentTags": [
             "@category",
             "@since"
@@ -267634,8 +267656,8 @@
           "exportKind": "const",
           "filePath": "src/NodeIdentity.models.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/NodeIdentity.models.ts",
-          "line": 368,
-          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-368-revisionpreimage",
+          "line": 388,
+          "anchor": "packages-tooling-library-agent-memory-store-src-nodeidentity-models-ts-388-revisionpreimage",
           "currentTags": [
             "@param",
             "@returns",

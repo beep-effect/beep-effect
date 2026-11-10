@@ -41,7 +41,7 @@ import * as Digest from "effect/crypto/Digest";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
@@ -70,7 +70,7 @@ import { LineageId } from "./Observation.events.ts";
 import { BaseExport, BaseFile, BaseNode } from "./Operation.models.ts";
 import { OccurrenceAnchor } from "./SpanAnchor.models.ts";
 import type { SqliteClientConfig } from "@beep/sqlite";
-import type { MemoryLogError } from "./AgentMemoryStore.errors.ts";
+import type { FolderAlreadyImportedError, MemoryLogError } from "./AgentMemoryStore.errors.ts";
 import type { ProjectedNode, Projection } from "./internal/MarkdownProjection.ts";
 import type { MarkdownPartition, PartitionNode } from "./MarkdownPartition.models.ts";
 import type { MemoryEvent } from "./NodeEvent.events.ts";
@@ -115,9 +115,10 @@ export const MarkdownPartitionExtractor: SourceTextExtractor = SourceTextExtract
  *
  * **Details**
  *
- * A memory file's relative path ends in `.md` and has no segment starting with
- * `.`, so hidden folders, editor swap files and the projector's own temporary
- * files are never read or written.
+ * The guard of {@link MemoryFilePath}: a memory file's relative path ends in
+ * `.md` and has no empty segment or segment starting with `.`, so hidden
+ * folders, editor swap files and the projector's own temporary files are
+ * never read or written.
  *
  * **Example** (Check memory file paths)
  *
@@ -133,9 +134,7 @@ export const MarkdownPartitionExtractor: SourceTextExtractor = SourceTextExtract
  * @category predicates
  * @since 0.0.0
  */
-export const isMemoryFilePath = (relativePath: string): boolean =>
-  Str.endsWith(".md")(relativePath) &&
-  A.every(Str.split(relativePath, "/"), (segment) => Str.isNonEmpty(segment) && !Str.startsWith(".")(segment));
+export const isMemoryFilePath: (relativePath: string) => relativePath is MemoryFilePath = S.is(MemoryFilePath);
 
 // A memory file as read from disk.
 interface DiskFile {
@@ -163,6 +162,10 @@ const utf8 = new TextEncoder();
 // file's first gap node and the bytes round-trip; `fatal` refuses bytes that
 // are not UTF-8, which could not round-trip.
 const strictUtf8 = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
+
+// Three bound parameters per row: 300 rows stay under the 999-parameter
+// limit of the oldest SQLite builds, and far under the 32,766 of current ones.
+const FOLDER_FILE_ROWS_PER_INSERT = 300;
 
 const knownKey = (path: string, digest: string): string => `${path}\u0000${digest}`;
 
@@ -272,9 +275,8 @@ const make = Effect.gen(function* () {
       .readDirectory(root, { recursive: true })
       .pipe(Effect.mapError(failure(operation, O.none())));
     const files: Array<DiskFile> = [];
-    for (const relative of A.sort(A.filter(entries, isMemoryFilePath), Order.String)) {
-      const path = MemoryFilePath.make(relative);
-      const absolute = joinPath(root, relative);
+    for (const path of A.sort(A.filter(entries, isMemoryFilePath), Order.String)) {
+      const absolute = joinPath(root, path);
       const info = yield* fs.stat(absolute).pipe(Effect.mapError(failure(operation, O.some(path))));
       if (info.type === "File") {
         const bytes = yield* fs.readFile(absolute).pipe(Effect.mapError(failure(operation, O.some(path))));
@@ -315,20 +317,27 @@ const make = Effect.gen(function* () {
   // Records the bytes of `files` as known in the folder `key` names. The rows
   // land before the bytes they describe, so a write cut short leaves every
   // file at bytes the fence knows.
+  // The rows go in chunks of FOLDER_FILE_ROWS_PER_INSERT inside one
+  // transaction, so a folder of any size stays under SQLite's bound-parameter
+  // limit and its rows still land all or none.
   const recordFolderFiles = (
     operation: string,
     key: string,
     files: ReadonlyArray<{ readonly path: MemoryFilePath; readonly digest: Sha256Hex }>
   ) =>
-    A.match(files, {
-      onEmpty: () => Effect.void,
-      onNonEmpty: (rows) =>
-        sql`
-          INSERT INTO agent_memory_folder_files ${sql.insert(
-            A.map(rows, (file) => ({ root: key, file_path: file.path, file_digest: file.digest }))
-          )}
-          ON CONFLICT DO NOTHING`.pipe(Effect.asVoid, Effect.mapError(failure(operation, O.none()))),
-    });
+    sql
+      .withTransaction(
+        Effect.forEach(
+          A.chunksOf(files, FOLDER_FILE_ROWS_PER_INSERT),
+          (rows) => sql`
+            INSERT INTO agent_memory_folder_files ${sql.insert(
+              A.map(rows, (file) => ({ root: key, file_path: file.path, file_digest: file.digest }))
+            )}
+            ON CONFLICT DO NOTHING`,
+          { discard: true }
+        )
+      )
+      .pipe(Effect.mapError(failure(operation, O.none())));
 
   // The fence of AC-8: the log imported a folder, and every memory file in
   // this folder holds bytes this store imported from or wrote to this same
@@ -473,6 +482,26 @@ const make = Effect.gen(function* () {
     return A.append(events, folderImported);
   });
 
+  // Decision `second-import-is-idempotent-on-a-projected-folder`: the log
+  // already holds a folder, so the import appends nothing.
+  const reimport = Effect.fnUntraced(function* (root: PosixPath, disk: ReadonlyArray<DiskFile>) {
+    const projected = yield* isProjectedFolder("importFolder", root, disk);
+    if (!projected) {
+      const folderDigest = yield* folderDigestOf("importFolder", listingOf(disk));
+      return yield* ForeignFolderError.make({ root, folderDigest });
+    }
+    return yield* currentBase("importFolder");
+  });
+
+  // A first import that lost the race to another writer's first import: the
+  // same folder bytes are the same import, any other folder is foreign.
+  const lostImport = Effect.fnUntraced(function* (root: PosixPath, refused: FolderAlreadyImportedError) {
+    if (refused.folderDigest !== refused.importedFolderDigest) {
+      return yield* ForeignFolderError.make({ root, folderDigest: refused.folderDigest });
+    }
+    return yield* currentBase("importFolder");
+  });
+
   const importFolderUnlocked = Effect.fnUntraced(function* (root: PosixPath) {
     yield* catchUp("importFolder");
     const exists = yield* fs.exists(root).pipe(Effect.mapError(failure("importFolder", O.none())));
@@ -481,22 +510,27 @@ const make = Effect.gen(function* () {
     }
     const disk = yield* scanFolder("importFolder", root);
     if (MutableHashSet.size(projection.folders) > 0) {
-      // Decision `second-import-is-idempotent-on-a-projected-folder`.
-      const projected = yield* isProjectedFolder("importFolder", root, disk);
-      if (!projected) {
-        const folderDigest = yield* folderDigestOf("importFolder", listingOf(disk));
-        return yield* ForeignFolderError.make({ root, folderDigest });
-      }
-      return yield* currentBase("importFolder");
+      return yield* reimport(root, disk);
     }
     const events = yield* importEvents(disk);
     // The folder's rows say only that it held these bytes, which stays true
     // if the append below fails.
     const key = yield* folderKeyOf("importFolder", root);
     yield* recordFolderFiles("importFolder", key, disk);
-    yield* log.appendMany(events).pipe(Effect.mapError(failure("importFolder", O.none())));
+    // The log refuses a second FolderImported in the writer transaction, so of
+    // two first imports racing on one database exactly one lands.
+    const refused = yield* log
+      .appendMany(events)
+      .pipe(
+        Effect.as(O.none<FolderAlreadyImportedError>()),
+        Effect.catchTag("FolderAlreadyImportedError", flow(O.some, Effect.succeed)),
+        Effect.mapError(failure("importFolder", O.none()))
+      );
     yield* catchUp("importFolder");
-    return yield* currentBase("importFolder");
+    return yield* O.match(refused, {
+      onNone: () => currentBase("importFolder"),
+      onSome: (error) => lostImport(root, error),
+    });
   });
 
   const writeAtomically = Effect.fnUntraced(function* (root: PosixPath, file: BuiltFile) {

@@ -16,7 +16,7 @@ import { $AgentMemoryStoreId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as EventJournal from "effect/eventlog/EventJournal";
-import { dual } from "effect/Function";
+import { constVoid, dual } from "effect/Function";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
@@ -34,6 +34,7 @@ import {
 import { LogCursor, MemoryFilePath, NodeId, NodeKind, RevisionId } from "../NodeIdentity.models.ts";
 import type { Sha256Hex } from "@beep/schema";
 import type { Entry } from "effect/eventlog/EventJournal";
+import type { LazyArg } from "effect/Function";
 import type { FileImported } from "../NodeEvent.events.ts";
 
 const $I = $AgentMemoryStoreId.create("internal/MarkdownProjection");
@@ -86,13 +87,16 @@ const decodeRetired = S.decodeUnknownEffect(NodeRetiredEvent.payloadSchemaBinary
 const decodeFileImported = S.decodeUnknownEffect(FileImportedEvent.payloadSchemaBinary);
 const decodeFolderImported = S.decodeUnknownEffect(FolderImportedEvent.payloadSchemaBinary);
 
+// Lists `nodeId` under `key` once: a node folded again keeps its one place.
 const pushTo = <K>(map: MutableHashMap.MutableHashMap<K, Array<NodeId>>, key: K, nodeId: NodeId): void => {
   O.match(MutableHashMap.get(map, key), {
     onNone: () => {
       MutableHashMap.set(map, key, [nodeId]);
     },
     onSome: (list) => {
-      list.push(nodeId);
+      if (!A.contains(list, nodeId)) {
+        list.push(nodeId);
+      }
     },
   });
 };
@@ -113,12 +117,21 @@ const updateNode = (
   );
 };
 
-const applyEntry = (projection: Projection, entry: Entry) =>
+// A revision that keeps its node live: a NodeRevised or a NodeStatusChanged.
+const liveRevision =
+  (projection: Projection) =>
+  (payload: { readonly nodeId: NodeId; readonly revisionId: RevisionId; readonly text: string }): LazyArg<void> =>
+  () =>
+    updateNode(projection, payload.nodeId, { live: true, revisionId: payload.revisionId, text: payload.text });
+
+// Decodes one entry's payload and returns what folding it does to the
+// projection, so the caller applies it in step with the cursor.
+const entryStep = (projection: Projection, entry: Entry): Effect.Effect<LazyArg<void>, S.SchemaError> =>
   Match.value(entry.event).pipe(
     // The log refuses a second NodeCreated for a node, so each node is created
     // once here.
     Match.when(NodeCreatedEvent.tag, () =>
-      Effect.map(decodeCreated(entry.payload), (payload) => {
+      Effect.map(decodeCreated(entry.payload), (payload) => () => {
         MutableHashMap.set(
           projection.nodes,
           payload.nodeId,
@@ -143,45 +156,46 @@ const applyEntry = (projection: Projection, entry: Entry) =>
         });
       })
     ),
-    Match.when(NodeRevisedEvent.tag, () =>
-      Effect.map(decodeRevised(entry.payload), (payload) =>
-        updateNode(projection, payload.nodeId, { live: true, revisionId: payload.revisionId, text: payload.text })
-      )
-    ),
+    Match.when(NodeRevisedEvent.tag, () => Effect.map(decodeRevised(entry.payload), liveRevision(projection))),
     Match.when(NodeStatusChangedEvent.tag, () =>
-      Effect.map(decodeStatusChanged(entry.payload), (payload) =>
-        updateNode(projection, payload.nodeId, { live: true, revisionId: payload.revisionId, text: payload.text })
-      )
+      Effect.map(decodeStatusChanged(entry.payload), liveRevision(projection))
     ),
     Match.when(NodeRetiredEvent.tag, () =>
-      Effect.map(decodeRetired(entry.payload), (payload) =>
-        updateNode(projection, payload.nodeId, { live: false, revisionId: payload.revisionId, text: "" })
+      Effect.map(
+        decodeRetired(entry.payload),
+        (payload) => () =>
+          updateNode(projection, payload.nodeId, { live: false, revisionId: payload.revisionId, text: "" })
       )
     ),
     Match.when(FileImportedEvent.tag, () =>
-      Effect.map(decodeFileImported(entry.payload), (payload) => {
+      Effect.map(decodeFileImported(entry.payload), (payload) => () => {
         MutableHashMap.set(projection.files, payload.filePath, payload);
       })
     ),
     Match.when(FolderImportedEvent.tag, () =>
-      Effect.map(decodeFolderImported(entry.payload), (payload) => {
+      Effect.map(decodeFolderImported(entry.payload), (payload) => () => {
         MutableHashSet.add(projection.folders, payload.folderDigest);
       })
     ),
     // Held writes and their resolutions place nothing; their revisions arrive
     // as node events.
-    Match.orElse(() => Effect.void)
+    Match.orElse(() => Effect.succeed(constVoid))
   );
 
 /**
  * Folds entries committed after the projection's cursor, in commit order, and
- * advances the cursor past them.
+ * advances the cursor past each one as it is folded.
+ *
+ * Each entry's change and its cursor step run with no yield between them, so
+ * an interruption or a payload that fails to decode leaves the cursor right
+ * after the last folded entry and the next fold starts there.
  */
 export const applyEntries = Effect.fnUntraced(function* (projection: Projection, entries: ReadonlyArray<Entry>) {
   for (const entry of entries) {
-    yield* applyEntry(projection, entry);
+    const step = yield* entryStep(projection, entry);
+    step();
+    projection.cursor = LogCursor.make(projection.cursor + 1);
   }
-  projection.cursor = LogCursor.make(projection.cursor + entries.length);
 });
 
 // Newest first by journal entry order: creation time, then entry id bytes.

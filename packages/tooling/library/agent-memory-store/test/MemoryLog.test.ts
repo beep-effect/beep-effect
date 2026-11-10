@@ -9,6 +9,8 @@
 import {
   ConflictResolution,
   ContentHash,
+  FileImported,
+  FolderAlreadyImportedError,
   FolderImported,
   HoldId,
   HoldNotOpenError,
@@ -33,8 +35,9 @@ import {
   UnplacedNodeError,
   WriteHeld,
 } from "@beep/agent-memory-store";
+import { Sha256Hex } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -223,6 +226,76 @@ describe.skipIf(!isBunRuntime)("MemoryLog live layer (Bun runtime)", () => {
       yield* log.appendMany([after(nodeB, r2, nodeA, filePath), after(unknownNode, r3, nodeB, filePath)]);
       const placed = yield* log.heads(unknownNode);
       expect(placed).toEqual([r3]);
+    })
+  );
+
+  it.effect(
+    "a NodeCreated or FileImported whose path breaks the memory-file rule fails the append with MemoryLogError and appends nothing",
+    Effect.fnUntraced(function* () {
+      const log = yield* freshLog();
+      const outside = ["../escape.md", ".git/x.md", "notes.txt", "/abs.md", "notes//x.md", "notes\\x.md", ""];
+      for (const path of outside) {
+        expect(S.is(MemoryFilePath)(path)).toBe(false);
+        const event = created(nodeA, r1);
+        // An unchecked payload stands in for a writer that skipped the schema.
+        const unchecked: MemoryEvent =
+          event._tag === "NodeCreated"
+            ? {
+                _tag: "NodeCreated",
+                payload: NodeCreated.make(
+                  { ...event.payload, filePath: path as MemoryFilePath },
+                  { disableChecks: true }
+                ),
+              }
+            : event;
+        const refused = yield* Effect.flip(log.append(unchecked));
+        expect(refused).toMatchObject({ _tag: "MemoryLogError", operation: "append" });
+        // The schema error names the field that broke the rule.
+        const message = S.is(MemoryLogError)(refused) ? refused.message : O.none();
+        assertTrue(O.exists(message, Str.includes("filePath")));
+      }
+      const imported = yield* Effect.flip(
+        log.append({
+          _tag: "FileImported",
+          payload: FileImported.make(
+            { filePath: "../escape.md" as MemoryFilePath, fileDigest: folderDigest, nodeCount: 0, author },
+            { disableChecks: true }
+          ),
+        })
+      );
+      expect(imported).toMatchObject({ _tag: "MemoryLogError", operation: "append" });
+      const cursor = yield* log.cursor;
+      const heads = yield* log.heads(nodeA);
+      expect(cursor).toBe(LogCursor.make(0));
+      expect(heads).toEqual([]);
+    })
+  );
+
+  it.effect(
+    "a second FolderImported fails its whole batch with FolderAlreadyImportedError naming both folders",
+    Effect.fnUntraced(function* () {
+      const log = yield* freshLog();
+      yield* log.appendMany([created(nodeA, r1), folderImported]);
+      const otherFolder = Sha256Hex.make(Str.repeat(64)("5"));
+      const second: MemoryEvent = {
+        _tag: "FolderImported",
+        payload: FolderImported.make({ folderDigest: otherFolder, fileCount: 1, nodeCount: 1, author }),
+      };
+      const refused = yield* Effect.flip(log.appendMany([created(nodeB, r2), second]));
+      expect(refused).toBeInstanceOf(FolderAlreadyImportedError);
+      expect(refused).toMatchObject({ folderDigest: otherFolder, importedFolderDigest: folderDigest });
+      // The refused batch's NodeCreated rolled back with it.
+      const headsB = yield* log.heads(nodeB);
+      const cursor = yield* log.cursor;
+      expect(headsB).toEqual([]);
+      expect(cursor).toBe(LogCursor.make(2));
+      // The same folder digest is refused too: one log holds one folder import.
+      const repeat = yield* Effect.flip(log.append(folderImported));
+      expect(repeat).toMatchObject({
+        _tag: "FolderAlreadyImportedError",
+        folderDigest,
+        importedFolderDigest: folderDigest,
+      });
     })
   );
 

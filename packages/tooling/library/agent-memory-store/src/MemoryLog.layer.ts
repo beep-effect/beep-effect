@@ -36,6 +36,7 @@
  * @since 0.0.0
  */
 
+import { Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
@@ -55,9 +56,16 @@ import * as Reactivity from "effect/reactivity/Reactivity";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as SqlError from "effect/sql/SqlError";
-import { HoldNotOpenError, MemoryLogError, StaleParentsError, UnplacedNodeError } from "./AgentMemoryStore.errors.ts";
+import {
+  FolderAlreadyImportedError,
+  HoldNotOpenError,
+  MemoryLogError,
+  StaleParentsError,
+  UnplacedNodeError,
+} from "./AgentMemoryStore.errors.ts";
 import { MemoryLog } from "./MemoryLog.service.ts";
 import {
+  FolderImportedEvent,
   MemoryEvents,
   MemoryLogSchema,
   NodeCreatedEvent,
@@ -105,12 +113,14 @@ const HoldRows = S.Array(S.Struct({ open: S.Literals([0, 1]) }));
 const OrderRows = S.Array(S.Struct({ entry_id: EventJournal.EntryId }));
 const CursorRows = S.Array(S.Struct({ cursor: LogCursor }));
 const NodeFileRows = S.Array(S.Struct({ file_path: MemoryFilePath }));
+const FolderRows = S.Array(S.Struct({ primary_key: Sha256Hex }));
 
 const decodeHeadRows = S.decodeUnknownEffect(HeadRows);
 const decodeHoldRows = S.decodeUnknownEffect(HoldRows);
 const decodeOrderRows = S.decodeUnknownEffect(OrderRows);
 const decodeCursorRows = S.decodeUnknownEffect(CursorRows);
 const decodeNodeFileRows = S.decodeUnknownEffect(NodeFileRows);
+const decodeFolderRows = S.decodeUnknownEffect(FolderRows);
 
 const createTables = Effect.fnUntraced(function* () {
   const sql = yield* SqlClient.SqlClient;
@@ -165,6 +175,21 @@ const recordOrder = Effect.fnUntraced(function* (entry: Entry) {
     INSERT INTO agent_memory_order (sequence, entry_id, event, primary_key)
     SELECT COALESCE(MAX(sequence), 0) + 1, ${entry.id}, ${entry.event}, ${entry.primaryKey}
     FROM agent_memory_order`;
+});
+
+// One log holds one memory folder: a FolderImported lands only when the log
+// holds none, checked in the writer transaction like the compare-and-set.
+const importFolder = Effect.fnUntraced(function* (folderDigest: Sha256Hex, entry: Entry) {
+  const sql = yield* SqlClient.SqlClient;
+  const rows = yield* sql`
+    SELECT primary_key FROM agent_memory_order WHERE event = ${FolderImportedEvent.tag} LIMIT 1`.pipe(
+    Effect.flatMap(decodeFolderRows)
+  );
+  const imported = A.head(rows);
+  if (O.isSome(imported)) {
+    return yield* FolderAlreadyImportedError.make({ folderDigest, importedFolderDigest: imported.value.primary_key });
+  }
+  yield* recordOrder(entry);
 });
 
 const sameRevisions = (left: ReadonlyArray<RevisionId>, right: ReadonlyArray<RevisionId>): boolean =>
@@ -283,7 +308,9 @@ const handlers = EventLog.group(MemoryEvents, (group) =>
     .handle("NodeRetired", ({ payload, entry }) =>
       Effect.catchIf(reviseNode(payload, entry), isStoreFailure, Effect.die)
     )
-    .handle("FolderImported", ({ entry }) => Effect.catchIf(recordOrder(entry), isStoreFailure, Effect.die))
+    .handle("FolderImported", ({ payload, entry }) =>
+      Effect.catchIf(importFolder(payload.folderDigest, entry), isStoreFailure, Effect.die)
+    )
     .handle("FileImported", ({ entry }) => Effect.catchIf(recordOrder(entry), isStoreFailure, Effect.die))
     .handle("WriteHeld", ({ payload, entry }) =>
       Effect.catchIf(openHold(payload.holdId, entry), isStoreFailure, Effect.die)

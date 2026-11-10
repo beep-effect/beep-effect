@@ -377,6 +377,48 @@ export class UnplacedNodeError extends S.TaggedError<UnplacedNodeError, { readon
 ) {}
 
 /**
+ * Refusal to append a second `FolderImported` to a log that already holds one.
+ *
+ * **Details**
+ *
+ * Decision `second-import-is-idempotent-on-a-projected-folder`: one log holds
+ * one memory folder, so its first import is its only `FolderImported`. The
+ * check runs inside the journal's writer transaction, so of two first imports
+ * racing on one database exactly one lands, and the refused batch (its
+ * `NodeCreated` and `FileImported` events included) appends nothing.
+ * `importedFolderDigest` is the digest of the folder the log already holds.
+ *
+ * **Example** (Refuse a second folder import)
+ *
+ * ```ts
+ * import { FolderAlreadyImportedError } from "@beep/agent-memory-store"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
+ *
+ * const error = FolderAlreadyImportedError.make({
+ *   folderDigest: Sha256Hex.make("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
+ *   importedFolderDigest: Sha256Hex.make("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"),
+ * })
+ * console.log(error._tag)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class FolderAlreadyImportedError extends S.TaggedError<
+  FolderAlreadyImportedError,
+  { readonly brand: unique symbol }
+>($I`FolderAlreadyImportedError`)(
+  "FolderAlreadyImportedError",
+  {
+    folderDigest: Sha256Hex.annotateKey({ description: "Digest of the folder the refused FolderImported names." }),
+    importedFolderDigest: Sha256Hex.annotateKey({ description: "Digest of the folder the log already holds." }),
+  },
+  $I.annoteError<FolderAlreadyImportedError>("FolderAlreadyImportedError", {
+    description: "Refusal to append a second FolderImported to a log that already holds one.",
+  })
+) {}
+
+/**
  * Refusal to project over a memory folder the log has not imported (AC-8).
  *
  * **Details**

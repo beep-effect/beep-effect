@@ -12,6 +12,7 @@ import type * as A from "effect/Array";
 import type * as Effect from "effect/Effect";
 import type { Entry } from "effect/eventlog/EventJournal";
 import type {
+  FolderAlreadyImportedError,
   HoldNotOpenError,
   MemoryLogError,
   StaleParentsError,
@@ -58,6 +59,14 @@ export type { Entry } from "effect/eventlog/EventJournal";
  *   holds that node in the same file, checked in the same transaction;
  *   otherwise the batch fails with `UnplacedNodeError`, so the log never
  *   holds a node that no file projection shows.
+ * - A `FolderImported` lands only when the log holds none, checked in the
+ *   same transaction; otherwise the batch fails with
+ *   `FolderAlreadyImportedError`, so of two first imports racing on one
+ *   database exactly one lands (decision
+ *   `second-import-is-idempotent-on-a-projected-folder`).
+ * - Every memory file path an event carries is a `MemoryFilePath`: a path
+ *   outside the memory-file rule fails the append with a `MemoryLogError`
+ *   whose cause is the schema error, and the batch appends nothing.
  * - The check applies to appends made through this service, which are the
  *   only writes any phase of this packet makes, so every node keeps one head.
  *   A remote replay is a set-union and must not be refused: it would bypass
@@ -93,10 +102,16 @@ export class MemoryLog extends Context.Service<
   {
     readonly append: (
       event: MemoryEvent
-    ) => Effect.Effect<void, MemoryLogError | StaleParentsError | HoldNotOpenError | UnplacedNodeError>;
+    ) => Effect.Effect<
+      void,
+      MemoryLogError | StaleParentsError | HoldNotOpenError | UnplacedNodeError | FolderAlreadyImportedError
+    >;
     readonly appendMany: (
       events: A.NonEmptyReadonlyArray<MemoryEvent>
-    ) => Effect.Effect<void, MemoryLogError | StaleParentsError | HoldNotOpenError | UnplacedNodeError>;
+    ) => Effect.Effect<
+      void,
+      MemoryLogError | StaleParentsError | HoldNotOpenError | UnplacedNodeError | FolderAlreadyImportedError
+    >;
     readonly heads: (nodeId: NodeId) => Effect.Effect<ReadonlyArray<RevisionId>, MemoryLogError>;
     readonly cursor: Effect.Effect<LogCursor, MemoryLogError>;
     readonly entriesAfter: (cursor: LogCursor) => Effect.Effect<ReadonlyArray<Entry>, MemoryLogError>;

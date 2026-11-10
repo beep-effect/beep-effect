@@ -91,6 +91,29 @@ export const spiedFileSystem = (spy: FileSystemSpy): Layer.Layer<FileSystem.File
     )
   ).pipe(Layer.provide(NodeFileSystem.layer));
 
+/**
+ * The Node file system running `before` once, ahead of the first file read:
+ * another writer's commit lands between this projector's catch-up and its
+ * append.
+ */
+export const fileSystemRunningFirst = <E>(before: Effect.Effect<unknown, E>): Layer.Layer<FileSystem.FileSystem> =>
+  Layer.effect(
+    FileSystem.FileSystem,
+    Effect.map(FileSystem.FileSystem, (fs) => {
+      let pending = true;
+      return FileSystem.FileSystem.of({
+        ...fs,
+        readFile: Effect.fn("FileSystemRunningFirst.readFile")(function* (path: string) {
+          if (pending) {
+            pending = false;
+            yield* Effect.orDie(before);
+          }
+          return yield* fs.readFile(path);
+        }),
+      });
+    })
+  ).pipe(Layer.provide(NodeFileSystem.layer));
+
 /** A store opened on one database file: the log, the projector and the SQL client they share. */
 export const openStore = Effect.fnUntraced(function* (
   filename: string,
