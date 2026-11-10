@@ -880,13 +880,22 @@ export const collectCoverageProducerArtifacts = Effect.fn("CoverageArtifacts.col
     concurrency: 1,
   });
   const selected = yield* newestProducerPartitions(A.zip(manifests, files));
-  if (
-    !sameStrings(
-      sorted(A.map(selected, ([manifest]) => manifest.partitionId)),
-      sorted(A.map(options.expectedPartitions, (partition) => partition.partitionId))
+  // A planned matrix never allocates the shard job of a partition that expects
+  // no package, so only partitions with expected packages must have uploaded.
+  // `loadManifest` already rejects unexpected partitions and validates any
+  // manifest that is present, empty partitions included.
+  const uploaded = A.map(selected, ([manifest]) => manifest.partitionId);
+  const missing = sorted(
+    A.map(
+      A.filter(
+        options.expectedPartitions,
+        (partition) => A.isReadonlyArrayNonEmpty(partition.packages) && !A.contains(uploaded, partition.partitionId)
+      ),
+      (partition) => partition.partitionId
     )
-  ) {
-    return yield* configurationError("missing producer partitions.");
+  );
+  if (A.isReadonlyArrayNonEmpty(missing)) {
+    return yield* configurationError(`missing producer partitions: ${A.join(missing, ", ")}.`);
   }
   const locatedPackages = A.flatMap(selected, ([manifest, file]: [CoverageProducerManifest, string]) =>
     A.map(manifest.packages, (entry) => ({ entry, directory: path.dirname(path.resolve(root, file)) }))
