@@ -2,13 +2,13 @@
 
 ## Status
 
-Status: `pending`
+Status: `in-progress`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Land the cancel ban (slice 1) and settle the facts the later slices need: which scorecard fields report main verdicts, first-wave pickup, heavy wait and cancel attribution; whether the re-run API accepts a cancelled push run. | Slice 1 merged; each fact recorded as a decision file or a `history/` note with its evidence. |
+| P0 Research | in-progress | Land the cancel ban (slice 1) and settle the facts the later slices need: which scorecard fields report main verdicts, first-wave pickup, heavy wait and cancel attribution; whether the re-run API accepts a cancelled push run. | Slice 1 merged; each fact recorded as a decision file or a `history/` note with its evidence. |
 | P1 Implement | pending | Slices 2 to 4 in the order below, each behind its admission gate. | Each slice merged, or refused by its gate and the refusal recorded. |
 | P2 Verify | pending | Read the 7-day (and 14-day) windows from the scorecard. | Acceptance numbers recorded under `history/`, the residual against the 95% bar named as `merge-queue-activation`'s. |
 | P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
@@ -83,6 +83,12 @@ git diff --check -- goals/main-verdict-every-commit
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug main-verdict-every-commit`; add a `kind: checkpoint` file there, never edit this block._
 
-_No checkpoint files yet._
+### Main cancel ban starts 2026-11-10; anchor for the before/after verdict reads, 2026-11-10
+
+Slice 1 (HOST-01 a) adds the ban to the AGENTS.md Inherited-reds bullet and the orchestrate skill's Red check and Queue starved rows: the unblocker cancels pull-request runs only, never a `refs/heads/main` run, queued or running. No certainty scorecard is on `main` yet (MEAS-01 slice 1 is unmerged), so the pre-change main verdict rate cannot be read now. The ban's start date is 2026-11-10 (UTC, the day this PR merges): the 7-day before window is 2026-11-03 to 2026-11-09 and the 7-day after window, which is also the first zero-agent-cancel window, is 2026-11-11 to 2026-11-17. The scorecard reads both once it reports the main verdict rate and cancel attribution; slice 2 (the replay) waits on those numbers.
+
+Lane docs/main-cancel-ban
+
+Reverse: Revert the cancel-ban PR and delete this checkpoint; the before/after reads then have no anchor.
 
 <!-- beep:decisions:end -->
