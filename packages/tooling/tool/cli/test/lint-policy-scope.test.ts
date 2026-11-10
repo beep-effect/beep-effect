@@ -211,7 +211,6 @@ describe("lint policy plan stages", () => {
       "knowledge:refs-check",
       "goals:doctor",
       "lint:oxlint",
-      "lint:shadcn",
       "lint:typos",
       "lint:markdown-fences",
       "lint:retired-effect-paths",

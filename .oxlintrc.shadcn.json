@@ -1,6 +1,6 @@
 {
   // Design-system lint lane: @shadcn/lint over every Tailwind surface (apps + UI packages).
-  // Runs as `bun run lint:shadcn` and the hosted "Shadcn Lint" context. Every rule is an
+  // Runs as `bun run lint:shadcn`, hosted inside the required Repo Sanity context. Every rule is an
   // error; there are no contracts and no allow-lists. Components own their appearance,
   // pages own layout, and every color/value comes from the theme in
   // packages/foundation/ui-system/ui/src/styles/globals.css (or an app theme that imports

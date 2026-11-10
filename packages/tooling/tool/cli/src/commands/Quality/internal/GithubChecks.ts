@@ -425,9 +425,9 @@ export const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubC
       ts2589QuarantineLane(ciLaneStep(repoRoot, "quality:check", "check"))
     )
   ),
-  // The hosted "Shadcn Lint" context is replayed locally by the `lint:shadcn`
-  // state task inside `quality:lint-policy` (full-scope policy lint); a separate
-  // pre-push lane ran the same oxlint walk a second time (perf audit R6, 2026-11-02).
+  // `lint:shadcn` has one hosted owner, the Repo Sanity CiLane body, which
+  // `yeet final-check` replays through `ci lane repo-sanity`; it needs no
+  // pre-push lane of its own (perf audit R6, 2026-11-02; hosted-setup-tax PERIH-02).
   githubCheckLane(
     "quality:jsdoc-ratchet",
     "pre-push",

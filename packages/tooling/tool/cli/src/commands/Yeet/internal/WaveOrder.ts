@@ -206,7 +206,8 @@ const cheapWrapperRow = (
  * fixture-verified, including which A1 row it resolves to (see
  * {@link DEFAULT_GATE_ORDER_COST_SOURCES}); storybook's 584 s is one external
  * main run. `quality:cache-policy` (cheap-gates only) and `quality:shadcn-lint`
- * (folded into `quality:lint-policy`) left the pre-push plan on 2026-11-02.
+ * left the pre-push plan on 2026-11-02; `lint:shadcn` now runs in the Repo
+ * Sanity lane body.
  *
  * **Gotchas**
  *

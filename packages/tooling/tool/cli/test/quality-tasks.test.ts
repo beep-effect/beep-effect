@@ -1758,8 +1758,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "origin/main",
         "--summarize",
       ]);
-      // The Shadcn Lint context is replayed by the `lint:shadcn` state task inside
-      // `quality:lint-policy`; no separate pre-push lane runs the same oxlint walk again.
+      // `lint:shadcn` runs in the Repo Sanity lane body (hosted-setup-tax PERIH-02);
+      // no pre-push lane runs the same oxlint walk again.
       expect(A.some(lanes, (lane) => lane.id === "quality:shadcn-lint")).toBe(false);
       expect(A.some(lanes, (lane) => A.contains(lane.step.args, "shadcn-lint"))).toBe(false);
       expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet")).toEqual(["run", "beep", "ci", "lane", "jsdoc-ratchet"]);
