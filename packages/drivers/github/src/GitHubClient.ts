@@ -34,7 +34,7 @@ import { GitHubError } from "./GitHubError.ts";
 import { GitHubGraphQLError } from "./GraphQL.ts";
 import { FetchFunction, makeTransport, RetryPolicySchema } from "./internal/octokit.ts";
 import { fromArray, paginate } from "./internal/paginate.ts";
-import { RateLimitSnapshot, RetryPolicy } from "./Resilience.ts";
+import { RateLimitCredential, RateLimitSnapshot, RetryPolicy } from "./Resilience.ts";
 import type * as Redacted from "effect/Redacted";
 import type { GraphQLDocument } from "./GraphQL.ts";
 import type * as Rest from "./Rest.ts";
@@ -242,6 +242,33 @@ export class GitHubClientOptions extends S.Opaque<GitHubClientOptions, { readonl
     /** Appended to octokit's own user agent. */
     userAgent: S.optionalKey(S.String).pipe(
       $I.annoteKey("GitHubClientOptions.userAgent", { description: "Appended to octokit's own user agent." })
+    ),
+    /**
+     * An opaque, non-secret label naming whose rate-limit budget this client spends.
+     *
+     * **Details**
+     *
+     * Carried verbatim on every `RateLimitObservation` the transport hands to
+     * the `RateLimitSink`. The driver never parses or composes it and never
+     * sends it in a header. It must never be a token.
+     */
+    budgetLabel: S.optionalKey(S.String).pipe(
+      $I.annoteKey("GitHubClientOptions.budgetLabel", {
+        description: "An opaque, non-secret label naming whose rate-limit budget this client spends.",
+      })
+    ),
+    /**
+     * The kind of credential `token` is, for rate-limit observations.
+     *
+     * **Details**
+     *
+     * Absent means derived: a non-empty token is `token`, an empty one
+     * `unauthenticated`. Only an App JWT client needs to say `app-jwt`.
+     */
+    credential: S.optionalKey(RateLimitCredential).pipe(
+      $I.annoteKey("GitHubClientOptions.credential", {
+        description: "The kind of credential the token is, for rate-limit observations.",
+      })
     ),
   }).pipe($I.annoteSchema("GitHubClientOptions", { description: "How a GitHub client layer is built." }))
 ) {}
@@ -695,6 +722,8 @@ export const makeClientShape = Effect.fn("GitHubClient.makeClientShape")(functio
       baseUrl: O.fromUndefinedOr(options.baseUrl),
       userAgent: O.fromUndefinedOr(options.userAgent),
       fetch: O.fromUndefinedOr(options.fetch),
+      budgetLabel: O.fromUndefinedOr(options.budgetLabel),
+      credential: O.fromUndefinedOr(options.credential),
     }),
   });
 
