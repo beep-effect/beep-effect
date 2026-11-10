@@ -28,7 +28,7 @@ const plannedShard = (shards: ReadonlyArray<ReadonlyArray<string>>, relative: st
  * Applies this package's two committed LPT shard plans to `vitest run --shard=N/<count>`.
  *
  * The hosted `lps-int-N` partitions (repo-cli `CiLanePartitions.ts`) run the integration files
- * one Vitest shard each through `vitest run test/integration --shard=N/16`; the hosted
+ * one Vitest shard each through `vitest run test/integration --shard=N/19`; the hosted
  * `law-practice-N` Test Unit partitions run the unit files through `--shard=N/12`. Vitest's
  * default shard is a hash split with equal file counts, which cannot balance files ranging from
  * 2 s to 1100 s, so this sequencer places files by plan instead. The integration plan
