@@ -251,7 +251,7 @@
         ".claude/skills/orchestrate",
         ".agents/skills/orchestrate"
       ],
-      "installedTreeHash": "b00331f73daad8cf7d21cfa50e2f843b1804b4ff34ce43c504343ea054c32d05"
+      "installedTreeHash": "aa7c186390252128853832663bedcc7a25e51e2cc5de24ba527f8f229e2963ee"
     },
     "plasma-sensitive-entry": {
       "_tag": "local",
@@ -346,7 +346,7 @@
         ".claude/skills/remote-development-agents",
         ".agents/skills/remote-development-agents"
       ],
-      "installedTreeHash": "1989601e744e1a0fb0477ff48524b796a06e56a656454128401f6733860814eb"
+      "installedTreeHash": "505662d7ea6247cf507ae75f31c33c7f131d88be023c1c106203b02235bc7ef3"
     },
     "schema-first-development": {
       "_tag": "local",
@@ -676,7 +676,7 @@
         ".claude/skills/update-harnesses",
         ".agents/skills/update-harnesses"
       ],
-      "installedTreeHash": "71a7d42aea43fea3f3e3339b3f04ea9e4405f64245612ef8b423cd8ba38843fa"
+      "installedTreeHash": "d924a954931ef7d2181977e8c37e6f74b08c9517b0f491cf062f3b46faaa7cbf"
     },
     "yeet": {
       "_tag": "local",
@@ -684,7 +684,7 @@
         ".claude/skills/yeet",
         ".agents/skills/yeet"
       ],
-      "installedTreeHash": "02fe44ce403661e68b22b6ad5c682d337379916005c51d7463868980c7f86b8f"
+      "installedTreeHash": "5fa9679e778f06e2c178a96f85cce1ce2533be185b6a42a267c50b976debdec5"
     }
   }
 }

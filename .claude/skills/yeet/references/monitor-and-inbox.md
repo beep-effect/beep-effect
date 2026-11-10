@@ -77,6 +77,31 @@ bun run beep yeet monitor --watch
 bun run beep yeet monitor --watch --until-event
 ```
 
+### Packet provenance in the footer
+
+Every recorded action (`publish` and `open` record `created`/`pushed`,
+`monitor` records `monitored`) also stores the active goal and exploration
+packets the branch is for, and the footer lists the union recorded at the
+newest head on an `Active packets:` line, so a PR made by a sub-agent or a
+Codex lane still names the packet it serves, and a packet the head no longer
+links drops out. Detection reads only the branch's own content (its
+first-parent non-merge commits, so a merge of the base credits nothing),
+strongest evidence first:
+
+- `branch`: a branch segment is the packet slug, or carries a multi-word slug
+  as a whole hyphenated run (`feat/agent-memory-store-p1` names the
+  `agent-memory-store` goal).
+- `commit`: a commit message on the branch names `goals/<slug>` or
+  `explorations/<slug>`. A `Packet: goals/<slug>` trailer is the explicit
+  binding for a lane whose branch and diff do not name its packet.
+- `diff`: the branch's own commits change files inside the packet directory
+  and the net diff still does.
+
+A packet counts only while its committed manifest reads `active` (goal
+`lifecycle`, exploration `status`) at the head or at the merge-base, so a PR
+that opens or closes a packet still names it. The footer names six packets
+and counts the rest; a footer with none is unchanged.
+
 ## Settle rule
 
 The monitor loops read the base branch ruleset once per head. They wait for every
@@ -181,11 +206,18 @@ on every poll; `--watch` does the same for checks, threads, and drift.
 | `check-failed` | P0 required, P1 optional | a check is red on the head | the next push, or an ack |
 | `base-conflict` | P0 | GitHub reports the head `CONFLICTING`/`DIRTY` (`--until-ready` only) | the next push, or the `cleared` ack the monitor writes when the same head reads mergeable again; a `CONFLICTING` read after `cleared` on the same head writes generation + 1 as a new row and wave |
 | `review-thread` | P1 | a thread is unresolved or owes a follow-up | an ack only; survives pushes |
-| `pr-comment` | P1 | a person's top-level comment lands after the window start (`--until-ready` only; see Comment replay) | an ack only; survives pushes |
+| `pr-comment` | P1 | a person's top-level comment lands after the window start, or a bot's review body raises findings no review thread carries, or carries findings Yeet could not parse (`--until-ready` only; see Comment replay and Review bodies and advisories in `review-threads.md`) | an ack only; survives pushes |
 | `base-drift` | P2 | the head is `BEHIND` its base | the next push |
 
 `review-thread` and `pr-comment` rows are wave-exempt: a push never supersedes
 them, because the thread or comment still needs its answer on the next head.
+A bot's review-body `pr-comment` row excerpts the body's counts and the first
+finding no thread carries (`...; 1 not on a review thread; first: src/a.ts:57`),
+or reads `coderabbit: body has findings Yeet could not parse (...) and must be
+read` when the body's format drifted. No row kind gates a merge: merge
+readiness, `yeet merge-gate` and `yeet ready` read GitHub state, never the
+inbox, so a comment row, a person's or a bot's, wakes the owner and holds
+nothing. Review bots never gate merges.
 One open row is kept per thread. Acknowledge them once answered, for example
 with `bun run beep yeet inbox ack <id> --thread-url <url>`. Observation rows
 (`proof-job-finished`, `pr-merge-ready`) are injected too but never join a

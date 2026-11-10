@@ -8,10 +8,11 @@ execute tests or regenerate the baseline.
 
 ## Producers
 
-The thirty Test Unit partitions keep stable identities: `unit-a` to
-`unit-g`, `repo-cli-1` to `repo-cli-11` and `law-practice-1` to
-`law-practice-12` (thirteen before 2026-11-09, ten before 2026-11-08, six and
-four before 2026-11-02; the lane-timings census knows every layout). The
+The twenty-four Test Unit partitions keep stable identities: `unit-a` to
+`unit-g`, `repo-cli-1` to `repo-cli-9` and `law-practice-1` to
+`law-practice-8` (thirty before 2026-11-10, thirteen before 2026-11-09, ten
+before 2026-11-08, six and four before 2026-11-02; the lane-timings census
+knows every layout). A sharded partition runs two Vitest workers. The
 sharded partitions follow the committed `vitest.shards.json` plan of their
 package, packed by `bun run beep ci partitions rebalance --write --run <id>`
 from green runs (repeat `--run` to pack each file at its worst measurement
@@ -26,7 +27,7 @@ coverage shards must use the same provider before their raw counters can be merg
 The coverage scope planner supplies required owners in addition to ordinary
 unit-test selection, so affected dependents and labs remain represented.
 
-A push allocates all thirty. A pull request allocates only the partitions with
+A push allocates all twenty-four. A pull request allocates only the partitions with
 selected work: the Check workflow's `Test Plan` job runs
 
 ```sh

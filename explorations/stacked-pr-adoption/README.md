@@ -4,7 +4,7 @@
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
 Stage: `align`
-Status: `parked`
+Status: `active`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -19,20 +19,25 @@ dependencies?
 
 ## Next Open Question
 
-None while parked. The packet reopens when either trigger in
-[`DECISIONS.md`](./DECISIONS.md) fires:
+Run the supervised native-stack test (decision `stack-test-shape`): three
+layers on a probe file, L1 merged alone, L2 and L3 merged from the top
+through the async merge endpoint. Record every fact in
+`research/stack-test-2026-11.md`.
 
-- `stacks-reopen-gate`: `main` required-green at least 80% of the time over
-  14 days, and at least 3 live dependency chains a week. The first step is
-  the supervised two-layer stack test.
-- `automated-hold-trigger`: unblocker starvation or inherited-red waste over
-  the measured thresholds, or S11 ending.
+Then, in align, with the results:
+
+- Is porting `yeet merge-gate` to `merge-async` worth a standalone PR? It
+  is the shared first step for stacks and for the merge queue.
+- Does the rest of the Yeet stack slice (stack linking, a stack-level ready
+  verdict, the review window on a cascade) earn a goal packet, given that
+  a stack fits 8 of the 12 dependency structures seen in 14 days?
+- Does the health half of `stacks-reopen-gate` still gate routine use?
 
 ## Read This First
 
 1. [`ops/manifest.json`](./ops/manifest.json) - machine state: stage, status, open questions.
-2. [`DECISIONS.md`](./DECISIONS.md) - the 2026-10-13 align rulings and re-entry triggers.
-3. [`RESEARCH.md`](./RESEARCH.md) - 2026-10-13 refresh, then the 2026-10-05 recommendation, Q0–Q4 answers and Heavy measurement.
+2. [`DECISIONS.md`](./DECISIONS.md) - the 2026-11-09 reground rulings, then the 2026-10-13 align rulings they amend.
+3. [`RESEARCH.md`](./RESEARCH.md) - the 2026-11-09 reground, then the 2026-10-13 refresh and the 2026-10-05 recommendation, Q0–Q4 answers and Heavy measurement.
 4. [`CAPTURE.md`](./CAPTURE.md) - the operator's request and why-now.
 5. [`research/SOURCES.md`](./research/SOURCES.md) - citations and tool licenses.
 6. [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md) - friction receipts.
@@ -60,3 +65,12 @@ None while parked. The packet reopens when either trigger in
   non-required Heavy lanes finding is now in
   `goals/ci-lane-economics/research/OPPORTUNITIES.md`. Everything else in
   the packet waits on its re-entry gates.
+- 2026-11-09: regrounded after four weeks parked. Demand is met (5 and 7
+  live chains a week) and `main` health is just short (73.6% against 80%);
+  a Check run now costs about 400 hosted runner-minutes and queues for
+  minutes. One grill round settled three rulings: the packet reopens at
+  align and the stack test runs now, in a three-layer shape; ruling B3's
+  "or stacked" is struck, so the Yeet skill's non-`main`-base ban is the
+  only doctrine; the automated main-red hold is retired. The inherited-red
+  figures went to `explorations/github-merge-queue`. Stage loop: align to
+  research (the test) and back.

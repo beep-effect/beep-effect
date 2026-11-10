@@ -78,7 +78,7 @@ merge. It does not, and nothing may.
   sibling's predicted conflicts against `origin/main`. Use it before opening a
   PR on a busy packet and before gating one.
 - **Fan-out cap.** A packet has at most three concurrently open PRs; a fourth
-  change is sequenced through one lane or stacked. The gate merges finals one
+  change is sequenced through one lane. The gate merges finals one
   at a time and lets the siblings catch up between merges.
 
 ## Ready

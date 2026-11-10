@@ -82,6 +82,7 @@ export * from "../commands/Yeet/internal/OwnerCheckpoint.receipts.ts";
 export * from "../commands/Yeet/internal/OwnerCheckpoint.schemas.ts";
 export * from "../commands/Yeet/internal/OwnerCheckpoint.store.ts";
 export * from "../commands/Yeet/internal/OwnerCheckpoint.ts";
+export * from "../commands/Yeet/internal/PacketProvenance.ts";
 export * from "../commands/Yeet/internal/ParityReuse.ts";
 export * from "../commands/Yeet/internal/Planner.schemas.ts";
 export * from "../commands/Yeet/internal/Planner.ts";

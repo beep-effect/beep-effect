@@ -5,7 +5,7 @@
     "title": "Agent and Linux Development Readiness",
     "status": "active",
     "created": "2026-10-01",
-    "updated": "2026-11-08",
+    "updated": "2026-11-09",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/cloud-agent-readiness",
@@ -49,7 +49,9 @@
     "goals/cloud-agent-readiness/history/2026-11-01-fleet-cloud-setup.md",
     "goals/cloud-agent-readiness/history/2026-11-01-cloud-task-admission.md",
     "goals/cloud-agent-readiness/ops/fleet-dev-toolset.sh",
-    "goals/cloud-agent-readiness/history/2026-11-08-fleet-dev-toolset.md"
+    "goals/cloud-agent-readiness/history/2026-11-08-fleet-dev-toolset.md",
+    "goals/cloud-agent-readiness/history/2026-11-07-tom-pc-1-wsl-worker-access.md",
+    "goals/cloud-agent-readiness/history/2026-11-09-tom-pc-1-wsl-fleet-parity.md"
   ],
   "researchReports": [
     "research/2026-10-01-container-probe.md",

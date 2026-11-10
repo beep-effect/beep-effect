@@ -75,7 +75,7 @@ export type PartitionedCiLane = typeof PartitionedCiLane.Type;
  *
  * **Details**
  *
- * `repo-cli-1` to `repo-cli-11` and `law-practice-1` to `law-practice-12` are
+ * `repo-cli-1` to `repo-cli-9` and `law-practice-1` to `law-practice-8` are
  * Vitest `--shard` slices of the `@beep/repo-cli#test` and
  * `@beep/law-practice-server#test` tasks, `lps-int-1` to `lps-int-19` the
  * nineteen slices of `@beep/law-practice-server#test:integration:parallel`;
@@ -105,8 +105,6 @@ export const CiLanePartitionId = LiteralKit([
   "repo-cli-7",
   "repo-cli-8",
   "repo-cli-9",
-  "repo-cli-10",
-  "repo-cli-11",
   "law-practice-1",
   "law-practice-2",
   "law-practice-3",
@@ -115,10 +113,6 @@ export const CiLanePartitionId = LiteralKit([
   "law-practice-6",
   "law-practice-7",
   "law-practice-8",
-  "law-practice-9",
-  "law-practice-10",
-  "law-practice-11",
-  "law-practice-12",
   "unit-a",
   "unit-b",
   "unit-c",
@@ -259,10 +253,11 @@ export class CiLanePartition extends S.Opaque<CiLanePartition, { readonly brand:
  * Lint bins come from the p95 package-task weights recorded in
  * `goals/ci-lane-economics/research/tail-attribution.md`: candidates ordered
  * by descending p95 weight with task id as the stable tie-break, each assigned
- * to the currently lightest bin. Test Unit isolates `@beep/repo-cli` (eleven
+ * to the currently lightest bin. Test Unit isolates `@beep/repo-cli` (nine
  * Vitest `--shard` slices, `packages/tooling/tool/cli/vitest.shards.json`) and
- * `@beep/law-practice-server` (twelve slices,
- * `packages/law-practice/server/vitest.shards.json`); a sharded weight is the
+ * `@beep/law-practice-server` (eight slices,
+ * `packages/law-practice/server/vitest.shards.json`), each run on two Vitest
+ * workers (decision of 2026-11-10); a sharded weight is the
  * shard's planned file time, and the seven unit bins are the LPT repack of every
  * other package's worst Vitest wall over six green runs, five on PR #3007 and
  * main run 42677073526 (`goals/ci-lane-economics` decisions of 2026-11-02,
@@ -447,79 +442,65 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
   CiLanePartition.make({
     id: "repo-cli-1",
     lane: "test-unit",
-    weightSeconds: 321,
+    weightSeconds: 392,
     packages: ["@beep/repo-cli"],
-    shard: CiLanePartitionShard.make({ index: 1, total: 11 }),
+    shard: CiLanePartitionShard.make({ index: 1, total: 9 }),
   }),
   CiLanePartition.make({
     id: "repo-cli-2",
     lane: "test-unit",
-    weightSeconds: 321,
+    weightSeconds: 392,
     packages: ["@beep/repo-cli"],
-    shard: CiLanePartitionShard.make({ index: 2, total: 11 }),
+    shard: CiLanePartitionShard.make({ index: 2, total: 9 }),
   }),
   CiLanePartition.make({
     id: "repo-cli-3",
     lane: "test-unit",
-    weightSeconds: 321,
+    weightSeconds: 392,
     packages: ["@beep/repo-cli"],
-    shard: CiLanePartitionShard.make({ index: 3, total: 11 }),
+    shard: CiLanePartitionShard.make({ index: 3, total: 9 }),
   }),
   CiLanePartition.make({
     id: "repo-cli-4",
     lane: "test-unit",
-    weightSeconds: 321,
+    weightSeconds: 392,
     packages: ["@beep/repo-cli"],
-    shard: CiLanePartitionShard.make({ index: 4, total: 11 }),
+    shard: CiLanePartitionShard.make({ index: 4, total: 9 }),
   }),
   CiLanePartition.make({
     id: "repo-cli-5",
     lane: "test-unit",
-    weightSeconds: 321,
+    weightSeconds: 392,
     packages: ["@beep/repo-cli"],
-    shard: CiLanePartitionShard.make({ index: 5, total: 11 }),
+    shard: CiLanePartitionShard.make({ index: 5, total: 9 }),
   }),
   CiLanePartition.make({
     id: "repo-cli-6",
     lane: "test-unit",
-    weightSeconds: 321,
+    weightSeconds: 392,
     packages: ["@beep/repo-cli"],
-    shard: CiLanePartitionShard.make({ index: 6, total: 11 }),
+    shard: CiLanePartitionShard.make({ index: 6, total: 9 }),
   }),
   CiLanePartition.make({
     id: "repo-cli-7",
     lane: "test-unit",
-    weightSeconds: 321,
+    weightSeconds: 392,
     packages: ["@beep/repo-cli"],
-    shard: CiLanePartitionShard.make({ index: 7, total: 11 }),
+    shard: CiLanePartitionShard.make({ index: 7, total: 9 }),
   }),
   CiLanePartition.make({
     id: "repo-cli-8",
     lane: "test-unit",
-    weightSeconds: 321,
+    weightSeconds: 392,
     packages: ["@beep/repo-cli"],
-    shard: CiLanePartitionShard.make({ index: 8, total: 11 }),
+    shard: CiLanePartitionShard.make({ index: 8, total: 9 }),
   }),
   CiLanePartition.make({
     id: "repo-cli-9",
     lane: "test-unit",
-    weightSeconds: 321,
+    weightSeconds: 392,
     packages: ["@beep/repo-cli"],
-    shard: CiLanePartitionShard.make({ index: 9, total: 11 }),
-  }),
-  CiLanePartition.make({
-    id: "repo-cli-10",
-    lane: "test-unit",
-    weightSeconds: 321,
-    packages: ["@beep/repo-cli"],
-    shard: CiLanePartitionShard.make({ index: 10, total: 11 }),
-  }),
-  CiLanePartition.make({
-    id: "repo-cli-11",
-    lane: "test-unit",
-    weightSeconds: 321,
-    packages: ["@beep/repo-cli"],
-    shard: CiLanePartitionShard.make({ index: 11, total: 11 }),
+    shard: CiLanePartitionShard.make({ index: 9, total: 9 }),
   }),
   // @beep/law-practice-server grew from 98 s (2026-11-02) to about 4,270 s of
   // Bun/Istanbul file time once #2847 registered the canonical citation
@@ -533,89 +514,65 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
   // carries the worst case and the 480 s budget the rest. The weights are the
   // planned file sums; `beep ci partitions rebalance --check` fails when they
   // drift from the plan.
+  // Since 2026-11-10 a shard runs two Vitest workers. On PR #3040's run 42732848457 the
+  // twelve shards finished 4,512 planned seconds in 2,421 s of Vitest (0.54 of the plan) and
+  // ran 3.8-5.5 min, so eight shards of 564 planned seconds hold about 303 s of Vitest each:
+  // 8.8 min on a p95 runner (1.28x the median) with 10 percent of plan imbalance.
   CiLanePartition.make({
     id: "law-practice-1",
     lane: "test-unit",
-    weightSeconds: 376,
+    weightSeconds: 564,
     packages: ["@beep/law-practice-server"],
-    shard: CiLanePartitionShard.make({ index: 1, total: 12 }),
+    shard: CiLanePartitionShard.make({ index: 1, total: 8 }),
   }),
   CiLanePartition.make({
     id: "law-practice-2",
     lane: "test-unit",
-    weightSeconds: 376,
+    weightSeconds: 564,
     packages: ["@beep/law-practice-server"],
-    shard: CiLanePartitionShard.make({ index: 2, total: 12 }),
+    shard: CiLanePartitionShard.make({ index: 2, total: 8 }),
   }),
   CiLanePartition.make({
     id: "law-practice-3",
     lane: "test-unit",
-    weightSeconds: 376,
+    weightSeconds: 564,
     packages: ["@beep/law-practice-server"],
-    shard: CiLanePartitionShard.make({ index: 3, total: 12 }),
+    shard: CiLanePartitionShard.make({ index: 3, total: 8 }),
   }),
   CiLanePartition.make({
     id: "law-practice-4",
     lane: "test-unit",
-    weightSeconds: 376,
+    weightSeconds: 564,
     packages: ["@beep/law-practice-server"],
-    shard: CiLanePartitionShard.make({ index: 4, total: 12 }),
+    shard: CiLanePartitionShard.make({ index: 4, total: 8 }),
   }),
   CiLanePartition.make({
     id: "law-practice-5",
     lane: "test-unit",
-    weightSeconds: 376,
+    weightSeconds: 564,
     packages: ["@beep/law-practice-server"],
-    shard: CiLanePartitionShard.make({ index: 5, total: 12 }),
+    shard: CiLanePartitionShard.make({ index: 5, total: 8 }),
   }),
   CiLanePartition.make({
     id: "law-practice-6",
     lane: "test-unit",
-    weightSeconds: 376,
+    weightSeconds: 564,
     packages: ["@beep/law-practice-server"],
-    shard: CiLanePartitionShard.make({ index: 6, total: 12 }),
+    shard: CiLanePartitionShard.make({ index: 6, total: 8 }),
   }),
   CiLanePartition.make({
     id: "law-practice-7",
     lane: "test-unit",
-    weightSeconds: 376,
+    weightSeconds: 564,
     packages: ["@beep/law-practice-server"],
-    shard: CiLanePartitionShard.make({ index: 7, total: 12 }),
+    shard: CiLanePartitionShard.make({ index: 7, total: 8 }),
   }),
   CiLanePartition.make({
     id: "law-practice-8",
     lane: "test-unit",
-    weightSeconds: 376,
+    weightSeconds: 564,
     packages: ["@beep/law-practice-server"],
-    shard: CiLanePartitionShard.make({ index: 8, total: 12 }),
-  }),
-  CiLanePartition.make({
-    id: "law-practice-9",
-    lane: "test-unit",
-    weightSeconds: 376,
-    packages: ["@beep/law-practice-server"],
-    shard: CiLanePartitionShard.make({ index: 9, total: 12 }),
-  }),
-  CiLanePartition.make({
-    id: "law-practice-10",
-    lane: "test-unit",
-    weightSeconds: 376,
-    packages: ["@beep/law-practice-server"],
-    shard: CiLanePartitionShard.make({ index: 10, total: 12 }),
-  }),
-  CiLanePartition.make({
-    id: "law-practice-11",
-    lane: "test-unit",
-    weightSeconds: 376,
-    packages: ["@beep/law-practice-server"],
-    shard: CiLanePartitionShard.make({ index: 11, total: 12 }),
-  }),
-  CiLanePartition.make({
-    id: "law-practice-12",
-    lane: "test-unit",
-    weightSeconds: 376,
-    packages: ["@beep/law-practice-server"],
-    shard: CiLanePartitionShard.make({ index: 12, total: 12 }),
+    shard: CiLanePartitionShard.make({ index: 8, total: 8 }),
   }),
   // Seven unit bins, LPT over per-package Vitest wall seconds at each package's worst measurement across
   // six green runs: PR #3007's 42607991192, 42615698428, 42626103000, 42637312401 and 42646019844, and
