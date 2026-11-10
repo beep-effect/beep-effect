@@ -159,6 +159,263 @@ const isConfined = (exported: string, edit: TouchedSpan): boolean =>
   Str.slice(edit.start + edit.newText.length)(exported) === Str.slice(edit.start + edit.oldLength)(edit.previous) &&
   Str.slice(edit.start, edit.start + edit.newText.length)(exported) === edit.newText;
 
+type Counter = ReturnType<typeof counter>;
+type Store = Effect.Success<ReturnType<typeof openStore>>;
+type Picked = O.Option<readonly [number, ModelNode]>;
+
+// The running tallies of the edit-confinement replay.
+interface EditRun {
+  edits: number;
+  minted: number;
+  outside: number;
+  readonly perKind: Counter;
+  readonly perOperation: Counter;
+  projectChecks: number;
+  projectMismatches: number;
+  readonly random: () => number;
+  readonly refusals: Counter;
+}
+
+// One file's edit within a round: the event to append and the span it touches.
+interface FileEdit {
+  readonly event: MemoryEvent;
+  readonly touched: TouchedSpan;
+}
+
+// Rotate through every (kind, operation) pair of the kinds a file holds: slot
+// k names kind k mod m and operation floor(k / m) mod 3, so each kind the file
+// holds takes each operation and neither choice is tied to the other.
+const planEdit = (
+  live: ReadonlyArray<readonly [number, ModelNode]>,
+  slot: number,
+  random: () => number
+): { readonly operation: Operation; readonly pick: Picked } => {
+  const kinds = A.filter(NodeKind.literals, (kind) => A.some(live, ([, node]) => node.kind === kind));
+  const width = Math.max(kinds.length, 1);
+  const wanted = O.getOrElse(A.get(kinds, slot % width), () => "paragraph" as const);
+  const planned = O.getOrElse(A.get(operations, Math.floor(slot / width) % operations.length), () => "insert" as const);
+  const ofKind = A.filter(live, ([, node]) => node.kind === wanted);
+  const pool = A.isReadonlyArrayNonEmpty(ofKind) ? ofKind : live;
+  const pick = A.get(pool, Math.floor(random() * pool.length));
+  const operation: Operation = O.isNone(pick) || (planned === "retire" && live.length <= 2) ? "insert" : planned;
+  return { operation, pick };
+};
+
+// Insert after the picked node; one insert in ten goes to any position
+// instead, tombstones, gaps and the top of the file included.
+const applyInsert = Effect.fnUntraced(function* (
+  run: EditRun,
+  nodes: Array<ModelNode>,
+  pick: Picked,
+  path: MemoryFilePath,
+  previous: string,
+  serial: number
+) {
+  const anywhere = O.isNone(pick) || run.random() < 0.1;
+  const position = anywhere
+    ? Math.floor(run.random() * (nodes.length + 1))
+    : O.match(pick, { onNone: () => 0, onSome: ([index]) => index + 1 });
+  const after = O.map(A.get(nodes, position - 1), (node) => node.nodeId);
+  const nodeId = NodeId.make(replayNodeId(run.minted));
+  run.minted += 1;
+  const kind = serial % 2 === 0 ? "paragraph" : "gap";
+  const text = kind === "gap" ? "\n\n" : `Inserted note ${serial}.`;
+  const insert = yield* insertEvent(nodeId, after, path, kind, text);
+  // Newest first after the predecessor: the new node sits right after it.
+  const start = modelText(A.take(nodes, position)).length;
+  nodes.splice(position, 0, { kind, live: true, nodeId, revisionId: insert.revisionId, text });
+  // An insert counts against the kind of the node it follows.
+  const followed = O.getOrElse(
+    O.map(pick, ([, node]) => node.kind),
+    () => "top"
+  );
+  run.perKind.bump(anywhere ? "insert:anywhere" : `insert:${followed}`);
+  const touched: TouchedSpan = { path, start, oldLength: 0, newText: text, previous, nodeId, operation: "insert" };
+  return { event: insert.event, touched } satisfies FileEdit;
+});
+
+// Revise or retire the picked node in place.
+const applyChange = Effect.fnUntraced(function* (
+  run: EditRun,
+  nodes: Array<ModelNode>,
+  [index, node]: readonly [number, ModelNode],
+  operation: Operation,
+  path: MemoryFilePath,
+  previous: string,
+  serial: number
+) {
+  const start = modelText(A.take(nodes, index)).length;
+  const text = operation === "revise" ? revisedText(node, serial) : "";
+  const written =
+    operation === "revise"
+      ? yield* reviseEvent(node.nodeId, node.revisionId, text)
+      : yield* retireEvent(node.nodeId, node.revisionId);
+  nodes[index] = { ...node, live: operation === "revise", revisionId: written.revisionId, text };
+  run.perKind.bump(`${operation}:${node.kind}`);
+  const touched: TouchedSpan = {
+    path,
+    start,
+    oldLength: node.text.length,
+    newText: text,
+    previous,
+    nodeId: node.nodeId,
+    operation,
+  };
+  return { event: written.event, touched } satisfies FileEdit;
+});
+
+// One edit of one file, chosen by the round's rotation slot.
+const editFile = Effect.fnUntraced(function* (run: EditRun, model: Model, path: MemoryFilePath, slot: number) {
+  const nodes = nodesOf(model, path);
+  const previous = modelText(nodes);
+  const live = A.filter(
+    A.map(nodes, (node, index) => [index, node] as const),
+    ([, node]) => node.live && Str.isNonEmpty(node.text)
+  );
+  const { operation, pick } = planEdit(live, slot, run.random);
+  const serial = run.edits;
+  const edit =
+    operation === "insert" || O.isNone(pick)
+      ? yield* applyInsert(run, nodes, pick, path, previous, serial)
+      : yield* applyChange(run, nodes, pick.value, operation, path, previous, serial);
+  run.perOperation.bump(operation);
+  run.edits += 1;
+  return edit;
+});
+
+// projectNode turns the same event into a raw-slice edit of the previous
+// bytes, or refuses it when the reparse check fails.
+const projectOutcome = Effect.fnUntraced(function* (store: Store, edit: TouchedSpan, exported: string) {
+  const projected = yield* Effect.exit(store.projector.projectNode(edit.nodeId));
+  if (Exit.isSuccess(projected)) {
+    return MarkdownEdit.applyAll(edit.previous, [projected.value]) === exported ? "match" : "mismatch";
+  }
+  return isReparseRefusal(projected) ? "refused" : "mismatch";
+});
+
+// Check one touched span against the export. projectNode partitions the file
+// twice, so only every fourth edit is cross-checked through it.
+const checkEdit = Effect.fnUntraced(function* (
+  run: EditRun,
+  store: Store,
+  model: Model,
+  diskText: HashMap.HashMap<string, string>,
+  edit: TouchedSpan,
+  stride: number
+) {
+  const exported = O.getOrElse(HashMap.get(diskText, edit.path), () => "");
+  if (!isConfined(exported, edit) || exported !== modelText(nodesOf(model, edit.path))) {
+    run.outside += 1;
+  }
+  if (stride % PROJECT_NODE_STRIDE !== 0) {
+    return;
+  }
+  const outcome = yield* projectOutcome(store, edit, exported);
+  run.projectChecks += 1;
+  if (outcome === "mismatch") {
+    run.projectMismatches += 1;
+  }
+  if (outcome === "refused") {
+    run.refusals.bump(edit.operation);
+  }
+});
+
+// One round: every file takes one edit, the edits commit together, the folder
+// is exported once and every touched span is checked.
+const editRound = Effect.fnUntraced(function* (
+  run: EditRun,
+  store: Store,
+  model: Model,
+  paths: ReadonlyArray<MemoryFilePath>,
+  folder: string,
+  round: number
+) {
+  const edits = yield* Effect.forEach(
+    A.map(paths, (path, index) => [index, path] as const),
+    ([fileIndex, path]) => editFile(run, model, path, round + fileIndex)
+  );
+  const events = A.map(edits, (edit) => edit.event);
+  yield* A.match(events, { onEmpty: () => Effect.void, onNonEmpty: store.log.appendMany });
+  yield* store.projector.exportFolder(PosixPath.make(folder));
+  const disk = yield* snapshotFolder(folder);
+  const diskText = HashMap.fromIterable(A.map(disk, (file) => [file.path, textOf(file.bytes)] as const));
+  yield* Effect.forEach(
+    A.map(edits, (edit, index) => [index, edit.touched] as const),
+    ([touchedIndex, touched]) => checkEdit(run, store, model, diskText, touched, round + touchedIndex),
+    { discard: true }
+  );
+});
+
+type InsertPair = readonly [NodeId, NodeId];
+
+// About four in five of every third node of every file is a predecessor, gap
+// nodes included; no two positions share one. Each predecessor gets one insert
+// from each writer.
+const concurrentInserts = Effect.fnUntraced(function* (
+  model: Model,
+  paths: ReadonlyArray<MemoryFilePath>,
+  random: () => number
+) {
+  const firsts: Array<MemoryEvent> = [];
+  const seconds: Array<MemoryEvent> = [];
+  const pairs = MutableHashMap.empty<NodeId, InsertPair>();
+  let minted = 0;
+  for (const path of paths) {
+    for (const [index, node] of A.map(nodesOf(model, path), (node, index) => [index, node] as const)) {
+      if (index % 3 !== 0 || random() < 0.2) {
+        continue;
+      }
+      const left = NodeId.make(replayNodeId(minted));
+      const right = NodeId.make(replayNodeId(minted + 1));
+      minted += 2;
+      const leftInsert = yield* insertEvent(left, O.some(node.nodeId), path, "paragraph", `Left ${minted}.`);
+      const rightInsert = yield* insertEvent(right, O.some(node.nodeId), path, "paragraph", `Right ${minted}.`);
+      firsts.push(leftInsert.event);
+      seconds.push(rightInsert.event);
+      MutableHashMap.set(pairs, node.nodeId, [left, right]);
+    }
+  }
+  return { firsts, seconds, pairs };
+});
+
+// Check one exported file against the model with every insert pair placed
+// right after its predecessor.
+const verifyPairs = (
+  nodes: ReadonlyArray<ModelNode>,
+  exported: string,
+  pairs: MutableHashMap.MutableHashMap<NodeId, InsertPair>,
+  pairText: (pair: InsertPair) => string
+): { readonly failures: number; readonly matches: boolean; readonly positions: number } => {
+  let positions = 0;
+  let failures = 0;
+  for (const [index, node] of A.map(nodes, (node, index) => [index, node] as const)) {
+    const pair = MutableHashMap.get(pairs, node.nodeId);
+    if (O.isNone(pair)) {
+      continue;
+    }
+    positions += 1;
+    // The predecessor, both inserts newest first, then its original
+    // successor: nothing between them was dropped or moved.
+    const successor = O.getOrElse(
+      O.map(A.get(nodes, index + 1), (next) => next.text),
+      () => ""
+    );
+    if (!Str.includes(`${node.text}${pairText(pair.value)}${successor}`)(exported)) {
+      failures += 1;
+    }
+  }
+  const expected = A.join(
+    A.map(nodes, (node) =>
+      O.match(MutableHashMap.get(pairs, node.nodeId), {
+        onNone: () => node.text,
+        onSome: (pair) => `${node.text}${pairText(pair)}`,
+      })
+    ),
+    ""
+  );
+  return { failures, matches: exported === expected, positions };
+};
+
 describe.skipIf(!isBunRuntime)("MarkdownProjector AC-1 (Bun runtime)", () => {
   it.layer(TestPlatform)("goals Markdown sample", (it) => {
     it.effect(
@@ -246,128 +503,23 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector AC-1 (Bun runtime)", () => {
           Order.String
         );
 
-        const random = seededRandom(SEED);
-        const perKind = counter();
-        const perOperation = counter();
-        const refusals = counter();
-        let edits = 0;
-        let outside = 0;
-        let projectChecks = 0;
-        let projectMismatches = 0;
-        let minted = 0;
+        const run: EditRun = {
+          edits: 0,
+          minted: 0,
+          outside: 0,
+          perKind: counter(),
+          perOperation: counter(),
+          projectChecks: 0,
+          projectMismatches: 0,
+          random: seededRandom(SEED),
+          refusals: counter(),
+        };
         let round = 0;
-
-        while (edits < EDIT_TARGET) {
-          const events: Array<MemoryEvent> = [];
-          const touched: Array<TouchedSpan> = [];
-          for (const [fileIndex, path] of A.map(paths, (path, index) => [index, path] as const)) {
-            const nodes = nodesOf(model, path);
-            const previous = modelText(nodes);
-            const live = A.filter(
-              A.map(nodes, (node, index) => [index, node] as const),
-              ([, node]) => node.live && Str.isNonEmpty(node.text)
-            );
-            // Rotate through every (kind, operation) pair of the kinds this
-            // file holds: slot k names kind k mod m and operation
-            // floor(k / m) mod 3, so each kind the file holds takes each
-            // operation and neither choice is tied to the other.
-            const kinds = A.filter(NodeKind.literals, (kind) => A.some(live, ([, node]) => node.kind === kind));
-            const slot = round + fileIndex;
-            const width = Math.max(kinds.length, 1);
-            const wanted = O.getOrElse(A.get(kinds, slot % width), () => "paragraph" as const);
-            const planned = O.getOrElse(
-              A.get(operations, Math.floor(slot / width) % operations.length),
-              () => "insert" as const
-            );
-            const ofKind = A.filter(live, ([, node]) => node.kind === wanted);
-            const pool = A.isReadonlyArrayNonEmpty(ofKind) ? ofKind : live;
-            const pick = A.get(pool, Math.floor(random() * pool.length));
-            const operation: Operation =
-              O.isNone(pick) || (planned === "retire" && live.length <= 2) ? "insert" : planned;
-            const serial = edits;
-
-            if (operation === "insert" || O.isNone(pick)) {
-              // Insert after the picked node; one insert in ten goes to any
-              // position instead, tombstones, gaps and the top of the file
-              // included.
-              const anywhere = O.isNone(pick) || random() < 0.1;
-              const position = anywhere
-                ? Math.floor(random() * (nodes.length + 1))
-                : O.match(pick, { onNone: () => 0, onSome: ([index]) => index + 1 });
-              const after = O.map(A.get(nodes, position - 1), (node) => node.nodeId);
-              const nodeId = NodeId.make(replayNodeId(minted));
-              minted += 1;
-              const kind = serial % 2 === 0 ? "paragraph" : "gap";
-              const text = kind === "gap" ? "\n\n" : `Inserted note ${serial}.`;
-              const insert = yield* insertEvent(nodeId, after, path, kind, text);
-              events.push(insert.event);
-              // Newest first after the predecessor: the new node sits right after it.
-              const start = modelText(A.take(nodes, position)).length;
-              nodes.splice(position, 0, { kind, live: true, nodeId, revisionId: insert.revisionId, text });
-              touched.push({ path, start, oldLength: 0, newText: text, previous, nodeId, operation });
-              // An insert counts against the kind of the node it follows.
-              perKind.bump(
-                anywhere
-                  ? "insert:anywhere"
-                  : `insert:${O.getOrElse(
-                      O.map(pick, ([, node]) => node.kind),
-                      () => "top"
-                    )}`
-              );
-            } else {
-              const [index, node] = pick.value;
-              const start = modelText(A.take(nodes, index)).length;
-              const text = operation === "revise" ? revisedText(node, serial) : "";
-              const written =
-                operation === "revise"
-                  ? yield* reviseEvent(node.nodeId, node.revisionId, text)
-                  : yield* retireEvent(node.nodeId, node.revisionId);
-              events.push(written.event);
-              nodes[index] = { ...node, live: operation === "revise", revisionId: written.revisionId, text };
-              touched.push({
-                path,
-                start,
-                oldLength: node.text.length,
-                newText: text,
-                previous,
-                nodeId: node.nodeId,
-                operation,
-              });
-              perKind.bump(`${operation}:${node.kind}`);
-            }
-            perOperation.bump(operation);
-            edits += 1;
-          }
-
-          yield* A.match(events, { onEmpty: () => Effect.void, onNonEmpty: store.log.appendMany });
-          yield* store.projector.exportFolder(PosixPath.make(folder));
-          const disk = yield* snapshotFolder(folder);
-          const diskText = HashMap.fromIterable(A.map(disk, (file) => [file.path, textOf(file.bytes)] as const));
-
-          for (const [touchedIndex, edit] of A.map(touched, (edit, index) => [index, edit] as const)) {
-            const exported = O.getOrElse(HashMap.get(diskText, edit.path), () => "");
-            if (!isConfined(exported, edit) || exported !== modelText(nodesOf(model, edit.path))) {
-              outside += 1;
-            }
-            // projectNode turns the same event into a raw-slice edit of the
-            // previous bytes, or refuses it when the reparse check fails. It
-            // partitions the file twice, so every fourth edit is cross-checked.
-            if ((round + touchedIndex) % PROJECT_NODE_STRIDE === 0) {
-              const projected = yield* Effect.exit(store.projector.projectNode(edit.nodeId));
-              projectChecks += 1;
-              if (Exit.isSuccess(projected)) {
-                if (MarkdownEdit.applyAll(edit.previous, [projected.value]) !== exported) {
-                  projectMismatches += 1;
-                }
-              } else if (isReparseRefusal(projected)) {
-                refusals.bump(edit.operation);
-              } else {
-                projectMismatches += 1;
-              }
-            }
-          }
+        while (run.edits < EDIT_TARGET) {
+          yield* editRound(run, store, model, paths, folder, round);
           round += 1;
         }
+        const { edits, outside, perKind, perOperation, projectChecks, projectMismatches, refusals } = run;
 
         const bound = 3 / edits;
         const refused = refusals.get("revise") + refusals.get("insert") + refusals.get("retire");
@@ -409,27 +561,7 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector AC-1 (Bun runtime)", () => {
         const model = yield* modelFromLog(imported);
         const paths = model.pipe(MutableHashMap.keys, A.fromIterable, A.sort(Order.String));
 
-        // About four in five of every third node of every file is a
-        // predecessor, gap nodes included; no two positions share one.
-        const random = seededRandom(SEED + 1);
-        const firsts: Array<MemoryEvent> = [];
-        const seconds: Array<MemoryEvent> = [];
-        const pairs = MutableHashMap.empty<NodeId, readonly [NodeId, NodeId]>();
-        let minted = 0;
-        for (const path of paths) {
-          for (const [index, node] of A.map(nodesOf(model, path), (node, index) => [index, node] as const)) {
-            if (index % 3 === 0 && random() >= 0.2) {
-              const left = NodeId.make(replayNodeId(minted));
-              const right = NodeId.make(replayNodeId(minted + 1));
-              minted += 2;
-              const leftInsert = yield* insertEvent(left, O.some(node.nodeId), path, "paragraph", `Left ${minted}.`);
-              const rightInsert = yield* insertEvent(right, O.some(node.nodeId), path, "paragraph", `Right ${minted}.`);
-              firsts.push(leftInsert.event);
-              seconds.push(rightInsert.event);
-              MutableHashMap.set(pairs, node.nodeId, [left, right]);
-            }
-          }
-        }
+        const { firsts, seconds, pairs } = yield* concurrentInserts(model, paths, seededRandom(SEED + 1));
         // Both writers build their inserts against the same base before either
         // commits. The appends then commit one after the other: bun:sqlite waits
         // for a busy lock synchronously, so two connections in one process that
@@ -451,7 +583,7 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector AC-1 (Bun runtime)", () => {
           Order.flip(EventJournal.EntryIdOrder),
           (nodeId: NodeId): EntryId => O.getOrThrow(HashMap.get(entryOf, nodeId))
         );
-        const pairText = (pair: readonly [NodeId, NodeId]): string =>
+        const pairText = (pair: InsertPair): string =>
           A.join(
             A.map(A.sort(pair, newestFirst), (nodeId) => O.getOrThrow(HashMap.get(insertedText, nodeId))),
             ""
@@ -465,32 +597,11 @@ describe.skipIf(!isBunRuntime)("MarkdownProjector AC-1 (Bun runtime)", () => {
         let failures = 0;
         const fileMismatches: Array<MemoryFilePath> = [];
         for (const path of paths) {
-          const nodes = nodesOf(model, path);
           const exported = O.getOrElse(HashMap.get(diskText, path), () => "");
-          for (const [index, node] of A.map(nodes, (node, index) => [index, node] as const)) {
-            O.map(MutableHashMap.get(pairs, node.nodeId), (pair) => {
-              positions += 1;
-              // The predecessor, both inserts newest first, then its original
-              // successor: nothing between them was dropped or moved.
-              const successor = O.getOrElse(
-                O.map(A.get(nodes, index + 1), (next) => next.text),
-                () => ""
-              );
-              if (!Str.includes(`${node.text}${pairText(pair)}${successor}`)(exported)) {
-                failures += 1;
-              }
-            });
-          }
-          const expected = A.join(
-            A.map(nodes, (node) =>
-              O.match(MutableHashMap.get(pairs, node.nodeId), {
-                onNone: () => node.text,
-                onSome: (pair) => `${node.text}${pairText(pair)}`,
-              })
-            ),
-            ""
-          );
-          if (exported !== expected) {
+          const verified = verifyPairs(nodesOf(model, path), exported, pairs, pairText);
+          positions += verified.positions;
+          failures += verified.failures;
+          if (!verified.matches) {
             fileMismatches.push(path);
           }
         }

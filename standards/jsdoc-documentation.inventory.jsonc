@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-10T03:49:42.809Z",
+  "generatedAt": "2026-11-10T03:59:04.687Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -266426,8 +266426,8 @@
           "exportKind": "const",
           "filePath": "src/MarkdownPartition.parser.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MarkdownPartition.parser.ts",
-          "line": 357,
-          "anchor": "packages-tooling-library-agent-memory-store-src-markdownpartition-parser-ts-357-partition",
+          "line": 362,
+          "anchor": "packages-tooling-library-agent-memory-store-src-markdownpartition-parser-ts-362-partition",
           "currentTags": [
             "@param",
             "@returns",
@@ -266450,8 +266450,8 @@
           "exportKind": "const",
           "filePath": "src/MarkdownPartition.parser.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MarkdownPartition.parser.ts",
-          "line": 400,
-          "anchor": "packages-tooling-library-agent-memory-store-src-markdownpartition-parser-ts-400-partitiontree",
+          "line": 405,
+          "anchor": "packages-tooling-library-agent-memory-store-src-markdownpartition-parser-ts-405-partitiontree",
           "currentTags": [
             "@param",
             "@returns",
@@ -266474,8 +266474,8 @@
           "exportKind": "const",
           "filePath": "src/MarkdownPartition.parser.ts",
           "repoPath": "packages/tooling/library/agent-memory-store/src/MarkdownPartition.parser.ts",
-          "line": 478,
-          "anchor": "packages-tooling-library-agent-memory-store-src-markdownpartition-parser-ts-478-checkreplacement",
+          "line": 483,
+          "anchor": "packages-tooling-library-agent-memory-store-src-markdownpartition-parser-ts-483-checkreplacement",
           "currentTags": [
             "@param",
             "@returns",

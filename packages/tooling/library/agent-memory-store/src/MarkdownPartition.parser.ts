@@ -223,16 +223,13 @@ function blockSpans(source: Source, block: Block, floor: number): ReadonlyArray<
 // Spans are usable when they are non-overlapping, in order, inside
 // [low, high] and never split a surrogate pair. Zero-width spans are dropped
 // first: they hold no bytes.
+const outOfBounds = (text: string, start: number, end: number, low: number, high: number): boolean =>
+  start < low || end < start || end > high || splitsSurrogatePair(text, start) || splitsSurrogatePair(text, end);
+
 const usableSpans = (text: string, spans: ReadonlyArray<Span>, low: number, high: number): boolean => {
   let previous = low;
   for (const span of spans) {
-    if (
-      span.start < previous ||
-      span.end < span.start ||
-      span.end > high ||
-      splitsSurrogatePair(text, span.start) ||
-      splitsSurrogatePair(text, span.end)
-    ) {
+    if (outOfBounds(text, span.start, span.end, previous, high)) {
       return false;
     }
     previous = span.end;
@@ -273,6 +270,22 @@ const assemble = (text: string, spans: ReadonlyArray<Span>, fallback: PartitionF
 const wholeFile = (text: string, fallback: PartitionFallback): MarkdownPartition =>
   assemble(text, [{ kind: "paragraph", start: 0, end: text.length }], fallback);
 
+// The spans of one in-bounds, non-empty block: its own spans when usable,
+// otherwise one coarse span over the block's whole line region.
+const regionSpans = (
+  source: Source,
+  block: Block,
+  cursor: number,
+  start: number,
+  end: number
+): { readonly spans: ReadonlyArray<Span>; readonly coarse: boolean } => {
+  const regionStart = lineStart(source.text, start, cursor);
+  const inner = nonEmpty(blockSpans(source, block, cursor));
+  return usableSpans(source.text, inner, regionStart, end)
+    ? { spans: inner, coarse: false }
+    : { spans: [{ kind: coarseKind(block), start: regionStart, end }], coarse: true };
+};
+
 const partitionParsed = (source: Source, root: Root): MarkdownPartition => {
   const { text } = source;
   const spans: Array<Span> = [];
@@ -281,26 +294,18 @@ const partitionParsed = (source: Source, root: Root): MarkdownPartition => {
   for (const block of root.children) {
     const start = startOf(source, block);
     const end = endOf(source, block);
-    if (
-      start < cursor ||
-      end < start ||
-      end > text.length ||
-      splitsSurrogatePair(text, start) ||
-      splitsSurrogatePair(text, end)
-    ) {
+    if (outOfBounds(text, start, end, cursor, text.length)) {
       return wholeFile(text, "file");
     }
-    if (end > start) {
-      const regionStart = lineStart(text, start, cursor);
-      const inner = nonEmpty(blockSpans(source, block, cursor));
-      if (usableSpans(text, inner, regionStart, end)) {
-        spans.push(...inner);
-      } else {
-        spans.push({ kind: coarseKind(block), start: regionStart, end });
-        fallback = "block";
-      }
-      cursor = end;
+    if (end <= start) {
+      continue;
     }
+    const region = regionSpans(source, block, cursor, start, end);
+    spans.push(...region.spans);
+    if (region.coarse) {
+      fallback = "block";
+    }
+    cursor = end;
   }
   return assemble(text, spans, fallback);
 };
