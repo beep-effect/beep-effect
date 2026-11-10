@@ -100,3 +100,5 @@ Full table with gaps in RESEARCH "In-Repo Capability Inventory".
   [`../RESEARCH.md`](../RESEARCH.md).
 - Adjacent graduated explorations: `explorations/observability-palantiri`,
   `explorations/agent-observability-rebuild`, `explorations/fleet-coordination`.
+- Graduated goal: `goals/lane-cockpit-spike` (its `research/SOURCES.md`
+  reproduces the rows the spike builds on).

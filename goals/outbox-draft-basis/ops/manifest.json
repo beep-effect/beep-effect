@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "outbox-draft-basis",
+    "packetId": "goal-packet/v1:82d50f160b7cbf3a2c9b8b830be4977ba2347bad516e58d547820c3c33324144",
+    "title": "Outbox Draft Basis",
+    "status": "active",
+    "created": "2026-11-10",
+    "updated": "2026-11-10",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/outbox-draft-basis",
+  "lifecycle": "active",
+  "mission": "An outbox draft records the Microsoft Graph items it rested on, and a draft whose basis changed is reported and flagged in Outlook before the attorney sends it.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/semantic-agent-graph-stack",
+    "graduated": "2026-11-10"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/outbox-draft-basis/README.md",
+    "goals/outbox-draft-basis/SPEC.md",
+    "goals/outbox-draft-basis/PLAN.md",
+    "goals/outbox-draft-basis/GOAL.md",
+    "goals/outbox-draft-basis/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/outbox-draft-basis/GOAL.md"
+    }
+  ],
+  "provides": ["m365/outbox-draft-basis"],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/outbox-draft-basis/GOAL.md)\" -le 4000",
+    "jq . goals/outbox-draft-basis/ops/manifest.json",
+    "rg -n \"outbox-draft-basis|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/outbox-draft-basis",
+    "git diff --check -- goals/outbox-draft-basis",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

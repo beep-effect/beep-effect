@@ -3,16 +3,12 @@
   "exploration": {
     "slug": "textjs-console-ui",
     "title": "Text.js Console UI",
-    "status": "active",
-    "stage": "align",
-    "openQuestions": [
-      "Q1 primary pull: which use-case family is this packet for (operator cockpit, text-frame UI test tier, console companion, pattern port, or park)?",
-      "Q2 appetite: how much is this worth (one-day spike, about a week, or nothing now)?",
-      "Q3 dependency stance: may repo tooling take a pinned dependency on an eight-day-old single-author framework, or ideas only?"
-    ],
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": ["goals/lane-cockpit-spike"],
       "docs": [],
       "supersededBy": null
     },

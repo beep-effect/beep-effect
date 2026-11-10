@@ -38,8 +38,8 @@ deletes.
 
 ## Solution Sketch
 
-A lab app, `apps/labs/lane-cockpit`, that draws the live lanes board
-full-screen in a terminal.
+A lab app named `lane-cockpit` under `apps/labs/` that draws the live lanes
+board full-screen in a terminal.
 
 ```text
  beep session open --json        every N seconds, from an Effect fiber

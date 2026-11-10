@@ -139,3 +139,27 @@ decodes the report with a schema. It does not import the session services.
 `@beep/repo-cli/test/Session`. Widening a tooling export for a throwaway is
 out of proportion. Reversal: if the cockpit is kept, the follow-on goal
 decides the proper export.
+
+## 2026-11-10 — shape review
+
+**Question:** Does `BRIEF.md` match the picture in the operator's head?
+
+**Answer:** Yes, as drafted: a flat board, blocked lanes first.
+
+**Rationale:** Recommended and accepted. Rejected: grouping rows under their
+goal packet or PR (closer to how the merge gate thinks, but it needs a goal
+lookup the ledger row does not carry); holding at shape; revising the sketch.
+
+## 2026-11-10 — graduation
+
+**Question:** Does the packet meet the definition of ready, and what
+graduates now?
+
+**Answer:** Ready. `lane-cockpit-spike` graduates now. `operator-cockpit`,
+`cockpit-actions`, `agent-frame-protocol` and `terminal-content-negotiation`
+stay in `MAP.md` behind their gates.
+
+**Rationale:** Brief complete, no open questions, the map names the goal and
+its first slice, and every component cites a brick or is marked NET-NEW.
+Gated candidates do not hold the packet open (Graduation Contract, ratified
+2026-08-13). Reversal: kill the goal and set this packet back to `decompose`.
