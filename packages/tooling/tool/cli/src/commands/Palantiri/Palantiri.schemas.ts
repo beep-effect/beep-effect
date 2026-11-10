@@ -134,21 +134,21 @@ export class ParcelCatalog extends S.Opaque<ParcelCatalog, { readonly brand: uni
 ) {}
 
 /**
- * The parcels `beep session open` pushes: account headroom, lane reds and
- * host pressure.
+ * The parcels `beep session open` pushes: account headroom, lane reds, host
+ * pressure and GitHub headroom.
  *
  * **Example** (List the hot parcels)
  *
  * ```ts
  * import { HotParcelId } from "@beep/repo-cli/test/Palantiri"
  *
- * console.log(HotParcelId.literals) // ["account-headroom", "lane-reds", "host-pressure"]
+ * console.log(HotParcelId.literals) // ["account-headroom", "lane-reds", "host-pressure", "github-headroom"]
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const HotParcelId = LiteralKit(["account-headroom", "lane-reds", "host-pressure"]).pipe(
+export const HotParcelId = LiteralKit(["account-headroom", "lane-reds", "host-pressure", "github-headroom"]).pipe(
   $I.annoteSchema("HotParcelId", { description: "A parcel `beep session open` prints." })
 );
 

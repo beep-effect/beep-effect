@@ -24,7 +24,8 @@ import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { headerNumber, retryAfterMillisFrom } from "./internal/headers.ts";
+import { headerNumber, headerString, retryAfterMillisFrom } from "./internal/headers.ts";
+import { GitHubRateLimitResource } from "./Resilience.ts";
 
 const $I = $GithubId.create("GitHubError");
 
@@ -704,8 +705,11 @@ const saysAlreadyExists = (facts: Throwable): boolean => {
  *
  * **Details**
  *
- * Answers `Option.none()` unless all three headers are present and numeric: a
- * partial snapshot is never reported.
+ * Answers `Option.none()` unless all three required headers are present and
+ * numeric: a partial snapshot is never reported. `x-ratelimit-used` and
+ * `x-ratelimit-resource` are optional and appear only when present; a resource
+ * GitHub names but {@link GitHubRateLimitResource} does not list is dropped, so
+ * it can never fail the snapshot decode.
  *
  * **Example** (Read a complete rate-limit snapshot)
  *
@@ -715,8 +719,9 @@ const saysAlreadyExists = (facts: Throwable): boolean => {
  *
  * const snapshot = readRateLimitHeaders({
  *   "x-ratelimit-remaining": "42", "x-ratelimit-limit": "5000", "x-ratelimit-reset": "100",
+ *   "x-ratelimit-used": "4958", "x-ratelimit-resource": "core",
  * });
- * console.log(O.getOrUndefined(O.map(snapshot, (value) => value.remaining))) // 42
+ * console.log(O.getOrUndefined(O.map(snapshot, (value) => value.resource))) // core
  * ```
  *
  * @internal
@@ -725,9 +730,27 @@ const saysAlreadyExists = (facts: Throwable): boolean => {
  */
 export const readRateLimitHeaders = (
   headers: Readonly<Record<string, unknown>> | undefined
-): O.Option<{ readonly remaining: number; readonly limit: number; readonly resetEpochSeconds: number }> =>
-  O.all({
-    remaining: O.fromUndefinedOr(headerNumber(headers, "x-ratelimit-remaining")),
-    limit: O.fromUndefinedOr(headerNumber(headers, "x-ratelimit-limit")),
-    resetEpochSeconds: O.fromUndefinedOr(headerNumber(headers, "x-ratelimit-reset")),
-  });
+): O.Option<{
+  readonly remaining: number;
+  readonly limit: number;
+  readonly resetEpochSeconds: number;
+  readonly used?: number;
+  readonly resource?: GitHubRateLimitResource;
+}> =>
+  O.map(
+    O.all({
+      remaining: O.fromUndefinedOr(headerNumber(headers, "x-ratelimit-remaining")),
+      limit: O.fromUndefinedOr(headerNumber(headers, "x-ratelimit-limit")),
+      resetEpochSeconds: O.fromUndefinedOr(headerNumber(headers, "x-ratelimit-reset")),
+    }),
+    (required) => ({
+      ...required,
+      ...O.getSomesStruct({
+        used: O.fromUndefinedOr(headerNumber(headers, "x-ratelimit-used")),
+        resource: O.filter(
+          O.fromUndefinedOr(headerString(headers, "x-ratelimit-resource")),
+          S.is(GitHubRateLimitResource)
+        ),
+      }),
+    })
+  );

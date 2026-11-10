@@ -2,14 +2,14 @@
 
 ## Status
 
-Status: `pending`
+Status: `active`. P0 is complete: the design (`research/2026-11-10-design.md`) resolves SPEC ambiguities A1 to A20. P1 is in progress on the implementation lane.
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded. |
-| P1 Implement | pending | Make the smallest changes that satisfy `SPEC.md`. | Acceptance criteria are met. |
+| P0 Research | complete | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded. |
+| P1 Implement | in-progress | Make the smallest changes that satisfy `SPEC.md`. | Acceptance criteria are met. |
 | P2 Verify | pending | Run required checks and capture evidence. | Verification is green or blockers are documented. |
 | P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
@@ -63,6 +63,10 @@ git diff --check -- goals/github-budget-ledger
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug github-budget-ledger`; add a `kind: checkpoint` file there, never edit this block._
 
-_No checkpoint files yet._
+### P0 complete, P1 in progress, 2026-11-10
+
+P0 closed with the normative design `research/2026-11-10-design.md`: schemas, driver change, ledger service and store, gh spawn attribution, sampler and calibration, reserve signal, the github-headroom parcel, the test plan and the slicing. It resolves SPEC ambiguities A1 to A20, one decision file each, and records the laws and feasibility review dispositions. P1 implements the design as one PR, in the design's commit order.
+
+Reverse: Set P0 back to pending in PLAN.md and ops/manifest.json and delete this checkpoint.
 
 <!-- beep:decisions:end -->

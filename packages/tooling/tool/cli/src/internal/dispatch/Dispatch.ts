@@ -28,6 +28,7 @@ import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { commandGroupRoutes, QUALITY_TASK_NAMES } from "./Dispatch.manifest.ts";
 import { DispatchTarget } from "./Dispatch.schemas.ts";
+import { ROOT_VALUE_FLAG_NAMES } from "./RootFlags.ts";
 import type { CommandGroupHelp, RuntimeService } from "./Dispatch.schemas.ts";
 
 /**
@@ -58,8 +59,10 @@ const ROOT_GLOBAL_FLAG_NAMES: ReadonlyArray<string> = [
   "-h",
   "-v",
 ];
+
 // Built-in root flags that take their value as the next token.
-const ROOT_VALUE_FLAG_NAMES: ReadonlyArray<string> = ["--completions", "--log-level"];
+export { ROOT_VALUE_FLAG_NAMES } from "./RootFlags.ts";
+
 // Built-in root flags that walk every group, so the whole tree must load.
 const FULL_TREE_FLAG_NAMES: ReadonlyArray<string> = ["--completions", "--wizard"];
 const LINT_POLICY_SUBCOMMAND_NAMES: ReadonlyArray<string> = LINT_POLICY_SUBCOMMANDS;
