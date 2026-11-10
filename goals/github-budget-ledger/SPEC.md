@@ -121,9 +121,11 @@ No new workspace package is planned. If one becomes necessary it is bootstrapped
 - [ ] `gh` spawns made through `ghOutput` and `runRepoCommandCapture("gh")` are attributed to their command (count
       and, where the next `/rate_limit` sample allows, estimated cost). No PATH shim exists.
 - [ ] `GraphqlBudget` consults the ledger before spending a probe.
-- [ ] The ledger exposes a typed reserve signal (`belowReserve` per identity x resource, threshold 15% of that
-      bucket's `limit`) with a test showing background callers see it, that one identity's low bucket does not
-      signal another identity's, and that interactive / merge-critical callers are not blocked by it.
+- [ ] The ledger exposes a typed reserve signal (`ReserveState` `Below` / `Clear` / `Unknown` per identity x
+      resource, threshold 15% of that bucket's `limit`) with a test showing background callers see it and that one
+      identity's low bucket does not signal another identity's. The signal carries no caller-priority logic:
+      admitting interactive and merge-critical reads below the reserve belongs to its first consumer,
+      [`github-state-worker`](../github-state-worker/SPEC.md) (decision 2026-11-10 "reserve priority moves to goal 2").
 - [ ] **Baseline recorded:** at least 24 h of ledger data on the hub (DankStation) summarised in
       `history/` as requests and points per hour per resource, per command, with the unattributed remainder. This
       resolves or explains the 430-vs-720-1,440 GraphQL/h conflict and is the "before" for goals 2 and 3.
@@ -367,6 +369,14 @@ The ledger sink is disabled when `isCiSync()` holds or `BEEP_GITHUB_LEDGER=off`,
 Resolves SPEC ambiguity A9 in the P0 design (`research/2026-11-10-design.md`, "SPEC ambiguities resolved here").
 
 Reverse: Enable it with a CI state root.
+
+### Reserve priority moves to goal 2, 2026-11-10
+
+Hosted Fallow dead-code on #3068 flagged ReserveSignal.belowReserve and admits as unused: only tests called them, and goal 1 deliberately has no reserve-enforcing caller (SPEC non-goal: this goal publishes the signal, github-state-worker makes the worker obey it). The members were removed and consumers read ReserveState via ReserveState.match. The goal 1 acceptance criterion no longer asks for an interactive/merge-critical admission test; github-state-worker's SPEC already owns that rule (merge-critical head-pinned re-read and operator-direct commands may go to 1) and its test, at the first real consumer.
+
+Lane feat/github-budget-ledger · PR #3068
+
+Reverse: Restore a priority-aware admits(priority) on ReserveSignal with a production caller and the goal 1 test
 
 ### Review fixes: calibration file, latest retention, shown-bucket freshness, lease token, 2026-11-10
 

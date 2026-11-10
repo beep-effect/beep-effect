@@ -183,6 +183,7 @@ const reading = (options: {
     basis: options.basis ?? "transport",
   });
 
+const UnknownJson = S.fromJsonString(S.Unknown);
 const memoryLedger = layerGithubBudgetLedger({ host }).pipe(Layer.provideMerge(layerGithubLedgerStoreMemory));
 
 const withStateRoot =
@@ -263,7 +264,7 @@ describe("GithubLedger schemas", () => {
 
   it.effect("rejects a raw token in identities.json", () =>
     Effect.gen(function* () {
-      const text = yield* S.encodeEffect(S.fromJsonString(S.Unknown))({
+      const text = yield* S.encodeEffect(UnknownJson)({
         schemaVersion: "github-identities/v1",
         identities: [{ _tag: "OpRef", tokenRef: `ghp_${Str.repeat(36)("x")}`, login: "alice" }],
       });
