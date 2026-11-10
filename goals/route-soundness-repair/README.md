@@ -37,11 +37,16 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+P1 Implement — slice 1 (ROUT-03 census, `fix(ci): keep goal ops scripts, fixtures and research inputs on the
+code route`) published; P0 re-checked lever status at `origin/main` 5e09d90a6da. Slices 2 and 3 complete the first wave;
+slice 4 opens when slice 1 merges.
 
 ## Latest Evidence
 
-Not started.
+- `packages/tooling/tool/cli/test/goal-data-consumer-census.test.ts`: the generated census of consumed goal paths
+  is red on the pre-slice patterns (548 consumed entries docs-only) and green after; change-profile gives
+  `docs_only=false` for the frozen profile fixture, a citation ops `.py` probe, a `.ts` ops script and the ciops
+  gate-order handoff JSON.
 
 ## Notes
 
@@ -56,7 +61,7 @@ Not started.
   heavy-pool-diet's PERIH-11 pin bumps; ROUT-07 waits for certainty-scorecard's ROUT-05 and must report before
   PERIH-04, YEET-02 or ROUT-01's residual land (#3030 landed its empty-leg skips first), or TURB-03 if a goal adopts
   it (D24). Every repair lands with a mutation fixture or replay.
-- ROUT-02's host is the small docs-policy job D8 rules; hosting it in Repo Sanity is a proposed D8 amendment for the
-  operator, measured in the slice before building.
+- ROUT-02's host is the small docs-policy job D8 rules; the operator kept it on 2026-11-09 and the Repo Sanity
+  hosting proposal is closed.
 - Siblings that require `ci/route-soundness` before a narrowing lever lands: hosted-setup-tax and
   local-proof-under-ten. certainty-scorecard runs alongside and reports the runner-minutes these repairs add.

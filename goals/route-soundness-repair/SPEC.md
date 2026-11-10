@@ -79,15 +79,17 @@ Higher sources outrank lower sources when they conflict.
 
 - `packages/tooling/tool/cli` (`@beep/repo-cli`):
   - `packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts` (`ciOperationalPatterns`, `heavyDocsOnlyPattern`) and its generated
-    projection `packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json` (checked by `bun run beep ci patterns`); both the
-    `goals` and the `docs` alternatives need editing (ROUT-03).
+    projection `packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json` (checked by `bun run beep ci patterns`). ROUT-03
+    slice 1 adds the `ciGoalDataConsumers` registry there and joins each row into `codeRoots`, leaving the `goals` and
+    `docs` alternatives unchanged (decision "ROUT-03 slice 1 keeps consumed goal paths on the code route through codeRoots
+    consumer rows").
   - `packages/tooling/tool/cli/src/commands/Ci/CiOperational.service.ts` (`changeProfile`, which reads the head checkout's patterns file and
     falls back to the embedded value): the base-ref read with a backward-compatible decode (PERIH-10).
   - `packages/tooling/tool/cli/src/commands/Ci/CiLane.ts`: the docs-policy lane id (ROUT-02).
   - `packages/tooling/tool/cli/src/commands/Ci/RouteClassify.ts`, `packages/tooling/tool/cli/src/commands/Quality/internal/LintPolicyScope.ts`, `lefthook.yml` and the
     inline greps in `.github/workflows/check.yml`: classifiers the ROUT-07 differential compares.
   - `packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts`: consumer rows for goal-data paths (ROUT-03 slice 2).
-  - `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts` (bare coverage path, line 4838) and
+  - `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts` (bare coverage comparator call, line 4852) and
     `packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts` (`compareCoverageRegressionBaseline` already takes a
     `base`): COVE-02; failure-row labels (COVE-04).
   - `packages/tooling/tool/cli/src/commands/Quality/internal/CoverageEnvironment.ts`: the shared Node pin for local coverage children
@@ -111,7 +113,7 @@ Higher sources outrank lower sources when they conflict.
 - `.github/workflows/check.yml`: the docs-policy job (ROUT-02), the fixed name of the `coverage-regression` job
   (COVE-08), every `beep ci change-profile` call site (PERIH-10): in check.yml the
   change-profile job step (line 53), the Test Plan classification step (line 769) and the lane-gate evals (lines 267,
-  1197, 1333, 1736), plus `.github/workflows/heavy.yml`, `.github/workflows/heavy-admit.yml` and
+  1197, 1333, 1747), plus `.github/workflows/heavy.yml`, `.github/workflows/heavy-admit.yml` and
   `.github/workflows/storybook.yml`; the binary smoke call in `.github/workflows/beep-ci-binary.yml` is listed as
   excluded. Re-inventory with grep when the slice starts, and the coverage Node pins (COVE-03 drift test).
 - `scripts/cloud/bootstrap.sh`: provision the pinned coverage runtime (COVE-03).
@@ -127,10 +129,10 @@ Status checked against `origin/main` at c90929b1ff1 on 2026-11-10 (decision "Eve
 
 | Id | What | Status | Admission gate before landing | Depends on |
 | --- | --- | --- | --- | --- |
-| ROUT-03 | Register goal-folder data consumers; narrow the #2999 widening for consumed paths | open (`CiOperational.patterns.json` still has `^goals/[^/]+/` in `docs`; last change #2999) | Generated census of every `goals/` path a test reads, spawns or imports, or a `turbo.json` declares, plus the existing cross-package fixture read the ROUT-09 audit found (law-practice-server coverage tests read `packages/law-practice/use-cases/test/fixtures` by relative path, unregistered as a fixture owner and excluded from transit; PLAN ROUT-09 entry); each non-docs-only, mapped in CoverageScope and a per-package Turbo input; mutations of a `.py` probe, a `.ts` ops script, the frozen JSON fixture and a research JSON each selected and red | none |
-| ROUT-02 | Docs-policy job: knowledge and packet policy on docs-only and goals-only PRs | open (#3010 and #3011 add no job or lane id; #3039 added a Repo Sanity goals-only path that runs only the private-home-paths law, check.yml line 330) | Completeness test derived from `turbo.json` inputs against fixed probe paths with an explicit exclusion list (fails today on `lint:effect-imports-markdown`); goals-only and docs-only fixtures select the docs-policy job; replaying #2909's head goes red | ROUT-03; HOST-06 (heavy-pool-diet) |
+| ROUT-03 | Register goal-folder data consumers; narrow the #2999 widening for consumed paths | slice 1 in review (census test and `ciGoalDataConsumers` rows in `codeRoots`, checked at 5e09d90a6da); slice 2 (CoverageScope rows, per-package Turbo inputs) open | Generated census of every `goals/` path a test reads, spawns or imports, or a `turbo.json` declares, plus the existing cross-package fixture read the ROUT-09 audit found (law-practice-server coverage tests read `packages/law-practice/use-cases/test/fixtures` by relative path, unregistered as a fixture owner and excluded from transit; PLAN ROUT-09 entry); each non-docs-only, mapped in CoverageScope and a per-package Turbo input; mutations of a `.py` probe, a `.ts` ops script, the frozen JSON fixture and a research JSON each selected and red | none |
+| ROUT-02 | Docs-policy job: knowledge and packet policy on docs-only and goals-only PRs | open (#3010 and #3011 add no job or lane id; #3039 added a Repo Sanity goals-only path that runs only the private-home-paths law, check.yml line 329) | Completeness test derived from `turbo.json` inputs against fixed probe paths with an explicit exclusion list (fails today on `lint:effect-imports-markdown`); goals-only and docs-only fixtures select the docs-policy job; replaying #2909's head goes red | ROUT-03; HOST-06 (heavy-pool-diet) |
 | TEST-10 | Key `test`, `test:property` and `doctest` on `@beep/glob#transit` with a setup-closure invariant (merges TURB-04) | open (`turbo.json` lines 5374, 5419, 67) | Dry-run hash A/B in a disposable worktree: every hash in the three families changes on a `GlobPattern.ts` edit, a control edit leaves them stable (pre-fix `@beep/identity#test=efb65c7d1bcb4fc1`); invariant over cacheable families only; cache-qualification baseline re-recorded in the same PR | none |
-| COVE-02 | Bare `bun run coverage` judges against the merge base it planned from | open; #3008 made bare runs plan `--affected` from the merge base, but `Tasks.ts` line 4838 still omits the base | Fixture in `quality-tasks.test.ts`: a lowered row in a dirty baseline fails the bare run with the self-judge line; the same fixture passes on the current tree | none |
+| COVE-02 | Bare `bun run coverage` judges against the merge base it planned from | open; #3008 made bare runs plan `--affected` from the merge base, but `Tasks.ts` line 4852 still omits the base | Fixture in `quality-tasks.test.ts`: a lowered row in a dirty baseline fails the bare run with the self-judge line; the same fixture passes on the current tree | none |
 | YEET-08 | Versioned final-check receipts by gate set, exact gate names, named hosted obligations | open (`FinalCheckReceipt` tag `yeet-final-check/v1`, no gate-set digest; AGENTS.md names "Effect Diagnostics") | A v1 receipt is refused on the head path and the ancestor-carry path; a docs-drift test ties AGENTS.md and SKILL.md gate names to the `FinalCheckGate` literals; later slices: commitlint argv equals check.yml `--from/--to`, codegen and IPC planned only when `should_run` | slice 1 none; slices 2-3 SCHE-02 (local-proof-under-ten) |
 | COVE-03 | Local coverage children and baseline writes on Node 22.23.4 from one shared pin | open (`.nvmrc` 24.22.1; check.yml pins 22.23.4 at three sites) | Wrong runtime refused with no rows written; `bunx --bun` law-practice-server argv unchanged; pin-drift test against check.yml; A/B on `@beep/acp` plus 2-4 v8 packages in hosted producer mode matches hosted rows within 0.001 | none |
 | COVE-08 | Fixed comparator context name, removing the conditional on the job name | open (check.yml `coverage-regression` job, Heavy / Coverage Regression, line 1160: name conditional on `legacy_coverage`) | Route replay of context emission on docs, source and main events | coordinated with PERIH-01's probe-deletion slice (heavy-pool-diet), see Constraints |
@@ -152,8 +154,8 @@ Status checked against `origin/main` at c90929b1ff1 on 2026-11-10 (decision "Eve
   package's test cache and forces a cache-qualification re-record and a policy-fingerprint reseal.
 - **TEST-10 touches root `turbo.json`.** It re-records the cache-qualification baseline and reseals
   `standards/policy-tools.fingerprint.json` in the same PR and freezes
-  coverage rows at base (full matrix). Batch it with no other `turbo.json`, `bun.lock` or workflow change. Open
-  #3041 edits `turbo.json`; if it merges first, rebase on it and re-record against that.
+  coverage rows at base (full matrix). Batch it with no other `turbo.json`, `bun.lock` or workflow change. #3041
+  (merged) edited `turbo.json`; re-record against main after it.
 - **Any workflow change** (ROUT-02, COVE-08, PERIH-10) freezes coverage floors at base, escalates to a full
   matrix and re-records the cache-policy baseline in the same PR; plan the S11 path. ROUT-03's per-package
   `turbo.json` edits do the same (the baseline records per-package inputs). A change to `.github/workflows/heavy.yml`, which check.yml calls at `@main`, is two PRs:
@@ -162,10 +164,9 @@ Status checked against `origin/main` at c90929b1ff1 on 2026-11-10 (decision "Eve
   if the slice needs one (for example to fetch the base ref), that edit follows this two-PR rule.
 - **ROUT-02 host.** #3039 made Repo Sanity run on goals-only diffs: its lane gate sets `home_paths_only` and the job
   runs only the private-home-paths law, with no disk cleanup and no app secrets. That is not the knowledge and packet
-  policy D8 asks for. The plan is the small hosted docs-policy job D8 rules (one check.yml job plus a CiLane id),
-  with its setup modeled on that goals-only path. Hosting the steps in Repo Sanity instead is a proposed amendment to
-  D8 for the operator, not a plan (decision "ROUT-02 is the D8 docs-policy job"); the slice measures both before
-  building. Cost is about +4-5 runner-min per docs/goals-only run (PLAN row; the critique books +3-5) and 0
+  policy D8 asks for. ROUT-02 builds the small hosted docs-policy job D8 rules (one check.yml job plus a CiLane id),
+  with its setup modeled on that goals-only path. The operator kept that job on 2026-11-09; the proposal to host the
+  steps in Repo Sanity is closed (decision "Operator keeps the D8 docs-policy job for ROUT-02"). Cost is about +4-5 runner-min per docs/goals-only run (PLAN row; the critique books +3-5) and 0
   on code PRs; it is booked as a cost, not a saving.
 - **COVE-08 and PERIH-01 split one edge.** heavy.yml no longer emits Heavy / Coverage Regression, so
   `legacy_coverage` resolves false and the name already resolves to `Heavy / Coverage Regression`. COVE-08 owns making the Coverage Regression job name in `.github/workflows/check.yml` a literal. PERIH-01's probe-deletion slice (heavy-pool-diet) owns the probe step, the `legacy_integration` output, the Test Integration name conditional and the LEGACY_COVERAGE env line and assertion. The `legacy_coverage` output has one consumer on each side, so whichever of the two lands second deletes it in that PR: if the probe deletion lands first it sets `legacy_coverage` to 'false' and COVE-08 then deletes the output together with its last consumer; if COVE-08 lands first, the probe deletion removes the output outright. Whichever lands second merges `main` first. Each updates `packages/tooling/tool/cli/test/ci-runner-security.test.ts` for the lines it changes. The reviewer constraint on PERIH-01 (set both outputs or remove their consumers) stays with heavy-pool-diet. Required-context names do not change.
@@ -318,6 +319,24 @@ ROUT-02 builds the small hosted docs-policy job D8 rules: one check.yml job plus
 Source: exploration `explorations/ten-minute-certainty/DECISIONS.md` (D8); `.github/workflows/check.yml` at c90929b1ff1 and #3039.
 
 Reverse: If the operator accepts the amendment, supersede this decision with one that hosts the knowledge and packet steps in Repo Sanity and amend the docs-only-narrowing decision.
+
+### Operator keeps the D8 docs-policy job for ROUT-02; the Repo Sanity hosting proposal is closed, 2026-11-10
+
+Asked on 2026-11-09 where ROUT-02 (knowledge and packet policy on docs-only and goals-only PRs) should run, the operator answered: keep the separate small docs-policy job that D8 ruled. ROUT-02 (PLAN slice 7) therefore builds one check.yml job plus a CiLane id, its setup modeled on the goals-only Repo Sanity path #3039 added (no disk cleanup, no app secrets). The proposed D8 amendment to host those steps inside Repo Sanity, recorded in the 2026-11-10 decision "ROUT-02 is the D8 docs-policy job", is closed without adoption, and slice 7 no longer measures the Repo Sanity alternative before building.
+Source: operator answer of 2026-11-09 relayed by the orchestrator session; exploration `explorations/ten-minute-certainty/DECISIONS.md` (D8).
+
+Lane fix/rout-03-goal-data-census
+
+Reverse: A new operator ruling that hosts the knowledge and packet steps in Repo Sanity supersedes this file and amends the docs-only-narrowing decision.
+
+### ROUT-03 slice 1 keeps consumed goal paths on the code route through codeRoots consumer rows, 2026-11-10
+
+Slice 1 widens the code route without touching the `docs` or `goals` alternatives. A schema-backed registry, `ciGoalDataConsumers` (`CiGoalDataConsumer` rows in `packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts`), names each consumed goal path family with its consumer packages, mode and evidence files, and every row's pattern joins `codeRoots`, which already excludes a path from docs-only in both `heavyDocsOnlyPattern` and the change-profile classifier. Reason: `beep ci change-profile` decodes the head checkout's `CiOperational.patterns.json` with the binary pinned on main, so a value change to an existing key takes effect on the PR that lands it, while a new key would be ignored by the pinned decoder until the next binary bump; editing `codeRoots` also cannot narrow anything (widening-only). The rows: the citation-extraction-engine `ops/` directory (law-practice-server spawns its `.py` probes and imports its `.mjs` children), the frozen six-form profile (eyecite, law-practice-server), the semantica C2 canary report, the time-to-certainty `economics.json` and `gate-order-handoff.json` (repo-cli, ciops), the native-dependency-diagnostics `.py` pair (repo-cli) and every `goals/*/ops/**/*.ts` script (repo-cli's goals-ops-typecheck raw glob). The census (`packages/tooling/tool/cli/test/goal-data-consumer-census.test.ts`) regenerates consumers from test sources and package `turbo.json` inputs by three read shapes (test-relative `../goals/`, `${root}/goals/` joins, `$TURBO_ROOT$/goals/`), resolves them against tracked files, and drops references whose packet segment is interpolated (synthetic fixtures). It excludes the `goals/*/ops/manifest.json` glob (packet manifests are goal documents; ROUT-02) and leaves root `//#` policy-task inputs to ROUT-02. Before the change it reported 548 consumed entries as docs-only; after it, none.
+Source: `packages/tooling/tool/cli/src/commands/Ci/CiOperational.service.ts` (`changeProfilePatterns`, `classifyChangedPaths`); `.github/workflows/check.yml` Change Profile job at 5e09d90a6da.
+
+Lane fix/rout-03-goal-data-census
+
+Reverse: Remove the ciGoalDataConsumers rows from codeRoots in CiOperational.schemas.ts, run bun run beep ci patterns --write, and delete goal-data-consumer-census.test.ts.
 
 <!-- beep:decisions:end -->
 
