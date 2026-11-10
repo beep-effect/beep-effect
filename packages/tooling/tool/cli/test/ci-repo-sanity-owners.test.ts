@@ -204,8 +204,8 @@ layer(testLayer, { timeout: "60 seconds" })("Repo Sanity step masking (PERIH-02)
       const exit = yield* Effect.exit(runQualityTaskStreamingStepGroupForTesting("ci:repo-sanity", replay));
       const shadcnRan = yield* fs.exists(marker);
       expect(shadcnRan).toBe(true);
-      assertTrue(Exit.isFailure(exit));
-      const failure = Cause.squash(exit.cause);
+      // A success leaves no failure, which the guard below rejects.
+      const failure = exit.pipe(Exit.match({ onSuccess: () => undefined, onFailure: Cause.squash }));
       assertTrue(isQualityTaskGroupFailed(failure));
       expect(A.map(failure.failures, (step) => step.label)).toEqual(
         A.map(A.take(body, shadcnIndex), (step) => step.label)
