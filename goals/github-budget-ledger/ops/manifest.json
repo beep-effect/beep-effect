@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "github-budget-ledger",
+    "packetId": "goal-packet/v1:480366fa6c6d68b8790aeeded50d22592f2c12098c96e75ba471335b4008a23b",
+    "title": "GitHub Budget Ledger",
+    "status": "active",
+    "created": "2026-11-09",
+    "updated": "2026-11-09",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/github-budget-ledger",
+  "lifecycle": "active",
+  "mission": "Record the cost of every GitHub request per identity, resource, command and host in a host-scoped ledger fed by x-ratelimit-* headers and the free /rate_limit, show it as a github-headroom parcel in session open, and publish the 15% reserve signal and the T3 share threshold that later goals obey.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/github-api-quota",
+    "graduated": "2026-11-09"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/github-budget-ledger/README.md",
+    "goals/github-budget-ledger/SPEC.md",
+    "goals/github-budget-ledger/PLAN.md",
+    "goals/github-budget-ledger/GOAL.md",
+    "goals/github-budget-ledger/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/github-budget-ledger/GOAL.md"
+    }
+  ],
+  "provides": ["github/budget-ledger"],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/github-budget-ledger/GOAL.md)\" -le 4000",
+    "jq . goals/github-budget-ledger/ops/manifest.json",
+    "rg -n \"github-budget-ledger|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/github-budget-ledger",
+    "git diff --check -- goals/github-budget-ledger",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "statusNote": "Authored 2026-11-09 from explorations/github-api-quota, not started: P0 is next and this goal goes first (goals 2 and 3 wait on its ledger and reserve signal)."
+}
