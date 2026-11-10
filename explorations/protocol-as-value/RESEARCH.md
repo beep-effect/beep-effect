@@ -6,6 +6,78 @@ repo (cited), and what exists inside it (so we compose bricks instead of
 rebuilding them). Date sections; research goes stale.
 -->
 
+## 2026-11-10 — shape review against the tree
+
+A re-check of the in-repo inventory against `origin/main`, run for the shape
+review. The external research was not re-run. Where this section and the
+August inventory disagree, this section is current.
+
+**Encoders.** The August inventory counted three or more canonical-JSON
+encoders and called them incompatible. A differential run over 20,000
+plain-JSON values
+([`research/encoder-differential-2026-11-10.md`](./research/encoder-differential-2026-11-10.md))
+found four of them byte-identical, and identical to RFC 8785:
+
+- `packages/foundation/modeling/epistemics/src/internal/CanonicalJson.ts`.
+  The epistemic encoder moved here; `@beep/epistemics` exports it as
+  `canonicalDetectionJson`, and `@beep/epistemic-domain` and
+  `@beep/execution-authority-domain` re-export that one function.
+- `packages/tooling/tool/cli/src/commands/Goals/PacketCore/PacketDigest.ts`
+  (`canonicalJsonText`). Ten source files reference it, most of them commands that
+  are not event-sourced.
+- `apps/labs/semantica/src/corpus/Canonical.ts`.
+- `packages/foundation/modeling/jsonc/src/JsoncFingerprint.ts`, an RFC 8785
+  emitter with SHA-256 fingerprints and typed refusals, added 2026-10-21 by
+  the effected kit promotion. One consumer:
+  `packages/drivers/box-provisioning/src/internal/canonical.ts`.
+
+They differ only on values that are not JSON. The hand-rolled three coerce
+(`NaN` to `null`, a `Date` to `{}`); `JsoncFingerprint` refuses. Two more
+encoders were not in the run: PartyKey v1
+(`packages/party/domain/src/values/PartyKey/PartyKey.behavior.ts`, added
+2026-11-02, string-only, pinned by its own specification) and the OpenClaw
+document renderer, which is indented by design.
+
+**Digest grammar.** `sha256:` plus hex is already a schema twice:
+`ContentDigest` in
+`packages/foundation/capability/file-processing/src/Artifact/Artifact.schema.ts`
+and `SourceTextDigest` in
+`packages/foundation/modeling/provenance/src/SourceTextIdentity.ts`. PartyKey
+uses `pk:v1:` plus hex. `Sha256Hex` in `@beep/schema` remains the bare form.
+
+**Effect modules now in use.** The August gap "zero `effect/workflow` or
+cluster imports" no longer holds. `effect/eventlog` backs the agent memory
+log (`packages/tooling/library/agent-memory-store/src/MemoryLog.service.ts`)
+and `@beep/duckdb` ships an `EventJournal` implementation; workflow and
+cluster imports appear in the documents server and the alchemy-postgres
+driver. `EventJournal` entries carry a UUID v7 id and an opaque payload, with
+no parent link and no digest, so it does not provide a hash chain. Nothing in
+this packet had compared the proposed journal kit with it.
+
+**Schema serialization.** `effect/SchemaRepresentation` (`toJson`,
+`fromJson`) is the serializable form of a schema. No source file in this
+repository imports it yet. A schema AST holds closures and cannot be hashed
+directly.
+
+**Fibered kit.** `goals/identity-iri-fibered` is `completed-retained` and
+`packages/foundation/modeling/identity/src/Fibered.ts` ships. The August
+entry "design-locked, zero code" is superseded.
+
+**Chains.** Of the five August instances, the execution ledger and
+PacketCore are parent-linked chains. Yeet's internals have no parent-link
+field. The candor gate was not re-read. Four goal packets carry an
+`ops/events/` stream in this tree, each with one event; the archive
+repository was not counted.
+
+**Consumers.** Fleet messaging is no longer an in-repo candidate: the agent
+guide rules that cross-session messaging runs only through T3 Code's tools.
+Sibling packets recorded how they treat this packet's seam:
+`explorations/typed-agent-skill-contracts` (waiting rejected as an unbounded
+block), `goals/oracle-loop-poc/QUESTION-BINDING.md` (need not wait, must not
+become a competing owner) and
+`explorations/remote-skill-activation-conformance` (coordinate, no local
+substitute).
+
 ## 2026-11-05 — qualifications to the August conclusions
 
 The [adopted contract amendment](./DECISIONS.md#2026-11-05--definition-identity-and-consumer-qualification-amendment)

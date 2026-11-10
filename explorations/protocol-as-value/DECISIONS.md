@@ -200,3 +200,79 @@ projection because a request/replay example exists.
 **Reversal:** Amend these contracts through a later dated decision, retain
 historical receipts, and withdraw any claim whose qualifying evidence no
 longer applies. Any replacement digest guarantee must match its implementation.
+
+## 2026-11-10 — shape narrowed to the canonical digest owner
+
+**Question:** Shape review of the amended BRIEF: does Wave 1 graduate as
+drafted (encoder module, two digest regimes, journal/register/fold kit, two
+proof migrations)?
+
+**Answer (operator-approved 2026-11-10):** No. One goal graduates,
+`canonical-digest-owner`, and it covers the canonical byte form and the
+digest grammar only. The rest moves to gated candidates in `MAP.md`. The
+review checked the packet against the tree; evidence is in
+[`RESEARCH.md`](./RESEARCH.md) (2026-11-10) and
+[`research/encoder-differential-2026-11-10.md`](./research/encoder-differential-2026-11-10.md).
+
+1. **Byte form and owner.** The canonical byte form is RFC 8785. Its owner is
+   `@beep/jsonc`'s `JsoncFingerprint`, which already ships in
+   foundation/modeling. This supersedes the 2026-08-23 canonical-JSON
+   ownership entry (a new module in `@beep/schema` matching the epistemic
+   encoder). `@beep/jsonc` depends on `@beep/schema`, so an encoder in
+   `@beep/schema` would be a cycle or one more copy.
+2. **Refusal policy.** Values outside plain JSON are refused with a typed
+   error. One named pre-pass is allowed: dropping object members whose value
+   is `undefined`, because every legacy encoder and `JSON.stringify` already
+   agree that such a member is absent. Nothing else is coerced.
+3. **Digest grammar.** A self-describing digest is `sha256:` followed by 64
+   lowercase hex digits, the grammar `ContentDigest` and `SourceTextDigest`
+   already use. `@beep/schema` owns it beside `Sha256Hex`, and domain digests
+   brand over it. The encoding version is not part of the digest string; the
+   schema that names a preimage contract carries it. Stored bare-hex
+   identifiers stay valid and are never rewritten. This supersedes "CID-lite,
+   grammar decided in the goal".
+4. **Definition digest.** The meaning-digest regime leaves Wave 1 and is
+   renamed definition digest, which is what the 2026-11-05 amendment says it
+   guarantees. Both proof migrations were fact digests, so it had no Wave 1
+   consumer. It is gated on the first consumer that hashes a definition, and
+   its preimage is `effect/SchemaRepresentation` JSON or a plain-data
+   protocol value, never a schema AST, which holds closures.
+5. **Chain kit.** The journal/register/fold kit leaves Wave 1. Two of the
+   five instances are parent-linked chains, and the PacketCore chain in this
+   tree is four streams of one event each. It is gated on a third
+   parent-linked journal, and its design must first say what
+   `effect/eventlog` does and does not cover.
+6. **Protocol kit.** Still gated as amended on 2026-11-05, with three
+   changes. Fleet messaging is no longer a candidate consumer, since the
+   repository ships no mailbox or relay of its own (`AGENTS.md`, Autonomy).
+   `goals/identity-iri-fibered` completed and `Fibered` ships in
+   `@beep/identity`, so the kit adopts it, as the 2026-08-23 entry said it
+   would. The pull-request lifecycle (lane owner, orchestrator, reviewer,
+   merge gate) is recorded as a candidate qualification case; nobody has
+   tested the fit.
+7. **Request contracts.** The BRIEF's consumer evaluation and request
+   section is removed. `goals/oracle-loop-poc/QUESTION-BINDING.md` already
+   carries those cases (Q3 to Q15) and is their owner.
+
+**Rationale:** The BRIEF's problem statement called the encoders
+incompatible. A differential run over 20,000 plain-JSON values found the
+epistemics, PacketCore and semantica encoders and `JsoncFingerprint`
+byte-identical. They differ only on values that are not JSON, which the
+hand-rolled three coerce silently and `JsoncFingerprint` refuses. The defect
+is several copies and silent coercion, and both have a small fix. Meanwhile
+the packet sat at shape for 79 days holding the canonical seam: two sibling
+packets recorded that they would not wait for it, a third reserved the seam
+against it, and PartyKey v1 added one more hand-rolled encoder on 2026-11-02.
+
+**Rejected:** Graduating Wave 1 as drafted (a normalizer with no consumer and
+a kit abstracted from two instances). Parking the packet (the encoder and
+grammar work is ready and has waiting consumers). Putting the encoding
+version inside the digest string (two digests of the same bytes would compare
+unequal for a reason the hash does not see).
+
+**DEFERRED:** Whether the Mepuka call produced joint scope. It stays a
+protocol-kit trigger and blocks nothing here.
+
+**Reversal:** Reopen this packet at decompose with a dated entry. The goal's
+migrations are import swaps proven byte-identical by fixture, so reverting
+them restores the old encoders without touching a stored digest.
