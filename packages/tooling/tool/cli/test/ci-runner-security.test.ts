@@ -1974,6 +1974,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "skills-update-train.yml:Skills Replay",
         "skills-update-train.yml:Skills Relock",
         "skills-update-train.yml:Skills Train Batch Issue",
+        // Vercel app deploys: a release step gated on Turbo's affected set, not a quality lane.
+        "vercel-deploy.yml:Plan Vercel deploys",
+        "vercel-deploy.yml:Deploy ${{ matrix.project }} (${{ matrix.target }})",
       ];
       const readDirectory22 = yield* fs.readDirectory(`${root}/.github/workflows`);
       const files = A.filter(readDirectory22, Str.endsWith(".yml"));
