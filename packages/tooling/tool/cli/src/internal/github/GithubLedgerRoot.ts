@@ -32,7 +32,13 @@ import { ROOT_VALUE_FLAG_NAMES } from "../dispatch/RootFlags.ts";
 import { GhSpawnSink } from "../repo-run/GhSpawnSink.ts";
 import { GithubConfiguredIdentities, readGhCliLogin, readGithubIdentityConfig } from "./GithubIdentityConfig.ts";
 import { DEFAULT_COMMAND_LABEL, GithubLedgerCommandLabel, UNRESOLVED_IDENTITY } from "./GithubLedger.schemas.ts";
-import { GithubBudgetLedger, GithubLedgerCommand, layerGithubBudgetLedgerLive } from "./GithubLedger.service.ts";
+import { GithubBudgetLedger, GithubLedgerCommand, layerGithubBudgetLedger } from "./GithubLedger.service.ts";
+import { layerGithubLedgerStoreLive } from "./GithubLedger.store.ts";
+import {
+  GithubRateLimitSampler,
+  layerGithubIdentityRegistryLive,
+  layerGithubRateLimitSampler,
+} from "./GithubRateLimitSampler.ts";
 import type * as Command from "effect/cli/Command";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
@@ -121,8 +127,10 @@ export const commandLabelOf: {
 );
 
 /**
- * The root's ledger: the file store, the `gh` CLI identity for spawn rows
- * (read lazily, once per process) and the configured identities.
+ * The root's ledger and `/rate_limit` sampler: one file store shared by both,
+ * the `gh` CLI identity for spawn rows (read lazily, once per process) and the
+ * live identity registry, which reads `identities.json` only when the sampler
+ * runs.
  *
  * **Example** (Inspect the layer)
  *
@@ -137,7 +145,7 @@ export const commandLabelOf: {
  * @since 0.0.0
  */
 export const layerGithubLedgerRootLive: Layer.Layer<
-  GithubBudgetLedger,
+  GithubBudgetLedger | GithubRateLimitSampler,
   never,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > = Layer.unwrap(
@@ -147,7 +155,9 @@ export const layerGithubLedgerRootLive: Layer.Layer<
       Effect.provideContext(services),
       Effect.map(O.getOrElse(() => UNRESOLVED_IDENTITY))
     );
-    return layerGithubBudgetLedgerLive({ ghIdentity });
+    const ledger = layerGithubBudgetLedger({ ghIdentity }).pipe(Layer.provideMerge(layerGithubLedgerStoreLive));
+    const registry = layerGithubIdentityRegistryLive(".").pipe(Layer.provideMerge(ledger));
+    return layerGithubRateLimitSampler().pipe(Layer.provideMerge(registry));
   })
 );
 
@@ -190,8 +200,9 @@ export const githubLedgerDisabled: Effect.Effect<boolean> = Effect.gen(function*
  * The ledger layer is built with `Effect.exit`, so a typed failure, a defect
  * or an interrupt while building runs the program without a ledger. Inside,
  * `RateLimitSink`, `GhSpawnSink`, `GithubConfiguredIdentities` and
- * `GithubLedgerCommand` resolve to the ledger's bindings; outside, they keep
- * their no-op defaults.
+ * `GithubLedgerCommand` resolve to the ledger's bindings, and
+ * `GithubRateLimitSampler` is provided when the layer built one; outside, they
+ * keep their no-op defaults.
  *
  * **Example** (Wrap a program)
  *
@@ -222,24 +233,44 @@ export const withGithubLedger =
   <A, E, R>(
     effect: Effect.Effect<A, E, R>
   ): Effect.Effect<A, E, R | FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner> =>
-    Effect.gen(function* () {
-      if (yield* githubLedgerDisabled) return yield* effect;
-      const services = yield* Effect.context<FileSystem.FileSystem | Path.Path>();
-      const scope = yield* Scope.make();
-      // Any failure or defect while building means "no ledger", never a failed command.
-      const built = yield* Effect.exit(Layer.buildWithScope(options.layer ?? layerGithubLedgerRootLive, scope));
-      if (Exit.isFailure(built)) {
-        yield* Scope.close(scope, Exit.void);
-        yield* Effect.logDebug("github.ledger.disabled", built.cause);
-        return yield* effect;
-      }
-      const ledger = Context.get(built.value, GithubBudgetLedger);
-      return yield* effect.pipe(
-        Effect.provideService(GithubBudgetLedger, ledger),
-        Effect.provideService(RateLimitSink, ledger.sink),
-        Effect.provideService(GhSpawnSink, ledger.ghSink),
-        Effect.provideService(GithubConfiguredIdentities, configuredIdentitiesFor(services)),
-        Effect.provideService(GithubLedgerCommand, commandLabelOf(options.root, options.argv)),
-        Effect.ensuring(Scope.close(scope, Exit.void))
-      );
+    runWithGithubLedger(options, effect);
+
+const runWithGithubLedger = Effect.fnUntraced(function* <A, E, R>(
+  options: {
+    readonly argv: ReadonlyArray<string>;
+    readonly root: Command.Command.Any;
+    readonly layer?: Layer.Layer<
+      GithubBudgetLedger,
+      GithubLedgerError,
+      FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+    >;
+  },
+  effect: Effect.Effect<A, E, R>
+) {
+  if (yield* githubLedgerDisabled) return yield* effect;
+  const services = yield* Effect.context<FileSystem.FileSystem | Path.Path>();
+  const scope = yield* Scope.make();
+  // Any failure or defect while building means "no ledger", never a failed command.
+  const built = yield* Effect.exit(Layer.buildWithScope(options.layer ?? layerGithubLedgerRootLive, scope));
+  if (Exit.isFailure(built)) {
+    yield* Scope.close(scope, Exit.void);
+    yield* Effect.logDebug("github.ledger.disabled", built.cause);
+    return yield* effect;
+  }
+  const ledger = Context.get(built.value, GithubBudgetLedger);
+  const sampler = Context.getOption(built.value, GithubRateLimitSampler);
+  const withSampler = <A2, E2, R2>(program: Effect.Effect<A2, E2, R2>) =>
+    O.match(sampler, {
+      onNone: () => program,
+      onSome: (value) => Effect.provideService(program, GithubRateLimitSampler, value),
     });
+  return yield* effect.pipe(
+    withSampler,
+    Effect.provideService(GithubBudgetLedger, ledger),
+    Effect.provideService(RateLimitSink, ledger.sink),
+    Effect.provideService(GhSpawnSink, ledger.ghSink),
+    Effect.provideService(GithubConfiguredIdentities, configuredIdentitiesFor(services)),
+    Effect.provideService(GithubLedgerCommand, commandLabelOf(options.root, options.argv)),
+    Effect.ensuring(Scope.close(scope, Exit.void))
+  );
+});

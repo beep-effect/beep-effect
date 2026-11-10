@@ -1,6 +1,14 @@
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { GitHubError } from "@beep/github/GitHubError";
 import {
+  GithubBudgetIdentity,
+  GithubIdentityLabel,
+  GithubLedgerStore,
+  HostLabel,
+  layerGithubBudgetLedger,
+  layerGithubLedgerStoreMemory,
+} from "@beep/repo-cli/test/SharedInternals";
+import {
   classifyYeetGithubRateLimit,
   decideYeetGithubRateLimitPause,
   readYeetGithubRateLimit,
@@ -23,6 +31,7 @@ import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { YeetGithubRateLimitKind, YeetMonitorPollOutcome } from "@beep/repo-cli/test/Yeet";
@@ -244,3 +253,36 @@ it.layer(rateLimitClient({ resources: { core: { remaining: 1, reset: 1 } } }))(
     );
   }
 );
+
+it.layer(
+  rateLimitClient({
+    resources: { ...liveRateLimitPayload.resources, search: "malformed", novel_bucket: { limit: 1 } },
+  })
+)("readYeetGithubRateLimit on a payload with malformed extra buckets", (it) => {
+  it.effect("still projects core and graphql", () =>
+    Effect.gen(function* () {
+      const read = yield* readYeetGithubRateLimit;
+      expect([read.resources.core.remaining, read.resources.graphql.remaining]).toEqual([0, 4873]);
+    })
+  );
+});
+
+const pauseLedger = layerGithubBudgetLedger({ host: HostLabel.make("hub") }).pipe(
+  Layer.provideMerge(layerGithubLedgerStoreMemory)
+);
+const labelledClient = Layer.merge(
+  rateLimitClient(liveRateLimitPayload),
+  Layer.succeed(GithubBudgetIdentity, O.some(GithubIdentityLabel.make("user:alice")))
+);
+
+it.layer(Layer.merge(pauseLedger, labelledClient))("readYeetGithubRateLimit with a GitHub budget ledger", (it) => {
+  it.effect("records the pause read as a monitor-pause sample of the client's identity", () =>
+    Effect.gen(function* () {
+      yield* readYeetGithubRateLimit;
+      const latest = yield* GithubLedgerStore.use((store) => store.latestSamples);
+      expect(A.map(latest, (row) => [row.identity, row.trigger, row.selfCost, row.buckets.length])).toStrictEqual([
+        ["user:alice", "monitor-pause", "unconfirmed", 3],
+      ]);
+    })
+  );
+});

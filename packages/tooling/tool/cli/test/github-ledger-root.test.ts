@@ -4,6 +4,7 @@ import {
   GithubBudgetLedger,
   GithubLedgerCommand,
   GithubLedgerError,
+  GithubRateLimitSampler,
   layerGithubBudgetLedgerLive,
   withGithubLedger,
 } from "@beep/repo-cli/test/SharedInternals";
@@ -22,11 +23,13 @@ const root = Command.make("beep").pipe(
 
 const probe = Effect.gen(function* () {
   const ledger = yield* Effect.serviceOption(GithubBudgetLedger);
+  const sampler = yield* Effect.serviceOption(GithubRateLimitSampler);
   const sink = yield* RateLimitSink;
   const ghSink = yield* GhSpawnSink;
   const command = yield* GithubLedgerCommand;
   return {
     bound: O.isSome(ledger),
+    sampled: O.isSome(sampler),
     sinkIsLedger: O.exists(ledger, (value) => value.sink.record === sink.record),
     ghSinkIsLedger: O.exists(ledger, (value) => value.ghSink.record === ghSink.record),
     command,
@@ -55,6 +58,7 @@ describe("withGithubLedger", () => {
         const value1 = yield* run({});
         expect(value1).toStrictEqual({
           bound: true,
+          sampled: true,
           sinkIsLedger: true,
           ghSinkIsLedger: true,
           command: "yeet monitor",
@@ -64,7 +68,7 @@ describe("withGithubLedger", () => {
 
     it.effect("stays off under CI and with BEEP_GITHUB_LEDGER=off", () =>
       Effect.gen(function* () {
-        const off = { bound: false, sinkIsLedger: false, ghSinkIsLedger: false, command: "beep" };
+        const off = { bound: false, sampled: false, sinkIsLedger: false, ghSinkIsLedger: false, command: "beep" };
         const value2 = yield* run({ CI: "true" });
         expect(value2).toStrictEqual(off);
         const value3 = yield* run({ BEEP_GITHUB_LEDGER: "off" });
@@ -74,7 +78,7 @@ describe("withGithubLedger", () => {
 
     it.effect("runs the program without a ledger when the ledger fails or dies while building", () =>
       Effect.gen(function* () {
-        const off = { bound: false, sinkIsLedger: false, ghSinkIsLedger: false, command: "beep" };
+        const off = { bound: false, sampled: false, sinkIsLedger: false, ghSinkIsLedger: false, command: "beep" };
         const failing = Layer.effect(
           GithubBudgetLedger,
           Effect.fail(GithubLedgerError.make({ reason: "state-dir", detail: "no state directory" }))

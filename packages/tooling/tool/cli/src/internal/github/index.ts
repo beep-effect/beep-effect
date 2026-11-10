@@ -17,6 +17,7 @@ export * from "./GithubLedger.schemas.ts";
 export * from "./GithubLedger.service.ts";
 export * from "./GithubLedger.store.ts";
 export * from "./GithubLedgerRoot.ts";
+export * from "./GithubRateLimitSampler.ts";
 export * from "./GithubRest.ts";
 export * from "./GraphqlBudget.ts";
 export * from "./JobShape.ts";
