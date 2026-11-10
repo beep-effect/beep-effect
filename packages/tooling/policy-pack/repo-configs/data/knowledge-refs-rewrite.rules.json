@@ -31,10 +31,10 @@
     },
     {
       "path": "docs/agent-memory-infra/origintrail-docs.md",
-      "find": "`/tmp/claude-1000/-home-elpresidank-YeeBois-projects-beep-effect5/ea57f70e-159a-4fc2-9828-26514d3e7422/scratchpad/llms/origintrail-llms.txt`",
+      "find": "`/tmp/claude-1000/-home-<user>-YeeBois-projects-beep-effect5/ea57f70e-159a-4fc2-9828-26514d3e7422/scratchpad/llms/origintrail-llms.txt`",
       "replace": "a machine-local session scratch copy (not preserved)",
       "count": 1,
-      "note": "B5: dead session-scratch staging path in a reference entry; the surrounding prose already names the file and the upstream URL stays on the next line."
+      "note": "B5: dead session-scratch staging path in a reference entry; the surrounding prose already names the file and the upstream URL stays on the next line. Historical rule, already applied: on 2026-11-09 its find text was redacted to the -home-<user>- placeholder form, so it records the shape of the removed path rather than its bytes and matches nothing."
     },
     {
       "path": "docs/agent-memory-infra/trustgraph-docs.md",

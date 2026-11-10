@@ -3,6 +3,9 @@
  * the lane base 641180ade6 (W5 head) except for import paths and the identity namespace.
  * `writeTextFile` is imported from `ArtifactPaths.ts`, where beep-cli-composition W1b (#2645) moved it;
  * the replayed logic is unchanged.
+ * `renderYeetMonitorReviewBodySignal` gains a `coderabbit-unparsed` case because it matches exhaustively
+ * on the live `YeetReviewBodySignal` union, which #3031 extended; the case renders the summary the live
+ * function renders, so the two sides still agree; the only review body a scenario reads is a plain one.
  */
 
 import { Fmt } from "@beep/cli-kit/Fmt";
@@ -950,6 +953,9 @@ export const renderYeetMonitorReviewBodySignal = (signal: YeetReviewBodySignal):
       O.some(
         `coderabbit: ${coderabbit.actionable} actionable, ${coderabbit.nitpicks} nitpick(s), ${coderabbit.outsideDiff} outside diff (advisory)`
       )
+    ),
+    Match.discriminator("signal")("coderabbit-unparsed", (unparsed) =>
+      O.some(`coderabbit: body has findings Yeet could not parse (${unparsed.evidence}) and must be read`)
     ),
     Match.discriminator("signal")("greptile", (greptile) =>
       O.some(

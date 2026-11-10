@@ -22,7 +22,7 @@
   "producerSha256": "041e6c6e9eadb005da195f3982b9a6e2e87853108e03ca75e5c80bf51e706ddf",
   "runtimes": [
     {
-      "executable": "/home/elpresidank/.local/share/vite-plus/package_manager/bun/1.4.4/bun/bin/bun.native",
+      "executable": "~/.local/share/vite-plus/package_manager/bun/1.4.4/bun/bin/bun.native",
       "stages": [
         {
           "compiled": 2684,
@@ -49,7 +49,7 @@
       }
     },
     {
-      "executable": "/home/elpresidank/.local/share/vite-plus/js_runtime/node/24.22.1/bin/node",
+      "executable": "~/.local/share/vite-plus/js_runtime/node/24.22.1/bin/node",
       "stages": [
         {
           "compiled": 2684,

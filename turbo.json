@@ -1837,6 +1837,8 @@
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/MarkdownFences.model.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/MarkdownFences.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/NoNativeRuntime.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/PrivateHomePaths.model.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/PrivateHomePaths.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/RetiredEffectPaths.model.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/RetiredEffectPaths.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/RetiredIriAuthorities.model.ts",
@@ -6452,6 +6454,27 @@
       ]
     },
     "//#lint:retired-iri-authorities": {
+      "cache": false,
+      "env": ["BEEP_CACHE_TOOLCHAIN_DIGEST"],
+      "outputs": [],
+      "dependsOn": ["@beep/repo-cli#lint:policy-fingerprint:laws"],
+      "inputs": [
+        "**/*",
+        "!.git/**",
+        "!**/.git/**",
+        "!.repos/**",
+        "!**/node_modules/**",
+        "!**/.beep/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!**/coverage/**",
+        "!**/.next/**",
+        "!**/storybook-static/**",
+        "!.claude/worktrees/**",
+        "!**/src-tauri/target/**"
+      ]
+    },
+    "//#lint:private-home-paths": {
       "cache": false,
       "env": ["BEEP_CACHE_TOOLCHAIN_DIGEST"],
       "outputs": [],

@@ -4,6 +4,7 @@ import {
   YeetReviewBodySignalInput,
   YeetReviewBodyThreadLocation,
   yeetReviewBodyAdvisoryCount,
+  yeetReviewBodyUnthreadedItems,
 } from "@beep/repo-cli/test/Yeet";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -34,6 +35,12 @@ const fixture = (name: string): Promise<string> =>
 const CODERABBIT_BODY = await fixture("coderabbit-actionable-2.md");
 const GREPTILE_R2_BODY = await fixture("greptile-format-r2.md");
 const GREPTILE_R8_BODY = await fixture("greptile-format-r8.md");
+// Real bodies in CodeRabbit's current format, trimmed of the review-info
+// footer: PR #3013's single body-only nitpick, the finding that went unseen
+// for five hours, and PR #3007's outside-diff finding plus a nitpick.
+const CODERABBIT_NITPICK_BODY = await fixture("coderabbit-nitpick-current-format.md");
+const CODERABBIT_OUTSIDE_DIFF_BODY = await fixture("coderabbit-outside-diff-current-format.md");
+const NITPICK_PATH = "packages/tooling/library/agent-memory-store/src/MemoryIndexes.service.ts";
 
 const signal = (authorLogin: string, body: string) =>
   parseYeetReviewBodySignal(YeetReviewBodySignalInput.make({ authorLogin, body }));
@@ -246,6 +253,158 @@ describe("review body signal parsing", () => {
   });
 });
 
+const itemShape = (parsed: ReturnType<typeof signal>) =>
+  parsed.signal === "coderabbit"
+    ? A.map(parsed.items, (item) => [item.path, O.getOrNull(item.line), O.getOrNull(item.section)])
+    : [];
+
+describe("current CodeRabbit body format", () => {
+  it("reads a colon-spelled nitpick count and one finding listed in two prompts", () => {
+    // The body names the finding twice: in its own "Prompt for AI Agents" and
+    // again under "Nitpick comments:" in the fix-all prompt. One finding.
+    const parsed = signal("coderabbitai[bot]", CODERABBIT_NITPICK_BODY);
+
+    expect(parsed.signal).toBe("coderabbit");
+    if (parsed.signal !== "coderabbit") {
+      return;
+    }
+    expect([parsed.actionable, parsed.nitpicks, parsed.outsideDiff, parsed.minor]).toEqual([0, 1, 0, 0]);
+    expect(itemShape(parsed)).toEqual([[NITPICK_PATH, 57, "nitpick"]]);
+    expect(yeetReviewBodyAdvisoryCount(parsed, [])).toBe(1);
+  });
+
+  it("reads quoted outside-diff findings and hard-wrapped prompt lead-ins", () => {
+    const parsed = signal("coderabbitai[bot]", CODERABBIT_OUTSIDE_DIFF_BODY);
+
+    expect(parsed.signal).toBe("coderabbit");
+    if (parsed.signal !== "coderabbit") {
+      return;
+    }
+    expect([parsed.actionable, parsed.nitpicks, parsed.outsideDiff]).toEqual([0, 1, 1]);
+    expect(itemShape(parsed)).toEqual([
+      ["docs/runbooks/ci-coverage-artifacts.md", 73, "outside-diff"],
+      ["packages/tooling/tool/cli/src/commands/Ci/CiPartitions.command.ts", 268, "nitpick"],
+    ]);
+    expect(yeetReviewBodyAdvisoryCount(parsed, [])).toBe(2);
+  });
+
+  it("joins every observed wrap of a single-finding lead-in", () => {
+    const wraps = [
+      "Review comment at\n@src/a.ts at\nline 57:",
+      "Review comment at @src/a.ts at line\n57:",
+      "Review comment at\n@src/a.ts\nat line 57:",
+      "Review comment at @src/a.ts around lines\n57 - 60:",
+      "Review comment at\n@src/a.ts around lines 57\n- 60:",
+    ];
+
+    expect(
+      A.map(wraps, (lead) =>
+        itemShape(signal("coderabbitai[bot]", `**Actionable comments posted: 1**\n${lead}\nRename it.`))
+      )
+    ).toEqual(A.map(wraps, () => [["src/a.ts", 57, null]]));
+  });
+
+  it("drops a lead-in whose location never closes", () => {
+    // A lead-in still open at the end of the body was not a location.
+    const parsed = signal("coderabbitai[bot]", "**Actionable comments posted: 1**\nReview comment at\n@src/a.ts");
+
+    expect(parsed.signal === "coderabbit" && parsed.actionable).toBe(1);
+    expect(itemShape(parsed)).toEqual([]);
+  });
+
+  it("keeps two findings a fix-all section places on one line", () => {
+    // PR #2917 listed three distinct findings at one line of one file; only
+    // the second listing of a finding is a duplicate.
+    const parsed = signal(
+      "coderabbitai[bot]",
+      A.join(
+        [
+          "**Actionable comments posted: 2**",
+          "Review comment at @src/a.ts at line 9:",
+          "Inline comments:",
+          "Review comments at",
+          "@src/a.ts:",
+          "- Line 9: first finding",
+          "- Line 9: second finding",
+        ],
+        "\n"
+      )
+    );
+
+    expect(itemShape(parsed)).toEqual([
+      ["src/a.ts", 9, "inline"],
+      ["src/a.ts", 9, "inline"],
+    ]);
+  });
+
+  it("does not add a body-only finding to the count that already summarises it", () => {
+    const parsed = signal(
+      "coderabbitai[bot]",
+      A.join(
+        [
+          "**Actionable comments posted: 1**",
+          "<summary>Minor comments: 2</summary>",
+          "Inline comments:",
+          "Review comments at @src/a.ts:",
+          "- Line 3: threaded",
+          "Minor comments:",
+          "Review comments at @src/b.ts:",
+          "- Line 5: first minor",
+          "- Around line 8-9: second minor",
+        ],
+        "\n"
+      )
+    );
+
+    expect(parsed.signal === "coderabbit" && parsed.minor).toBe(2);
+    expect(yeetReviewBodyAdvisoryCount(parsed, [location("src/a.ts", 3)])).toBe(2);
+    expect(yeetReviewBodyAdvisoryCount(parsed, [])).toBe(3);
+  });
+
+  it("reads a findings body it cannot parse as unparsed, never as a clean zero", () => {
+    // A respelling of every marker the parser reads: the per-finding prompt is
+    // still there, so the body plainly carries a finding.
+    const drifted = Str.replace(
+      /Review comments? at/gu,
+      "Finding in"
+    )(Str.replace(/Nitpick comments/gu, "Nitpicks")(CODERABBIT_NITPICK_BODY));
+    const parsed = signal("coderabbitai[bot]", drifted);
+
+    expect(parsed).toMatchObject({ signal: "coderabbit-unparsed", evidence: "fix-prompt" });
+    expect(yeetReviewBodyAdvisoryCount(parsed, [])).toBe(1);
+  });
+
+  it("reads a positive findings summary alone as unparsed", () => {
+    const parsed = signal("coderabbitai[bot]", "<summary>🧹 Trivial comments: 2</summary>");
+
+    expect(parsed).toMatchObject({ signal: "coderabbit-unparsed", evidence: "findings-summary" });
+  });
+
+  it("keeps a rate-limit notice, a walkthrough and an additional-comments body at a clean zero", () => {
+    const quiet = [
+      A.join(
+        [
+          "<!-- This is an auto-generated comment: rate limited by coderabbit.ai -->",
+          "> [!WARNING]",
+          "> ## Rate limit exceeded",
+          "> Please wait 12 minutes before requesting another review.",
+        ],
+        "\n"
+      ),
+      A.join(["## Walkthrough", "", "The change adds a parser.", "", "## Changes", "| File | Summary |"], "\n"),
+      A.join(
+        ["<summary>Additional comments: 1</summary>", "`619-627`: **Trivial** · **Low value**", "Unverified finding"],
+        "\n"
+      ),
+      A.join(["Prompt to fix all issues", "Failed pre-merge checks:", "- Docstring Coverage:"], "\n"),
+    ];
+
+    expect(A.map(quiet, (body) => signal("coderabbitai[bot]", body))).toMatchObject(
+      A.map(quiet, () => ({ signal: "coderabbit", actionable: 0, nitpicks: 0, outsideDiff: 0, minor: 0, items: [] }))
+    );
+  });
+});
+
 describe("review body advisory counting", () => {
   it("counts a CodeRabbit finding the operator has no thread for", () => {
     const parsed = signal("coderabbitai[bot]", CODERABBIT_BODY);
@@ -262,6 +421,29 @@ describe("review body advisory counting", () => {
     ]);
 
     expect(counted).toBe(0);
+  });
+
+  it("matches a ranged finding to any thread whose line range overlaps it", () => {
+    const parsed = signal(
+      "coderabbitai[bot]",
+      "**Actionable comments posted: 1**\nInline comments:\nReview comments at @src/a.ts:\n- Around line 73-74: fix it"
+    );
+    const spanning = (startLine: number | undefined, line: number) =>
+      YeetReviewBodyThreadLocation.make({
+        path: "src/a.ts",
+        line: O.some(line),
+        startLine: startLine === undefined ? O.none() : O.some(startLine),
+      });
+
+    expect(A.map(parsed.signal === "coderabbit" ? parsed.items : [], (item) => O.getOrNull(item.endLine))).toEqual([
+      74,
+    ]);
+    expect(
+      A.map(
+        [spanning(73, 74), spanning(undefined, 74), spanning(70, 73), spanning(75, 80), spanning(undefined, 72)],
+        (thread) => yeetReviewBodyAdvisoryCount(parsed, [thread])
+      )
+    ).toEqual([0, 0, 0, 1, 1]);
   });
 
   it("keeps a finding whose thread sits on a different line of the same file", () => {
@@ -305,6 +487,13 @@ describe("review body advisory counting", () => {
   it("counts Greptile new findings at every severity and nothing for a clean round", () => {
     expect(yeetReviewBodyAdvisoryCount(signal("kriegcloud", GREPTILE_R8_BODY), [])).toBe(1);
     expect(yeetReviewBodyAdvisoryCount(signal("kriegcloud", GREPTILE_R2_BODY), [])).toBe(0);
+  });
+
+  it("drops a current-format nitpick whose location already has a thread", () => {
+    const parsed = signal("coderabbitai[bot]", CODERABBIT_NITPICK_BODY);
+
+    expect(yeetReviewBodyUnthreadedItems(parsed, [location(NITPICK_PATH, 57)])).toEqual([]);
+    expect(yeetReviewBodyUnthreadedItems(parsed, [])).toHaveLength(1);
   });
 
   it("counts nothing for a plain body", () => {

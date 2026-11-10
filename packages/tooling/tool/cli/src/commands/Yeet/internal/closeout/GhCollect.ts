@@ -226,6 +226,7 @@ const closeoutReviewThread = (thread: ReviewThreadNode): GhReviewThread =>
     line: O.getOrNull(thread.line),
     path: thread.path,
     resolvedBy: O.getOrNull(O.map(thread.resolvedBy, (login) => GhActor.make({ login }))),
+    startLine: O.getOrNull(thread.startLine),
   });
 
 /**

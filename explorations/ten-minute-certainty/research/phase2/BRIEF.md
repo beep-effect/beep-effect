@@ -1,6 +1,6 @@
 # Phase 2 audit brief (shared by every seat)
 
-Repo: /home/elpresidank/YeeBois/projects/beep-effect, branch main, clean. Do not create worktrees. Do not edit
+Repo: ~/YeeBois/projects/beep-effect, branch main, clean. Do not create worktrees. Do not edit
 tracked files. Do not run git write commands, installs, yeet proofs, coverage, docgen, or any whole-repo lint/test/check.
 
 Read first: ../phase1/SURFACE-INVENTORY.md (the phase 1 surface inventory; your area's section plus

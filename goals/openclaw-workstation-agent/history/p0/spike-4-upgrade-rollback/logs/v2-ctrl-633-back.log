@@ -10,11 +10,11 @@
 2026-07-25T04:12:24.560-05:00 [gateway] starting channels and sidecars...
 2026-07-25T04:12:24.591-05:00 [gateway] ready
 2026-07-25T04:12:24.635-05:00 [heartbeat] started
-2026-07-25T04:12:24.661-05:00 [reload] config watcher error; re-creating watcher (attempt 1/3 in 500ms): Error: ENOSPC: System limit for number of file watchers reached, watch '/tmp/claude-1000/-home-elpresidank-YeeBois-projects-beep-effect3/3d98f4e1-d597-4777-a0ea-425d551c87be/scratchpad/p0/spike4/ctrl-config.json'
-2026-07-25T04:12:25.163-05:00 [reload] config watcher error; re-creating watcher (attempt 2/3 in 2000ms): Error: ENOSPC: System limit for number of file watchers reached, watch '/tmp/claude-1000/-home-elpresidank-YeeBois-projects-beep-effect3/3d98f4e1-d597-4777-a0ea-425d551c87be/scratchpad/p0/spike4/ctrl-config.json'
-2026-07-25T04:12:27.165-05:00 [reload] config watcher error; re-creating watcher (attempt 3/3 in 5000ms): Error: ENOSPC: System limit for number of file watchers reached, watch '/tmp/claude-1000/-home-elpresidank-YeeBois-projects-beep-effect3/3d98f4e1-d597-4777-a0ea-425d551c87be/scratchpad/p0/spike4/ctrl-config.json'
+2026-07-25T04:12:24.661-05:00 [reload] config watcher error; re-creating watcher (attempt 1/3 in 500ms): Error: ENOSPC: System limit for number of file watchers reached, watch '/tmp/claude-1000/-home-<user>-YeeBois-projects-beep-effect3/3d98f4e1-d597-4777-a0ea-425d551c87be/scratchpad/p0/spike4/ctrl-config.json'
+2026-07-25T04:12:25.163-05:00 [reload] config watcher error; re-creating watcher (attempt 2/3 in 2000ms): Error: ENOSPC: System limit for number of file watchers reached, watch '/tmp/claude-1000/-home-<user>-YeeBois-projects-beep-effect3/3d98f4e1-d597-4777-a0ea-425d551c87be/scratchpad/p0/spike4/ctrl-config.json'
+2026-07-25T04:12:27.165-05:00 [reload] config watcher error; re-creating watcher (attempt 3/3 in 5000ms): Error: ENOSPC: System limit for number of file watchers reached, watch '/tmp/claude-1000/-home-<user>-YeeBois-projects-beep-effect3/3d98f4e1-d597-4777-a0ea-425d551c87be/scratchpad/p0/spike4/ctrl-config.json'
 2026-07-25T04:12:30.306-05:00 [gateway] provider auth state pre-warmed in 671ms eventLoopMax=12.0ms
-2026-07-25T04:12:32.166-05:00 [reload] config watcher native retries exhausted; degrading to polling mode: Error: ENOSPC: System limit for number of file watchers reached, watch '/tmp/claude-1000/-home-elpresidank-YeeBois-projects-beep-effect3/3d98f4e1-d597-4777-a0ea-425d551c87be/scratchpad/p0/spike4/ctrl-config.json'
+2026-07-25T04:12:32.166-05:00 [reload] config watcher native retries exhausted; degrading to polling mode: Error: ENOSPC: System limit for number of file watchers reached, watch '/tmp/claude-1000/-home-<user>-YeeBois-projects-beep-effect3/3d98f4e1-d597-4777-a0ea-425d551c87be/scratchpad/p0/spike4/ctrl-config.json'
 2026-07-25T04:12:34.657-05:00 [gateway] agent runtime plugins pre-warmed in 67ms
 2026-07-25T04:12:37.540-05:00 [gateway] signal SIGTERM received
 2026-07-25T04:12:37.541-05:00 [gateway] received SIGTERM; shutting down

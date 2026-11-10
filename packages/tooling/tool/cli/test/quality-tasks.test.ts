@@ -1792,6 +1792,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:retired-effect-paths",
         "lint:entity-kit-freeze",
         "lint:retired-iri-authorities",
+        "lint:private-home-paths",
         "lint:tracked-shell-allowlist",
         "lint:schema-tag-idioms",
         "lint:holds",
@@ -1840,6 +1841,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       );
       expect(qualityLaneArgs(lanes, "lint:retired-iri-authorities")).toEqual(
         expectedTurboArgs("lint:retired-iri-authorities", ["--summarize"])
+      );
+      expect(qualityLaneArgs(lanes, "lint:private-home-paths")).toEqual(
+        expectedTurboArgs("lint:private-home-paths", ["--summarize"])
       );
       expect(qualityLaneArgs(lanes, "lint:tracked-shell-allowlist")).toEqual(
         expectedTurboArgs("lint:tracked-shell-allowlist", ["--summarize"])
@@ -5681,6 +5685,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:retired-effect-paths",
         "lint:entity-kit-freeze",
         "lint:retired-iri-authorities",
+        "lint:private-home-paths",
         "lint:tracked-shell-allowlist",
         "lint:opaque-roundtrips",
         "lint:schema-tag-idioms",
@@ -5744,6 +5749,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:retired-effect-paths",
         "lint:entity-kit-freeze",
         "lint:retired-iri-authorities",
+        "lint:private-home-paths",
         "lint:tracked-shell-allowlist",
         "lint:opaque-roundtrips",
         "lint:schema-tag-idioms",
@@ -5848,6 +5854,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           "lint:retired-effect-paths",
           "lint:entity-kit-freeze",
           "lint:retired-iri-authorities",
+          "lint:private-home-paths",
           "lint:tracked-shell-allowlist",
           "lint:schema-tag-idioms",
           "lint:holds",

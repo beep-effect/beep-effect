@@ -1340,7 +1340,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       ]) {
         const steps = jobSteps(jobs, jobId);
         const setupIndex = O.getOrThrow(A.findFirstIndex(steps, (step) => step.uses === SETUP_MONOREPO_ACTION));
-        assert.strictEqual(setupMonorepoStep(jobs, jobId).if, gated, jobId);
+        assert.strictEqual(
+          setupMonorepoStep(jobs, jobId).if,
+          jobId === "verify" ? `${gated} || steps.lane-gate.outputs.home_paths_only == 'true'` : gated,
+          jobId
+        );
         assert.isBelow(stepIndexByName(steps, "Determine lane execution"), setupIndex, jobId);
         assert.strictEqual(stepByName(steps, "Skip lane").if, "steps.lane-gate.outputs.should_run != 'true'", jobId);
       }
@@ -1365,6 +1369,21 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assert.include(
         verifyGate,
         'if [[ "${{ env.BEEP_CI_LANE_ID }}" == "repo-sanity" ]]; then\n  skip_profile="$goals_only"'
+      );
+      // A goals_only packet-prose diff skips the Repo Sanity body, never the
+      // public-repo home path law: the job carries no goals_only guard and the
+      // law step is gated only on the lane gate's home_paths_only output.
+      assert.isUndefined(yamlAt(policy.workflow, ["jobs", "verify", "if"]));
+      assert.include(
+        verifyGate,
+        'should_run=false\n  # Packet prose still gets the private home path law.\n  if [[ "${{ env.BEEP_CI_LANE_ID }}" == "repo-sanity" ]]; then\n    home_paths_only=true'
+      );
+      assert.include(verifyGate, 'echo "home_paths_only=$home_paths_only" >> "$GITHUB_OUTPUT"');
+      const homePaths = stepByName(jobSteps(jobs, "verify"), "Check private home paths");
+      assert.strictEqual(homePaths.if, "steps.lane-gate.outputs.home_paths_only == 'true'");
+      assert.strictEqual(
+        stepRun(jobSteps(jobs, "verify"), "Check private home paths"),
+        "bun run beep laws private-home-paths --check"
       );
       assert.include(verifyGate, "^packages/ecosystem/");
       assert.include(
@@ -1827,7 +1846,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const heavyJobs = yield* workflowJobs(heavy);
       assert.notInclude(checkText, "Free runner disk");
       assert.notInclude(heavyText, "Free runner disk");
-      assert.strictEqual(setupMonorepoInputs(checkJobs, "verify")["free-disk"], "true");
+      // Repo Sanity's law-only goals_only path skips the cleanup and the
+      // application secrets; every full lane run keeps both.
+      const lawOnlyLight = "${{ steps.lane-gate.outputs.home_paths_only == 'true' && 'false' || 'true' }}";
+      assert.strictEqual(setupMonorepoInputs(checkJobs, "verify")["free-disk"], lawOnlyLight);
+      assert.strictEqual(setupMonorepoInputs(checkJobs, "verify")["app-secrets"], lawOnlyLight);
       assert.strictEqual(setupMonorepoInputs(checkJobs, "labs")["free-disk"], "true");
       assert.strictEqual(setupMonorepoInputs(checkJobs, "lint-shard")["free-disk-min-gib"], "64");
       assert.strictEqual(setupMonorepoInputs(checkJobs, "test-unit-shard")["free-disk-min-gib"], "64");
