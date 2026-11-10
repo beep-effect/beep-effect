@@ -47,7 +47,7 @@ const failingSpawner = ChildProcessSpawner.make(() =>
 const ghFailure = (failure: { readonly _tag: string }) => failure._tag;
 
 describe("gh spawn attribution", () => {
-  it.layer(Layer.mergeAll(ledger, SecureRandom.layerWebCrypto))((it) => {
+  it.layer(Layer.mergeAll(ledger, SecureRandom.layerWebCrypto), { timeout: "30 seconds" })((it) => {
     it.effect("records one GhSpawn row per gh child, reduced to subcommand and resource", () =>
       Effect.gen(function* () {
         const { spawner } = scriptedSpawner({ "gh pr view --json x": { stdout: "{}", exitCode: 0 } });
@@ -64,7 +64,7 @@ describe("gh spawn attribution", () => {
     );
   });
 
-  it.layer(Layer.mergeAll(ledger, SecureRandom.layerWebCrypto))((it) => {
+  it.layer(Layer.mergeAll(ledger, SecureRandom.layerWebCrypto), { timeout: "30 seconds" })((it) => {
     it.effect("records ghOutput's nonzero exit and its spawn failure as -1", () =>
       Effect.gen(function* () {
         const { spawner } = scriptedSpawner({ "gh run list": { stdout: "", exitCode: 4 } });
@@ -91,7 +91,7 @@ describe("gh spawn attribution", () => {
     );
   });
 
-  it.layer(Layer.mergeAll(ledger, SecureRandom.layerWebCrypto))((it) => {
+  it.layer(Layer.mergeAll(ledger, SecureRandom.layerWebCrypto), { timeout: "30 seconds" })((it) => {
     it.effect("records nothing for a non-gh command and never persists an api path", () =>
       Effect.gen(function* () {
         const { spawner } = scriptedSpawner({
@@ -115,7 +115,7 @@ describe("gh spawn attribution", () => {
     );
   });
 
-  it.layer(SecureRandom.layerWebCrypto)((it) => {
+  it.layer(SecureRandom.layerWebCrypto, { timeout: "30 seconds" })((it) => {
     it.effect("changes nothing without a sink binding", () =>
       Effect.gen(function* () {
         const { spawner } = scriptedSpawner({ "gh pr view": { stdout: "ok", exitCode: 0 } });

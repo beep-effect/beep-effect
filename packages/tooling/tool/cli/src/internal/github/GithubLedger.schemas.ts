@@ -126,7 +126,7 @@ export const ANONYMOUS_IDENTITY: GithubIdentityLabel = GithubIdentityLabel.make(
  * import { HostLabel } from "@beep/repo-cli/test/SharedInternals"
  * import * as S from "effect/Schema"
  *
- * console.log(S.is(HostLabel)("dankstation")) // true
+ * console.log(S.is(HostLabel)("host-a")) // true
  * console.log(S.is(HostLabel)("Host.example.com")) // false
  * ```
  *
@@ -1204,7 +1204,7 @@ export const GithubIdentityConfigJson = S.fromJsonString(GithubIdentityConfig);
  */
 export const configuredLabelOf = (entry: ConfiguredGithubIdentity): O.Option<GithubIdentityLabel> =>
   ConfiguredGithubIdentity.match(entry, {
-    GhCli: () => O.none<GithubIdentityLabel>(),
+    GhCli: O.none<GithubIdentityLabel>,
     OpRef: ({ login }) => GithubIdentityLabel.makeOption(`user:${login}`),
     GithubApp: ({ appId, installationId }) => GithubIdentityLabel.makeOption(`app:${appId}/${installationId}`),
   });
@@ -1335,8 +1335,10 @@ export class LedgerRange extends S.Opaque<LedgerRange, { readonly brand: unique 
 
 /**
  * What retention removes: raw hours before `rowsBefore`, rollups before
- * `rollupsBefore`, and the oldest raw hours before `rowsKeepAfter` while the
- * raw total exceeds `rowsMaxBytes`.
+ * `rollupsBefore`, the oldest raw hours before `rowsKeepAfter` while the
+ * raw total exceeds `rowsMaxBytes`, `latest/` transport and sample readings
+ * taken before `latestBefore`, and calibration pairs before
+ * `calibrationsBefore`.
  *
  * **Example** (Build cutoffs)
  *
@@ -1345,7 +1347,15 @@ export class LedgerRange extends S.Opaque<LedgerRange, { readonly brand: unique 
  * import * as DateTime from "effect/DateTime"
  *
  * const at = DateTime.makeUnsafe(0)
- * console.log(RetentionCutoffs.make({ rowsBefore: at, rollupsBefore: at, rowsMaxBytes: 1, rowsKeepAfter: at }).rowsMaxBytes) // 1
+ * const cutoffs = RetentionCutoffs.make({
+ *   rowsBefore: at,
+ *   rollupsBefore: at,
+ *   rowsMaxBytes: 1,
+ *   rowsKeepAfter: at,
+ *   latestBefore: at,
+ *   calibrationsBefore: at
+ * })
+ * console.log(cutoffs.rowsMaxBytes) // 1
  * ```
  *
  * @category models
@@ -1357,6 +1367,8 @@ export class RetentionCutoffs extends S.Opaque<RetentionCutoffs, { readonly bran
     rollupsBefore: S.DateTimeUtcFromString,
     rowsMaxBytes: S.Int,
     rowsKeepAfter: S.DateTimeUtcFromString,
+    latestBefore: S.DateTimeUtcFromString,
+    calibrationsBefore: S.DateTimeUtcFromString,
   }).pipe($I.annoteSchema("RetentionCutoffs", { description: "What ledger retention removes." }))
 ) {}
 

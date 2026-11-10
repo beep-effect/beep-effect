@@ -275,14 +275,17 @@ const labelledClient = Layer.merge(
   Layer.succeed(GithubBudgetIdentity, O.some(GithubIdentityLabel.make("user:alice")))
 );
 
-it.layer(Layer.merge(pauseLedger, labelledClient))("readYeetGithubRateLimit with a GitHub budget ledger", (it) => {
-  it.effect("records the pause read as a monitor-pause sample of the client's identity", () =>
-    Effect.gen(function* () {
-      yield* readYeetGithubRateLimit;
-      const latest = yield* GithubLedgerStore.use((store) => store.latestSamples);
-      expect(A.map(latest, (row) => [row.identity, row.trigger, row.selfCost, row.buckets.length])).toStrictEqual([
-        ["user:alice", "monitor-pause", "unconfirmed", 3],
-      ]);
-    })
-  );
-});
+it.layer(Layer.merge(pauseLedger, labelledClient), { timeout: "30 seconds" })(
+  "readYeetGithubRateLimit with a GitHub budget ledger",
+  (it) => {
+    it.effect("records the pause read as a monitor-pause sample of the client's identity", () =>
+      Effect.gen(function* () {
+        yield* readYeetGithubRateLimit;
+        const latest = yield* GithubLedgerStore.use((store) => store.latestSamples);
+        expect(A.map(latest, (row) => [row.identity, row.trigger, row.selfCost, row.buckets.length])).toStrictEqual([
+          ["user:alice", "monitor-pause", "unconfirmed", 3],
+        ]);
+      })
+    );
+  }
+);

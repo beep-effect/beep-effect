@@ -281,6 +281,56 @@ export const calibrationOf =
   };
 
 /**
+ * The newest reading of a bucket that its reserve verdict may rest on.
+ *
+ * **Details**
+ *
+ * For a `graphql` key, sample-basis readings count only when
+ * `admitGraphqlSamples`, because REST misreports the GraphQL bucket. Every
+ * other key takes its newest reading of either basis. This is the reading
+ * {@link reserveOf} judges, so a caller that shows a bucket's numbers next
+ * to its verdict shows the same reading.
+ *
+ * **Example** (An uncalibrated GraphQL sample is not usable)
+ *
+ * ```ts
+ * import { BucketKey, BucketReading, GithubIdentityLabel, usableReadingOf } from "@beep/repo-cli/test/SharedInternals"
+ * import * as DateTime from "effect/DateTime"
+ * import * as O from "effect/Option"
+ *
+ * const key = BucketKey.make({ identity: GithubIdentityLabel.make("user:octocat"), resource: "graphql" })
+ * const sample = BucketReading.make({
+ *   key,
+ *   limit: 5000,
+ *   remaining: 4000,
+ *   used: O.none(),
+ *   resetAt: DateTime.makeUnsafe(60_000),
+ *   asOf: DateTime.makeUnsafe(0),
+ *   basis: "sample"
+ * })
+ * console.log(O.isNone(usableReadingOf({ admitGraphqlSamples: false })(key, [sample]))) // true
+ * ```
+ *
+ * @param input - Whether calibration admits sample-basis `graphql` readings.
+ * @returns A function from a key and readings to the newest usable reading of that key.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const usableReadingOf =
+  ({ admitGraphqlSamples }: { readonly admitGraphqlSamples: boolean }) =>
+  (key: BucketKey, readings: ReadonlyArray<BucketReading>): O.Option<BucketReading> =>
+    pipe(
+      readings,
+      A.filter(
+        (reading) =>
+          bucketKeyString(reading.key) === bucketKeyString(key) &&
+          (key.resource !== "graphql" || reading.basis === "transport" || admitGraphqlSamples)
+      ),
+      A.sort(Order.mapInput(Order.Number, (reading: BucketReading) => millis(reading.asOf))),
+      A.last
+    );
+
+/**
  * The reserve signal of one bucket from its readings.
  *
  * **Details**
@@ -311,18 +361,9 @@ export const reserveOf =
   ({ now, admitGraphqlSamples }: { readonly now: DateTime.Utc; readonly admitGraphqlSamples: boolean }) =>
   (key: BucketKey, readings: ReadonlyArray<BucketReading>): ReserveSignal => {
     const own = A.filter(readings, (reading) => bucketKeyString(reading.key) === bucketKeyString(key));
-    const usable = A.filter(
-      own,
-      (reading) => key.resource !== "graphql" || reading.basis === "transport" || admitGraphqlSamples
-    );
     const unknown = (reason: ReserveUnknownReason, asOf: O.Option<DateTime.Utc>) =>
       ReserveSignal.make({ key, state: ReserveState.cases.Unknown.make({ reason, asOf }) });
-    const newest = A.last(
-      A.sort(
-        usable,
-        Order.mapInput(Order.Number, (reading: BucketReading) => millis(reading.asOf))
-      )
-    );
+    const newest = usableReadingOf({ admitGraphqlSamples })(key, own);
     return O.match(newest, {
       onNone: () => unknown(A.isReadonlyArrayNonEmpty(own) ? "uncalibrated" : "no-reading", O.none()),
       onSome: (reading) => {

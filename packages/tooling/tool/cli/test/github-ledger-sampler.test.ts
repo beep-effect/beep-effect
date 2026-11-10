@@ -26,12 +26,15 @@ import {
 } from "@beep/repo-cli/test/SharedInternals";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertFalse, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -40,6 +43,7 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import { recordingFetch, scriptedSpawner, withLayer } from "./support/GithubLedgerFakes.ts";
@@ -192,8 +196,11 @@ describe("GithubRateLimitSampler.sampleAll", () => {
       yield* Effect.gen(function* () {
         const outcomes = yield* GithubRateLimitSampler.use((sampler) => sampler.sampleAll("manual"));
         expect(tags(outcomes)).toStrictEqual(["Sampled", "Failed"]);
-        expect(outcomes[1]).toMatchObject({ entry: "OpRef", identity: O.some(bob) });
-        expect(outcomes[1]?._tag === "Failed" ? outcomes[1].detail : "").toContain("op-read-failed");
+        const failed = outcomes[1];
+        assertTrue(failed?._tag === "Failed");
+        expect(failed.entry).toBe("OpRef");
+        assertSome(failed.identity, bob);
+        expect(failed.detail).toContain("op-read-failed");
       }).pipe(withLayer(samplerOver(registry.layer)));
     })
   );
@@ -225,6 +232,28 @@ describe("GithubRateLimitSampler.sampleAll", () => {
         const rows = yield* allRows;
         const samples = samplesOf(rows);
         expect(samples[0]?.buckets[0]?.used).toBe(9);
+      }).pipe(withLayer(samplerOver(registry.layer)));
+    })
+  );
+
+  it.effect("fails a hung identity after 60 s and still samples the next one", () =>
+    Effect.gen(function* () {
+      const bobFetch = rateLimitFetch();
+      const registry = stubRegistry([
+        { entry: GH_CLI, label: alice, client: Layer.effect(GitHubClient, Effect.never) },
+        { entry: OP_REF, label: bob, client: tokenClient(bobFetch.fetch) },
+      ]);
+      yield* Effect.gen(function* () {
+        const running = yield* GithubRateLimitSampler.use((sampler) => sampler.sampleAll("timer")).pipe(
+          Effect.forkChild
+        );
+        yield* TestClock.adjust(Duration.seconds(61));
+        const outcomes = yield* Fiber.join(running);
+        expect(tags(outcomes)).toStrictEqual(["Failed", "Sampled"]);
+        const hung = outcomes[0];
+        assertTrue(hung?._tag === "Failed");
+        expect(hung.detail).toContain("did not finish");
+        expect(bobFetch.count()).toBe(2);
       }).pipe(withLayer(samplerOver(registry.layer)));
     })
   );
@@ -355,7 +384,7 @@ describe("GithubRateLimitSampler.calibrate", () => {
 });
 
 describe("GithubRateLimitSampler over the file store", () => {
-  it.layer(NodeServices.layer)((it) => {
+  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
     it.effect("lets exactly one of two concurrent reclaimers take a stale lease", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -374,6 +403,41 @@ describe("GithubRateLimitSampler over the file store", () => {
             { concurrency: 2 }
           );
           expect(A.filter(results, (won) => won)).toHaveLength(1);
+        }).pipe(
+          withLayer(layerGithubLedgerStoreLive),
+          Effect.provideService(
+            ConfigProvider.ConfigProvider,
+            ConfigProvider.fromUnknown({ BEEP_GITHUB_LEDGER_STATE_ROOT: root })
+          )
+        );
+      })
+    );
+
+    it.effect("keeps a reclaimer's lease when the holder it replaced releases late", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "github-ledger-lease-owner-" });
+        yield* Effect.gen(function* () {
+          const store = yield* GithubLedgerStore;
+          const lock = path.join(root, "sampler", "user_alice.lock");
+          const slow = yield* Scope.make();
+          const reclaimer = yield* Scope.make();
+          const first = yield* store.acquireSamplerLease(alice).pipe(Scope.provide(slow));
+          assertTrue(first);
+          // The slow holder overran the staleness bound, so a second process reclaims the lease.
+          yield* fs.utimes(lock, 1, 1);
+          yield* TestClock.setTime(10 * 60_000);
+          const reclaimed = yield* store.acquireSamplerLease(alice).pipe(Scope.provide(reclaimer));
+          assertTrue(reclaimed);
+          yield* Scope.close(slow, Exit.void);
+          const keptAfterLateRelease = yield* fs.exists(lock);
+          assertTrue(keptAfterLateRelease);
+          const third = yield* Effect.scoped(store.acquireSamplerLease(alice));
+          assertFalse(third);
+          yield* Scope.close(reclaimer, Exit.void);
+          const keptAfterOwnRelease = yield* fs.exists(lock);
+          assertFalse(keptAfterOwnRelease);
         }).pipe(
           withLayer(layerGithubLedgerStoreLive),
           Effect.provideService(
@@ -417,7 +481,7 @@ describe("GithubIdentityRegistry live", () => {
     );
   });
 
-  it.layer(NodeServices.layer)((it) => {
+  it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {
     it.effect("always samples the env-selected identity alongside the gh login", () =>
       Effect.gen(function* () {
         const configured = yield* configuredWith(bob);

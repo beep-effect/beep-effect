@@ -84,6 +84,8 @@ export const GITHUB_SAMPLE_INTERVAL: Duration.Duration = Duration.minutes(5);
 // A sample younger than the interval less this slack is still fresh, so a timer
 // that fires a few seconds early does not skip a whole cycle.
 const SAMPLE_DUE_SLACK = Duration.seconds(30);
+// Below the 120 s lease staleness bound, so a hung sample never outlives its lease.
+const SAMPLE_ENTRY_TIMEOUT = Duration.seconds(60);
 
 /**
  * Read `GET /rate_limit` through the provided client. The endpoint is free on
@@ -355,7 +357,6 @@ export const makeGithubIdentityRegistryLive = Effect.fn("GithubIdentityRegistry.
     const all = A.append(A.appendAll(fileEntries, O.toArray(env)), GH_CLI_ENTRY);
     const keyed = yield* Effect.forEach(all, (entry, index) =>
       labelOf(entry).pipe(
-        Effect.map((label): string => label),
         Effect.orElseSucceed(() => `unlabelled:${index}`),
         Effect.map((key) => [key, entry] as const)
       )
@@ -433,7 +434,7 @@ export interface GithubRateLimitSamplerShape {
   readonly calibrate: (
     options: GithubCalibrationOptions
   ) => Effect.Effect<ReadonlyArray<CalibrationRow>, GithubIdentityError | GitHubError>;
-  /** One sample per configured non-App identity. Never fails; each identity has its own outcome. */
+  /** One sample per configured non-App identity, each capped at 60 s. Never fails; each identity has its own outcome. */
   readonly sampleAll: (trigger: SampleTrigger) => Effect.Effect<ReadonlyArray<SampleOutcome>>;
   /** Sample the provided client's identity when its last sample is older than the interval. Never fails. */
   readonly sampleIfDue: (trigger: SampleTrigger) => Effect.Effect<SampleOutcome, never, GitHubClient>;
@@ -644,7 +645,20 @@ export const makeGithubRateLimitSampler = Effect.fn("GithubRateLimitSampler.make
           Effect.as(Effect.logWarning(`github ledger: ${error.detail}; sampling the gh login only`), A.of(GH_CLI_ENTRY))
         )
       );
-      return yield* Effect.forEach(entries, (entry) => sampleEntry(entry, trigger));
+      return yield* Effect.forEach(entries, (entry) =>
+        sampleEntry(entry, trigger).pipe(
+          Effect.timeoutOption(SAMPLE_ENTRY_TIMEOUT),
+          Effect.map(
+            O.getOrElse(() =>
+              SampleOutcome.cases.Failed.make({
+                entry: entry._tag,
+                identity: configuredLabelOf(entry),
+                detail: `the sample did not finish within ${Duration.format(SAMPLE_ENTRY_TIMEOUT)}`,
+              })
+            )
+          )
+        )
+      );
     }).pipe(Effect.withSpan("GithubRateLimitSampler.sampleAll"));
 
   const sampleIfDue = (trigger: SampleTrigger): Effect.Effect<SampleOutcome, never, GitHubClient> =>

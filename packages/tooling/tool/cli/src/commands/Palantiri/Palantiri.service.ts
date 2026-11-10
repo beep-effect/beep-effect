@@ -1055,12 +1055,15 @@ const spenderOf = (spend: CommandSpend): GithubSpender =>
 
 /**
  * The github-headroom source over a {@link GithubBudgetLedger}: the reserve
- * signal and newest reading of each bucket, and the precomputed summary.
+ * signal of each bucket, the newest reading that signal rests on, and the
+ * precomputed summary.
  *
  * **Details**
  *
- * It reads the ledger's `latest/` files only: no network call, no spawn and
- * no raw rows, so it fits the hot block's 2-second budget. A ledger with no
+ * It reads the ledger's `latest/` files and calibration file only: no network
+ * call, no spawn and no raw rows, so it fits the hot block's 2-second budget.
+ * A `graphql` bucket with only uncalibrated `/rate_limit` samples has no
+ * usable reading and is left out, because REST misreports that bucket. A ledger with no
  * bucket reading and no summary is `Missing`. A ledger read failure is a
  * `SourceFailed` naming only the failure reason, never a path.
  *
@@ -1082,8 +1085,9 @@ export const makeGithubHeadroomSource = Effect.gen(function* () {
     const signals = yield* ledger.reserves;
     const summary = yield* ledger.summary;
     const readings = yield* Effect.forEach(signals, (signal) =>
+      // The reading the verdict rests on, so a bucket's numbers and its reserve agree.
       Effect.map(
-        ledger.latest(signal.key),
+        ledger.latestUsable(signal.key),
         O.map((reading) => [signal, reading] as const)
       )
     );

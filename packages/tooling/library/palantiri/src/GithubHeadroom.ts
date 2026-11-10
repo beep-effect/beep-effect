@@ -146,9 +146,12 @@ const resetText = (item: GithubHeadroom): string => (item.resource === "search" 
 const bucketText = (item: GithubHeadroom): string =>
   `${item.resource} ${item.remaining}/${item.limit}${reserveText(item)}${resetText(item)}`;
 
-const headroomText = (items: ReadonlyArray<GithubHeadroom>, now: DateTime.Utc): string => {
-  const shown = A.filter(items, (item) => isFreshItem(item) && A.contains(SUMMARY_RESOURCES, item.resource));
-  return A.match(shown, {
+// The fresh core, graphql and search buckets: the ones the summary shows as headroom.
+const shownItems = (items: ReadonlyArray<GithubHeadroom>): ReadonlyArray<GithubHeadroom> =>
+  A.filter(items, (item) => isFreshItem(item) && A.contains(SUMMARY_RESOURCES, item.resource));
+
+const headroomText = (items: ReadonlyArray<GithubHeadroom>, now: DateTime.Utc): string =>
+  A.match(shownItems(items), {
     onEmpty: () =>
       pipe(
         A.getSomes(A.map(items, (item) => item.asOf)),
@@ -167,7 +170,6 @@ const headroomText = (items: ReadonlyArray<GithubHeadroom>, now: DateTime.Utc): 
       return A.join(A.appendAll(identities, stale), "; ");
     },
   });
-};
 
 const byPoints: Order.Order<GithubSpender> = Order.flip(
   Order.mapInput(Num.Order, (spender: GithubSpender) => spender.estimatedPoints)
@@ -213,7 +215,13 @@ const spendersText = (
         : `spenders unknown (summary ${ageOf(asOf, now)} old)`,
   });
 
-const envelopeFreshness = (input: GithubHeadroomInput, now: DateTime.Utc): FreshnessType =>
+// Over the shown buckets only: a key seen once (a reviewer App, an old token) must not keep a
+// fresh envelope stale. With nothing shown, every bucket decides, so stale stays stale.
+const envelopeFreshness = (
+  input: GithubHeadroomInput,
+  items: ReadonlyArray<GithubHeadroom>,
+  now: DateTime.Utc
+): FreshnessType =>
   GithubHeadroomInput.match(input, {
     Missing: (missing) =>
       Freshness.cases.Unknown.make({ reason: "no-source", asOf: O.none(), detail: O.some(missing.detail) }),
@@ -221,7 +229,10 @@ const envelopeFreshness = (input: GithubHeadroomInput, now: DateTime.Utc): Fresh
       checkFreshness(
         now,
         GithubHeadroomSpec.freshnessBound,
-        A.map(present.buckets, (bucket) => bucket.asOf)
+        A.match(shownItems(items), {
+          onEmpty: () => A.map(present.buckets, (bucket) => bucket.asOf),
+          onNonEmpty: (shown) => A.getSomes(A.map(shown, (item) => item.asOf)),
+        })
       ),
   });
 
@@ -239,7 +250,10 @@ const summarize = (input: GithubHeadroomInput, items: ReadonlyArray<GithubHeadro
  *
  * A `Missing` ledger is `Unknown{no-source}` with the summary
  * `github headroom unknown: no ledger on this host`. Otherwise the envelope's
- * freshness is the oldest bucket reading against the 15-minute bound. The
+ * freshness is the oldest reading among the buckets the summary shows (the
+ * fresh `core`, `graphql` and `search` ones) against the 15-minute bound, so
+ * an identity seen once and never again does not keep the parcel stale; with
+ * no bucket shown, every bucket's reading decides. The
  * summary lists the fresh `core`, `graphql` and `search` buckets per
  * identity, such as
  * `user:octocat core 3120/5000 ↺21:31Z · graphql 412/5000 BELOW 15% ↺21:40Z · search 30/30`,
@@ -278,7 +292,7 @@ export const reduceGithubHeadroom: {
     ParcelDraft.make({
       spec: GithubHeadroomSpec,
       readAt: now,
-      freshness: envelopeFreshness(input, now),
+      freshness: envelopeFreshness(input, items, now),
       summary: summarize(input, items, now),
       items,
       budget,

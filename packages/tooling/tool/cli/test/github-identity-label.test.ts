@@ -10,6 +10,7 @@ import {
   GithubIdentityLabel,
   GithubLedgerStore,
   GithubTransportFetch,
+  ghSpawnIdentity,
   LedgerRange,
   layerGithubBudgetLedger,
   layerGithubClientFor,
@@ -21,6 +22,7 @@ import {
 } from "@beep/repo-cli/test/SharedInternals";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
+import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Context from "effect/Context";
@@ -36,6 +38,9 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Redacted from "effect/Redacted";
 import * as Str from "effect/String";
 import { rateLimitHeaders, recordingFetch, scriptedSpawner, withLayer } from "./support/GithubLedgerFakes.ts";
+
+const alice = GithubIdentityLabel.make("user:alice");
+const bob = GithubIdentityLabel.make("user:bob");
 
 // A fixture token in GitHub's format; it never leaves this process.
 const FIXTURE_TOKEN = `ghp_${Str.repeat(2)("Fixture0Token1")}abcdefgh`;
@@ -100,20 +105,20 @@ describe("GitHub identity labels", () => {
         },
         fetch,
       });
-      expect(built.label).toStrictEqual(O.some("user:alice"));
+      assertSome(built.label, alice);
       expect(fetch.count()).toBe(0);
       const ledger = yield* GithubBudgetLedger;
       const aliases = yield* ledger.aliases;
       const hash = yield* hashOf(FIXTURE_TOKEN);
       expect(aliases.aliases[hash]).toBe("user:alice");
-    }).pipe(withLayer(memoryLedger), Effect.scoped)
+    }).pipe(withLayer(memoryLedger))
   );
 
   it.effect("uses a known alias when GH_TOKEN overrides the gh login", () =>
     Effect.gen(function* () {
       const ledger = yield* GithubBudgetLedger;
       const hash = yield* hashOf(FIXTURE_TOKEN);
-      yield* ledger.recordAlias(hash, GithubIdentityLabel.make("user:alice"));
+      yield* ledger.recordAlias(hash, alice);
       const fetch = userReply("someone-else");
       const built = yield* buildClient({
         identity: ghIdentity,
@@ -121,10 +126,10 @@ describe("GitHub identity labels", () => {
         env: { GH_TOKEN: "set" },
         fetch,
       });
-      expect(built.label).toStrictEqual(O.some("user:alice"));
+      assertSome(built.label, alice);
       expect(fetch.count()).toBe(0);
-      expect(A.contains(built.spawned, "gh config get -h github.com user")).toBe(false);
-    }).pipe(withLayer(memoryLedger), Effect.scoped)
+      assertFalse(A.contains(built.spawned, "gh config get -h github.com user"));
+    }).pipe(withLayer(memoryLedger))
   );
 
   it.effect("makes exactly one GET /user for an unknown token, then reuses the alias", () =>
@@ -132,12 +137,12 @@ describe("GitHub identity labels", () => {
       const fetch = userReply("bob");
       const script = { "op read --no-newline op://vault/bot/token": { stdout: FIXTURE_TOKEN } };
       const first = yield* buildClient({ identity: opIdentity, script, fetch });
-      expect(first.label).toStrictEqual(O.some("user:bob"));
+      assertSome(first.label, bob);
       expect(fetch.count()).toBe(1);
       const second = yield* buildClient({ identity: opIdentity, script, fetch });
-      expect(second.label).toStrictEqual(O.some("user:bob"));
+      assertSome(second.label, bob);
       expect(fetch.count()).toBe(1);
-    }).pipe(withLayer(memoryLedger), Effect.scoped)
+    }).pipe(withLayer(memoryLedger))
   );
 
   it.effect("degrades to the token hash when GET /user fails or gh's login is malformed", () =>
@@ -152,9 +157,9 @@ describe("GitHub identity labels", () => {
         fetch,
       });
       const hash = yield* hashOf(FIXTURE_TOKEN);
-      expect(built.label).toStrictEqual(O.some(hash));
-      expect(Str.startsWith("token:")(hash)).toBe(true);
-    }).pipe(withLayer(memoryLedger), Effect.scoped)
+      assertSome(built.label, hash);
+      assertTrue(Str.startsWith("token:")(hash));
+    }).pipe(withLayer(memoryLedger))
   );
 
   it.effect("labels an App and a configured op-ref without any request", () =>
@@ -168,7 +173,7 @@ describe("GitHub identity labels", () => {
         cwd: ".",
         transport: {},
       });
-      expect(app).toStrictEqual(O.some("app:12/34"));
+      assertSome(app, GithubIdentityLabel.make("app:12/34"));
       const fetch = userReply("unused");
       const configured = yield* resolveGithubIdentityLabel({
         kind: "op-ref",
@@ -186,7 +191,7 @@ describe("GitHub identity labels", () => {
           ])
         )
       );
-      expect(configured).toStrictEqual(O.some("user:beep-bot"));
+      assertSome(configured, GithubIdentityLabel.make("user:beep-bot"));
       expect(fetch.count()).toBe(0);
     }).pipe(
       withLayer(Layer.merge(memoryLedger, Digest.layerWebCrypto)),
@@ -203,10 +208,30 @@ describe("GitHub identity labels", () => {
         script: { "gh auth token": { stdout: FIXTURE_TOKEN } },
         fetch,
       });
-      expect(built.label).toStrictEqual(O.none());
+      assertNone(built.label);
       expect(built.spawned).toStrictEqual(["gh auth token"]);
       expect(fetch.count()).toBe(0);
-    }).pipe(Effect.scoped)
+    })
+  );
+
+  it.effect("labels gh children with the env token gh spends before its hosts.yml login", () =>
+    Effect.gen(function* () {
+      const { spawner, spawned } = scriptedSpawner({ "gh config get -h github.com user": { stdout: "alice\n" } });
+      const labelWith = (env: Readonly<Record<string, string>>) =>
+        ghSpawnIdentity(".").pipe(
+          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env)),
+          withLayer(Digest.layerWebCrypto)
+        );
+      const hash = yield* hashOf(FIXTURE_TOKEN);
+      const fromGhToken = yield* labelWith({ GH_TOKEN: FIXTURE_TOKEN });
+      const fromGithubToken = yield* labelWith({ GITHUB_TOKEN: FIXTURE_TOKEN });
+      expect([fromGhToken, fromGithubToken]).toStrictEqual([hash, hash]);
+      expect(spawned).toStrictEqual([]);
+      const fromLogin = yield* labelWith({ GH_TOKEN: "" });
+      expect(fromLogin).toBe(alice);
+      expect(spawned).toStrictEqual(["gh config get -h github.com user"]);
+    })
   );
 
   it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {

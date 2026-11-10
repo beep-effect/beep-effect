@@ -1129,29 +1129,27 @@ describe("GitHubApp rate-limit observations", () => {
   });
 
   it.effect("the JWT client and the installation client both carry the caller's label, unchanged", () =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const { sink, projected } = yield* collecting();
-        const script = scriptedFetch([
-          { ...tokenReply(), headers },
-          { status: 200, body: { default_branch: "main" }, headers },
-          { status: 204 },
-        ]);
-        const context = yield* Layer.build(
-          GitHubApp.clientLayer(
-            { ...CREDENTIALS, installationId: 42 },
-            { fetch: script.fetch, retry: NO_RETRY, budgetLabel: LABEL }
-          )
-        ).pipe(Effect.provideService(RateLimitSink, sink));
-        const client = Context.get(context, GitHubClient);
-        yield* client.request("GET /repos/{owner}/{repo}", { owner: "o", repo: "r" });
-        const observed = yield* projected;
-        assert.deepStrictEqual(observed, [
-          ["app-jwt", LABEL],
-          ["token", LABEL],
-        ]);
-      })
-    )
+    Effect.gen(function* () {
+      const { sink, projected } = yield* collecting();
+      const script = scriptedFetch([
+        { ...tokenReply(), headers },
+        { status: 200, body: { default_branch: "main" }, headers },
+        { status: 204 },
+      ]);
+      const context = yield* Layer.build(
+        GitHubApp.clientLayer(
+          { ...CREDENTIALS, installationId: 42 },
+          { fetch: script.fetch, retry: NO_RETRY, budgetLabel: LABEL }
+        )
+      ).pipe(Effect.provideService(RateLimitSink, sink));
+      const client = Context.get(context, GitHubClient);
+      yield* client.request("GET /repos/{owner}/{repo}", { owner: "o", repo: "r" });
+      const observed = yield* projected;
+      assert.deepStrictEqual(observed, [
+        ["app-jwt", LABEL],
+        ["token", LABEL],
+      ]);
+    })
   );
 
   for (const [name, installationToken, credential] of [
@@ -1159,27 +1157,25 @@ describe("GitHubApp rate-limit observations", () => {
     ["with an installation token is a token", Redacted.make("ghs_x"), "token"],
   ] as const) {
     it.effect(`the bot-user lookup ${name}`, () =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          const { sink, projected } = yield* collecting();
-          const script = scriptedFetch([
-            { status: 200, body: { slug: "my-app", name: "My App", id: 1 }, headers },
-            { status: 200, body: { id: 987654, login: "my-app[bot]" }, headers },
-          ]);
-          const context = yield* Layer.build(
-            GitHubApp.layerWith({ fetch: script.fetch, retry: NO_RETRY, budgetLabel: LABEL })
-          );
-          const app = Context.get(context, GitHubApp);
-          yield* app
-            .identity({ ...CREDENTIALS, ...(installationToken === undefined ? {} : { installationToken }) })
-            .pipe(Effect.provideService(RateLimitSink, sink));
-          const observed = yield* projected;
-          assert.deepStrictEqual(observed, [
-            ["app-jwt", LABEL],
-            [credential, LABEL],
-          ]);
-        })
-      )
+      Effect.gen(function* () {
+        const { sink, projected } = yield* collecting();
+        const script = scriptedFetch([
+          { status: 200, body: { slug: "my-app", name: "My App", id: 1 }, headers },
+          { status: 200, body: { id: 987654, login: "my-app[bot]" }, headers },
+        ]);
+        const context = yield* Layer.build(
+          GitHubApp.layerWith({ fetch: script.fetch, retry: NO_RETRY, budgetLabel: LABEL })
+        );
+        const app = Context.get(context, GitHubApp);
+        yield* app
+          .identity({ ...CREDENTIALS, ...(installationToken === undefined ? {} : { installationToken }) })
+          .pipe(Effect.provideService(RateLimitSink, sink));
+        const observed = yield* projected;
+        assert.deepStrictEqual(observed, [
+          ["app-jwt", LABEL],
+          [credential, LABEL],
+        ]);
+      })
     );
   }
 });

@@ -1,4 +1,5 @@
 import {
+  Freshness,
   GithubHeadroomBucketInput,
   GithubHeadroomInput,
   GithubHeadroomSource,
@@ -20,7 +21,6 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import { failingSources } from "./fixtures/Sources.ts";
-import type { Freshness } from "@beep/palantiri";
 
 const ParcelEnvelopeJson = S.fromJsonString(ParcelEnvelope);
 
@@ -146,13 +146,14 @@ describe("reduceGithubHeadroom", () => {
     expect(parcel.summary).not.toContain("3120/5000");
   });
 
-  it("names stale identities next to fresh ones", () => {
+  it("names stale identities next to fresh ones and keeps the envelope fresh", () => {
     const parcel = reduceGithubHeadroom(
       present({ buckets: [bucket({}), bucket({ identity: "user:bob", asOf: minutesAgo(30) })] }),
       NOW,
       20
     );
-    expect(reasonOf(parcel.freshness)).toBe("stale");
+    expect(reasonOf(parcel.freshness)).toBe("fresh");
+    expect(parcel.freshness).toEqual(Freshness.cases.Fresh.make({ asOf: minutesAgo(1) }));
     expect(parcel.summary).toMatch(/^user:alice core 3120\/5000 ↺21:31Z; 1 stale \(user:bob\); /);
   });
 

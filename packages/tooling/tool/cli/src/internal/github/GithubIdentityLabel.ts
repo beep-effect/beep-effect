@@ -100,6 +100,53 @@ export interface GithubIdentityLabelInput {
   readonly transport: Omit<GitHubClientOptions.Encoded, "token">;
 }
 
+// gh reads GH_TOKEN, then GITHUB_TOKEN, before its hosts.yml login.
+const ghEnvToken = Effect.gen(function* () {
+  const ghToken = yield* configStringOption("GH_TOKEN");
+  const githubToken = yield* configStringOption("GITHUB_TOKEN");
+  return O.map(
+    O.orElse(O.filter(ghToken, Str.isNonEmpty), () => O.filter(githubToken, Str.isNonEmpty)),
+    Redacted.make
+  );
+});
+
+/**
+ * The label of the identity a spawned `gh` spends: the env token's identity
+ * when `GH_TOKEN` or `GITHUB_TOKEN` is set, else the `gh` CLI's local login.
+ *
+ * **Details**
+ *
+ * An env token gets its `token:<12 hex>` label, which the ledger maps through
+ * the alias map when it records the row, so a token this host has resolved
+ * before lands on its `user:` bucket. It makes no request. Without an env
+ * token it reads `gh config get -h github.com user`, and falls back to
+ * `unresolved`.
+ *
+ * **Example** (Build the read)
+ *
+ * ```ts
+ * import { ghSpawnIdentity } from "@beep/repo-cli/test/SharedInternals"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(ghSpawnIdentity(process.cwd()))) // true
+ * ```
+ *
+ * @param cwd - The working directory for `gh`.
+ * @returns The label `gh` children spend.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const ghSpawnIdentity = Effect.fn("GithubIdentityLabel.ghSpawnIdentity")(function* (
+  cwd: string
+): Effect.fn.Return<GithubIdentityLabel, never, ChildProcessSpawner.ChildProcessSpawner | Digest.Digest> {
+  const envToken = yield* ghEnvToken;
+  if (O.isSome(envToken)) {
+    return yield* tokenHashLabel(envToken.value).pipe(Effect.orElseSucceed(() => UNRESOLVED_IDENTITY));
+  }
+  const login = yield* readGhCliLogin(cwd);
+  return O.getOrElse(login, () => UNRESOLVED_IDENTITY);
+});
+
 const lookupUser = Effect.fnUntraced(function* (
   token: Redacted.Redacted<string>,
   hash: GithubIdentityLabel,
@@ -155,9 +202,7 @@ export const resolveGithubIdentityLabel = Effect.fn("GithubIdentityLabel.resolve
   const hash = yield* tokenHashLabel(token);
   const remember = (user: GithubIdentityLabel) => Effect.as(ledger.value.recordAlias(hash, user), O.some(user));
   // gh's own login describes the gh token only when no env token overrides it.
-  const ghToken = yield* configStringOption("GH_TOKEN");
-  const githubToken = yield* configStringOption("GITHUB_TOKEN");
-  const envToken = O.orElse(O.filter(ghToken, Str.isNonEmpty), () => O.filter(githubToken, Str.isNonEmpty));
+  const envToken = yield* ghEnvToken;
   if (input.kind === "gh-cli" && O.isNone(envToken)) {
     const login = yield* readGhCliLogin(input.cwd);
     if (O.isSome(login)) return yield* remember(login.value);

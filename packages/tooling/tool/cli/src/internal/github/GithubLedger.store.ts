@@ -10,8 +10,11 @@
  * `O_APPEND` write of one line no longer than 4 KiB, so writers on one host do
  * not interleave, and a reader skips any torn line. `latest/*.json`,
  * `aliases.json` and `rollups/*.json` are replaced atomically and privately
- * (`0600` files in `0700` directories). Nothing is resolved or created until
- * the first operation runs.
+ * (`0600` files in `0700` directories). Calibration pairs are also appended to
+ * `calibration.jsonl`, so the read side can judge calibration without opening
+ * any raw hour. A sampler lease names its holder with a random token and is
+ * removed only by that holder. Nothing is resolved or created until the first
+ * operation runs.
  *
  * @internal
  * @packageDocumentation
@@ -47,6 +50,7 @@ import {
   fileKeyOf,
   GITHUB_LEDGER_MAX_LINE_BYTES,
   GithubLedgerError,
+  GithubLedgerRow,
   GithubLedgerRowJson,
   IdentityAliases,
   IdentityAliasesJson,
@@ -59,8 +63,8 @@ import type * as PlatformError from "effect/PlatformError";
 import type * as Scope from "effect/Scope";
 import type {
   BucketReading,
+  CalibrationRow,
   GithubIdentityLabel,
-  GithubLedgerRow,
   LedgerHourRollup,
   LedgerRange,
   RetentionCutoffs,
@@ -70,6 +74,7 @@ import type {
 const $I = $RepoCliId.create("internal/github/GithubLedger.store");
 
 const HOUR_MILLIS = Duration.toMillis(Duration.hours(1));
+const CALIBRATION_FILE = "calibration.jsonl";
 const SAMPLER_LEASE_STALE = Duration.seconds(120);
 const textEncoder = new TextEncoder();
 
@@ -86,6 +91,10 @@ export interface GithubLedgerStoreShape {
   ) => Effect.Effect<boolean, GithubLedgerError, Scope.Scope>;
   /** Append one row to its hour's file; an encoded line over 4 KiB is rejected. */
   readonly append: (row: GithubLedgerRow) => Effect.Effect<void, GithubLedgerError>;
+  /** Append one calibration pair to the calibration file the read side judges calibration from. */
+  readonly appendCalibration: (row: CalibrationRow) => Effect.Effect<void, GithubLedgerError>;
+  /** The retained calibration pairs, oldest first; torn or corrupt lines are skipped. */
+  readonly calibrations: Effect.Effect<ReadonlyArray<CalibrationRow>, GithubLedgerError>;
   /** The newest sample per identity. */
   readonly latestSamples: Effect.Effect<ReadonlyArray<SampleRow>, GithubLedgerError>;
   /** The newest transport reading per key. */
@@ -96,7 +105,7 @@ export interface GithubLedgerStoreShape {
   readonly readRollup: (hour: DateTime.Utc) => Effect.Effect<O.Option<LedgerHourRollup>, GithubLedgerError>;
   /** The hot-parcel summary, when one was written. */
   readonly readSummary: Effect.Effect<O.Option<LedgerSummary>, GithubLedgerError>;
-  /** Delete raw hours and rollups past retention. */
+  /** Delete raw hours, rollups, `latest/` readings and calibration pairs past retention. */
   readonly removeBefore: (cutoffs: RetentionCutoffs) => Effect.Effect<void, GithubLedgerError>;
   /** The hours that still have a raw row file, oldest first. */
   readonly rowHours: Effect.Effect<ReadonlyArray<DateTime.Utc>, GithubLedgerError>;
@@ -176,6 +185,24 @@ const hourOfFileName = (name: string): O.Option<DateTime.Utc> =>
   );
 
 const isNotFound = (error: PlatformError.PlatformError): boolean => error.reason._tag === "NotFound";
+
+const isCalibrationRow = GithubLedgerRow.guards.Calibration;
+
+const SamplerLeaseJson = S.fromJsonString(
+  S.Struct({ pid: S.Int, at: S.DateTimeUtcFromString, token: S.String }).pipe(
+    $I.annoteSchema("SamplerLease", { description: "Who holds a sampler lease, so only the holder removes it." })
+  )
+);
+
+const leaseBody = Effect.gen(function* () {
+  const pid = yield* Effect.sync(() => process.pid);
+  const at = yield* DateTime.now;
+  const high = yield* Random.nextIntBetween(0, 2_147_483_647);
+  const low = yield* Random.nextIntBetween(0, 2_147_483_647);
+  return yield* S.encodeEffect(SamplerLeaseJson)({ pid, at, token: `${pid}-${high}-${low}` }).pipe(
+    Effect.mapError(GithubLedgerError.fromUnknown("decode", "encode the sampler lease"))
+  );
+});
 
 /**
  * Build the file store, resolving the state directory on first use.
@@ -262,8 +289,8 @@ export const makeGithubLedgerStoreLive = Effect.gen(function* () {
     );
   });
 
-  const createLease = (lock: string) =>
-    fs.writeFileString(lock, "lease\n", { flag: "wx", mode: 0o600 }).pipe(
+  const createLease = (lock: string, body: string) =>
+    fs.writeFileString(lock, body, { flag: "wx", mode: 0o600 }).pipe(
       Effect.as(true),
       Effect.catchTag("PlatformError", (error) =>
         error.reason._tag === "AlreadyExists"
@@ -289,6 +316,27 @@ export const makeGithubLedgerStoreLive = Effect.gen(function* () {
     yield* fs
       .writeFileString(rowFile(rows, row.at), `${line}\n`, { flag: "a", mode: 0o600 })
       .pipe(Effect.mapError(writeError("append a ledger row")));
+  });
+
+  const appendCalibration = Effect.fnUntraced(function* (row: CalibrationRow) {
+    const line = yield* encodeLine(row);
+    const base = yield* root;
+    yield* fs
+      .makeDirectory(base, { recursive: true, mode: 0o700 })
+      .pipe(Effect.mapError(writeError("create the ledger directory")));
+    yield* fs
+      .writeFileString(path.join(base, CALIBRATION_FILE), `${line}\n`, { flag: "a", mode: 0o600 })
+      .pipe(Effect.mapError(writeError("append a calibration pair")));
+  });
+
+  const calibrations = Effect.gen(function* () {
+    const base = yield* root;
+    const text = yield* readOptional(path.join(base, CALIBRATION_FILE), "read the calibration pairs");
+    const decode = partitionJsonLines(S.decodeUnknownOption(GithubLedgerRowJson));
+    return O.match(text, {
+      onNone: A.empty<CalibrationRow>,
+      onSome: (content) => A.filter(decode(content).rows, isCalibrationRow),
+    });
   });
 
   const readRows = Effect.fnUntraced(function* (range: LedgerRange) {
@@ -364,8 +412,15 @@ export const makeGithubLedgerStoreLive = Effect.gen(function* () {
       .makeDirectory(sampler, { recursive: true, mode: 0o700 })
       .pipe(Effect.mapError(writeError("create the sampler directory")));
     const lock = path.join(sampler, `${fileKeyOf(identity)}.lock`);
-    const release = Effect.addFinalizer(() => fs.remove(lock).pipe(Effect.ignore));
-    const created = yield* createLease(lock);
+    const body = yield* leaseBody;
+    // Remove the lock only while it is still this holder's: a reclaimer may have replaced it.
+    const release = Effect.addFinalizer(() =>
+      fs.readFileString(lock).pipe(
+        Effect.flatMap((current) => (current === body ? fs.remove(lock) : Effect.void)),
+        Effect.ignore
+      )
+    );
+    const created = yield* createLease(lock, body);
     if (created) {
       yield* release;
       return true;
@@ -387,9 +442,64 @@ export const makeGithubLedgerStoreLive = Effect.gen(function* () {
     );
     if (!reclaimed) return false;
     yield* fs.remove(stale).pipe(Effect.ignore);
-    const retried = yield* createLease(lock);
+    const retried = yield* createLease(lock, body);
     if (retried) yield* release;
     return retried;
+  });
+
+  // A key seen once (a reviewer App run, an old token) would otherwise stay in every read forever.
+  const removeLatestBefore = Effect.fnUntraced(function* (limit: DateTime.Utc) {
+    const latest = yield* dir("latest");
+    const listed = yield* listNames(latest, "list latest readings");
+    const limitMillis = DateTime.toEpochMillis(limit);
+    const takenAt = (name: string) => (text: string) =>
+      Str.startsWith("sample-")(name)
+        ? O.map(S.decodeOption(SampleRowJson)(text), (sample) => sample.at)
+        : O.map(S.decodeOption(BucketReadingJson)(text), (reading) => reading.asOf);
+    const readings = A.filter(
+      listed,
+      (name) => (Str.startsWith("sample-")(name) || Str.startsWith("transport-")(name)) && Str.endsWith(".json")(name)
+    );
+    yield* Effect.forEach(
+      readings,
+      Effect.fnUntraced(function* (name) {
+        const file = path.join(latest, name);
+        const text = yield* readOptional(file, "read a reading");
+        // An unreadable reading is dropped by every read, so it is removed too.
+        const expired = O.exists(text, (content) =>
+          pipe(
+            takenAt(name)(content),
+            O.map((at) => DateTime.toEpochMillis(at) < limitMillis),
+            O.getOrElse(() => true)
+          )
+        );
+        if (expired) yield* removeIfPresent(file, "remove an old reading");
+      }),
+      { discard: true, concurrency: 8 }
+    );
+  });
+
+  const removeCalibrationsBefore = Effect.fnUntraced(function* (limit: DateTime.Utc) {
+    const base = yield* root;
+    const file = path.join(base, CALIBRATION_FILE);
+    const text = yield* readOptional(file, "read the calibration pairs");
+    if (O.isNone(text)) return;
+    const decode = partitionJsonLines(S.decodeUnknownOption(GithubLedgerRowJson));
+    const read = decode(text.value);
+    const kept = A.filter(
+      read.rows,
+      (row) => isCalibrationRow(row) && DateTime.toEpochMillis(row.at) >= DateTime.toEpochMillis(limit)
+    );
+    if (A.length(kept) === A.length(read.rows) && read.corruptLineCount === 0) return;
+    const lines = yield* Effect.forEach(kept, encodeLine);
+    yield* writePrivate(
+      file,
+      A.join(
+        A.map(lines, (line) => `${line}\n`),
+        ""
+      ),
+      "rewrite the calibration pairs"
+    );
   });
 
   const removeBefore = Effect.fnUntraced(function* (cutoffs: RetentionCutoffs) {
@@ -426,10 +536,14 @@ export const makeGithubLedgerStoreLive = Effect.gen(function* () {
       (hour) => removeIfPresent(path.join(rollups, `${hourFileKey(hour)}.json`), "remove a rollup"),
       { discard: true }
     );
+    yield* removeLatestBefore(cutoffs.latestBefore);
+    yield* removeCalibrationsBefore(cutoffs.calibrationsBefore);
   });
 
   const store: GithubLedgerStoreShape = {
     append,
+    appendCalibration,
+    calibrations,
     rows: readRows,
     rowHours,
     writeLatestSample,
@@ -484,6 +598,7 @@ export const layerGithubLedgerStoreLive: Layer.Layer<GithubLedgerStore, never, F
  */
 export const makeGithubLedgerStoreMemory = Effect.sync((): GithubLedgerStoreShape => {
   const rows = MutableHashMap.empty<number, ReadonlyArray<GithubLedgerRow>>();
+  const calibrationRows = MutableHashMap.empty<"calibrations", ReadonlyArray<CalibrationRow>>();
   const samples = MutableHashMap.empty<string, SampleRow>();
   const transports = MutableHashMap.empty<string, BucketReading>();
   const rollups = MutableHashMap.empty<number, LedgerHourRollup>();
@@ -511,6 +626,21 @@ export const makeGithubLedgerStoreMemory = Effect.sync((): GithubLedgerStoreShap
           })
         )
       ),
+    appendCalibration: (row) =>
+      encodeLine(row).pipe(
+        Effect.andThen(
+          Effect.sync(() =>
+            MutableHashMap.set(
+              calibrationRows,
+              "calibrations",
+              A.append(O.getOrElse(MutableHashMap.get(calibrationRows, "calibrations"), A.empty<CalibrationRow>), row)
+            )
+          )
+        )
+      ),
+    calibrations: Effect.sync(() =>
+      O.getOrElse(MutableHashMap.get(calibrationRows, "calibrations"), A.empty<CalibrationRow>)
+    ),
     rows: (range) =>
       Effect.sync(() =>
         A.filter(
@@ -559,6 +689,19 @@ export const makeGithubLedgerStoreMemory = Effect.sync((): GithubLedgerStoreShap
         A.forEach(
           A.filter(keysOf(rollups), (key) => key < rollupsLimit),
           (key) => MutableHashMap.remove(rollups, key)
+        );
+        const latestLimit = DateTime.toEpochMillis(cutoffs.latestBefore);
+        A.forEach(
+          A.filter(A.fromIterable(samples), ([, sample]) => DateTime.toEpochMillis(sample.at) < latestLimit),
+          ([key]) => MutableHashMap.remove(samples, key)
+        );
+        A.forEach(
+          A.filter(A.fromIterable(transports), ([, reading]) => DateTime.toEpochMillis(reading.asOf) < latestLimit),
+          ([key]) => MutableHashMap.remove(transports, key)
+        );
+        const calibrationLimit = DateTime.toEpochMillis(cutoffs.calibrationsBefore);
+        MutableHashMap.modify(calibrationRows, "calibrations", (kept) =>
+          A.filter(kept, (row) => DateTime.toEpochMillis(row.at) >= calibrationLimit)
         );
       }),
   };

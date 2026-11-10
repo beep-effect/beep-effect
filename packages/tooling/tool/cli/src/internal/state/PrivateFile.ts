@@ -36,7 +36,7 @@ import * as Random from "effect/Random";
  * @category utilities
  * @since 0.0.0
  */
-export const writePrivateFile = Effect.fn("PalantiriSource.writePrivateFile")(function* (file: string, text: string) {
+export const writePrivateFile = Effect.fn("StateFile.writePrivate")(function* (file: string, text: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const dir = path.dirname(file);

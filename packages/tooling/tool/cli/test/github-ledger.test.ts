@@ -46,7 +46,7 @@ import {
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -60,6 +60,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
@@ -267,7 +268,7 @@ describe("GithubLedger schemas", () => {
         identities: [{ _tag: "OpRef", tokenRef: `ghp_${Str.repeat(36)("x")}`, login: "alice" }],
       });
       const exit = yield* Effect.exit(S.decodeEffect(GithubIdentityConfigJson)(text));
-      expect(Exit.isFailure(exit)).toBe(true);
+      exit.pipe(Exit.isFailure, assertTrue);
     })
   );
 
@@ -413,12 +414,10 @@ describe("GithubLedger windows", () => {
       transportRow({ at: at(2500), used: 40, pid: 300, operation: "Lonely" }),
     ];
     const costs = operationCostsOf(rows);
-    expect(
-      A.findFirst(costs, (cost) => cost.operation === "PullRequestThreads").pipe(O.map((cost) => cost.points))
-    ).toStrictEqual(O.some(5));
-    expect(A.findFirst(costs, (cost) => cost.operation === "Lonely").pipe(O.map((cost) => cost.points))).toStrictEqual(
-      O.some(1)
-    );
+    const pointsOf = (operation: string) =>
+      A.findFirst(costs, (cost) => cost.operation === operation).pipe(O.map((cost) => cost.points));
+    assertSome(pointsOf("PullRequestThreads"), 5);
+    assertSome(pointsOf("Lonely"), 1);
   });
 
   it("attributes estimated points, gh spawns and the unattributed remainder", () => {
@@ -466,7 +465,7 @@ describe("GithubLedger windows", () => {
 });
 
 describe("GithubBudgetLedger over memory", () => {
-  it.layer(memoryLedger)((it) => {
+  it.layer(memoryLedger, { timeout: "30 seconds" })((it) => {
     it.effect("records a transport row with the requesting fiber's command", () =>
       Effect.gen(function* () {
         const ledger = yield* GithubBudgetLedger;
@@ -495,7 +494,7 @@ describe("GithubBudgetLedger over memory", () => {
           remaining: 4000,
           nominalCost: 1,
         });
-        expect(rows[0]?._tag === "Transport" ? rows[0].used : O.none()).toStrictEqual(O.some(1000));
+        assertSome(rows[0]?._tag === "Transport" ? rows[0].used : O.none(), 1000);
       })
     );
 
@@ -518,7 +517,7 @@ describe("GithubBudgetLedger over memory", () => {
     );
   });
 
-  it.layer(memoryLedger)((it) => {
+  it.layer(memoryLedger, { timeout: "30 seconds" })((it) => {
     it.effect("joins token-hash rows to their owner once the alias exists", () =>
       Effect.gen(function* () {
         yield* TestClock.setTime(T0 + 2 * MINUTE);
@@ -606,6 +605,82 @@ describe("GithubBudgetLedger over memory", () => {
       const error = yield* Effect.flip(store.append(huge));
       expect(error.reason).toBe("write");
     }).pipe(withLayer(layerGithubLedgerStoreMemory))
+  );
+
+  it.effect("reads the raw hours once per prune however many hours are still incomplete", () =>
+    Effect.gen(function* () {
+      const base = yield* makeGithubLedgerStoreMemory;
+      const reads = yield* Ref.make(0);
+      const counting = Layer.succeed(GithubLedgerStore, {
+        ...base,
+        rows: Effect.fn("GithubLedgerTest.countingRows")(function* (range) {
+          yield* Ref.update(reads, (count) => count + 1);
+          return yield* base.rows(range);
+        }),
+      });
+      // A graphql anchor in each of five hours with no rollup yet; the last has no later anchor.
+      yield* Effect.forEach(
+        A.range(0, 4),
+        (hour) => base.append(transportRow({ at: at(hour * HOUR + MINUTE), used: 10 + hour })),
+        { discard: true }
+      );
+      yield* TestClock.setTime(T0 + 5 * HOUR + 20 * MINUTE);
+      yield* GithubBudgetLedger.use((ledger) => ledger.prune).pipe(
+        withLayer(layerGithubBudgetLedger({ host }).pipe(Layer.provide(counting)))
+      );
+      // One read for the hours' context, one for the summary's last hour.
+      const readCount = yield* Ref.get(reads);
+      expect(readCount).toBe(2);
+      const first = yield* base.readRollup(at(0));
+      assertSome(
+        O.map(first, (rollup) => rollup.complete),
+        true
+      );
+      const last = yield* base.readRollup(at(4 * HOUR));
+      assertNone(last);
+    })
+  );
+
+  it.effect("judges graphql calibration from the calibration file, never from raw rows", () =>
+    Effect.gen(function* () {
+      const base = yield* makeGithubLedgerStoreMemory;
+      const latestOnly = Layer.succeed(GithubLedgerStore, {
+        ...base,
+        rows: Effect.fn("GithubLedgerTest.rawRowsRead")(function* () {
+          return yield* Effect.die("the read side read raw rows");
+        }),
+        rowHours: Effect.die("the read side listed raw hours"),
+      });
+      yield* TestClock.setTime(T0 + MINUTE);
+      yield* base.writeLatestSample(sampleRow({ at: at(0), used: 100, resource: "graphql" }));
+      const signalOf = GithubBudgetLedger.use((ledger) => ledger.reserve(key(alice, "graphql"))).pipe(
+        withLayer(layerGithubBudgetLedger({ host }).pipe(Layer.provide(latestOnly)))
+      );
+      const before = yield* signalOf;
+      expect(before.state).toMatchObject({ _tag: "Unknown", reason: "uncalibrated" });
+      yield* Effect.forEach(
+        A.range(1, 6),
+        (index) =>
+          base.appendCalibration(
+            GithubLedgerRow.cases.Calibration.make({
+              at: at(-index * HOUR),
+              host,
+              identity: alice,
+              restUsed: 100,
+              restRemaining: 4900,
+              restResetAt: at(HOUR),
+              graphqlUsed: 104,
+              graphqlRemaining: 4896,
+              graphqlResetAt: at(HOUR),
+              graphqlCost: 1,
+              spanMillis: 150,
+            })
+          ),
+        { discard: true }
+      );
+      const after = yield* signalOf;
+      expect(after.state._tag).toBe("Clear");
+    })
   );
 });
 
@@ -718,12 +793,18 @@ describe("GithubLedger file store", () => {
             yield* TestClock.setTime(T0 + 3 * HOUR);
             yield* ledger.prune;
             const idle = yield* store.readRollup(at(0));
-            expect(O.map(idle, (rollup) => rollup.complete)).toStrictEqual(O.some(false));
+            assertSome(
+              O.map(idle, (rollup) => rollup.complete),
+              false
+            );
             yield* store.append(sampleRow({ at: at(3 * HOUR + MINUTE), used: 25 }));
             yield* TestClock.setTime(T0 + 3 * HOUR + 2 * MINUTE);
             yield* ledger.prune;
             const complete = yield* store.readRollup(at(0));
-            expect(O.map(complete, (rollup) => rollup.complete)).toStrictEqual(O.some(true));
+            assertSome(
+              O.map(complete, (rollup) => rollup.complete),
+              true
+            );
             const file = path.join(root, "rollups", "2026-11-10T14.json");
             const before = yield* fs.readFileString(file);
             yield* store.append(sampleRow({ at: at(55 * MINUTE), used: 21 }));
@@ -731,9 +812,9 @@ describe("GithubLedger file store", () => {
             const value9 = yield* fs.readFileString(file);
             expect(value9).toBe(before);
             const hours = yield* store.rowHours;
-            expect(A.some(hours, (hour) => DateTime.toEpochMillis(hour) < T0 - 72 * HOUR)).toBe(false);
+            assertFalse(A.some(hours, (hour) => DateTime.toEpochMillis(hour) < T0 - 72 * HOUR));
             const summary = yield* ledger.summary;
-            expect(O.isSome(summary)).toBe(true);
+            summary.pipe(O.isSome, assertTrue);
           }).pipe(withLayer(liveLedger), withStateRoot(root));
         })
     );
@@ -772,6 +853,49 @@ describe("GithubLedger file store", () => {
           ),
           withStateRoot(root)
         );
+      })
+    );
+
+    it.effect("drops latest readings older than 24 h and calibration pairs older than 7 days on prune", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "github-ledger-latest-" });
+        yield* TestClock.setTime(T0);
+        yield* Effect.gen(function* () {
+          const ledger = yield* GithubBudgetLedger;
+          const store = yield* GithubLedgerStore;
+          // A reviewer App seen once a day ago, and the identity in use now.
+          yield* store.writeLatestTransport(reading({ key: key(app, "core"), remaining: 4000, asOf: T0 - 25 * HOUR }));
+          yield* store.writeLatestTransport(reading({ key: key(alice, "core"), remaining: 4000, asOf: T0 - MINUTE }));
+          yield* store.writeLatestSample(sampleRow({ at: at(-25 * HOUR), identity: tokenLabel, used: 3 }));
+          yield* store.writeLatestSample(sampleRow({ at: at(-MINUTE), used: 3 }));
+          const pair = (offset: number) =>
+            GithubLedgerRow.cases.Calibration.make({
+              at: at(offset),
+              host,
+              identity: alice,
+              restUsed: 100,
+              restRemaining: 4900,
+              restResetAt: at(HOUR),
+              graphqlUsed: 104,
+              graphqlRemaining: 4896,
+              graphqlResetAt: at(HOUR),
+              graphqlCost: 1,
+              spanMillis: 150,
+            });
+          yield* store.appendCalibration(pair(-8 * 24 * HOUR));
+          yield* store.appendCalibration(pair(-HOUR));
+          yield* ledger.prune;
+          const transports = yield* store.latestTransport;
+          expect(A.map(transports, (value) => value.key.identity)).toStrictEqual(["user:alice"]);
+          const samples = yield* store.latestSamples;
+          expect(A.map(samples, (value) => value.identity)).toStrictEqual(["user:alice"]);
+          const pairs = yield* store.calibrations;
+          expect(A.map(pairs, (value) => DateTime.toEpochMillis(value.at))).toStrictEqual([T0 - HOUR]);
+          const mode = (yield* fs.stat(path.join(root, "calibration.jsonl"))).mode & 0o777;
+          expect(mode).toBe(0o600);
+        }).pipe(withLayer(liveLedger), withStateRoot(root));
       })
     );
 

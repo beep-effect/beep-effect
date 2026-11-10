@@ -14,7 +14,7 @@ import {
   layerGraphqlBudget,
 } from "@beep/repo-cli/test/SharedInternals";
 import { describe, expect, it } from "@effect/vitest";
-import { assertInstanceOf } from "@effect/vitest/utils";
+import { assertInstanceOf, assertTrue } from "@effect/vitest/utils";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
@@ -93,7 +93,7 @@ describe("GraphqlBudget ledger-first", () => {
   it.effect("proceeds on a fresh transport reading with zero probes", () =>
     Effect.gen(function* () {
       const { outcome, probes } = yield* run({ seed: reading({ remaining: 4000 }) });
-      expect(Result.isSuccess(outcome)).toBe(true);
+      outcome.pipe(Result.isSuccess, assertTrue);
       expect(probes).toBe(0);
     })
   );
@@ -104,14 +104,14 @@ describe("GraphqlBudget ledger-first", () => {
       const sampled = yield* run({ seed: reading({ remaining: 4000, basis: "sample" }) });
       const reset = yield* run({ seed: reading({ remaining: 4000, resetAt: 500 }) });
       expect([stale.probes, sampled.probes, reset.probes]).toStrictEqual([1, 1, 1]);
-      expect(Result.isSuccess(stale.outcome) && Result.isSuccess(sampled.outcome)).toBe(true);
+      assertTrue(Result.isSuccess(stale.outcome) && Result.isSuccess(sampled.outcome));
     })
   );
 
   it.effect("probes as before with no ledger", () =>
     Effect.gen(function* () {
       const { outcome, probes } = yield* run({ withLedger: false });
-      expect(Result.isSuccess(outcome)).toBe(true);
+      outcome.pipe(Result.isSuccess, assertTrue);
       expect(probes).toBe(1);
     })
   );
@@ -120,11 +120,9 @@ describe("GraphqlBudget ledger-first", () => {
     Effect.gen(function* () {
       const { outcome, probes } = yield* run({ seed: reading({ remaining: 3 }) });
       expect(probes).toBe(0);
-      expect(Result.isFailure(outcome)).toBe(true);
-      if (Result.isFailure(outcome)) {
-        assertInstanceOf(outcome.failure, GraphqlBudgetExhausted);
-        expect(outcome.failure.remaining).toBe(3);
-      }
+      assertTrue(outcome._tag === "Failure");
+      assertInstanceOf(outcome.failure, GraphqlBudgetExhausted);
+      expect(outcome.failure.remaining).toBe(3);
     })
   );
 });

@@ -42,6 +42,7 @@ import {
   reserveOf,
   rollupOf,
   summaryOf,
+  usableReadingOf,
 } from "./GithubLedger.reducers.ts";
 import {
   BucketKey,
@@ -87,6 +88,7 @@ const ROLLUP_IDLE = Duration.hours(3);
 const ROLLUP_CONTEXT_BEFORE = Duration.hours(2);
 const ROLLUP_CONTEXT_AFTER = Duration.hours(24);
 const CALIBRATION_LOOKBACK = Duration.days(7);
+const LATEST_RETENTION = Duration.hours(24);
 const RESERVE_RESOURCES: ReadonlyArray<string> = ["core", "graphql", "search"];
 
 /**
@@ -125,7 +127,13 @@ export interface GithubBudgetLedgerShape {
   readonly lastSampleAt: (identity: GithubIdentityLabel) => Effect.Effect<O.Option<DateTime.Utc>, GithubLedgerError>;
   /** The newest reading of a bucket, from memory and `latest/` only. */
   readonly latest: (key: BucketKey) => Effect.Effect<O.Option<BucketReading>, GithubLedgerError>;
-  /** Write due rollups and the summary, then apply retention. */
+  /**
+   * The newest reading of a bucket that its reserve verdict rests on: for a
+   * `graphql` key, sample readings only when calibration admits them. Reads
+   * memory, `latest/` and the calibration file only.
+   */
+  readonly latestUsable: (key: BucketKey) => Effect.Effect<O.Option<BucketReading>, GithubLedgerError>;
+  /** Write due rollups and the summary, then apply retention, `latest/` readings older than 24 h included. */
   readonly prune: Effect.Effect<void, GithubLedgerError>;
   /** Record that a `token:` label belongs to a user label; never fails. */
   readonly recordAlias: (token: GithubIdentityLabel, user: GithubIdentityLabel) => Effect.Effect<void>;
@@ -318,7 +326,8 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
     yield* Effect.forEach(readingsOfSample(row), remember, { discard: true });
   }, absorb("recordSample"));
 
-  const recordCalibration = (row: CalibrationRow) => store.append(row).pipe(absorb("recordCalibration"));
+  const recordCalibration = (row: CalibrationRow) =>
+    store.append(row).pipe(Effect.andThen(store.appendCalibration(row)), absorb("recordCalibration"));
 
   const recordAlias = (token: GithubIdentityLabel, user: GithubIdentityLabel) =>
     store.writeAlias(token, user).pipe(Effect.andThen(Ref.set(aliasCache, O.none())), absorb("recordAlias"));
@@ -355,27 +364,33 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
     return A.last(A.sort(readingsFor(canonicalKey(current)(key), all), byAsOf));
   });
 
+  // The calibration file, never the raw hours: the read side and every prune judge calibration from it.
   const calibrationRows = Effect.fnUntraced(function* (now: DateTime.Utc) {
     const current = yield* aliases;
-    const rows = yield* store.rows(
-      LedgerRange.make({
-        from: DateTime.subtract(now, { milliseconds: Duration.toMillis(CALIBRATION_LOOKBACK) }),
-        to: now,
-      })
+    const since = DateTime.toEpochMillis(now) - Duration.toMillis(CALIBRATION_LOOKBACK);
+    const rows = yield* store.calibrations;
+    return A.map(
+      A.filter(rows, (row) => DateTime.toEpochMillis(row.at) > since),
+      canonicalRow(current)
     );
-    return A.map(A.filter(rows, GithubLedgerRow.guards.Calibration), canonicalRow(current));
+  });
+
+  // Calibration is read only when a graphql verdict depends on sample readings.
+  const admitsSamples = Effect.fnUntraced(function* (key: BucketKey, own: ReadonlyArray<BucketReading>) {
+    const now = yield* DateTime.now;
+    const needsCalibration =
+      key.resource === "graphql" &&
+      A.some(own, (reading) => reading.basis === "sample") &&
+      !A.some(own, (reading) => reading.basis === "transport");
+    if (!needsCalibration) return false;
+    const calibration = yield* calibrationRows(now);
+    return calibrationOf({ now, identity: key.identity })(calibration);
   });
 
   const signalOf = Effect.fnUntraced(function* (key: BucketKey, all: ReadonlyArray<BucketReading>) {
     const now = yield* DateTime.now;
     const own = readingsFor(key, all);
-    // Calibration rows are read only when a graphql verdict depends on sample readings.
-    const needsCalibration =
-      key.resource === "graphql" &&
-      A.some(own, (reading) => reading.basis === "sample") &&
-      !A.some(own, (reading) => reading.basis === "transport");
-    const calibration = needsCalibration ? yield* calibrationRows(now) : A.empty<GithubLedgerRow>();
-    const admitGraphqlSamples = needsCalibration && calibrationOf({ now, identity: key.identity })(calibration);
+    const admitGraphqlSamples = yield* admitsSamples(key, own);
     return reserveOf({ now, admitGraphqlSamples })(key, own);
   });
 
@@ -383,6 +398,15 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
     const current = yield* aliases;
     const all = yield* readings;
     return yield* signalOf(canonicalKey(current)(key), all);
+  });
+
+  const latestUsable = Effect.fnUntraced(function* (key: BucketKey) {
+    const current = yield* aliases;
+    const all = yield* readings;
+    const target = canonicalKey(current)(key);
+    const own = readingsFor(target, all);
+    const admitGraphqlSamples = yield* admitsSamples(target, own);
+    return usableReadingOf({ admitGraphqlSamples })(target, own);
   });
 
   const reserves = Effect.gen(function* () {
@@ -408,12 +432,31 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
     );
   });
 
-  const contextRows = Effect.fnUntraced(function* (hour: DateTime.Utc, now: DateTime.Utc) {
+  const contextRange = (hour: DateTime.Utc, now: DateTime.Utc): LedgerRange =>
+    LedgerRange.make({
+      from: DateTime.subtract(hour, { milliseconds: Duration.toMillis(ROLLUP_CONTEXT_BEFORE) }),
+      to: DateTime.min(now, DateTime.add(hour, { milliseconds: Duration.toMillis(ROLLUP_CONTEXT_AFTER) })),
+    });
+
+  // One read of the union of the hours' context ranges, sliced per hour in memory, so a
+  // run of incomplete hours costs one pass over the raw files instead of 26 hours each.
+  const contextRowsFor = Effect.fnUntraced(function* (pending: ReadonlyArray<DateTime.Utc>, now: DateTime.Utc) {
+    const first = A.head(pending);
+    const last = A.last(pending);
+    if (O.isNone(first) || O.isNone(last)) return (_hour: DateTime.Utc) => A.empty<GithubLedgerRow>();
     const current = yield* aliases;
-    const to = DateTime.min(now, DateTime.add(hour, { milliseconds: Duration.toMillis(ROLLUP_CONTEXT_AFTER) }));
-    const from = DateTime.subtract(hour, { milliseconds: Duration.toMillis(ROLLUP_CONTEXT_BEFORE) });
-    const rows = yield* store.rows(LedgerRange.make({ from, to }));
-    return A.map(rows, canonicalRow(current));
+    const union = LedgerRange.make({
+      from: contextRange(first.value, now).from,
+      to: contextRange(last.value, now).to,
+    });
+    const unionRows = yield* store.rows(union);
+    const rows = A.map(unionRows, canonicalRow(current));
+    return (hour: DateTime.Utc): ReadonlyArray<GithubLedgerRow> => {
+      const range = contextRange(hour, now);
+      const from = DateTime.toEpochMillis(range.from);
+      const to = DateTime.toEpochMillis(range.to);
+      return A.filter(rows, (row) => DateTime.toEpochMillis(row.at) > from && DateTime.toEpochMillis(row.at) <= to);
+    };
   });
 
   const admitter =
@@ -437,49 +480,55 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
     });
   };
 
-  const hourRollup = Effect.fnUntraced(function* (
-    hour: DateTime.Utc,
-    now: DateTime.Utc,
-    admit: (identity: GithubIdentityLabel) => boolean
-  ) {
-    const stored = yield* store.readRollup(hour);
-    const complete = O.filter(stored, (rollup) => rollup.complete);
-    if (O.isSome(complete)) return complete.value;
-    const rows = yield* contextRows(hour, now);
-    return rollupOf({ hour, host, complete: false, rows, admitGraphqlSamples: admit });
-  });
+  const storedComplete = (hour: DateTime.Utc) =>
+    Effect.map(store.readRollup(hour), (stored) => [hour, O.filter(stored, (rollup) => rollup.complete)] as const);
+
+  const incompleteHours = (
+    stored: ReadonlyArray<readonly [DateTime.Utc, O.Option<LedgerHourRollup>]>
+  ): ReadonlyArray<DateTime.Utc> =>
+    A.map(
+      A.filter(stored, ([, complete]) => O.isNone(complete)),
+      ([hour]) => hour
+    );
 
   const hours = Effect.fnUntraced(function* (range: LedgerRange) {
     const now = yield* DateTime.now;
     const calibration = yield* calibrationRows(now);
     const admit = admitter(now, calibration);
-    return yield* Effect.forEach(hoursOfRange(range), (hour) => hourRollup(hour, now, admit));
-  });
-
-  const pruneHour = Effect.fnUntraced(function* (
-    hour: DateTime.Utc,
-    now: DateTime.Utc,
-    admit: (identity: GithubIdentityLabel) => boolean
-  ) {
-    const start = DateTime.toEpochMillis(hour);
-    const nowMillis = DateTime.toEpochMillis(now);
-    if (nowMillis < start + Duration.toMillis(ROLLUP_GRACE)) return;
-    const stored = yield* store.readRollup(hour);
-    if (O.exists(stored, (rollup) => rollup.complete)) return;
-    const rows = yield* contextRows(hour, now);
-    const complete = isRipe(hour, rows, admit);
-    if (complete || nowMillis >= start + Duration.toMillis(ROLLUP_IDLE)) {
-      yield* store.writeRollup(rollupOf({ hour, host, complete, rows, admitGraphqlSamples: admit }));
-    }
+    const stored = yield* Effect.forEach(hoursOfRange(range), storedComplete);
+    const contextOf = yield* contextRowsFor(incompleteHours(stored), now);
+    return A.map(stored, ([hour, complete]) =>
+      O.getOrElse(complete, () =>
+        rollupOf({ hour, host, complete: false, rows: contextOf(hour), admitGraphqlSamples: admit })
+      )
+    );
   });
 
   const prune = Effect.gen(function* () {
     const now = yield* DateTime.now;
+    const nowMillis = DateTime.toEpochMillis(now);
     const current = yield* aliases;
     const calibration = yield* calibrationRows(now);
     const admit = admitter(now, calibration);
     const rowHours = yield* store.rowHours;
-    yield* Effect.forEach(rowHours, (hour) => pruneHour(hour, now, admit), { discard: true });
+    const graced = A.filter(
+      rowHours,
+      (hour) => nowMillis >= DateTime.toEpochMillis(hour) + Duration.toMillis(ROLLUP_GRACE)
+    );
+    const stored = yield* Effect.forEach(graced, storedComplete);
+    const pending = incompleteHours(stored);
+    const contextOf = yield* contextRowsFor(pending, now);
+    yield* Effect.forEach(
+      pending,
+      (hour) => {
+        const rows = contextOf(hour);
+        const complete = isRipe(hour, rows, admit);
+        return complete || nowMillis >= DateTime.toEpochMillis(hour) + Duration.toMillis(ROLLUP_IDLE)
+          ? store.writeRollup(rollupOf({ hour, host, complete, rows, admitGraphqlSamples: admit }))
+          : Effect.void;
+      },
+      { discard: true }
+    );
     const recentRows = yield* store.rows(LedgerRange.make({ from: DateTime.subtract(now, { hours: 1 }), to: now }));
     const previous = yield* store.readRollup(DateTime.subtract(hourStartOf(now), { hours: 1 }));
     yield* store.writeSummary(
@@ -495,6 +544,8 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
         rollupsBefore: DateTime.subtract(now, { milliseconds: Duration.toMillis(ROLLUP_RETENTION) }),
         rowsMaxBytes: RAW_MAX_BYTES,
         rowsKeepAfter: DateTime.subtract(now, { milliseconds: Duration.toMillis(RAW_KEEP_AT_LEAST) }),
+        latestBefore: DateTime.subtract(now, { milliseconds: Duration.toMillis(LATEST_RETENTION) }),
+        calibrationsBefore: DateTime.subtract(now, { milliseconds: Duration.toMillis(CALIBRATION_LOOKBACK) }),
       })
     );
   }).pipe(Effect.withSpan("GithubBudgetLedger.prune"));
@@ -509,6 +560,7 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
     sink: { record: recordTransport },
     ghSink: { record: recordSpawn },
     latest,
+    latestUsable,
     reserve,
     reserves,
     lastSampleAt,

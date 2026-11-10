@@ -340,7 +340,7 @@ export const GithubTransportFetch: Context.Reference<O.Option<typeof globalThis.
  */
 export const GithubBudgetIdentity: Context.Reference<O.Option<GithubIdentityLabel>> = Context.Reference(
   $I`GithubBudgetIdentity`,
-  { defaultValue: () => O.none<GithubIdentityLabel>() }
+  { defaultValue: O.none<GithubIdentityLabel> }
 );
 
 /**
