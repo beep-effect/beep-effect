@@ -582,13 +582,17 @@ const LOG_BODY_FORMAT = `${LOG_FORMAT}%x00%b`;
  * The body-shape options {@link GitCommand.log} accepts beyond the walk
  * itself. `nameStatus` swaps `--name-only` for `--name-status`; `diffFilter`
  * and `findRenames` select and detect changes in either body mode (the
- * service validates both pre-spawn); `quotePath: false` prepends the global
+ * service validates both pre-spawn); `noRenames` turns rename detection off
+ * (the service refuses it with `findRenames`); `noWalk` lists exactly the
+ * given revisions, in the given order; `quotePath: false` prepends the global
  * `-c core.quotePath=false`.
  */
 type LogOptions = {
   readonly nameStatus?: boolean;
   readonly diffFilter?: string;
   readonly findRenames?: number;
+  readonly noRenames?: boolean;
+  readonly noWalk?: boolean;
   readonly quotePath?: false;
   readonly revisions?: ReadonlyArray<string>;
   readonly noMerges?: boolean;
@@ -602,11 +606,19 @@ type LogOptions = {
 const logBodyMode = (options: LogOptions): ReadonlyArray<string> =>
   options.omitPaths === true ? [] : [options.nameStatus === true ? "--name-status" : "--name-only"];
 
-/** `[--no-merges] [--reverse] [--since=<when>]`: the commit filters and order {@link LogOptions} renders after the limit. */
+/** `[--diff-filter=<letters>] [--no-renames] [--find-renames=<n>%]`: the diff selection and rename detection {@link LogOptions} renders after the body flag. */
+const logDiffOptions = (options: LogOptions): ReadonlyArray<string> => [
+  ...(options.diffFilter !== undefined ? [`--diff-filter=${options.diffFilter}`] : []),
+  ...(options.noRenames === true ? ["--no-renames"] : []),
+  ...(options.findRenames !== undefined ? [`--find-renames=${options.findRenames}%`] : []),
+];
+
+/** `[--no-merges] [--reverse] [--since=<when>] [--no-walk=unsorted]`: the commit filters and order {@link LogOptions} renders after the limit. */
 const logWalkFilters = (options: LogOptions): ReadonlyArray<string> => [
   ...(options.noMerges === true ? ["--no-merges"] : []),
   ...(options.reverse === true ? ["--reverse"] : []),
   ...(options.since !== undefined ? [`--since=${options.since}`] : []),
+  ...(options.noWalk === true ? ["--no-walk=unsorted"] : []),
 ];
 
 /**
@@ -633,8 +645,7 @@ const log = (
     "-z",
     options.includeBody === true ? LOG_BODY_FORMAT : LOG_FORMAT,
     ...logBodyMode(options),
-    ...(options.diffFilter !== undefined ? [`--diff-filter=${options.diffFilter}`] : []),
-    ...(options.findRenames !== undefined ? [`--find-renames=${options.findRenames}%`] : []),
+    ...logDiffOptions(options),
     ...(follow ? ["--follow"] : []),
     ...(firstParentDiffMerges ? ["--diff-merges=first-parent"] : []),
     ...(limit !== undefined ? [`--max-count=${limit}`] : []),
@@ -2364,11 +2375,12 @@ export class GitCommand {
    *
    * **Details**
    *
-   * `git [-c core.quotePath=false] log --no-show-signature -z --format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s[%x00%b] [--name-only | --name-status] [--diff-filter=<letters>] [--find-renames=<n>%]`
+   * `git [-c core.quotePath=false] log --no-show-signature -z --format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s[%x00%b] [--name-only | --name-status] [--diff-filter=<letters>] [--no-renames] [--find-renames=<n>%]`
    * — a commit listing carrying each commit's sha, both ISO dates, its author
-   * identity, its subject and the paths it touched. Six optional flags
+   * identity, its subject and the paths it touched. Seven optional flags
    * follow, in this order: `--follow`, `--diff-merges=first-parent`,
-   * `--max-count=N`, `--no-merges`, `--reverse`, `--since=<when>`, then the
+   * `--max-count=N`, `--no-merges`, `--reverse`, `--since=<when>`,
+   * `--no-walk=unsorted`, then the
    * walk: with `options.revisions`, `--end-of-options <revisions...> --`
    * followed by the pathspec, so each revision stays a revision; without them
    * the `--` separator and the pathspec alone, walking from `HEAD`.
@@ -2396,6 +2408,11 @@ export class GitCommand {
    * `R<score>\0<old>\0<new>\0` tokens `GitCommand.nameStatus` emits.
    * `options.diffFilter` and `options.findRenames` apply in either body mode;
    * a commit whose diff the filter empties is omitted from the walk by git.
+   * `options.noRenames` turns rename detection off, so a moved file lists as
+   * a deletion plus an addition and git never reads a blob to pair them.
+   * `options.noWalk` renders `--no-walk=unsorted`: git lists exactly the
+   * given revisions, in the order given, without walking their ancestry, and
+   * each listed commit's diff is the one the walk would have printed for it.
    *
    * `--follow` requires exactly one path — git's own restriction, enforced
    * pre-spawn by `Git.log`. Without `--diff-merges=first-parent` a merge
@@ -2443,6 +2460,24 @@ export class GitCommand {
    *
    * console.log(invocation.redactedArgs.join(" "));
    * // log --no-show-signature -z --format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s%x00%b --no-merges --reverse --end-of-options origin/main..HEAD --
+   * ```
+   *
+   * **Example** (Deletions without rename detection, then two named commits)
+   *
+   * ```ts
+   * import { GitCommand } from "@beep/git/GitCommand";
+   *
+   * const deletions = GitCommand.log([], false, undefined, false, { diffFilter: "D", noRenames: true });
+   * const named = GitCommand.log([], false, undefined, false, {
+   *   nameStatus: true,
+   *   revisions: ["HEAD~2", "HEAD"],
+   *   noWalk: true,
+   * });
+   *
+   * console.log(deletions.redactedArgs.join(" "));
+   * // log --no-show-signature -z --format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s --name-only --diff-filter=D --no-renames
+   * console.log(named.redactedArgs.join(" "));
+   * // log --no-show-signature -z --format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s --name-status --no-walk=unsorted --end-of-options HEAD~2 HEAD --
    * ```
    *
    * @category constructors

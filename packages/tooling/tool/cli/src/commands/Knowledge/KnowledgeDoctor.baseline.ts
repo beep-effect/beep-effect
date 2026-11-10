@@ -946,35 +946,25 @@ const PACKAGE_SUBJECT_PATTERN = /^beep-(?:package|subpath|export):@beep\/([^/#\s
  *
  * ```ts
  * import { knowledgeRemovedPackageNames } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.baseline"
- * import { KnowledgePathRemoval } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.schemas"
  * import * as HashSet from "effect/HashSet"
- * import * as O from "effect/Option"
  *
- * const names = knowledgeRemovedPackageNames([
- *   KnowledgePathRemoval.make({
- *     path: "packages/drivers/courtlistener/package.json",
- *     commit: "1111111111111111111111111111111111111111",
- *     subject: "chore: drop the driver",
- *     change: "deleted",
- *     renamedTo: O.none(),
- *   }),
- * ])
+ * const names = knowledgeRemovedPackageNames(["packages/drivers/courtlistener/package.json", "docs/old.md"])
  *
  * console.log(HashSet.has(names, "courtlistener")) // true
  * ```
  *
- * @param removals - The tree's deleted and renamed-away paths.
+ * @param removedPaths - Every path the tree's history deleted or renamed away.
  * @returns The package short names those removals retired.
  * @category utilities
  * @since 0.0.0
  */
-export const knowledgeRemovedPackageNames = (removals: ReadonlyArray<KnowledgePathRemoval>): HashSet.HashSet<string> =>
+export const knowledgeRemovedPackageNames = (removedPaths: ReadonlyArray<string>): HashSet.HashSet<string> =>
   HashSet.fromIterable(
-    A.flatMap(removals, (removal) => {
-      if (!Str.endsWith("/package.json")(removal.path)) {
+    A.flatMap(removedPaths, (path) => {
+      if (!Str.endsWith("/package.json")(path)) {
         return A.empty<string>();
       }
-      const segments = A.dropRight(Str.split("/")(removal.path), 1);
+      const segments = A.dropRight(Str.split("/")(path), 1);
       return A.appendAll(
         A.takeRight(segments, 1),
         A.length(segments) >= 2 ? [A.join(A.takeRight(segments, 2), "-")] : []
@@ -1134,8 +1124,11 @@ export interface KnowledgeMintInput {
   readonly files: KnowledgeSealFiles;
   /** Promotion rows as of the previous baseline's `mintedAt`; empty on the first seal. */
   readonly previousPromotions: ReadonlyArray<KnowledgeDoctorPromotion>;
-  /** The minted commit's deleted and renamed-away paths; `O.none()` (shallow history) fails closed. */
-  readonly removals: O.Option<ReadonlyArray<KnowledgePathRemoval>>;
+  /**
+   * Every path the minted commit's history deleted or renamed away, read without rename detection;
+   * `O.none()` (shallow or unreadable history) fails closed.
+   */
+  readonly removedPaths: O.Option<ReadonlyArray<string>>;
   /** The doctor report of the minted commit. */
   readonly report: KnowledgeDoctorReport;
   /** The minted tree, for the source lines the prohibition group reads. */
@@ -1196,13 +1189,13 @@ const sourceLine = Effect.fn("KnowledgeDoctor.sourceLine")(function* (
  * console.log(typeof mintKnowledgeBaseline) // "function"
  * ```
  *
- * @param input - The minted commit's report, tree, removals, seal files, and the previous promotions.
+ * @param input - The minted commit's report, tree, removed paths, seal files, and the previous promotions.
  * @returns The baseline, or the refusal listing the findings it may not absorb.
  * @category use-cases
  * @since 0.0.0
  */
 export const mintKnowledgeBaseline = Effect.fn("KnowledgeDoctor.mint")(function* (input: KnowledgeMintInput) {
-  const removals = yield* Effect.fromOption(input.removals).pipe(
+  const removedPaths = yield* Effect.fromOption(input.removedPaths).pipe(
     Effect.mapError(() =>
       KnowledgeDoctorInputError.of(
         "shallow-history",
@@ -1252,7 +1245,7 @@ export const mintKnowledgeBaseline = Effect.fn("KnowledgeDoctor.mint")(function*
       (group) => group.causeKey
     )
   );
-  const removedPackages = knowledgeRemovedPackageNames(removals);
+  const removedPackages = knowledgeRemovedPackageNames(removedPaths);
   let cache = HashMap.empty<string, ReadonlyArray<string>>();
   let entries = A.empty<KnowledgeBaselineEntry>();
   for (const { row, entry } of admitted) {

@@ -223,6 +223,22 @@ it.effect(
       code: -32601,
       errorMessage: "Method not found: x/test",
     });
+    assert.deepEqual(encode(AcpError.AcpRequestError, AcpError.AcpRequestError.invalidRequest()), {
+      _tag: "AcpRequestError",
+      code: -32600,
+      errorMessage: "Invalid request",
+    });
+    assert.deepEqual(encode(AcpError.AcpRequestError, AcpError.AcpRequestError.authRequired("Sign in", { url: "x" })), {
+      _tag: "AcpRequestError",
+      code: -32000,
+      data: { url: "x" },
+      errorMessage: "Sign in",
+    });
+    assert.deepEqual(encode(AcpError.AcpRequestError, AcpError.AcpRequestError.resourceNotFound()), {
+      _tag: "AcpRequestError",
+      code: -32002,
+      errorMessage: "Resource not found",
+    });
     assert.deepEqual(encode(AcpError.AcpProcessExitedError, AcpError.AcpProcessExitedError.make({ code: O.some(7) })), {
       _tag: "AcpProcessExitedError",
       code: 7,

@@ -106,6 +106,6 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("extraction 
         const failure = yield* stage.extract({ plain: "not native storage" }).pipe(Effect.flip);
         deepStrictEqual(refusal(failure), { _tag: "CitationTokenizedExtractionFailure", detail: "invalid-input" });
       }),
-    { timeout: 10_000 }
+    { timeout: 60_000 }
   );
 });

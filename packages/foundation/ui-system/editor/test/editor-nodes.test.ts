@@ -188,6 +188,43 @@ describe("@beep/editor node registration", () => {
     );
   });
 
+  it("clones decorator nodes with their payload and key", () => {
+    const editor = createHeadlessEditor({
+      namespace: "beep-editor-clone-test",
+      nodes: [...editorNodes],
+      onError: (error) => {
+        throw error;
+      },
+    });
+
+    editor.update(
+      () => {
+        const artifact = ArtifactRefNode.importJSON({
+          type: "artifact-ref",
+          version: 1,
+          artifactId: "artifact-123",
+          label: "Spec",
+        });
+        const youtube = YouTubeNode.importJSON({
+          type: "youtube",
+          version: 1,
+          format: "",
+          videoID: syntheticYouTubeVideoId,
+        });
+        $getRoot().clear().append(artifact, youtube);
+
+        const artifactClone = ArtifactRefNode.clone(artifact);
+        const youtubeClone = YouTubeNode.clone(youtube);
+
+        expect(artifactClone.getKey()).toBe(artifact.getKey());
+        expect(artifactClone.exportJSON()).toEqual(artifact.exportJSON());
+        expect(youtubeClone.getKey()).toBe(youtube.getKey());
+        expect(youtubeClone.exportJSON()).toEqual(youtube.exportJSON());
+      },
+      { discrete: true }
+    );
+  });
+
   it("rejects non-JSON NodeState when exporting decorator nodes", () => {
     const editor = createHeadlessEditor({
       namespace: "beep-editor-invalid-node-state-export-test",

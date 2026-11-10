@@ -3,21 +3,17 @@
   "exploration": {
     "slug": "stacked-pr-adoption",
     "title": "Stacked PR Adoption",
-    "status": "active",
-    "stage": "align",
-    "openQuestions": [
-      "Run the supervised three-layer native-stack test (decision stack-test-shape) and record its facts in research/stack-test-2026-11.md.",
-      "After the test: is porting yeet merge-gate to merge-async worth a standalone PR, as the shared first step for stacks and the merge queue?",
-      "After the test: does the rest of the Yeet stack slice earn a goal packet, given a stack fits 8 of 12 observed dependency structures?",
-      "After the test: does the health half of stacks-reopen-gate still gate routine use?"
-    ],
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": ["goals/yeet-async-merge-and-stacks"],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-10-05",
-    "updated": "2026-11-09"
+    "updated": "2026-11-10",
+    "retentionReason": "Three gated MAP candidates reopen this packet at decompose, and the graduated goal's pilot reports back here."
   }
 }
