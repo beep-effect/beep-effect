@@ -12550,6 +12550,69 @@
         }
       }
     },
+    "@beep/eyecite": {
+      "path": "packages/drivers/eyecite",
+      "lines": 91.83,
+      "statements": 92.85,
+      "branches": 100,
+      "functions": 88.46,
+      "uncovered": {
+        "lines": 4,
+        "statements": 4,
+        "branches": 0,
+        "functions": 3
+      },
+      "files": {
+        "packages/drivers/eyecite/src/Eyecite.models.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/eyecite/src/Eyecite.protocol.ts": {
+          "lines": 0,
+          "statements": 0,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/drivers/eyecite/src/Eyecite.recognize.ts": {
+          "lines": 91.42,
+          "statements": 92.85,
+          "branches": 100,
+          "functions": 88,
+          "uncovered": {
+            "lines": 3,
+            "statements": 3,
+            "branches": 0,
+            "functions": 3
+          }
+        },
+        "packages/drivers/eyecite/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    },
     "@beep/fc-runs": {
       "path": "packages/tooling/test-kit/fc-runs",
       "lines": 100,
