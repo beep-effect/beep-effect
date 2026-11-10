@@ -180,18 +180,24 @@ Paths verified on `main` @ e62411d63f, 2026-10-09. Details in
 | Ecosystem-package standard | standards | `standards/architecture/14-ecosystem-packages.md:108,143` | reuse (defines publishable tier) |
 | SchemaCompiler DEFER ruling | effect-schema-parity | `explorations/effect-schema-parity/DECISIONS.md:611` | constraint |
 | Compiler spike numbers | effect-schema-parity | [explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/explorations/effect-schema-parity/research/2026-09-28-compiler-evaluation.md) | evidence |
-| Shared build-kit package | (proposed `packages/tooling/library/build-kit`) | NOT FOUND | NET-NEW |
+| Shared build-kit package | (proposed `packages/tooling/library/build-kit`) | NOT FOUND | rejected 2026-11-10 (DECISIONS Q3) |
+| Check-program census | `@beep/repo-cli` | `packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts`, `CheckCensusGate.ts` | reuse (check-once proof) |
+| Build output contract test | `@beep/repo-cli` | `packages/tooling/tool/cli/test/build-turbo-outputs.test.ts` | extend |
+| Generated build defaults | `@beep/repo-cli-kit` | `packages/tooling/library/repo-cli-kit/src/package-scripts/PackageScripts.schemas.ts:1375,1399,1419,1480` | replace the value |
+| Release Lane rule | standards | `standards/architecture/14-ecosystem-packages.md` ("Release Lane") | constraint |
 
 ## 5. Cross-links & provenance
 
 - Packet: [`../README.md`](../README.md), [`../CAPTURE.md`](../CAPTURE.md),
   [`../RESEARCH.md`](../RESEARCH.md), [`../ops/manifest.json`](../ops/manifest.json).
-  No `DECISIONS.md` yet (align has not started).
+  Align log: [`../DECISIONS.md`](../DECISIONS.md) (2026-11-10).
 - Deep-research notes: [`deep-research/`](./deep-research/), synthesis
   [`deep-research/REPORT.md`](./deep-research/REPORT.md).
 - Experiments: [`experiments/`](./experiments/):
   [`bun-treeshake-probe-1.4.2.md`](./experiments/bun-treeshake-probe-1.4.2.md),
-  [`schema-build-timings.md`](./experiments/schema-build-timings.md). Raw
+  [`schema-build-timings.md`](./experiments/schema-build-timings.md),
+  [`2026-11-10-reverification-and-check-sweep.md`](./experiments/2026-11-10-reverification-and-check-sweep.md)
+  with its rows in [`2026-11-10-check-sweep.tsv`](./experiments/2026-11-10-check-sweep.tsv). Raw
   outputs stayed in the session scratchpad; the tsdown probe stays at
   `~/.cache/beep/tsdown-probe/`.
 - Packet opened by PR #1557 (`e62411d63f`, "docs(explorations): open
@@ -199,4 +205,4 @@ Paths verified on `main` @ e62411d63f, 2026-10-09. Details in
 - Sibling packet: [`../../effect-schema-parity/`](../../effect-schema-parity/)
   (SchemaCompiler DEFER, 2026-09-28).
 - Friction receipts: [`OPPORTUNITIES.md`](./OPPORTUNITIES.md).
-- No graduated goals yet.
+- Graduated 2026-11-10 into [`goals/declaration-only-builds`](../../../goals/declaration-only-builds/README.md).
