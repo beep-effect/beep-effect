@@ -383,6 +383,16 @@ Lane claude/integration-hosted-partitions-ba7e3b · PR #3005
 
 Reverse: Drop --maxWorkers=1 from the integration shard passthrough in CiLane.ts once a hosted runner class with more cores is measured to keep the native deadlines at two workers.
 
+### Integration shards are sized at each file's worst seconds over several green runs, 2026-11-09
+
+The sixteen-shard plan was sized from one run (42637925544) on the claim that hosted spread was 3 to 5 percent. Seven later green runs of the same layout disprove it. Against the plan's seconds a shard's Vitest duration ranged from 0.64 to 1.51 times, and both files of a shard always moved together, so the factor belongs to the runner, not the file. Azure region explains part of it: centralus, southcentralus and westus2 jobs had a median of 0.78 to 0.85 of plan, eastus and westcentralus 1.10 to 1.16. The single-run file seconds were also low for the files that happened to land on fast runners: CanonicalCourts was planned at 198 s and measured 250 to 356 s, ParserOperationsRange2 at 242 s and measured 197 to 324 s. As a result shard 14 took 9.7 to 10.8 minutes and shard 16 took 9.0 to 11.8 minutes on main runs 42662847801, 42675828132 and 42677073526 and on pull-request runs 42679893579, 42680346897, 42682725454 and 42690710476. No job failed, because the job timeout is thirty minutes, but the ten-minute target was missed on nearly every run.
+
+The plan is now LPT over each file's worst measured seconds across eight green runs (the seven above and PR #3005 run 42656046751), at the smallest bin count whose largest bin equals the largest single file, so no pairing sets the ceiling. That is nineteen partitions with planned worst bodies of 308 to 422 s. The job adds a measured 66 to 109 s (mean 83) of checkout, setup and Turbo around the Vitest body, so the slowest observed runner finishes in under nine minutes. An eighteen-bin plan fits the 480 s sharded file budget that the Test Unit shards use (`CI_SHARDED_PARTITION_FILE_BUDGET_SECONDS`) but its 464 s worst bin plus 109 s of setup is 9.6 minutes, too thin a margin for the ten-minute target; the nineteenth bin buys about forty seconds. `packages/tooling/tool/cli/test/ci-lane.test.ts` now fails when a planned shard exceeds the budget. Ten of the 127 partition jobs in the eight runs reached ten minutes under the sixteen-bin plan. This supersedes the "sized without a further safety factor" sentence of the one-worker sizing decision and the sixteen-partition count in the hosted-partitions decision.
+
+Lane perf/integration-shard-headroom
+
+Reverse: Regenerate vitest.integration.shards.json with fewer bins, and set the matching CiLanePartitions.ts entries and check.yml matrix, once several green runs show the worst body plus setup stays a minute under ten at a lower count.
+
 ### Keep the 8 effect-vitest exceptions PR 2994 adds as reviewed PR 2966 debt, 2026-11-09
 
 PR 2994, the `unblocks-main` PR for episode ep70, adds 8 rows to `standards/effect-vitest.inventory.jsonc` for findings that PR 2966 introduced. S31 counts that as inventory growth. The rows stay as reviewed exceptions because none of them is a defect in the test code:

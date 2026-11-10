@@ -56,6 +56,20 @@ Lane @slop/11-6-26 · PR #2915
 
 Reverse: Return @beep/law-practice-server to unit-d (weight 749), drop law-practice-1..3 from the partition table, the check.yml matrix and the census layout; the census keeps judging runs by the layout they ran.
 
+### Allocate only planned test partitions on pull requests; sweep property tests only and split Property Laws, 2026-11-09
+
+Measured on main run 42677073526 and five pull-request runs of 2026-11-09: one Check run asked for 66 to 70 hosted jobs at once against the organization's 60 concurrent hosted jobs, so Test Unit and Test Integration shards waited up to 9.8 minutes for a runner whenever two runs overlapped and the two aggregates reported 15 to 20 minutes after the run's first job. On a pull request that touched only repo-cli (run 42697058070) 35 of the 47 shard jobs took a runner for about 75 seconds of setup to run nothing. Property Laws ran 17.7 to 23.2 minutes cold.
+
+**Planned partitions.** The Check workflow gains a `Test Plan` job. On a push it publishes every partition of both lanes. On a pull request it runs the lane selection once per lane (`ci lane test-unit --plan-partitions`, `ci lane test-integration --plan-partitions`) and publishes the partitions that carry a selected task; the Test Unit plan uses the instrumented shape, so the coverage planner's owners and its full fallback are part of the selection. The shard matrices are built from the plan. Three checks keep a partition that was not allocated from reading as a pass: every allocated partition receives the plan through `--planned-partitions`, re-derives it from its own selection and fails with `unplanned-partition` when one with selected tasks is missing; Coverage Regression requires a manifest from every partition its own owner plan gives a package to (an expected-empty partition may be absent); and both aggregates fail unless the plan job succeeded and the plan is a JSON array of known partitions. Test Integration always plans `int-rest`, so its aggregate has no empty-plan skip. The plan costs one job of about 90 seconds on a pull request before the shards are allocated, and nothing on a documentation-only diff beyond the classification.
+
+**Property Laws.** Two changes. The deep sweep now selects at test level as well as file level: in a file whose relative import graph never runs a property inline, a test whose registration line is positively a plain `it(...)` or `it.effect(...)` is skipped at collection, and suites left with no runnable test skip their hooks. The floor reaches a test only through `fcRuns` options or an inline property call, so a plain test replayed at 400 runs repeats the Test Unit lane's result. Anything not positively plain keeps running. The rules live in `packages/tooling/test-kit/fc-runs/src/PropertySelection.ts` with unit tests and are applied by `vitest.property-runner.ts`. On repo-cli the local sweep fell from 4,682 tests in 8:05 to 1,387 tests in 3:09 with 3,300 skipped. The hosted lane also splits into two slices with complementary Turbo filters (repo-cli alone, every other package) under one `Property Laws` aggregate, because repo-cli's task used to start about six minutes in, behind the other 85 packages.
+
+**Not changed.** Main-branch Check runs share one concurrency group without cancel-in-progress. GitHub keeps one pending run per group, so a later merge cancels the run that was waiting: 82 of the last 100 push runs on main (2026-11-08 02:09Z to 2026-11-09 21:51Z) were cancelled, and nine of twelve sampled had started no job. Giving each main commit its own group would let every commit finish, at the price of overlapping runs that each ask for about 70 hosted jobs; that trade needs runner-capacity evidence and is left for its own decision.
+
+Lane practical-poincare
+
+Reverse: Put the two ALL_* partition lists back into the shard matrices in check.yml and delete the Test Plan job, the --planned-partitions arguments and the plan terms of both aggregates; remove the runner block from vitest.shared.ts to return to file-level sweep selection; fold the two Property Laws slices back into one job. No baseline rows or shard plans change.
+
 ### Bare local coverage defaults to the affected plan; law-practice-server gets its own shard, 2026-11-09
 
 Tier 1 of the 2026-11-09 test/coverage efficiency plan (41-agent workflow, HEAD 33b9f1cb31).
@@ -98,7 +112,7 @@ Main run 42677073526, the first on the 11/12/7 layout, ran every Test Unit shard
 
 The rerun of PR #3007's last head (42669948388) could not be folded: GitHub returns 502 for its jobs listing.
 
-Lane `perf/unit-bins-fold-main-run`
+Lane perf/unit-bins-fold-main-run
 
 Reverse: Remove the startFirst lists from the unit bins in CiLanePartitions.ts and the ciLaneStartOrder call in CiCoverage.ts; steps then run in name order again. Undo the split by moving the tests of research-library-evidence.test.ts back into research-library-views.test.ts and pruning the plan.
 

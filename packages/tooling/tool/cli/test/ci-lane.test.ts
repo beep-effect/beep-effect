@@ -4,6 +4,7 @@ import {
   CI_LANE_DESCRIPTORS,
   CI_LANE_ID_VALUES,
   CI_LANE_PARTITIONS,
+  CI_SHARDED_PARTITION_FILE_BUDGET_SECONDS,
   CiLaneId,
   CiLanePartition,
   CiLanePartitionShard,
@@ -20,6 +21,8 @@ import {
   ciLocalLaneInputsForTesting,
   ciLocalStepsForTesting,
   docgenLaneModeForChangedPaths,
+  planCiLanePartitions,
+  plannedCiLanePartitions,
   proveCiLanePartition,
   runCiLane,
   withCiLaneDefaultPlacements,
@@ -71,6 +74,7 @@ import * as TestConsole from "effect/testing/TestConsole";
 import { commandArgs } from "./support/commandArgs.ts";
 import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
 import type { SpawnRecord } from "@beep/commands/ScriptedSpawner";
+import type { PartitionedCiLane } from "@beep/repo-cli/commands/Ci";
 
 class CiLaneTestOperationError extends S.TaggedError<CiLaneTestOperationError, { readonly brand: unique symbol }>()(
   "CiLaneTestOperationError",
@@ -502,22 +506,25 @@ describe("CI lane partitions", () => {
       { id: "unit-e", packages: 27, weightSeconds: 593 },
       { id: "unit-f", packages: 28, weightSeconds: 593 },
       { id: "unit-g", packages: 28, weightSeconds: 594 },
-      { id: "lps-int-1", packages: 1, weightSeconds: 407 },
-      { id: "lps-int-2", packages: 1, weightSeconds: 394 },
-      { id: "lps-int-3", packages: 1, weightSeconds: 337 },
-      { id: "lps-int-4", packages: 1, weightSeconds: 327 },
-      { id: "lps-int-5", packages: 1, weightSeconds: 318 },
-      { id: "lps-int-6", packages: 1, weightSeconds: 320 },
-      { id: "lps-int-7", packages: 1, weightSeconds: 324 },
-      { id: "lps-int-8", packages: 1, weightSeconds: 367 },
-      { id: "lps-int-9", packages: 1, weightSeconds: 362 },
-      { id: "lps-int-10", packages: 1, weightSeconds: 362 },
-      { id: "lps-int-11", packages: 1, weightSeconds: 374 },
-      { id: "lps-int-12", packages: 1, weightSeconds: 392 },
-      { id: "lps-int-13", packages: 1, weightSeconds: 425 },
-      { id: "lps-int-14", packages: 1, weightSeconds: 419 },
-      { id: "lps-int-15", packages: 1, weightSeconds: 407 },
-      { id: "lps-int-16", packages: 1, weightSeconds: 411 },
+      { id: "lps-int-1", packages: 1, weightSeconds: 422 },
+      { id: "lps-int-2", packages: 1, weightSeconds: 400 },
+      { id: "lps-int-3", packages: 1, weightSeconds: 391 },
+      { id: "lps-int-4", packages: 1, weightSeconds: 366 },
+      { id: "lps-int-5", packages: 1, weightSeconds: 359 },
+      { id: "lps-int-6", packages: 1, weightSeconds: 356 },
+      { id: "lps-int-7", packages: 1, weightSeconds: 355 },
+      { id: "lps-int-8", packages: 1, weightSeconds: 347 },
+      { id: "lps-int-9", packages: 1, weightSeconds: 328 },
+      { id: "lps-int-10", packages: 1, weightSeconds: 324 },
+      { id: "lps-int-11", packages: 1, weightSeconds: 312 },
+      { id: "lps-int-12", packages: 1, weightSeconds: 308 },
+      { id: "lps-int-13", packages: 1, weightSeconds: 310 },
+      { id: "lps-int-14", packages: 1, weightSeconds: 342 },
+      { id: "lps-int-15", packages: 1, weightSeconds: 356 },
+      { id: "lps-int-16", packages: 1, weightSeconds: 353 },
+      { id: "lps-int-17", packages: 1, weightSeconds: 367 },
+      { id: "lps-int-18", packages: 1, weightSeconds: 391 },
+      { id: "lps-int-19", packages: 1, weightSeconds: 421 },
       { id: "int-rest", packages: 0, weightSeconds: 60 },
     ]);
   });
@@ -570,22 +577,25 @@ describe("CI lane partitions", () => {
       { id: "unit-e", shard: undefined },
       { id: "unit-f", shard: undefined },
       { id: "unit-g", shard: undefined },
-      { id: "lps-int-1", shard: CiLanePartitionShard.make({ index: 1, total: 16 }) },
-      { id: "lps-int-2", shard: CiLanePartitionShard.make({ index: 2, total: 16 }) },
-      { id: "lps-int-3", shard: CiLanePartitionShard.make({ index: 3, total: 16 }) },
-      { id: "lps-int-4", shard: CiLanePartitionShard.make({ index: 4, total: 16 }) },
-      { id: "lps-int-5", shard: CiLanePartitionShard.make({ index: 5, total: 16 }) },
-      { id: "lps-int-6", shard: CiLanePartitionShard.make({ index: 6, total: 16 }) },
-      { id: "lps-int-7", shard: CiLanePartitionShard.make({ index: 7, total: 16 }) },
-      { id: "lps-int-8", shard: CiLanePartitionShard.make({ index: 8, total: 16 }) },
-      { id: "lps-int-9", shard: CiLanePartitionShard.make({ index: 9, total: 16 }) },
-      { id: "lps-int-10", shard: CiLanePartitionShard.make({ index: 10, total: 16 }) },
-      { id: "lps-int-11", shard: CiLanePartitionShard.make({ index: 11, total: 16 }) },
-      { id: "lps-int-12", shard: CiLanePartitionShard.make({ index: 12, total: 16 }) },
-      { id: "lps-int-13", shard: CiLanePartitionShard.make({ index: 13, total: 16 }) },
-      { id: "lps-int-14", shard: CiLanePartitionShard.make({ index: 14, total: 16 }) },
-      { id: "lps-int-15", shard: CiLanePartitionShard.make({ index: 15, total: 16 }) },
-      { id: "lps-int-16", shard: CiLanePartitionShard.make({ index: 16, total: 16 }) },
+      { id: "lps-int-1", shard: CiLanePartitionShard.make({ index: 1, total: 19 }) },
+      { id: "lps-int-2", shard: CiLanePartitionShard.make({ index: 2, total: 19 }) },
+      { id: "lps-int-3", shard: CiLanePartitionShard.make({ index: 3, total: 19 }) },
+      { id: "lps-int-4", shard: CiLanePartitionShard.make({ index: 4, total: 19 }) },
+      { id: "lps-int-5", shard: CiLanePartitionShard.make({ index: 5, total: 19 }) },
+      { id: "lps-int-6", shard: CiLanePartitionShard.make({ index: 6, total: 19 }) },
+      { id: "lps-int-7", shard: CiLanePartitionShard.make({ index: 7, total: 19 }) },
+      { id: "lps-int-8", shard: CiLanePartitionShard.make({ index: 8, total: 19 }) },
+      { id: "lps-int-9", shard: CiLanePartitionShard.make({ index: 9, total: 19 }) },
+      { id: "lps-int-10", shard: CiLanePartitionShard.make({ index: 10, total: 19 }) },
+      { id: "lps-int-11", shard: CiLanePartitionShard.make({ index: 11, total: 19 }) },
+      { id: "lps-int-12", shard: CiLanePartitionShard.make({ index: 12, total: 19 }) },
+      { id: "lps-int-13", shard: CiLanePartitionShard.make({ index: 13, total: 19 }) },
+      { id: "lps-int-14", shard: CiLanePartitionShard.make({ index: 14, total: 19 }) },
+      { id: "lps-int-15", shard: CiLanePartitionShard.make({ index: 15, total: 19 }) },
+      { id: "lps-int-16", shard: CiLanePartitionShard.make({ index: 16, total: 19 }) },
+      { id: "lps-int-17", shard: CiLanePartitionShard.make({ index: 17, total: 19 }) },
+      { id: "lps-int-18", shard: CiLanePartitionShard.make({ index: 18, total: 19 }) },
+      { id: "lps-int-19", shard: CiLanePartitionShard.make({ index: 19, total: 19 }) },
       { id: "int-rest", shard: undefined },
     ]);
     for (const id of ["repo-cli-1", "repo-cli-2", "repo-cli-3", "repo-cli-4", "repo-cli-5", "repo-cli-6"] as const) {
@@ -615,6 +625,11 @@ describe("CI lane partitions", () => {
       );
       expect(A.map(shards, (partition) => partition.shard?.index)).toEqual(A.range(1, A.length(shards)));
       expect(A.map(shards, (partition) => partition.weightSeconds)).toEqual(A.map(plan.shardSeconds, Math.round));
+      // Worst measured file seconds per shard stay within the sharded file budget, so the slowest
+      // observed hosted runner still finishes the partition under the ten-minute job target.
+      for (const seconds of plan.shardSeconds) {
+        expect(seconds).toBeLessThanOrEqual(CI_SHARDED_PARTITION_FILE_BUDGET_SECONDS);
+      }
     })
   );
 
@@ -627,13 +642,13 @@ describe("CI lane partitions", () => {
         partition: "lps-int-3",
         packages: ["@beep/law-practice-server"],
         options,
-        shard: CiLanePartitionShard.make({ index: 3, total: 16 }),
+        shard: CiLanePartitionShard.make({ index: 3, total: 19 }),
       })
     );
     expect(sharded.command).toBe("bunx");
     expect([...sharded.args]).toContain("@beep/law-practice-server#test:integration:parallel");
     expect([...sharded.args]).toContain("--filter=@beep/law-practice-server");
-    expect([...sharded.args]).toContain("--shard=3/16");
+    expect([...sharded.args]).toContain("--shard=3/19");
     expect([...sharded.args]).toContain("--maxWorkers=1");
     expect([...sharded.args]).not.toContain("--force");
 
@@ -1110,49 +1125,131 @@ describe("CI lane partitions", () => {
       expect(yamlAt(workflow, ["jobs", "test-integration", "needs"])).toEqual([
         "admission",
         "change-profile",
+        "test-plan",
         "test-integration-shard",
       ]);
       const integrationGate = yamlAt(workflow, ["jobs", "test-integration", "steps", 0, "run"]);
       assertTrue(isWorkflowScript(integrationGate));
       expect(integrationGate).toContain('[[ "${{ needs.admission.result }}" == "success" ]]');
       expect(integrationGate).toContain('[[ "${{ needs.change-profile.result }}" == "success" ]]');
+      expect(integrationGate).toContain('[[ "${{ needs.test-plan.result }}" == "success" ]]');
       expect(integrationGate).toContain(
-        'case "${{ needs.change-profile.outputs.docs_only }}:${{ needs.test-integration-shard.result }}" in'
+        'case "${{ needs.change-profile.outputs.docs_only }}:${planned}:${{ needs.test-integration-shard.result }}" in'
       );
-      expect(integrationGate).toContain("true:skipped)");
-      expect(integrationGate).toContain("false:success)");
-      expect(integrationGate).toContain('*) echo "Unexpected classification or partition result"; exit 1');
+      expect(integrationGate).toContain("true:*:skipped)");
+      expect(integrationGate).toContain("false:some:success)");
+      // The catch-all partition is always planned, so an empty integration plan never passes as a skip.
+      expect(integrationGate).not.toContain("false:none:skipped)");
+      expect(integrationGate).toContain('*) echo "Unexpected classification, plan or partition result"; exit 1');
 
-      // Every partitioned lane lists exactly its table's partitions, in table order.
-      for (const [job, laneId] of [
-        ["lint-shard", "lint"],
-        ["test-unit-shard", "test-unit"],
-        ["test-integration-shard", "test-integration"],
+      // Lint lists exactly its table's partitions, in table order.
+      const lanePartitionIds = (laneId: PartitionedCiLane) =>
+        pipe(
+          CI_LANE_PARTITIONS,
+          A.filter((partition) => partition.lane === laneId),
+          A.map((partition) => partition.id)
+        );
+      expect(yamlAt(workflow, ["jobs", "lint-shard", "strategy", "matrix", "partition"])).toEqual(
+        lanePartitionIds("lint")
+      );
+
+      // The test lanes allocate what Test Plan publishes. Its full lists (what a push runs and the
+      // bound every pull-request plan is checked against) are exactly the table's partitions, in
+      // table order, and each partition is handed the plan to prove it.
+      for (const { job, laneId, all, output, aggregate } of [
+        {
+          job: "test-unit-shard",
+          laneId: "test-unit",
+          all: "ALL_TEST_UNIT_PARTITIONS",
+          output: "test_unit",
+          aggregate: "test-unit",
+        },
+        {
+          job: "test-integration-shard",
+          laneId: "test-integration",
+          all: "ALL_TEST_INTEGRATION_PARTITIONS",
+          output: "test_integration",
+          aggregate: "test-integration",
+        },
       ] as const) {
-        expect(yamlAt(workflow, ["jobs", job, "strategy", "matrix", "partition"])).toEqual(
-          pipe(
-            CI_LANE_PARTITIONS,
-            A.filter((partition) => partition.lane === laneId),
-            A.map((partition) => partition.id)
-          )
+        const fullPlan = yamlAt(workflow, ["jobs", "test-plan", "env", all]);
+        assertTrue(isWorkflowScript(fullPlan));
+        // The list is JSON, which the workflow YAML reader parses as a flow sequence.
+        expect(parseWorkflowYaml(fullPlan)).toEqual(lanePartitionIds(laneId));
+        expect(yamlAt(workflow, ["jobs", job, "strategy", "matrix", "partition"])).toBe(
+          `\${{ fromJSON(needs.test-plan.outputs.${output}) }}`
+        );
+        expect(yamlAt(workflow, ["jobs", job, "needs"])).toEqual(["change-profile", "test-plan"]);
+        expect(yamlAt(workflow, ["jobs", job, "if"])).toBe(
+          `needs.change-profile.outputs.docs_only != 'true' && needs.test-plan.outputs.${output} != '[]'`
+        );
+        expect(yamlAt(workflow, ["jobs", "test-plan", "outputs", output])).toBe(`\${{ steps.plan.outputs.${output} }}`);
+        expect(workflowText).toContain(
+          `ci lane ${laneId} --partition "\${{ matrix.partition }}" --planned-partitions "$PLANNED_PARTITIONS"`
+        );
+        expect(yamlAt(workflow, ["jobs", aggregate, "steps", 0, "env", "PLANNED_PARTITIONS"])).toBe(
+          `\${{ needs.test-plan.outputs.${output} }}`
         );
       }
+      // The plan waits for nothing, classifies the diff itself and plans with the partitions' own shape.
+      expect(yamlAt(workflow, ["jobs", "test-plan", "needs"])).toBeUndefined();
+      expect(yamlAt(workflow, ["jobs", "test-plan", "if"])).toBeUndefined();
+      expect(workflowText).toContain(
+        'bun run beep ci lane test-unit --plan-partitions --affected --base "$BEEP_COVERAGE_BASE_SHA"'
+      );
+      expect(workflowText).toContain(
+        'bun run beep ci lane test-integration --plan-partitions --affected --base "origin/${GITHUB_BASE_REF:-main}"'
+      );
 
-      for (const { job, shard } of [
-        { job: "lint", shard: "lint-shard" },
-        { job: "test-unit", shard: "test-unit-shard" },
-      ]) {
-        const gate = yamlAt(workflow, ["jobs", job, "steps", 0, "run"]);
-        assertTrue(isWorkflowScript(gate));
-        expect(yamlAt(workflow, ["jobs", job, "needs"])).toEqual(["change-profile", shard]);
-        expect(gate).toContain('[[ "${{ needs.change-profile.result }}" == "success" ]]');
-        expect(gate).toContain(
-          `case "\${{ needs.change-profile.outputs.docs_only }}:\${{ needs.${shard}.result }}" in`
-        );
-        expect(gate).toContain("true:skipped)");
-        expect(gate).toContain("false:success)");
-        expect(gate).toContain('*) echo "Unexpected classification or shard result"; exit 1');
-      }
+      const lintGate = yamlAt(workflow, ["jobs", "lint", "steps", 0, "run"]);
+      assertTrue(isWorkflowScript(lintGate));
+      expect(yamlAt(workflow, ["jobs", "lint", "needs"])).toEqual(["change-profile", "lint-shard"]);
+      expect(lintGate).toContain('[[ "${{ needs.change-profile.result }}" == "success" ]]');
+      expect(lintGate).toContain(
+        'case "${{ needs.change-profile.outputs.docs_only }}:${{ needs.lint-shard.result }}" in'
+      );
+      expect(lintGate).toContain("true:skipped)");
+      expect(lintGate).toContain("false:success)");
+      expect(lintGate).toContain('*) echo "Unexpected classification or shard result"; exit 1');
+
+      const unitGate = yamlAt(workflow, ["jobs", "test-unit", "steps", 0, "run"]);
+      assertTrue(isWorkflowScript(unitGate));
+      expect(yamlAt(workflow, ["jobs", "test-unit", "needs"])).toEqual([
+        "change-profile",
+        "test-plan",
+        "test-unit-shard",
+      ]);
+      expect(unitGate).toContain('[[ "${{ needs.change-profile.result }}" == "success" ]]');
+      expect(unitGate).toContain('[[ "${{ needs.test-plan.result }}" == "success" ]]');
+      expect(unitGate).toContain(
+        'case "${{ needs.change-profile.outputs.docs_only }}:${planned}:${{ needs.test-unit-shard.result }}" in'
+      );
+      expect(unitGate).toContain("true:*:skipped)");
+      expect(unitGate).toContain("false:none:skipped)");
+      expect(unitGate).toContain("false:some:success)");
+      expect(unitGate).toContain('*) echo "Unexpected classification, plan or shard result"; exit 1');
+
+      // Property Laws keeps one context over two slices whose Turbo filters are complements, so
+      // every package runs in exactly one of them.
+      expect(yamlAt(workflow, ["jobs", "property-laws", "name"])).toBe("Property Laws");
+      expect(yamlAt(workflow, ["jobs", "property-laws", "if"])).toBe("${{ !cancelled() }}");
+      expect(yamlAt(workflow, ["jobs", "property-laws", "needs"])).toEqual(["change-profile", "property-laws-shard"]);
+      expect(yamlAt(workflow, ["jobs", "property-laws-shard", "strategy", "fail-fast"])).toBe(false);
+      expect(yamlAt(workflow, ["jobs", "property-laws-shard", "strategy", "matrix", "partition"])).toEqual([
+        "repo-cli",
+        "rest",
+      ]);
+      expect(workflowText).toContain('repo-cli) shape_args+=(--filter "@beep/repo-cli") ;;');
+      expect(workflowText).toContain('rest) shape_args+=(--filter "!@beep/repo-cli") ;;');
+      const propertyGate = yamlAt(workflow, ["jobs", "property-laws", "steps", 0, "run"]);
+      assertTrue(isWorkflowScript(propertyGate));
+      expect(propertyGate).toContain('[[ "${{ needs.change-profile.result }}" == "success" ]]');
+      expect(propertyGate).toContain(
+        'case "${{ needs.change-profile.outputs.docs_only }}:${{ needs.property-laws-shard.result }}" in'
+      );
+      expect(propertyGate).toContain("true:skipped)");
+      expect(propertyGate).toContain("false:success)");
+      expect(propertyGate).toContain('*) echo "Unexpected classification or slice result"; exit 1');
     })
   );
 });
@@ -1315,6 +1412,141 @@ describe("partitioned CI lane execution", () => {
           })
         )
       )
+    );
+  });
+
+  it("plans exactly the partitions that carry a selected task", () => {
+    const idsOf = (laneId: PartitionedCiLane, shardedOnly: boolean) =>
+      pipe(
+        CI_LANE_PARTITIONS,
+        A.filter((partition) => partition.lane === laneId && (!shardedOnly || partition.shard !== undefined)),
+        A.map((partition) => partition.id)
+      );
+    const unitPackage = firstOf(partitionPackages("unit-a"));
+    const unitPackages = lanePackages("test-unit");
+
+    expect(plannedCiLanePartitions("test-unit", unitPackages, [])).toEqual([]);
+    expect(plannedCiLanePartitions("test-unit", unitPackages, [unitPackage])).toEqual(["unit-a"]);
+    // A sharded package needs every one of its slices.
+    expect(plannedCiLanePartitions("test-unit", unitPackages, ["@beep/repo-cli"])).toEqual(
+      A.filter(idsOf("test-unit", true), Str.startsWith("repo-cli-"))
+    );
+    expect(plannedCiLanePartitions("test-unit", unitPackages, unitPackages)).toEqual(idsOf("test-unit", false));
+    expect(pipe("test-unit", plannedCiLanePartitions(unitPackages, [unitPackage]))).toEqual(["unit-a"]);
+
+    // The integration catch-all runs Turbo's own affected scope, so it is planned even for an empty selection.
+    expect(plannedCiLanePartitions("test-integration", ["@beep/law-practice-server"], [])).toEqual(["int-rest"]);
+    expect(
+      plannedCiLanePartitions("test-integration", ["@beep/law-practice-server"], ["@beep/law-practice-server"])
+    ).toEqual(idsOf("test-integration", false));
+
+    // A package the table does not name is planned into its default bin, the bin its partition proves.
+    const unlisted = "@beep/unlisted-plan-fixture";
+    const defaultBin = firstOf(
+      ciLaneDefaultPlacements(
+        A.filter(CI_LANE_PARTITIONS, (partition) => partition.lane === "test-unit"),
+        [unlisted]
+      )
+    ).partition;
+    expect(plannedCiLanePartitions("test-unit", A.append(unitPackages, unlisted), [unlisted])).toEqual([defaultBin]);
+  });
+
+  it.layer(PartitionLaneLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("plans a lane from one selection dry run and executes nothing", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const { commands, planned } = yield* withPartitionShim(
+          { dryRunOutput: turboDryRunOutput("test:integration:parallel", ["@beep/law-practice-server"]) },
+          ({ commandLogPath }) =>
+            Effect.gen(function* () {
+              const planned = yield* planCiLanePartitions(
+                "test-integration",
+                CiLaneRunOptions.make({ ...baseOptions, affected: true })
+              );
+              const commandLog = yield* fs.readFileString(commandLogPath);
+              return { commands: pipe(commandLog, Str.split("\n"), A.filter(Str.isNonEmpty)), planned };
+            })
+        );
+        expect(planned).toEqual(
+          pipe(
+            CI_LANE_PARTITIONS,
+            A.filter((partition) => partition.lane === "test-integration"),
+            A.map((partition) => partition.id)
+          )
+        );
+        expect(commands).toHaveLength(1);
+        expect(firstOf(commands)).toContain("turbo run test:integration:parallel");
+        expect(firstOf(commands)).toContain("--affected --filter=!./apps/labs/** --only --dry-run=json");
+        const planLogLines = yield* TestConsole.logLines;
+        const output = A.join(A.filter(planLogLines, P.isString), "\n");
+        expect(output).toContain(`test-integration plan: ${A.length(planned)} partition(s) for 1 selected task(s)`);
+      })
+    );
+
+    it.effect("refuses to plan an unpartitioned lane or a single partition", () =>
+      Effect.gen(function* () {
+        const unpartitioned = yield* planCiLanePartitions("property", baseOptions).pipe(Effect.flip);
+        expect(unpartitioned._tag).toBe("CiLanePartitionError");
+        expect(unpartitioned.message).toContain("Lane property has no partitions to plan");
+
+        const single = yield* planCiLanePartitions(
+          "lint",
+          CiLaneRunOptions.make({ ...baseOptions, partition: "lint-a" })
+        ).pipe(Effect.flip);
+        expect(single._tag).toBe("CiLanePartitionError");
+        expect(single.message).toContain("cannot be combined with --partition or --filter");
+      })
+    );
+  });
+
+  it.layer(PartitionLaneLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("fails a partition whose plan omits a partition with selected tasks", () =>
+      Effect.gen(function* () {
+        const selectedPackage = firstOf(partitionPackages("unit-b"));
+        const dryRunOutput = turboDryRunOutput("test", [selectedPackage]);
+
+        // unit-a was allocated and has nothing to run; unit-b has the selected task and no job.
+        const omitted = yield* withPartitionShim({ dryRunOutput }, ({ commandLogPath }) =>
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const error = yield* runCiLane(
+              "test-unit",
+              CiLaneRunOptions.make({
+                ...baseOptions,
+                affected: true,
+                partition: "unit-a",
+                plannedPartitions: ["unit-a"],
+              })
+            ).pipe(Effect.flip);
+            const commandLog = yield* fs.readFileString(commandLogPath);
+            const commands = pipe(commandLog, Str.split("\n"), A.filter(Str.isNonEmpty));
+            expect(commands).toHaveLength(1);
+            return error;
+          })
+        );
+        expect(omitted._tag).toBe("CiLanePartitionError");
+        if (omitted._tag === "CiLanePartitionError") {
+          expect(omitted.reason).toBe("unplanned-partition");
+          expect(omitted.partition).toBe("unit-a");
+          expect(omitted.message).toContain("plan omits partition(s) with selected tasks: unit-b.");
+        }
+
+        yield* withPartitionShim({ dryRunOutput }, () =>
+          runCiLane(
+            "test-unit",
+            CiLaneRunOptions.make({
+              ...baseOptions,
+              affected: true,
+              partition: "unit-a",
+              plannedPartitions: ["unit-a", "unit-b"],
+            })
+          )
+        );
+        const planLogLines = yield* TestConsole.logLines;
+        const output = A.join(A.filter(planLogLines, P.isString), "\n");
+        expect(output).toContain("test-unit plan proved: every partition with selected tasks was allocated.");
+        expect(output).toContain("test-unit unit-a: partition has no selected tasks (skipped)");
+      })
     );
   });
 
@@ -2073,6 +2305,62 @@ for (const selected of [false, true]) {
     );
   });
 }
+
+it.layer(Layer.mergeAll(PartitionLaneLayer, NodeStdio.layer, NodeTerminal.layer), { timeout: "10 seconds" })(
+  "partition plan command",
+  (it) => {
+    it.effect("publishes the planned partitions as one JSON step output and runs nothing", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const output = yield* fs.makeTempFileScoped();
+        const commandLog = yield* withPartitionShim(
+          { dryRunOutput: turboDryRunOutput("lint", [firstOf(partitionPackages("lint-b"))]) },
+          ({ commandLogPath }) =>
+            Command.runWith(ciLaneCommand, { version: "0.0.0" })(["lint", "--plan-partitions", "--affected"]).pipe(
+              Effect.provideService(
+                ConfigProvider.ConfigProvider,
+                ConfigProvider.fromUnknown({ GITHUB_OUTPUT: output })
+              ),
+              Effect.andThen(fs.readFileString(commandLogPath))
+            )
+        );
+        const contents = yield* fs.readFileString(output);
+        expect(contents).toContain("partitions");
+        expect(contents).toContain('["lint-b"]');
+        const commands = pipe(commandLog, Str.split("\n"), A.filter(Str.isNonEmpty));
+        expect(commands).toHaveLength(1);
+        expect(firstOf(commands)).toContain("--dry-run=json");
+      })
+    );
+
+    it.effect("rejects a planned list that is not a JSON array of partition ids before running the lane", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const ranAnything = yield* withPartitionShim(
+          { dryRunOutput: turboDryRunOutput("lint", []) },
+          ({ commandLogPath }) =>
+            Effect.gen(function* () {
+              for (const planned of ["lint-a", '["not-a-partition"]', "{}"]) {
+                // `Effect.flip` fails the test unless the command itself failed.
+                yield* Command.runWith(ciLaneCommand, { version: "0.0.0" })([
+                  "lint",
+                  "--partition",
+                  "lint-a",
+                  "--planned-partitions",
+                  planned,
+                ]).pipe(Effect.flip);
+              }
+              return yield* fs.exists(commandLogPath);
+            })
+        );
+        expect(ranAnything).toBe(false);
+        const errorLines = yield* TestConsole.errorLines;
+        const errors = A.join(A.filter(errorLines, P.isString), "\n");
+        expect(errors).toContain("--planned-partitions must be a JSON array of partition ids.");
+      })
+    );
+  }
+);
 
 const foreignStorybook = storybookSpawner(
   storybookDryRun([

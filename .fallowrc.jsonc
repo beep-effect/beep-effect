@@ -293,6 +293,12 @@
   // recognize it, and deleting it breaks `next build` (proven 2026-06-11 in
   // goals/fallow-zero-dead-code).
   "ignoreExports": [
+    // Vitest loads the deep property sweep runner by path (`test.runner` in
+    // vitest.shared.ts), so no import credits its default export.
+    {
+      "file": "vitest.property-runner.ts",
+      "exports": ["default"]
+    },
     // @beep/canvas command bridge: documented request/schema values kept as
     // public bridge contracts for typed host integrations.
     {
