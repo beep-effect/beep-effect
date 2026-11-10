@@ -97,7 +97,11 @@ one P1 `pr-comment` row linking the review. Its excerpt names the body's counts,
 how many findings no thread carries, and the first such finding's path and line,
 for example
 `coderabbit: 0 actionable, 1 nitpick(s), 0 outside diff (advisory); 1 not on a review thread; first: src/a.ts:57`.
-A body whose every finding already has a thread arms nothing. The row is the
+A CodeRabbit body whose every finding already has a thread arms nothing: a
+finding matches a thread on the same file when the finding's line range overlaps
+the thread's `startLine..line` (GitHub anchors a multi-line thread at its last
+line, CodeRabbit names a ranged finding by its first). A Greptile-format body
+lists no locations, so its new-finding counts arm a row without a thread check. The row is the
 same kind as a person's comment row: it wakes `yeet job wait` and the inbox hook
 injects it, so the owner looks, but no merge verdict reads the inbox — merge
 readiness, `yeet merge-gate` and `yeet ready` read GitHub state alone — so the

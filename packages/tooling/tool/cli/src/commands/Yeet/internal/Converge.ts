@@ -438,9 +438,11 @@ const botReviewBodyExcerpt = (
  * was submitted after the window start, and it raises at least one advisory
  * no review thread already carries (`yeetReviewBodyAdvisoryCount`), which
  * includes a CodeRabbit body whose findings Yeet could not parse. A finding
- * that opened a thread already has a `review-thread` row, so a body whose
- * every finding sits on a thread writes nothing, and so does a rate-limit
- * notice or a walkthrough with no findings. A bot's conversation comment never
+ * that opened a thread already has a `review-thread` row, so a CodeRabbit body
+ * whose every finding sits on a thread writes nothing, and so does a
+ * rate-limit notice or a walkthrough with no findings. A Greptile-format body
+ * lists no locations, so its new-finding counts arm a row with no thread
+ * check. A bot's conversation comment never
  * qualifies.
  *
  * The excerpt names the body's counts, how many findings no thread carries
@@ -614,7 +616,9 @@ const readReviewBodyThreadLocations = Effect.fn("Yeet.readReviewBodyThreadLocati
   const read = yield* reviewThreads
     .list(prNumber)
     .pipe(Effect.mapError(yeetGithubFailure(`review thread read for PR #${prNumber}`)));
-  return A.map(read.threads, (thread) => YeetReviewBodyThreadLocation.make({ path: thread.path, line: thread.line }));
+  return A.map(read.threads, (thread) =>
+    YeetReviewBodyThreadLocation.make({ path: thread.path, line: thread.line, startLine: thread.startLine })
+  );
 });
 
 /**

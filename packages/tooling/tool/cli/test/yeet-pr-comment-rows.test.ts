@@ -154,14 +154,15 @@ const threadComment = (path: string, line: number) => ({
 });
 
 // A resolved thread still carries its finding: the owner already answered it.
-const thread = (path: string, line: number) => ({
+// A multi-line thread is anchored at its last line and names its first.
+const thread = (path: string, line: number, startLine: number | null = null) => ({
   id: `PRRT_${path}_${line}`,
   isResolved: true,
   isOutdated: false,
   isCollapsed: true,
   path,
   line,
-  startLine: null,
+  startLine,
   diffSide: "RIGHT",
   resolvedBy: { login: ACTING },
   comments: { pageInfo: { hasNextPage: false, endCursor: null }, nodes: [threadComment(path, line)] },
@@ -677,6 +678,41 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("bot review-body finding rows
         yield* Ref.set(payloads, { ...noPayloads, reviews: [review(63, CODERABBIT, AFTER_SUBMIT, body)] });
         const appended = yield* pollYeetPrCommentRows(context, windowFor(), POLLED_AT);
         expect(A.map(appended, (row) => row.capsule.commentId)).toStrictEqual([63]);
+      })
+    )
+  );
+
+  it.effect("arms no row for a ranged inline finding whose multi-line thread spans it", () =>
+    withCheckout((root, payloads) =>
+      Effect.gen(function* () {
+        const context = contextFor(root);
+        const body = A.join(
+          [
+            "**Actionable comments posted: 1**",
+            "Inline comments:",
+            "Review comments at @docs/runbook.md:",
+            "- Around line 73-74: Update the partition count.",
+          ],
+          "\n"
+        );
+        yield* Ref.set(payloads, {
+          ...noPayloads,
+          reviews: [review(64, CODERABBIT, AFTER_SUBMIT, body)],
+          threads: [thread("docs/runbook.md", 74, 73)],
+        });
+
+        const appended = yield* pollYeetPrCommentRows(context, windowFor(), POLLED_AT);
+        expect(appended).toStrictEqual([]);
+        // A thread that does not reach the finding's range leaves it unthreaded.
+        assertSome(
+          O.map(
+            yeetPrBotReviewBodyCapsule(reviewBody(65, CODERABBIT, body), windowFor(), [
+              YeetReviewBodyThreadLocation.make({ path: "docs/runbook.md", line: O.some(90), startLine: O.some(80) }),
+            ]),
+            (value) => value.excerpt
+          ),
+          "coderabbit: 1 actionable, 0 nitpick(s), 0 outside diff (advisory); 1 not on a review thread; first: docs/runbook.md:73"
+        );
       })
     )
   );

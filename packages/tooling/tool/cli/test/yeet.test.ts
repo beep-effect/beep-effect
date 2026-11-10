@@ -2260,6 +2260,45 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
       // 1 unlinked CodeRabbit item + 3 nitpicks, plus 2 new Greptile findings.
       expect(advisories).toEqual({ count: 6, sources: ["coderabbitai=4", "operator=2"] });
     });
+
+    it("matches a ranged CodeRabbit finding to the multi-line thread that spans it", () => {
+      // GitHub anchors a multi-line thread at its last line (74) and names the
+      // first as startLine (73); CodeRabbit names the finding by its first line.
+      const thread = (id: string, startLine: number | null, line: number): GhReviewThread =>
+        GhReviewThread.make({
+          comments: GhReviewThreadCommentConnection.make({
+            nodes: [],
+            pageInfo: { endCursor: null, hasNextPage: false },
+          }),
+          id,
+          isOutdated: false,
+          isResolved: true,
+          line,
+          path: "docs/runbook.md",
+          startLine,
+        });
+      const body =
+        "**Actionable comments posted: 1**\n\nInline comments:\nReview comments at @docs/runbook.md:\n- Around line 73-74: fix the count\n";
+      const reviews = [
+        GhReview.make({
+          author: GhActor.make({ login: "coderabbitai" }),
+          body,
+          comments: GhInlineReviewCommentConnection.make({
+            nodes: [],
+            pageInfo: { endCursor: null, hasNextPage: false },
+          }),
+          id: "PRR_ranged",
+          state: "COMMENTED",
+          submittedAt: "2026-09-22T00:00:00Z",
+        }),
+      ];
+
+      expect(closeoutReviewAdvisories(reviews, [thread("PRRT_ranged", 73, 74)])).toEqual({ count: 0, sources: [] });
+      expect(closeoutReviewAdvisories(reviews, [thread("PRRT_elsewhere", 80, 90)])).toEqual({
+        count: 1,
+        sources: ["coderabbitai=1"],
+      });
+    });
   });
 
   describe("yeet quality issue index", () => {

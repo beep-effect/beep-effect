@@ -163,7 +163,9 @@ export type YeetReviewBodyFindingsEvidence = typeof YeetReviewBodyFindingsEviden
  * Parsed from the fix-prompt blocks, where each finding is introduced by the
  * path it lives in and then by the line it starts at. The line is optional
  * because a path can be named without one, and a location with no line still
- * counts as an advisory the operator has not seen. `section` is the
+ * counts as an advisory the operator has not seen. `endLine` is the last line
+ * of a ranged finding (`- Around line 73-74:`), when the body names one.
+ * `section` is the
  * fix-prompt heading the finding was listed under, when the body names one.
  *
  * **Example** (Name a located finding)
@@ -183,6 +185,7 @@ export class YeetReviewBodyItem extends S.Opaque<YeetReviewBodyItem, { readonly 
   S.Struct({
     path: S.String,
     line: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    endLine: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     section: YeetReviewBodyItemSection.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("YeetReviewBodyItem", {
@@ -394,6 +397,12 @@ export class YeetReviewBodySignalInput extends S.Opaque<YeetReviewBodySignalInpu
 /**
  * Where a review thread sits, for matching a body's findings against it.
  *
+ * **Details**
+ *
+ * `line` is the line GitHub anchors the thread at, the last line of a
+ * multi-line thread; `startLine` is its first line, when the thread spans
+ * several. A finding matches when its own range overlaps `startLine..line`.
+ *
  * **Example** (Name a thread location)
  *
  * ```ts
@@ -414,9 +423,10 @@ export class YeetReviewBodyThreadLocation extends S.Opaque<
   S.Struct({
     path: S.String,
     line: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    startLine: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("YeetReviewBodyThreadLocation", {
-      description: "The path and line of an existing review thread.",
+      description: "The path, line and first line of an existing review thread.",
     })
   )
 ) {}
@@ -470,14 +480,14 @@ const nitpickPattern = /Nitpick comments(?:\s*\((?<count>\d+)\)|:[ \t]*(?<colonC
 const outsideDiffPattern = /Outside diff range comments\s*\((?<count>\d+)\)/giu;
 const minorPattern = /Minor comments:[ \t]*(?<colonCount>\d+)/giu;
 const itemPathPattern = /^In\s+`@?(?<path>[^`]+)`\s*:?$/u;
-const itemLinePattern = /^-\s*(?:Around\s+lines?|Lines?)\s+(?<line>\d+)/iu;
+const itemLinePattern = /^-\s*(?:Around\s+lines?|Lines?)\s+(?<line>\d+)(?:\s*-\s*(?<endLine>\d+))?/iu;
 // The current format's fix-prompt lead-ins. They are hard-wrapped at about 80
 // columns wherever the path runs long, so a lead-in is joined with the lines
 // after it, up to the colon that ends the location, before it is matched.
 const reviewCommentLeadPattern = /^Review comments? at\b/u;
 const reviewCommentsPathPattern = /^Review comments at @(?<path>\S+):$/u;
 const reviewCommentLocatedPattern =
-  /^Review comment at @(?<path>\S+) (?:at line|around lines) (?<line>\d+)(?: - \d+)?:$/u;
+  /^Review comment at @(?<path>\S+) (?:at line|around lines) (?<line>\d+)(?: - (?<endLine>\d+))?:$/u;
 const sectionHeadingPattern = /^(?<section>Inline|Nitpick|Outside diff|Minor) comments:$/u;
 const anySectionHeadingPattern = /^[A-Z][A-Za-z -]* comments:$/u;
 // The per-finding prompt CodeRabbit attaches to every finding it lists, and
@@ -617,6 +627,10 @@ type ItemLineReading = (scan: ItemScan, line: string) => O.Option<ItemScan>;
 const capture = (pattern: RegExp, line: string, group: string): O.Option<string> =>
   O.fromUndefinedOr(pattern.exec(line)?.groups?.[group]);
 
+// The end of a ranged location (`73-74`), when the line names one.
+const capturedLine = (pattern: RegExp, line: string, group: string): O.Option<number> =>
+  O.map(capture(pattern, line, group), parseCount);
+
 const readSectionHeading: ItemLineReading = (scan, line) =>
   O.map(capture(sectionHeadingPattern, line, "section"), (heading) => ({
     ...scan,
@@ -644,7 +658,12 @@ const readLocatedComment: ItemLineReading = (scan, line) =>
       openPathLocated: false,
       items: A.append(
         closeOpenPath(scan),
-        YeetReviewBodyItem.make({ path, line: O.some(parseCount(located)), section: scan.section })
+        YeetReviewBodyItem.make({
+          path,
+          line: O.some(parseCount(located)),
+          endLine: capturedLine(reviewCommentLocatedPattern, line, "endLine"),
+          section: scan.section,
+        })
       ),
     })
   );
@@ -655,7 +674,12 @@ const readItemLine: ItemLineReading = (scan, line) =>
     openPathLocated: true,
     items: A.append(
       scan.items,
-      YeetReviewBodyItem.make({ path: openPath, line: O.some(parseCount(located)), section: scan.section })
+      YeetReviewBodyItem.make({
+        path: openPath,
+        line: O.some(parseCount(located)),
+        endLine: capturedLine(itemLinePattern, line, "endLine"),
+        section: scan.section,
+      })
     ),
   }));
 
@@ -870,6 +894,11 @@ export const parseYeetReviewBodySignal = (input: YeetReviewBodySignalInput): Yee
     : ReviewBodyPlain.make({ signal: "plain" });
 };
 
+// A finding and a thread on the same file match when their line ranges
+// overlap: GitHub anchors a multi-line thread at its last line and names the
+// first as `startLine`, while CodeRabbit names a ranged finding by its first
+// line, so comparing single lines would miss a ranged finding's own thread.
+// Either side with no line matches on the path alone.
 const itemHasThread = (item: YeetReviewBodyItem, threads: ReadonlyArray<YeetReviewBodyThreadLocation>): boolean =>
   A.some(
     threads,
@@ -879,7 +908,9 @@ const itemHasThread = (item: YeetReviewBodyItem, threads: ReadonlyArray<YeetRevi
         O.all([item.line, thread.line]),
         O.match({
           onNone: () => true,
-          onSome: ([itemLine, threadLine]) => N.Equivalence(itemLine, threadLine),
+          onSome: ([itemStart, threadEnd]) =>
+            itemStart <= threadEnd &&
+            O.getOrElse(item.endLine, () => itemStart) >= O.getOrElse(thread.startLine, () => threadEnd),
         })
       )
   );

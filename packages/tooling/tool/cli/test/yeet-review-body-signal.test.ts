@@ -423,6 +423,29 @@ describe("review body advisory counting", () => {
     expect(counted).toBe(0);
   });
 
+  it("matches a ranged finding to any thread whose line range overlaps it", () => {
+    const parsed = signal(
+      "coderabbitai[bot]",
+      "**Actionable comments posted: 1**\nInline comments:\nReview comments at @src/a.ts:\n- Around line 73-74: fix it"
+    );
+    const spanning = (startLine: number | undefined, line: number) =>
+      YeetReviewBodyThreadLocation.make({
+        path: "src/a.ts",
+        line: O.some(line),
+        startLine: startLine === undefined ? O.none() : O.some(startLine),
+      });
+
+    expect(A.map(parsed.signal === "coderabbit" ? parsed.items : [], (item) => O.getOrNull(item.endLine))).toEqual([
+      74,
+    ]);
+    expect(
+      A.map(
+        [spanning(73, 74), spanning(undefined, 74), spanning(70, 73), spanning(75, 80), spanning(undefined, 72)],
+        (thread) => yeetReviewBodyAdvisoryCount(parsed, [thread])
+      )
+    ).toEqual([0, 0, 0, 1, 1]);
+  });
+
   it("keeps a finding whose thread sits on a different line of the same file", () => {
     const parsed = signal("coderabbitai[bot]", CODERABBIT_BODY);
 
