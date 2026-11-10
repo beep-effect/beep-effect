@@ -15,6 +15,9 @@
   },
   "references": [
     {
+      "path": "../../../drivers/sqlite/tsconfig.json"
+    },
+    {
       "path": "../../../foundation/modeling/epistemics/tsconfig.json"
     },
     {
