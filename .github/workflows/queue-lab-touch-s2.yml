@@ -1,0 +1,9 @@
+name: Queue Lab Touch s2
+on:
+  workflow_dispatch:
+permissions: {}
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo s2-1
