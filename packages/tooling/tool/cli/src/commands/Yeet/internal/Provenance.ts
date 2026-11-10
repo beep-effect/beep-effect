@@ -31,6 +31,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { adaptGitKitError } from "../../../internal/repo-run/index.ts";
 import { yeetGitOutputErrorAdapter } from "./GitErrorAdapter.ts";
+import { mergePrProvenancePackets, PrProvenancePacket, PUBLIC_PACKET_LIMIT, packetPath } from "./PacketProvenance.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -582,6 +583,10 @@ export class PrSessionRecord extends PrProvenance.extend<PrSessionRecord>($I`PrS
     runId: S.String,
     role: PrProvenanceRole,
     recordedAt: S.DateTimeUtcFromString,
+    packets: S.Array(PrProvenancePacket).pipe(
+      S.withConstructorDefault(Effect.succeed(A.empty<PrProvenancePacket>())),
+      S.withDecodingDefaultKey(Effect.succeed(A.empty<PrProvenancePacket>()))
+    ),
   },
   $I.annote("PrSessionRecord", { description: "Durable local record linking a PR action to an agent session." })
 ) {}
@@ -699,6 +704,10 @@ export class PublicPrProvenance extends S.Opaque<PublicPrProvenance, { readonly 
     branch: PrProvenanceBranch,
     workspace: PrProvenanceLabel,
     agents: S.Array(PublicAgent).check(S.isMaxLength(4)),
+    packets: S.Array(PrProvenancePacket)
+      .check(S.isMinLength(1), S.isMaxLength(PUBLIC_PACKET_LIMIT))
+      .pipe(S.optionalKey),
+    otherPacketCount: S.Int.check(S.isGreaterThan(0)).pipe(S.optionalKey),
   }).pipe(
     $I.annoteSchema("PublicPrProvenance", { description: "Only provenance data permitted to enter a GitHub PR body." })
   )
@@ -796,7 +805,9 @@ export const distinctPrSessions = (records: ReadonlyArray<PrSessionRecord>): Rea
  *
  * Rows are sorted newest-first, deduplicated by session, and capped at four
  * public agent entries. Filesystem paths, session ids, run ids, and timestamps
- * cannot cross the output schema.
+ * cannot cross the output schema. Active packets are the union of the rows
+ * recorded at the newest row's head, so a packet the current head no longer
+ * links drops out.
  *
  * **Gotchas**
  *
@@ -880,12 +891,24 @@ export const toPublicPrProvenance: {
         })
       )
     );
+    // Packets describe one head: rows recorded at older heads would keep a
+    // reverted edit or a packet closed on the base listed for good.
+    const newest = A.headNonEmpty(A.sort(records, recordOrder));
+    const packets = pipe(
+      records,
+      A.filter((record) => record.headSha === newest.headSha),
+      A.flatMap((record) => record.packets),
+      mergePrProvenancePackets
+    );
+    const other = A.length(packets) - PUBLIC_PACKET_LIMIT;
     return PublicPrProvenance.make({
       schemaVersion: 2,
       pr,
       branch: records[0].branch,
       workspace: records[0].workspace,
       agents,
+      ...(A.isReadonlyArrayNonEmpty(packets) ? { packets: A.take(packets, PUBLIC_PACKET_LIMIT) } : {}),
+      ...(other > 0 ? { otherPacketCount: other } : {}),
     });
   }
 );
@@ -1002,12 +1025,19 @@ export const renderPrProvenance = (provenance: PublicPrProvenance): string => {
     }),
     A.join("\n")
   );
+  const packets = pipe(
+    provenance.packets ?? A.empty<PrProvenancePacket>(),
+    A.map((packet) => `<code>${escapeHtml(packetPath(packet))}</code> (${A.join(packet.sources, ", ")})`),
+    A.join(", ")
+  );
+  const otherPackets = provenance.otherPacketCount === undefined ? "" : ` and ${provenance.otherPacketCount} more`;
+  const packetLine = Str.isEmpty(packets) ? "" : `- Active packets: ${packets}${otherPackets}\n`;
   const resume = O.match(provenance.pr, {
     onNone: () => "",
     onSome: (pr) =>
       `\n\nResume the publishing agent from any beep-effect checkout on the publishing workstation:\n\n${renderResumeFence(pr)}`,
   });
-  return `---\n\n<!-- yeet-provenance:start -->\n## Provenance\n\n- Workspace: <code>${escapeHtml(provenance.workspace)}</code>\n- Branch: <code>${escapeHtml(provenance.branch)}</code>\n- Agents (newest first):\n${agents}${resume}\n\n<!-- yeet-provenance\n${encoded}\n-->\n<!-- yeet-provenance:end -->\n`;
+  return `---\n\n<!-- yeet-provenance:start -->\n## Provenance\n\n- Workspace: <code>${escapeHtml(provenance.workspace)}</code>\n- Branch: <code>${escapeHtml(provenance.branch)}</code>\n${packetLine}- Agents (newest first):\n${agents}${resume}\n\n<!-- yeet-provenance\n${encoded}\n-->\n<!-- yeet-provenance:end -->\n`;
 };
 
 /**

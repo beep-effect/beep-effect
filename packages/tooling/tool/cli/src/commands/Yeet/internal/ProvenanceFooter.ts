@@ -36,6 +36,7 @@ import { adaptGitKitError } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext, runIdForContext, writeTextFile } from "./ArtifactPaths.ts";
 import { yeetGitOutputErrorAdapter } from "./GitErrorAdapter.ts";
+import { detectActivePackets } from "./PacketProvenance.ts";
 import {
   makePrProvenanceServiceLive,
   PrRepository,
@@ -660,9 +661,11 @@ export const makeCurrentPrSessionRecord = Effect.fn("ProvenanceFooter.makeRecord
   const headSha = yield* git
     .revParse(context.repoRoot, "HEAD")
     .pipe(Effect.mapError(adaptGitKitError(GitCommand.revParse("HEAD"), yeetGitOutputErrorAdapter)));
+  const packets = yield* detectActivePackets(context.repoRoot, context.base, context.branch);
   const recordedAt = yield* DateTime.now;
   return PrSessionRecord.make({
     ...provenance,
+    packets,
     schemaVersion: 1,
     repository,
     prNumber,

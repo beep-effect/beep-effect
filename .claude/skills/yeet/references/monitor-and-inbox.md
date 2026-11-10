@@ -77,6 +77,30 @@ bun run beep yeet monitor --watch
 bun run beep yeet monitor --watch --until-event
 ```
 
+### Packet provenance in the footer
+
+Every recorded action (`publish` and `open` record `created`/`pushed`,
+`monitor` records `monitored`) also stores the active goal and exploration
+packets the branch is for, and the footer lists the union recorded at the
+newest head on an `Active packets:` line, so a PR made by a sub-agent or a
+Codex lane still names the packet it serves, and a packet the head no longer
+links drops out. Detection reads only the branch's own content (its
+first-parent non-merge commits, so a merge of the base credits nothing),
+strongest evidence first:
+
+- `branch`: a branch segment is the packet slug, or carries a multi-word slug
+  as a whole hyphenated run (`goals/agent-memory-store-p1`).
+- `commit`: a commit message on the branch names `goals/<slug>` or
+  `explorations/<slug>`. A `Packet: goals/<slug>` trailer is the explicit
+  binding for a lane whose branch and diff do not name its packet.
+- `diff`: the branch's own commits change files inside the packet directory
+  and the net diff still does.
+
+A packet counts only while its committed manifest reads `active` (goal
+`lifecycle`, exploration `status`) at the head or at the merge-base, so a PR
+that opens or closes a packet still names it. The footer names six packets
+and counts the rest; a footer with none is unchanged.
+
 ## Settle rule
 
 The monitor loops read the base branch ruleset once per head. They wait for every
