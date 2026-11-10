@@ -1,0 +1,15 @@
+---
+title: "TURB-01 slice 1: generated standards files get owner rows that a reader scan derives and a live drift check holds"
+date: 2026-11-10
+lane: "feat/turb-01-standards-coverage-owners"
+reversal: "Delete COVERAGE_GENERATED_STANDARDS_OWNER_ROWS and its spread from CoverageScope.ts (the files return to the full fallback), and delete CoverageScopeReaders.ts with its test; no generated file or seal changes."
+---
+
+Six generated standards paths fell through to the `no current workspace owner` fallback in `CoverageScope.ts` (rows at `:76-98`, fallback at `:772` on 5e09d90a6da): the instrumentation catalog directory, the JSDoc and schema-first inventories, the policy fingerprint, the cache-qualification baseline and `fallow.boundaries.generated.jsonc`. They now have rows in `COVERAGE_GENERATED_STANDARDS_OWNER_ROWS`, each `[readerPath, ownerPattern, packageName]`, spread into the repository fixture rows, so a change selects its owner as a fixture owner (no dependents seeded).
+
+The owners are derived, not asserted. `CoverageScopeReaders.ts` holds a reader scan: a workspace source reads a path when one of its string tokens (TypeScript parser via ts-morph, so comments never count; folded `+` chains of literals and template parts do) has the path's basename as one whole path segment. A read outside a package's `test/` tree also makes that package's coverage-bearing dependents owners. The live drift check in `test/coverage-scope-standards-owners.test.ts` scans every `packages/**` and `apps/**` source and fails when a row and the scan disagree in either direction; seeding a wrong owner turned it red. On this head the scan finds @beep/repo-cli alone for all six (repo-cli-kit and repo-configs mention three of them only in comments or a schema tag). Basename-segment matching over-approximates on purpose: a stale-looking extra owner costs a test run, a missed reader would cost a green it did not earn.
+
+Gates: planner fixtures select exactly @beep/repo-cli for each row and keep `standards/fallow.boundaries.provenance.jsonc` (unmapped) and prefix look-alikes on full; the seeded `path.join` fixture and the comment and longer-segment negatives pin the scan; the first-parent replay over 727 commits rebuilt from git (`ops/turb-01-replay.ts`, `research/turb-01/REPLAY.md`) shrinks 67 commits from full to owner-scoped with zero violations. `beep lint policy-fingerprint --check` reports the seal current with these changes (CoverageScope.ts is not a sealed input), so the reseal wrote nothing; the PR touches no `turbo.json`, `bun.lock`, root `package.json` or workflow file, so it is not a global input and re-records no cache-qualification baseline.
+
+Rejected: hand-asserted rows (they drift as readers move); scanning raw text with ripgrep (counts comments and misses `path.join` splits); deriving owners at plan time (the planner would parse the workspace on every run).
+Source: `packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts` at 5e09d90a6da; this PR's replay receipt `research/turb-01/replay-5e09d90a6da.json`.
