@@ -33,3 +33,25 @@ machine identifiers; this repository is public.
   deps-toolchain reader caught it.
 - **What would have prevented it:** a `failureKind` guard in `Economics.ts` before the fallback, and a
   fixture with a handler-error attempt whose first plan step never started.
+
+## 2026-11-09 — absolute home paths reached main through a review-only grep
+
+- **What was happening:** landing the phase 2 brief (#3017), which recorded the clone's absolute path.
+- **Evidence:** `git grep` for the operator's home prefix found 42 lines in 30 tracked files (this brief,
+  and goal evidence in `citation-extraction-engine` and `claim-check-performance`). The only check was an
+  orchestrator verify script that greps a diff for home prefixes; no hosted or cheap gate ran it, so every
+  lane that skipped that script merged the path. Thirteen of the files are digest-sealed archives that
+  can no longer be redacted without breaking their seals.
+  Widening the scan to the dash-encoded form agent scratchpads use (`/tmp/claude-1000/-home-<user>-...`)
+  found 136 more lines in 19 goal evidence files and one rewrite-rules file. A first seal census compared
+  only full sha256 and git blob hashes and missed that two of those files, the openclaw spike-4
+  `gen-A`/`gen-B` configs, are pinned by 16-hex sha256 prefixes in `logs/v2-setup.log` and the v3
+  adjudication; review caught it and both were restored to their sealed bytes. The census now searches
+  full digests, 8-hex prefixes of sha256, git blob, md5 and sha1, and base64 sha256 prefixes.
+- **What would have prevented it:** a tracked-text law that hosted CI runs on every diff. Heavy /
+  Lint Policy skips docs-only diffs and `yeet open` runs no local gate, so the cheap-gates lane alone would
+  not have blocked #3017. `bun run beep laws private-home-paths --check` (`lint:private-home-paths`) now
+  runs in the cheap gates and in hosted Repo Sanity, which runs for docs-only diffs; for a packet-prose
+  (`goals_only`) diff Repo Sanity skips its lane body and runs only this law. The law passes only
+  placeholder users, limits fleet accounts to the files that already name them, holds the sealed archives
+  to exact counts, and decodes NUL-bearing files instead of skipping them.

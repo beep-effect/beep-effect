@@ -95,7 +95,7 @@ standalone command's strict TypeScript/Effect check passed. Formatting,
 Markdown, manifest/packet and diff checks cover this local checkpoint.
 
 Supporting logs are under
-`/home/elpresidank/.cache/beep/citation-extraction-engine/`:
+`~/.cache/beep/citation-extraction-engine/`:
 `divergence-check.log`, `divergence-controls.log`,
 `divergence-parity-controls.log`, `divergence-package-verify.log`,
 `divergence-typecheck.log`, `divergence-markdown.log` and

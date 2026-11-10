@@ -1,5 +1,5 @@
 ### LANE N3-identity-mismatch (2026-07-26T04:39:28Z)
-### COMMAND: setsid -w env -i HOME=$HOME USER=elpresidank LOGNAME=elpresidank PATH=/usr/bin:/bin SPIKE_TARGET_USER=elpresidank SPIKE_EXPECTED_IDENTITY=/tmp/claude-1000/-home-elpresidank-YeeBois-projects-beep-effect2/24ddf3c1-674e-4ddb-acac-1343f8e844f6/scratchpad/spike-2/expected-identity-mutated.json SPIKE_STATE_DIR=/tmp/claude-1000/-home-elpresidank-YeeBois-projects-beep-effect2/24ddf3c1-674e-4ddb-acac-1343f8e844f6/scratchpad/spike-2/throwaway-state bash /tmp/claude-1000/-home-elpresidank-YeeBois-projects-beep-effect2/24ddf3c1-674e-4ddb-acac-1343f8e844f6/scratchpad/spike-2/applicator.sh
+### COMMAND: setsid -w env -i HOME=$HOME USER=elpresidank LOGNAME=elpresidank PATH=/usr/bin:/bin SPIKE_TARGET_USER=elpresidank SPIKE_EXPECTED_IDENTITY=/tmp/claude-1000/-home-<user>-YeeBois-projects-beep-effect2/24ddf3c1-674e-4ddb-acac-1343f8e844f6/scratchpad/spike-2/expected-identity-mutated.json SPIKE_STATE_DIR=/tmp/claude-1000/-home-<user>-YeeBois-projects-beep-effect2/24ddf3c1-674e-4ddb-acac-1343f8e844f6/scratchpad/spike-2/throwaway-state bash /tmp/claude-1000/-home-<user>-YeeBois-projects-beep-effect2/24ddf3c1-674e-4ddb-acac-1343f8e844f6/scratchpad/spike-2/applicator.sh
 
 
 === step 0: non-interactive context probe ===
@@ -42,7 +42,7 @@
     |   "runtime_dir": "/run/user/1000",
     |   "bus_address": "unix:path=/run/user/1000/bus"
     | }
-[04:39:28Z] expected identity tuple (/tmp/claude-1000/-home-elpresidank-YeeBois-projects-beep-effect2/24ddf3c1-674e-4ddb-acac-1343f8e844f6/scratchpad/spike-2/expected-identity-mutated.json):
+[04:39:28Z] expected identity tuple (/tmp/claude-1000/-home-<user>-YeeBois-projects-beep-effect2/24ddf3c1-674e-4ddb-acac-1343f8e844f6/scratchpad/spike-2/expected-identity-mutated.json):
     | {
     |   "bus_address": "unix:path=/run/user/1000/bus",
     |   "home": "$HOME",

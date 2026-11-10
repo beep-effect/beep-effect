@@ -219,10 +219,12 @@ jobs:
       # excludes start, then complete skip-satisfied with this receipt in their job summary.
       route_skips: ${{ needs.admission.outputs.route_skips }}
       route_receipt: ${{ needs.admission.outputs.route_receipt }}
+  # Repo Sanity starts for every diff: a packet-prose-only (goals_only) diff
+  # skips the lane body but still runs the private home path law, because the
+  # public repository must not record an absolute home path in any diff.
   verify:
     name: Repo Sanity
     needs: [change-profile]
-    if: needs.change-profile.outputs.goals_only != 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
@@ -253,6 +255,7 @@ jobs:
         run: |
           set -euo pipefail
           should_run=true
+          home_paths_only=false
           eval "$(beep ci change-profile)"
           # Docs-only diffs (Heavy admission's path rule) give these lanes
           # nothing to prove. Repo Sanity validates `.changeset/*.md`, which that
@@ -263,6 +266,10 @@ jobs:
           fi
           if [[ "$skip_profile" == "true" ]]; then
             should_run=false
+            # Packet prose still gets the private home path law.
+            if [[ "${{ env.BEEP_CI_LANE_ID }}" == "repo-sanity" ]]; then
+              home_paths_only=true
+            fi
           fi
           if [[ "${{ env.BEEP_CI_LANE_ID }}" == "codegen" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
             base_ref="origin/${GITHUB_BASE_REF:-main}"
@@ -286,14 +293,17 @@ jobs:
           fi
 
           echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
+          echo "home_paths_only=$home_paths_only" >> "$GITHUB_OUTPUT"
 
       - name: Setup monorepo CI
-        if: steps.lane-gate.outputs.should_run == 'true'
+        if: steps.lane-gate.outputs.should_run == 'true' || steps.lane-gate.outputs.home_paths_only == 'true'
         uses: ./.github/actions/setup-monorepo-ci
         with:
-          free-disk: "true"
+          # The law-only goals_only path reads tracked files: it frees no disk
+          # and exports no application secrets. The full lane keeps both.
+          free-disk: ${{ steps.lane-gate.outputs.home_paths_only == 'true' && 'false' || 'true' }}
           free-disk-min-gib: "64"
-          app-secrets: "true"
+          app-secrets: ${{ steps.lane-gate.outputs.home_paths_only == 'true' && 'false' || 'true' }}
           database-url: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
           database-url-unpooled: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
           email-resend-api-key: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
@@ -306,6 +316,10 @@ jobs:
       - name: Check workflow policy
         if: env.BEEP_CI_LANE_ID == 'repo-sanity' && steps.lane-gate.outputs.should_run == 'true'
         run: bun run beep ci workflow-lint
+
+      - name: Check private home paths
+        if: steps.lane-gate.outputs.home_paths_only == 'true'
+        run: bun run beep laws private-home-paths --check
 
       - name: Verify regenerate merge-driver bootstrap
         if: env.BEEP_CI_LANE_ID == 'codegen' && steps.lane-gate.outputs.should_run == 'true'

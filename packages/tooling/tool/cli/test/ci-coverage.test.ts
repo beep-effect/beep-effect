@@ -207,7 +207,7 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
       expect(mocks.run).toHaveBeenNthCalledWith(1, "ci:coverage:compound-prerequisites", expect.any(Array));
       expect(mocks.run).toHaveBeenNthCalledWith(2, "ci:test:@beep/repo-cli:0", [
         expect.objectContaining({
-          args: expect.arrayContaining(["vitest", "run", "--coverage.provider=v8", "--shard=1/2"]),
+          args: expect.arrayContaining(["vitest", "run", "--coverage.provider=v8", "--shard=1/2", "--maxWorkers=2"]),
           env: expect.objectContaining({ CUSTOM: "kept", VITEST_COVERAGE_RATCHET: undefined }),
         }),
       ]);

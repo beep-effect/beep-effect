@@ -31,7 +31,7 @@ describe("NativeAddon", () => {
   });
 
   it("takes the executable folder from Windows and POSIX paths", () => {
-    expect(executableDirectory("C:\\Users\\tom\\Ext\\practice-kg-mcp.exe")).toBe("C:\\Users\\tom\\Ext\\");
+    expect(executableDirectory("C:\\Users\\attorney\\Ext\\practice-kg-mcp.exe")).toBe("C:\\Users\\attorney\\Ext\\");
     expect(executableDirectory("/opt/ext/practice-kg-mcp")).toBe("/opt/ext/");
     expect(executableDirectory("practice-kg-mcp")).toBe(".");
   });

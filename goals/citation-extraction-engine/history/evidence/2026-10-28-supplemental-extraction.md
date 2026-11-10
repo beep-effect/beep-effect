@@ -83,7 +83,7 @@ command passed a separate strict TypeScript/Effect check. Formatting, Markdown,
 diff and commit checks cover this checkpoint.
 
 Supporting local logs are under
-`/home/elpresidank/.cache/beep/citation-extraction-engine/`:
+`~/.cache/beep/citation-extraction-engine/`:
 `supplemental-check.log`, `supplemental-controls.log`,
 `supplemental-parity-controls.log`, `supplemental-typecheck.log`,
 `supplemental-package-verify.log` and `supplemental-markdown.log`.

@@ -9,7 +9,7 @@
   "authoritativeStrict": 46,
   "allAlignedButStrictFailed": 55,
   "fullCensus": {
-    "path": "/home/elpresidank/.cache/beep/claim-check-performance/census-components-001/census.json",
+    "path": "~/.cache/beep/claim-check-performance/census-components-001/census.json",
     "sha256": "c73376fb4355e0c7a6ada7d928e57a8e775698354258d62da6fba2ab923d3291",
     "bytes": 2379949
   },

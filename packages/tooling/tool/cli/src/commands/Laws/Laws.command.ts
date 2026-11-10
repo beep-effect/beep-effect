@@ -32,6 +32,8 @@ import {
   NoNativeRuntimeRulesOptions,
   runNoNativeRuntimeRules,
 } from "./NoNativeRuntime.ts";
+import { PrivateHomePathsOptions } from "./PrivateHomePaths.model.ts";
+import { formatPrivateHomePathFinding, runPrivateHomePaths } from "./PrivateHomePaths.ts";
 import { RetiredEffectPathsOptions } from "./RetiredEffectPaths.model.ts";
 import { formatRetiredEffectPathFinding, runRetiredEffectPaths } from "./RetiredEffectPaths.ts";
 import { RetiredIriAuthoritiesOptions } from "./RetiredIriAuthorities.model.ts";
@@ -781,6 +783,45 @@ const lawsRetiredIriAuthoritiesCommand = Command.make(
 ).pipe(Command.withDescription("Check git-tracked files for retired IRI authorities and public-origin literals"));
 
 /**
+ * CLI command for the private home path law.
+ *
+ * **Example** (Reference the private-home-paths subcommand)
+ *
+ * ```ts
+ * console.log("lawsPrivateHomePathsCommand")
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+const lawsPrivateHomePathsCommand = Command.make(
+  "private-home-paths",
+  lawCheckFlags("Fail when any git-tracked text file records an absolute home path of a non-placeholder user"),
+  Effect.fn(function* ({ check, json }) {
+    const summary = yield* runPrivateHomePaths(
+      PrivateHomePathsOptions.make({ cwd: process.cwd(), strictCheck: check })
+    );
+
+    yield* reportLawSummary({
+      prefix: "effect-governance-private-home-paths",
+      check,
+      json,
+      summary,
+      counters: [
+        ["scanned_files", summary.scannedFiles],
+        ["skipped_binary_files", summary.skippedBinaryFiles],
+        ["exempt_files", summary.exemptFiles],
+      ],
+      findings: A.map(summary.findings, formatPrivateHomePathFinding),
+    });
+
+    if (summary.strictFailure) {
+      return yield* failWithReportedExit("effect-governance-private-home-paths: check failed.");
+    }
+  })
+).pipe(Command.withDescription("Check git-tracked text files for absolute home paths; record them relative to ~"));
+
+/**
  * CLI command for the schema tag idiom law.
  *
  * **Example** (Reference the schema-tag-idioms subcommand)
@@ -969,6 +1010,7 @@ export const lawsCommand = Command.make("laws", {}, () =>
     "- bun run beep laws entity-kit-freeze --write",
     "- bun run beep laws frozen-grant-set --check",
     "- bun run beep laws markdown-fences --check",
+    "- bun run beep laws private-home-paths --check",
     "- bun run beep laws retired-effect-paths --check",
     "- bun run beep laws retired-iri-authorities --check",
     "- bun run beep laws schema-tag-idioms --check",
@@ -986,6 +1028,7 @@ export const lawsCommand = Command.make("laws", {}, () =>
     lawsEntityKitFreezeCommand,
     lawsFrozenGrantSetCommand,
     lawsMarkdownFencesCommand,
+    lawsPrivateHomePathsCommand,
     lawsRetiredEffectPathsCommand,
     lawsRetiredIriAuthoritiesCommand,
     lawsSchemaTagIdiomsCommand,
