@@ -149,15 +149,15 @@ export type ObservedDefect = typeof ObservedDefect.Type;
 /**
  * A transport-safe schema for defects that preserves stacks when possible.
  *
- * **Example** (Decode Error as defect)
+ * **Example** (Encode an Error with its stack)
  *
  * ```typescript
  * import * as S from "effect/Schema"
  * import { ObservedDefectWithStack } from "@beep/observability/Observed"
  *
- * const decode = S.decodeUnknownSync(ObservedDefectWithStack)
- * const defect = decode(new Error("unexpected crash"))
- * console.log(defect)
+ * const encode = S.encodeUnknownSync(ObservedDefectWithStack)
+ * const encoded = encode(new Error("unexpected crash"))
+ * console.log(encoded)
  * ```
  *
  * @category models
