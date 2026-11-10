@@ -97,12 +97,16 @@ describe("PullRequest merge queue", () => {
         assert.deepStrictEqual(second.variables, { pullRequestId: "PR_3061", expectedHeadOid: "fff", jump: true });
 
         const building = yield* pulls.mergeQueueEntry(3061);
-        assert.isTrue(O.isSome(building));
-        const read = O.getOrThrow(building);
-        assert.strictEqual(read.state, "AWAITING_CHECKS");
-        assertSome(read.headOid, "01ad0c0");
-        assertSome(read.baseOid, "013e749");
-        assertSome(read.estimatedTimeToMerge, 42);
+        assertSome(
+          building,
+          MergeQueueEntry.make({
+            ...queued,
+            state: "AWAITING_CHECKS",
+            estimatedTimeToMerge: O.some(42),
+            headOid: O.some("01ad0c0"),
+            baseOid: O.some("013e749"),
+          })
+        );
         const third = yield* sent(2);
         assert.deepStrictEqual(third.variables, { owner: "acme", name: "widget", number: 3061 });
 
