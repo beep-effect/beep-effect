@@ -23,6 +23,10 @@
     "pullRequests": [
       {
         "number": 3073,
+        "role": "supporting"
+      },
+      {
+        "number": 3094,
         "role": "final"
       }
     ],
@@ -34,7 +38,7 @@
       },
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/docs_residue-closeout-3542e74b5bef/verdict.json",
+        "ref": ".beep/yeet/runs/docs_residue-closeout-refinal-bf743b3a425c/verdict.json",
         "gating": true
       }
     ]
@@ -195,9 +199,9 @@
       "status": "complete"
     }
   ],
-  "statusNote": "All fifteen historical source acceptances reconciled on 2026-11-10 at 6d47006fa1; all source issues closed, canon verified completed-retained via #2586. Current scan: 533 rows, 15 open, 518 exceptions; 59 reasons lack literal Owner/Exit. Fleet orchestrator owns one separate current-drift remediation lane, including the harness-ledger row already open at the canon merge. No current-zero claim. This docs lane adds no standards rows or coverage changes. Final PR publication/readiness and post-merge completion refresh remain; adopt completed-retained only in the subsequent packet-state PR. Proposed completed-retained via final PR #3073; completion refresh and packet-state adoption remain after merge.",
+  "statusNote": "All fifteen historical source acceptances reconciled on 2026-11-10 at 6d47006fa1; all source issues closed, canon verified completed-retained via #2586. Current scan: 533 rows, 15 open, 518 exceptions; 59 reasons lack literal Owner/Exit. Fleet orchestrator owns one separate current-drift remediation lane, including the harness-ledger row already open at the canon merge. No current-zero claim. This docs lane adds no standards rows or coverage changes. Final PR publication/readiness and post-merge completion refresh remain; adopt completed-retained only in the subsequent packet-state PR. #3073 landed the reconciliation but merged before its readiness was recorded; proposed completed-retained via goals-only re-final PR #3094, with completion refresh and packet-state adoption remaining after its merge.",
   "proposedCloseout": {
     "status": "completed-retained",
-    "finalPullRequest": 3073
+    "finalPullRequest": 3094
   }
 }
