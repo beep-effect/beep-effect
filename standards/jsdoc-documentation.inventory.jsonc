@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-10T04:58:24.323Z",
+  "generatedAt": "2026-11-10T05:36:08.641Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 15,
     "publicModules": 3886,
-    "publicExports": 27727,
+    "publicExports": 27735,
     "openModules": 114,
     "openExports": 88,
     "missingExportExamples": 0,
@@ -51042,8 +51042,8 @@
           "exportKind": "interface",
           "filePath": "src/Git.ts",
           "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 2573,
-          "anchor": "packages-drivers-git-src-git-ts-2573-gitshape",
+          "line": 2587,
+          "anchor": "packages-drivers-git-src-git-ts-2587-gitshape",
           "currentTags": [
             "@public",
             "@category",
@@ -51065,8 +51065,8 @@
           "exportKind": "type",
           "filePath": "src/Git.ts",
           "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 4562,
-          "anchor": "packages-drivers-git-src-git-ts-4562-gitstubs",
+          "line": 4580,
+          "anchor": "packages-drivers-git-src-git-ts-4580-gitstubs",
           "currentTags": [
             "@public",
             "@category",
@@ -51088,8 +51088,8 @@
           "exportKind": "class",
           "filePath": "src/Git.ts",
           "repoPath": "packages/drivers/git/src/Git.ts",
-          "line": 4663,
-          "anchor": "packages-drivers-git-src-git-ts-4663-git",
+          "line": 4681,
+          "anchor": "packages-drivers-git-src-git-ts-4681-git",
           "currentTags": [
             "@public",
             "@category",
@@ -51180,8 +51180,8 @@
           "exportKind": "const",
           "filePath": "src/GitCommand.ts",
           "repoPath": "packages/drivers/git/src/GitCommand.ts",
-          "line": 673,
-          "anchor": "packages-drivers-git-src-gitcommand-ts-673-gitconfigscope",
+          "line": 684,
+          "anchor": "packages-drivers-git-src-gitcommand-ts-684-gitconfigscope",
           "currentTags": [
             "@public",
             "@category",
@@ -51203,8 +51203,8 @@
           "exportKind": "type",
           "filePath": "src/GitCommand.ts",
           "repoPath": "packages/drivers/git/src/GitCommand.ts",
-          "line": 683,
-          "anchor": "packages-drivers-git-src-gitcommand-ts-683-gitconfigscope",
+          "line": 694,
+          "anchor": "packages-drivers-git-src-gitcommand-ts-694-gitconfigscope",
           "currentTags": [
             "@see",
             "@category",
@@ -51226,8 +51226,8 @@
           "exportKind": "const",
           "filePath": "src/GitCommand.ts",
           "repoPath": "packages/drivers/git/src/GitCommand.ts",
-          "line": 716,
-          "anchor": "packages-drivers-git-src-gitcommand-ts-716-statusuntrackedfiles",
+          "line": 727,
+          "anchor": "packages-drivers-git-src-gitcommand-ts-727-statusuntrackedfiles",
           "currentTags": [
             "@public",
             "@category",
@@ -51249,8 +51249,8 @@
           "exportKind": "type",
           "filePath": "src/GitCommand.ts",
           "repoPath": "packages/drivers/git/src/GitCommand.ts",
-          "line": 726,
-          "anchor": "packages-drivers-git-src-gitcommand-ts-726-statusuntrackedfiles",
+          "line": 737,
+          "anchor": "packages-drivers-git-src-gitcommand-ts-737-statusuntrackedfiles",
           "currentTags": [
             "@see",
             "@category",
@@ -51272,8 +51272,8 @@
           "exportKind": "const",
           "filePath": "src/GitCommand.ts",
           "repoPath": "packages/drivers/git/src/GitCommand.ts",
-          "line": 748,
-          "anchor": "packages-drivers-git-src-gitcommand-ts-748-statusignoresubmodules",
+          "line": 759,
+          "anchor": "packages-drivers-git-src-gitcommand-ts-759-statusignoresubmodules",
           "currentTags": [
             "@public",
             "@category",
@@ -51295,8 +51295,8 @@
           "exportKind": "type",
           "filePath": "src/GitCommand.ts",
           "repoPath": "packages/drivers/git/src/GitCommand.ts",
-          "line": 758,
-          "anchor": "packages-drivers-git-src-gitcommand-ts-758-statusignoresubmodules",
+          "line": 769,
+          "anchor": "packages-drivers-git-src-gitcommand-ts-769-statusignoresubmodules",
           "currentTags": [
             "@see",
             "@category",
@@ -51318,8 +51318,8 @@
           "exportKind": "class",
           "filePath": "src/GitCommand.ts",
           "repoPath": "packages/drivers/git/src/GitCommand.ts",
-          "line": 1282,
-          "anchor": "packages-drivers-git-src-gitcommand-ts-1282-gitcommand",
+          "line": 1293,
+          "anchor": "packages-drivers-git-src-gitcommand-ts-1293-gitcommand",
           "currentTags": [
             "@public",
             "@category",
@@ -507014,7 +507014,7 @@
         "srcDir": "src",
         "sourceFileCount": 572,
         "publicModuleCount": 568,
-        "publicExportCount": 5219
+        "publicExportCount": 5227
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -513536,7 +513536,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 6,
+          "exportCount": 10,
           "remediationStatus": "resolved"
         },
         {
@@ -513602,7 +513602,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 56,
+          "exportCount": 58,
           "remediationStatus": "resolved"
         },
         {
@@ -513624,7 +513624,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 26,
+          "exportCount": 28,
           "remediationStatus": "resolved"
         },
         {
@@ -580168,8 +580168,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 971,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-971-knowledgeremovedpackagenames",
+          "line": 961,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-961-knowledgeremovedpackagenames",
           "currentTags": [
             "@param",
             "@returns",
@@ -580192,8 +580192,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 1033,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1033-knowledgebaselinegroupinput",
+          "line": 1023,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1023-knowledgebaselinegroupinput",
           "currentTags": [
             "@category",
             "@since"
@@ -580214,8 +580214,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 1106,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1106-classifyknowledgebaselinegroup",
+          "line": 1096,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1096-classifyknowledgebaselinegroup",
           "currentTags": [
             "@param",
             "@returns",
@@ -580238,8 +580238,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 1132,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1132-knowledgemintinput",
+          "line": 1122,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1122-knowledgemintinput",
           "currentTags": [
             "@category",
             "@since"
@@ -580260,8 +580260,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 1204,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1204-mintknowledgebaseline",
+          "line": 1197,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1197-mintknowledgebaseline",
           "currentTags": [
             "@param",
             "@returns",
@@ -580284,8 +580284,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 1325,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1325-encodeknowledgebaselinetext",
+          "line": 1318,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1318-encodeknowledgebaselinetext",
           "currentTags": [
             "@param",
             "@returns",
@@ -580308,8 +580308,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 1365,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1365-verifyknowledgebaselinetext",
+          "line": 1358,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1358-verifyknowledgebaselinetext",
           "currentTags": [
             "@param",
             "@returns",
@@ -580332,8 +580332,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 1398,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1398-knowledgemintacceptance",
+          "line": 1391,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1391-knowledgemintacceptance",
           "currentTags": [
             "@category",
             "@since"
@@ -580354,8 +580354,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 1439,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1439-knowledgesealguardinput",
+          "line": 1432,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1432-knowledgesealguardinput",
           "currentTags": [
             "@category",
             "@since"
@@ -580376,8 +580376,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 1665,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1665-knowledgesealguard",
+          "line": 1658,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1658-knowledgesealguard",
           "currentTags": [
             "@param",
             "@returns",
@@ -580400,8 +580400,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 1721,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1721-knowledgedoctorcheckinput",
+          "line": 1714,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1714-knowledgedoctorcheckinput",
           "currentTags": [
             "@category",
             "@since"
@@ -580422,8 +580422,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 1817,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1817-checkknowledgedoctorreport",
+          "line": 1810,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1810-checkknowledgedoctorreport",
           "currentTags": [
             "@param",
             "@returns",
@@ -580446,8 +580446,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.baseline.ts",
-          "line": 1957,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1957-knowledgedoctorgatefailure",
+          "line": 1950,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-baseline-ts-1950-knowledgedoctorgatefailure",
           "currentTags": [
             "@param",
             "@returns",
@@ -581026,8 +581026,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.grouping.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.grouping.ts",
-          "line": 76,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-grouping-ts-76-knowledgedelegatedrow",
+          "line": 78,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-grouping-ts-78-knowledgedelegatedrow",
           "currentTags": [
             "@category",
             "@since"
@@ -581048,8 +581048,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.grouping.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.grouping.ts",
-          "line": 123,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-grouping-ts-123-knowledgedelegatedrow",
+          "line": 125,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-grouping-ts-125-knowledgedelegatedrow",
           "currentTags": [
             "@param",
             "@returns",
@@ -581072,8 +581072,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.grouping.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.grouping.ts",
-          "line": 167,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-grouping-ts-167-knowledge-path-removal-log",
+          "line": 169,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-grouping-ts-169-knowledge-path-removal-log",
           "currentTags": [
             "@category",
             "@since"
@@ -581094,8 +581094,78 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.grouping.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.grouping.ts",
-          "line": 245,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-grouping-ts-245-knowledgepathremovalsfromlog",
+          "line": 247,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-grouping-ts-247-knowledgepathremovalsfromlog",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "KNOWLEDGE_REMOVAL_WALK_LOG",
+          "exportKind": "const",
+          "filePath": "src/commands/Knowledge/KnowledgeDoctor.grouping.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.grouping.ts",
+          "line": 292,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-grouping-ts-292-knowledge-removal-walk-log",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "knowledgeRemovalCommitsFromLog",
+          "exportKind": "const",
+          "filePath": "src/commands/Knowledge/KnowledgeDoctor.grouping.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.grouping.ts",
+          "line": 334,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-grouping-ts-334-knowledgeremovalcommitsfromlog",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "selectKnowledgeRemovalCommits",
+          "exportKind": "const",
+          "filePath": "src/commands/Knowledge/KnowledgeDoctor.grouping.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.grouping.ts",
+          "line": 408,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-grouping-ts-408-selectknowledgeremovalcommits",
           "currentTags": [
             "@param",
             "@returns",
@@ -581118,8 +581188,32 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.grouping.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.grouping.ts",
-          "line": 297,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-grouping-ts-297-knowledgecausetargetpath",
+          "line": 447,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-grouping-ts-447-knowledgecausetargetpath",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "knowledgeRemovalTargets",
+          "exportKind": "const",
+          "filePath": "src/commands/Knowledge/KnowledgeDoctor.grouping.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.grouping.ts",
+          "line": 475,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-grouping-ts-475-knowledgeremovaltargets",
           "currentTags": [
             "@param",
             "@returns",
@@ -581142,8 +581236,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.grouping.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.grouping.ts",
-          "line": 377,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-grouping-ts-377-groupknowledgedoctorfindings",
+          "line": 552,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-grouping-ts-552-groupknowledgedoctorfindings",
           "currentTags": [
             "@param",
             "@returns",
@@ -582897,12 +582991,56 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "KnowledgeRemovalCommit",
+          "exportKind": "class",
+          "filePath": "src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
+          "line": 1234,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-schemas-ts-1234-knowledgeremovalcommit",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "KnowledgePathRemovalQuery",
+          "exportKind": "class",
+          "filePath": "src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
+          "line": 1268,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-schemas-ts-1268-knowledgepathremovalquery",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "KnowledgeRootAttribution",
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
-          "line": 1237,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-schemas-ts-1237-knowledgerootattribution",
+          "line": 1307,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-schemas-ts-1307-knowledgerootattribution",
           "currentTags": [
             "@category",
             "@since"
@@ -582923,8 +583061,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
-          "line": 1284,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-schemas-ts-1284-knowledgecausegroup",
+          "line": 1354,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-schemas-ts-1354-knowledgecausegroup",
           "currentTags": [
             "@category",
             "@since"
@@ -582945,8 +583083,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
-          "line": 1318,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-schemas-ts-1318-knowledgeroothistory",
+          "line": 1388,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-schemas-ts-1388-knowledgeroothistory",
           "currentTags": [
             "@category",
             "@since"
@@ -582967,8 +583105,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
-          "line": 1330,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-schemas-ts-1330-knowledgeroothistory",
+          "line": 1400,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-schemas-ts-1400-knowledgeroothistory",
           "currentTags": [
             "@category",
             "@since"
@@ -582989,8 +583127,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
-          "line": 1346,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-schemas-ts-1346-knowledgedoctormode",
+          "line": 1416,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-schemas-ts-1416-knowledgedoctormode",
           "currentTags": [
             "@category",
             "@since"
@@ -583011,8 +583149,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
-          "line": 1358,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-schemas-ts-1358-knowledgedoctormode",
+          "line": 1428,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-schemas-ts-1428-knowledgedoctormode",
           "currentTags": [
             "@category",
             "@since"
@@ -583033,8 +583171,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
-          "line": 1381,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-schemas-ts-1381-knowledgebaselinekey",
+          "line": 1451,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-schemas-ts-1451-knowledgebaselinekey",
           "currentTags": [
             "@category",
             "@since"
@@ -583055,8 +583193,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
-          "line": 1393,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-schemas-ts-1393-knowledgebaselinekey",
+          "line": 1463,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-schemas-ts-1463-knowledgebaselinekey",
           "currentTags": [
             "@category",
             "@since"
@@ -583077,8 +583215,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
-          "line": 1414,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-schemas-ts-1414-knowledgeratchetentry",
+          "line": 1484,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-schemas-ts-1484-knowledgeratchetentry",
           "currentTags": [
             "@category",
             "@since"
@@ -583099,8 +583237,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
-          "line": 1461,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-schemas-ts-1461-knowledgedoctorratchet",
+          "line": 1531,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-schemas-ts-1531-knowledgedoctorratchet",
           "currentTags": [
             "@category",
             "@since"
@@ -583121,8 +583259,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
-          "line": 1522,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-schemas-ts-1522-knowledgedoctorreport",
+          "line": 1592,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-schemas-ts-1592-knowledgedoctorreport",
           "currentTags": [
             "@category",
             "@since"
@@ -583143,8 +583281,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
-          "line": 1579,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-schemas-ts-1579-encodeknowledgedoctorreportjson",
+          "line": 1649,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-schemas-ts-1649-encodeknowledgedoctorreportjson",
           "currentTags": [
             "@category",
             "@since"
@@ -583165,8 +583303,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.schemas.ts",
-          "line": 1599,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-schemas-ts-1599-decodeknowledgedoctorreportjson",
+          "line": 1669,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-schemas-ts-1669-decodeknowledgedoctorreportjson",
           "currentTags": [
             "@category",
             "@since"
@@ -583187,8 +583325,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 200,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-200-knowledgedoctortree",
+          "line": 212,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-212-knowledgedoctortree",
           "currentTags": [
             "@see",
             "@category",
@@ -583210,8 +583348,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 227,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-227-knowledgeevaluator",
+          "line": 242,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-242-knowledgeevaluator",
           "currentTags": [
             "@see",
             "@category",
@@ -583233,8 +583371,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 262,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-262-makeknowledgetreeentryindex",
+          "line": 277,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-277-makeknowledgetreeentryindex",
           "currentTags": [
             "@param",
             "@returns",
@@ -583257,8 +583395,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 293,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-293-knowledge-cli-global-flags",
+          "line": 308,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-308-knowledge-cli-global-flags",
           "currentTags": [
             "@category",
             "@since"
@@ -583279,8 +583417,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 321,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-321-knowledge-producer-outputs",
+          "line": 336,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-336-knowledge-producer-outputs",
           "currentTags": [
             "@category",
             "@since"
@@ -583301,8 +583439,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 565,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-565-extractknowledgedocumentspans",
+          "line": 580,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-580-extractknowledgedocumentspans",
           "currentTags": [
             "@category",
             "@since"
@@ -583323,8 +583461,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 589,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-589-knowledgespanclassificationrule",
+          "line": 604,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-604-knowledgespanclassificationrule",
           "currentTags": [
             "@category",
             "@since"
@@ -583345,8 +583483,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 618,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-618-knowledge-span-classification-rules",
+          "line": 633,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-633-knowledge-span-classification-rules",
           "currentTags": [
             "@category",
             "@since"
@@ -583367,8 +583505,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 671,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-671-classifyknowledgespan",
+          "line": 686,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-686-classifyknowledgespan",
           "currentTags": [
             "@param",
             "@returns",
@@ -583391,8 +583529,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 736,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-736-knowledgepathsevaluator",
+          "line": 751,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-751-knowledgepathsevaluator",
           "currentTags": [
             "@category",
             "@since"
@@ -583413,8 +583551,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 916,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-916-knowledgecommandsevaluator",
+          "line": 931,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-931-knowledgecommandsevaluator",
           "currentTags": [
             "@category",
             "@since"
@@ -583435,8 +583573,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 939,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-939-knowledge-doctor-evaluators",
+          "line": 954,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-954-knowledge-doctor-evaluators",
           "currentTags": [
             "@category",
             "@since"
@@ -583457,8 +583595,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 1019,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1019-overlaywithout",
+          "line": 1034,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1034-overlaywithout",
           "currentTags": [
             "@param",
             "@returns",
@@ -583481,8 +583619,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 1151,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1151-knowledgecounterfactualverdicts",
+          "line": 1166,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1166-knowledgecounterfactualverdicts",
           "currentTags": [
             "@param",
             "@returns",
@@ -583505,8 +583643,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 1395,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1395-scanknowledgedoctortree",
+          "line": 1414,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1414-scanknowledgedoctortree",
           "currentTags": [
             "@param",
             "@returns",
@@ -583529,8 +583667,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 1496,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1496-knowledgedoctormemorytreeinput",
+          "line": 1515,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1515-knowledgedoctormemorytreeinput",
           "currentTags": [
             "@category",
             "@since"
@@ -583551,8 +583689,56 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 1540,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1540-makeknowledgedoctormemorytree",
+          "line": 1563,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1563-makeknowledgedoctormemorytree",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "makeKnowledgePathRemovalReader",
+          "exportKind": "const",
+          "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
+          "line": 1777,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1777-makeknowledgepathremovalreader",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "makeKnowledgeLivePathRemovals",
+          "exportKind": "const",
+          "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
+          "line": 1814,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1814-makeknowledgelivepathremovals",
           "currentTags": [
             "@param",
             "@returns",
@@ -583575,8 +583761,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 1706,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1706-makeknowledgedoctortree",
+          "line": 1912,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1912-makeknowledgedoctortree",
           "currentTags": [
             "@param",
             "@returns",
@@ -583599,8 +583785,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 1747,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1747-knowledgeshallowhistoryerror",
+          "line": 1953,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1953-knowledgeshallowhistoryerror",
           "currentTags": [
             "@param",
             "@returns",
@@ -583623,8 +583809,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 1856,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-1856-knowledgedoctorcheckoptions",
+          "line": 2062,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2062-knowledgedoctorcheckoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -583645,8 +583831,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 2022,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2022-readknowledgedoctorchecksidesfortesting",
+          "line": 2231,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2231-readknowledgedoctorchecksidesfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -583669,8 +583855,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 2146,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2146-knowledgedoctormintoptions",
+          "line": 2358,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2358-knowledgedoctormintoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -583691,8 +583877,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 2260,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2260-knowledgedoctorleasesoptions",
+          "line": 2472,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2472-knowledgedoctorleasesoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -583713,8 +583899,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 2320,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2320-knowledgedoctorshape",
+          "line": 2532,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2532-knowledgedoctorshape",
           "currentTags": [
             "@see",
             "@category",
@@ -583736,8 +583922,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 2391,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2391-knowledgedoctor",
+          "line": 2603,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2603-knowledgedoctor",
           "currentTags": [
             "@see",
             "@category",
@@ -583759,8 +583945,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Knowledge/KnowledgeDoctor.service.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Knowledge/KnowledgeDoctor.service.ts",
-          "line": 2441,
-          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2441-knowledgedoctorlive",
+          "line": 2653,
+          "anchor": "packages-tooling-tool-cli-src-commands-knowledge-knowledgedoctor-service-ts-2653-knowledgedoctorlive",
           "currentTags": [
             "@category",
             "@since"
