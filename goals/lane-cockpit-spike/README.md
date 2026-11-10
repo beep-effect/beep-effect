@@ -35,11 +35,19 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+P3 Yeet: the lab is built and verified; the PR is being driven to merge. P4
+waits on the operator's one-day keep test after the merge.
 
 ## Latest Evidence
 
-Not started.
+- 2026-11-10: `render` from `@textjs/react/testing` runs under the repo's
+  Vitest on Bun and Node; the circuit breaker did not fire
+  ([checkpoint](./decisions/2026-11-10-p0-render-runs-under-the-repo-s-vitest-on-bun-and-node.md)).
+- 2026-11-10: the lab draws the live ledger (127 rows, 26 blocked) offscreen
+  and full-screen in a PTY; 17 tests pass and package-verify is green
+  ([checkpoint](./decisions/2026-11-10-p2-first-frame-from-the-live-ledger.md)).
+- Start the board from the repository root:
+  `bun run --cwd apps/labs/lane-cockpit start`.
 
 ## Notes
 

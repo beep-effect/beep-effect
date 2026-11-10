@@ -262,6 +262,7 @@ const generatedComposers = $I.compose(
 const generatedLabComposers = $I.compose(
   "api-docs",
   "ciops",
+  "lane-cockpit",
   "lejeune-bolt-workbench",
   "semantica",
   "trustgraph-workbench"
@@ -309,6 +310,23 @@ export const $ApiDocsId: Identity.IdentityComposer<"@beep/api-docs"> = composers
  * @since 0.0.0
  */
 export const $CiopsId: Identity.IdentityComposer<"@beep/ciops"> = composers.$CiopsId;
+
+/**
+ * Identity composer for `@beep/lane-cockpit`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $LaneCockpitId } from "@beep/identity/packages"
+ *
+ * const id = $LaneCockpitId.make("LaneCockpit")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $LaneCockpitId: Identity.IdentityComposer<"@beep/lane-cockpit"> = composers.$LaneCockpitId;
 
 /**
  * Identity composer for `@beep/lejeune-bolt-workbench`.
