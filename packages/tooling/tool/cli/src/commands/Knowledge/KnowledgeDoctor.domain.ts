@@ -289,6 +289,23 @@ const packetFilesByPrefix = (oracle: KnowledgeTreeOracle, prefix: string): Packe
   return files;
 };
 
+// One pass buckets every tracked file name under its parent directory spelled with a trailing `/`,
+// in tree order. A direct child of `prefix` is exactly a path whose last `/` ends `prefix`, so each
+// packet's decisions and reflections lookup reads one bucket instead of rescanning the whole tree.
+const directFilesByDirectory = (oracle: KnowledgeTreeOracle): MutableHashMap.MutableHashMap<string, Array<string>> => {
+  const files = MutableHashMap.empty<string, Array<string>>();
+  for (const entry of oracle.trackedEntries) {
+    const cut = O.getOrElse(Str.lastIndexOf("/")(entry.path), () => -1) + 1;
+    const directory = Str.slice(0, cut)(entry.path);
+    const name = Str.slice(cut)(entry.path);
+    O.match(MutableHashMap.get(files, directory), {
+      onNone: () => MutableHashMap.set(files, directory, [name]),
+      onSome: (names) => names.push(name),
+    });
+  }
+  return files;
+};
+
 const sortedPacketFiles = (files: PacketFiles, packetPath: string): ReadonlyArray<string> =>
   A.sort(O.getOrElse(MutableHashMap.get(files, packetPath), A.empty<string>), Order.String);
 
@@ -334,16 +351,9 @@ export const makeKnowledgeGoalPacketReader = (
   const directories = ancestorDirectories(paths);
   const opsFilesByPacket = packetFilesByPrefix(oracle, "ops/");
   const researchFilesByPacket = packetFilesByPrefix(oracle, "research/");
+  const filesByDirectory = directFilesByDirectory(oracle);
   const directFiles = (prefix: string): ReadonlyArray<string> =>
-    A.getSomes(
-      A.map(oracle.trackedEntries, (entry) =>
-        pipe(
-          O.liftPredicate(entry.path, Str.startsWith(prefix)),
-          O.map(Str.slice(Str.length(prefix))),
-          O.filter((name) => !pipe(name, Str.includes("/")))
-        )
-      )
-    );
+    O.getOrElse(MutableHashMap.get(filesByDirectory, prefix), A.empty<string>);
   return {
     decisionFiles: (packetPath) => Effect.succeed(directFiles(`${packetPath}/${DECISIONS_DIR}/`)),
     readDecision: (packetPath, file) => knowledgeTreeFacts.readText(oracle, `${packetPath}/${DECISIONS_DIR}/${file}`),

@@ -2420,6 +2420,7 @@
         "packages/tooling/tool/cli/src/commands/Lint/EffectSchemaInventory.schemas.ts",
         "packages/tooling/tool/cli/src/commands/Lint/Lint.errors.ts",
         "packages/tooling/tool/cli/src/commands/Lint/LintDeprecatedApis.command.ts",
+        "packages/tooling/tool/cli/src/commands/Lint/LintDeprecatedApis.schemas.ts",
         "packages/tooling/tool/cli/src/commands/Lint/PolicyFingerprint.schemas.ts",
         "packages/tooling/tool/cli/src/commands/Lint/internal/EffectSchemaInventoryExtract.ts",
         "packages/tooling/tool/cli/src/commands/Lint/internal/LintPackage.ts",

@@ -120,6 +120,7 @@ export {
   decodeEffectVitestPrimitiveGraphDocument,
   EffectVitestCensusPath,
   EffectVitestCensusRow,
+  EffectVitestConfigFileGlobs,
   EffectVitestFinding,
   EffectVitestFindingRuleId,
   EffectVitestInventoryDocument,

@@ -67,12 +67,15 @@ import { KnowledgeFindingCandidate, KnowledgeFindingLocation, KnowledgeTrackedEn
 import {
   knowledgeCommandWords,
   knowledgeFindingsFromCandidates,
+  knowledgeInSequenceOrder,
   materializeKnowledgeTree,
+  materializeKnowledgeTreePaths,
   readKnowledgeGitRefNames,
 } from "./Knowledge.service.ts";
 import {
   checkKnowledgeDoctorReport,
   KNOWLEDGE_DOCTOR_BASELINE_PATH,
+  KNOWLEDGE_SEAL_FILE_PATHS,
   KnowledgeDoctorCheckInput,
   KnowledgeMintAcceptance,
   mintKnowledgeBaseline,
@@ -1758,6 +1761,10 @@ export const knowledgeShallowHistoryError: {
       : O.none()
 );
 
+// A tree read only through `readKnowledgeSealFiles` needs its seal inputs extracted, not the whole tree.
+const materializeKnowledgeSealTree = (treeish: string) =>
+  Effect.map(materializeKnowledgeTreePaths(treeish, KNOWLEDGE_SEAL_FILE_PATHS), (materialized) => materialized.oracle);
+
 type DoctorRefs = { readonly repoRoot: string; readonly head: string; readonly mergeBase: string };
 
 // A kit failure with git's exit code becomes `onExit`; one without (git never ran) is the operational spawn failure.
@@ -1926,6 +1933,106 @@ const mintAcceptance = Effect.fn("KnowledgeDoctor.mintAcceptance")(function* (
   return KnowledgeMintAcceptance.make({ mintedAtIsAncestor, reproduces });
 });
 
+// The two sides the gate compares: the HEAD doctor tree with its seal files, and the merge-base seal
+// inputs, extracted side by side. Exits replay HEAD side first: a failure of the HEAD tree or its seal
+// files wins over a merge-base failure, as in the HEAD-then-base sequence.
+//
+// The CI phase labels exist to name the step a stalled hosted run is stuck in (#2688), so with the two
+// sides overlapping each side labels its own start and end, and the last line names the side still
+// running. `read-removals` prints where the history walk starts; the scan joins that walk inside its
+// report grouping, so `scanTree` labels the join (`join-removals`, `removals-joined`) and a stalled
+// `git log` is not blamed on the scan. `tree` is the unlabelled tree for reads after the join.
+type DoctorCheckSides = {
+  readonly tree: KnowledgeDoctorTree;
+  readonly scanTree: KnowledgeDoctorTree;
+  readonly head: KnowledgeSealFiles;
+  readonly baseTree: KnowledgeTreeOracle;
+};
+type DoctorSealReadError = Effect.Error<ReturnType<typeof readKnowledgeSealFiles>>;
+
+const readDoctorCheckSides = <E1, R1, E2, R2>(
+  headTree: Effect.Effect<KnowledgeDoctorTree, E1, R1>,
+  baseTree: Effect.Effect<KnowledgeTreeOracle, E2, R2>,
+  progress: (phase: string) => Effect.Effect<void>
+): Effect.Effect<DoctorCheckSides, E1 | E2 | DoctorSealReadError, R1 | R2 | Scope.Scope> =>
+  Effect.map(
+    knowledgeInSequenceOrder(
+      Effect.gen(function* () {
+        yield* progress("materialize-head");
+        const tree = yield* headTree;
+        // The history walk behind `pathRemovals` never fails and depends only on the head commit, so it
+        // starts here and its `git log` runs beside the scan; later reads join the same cached run.
+        yield* progress("read-removals");
+        yield* Effect.forkScoped(tree.pathRemovals);
+        yield* progress("read-head-seal");
+        const head = yield* readKnowledgeSealFiles(tree);
+        yield* progress("read-head-seal-done");
+        return [tree, head] as const;
+      }),
+      Effect.gen(function* () {
+        yield* progress("materialize-base");
+        const base = yield* baseTree;
+        yield* progress("materialize-base-done");
+        return base;
+      })
+    ),
+    ([[tree, head], baseTree]) => ({
+      tree,
+      scanTree: {
+        ...tree,
+        pathRemovals: progress("join-removals").pipe(
+          Effect.andThen(tree.pathRemovals),
+          Effect.tap(() => progress("removals-joined"))
+        ),
+      } satisfies KnowledgeDoctorTree,
+      head,
+      baseTree,
+    })
+  );
+
+/**
+ * Reads the knowledge doctor gate's HEAD and merge-base sides with their CI phase labels.
+ *
+ * **Details**
+ *
+ * The HEAD tree and the merge-base seal tree are built side by side; each side labels its start and
+ * its end, and `read-removals` marks where the history walk is forked. The returned `scanTree` labels
+ * the scan's join of that walk with `join-removals` and `removals-joined`, so the last label of a
+ * stalled run names the stalled step.
+ *
+ * **Example** (Read two in-memory sides)
+ *
+ * ```ts
+ * import { makeKnowledgeDoctorMemoryTree } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.service"
+ * import { readKnowledgeDoctorCheckSidesForTesting } from "@beep/repo-cli/test/Knowledge"
+ * import * as Effect from "effect/Effect"
+ *
+ * const tree = makeKnowledgeDoctorMemoryTree({ files: {} })
+ * const sides = readKnowledgeDoctorCheckSidesForTesting(Effect.succeed(tree), Effect.succeed(tree), () => Effect.void)
+ * console.log(Effect.isEffect(Effect.scoped(sides))) // true
+ * ```
+ *
+ * @param headTree - Builds the HEAD doctor tree.
+ * @param baseTree - Builds the merge-base seal tree.
+ * @param progress - Prints one phase label.
+ * @returns The HEAD tree, its labelled scan view, the HEAD seal files and the merge-base tree.
+ * @category testing
+ * @since 0.0.0
+ */
+export const readKnowledgeDoctorCheckSidesForTesting: {
+  <E2, R2>(
+    baseTree: Effect.Effect<KnowledgeTreeOracle, E2, R2>,
+    progress: (phase: string) => Effect.Effect<void>
+  ): <E1, R1>(
+    headTree: Effect.Effect<KnowledgeDoctorTree, E1, R1>
+  ) => Effect.Effect<DoctorCheckSides, E1 | E2 | DoctorSealReadError, R1 | R2 | Scope.Scope>;
+  <E1, R1, E2, R2>(
+    headTree: Effect.Effect<KnowledgeDoctorTree, E1, R1>,
+    baseTree: Effect.Effect<KnowledgeTreeOracle, E2, R2>,
+    progress: (phase: string) => Effect.Effect<void>
+  ): Effect.Effect<DoctorCheckSides, E1 | E2 | DoctorSealReadError, R1 | R2 | Scope.Scope>;
+} = dual(3, readDoctorCheckSides);
+
 const checkLive = Effect.fn("KnowledgeDoctor.checkLive")(function* (options: KnowledgeDoctorCheckOptions) {
   const ci = yield* isCi;
   const progress = Effect.fn("KnowledgeDoctor.checkProgress")((phase: string) =>
@@ -1935,21 +2042,20 @@ const checkLive = Effect.fn("KnowledgeDoctor.checkLive")(function* (options: Kno
   const refs = yield* resolveDoctorRefs(options.baseRef);
   const checked = yield* Effect.scoped(
     Effect.gen(function* () {
-      yield* progress("materialize-head");
-      const tree = yield* makeKnowledgeDoctorTree(refs.head);
-      yield* progress("read-head-seal");
-      const head = yield* readKnowledgeSealFiles(tree);
-      yield* progress("materialize-base");
-      const baseTree = yield* materializeKnowledgeTree(refs.mergeBase);
+      const { tree, scanTree, head, baseTree } = yield* readDoctorCheckSides(
+        makeKnowledgeDoctorTree(refs.head),
+        materializeKnowledgeSealTree(refs.mergeBase),
+        progress
+      );
       yield* progress("read-base-seal");
-      const base = yield* readKnowledgeSealFiles(baseTree.oracle);
+      const base = yield* readKnowledgeSealFiles(baseTree);
       const baseline = yield* Effect.fromOption(O.orElse(head.baseline, () => base.baseline)).pipe(
         Effect.mapError(missingBaseline)
       );
-      yield* progress("read-removals");
-      const removals = yield* tree.pathRemovals;
       yield* progress("scan-tree");
-      const report = yield* scanKnowledgeDoctorTree(tree);
+      const report = yield* scanKnowledgeDoctorTree(scanTree);
+      // The scan already joined the history walk, so this read is the cached result.
+      const removals = yield* tree.pathRemovals;
       const adapter = doctorGitAdapter(`mintedAt ${baseline.mintedAt}`);
       yield* progress("read-renames");
       const renames = yield* readGitRenames(refs.repoRoot, baseline.mintedAt, refs.head, [], adapter, () =>
@@ -2003,8 +2109,8 @@ const checkLive = Effect.fn("KnowledgeDoctor.checkLive")(function* (options: Kno
 
 const verifyMintLive = Effect.scoped(
   Effect.gen(function* () {
-    const tree = yield* materializeKnowledgeTree("HEAD");
-    const files = yield* readKnowledgeSealFiles(tree.oracle);
+    const tree = yield* materializeKnowledgeSealTree("HEAD");
+    const files = yield* readKnowledgeSealFiles(tree);
     const baseline = yield* Effect.fromOption(files.baseline).pipe(Effect.mapError(missingBaseline));
     const minted = yield* Effect.scoped(mintAt(baseline.mintedAt));
     yield* verifyKnowledgeBaselineText(
@@ -2169,12 +2275,12 @@ const leasesLive = Effect.fn("KnowledgeDoctor.leasesLive")(function* (options: K
   const refs = yield* resolveDoctorRefs(options.baseRef);
   return yield* Effect.scoped(
     Effect.gen(function* () {
-      const headTree = yield* materializeKnowledgeTree(refs.head);
-      const head = yield* readKnowledgeSealFiles(headTree.oracle);
+      const headTree = yield* materializeKnowledgeSealTree(refs.head);
+      const head = yield* readKnowledgeSealFiles(headTree);
       const leases = O.match(head.leases, { onNone: A.empty<KnowledgeDebtLease>, onSome: (file) => file.leases });
       const base = A.isReadonlyArrayEmpty(leases)
         ? O.none<KnowledgeSealFiles>()
-        : yield* Effect.asSome(readKnowledgeSealFiles((yield* materializeKnowledgeTree(refs.mergeBase)).oracle));
+        : yield* Effect.asSome(Effect.flatMap(materializeKnowledgeSealTree(refs.mergeBase), readKnowledgeSealFiles));
       const rows = yield* evaluateKnowledgeLeases(
         KnowledgeLeaseEvaluationInput.make({
           leases,

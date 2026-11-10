@@ -5,10 +5,14 @@ import {
   encodeKnowledgeBaselineText,
   evaluateKnowledgeLeases,
   isKnowledgeLeaseEffective,
+  KNOWLEDGE_CODEOWNERS_PATH,
+  KNOWLEDGE_DOCTOR_BASELINE_NOTE,
   KNOWLEDGE_DOCTOR_BASELINE_PATH,
   KNOWLEDGE_DOCTOR_BASELINE_PENDING_MESSAGE,
+  KNOWLEDGE_DOCTOR_IDENTITY_PATH,
   KNOWLEDGE_DOCTOR_LEASES_PATH,
   KNOWLEDGE_DOCTOR_PROMOTIONS_PATH,
+  KNOWLEDGE_SEAL_FILE_PATHS,
   KnowledgeBaselineEntry,
   KnowledgeBaselineGroupInput,
   KnowledgeDebtLease,
@@ -27,6 +31,7 @@ import {
   KnowledgeIdentityMapping,
   KnowledgeLeaseEvaluationInput,
   KnowledgeMintAcceptance,
+  KnowledgeOperationalError,
   KnowledgePathRemoval,
   KnowledgeSealFiles,
   KnowledgeSealGuardInput,
@@ -35,6 +40,7 @@ import {
   knowledgeSealGuard,
   knowledgeShallowHistoryError,
   makeKnowledgeDoctorMemoryTree,
+  materializeKnowledgeTree,
   mintKnowledgeBaseline,
   readKnowledgeSealFiles,
   resolveKnowledgeCodeowners,
@@ -42,14 +48,21 @@ import {
   scanKnowledgeDoctorTree,
   verifyKnowledgeBaselineText,
 } from "@beep/repo-cli/commands/Knowledge";
+import {
+  knowledgeInSequenceOrder,
+  materializeKnowledgeTreePaths,
+} from "@beep/repo-cli/commands/Knowledge/Knowledge.service";
 import { CacheRuntimeProcess as StepExec } from "@beep/repo-cli/test/Cache";
-import { renderKnowledgeDoctorCheckReport } from "@beep/repo-cli/test/Knowledge";
+import {
+  readKnowledgeDoctorCheckSidesForTesting,
+  renderKnowledgeDoctorCheckReport,
+} from "@beep/repo-cli/test/Knowledge";
 import { CapturedStreams } from "@beep/repo-cli/test/Process";
 import { knowledgeLeaseWarningLines, warnKnowledgeLeases } from "@beep/repo-cli/test/Yeet";
 import { it } from "@beep/test-runner";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { assert, describe, vi } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertFalse, assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
@@ -59,7 +72,10 @@ import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -840,6 +856,166 @@ describe("knowledge doctor sealed baseline", () => {
         const leases = yield* doctor.leases(KnowledgeDoctorLeasesOptions.make({ baseRef: "fixture-base", now: NOW }));
         assert.strictEqual(A.length(leases.leases), 1);
         assert.strictEqual(leases.leases[0]?.status, "active");
+      })
+    );
+    it.effect(
+      "reads exactly the seal file paths, so a seal-only tree serves every seal read",
+      Effect.fnUntraced(function* () {
+        const baselineText = yield* encodeKnowledgeBaselineText(
+          KnowledgeDoctorBaseline.make({ mintedAt: MINTED, note: KNOWLEDGE_DOCTOR_BASELINE_NOTE, entries: [] })
+        );
+        const tree = makeKnowledgeDoctorMemoryTree({
+          files: {
+            [KNOWLEDGE_DOCTOR_BASELINE_PATH]: baselineText,
+            [KNOWLEDGE_DOCTOR_PROMOTIONS_PATH]:
+              '{ "schemaVersion": "knowledge-doctor-promotions/v1", "promotions": [] }',
+            [KNOWLEDGE_DOCTOR_LEASES_PATH]: '{ "schemaVersion": "knowledge-doctor-leases/v1", "leases": [] }',
+            [KNOWLEDGE_DOCTOR_IDENTITY_PATH]: '{ "schemaVersion": "knowledge-doctor-identity/v1", "mappings": [] }',
+            [KNOWLEDGE_CODEOWNERS_PATH]: CODEOWNERS,
+            "docs/a.md": "# Not a seal input\n",
+          },
+        });
+        let read = A.empty<string>();
+        const files = yield* readKnowledgeSealFiles({
+          ...tree,
+          readBytes: (repoPath) => {
+            read = A.append(read, repoPath);
+            return tree.readBytes(repoPath);
+          },
+        });
+        assert.deepStrictEqual(A.sort(read, Order.String), A.sort(KNOWLEDGE_SEAL_FILE_PATHS, Order.String));
+        assert.deepStrictEqual(
+          A.map(
+            [files.baseline, files.promotions, files.leases, files.identity, files.codeowners] as const,
+            (value: O.Option<unknown>) => O.isSome(value)
+          ),
+          [true, true, true, true, true]
+        );
+      })
+    );
+    it.effect(
+      "extracts only the selected paths of a commit and refuses reads outside them",
+      Effect.fnUntraced(function* () {
+        const root = yield* temporaryWorkingDirectory;
+        const fs = yield* FileSystem.FileSystem;
+        yield* fs.makeDirectory("docs", { recursive: true });
+        yield* fs.makeDirectory(".github", { recursive: true });
+        yield* fs.writeFileString(".github/CODEOWNERS", CODEOWNERS);
+        yield* fs.writeFileString("docs/a.md", "# Synthetic document\n");
+        yield* Effect.forEach(
+          [
+            ["init", "--initial-branch=main"],
+            ["add", "."],
+            [
+              "-c",
+              "user.name=Fixture",
+              "-c",
+              "user.email=fixture@example.invalid",
+              "-c",
+              "commit.gpgsign=false",
+              "commit",
+              "-m",
+              "fixture",
+            ],
+          ],
+          (args) => StepExec.runCapturedStreams({ command: "git", args, cwd: root, extendEnv: true }),
+          { discard: true }
+        );
+        const full = yield* materializeKnowledgeTree("HEAD");
+        const selected = yield* materializeKnowledgeTreePaths("HEAD", [
+          KNOWLEDGE_CODEOWNERS_PATH,
+          "goals/absent.jsonc",
+        ]);
+        assert.strictEqual(selected.oracle.commit, full.oracle.commit);
+        assert.deepStrictEqual(selected.oracle.trackedEntries, full.oracle.trackedEntries);
+        const path = yield* Path.Path;
+        // The narrowing is on disk: the selected archive root holds the seal input and nothing else.
+        const extracted = (root: string) =>
+          Effect.forEach([KNOWLEDGE_CODEOWNERS_PATH, "docs/a.md"], (repoPath) => fs.exists(path.join(root, repoPath)));
+        const fullOnDisk = yield* extracted(full.archiveRoot);
+        const selectedOnDisk = yield* extracted(selected.archiveRoot);
+        assert.deepStrictEqual(fullOnDisk, [true, true]);
+        assert.deepStrictEqual(selectedOnDisk, [true, false]);
+        const selectedBytes = yield* selected.oracle.readBytes(KNOWLEDGE_CODEOWNERS_PATH);
+        const fullBytes = yield* full.oracle.readBytes(KNOWLEDGE_CODEOWNERS_PATH);
+        assert.deepStrictEqual(selectedBytes, fullBytes);
+        const outside = yield* Effect.flip(selected.oracle.readBytes("docs/a.md"));
+        assert.include(outside.message, "outside the paths materialized");
+        const seal = yield* readKnowledgeSealFiles(selected.oracle);
+        const fullSeal = yield* readKnowledgeSealFiles(full.oracle);
+        assert.deepStrictEqual(seal, fullSeal);
+      })
+    );
+    it.effect(
+      "replays overlapped steps in sequence order even when the later step fails first",
+      Effect.fnUntraced(function* () {
+        const headFailure = KnowledgeOperationalError.make({ message: "head side" });
+        const baseFailure = KnowledgeOperationalError.make({ message: "base side" });
+        const both = yield* Effect.flip(
+          knowledgeInSequenceOrder(
+            Effect.yieldNow.pipe(
+              Effect.andThen(Effect.yieldNow),
+              Effect.andThen(Effect.yieldNow),
+              Effect.andThen(Effect.fail(headFailure))
+            ),
+            Effect.fail(baseFailure)
+          )
+        );
+        assert.strictEqual(both.message, "head side");
+        const second = yield* Effect.flip(knowledgeInSequenceOrder(Effect.succeed("head"), Effect.fail(baseFailure)));
+        assert.strictEqual(second.message, "base side");
+        const results = yield* knowledgeInSequenceOrder(
+          Effect.yieldNow.pipe(Effect.as("head")),
+          Effect.succeed("base")
+        );
+        assert.deepStrictEqual(results, ["head", "base"]);
+      })
+    );
+    it.effect(
+      "labels each overlapped side and the scan's join of the history walk so a stall names its step",
+      Effect.fnUntraced(function* () {
+        const labels = yield* Ref.make(A.empty<string>());
+        // What the stderr tail shows at each moment the history walk is awaited: a walk that stalls
+        // there leaves this as the last thing printed.
+        const awaitedAfter = yield* Ref.make(A.empty<ReadonlyArray<string>>());
+        const progress = (phase: string) => Ref.update(labels, A.append(phase));
+        const tree = makeKnowledgeDoctorMemoryTree({ files: { "docs/a.md": "# Synthetic document\n" } });
+        const walked: KnowledgeDoctorTree = {
+          ...tree,
+          pathRemovals: Ref.get(labels).pipe(
+            Effect.flatMap((seen) => Ref.update(awaitedAfter, A.append(seen))),
+            Effect.as(O.some(A.empty<KnowledgePathRemoval>()))
+          ),
+        };
+        yield* Effect.scoped(
+          Effect.gen(function* () {
+            const sides = yield* readKnowledgeDoctorCheckSidesForTesting(
+              Effect.succeed(walked),
+              Effect.succeed(tree),
+              progress
+            );
+            yield* progress("scan-tree");
+            yield* scanKnowledgeDoctorTree(sides.scanTree);
+          })
+        );
+        const awaited = yield* Ref.get(awaitedAfter);
+        const tails = A.map(awaited, A.last);
+        // The scan's wait on the walk is announced as the join, never left under `scan-tree`.
+        assertTrue(A.some(tails, (tail) => O.contains(tail, "join-removals")));
+        assertFalse(A.some(tails, (tail) => O.contains(tail, "scan-tree")));
+        const seen = yield* Ref.get(labels);
+        const headLabels = ["materialize-head", "read-removals", "read-head-seal", "read-head-seal-done"];
+        const baseLabels = ["materialize-base", "materialize-base-done"];
+        const sideLabels = A.take(seen, 6);
+        assert.deepStrictEqual(
+          A.filter(sideLabels, (label) => A.contains(headLabels, label)),
+          headLabels
+        );
+        assert.deepStrictEqual(
+          A.filter(sideLabels, (label) => A.contains(baseLabels, label)),
+          baseLabels
+        );
+        assert.deepStrictEqual(A.drop(seen, 6), ["scan-tree", "join-removals", "removals-joined"]);
       })
     );
     it.effect(
