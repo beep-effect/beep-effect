@@ -1187,6 +1187,93 @@ describe("ci lane timing admission window", () => {
     })
   );
 
+  describe("planned Test Unit matrices", () => {
+    const shard = (
+      run: CiWorkflowWindowRun,
+      id: number,
+      partition: string,
+      startedAt: string,
+      conclusion = "success"
+    ) =>
+      job({
+        completed_at: "2026-11-10T00:12:00Z",
+        conclusion,
+        id,
+        name: `Test Unit (${partition})`,
+        run_id: run.id,
+        started_at: startedAt,
+      });
+    const aggregator = (run: CiWorkflowWindowRun, conclusion = "success") =>
+      job({
+        completed_at: "2026-11-10T00:15:00Z",
+        conclusion,
+        id: run.id * 10 + 9,
+        name: "Test Unit",
+        run_id: run.id,
+        started_at: "2026-11-10T00:13:00Z",
+      });
+    const testPlan = (run: CiWorkflowWindowRun) =>
+      job({
+        completed_at: "2026-11-10T00:01:00Z",
+        id: run.id * 10 + 8,
+        name: "Test Plan",
+        run_id: run.id,
+        started_at: "2026-11-10T00:00:30Z",
+      });
+    const subset = (run: CiWorkflowWindowRun, conclusion = "success") => [
+      shard(run, run.id * 10 + 1, "repo-cli-7", "2026-11-10T00:03:00Z"),
+      shard(run, run.id * 10 + 2, "law-practice-12", "2026-11-10T00:02:00Z", conclusion),
+      shard(run, run.id * 10 + 3, "unit-g", "2026-11-10T00:04:00Z"),
+    ];
+
+    it.effect("measures a planned subset from its earliest present shard to the aggregator", () =>
+      Effect.gen(function* () {
+        const run = windowRun({ id: 410 });
+        const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+          windowRunJobs(run, [testPlan(run), ...subset(run), aggregator(run)]),
+        ]);
+        expect(laneStat(report, "Test Unit").n).toBe(1);
+        // Earliest present shard start 00:02 to aggregator completion 00:15.
+        assertSome(laneStat(report, "Test Unit").p95Seconds, 780);
+        expect(attributionStat(report, "Test Unit").incompleteEffectiveSpans).toBe(0);
+      })
+    );
+
+    it.effect("keeps the same subset incomplete without a Test Plan job", () =>
+      Effect.gen(function* () {
+        const run = windowRun({ id: 420 });
+        const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+          windowRunJobs(run, [...subset(run), aggregator(run)]),
+        ]);
+        expect(laneStat(report, "Test Unit").n).toBe(0);
+        expect(attributionStat(report, "Test Unit").incompleteEffectiveSpans).toBe(1);
+      })
+    );
+
+    it.effect("attributes a failed present shard of a planned run as a failure", () =>
+      Effect.gen(function* () {
+        const run = windowRun({ id: 430 });
+        const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+          windowRunJobs(run, [testPlan(run), ...subset(run, "failure"), aggregator(run, "failure")]),
+        ]);
+        expect(laneStat(report, "Test Unit").n).toBe(0);
+        expect(attributionStat(report, "Test Unit").failures).toBe(1);
+        expect(attributionStat(report, "Test Unit").incompleteEffectiveSpans).toBe(0);
+      })
+    );
+
+    it.effect("keeps a planned run with no shard job incomplete", () =>
+      Effect.gen(function* () {
+        const run = windowRun({ id: 440 });
+        const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, [
+          windowRunJobs(run, [testPlan(run), aggregator(run)]),
+        ]);
+        expect(laneStat(report, "Test Unit").n).toBe(0);
+        expect(attributionStat(report, "Test Unit").incompleteEffectiveSpans).toBe(1);
+      })
+    );
+  });
+
   it.effect("renders an unratified version without claiming a ratified context count", () =>
     Effect.gen(function* () {
       const report = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, []);
