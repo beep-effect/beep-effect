@@ -654,9 +654,9 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     required: false,
     laneClass: "cli-runnable",
     replay: "exact",
-    flags: ["--affected", "--base", "--summarize", "--runs", "--seed", "--filter"],
+    flags: ["--affected", "--base", "--summarize", "--runs", "--seed", "--filter", "--shard"],
     notes:
-      "Added by one-round-loop P1 (D3): schema property laws at a 400-run PR floor via BEEP_FC_NUM_RUNS, pinned to a fixed BEEP_FC_SEED so local and CI test identical inputs (one-round determinism; nightly rotates seeds); lands non-required, flips to required at P4 after a stable green history. Hosted CI runs it as two complementary slices, --filter @beep/repo-cli and --filter !@beep/repo-cli, under one aggregate context; without --filter the lane runs both.",
+      "Added by one-round-loop P1 (D3): schema property laws at a 400-run PR floor via BEEP_FC_NUM_RUNS, pinned to a fixed BEEP_FC_SEED so local and CI test identical inputs (one-round determinism; nightly rotates seeds); lands non-required, flips to required at P4 after a stable green history. Hosted CI runs it as four slices under one aggregate context: the two Vitest shards of @beep/repo-cli (--filter @beep/repo-cli --shard 1/2 and 2/2), packages/foundation with packages/drivers, and every other package; --filter takes comma-separated Turbo filters, and without --filter and --shard the lane runs everything.",
   }),
   // lab-apps-lifecycle P2 (ratified row 10): the single visible labs proof
   // lane. Labs are excluded from every required turbo lane (row 9); this lane
@@ -735,6 +735,7 @@ export class CiLaneRunOptions extends S.Opaque<CiLaneRunOptions, { readonly bran
     runs: S.optionalKey(S.String),
     seed: S.optionalKey(S.String),
     filter: S.optionalKey(S.String),
+    shard: S.optionalKey(CiLanePartitionShard),
     partition: S.optionalKey(CiLanePartitionId),
     plannedPartitions: CiLanePartitionId.pipe(S.Array, S.optionalKey),
     inventory: S.optionalKey(S.String),
@@ -761,11 +762,27 @@ const CI_LANE_TURBO_CONCURRENCY_ARG = "--concurrency=4";
 const turboShapeArgs = (options: CiLaneRunOptions): ReadonlyArray<string> => [
   ...(options.affected ? ["--affected"] : A.empty<string>()),
   ...(options.summarize ? ["--summarize"] : A.empty<string>()),
+  // Commas separate several Turbo filters. Turbo unions the positive ones and subtracts the negated
+  // ones, so two slices can cover a lane exactly once without a package table.
   ...O.match(O.fromUndefinedOr(options.filter), {
     onNone: A.empty<string>,
-    onSome: (filter) => [`--filter=${filter}`],
+    onSome: (filter) =>
+      A.map(A.filter(A.map(Str.split(filter, ","), Str.trim), Str.isNonEmpty), (entry) => `--filter=${entry}`),
   }),
 ];
+
+// Vitest slice of the swept packages, forwarded behind Turbo's `--` so each package's own
+// `vitest run` receives it. Only the property lane reads it.
+const vitestShardPassThroughArgs = (options: CiLaneRunOptions): ReadonlyArray<string> =>
+  O.match(O.fromUndefinedOr(options.shard), {
+    onNone: A.empty<string>,
+    onSome: ({ index, total }) => ["--", `--shard=${index}/${total}`],
+  });
+
+const decodeCiLaneShardFlag = (raw: string) => {
+  const parts = A.map(Str.split(raw, "/"), Number);
+  return S.decodeUnknownEffect(CiLanePartitionShard)(A.length(parts) === 2 ? { index: parts[0], total: parts[1] } : {});
+};
 
 // Default BEEP_FC_NUM_RUNS floor for the property lane. A blank or
 // whitespace-only `--runs` (e.g. `--runs ""`) would otherwise reach the
@@ -1936,10 +1953,13 @@ export const ciLaneStepsForTesting: {
           command: "bunx",
           // Keep sweeping after one red suite so a nightly run reports every
           // failing package instead of the first (#2687).
-          args: directTurboArgs(
-            ["test:property"],
-            [CI_LANE_TURBO_CONCURRENCY_ARG, "--continue=dependencies-successful", ...turboShapeArgs(options)]
-          ),
+          args: [
+            ...directTurboArgs(
+              ["test:property"],
+              [CI_LANE_TURBO_CONCURRENCY_ARG, "--continue=dependencies-successful", ...turboShapeArgs(options)]
+            ),
+            ...vitestShardPassThroughArgs(options),
+          ],
           cwd: repoRoot,
           env: {
             BEEP_FC_NUM_RUNS: resolvePropertyLaneRuns(options.runs),
@@ -2848,7 +2868,13 @@ export const ciLaneCommand = Command.make(
       Flag.withDescription("BEEP_FC_SEED for the property lane; a fixed seed makes local and CI test identical inputs")
     ),
     filter: Flag.String("filter").pipe(
-      Flag.withDescription("Pass one package filter to the Turbo invocation inside the selected lane"),
+      Flag.withDescription(
+        "Pass one package filter, or several separated by commas, to the Turbo invocation inside the selected lane"
+      ),
+      Flag.optional
+    ),
+    shard: Flag.String("shard").pipe(
+      Flag.withDescription("property: run Vitest slice <index>/<total> of each swept package"),
       Flag.optional
     ),
     partition: Flag.ChoiceWithValue("partition", partitionFlagChoices).pipe(
@@ -2928,10 +2954,20 @@ export const ciLaneCommand = Command.make(
     runs,
     seed,
     selectionOnly,
+    shard,
     summarize,
     to,
     validateEnvelopes,
   }) {
+    const decodedShard = yield* O.match(shard, {
+      onNone: () => Effect.succeedNone,
+      onSome: (raw) =>
+        decodeCiLaneShardFlag(raw).pipe(
+          Effect.asSome,
+          CiCommandError.mapError("--shard must be <index>/<total> with the index no larger than the total."),
+          Effect.catchTag("CiCommandError", reportCiCommandError)
+        ),
+    });
     const decodedPlannedPartitions = yield* O.match(plannedPartitions, {
       onNone: () => Effect.succeedNone,
       onSome: (raw) =>
@@ -2955,6 +2991,7 @@ export const ciLaneCommand = Command.make(
         coverageOutput,
         coverageInput,
         plannedPartitions: decodedPlannedPartitions,
+        shard: decodedShard,
       }),
       compareOnly,
       coverageOnly,
