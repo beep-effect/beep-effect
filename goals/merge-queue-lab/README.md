@@ -39,7 +39,7 @@ Use this command for execution-capable sessions:
 P3 Yeet. P0 to P2 and P4's work are done: the verdict is **go**
 ([`decisions/2026-11-10-verdict-go.md`](./decisions/2026-11-10-verdict-go.md)).
 Next action: merge the driver pull request (#3072) and this packet's final
-pull request, then adopt the closeout in a packet-state pull request.
+pull request (#3112), then adopt the closeout in a packet-state pull request.
 
 ## Latest Evidence
 
