@@ -101,7 +101,7 @@ jobs:
             echo "::notice::VERCEL_TOKEN is unavailable (fork pull request?); no Vercel deploys planned."
             summary "| all | - | skipped: no VERCEL_TOKEN |"
             echo "any=false" >> "$GITHUB_OUTPUT"
-            echo 'matrix={"include":[]}' >> "$GITHUB_OUTPUT"
+            echo 'matrix=[]' >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -176,7 +176,7 @@ jobs:
           else
             echo "any=false" >> "$GITHUB_OUTPUT"
           fi
-          echo "matrix=$(jq -c '{include: .}' <<<"$include")" >> "$GITHUB_OUTPUT"
+          echo "matrix=$(jq -c . <<<"$include")" >> "$GITHUB_OUTPUT"
 
   deploy:
     name: Deploy ${{ matrix.project }} (${{ matrix.target }})
@@ -186,7 +186,8 @@ jobs:
     timeout-minutes: 40
     strategy:
       fail-fast: false
-      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
     environment:
       name: vercel-${{ matrix.project }}-${{ matrix.target }}
       url: ${{ steps.deploy.outputs.url }}
