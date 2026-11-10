@@ -23,6 +23,7 @@ import { Node, Project, SyntaxKind } from "ts-morph";
 import { EffectVitestLintError } from "../Lint.errors.ts";
 import {
   EffectVitestCensusRow,
+  EffectVitestConfigFileGlobs,
   EffectVitestFinding,
   EffectVitestInventoryDocument,
   EffectVitestScanTiming,
@@ -125,6 +126,11 @@ const findingOrder = Order.mapInput(Order.String, (finding: EffectVitestFinding)
 export const countEffectVitestSourceLines = (text: string): number =>
   Str.isEmpty(text) ? 0 : Str.split("\n")(text).length - (Str.endsWith("\n")(text) ? 1 : 0);
 
+// The source globs' `!` exclusions as walk ignores. The `//#lint:effect-vitest` Turbo row applies each
+// negation to every glob in it, config globs included, so both walks below ignore the same set: a file
+// the key does not hash is never one the scan reads.
+const effectVitestWalkIgnores = A.map(A.filter(EffectVitestSourceFileGlobs, Str.startsWith("!")), Str.slice(1));
+
 /**
  * Discover the schema-owned D9 path set through the repository filesystem service.
  *
@@ -150,7 +156,6 @@ export const discoverEffectVitestSourcePaths = Effect.fn("EffectVitestScan.disco
   root: string
 ) {
   const fsUtils = yield* FsUtils;
-  const excludedGlobs = A.filter(EffectVitestSourceFileGlobs, Str.startsWith("!"));
   const includedGlobs = A.filter(EffectVitestSourceFileGlobs, (pattern) => !Str.startsWith("!")(pattern));
   return yield* fsUtils
     .globFiles(
@@ -158,7 +163,7 @@ export const discoverEffectVitestSourcePaths = Effect.fn("EffectVitestScan.disco
       GlobOptions.make({
         cwd: root,
         absolute: true,
-        ignore: A.map(excludedGlobs, Str.slice(1)),
+        ignore: effectVitestWalkIgnores,
       })
     )
     .pipe(EffectVitestLintError.mapError("Unable to discover the Effect Vitest D9 scope."));
@@ -246,15 +251,40 @@ export const retainBrowserSafeFindings: {
   browserMode ? A.filter(findings, (finding) => !A.contains(NODE_ASSERT_REPLACEMENT_RULES, finding.ruleId)) : findings
 );
 
-const VitestConfigGlobs = ["{apps,packages,infra}/**/vitest*.config.{ts,mts,js,mjs}"];
-
-const discoverBrowserModeTestPaths = Effect.fnUntraced(function* (root: string) {
+/**
+ * Discover the test files that a vitest browser-mode project includes.
+ *
+ * **Details**
+ *
+ * Every config named by `EffectVitestConfigFileGlobs` is parsed, and the
+ * `include` globs of each `browser: { enabled: true }` project are resolved
+ * from that config's directory. The config walk ignores exactly what the D9
+ * source walk ignores (the `!` entries of `EffectVitestSourceFileGlobs`, such
+ * as `dist` output), because the `//#lint:effect-vitest` Turbo row applies
+ * those negations to the config globs too: a config the cache key does not
+ * hash must not change the result.
+ *
+ * **Example** (Discover browser-mode tests beneath a repository root)
+ *
+ * ```ts import.meta.vitest name="Discover browser-mode tests beneath a repository root"
+ * import { discoverEffectVitestBrowserModePaths } from "@beep/repo-cli/commands/Lint"
+ * import * as Effect from "effect/Effect";
+ * const program = discoverEffectVitestBrowserModePaths(process.cwd())
+ * Effect.isEffect(program) // => true
+ * ```
+ *
+ * @category resources
+ * @since 0.0.0
+ */
+export const discoverEffectVitestBrowserModePaths = Effect.fn("EffectVitestScan.discoverBrowserModePaths")(function* (
+  root: string
+) {
   const fsUtils = yield* FsUtils;
   const path = yield* Path.Path;
   const configProject = new Project({ skipAddingFilesFromTsConfig: true, skipFileDependencyResolution: true });
   const configs = yield* fsUtils.globFiles(
-    VitestConfigGlobs,
-    GlobOptions.make({ cwd: root, absolute: true, ignore: ["**/node_modules/**"] })
+    EffectVitestConfigFileGlobs,
+    GlobOptions.make({ cwd: root, absolute: true, ignore: A.append(effectVitestWalkIgnores, "**/node_modules/**") })
   );
   const included = yield* Effect.forEach(configs, (configPath) =>
     A.match(browserModeIncludeGlobs(configProject.addSourceFileAtPath(configPath)), {
@@ -552,7 +582,7 @@ export const runEffectVitestLint = Effect.fn("EffectVitestScan.run")(function* (
     fallbackPrefixes: [{ prefix: "infra/", owner: "@beep/infra" }],
   });
   const sourcePaths = yield* discoverEffectVitestSourcePaths(root);
-  const browserModePaths = yield* discoverBrowserModeTestPaths(root);
+  const browserModePaths = yield* discoverEffectVitestBrowserModePaths(root);
   yield* Console.log(
     `[effect-vitest:phase] discoveryMs=${(performance.now() - started).toFixed(1)} files=${sourcePaths.length}`
   );

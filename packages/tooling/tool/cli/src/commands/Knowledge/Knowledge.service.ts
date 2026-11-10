@@ -18,12 +18,13 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { identity, pipe } from "effect/Function";
+import { constTrue, dual, identity, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
@@ -86,6 +87,7 @@ import {
 import type { CapturedStreams } from "@beep/repo-cli-kit/process/StepExec";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
+import type * as Exit from "effect/Exit";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GitCommandErrorAdapter } from "../../internal/repo-run/GitExec.ts";
 import type { KnowledgeStaticCommandTree } from "./Knowledge.command-surface.ts";
@@ -148,6 +150,7 @@ const FORMAT_CHARACTER_PATTERN = /\p{Cf}/gu;
 const POSIX_ABSOLUTE_PATH_PATTERN = /(?<![\p{L}\p{M}\p{N}\p{Pc}/])\/[^\s/"'`:]+(?:\/[^\s/"'`:]+)*(?::\d+(?::\d+)?)?/gu;
 const WINDOWS_ABSOLUTE_PATH_PATTERN = /[A-Za-z]:\\(?:[^\\\s"'`]+\\)*[^\\\s"'`]+(?::\d+(?::\d+)?)?/gu;
 const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
 const bytesEquivalent = S.toEquivalence(S.Uint8Array);
 const decodeFindingId = S.decodeUnknownEffect(KnowledgeFindingId);
 
@@ -365,33 +368,116 @@ const trackedTreePathExists = (entries: ReadonlyArray<KnowledgeTrackedEntry>, re
   return A.some(entries, (entry) => entry.path === repoPath || Str.startsWith(directoryPrefix)(entry.path));
 };
 
-const knowledgePathExists = (entries: ReadonlyArray<KnowledgeTrackedEntry>, repoPath: string): boolean =>
-  HashSet.has(DERIVED_PROJECTION_PATHS, repoPath) || trackedTreePathExists(entries, repoPath);
+/**
+ * One side's tracked entries plus the exact-path and directory-prefix sets that answer
+ * {@link trackedTreePathExists} in constant time.
+ *
+ * `directories` holds every proper `/`-prefix of every entry path, so membership in `paths` or
+ * `directories` is exactly "some entry equals the path or lies beneath it". Git tree paths never carry
+ * empty segments, so no spelling with `//`, a trailing `/`, or an empty string can match either set,
+ * which is also what the linear prefix scan answers for those spellings.
+ */
+interface KnowledgeTrackedPathIndex {
+  readonly directories: HashSet.HashSet<string>;
+  readonly entries: ReadonlyArray<KnowledgeTrackedEntry>;
+  readonly paths: HashSet.HashSet<string>;
+}
+
+const makeTrackedPathIndex = (entries: ReadonlyArray<KnowledgeTrackedEntry>): KnowledgeTrackedPathIndex => {
+  const directories = MutableHashSet.empty<string>();
+  for (const entry of entries) {
+    A.reduce(A.dropRight(Str.split("/")(entry.path), 1), "", (parent, segment) => {
+      const directory = Str.isEmpty(parent) ? segment : `${parent}/${segment}`;
+      MutableHashSet.add(directories, directory);
+      return directory;
+    });
+  }
+  return {
+    directories: HashSet.fromIterable(directories),
+    entries,
+    paths: HashSet.fromIterable(A.map(entries, (entry) => entry.path)),
+  };
+};
+
+const indexedTrackedPathExists = (index: KnowledgeTrackedPathIndex, repoPath: string): boolean =>
+  HashSet.has(index.paths, repoPath) || HashSet.has(index.directories, repoPath);
+
+const knowledgePathExists = (index: KnowledgeTrackedPathIndex, repoPath: string): boolean =>
+  HashSet.has(DERIVED_PROJECTION_PATHS, repoPath) || indexedTrackedPathExists(index, repoPath);
+
+/**
+ * Answers the semantic-delta tracked-path question through the indexed lookup the scanner uses.
+ *
+ * **Details**
+ *
+ * A path exists when an entry equals it or lies beneath it as a directory. The index answers this
+ * with two set lookups instead of a prefix scan over the whole tree, and must agree with that scan
+ * for every spelling, including partial segments, trailing slashes, and empty strings.
+ *
+ * **Example** (A directory prefix exists, a partial segment does not)
+ *
+ * ```ts
+ * import { KnowledgeTrackedEntry } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
+ * import { knowledgeTrackedPathExistsForTesting } from "@beep/repo-cli/test/Knowledge"
+ *
+ * const entries = [KnowledgeTrackedEntry.make({ path: "goals/ab/x.md", mode: "100644", objectId: "oid" })]
+ *
+ * console.log(knowledgeTrackedPathExistsForTesting(entries, "goals/ab")) // true
+ * console.log(knowledgeTrackedPathExistsForTesting(entries, "goals/a")) // false
+ * ```
+ *
+ * @param entries - Tracked entries of one tree.
+ * @param repoPath - Repository-relative spelling to look up.
+ * @returns Whether the indexed lookup reports the path as tracked.
+ * @category testing
+ * @since 0.0.0
+ */
+export const knowledgeTrackedPathExistsForTesting: {
+  (repoPath: string): (entries: ReadonlyArray<KnowledgeTrackedEntry>) => boolean;
+  (entries: ReadonlyArray<KnowledgeTrackedEntry>, repoPath: string): boolean;
+} = dual(2, (entries: ReadonlyArray<KnowledgeTrackedEntry>, repoPath: string): boolean =>
+  indexedTrackedPathExists(makeTrackedPathIndex(entries), repoPath)
+);
 
 const decodeUtf8 = (bytes: Uint8Array, repoPath: string): Effect.Effect<string, KnowledgeOperationalError> =>
   decodeKnowledgeUtf8(bytes, `Malformed UTF-8 in tracked Markdown file "${repoPath}".`);
 
 const documentIdForBase = (repoPath: string): string => nfc(`base:${repoPath}`);
 
-const makeHeadDocumentId = (
+/**
+ * Builds the HEAD document-identity function for one comparison.
+ *
+ * The rename lookups and the base path set are built once per comparison rather than once per HEAD
+ * document. The first rename naming a target wins, exactly as a front-to-back search would pick it.
+ *
+ * @param baseEntries - Tracked entries of the base tree; only their paths are read.
+ * @param renames - Renames between base and HEAD, in the order `git diff` reported them.
+ * @returns The identity of a HEAD entry: its rename source's base identity, its own base identity
+ *   when the path exists on both sides and was not renamed away, or a HEAD-only identity.
+ */
+const makeHeadDocumentIdResolver = (
   baseEntries: ReadonlyArray<KnowledgeTrackedEntry>,
-  headEntry: KnowledgeTrackedEntry,
   renames: ReadonlyArray<KnowledgeRename>
-): string => {
-  const renameTarget = A.findFirst(renames, (rename) => rename.targetPath === headEntry.path);
-  if (O.isSome(renameTarget)) {
-    return nfc(`base:${renameTarget.value.sourcePath}`);
-  }
+): ((headEntry: KnowledgeTrackedEntry) => string) => {
+  const renameSourceByTarget = A.reduce(renames, HashMap.empty<string, string>(), (byTarget, rename) =>
+    HashMap.has(byTarget, rename.targetPath) ? byTarget : HashMap.set(byTarget, rename.targetPath, rename.sourcePath)
+  );
   const renamedSources = HashSet.fromIterable(A.map(renames, (rename) => rename.sourcePath));
   const basePaths = HashSet.fromIterable(A.map(baseEntries, (entry) => entry.path));
-  if (HashSet.has(basePaths, headEntry.path) && !HashSet.has(renamedSources, headEntry.path)) {
-    return nfc(`base:${headEntry.path}`);
-  }
-  return nfc(
-    HashSet.has(renamedSources, headEntry.path)
-      ? `head-new:${headEntry.path}:${headEntry.objectId}`
-      : `head-new:${headEntry.path}`
-  );
+  return (headEntry) =>
+    O.match(HashMap.get(renameSourceByTarget, headEntry.path), {
+      onSome: (sourcePath) => nfc(`base:${sourcePath}`),
+      onNone: () => {
+        if (HashSet.has(basePaths, headEntry.path) && !HashSet.has(renamedSources, headEntry.path)) {
+          return nfc(`base:${headEntry.path}`);
+        }
+        return nfc(
+          HashSet.has(renamedSources, headEntry.path)
+            ? `head-new:${headEntry.path}:${headEntry.objectId}`
+            : `head-new:${headEntry.path}`
+        );
+      },
+    });
 };
 
 const findingLocation = (path: string, line: number, column: number): KnowledgeFindingLocation =>
@@ -462,11 +548,7 @@ export const knowledgeCommandWords = (span: string): ReadonlyArray<string> => {
  * @param entries - Tracked tree of the archive side currently being scanned.
  * @returns The normalized repository path when it is governed and absent from that tracked tree.
  */
-const brokenPathAt = (
-  raw: string,
-  documentPath: string,
-  entries: ReadonlyArray<KnowledgeTrackedEntry>
-): O.Option<string> =>
+const brokenPathAt = (raw: string, documentPath: string, entries: KnowledgeTrackedPathIndex): O.Option<string> =>
   pipe(
     normalizeKnowledgeRepoPath(documentPath, raw),
     O.filter((repoPath) => !knowledgePathExists(entries, repoPath))
@@ -477,7 +559,7 @@ const assertionCandidate = (
   lineNumber: number,
   documentPath: string,
   documentId: string,
-  entries: ReadonlyArray<KnowledgeTrackedEntry>
+  entries: KnowledgeTrackedPathIndex
 ): O.Option<KnowledgeFindingCandidate> =>
   O.map(brokenPathAt(assertion.path, documentPath, entries), (repoPath) =>
     failedAssertionCandidate(documentId, documentPath, repoPath, lineNumber, assertion.column)
@@ -513,7 +595,7 @@ const commandOccurrence = (
  * @param lineNumber - One-based source line containing the span.
  * @param documentPath - Repository-relative path of the scanned document.
  * @param documentId - Stable paired-document identity used by semantic delta.
- * @param entries - Tracked entries in the archive side being scanned.
+ * @param entries - Tracked-path index of the archive side being scanned.
  * @param gitRefNames - Exact branch and tag names collected once for the comparison.
  * @param packageExports - Inline columns whose affirmative export claim has a tracked owner and target.
  * @returns A finding candidate only when the span is a governed missing path rather than a command
@@ -524,7 +606,7 @@ const inlinePathCandidate = (
   lineNumber: number,
   documentPath: string,
   documentId: string,
-  entries: ReadonlyArray<KnowledgeTrackedEntry>,
+  entries: KnowledgeTrackedPathIndex,
   gitRefNames: HashSet.HashSet<string>,
   packageExports: HashSet.HashSet<number>
 ): O.Option<KnowledgeFindingCandidate> =>
@@ -541,7 +623,7 @@ const extractLineFindings = (
   lineNumber: number,
   documentPath: string,
   documentId: string,
-  entries: ReadonlyArray<KnowledgeTrackedEntry>,
+  entries: KnowledgeTrackedPathIndex,
   gitRefNames: HashSet.HashSet<string>,
   packageExports: HashSet.HashSet<number>
 ): readonly [ReadonlyArray<KnowledgeFindingCandidate>, ReadonlyArray<KnowledgeCommandOccurrence>] => {
@@ -567,6 +649,7 @@ const extractLineFindings = (
 
 const extractDocument = Effect.fn("Knowledge.extractDocument")(function* (
   oracle: KnowledgeArchiveOracle,
+  index: KnowledgeTrackedPathIndex,
   entry: KnowledgeTrackedEntry,
   documentId: string,
   gitRefNames: HashSet.HashSet<string>,
@@ -587,7 +670,7 @@ const extractDocument = Effect.fn("Knowledge.extractDocument")(function* (
       line.number,
       entry.path,
       documentId,
-      oracle.trackedEntries,
+      index,
       gitRefNames,
       verifiedPackageExportColumns(line.text, packages, documentPackages, oracle.trackedEntries)
     );
@@ -689,6 +772,7 @@ const documentCandidatesForSide = Effect.fn("Knowledge.documentCandidatesForSide
     A.filter((entry) => isRegularBlob(entry) && isScannerMarkdownPath(entry.path)),
     A.sort(Order.mapInput(Order.String, (entry: KnowledgeTrackedEntry) => entry.path))
   );
+  const index = makeTrackedPathIndex(oracle.trackedEntries);
   const packages = yield* deriveKnowledgePackages(
     { ...oracle, commit: "archive", treeish: "archive" },
     HashSet.fromIterable(A.map(A.filter(oracle.trackedEntries, isRegularBlob), (entry) => entry.path))
@@ -696,7 +780,7 @@ const documentCandidatesForSide = Effect.fn("Knowledge.documentCandidatesForSide
   let candidates = A.empty<KnowledgeFindingCandidate>();
   let commands = A.empty<KnowledgeCommandOccurrence>();
   for (const entry of documents) {
-    const extracted = yield* extractDocument(oracle, entry, documentId(entry), gitRefNames, packages);
+    const extracted = yield* extractDocument(oracle, index, entry, documentId(entry), gitRefNames, packages);
     candidates = A.appendAll(candidates, extracted.candidates);
     commands = A.appendAll(commands, extracted.commands);
   }
@@ -785,30 +869,46 @@ const degradeToBaseBootFailure = (error: KnowledgeProbeBootError): Effect.Effect
     skippedProbeOutcome(KnowledgeProbePolicy.Enum["skipped-base-boot-failure"], pipe(error, probeBootExcerpt, O.some))
   );
 
+// A current-checkout probe that cannot boot against HEAD data is the branch author's defect, never
+// lost coverage, so HEAD-side boot failures surface as operational errors.
+const headProbeFailure = <A>(
+  exit: Exit.Exit<A, KnowledgeOperationalError | KnowledgeProbeBootError>
+): Effect.Effect<A, KnowledgeOperationalError> =>
+  Effect.catchTag(exit, "KnowledgeProbeBootError", (error) =>
+    Effect.fail(KnowledgeOperationalError.make({ message: sanitizeProbeDiagnostic(error.message) }))
+  );
+
 const probeBothSides = Effect.fn("Knowledge.probeBothSides")(function* (
   input: KnowledgePairedOracleInput,
   base: KnowledgeProbeSideInput,
   head: KnowledgeProbeSideInput
 ) {
-  const [currentTree, headStaticTree] = yield* Effect.all([input.head.currentCommandTree, input.head.commandTree]).pipe(
-    Effect.catchTag("KnowledgeProbeBootError", (error) =>
-      Effect.fail(KnowledgeOperationalError.make({ message: sanitizeProbeDiagnostic(error.message) }))
-    )
+  // Every probe below is independent of the others' results: each reads only its own side's archive
+  // data and scratch root, so they run at once. Their exits are then replayed in the sequential order
+  // the precedence rules below were written for, which keeps the reported outcome identical to running
+  // them one after another: a failure is only observed when every step before it succeeded.
+  const [currentTreeExit, headStaticTreeExit, headCandidatesExit, baseCandidatesExit] = yield* Effect.all(
+    [
+      Effect.exit(input.head.currentCommandTree),
+      Effect.exit(input.head.commandTree),
+      Effect.exit(probeCandidatesForHead(input.head, base.commands, head)),
+      Effect.exit(probeCandidatesForSide(input.base, base)),
+    ],
+    { concurrency: "unbounded" }
   );
+  const currentTree = yield* headProbeFailure(currentTreeExit);
+  const headStaticTree = yield* headProbeFailure(headStaticTreeExit);
   if (!KnowledgeCommandSurface.staticCommandNodeEquivalent(currentTree, headStaticTree)) {
     return yield* KnowledgeOperationalError.make({
       message: "Static command surface provenance does not match the current-checkout command tree.",
     });
   }
-  // HEAD runs first because both sides execute the current checkout's code. Its command probe receives
-  // the union of base and HEAD inputs, so a current-code defect in a base-only command fails as the
-  // branch author's operational error before a base-data-only incompatibility may degrade coverage.
-  const headCandidates = yield* probeCandidatesForHead(input.head, base.commands, head).pipe(
-    Effect.catchTag("KnowledgeProbeBootError", (error) =>
-      Effect.fail(KnowledgeOperationalError.make({ message: sanitizeProbeDiagnostic(error.message) }))
-    )
-  );
-  const baseCandidates = yield* probeCandidatesForSide(input.base, base);
+  // HEAD is observed first because both sides execute the current checkout's code. Its command probe
+  // receives the union of base and HEAD inputs, so a current-code defect in a base-only command fails
+  // as the branch author's operational error before a base-data-only incompatibility may degrade
+  // coverage.
+  const headCandidates = yield* headProbeFailure(headCandidatesExit);
+  const baseCandidates = yield* baseCandidatesExit;
   return {
     policy: KnowledgeProbePolicy.Enum.enabled,
     detail: O.none<string>(),
@@ -963,16 +1063,13 @@ export const scanKnowledgePair = Effect.fn("Knowledge.scanPair")(function* (inpu
     (entry) => documentIdForBase(entry.path),
     input.gitRefNames
   );
+  const headDocumentId = makeHeadDocumentIdResolver(input.base.trackedEntries, input.renames);
   const headIndexEntry = A.findFirst(input.head.trackedEntries, (entry) => entry.path === INDEX_PATH);
   const headIndexDocumentId = O.match(headIndexEntry, {
     onNone: () => `head-new:${INDEX_PATH}`,
-    onSome: (entry) => makeHeadDocumentId(input.base.trackedEntries, entry, input.renames),
+    onSome: headDocumentId,
   });
-  const headDocuments = yield* documentCandidatesForSide(
-    input.head,
-    (entry) => makeHeadDocumentId(input.base.trackedEntries, entry, input.renames),
-    input.gitRefNames
-  );
+  const headDocuments = yield* documentCandidatesForSide(input.head, headDocumentId, input.gitRefNames);
   const probe = yield* resolveProbeCandidates(
     input,
     { commands: baseDocuments.commands, indexDocumentId: documentIdForBase(INDEX_PATH) },
@@ -1577,7 +1674,11 @@ const READABLE_ARCHIVE_ENTRY_TYPES = HashSet.make("File", "Directory");
 const isReadableArchiveEntry = (_path: string, entry: unknown): boolean =>
   P.hasProperty(entry, "type") && P.isString(entry.type) && HashSet.has(READABLE_ARCHIVE_ENTRY_TYPES, entry.type);
 
-const extractArchive = Effect.fn("Knowledge.extractArchive")(function* (archivePath: string, archiveRoot: string) {
+const extractArchive = Effect.fn("Knowledge.extractArchive")(function* (
+  archivePath: string,
+  archiveRoot: string,
+  admitsPath: (repoPath: string) => boolean = constTrue
+) {
   yield* Effect.tryPromise({
     try: () =>
       extractTar({
@@ -1586,7 +1687,12 @@ const extractArchive = Effect.fn("Knowledge.extractArchive")(function* (archiveP
         strict: true,
         preservePaths: false,
         unlink: true,
-        filter: isReadableArchiveEntry,
+        // Extracted files are data read for their bytes only; nothing reads a timestamp, so skipping
+        // one `utimes` call per entry is free.
+        noMtime: true,
+        // The type filter always applies; a path selection only ever narrows it further.
+        filter: (entryPath: string, entry: unknown) =>
+          isReadableArchiveEntry(entryPath, entry) && admitsPath(entryPath),
       }),
     catch: KnowledgeOperationalError.new(`Failed to safely extract Git archive "${archivePath}".`),
   });
@@ -1670,6 +1776,219 @@ export const resolveKnowledgeProbePolicy = Effect.fn("Knowledge.resolveProbePoli
     : KnowledgeProbePolicy.Enum["skipped-untrusted-context"];
 });
 
+/**
+ * Runs two independent effects at once and reports their outcomes as `first` then `second` would.
+ *
+ * Both always run to completion; the first failure in sequence order wins, so callers keep the error
+ * precedence of the sequential program they replace.
+ *
+ * @param first - The effect whose failure takes precedence.
+ * @param second - The effect whose failure is reported only when `first` succeeds.
+ * @returns Both successes as a pair, or the first failure in sequence order.
+ */
+const inSequenceOrder = <A, B, E1, E2, R1, R2>(
+  first: Effect.Effect<A, E1, R1>,
+  second: Effect.Effect<B, E2, R2>
+): Effect.Effect<readonly [A, B], E1 | E2, R1 | R2> =>
+  Effect.flatMap(Effect.all([Effect.exit(first), Effect.exit(second)], { concurrency: 2 }), ([firstExit, secondExit]) =>
+    Effect.flatMap(firstExit, (a) => Effect.map(secondExit, (b) => [a, b] as const))
+  );
+
+/**
+ * Runs two independent knowledge steps at once and replays their outcomes in sequence order.
+ *
+ * **Details**
+ *
+ * Both steps always run to completion, and the first failure in sequence order is the one reported,
+ * so a caller that overlaps two steps keeps the error precedence of the sequence it replaces. The
+ * knowledge doctor's gate uses it to read the merge-base seal inputs beside the HEAD tree.
+ *
+ * **Example** (Both succeed in order)
+ *
+ * ```ts
+ * import { knowledgeInSequenceOrder } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(knowledgeInSequenceOrder(Effect.succeed("head"), Effect.succeed("base")))) // true
+ * ```
+ *
+ * @param first - The step whose failure takes precedence.
+ * @param second - The step run beside it.
+ * @returns Both results in order, or the first failure in sequence order.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const knowledgeInSequenceOrder: {
+  <B, E2, R2>(
+    second: Effect.Effect<B, E2, R2>
+  ): <A, E1, R1>(first: Effect.Effect<A, E1, R1>) => Effect.Effect<readonly [A, B], E1 | E2, R1 | R2>;
+  <A, B, E1, E2, R1, R2>(
+    first: Effect.Effect<A, E1, R1>,
+    second: Effect.Effect<B, E2, R2>
+  ): Effect.Effect<readonly [A, B], E1 | E2, R1 | R2>;
+} = dual(2, inSequenceOrder);
+
+/**
+ * Runs two effects at once and replays their outcomes in sequence order, as semantic-delta's archive
+ * write and extraction phases do.
+ *
+ * **Details**
+ *
+ * Both effects always run to completion. When both fail, the first effect's error is reported even
+ * if the second failed sooner, so the base side's error wins exactly as it did in the base-then-HEAD
+ * sequence this replaces. When only one fails, its error is reported; when both succeed, the results
+ * come back as `[first, second]`.
+ *
+ * **Example** (Both succeed in order)
+ *
+ * ```ts
+ * import { inSequenceOrderForTesting } from "@beep/repo-cli/test/Knowledge"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = inSequenceOrderForTesting(Effect.succeed("base"), Effect.succeed("head"))
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param first - The effect whose failure takes precedence (the base side).
+ * @param second - The effect run beside it (the HEAD side).
+ * @returns Both results in order, or the first failure in sequence order.
+ * @category testing
+ * @since 0.0.0
+ */
+export const inSequenceOrderForTesting: {
+  <B, E2, R2>(
+    second: Effect.Effect<B, E2, R2>
+  ): <A, E1, R1>(first: Effect.Effect<A, E1, R1>) => Effect.Effect<readonly [A, B], E1 | E2, R1 | R2>;
+  <A, B, E1, E2, R1, R2>(
+    first: Effect.Effect<A, E1, R1>,
+    second: Effect.Effect<B, E2, R2>
+  ): Effect.Effect<readonly [A, B], E1 | E2, R1 | R2>;
+} = dual(2, inSequenceOrder);
+
+const COMMIT_SPECIFIC_ATTRIBUTE = "export-subst";
+
+/**
+ * Whether the base side's static command surface is provably the HEAD side's, so one derivation
+ * serves both.
+ *
+ * **Details**
+ *
+ * The static reader sees only the files {@link KnowledgeCommandSurface.staticCommandTreeInputs}
+ * names, and their extracted bytes are a function of blob, mode and in-tree attributes. Equal rows
+ * prove equal inputs unless an attribute substitutes commit-specific text, so any `.gitattributes`
+ * that is not a regular blob, or that mentions `export-subst` at all, refuses the reuse and both sides
+ * derive their own surface as before.
+ */
+const sharesStaticCommandSurface = Effect.fn("Knowledge.sharesStaticCommandSurface")(function* (
+  baseEntries: ReadonlyArray<KnowledgeTrackedEntry>,
+  head: KnowledgeArchiveOracle
+) {
+  const headInputs = KnowledgeCommandSurface.staticCommandTreeInputs(head.trackedEntries);
+  if (!A.makeEquivalence(Str.equivalence)(KnowledgeCommandSurface.staticCommandTreeInputs(baseEntries), headInputs)) {
+    return false;
+  }
+  const attributes = A.filter(head.trackedEntries, (entry) => KnowledgeCommandSurface.isGitAttributesPath(entry.path));
+  if (!A.every(attributes, isRegularBlob)) {
+    return false;
+  }
+  for (const entry of attributes) {
+    // An attribute file the archive left out (for example through `export-ignore`) cannot be
+    // inspected, so it refuses the reuse rather than failing the comparison.
+    const text = yield* head.readBytes(entry.path).pipe(
+      Effect.map((bytes) => O.some(textDecoder.decode(bytes))),
+      Effect.orElseSucceed(O.none<string>)
+    );
+    if (!O.exists(text, P.not(Str.includes(COMMIT_SPECIFIC_ATTRIBUTE)))) {
+      return false;
+    }
+  }
+  return true;
+});
+
+/**
+ * Decides whether the base side may reuse the HEAD side's static command surface.
+ *
+ * **Details**
+ *
+ * True only when both trees list identical command-source, shared-flag and `.gitattributes` entries
+ * and no attribute file can substitute commit-specific text, which is what makes one derivation
+ * provably serve both sides.
+ *
+ * **Example** (Two empty trees share their surface)
+ *
+ * ```ts
+ * import { KnowledgeIndexBytes } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
+ * import type { KnowledgeArchiveOracle } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
+ * import { sharesStaticCommandSurfaceForTesting } from "@beep/repo-cli/test/Knowledge"
+ * import * as Effect from "effect/Effect"
+ *
+ * const head: KnowledgeArchiveOracle = {
+ *   commandTree: Effect.die("unused"),
+ *   currentCommandTree: Effect.die("unused"),
+ *   indexBytes: Effect.succeed(KnowledgeIndexBytes.make({ expected: new Uint8Array(), archived: new Uint8Array() })),
+ *   probeCommands: () => Effect.succeed([]),
+ *   readBytes: () => Effect.succeed(new Uint8Array()),
+ *   trackedEntries: [],
+ * }
+ *
+ * console.log(Effect.isEffect(sharesStaticCommandSurfaceForTesting([], head))) // true
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const sharesStaticCommandSurfaceForTesting = sharesStaticCommandSurface;
+
+/**
+ * The base oracle a comparison scans: carrying HEAD's command tree when the static surface is
+ * provably shared, and unchanged otherwise.
+ *
+ * @param base - The base side's oracle.
+ * @param head - The HEAD side's oracle, whose command tree is reused when the surface is shared.
+ * @returns `base` itself when the surfaces differ, or a copy whose `commandTree` is HEAD's.
+ */
+const baseSharingHeadCommandSurface = (
+  base: KnowledgeArchiveOracle,
+  head: KnowledgeArchiveOracle
+): Effect.Effect<KnowledgeArchiveOracle> =>
+  Effect.map(sharesStaticCommandSurface(base.trackedEntries, head), (shared) =>
+    shared ? { ...base, commandTree: head.commandTree } : base
+  );
+
+/**
+ * Applies the shared-surface decision to a base oracle, as the live comparison does.
+ *
+ * **Example** (Two empty trees share one command tree)
+ *
+ * ```ts
+ * import { KnowledgeIndexBytes } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
+ * import type { KnowledgeArchiveOracle } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
+ * import { baseSharingHeadCommandSurfaceForTesting } from "@beep/repo-cli/test/Knowledge"
+ * import * as Effect from "effect/Effect"
+ *
+ * const side: KnowledgeArchiveOracle = {
+ *   commandTree: Effect.die("unused"),
+ *   currentCommandTree: Effect.die("unused"),
+ *   indexBytes: Effect.succeed(KnowledgeIndexBytes.make({ expected: new Uint8Array(), archived: new Uint8Array() })),
+ *   probeCommands: () => Effect.succeed([]),
+ *   readBytes: () => Effect.succeed(new Uint8Array()),
+ *   trackedEntries: [],
+ * }
+ *
+ * console.log(Effect.isEffect(baseSharingHeadCommandSurfaceForTesting(side, side))) // true
+ * ```
+ *
+ * @param base - The base side's oracle.
+ * @param head - The HEAD side's oracle.
+ * @returns `base` itself when the surfaces differ, or a copy whose `commandTree` is HEAD's.
+ * @category testing
+ * @since 0.0.0
+ */
+export const baseSharingHeadCommandSurfaceForTesting: {
+  (head: KnowledgeArchiveOracle): (base: KnowledgeArchiveOracle) => Effect.Effect<KnowledgeArchiveOracle>;
+  (base: KnowledgeArchiveOracle, head: KnowledgeArchiveOracle): Effect.Effect<KnowledgeArchiveOracle>;
+} = dual(2, baseSharingHeadCommandSurface);
+
 const semanticDeltaLive = Effect.fn("Knowledge.semanticDelta")(function* (baseRef: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1698,10 +2017,13 @@ const semanticDeltaLive = Effect.fn("Knowledge.semanticDelta")(function* (baseRe
       yield* fs
         .makeDirectory(headRoot)
         .pipe(KnowledgeOperationalError.mapError("Failed to create the HEAD archive root."));
-      yield* writeGitArchive(repoRoot, baseCommit, baseArchive, gitAdapter);
-      yield* writeGitArchive(repoRoot, headCommit, headArchive, gitAdapter);
-      yield* extractArchive(baseArchive, baseRoot);
-      yield* extractArchive(headArchive, headRoot);
+      // Base and HEAD materialize side by side, one phase at a time, and each phase replays its exits
+      // base first: the first failure reported is the one a base-then-HEAD sequence would report.
+      yield* inSequenceOrder(
+        writeGitArchive(repoRoot, baseCommit, baseArchive, gitAdapter),
+        writeGitArchive(repoRoot, headCommit, headArchive, gitAdapter)
+      );
+      yield* inSequenceOrder(extractArchive(baseArchive, baseRoot), extractArchive(headArchive, headRoot));
 
       const baseTree = yield* readGitTree(repoRoot, baseCommit, gitAdapter, () =>
         KnowledgeOperationalError.make({ message: "Malformed NUL-delimited base ls-tree output." })
@@ -1736,13 +2058,21 @@ const semanticDeltaLive = Effect.fn("Knowledge.semanticDelta")(function* (baseRe
         path.join(tempRoot, "base-scratch"),
         baseEntries
       );
-      const head = yield* makeKnowledgeArchiveOracle(
+      const headOracle = yield* makeKnowledgeArchiveOracle(
         repoRoot,
         headRoot,
         path.join(tempRoot, "head-scratch"),
         headEntries
       );
-      return yield* scanKnowledgePair({ base, gitRefNames, head, probePolicy, renames });
+      const headCommandTree = yield* Effect.cached(headOracle.commandTree);
+      const head = { ...headOracle, commandTree: headCommandTree } satisfies KnowledgeArchiveOracle;
+      return yield* scanKnowledgePair({
+        base: yield* baseSharingHeadCommandSurface(base, head),
+        gitRefNames,
+        head,
+        probePolicy,
+        renames,
+      });
     })
   );
 });
@@ -1800,6 +2130,65 @@ export interface KnowledgeMaterializedTree {
   readonly repoRoot: string;
 }
 
+// The archive step shared by the full and the path-selected tree. `selection` narrows extraction and
+// reads only; resolution, the archive itself, the ls-tree entry list and their order never change.
+const materializeTreeWith = Effect.fnUntraced(function* (
+  treeish: string,
+  selection: O.Option<HashSet.HashSet<string>>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const runtime = yield* Effect.context<FileSystem.FileSystem | Path.Path>();
+  const repoRoot = yield* findRepoRoot().pipe(
+    KnowledgeOperationalError.mapError("Failed to locate the repository root for the reference census.")
+  );
+  yield* guardKnowledgeCloneAttributes(repoRoot);
+  const commit = yield* resolveGitCommit(repoRoot, treeish, treeGitAdapter(treeish));
+  const tempRoot = yield* fs
+    .makeTempDirectoryScoped({ prefix: "beep-knowledge-refs-" })
+    .pipe(KnowledgeOperationalError.mapError("Failed to create a reference-census temporary root."));
+  const archiveRoot = path.join(tempRoot, "tree");
+  const archivePath = path.join(tempRoot, "tree.tar");
+  yield* fs
+    .makeDirectory(archiveRoot)
+    .pipe(KnowledgeOperationalError.mapError("Failed to create the reference-census archive root."));
+  yield* writeGitArchive(repoRoot, commit, archivePath, gitAdapter);
+  yield* extractArchive(
+    archivePath,
+    archiveRoot,
+    O.match(selection, {
+      onNone: () => constTrue,
+      onSome: (paths) => (repoPath: string) => HashSet.has(paths, repoPath),
+    })
+  );
+  yield* fs
+    .remove(archivePath)
+    .pipe(KnowledgeOperationalError.mapError("Failed to release the extracted reference-census archive."));
+  const tree = yield* readGitTree(repoRoot, commit, gitAdapter, () =>
+    KnowledgeOperationalError.make({ message: "Malformed NUL-delimited census ls-tree output." })
+  );
+  const readBytes = Effect.fn("Knowledge.treeReadBytes")(function* (repoPath: string) {
+    if (O.exists(selection, (paths) => !HashSet.has(paths, repoPath))) {
+      return yield* KnowledgeOperationalError.make({
+        message: `Tracked file "${repoPath}" is outside the paths materialized from ${commit}.`,
+      });
+    }
+    return yield* fs
+      .readFile(path.join(archiveRoot, repoPath))
+      .pipe(KnowledgeOperationalError.mapError(`Failed to read archived tracked file "${repoPath}".`));
+  });
+
+  const oracle: KnowledgeTreeOracle = {
+    treeish,
+    commit,
+    trackedEntries: A.map(tree, (entry) =>
+      KnowledgeTrackedEntry.make({ path: entry.path, mode: entry.mode, objectId: entry.objectId })
+    ),
+    readBytes: (repoPath: string) => readBytes(repoPath).pipe(Effect.provide(runtime)),
+  };
+  return { archiveRoot, oracle, repoRoot } satisfies KnowledgeMaterializedTree;
+});
+
 /**
  * Materializes one commit-ish as a scoped archive and returns the oracle plus its archive root.
  *
@@ -1827,47 +2216,48 @@ export interface KnowledgeMaterializedTree {
  * @category use-cases
  * @since 0.0.0
  */
-export const materializeKnowledgeTree = Effect.fn("Knowledge.materializeTree")(function* (treeish: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const runtime = yield* Effect.context<FileSystem.FileSystem | Path.Path>();
-  const repoRoot = yield* findRepoRoot().pipe(
-    KnowledgeOperationalError.mapError("Failed to locate the repository root for the reference census.")
-  );
-  yield* guardKnowledgeCloneAttributes(repoRoot);
-  const commit = yield* resolveGitCommit(repoRoot, treeish, treeGitAdapter(treeish));
-  const tempRoot = yield* fs
-    .makeTempDirectoryScoped({ prefix: "beep-knowledge-refs-" })
-    .pipe(KnowledgeOperationalError.mapError("Failed to create a reference-census temporary root."));
-  const archiveRoot = path.join(tempRoot, "tree");
-  const archivePath = path.join(tempRoot, "tree.tar");
-  yield* fs
-    .makeDirectory(archiveRoot)
-    .pipe(KnowledgeOperationalError.mapError("Failed to create the reference-census archive root."));
-  yield* writeGitArchive(repoRoot, commit, archivePath, gitAdapter);
-  yield* extractArchive(archivePath, archiveRoot);
-  yield* fs
-    .remove(archivePath)
-    .pipe(KnowledgeOperationalError.mapError("Failed to release the extracted reference-census archive."));
-  const tree = yield* readGitTree(repoRoot, commit, gitAdapter, () =>
-    KnowledgeOperationalError.make({ message: "Malformed NUL-delimited census ls-tree output." })
-  );
-  const readBytes = Effect.fn("Knowledge.treeReadBytes")(function* (repoPath: string) {
-    return yield* fs
-      .readFile(path.join(archiveRoot, repoPath))
-      .pipe(KnowledgeOperationalError.mapError(`Failed to read archived tracked file "${repoPath}".`));
-  });
+export const materializeKnowledgeTree = Effect.fn("Knowledge.materializeTree")((treeish: string) =>
+  materializeTreeWith(treeish, O.none())
+);
 
-  const oracle: KnowledgeTreeOracle = {
-    treeish,
-    commit,
-    trackedEntries: A.map(tree, (entry) =>
-      KnowledgeTrackedEntry.make({ path: entry.path, mode: entry.mode, objectId: entry.objectId })
-    ),
-    readBytes: (repoPath: string) => readBytes(repoPath).pipe(Effect.provide(runtime)),
-  };
-  return { archiveRoot, oracle, repoRoot } satisfies KnowledgeMaterializedTree;
-});
+/**
+ * Materializes only the named paths of one commit-ish and returns an oracle over them.
+ *
+ * **Details**
+ *
+ * The same clone-attributes guard, commit resolution, full `git archive` and `git ls-tree` entry list
+ * as {@link materializeKnowledgeTree}, in the same order, so the bytes of every selected path are the
+ * bytes the full tree would hold and every failure is the one the full tree would raise. Only the
+ * extraction narrows: entries outside `paths` are read past in the tar stream instead of written to
+ * disk, and the link and type filter applies as before. `trackedEntries` stays the whole tree.
+ *
+ * **Gotchas**
+ *
+ * `readBytes` of a path outside `paths` fails loudly with an operational error rather than reading a
+ * file that was never extracted. A caller may use this only when it provably reads a known path list,
+ * such as the knowledge doctor's seal inputs; anything that walks the archive root must use the full
+ * tree. The archive root is returned so the narrowed extraction itself can be inspected, holds only
+ * the selected paths, and is scoped like the full tree's.
+ *
+ * **Example** (Materialize the seal inputs of the working commit)
+ *
+ * ```ts
+ * import { materializeKnowledgeTreePaths } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(Effect.scoped(materializeKnowledgeTreePaths("HEAD", [".github/CODEOWNERS"])))) // true
+ * ```
+ *
+ * @param treeish - Any commit-ish; no fetch ever occurs.
+ * @param paths - Repository paths to extract; absent or untracked ones are simply not extracted.
+ * @returns The oracle over the whole tracked tree whose bytes cover `paths` only, its archive root
+ * holding just those paths, and the repository root.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const materializeKnowledgeTreePaths = Effect.fn("Knowledge.materializeTreePaths")(
+  (treeish: string, paths: ReadonlyArray<string>) => materializeTreeWith(treeish, O.some(HashSet.fromIterable(paths)))
+);
 
 const refsTreeLive = (treeish: string) =>
   Effect.scoped(Effect.flatMap(makeKnowledgeTreeOracle(treeish), scanKnowledgeRefsTree));

@@ -1109,6 +1109,37 @@ const buildStaticCommandTree = Effect.fn("Knowledge.buildStaticCommandTree")(fun
   });
 });
 
+const isGitAttributesPath = (repoPath: string): boolean =>
+  repoPath === ".gitattributes" || Str.endsWith("/.gitattributes")(repoPath);
+
+/**
+ * Every tracked entry whose archived bytes can reach {@link buildStaticCommandTree}, as sorted
+ * `mode objectId path` rows.
+ *
+ * The static reader enumerates the command source root and the shared flag sources and nothing else,
+ * and archive extraction derives each of those files from its blob, its mode, and the in-tree
+ * `.gitattributes` files (the canonical archive contract disables every other attribute layer). Two
+ * trees with equal rows therefore extract byte-identical command sources, except where an attribute
+ * substitutes commit-specific text, which callers must rule out separately.
+ *
+ * @param entries - `git ls-tree` entries of one revision.
+ * @returns The static command reader's inputs, sorted so equal inputs compare equal.
+ */
+const staticCommandTreeInputs = (
+  entries: ReadonlyArray<{ readonly mode: string; readonly objectId: string; readonly path: string }>
+): ReadonlyArray<string> =>
+  pipe(
+    entries,
+    A.filter(
+      (entry) =>
+        Str.startsWith(`${COMMAND_SOURCE_ROOT}/`)(entry.path) ||
+        A.contains(SHARED_FLAG_SOURCES, entry.path) ||
+        isGitAttributesPath(entry.path)
+    ),
+    A.map((entry) => `${entry.mode} ${entry.objectId} ${entry.path}`),
+    A.sort(Order.String)
+  );
+
 const commandTreeProbeSource = (rootCommandModule: string): string => `
 import * as BunRuntime from "@effect/platform-bun/BunRuntime"
 import * as BunServices from "@effect/platform-bun/BunServices"
@@ -1256,6 +1287,8 @@ const withoutStaticCommandOption = (
 export const KnowledgeCommandSurface = {
   buildStaticCommandTree,
   commandTreeProbeSource,
+  isGitAttributesPath,
+  staticCommandTreeInputs,
   decodeCurrentCommandTree,
   pruneStaticCommand,
   resolveStaticCommand,
