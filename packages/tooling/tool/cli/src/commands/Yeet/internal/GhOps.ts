@@ -49,6 +49,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as SynchronizedRef from "effect/SynchronizedRef";
 import {
+  GithubAsyncMergeRequest,
   GithubCheckRunRecord,
   GithubClientRequest,
   GithubIdentity,
@@ -66,6 +67,7 @@ import {
 } from "../../../internal/github/index.ts";
 import { enforceReviewerGate } from "../../Reviewer/ReviewerRuleset.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
+import { renderYeetMergeSettlement, settleYeetMerge, YeetMergeSettlement } from "./AsyncMerge.ts";
 import { parsePrProvenanceFooter, replacePrBodyKeepingFooter } from "./Provenance.ts";
 import {
   detectPrRepository,
@@ -1418,7 +1420,6 @@ export const runYeetGhMerge = (
   runGh(
     options,
     Effect.gen(function* () {
-      const rest = yield* GithubRest;
       const facts = yield* readGateFacts({
         number: options.number,
         pinnedSha: O.some(Str.trim(options.sha)),
@@ -1444,22 +1445,31 @@ export const runYeetGhMerge = (
       yield* enforceReviewerGate(options.number, facts.pullRequest.headSha).pipe(
         Effect.catchTag("ReviewerError", (error) => report(1)(`[gh] ${error.message}`))
       );
-      const merged = yield* rest.mergePullRequest(options.number, {
-        sha: facts.pullRequest.headSha,
-        commitTitle: `${facts.pullRequest.title} (#${options.number})`,
-        // GitHub would default the squash body to the commit list, whose lines can
-        // break server-side commitlint (body lines under 100 characters).
-        commitMessage: foldCommitMessage(
-          `Squash-merged at ${facts.pullRequest.headSha} by beep yeet gh merge.${
-            A.isReadonlyArrayNonEmpty(options.tolerate) ? ` Tolerated: ${A.join(options.tolerate, "; ")}.` : ""
-          }`
-        ),
-        method: "squash",
-      });
+      const settled = yield* settleYeetMerge(
+        options.number,
+        GithubAsyncMergeRequest.make({
+          action: "direct_merge",
+          method: "squash",
+          sha: facts.pullRequest.headSha,
+          commitTitle: `${facts.pullRequest.title} (#${options.number})`,
+          // GitHub would default the squash body to the commit list, whose lines can
+          // break server-side commitlint (body lines under 100 characters).
+          commitMessage: foldCommitMessage(
+            `Squash-merged at ${facts.pullRequest.headSha} by beep yeet gh merge.${
+              A.isReadonlyArrayNonEmpty(options.tolerate) ? ` Tolerated: ${A.join(options.tolerate, "; ")}.` : ""
+            }`
+          ),
+        })
+      );
+      if (!YeetMergeSettlement.guards.Merged(settled)) {
+        return yield* report(YEET_GH_EXIT_HOLD)(
+          `[gh] not merged #${options.number}: ${renderYeetMergeSettlement(settled)}`
+        );
+      }
       yield* Console.log(
-        `[gh] merged=${merged.merged} #${options.number} ${Str.slice(0, 10)(merged.sha)}${
-          A.isReadonlyArrayNonEmpty(options.tolerate) ? ` tolerated=[${A.join(options.tolerate, "; ")}]` : ""
-        }`
+        `[gh] merged=true #${options.number} ${Str.slice(0, 10)(settled.sha)} via ${
+          settled.endpoint === "async" ? "merge-async" : "merge (legacy)"
+        }${A.isReadonlyArrayNonEmpty(options.tolerate) ? ` tolerated=[${A.join(options.tolerate, "; ")}]` : ""}`
       );
     })
   );

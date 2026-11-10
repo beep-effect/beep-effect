@@ -158,6 +158,14 @@ Lane docs/stack-test-results
 
 Reverse: Re-shape the appetite in the exploration and supersede this decision.
 
+### Failed and unsettled async merges hold; the poll waits about two minutes, 2026-11-10
+
+The P0 probes (research/merge-async-p0-probes-2026-11.md) settled the 409 body (same shape as the 202, carrying the in-flight uuid), a head that moves before the request (400, failed) or after it (failed, 'Head branch is out of date'), and an unknown or expired uuid (404). The client decodes 400 and 409 bodies from the octokit error's response.data and keeps every other status a GitHubError. A 409 attaches to the in-flight request instead of sending another. The gate polls every 2 s for up to 60 more reads: `failed` holds as `merge-failed` with GitHub's sentence; still pending, queued or expired holds as `merge-unsettled`. Neither is read as merged. The owner checkpoint keeps its rule that anything but a confirmed merge is uncertain and reconciled by readback.
+
+Lane claude/trusting-hamilton-1ad7d1
+
+Reverse: Raise or drop the poll budget in AsyncMerge.ts, or read Unsettled as a refusal instead of a hold.
+
 ### Strict merges never bypass; relaxed merges request it with attribution, 2026-11-10
 
 The async endpoint takes `bypass_rules`, default false. Strict mode sends false. Only `--relaxed` (S11) sends true, with the attributed reds the gate already records. 42.9% of pushes to main bypassed the ruleset in the week to 2026-11-09 as a side effect of who held the token. Source: `explorations/stacked-pr-adoption/RESEARCH.md`, 2026-11-09 section.
@@ -165,6 +173,14 @@ The async endpoint takes `bypass_rules`, default false. Strict mode sends false.
 Lane docs/stack-test-results
 
 Reverse: Send bypass_rules from relaxed mode unconditionally, as the legacy endpoint did in effect.
+
+### Legacy merge stays behind BEEP_YEET_MERGE_ENDPOINT=legacy for one working day, 2026-11-10
+
+Every Yeet merge (merge-gate, merge, gh merge, owner checkpoint) goes through settleYeetMerge, which reads BEEP_YEET_MERGE_ENDPOINT (async by default; legacy routes to PUT pulls/{n}/merge, which cannot send a bypass). An unparseable value falls back to async with a warning, because async is the path that holds a failed rule. The legacy call and the switch are deleted in a small follow-up PR one working day after slice A merges: on or after 2026-11-11.
+
+Lane claude/trusting-hamilton-1ad7d1
+
+Reverse: Set BEEP_YEET_MERGE_ENDPOINT=legacy in the merging shell; after the deletion PR, revert that PR.
 
 ### A lane never rewrites a published ref; it adopts GitHub's rewrite, 2026-11-10
 

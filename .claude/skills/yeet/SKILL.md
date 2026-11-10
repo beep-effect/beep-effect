@@ -274,8 +274,14 @@ CLONE="$(git rev-parse --path-format=absolute --git-common-dir)/.." && bun run b
 bun run beep yeet reply
 ```
 
-- Squash-merge this branch's PR, confirm `MERGED` through the API, then sweep
-  the clone under the current task and `AGENTS.md` authority. Standing own-PR
+- Squash-merge this branch's PR through `PUT pulls/{n}/merge-async` (strict,
+  no rules bypass), wait for GitHub's terminal result (a `failed` result
+  fails with GitHub's sentence; a pending one is never read as merged),
+  confirm `MERGED` through the API, then sweep
+  the clone under the current task and `AGENTS.md` authority.
+  `BEEP_YEET_MERGE_ENDPOINT=legacy` routes every Yeet merge back to the old
+  `PUT pulls/{n}/merge` call for one working day after slice A of
+  `goals/yeet-async-merge-and-stacks` merged. Standing own-PR
   authority requires the full merge gate; local-only fences forbid publication
   and merging:
 
