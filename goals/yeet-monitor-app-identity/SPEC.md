@@ -180,8 +180,9 @@ with `bun run beep create-package`.
       `Check` or `Heavy Admit` run on a throwaway PR whose job carries a
       monitor-class signature, with its decision and rerun recorded. (Not a
       `workflow_dispatch` run: neither listed workflow has that trigger, and
-      `heavy.yml`'s own dispatch is a main-only run named "Heavy", which is not
-      listed.) Either way, the failed run must belong
+      `heavy.yml` ("Heavy") is a `workflow_call`-only reusable workflow whose
+      dispatch paths run through other, unlisted callers such as
+      `cache-producer*.yml`.) Either way, the failed run must belong
       to a workflow listed in `rerun-runner-loss.yml`'s `workflow_run.workflows`,
       and the rerun decision and the rerun itself must come from
       `rerun-runner-loss.yml` through its `workflow_run` trigger, not from a
