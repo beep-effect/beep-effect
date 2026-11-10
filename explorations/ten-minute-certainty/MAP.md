@@ -124,8 +124,9 @@ a reviewer correction with the date, so the record never contradicts the constra
 | Property Laws sharding (HOST-05) | Property Laws p95 over 10 min after the file split, and a ruling that mergeable contexts bind |
 | Coverage Regression as a required context | scorecard shows coverage-verdict p95 under 10 min; fixed context name landed |
 | Smoke-per-PR corpus replay | main verdict rate at or above 95% for 14 days |
-| Per-SHA main groups | throughput layout landed and the merge-timestamp replay shows PR p95 regressing under one minute |
+| Per-SHA main groups | merged into `merge-queue-activation` in [`explorations/github-merge-queue/MAP.md`](../github-merge-queue/MAP.md) (operator ruling `verdict-placement`, 2026-11-09): the per-commit verdict runs as a merge group before the merge. The throughput layout and the merge-timestamp replay stay its prerequisites |
 | Enforced cache reuse (TURB-05, YEET-05, YEET-06 beyond cheap lanes) | the R2 pause lifts |
 | Hub `^transit` narrowing (TEST-07) | module-graph evidence plus a qualified affected-route refinement |
 | File-level test selection as a receipt (TEST-08) | 100% recall over at least 50 red episodes |
-| Merge queue, stacked PRs | their recorded flip conditions (80% main required-green over 14 days) |
+| Merge queue | owned by `explorations/github-merge-queue`; the 80% bar is superseded (ruling `gate-restatement`, 2026-11-09) by parity, p90 merge-group wall time at or under 15 minutes and false ejections at or under 5% over 100 entries |
+| Stacked PRs | the stacks-reopen gate in `explorations/stacked-pr-adoption/DECISIONS.md` |

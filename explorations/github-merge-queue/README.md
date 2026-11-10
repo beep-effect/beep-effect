@@ -34,12 +34,14 @@ gate fires:
 
 A park or kill verdict from the lab ends the packet instead.
 
-Owed outside this packet: `explorations/ten-minute-certainty/MAP.md` still
-lists "Per-SHA main groups" and "Merge queue, stacked PRs" as separate gated
-candidates behind the 80% bar. Under the `verdict-placement` and
-`gate-restatement` rulings they are one candidate with the gate above; that
-packet's owner rewrites the rows. `explorations/stacked-pr-adoption` cites the
-same 80% bar for its own stacks-reopen gate and keeps it until it is reopened.
+Updated outside this packet in the same change: the "Per-SHA main groups"
+and "Merge queue, stacked PRs" rows in
+`explorations/ten-minute-certainty/MAP.md` and the matching no-go in its
+`BRIEF.md` now point at the rulings here. Its D7 text and candidate goal
+`main-verdict-every-commit` still describe per-SHA groups as the last step;
+their owner amends them when that goal is written.
+`explorations/stacked-pr-adoption` cites the old 80% bar for its own
+stacks-reopen gate and keeps it until it is reopened.
 
 ## Read This First
 
