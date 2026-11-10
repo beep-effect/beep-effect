@@ -1,0 +1,90 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "github-state-worker",
+    "packetId": "goal-packet/v1:3ebd777287701c2467a1d69d288ea8a105b4caef32c5ce242ceb5dc7b7ec209d",
+    "title": "GitHub State Worker",
+    "status": "active",
+    "created": "2026-11-09",
+    "updated": "2026-11-09",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/github-state-worker",
+  "lifecycle": "active",
+  "mission": "Run one per-host systemd GitHub-state worker that reads each tracked PR once per cycle (fingerprint-batched GraphQL, ETag-revalidated REST) and publishes atomic PR snapshots that every Yeet and orchestrator reader consumes instead of polling GitHub itself.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/github-api-quota",
+    "graduated": "2026-11-09"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/github-state-worker/README.md",
+    "goals/github-state-worker/SPEC.md",
+    "goals/github-state-worker/PLAN.md",
+    "goals/github-state-worker/GOAL.md",
+    "goals/github-state-worker/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/github-state-worker/GOAL.md"
+    }
+  ],
+  "provides": ["github/pr-snapshot"],
+  "requires": ["github/budget-ledger"],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/github-state-worker/GOAL.md)\" -le 4000",
+    "jq . goals/github-state-worker/ops/manifest.json",
+    "rg -n \"github-state-worker|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/github-state-worker",
+    "git diff --check -- goals/github-state-worker",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "blockedBy": ["goals/github-budget-ledger"],
+  "statusNote": "Authored 2026-11-09, not started: blocked until github-budget-ledger lands its ledger, reserve signal and baseline."
+}
