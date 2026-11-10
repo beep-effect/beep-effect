@@ -35,6 +35,8 @@ import type { CiLaneId } from "@beep/repo-cli/commands/Ci";
 const REPO_ROOT = "/repo";
 const SHADCN_TASK = "lint:shadcn";
 const SHADCN_STEP = "ci:repo-sanity:shadcn";
+const MARKER_FILE = "shadcn-ran.txt";
+const isQualityTaskGroupFailed = S.is(QualityTaskGroupFailed);
 
 const checkWorkflowText = import.meta.glob<string>("../../../../../.github/workflows/check.yml", {
   eager: true,
@@ -186,7 +188,7 @@ layer(testLayer, { timeout: "60 seconds" })("Repo Sanity step masking (PERIH-02)
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const dir = yield* fs.makeTempDirectoryScoped({ prefix: "repo-sanity-mask-" });
-      const marker = path.join(dir, "shadcn-ran.txt");
+      const marker = path.join(dir, MARKER_FILE);
       const body = ciLaneStepsForTesting(REPO_ROOT, "repo-sanity", pullRequestOptions);
       const shadcnIndex = O.getOrThrow(A.findFirstIndex(body, (step) => step.label === SHADCN_STEP));
       expect(shadcnIndex).toBeGreaterThan(0);
@@ -194,15 +196,17 @@ layer(testLayer, { timeout: "60 seconds" })("Repo Sanity step masking (PERIH-02)
         QualityTaskStep.make({
           label: step.label,
           command: "bun",
-          args: ["-e", index === shadcnIndex ? `await Bun.write(${JSON.stringify(marker)}, "yes")` : "process.exit(3)"],
+          // Each step runs in `dir`, so the marker is written by relative path.
+          args: ["-e", index === shadcnIndex ? `await Bun.write("${MARKER_FILE}", "yes")` : "process.exit(3)"],
           cwd: dir,
         })
       );
       const exit = yield* Effect.exit(runQualityTaskStreamingStepGroupForTesting("ci:repo-sanity", replay));
-      expect(yield* fs.exists(marker)).toBe(true);
+      const shadcnRan = yield* fs.exists(marker);
+      expect(shadcnRan).toBe(true);
       assertTrue(Exit.isFailure(exit));
       const failure = Cause.squash(exit.cause);
-      assertTrue(failure instanceof QualityTaskGroupFailed);
+      assertTrue(isQualityTaskGroupFailed(failure));
       expect(A.map(failure.failures, (step) => step.label)).toEqual(
         A.map(A.take(body, shadcnIndex), (step) => step.label)
       );
