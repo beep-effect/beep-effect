@@ -176,9 +176,12 @@ with `bun run beep create-package`.
       rerunning it.
 - [ ] 3a: At least one workflow rerun of a monitor-class failure on
       `GITHUB_TOKEN` is linked in `history/`: a natural hosted flake, or, if
-      none occurs within the goal window, a seeded proof (a `workflow_dispatch`
-      or deliberately failed run carrying a monitor-class signature) whose
-      decision and rerun are recorded. Either way, the failed run must belong
+      none occurs within the goal window, a seeded proof: a deliberately failed
+      `Check` or `Heavy Admit` run on a throwaway PR whose job carries a
+      monitor-class signature, with its decision and rerun recorded. (Not a
+      `workflow_dispatch` run: neither listed workflow has that trigger, and
+      `heavy.yml`'s own dispatch is a main-only run named "Heavy", which is not
+      listed.) Either way, the failed run must belong
       to a workflow listed in `rerun-runner-loss.yml`'s `workflow_run.workflows`,
       and the rerun decision and the rerun itself must come from
       `rerun-runner-loss.yml` through its `workflow_run` trigger, not from a
