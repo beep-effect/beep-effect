@@ -221,9 +221,9 @@ bun run beep yeet publish --push-only --reuse-verified
 bun run beep yeet monitor
 ```
 
-`yeet monitor` records the current agent locally and re-asserts the registry-backed
-provenance footer once before polling. This restores a missing or drifted footer
-without treating the PR body's public JSON twin as trusted state.
+`yeet monitor` records the current agent and its branch's active packets, then
+re-asserts the registry-backed provenance footer once before polling, without
+trusting the body's public JSON twin (`references/monitor-and-inbox.md`).
 
 - Keep monitoring across pushes until the PR merges or closes. This announces
   readiness once per head, writes the `pr-merge-ready` inbox row, and keeps
