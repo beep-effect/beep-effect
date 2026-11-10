@@ -26,6 +26,7 @@ import * as Config from "effect/Config";
 import * as Console from "effect/Console";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
@@ -315,8 +316,13 @@ export const settleYeetMerge = Effect.fn("Yeet.settleMerge")(function* (
   });
 });
 
+// GitHub's rule sentences arrive multi-line ("Repository rule violations found\n\nA
+// conversation must be resolved..."); a hold detail and a log line are one line.
+const oneLine = flow(Str.replace(/\s+/gu, " "), Str.trim);
+
 /**
- * One line naming how a settled merge ended, for logs and hold details.
+ * One line naming how a settled merge ended, for logs and hold details. GitHub's
+ * multi-line sentences are folded onto one line.
  *
  * **Example** (Render a refusal)
  *
@@ -340,9 +346,10 @@ export const renderYeetMergeSettlement = (settlement: YeetMergeSettlement): stri
   return YeetMergeSettlement.match(settlement, {
     Merged: ({ sha, attached }) =>
       `${endpoint} merged as ${sha}${attached ? " (attached to an in-flight request)" : ""}`,
-    Failed: ({ message }) => `${endpoint} failed: ${Str.isEmpty(message) ? "GitHub sent no message" : message}`,
+    Failed: ({ message }) =>
+      `${endpoint} failed: ${Str.isEmpty(oneLine(message)) ? "GitHub sent no message" : oneLine(message)}`,
     Unsettled: ({ message, uuid }) =>
-      `${endpoint} unsettled: ${message}${O.getOrElse(
+      `${endpoint} unsettled: ${oneLine(message)}${O.getOrElse(
         O.map(uuid, (id) => ` (request ${id})`),
         () => ""
       )}`,

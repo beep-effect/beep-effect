@@ -191,6 +191,17 @@ describe("settleYeetMerge", () => {
     })
   );
 
+  it("folds GitHub's multi-line rule sentence onto one line", () => {
+    const settled = YeetMergeSettlement.cases.Failed.make({
+      endpoint: "async",
+      message:
+        "Repository rule violations found\n\nA conversation must be resolved before this pull request can be merged.\n\n",
+    });
+    expect(renderYeetMergeSettlement(settled)).toBe(
+      "merge-async failed: Repository rule violations found A conversation must be resolved before this pull request can be merged."
+    );
+  });
+
   it.effect("fails a merge whose head moved after acceptance", () =>
     Effect.gen(function* () {
       const sentence = "Head branch is out of date. Review and try the merge again.";
