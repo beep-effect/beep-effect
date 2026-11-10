@@ -208,6 +208,166 @@ The ledger attributes (or bounds, via the unattributed remainder) T3 Code's shar
 
 Reverse: Lower or raise the threshold by a superseding decision, or open t3-snapshot-consumer directly by operator call.
 
+### A1 Identity label: the bucket owner, with a host-scoped alias map, 2026-11-10
+
+The identity label names the bucket owner: `user:<login>`, `app:<id>/<inst>[/jwt]`, `anonymous` or `unresolved`, with `token:` plus a 12-hex SHA-256 prefix as a degraded label. A host-scoped `aliases.json` maps token hashes to logins. It is seeded at no cost from gh-cli and configured logins, otherwise by one `GET /user` per new token lineage (nominal cost 1). Aliases apply at record time and at read time, so one bucket keeps one label.
+
+Resolves SPEC ambiguity A1 in the P0 design (`research/2026-11-10-design.md`, "SPEC ambiguities resolved here").
+
+Reverse: Drop the alias map and key windows on raw labels.
+
+### A10 Cross-process writers: one O_APPEND write per line, no lock, 2026-11-10
+
+Each row is one `O_APPEND` write of one line to a local regular file, with no lock and a 4 KiB line cap as a sanity bound; the reader skips torn lines. The sampler lease is an exclusive create, a stale lease (120 s) is reclaimed by rename, and the due check is repeated after acquiring it.
+
+Resolves SPEC ambiguity A10 in the P0 design (`research/2026-11-10-design.md`, "SPEC ambiguities resolved here").
+
+Reverse: Move to a SQLite store, per the exploration's rabbit hole.
+
+### A11 Configured identities live in $XDG_CONFIG_HOME/beep/github/identities.json, 2026-11-10
+
+The configured identity list is `$XDG_CONFIG_HOME/beep/github/identities.json`, overridable with `BEEP_GITHUB_IDENTITIES_FILE`. The sampled set is its entries, the env-selected identity and `GhCli`, deduplicated by label. `OpRef` entries require `login`, and reference fields must match `op://`.
+
+Resolves SPEC ambiguity A11 in the P0 design (`research/2026-11-10-design.md`, "SPEC ambiguities resolved here").
+
+Reverse: Move it into env or the state dir.
+
+### A12 GraphQL secondary limits served as 200 are recorded, not reclassified, 2026-11-10
+
+A GraphQL secondary rate limit served with status 200 is recorded with outcome `secondary-limited`. The driver's retry classification is unchanged in goal 1; goal 2's rate-limit handling owns it.
+
+Resolves SPEC ambiguity A12 in the P0 design (`research/2026-11-10-design.md`, "SPEC ambiguities resolved here").
+
+Reverse: Reclassify it as `rateLimited` in `GraphQL.ts`.
+
+### A13 The driver takes an opaque budgetLabel and a technical credential, 2026-11-10
+
+The driver learns the identity only through an opaque `budgetLabel` option (the Prow budget-id pattern) and a technical `credential` (`token`, `app-jwt` or `unauthenticated`). The driver never composes a label; the CLI derives `/jwt` and `anonymous` from `credential`.
+
+Resolves SPEC ambiguity A13 in the P0 design (`research/2026-11-10-design.md`, "SPEC ambiguities resolved here").
+
+Reverse: Move label resolution into the driver.
+
+### A14 Host label: the short hostname, never a machine id, 2026-11-10
+
+Rows carry the short hostname only. `/etc/machine-id` is never read into a row.
+
+Resolves SPEC ambiguity A14 in the P0 design (`research/2026-11-10-design.md`, "SPEC ambiguities resolved here").
+
+Reverse: Hash the hostname.
+
+### A15 Parcel buckets: core, graphql and search in the summary, 2026-11-10
+
+The github-headroom summary lists `core`, `graphql` and `search` per known identity. The items carry every bucket the ledger's reserve signals return.
+
+Resolves SPEC ambiguity A15 in the P0 design (`research/2026-11-10-design.md`, "SPEC ambiguities resolved here").
+
+Reverse: Change the summary filter.
+
+### A16 The baseline and the T3 decision ride the goal's final PR, 2026-11-10
+
+The baseline note and the T3-share decision do not ride the implementation PR. One implementation PR lands first; the goal's final PR follows after at least 24 h of hub data, per the AGENTS two-PR closeout.
+
+Resolves SPEC ambiguity A16 in the P0 design (`research/2026-11-10-design.md`, "SPEC ambiguities resolved here").
+
+Reverse: None: the two-PR closeout is a repo law.
+
+### A17 GraphQL truth: transport anchors, with samples admitted by calibration, 2026-11-10
+
+GraphQL anchors and the GraphQL reserve use transport-basis readings, because REST `/rate_limit` misreports the GraphQL bucket. REST sample `graphql` readings are admitted only when at least 6 calibration pairs in 7 days show a median drift of at most 50 points. Calibration is a manual command costing 1 point per pair, run once at P1 exit.
+
+Resolves SPEC ambiguity A17 in the P0 design (`research/2026-11-10-design.md`, "SPEC ambiguities resolved here").
+
+Reverse: Trust REST samples unconditionally, or drop them for GraphQL entirely.
+
+### A18 Operation labels are normalised at record time, 2026-11-10
+
+`normalizeOperation` runs at record time: owner/repo, user, org, numeric, SHA and named segments become placeholders, with depth 8 and 120 characters. Callers that interpolate parameters are left unchanged.
+
+Resolves SPEC ambiguity A18 in the P0 design (`research/2026-11-10-design.md`, "SPEC ambiguities resolved here").
+
+Reverse: Change those callers to route templates and drop normalisation.
+
+### A19 T3 share: a one-off fleet aggregation, no shared state, 2026-11-10
+
+The T3 share is bounded by a one-off aggregation of every fleet host's ledger report for the baseline window: T3 plus uncovered spend is at most the hub's `fleetUsed(graphql)` minus the hosts' estimated points and gh estimates. Known in-repo leaks are listed beside it. No state is shared between hosts.
+
+Resolves SPEC ambiguity A19 in the P0 design (`research/2026-11-10-design.md`, "SPEC ambiguities resolved here").
+
+Reverse: Build a fleet-shared ledger through the gated sharing candidate.
+
+### A2 Command label: walk the loaded effect/cli command tree, 2026-11-10
+
+The COMMAND label is read from the loaded `effect/cli` command tree: only known group and subcommand names count, root flags are skipped as in `Dispatch.firstPositional`, at most three words are kept and the default is `beep`. Each record reads it from the requesting fiber's `GithubLedgerCommand` reference.
+
+Resolves SPEC ambiguity A2 in the P0 design (`research/2026-11-10-design.md`, "SPEC ambiguities resolved here").
+
+Reverse: Fall back to the leading-argv-word heuristic.
+
+### A20 Error shape: one GithubLedgerError with a reason, 2026-11-10
+
+Ledger failures are one `GithubLedgerError { reason, detail, cause, message }` using the shared `optionalDefect` helpers. The reasons are `state-dir`, `read`, `write`, `decode` and `config`, with a fixed mapping from each failure source.
+
+Resolves SPEC ambiguity A20 in the P0 design (`research/2026-11-10-design.md`, "SPEC ambiguities resolved here").
+
+Reverse: Split into per-reason error classes.
+
+### A3 Sampler: a 5-minute user timer plus opportunistic monitor samples, 2026-11-10
+
+With no daemon, a 5-minute systemd user timer samples non-App identities. Monitor polls sample their own client's identity opportunistically, forked into the loop scope with a 30 s cap, and the monitor's pause read is recorded too; `session open` never samples. The due check and the lease come before any client build. App identities are sampled only by long-lived processes that already hold an installation client. Each sample is two free reads.
+
+Resolves SPEC ambiguity A3 in the P0 design (`research/2026-11-10-design.md`, "SPEC ambiguities resolved here").
+
+Reverse: Sample Apps in the timer and record the mint and revoke as sampler self-cost.
+
+### A4 Per-request cost: nominal cost plus telescoped fleet usage, 2026-11-10
+
+Rows store the raw headers plus `nominalCost`: REST 1; 304, `/rate_limit` and primary `rate-limited` 0; GraphQL a floor of 1. Hourly fleet usage telescopes per reset epoch. Per-command points use a min-positive same-pid delta-used estimator per GraphQL operation, with at least three candidates. A `gh` spawn costs 1, bounded by the residual.
+
+Resolves SPEC ambiguity A4 in the P0 design (`research/2026-11-10-design.md`, "SPEC ambiguities resolved here").
+
+Reverse: Record `rateLimit{cost}` per GraphQL document (goal 2).
+
+### A5 Resource set: a driver LiteralKit with an unknown member, 2026-11-10
+
+The driver owns a `LiteralKit` with the documented resource keys plus `unknown`. A GraphQL response without a resource header becomes `graphql`; a REST one becomes `unknown`. Unknown `/rate_limit` body keys are dropped.
+
+Resolves SPEC ambiguity A5 in the P0 design (`research/2026-11-10-design.md`, "SPEC ambiguities resolved here").
+
+Reverse: Extend the literal list.
+
+### A6 GraphqlBudget trusts only fresh transport-basis readings, 2026-11-10
+
+`GraphqlBudget` may skip its probe only on a transport-basis (GraphQL header) reading at most 60 s old whose reset is still ahead, from memory or `latest/transport-*.json`. It never trusts samples.
+
+Resolves SPEC ambiguity A6 in the P0 design (`research/2026-11-10-design.md`, "SPEC ambiguities resolved here").
+
+Reverse: Allow sample-basis readings.
+
+### A7 Reserve: Unknown admits background callers, 2026-11-10
+
+An `Unknown` reserve admits background callers. The threshold is `ceil(0.15 x limit)`. A reading counts for 10 minutes; after its reset the state is `Unknown{window-reset}`. The github-headroom parcel shows the reserve state the signal computed, never its own.
+
+Resolves SPEC ambiguity A7 in the P0 design (`research/2026-11-10-design.md`, "SPEC ambiguities resolved here").
+
+Reverse: Make `Unknown` refuse background calls (goal 2 may).
+
+### A8 Retention: 72 h raw rows, 256 MiB cap, 35-day rollups, 2026-11-10
+
+Raw rows are kept 72 h with a 256 MiB cap, and rollups 35 days. An hour is rolled up complete at H+1h+15min once a later anchor exists, or incomplete at H+3h otherwise. Incomplete rollups are rewritten while their raw rows still exist.
+
+Resolves SPEC ambiguity A8 in the P0 design (`research/2026-11-10-design.md`, "SPEC ambiguities resolved here").
+
+Reverse: Change the constants.
+
+### A9 The ledger is disabled in CI and by BEEP_GITHUB_LEDGER=off, 2026-11-10
+
+The ledger sink is disabled when `isCiSync()` holds or `BEEP_GITHUB_LEDGER=off`, read through `configStringOption`. The github-headroom parcel still reads whatever ledger the host has.
+
+Resolves SPEC ambiguity A9 in the P0 design (`research/2026-11-10-design.md`, "SPEC ambiguities resolved here").
+
+Reverse: Enable it with a CI state root.
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger
