@@ -46,7 +46,7 @@
   ],
   "provides": ["ci/heavy-pool-diet"],
   "requires": ["ci/certainty-scorecard"],
-  "statusNote": "Active since 2026-11-10: PERIH-01 slice 1 deleted the dead coverage-rollout probe (PR_PLACEHOLDER) and set legacy_coverage to 'false' for COVE-08 to delete. LINT-01 and LINT-04 landed in #3019 and LINT-02 slice 1 in #3041 (e8c9a47971b), each keeping its unpaid gate items (D26). Startable now are LINT-05, the LINT-01 and LINT-04 gate slices, the PERIH-11 closure-digest release trigger and the HOST-06 and required-lanes-first heavy.yml migrations. The acceptance numbers and the capacity question wait on certainty-scorecard; the binary-dependent PERIH-01 switch waits on route-soundness-repair PERIH-10; HOST-08 waits on Test Unit steady state (its ROUT-01 dependency landed in #3030).",
+  "statusNote": "Active since 2026-11-10: PERIH-01 slice 1 deleted the dead coverage-rollout probe (#3116) and set legacy_coverage to 'false' for COVE-08 to delete. LINT-01 and LINT-04 landed in #3019 and LINT-02 slice 1 in #3041 (e8c9a47971b), each keeping its unpaid gate items (D26). Startable now are LINT-05, the LINT-01 and LINT-04 gate slices, the PERIH-11 closure-digest release trigger and the HOST-06 and required-lanes-first heavy.yml migrations. The acceptance numbers and the capacity question wait on certainty-scorecard; the binary-dependent PERIH-01 switch waits on route-soundness-repair PERIH-10; HOST-08 waits on Test Unit steady state (its ROUT-01 dependency landed in #3030).",
   "phases": [
     {
       "id": "P0",

@@ -48,7 +48,7 @@ Not started.
   (027664ba178). LINT-02 slice 1 (knowledge doctor abreast of the medium graph) landed in #3041
   (e8c9a47971b). Per D26 the goal keeps their unpaid gate items (two missing LINT-01
   fixtures plus noResolve parity, the LINT-04 per-family checks, the LINT-02 A/B) and their scorecard readings.
-- First slice, landed (PR_PLACEHOLDER): `ci: delete the dead coverage-rollout probe` (PERIH-01 slice 1, S). It removes the probe,
+- First slice, landed (#3116): `ci: delete the dead coverage-rollout probe` (PERIH-01 slice 1, S). It removes the probe,
   `legacy_integration`, the Test Integration name conditional and the LEGACY_COVERAGE env line and assertion.
   COVE-08 (`route-soundness-repair`) owns making the Coverage Regression name a literal. Whichever of the two
   lands second deletes `legacy_coverage` (set to 'false' meanwhile) and merges `main` first. The PERIH-11 closure-digest
