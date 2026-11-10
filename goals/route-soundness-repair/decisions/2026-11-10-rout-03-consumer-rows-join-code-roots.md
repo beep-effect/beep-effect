@@ -2,6 +2,7 @@
 title: "ROUT-03 slice 1 keeps consumed goal paths on the code route through codeRoots consumer rows"
 date: 2026-11-10
 lane: "fix/rout-03-goal-data-census"
+pullRequest: 3064
 reversal: "Remove the ciGoalDataConsumers rows from codeRoots in CiOperational.schemas.ts, run bun run beep ci patterns --write, and delete goal-data-consumer-census.test.ts."
 ---
 

@@ -2,6 +2,7 @@
 title: "Operator keeps the D8 docs-policy job for ROUT-02; the Repo Sanity hosting proposal is closed"
 date: 2026-11-10
 lane: "fix/rout-03-goal-data-census"
+pullRequest: 3064
 reversal: "A new operator ruling that hosts the knowledge and packet steps in Repo Sanity supersedes this file and amends the docs-only-narrowing decision."
 ---
 

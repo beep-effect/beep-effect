@@ -11,6 +11,7 @@ import { findRepoRoot } from "@beep/repo-utils/Root";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Command from "effect/cli/Command";
@@ -236,7 +237,7 @@ it.layer(Layer.provideMerge(Git.layer, NodeServices.layer), { timeout: "120 seco
       Effect.fnUntraced(function* () {
         const { paths } = yield* census;
         const opsScript = A.findFirst(paths, (file) => /^goals\/[^/]+\/ops\/.+\.ts$/u.test(file));
-        expect(O.isSome(opsScript)).toBe(true);
+        assertTrue(O.isSome(opsScript));
         const named = A.append(mutations, ["`.ts` ops script", O.getOrElse(opsScript, () => "")] as const);
         for (const [label, mutated] of named) {
           expect(A.contains(paths, mutated), `${label}: ${mutated} is tracked`).toBe(true);

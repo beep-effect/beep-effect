@@ -20,7 +20,7 @@ PR-sized, in landing order. At most three open at once (`goals/README.md`). Size
 
 | # | Slice (PR title) | Levers | Size | Admission gate | Depends on |
 | --- | --- | --- | --- | --- | --- |
-| 1 | `fix(ci): keep goal ops scripts, fixtures and research inputs on the code route` | ROUT-03 | S | Census test (a new goal-data consumer census test under `packages/tooling/tool/cli/test`) finds every `goals/` path a test reads, spawns or imports, or a `turbo.json` declares, and asserts each is non-docs-only; mutations of a citation ops `.py` probe, a `.ts` ops script, the frozen JSON fixture and a ciops research JSON are each selected by change-profile. Edits `CiOperational.schemas.ts` (the `ciGoalDataConsumers` rows joined into `codeRoots`), the generated patterns JSON and `ci-heavy-admission.test.ts`, and adds `goal-data-consumer-census.test.ts`; no workflow or `turbo.json` change, so it lands alone. Merge by 2026-11-16 (D8). | none; first |
+| 1 | `fix(ci): keep goal ops scripts, fixtures and research inputs on the code route` (landed, #3064) | ROUT-03 | S | Census test (a new goal-data consumer census test under `packages/tooling/tool/cli/test`) finds every `goals/` path a test reads, spawns or imports, or a `turbo.json` declares, and asserts each is non-docs-only; mutations of a citation ops `.py` probe, a `.ts` ops script, the frozen JSON fixture and a ciops research JSON are each selected by change-profile. Edits `CiOperational.schemas.ts` (the `ciGoalDataConsumers` rows joined into `codeRoots`), the generated patterns JSON and `ci-heavy-admission.test.ts`, and adds `goal-data-consumer-census.test.ts`; no workflow or `turbo.json` change, so it lands alone. Merge by 2026-11-16 (D8). | none; first |
 | 2 | `fix(coverage): judge bare affected runs against the merge base they planned from` | COVE-02 | S | Lowered-row fixture in `quality-tasks.test.ts` fails the bare run with the self-judge line; clean tree passes | none; parallel with 1 |
 | 3 | `fix(yeet): version final-check receipts by gate set; docs name the exact gates` | YEET-08 slice 1 | S | v1 receipt refused on head and ancestor-carry paths; docs-drift test over AGENTS.md and the yeet skill | none; parallel with 1-2 |
 | 4 | `fix(quality): declare goal-data consumers in CoverageScope and per-package turbo.json inputs` | ROUT-03 slice 2 | S | Census asserts each path is mapped in CoverageScope and a per-package Turbo input; the four mutations turn their consumers red under `--affected`; a coverage scope fixture with only `packages/law-practice/use-cases/test/fixtures/eyecite/authority-identity-cases.json` changed includes `@beep/law-practice-server` (ROUT-09 hole); no root `turbo.json` edit; per-package `turbo.json` change, so coverage rows freeze at base and the cache-qualification baseline is re-recorded in the same PR | 1 |
@@ -83,12 +83,12 @@ git diff --check -- goals/route-soundness-repair
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug route-soundness-repair`; add a `kind: checkpoint` file there, never edit this block._
 
-### P0 re-checked at 5e09d90a6da; slice 1 (ROUT-03 census) in review, 2026-11-10
+### P0 re-checked at 5e09d90a6da; slice 1 (ROUT-03 census) lands in #3064, 2026-11-10
 
-P0: lever statuses re-read against origin/main 5e09d90a6da after #3041, #3049, #3053, #3055 and #3056 merged. No lever of this goal had landed. Corrected stale citations: the bare coverage comparator call in `Tasks.ts` is now line 4852 (was 4838), the Repo Sanity goals-only step in check.yml is line 329 (was 330), the fourth lane-gate change-profile eval is line 1747 (was 1736); #3041 has merged, so TEST-10 rebases on its `turbo.json`. The ROUT-03 census input list is the census test's output. P1: slice 1 (ROUT-03 census and codeRoots consumer rows) is published; slices 2 and 3 are next in the first wave, slice 4 opens when slice 1 merges.
+P0: lever statuses re-read against origin/main 5e09d90a6da after #3041, #3049, #3053, #3055 and #3056 merged. No lever of this goal had landed. Corrected stale citations: the bare coverage comparator call in `Tasks.ts` is now line 4852 (was 4838), the Repo Sanity goals-only step in check.yml is line 329 (was 330), the fourth lane-gate change-profile eval is line 1747 (was 1736); #3041 has merged, so TEST-10 rebases on its `turbo.json`. The ROUT-03 census input list is the census test's output. P1: slice 1 (ROUT-03 census and codeRoots consumer rows) lands in #3064, inside the D8 deadline; slices 2 and 3 are next in the first wave, slice 4 opens when slice 1 merges.
 Source: `git log c90929b1ff1..origin/main`; the files named above at 5e09d90a6da.
 
-Lane fix/rout-03-goal-data-census
+Lane fix/rout-03-goal-data-census · PR #3064
 
 Reverse: Supersede with a later checkpoint.
 
