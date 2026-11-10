@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "github-api-quota",
+    "title": "GitHub API Quota",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [
+        "goals/github-budget-ledger",
+        "goals/github-state-worker",
+        "goals/yeet-monitor-app-identity"
+      ],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-11-09",
+    "updated": "2026-11-09",
+    "retentionReason": "Retained until the three graduated goals (github-budget-ledger, github-state-worker, yeet-monitor-app-identity) close: their SPEC.md, PLAN.md and research/SOURCES.md link MAP.md, RESEARCH.md and research/SOURCES.md here. Archive with bun run beep goals archive --kind explorations after they close."
+  }
+}
