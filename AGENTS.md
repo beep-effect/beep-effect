@@ -204,7 +204,7 @@ needed only for the escalation list below.
   the lane now" for the lane owner, whatever the acceptance or merge
   arrangement says; no brief or delegation model may forbid a lane from
   merging main. A goal packet has at most three concurrently open PRs (a
-  fourth is sequenced through one lane or stacked), and the gate merges
+  fourth is sequenced through one lane), and the gate merges
   finals one at a time as they arrive, telling the remaining siblings to
   merge main between merges (operator 2026-11-05,
   `goals/agent-pool-doctrine/history/2026-11-05-base-conflict-merge-main.md`).
