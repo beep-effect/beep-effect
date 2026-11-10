@@ -191,6 +191,78 @@ export class CiWorkflowJob extends S.Opaque<CiWorkflowJob, { readonly brand: uni
   )
 ) {}
 
+/**
+ * One job attempt read that failed after every transient retry.
+ *
+ * **Details**
+ *
+ * The per-attempt jobs read records the failure instead of dropping the run,
+ * so a scorecard or census can say which run is incomplete and refuse to
+ * certify on it.
+ *
+ * **Example** (Describe a failed attempt read)
+ *
+ * ```ts
+ * import { CiWorkflowPartialRead } from "@beep/repo-cli/commands/Ci"
+ *
+ * const read = CiWorkflowPartialRead.make({ attempt: 2, message: "HTTP 502", runId: 42646019844 })
+ * console.log(read.attempt)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CiWorkflowPartialRead extends S.Opaque<CiWorkflowPartialRead, { readonly brand: unique symbol }>()(
+  S.Struct({
+    attempt: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+    message: S.String,
+    runId: S.Finite,
+  }).pipe(
+    $I.annoteSchema("CiWorkflowPartialRead", {
+      description: "One per-attempt jobs read that failed after every transient retry.",
+    })
+  )
+) {}
+
+const partialReadsDefault: ReadonlyArray<CiWorkflowPartialRead> = [];
+
+/**
+ * One workflow run's jobs, read attempt by attempt.
+ *
+ * **Details**
+ *
+ * `jobs` is the union of every attempt's listing, de-duplicated by
+ * `(id, run_attempt)`; it equals the `filter=all` listing whenever that one
+ * succeeds. Rerun attempts list the jobs they did not re-execute again with
+ * the original timestamps, so runner-minute sums must de-duplicate those
+ * copies. `partialReads` names every attempt
+ * whose read failed.
+ *
+ * **Example** (Describe a fully read run)
+ *
+ * ```ts
+ * import { CiWorkflowRunAttemptJobs } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(CiWorkflowRunAttemptJobs.make({ jobs: [], partialReads: [] }).jobs.length)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CiWorkflowRunAttemptJobs extends S.Opaque<CiWorkflowRunAttemptJobs, { readonly brand: unique symbol }>()(
+  S.Struct({
+    jobs: S.Array(CiWorkflowJob),
+    partialReads: S.Array(CiWorkflowPartialRead).pipe(
+      S.withConstructorDefault(Effect.succeed(partialReadsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(partialReadsDefault))
+    ),
+  }).pipe(
+    $I.annoteSchema("CiWorkflowRunAttemptJobs", {
+      description: "Union of a workflow run's per-attempt job listings with every failed attempt read named.",
+    })
+  )
+) {}
+
 const CiWorkflowAttemptOneJob = CiWorkflowJob.mapFields((fields) => ({
   ...fields,
   run_attempt: S.tag(1),
@@ -1058,6 +1130,9 @@ type CiWorkflowJobsPageFetcher<Requirements> = (
 const ciWorkflowJobsEndpoint = (runId: number, perPage: number, pageNumber: number): string =>
   `repos/{owner}/{repo}/actions/runs/${runId}/jobs?filter=all&per_page=${perPage}&page=${pageNumber}`;
 
+const ciWorkflowAttemptJobsEndpoint = (runId: number, attempt: number, perPage: number, pageNumber: number): string =>
+  `repos/{owner}/{repo}/actions/runs/${runId}/attempts/${attempt}/jobs?per_page=${perPage}&page=${pageNumber}`;
+
 const fetchLegacyCiWorkflowJobsPage = Effect.fn("Ci.fetchLegacyCiWorkflowJobsPage")(function* (
   runId: number,
   perPage: number,
@@ -1340,8 +1415,10 @@ const ciRulesetPopulationChangesDefault = A.empty<CiRulesetPopulationChange>();
  * under the seven-day census week the packets admit on. `population-change`
  * means a ruleset version that added or removed a required context took
  * effect inside the window, so part of the window ran under a population the
- * census does not measure. All three are reasons a result is a preview;
- * none is a reason the numbers are wrong.
+ * census does not measure. `partial-read` means a run's per-attempt jobs read
+ * failed after every transient retry, so that run's rows are incomplete. All
+ * four are reasons a result is a preview; only `partial-read` means numbers
+ * are missing, and the census refuses it without `--preview`.
  *
  * **Example** (List the guarded bounds)
  *
@@ -1354,10 +1431,15 @@ const ciRulesetPopulationChangesDefault = A.empty<CiRulesetPopulationChange>();
  * @category models
  * @since 0.0.0
  */
-export const CiLaneTimingWindowGuardReason = LiteralKit(["future-cutoff", "short-span", "population-change"]).pipe(
+export const CiLaneTimingWindowGuardReason = LiteralKit([
+  "future-cutoff",
+  "short-span",
+  "population-change",
+  "partial-read",
+]).pipe(
   $I.annoteSchema("CiLaneTimingWindowGuardReason", {
     description:
-      "Bound a bounded lane-timing census window breaches: a future cutoff, a span under seven days, or a required-context change inside it.",
+      "Bound a bounded lane-timing census window breaches: a future cutoff, a span under seven days, a required-context change inside it, or a job attempt read that failed.",
   })
 );
 
@@ -1423,6 +1505,7 @@ export class CiLaneTimingWindowGuardVerdict extends S.Opaque<
     populationChanges: S.Array(CiRulesetPopulationChange).pipe(
       S.withConstructorDefault(Effect.succeed(ciRulesetPopulationChangesDefault))
     ),
+    partialReads: S.Array(CiWorkflowPartialRead).pipe(S.withConstructorDefault(Effect.succeed(partialReadsDefault))),
     preview: S.Boolean,
     reasons: S.Array(CiLaneTimingWindowGuardReason),
     since: S.DateTimeUtc,
@@ -1466,6 +1549,8 @@ export class CiWorkflowWindowRun extends S.Opaque<CiWorkflowWindowRun, { readonl
     run_attempt: S.Finite,
     run_started_at: S.DateTimeUtcFromString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     updated_at: S.DateTimeUtcFromString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    status: S.NullOr(S.String).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    conclusion: S.NullOr(S.String).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("CiWorkflowWindowRun", {
       description:
@@ -1783,6 +1868,7 @@ export class CiLaneTimingWindowReport extends S.Opaque<CiLaneTimingWindowReport,
     contextCount: S.Int.check(S.isGreaterThanOrEqualTo(0)),
     dayPeaks: S.Array(CiLaneTimingDayPeak).pipe(S.withConstructorDefault(Effect.succeed(ciLaneTimingDayPeaksDefault))),
     laneStats: S.Array(CiLaneTimingWindowStat),
+    partialReads: S.Array(CiWorkflowPartialRead).pipe(S.withConstructorDefault(Effect.succeed(partialReadsDefault))),
     pickup: CiLaneTimingPickupStat,
     populationChanges: S.Array(CiRulesetPopulationChange).pipe(
       S.withConstructorDefault(Effect.succeed(ciRulesetPopulationChangesDefault))
@@ -2170,7 +2256,22 @@ export class CiLaneTimingGithubClient extends Context.Service<
   CiLaneTimingGithubClientShape
 >()($I`CiLaneTimingGithubClient`) {}
 
-const makeCiLaneTimingGithubClient = Effect.fn("CiLaneTimingGithubClient.make")(function* () {
+/**
+ * Build a {@link CiLaneTimingGithubClient} over the provided GitHub client and repo.
+ *
+ * **Example** (Reference the constructor)
+ *
+ * ```ts
+ * import { makeCiLaneTimingGithubClient } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(typeof makeCiLaneTimingGithubClient)
+ * ```
+ *
+ * @returns A client whose reads use the ambient `GitHubClient` and `Repo`.
+ * @category clients
+ * @since 0.0.0
+ */
+export const makeCiLaneTimingGithubClient = Effect.fn("CiLaneTimingGithubClient.make")(function* () {
   const context = yield* Effect.context<GitHubClient | Repo>();
   return CiLaneTimingGithubClient.of({
     getJson: Effect.fn("CiLaneTimingGithubClient.getJson")((endpoint) =>
@@ -2286,7 +2387,40 @@ const collectCiWorkflowWindowRunPages = Effect.fn("Ci.collectCiWorkflowWindowRun
   });
 });
 
-const collectCiWorkflowWindowRuns = Effect.fn("Ci.collectCiWorkflowWindowRuns")(function* (
+/**
+ * List one workflow's runs created inside a half-open window, de-duplicated and ordered.
+ *
+ * **Details**
+ *
+ * A listing past GitHub's 1,000-run cap is halved until every half fits, and
+ * runs are ordered by creation time then id, so page order cannot reorder a
+ * census.
+ *
+ * **Example** (Prepare a listing effect)
+ *
+ * ```ts
+ * import { CiLaneTimingWindowOptions, collectCiWorkflowWindowRuns } from "@beep/repo-cli/commands/Ci"
+ * import * as DateTime from "effect/DateTime"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * const options = CiLaneTimingWindowOptions.make({
+ *   branch: O.none(),
+ *   event: "pull_request",
+ *   headSha: O.none(),
+ *   since: DateTime.makeUnsafe("2026-11-09T00:00:00Z"),
+ *   until: DateTime.makeUnsafe("2026-11-10T00:00:00Z"),
+ *   workflow: "check.yml",
+ * })
+ * console.log(Effect.isEffect(collectCiWorkflowWindowRuns(options)))
+ * ```
+ *
+ * @param options - Workflow, event, branch and interval filters.
+ * @returns Every run inside the window, oldest first.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const collectCiWorkflowWindowRuns = Effect.fn("Ci.collectCiWorkflowWindowRuns")(function* (
   options: CiLaneTimingWindowOptions
 ): Effect.fn.Return<ReadonlyArray<CiWorkflowWindowRun>, CiCommandError, CiLaneTimingGithubClient> {
   const eventRuns = yield* Effect.forEach(
@@ -2300,13 +2434,86 @@ const collectCiWorkflowWindowRuns = Effect.fn("Ci.collectCiWorkflowWindowRuns")(
   return A.sort(A.fromIterable(HashMap.values(indexed)), windowRunOrder);
 });
 
-const fetchCiWorkflowWindowJobsPage = Effect.fn("Ci.fetchCiWorkflowWindowJobsPage")(function* (
+const CI_WORKFLOW_JOBS_PAGE_SIZE = 100;
+const CI_WORKFLOW_JOBS_FALLBACK_PAGE_SIZE = 30;
+
+const workflowJobAttemptKey = (job: CiWorkflowJob): string => `${job.id}:${job.run_attempt}`;
+
+/**
+ * Read one workflow run's jobs attempt by attempt and union them.
+ *
+ * **Details**
+ *
+ * The `filter=all` listing of a large rerun pages through every attempt at
+ * once, and on runs such as 42646019844 (three attempts, 180 jobs) its pages
+ * fail with HTTP 502 often enough that the transient retries run out. The
+ * per-attempt endpoint lists at most one attempt's jobs per read, and the union
+ * de-duplicated by `(id, run_attempt)` equals the `filter=all` set whenever
+ * that one succeeds (22 of 22 tuples on run 42655574858). An attempt whose
+ * 100-job pages fail after every transient retry is read again in pages of 30,
+ * which GitHub serves when the larger payload keeps returning 502 (run
+ * 42669948388, attempts 2 and 3). An attempt that still fails is returned in
+ * `partialReads` instead of
+ * failing the run, so a census can stamp or refuse the incomplete run rather
+ * than drop it.
+ *
+ * **Example** (Prepare a per-attempt read)
+ *
+ * ```ts
+ * import { collectCiWorkflowRunAttemptJobs } from "@beep/repo-cli/commands/Ci"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(collectCiWorkflowRunAttemptJobs(42646019844, 3)))
+ * ```
+ *
+ * @param runId - Run whose attempts are read and named in any partial read.
+ * @param runAttempt - The run's latest attempt number; attempts 1 through it are read.
+ * @returns The de-duplicated union of every readable attempt plus each failed attempt read.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const collectCiWorkflowRunAttemptJobs = Effect.fn("Ci.collectCiWorkflowRunAttemptJobs")(function* (
   runId: number,
-  perPage: number,
-  pageNumber: number
-): Effect.fn.Return<unknown, CiCommandError, CiLaneTimingGithubClient> {
+  runAttempt: number
+): Effect.fn.Return<CiWorkflowRunAttemptJobs, never, CiLaneTimingGithubClient> {
   const github = yield* CiLaneTimingGithubClient;
-  return yield* github.getJson(ciWorkflowJobsEndpoint(runId, perPage, pageNumber));
+  const attempts = A.makeBy(Math.max(1, Math.trunc(runAttempt)), (index) => index + 1);
+  const readAttempt = (attempt: number, perPage: number) =>
+    collectCiWorkflowJobPages(
+      (id: number, size: number, pageNumber: number) =>
+        github.getJson(ciWorkflowAttemptJobsEndpoint(id, attempt, size, pageNumber)),
+      runId,
+      perPage
+    );
+  const reads = yield* Effect.forEach(attempts, (attempt) =>
+    readAttempt(attempt, CI_WORKFLOW_JOBS_PAGE_SIZE).pipe(
+      // A page of 100 jobs with their steps is the payload GitHub 502s on; smaller pages of the same attempt succeed.
+      Effect.catch(() => readAttempt(attempt, CI_WORKFLOW_JOBS_FALLBACK_PAGE_SIZE)),
+      Effect.map((jobs) => ({ attempt, jobs, failure: O.none<string>() })),
+      Effect.catch((error: CiCommandError) =>
+        Effect.succeed({ attempt, jobs: A.empty<CiWorkflowJob>(), failure: O.some(error.message) })
+      )
+    )
+  );
+  const union = A.reduce(
+    A.flatMap(reads, (read) => read.jobs),
+    { jobs: A.empty<CiWorkflowJob>(), seen: HashSet.empty<string>() },
+    (collected, job) =>
+      HashSet.has(collected.seen, workflowJobAttemptKey(job))
+        ? collected
+        : {
+            jobs: A.append(collected.jobs, job),
+            seen: HashSet.add(collected.seen, workflowJobAttemptKey(job)),
+          }
+  );
+  return CiWorkflowRunAttemptJobs.make({
+    jobs: union.jobs,
+    partialReads: A.getSomes(
+      A.map(reads, (read) =>
+        O.map(read.failure, (message) => CiWorkflowPartialRead.make({ attempt: read.attempt, message, runId }))
+      )
+    ),
+  });
 });
 
 /**
@@ -2941,27 +3148,40 @@ const collectCiLaneTimingWindowWithClient = Effect.fn("Ci.collectCiLaneTimingWin
   yield* assertRequiredContextCount(requiredContextSet, O.some(version));
   yield* refuseCiLaneTimingWindowPopulationChange(options, changes, preview);
   const runs = yield* collectCiWorkflowWindowRuns(options);
-  const rows = yield* pipe(
+  const collected = yield* pipe(
     Stream.fromIterable(runs),
     Stream.mapEffect(
       Effect.fnUntraced(function* (run) {
-        const jobs = yield* collectCiWorkflowJobPages(fetchCiWorkflowWindowJobsPage, run.id, 100);
-        return CiWorkflowWindowRunJobs.make({ jobs, run });
+        const read = yield* collectCiWorkflowRunAttemptJobs(run.id, run.run_attempt);
+        if (!preview && A.isReadonlyArrayNonEmpty(read.partialReads)) {
+          return yield* CiCommandError.make({
+            message: `${renderPartialReads(read.partialReads)}: job reads failed after every retry (${A.join(
+              A.map(read.partialReads, (partial) => partial.message),
+              "; "
+            )}). Pass --preview to read a census stamped as partial.`,
+          });
+        }
+        return { partialReads: read.partialReads, runJobs: CiWorkflowWindowRunJobs.make({ jobs: read.jobs, run }) };
       }),
       { concurrency: CI_LANE_TIMING_JOB_FETCH_CONCURRENCY, unordered: false }
     ),
-    Stream.runFold(A.empty<CiLaneTimingWindowRow>, (collected, runJobs) =>
-      A.appendAll(collected, rowsForRun(requiredContextSet, runJobs))
+    Stream.runFold(
+      () => ({ partialReads: A.empty<CiWorkflowPartialRead>(), rows: A.empty<CiLaneTimingWindowRow>() }),
+      (accumulated, read) => ({
+        partialReads: A.appendAll(accumulated.partialReads, read.partialReads),
+        rows: A.appendAll(accumulated.rows, rowsForRun(requiredContextSet, read.runJobs)),
+      })
     )
   );
-  return yield* reportFromRows(
+  const report = yield* reportFromRows(
     requiredContextSet,
     A.length(runs),
-    rows,
+    collected.rows,
     O.some(version),
     changes,
     ciLaneTimingDayPeaks(runs)
   );
+  return CiLaneTimingWindowReport.make({ ...report, partialReads: collected.partialReads });
 });
 
 /**
@@ -3576,6 +3796,7 @@ const CI_LANE_TIMING_WINDOW_GUARD_REFUSAL: Record<
       A.map(A.filter(verdict.populationChanges, isRequiredContextChange), renderRulesetPopulationChange),
       "; "
     )}`,
+  "partial-read": (verdict) => `job reads failed after every retry: ${renderPartialReads(verdict.partialReads)}`,
 };
 
 const CI_LANE_TIMING_WINDOW_GUARD_BANNER: Record<
@@ -3585,7 +3806,14 @@ const CI_LANE_TIMING_WINDOW_GUARD_BANNER: Record<
   "future-cutoff": () => "cutoff is in the future",
   "short-span": () => "span under seven days",
   "population-change": () => "required contexts changed inside the window",
+  "partial-read": (verdict) => `partial job reads (${renderPartialReads(verdict.partialReads)})`,
 };
+
+const renderPartialReads = (reads: ReadonlyArray<CiWorkflowPartialRead>): string =>
+  A.join(
+    A.map(reads, (read) => `run ${read.runId} attempt ${read.attempt}`),
+    ", "
+  );
 
 const CI_LANE_TIMING_WINDOW_PREVIEW_HEADER = "ci lane timing window (PREVIEW, not an admission census)";
 
@@ -3805,9 +4033,13 @@ const withCiLaneTimingWindowPopulation = (
   report: CiLaneTimingWindowReport
 ): CiLaneTimingWindowGuardVerdict =>
   CiLaneTimingWindowGuardVerdict.make({
+    partialReads: report.partialReads,
     populationChanges: report.populationChanges,
     preview: verdict.preview,
-    reasons: A.appendAll(verdict.reasons, assessCiLaneTimingWindowPopulation(report.populationChanges)),
+    reasons: A.appendAll(
+      A.appendAll(verdict.reasons, assessCiLaneTimingWindowPopulation(report.populationChanges)),
+      A.isReadonlyArrayNonEmpty(report.partialReads) ? ["partial-read" as const] : A.empty()
+    ),
     since: verdict.since,
     until: verdict.until,
   });

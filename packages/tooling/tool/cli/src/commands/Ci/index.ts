@@ -10,6 +10,21 @@
  * @category cli-commands
  * @since 0.0.0
  */
+
+/**
+ * Public certainty scorecard schemas.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./Certainty.schemas.ts";
+/**
+ * Public head-level certainty scorecard (`beep ci certainty`).
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./Certainty.ts";
 export * from "./Ci.command.ts";
 /**
  * Public command module export.

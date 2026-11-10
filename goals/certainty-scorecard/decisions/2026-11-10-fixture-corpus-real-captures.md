@@ -1,0 +1,8 @@
+---
+title: "The committed MEAS-01 corpus is two real captures; the recorded 30-run membership is not recoverable"
+date: 2026-11-10
+lane: "claude/jovial-sammet-084b0a"
+reversal: "Replace the two fixtures with a corpus whose membership reproduces the Astra 30-run figures exactly, if that corpus is recovered, and restate the replay assertions."
+---
+
+Decision `in-repo-fixture-corpus` asked for a committed corpus reproducing the recorded figures (4 of 30 under 10 min, green-only p95 101.9, about 315 runner-min per run). The exploration never recorded which 30 runs Astra used, so slice 1 commits two real captures of `beep ci certainty --write-corpus` instead, slimmed to the fields the fold reads and with branch names replaced by `<label>-branch-NN` (D18): `baseline-2026-11-09.json` (T0 2026-11-09 12:00-18:00Z, 64 GitHub reads) and `planned-2026-11-10.json` (01:00-04:00Z on 2026-11-10, after #3030, for the admission-to-Heavy and Test Unit selection rows). The baseline reproduces the recorded anchors exactly: green-only p95 101.9 min (facc14a6, three attempts), 9f30182f at 40.2 min with 315.3 runner-min (the plan's spot check of run 42637312401), and 4 heads under ten minutes (one code head, three docs heads). It also carries every named per-head case (eb295434 two producers, facc14a6 three attempts, docs-only b85ee265, cancelled ecc04921). The SLO statistic on that window is p50 63.35 min with p95 not attained (6 misses of 17 counted code heads, 14 superseded censored), and runner-minutes per producer run average 219.7 over 40 runs (check.yml and heavy-admit.yml counted separately); these are stated beside the recorded figures, not substituted for them. The fixtures are excluded from Biome like the other large replay corpora.
