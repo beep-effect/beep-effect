@@ -516,6 +516,16 @@ const runOrdinaryCoverageStep = Effect.fn("CiCoverage.runOrdinaryStep")(function
 // Hosted ubuntu runners expose 4 vCPUs; with `--maxWorkers=1` per producer, two producers fit beside the
 // step runner without exceeding the 16 GB the one-worker pin was sized for.
 const CI_COVERAGE_COMPOUND_STEP_CONCURRENCY = 2;
+const CI_COVERAGE_ONE_WORKER_ARG = "--maxWorkers=1";
+// A sharded partition runs a single producer, so that producer takes both worker slots a unit bin
+// splits between its two producers: the same two Vitest workers and the same memory on the runner.
+// With one worker a shard used one of four vCPUs (run 42726850927, repo-cli-3: 562 s of Vitest for
+// 452 s of file time, strictly serial).
+const CI_COVERAGE_SHARD_WORKERS_ARG = "--maxWorkers=2";
+const producerWorkersArg =
+  (entry: CoverageProducerPackage) =>
+  (arg: string): string =>
+    entry.shard !== undefined && arg === CI_COVERAGE_ONE_WORKER_ARG ? CI_COVERAGE_SHARD_WORKERS_ARG : arg;
 /** Parallel `vitest list` discoveries: one per core of the hosted 4-vCPU runner. */
 const CI_COVERAGE_DISCOVERY_CONCURRENCY = 4;
 
@@ -542,9 +552,12 @@ const runCompoundCoverageSteps = Effect.fn("CiCoverage.runCompoundSteps")(functi
       cwd: path.join(repoRoot, entry.packagePath),
       args: [
         ...A.filter(A.drop(entry.testCommand, 1), (arg) => arg !== "--coverage" && arg !== "--coverage=true"),
-        ...A.filter(
-          A.drop(ciCoverageTestArgs, 1),
-          (arg) => !Str.startsWith("--outputFile=")(arg) && !Str.startsWith("--coverage.provider=")(arg)
+        ...A.map(
+          A.filter(
+            A.drop(ciCoverageTestArgs, 1),
+            (arg) => !Str.startsWith("--outputFile=")(arg) && !Str.startsWith("--coverage.provider=")(arg)
+          ),
+          producerWorkersArg(entry)
         ),
         `--coverage.provider=${entry.provider}`,
         `--coverage.reportsDirectory=${path.dirname(entry.testReportPath)}`,
@@ -738,5 +751,5 @@ export const ciCoverageTestArgs: ReadonlyArray<string> = [
   "--reporter=json",
   "--outputFile=coverage/unit-results.json",
   "--fileParallelism=true",
-  "--maxWorkers=1",
+  CI_COVERAGE_ONE_WORKER_ARG,
 ];

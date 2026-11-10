@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "yeet-monitor-app-identity",
+    "packetId": "goal-packet/v1:917ba2c4542af8db3e1d90c89e14fc5b9c786fb9f261c64dbc541337ae111a20",
+    "title": "Yeet Monitor App Identity",
+    "status": "active",
+    "created": "2026-11-09",
+    "updated": "2026-11-09",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/yeet-monitor-app-identity",
+  "lifecycle": "active",
+  "mission": "Make the Yeet monitor read-only by moving its environment-only reruns into rerun-runner-loss.yml, then run the per-host GitHub-state worker's reads on the beep-fleet-orchestrator App installation token through LoadCredential=, proving with the budget ledger that polling left the user bucket.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/github-api-quota",
+    "graduated": "2026-11-09"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/yeet-monitor-app-identity/README.md",
+    "goals/yeet-monitor-app-identity/SPEC.md",
+    "goals/yeet-monitor-app-identity/PLAN.md",
+    "goals/yeet-monitor-app-identity/GOAL.md",
+    "goals/yeet-monitor-app-identity/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/yeet-monitor-app-identity/GOAL.md"
+    }
+  ],
+  "provides": ["github/read-only-monitor"],
+  "requires": ["github/budget-ledger", "github/pr-snapshot"],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/yeet-monitor-app-identity/GOAL.md)\" -le 4000",
+    "jq . goals/yeet-monitor-app-identity/ops/manifest.json",
+    "rg -n \"yeet-monitor-app-identity|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/yeet-monitor-app-identity",
+    "git diff --check -- goals/yeet-monitor-app-identity",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "statusNote": "Authored 2026-11-09, not started: 3a (read-only monitor) is startable after github-budget-ledger; 3b (App identity) is blocked on github-state-worker and 3a. requires lists both edges: github/budget-ledger gates 3a, github/pr-snapshot gates 3b."
+}

@@ -2,7 +2,7 @@
 
 User requested comparison with the canonical Effect workers and workflow sources.
 Reference inspected: Effect revision `7a87ff9b88b1a570995b1b5570559c1b4dd5367b`
-at `/home/elpresidank/YeeBois/references/effect/effect`.
+at `~/YeeBois/references/effect/effect`.
 
 Current HTML execution uses Effect ChildProcessSpawner, Stdio, Stream, Schema,
 Scope, Clock, Deferred and semaphore primitives, but implements a private framed

@@ -96,8 +96,9 @@ export default splitProjects
               exclude: cliExcludes,
               // Real native worker tests include cold module loading. Bound the test runner fan-out
               // so it does not consume the production deadline itself (#2511). The hosted coverage
-              // producer's `--maxWorkers=1` still overrides this: Vitest applies the CLI flag to
-              // every project. Each native owner still enforces its configured queue/execution limits.
+              // producer passes `--maxWorkers=2` to a unit shard and Vitest applies the CLI flag to
+              // every project, so this cap and the hosted one agree. Each native owner still enforces
+              // its configured queue/execution limits.
               maxWorkers: 2,
               maxConcurrency: 2,
               sequence: { groupOrder: 0 },

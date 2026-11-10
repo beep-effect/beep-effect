@@ -924,6 +924,13 @@ export const githubCheckCheapGateLanes = (repoRoot: string): ReadonlyArray<Githu
     rootTaskLane(repoRoot, "lint:retired-iri-authorities", "lint:retired-iri-authorities")
   ),
   githubCheckLane(
+    "lint:private-home-paths",
+    "cheap-gates",
+    "repo-quality",
+    "preflight",
+    rootTaskLane(repoRoot, "lint:private-home-paths", "lint:private-home-paths")
+  ),
+  githubCheckLane(
     "lint:tracked-shell-allowlist",
     "cheap-gates",
     "repo-quality",
