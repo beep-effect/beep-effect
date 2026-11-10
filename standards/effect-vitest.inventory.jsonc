@@ -3219,6 +3219,28 @@
       "reason": "The per-sink NodeHttpServer.layerTest scope shuts its ephemeral server down before returning, and cleanup probes verify all five listeners are unreachable afterwards (goals/effect-vitest-canon/research/cli-next-five-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when EV004 recognises a helper scope whose close the caller observes before returning (#1855 wave 8 register)."
     },
     {
+      "id": "EV004:packages/tooling/tool/cli/test/github-ledger.test.ts:756:scoped@10#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/github-ledger.test.ts",
+      "line": 756,
+      "endLine": 764,
+      "symbol": "scoped",
+      "occurrence": "v2:87d99e498d91ec6c276b80d8b745ed01c15ca51ee8d6f40a2d42ce8c5ab99225",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped( spawner.spawn(ChildProcess.make(process.execPath, [fixture, file, line, \"500\"])).pipe( Effect.flatMap((handle) => Effect.all([handle.all.pipe(Stream.decodeText(), Stream.mkString), hand",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Each append child gets its own scope so its handle is released when that child exits while the other still runs; the two children run concurrently and the line-integrity assertion reads the file after both scopes closed. The scope is deliberately the child's, shorter than the test. Owner: @beep/repo-cli. Exit: retire when EV004 recognises a per-child spawn scope inside a concurrent helper."
+    },
+    {
       "id": "EV004:packages/tooling/tool/cli/test/image-command.test.ts:138:scoped@2#1",
       "lens": "resource",
       "ruleId": "EV004",
@@ -9653,6 +9675,94 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The handler spawns a real bash pipeline into a fake op and op-doctor on PATH through ChildProcessSpawner, and the dry run reads the committed repo-configs manifests; a live child process sees only the real filesystem."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/github-identity-label.test.ts:23:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/github-identity-label.test.ts",
+      "line": 23,
+      "endLine": 23,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The identities.json rejection and the client-seam case read and write real temporary files through the live ledger store, and the seam case scans every file the store wrote for a leaked token or path. Owner: @beep/repo-cli. Exit: retire when both cases run over the memory store plus a memory filesystem that the leak scan can enumerate."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/github-ledger-root.test.ts:11:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/github-ledger-root.test.ts",
+      "line": 11,
+      "endLine": 11,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "withGithubLedger builds the root's live ledger layer, which requires the FileSystem, Path and ChildProcessSpawner the CLI root passes it; NodeServices supplies all three and the state root is a scoped temporary directory. Owner: @beep/repo-cli. Exit: retire when the root wiring takes its platform services through a test layer that fakes the spawner and the filesystem together."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/github-ledger-sampler.test.ts:27:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/github-ledger-sampler.test.ts",
+      "line": 27,
+      "endLine": 27,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The sampler lease is an exclusive-create lock file whose mtime staleness, rename-based reclaim and holder-token release are the subject; the memory store has no file semantics to race. Owner: @beep/repo-cli. Exit: retire when the lease cases run against a filesystem fake that models exclusive create, rename and mtime."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/github-ledger.test.ts:47:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/github-ledger.test.ts",
+      "line": 47,
+      "endLine": 47,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The file store's real platform behaviour is the subject: 0600/0700 modes, one O_APPEND write per row across fibers and child processes, hour-partitioned files, atomic latest/ replacement and retention by file. NodeServices also supplies the spawner for the two-process append. Owner: @beep/repo-cli. Exit: retire the in-memory cases' share when they move to layerGithubLedgerStoreMemory; the file-store cases need a real filesystem."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/gitleaks-observation-digest.test.ts:10:@effect/platform-node@0#1",

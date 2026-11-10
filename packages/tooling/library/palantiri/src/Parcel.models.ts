@@ -58,6 +58,7 @@ export const ParcelId = LiteralKit([
   "host-pressure",
   "app-error-classes",
   "since-last-check",
+  "github-headroom",
 ]).pipe($I.annoteSchema("ParcelId", { description: "Identifier of a parcel Palantiri serves." }));
 
 /**
@@ -81,7 +82,9 @@ export type ParcelId = typeof ParcelId.Type;
  * and memory files; `admission-slots` is the machine-wide admission state.
  * `grafana-query` is the app telemetry query adapter, which does not exist
  * yet. `session-ledger` is the workstation session ledger and
- * `session-cursor` a session's last-read mark.
+ * `session-cursor` a session's last-read mark. `github-ledger` is the host's
+ * GitHub budget ledger and `github-rate-limit-sample` a `/rate_limit` sample
+ * that ledger recorded.
  *
  * **Example** (Narrow a source)
  *
@@ -105,6 +108,8 @@ export const ParcelSource = LiteralKit([
   "grafana-query",
   "session-ledger",
   "session-cursor",
+  "github-ledger",
+  "github-rate-limit-sample",
 ]).pipe($I.annoteSchema("ParcelSource", { description: "A source a parcel reads from." }));
 
 /**

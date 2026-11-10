@@ -7,7 +7,7 @@ import {
   InstallationToken,
 } from "@beep/github/GitHubApp";
 import { GitHubClient } from "@beep/github/GitHubClient";
-import { RetryPolicy } from "@beep/github/Resilience";
+import { RateLimitSink, RetryPolicy } from "@beep/github/Resilience";
 import { assert, describe, it } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -25,13 +25,15 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
 import * as Tracer from "effect/Tracer";
 import * as TestClock from "effect/testing/TestClock";
-import { scriptedFetch } from "./support/fixtures.ts";
+import { rateLimitHeaders, scriptedFetch } from "./support/fixtures.ts";
 import type { GitHubAppError } from "@beep/github/GitHubApp";
+import type { RateLimitObservation, RateLimitSinkShape } from "@beep/github/Resilience";
 import type { Reply } from "./support/fixtures.ts";
 
 /**
@@ -1110,4 +1112,70 @@ describe("Option is not needed to read a missing installation account", () => {
         assertNone(O.fromUndefinedOr(all[0]?.account));
       })
   );
+});
+
+describe("GitHubApp rate-limit observations", () => {
+  const LABEL = "app:1/42";
+  const headers = rateLimitHeaders({ remaining: 4_000, limit: 5_000, resource: "core" });
+
+  /** A sink that keeps every observation, and a projection of each to credential and label. */
+  const collecting = Effect.fnUntraced(function* () {
+    const seen = yield* Ref.make<ReadonlyArray<RateLimitObservation>>([]);
+    const sink: RateLimitSinkShape = { record: (observation) => Ref.update(seen, A.append(observation)) };
+    const projected = Ref.get(seen).pipe(
+      Effect.map(A.map((observation) => [observation.credential, O.getOrUndefined(observation.budgetLabel)] as const))
+    );
+    return { sink, projected };
+  });
+
+  it.effect("the JWT client and the installation client both carry the caller's label, unchanged", () =>
+    Effect.gen(function* () {
+      const { sink, projected } = yield* collecting();
+      const script = scriptedFetch([
+        { ...tokenReply(), headers },
+        { status: 200, body: { default_branch: "main" }, headers },
+        { status: 204 },
+      ]);
+      const context = yield* Layer.build(
+        GitHubApp.clientLayer(
+          { ...CREDENTIALS, installationId: 42 },
+          { fetch: script.fetch, retry: NO_RETRY, budgetLabel: LABEL }
+        )
+      ).pipe(Effect.provideService(RateLimitSink, sink));
+      const client = Context.get(context, GitHubClient);
+      yield* client.request("GET /repos/{owner}/{repo}", { owner: "o", repo: "r" });
+      const observed = yield* projected;
+      assert.deepStrictEqual(observed, [
+        ["app-jwt", LABEL],
+        ["token", LABEL],
+      ]);
+    })
+  );
+
+  for (const [name, installationToken, credential] of [
+    ["without an installation token is unauthenticated", undefined, "unauthenticated"],
+    ["with an installation token is a token", Redacted.make("ghs_x"), "token"],
+  ] as const) {
+    it.effect(`the bot-user lookup ${name}`, () =>
+      Effect.gen(function* () {
+        const { sink, projected } = yield* collecting();
+        const script = scriptedFetch([
+          { status: 200, body: { slug: "my-app", name: "My App", id: 1 }, headers },
+          { status: 200, body: { id: 987654, login: "my-app[bot]" }, headers },
+        ]);
+        const context = yield* Layer.build(
+          GitHubApp.layerWith({ fetch: script.fetch, retry: NO_RETRY, budgetLabel: LABEL })
+        );
+        const app = Context.get(context, GitHubApp);
+        yield* app
+          .identity({ ...CREDENTIALS, ...(installationToken === undefined ? {} : { installationToken }) })
+          .pipe(Effect.provideService(RateLimitSink, sink));
+        const observed = yield* projected;
+        assert.deepStrictEqual(observed, [
+          ["app-jwt", LABEL],
+          [credential, LABEL],
+        ]);
+      })
+    );
+  }
 });

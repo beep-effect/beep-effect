@@ -4,6 +4,7 @@ import {
   AccountHeadroomSource,
   AccountsReportInputJson,
   AccountsWindowRemaining,
+  GithubHeadroomSource,
   HostPressureSource,
   LaneRedsSource,
   ParcelEnvelope,
@@ -131,7 +132,7 @@ const withEnv = (env: Record<string, string>) =>
 const noFiles = Layer.mergeAll(FileSystem.layerNoop({}), Path.layer);
 
 // The ports this file does not exercise, failing if read.
-const offline = (parcel: "lane-reds" | "host-pressure" | "since-last-check") =>
+const offline = (parcel: "lane-reds" | "host-pressure" | "since-last-check" | "github-headroom") =>
   Effect.fail(SourceFailed.make({ parcel, detail: "not wired in this test" }));
 
 const otherSources = Layer.mergeAll(
@@ -140,7 +141,8 @@ const otherSources = Layer.mergeAll(
   Layer.succeed(SinceLastCheckSource, {
     read: Effect.fn("SinceLastCheckSource.stub.read")(() => offline("since-last-check")),
     advance: Effect.fn("SinceLastCheckSource.stub.advance")(() => offline("since-last-check")),
-  })
+  }),
+  Layer.succeed(GithubHeadroomSource, { snapshot: offline("github-headroom") })
 );
 
 const spans = MutableHashMap.empty<string, Tracer.NativeSpan>();

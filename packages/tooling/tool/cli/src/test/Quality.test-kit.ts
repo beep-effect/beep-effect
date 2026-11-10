@@ -87,6 +87,7 @@ export * as CoverageArtifacts from "../commands/Quality/internal/CoverageArtifac
 export * as CoverageConfig from "../commands/Quality/internal/CoverageConfig.runtime.ts";
 export * from "../commands/Quality/internal/CoverageRegression.ts";
 export * from "../commands/Quality/internal/CoverageScope.ts";
+export * from "../commands/Quality/internal/CoverageScopeReaders.ts";
 export * from "../commands/Quality/internal/DocsOxlintPlugin.ts";
 export * from "../commands/Quality/internal/FallowEnvelope.schema.ts";
 export * from "../commands/Quality/internal/FlakeQuarantine.ts";

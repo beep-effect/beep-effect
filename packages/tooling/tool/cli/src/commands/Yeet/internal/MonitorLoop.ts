@@ -70,6 +70,7 @@ import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { GithubRateLimitSampler } from "../../../internal/github/GithubRateLimitSampler.ts";
 import {
   detectGithubJobShapeClass,
   GithubJobRecord,
@@ -194,6 +195,7 @@ import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
+import type { GithubRateLimitSamplerShape } from "../../../internal/github/GithubRateLimitSampler.ts";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetGithubServices } from "./GhOps.ts";
 import type { YeetPrCommentRow } from "./Inbox.ts";
@@ -2356,8 +2358,41 @@ interface MonitorLoopScope {
   readonly escalation: O.Option<MonitorWaveEscalation>;
   // The loop's one gh login, built on the first poll that reads GitHub.
   readonly github: Effect.Effect<Context.Context<YeetGithubServices>, YeetCommandError>;
+  // The ledger's `/rate_limit` sampler, when the root bound one.
+  readonly sampler: O.Option<MonitorSampler>;
   readonly waveBaseline: O.Option<HashSet.HashSet<string>>;
 }
+
+// A sample forked off a poll: the loop's scope interrupts it when the loop
+// ends, and `inFlight` keeps at most one running at a time.
+interface MonitorSampler {
+  readonly inFlight: Ref.Ref<boolean>;
+  readonly sampler: GithubRateLimitSamplerShape;
+  readonly scope: Scope.Scope;
+}
+
+const MONITOR_SAMPLE_TIMEOUT = Duration.seconds(30);
+
+// Sample the loop login's identity when it is due, without delaying the poll.
+// The sampler's own due check and lease bound it to one sample per interval
+// per identity per host, however many monitors poll.
+const forkMonitorSample = Effect.fnUntraced(function* (
+  scope: MonitorLoopScope,
+  github: Context.Context<YeetGithubServices>
+) {
+  if (O.isNone(scope.sampler)) return;
+  const { inFlight, sampler, scope: samplerScope } = scope.sampler.value;
+  const busy = yield* Ref.modify(inFlight, (running) => [running, true] as const);
+  if (busy) return;
+  yield* sampler
+    .sampleIfDue("monitor")
+    .pipe(
+      Effect.provideContext(github),
+      Effect.timeoutOption(MONITOR_SAMPLE_TIMEOUT),
+      Effect.ensuring(Ref.set(inFlight, false)),
+      Effect.forkIn(samplerScope)
+    );
+});
 
 interface MonitorWaveEscalation {
   readonly escalate: typeof escalateYeetPrWave;
@@ -2425,6 +2460,17 @@ const escalateMonitorWave = Effect.fn("YeetMonitorLoop.escalateWave")(function* 
   });
 });
 
+// The loop's own scope holds forked samples, so they end with the loop.
+const monitorSampler: Effect.Effect<O.Option<MonitorSampler>, never, Scope.Scope> = Effect.gen(function* () {
+  const sampler = yield* Effect.serviceOption(GithubRateLimitSampler);
+  if (O.isNone(sampler)) return O.none<MonitorSampler>();
+  return O.some<MonitorSampler>({
+    sampler: sampler.value,
+    scope: yield* Effect.scope,
+    inFlight: yield* Ref.make(false),
+  });
+});
+
 const pollUntilMerged = Effect.fn("YeetMonitorLoop.poll")(function* (
   context: RepoRunContext,
   options: YeetMonitorUntilMergedOptions,
@@ -2444,6 +2490,7 @@ const pollUntilMerged = Effect.fn("YeetMonitorLoop.poll")(function* (
   if (Result.isFailure(github)) {
     return MonitorPoll.make({ budget, head: previous, failure: O.some(github.failure) });
   }
+  yield* forkMonitorSample(scope, github.success);
   return yield* Effect.provideContext(
     pollObservedHead(context, options, budget, previous, firstCycle, scope, collected.success),
     github.success
@@ -2705,6 +2752,7 @@ export const runYeetMonitorUntilMerged: {
         : O.none(),
       escalation: yield* monitorWaveEscalation(options),
       github: yield* makeYeetGhLoginOnce(context.repoRoot),
+      sampler: yield* monitorSampler,
     };
     while (true) {
       const next: MonitorPoll = yield* pollUntilMerged(context, options, budget, head, firstCycle, scope);

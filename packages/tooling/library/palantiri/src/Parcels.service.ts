@@ -35,6 +35,7 @@ import {
 import { AppErrorClassesSpec, reduceAppErrorClasses } from "./AppErrorClasses.ts";
 import { Freshness } from "./Freshness.ts";
 import { replaceGaugeSeries } from "./GaugeSeries.ts";
+import { GithubHeadroomSpec, reduceGithubHeadroom } from "./GithubHeadroom.ts";
 import { freshPressureStalls, HostPressureSpec, hostPressureItems, reduceHostPressure } from "./HostPressure.ts";
 import { LaneRedsSpec, reduceLaneReds } from "./LaneReds.ts";
 import {
@@ -52,6 +53,7 @@ import { makeParcelEnvelope, ParcelDraft, ParcelEnvelope } from "./ParcelEnvelop
 import { UnknownParcel } from "./Parcels.errors.ts";
 import { reduceSinceLastCheck, SinceLastCheckSpec, sinceLastCheckCursor } from "./SinceLastCheck.ts";
 import type { AccountHeadroom, AccountHeadroomInput } from "./AccountHeadroom.models.ts";
+import type { GithubHeadroomInput } from "./GithubHeadroom.models.ts";
 import type { HostPressureInput, HostPressureItem } from "./HostPressure.models.ts";
 import type { LaneRedsInput } from "./LaneReds.models.ts";
 import type { ParcelBudget, ParcelSpec, SessionKey } from "./Parcel.models.ts";
@@ -199,12 +201,50 @@ export class SinceLastCheckSource extends Context.Service<
 >()($I`SinceLastCheckSource`) {}
 
 /**
+ * Port the github-headroom parcel reads through: this host's GitHub budget
+ * ledger, or its absence.
+ *
+ * **Details**
+ *
+ * The read must stay off the network and spawn nothing: it serves the hot
+ * block of `beep session open`, which has a 2-second budget.
+ *
+ * **Example** (Provide a host without a ledger)
+ *
+ * ```ts
+ * import { GithubHeadroomSource } from "@beep/palantiri/Parcels.service"
+ * import { GithubHeadroomInput } from "@beep/palantiri/GithubHeadroom.models"
+ * import * as Effect from "effect/Effect"
+ *
+ * const source = GithubHeadroomSource.of({
+ *   snapshot: Effect.succeed(GithubHeadroomInput.cases.Missing.make({ detail: "no ledger directory" }))
+ * })
+ * console.log(Effect.isEffect(source.snapshot)) // true
+ * ```
+ *
+ * @category ports
+ * @since 0.0.0
+ */
+export class GithubHeadroomSource extends Context.Service<
+  GithubHeadroomSource,
+  {
+    /** The newest reading of every bucket the host's ledger knows, with its summary. */
+    readonly snapshot: Effect.Effect<GithubHeadroomInput, SourceFailed>;
+  }
+>()($I`GithubHeadroomSource`) {}
+
+/**
  * Every source port the {@link Parcels} service reads through.
  *
  * @category ports
  * @since 0.0.0
  */
-export type ParcelSources = AccountHeadroomSource | LaneRedsSource | HostPressureSource | SinceLastCheckSource;
+export type ParcelSources =
+  | AccountHeadroomSource
+  | LaneRedsSource
+  | HostPressureSource
+  | SinceLastCheckSource
+  | GithubHeadroomSource;
 
 /**
  * The spec of every parcel, in `ParcelId` order.
@@ -215,7 +255,7 @@ export type ParcelSources = AccountHeadroomSource | LaneRedsSource | HostPressur
  * import { parcelSpecs } from "@beep/palantiri/Parcels.service"
  *
  * console.log(parcelSpecs.map((spec) => spec.id))
- * // ["account-headroom", "lane-reds", "host-pressure", "app-error-classes", "since-last-check"]
+ * // ["account-headroom", "lane-reds", "host-pressure", "app-error-classes", "since-last-check", "github-headroom"]
  * ```
  *
  * @category constants
@@ -227,6 +267,7 @@ export const parcelSpecs: ReadonlyArray<ParcelSpec> = [
   HostPressureSpec,
   AppErrorClassesSpec,
   SinceLastCheckSpec,
+  GithubHeadroomSpec,
 ];
 
 /**
@@ -371,6 +412,7 @@ const makeParcels = Effect.gen(function* () {
   const lanes = yield* LaneRedsSource;
   const host = yield* HostPressureSource;
   const sessions = yield* SinceLastCheckSource;
+  const github = yield* GithubHeadroomSource;
 
   const readAccountHeadroom = Effect.fnUntraced(function* (budget: ParcelBudget) {
     const now = yield* DateTime.now;
@@ -398,6 +440,16 @@ const makeParcels = Effect.gen(function* () {
       Effect.map(reduceHostPressure(now, budget)),
       Effect.catchTag("SourceFailed", (failure) =>
         recordPressure([]).pipe(Effect.as(unavailable(HostPressureSpec, now, budget, failure)))
+      )
+    );
+  });
+
+  const readGithubHeadroom = Effect.fnUntraced(function* (budget: ParcelBudget) {
+    const now = yield* DateTime.now;
+    return yield* github.snapshot.pipe(
+      Effect.map(reduceGithubHeadroom(now, budget)),
+      Effect.catchTag("SourceFailed", (failure) =>
+        Effect.succeed(unavailable(GithubHeadroomSpec, now, budget, failure))
       )
     );
   });
@@ -470,6 +522,7 @@ const makeParcels = Effect.gen(function* () {
       "host-pressure": () => readHostPressure(budget),
       "app-error-classes": () => readAppErrorClasses(budget),
       "since-last-check": () => readSinceLastCheck(budget, session),
+      "github-headroom": () => readGithubHeadroom(budget),
     });
     yield* Effect.annotateCurrentSpan(ParcelFreshnessAttribute, freshnessState(envelope.freshness));
     return envelope;

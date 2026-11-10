@@ -1,5 +1,6 @@
 import {
   AccountHeadroomSource,
+  GithubHeadroomSource,
   HostPressureSource,
   LaneRedsSource,
   ParcelItem,
@@ -24,7 +25,8 @@ export const failingSources = Layer.mergeAll(
   Layer.succeed(SinceLastCheckSource, {
     read: Effect.fn("SinceLastCheckSource.stub.read")(() => offline("since-last-check")),
     advance: Effect.fn("SinceLastCheckSource.stub.advance")(() => offline("since-last-check")),
-  })
+  }),
+  Layer.succeed(GithubHeadroomSource, { snapshot: offline("github-headroom") })
 );
 
 /** The account-headroom items of an envelope. */

@@ -13,6 +13,8 @@
  * @since 0.0.0
  */
 import { $GithubId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Random from "effect/Random";
@@ -20,6 +22,61 @@ import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 
 const $I = $GithubId.create("Resilience");
+
+/**
+ * The GitHub rate-limit bucket a request counted against.
+ *
+ * **Details**
+ *
+ * The literal set is the `GET /rate_limit` `resources` keys GitHub documents,
+ * plus three keys older documentation and live responses still carry
+ * (`code_scanning_upload`, `audit_log`, `audit_log_streaming`), plus a closed
+ * `unknown` for an absent or unrecognised `x-ratelimit-resource` header. A
+ * GraphQL request always counts against `graphql`.
+ *
+ * **Example** (Recognise a documented bucket)
+ *
+ * ```ts
+ * import { GitHubRateLimitResource } from "@beep/github/Resilience";
+ *
+ * console.log(GitHubRateLimitResource.is.graphql("graphql")) // true
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const GitHubRateLimitResource = LiteralKit([
+  "core",
+  "graphql",
+  "search",
+  "code_search",
+  "source_import",
+  "integration_manifest",
+  "code_scanning_upload",
+  "code_scanning_autofix",
+  "actions_runner_registration",
+  "scim",
+  "dependency_snapshots",
+  "dependency_sbom",
+  "audit_log",
+  "audit_log_streaming",
+  "copilot_usage_records",
+  "unknown",
+]).pipe(
+  $I.annoteSchema("GitHubRateLimitResource", {
+    description: "The GitHub rate-limit bucket a request counted against (x-ratelimit-resource).",
+  })
+);
+
+/**
+ * The values accepted by {@link GitHubRateLimitResource}.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export type GitHubRateLimitResource = typeof GitHubRateLimitResource.Type;
 
 /**
  * What GitHub's rate-limit headers said on the most recent REST response.
@@ -63,6 +120,20 @@ export class RateLimitSnapshot extends S.Class<RateLimitSnapshot, { readonly bra
       $I.annoteKey("RateLimitSnapshot.resetEpochSeconds", {
         description: "When the window resets, as epoch **seconds** — GitHub's own unit.",
       })
+    ),
+    /** The bucket the request counted against (`x-ratelimit-resource`); `unknown` when absent or unrecognised. */
+    resource: GitHubRateLimitResource.pipe(
+      S.withDecodingDefaultKey(Effect.succeed(GitHubRateLimitResource.Enum.unknown)),
+      S.withConstructorDefault(Effect.succeed(GitHubRateLimitResource.Enum.unknown)),
+      $I.annoteKey("RateLimitSnapshot.resource", {
+        description: "The bucket the request counted against; unknown when absent or unrecognised.",
+      })
+    ),
+    /** Requests used in the current window (`x-ratelimit-used`); none when the response omitted it. */
+    used: S.Int.pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone),
+      $I.annoteKey("RateLimitSnapshot.used", { description: "Requests used in the current window." })
     ),
   },
   $I.annote("RateLimitSnapshot", {
@@ -109,6 +180,246 @@ export class RateLimitSnapshot extends S.Class<RateLimitSnapshot, { readonly bra
     return this.remaining <= 0;
   }
 }
+
+/**
+ * Whether an observed request went to REST or GraphQL.
+ *
+ * **Example** (Recognise a GraphQL observation)
+ *
+ * ```ts
+ * import { RateLimitRequestKind } from "@beep/github/Resilience";
+ *
+ * console.log(RateLimitRequestKind.is.graphql("graphql")) // true
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RateLimitRequestKind = LiteralKit(["rest", "graphql"]).pipe(
+  $I.annoteSchema("RateLimitRequestKind", {
+    description: "Whether the observed request went to REST or GraphQL.",
+  })
+);
+
+/**
+ * The values accepted by {@link RateLimitRequestKind}.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RateLimitRequestKind = typeof RateLimitRequestKind.Type;
+
+/**
+ * How an observed GitHub attempt ended, as far as the budget is concerned.
+ *
+ * **Details**
+ *
+ * `rate-limited` is a primary limit (the bucket is empty, or a GraphQL
+ * `RATE_LIMITED` entry); `secondary-limited` is GitHub's abuse throttle (a 429,
+ * a 403 carrying `retry-after`, or a "secondary rate limit" message);
+ * `not-modified` is a 304; `error` is any other failure.
+ *
+ * **Example** (Recognise a primary rate limit)
+ *
+ * ```ts
+ * import { RateLimitOutcome } from "@beep/github/Resilience";
+ *
+ * console.log(RateLimitOutcome.is["rate-limited"]("rate-limited")) // true
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RateLimitOutcome = LiteralKit(["ok", "not-modified", "rate-limited", "secondary-limited", "error"]).pipe(
+  $I.annoteSchema("RateLimitOutcome", { description: "How an observed GitHub attempt ended." })
+);
+
+/**
+ * The values accepted by {@link RateLimitOutcome}.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RateLimitOutcome = typeof RateLimitOutcome.Type;
+
+/**
+ * The kind of credential an observed request carried.
+ *
+ * **Details**
+ *
+ * `token` is a bearer token (a personal, OAuth or installation token),
+ * `app-jwt` is a GitHub App's own JWT, and `unauthenticated` is no credential
+ * at all. The driver knows this without knowing who owns the bucket.
+ *
+ * **Example** (Recognise an App JWT)
+ *
+ * ```ts
+ * import { RateLimitCredential } from "@beep/github/Resilience";
+ *
+ * console.log(RateLimitCredential.is["app-jwt"]("app-jwt")) // true
+ * ```
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RateLimitCredential = LiteralKit(["token", "app-jwt", "unauthenticated"]).pipe(
+  $I.annoteSchema("RateLimitCredential", { description: "The kind of credential an observed request carried." })
+);
+
+/**
+ * The values accepted by {@link RateLimitCredential}.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RateLimitCredential = typeof RateLimitCredential.Type;
+
+/**
+ * One GitHub response's rate-limit headers, with the context the transport knows.
+ *
+ * **Details**
+ *
+ * The transport emits one observation per HTTP attempt to the
+ * {@link RateLimitSink}. `budgetLabel` is the caller's opaque, non-secret label,
+ * passed through verbatim; the driver never parses or composes it and never
+ * sends it in a header. `at` is in-memory only: an observation is never
+ * serialised, so it carries a `DateTime.Utc` directly.
+ *
+ * **Example** (Describe a successful REST attempt)
+ *
+ * ```ts
+ * import { RateLimitObservation, RateLimitSnapshot } from "@beep/github/Resilience";
+ * import * as DateTime from "effect/DateTime";
+ * import * as O from "effect/Option";
+ *
+ * const observation = RateLimitObservation.make({
+ *   snapshot: RateLimitSnapshot.make({ remaining: 4999, limit: 5000, resetEpochSeconds: 60, resource: "core" }),
+ *   budgetLabel: O.some("user:octocat"),
+ *   credential: "token",
+ *   operation: "GET /rate_limit",
+ *   kind: "rest",
+ *   status: 200,
+ *   outcome: "ok",
+ *   at: DateTime.makeUnsafe(0),
+ * });
+ * console.log(observation.snapshot.resource) // core
+ * ```
+ *
+ * @public
+ * @category models
+ * @since 0.0.0
+ */
+export class RateLimitObservation extends S.Opaque<RateLimitObservation, { readonly brand: unique symbol }>()(
+  S.Struct({
+    /** The parsed rate-limit headers. */
+    snapshot: RateLimitSnapshot.pipe(
+      $I.annoteKey("RateLimitObservation.snapshot", { description: "The parsed rate-limit headers." })
+    ),
+    /** The caller's opaque budget label, verbatim; never a token. */
+    budgetLabel: S.Option(S.String).pipe(
+      $I.annoteKey("RateLimitObservation.budgetLabel", {
+        description: "The caller's opaque budget label, verbatim; never a token.",
+      })
+    ),
+    /** The kind of credential the request carried. */
+    credential: RateLimitCredential.pipe(
+      $I.annoteKey("RateLimitObservation.credential", { description: "The kind of credential the request carried." })
+    ),
+    /** The route or operation name, as the caller passed it. */
+    operation: S.String.pipe(
+      $I.annoteKey("RateLimitObservation.operation", {
+        description: "The route or operation name, as the caller passed it.",
+      })
+    ),
+    /** Whether the request went to REST or GraphQL. */
+    kind: RateLimitRequestKind.pipe(
+      $I.annoteKey("RateLimitObservation.kind", { description: "Whether the request went to REST or GraphQL." })
+    ),
+    /** The HTTP status; 200 for a GraphQL response that carried errors. */
+    status: S.Int.pipe(
+      $I.annoteKey("RateLimitObservation.status", {
+        description: "The HTTP status; 200 for a GraphQL response that carried errors.",
+      })
+    ),
+    /** How the attempt ended, as far as the budget is concerned. */
+    outcome: RateLimitOutcome.pipe(
+      $I.annoteKey("RateLimitObservation.outcome", {
+        description: "How the attempt ended, as far as the budget is concerned.",
+      })
+    ),
+    /** When the response (or the failure) was seen, by the Effect clock. */
+    at: S.DateTimeUtc.pipe(
+      $I.annoteKey("RateLimitObservation.at", {
+        description: "When the response or the failure was seen, by the Effect clock.",
+      })
+    ),
+  }).pipe(
+    $I.annoteSchema("RateLimitObservation", { description: "One GitHub response's rate-limit headers, in context." })
+  )
+) {}
+
+/**
+ * The operations a {@link RateLimitSink} provides.
+ *
+ * @public
+ * @category type-level
+ * @since 0.0.0
+ */
+export interface RateLimitSinkShape {
+  /**
+   * Accept one observation.
+   *
+   * **Gotchas**
+   *
+   * The transport bounds this call to 250 ms and absorbs any failure or
+   * defect, so a slow or broken sink never fails or stalls a request; it runs
+   * on the requesting fiber, so fiber-local context is visible to it.
+   */
+  readonly record: (observation: RateLimitObservation) => Effect.Effect<void>;
+}
+
+/**
+ * Where the transport sends every rate-limit observation.
+ *
+ * **Details**
+ *
+ * A `Context.Reference`: reading it adds nothing to a layer's requirements,
+ * and its default drops every observation, so a client built without one
+ * behaves exactly as before. The transport captures the sink once, when the
+ * client layer is built, from the context that layer is built in.
+ *
+ * **Example** (Collect observations in memory)
+ *
+ * ```ts
+ * import { GitHubClient } from "@beep/github/GitHubClient";
+ * import { RateLimitSink } from "@beep/github/Resilience";
+ * import type { RateLimitObservation } from "@beep/github/Resilience";
+ * import * as Effect from "effect/Effect";
+ * import * as Layer from "effect/Layer";
+ * import * as Redacted from "effect/Redacted";
+ *
+ * const seen: Array<RateLimitObservation> = [];
+ * const sink = Layer.succeed(RateLimitSink, {
+ *   record: (observation) => Effect.sync(() => seen.push(observation)),
+ * });
+ * const client = GitHubClient.layerFromToken({ token: Redacted.make("example-token"), budgetLabel: "user:octocat" });
+ * console.log(Layer.isLayer(Layer.provide(client, sink))) // true
+ * ```
+ *
+ * @public
+ * @category services
+ * @since 0.0.0
+ */
+export const RateLimitSink: Context.Reference<RateLimitSinkShape> = Context.Reference<RateLimitSinkShape>(
+  $I`RateLimitSink`,
+  { defaultValue: () => ({ record: () => Effect.void }) }
+);
 
 /**
  * The shape {@link RetryPolicy} needs from a failure to decide anything.

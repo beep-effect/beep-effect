@@ -35,11 +35,16 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+P0 Research and P1 Implement, in progress. The P0 lever re-check at `origin/main` 5e09d90a6da is done
+(#3041 merged; #3056's four Property Laws slices recorded as a decision); the scorecard re-baseline waits on
+certainty-scorecard. P1: TURB-01 slice 1 (owner rows for generated standards inventories) is in review.
+Next startable: slice 2 (PERIH-02 with PERIL-04) and slice 3 (TEST-01 oracle census).
 
 ## Latest Evidence
 
-Not started.
+- TURB-01 slice 1: [`research/turb-01/REPLAY.md`](./research/turb-01/REPLAY.md). Over 727 first-parent
+  commits rebuilt from git, 67 shrink from a full Test Unit plan to owner-scoped, with 0 violations; the
+  reader-scan drift check holds all six rows on @beep/repo-cli.
 
 ## Notes
 
@@ -58,9 +63,10 @@ Not started.
   base-ref patterns (PERIH-10); PERIL-01 on PERIH-04; HOST-09's
   rerun slice on `goals/yeet-monitor-app-identity`; the acceptance claim on certainty-scorecard.
 - **Already landed:** #3030 (f818c6e52bf) shipped ROUT-01 as the Test Plan job and the selection half of TEST-01 as
-  test-level property selection. Property Laws runs as two slices since #3030, accepted by D26; returning it to
-  one slice is this goal's decision. The goal keeps only the residual gates and measurement.
+  test-level property selection. Property Laws ran as two slices from #3030 (D26) and as four since #3056
+  (741b1492b2a, ci-lane-economics), accepted as landed by a decision file; no further shard before the census
+  and the split slice. The goal keeps only the residual gates and measurement.
 - **Order rules that cost red runs:** guards `!= 'false'`; `heavy.yml` at `@main` means two PRs per heavy
   input; `turbo.json`, `bun.lock`, root `package.json` or workflow edits freeze coverage rows and need the
-  cache-qualification baseline re-recorded in the same PR, so batch them; merge `main` after #3041
-  if a slice shares its files.
+  cache-qualification baseline re-recorded in the same PR, so batch them; reseal or re-record after merging `main`,
+  never hand-merge generated files.
