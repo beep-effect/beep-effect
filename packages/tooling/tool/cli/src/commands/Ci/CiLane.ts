@@ -393,6 +393,8 @@ export class CiLaneDescriptor extends S.Opaque<CiLaneDescriptor, { readonly bran
 ) {}
 
 const TURBO_SHAPE_FLAGS = ["--affected", "--base", "--summarize"] as const;
+// Every partitioned lane can plan its partitions and prove a plan it was handed.
+const PARTITION_PLAN_FLAGS = ["--plan-partitions", "--planned-partitions"] as const;
 
 /**
  * Hosted lane inventory for check, heavy and storybook workflows.
@@ -428,7 +430,7 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     required: true,
     laneClass: "cli-runnable",
     replay: "exact",
-    flags: [...TURBO_SHAPE_FLAGS, "--partition", "--dry-run", "--force"],
+    flags: [...TURBO_SHAPE_FLAGS, "--partition", "--dry-run", "--force", ...PARTITION_PLAN_FLAGS],
   }),
   CiLaneDescriptor.make({
     id: "lint-policy",
@@ -465,7 +467,7 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     required: true,
     laneClass: "cli-runnable",
     replay: "exact",
-    flags: [...TURBO_SHAPE_FLAGS, "--partition", "--dry-run", "--force", "--coverage-output"],
+    flags: [...TURBO_SHAPE_FLAGS, "--partition", "--dry-run", "--force", "--coverage-output", ...PARTITION_PLAN_FLAGS],
     notes:
       "Runs unit suites under Bun; --coverage-output instruments that same execution and seals its partition receipt.",
   }),
@@ -475,7 +477,7 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     required: true,
     laneClass: "cli-runnable",
     replay: "exact",
-    flags: [...TURBO_SHAPE_FLAGS, "--partition", "--dry-run"],
+    flags: [...TURBO_SHAPE_FLAGS, "--partition", "--dry-run", ...PARTITION_PLAN_FLAGS],
     notes:
       "Hosted partitions since 2026-11-09: `lps-int-N` runs one Vitest shard of @beep/law-practice-server's integration suite and `int-rest` runs the root integration lane for every other package; a fail-closed check.yml aggregate reports the context the heavy pool used to own.",
   }),
@@ -651,9 +653,9 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     required: false,
     laneClass: "cli-runnable",
     replay: "exact",
-    flags: ["--affected", "--base", "--summarize", "--runs", "--seed"],
+    flags: ["--affected", "--base", "--summarize", "--runs", "--seed", "--filter"],
     notes:
-      "Added by one-round-loop P1 (D3): schema property laws at a 400-run PR floor via BEEP_FC_NUM_RUNS, pinned to a fixed BEEP_FC_SEED so local and CI test identical inputs (one-round determinism; nightly rotates seeds); lands non-required, flips to required at P4 after a stable green history.",
+      "Added by one-round-loop P1 (D3): schema property laws at a 400-run PR floor via BEEP_FC_NUM_RUNS, pinned to a fixed BEEP_FC_SEED so local and CI test identical inputs (one-round determinism; nightly rotates seeds); lands non-required, flips to required at P4 after a stable green history. Hosted CI runs it as two complementary slices, --filter @beep/repo-cli and --filter !@beep/repo-cli, under one aggregate context; without --filter the lane runs both.",
   }),
   // lab-apps-lifecycle P2 (ratified row 10): the single visible labs proof
   // lane. Labs are excluded from every required turbo lane (row 9); this lane
@@ -733,6 +735,7 @@ export class CiLaneRunOptions extends S.Opaque<CiLaneRunOptions, { readonly bran
     seed: S.optionalKey(S.String),
     filter: S.optionalKey(S.String),
     partition: S.optionalKey(CiLanePartitionId),
+    plannedPartitions: CiLanePartitionId.pipe(S.Array, S.optionalKey),
     inventory: S.optionalKey(S.String),
     coverageOutput: S.optionalKey(S.String),
     coverageInput: S.optionalKey(S.String),
@@ -1222,6 +1225,70 @@ export const proveCiLanePartition = Effect.fn("CiLane.proveCiLanePartition")(fun
     ...O.getSomesStruct({ shard: O.fromUndefinedOr(definition.shard) }),
   });
 });
+
+/**
+ * List the partitions of one lane that a run has to allocate for a Turbo selection.
+ *
+ * **Details**
+ *
+ * A partition is needed when at least one of its packages (curated or
+ * default-placed) is in the selection. The integration catch-all bin is always
+ * needed: Turbo scopes its unsplit and serial tasks itself, and they are not
+ * part of the parallel-task selection. `check.yml`'s Test Plan job builds the
+ * shard matrices from this list, and every allocated partition re-derives it
+ * from its own selection to prove the plan left nothing out.
+ *
+ * **Example** (Plan one affected lint package)
+ *
+ * ```ts
+ * import { plannedCiLanePartitions } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(plannedCiLanePartitions("lint", ["@beep/repo-cli"], ["@beep/repo-cli"])) // ["lint-a"]
+ * ```
+ *
+ * @param laneId - Partitioned lane being planned.
+ * @param taskPackageNames - Every current non-labs workspace package with the lane task.
+ * @param selectedTaskPackageNames - Executable packages selected by Turbo's shaped dry run.
+ * @param table - Schema-backed table to plan from; injectable for focused tests.
+ * @returns The needed partition ids, in table order.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const plannedCiLanePartitions: {
+  (
+    laneId: PartitionedCiLane,
+    taskPackageNames: ReadonlyArray<string>,
+    selectedTaskPackageNames: ReadonlyArray<string>,
+    table?: ReadonlyArray<CiLanePartition>
+  ): ReadonlyArray<CiLanePartitionId>;
+  (
+    taskPackageNames: ReadonlyArray<string>,
+    selectedTaskPackageNames: ReadonlyArray<string>,
+    table?: ReadonlyArray<CiLanePartition>
+  ): (laneId: PartitionedCiLane) => ReadonlyArray<CiLanePartitionId>;
+} = dual(
+  (args) => isPartitionedCiLane(args[0]),
+  (
+    laneId: PartitionedCiLane,
+    taskPackageNames: ReadonlyArray<string>,
+    selectedTaskPackageNames: ReadonlyArray<string>,
+    table: ReadonlyArray<CiLanePartition> = CI_LANE_PARTITIONS
+  ): ReadonlyArray<CiLanePartitionId> => {
+    const selectedPackages = HashSet.fromIterable(selectedTaskPackageNames);
+    return pipe(
+      withCiLaneDefaultPlacements(
+        A.filter(table, (candidate) => candidate.lane === laneId),
+        taskPackageNames
+      ),
+      A.filter(
+        (partition) =>
+          isIntegrationRestPartition(laneId, O.fromUndefinedOr(partition.shard)) ||
+          A.some(partition.packages, (name) => HashSet.has(selectedPackages, name))
+      ),
+      A.map((partition) => partition.id)
+    );
+  }
+);
 
 const partitionedLaneTask = (laneId: PartitionedCiLane): string =>
   PartitionedCiLaneSchema.match(laneId, {
@@ -2325,29 +2392,43 @@ const runPartitionStep = Effect.fn("CiLane.runPartitionStep")(function* (
   }
 });
 
-const runCiPartitionedLane = Effect.fn("CiLane.runCiPartitionedLane")(function* (
+type PartitionedLaneSelection = {
+  readonly coveragePlan: CiCoverageArtifactPlan | undefined;
+  readonly selectedPackages: ReadonlyArray<string>;
+  readonly taskPackageNames: ReadonlyArray<string>;
+  readonly workspacePackageNames: ReadonlyArray<string>;
+};
+
+// One lane's Turbo selection and workspace inventory, shared by the partition proof and the
+// partition plan so both read the same task set. `scope` names the caller in step labels and
+// errors: a partition id, or "plan" for the plan. An instrumented Test Unit selection also
+// carries every coverage owner, because the coverage planner can widen past Turbo's affected set.
+const resolvePartitionedLaneSelection = Effect.fn("CiLane.resolvePartitionedLaneSelection")(function* (
   repoRoot: string,
-  request: PartitionedLaneRequest,
-  options: CiLaneRunOptions
+  laneId: PartitionedCiLane,
+  options: CiLaneRunOptions,
+  scope: O.Option<CiLanePartitionId>,
+  instrumented: boolean
 ): Effect.fn.Return<
-  void,
-  CiCommandError | CiLanePartitionError | QualityTaskConfigurationError | QualityTaskGroupFailed,
+  PartitionedLaneSelection,
+  CiCommandError | CiLanePartitionError | QualityTaskConfigurationError,
   CiLaneEnvironment
 > {
-  const { laneId, partition } = request;
+  const partition = O.getOrUndefined(scope);
+  const label = O.getOrElse(scope, () => "plan");
   const task = partitionedLaneTask(laneId);
   const selectionArgs = partitionDryRunArgs(laneId, options);
 
   const selection = yield* resolveTurboCacheStep(
     QualityTaskStep.make({
-      label: `ci:${laneId}:${partition}:selection`,
+      label: `ci:${laneId}:${label}:selection`,
       command: "bunx",
       args: selectionArgs,
       cwd: repoRoot,
       env: options.affected ? { TURBO_SCM_BASE: options.base } : {},
     })
   );
-  yield* Console.log(`[ci] ci:${laneId}:${partition}: ${renderStepCommand(selection)}`);
+  yield* Console.log(`[ci] ci:${laneId}:${label}: ${renderStepCommand(selection)}`);
   const envOverrides = yield* turboEnvOverrides(selection.command, selection.args, Bun.env);
   const selectedResult = yield* runCaptured({
     command: selection.command,
@@ -2432,11 +2513,8 @@ const runCiPartitionedLane = Effect.fn("CiLane.runCiPartitionedLane")(function* 
     A.sort(Order.String)
   );
 
-  const coveragePlan =
-    laneId === "test-unit" && options.coverageOutput !== undefined
-      ? yield* ciCoveragePlan(repoRoot, options)
-      : undefined;
-  const completeSelectedPackages =
+  const coveragePlan = instrumented ? yield* ciCoveragePlan(repoRoot, options) : undefined;
+  const selectedPackages =
     coveragePlan === undefined
       ? selectedTaskPackages
       : A.sort(
@@ -2451,22 +2529,127 @@ const runCiPartitionedLane = Effect.fn("CiLane.runCiPartitionedLane")(function* 
           ),
           Order.String
         );
+  return { coveragePlan, selectedPackages, taskPackageNames, workspacePackageNames };
+});
+
+// A partition handed the run's planned list proves the plan allocated every partition its own
+// selection needs. A partition the plan never allocated runs no job, so without this an omitted
+// partition would read as a pass; any allocated sibling turns the omission into a failure.
+const provePlannedCiLanePartitions = Effect.fn("CiLane.provePlannedCiLanePartitions")(function* (
+  laneId: PartitionedCiLane,
+  partition: CiLanePartitionId,
+  options: CiLaneRunOptions,
+  selection: PartitionedLaneSelection
+): Effect.fn.Return<void, CiLanePartitionError> {
+  const planned = options.plannedPartitions;
+  if (planned === undefined) return;
+  const unplanned = A.filter(
+    plannedCiLanePartitions(laneId, selection.taskPackageNames, selection.selectedPackages),
+    (needed) => !A.contains(planned, needed)
+  );
+  if (A.isReadonlyArrayNonEmpty(unplanned)) {
+    return yield* ciLanePartitionError(
+      "unplanned-partition",
+      laneId,
+      `The run's ${laneId} plan omits partition(s) with selected tasks: ${A.join(unplanned, ", ")}.`,
+      partition
+    );
+  }
+  yield* Console.log(`[ci] ${laneId} plan proved: every partition with selected tasks was allocated.`);
+});
+
+const runCiPartitionedLane = Effect.fn("CiLane.runCiPartitionedLane")(function* (
+  repoRoot: string,
+  request: PartitionedLaneRequest,
+  options: CiLaneRunOptions
+): Effect.fn.Return<
+  void,
+  CiCommandError | CiLanePartitionError | QualityTaskConfigurationError | QualityTaskGroupFailed,
+  CiLaneEnvironment
+> {
+  const { laneId, partition } = request;
+  const selection = yield* resolvePartitionedLaneSelection(
+    repoRoot,
+    laneId,
+    options,
+    O.some(partition),
+    laneId === "test-unit" && options.coverageOutput !== undefined
+  );
   const proof = yield* proveCiLanePartition(
     laneId,
     partition,
-    workspacePackageNames,
-    taskPackageNames,
-    completeSelectedPackages,
+    selection.workspacePackageNames,
+    selection.taskPackageNames,
+    selection.selectedPackages,
     options.affected
   );
   yield* Console.log(
-    `[ci] ${laneId} partition union proved: ${taskPackageNames.length} executable tasks, ${proof.selectedTaskCount} selected, ${proof.partitionTaskCount} in ${partition}.`
+    `[ci] ${laneId} partition union proved: ${selection.taskPackageNames.length} executable tasks, ${proof.selectedTaskCount} selected, ${proof.partitionTaskCount} in ${partition}.`
   );
-  yield* Effect.forEach(ciLaneDefaultPlacementLinesForTesting(laneId, taskPackageNames), Console.log, {
+  yield* Effect.forEach(ciLaneDefaultPlacementLinesForTesting(laneId, selection.taskPackageNames), Console.log, {
     discard: true,
   });
+  yield* provePlannedCiLanePartitions(laneId, partition, options, selection);
 
-  yield* runCiPartitionExecution(repoRoot, request, options, proof, coveragePlan);
+  yield* runCiPartitionExecution(repoRoot, request, options, proof, selection.coveragePlan);
+});
+
+/**
+ * Plan the partitions of one lane that a run must allocate.
+ *
+ * **Details**
+ *
+ * Runs the lane's Turbo selection dry run exactly as a partition does and
+ * returns every partition with a selected task. Test Unit plans the
+ * instrumented shape hosted shards run, so the coverage planner's owners are
+ * part of the selection. Without the affected shape Turbo selects every task
+ * and the plan is the lane's whole table.
+ *
+ * **Example** (Plan the affected Test Integration partitions)
+ *
+ * ```ts
+ * import { CiLaneRunOptions, planCiLanePartitions } from "@beep/repo-cli/commands/Ci"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = planCiLanePartitions("test-integration", CiLaneRunOptions.make({
+ *   affected: true, base: "origin/main", head: "HEAD", summarize: false,
+ *   mode: "auto", to: "HEAD", last: false, changesetStatus: false,
+ *   validateEnvelopes: false
+ * }))
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param laneId - CI lane to plan; it must be a partitioned lane.
+ * @param options - Lane shape (affected and base) the partitions will run with.
+ * @returns The needed partition ids, in table order.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const planCiLanePartitions = Effect.fn("CiLane.planCiLanePartitions")(function* (
+  laneId: CiLaneId,
+  options: CiLaneRunOptions
+): Effect.fn.Return<
+  ReadonlyArray<CiLanePartitionId>,
+  CiCommandError | CiLanePartitionError | QualityTaskConfigurationError,
+  CiLaneEnvironment
+> {
+  if (!isPartitionedCiLane(laneId)) {
+    return yield* ciLanePartitionError("invalid-options", laneId, `Lane ${laneId} has no partitions to plan.`);
+  }
+  if (options.partition !== undefined || options.filter !== undefined) {
+    return yield* ciLanePartitionError(
+      "invalid-options",
+      laneId,
+      "--plan-partitions plans the whole lane; it cannot be combined with --partition or --filter."
+    );
+  }
+  const repoRoot = yield* findRepoRoot().pipe(CiCommandError.mapError("Failed to locate repository root."));
+  const selection = yield* resolvePartitionedLaneSelection(repoRoot, laneId, options, O.none(), laneId === "test-unit");
+  const planned = plannedCiLanePartitions(laneId, selection.taskPackageNames, selection.selectedPackages);
+  yield* Console.log(
+    `[ci] ${laneId} plan: ${A.length(planned)} partition(s) for ${A.length(selection.selectedPackages)} selected task(s) of ${A.length(selection.taskPackageNames)}: ${A.join(planned, ", ")}`
+  );
+  return planned;
 });
 
 const validateCiCoverageConsumerRequest = Effect.fn("CiLane.validateCiCoverageConsumerRequest")(function* (
@@ -2587,6 +2770,12 @@ const partitionFlagChoices: ReadonlyArray<readonly [CiLanePartitionId, CiLanePar
   (partition) => [partition, partition] as const
 );
 
+// The run's partition plan travels between jobs as one JSON array: `--plan-partitions` publishes
+// it as the `partitions` step output and `--planned-partitions` reads it back.
+const PlannedCiLanePartitions = S.Array(CiLanePartitionId);
+const decodePlannedCiLanePartitions = S.decodeUnknownEffect(S.fromJsonString(PlannedCiLanePartitions));
+const PLANNED_PARTITIONS_OUTPUT = "partitions";
+
 /**
  * `beep ci lane` command: run one CI lane body or list the lane inventory.
  *
@@ -2658,6 +2847,18 @@ export const ciLaneCommand = Command.make(
       Flag.withDescription("Run one deterministic Lint, Test Unit or Test Integration package partition"),
       Flag.optional
     ),
+    planPartitions: Flag.Boolean("plan-partitions").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription(
+        "Partitioned lanes: write the partitions with selected tasks to GITHUB_OUTPUT (partitions) and run nothing"
+      )
+    ),
+    plannedPartitions: Flag.String("planned-partitions").pipe(
+      Flag.withDescription(
+        "With --partition: JSON array of the run's planned partitions; fail when one with selected tasks is missing"
+      ),
+      Flag.optional
+    ),
     coverageOutput: Flag.String("coverage-output").pipe(
       Flag.withDescription("Seal instrumented unit/Labs coverage in this artifact directory"),
       Flag.optional
@@ -2714,6 +2915,8 @@ export const ciLaneCommand = Command.make(
     list,
     mode,
     partition,
+    planPartitions,
+    plannedPartitions,
     runs,
     seed,
     selectionOnly,
@@ -2721,13 +2924,30 @@ export const ciLaneCommand = Command.make(
     to,
     validateEnvelopes,
   }) {
+    const decodedPlannedPartitions = yield* O.match(plannedPartitions, {
+      onNone: () => Effect.succeedNone,
+      onSome: (raw) =>
+        decodePlannedCiLanePartitions(raw).pipe(
+          Effect.asSome,
+          CiCommandError.mapError("--planned-partitions must be a JSON array of partition ids."),
+          Effect.catchTag("CiCommandError", reportCiCommandError)
+        ),
+    });
     const options = CiLaneRunOptions.make({
       affected,
       base,
       head,
       summarize,
       mode,
-      ...O.getSomesStruct({ filter, from, inventory, partition, coverageOutput, coverageInput }),
+      ...O.getSomesStruct({
+        filter,
+        from,
+        inventory,
+        partition,
+        coverageOutput,
+        coverageInput,
+        plannedPartitions: decodedPlannedPartitions,
+      }),
       compareOnly,
       coverageOnly,
       to,
@@ -2756,6 +2976,24 @@ export const ciLaneCommand = Command.make(
           .set("should_run", selected ? "true" : "false")
           .pipe(CiCommandError.mapError("Failed to write Storybook selection to GITHUB_OUTPUT."));
       }).pipe(Effect.catchTag("CiCommandError", reportCiCommandError));
+    }
+
+    if (planPartitions) {
+      return yield* Effect.gen(function* () {
+        const laneId = yield* Effect.fromOption(lane).pipe(
+          CiCommandError.mapError("--plan-partitions requires a lane id.")
+        );
+        const planned = yield* planCiLanePartitions(laneId, options);
+        const outputs = yield* ActionOutputs;
+        yield* outputs
+          .setJson(PLANNED_PARTITIONS_OUTPUT, planned, PlannedCiLanePartitions)
+          .pipe(CiCommandError.mapError("Failed to write the partition plan to GITHUB_OUTPUT."));
+      }).pipe(
+        Effect.catchTags({
+          CiCommandError: reportCiCommandError,
+          CiLanePartitionError: reportCiCommandError,
+        })
+      );
     }
 
     return yield* O.match(lane, {

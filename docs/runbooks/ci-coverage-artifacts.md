@@ -26,6 +26,24 @@ coverage shards must use the same provider before their raw counters can be merg
 The coverage scope planner supplies required owners in addition to ordinary
 unit-test selection, so affected dependents and labs remain represented.
 
+A push allocates all thirty. A pull request allocates only the partitions with
+selected work: the Check workflow's `Test Plan` job runs
+
+```sh
+bun run beep ci lane test-unit --plan-partitions --affected --base <PR base SHA>
+```
+
+(and the same for `test-integration`), which resolves the lane's Turbo
+selection and the coverage planner's owners exactly as a partition does and
+publishes the partitions that carry a selected task as the `partitions` step
+output. The shard matrices are built from that list, so an unaffected
+partition no longer takes a hosted runner to run nothing. Each allocated
+partition receives the list through `--planned-partitions` and fails with
+`unplanned-partition` when its own selection needs a partition the plan left
+out. `Test Plan` also lists every partition of both lanes (what a push runs and
+the bound a pull-request plan is checked against); `ci-lane.test.ts` holds
+those lists equal to `CiLanePartitions.ts`.
+
 The workflow invokes each unit partition with:
 
 ```sh
@@ -63,16 +81,23 @@ some test cases. Explicit coverage arguments enable instrumentation, while the
 artifact consumer enforces the ratchet, so ordinary unit cases remain eligible.
 
 The producer records raw `coverage-final.json` counters, test results,
-runtime receipts and a manifest. An empty partition still supplies an
-explicit receipt. Instrumented tasks run fresh during the initial rollout;
+runtime receipts and a manifest. A partition that was allocated with no
+selected package still supplies an explicit receipt; a partition the plan did
+not allocate supplies nothing. Instrumented tasks run fresh during the initial rollout;
 ordinary cached logs are insufficient evidence of a coverage report.
 
 ## Comparison
 
-The workflow downloads the expected unit-partition artifacts plus the Labs
-artifact into separate directories and runs the comparator below. The current
-layout has ten unit partitions plus Labs; the expected identities are derived
-from `CiLanePartitions.ts` and `CiCoverage.ts`.
+The workflow downloads the run's unit-partition artifacts plus the Labs
+artifact into separate directories and runs the comparator below. The expected
+identities are derived from `CiLanePartitions.ts` and `CiCoverage.ts`: the
+comparator plans the coverage owners itself and assigns them to partitions. A
+partition must supply a manifest exactly when that assignment gives it at
+least one package. A partition with none may be absent, because the plan did
+not allocate it, and a manifest it does supply is validated as before. A
+partition with expected packages and no manifest fails as
+`missing producer partitions`, which turns a plan that left out needed work
+into a red Coverage Regression.
 
 ```sh
 bun run beep ci lane coverage --compare-only \

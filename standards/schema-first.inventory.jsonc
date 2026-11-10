@@ -2343,7 +2343,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 94,
+      "line": 97,
       "owner": "@beep/repo-cli",
       "reason": "Golden regression file for the hosted lane inventory: it decodes committed snapshots (standards/branch-protection-contexts.json, the law-practice-server integration shard plan) and a shard literal to compare them with CiLanePartitions.ts and check.yml; CiLanePartitionShard's bound checks are exercised by the explicit accept/reject cases here, and schema-derived property coverage adds nothing to a snapshot comparison."
     },

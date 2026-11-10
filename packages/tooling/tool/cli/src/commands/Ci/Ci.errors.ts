@@ -64,7 +64,10 @@ export class CiCommandError extends S.TaggedError<CiCommandError, { readonly bra
  * The `shard-*` reasons cover a package that is split across several
  * partitions with Vitest `--shard`: every such partition must carry a shard,
  * share one total, hold exactly that package, and together enumerate the
- * indexes `1..total` exactly once.
+ * indexes `1..total` exactly once. `unplanned-partition` is raised by a
+ * partition that was handed the run's planned partition list and finds a
+ * partition with selected tasks missing from it, so a job the plan never
+ * allocated cannot pass silently.
  *
  * **Example** (Recognize a stale package failure)
  *
@@ -91,6 +94,7 @@ export const CiLanePartitionErrorReason = LiteralKit([
   "sharded-bin-package-count",
   "sharded-package-unsharded",
   "unknown-selected-task",
+  "unplanned-partition",
   "workspace-read",
   "turbo-dry-run",
 ]).pipe(
