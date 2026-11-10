@@ -21,7 +21,7 @@ PR-sized, in landing order. At most three open at once (`goals/README.md`). Size
 | # | Slice (PR title) | Levers | Size | Admission gate | Depends on |
 | --- | --- | --- | --- | --- | --- |
 | 1 | `fix(ci): keep goal ops scripts, fixtures and research inputs on the code route` (landed, #3064) | ROUT-03 | S | Census test (a new goal-data consumer census test under `packages/tooling/tool/cli/test`) finds every `goals/` path a test reads, spawns or imports, or a `turbo.json` declares, and asserts each is non-docs-only; mutations of a citation ops `.py` probe, a `.ts` ops script, the frozen JSON fixture and a ciops research JSON are each selected by change-profile. Edits `CiOperational.schemas.ts` (the `ciGoalDataConsumers` rows joined into `codeRoots`), the generated patterns JSON and `ci-heavy-admission.test.ts`, and adds `goal-data-consumer-census.test.ts`; no workflow or `turbo.json` change, so it lands alone. Merge by 2026-11-16 (D8). | none; first |
-| 2 | `fix(coverage): judge bare affected runs against the merge base they planned from` | COVE-02 | S | Lowered-row fixture in `quality-tasks.test.ts` fails the bare run with the self-judge line; clean tree passes | none; parallel with 1 |
+| 2 | `fix(coverage): judge bare affected runs against the merge base they planned from` (landed) | COVE-02 | S | Lowered-row fixture in `quality-tasks.test.ts` fails the bare run with the self-judge line; clean tree passes | none; parallel with 1 |
 | 3 | `fix(yeet): version final-check receipts by gate set; docs name the exact gates` | YEET-08 slice 1 | S | v1 receipt refused on head and ancestor-carry paths; docs-drift test over AGENTS.md and the yeet skill | none; parallel with 1-2 |
 | 4 | `fix(quality): declare goal-data consumers in CoverageScope and per-package turbo.json inputs` | ROUT-03 slice 2 | S | Census asserts each path is mapped in CoverageScope and a per-package Turbo input; the four mutations turn their consumers red under `--affected`; a coverage scope fixture with only `packages/law-practice/use-cases/test/fixtures/eyecite/authority-identity-cases.json` changed includes `@beep/law-practice-server` (ROUT-09 hole); no root `turbo.json` edit; per-package `turbo.json` change, so coverage rows freeze at base and the cache-qualification baseline is re-recorded in the same PR | 1 |
 | 5 | `ci: fixed coverage comparator context name` | COVE-08 | S | Route replay of context emission (docs, source, main); `ci-runner-security.test.ts` updated for the literal `Heavy / Coverage Regression` name; if PERIH-01's probe deletion landed first, delete the `legacy_coverage` output with its last consumer; workflow change, so coverage rows freeze at base; re-record the cache-policy baseline in the same PR | owns making the job name literal; whichever of COVE-08 and PERIH-01's probe-deletion slice lands second merges `main` first and deletes `legacy_coverage` |
@@ -89,6 +89,15 @@ P0: lever statuses re-read against origin/main 5e09d90a6da after #3041, #3049, #
 Source: `git log c90929b1ff1..origin/main`; the files named above at 5e09d90a6da.
 
 Lane fix/rout-03-goal-data-census · PR #3064
+
+Reverse: Supersede with a later checkpoint.
+
+### Slice 2 (COVE-02): bare coverage judges against the merge base it planned from, 2026-11-10
+
+The bare local run of bun run coverage resolves its origin/main merge base (or TURBO_SCM_BASE) to plan the affected scope. It now carries that base in the resolved coverage options as the comparison base and hands it to the ratchet comparator, which previously fell back to TURBO_SCM_BASE and, with neither set, judged every row at the working-copy floors. A fixture in quality-tasks.test.ts (merge base at 80, a dirty baseline lowering the touched row to 50, a measured 60) fails the bare run against the merge base and passes only when the planned base is dropped; it is red on the pre-fix resolver.
+Source: packages/tooling/tool/cli/src/commands/Quality/Tasks.ts (resolveDefaultAffectedCoverageTaskOptions, compareRootCoverage).
+
+Lane fix/cove-02-bare-coverage-base
 
 Reverse: Supersede with a later checkpoint.
 
