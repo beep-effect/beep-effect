@@ -3,17 +3,12 @@
   "exploration": {
     "slug": "github-merge-queue",
     "title": "GitHub Merge Queue",
-    "status": "active",
-    "stage": "align",
-    "openQuestions": [
-      "s11-under-a-queue: does a merge queue end S11 on main (the queue is the only door and the ruleset bypass is reserved for a declared unblocker), or does S11 stay, in which case the queue has no job and the packet is killed?",
-      "gate-restatement: replace the 80% main-green bar with properties of the merge-group run itself (parity for all 15 required contexts, p90 wall time, false-ejection rate measured on a lab queue), and supersede the 2026-08-27 standards decision including its strict-first clause?",
-      "verdict-placement: is the merge group the delivery of ten-minute-certainty D7's per-SHA main verdict (the same run before the merge instead of after it), replacing that packet's 'Per-SHA main groups' gated candidate rather than adding to it?",
-      "first-slice: graduate one small goal now (merge-group parity, a lab-branch queue that settles the 21 undocumented behaviours, the measurement), with activation on main and the Yeet enqueue rework held as gated candidates?"
-    ],
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": ["goals/merge-queue-lab"],
       "docs": [],
       "supersededBy": null
     },

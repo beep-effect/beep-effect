@@ -3,8 +3,8 @@
 ## Status
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
-Stage: `align`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -20,33 +20,36 @@ itself captured, not scheduled, pending an `/explore` grill.
 
 ## Next Open Question
 
-The operator scheduled the packet on 2026-11-09. Research is done and the
-packet is at align. Four questions are open, in the order they unblock each
-other:
+None is open. The packet graduated on 2026-11-09 with one goal,
+[`goals/merge-queue-lab`](../../goals/merge-queue-lab/README.md), and four
+gated candidates in [`MAP.md`](./MAP.md). It reopens at `decompose` when a
+gate fires:
 
-1. **S11 under a queue.** A queue lands only green merge groups; S11 lets
-   finals merge over failing required jobs. Does the queue end S11 on `main`,
-   or does S11 stay and the packet die?
-2. **The gate.** `main` reads 73.8% required-green over the last 14 days
-   against the 80% bar, and the bar measures a symptom a queue would remove.
-   Restate it as properties of the merge-group run (parity, wall time,
-   false-ejection rate on a lab queue) and supersede the 2026-08-27 standards
-   decision?
-3. **Verdict placement.** `ten-minute-certainty` D7 already buys a hosted
-   verdict for every `main` commit. Is the merge group that same run, moved in
-   front of the merge?
-4. **First slice.** One small goal now (parity, a lab-branch queue, the
-   measurement) with activation gated, or more?
+| Candidate | Gate |
+| --- | --- |
+| `merge-group-parity` | `merge-queue-lab` ends in go, and `ten-minute-certainty`'s `route-soundness-repair`, `heavy-pool-diet` and `hosted-setup-tax` have merged |
+| `yeet-queue-states` | `merge-queue-lab` ends in go, and `goals/github-state-worker` is completed |
+| `merge-queue-activation` | the activation gate holds (parity, p90 wall time at or under 15 minutes, false ejections at or under 5% over 100 entries), parity and Yeet states are completed, and `ten-minute-certainty`'s throughput layout for `main` has landed |
+| `pr-head-slimming` | the queue has been live on `main` for 14 days with ejection causes recorded |
+
+A park or kill verdict from the lab ends the packet instead.
+
+Owed outside this packet: `explorations/ten-minute-certainty/MAP.md` still
+lists "Per-SHA main groups" and "Merge queue, stacked PRs" as separate gated
+candidates behind the 80% bar. Under the `verdict-placement` and
+`gate-restatement` rulings they are one candidate with the gate above; that
+packet's owner rewrites the rows. `explorations/stacked-pr-adoption` cites the
+same 80% bar for its own stacks-reopen gate and keeps it until it is reopened.
 
 ## Read This First
 
 1. [`ops/manifest.json`](./ops/manifest.json) - machine state: stage, status, open questions.
-2. [`CAPTURE.md`](./CAPTURE.md) - raw dump (stage 0).
-3. [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger, pre-seeded with the on-disk sources and in-repo bricks.
-4. [`RESEARCH.md`](./RESEARCH.md) - synthesis of the three lane reports under `research/`, plus the 2026-11-09 measurements (stage 1).
-5. `DECISIONS.md` - grilling log (stage 2, not yet present).
-6. `BRIEF.md` - shaped pitch (stage 3, not yet present).
-7. `MAP.md` - decomposition (stage 4, not yet present).
+2. [`BRIEF.md`](./BRIEF.md) - the shaped pitch: problem, appetite, sketch, rabbit holes, no-gos.
+3. [`DECISIONS.md`](./DECISIONS.md) - the operator rulings of 2026-11-09 and the agent-decided entries.
+4. [`MAP.md`](./MAP.md) - the graduated goal, the gated candidates and their gates.
+5. [`RESEARCH.md`](./RESEARCH.md) - synthesis of the three lane reports under `research/`, plus the 2026-11-09 measurements.
+6. [`research/SOURCES.md`](./research/SOURCES.md) - provenance ledger.
+7. [`CAPTURE.md`](./CAPTURE.md) - the 2026-09-16 raw dump. Its "GitHub facts" and acceptance criteria are superseded by the files above.
 
 ## Trail
 
@@ -70,3 +73,14 @@ other:
   `ten-minute-certainty` D7 already pays for a verdict on every `main` commit,
   which is the same spend a merge group makes before the merge. Stage moved
   capture to research to align in one session.
+- 2026-11-09: aligned, shaped, decomposed and graduated in the same session.
+  Two grill rounds and one shape review, all logged in `DECISIONS.md`: a queue
+  replaces S11 at activation; the activation gate is restated on the
+  merge-group run and the 2026-08-27 standards decision is superseded; the
+  merge group is `ten-minute-certainty` D7's per-commit verdict placed before
+  the merge; pull-request head proof stays unchanged at activation; the lab
+  runs now and parity waits for `ten-minute-certainty`'s route-soundness and
+  job-removal goals. Definition of ready: brief complete, no open blocking
+  question (cache writer and Spot-eviction handling are DEFERRED with reasons),
+  map names five candidates, every component cites a brick or is marked
+  NET-NEW. Graduated `goals/merge-queue-lab`; four candidates stay gated.
