@@ -1,0 +1,16 @@
+gh pr merge 3066 (no flags, gh 2.103.3, checks passed): printed nothing, exit 0
+{"state":"MERGED","timeline":[{"__typename":"AddedToMergeQueueEvent","createdAt":"2026-11-10T05:03:25Z","actor":"kriegcloud","reason":null},{"__typename":"MergedEvent","createdAt":"2026-11-10T05:04:14Z","actor":"kriegcloud","reason":null},{"__typename":"RemovedFromMergeQueueEvent","createdAt":"2026-11-10T05:04:14Z","actor":"github-merge-queue","reason":"merged"}]}
+
+[06:17:23] 9a --admin on 3089
+GraphQL: Repository rule violations found
+Changes must be made through the merge queue
+ (mergePullRequest)
+exit=1
+{"n":3089,"state":"OPEN","inQueue":false,"merge":null,"timeline":[]}
+[06:17:32] 9a --auto on 3090 right after open
+exit=0
+{"inQueue":false,"auto":{"enabledAt":"2026-11-10T06:17:33Z","mergeMethod":"MERGE","enabledBy":{"login":"kriegcloud"}}}
+{"t":"2026-11-10T06:17:35Z","n":3090,"state":"OPEN","mergeable":"MERGEABLE","mergeStateStatus":"BLOCKED","inQueue":false,"entry":null,"queue":[]}
+{"n":3090,"state":"OPEN","inQueue":false,"merge":null,"timeline":[{"__typename":"AutoMergeEnabledEvent","createdAt":"2026-11-10T06:17:33Z","actor":"kriegcloud","reason":null}]}
+# PR 3090 after the wait: auto-merge enabled 06:17:33, enqueued by kriegcloud 06:18:04 once its check passed
+{"state":"MERGED","merge":"56933eb26f25a200900e8f441382fa4a337dcf11","tl":[{"__typename":"AutoMergeEnabledEvent","createdAt":"2026-11-10T06:17:33Z","actor":"kriegcloud","reason":null},{"__typename":"AddedToMergeQueueEvent","createdAt":"2026-11-10T06:18:04Z","actor":"kriegcloud","reason":null},{"__typename":"RemovedFromMergeQueueEvent","createdAt":"2026-11-10T06:18:55Z","actor":"github-merge-queue","reason":"merged"},{"__typename":"MergedEvent","createdAt":"2026-11-10T06:18:56Z","actor":"kriegcloud","reason":null}]}

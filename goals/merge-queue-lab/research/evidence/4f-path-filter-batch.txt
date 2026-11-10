@@ -1,0 +1,23 @@
+[06:36:09] 4f a=3097
+before: {"updated_at":"2026-11-10T00:36:03.696-06:00","rules":[{"type":"required_status_checks","parameters":{"strict_required_status_checks_policy":false,"do_not_enforce_on_create":false,"required_status_checks":[{"context":"queue-lab-gate","integration_id":15368}]}},{"type":"merge_queue","parameters":{"merge_method":"SQUASH","max_entries_to_build":1,"min_entries_to_merge":1,"max_entries_to_merge":1,"min_entries_to_merge_wait_minutes":0,"grouping_strategy":"ALLGREEN","check_response_timeout_minutes":10}}]}
+after: {"updated_at":"2026-11-10T00:37:12.088-06:00","rules":[{"type":"required_status_checks","parameters":{"strict_required_status_checks_policy":false,"do_not_enforce_on_create":false,"required_status_checks":[{"context":"queue-lab-gate","integration_id":15368},{"context":"queue-lab-paths","integration_id":15368}]}},{"type":"merge_queue","parameters":{"merge_method":"SQUASH","max_entries_to_build":1,"min_entries_to_merge":1,"max_entries_to_merge":1,"min_entries_to_merge_wait_minutes":0,"grouping_strategy":"ALLGREEN","check_response_timeout_minutes":10}}],"bypass_actors":[]}
+queue-lab-self-enqueue	skipping	0	https://github.com/beep-effect/beep-effect/actions/runs/42769613456/job/129674154240	
+queue-lab-gate	pass	3s	https://github.com/beep-effect/beep-effect/actions/runs/42769613456/job/129674117405	
+queue-lab-reusable / inner	pass	4s	https://github.com/beep-effect/beep-effect/actions/runs/42769613456/job/129674117679	
+queue-lab-token-probe	skipping	0	https://github.com/beep-effect/beep-effect/actions/runs/42769613456/job/129674119782	
+queue-lab-resolve	pass	5s	https://github.com/beep-effect/beep-effect/actions/runs/42769613456/job/129674067825	
+queue-lab-shared	pass	4s	https://github.com/beep-effect/beep-effect/actions/runs/42769613361/job/129674067894	
+queue-lab-push	skipping	0	https://github.com/beep-effect/beep-effect/actions/runs/42769613456/job/129674070448	
+{"mergeable":"MERGEABLE","mergeStateStatus":"BLOCKED"}
+[06:37:14] enqueue with queue-lab-paths required but never reported on the PR head
+{"data":{"enqueuePullRequest":null},"errors":[{"type":"UNPROCESSABLE","path":["enqueuePullRequest"],"locations":[{"line":1,"column":51}],"message":"Pull request Required status check \"queue-lab-paths\" is expected."}]}gh: Pull request Required status check "queue-lab-paths" is expected.
+
+{"t":"2026-11-10T06:37:16Z","n":3097,"state":"OPEN","mergeable":"MERGEABLE","mergeStateStatus":"BLOCKED","inQueue":false,"entry":null,"queue":[]}
+{"n":3097,"state":"OPEN","inQueue":false,"merge":null,"timeline":[]}
+{"conclusion":"success","databaseId":42769004758,"event":"merge_group","headBranch":"gh-readonly-queue/queue-lab/pr-3093-fbc87de54c35c4a879d5b60b4dce054e8ab65cb4"}
+{"conclusion":"success","databaseId":42769003372,"event":"merge_group","headBranch":"gh-readonly-queue/queue-lab/pr-3092-56933eb26f25a200900e8f441382fa4a337dcf11"}
+{"conclusion":"success","databaseId":42767770027,"event":"merge_group","headBranch":"gh-readonly-queue/queue-lab/pr-3093-27ba574bbdfa8082e5cdc506b426e18c5269cc17"}
+{"conclusion":"success","databaseId":42767768491,"event":"merge_group","headBranch":"gh-readonly-queue/queue-lab/pr-3092-acffaf2e14a474f508b2047dc98de805d9627aa8"}
+{"conclusion":"success","databaseId":42767766726,"event":"merge_group","headBranch":"gh-readonly-queue/queue-lab/pr-3091-56933eb26f25a200900e8f441382fa4a337dcf11"}
+before: {"updated_at":"2026-11-10T00:37:12.088-06:00","rules":[{"type":"required_status_checks","parameters":{"strict_required_status_checks_policy":false,"do_not_enforce_on_create":false,"required_status_checks":[{"context":"queue-lab-gate","integration_id":15368},{"context":"queue-lab-paths","integration_id":15368}]}},{"type":"merge_queue","parameters":{"merge_method":"SQUASH","max_entries_to_build":1,"min_entries_to_merge":1,"max_entries_to_merge":1,"min_entries_to_merge_wait_minutes":0,"grouping_strategy":"ALLGREEN","check_response_timeout_minutes":10}}]}
+after: {"updated_at":"2026-11-10T00:37:18.930-06:00","rules":[{"type":"required_status_checks","parameters":{"strict_required_status_checks_policy":false,"do_not_enforce_on_create":false,"required_status_checks":[{"context":"queue-lab-gate","integration_id":15368}]}},{"type":"merge_queue","parameters":{"merge_method":"SQUASH","max_entries_to_build":1,"min_entries_to_merge":1,"max_entries_to_merge":1,"min_entries_to_merge_wait_minutes":0,"grouping_strategy":"ALLGREEN","check_response_timeout_minutes":10}}],"bypass_actors":[]}

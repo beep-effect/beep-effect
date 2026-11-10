@@ -1,0 +1,22 @@
+[05:57:00] 4e pr=3077
+{"data":{"enqueuePullRequest":{"mergeQueueEntry":{"id":"MQE_lQDOPbO_N88AAAABOCA7iM4ABVx3zgPbfbA","state":"QUEUED","position":1,"enqueuedAt":"2026-11-10T05:57:32Z","jump":false,"solo":false,"enqueuer":{"login":"beep-fleet-orchestrator"},"headCommit":null,"baseCommit":null,"pullRequest":{"number":3077}}}}}
+{"t":"2026-11-10T05:57:33Z","n":3077,"state":"OPEN","mergeable":"MERGEABLE","mergeStateStatus":"CLEAN","inQueue":true,"entry":{"state":"QUEUED","position":1,"head":null,"base":null},"queue":[{"n":3077,"state":"QUEUED","position":1}]}
+{"t":"2026-11-10T05:58:04Z","n":3077,"state":"OPEN","mergeable":"MERGEABLE","mergeStateStatus":"CLEAN","inQueue":true,"entry":{"state":"AWAITING_CHECKS","position":1,"head":"82239da6eb64616c713397b0c9e98624742e4028","base":"e1b898eb9e53c3cac23b020f160d8909f76e1362"},"queue":[{"n":3077,"state":"AWAITING_CHECKS","position":1}]}
+{"t":"2026-11-10T05:58:35Z","n":3077,"state":"MERGED","mergeable":"UNKNOWN","mergeStateStatus":"UNKNOWN","inQueue":false,"entry":null,"queue":[]}
+{"state":"MERGED","inQueue":false,"timeline":[{"__typename":"AddedToMergeQueueEvent","createdAt":"2026-11-10T05:57:33Z","actor":"beep-fleet-orchestrator","reason":null},{"__typename":"MergedEvent","createdAt":"2026-11-10T05:58:22Z","actor":"beep-fleet-orchestrator","reason":null},{"__typename":"RemovedFromMergeQueueEvent","createdAt":"2026-11-10T05:58:22Z","actor":"github-merge-queue","reason":"merged"}]}
+[{"conclusion":"success","createdAt":"2026-11-10T05:57:51Z","databaseId":42765364202,"headBranch":"gh-readonly-queue/queue-lab/pr-3077-e1b898eb9e53c3cac23b020f160d8909f76e1362","status":"completed","updatedAt":"2026-11-10T05:58:04Z"}]
+{"conclusion":"skipped","name":"queue-lab-token-probe"}
+{"conclusion":"skipped","name":"queue-lab-self-enqueue"}
+{"conclusion":"skipped","name":"queue-lab-reusable"}
+{"conclusion":"skipped","name":"queue-lab-resolve"}
+{"conclusion":"skipped","name":"queue-lab-gate"}
+{"conclusion":"success","name":"queue-lab-push"}
+{"conclusion":"skipped","name":"queue-lab-self-enqueue"}
+{"conclusion":"skipped","name":"queue-lab-gate"}
+{"conclusion":"success","name":"queue-lab-reusable / inner"}
+{"conclusion":"success","name":"queue-lab-token-probe"}
+{"conclusion":"success","name":"CodeRabbit"}
+{"conclusion":"success","name":"queue-lab-paths"}
+{"conclusion":"skipped","name":"queue-lab-push"}
+{"conclusion":"success","name":"queue-lab-resolve"}
+{"conclusion":null,"name":"queue-lab-shared"}

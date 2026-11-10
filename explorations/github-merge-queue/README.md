@@ -32,7 +32,9 @@ gate fires:
 | `merge-queue-activation` | the activation gate holds (parity, p90 wall time at or under 15 minutes, false ejections at or under 5% over 100 entries), parity and Yeet states are completed, and `ten-minute-certainty`'s throughput layout for `main` has landed |
 | `pr-head-slimming` | the queue has been live on `main` for 14 days with ejection causes recorded |
 
-A park or kill verdict from the lab ends the packet instead.
+A park or kill verdict from the lab ends the packet instead. The lab ended
+in **go** on 2026-11-10 (`DECISIONS.md`, `lab-verdict`), so the gates above
+that name it are met on that count.
 
 Updated outside this packet in the same change: the "Per-SHA main groups"
 and "Merge queue, stacked PRs" rows in
@@ -86,3 +88,12 @@ stacks-reopen gate and keeps it until it is reopened.
   question (cache writer and Spot-eviction handling are DEFERRED with reasons),
   map names five candidates, every component cites a brick or is marked
   NET-NEW. Graduated `goals/merge-queue-lab`; four candidates stay gated.
+- 2026-11-10: `goals/merge-queue-lab` returned **go**. A second ruleset with a
+  queue on `queue-lab` was accepted; the App, the fleet PAT and the operator
+  login all enqueue, and the App also jumps and enqueues workflow-touching
+  pull requests; the landed commit is the group's head commit; a green rerun
+  does not rescue an ejected entry; `GITHUB_TOKEN` enqueues and shared
+  concurrency groups end in timeout ejections. `@beep/github` gained
+  `enqueuePullRequest`, `dequeuePullRequest` and `mergeQueueEntry`. Findings
+  ledger: `goals/merge-queue-lab/research/findings.md`. The four gated
+  candidates keep their other gates.

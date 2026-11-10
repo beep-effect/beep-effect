@@ -1,0 +1,12 @@
+# PR #3070: its pull_request run's queue-lab-self-enqueue job enqueued it with GITHUB_TOKEN (run 42761206785)
+queue-lab-gate	pass
+queue-lab-self-enqueue	pass
+# queue entry while AWAITING_CHECKS (05:23Z): group branch built, head 6a73f08
+{"state":"AWAITING_CHECKS","enqueuedAt":"2026-11-10T05:20:09Z","enqueuer":"github-actions","headCommit":"6a73f08e8fd85e1fe28940885e3f130820e740b0","baseCommit":"4d4abae0b7ee6bc26ab209829d609e7f038fea0d"}
+# check runs on the group head 6a73f08 (no Queue Lab run was created)
+{"conclusion":"success","name":"CodeRabbit","status":"completed"}
+# Queue Lab merge_group runs for pr-3070
+[]
+# timeline
+{"__typename":"AddedToMergeQueueEvent","createdAt":"2026-11-10T05:20:09Z","actor":"github-actions","reason":null}
+{"__typename":"RemovedFromMergeQueueEvent","createdAt":"2026-11-10T05:31:27Z","actor":"github-merge-queue","reason":"checks_timed_out"}

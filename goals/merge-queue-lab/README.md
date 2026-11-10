@@ -36,12 +36,21 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research, not started. Next action: read the live `main` ruleset, list the
-identities the fleet merges with, then start P1 by cutting `queue-lab`.
+P3 Yeet. P0 to P2 and P4's work are done: the verdict is **go**
+([`decisions/2026-11-10-verdict-go.md`](./decisions/2026-11-10-verdict-go.md)).
+Next action: merge the driver pull request (#3072) and this packet's final
+pull request, then adopt the closeout in a packet-state pull request.
 
 ## Latest Evidence
 
-Not started.
+- [`research/findings.md`](./research/findings.md): every Observations row,
+  each tied to a file under [`research/evidence/`](./research/evidence/).
+- Lab: branch `queue-lab`, ruleset 26917133 (parked at build concurrency 0);
+  ruleset 10240248 on `main` unchanged since 2026-10-27.
+- Driver: `@beep/github` `enqueuePullRequest`, `dequeuePullRequest`,
+  `mergeQueueEntry` (#3072).
+- Driver script: [`ops/queue-lab.sh`](./ops/queue-lab.sh).
+- Reflection: [`history/reflections/2026-11-10-claude.md`](./history/reflections/2026-11-10-claude.md).
 
 ## Notes
 

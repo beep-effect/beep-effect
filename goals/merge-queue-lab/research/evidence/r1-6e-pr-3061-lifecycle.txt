@@ -1,0 +1,81 @@
+# PR #3061 GraphQL read before enqueue
+{
+  "id": "PR_kwDOPbO_N88AAAABOBdP6Q",
+  "number": 3061,
+  "state": "OPEN",
+  "headRefOid": "d0444bc3900bc28e5a361105bff69b76637f97c9",
+  "baseRefName": "queue-lab",
+  "mergeable": "MERGEABLE",
+  "mergeStateStatus": "CLEAN",
+  "isInMergeQueue": false,
+  "isMergeQueueEnabled": true,
+  "autoMergeRequest": null,
+  "mergeQueueEntry": null,
+  "mergeQueue": {
+    "configuration": {
+      "checkResponseTimeout": 600,
+      "maximumEntriesToBuild": 1,
+      "maximumEntriesToMerge": 1,
+      "mergeMethod": "SQUASH",
+      "mergingStrategy": "ALLGREEN",
+      "minimumEntriesToMerge": 1,
+      "minimumEntriesToMergeWaitTime": 0
+    },
+    "nextEntryEstimatedTimeToMerge": null,
+    "entries": {
+      "totalCount": 0,
+      "nodes": []
+    }
+  },
+  "timelineItems": {
+    "nodes": []
+  }
+}
+# polls (30 s) after the App enqueued
+{"t":"04:54:47","pr":{"state":"OPEN","mergeable":"MERGEABLE","mergeStateStatus":"CLEAN","isInMergeQueue":true,"e":{"state":"QUEUED","position":1,"headCommit":null,"baseCommit":null}}}
+{"t":"04:55:17","pr":{"state":"OPEN","mergeable":"MERGEABLE","mergeStateStatus":"CLEAN","isInMergeQueue":true,"e":{"state":"AWAITING_CHECKS","position":1,"headCommit":"01ad0c0b42c54ef9c269380345f3ad517e0f6e99","baseCommit":"013e7496a1ba780c3498a1d4c8c70523632db660"}}}
+{"t":"04:55:48","pr":{"state":"MERGED","mergeable":"UNKNOWN","mergeStateStatus":"UNKNOWN","isInMergeQueue":false,"e":null}}
+# after merge
+{
+  "state": "MERGED",
+  "mergeable": "UNKNOWN",
+  "mergeStateStatus": "UNKNOWN",
+  "timelineItems": {
+    "nodes": [
+      {
+        "__typename": "AddedToMergeQueueEvent",
+        "createdAt": "2026-11-10T04:54:38Z",
+        "actor": {
+          "login": "beep-fleet-orchestrator"
+        },
+        "enqueuer": {
+          "login": "beep-fleet-orchestrator[bot]"
+        }
+      },
+      {
+        "__typename": "RemovedFromMergeQueueEvent",
+        "createdAt": "2026-11-10T04:55:27Z",
+        "reason": "merged",
+        "actor": {
+          "login": "github-merge-queue"
+        },
+        "enqueuer": {
+          "login": "github-merge-queue[bot]"
+        },
+        "beforeCommit": {
+          "oid": "01ad0c0b42c54ef9c269380345f3ad517e0f6e99"
+        }
+      },
+      {
+        "__typename": "MergedEvent",
+        "createdAt": "2026-11-10T04:55:28Z",
+        "actor": {
+          "login": "beep-fleet-orchestrator"
+        },
+        "commit": {
+          "oid": "01ad0c0b42c54ef9c269380345f3ad517e0f6e99"
+        }
+      }
+    ]
+  }
+}

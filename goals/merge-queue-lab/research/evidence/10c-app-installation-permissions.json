@@ -1,0 +1,14 @@
+{
+  "app_slug": "beep-fleet-orchestrator",
+  "account": "beep-effect",
+  "repository_selection": "selected",
+  "permissions": {
+    "checks": "read",
+    "issues": "write",
+    "actions": "write",
+    "contents": "write",
+    "metadata": "read",
+    "pull_requests": "write"
+  },
+  "events": []
+}
