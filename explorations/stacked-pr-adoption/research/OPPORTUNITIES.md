@@ -106,3 +106,62 @@ machine or session identifiers.
 - **Would have prevented it:** the sweep reporting `already deleted (by
   retire)` when the tip is absent, instead of a "blocked ... exists"
   reason.
+
+## 2026-11-09 — A re-entry gate that needs a census nobody runs
+
+- **Doing:** regrounding this packet after four weeks parked.
+- **Evidence:**
+  - `stacks-reopen-gate` and `automated-hold-trigger` are both defined on a
+    weekly census. No command or schedule produces one, so nothing checked
+    either gate between 2026-10-13 and 2026-11-09.
+  - The demand half was already met in the week of 10-27 (5 live chains
+    against a bar of 3), and `main` passed the health half that same week
+    (86.2% required-green). Nobody saw it.
+- **Would have prevented it:** a gate stated as a command that prints it,
+  run on a schedule, or a parked packet with a calendar re-check date in
+  place of a measured trigger.
+
+## 2026-11-09 — A later ruling contradicted a parked packet's doctrine line
+
+- **Doing:** checking that the Yeet skill's dependent-lane rule (step 2c)
+  is still the only doctrine on stacking.
+- **Evidence:**
+  - Ruling B3 of 2026-11-05 added "or stacked on it and retargeted when
+    the parent merges" to `AGENTS.md`, the orchestrate skill, the Yeet
+    `references/merge-loop.md` and `goals/README.md`.
+  - Step 2c, in the same Yeet skill, says never to open a PR against a
+    non-`main` base.
+  - #2697 was opened on a parent branch that day and merged into it six
+    minutes later with no workflow run.
+- **Would have prevented it:** a search of the doctrine files for the term
+  before a ruling adds a line about it (`rg -n -i stack AGENTS.md
+  .claude/skills goals/README.md` returns step 2c).
+
+## 2026-11-09 — `unblocks-main` is on one PR in five
+
+- **Doing:** using the label as the census key that decision
+  `automated-hold-trigger` names.
+- **Evidence:** 151 of 782 PRs opened since 2026-10-27 carry the label,
+  against about 24 required-red episodes on `main`. Decision
+  `unblocker-label` set one labelled PR per episode. The label also
+  exempts a PR from the merge gate's `own-red` hold and admits
+  `--force-window`, so applying it has become the way to merge a fix
+  quickly.
+- **Would have prevented it:** separating the census key from the merge
+  privilege, or recording the episode number on the label
+  (`unblocks-main/ep75`) so one episode's PRs can be counted.
+
+## 2026-11-09 — Two API limits shaped the `main` health read
+
+- **Doing:** reading 14 days of `main` Check verdicts per required context.
+- **Evidence:**
+  - One GraphQL query over commit history with nested check suites and
+    filtered check runs failed with `Resource limits for this query
+    exceeded` at 30 commits a page.
+  - `actions/workflows/check.yml/runs` returns at most 1,000 rows per
+    query. Fourteen days of `main` pushes is 733, so a 20-day window would
+    be cut short without an error.
+- **Would have prevented it:** the route that worked, kept as a command:
+  list runs in date windows, then read only the failing runs' failed
+  check runs through `nodes(ids:)` in batches of 12. The whole read took
+  nine REST calls and nine GraphQL requests.

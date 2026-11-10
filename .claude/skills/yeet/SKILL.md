@@ -69,7 +69,8 @@ git fetch origin && git merge origin/main
    Never open a PR against a non-`main` base: no workflow fires on it.
    Never merge an unlanded PR's branch into yours. A lane blocked by red
    `main` waits for the declared `unblocks-main` PR, then merges `main`
-   once. Native stacks stay deferred until that packet's reopen gate fires.
+   once. Native stacks stay off until that packet's supervised stack test
+   passes (reopened 2026-11-09); the test's own PRs are the one exception.
 3. If the worktree contains unrelated changes, stage only the intended files.
    Never publish unrelated paths silently.
 4. Check for already-running heavyweight quality commands before starting a

@@ -476,29 +476,23 @@ describe("CI lane partitions", () => {
     ).toEqual([
       { id: "lint-a", packages: 75, weightSeconds: 1132 },
       { id: "lint-b", packages: 68, weightSeconds: 1134 },
-      { id: "repo-cli-1", packages: 1, weightSeconds: 321 },
-      { id: "repo-cli-2", packages: 1, weightSeconds: 321 },
-      { id: "repo-cli-3", packages: 1, weightSeconds: 321 },
-      { id: "repo-cli-4", packages: 1, weightSeconds: 321 },
-      { id: "repo-cli-5", packages: 1, weightSeconds: 321 },
-      { id: "repo-cli-6", packages: 1, weightSeconds: 321 },
-      { id: "repo-cli-7", packages: 1, weightSeconds: 321 },
-      { id: "repo-cli-8", packages: 1, weightSeconds: 321 },
-      { id: "repo-cli-9", packages: 1, weightSeconds: 321 },
-      { id: "repo-cli-10", packages: 1, weightSeconds: 321 },
-      { id: "repo-cli-11", packages: 1, weightSeconds: 321 },
-      { id: "law-practice-1", packages: 1, weightSeconds: 376 },
-      { id: "law-practice-2", packages: 1, weightSeconds: 376 },
-      { id: "law-practice-3", packages: 1, weightSeconds: 376 },
-      { id: "law-practice-4", packages: 1, weightSeconds: 376 },
-      { id: "law-practice-5", packages: 1, weightSeconds: 376 },
-      { id: "law-practice-6", packages: 1, weightSeconds: 376 },
-      { id: "law-practice-7", packages: 1, weightSeconds: 376 },
-      { id: "law-practice-8", packages: 1, weightSeconds: 376 },
-      { id: "law-practice-9", packages: 1, weightSeconds: 376 },
-      { id: "law-practice-10", packages: 1, weightSeconds: 376 },
-      { id: "law-practice-11", packages: 1, weightSeconds: 376 },
-      { id: "law-practice-12", packages: 1, weightSeconds: 376 },
+      { id: "repo-cli-1", packages: 1, weightSeconds: 392 },
+      { id: "repo-cli-2", packages: 1, weightSeconds: 392 },
+      { id: "repo-cli-3", packages: 1, weightSeconds: 392 },
+      { id: "repo-cli-4", packages: 1, weightSeconds: 392 },
+      { id: "repo-cli-5", packages: 1, weightSeconds: 392 },
+      { id: "repo-cli-6", packages: 1, weightSeconds: 392 },
+      { id: "repo-cli-7", packages: 1, weightSeconds: 392 },
+      { id: "repo-cli-8", packages: 1, weightSeconds: 392 },
+      { id: "repo-cli-9", packages: 1, weightSeconds: 392 },
+      { id: "law-practice-1", packages: 1, weightSeconds: 564 },
+      { id: "law-practice-2", packages: 1, weightSeconds: 564 },
+      { id: "law-practice-3", packages: 1, weightSeconds: 564 },
+      { id: "law-practice-4", packages: 1, weightSeconds: 564 },
+      { id: "law-practice-5", packages: 1, weightSeconds: 564 },
+      { id: "law-practice-6", packages: 1, weightSeconds: 564 },
+      { id: "law-practice-7", packages: 1, weightSeconds: 564 },
+      { id: "law-practice-8", packages: 1, weightSeconds: 564 },
       { id: "unit-a", packages: 26, weightSeconds: 594 },
       { id: "unit-b", packages: 28, weightSeconds: 593 },
       { id: "unit-c", packages: 27, weightSeconds: 594 },
@@ -547,29 +541,23 @@ describe("CI lane partitions", () => {
     expect(A.map(CI_LANE_PARTITIONS, (partition) => ({ id: partition.id, shard: partition.shard }))).toEqual([
       { id: "lint-a", shard: undefined },
       { id: "lint-b", shard: undefined },
-      { id: "repo-cli-1", shard: CiLanePartitionShard.make({ index: 1, total: 11 }) },
-      { id: "repo-cli-2", shard: CiLanePartitionShard.make({ index: 2, total: 11 }) },
-      { id: "repo-cli-3", shard: CiLanePartitionShard.make({ index: 3, total: 11 }) },
-      { id: "repo-cli-4", shard: CiLanePartitionShard.make({ index: 4, total: 11 }) },
-      { id: "repo-cli-5", shard: CiLanePartitionShard.make({ index: 5, total: 11 }) },
-      { id: "repo-cli-6", shard: CiLanePartitionShard.make({ index: 6, total: 11 }) },
-      { id: "repo-cli-7", shard: CiLanePartitionShard.make({ index: 7, total: 11 }) },
-      { id: "repo-cli-8", shard: CiLanePartitionShard.make({ index: 8, total: 11 }) },
-      { id: "repo-cli-9", shard: CiLanePartitionShard.make({ index: 9, total: 11 }) },
-      { id: "repo-cli-10", shard: CiLanePartitionShard.make({ index: 10, total: 11 }) },
-      { id: "repo-cli-11", shard: CiLanePartitionShard.make({ index: 11, total: 11 }) },
-      { id: "law-practice-1", shard: CiLanePartitionShard.make({ index: 1, total: 12 }) },
-      { id: "law-practice-2", shard: CiLanePartitionShard.make({ index: 2, total: 12 }) },
-      { id: "law-practice-3", shard: CiLanePartitionShard.make({ index: 3, total: 12 }) },
-      { id: "law-practice-4", shard: CiLanePartitionShard.make({ index: 4, total: 12 }) },
-      { id: "law-practice-5", shard: CiLanePartitionShard.make({ index: 5, total: 12 }) },
-      { id: "law-practice-6", shard: CiLanePartitionShard.make({ index: 6, total: 12 }) },
-      { id: "law-practice-7", shard: CiLanePartitionShard.make({ index: 7, total: 12 }) },
-      { id: "law-practice-8", shard: CiLanePartitionShard.make({ index: 8, total: 12 }) },
-      { id: "law-practice-9", shard: CiLanePartitionShard.make({ index: 9, total: 12 }) },
-      { id: "law-practice-10", shard: CiLanePartitionShard.make({ index: 10, total: 12 }) },
-      { id: "law-practice-11", shard: CiLanePartitionShard.make({ index: 11, total: 12 }) },
-      { id: "law-practice-12", shard: CiLanePartitionShard.make({ index: 12, total: 12 }) },
+      { id: "repo-cli-1", shard: CiLanePartitionShard.make({ index: 1, total: 9 }) },
+      { id: "repo-cli-2", shard: CiLanePartitionShard.make({ index: 2, total: 9 }) },
+      { id: "repo-cli-3", shard: CiLanePartitionShard.make({ index: 3, total: 9 }) },
+      { id: "repo-cli-4", shard: CiLanePartitionShard.make({ index: 4, total: 9 }) },
+      { id: "repo-cli-5", shard: CiLanePartitionShard.make({ index: 5, total: 9 }) },
+      { id: "repo-cli-6", shard: CiLanePartitionShard.make({ index: 6, total: 9 }) },
+      { id: "repo-cli-7", shard: CiLanePartitionShard.make({ index: 7, total: 9 }) },
+      { id: "repo-cli-8", shard: CiLanePartitionShard.make({ index: 8, total: 9 }) },
+      { id: "repo-cli-9", shard: CiLanePartitionShard.make({ index: 9, total: 9 }) },
+      { id: "law-practice-1", shard: CiLanePartitionShard.make({ index: 1, total: 8 }) },
+      { id: "law-practice-2", shard: CiLanePartitionShard.make({ index: 2, total: 8 }) },
+      { id: "law-practice-3", shard: CiLanePartitionShard.make({ index: 3, total: 8 }) },
+      { id: "law-practice-4", shard: CiLanePartitionShard.make({ index: 4, total: 8 }) },
+      { id: "law-practice-5", shard: CiLanePartitionShard.make({ index: 5, total: 8 }) },
+      { id: "law-practice-6", shard: CiLanePartitionShard.make({ index: 6, total: 8 }) },
+      { id: "law-practice-7", shard: CiLanePartitionShard.make({ index: 7, total: 8 }) },
+      { id: "law-practice-8", shard: CiLanePartitionShard.make({ index: 8, total: 8 }) },
       { id: "unit-a", shard: undefined },
       { id: "unit-b", shard: undefined },
       { id: "unit-c", shard: undefined },
@@ -601,7 +589,7 @@ describe("CI lane partitions", () => {
     for (const id of ["repo-cli-1", "repo-cli-2", "repo-cli-3", "repo-cli-4", "repo-cli-5", "repo-cli-6"] as const) {
       expect(partitionPackages(id)).toEqual(["@beep/repo-cli"]);
     }
-    for (const id of ["law-practice-1", "law-practice-6", "law-practice-12"] as const) {
+    for (const id of ["law-practice-1", "law-practice-6", "law-practice-8"] as const) {
       expect(partitionPackages(id)).toEqual(["@beep/law-practice-server"]);
     }
     for (const partition of A.filter(CI_LANE_PARTITIONS, (candidate) => candidate.lane === "test-integration")) {
@@ -739,7 +727,7 @@ describe("CI lane partitions", () => {
       "--filter=@beep/repo-cli",
       "--summarize",
       "--",
-      "--shard=1/11",
+      "--shard=1/9",
     ];
     expect([...sharded.execution]).toEqual([
       "turbo",
@@ -748,8 +736,8 @@ describe("CI lane partitions", () => {
       ...expectedTurboCacheArgs(shardedShape),
       ...shardedShape,
     ]);
-    expect(A.takeRight(sharded.execution, 2)).toEqual(["--", "--shard=1/11"]);
-    expect(sharded.selection).not.toContain("--shard=1/11");
+    expect(A.takeRight(sharded.execution, 2)).toEqual(["--", "--shard=1/9"]);
+    expect(sharded.selection).not.toContain("--shard=1/9");
 
     const unitA = O.getOrThrow(A.findFirst(CI_LANE_PARTITIONS, (partition) => partition.id === "unit-a"));
     const unsharded = ciLanePartitionArgsForTesting(
@@ -1407,7 +1395,7 @@ describe("partitioned CI lane execution", () => {
             const logLines7 = yield* TestConsole.logLines;
             const output = A.join(A.filter(logLines7, P.isString), "\n");
             expect(output).toContain("test-unit repo-cli-1: planned execution: bunx turbo run @beep/repo-cli#test");
-            expect(output).toContain("--filter=@beep/repo-cli -- --shard=1/11");
+            expect(output).toContain("--filter=@beep/repo-cli -- --shard=1/9");
             expect(output).toContain("test-unit repo-cli-1: dry-run proof complete; no tasks executed");
           })
         )

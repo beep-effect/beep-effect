@@ -1371,9 +1371,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         'if [[ "${{ env.BEEP_CI_LANE_ID }}" == "repo-sanity" ]]; then\n  skip_profile="$goals_only"'
       );
       // A goals_only packet-prose diff skips the Repo Sanity body, never the
-      // public-repo home path law: the job carries no goals_only guard and the
-      // law step is gated only on the lane gate's home_paths_only output.
-      assert.isUndefined(yamlAt(policy.workflow, ["jobs", "verify", "if"]));
+      // public-repo home path law: the job condition names only the cancel and
+      // Change Profile terms, never goals_only, and the law step is gated only on
+      // the lane gate's home_paths_only output.
+      assert.strictEqual(
+        yamlAt(policy.workflow, ["jobs", "verify", "if"]),
+        "${{ !cancelled() && needs.change-profile.result == 'success' }}"
+      );
       assert.include(
         verifyGate,
         'should_run=false\n  # Packet prose still gets the private home path law.\n  if [[ "${{ env.BEEP_CI_LANE_ID }}" == "repo-sanity" ]]; then\n    home_paths_only=true'
@@ -1997,6 +2001,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "skills-update-train.yml:Skills Replay",
         "skills-update-train.yml:Skills Relock",
         "skills-update-train.yml:Skills Train Batch Issue",
+        // Vercel app deploys: a release step gated on Turbo's affected set, not a quality lane.
+        "vercel-deploy.yml:Plan Vercel deploys",
+        "vercel-deploy.yml:Deploy ${{ matrix.project }} (${{ matrix.target }})",
       ];
       const readDirectory22 = yield* fs.readDirectory(`${root}/.github/workflows`);
       const files = A.filter(readDirectory22, Str.endsWith(".yml"));

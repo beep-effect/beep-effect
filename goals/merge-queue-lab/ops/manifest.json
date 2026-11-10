@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "merge-queue-lab",
+    "title": "Merge Queue Lab",
+    "status": "active",
+    "created": "2026-11-09",
+    "updated": "2026-11-09",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/merge-queue-lab",
+  "lifecycle": "active",
+  "mission": "Run a GitHub merge queue on a lab branch behind a toy required check, record how GitHub behaves where its docs are silent, land enqueue calls in the GitHub driver, and return a go, park or kill verdict.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/github-merge-queue",
+    "graduated": "2026-11-09"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/merge-queue-lab/README.md",
+    "goals/merge-queue-lab/SPEC.md",
+    "goals/merge-queue-lab/PLAN.md",
+    "goals/merge-queue-lab/GOAL.md",
+    "goals/merge-queue-lab/research/SOURCES.md",
+    "explorations/github-merge-queue/BRIEF.md",
+    "explorations/github-merge-queue/DECISIONS.md",
+    "explorations/github-merge-queue/research/github-semantics.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/merge-queue-lab/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Stand up the lab",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Observe",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/merge-queue-lab/GOAL.md)\" -le 4000",
+    "jq . goals/merge-queue-lab/ops/manifest.json",
+    "rg -n \"merge-queue-lab|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/merge-queue-lab",
+    "git diff --check -- goals/merge-queue-lab",
+    "bun run beep ci ruleset --check",
+    "bun run beep quality package-verify @beep/github",
+    "bun run beep goals decisions check --slug merge-queue-lab",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation.",
+    "An observation would require enabling a queue on main, editing a workflow on main, or merging to main over a failing required check."
+  ]
+}
