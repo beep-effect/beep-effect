@@ -1,40 +1,50 @@
 # GOAL: Repository simplification residue
 
-Finish all fifteen size-only unmet outcomes from repository-simplification-confidence.
-S36 opens one executable successor; S23 forbids parking work because it is large.
-S31 requires zero added debt, exception, suppression or baseline inventory rows.
+Finish this packet's closeout from the current acceptance evidence. The fifteen
+source workstreams have landed and their issues are closed. Do not restart the
+historical wave order. Read README.md, PLAN.md, SPEC.md, ops/manifest.json and
+history/receipts/2026-11-10-acceptance-reconciliation.md first, then current AGENTS.md.
 
-Read SPEC.md, PLAN.md, README.md and ops/manifest.json in
-`goals/repository-simplification-residue/`, then AGENTS.md and the predecessor
-acceptance receipt. SPEC.md carries each issue's acceptance and source evidence.
+The receipt maps #1851 #1853 #1855 #1856 #1860 #1861 #1869 #1874 #1875 #1876
+#1878 #1879 #1880 #1881 #1882 to source-bound implementation and recovery proof.
+#1875's canon lifecycle and reflection landed through final PR #2586; the child
+packet is verified completed-retained and archived. Its accepted snapshot and
+actual merge tree differ. Preserve both observations.
 
-In scope: #1851 #1853 #1855 #1856 #1860 #1861 #1869 #1874 #1875 #1876 #1878
-#1879 #1880 #1881 #1882. The other eighteen predecessor issues are cross-references
-only. Do not reopen their native, credential, GUI or foreign-state gates here.
+Current main 6d47006fa1 has 533 effect-vitest findings: 15 open and 518 exceptions;
+59 exception reasons lack both literal Owner/Exit clauses. The full scan passes
+introduced=0, which does not establish zero open work. The fleet orchestrator
+owns a separate remediation lane for all 15 rows and 59 reasons, including the
+harness-ledger row already open in #2586's merge. Cite that owner and attribution;
+never claim current zero or add exceptions to make this closeout pass.
 
-Coordinate with the existing fleet orchestrator. Count every open PR repo-wide
-against the six-PR cap before admission, usually allowing one or two residue
-lanes. Wave 1 is the A retirement/catalog train (#1851/#1860) plus detector
-repairs (#1855). FIRST detector work is F-S31-EV010: fix classification for the
-three models-apply-command/models-apply/models-catalog provenance findings with
-paired fixtures, never exceptions. Reserve the next slot for #1861 and land it
-before 2026-10-30, including the OSV recheck. Follow the remaining PLAN order.
+The orchestrator admitted one closeout PR. Count all main-targeting open PRs,
+drafts included, against this packet's six-PR cap; the explicitly excluded
+queue-lab sandbox PRs never merge to main. At most three PRs may be open for this
+packet. Preserve unrelated staged OSDK files and IDE changes in the original
+clone; the closeout lane is an isolated sibling worktree.
 
-Preserve original patches, source identity maps, native fields, disabled rows,
-links, backups and unrelated live work. Source previews are not qualified ports.
-Use fresh source/reference checks and owner regeneration. Attribute failures;
-keep unknown evidence unknown. S30 attributes policy reds without adding rows.
-S11 merge decisions belong to the fleet orchestrator's thread/window/conflict gate.
+Publish every commit through yeet publish on the workstation that runs
+final-check, the until-ready monitor and completion refresh. Never use raw
+pushes. Validate the reflection through lint reflection-artifacts. Run relevant
+document/projection checks and final-check; flip ready at content-final and
+finish the until-ready monitor. Answer every actionable review thread. Send
+final <sha40> #N merge-ready: yes to the fleet orchestrator, which owns S11's
+thread/window/conflict merge gate. Nobody hand-merges this goal final first.
 
-For each lane, record acceptance, exact head, tests, S31 comparison, recovery and
-remaining work in history/. Changed packages require package-verify and relevant
-runtime/coverage proof. No baseline reset or coverage-floor reduction is allowed.
-The #1868 30-session regime restarts at #1884's merge after .ai/mcp deletion;
-children and synthetic sessions do not fill that external gate.
+Follow current AGENTS' two-PR closeout, superseding the historical same-PR
+lifecycle wording in SPEC: final work carries proposedCloseout while initiative
+status stays active. After merge, run goals completion refresh for this slug,
+then adopt verified completed-retained through goals set-status in a separate
+packet-state PR. Reconcile phase and status prose, land that PR, then retire the
+lane canonically. Unknown evidence remains unknown.
 
-Decide routine implementation details, recording reason and reversal in SPEC.md.
-Escalate new spend only. Keep making executable progress when another lane waits.
-The goal ends only after all fifteen acceptances pass, final source scans are
-reconciled, PRs land, and the final PR includes lifecycle completed-retained,
-phase closure and a validated reflection through /reflect. Opening this packet
-satisfies none of the fifteen source acceptances.
+S31 remains zero added debt, exception, suppression or baseline rows; do not reset
+baselines or reduce coverage floors. Preserve original patches, source identity
+maps, disabled rows, links, native fields and recovery material. Source and
+runtime proofs in old receipts are historical, not fresh runs by this docs lane.
+
+The eighteen predecessor external issues remain cross-references. Do not reopen
+native, credential, GUI, foreign-clone or #1868 measured-session gates here.
+Children and synthetic sessions cannot fill #1868. Decide routine details with
+reason and reversal in decisions/ and continue; escalate new spend only.
