@@ -2366,16 +2366,6 @@
       "line": 24,
       "owner": "@beep/repo-cli",
       "reason": "Turbo cache restore regression decodes turbo.json, package.json, Turbo dry-run JSON, fallow list output and the fixture envelopes it restores; the codec calls read real tool output and assert no schema law, so schema-derived arbitrary coverage does not apply."
-    },
-    {
-      "file": "packages/tooling/tool/cli/test/research-library-views.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 39,
-      "owner": "@beep/repo-cli",
-      "reason": "Research-library view regression: the codec calls encode fixture payloads to JSON, decode captured console lines and encode one intake and one probe record to compare with committed views; they assert no schema law, so schema-derived arbitrary coverage adds nothing."
     }
   ],
   "backlog": []
