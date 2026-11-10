@@ -4208,4 +4208,88 @@ layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
       }
     })
   );
+
+  it.effect("exempts process entry modules from EV003 but keeps wrappers in test modules under review", () =>
+    Effect.gen(function* () {
+      const program =
+        "const program = Fx.gen(function* () { const context = yield* L.build(live); return yield* run.pipe(Fx.provide(context)); });";
+      for (const runtime of [
+        'import * as BunRuntime from "@effect/platform-bun/BunRuntime"; BunRuntime.runMain(program);',
+        'import { NodeRuntime } from "@effect/platform-node"; NodeRuntime.runMain(program.pipe(Fx.scoped));',
+      ]) {
+        const hasRule185 = yield* hasRule(`${program}\n${runtime}`, "EV003");
+        assertFalse(hasRule185, runtime);
+      }
+      for (const body of [
+        program,
+        `${program}\nconst runMain = (effect) => effect; runMain(program);`,
+        `${program}\nimport * as BunRuntime from "@effect/platform-bun/BunRuntime"; const main = () => BunRuntime.runMain(program);`,
+        `${program}\nimport * as BunRuntime from "@effect/platform-bun/BunRuntime"; BunRuntime.runMain(program); it.effect("x", () => program);`,
+      ]) {
+        const hasRule186 = yield* hasRule(body, "EV003");
+        assertTrue(hasRule186, body);
+      }
+    })
+  );
+
+  it.effect("accepts DateTime clock reads as live-mode justification", () =>
+    Effect.gen(function* () {
+      const dateTimeImport = 'import * as DateTime from "effect/DateTime";';
+      for (const body of [
+        'it.live("now", () => Fx.gen(function* () { const now = yield* DateTime.now; }));',
+        'it.live("date", () => Fx.gen(function* () { yield* DateTime.nowAsDate; }));',
+        'it.live("unsafe", () => Fx.sync(() => DateTime.nowUnsafe()));',
+      ]) {
+        const hasRule187 = yield* hasRule(`${dateTimeImport}\n${body}`, "EV009");
+        assertFalse(hasRule187, body);
+      }
+      for (const body of [
+        'it.live("unrelated", () => Fx.gen(function* () { yield* DateTime.makeUnsafe(0); }));',
+        'it.live("shadow", () => Fx.gen(function* () { const DateTime = fake; yield* DateTime.now; }));',
+      ]) {
+        const hasRule188 = yield* hasRule(`${dateTimeImport}\n${body}`, "EV009");
+        assertTrue(hasRule188, body);
+      }
+    })
+  );
+
+  it.effect("follows relative fixture modules to a child process that runs a repository file", () =>
+    Effect.gen(function* () {
+      const spawnImport = 'import * as ChildProcess from "effect/process/ChildProcess";';
+      const body =
+        'import * as BunServices from "@effect/platform-bun/BunServices"; import { qualify } from "./Spawn.fixtures.ts"; it.layer(BunServices.layer)("native", (it) => { it.effect("runs", () => qualify("bun")); });';
+      const spawning = [
+        "/repo/test/Spawn.fixtures.ts",
+        `${spawnImport} export const qualify = Fx.fn("qualify")(function* (kind) { const entry = new URL("../ops/child.mjs", import.meta.url); const child = yield* ChildProcess.make(kind, [entry.href]); return yield* child.exitCode; });`,
+      ] as const;
+      const hasRule189 = yield* hasRuleAcrossFiles([spawning], body, "EV010");
+      assertFalse(hasRule189);
+      for (const fixture of [
+        `${spawnImport} export const qualify = Fx.fn("qualify")(function* (kind) { const child = yield* ChildProcess.make(kind, ["--version"]); return yield* child.exitCode; });`,
+        'export const qualify = Fx.fn("qualify")(function* (kind) { const entry = new URL("../ops/child.mjs", import.meta.url); return entry.href; });',
+      ]) {
+        const hasRule190 = yield* hasRuleAcrossFiles([["/repo/test/Spawn.fixtures.ts", fixture]], body, "EV010");
+        assertTrue(hasRule190, fixture);
+      }
+      const hasRule191 = yield* hasRuleAcrossFiles(
+        [spawning],
+        Str.replace("./Spawn.fixtures.ts", "@beep/example/Spawn")(body),
+        "EV010"
+      );
+      assertTrue(hasRule191);
+    })
+  );
+
+  it.effect("accepts a checked-in binary asset located on disk as native filesystem provenance", () =>
+    Effect.gen(function* () {
+      const harness = (asset: string) =>
+        `import * as BunServices from "@effect/platform-bun/BunServices"; import * as NodeURL from "node:url"; const assetPath = NodeURL.fileURLToPath(new URL("${asset}", import.meta.url)); it.layer(BunServices.layer)("kernel", (it) => { it.effect("loads", () => Fx.gen(function* () { const fs = yield* FileSystem.FileSystem; yield* fs.readFile(assetPath); })); });`;
+      const hasRule192 = yield* hasRule(harness("../assets/kernel.wasm"), "EV010");
+      assertFalse(hasRule192);
+      for (const asset of ["../assets/notes.json", "./integration/replay.test.ts", "/abs/kernel.wasm"]) {
+        const hasRule193 = yield* hasRule(harness(asset), "EV010");
+        assertTrue(hasRule193, asset);
+      }
+    })
+  );
 });

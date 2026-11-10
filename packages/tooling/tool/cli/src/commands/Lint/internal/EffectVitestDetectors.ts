@@ -1748,6 +1748,33 @@ const buildsAndProvidesLayer = (definition: EffectVitestFunctionNode, imports: E
   );
 };
 
+const platformRuntimeNames = ["BunRuntime", "NodeRuntime"];
+
+// A module-scope `BunRuntime.runMain(...)` or `NodeRuntime.runMain(...)` statement.
+const isRuntimeMainStatement = (statement: MorphNode, imports: EffectVitestImports): boolean => {
+  if (!Node.isExpressionStatement(statement)) return false;
+  const call = statement.getExpression();
+  return (
+    Node.isCallExpression(call) &&
+    A.some(platformRuntimeNames, (name) =>
+      isProvenanceCall(
+        call,
+        imports,
+        A.flatMap(["@effect/platform-bun", "@effect/platform-node"], (root) => [root, `${root}/${name}`]),
+        name,
+        ["runMain", `${name}.runMain`]
+      )
+    )
+  );
+};
+
+// A process entry module under test/ (an evaluation runner, a spawned child fixture) registers no
+// test and hands its program to a platform runtime's `runMain` at module scope. EV003 asks a
+// wrapper to share its resource through \`it.layer\`; an entry module has no test to share it with.
+const isProcessEntryModule = (sourceFile: SourceFile, imports: EffectVitestImports): boolean =>
+  A.some(sourceFile.getStatements(), (statement) => isRuntimeMainStatement(statement, imports)) &&
+  !A.some(imports.calls, (call) => O.isSome(classifyHarnessCall(call, imports)));
+
 // Only an argument forwarded to Layer.build is a caller-supplied layer.
 // Fixed-layer fixtures are still reviewed at their resource definition (EV003).
 const callerProvidedLayer = (
@@ -2136,10 +2163,18 @@ const controlledWait = (
 // Effect v4 exposes the live time reads as Effect values, so they appear as
 // references rather than calls inside the live body: `Clock.currentTimeMillis`
 // through a namespace, or a bare `currentTimeMillis` through a named import.
+// `DateTime.now` and its zoned and Date forms read the same Clock service; `nowUnsafe` reads the
+// host clock directly.
 const isLiveClockReference = (imports: EffectVitestImports) => (expression: Expression) =>
   isProvenanceExpression(expression, imports, ["effect", "effect/Clock"], "Clock", [
     "currentTimeMillis",
     "currentTimeNanos",
+  ]) ||
+  isProvenanceExpression(expression, imports, ["effect", "effect/DateTime"], "DateTime", [
+    "now",
+    "nowAsDate",
+    "nowInCurrentZone",
+    "nowUnsafe",
   ]);
 const isBareReference = (identifier: Identifier): boolean => {
   const parent = identifier.getParent();
@@ -3115,7 +3150,123 @@ const harnessOpensSqliteFile = (harness: CallExpression, imports: EffectVitestIm
     A.some(harnessEvidence(callback, imports).calls, (call) => opensSqliteFile(call, imports))
   );
 
-const canonicalPlatformIntegration = (declaration: ImportDeclaration, imports: EffectVitestImports): boolean =>
+// Vite's `?raw` import decodes UTF-8 text, so a checked-in binary file (a WASM kernel, an archive, an
+// image, a database) has no in-memory route into a test: only the native filesystem can read it.
+const committedBinaryAssetExtensions = [
+  ".wasm",
+  ".bin",
+  ".gz",
+  ".xz",
+  ".zip",
+  ".tar",
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".webp",
+  ".pdf",
+  ".sqlite",
+  ".db",
+];
+const REPOSITORY_REGION_LIMIT = 64;
+
+// `new URL("<relative>", import.meta.url)`: a checked-in repository file located on disk.
+const repositoryFileUrl = (node: MorphNode, imports: EffectVitestImports): O.Option<string> => {
+  if (!Node.isNewExpression(node)) return O.none();
+  const callee = node.getExpression();
+  const [target, base] = node.getArguments();
+  return Node.isIdentifier(callee) &&
+    callee.getText() === "URL" &&
+    O.isNone(imports.resolveBinding(callee)) &&
+    Node.isStringLiteral(target) &&
+    Str.startsWith(".")(target.getLiteralValue()) &&
+    base !== undefined &&
+    base.getText() === "import.meta.url"
+    ? O.some(target.getLiteralValue())
+    : O.none();
+};
+
+const isRelativeImport = (binding: MorphNode): boolean =>
+  Node.isImportDeclaration(binding) && Str.startsWith(".")(binding.getModuleSpecifierValue());
+
+// The value a referenced binding contributes: a same-file const initializer or function, or the
+// exported value of a relative (test fixture or support) module. Package imports stay closed.
+const referencedRegion = (
+  reference: Identifier,
+  imports: EffectVitestImports,
+  analysis: LayerAnalysis
+): O.Option<MorphNode> =>
+  O.flatMap(imports.resolveBinding(reference), (binding): O.Option<MorphNode> => {
+    if (Node.isFunctionDeclaration(binding)) return O.some(binding);
+    if (Node.isVariableDeclaration(binding) && binding.getVariableStatement()?.getDeclarationKind() === "const")
+      return O.fromUndefinedOr(binding.getInitializer());
+    if (!isRelativeImport(binding)) return O.none();
+    return O.flatMap(resolveLayerIdentifier(reference, [], analysis, 0), (entity) => {
+      if (entity._tag === "Function") return O.some(entity.definition);
+      return entity._tag === "Value" ? O.some(entity.expression) : O.none();
+    });
+  });
+
+// The harness callback plus every same-file value and relative-module export it reaches by name,
+// each region visited once and the walk bounded, so fixture-shaped subjects are followed to source.
+const regionValueReferences = (region: MorphNode): ReadonlyArray<Identifier> =>
+  A.filter(
+    region.getDescendantsOfKind(SyntaxKind.Identifier),
+    (reference) =>
+      !isNamePosition(reference) && reference.getFirstAncestorByKind(SyntaxKind.ImportDeclaration) === undefined
+  );
+
+const regionsReachedFrom = (region: MorphNode, analysis: LayerAnalysis): ReadonlyArray<MorphNode> => {
+  const regionImports = analysis.importsOf(region.getSourceFile());
+  return A.getSomes(
+    A.map(regionValueReferences(region), (reference) => referencedRegion(reference, regionImports, analysis))
+  );
+};
+
+const harnessRepositoryRegions = (harness: CallExpression, analysis: LayerAnalysis): ReadonlyArray<MorphNode> => {
+  const regions = A.fromOption(harnessCallback(harness));
+  for (const region of regions) {
+    if (regions.length >= REPOSITORY_REGION_LIMIT) break;
+    for (const reached of regionsReachedFrom(region, analysis)) {
+      if (!A.some(regions, (known) => known === reached)) regions.push(reached);
+    }
+  }
+  return regions;
+};
+
+const regionLocates = (region: MorphNode, analysis: LayerAnalysis, accept: (target: string) => boolean): boolean => {
+  const regionImports = analysis.importsOf(region.getSourceFile());
+  return A.some(region.getDescendantsOfKind(SyntaxKind.NewExpression), (node) =>
+    O.exists(repositoryFileUrl(node, regionImports), accept)
+  );
+};
+
+// A harness that spawns a child process and hands it a checked-in repository file (its entrypoint
+// or its subject) tests a process that reads the real disk; no memory filesystem is visible to a
+// child, so the platform bundle is the subject. The spawn may live in a relative fixture module.
+const harnessSpawnsRepositoryChild = (harness: CallExpression, analysis: LayerAnalysis): boolean =>
+  A.some(
+    harnessRepositoryRegions(harness, analysis),
+    (region) =>
+      A.some(region.getDescendantsOfKind(SyntaxKind.CallExpression), (call) =>
+        isChildProcessMake(call, analysis.importsOf(region.getSourceFile()))
+      ) && regionLocates(region, analysis, constTrue)
+  );
+
+// A harness that hands its subject a checked-in binary asset by path reads bytes only the native
+// filesystem can supply (see `committedBinaryAssetExtensions`).
+const harnessLocatesCommittedBinaryAsset = (harness: CallExpression, analysis: LayerAnalysis): boolean =>
+  A.some(harnessRepositoryRegions(harness, analysis), (region) =>
+    regionLocates(region, analysis, (target) =>
+      A.some(committedBinaryAssetExtensions, (extension) => Str.endsWith(extension)(target))
+    )
+  );
+
+const canonicalPlatformIntegration = (
+  declaration: ImportDeclaration,
+  imports: EffectVitestImports,
+  analysis: LayerAnalysis
+): boolean =>
   O.exists(platformBundleLayers(declaration, imports, servicesBundle), (layers) => {
     const visited: FlowCache = MutableHashMap.empty();
     return O.exists(O.all(A.map(layers, (layer) => harnessFlows(layer, imports, [], false, visited))), (nested) => {
@@ -3143,6 +3294,8 @@ const canonicalPlatformIntegration = (declaration: ImportDeclaration, imports: E
               !harnessHasOpaquePlatformReferences(harness, imports)) ||
             harnessKillsChildProcess(harness, imports) ||
             harnessOpensSqliteFile(harness, imports) ||
+            harnessSpawnsRepositoryChild(harness, analysis) ||
+            harnessLocatesCommittedBinaryAsset(harness, analysis) ||
             harnessProvesNativeFileSystem(
               { harness, subject: A.some(flows, (flow) => flow.harness === harness && flow.subject) },
               imports
@@ -3307,6 +3460,7 @@ type DetectorState = {
   readonly file: string;
   readonly owner: string;
   readonly layers: LayerAnalysis;
+  readonly processEntry: boolean;
 };
 
 const inspectContext = (call: CallExpression, member: string, canonicalMember: string, state: DetectorState) => {
@@ -4713,7 +4867,7 @@ const detectPlatformImport = (declaration: ImportDeclaration, state: DetectorSta
     moduleName,
     members,
     osTemp,
-    () => canonicalPlatformIntegration(declaration, imports),
+    () => canonicalPlatformIntegration(declaration, imports, state.layers),
     () => nativeFileSystemLayerIntegration(declaration, imports),
     state
   );
@@ -4772,7 +4926,8 @@ const detectResourceDefinition = (
   { name, node }: ReturnType<typeof sourceFunctionDefinitions>[number],
   state: DetectorState
 ): void => {
-  const { imports, findings, makeFinding, file, owner } = state;
+  const { imports, findings, makeFinding, file, owner, processEntry } = state;
+  if (processEntry) return;
   const shareable = functionHasShareableResource(node, imports);
   if ((wrapperName(name) && shareable) || buildsAndProvidesLayer(node, imports))
     findings.push(makeFinding({ ruleId: "EV003", node, file, owner, symbol: name, judgment: !shareable }));
@@ -4859,6 +5014,7 @@ export const detectEffectVitestFindings: {
       file,
       owner,
       layers: makeLayerAnalysis(sourceFile, imports),
+      processEntry: isProcessEntryModule(sourceFile, imports),
     };
 
     for (const call of calls) inspectCall(call, state);

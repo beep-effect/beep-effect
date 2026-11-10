@@ -1514,7 +1514,7 @@ const twoSessionFixture = Effect.fn("test.twoSessionFixture")(function* () {
   return { root, stateDir };
 });
 
-const ProjectedLayer = Layer.unwrap(
+const ProjectedConfig = Layer.unwrap(
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
@@ -1527,15 +1527,9 @@ const ProjectedLayer = Layer.unwrap(
       previousRegime: "library-default",
     });
     yield* fs.writeFileString(file, encodedUnknownJson);
-    return HarnessLedgerServiceLive.pipe(
-      Layer.provideMerge(Git.layer),
-      Layer.provideMerge(NodeServices.layer),
-      Layer.provideMerge(
-        ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file }))
-      )
-    );
+    return ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file }));
   })
-).pipe(Layer.provide(NodeServices.layer));
+);
 
 layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service without a namespace projection", (it) => {
   it.effect("reconcile reads only the library-default regime and leaves projection-salted rows unjoined", () =>
@@ -1563,6 +1557,12 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service without a na
     })
   );
 });
+
+const ProjectedLayer = HarnessLedgerServiceLive.pipe(
+  Layer.provideMerge(Git.layer),
+  Layer.provideMerge(ProjectedConfig),
+  Layer.provideMerge(NodeServices.layer)
+);
 
 layer(ProjectedLayer, { timeout: "30 seconds" })("harness-ledger service under a namespace projection", (it) => {
   it.effect("reconcile joins a non-selected historical alias once across directory aliases and cycles", () =>
@@ -1596,7 +1596,7 @@ layer(ProjectedLayer, { timeout: "30 seconds" })("harness-ledger service under a
   );
 });
 
-const EqualNamespaceLayer = Layer.unwrap(
+const EqualNamespaceConfig = Layer.unwrap(
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
@@ -1609,15 +1609,15 @@ const EqualNamespaceLayer = Layer.unwrap(
       previousRegime: "library-default",
     });
     yield* fs.writeFileString(file, encodedUnknownJson33);
-    return HarnessLedgerServiceLive.pipe(
-      Layer.provideMerge(Git.layer),
-      Layer.provideMerge(NodeServices.layer),
-      Layer.provideMerge(
-        ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file }))
-      )
-    );
+    return ConfigProvider.layer(ConfigProvider.fromUnknown({ BEEP_HOOK_PULSE_NAMESPACE_PROJECTION: file }));
   })
-).pipe(Layer.provide(NodeServices.layer));
+);
+
+const EqualNamespaceLayer = HarnessLedgerServiceLive.pipe(
+  Layer.provideMerge(Git.layer),
+  Layer.provideMerge(EqualNamespaceConfig),
+  Layer.provideMerge(NodeServices.layer)
+);
 
 layer(EqualNamespaceLayer, { timeout: "30 seconds" })("harness-ledger service with equal effective salts", (it) => {
   it.effect("reconcile counts one hook once when the projection explicitly names the library default", () =>
@@ -1983,24 +1983,22 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger prune window diagnos
 // The disarm sentinel path is configuration. An empty value falls back to the
 // evidence root; a path that cannot be inspected at all is unproven in both
 // directions: the window treats it as disarmed without claiming the switch.
-const sentinelLayer = <E, R>(sentinel: Effect.Effect<string, E, R>) =>
+const sentinelConfig = <E, R>(sentinel: Effect.Effect<string, E, R>) =>
   Layer.unwrap(
     Effect.map(sentinel, (value) =>
-      HarnessLedgerServiceLive.pipe(
-        Layer.provideMerge(Git.layer),
-        Layer.provideMerge(NodeServices.layer),
-        Layer.provideMerge(
-          ConfigProvider.layer(
-            ConfigProvider.fromUnknown({ BEEP_HOOK_PULSE_DISARM_SENTINEL: value }, { preserveEmptyStrings: true })
-          )
-        )
+      ConfigProvider.layer(
+        ConfigProvider.fromUnknown({ BEEP_HOOK_PULSE_DISARM_SENTINEL: value }, { preserveEmptyStrings: true })
       )
     )
-  ).pipe(Layer.provide(NodeServices.layer));
+  );
 
-const EmptySentinelLayer = sentinelLayer(Effect.succeed(""));
+const EmptySentinelLayer = HarnessLedgerServiceLive.pipe(
+  Layer.provideMerge(Git.layer),
+  Layer.provideMerge(sentinelConfig(Effect.succeed(""))),
+  Layer.provideMerge(NodeServices.layer)
+);
 
-const UninspectableSentinelLayer = sentinelLayer(
+const UninspectableSentinelConfig = sentinelConfig(
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
@@ -2009,6 +2007,12 @@ const UninspectableSentinelLayer = sentinelLayer(
     yield* fs.writeFileString(blocker, "");
     return path.join(blocker, "hook-pulse.disarmed");
   })
+);
+
+const UninspectableSentinelLayer = HarnessLedgerServiceLive.pipe(
+  Layer.provideMerge(Git.layer),
+  Layer.provideMerge(UninspectableSentinelConfig),
+  Layer.provideMerge(NodeServices.layer)
 );
 
 layer(EmptySentinelLayer, { timeout: "30 seconds" })("harness-ledger service with an empty sentinel path", (it) => {

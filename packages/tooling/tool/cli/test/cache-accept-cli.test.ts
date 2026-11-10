@@ -14,11 +14,10 @@ import {
 } from "@beep/repo-cli/test/Cache";
 import { CacheTaskContract } from "@beep/repo-configs/cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
-import { Sha256Hex } from "@beep/schema";
+import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
-import * as Arbitrary from "effect/Arbitrary";
 import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Command from "effect/cli/Command";
@@ -160,22 +159,22 @@ it.layer(
           expect(result.failures).toEqual([]);
           const readDirectory4 = yield* fs.readDirectory(directory);
           expect(readDirectory4).toEqual([`${reference.sha256}.json`]);
-          const alteredReferences = yield* Arbitrary.checkEffect(
-            Arbitrary.schema(Sha256Hex),
-            (sha256) =>
-              Effect.gen(function* () {
-                const altered = CacheProducerAcceptanceReference.make({ ...reference, sha256 });
-                const pipe5 = yield* readCacheProducerAcceptance(directory, altered, publishedTrust).pipe(
-                  Effect.isSuccess
-                );
-                expect(pipe5).toBe(sha256 === reference.sha256);
-                const readFileString6 = yield* fs.readFileString(referencePath);
-                expect(readFileString6).toBe(marker);
-                return true;
-              }),
-            fcRuns(10)
-          );
-          expect(alteredReferences._tag).toBe("Passed");
+          // Every digest other than the accepted record's falls in one refusal class (the property
+          // below draws that class from Sha256Hex), so the real store is probed with the accepted
+          // digest and two fixed others rather than a degenerate random sweep over the CLI fixture.
+          for (const sha256 of [
+            reference.sha256,
+            Sha256Hex.make(Str.repeat(64)("0")),
+            Sha256Hex.make(Str.repeat(64)("f")),
+          ]) {
+            const altered = CacheProducerAcceptanceReference.make({ ...reference, sha256 });
+            const accepted = yield* readCacheProducerAcceptance(directory, altered, publishedTrust).pipe(
+              Effect.isSuccess
+            );
+            expect(accepted).toBe(sha256 === reference.sha256);
+            const referenceText = yield* fs.readFileString(referencePath);
+            expect(referenceText).toBe(marker);
+          }
           yield* revokeCacheProducerIssuer(publishedTrust.canary);
           const revoked = Bun.spawnSync(args, {
             env: {
@@ -191,5 +190,35 @@ it.layer(
           expect(readFileString7).toBe(marker);
         }).pipe(Effect.provideService(CacheHostedProducerVerifier, published.verifier));
       })
+  );
+
+  it.effect.prop(
+    "refuses every acceptance digest the private store does not hold and leaves the store unchanged",
+    { sha256: Sha256Hex },
+    ({ sha256 }) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "cache-acceptance-digest-" });
+        const directory = path.join(root, "accepted");
+        yield* fs.makeDirectory(directory, { mode: 0o700 });
+        const bytes = new TextEncoder().encode("{}");
+        const held = yield* S.decodeEffect(Sha256HexFromBytes)(bytes);
+        const record = `${held}.json`;
+        yield* fs.writeFile(path.join(directory, record), bytes, { mode: 0o600 });
+        const trust = CacheProducerTrustLocations.make({
+          stable: path.join(root, "stable"),
+          canary: path.join(root, "canary"),
+        });
+        const refused = yield* readCacheProducerAcceptance(
+          directory,
+          CacheProducerAcceptanceReference.make({ sha256 }),
+          trust
+        ).pipe(Effect.isFailure);
+        expect(refused).toBe(true);
+        const listed = yield* fs.readDirectory(directory);
+        expect(listed).toEqual([record]);
+      }),
+    { arbitrary: fcRuns(10) }
   );
 });

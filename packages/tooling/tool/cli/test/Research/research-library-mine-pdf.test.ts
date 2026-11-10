@@ -1,3 +1,4 @@
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { PageSize, PdfStructure, PdfTools, PdfToolsError } from "@beep/pdf-tools";
 import {
   hashBytes,
@@ -43,7 +44,7 @@ import {
 import { ShaclValidationRequest, ShaclValidationService } from "@beep/semantic-web/services/shacl-validation";
 import { ShaclValidationServiceLive } from "@beep/shacl";
 import { fcRuns } from "@beep/test-utils";
-import { NodeCrypto, NodeServices } from "@effect/platform-node";
+import { NodeCrypto } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import { assertInstanceOf, assertTrue, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -54,6 +55,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -143,7 +145,19 @@ const fakePdfTools = Effect.fn("test.fakePdfTools")(function* () {
   return { inspected, service };
 });
 
-const services = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, ShaclValidationServiceLive);
+// The PDF driver is faked, so every byte the mine reads or writes stays in the Effect FileSystem:
+// the memory filesystem holds the temp roots, captures and derived text. Nothing here spawns a
+// process, so the spawner double dies if a case ever reaches it.
+const services = Layer.mergeAll(
+  MemoryFileSystem.layer,
+  Path.layer,
+  NodeCrypto.layer,
+  ShaclValidationServiceLive,
+  Layer.succeed(
+    ChildProcessSpawner.ChildProcessSpawner,
+    ChildProcessSpawner.make(() => Effect.die("the research library mine PDF suite must not spawn a process"))
+  )
+);
 
 /**
  * One cited Box-style source whose only capture artifact is a PDF, and an intake holding a
@@ -155,6 +169,11 @@ const fixture = Effect.gen(function* () {
   const path = yield* Path.Path;
   const root = yield* fs.makeTempDirectoryScoped({ prefix: "research-library-mine-pdf-" });
   const repo = yield* fs.makeTempDirectoryScoped({ prefix: "research-library-mine-pdf-repo-" });
+  // `verifyLibrary` locates the repository by walking up from the working directory. Mark that
+  // directory in the memory checkout so verify reaches its integrity checks over packet-free
+  // topics instead of the live checkout's goals.
+  yield* fs.makeDirectory(process.cwd(), { recursive: true });
+  yield* fs.writeFileString(path.join(process.cwd(), "bun.lock"), "");
   yield* fs.makeDirectory(path.join(repo, "goals/demo-memory/ops"), { recursive: true });
   const manifest = yield* encodeJson({ initiative: { id: "demo-memory", title: "Demo memory" } });
   yield* fs.writeFileString(path.join(repo, "goals/demo-memory/ops/manifest.json"), manifest);

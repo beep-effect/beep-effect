@@ -1,9 +1,8 @@
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
+import { NodePath } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
@@ -19,37 +18,31 @@ import type { TestSpecification } from "vitest/node";
 // unlisted file by hash-sharding it, so a plan that drifts from the directory
 // still runs every file once; this census makes the drift visible instead of
 // silently unbalancing the partitions. Regenerate the plan when files change.
-const integrationDirectory = new URL("./integration/", import.meta.url);
-const testFilePattern = /\.test\.ts$/;
+// Vite resolves the glob at transform time (test/support/vite-env.d.ts), so the
+// census names exactly the checked-in `test/integration/*.test.ts` files.
+const integrationFiles = R.keys(
+  import.meta.glob<string>("./integration/*.test.ts", { eager: true, import: "default", query: "?raw" })
+);
 const plannedSeconds: Readonly<Record<string, number>> = integrationPlan.fileSeconds;
 
-it.layer(NodeServices.layer)("integration shard plan", (it) => {
-  it.effect("places every integration file in exactly one shard and names no missing file", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const directory = yield* path.fromFileUrl(integrationDirectory);
-      const entries = yield* fs.readDirectory(directory);
-      const onDisk = A.sort(
-        A.map(
-          A.filter(entries, (entry) => testFilePattern.test(entry)),
-          (entry) => `test/integration/${entry}`
-        ),
-        Str.Order
-      );
-      const planned = A.sort(A.flatten(integrationPlan.shards), Str.Order);
-
-      expect(A.length(integrationPlan.shards)).toBeGreaterThanOrEqual(2);
-      for (const shard of integrationPlan.shards) {
-        expect(A.isReadonlyArrayNonEmpty(shard)).toBe(true);
-      }
-      expect(planned).toEqual(A.dedupe(planned));
-      expect(planned).toEqual(onDisk);
-      expect(A.sort(R.keys(integrationPlan.fileSeconds), Str.Order)).toEqual(planned);
-      expect(A.length(integrationPlan.shardSeconds)).toBe(A.length(integrationPlan.shards));
-    })
+it("places every integration file in exactly one shard and names no missing file", () => {
+  const onDisk = A.sort(
+    A.map(integrationFiles, (file) => `test/${Str.slice(Str.length("./"))(file)}`),
+    Str.Order
   );
+  const planned = A.sort(A.flatten(integrationPlan.shards), Str.Order);
 
+  expect(A.length(integrationPlan.shards)).toBeGreaterThanOrEqual(2);
+  for (const shard of integrationPlan.shards) {
+    expect(A.isReadonlyArrayNonEmpty(shard)).toBe(true);
+  }
+  expect(planned).toEqual(A.dedupe(planned));
+  expect(planned).toEqual(onDisk);
+  expect(A.sort(R.keys(integrationPlan.fileSeconds), Str.Order)).toEqual(planned);
+  expect(A.length(integrationPlan.shardSeconds)).toBe(A.length(integrationPlan.shards));
+});
+
+it.layer(NodePath.layer)("integration shard plan", (it) => {
   // The sequencer is what the hosted `lps-int-N` partitions actually run through, so the plan is
   // proved where it is applied: every `--shard=N/<count>` yields exactly its planned files, an
   // unplanned file lands in exactly one shard, and each shard starts its heaviest file first.

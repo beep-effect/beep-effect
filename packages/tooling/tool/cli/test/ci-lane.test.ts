@@ -241,72 +241,64 @@ type PartitionShimOptions = {
   readonly executionExitCode?: number;
 };
 
-const withPartitionShim = <A, E, R>(
+const withPartitionShim = Effect.fn("withPartitionShim")(function* <A, E, R>(
   options: PartitionShimOptions,
   use: (fixture: { readonly commandLogPath: string; readonly tempDir: string }) => Effect.Effect<A, E, R>
-) =>
-  Effect.acquireUseRelease(
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const tempDir = yield* fs.makeTempDirectory();
-      return { fs, tempDir };
-    }),
-    ({ fs, tempDir }) =>
-      Effect.gen(function* () {
-        const path = yield* Path.Path;
-        const binDir = path.join(tempDir, "bin");
-        const commandLogPath = path.join(tempDir, "commands.log");
-        const bunxPath = path.join(binDir, "bunx");
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const tempDir = yield* fs.makeTempDirectoryScoped();
+  const path = yield* Path.Path;
+  const binDir = path.join(tempDir, "bin");
+  const commandLogPath = path.join(tempDir, "commands.log");
+  const bunxPath = path.join(binDir, "bunx");
 
-        yield* fs.makeDirectory(binDir, { recursive: true });
-        yield* fs.writeFileString(
-          bunxPath,
-          A.join(
-            [
-              "#!/usr/bin/env sh",
-              'printf \'%s\\n\' "$*" >> "$CI_LANE_TEST_COMMAND_LOG"',
-              'case " $* " in',
-              '  *" --dry-run=json "*)',
-              "    printf '%s\\n' \"$CI_LANE_TEST_DRY_RUN_OUTPUT\"",
-              '    exit "${CI_LANE_TEST_DRY_RUN_EXIT:-0}"',
-              "    ;;",
-              "esac",
-              'exit "${CI_LANE_TEST_EXECUTION_EXIT:-0}"',
-              "",
-            ],
-            "\n"
-          )
-        );
-        yield* fs.chmod(bunxPath, 0o755);
-        const bunPath = path.join(binDir, "bun");
-        const readFileString1 = yield* fs.readFileString(bunxPath);
-        yield* fs.writeFileString(bunPath, readFileString1);
-        yield* fs.chmod(bunPath, 0o755);
-
-        return yield* withEnvVarEffect(
-          "PATH",
-          `${binDir}:${Bun.env.PATH ?? ""}`,
-          withEnvVarEffect(
-            "CI_LANE_TEST_COMMAND_LOG",
-            commandLogPath,
-            withEnvVarEffect(
-              "CI_LANE_TEST_DRY_RUN_OUTPUT",
-              options.dryRunOutput,
-              withEnvVarEffect(
-                "CI_LANE_TEST_DRY_RUN_EXIT",
-                String(options.dryRunExitCode ?? 0),
-                withEnvVarEffect(
-                  "CI_LANE_TEST_EXECUTION_EXIT",
-                  String(options.executionExitCode ?? 0),
-                  use({ commandLogPath, tempDir })
-                )
-              )
-            )
-          )
-        );
-      }),
-    ({ fs, tempDir }) => fs.remove(tempDir, { force: true, recursive: true }).pipe(Effect.orDie)
+  yield* fs.makeDirectory(binDir, { recursive: true });
+  yield* fs.writeFileString(
+    bunxPath,
+    A.join(
+      [
+        "#!/usr/bin/env sh",
+        'printf \'%s\\n\' "$*" >> "$CI_LANE_TEST_COMMAND_LOG"',
+        'case " $* " in',
+        '  *" --dry-run=json "*)',
+        "    printf '%s\\n' \"$CI_LANE_TEST_DRY_RUN_OUTPUT\"",
+        '    exit "${CI_LANE_TEST_DRY_RUN_EXIT:-0}"',
+        "    ;;",
+        "esac",
+        'exit "${CI_LANE_TEST_EXECUTION_EXIT:-0}"',
+        "",
+      ],
+      "\n"
+    )
   );
+  yield* fs.chmod(bunxPath, 0o755);
+  const bunPath = path.join(binDir, "bun");
+  const readFileString1 = yield* fs.readFileString(bunxPath);
+  yield* fs.writeFileString(bunPath, readFileString1);
+  yield* fs.chmod(bunPath, 0o755);
+
+  return yield* withEnvVarEffect(
+    "PATH",
+    `${binDir}:${Bun.env.PATH ?? ""}`,
+    withEnvVarEffect(
+      "CI_LANE_TEST_COMMAND_LOG",
+      commandLogPath,
+      withEnvVarEffect(
+        "CI_LANE_TEST_DRY_RUN_OUTPUT",
+        options.dryRunOutput,
+        withEnvVarEffect(
+          "CI_LANE_TEST_DRY_RUN_EXIT",
+          String(options.dryRunExitCode ?? 0),
+          withEnvVarEffect(
+            "CI_LANE_TEST_EXECUTION_EXIT",
+            String(options.executionExitCode ?? 0),
+            use({ commandLogPath, tempDir })
+          )
+        )
+      )
+    )
+  );
+});
 
 const withWorkingDirectory = <A, E, R>(directory: string, use: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
   Effect.acquireUseRelease(
