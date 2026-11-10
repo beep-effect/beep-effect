@@ -316,7 +316,8 @@ const environmentName = (job: WorkflowJob): string =>
 const isMatrixWriter = (job: WorkflowJob, file: string, id: string): boolean =>
   job.strategy === undefined ||
   Str.includes("matrix.uses_turbo == 'true'")(environmentName(job)) ||
-  (file === "check.yml" && A.contains(["lint-shard", "test-unit-shard", "test-integration-shard"], id));
+  (file === "check.yml" &&
+    A.contains(["lint-shard", "test-unit-shard", "test-integration-shard", "property-laws-shard"], id));
 
 const writerEnvironmentAllowed = (job: WorkflowJob): boolean => {
   const env = environmentName(job);

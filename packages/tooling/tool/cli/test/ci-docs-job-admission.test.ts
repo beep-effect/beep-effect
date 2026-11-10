@@ -56,77 +56,174 @@ const aggregateCases = A.flatMap(["success", "failure", "skipped", "cancelled", 
   )
 );
 const passingStates = ["success:true:skipped", "success:false:success"];
+// The test lanes also read the run's partition plan: its job result and the planned list.
+const planCases = A.flatMap(["success", "failure", "skipped", "cancelled", ""], (plan) =>
+  A.map(["[]", '["int-rest"]', '["unit-a","int-rest"]', "", "null", '"unit-a"'], (planned) => ({ plan, planned }))
+);
 const decodeWorkflowSteps = S.decodeUnknownEffect(S.Array(S.Unknown));
 const isWorkflowText = S.is(S.String);
 
+const readCheckWorkflow = Effect.map(
+  Effect.tryPromise({
+    try: () => Bun.file(new URL("../../../../../.github/workflows/check.yml", import.meta.url)).text(),
+    catch: CiCommandError.new("Unable to read the checked-in workflow for the admission regression."),
+  }),
+  parseWorkflowYaml
+);
+
+const aggregateScript = (workflow: unknown, job: string): string => {
+  const script = yamlAt(workflow, ["jobs", job, "steps", 0, "run"]);
+  assertTrue(isWorkflowText(script));
+  return script;
+};
+
+type AggregateState = {
+  readonly admission: string;
+  readonly classification: string;
+  readonly docs: string;
+  readonly plan: string;
+  readonly planned: string;
+  readonly result: string;
+};
+
+// Runs one aggregate's real script with every `needs` expression rendered and the plan in its env.
+const aggregatePasses = (script: string, shard: string, state: AggregateState): boolean =>
+  Bun.spawnSync(
+    [
+      "bash",
+      "-c",
+      pipe(
+        script,
+        Str.replaceAll("${{ needs.admission.result }}", state.admission),
+        Str.replaceAll("${{ needs.change-profile.result }}", state.classification),
+        Str.replaceAll("${{ needs.test-plan.result }}", state.plan),
+        Str.replaceAll("${{ needs.change-profile.outputs.docs_only }}", state.docs),
+        Str.replaceAll(`\${{ needs.${shard}.result }}`, state.result)
+      ),
+    ],
+    { stdout: "pipe", stderr: "pipe", env: { ...Bun.env, PLANNED_PARTITIONS: state.planned } }
+  ).exitCode === 0;
+
+type PlannedLane = {
+  readonly emptyPlanSkips: boolean;
+  readonly isSome: (planned: string) => boolean;
+  readonly job: string;
+  readonly needs: ReadonlyArray<string>;
+  readonly output: string;
+  readonly shard: string;
+};
+
+// A planned lane passes in exactly these states: a documentation-only diff whose shards were
+// skipped, a plan that allocated shards which all passed, and (Test Unit only) a plan that
+// selected no partition. Test Integration always plans its catch-all, so an empty plan fails.
+const plannedLanes: ReadonlyArray<PlannedLane> = [
+  {
+    job: "test-unit",
+    shard: "test-unit-shard",
+    output: "test_unit",
+    needs: ["change-profile", "test-plan", "test-unit-shard"],
+    emptyPlanSkips: true,
+    isSome: (planned) => planned !== "[]",
+  },
+  {
+    job: "test-integration",
+    shard: "test-integration-shard",
+    output: "test_integration",
+    needs: ["admission", "change-profile", "test-plan", "test-integration-shard"],
+    emptyPlanSkips: false,
+    isSome: Str.includes('"int-rest"'),
+  },
+];
+
+const plannedLaneShouldPass = (lane: PlannedLane, state: AggregateState): boolean => {
+  const healthy = state.classification === "success" && state.plan === "success" && Str.startsWith("[")(state.planned);
+  const stated = A.contains(
+    [
+      "true:skipped",
+      ...(lane.isSome(state.planned) ? ["false:success"] : []),
+      ...(lane.emptyPlanSkips && state.planned === "[]" ? ["false:skipped"] : []),
+    ],
+    `${state.docs}:${state.result}`
+  );
+  return healthy && stated;
+};
+
 it.effect(
-  "executes the real aggregate scripts across classification and shard outcomes",
+  "executes the real unplanned aggregate scripts across classification and shard outcomes",
   Effect.fnUntraced(function* () {
-    const source = yield* Effect.tryPromise({
-      try: () => Bun.file(new URL("../../../../../.github/workflows/check.yml", import.meta.url)).text(),
-      catch: CiCommandError.new("Unable to read the checked-in workflow for the admission regression."),
-    });
-    const workflow = parseWorkflowYaml(source);
-    for (const { job, shard, needs } of [
-      { job: "lint", shard: "lint-shard", needs: ["change-profile", "lint-shard"] },
-      { job: "test-unit", shard: "test-unit-shard", needs: ["change-profile", "test-unit-shard"] },
-      {
-        job: "test-integration",
-        shard: "test-integration-shard",
-        needs: ["admission", "change-profile", "test-integration-shard"],
-      },
+    const workflow = yield* readCheckWorkflow;
+    for (const { job, shard } of [
+      { job: "lint", shard: "lint-shard" },
+      { job: "property-laws", shard: "property-laws-shard" },
     ]) {
-      const script = yamlAt(workflow, ["jobs", job, "steps", 0, "run"]);
-      assertTrue(isWorkflowText(script));
-      const render = (classification: string, docs: string, result: string, admission: string) =>
-        pipe(
-          script,
-          Str.replaceAll("${{ needs.admission.result }}", admission),
-          Str.replaceAll("${{ needs.change-profile.result }}", classification),
-          Str.replaceAll("${{ needs.change-profile.outputs.docs_only }}", docs),
-          Str.replaceAll(`\${{ needs.${shard}.result }}`, result)
-        );
+      const script = aggregateScript(workflow, job);
       for (const { classification, docs, result } of aggregateCases) {
-        const executed = Bun.spawnSync(["bash", "-c", render(classification, docs, result, "success")], {
-          stdout: "pipe",
-          stderr: "pipe",
-        });
         assert.strictEqual(
-          executed.exitCode === 0,
+          aggregatePasses(script, shard, { admission: "", classification, docs, plan: "", planned: "", result }),
           A.contains(passingStates, `${classification}:${docs}:${result}`),
           `${job}: ${classification}/${docs}/${result}`
         );
       }
-      assert.deepEqual(yamlAt(workflow, ["jobs", job, "needs"]), needs);
+      assert.deepEqual(yamlAt(workflow, ["jobs", job, "needs"]), ["change-profile", shard]);
     }
-    // The integration aggregate also fails closed when admission itself did not succeed.
-    const integrationScript = yamlAt(workflow, ["jobs", "test-integration", "steps", 0, "run"]);
-    assertTrue(isWorkflowText(integrationScript));
-    for (const admission of ["failure", "skipped", "cancelled", ""]) {
-      const rendered = pipe(
-        integrationScript,
-        Str.replaceAll("${{ needs.admission.result }}", admission),
-        Str.replaceAll("${{ needs.change-profile.result }}", "success"),
-        Str.replaceAll("${{ needs.change-profile.outputs.docs_only }}", "false"),
-        Str.replaceAll("${{ needs.test-integration-shard.result }}", "success")
-      );
-      const executed = Bun.spawnSync(["bash", "-c", rendered], { stdout: "pipe", stderr: "pipe" });
-      assert.notStrictEqual(executed.exitCode, 0, `test-integration: admission ${admission}`);
-    }
-    for (const job of [
-      "lint-shard",
-      "test-unit-shard",
-      "test-integration-shard",
-      "labs",
-      "property-laws",
-      "fallow-advisory",
-    ]) {
+    for (const job of ["lint-shard", "labs", "property-laws-shard", "fallow-advisory"]) {
       assert.deepEqual(yamlAt(workflow, ["jobs", job, "needs"]), ["change-profile"]);
       assert.strictEqual(yamlAt(workflow, ["jobs", job, "if"]), "needs.change-profile.outputs.docs_only != 'true'");
     }
     assert.isUndefined(yamlAt(workflow, ["jobs", "security", "if"]));
     assert.isUndefined(yamlAt(workflow, ["jobs", "secrets", "if"]));
     assert.isUndefined(yamlAt(workflow, ["jobs", "sast", "if"]));
+  })
+);
+
+it.effect(
+  "executes the real planned aggregate scripts across classification, plan and shard outcomes",
+  Effect.fnUntraced(function* () {
+    const workflow = yield* readCheckWorkflow;
+    for (const lane of plannedLanes) {
+      const script = aggregateScript(workflow, lane.job);
+      const states = A.flatMap(aggregateCases, (aggregateCase) =>
+        A.map(planCases, (planCase): AggregateState => ({ ...aggregateCase, ...planCase, admission: "success" }))
+      );
+      for (const state of states) {
+        assert.strictEqual(
+          aggregatePasses(script, lane.shard, state),
+          plannedLaneShouldPass(lane, state),
+          `${lane.job}: ${state.classification}/${state.docs}/${state.result}/${state.plan}/${state.planned}`
+        );
+      }
+      assert.deepEqual(yamlAt(workflow, ["jobs", lane.job, "needs"]), lane.needs);
+      assert.strictEqual(
+        yamlAt(workflow, ["jobs", lane.job, "steps", 0, "env", "PLANNED_PARTITIONS"]),
+        `\${{ needs.test-plan.outputs.${lane.output} }}`
+      );
+      assert.deepEqual(yamlAt(workflow, ["jobs", lane.shard, "needs"]), ["change-profile", "test-plan"]);
+      assert.strictEqual(
+        yamlAt(workflow, ["jobs", lane.shard, "if"]),
+        `needs.change-profile.outputs.docs_only != 'true' && needs.test-plan.outputs.${lane.output} != '[]'`
+      );
+    }
+  })
+);
+
+it.effect(
+  "fails the integration aggregate closed when admission itself did not succeed",
+  Effect.fnUntraced(function* () {
+    const workflow = yield* readCheckWorkflow;
+    const script = aggregateScript(workflow, "test-integration");
+    for (const admission of ["failure", "skipped", "cancelled", ""]) {
+      assert.isFalse(
+        aggregatePasses(script, "test-integration-shard", {
+          admission,
+          classification: "success",
+          docs: "false",
+          plan: "success",
+          planned: '["int-rest"]',
+          result: "success",
+        }),
+        `test-integration: admission ${admission}`
+      );
+    }
   })
 );
 
