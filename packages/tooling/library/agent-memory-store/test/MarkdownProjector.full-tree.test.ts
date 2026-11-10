@@ -23,6 +23,7 @@ import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as TestClock from "effect/testing/TestClock";
 import {
   importedFiles,
   isBunRuntime,
@@ -44,14 +45,14 @@ describe.skipIf(!enabled)("MarkdownProjector AC-1 over the live goals tree (opt-
         const goalsFolder = yield* path.fromFileUrl(new URL("../../../../../goals", import.meta.url));
         const workspace = yield* tempDirectory("beep-ac1-full-tree-");
         const store = yield* openStore(`${workspace}/memory.db`);
-        const importStart = yield* Clock.currentTimeMillis;
+        const importStart = yield* TestClock.withLive(Clock.currentTimeMillis);
         const imported = yield* store.projector.importFolder(PosixPath.make(goalsFolder));
-        const importEnd = yield* Clock.currentTimeMillis;
+        const importEnd = yield* TestClock.withLive(Clock.currentTimeMillis);
 
         const rebuilt = `${workspace}/rebuilt`;
         const fresh = yield* openStore(`${workspace}/memory.db`);
         yield* fresh.projector.exportFolder(PosixPath.make(rebuilt));
-        const exportEnd = yield* Clock.currentTimeMillis;
+        const exportEnd = yield* TestClock.withLive(Clock.currentTimeMillis);
 
         const source = yield* snapshotFolder(goalsFolder);
         const output = yield* snapshotFolder(rebuilt);
