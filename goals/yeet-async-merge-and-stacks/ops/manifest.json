@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "yeet-async-merge-and-stacks",
+    "packetId": "goal-packet/v1:ba60c870dc0afa522a421c9321e5ec6bf3e978e07c1172b20f9067165d2d45a0",
+    "title": "Yeet Async Merge and Native Stacks",
+    "status": "active",
+    "created": "2026-11-10",
+    "updated": "2026-11-10",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/yeet-async-merge-and-stacks",
+  "lifecycle": "active",
+  "mission": "Merge through GitHub's async endpoint with an explicit bypass, keep proof across rewrites that change nothing, and support two-layer native stacks.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/stacked-pr-adoption",
+    "graduated": "2026-11-10"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/yeet-async-merge-and-stacks/README.md",
+    "goals/yeet-async-merge-and-stacks/SPEC.md",
+    "goals/yeet-async-merge-and-stacks/PLAN.md",
+    "goals/yeet-async-merge-and-stacks/GOAL.md",
+    "goals/yeet-async-merge-and-stacks/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/yeet-async-merge-and-stacks/GOAL.md"
+    }
+  ],
+  "provides": ["github/async-merge", "yeet/native-stacks"],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/yeet-async-merge-and-stacks/GOAL.md)\" -le 4000",
+    "jq . goals/yeet-async-merge-and-stacks/ops/manifest.json",
+    "rg -n \"yeet-async-merge-and-stacks|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/yeet-async-merge-and-stacks",
+    "git diff --check -- goals/yeet-async-merge-and-stacks",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

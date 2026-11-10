@@ -6,6 +6,12 @@ repo (cited), and what exists inside it (so we compose bricks instead of
 rebuilding them). Date sections; research goes stale.
 -->
 
+## 2026-11-10 — Stack test
+
+The supervised native-stack test ran on 2026-11-10 and passed. Its record,
+with every observed fact and the two corrections it makes to this file, is
+[`research/stack-test-2026-11.md`](./research/stack-test-2026-11.md).
+
 ## 2026-11-09 — Reground after four weeks parked (read this first)
 
 Re-measured in one session. Where it disagrees with the 10-13 refresh, this
@@ -123,8 +129,9 @@ section is current; the older sections stay as written. Windows end
   - Auto-merge for stacks was "rolling out over the next few weeks" on
     10-06, and the current docs pages do not mention it (UNVERIFIED).
   - The docs still do not state a layer's `GITHUB_BASE_REF` or the
-    cascade's `pull_request` activity. The six facts in decision
-    `stack-test-terms` remain unverified on this repo.
+    cascade's `pull_request` activity. The test of 2026-11-10 settled most
+    of the six facts in decision `stack-test-terms`; see
+    [`research/stack-test-2026-11.md`](./research/stack-test-2026-11.md).
 - **What this changes in the 10-13 reasoning.**
   - Stacks were never a CI saving, and CI cost is no longer the reason to
     avoid them either.
@@ -235,7 +242,9 @@ sections below stay as written.
 - **Unverified items from 10-05, now partly answered** (docs plus a
   third-party probe; still unverified on this repo):
   - A stack layer's `GITHUB_BASE_REF` is its direct parent; the trunk
-    appears only in `pull_request.stack.base.ref`.
+    appears only in `pull_request.stack.base.ref`. (Wrong on this repo:
+    the 2026-11-10 test read `GITHUB_BASE_REF` as `main` on every layer;
+    only the event payload's base is the direct parent.)
   - The post-merge cascade fires `synchronize`.
   - On #860, REST files and `.diff` return only the layer's diff.
   - Correction to 10-05 Q3: `gh stack sync` rebases and force-pushes; it is
