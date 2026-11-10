@@ -50,7 +50,7 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P1",
@@ -85,5 +85,5 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Authored 2026-11-09 from explorations/ten-minute-certainty, re-checked at c90929b1ff1, not started: the AGENTS.md and orchestrate-skill ban on cancelling refs/heads/main runs is startable now and needs no scorecard. The merge-timestamp replay and the main throughput layout wait for certainty-scorecard (ci/certainty-scorecard) to report the main verdict rate and the hosted and heavy queue numbers; re-dispatch of missing verdicts reads its main census and comes after them. ci/main-verdict means the landed throughput layout, which merge-queue-activation (explorations/github-merge-queue) waits on; the merge-timestamp replay, published as input for that candidate's owner whether or not its gate names it (D28); and the interim main verdict rate after the layout and re-dispatch; per-SHA verdicts are that candidate's, not this goal's (D28)."
+  "statusNote": "Slice 1 landed 2026-11-10 (HOST-01 a): AGENTS.md and the orchestrate skill forbid cancelling any refs/heads/main run, queued or running; the ban's start date is the anchor for the before/after verdict reads and the first zero-agent-cancel window (checkpoint cancel-ban-start-anchor). P0 in progress. The merge-timestamp replay (slice 2) and the main throughput layout wait for certainty-scorecard (ci/certainty-scorecard) to report the main verdict rate, per-run job counts and the hosted and heavy queue numbers; re-dispatch of missing verdicts reads its main census and comes after them. ci/main-verdict means the landed throughput layout, which merge-queue-activation (explorations/github-merge-queue) waits on; the merge-timestamp replay, published as input for that candidate's owner (D28); and the interim main verdict rate after the layout and re-dispatch; per-SHA verdicts are that candidate's, not this goal's (D28)."
 }
