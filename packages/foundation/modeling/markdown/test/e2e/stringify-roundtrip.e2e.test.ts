@@ -91,13 +91,22 @@ describe("stringify cost", () => {
     const warm = parseBlocks(input, { dialect: "gfm" }).root;
     stringifyTree(warm);
 
-    const parseStart = performance.now();
-    const tree = parseBlocks(input, { dialect: "gfm" }).root;
-    const parseMs = performance.now() - parseStart;
+    // One sample of each is at the mercy of a GC pause or a CPU-contended
+    // slice under a parallel turbo run. Interleave rounds so both sides see
+    // the same load, and compare per-side minimums: the minimum is the
+    // estimator least inflated by scheduler and collector noise.
+    let parseMs = Number.POSITIVE_INFINITY;
+    let stringifyMs = Number.POSITIVE_INFINITY;
+    let emitted = "";
+    for (let round = 0; round < 5; round++) {
+      const parseStart = performance.now();
+      const tree = parseBlocks(input, { dialect: "gfm" }).root;
+      parseMs = Math.min(parseMs, performance.now() - parseStart);
 
-    const stringifyStart = performance.now();
-    const emitted = stringifyTree(tree);
-    const stringifyMs = performance.now() - stringifyStart;
+      const stringifyStart = performance.now();
+      emitted = stringifyTree(tree);
+      stringifyMs = Math.min(stringifyMs, performance.now() - stringifyStart);
+    }
 
     assert.isAbove(emitted.length, input.length / 2);
     // The flag would bind if serialization cost rivaled parse cost (which
