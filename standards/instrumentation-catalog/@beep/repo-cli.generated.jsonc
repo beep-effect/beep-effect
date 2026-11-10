@@ -3790,6 +3790,7 @@
     {"name":"Yeet.readProofEnvironments","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.readPublishedHead","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.readPullRequestForReady","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"Yeet.readReviewBodyThreadLocations","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.readReviewLaneLedger","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.readSquashCommitlint","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.readSquashCommitlintForPullRequest","owner":"@beep/repo-cli","family":"tooling","conforms":true},

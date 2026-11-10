@@ -35,10 +35,18 @@
  * job's pull request that no earlier wait on the job returned, and a new P1
  * `pr-comment` row is one.
  *
+ * A `pr-comment` row comes from a person's top-level comment, or from a bot's
+ * review body that raises findings no review thread carries (a CodeRabbit
+ * nitpick, outside-diff or minor finding, a Greptile-format new finding, or a
+ * CodeRabbit body whose findings Yeet could not parse). Review bots never gate
+ * a merge: no merge verdict reads the inbox, so the row makes the owner look
+ * and nothing more.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
 
+import { ReviewThread } from "@beep/github/ReviewThread";
 import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -51,6 +59,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { readYeetAckState } from "./Ack.ts";
 import { YeetCheckOutcome } from "./CheckOutcome.ts";
+import { yeetGithubFailure } from "./GhOps.ts";
 import {
   appendYeetInboxRowOnce,
   YeetBaseDriftCapsule,
@@ -70,11 +79,17 @@ import {
   acknowledgeYeetMonitorComments,
   collectNewYeetMonitorComments,
   openYeetMonitorCommentStream,
+  renderYeetMonitorReviewBodySignal,
   YEET_MONITOR_COMMENT_EXCERPT_LENGTH,
   YeetMonitorCommentConsumer,
   yeetMonitorCommentFromBot,
 } from "./MonitorComments.ts";
 import { dispatchYeetCheckFailure } from "./Remediation.ts";
+import {
+  YeetReviewBodyThreadLocation,
+  yeetReviewBodyAdvisoryCount,
+  yeetReviewBodyUnthreadedItems,
+} from "./ReviewBodySignal.ts";
 import { YeetWatchCheck, YeetWatchThread, yeetWatchThreadOutstanding } from "./WatchStream.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -303,13 +318,17 @@ const topLevelCommentSource = (comment: YeetMonitorComment): O.Option<readonly [
     Match.exhaustive
   );
 
+// A named author other than this monitor's own identity: not a deleted
+// account GitHub no longer names, and not the acting login.
+const notActingLogin = (comment: YeetMonitorComment, window: YeetPrCommentWindow): boolean =>
+  Str.isNonEmpty(comment.author) &&
+  comment.author !== "unknown" &&
+  Str.toLowerCase(comment.author) !== Str.toLowerCase(window.actingLogin);
+
 // A person other than the acting login: not a bot, not a deleted account
 // GitHub no longer names, and not this monitor's own identity.
 const writtenByAnotherPerson = (comment: YeetMonitorComment, window: YeetPrCommentWindow): boolean =>
-  Str.isNonEmpty(comment.author) &&
-  comment.author !== "unknown" &&
-  !yeetMonitorCommentFromBot(comment) &&
-  Str.toLowerCase(comment.author) !== Str.toLowerCase(window.actingLogin);
+  notActingLogin(comment, window) && !yeetMonitorCommentFromBot(comment);
 
 // Instants, not strings: GitHub stamps whole seconds and the window start
 // carries milliseconds, so a string comparison would misorder one second.
@@ -385,15 +404,154 @@ export const yeetPrCommentCapsule: {
     )
 );
 
+// What a bot review body's row says after the body's own summary: how many
+// of its findings no review thread carries, and where the first of those sits.
+const botReviewBodyExcerpt = (
+  comment: Extract<YeetMonitorComment, { readonly _tag: "review-body" }>,
+  summary: string,
+  advisories: number,
+  threads: ReadonlyArray<YeetReviewBodyThreadLocation>
+): string => {
+  const first = pipe(
+    A.head(yeetReviewBodyUnthreadedItems(comment.signal, threads)),
+    O.map((item) =>
+      O.match(item.line, {
+        onNone: () => `; first: ${item.path}`,
+        onSome: (line) => `; first: ${item.path}:${line}`,
+      })
+    ),
+    O.getOrElse(() => Str.empty)
+  );
+  return comment.signal.signal === "coderabbit-unparsed"
+    ? summary
+    : `${summary}; ${advisories} not on a review thread${first}`;
+};
+
+/**
+ * Turn one bot review body into a pull request comment capsule, when its findings need a look.
+ *
+ * **Details**
+ *
+ * The bot half of the comment rows. A review body qualifies when a bot wrote
+ * it (`yeetMonitorCommentFromBot`: a CodeRabbit login, a Greptile login or
+ * Greptile-format body, an App account), it is not the acting login's own, it
+ * was submitted after the window start, and it raises at least one advisory
+ * no review thread already carries (`yeetReviewBodyAdvisoryCount`), which
+ * includes a CodeRabbit body whose findings Yeet could not parse. A finding
+ * that opened a thread already has a `review-thread` row, so a CodeRabbit body
+ * whose every finding sits on a thread writes nothing, and so does a
+ * rate-limit notice or a walkthrough with no findings. A Greptile-format body
+ * lists no locations, so its new-finding counts arm a row with no thread
+ * check. A bot's conversation comment never
+ * qualifies.
+ *
+ * The excerpt names the body's counts, how many findings no thread carries
+ * and the first such finding's path and line, so the row says where to look
+ * without a read of `link`.
+ *
+ * **Gotchas**
+ *
+ * The row is a P1 `pr-comment` row like a person's. It wakes a waiting
+ * `yeet job wait` or an attached `--until-ready` loop and the inbox hook
+ * injects it, but no merge verdict reads the inbox: merge readiness,
+ * `yeet merge-gate` and `yeet ready` read GitHub state alone, so the row never
+ * gates a merge.
+ *
+ * **Example** (A CodeRabbit nitpick no thread carries)
+ *
+ * ```ts
+ * import {
+ *   parseYeetReviewBodySignal,
+ *   YeetMonitorReviewBody,
+ *   YeetPrCommentWindow,
+ *   YeetReviewBodySignalInput,
+ *   yeetPrBotReviewBodyCapsule,
+ * } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const body = "Nitpick comments: 1\n\nNitpick comments:\nReview comments at @src/a.ts:\n- Line 7: rename it\n"
+ * const review = YeetMonitorReviewBody.make({
+ *   author: "coderabbitai[bot]",
+ *   body,
+ *   id: 51,
+ *   signal: parseYeetReviewBodySignal(YeetReviewBodySignalInput.make({ authorLogin: "coderabbitai[bot]", body })),
+ *   state: "COMMENTED",
+ *   submittedAt: "2026-09-25T00:01:00Z",
+ *   url: "https://github.com/o/r/pull/900#pullrequestreview-51",
+ * })
+ * const window = YeetPrCommentWindow.make({
+ *   actingLogin: "operator", headSha: "abc123", prNumber: 900, since: "2026-09-25T00:00:00.000Z"
+ * })
+ * console.log(O.isSome(yeetPrBotReviewBodyCapsule(review, window, []))) // true
+ * ```
+ *
+ * @param comment - One row from the monitor comment stream.
+ * @param window - The pull request, head, acting login and window start.
+ * @param threads - Where the pull request's review threads sit, resolved ones included.
+ * @returns The capsule, or `None` for a comment that does not become a bot findings row.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const yeetPrBotReviewBodyCapsule: {
+  (
+    window: YeetPrCommentWindow,
+    threads: ReadonlyArray<YeetReviewBodyThreadLocation>
+  ): (comment: YeetMonitorComment) => O.Option<YeetPrCommentCapsule>;
+  (
+    comment: YeetMonitorComment,
+    window: YeetPrCommentWindow,
+    threads: ReadonlyArray<YeetReviewBodyThreadLocation>
+  ): O.Option<YeetPrCommentCapsule>;
+} = dual(
+  3,
+  (
+    comment: YeetMonitorComment,
+    window: YeetPrCommentWindow,
+    threads: ReadonlyArray<YeetReviewBodyThreadLocation>
+  ): O.Option<YeetPrCommentCapsule> =>
+    Match.value(comment).pipe(
+      Match.tag("review-body", (body) => {
+        const advisories = yeetReviewBodyAdvisoryCount(body.signal, threads);
+        // Only a structured body has a summary; a plain one never qualifies.
+        return pipe(
+          renderYeetMonitorReviewBodySignal(body.signal),
+          O.filter(
+            () =>
+              advisories > 0 &&
+              yeetMonitorCommentFromBot(body) &&
+              notActingLogin(body, window) &&
+              createdAfter(body.submittedAt, window.since)
+          ),
+          O.map((summary) =>
+            YeetPrCommentCapsule.make({
+              author: body.author,
+              commentId: body.id,
+              createdAt: body.submittedAt,
+              excerpt: rowExcerpt(botReviewBodyExcerpt(body, summary, advisories, threads)),
+              headSha: window.headSha,
+              link: body.url,
+              prNumber: window.prNumber,
+              source: YeetPrCommentSource.Enum["review-body"],
+            })
+          )
+        );
+      }),
+      Match.orElse(() => O.none<YeetPrCommentCapsule>())
+    )
+);
+
 /**
  * Append one P1 `pr-comment` row per qualifying comment, once per comment.
  *
  * **Details**
  *
- * Row ids are keyed on the PR number, source and GitHub comment id, so seeing
- * the same comment again, on this poll or after a push, appends nothing. A
- * failed append fails the call, so the caller leaves the watermark where it
- * was and the next poll retries; rows already appended are deduplicated then.
+ * A comment qualifies as a person's (`yeetPrCommentCapsule`) or as a bot
+ * review body whose findings no thread carries (`yeetPrBotReviewBodyCapsule`,
+ * read against `threads`). Row ids are keyed on the PR number, source and
+ * GitHub comment id, so seeing the same comment again, on this poll or after a
+ * push, appends nothing. A failed append fails the call, so the caller leaves
+ * the watermark where it was and the next poll retries; rows already appended
+ * are deduplicated then.
  *
  * **Example** (Build the convergence effect)
  *
@@ -419,14 +577,17 @@ export const convergeYeetPrComments = Effect.fn("Yeet.convergePrComments")(funct
   repoRoot: string,
   window: YeetPrCommentWindow,
   comments: ReadonlyArray<YeetMonitorComment>,
-  at: string
+  at: string,
+  threads: ReadonlyArray<YeetReviewBodyThreadLocation> = A.empty()
 ): Effect.fn.Return<
   ReadonlyArray<YeetPrCommentRow>,
   YeetCommandError,
   SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | Digest.Digest
 > {
+  const capsule = (comment: YeetMonitorComment): O.Option<YeetPrCommentCapsule> =>
+    O.orElse(yeetPrCommentCapsule(comment, window), () => yeetPrBotReviewBodyCapsule(comment, window, threads));
   const appended = yield* Effect.forEach(
-    A.getSomes(A.map(comments, yeetPrCommentCapsule(window))),
+    A.getSomes(A.map(comments, capsule)),
     Effect.fnUntraced(function* (capsule) {
       const row = YeetPrCommentRow.make({
         capsule,
@@ -441,6 +602,25 @@ export const convergeYeetPrComments = Effect.fn("Yeet.convergePrComments")(funct
   return A.getSomes(appended);
 });
 
+// Only a CodeRabbit body lists locations to match against threads, so only a
+// poll that collected one pays for the thread read.
+const listsReviewBodyLocations = (comment: YeetMonitorComment): boolean =>
+  comment._tag === "review-body" &&
+  comment.signal.signal === "coderabbit" &&
+  A.isReadonlyArrayNonEmpty(comment.signal.items);
+
+// Every thread, resolved ones included: a finding the owner already answered
+// on its thread is carried by that thread, not raised again by the body.
+const readReviewBodyThreadLocations = Effect.fn("Yeet.readReviewBodyThreadLocations")(function* (prNumber: number) {
+  const reviewThreads = yield* ReviewThread;
+  const read = yield* reviewThreads
+    .list(prNumber)
+    .pipe(Effect.mapError(yeetGithubFailure(`review thread read for PR #${prNumber}`)));
+  return A.map(read.threads, (thread) =>
+    YeetReviewBodyThreadLocation.make({ path: thread.path, line: thread.line, startLine: thread.startLine })
+  );
+});
+
 /**
  * Poll the pull request's comments once and turn the new ones into inbox rows.
  *
@@ -452,8 +632,11 @@ export const convergeYeetPrComments = Effect.fn("Yeet.convergePrComments")(funct
  * collects every comment past it; appends the qualifying ones as rows; and only
  * then advances the watermark over everything it read, so a comment before the
  * window, a bot's comment or an inline review comment is read once and never
- * again. A failed read or append leaves the watermark where it was and fails
- * the call, so the next poll retries without losing a comment.
+ * again. When the poll collected a CodeRabbit review body that lists finding
+ * locations, it also reads the pull request's review threads, resolved ones
+ * included, so a finding already on a thread raises no row. A failed read or
+ * append leaves the watermark where it was and fails the call, so the next
+ * poll retries without losing a comment.
  *
  * **Example** (Build the poll)
  *
@@ -501,7 +684,10 @@ export const pollYeetPrCommentRows = Effect.fn("Yeet.pollPrCommentRows")(functio
   const consumer = YeetMonitorCommentConsumer.Enum["until-ready"];
   const watermarkRef = yield* openYeetMonitorCommentStream(context, window.prNumber, consumer, O.some(window.since));
   const comments = yield* collectNewYeetMonitorComments(context, window.prNumber, watermarkRef);
-  const appended = yield* convergeYeetPrComments(context.repoRoot, window, comments, at);
+  const threads = A.some(comments, listsReviewBodyLocations)
+    ? yield* readReviewBodyThreadLocations(window.prNumber)
+    : A.empty<YeetReviewBodyThreadLocation>();
+  const appended = yield* convergeYeetPrComments(context.repoRoot, window, comments, at, threads);
   yield* acknowledgeYeetMonitorComments(context, window.prNumber, watermarkRef, comments, consumer);
   return appended;
 });

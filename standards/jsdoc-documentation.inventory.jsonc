@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-09T22:03:19.941Z",
+  "generatedAt": "2026-11-10T01:15:59.856Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 179,
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 15,
-    "publicModules": 3875,
-    "publicExports": 27641,
+    "publicModules": 3876,
+    "publicExports": 27651,
     "openModules": 114,
     "openExports": 88,
     "missingExportExamples": 0,
@@ -102,9 +102,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 2,
-        "publicModuleCount": 2,
-        "publicExportCount": 7
+        "sourceFileCount": 3,
+        "publicModuleCount": 3,
+        "publicExportCount": 13
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -168,6 +168,28 @@
           ],
           "exportCount": 6,
           "remediationStatus": "open"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/PropertySelection.ts",
+          "repoPath": "packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
+          "line": 1,
+          "anchor": "packages-tooling-test-kit-fc-runs-src-propertyselection-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "exportCount": 6,
+          "remediationStatus": "resolved"
         },
         {
           "docKind": "packageDocumentation",
@@ -316,6 +338,150 @@
           "repoPath": "packages/tooling/test-kit/fc-runs/src/FastCheckRuns.ts",
           "line": 205,
           "anchor": "packages-tooling-test-kit-fc-runs-src-fastcheckruns-ts-205-fcrunscapped",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "runsPropertiesInline",
+          "exportKind": "const",
+          "filePath": "src/PropertySelection.ts",
+          "repoPath": "packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
+          "line": 66,
+          "anchor": "packages-tooling-test-kit-fc-runs-src-propertyselection-ts-66-runspropertiesinline",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "relativeImportSpecifiers",
+          "exportKind": "const",
+          "filePath": "src/PropertySelection.ts",
+          "repoPath": "packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
+          "line": 88,
+          "anchor": "packages-tooling-test-kit-fc-runs-src-propertyselection-ts-88-relativeimportspecifiers",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "relativeImportCandidates",
+          "exportKind": "const",
+          "filePath": "src/PropertySelection.ts",
+          "repoPath": "packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
+          "line": 118,
+          "anchor": "packages-tooling-test-kit-fc-runs-src-propertyselection-ts-118-relativeimportcandidates",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "moduleGraphRunsPropertiesInline",
+          "exportKind": "const",
+          "filePath": "src/PropertySelection.ts",
+          "repoPath": "packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
+          "line": 158,
+          "anchor": "packages-tooling-test-kit-fc-runs-src-propertyselection-ts-158-modulegraphrunspropertiesinline",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "isPlainRegistrationLine",
+          "exportKind": "const",
+          "filePath": "src/PropertySelection.ts",
+          "repoPath": "packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
+          "line": 222,
+          "anchor": "packages-tooling-test-kit-fc-runs-src-propertyselection-ts-222-isplainregistrationline",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "plainRegistrationLines",
+          "exportKind": "const",
+          "filePath": "src/PropertySelection.ts",
+          "repoPath": "packages/tooling/test-kit/fc-runs/src/PropertySelection.ts",
+          "line": 242,
+          "anchor": "packages-tooling-test-kit-fc-runs-src-propertyselection-ts-242-plainregistrationlines",
           "currentTags": [
             "@param",
             "@returns",
@@ -55351,8 +55517,8 @@
           "exportKind": "class",
           "filePath": "src/Pglite.errors.ts",
           "repoPath": "packages/drivers/pglite/src/Pglite.errors.ts",
-          "line": 44,
-          "anchor": "packages-drivers-pglite-src-pglite-errors-ts-44-pgliteerror",
+          "line": 37,
+          "anchor": "packages-drivers-pglite-src-pglite-errors-ts-37-pgliteerror",
           "currentTags": [
             "@category",
             "@since"
@@ -505948,7 +506114,7 @@
         "srcDir": "src",
         "sourceFileCount": 569,
         "publicModuleCount": 565,
-        "publicExportCount": 5172
+        "publicExportCount": 5176
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -508042,7 +508208,7 @@
               "rule": "multiple-description-paragraphs"
             }
           ],
-          "exportCount": 33,
+          "exportCount": 35,
           "remediationStatus": "open"
         },
         {
@@ -508064,7 +508230,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 11,
+          "exportCount": 12,
           "remediationStatus": "resolved"
         },
         {
@@ -508152,7 +508318,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 16,
+          "exportCount": 17,
           "remediationStatus": "resolved"
         },
         {
@@ -532041,8 +532207,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/Ci.errors.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Ci.errors.ts",
-          "line": 80,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-ci-errors-ts-80-cilanepartitionerrorreason",
+          "line": 83,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-ci-errors-ts-83-cilanepartitionerrorreason",
           "currentTags": [
             "@category",
             "@since"
@@ -532063,8 +532229,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/Ci.errors.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Ci.errors.ts",
-          "line": 117,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-ci-errors-ts-117-cilanepartitionerrorreason",
+          "line": 121,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-ci-errors-ts-121-cilanepartitionerrorreason",
           "currentTags": [
             "@category",
             "@since"
@@ -532085,8 +532251,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/Ci.errors.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Ci.errors.ts",
-          "line": 140,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-ci-errors-ts-140-cilanepartitionerror",
+          "line": 144,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-ci-errors-ts-144-cilanepartitionerror",
           "currentTags": [
             "@category",
             "@since"
@@ -532107,8 +532273,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/Ci.errors.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/Ci.errors.ts",
-          "line": 177,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-ci-errors-ts-177-reportcicommanderror",
+          "line": 181,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-ci-errors-ts-181-reportcicommanderror",
           "currentTags": [
             "@param",
             "@returns",
@@ -532844,8 +533010,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiCoverage.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiCoverage.ts",
-          "line": 591,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-591-runcilabscoverage",
+          "line": 606,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-606-runcilabscoverage",
           "currentTags": [
             "@category",
             "@since"
@@ -532866,8 +533032,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiCoverage.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiCoverage.ts",
-          "line": 633,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-633-runcicoveragecomparison",
+          "line": 648,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-648-runcicoveragecomparison",
           "currentTags": [
             "@category",
             "@since"
@@ -532888,8 +533054,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiCoverage.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiCoverage.ts",
-          "line": 716,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-716-cicoveragetestargs",
+          "line": 731,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cicoverage-ts-731-cicoveragetestargs",
           "currentTags": [
             "@category",
             "@since"
@@ -533020,8 +533186,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 374,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-374-workflowpolicydiagnostics",
+          "line": 375,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-375-workflowpolicydiagnostics",
           "currentTags": [
             "@category",
             "@since"
@@ -533042,8 +533208,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 415,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-415-setupactionsavesnocache",
+          "line": 416,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-416-setupactionsavesnocache",
           "currentTags": [
             "@category",
             "@since"
@@ -533064,8 +533230,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 447,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-447-workflowjobcontexts",
+          "line": 448,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-448-workflowjobcontexts",
           "currentTags": [
             "@category",
             "@since"
@@ -533086,8 +533252,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 484,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-484-prsizelabeldiff",
+          "line": 485,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-485-prsizelabeldiff",
           "currentTags": [
             "@param",
             "@returns",
@@ -533110,8 +533276,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 512,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-512-heldgrouprunids",
+          "line": 513,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-513-heldgrouprunids",
           "currentTags": [
             "@param",
             "@returns",
@@ -533134,8 +533300,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 555,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-555-desktopenvironmentapproved",
+          "line": 556,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-556-desktopenvironmentapproved",
           "currentTags": [
             "@param",
             "@returns",
@@ -533158,8 +533324,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 596,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-596-reviewerappintegrationmatches",
+          "line": 597,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-597-reviewerappintegrationmatches",
           "currentTags": [
             "@param",
             "@returns",
@@ -533182,8 +533348,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiGovernance.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts",
-          "line": 792,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-792-cigovernancecommands",
+          "line": 793,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cigovernance-ts-793-cigovernancecommands",
           "currentTags": [
             "@category",
             "@since"
@@ -533490,8 +533656,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 415,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-415-ci-lane-descriptors",
+          "line": 417,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-417-ci-lane-descriptors",
           "currentTags": [
             "@category",
             "@since"
@@ -533516,8 +533682,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 720,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-720-cilanerunoptions",
+          "line": 722,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-722-cilanerunoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -533538,8 +533704,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 911,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-911-cilanepartitionproof",
+          "line": 914,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-914-cilanepartitionproof",
           "currentTags": [
             "@category",
             "@since"
@@ -533560,8 +533726,32 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1159,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1159-provecilanepartition",
+          "line": 1162,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1162-provecilanepartition",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "plannedCiLanePartitions",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiLane.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+          "line": 1257,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1257-plannedcilanepartitions",
           "currentTags": [
             "@param",
             "@returns",
@@ -533584,8 +533774,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1354,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1354-cilanepartitionsteprequest",
+          "line": 1421,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1421-cilanepartitionsteprequest",
           "currentTags": [
             "@category",
             "@since"
@@ -533606,8 +533796,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1397,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1397-cilanepartitionstepfortesting",
+          "line": 1464,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1464-cilanepartitionstepfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -533630,8 +533820,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1422,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1422-cilanepartitionargs",
+          "line": 1489,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1489-cilanepartitionargs",
           "currentTags": [
             "@category",
             "@since"
@@ -533652,8 +533842,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1454,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1454-cilanedefaultplacementlinesfortesting",
+          "line": 1521,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1521-cilanedefaultplacementlinesfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -533676,8 +533866,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1501,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1501-cilanepartitionargsfortesting",
+          "line": 1568,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1568-cilanepartitionargsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -533700,8 +533890,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1715,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1715-cilanestepsfortesting",
+          "line": 1782,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1782-cilanestepsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -533728,8 +533918,32 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2069,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2069-docgenlanemodeforchangedpaths",
+          "line": 2136,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2136-docgenlanemodeforchangedpaths",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "planCiLanePartitions",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiLane.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+          "line": 2628,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2628-plancilanepartitions",
           "currentTags": [
             "@param",
             "@returns",
@@ -533752,8 +533966,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2529,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2529-runcilane",
+          "line": 2712,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2712-runcilane",
           "currentTags": [
             "@param",
             "@returns",
@@ -533776,8 +533990,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2607,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2607-cilanecommand",
+          "line": 2796,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2796-cilanecommand",
           "currentTags": [
             "@category",
             "@since"
@@ -533798,8 +534012,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2794,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2794-ci-local-default-lanes",
+          "line": 3032,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3032-ci-local-default-lanes",
           "currentTags": [
             "@category",
             "@since"
@@ -533820,8 +534034,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2889,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2889-cilocalstepplan",
+          "line": 3127,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3127-cilocalstepplan",
           "currentTags": [
             "@category",
             "@since"
@@ -533842,8 +534056,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 2971,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-2971-cilanedispatchstep",
+          "line": 3209,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3209-cilanedispatchstep",
           "currentTags": [
             "@param",
             "@returns",
@@ -533866,8 +534080,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 3009,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3009-cilocalstepsfortesting",
+          "line": 3247,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3247-cilocalstepsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -533890,8 +534104,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 3045,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3045-cilocallaneinputsfortesting",
+          "line": 3283,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3283-cilocallaneinputsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -533914,8 +534128,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 3076,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3076-runcilocal",
+          "line": 3314,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3314-runcilocal",
           "currentTags": [
             "@param",
             "@returns",
@@ -533938,8 +534152,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 3112,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3112-cilocalcommand",
+          "line": 3350,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-3350-cilocalcommand",
           "currentTags": [
             "@category",
             "@since"
@@ -534048,8 +534262,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 167,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-167-cilanepartitionid",
+          "line": 170,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-170-cilanepartitionid",
           "currentTags": [
             "@category",
             "@since"
@@ -534070,8 +534284,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 191,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-191-cilanepartitionshard",
+          "line": 194,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-194-cilanepartitionshard",
           "currentTags": [
             "@category",
             "@since"
@@ -534092,8 +534306,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 233,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-233-cilanepartition",
+          "line": 239,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-239-cilanepartition",
           "currentTags": [
             "@category",
             "@since"
@@ -534114,9 +534328,33 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 281,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-281-ci-lane-partitions",
+          "line": 289,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-289-ci-lane-partitions",
           "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ciLaneStartOrder",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiLanePartitions.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
+          "line": 1065,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-1065-cilanestartorder",
+          "currentTags": [
+            "@param",
+            "@returns",
             "@category",
             "@since"
           ],
@@ -534136,8 +534374,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 1004,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-1004-cilanedefaultplacement",
+          "line": 1108,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-1108-cilanedefaultplacement",
           "currentTags": [
             "@category",
             "@since"
@@ -534158,8 +534396,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 1057,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-1057-cilanedefaultplacements",
+          "line": 1161,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-1161-cilanedefaultplacements",
           "currentTags": [
             "@param",
             "@returns",
@@ -534182,8 +534420,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 1114,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-1114-withcilanedefaultplacements",
+          "line": 1218,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-1218-withcilanedefaultplacements",
           "currentTags": [
             "@param",
             "@returns",
@@ -534538,8 +534776,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Ci/CiPartitions.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.command.ts",
-          "line": 62,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-62-lptitem",
+          "line": 63,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-63-lptitem",
           "currentTags": [
             "@category",
             "@since"
@@ -534560,8 +534798,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Ci/CiPartitions.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.command.ts",
-          "line": 76,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-76-lptbin",
+          "line": 77,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-77-lptbin",
           "currentTags": [
             "@category",
             "@since"
@@ -534582,8 +534820,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiPartitions.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.command.ts",
-          "line": 114,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-114-lptassign",
+          "line": 115,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-115-lptassign",
           "currentTags": [
             "@param",
             "@returns",
@@ -534606,8 +534844,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiPartitions.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.command.ts",
-          "line": 173,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-173-buildvitestshardplan",
+          "line": 174,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-174-buildvitestshardplan",
           "currentTags": [
             "@param",
             "@returns",
@@ -534630,8 +534868,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiPartitions.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.command.ts",
-          "line": 350,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-350-checkcipartitions",
+          "line": 351,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-351-checkcipartitions",
           "currentTags": [
             "@param",
             "@returns",
@@ -534654,8 +534892,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiPartitions.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.command.ts",
-          "line": 382,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-382-rendercipartitionreport",
+          "line": 383,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-383-rendercipartitionreport",
           "currentTags": [
             "@param",
             "@returns",
@@ -534678,8 +534916,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiPartitions.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.command.ts",
-          "line": 575,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-575-prunecipartitionplans",
+          "line": 586,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-586-prunecipartitionplans",
           "currentTags": [
             "@param",
             "@returns",
@@ -534702,8 +534940,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiPartitions.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.command.ts",
-          "line": 610,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-610-worstcaseruntimings",
+          "line": 621,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-621-worstcaseruntimings",
           "currentTags": [
             "@param",
             "@returns",
@@ -534726,8 +534964,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiPartitions.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.command.ts",
-          "line": 647,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-647-rebalancecipartitions",
+          "line": 658,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-658-rebalancecipartitions",
           "currentTags": [
             "@param",
             "@returns",
@@ -534750,8 +534988,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiPartitions.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.command.ts",
-          "line": 748,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-748-cipartitionscommand",
+          "line": 759,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-command-ts-759-cipartitionscommand",
           "currentTags": [
             "@category",
             "@since"
@@ -534812,12 +535050,34 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "CI_UNIT_BIN_START_FIRST_SECONDS",
+          "exportKind": "const",
+          "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
+          "line": 88,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-88-ci-unit-bin-start-first-seconds",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "VitestShardPlan",
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
-          "line": 99,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-99-vitestshardplan",
+          "line": 121,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-121-vitestshardplan",
           "currentTags": [
             "@category",
             "@since"
@@ -534838,8 +535098,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
-          "line": 139,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-139-cishardedpartitionfamily",
+          "line": 161,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-161-cishardedpartitionfamily",
           "currentTags": [
             "@category",
             "@since"
@@ -534860,8 +535120,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
-          "line": 160,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-160-cishardedpartitionfamily",
+          "line": 182,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-182-cishardedpartitionfamily",
           "currentTags": [
             "@category",
             "@since"
@@ -534882,8 +535142,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
-          "line": 182,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-182-cishardedpartitionsource",
+          "line": 204,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-204-cishardedpartitionsource",
           "currentTags": [
             "@category",
             "@since"
@@ -534904,8 +535164,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
-          "line": 210,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-210-ci-sharded-partition-sources",
+          "line": 232,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-232-ci-sharded-partition-sources",
           "currentTags": [
             "@category",
             "@since"
@@ -534926,8 +535186,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
-          "line": 244,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-244-cipartitionfiletiming",
+          "line": 266,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-266-cipartitionfiletiming",
           "currentTags": [
             "@category",
             "@since"
@@ -534948,8 +535208,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
-          "line": 275,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-275-cipartitionpackagetiming",
+          "line": 297,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-297-cipartitionpackagetiming",
           "currentTags": [
             "@category",
             "@since"
@@ -534970,8 +535230,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
-          "line": 302,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-302-cipartitionruntimings",
+          "line": 324,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-324-cipartitionruntimings",
           "currentTags": [
             "@category",
             "@since"
@@ -534992,8 +535252,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
-          "line": 329,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-329-parsedhostedtestunitlog",
+          "line": 351,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-351-parsedhostedtestunitlog",
           "currentTags": [
             "@category",
             "@since"
@@ -535014,8 +535274,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
-          "line": 360,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-360-buildvitestshardplanoptions",
+          "line": 382,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-382-buildvitestshardplanoptions",
           "currentTags": [
             "@category",
             "@since"
@@ -535036,8 +535296,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
-          "line": 396,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-396-cipartitionbudgetstatus",
+          "line": 418,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-418-cipartitionbudgetstatus",
           "currentTags": [
             "@category",
             "@since"
@@ -535058,8 +535318,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
-          "line": 417,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-417-cipartitionbudgetstatus",
+          "line": 439,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-439-cipartitionbudgetstatus",
           "currentTags": [
             "@category",
             "@since"
@@ -535080,8 +535340,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
-          "line": 440,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-440-cipartitionbudgetrow",
+          "line": 462,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-462-cipartitionbudgetrow",
           "currentTags": [
             "@category",
             "@since"
@@ -535102,8 +535362,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiPartitions.schemas.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiPartitions.schemas.ts",
-          "line": 469,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-469-cipartitionrebalancereport",
+          "line": 491,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cipartitions-schemas-ts-491-cipartitionrebalancereport",
           "currentTags": [
             "@category",
             "@since"
@@ -537643,8 +537903,8 @@
           "exportKind": "interface",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 2089,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2089-cilanetiminggithubclientshape",
+          "line": 2121,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2121-cilanetiminggithubclientshape",
           "currentTags": [
             "@category",
             "@since"
@@ -537665,8 +537925,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 2108,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2108-cilanetiminggithubclient",
+          "line": 2140,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2140-cilanetiminggithubclient",
           "currentTags": [
             "@category",
             "@since"
@@ -537687,8 +537947,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 2279,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2279-collectrequiredcontexts",
+          "line": 2311,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2311-collectrequiredcontexts",
           "currentTags": [
             "@param",
             "@returns",
@@ -537711,8 +537971,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 2856,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2856-buildcilanetimingwindowreport",
+          "line": 2888,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2888-buildcilanetimingwindowreport",
           "currentTags": [
             "@param",
             "@returns",
@@ -537735,8 +537995,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 2946,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2946-collectcilanetimingwindow",
+          "line": 2978,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-2978-collectcilanetimingwindow",
           "currentTags": [
             "@param",
             "@returns",
@@ -537759,8 +538019,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3225,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3225-cilanetimingdaypeaks",
+          "line": 3257,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3257-cilanetimingdaypeaks",
           "currentTags": [
             "@param",
             "@returns",
@@ -537783,8 +538043,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3334,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3334-rendercilanetimingwindowmarkdown",
+          "line": 3366,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3366-rendercilanetimingwindowmarkdown",
           "currentTags": [
             "@param",
             "@returns",
@@ -537807,8 +538067,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3371,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3371-rendercilanetimingwindowsummary",
+          "line": 3403,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3403-rendercilanetimingwindowsummary",
           "currentTags": [
             "@param",
             "@returns",
@@ -537831,8 +538091,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3484,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3484-rendercilanetimingwindowtsv",
+          "line": 3516,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3516-rendercilanetimingwindowtsv",
           "currentTags": [
             "@param",
             "@returns",
@@ -537855,8 +538115,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3586,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3586-assesscilanetimingwindowbounds",
+          "line": 3618,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3618-assesscilanetimingwindowbounds",
           "currentTags": [
             "@param",
             "@returns",
@@ -537879,8 +538139,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3634,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3634-assesscilanetimingwindowpopulation",
+          "line": 3666,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3666-assesscilanetimingwindowpopulation",
           "currentTags": [
             "@param",
             "@returns",
@@ -537903,8 +538163,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3672,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3672-rendercilanetimingwindowpreviewbanner",
+          "line": 3704,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3704-rendercilanetimingwindowpreviewbanner",
           "currentTags": [
             "@param",
             "@returns",
@@ -537927,8 +538187,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3707,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3707-guardcilanetimingwindowbounds",
+          "line": 3739,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3739-guardcilanetimingwindowbounds",
           "currentTags": [
             "@param",
             "@returns",
@@ -537951,8 +538211,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/LaneTimings.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts",
-          "line": 3857,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3857-cilanetimingscommand",
+          "line": 3889,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-lanetimings-ts-3889-cilanetimingscommand",
           "currentTags": [
             "@category",
             "@since"
