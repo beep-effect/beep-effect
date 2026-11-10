@@ -1076,6 +1076,40 @@ it.layer(TestLayer, { timeout: "30 seconds" })(
         })
       );
 
+      it.effect("log noRenames lists a move's source as a deletion and noWalk lists exactly the given commits", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          // Rename detection off: c2's move of src/old.ts reads as a deletion of its source.
+          const deletions = yield* git.log(dirD, { diffFilter: "D", noRenames: true, quotePath: false });
+          assert.deepStrictEqual(
+            A.map(deletions, (entry) => [entry.sha, A.sort(entry.paths, Str.Order)] as const),
+            [[c2Sha, ["docs/gone.md", "src/old.ts"]]]
+          );
+          // The given commits in the given order (older first here), each with the changes the walk
+          // gives it, and no ancestor of either.
+          const walked = yield* git.log(dirD, { nameStatus: true, findRenames: 50 });
+          const listed = yield* git.log(dirD, {
+            nameStatus: true,
+            findRenames: 50,
+            noWalk: true,
+            revisions: [c1Sha, c2Sha],
+          });
+          assert.deepStrictEqual(
+            A.map(listed, (entry) => entry.sha),
+            [c1Sha, c2Sha]
+          );
+          assert.deepStrictEqual(
+            A.map(listed, (entry) => entry.changes),
+            A.map(A.reverse(walked), (entry) => entry.changes)
+          );
+          const single = yield* git.log(dirD, { nameStatus: true, noWalk: true, revisions: [c2Sha] });
+          assert.deepStrictEqual(
+            A.map(single, (entry) => entry.sha),
+            [c2Sha]
+          );
+        })
+      );
+
       it.effect(
         "lsTree fullTree lists the whole tree from a subdirectory cwd; currentBranch show-current agrees with abbrev-ref",
         () =>

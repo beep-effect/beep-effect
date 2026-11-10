@@ -15,6 +15,7 @@ import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
@@ -26,12 +27,13 @@ import {
   KnowledgeFindingOrigin,
   KnowledgePathChange,
   KnowledgePathRemoval,
+  KnowledgeRemovalCommit,
   KnowledgeRootAttribution,
 } from "./KnowledgeDoctor.schemas.ts";
 import type { CommitLogEntry, NameStatusEntry } from "@beep/git/Git";
 import type { GoalDoctorFinding } from "../Goals/Doctor.ts";
 import type { KnowledgeFindingId } from "./Knowledge.schemas.ts";
-import type { KnowledgeDoctorFinding } from "./KnowledgeDoctor.schemas.ts";
+import type { KnowledgeDoctorFinding, KnowledgePathRemovalQuery } from "./KnowledgeDoctor.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Knowledge/KnowledgeDoctor.grouping");
 
@@ -246,14 +248,18 @@ export const knowledgePathRemovalsFromLog: (
   entries: ReadonlyArray<CommitLogEntry>
 ) => ReadonlyArray<KnowledgePathRemoval> = A.flatMap(commitRemovals);
 
+// A removed path and every directory above it: the keys the removal index files it under.
+const pathPrefixes = (path: string): ReadonlyArray<string> =>
+  A.drop(
+    A.scan(Str.split("/")(path), "", (prefix, segment) => (Str.isEmpty(prefix) ? segment : `${prefix}/${segment}`)),
+    1
+  );
+
 // Each removed path and every directory above it, mapped to its newest removal.
 const removalIndex = (removals: ReadonlyArray<KnowledgePathRemoval>): HashMap.HashMap<string, KnowledgePathRemoval> => {
   const index = MutableHashMap.empty<string, KnowledgePathRemoval>();
   for (const removal of removals) {
-    const prefixes = A.scan(Str.split("/")(removal.path), "", (prefix, segment) =>
-      Str.isEmpty(prefix) ? segment : `${prefix}/${segment}`
-    );
-    for (const key of A.drop(prefixes, 1)) {
+    for (const key of pathPrefixes(removal.path)) {
       if (!MutableHashMap.has(index, key)) {
         MutableHashMap.set(index, key, removal);
       }
@@ -261,6 +267,150 @@ const removalIndex = (removals: ReadonlyArray<KnowledgePathRemoval>): HashMap.Ha
   }
   return HashMap.fromIterable(index);
 };
+
+/**
+ * The `Git.log` options of the tree-only removal walk {@link knowledgeRemovalCommitsFromLog} reads.
+ *
+ * **Details**
+ *
+ * Deletions only (`--diff-filter=D`) with rename detection off (`--no-renames`), so a rename lists its
+ * source as a deletion and git compares trees without reading one blob: in a blobless partial clone
+ * the walk fetches nothing. Per commit it lists the same removed paths as
+ * {@link KNOWLEDGE_PATH_REMOVAL_LOG}, which only adds the rename pairing.
+ *
+ * **Example** (Read the diff filter)
+ *
+ * ```ts
+ * import { KNOWLEDGE_REMOVAL_WALK_LOG } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.grouping"
+ *
+ * console.log(KNOWLEDGE_REMOVAL_WALK_LOG.diffFilter) // "D"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const KNOWLEDGE_REMOVAL_WALK_LOG = {
+  diffFilter: "D",
+  noRenames: true,
+  quotePath: false,
+} as const;
+
+/**
+ * Maps a `Git.log` listing read with {@link KNOWLEDGE_REMOVAL_WALK_LOG} onto removal commits.
+ *
+ * **Details**
+ *
+ * One commit per log entry, in log order (newest first), with the paths it deleted. Commits whose id
+ * is not a full commit id are skipped, as {@link knowledgePathRemovalsFromLog} skips them.
+ *
+ * **Example** (Map one deletion)
+ *
+ * ```ts
+ * import { CommitLogEntry } from "@beep/git/Git"
+ * import { knowledgeRemovalCommitsFromLog } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.grouping"
+ * import * as DateTime from "effect/DateTime"
+ *
+ * const at = DateTime.makeUnsafe("2026-11-03T00:00:00Z")
+ * const commits = knowledgeRemovalCommitsFromLog([
+ *   CommitLogEntry.make({
+ *     sha: "1111111111111111111111111111111111111111",
+ *     authoredAt: at,
+ *     committedAt: at,
+ *     authorName: "a",
+ *     authorEmail: "a@example.invalid",
+ *     subject: "chore: drop",
+ *     paths: ["docs/old.md"],
+ *   }),
+ * ])
+ *
+ * console.log(commits[0]?.paths) // ["docs/old.md"]
+ * ```
+ *
+ * @param entries - The tree-only walk, newest commit first.
+ * @returns Each commit's id and removed paths, newest first.
+ * @category parsing
+ * @since 0.0.0
+ */
+export const knowledgeRemovalCommitsFromLog = (
+  entries: ReadonlyArray<CommitLogEntry>
+): ReadonlyArray<KnowledgeRemovalCommit> =>
+  A.flatMap(entries, (entry) =>
+    isCommitSha(entry.sha) ? [KnowledgeRemovalCommit.make({ commit: entry.sha, paths: entry.paths })] : A.empty()
+  );
+
+// Claims every still-unclaimed target a commit removes, itself or a path under it; true when any.
+const claimTargets = (paths: ReadonlyArray<string>, remaining: MutableHashSet.MutableHashSet<string>): boolean => {
+  const claimed = A.filter(A.flatMap(paths, pathPrefixes), (key) => MutableHashSet.has(remaining, key));
+  for (const key of claimed) {
+    MutableHashSet.remove(remaining, key);
+  }
+  return A.isReadonlyArrayNonEmpty(claimed);
+};
+
+const selectRemovalCommits = (
+  history: ReadonlyArray<KnowledgeRemovalCommit>,
+  query: KnowledgePathRemovalQuery
+): ReadonlyArray<KnowledgeCommitSha> => {
+  const remaining = MutableHashSet.fromIterable(query.targets);
+  const selected = A.empty<KnowledgeCommitSha>();
+  for (const entry of history) {
+    if (MutableHashSet.size(remaining) === 0) {
+      break;
+    }
+    if (claimTargets(entry.paths, remaining)) {
+      selected.push(entry.commit);
+    }
+  }
+  return selected;
+};
+
+/**
+ * The commits whose rename-detecting removals a query reads, in walk order.
+ *
+ * **Details**
+ *
+ * For each target, the newest commit that removed the target itself or a path under it. The cause
+ * grouping files each
+ * removed path and every directory above it under its first removal in walk order, so the commit that
+ * removal belongs to is exactly the newest commit removing a matching path: reading only the selected
+ * commits gives every target the same attribution as reading the whole history. A commit removes the
+ * same paths whether or not renames are detected, so the tree-only walk is enough to select it.
+ *
+ * **Example** (The newest removal of a directory's file)
+ *
+ * ```ts
+ * import {
+ *   KnowledgePathRemovalQuery,
+ *   KnowledgeRemovalCommit,
+ * } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.schemas"
+ * import { selectKnowledgeRemovalCommits } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.grouping"
+ * import * as HashSet from "effect/HashSet"
+ *
+ * const newer = "2222222222222222222222222222222222222222"
+ * const older = "1111111111111111111111111111111111111111"
+ * const selected = selectKnowledgeRemovalCommits(
+ *   [
+ *     KnowledgeRemovalCommit.make({ commit: newer, paths: ["docs/guide/a.md"] }),
+ *     KnowledgeRemovalCommit.make({ commit: older, paths: ["docs/guide/b.md"] }),
+ *   ],
+ *   KnowledgePathRemovalQuery.make({ targets: HashSet.make("docs/guide") })
+ * )
+ *
+ * console.log(selected) // ["2222222222222222222222222222222222222222"]
+ * ```
+ *
+ * @param history - The tree-only walk, newest commit first.
+ * @param query - The targets to resolve.
+ * @returns The selected commit ids, newest first.
+ * @category queries
+ * @since 0.0.0
+ */
+export const selectKnowledgeRemovalCommits: {
+  (
+    query: KnowledgePathRemovalQuery
+  ): (history: ReadonlyArray<KnowledgeRemovalCommit>) => ReadonlyArray<KnowledgeCommitSha>;
+  (history: ReadonlyArray<KnowledgeRemovalCommit>, query: KnowledgePathRemovalQuery): ReadonlyArray<KnowledgeCommitSha>;
+} = dual(2, selectRemovalCommits);
 
 /* -------------------------------------------------------------------------------------------------
  * Cause targets and attribution
@@ -299,6 +449,31 @@ export const knowledgeCauseTargetPath = (causeKey: string): O.Option<string> =>
     A.findFirst(CAUSE_TARGETS, ([prefix]) => Str.startsWith(prefix)(causeKey)),
     ([prefix, toPath]) => toPath(Str.slice(Str.length(prefix))(causeKey))
   );
+
+/**
+ * Every path {@link groupKnowledgeDoctorFindings} looks up in the removal index for these findings.
+ *
+ * **Details**
+ *
+ * The target of each finding's cause key, when it names one. A removal query built from them resolves
+ * exactly the history the grouping of the same findings reads.
+ *
+ * **Example** (No findings, no targets)
+ *
+ * ```ts
+ * import { knowledgeRemovalTargets } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.grouping"
+ * import * as HashSet from "effect/HashSet"
+ *
+ * console.log(HashSet.size(knowledgeRemovalTargets([]))) // 0
+ * ```
+ *
+ * @param findings - The findings one grouping will collapse.
+ * @returns The distinct target paths of their cause keys.
+ * @category queries
+ * @since 0.0.0
+ */
+export const knowledgeRemovalTargets = (findings: ReadonlyArray<KnowledgeDoctorFinding>): HashSet.HashSet<string> =>
+  HashSet.fromIterable(A.getSomes(A.map(findings, (finding) => knowledgeCauseTargetPath(finding.causeKey))));
 
 // A rename of the target itself proposes its new path; a rename of a file under a directory target
 // proposes the directory the file moved into, when the file kept its relative place.

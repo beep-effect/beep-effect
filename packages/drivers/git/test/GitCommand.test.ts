@@ -620,6 +620,33 @@ describe("GitCommand", () => {
       ]);
     });
 
+    it("noRenames renders --no-renames after the filter and noWalk renders --no-walk=unsorted before the revisions", () => {
+      assertGitCommand(GitCommand.log([], false, undefined, false, { diffFilter: "D", noRenames: true }), [
+        "log",
+        "--no-show-signature",
+        "-z",
+        "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s",
+        "--name-only",
+        "--diff-filter=D",
+        "--no-renames",
+      ]);
+      assertGitCommand(
+        GitCommand.log([], false, undefined, false, { nameStatus: true, noWalk: true, revisions: ["b", "a"] }),
+        [
+          "log",
+          "--no-show-signature",
+          "-z",
+          "--format=%x00%H%x00%aI%x00%cI%x00%an%x00%ae%x00%s",
+          "--name-status",
+          "--no-walk=unsorted",
+          "--end-of-options",
+          "b",
+          "a",
+          "--",
+        ]
+      );
+    });
+
     it("diffFilter and findRenames apply to the --name-only body too", () => {
       assertGitCommand(GitCommand.log([], false, undefined, false, { diffFilter: "A" }), [
         "log",

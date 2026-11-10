@@ -139,7 +139,7 @@ const mintFirstSeal = Effect.fnUntraced(function* (tree: KnowledgeDoctorTree, fi
   const baseline = yield* mintKnowledgeBaseline({
     tree,
     report,
-    removals: O.some([]),
+    removedPaths: O.some([]),
     files,
     previousPromotions: [],
   });
@@ -204,15 +204,7 @@ describe("knowledge doctor sealed baseline", () => {
         const baseline = yield* mintKnowledgeBaseline({
           tree,
           report,
-          removals: O.some([
-            KnowledgePathRemoval.make({
-              path: "docs/gone.md",
-              commit: PROMOTED_AT,
-              subject: "docs: drop the guide",
-              change: "deleted",
-              renamedTo: O.none(),
-            }),
-          ]),
+          removedPaths: O.some(["docs/gone.md"]),
           files: EMPTY_SEAL,
           previousPromotions: [],
         });
@@ -241,15 +233,7 @@ describe("knowledge doctor sealed baseline", () => {
           ["deleted-target-rot"]
         );
         assert.deepStrictEqual(rot.baseline.entries[0]?.owners, ["@kriegcloud"]);
-        const removedPackages = knowledgeRemovedPackageNames([
-          KnowledgePathRemoval.make({
-            path: "packages/law-practice/domain/package.json",
-            commit: PROMOTED_AT,
-            subject: "chore: retire",
-            change: "deleted",
-            renamedTo: O.none(),
-          }),
-        ]);
+        const removedPackages = knowledgeRemovedPackageNames(["packages/law-practice/domain/package.json"]);
         assert.isTrue(HashSet.has(removedPackages, "domain"));
         assert.isTrue(HashSet.has(removedPackages, "law-practice-domain"));
         assertSome(groupOf("beep-package:@beep/schema"), "prohibition-of-retired-surface");
@@ -283,7 +267,7 @@ describe("knowledge doctor sealed baseline", () => {
           mintKnowledgeBaseline({
             tree: grown,
             report,
-            removals: O.some([]),
+            removedPaths: O.some([]),
             files: promoted,
             previousPromotions: promotions("broken-tracked-path").promotions,
           })
@@ -293,7 +277,7 @@ describe("knowledge doctor sealed baseline", () => {
         const newlyPromoted = yield* mintKnowledgeBaseline({
           tree: grown,
           report,
-          removals: O.some([]),
+          removedPaths: O.some([]),
           files: promoted,
           previousPromotions: [],
         });
@@ -301,7 +285,7 @@ describe("knowledge doctor sealed baseline", () => {
         const reportOnly = yield* mintKnowledgeBaseline({
           tree: grown,
           report,
-          removals: O.some([]),
+          removedPaths: O.some([]),
           files: seal({ baseline: O.some(first.baseline) }),
           previousPromotions: [],
         });
@@ -311,13 +295,19 @@ describe("knowledge doctor sealed baseline", () => {
         const withLease = yield* mintKnowledgeBaseline({
           tree: grown,
           report,
-          removals: O.some([]),
+          removedPaths: O.some([]),
           files: seal({ ...promoted, leases: O.some(leaseFile(leased)) }),
           previousPromotions: promotions("broken-tracked-path").promotions,
         });
         assert.deepStrictEqual(withLease.entries, first.baseline.entries);
         const shallow = yield* Effect.flip(
-          mintKnowledgeBaseline({ tree: grown, report, removals: O.none(), files: EMPTY_SEAL, previousPromotions: [] })
+          mintKnowledgeBaseline({
+            tree: grown,
+            report,
+            removedPaths: O.none(),
+            files: EMPTY_SEAL,
+            previousPromotions: [],
+          })
         );
         assert.strictEqual(
           shallow._tag === "KnowledgeDoctorInputError" ? shallow.reason : shallow._tag,
@@ -982,10 +972,11 @@ describe("knowledge doctor sealed baseline", () => {
         const tree = makeKnowledgeDoctorMemoryTree({ files: { "docs/a.md": "# Synthetic document\n" } });
         const walked: KnowledgeDoctorTree = {
           ...tree,
-          pathRemovals: Ref.get(labels).pipe(
-            Effect.flatMap((seen) => Ref.update(awaitedAfter, A.append(seen))),
-            Effect.as(O.some(A.empty<KnowledgePathRemoval>()))
-          ),
+          pathRemovals: () =>
+            Ref.get(labels).pipe(
+              Effect.flatMap((seen) => Ref.update(awaitedAfter, A.append(seen))),
+              Effect.as(O.some(A.empty<KnowledgePathRemoval>()))
+            ),
         };
         yield* Effect.scoped(
           Effect.gen(function* () {
@@ -1177,4 +1168,83 @@ it.layer(platformLayer, { timeout: "30 seconds" })("knowledge doctor kit failure
       assert.strictEqual(error._tag, "KnowledgeMintContextRefusal");
     })
   );
+});
+
+// A repository whose head cites a path and a package an earlier commit deleted; returns that commit.
+const buildRetiredHistory = Effect.fnUntraced(function* (root: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const git = yield* Git;
+  const run = (args: ReadonlyArray<string>) =>
+    StepExec.runCapturedStreams({
+      command: "git",
+      args: [
+        "-c",
+        "user.name=Fixture",
+        "-c",
+        "user.email=fixture@example.invalid",
+        "-c",
+        "commit.gpgsign=false",
+        ...args,
+      ],
+      cwd: root,
+      extendEnv: true,
+    });
+  const commit = (message: string) => run(["add", "-A"]).pipe(Effect.andThen(run(["commit", "-q", "-m", message])));
+  yield* run(["init", "-q", "--initial-branch=main"]);
+  yield* fs.makeDirectory(".github", { recursive: true });
+  yield* fs.makeDirectory("docs", { recursive: true });
+  yield* fs.makeDirectory("goals", { recursive: true });
+  yield* fs.makeDirectory("packages/gone", { recursive: true });
+  yield* fs.writeFileString(".github/CODEOWNERS", CODEOWNERS);
+  yield* fs.writeFileString("package.json", '{"name":"synthetic-knowledge-repository","private":true}');
+  yield* fs.writeFileString("docs/a.md", "# Synthetic document\n");
+  yield* fs.writeFileString("docs/gone.md", "# Gone\n");
+  yield* fs.writeFileString("packages/gone/package.json", '{"name":"@beep/gone"}\n');
+  yield* commit("seed");
+  yield* run(["rm", "-q", "docs/gone.md", "packages/gone/package.json"]);
+  yield* commit("retire the guide and the package");
+  const retiredAt = yield* git.revParse(root, "HEAD");
+  yield* fs.writeFileString("docs/a.md", "# Synthetic document\n\nSee `docs/gone.md`.\n\nImport `@beep/gone` here.\n");
+  yield* commit("cite the retired guide");
+  return { retiredAt, commit } as const;
+});
+
+describe("knowledge doctor history reads through the live doctor", () => {
+  it.layer(testLayer, { timeout: "60 seconds" })((it) => {
+    it.effect(
+      "attributes the report, the mint and the check from the history their own findings read",
+      Effect.fnUntraced(function* () {
+        const root = yield* temporaryWorkingDirectory;
+        const fs = yield* FileSystem.FileSystem;
+        const { retiredAt, commit } = yield* buildRetiredHistory(root);
+        const doctor = yield* KnowledgeDoctor;
+        const attributionOf = (report: KnowledgeDoctorReport) =>
+          A.findFirst(report.groups, (group) => group.causeKey === "path:docs/gone.md").pipe(
+            O.flatMap((group) => group.attribution),
+            O.map((attribution) => attribution.commit)
+          );
+        const report = yield* doctor.report("HEAD");
+        assert.strictEqual(report.rootHistory, "available");
+        assert.deepStrictEqual(attributionOf(report), O.some(retiredAt));
+        const baseline = yield* doctor.mint("HEAD");
+        const groupOf = (subject: string) =>
+          A.findFirst(baseline.entries, (entry) => entry.subject === subject).pipe(O.map((entry) => entry.group));
+        // Attributed by the scan's removals, and retired by the walk's removed package manifest.
+        assert.deepStrictEqual(groupOf("repo-path:docs/gone.md"), O.some("deleted-target-rot"));
+        assert.deepStrictEqual(groupOf("beep-package:@beep/gone"), O.some("deleted-target-rot"));
+        const encoded = yield* encodeKnowledgeBaselineText(baseline);
+        yield* fs.writeFileString(KNOWLEDGE_DOCTOR_BASELINE_PATH, encoded);
+        yield* fs.writeFileString(
+          "goals/knowledge-doctor.identity.jsonc",
+          '{"schemaVersion":"knowledge-doctor-identity/v1","mappings":[]}'
+        );
+        yield* commit("sealed baseline");
+        // The check regroups with its own read of the history.
+        const checked = yield* doctor.check(
+          KnowledgeDoctorCheckOptions.make({ acceptMint: false, baseRef: "HEAD", now: NOW })
+        );
+        assert.deepStrictEqual(attributionOf(checked), O.some(retiredAt));
+      })
+    );
+  });
 });

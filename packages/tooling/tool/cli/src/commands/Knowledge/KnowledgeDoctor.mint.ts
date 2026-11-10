@@ -127,7 +127,7 @@ export class KnowledgeMintOutcome extends S.Opaque<KnowledgeMintOutcome, { reado
  * console.log(typeof mintKnowledgeBaselineText) // "function"
  * ```
  *
- * @param input - The minted commit's report, tree, removals, seal files, and previous promotions.
+ * @param input - The minted commit's report, tree, removed paths, seal files, and previous promotions.
  * @returns The baseline, its file text, and whether it changes the committed file.
  * @category use-cases
  * @since 0.0.0
