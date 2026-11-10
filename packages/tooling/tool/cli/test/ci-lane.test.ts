@@ -1968,17 +1968,25 @@ describe("ciLaneStepsForTesting", () => {
     expect(step.env).toBeUndefined();
   });
 
-  it("always checks the schema catalog, changeset graph and catalog usage and appends changeset status on request", () => {
+  it("always checks the schema catalog, changeset graph, catalog usage and home paths and appends changeset status on request", () => {
     const withoutFlag = ciLaneStepsForTesting(REPO_ROOT, "repo-sanity", baseOptions);
     expect(A.map(withoutFlag, (step) => step.label)).toEqual([
       "lint:schema-catalog",
       "ci:repo-sanity:changeset-graph",
       "ci:repo-sanity:catalog-usage",
+      "lint:private-home-paths",
       "ci:repo-sanity",
     ]);
     expect(firstOf(withoutFlag)).toMatchObject({
       command: "bun",
       args: ["run", "beep", "lint", "schema-catalog"],
+      cwd: REPO_ROOT,
+    });
+    // Heavy / Lint Policy skips docs-only diffs, so the hosted home path
+    // guard lives in Repo Sanity, which still runs for them.
+    expect(O.getOrThrow(A.findFirst(withoutFlag, (step) => step.label === "lint:private-home-paths"))).toMatchObject({
+      command: "bun",
+      args: ["run", "beep", "laws", "private-home-paths", "--check"],
       cwd: REPO_ROOT,
     });
 
@@ -1991,6 +1999,7 @@ describe("ciLaneStepsForTesting", () => {
       "lint:schema-catalog",
       "ci:repo-sanity:changeset-graph",
       "ci:repo-sanity:catalog-usage",
+      "lint:private-home-paths",
       "ci:repo-sanity",
       "ci:repo-sanity:changeset-status",
     ]);
