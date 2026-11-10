@@ -88,3 +88,9 @@
 - Doing: holding STRICT final #2933 for ep58, with a DO-NOT-MERGE-before-the-gate line first in its body and the hold posted to the orchestrator.
 - Evidence: it was hand-merged at 08:26:29Z. `goals completion refresh` then printed `unsatisfied` ("the merge-push rule suite failed required status checks"; "declared verdict is not a publish result"). A body line does not stop a human merge, and the PR had also left draft before its last step.
 - Would have prevented it: a ruleset-enforced hold for a goal final, such as a required `yeet-verdict` status posted only after `merge-ready: yes`.
+
+## Re-final merged two minutes after its ready flip (2026-11-10)
+
+- Doing: verifying the proposed closeout with `goals completion refresh --slug alchemy-vault-sync-slice --readiness-job <id>` from the #2962 lane.
+- Evidence: `unknown`, "Readiness recovery refused: status was recorded after job end". #2962 went ready and merged at 2026-11-08T11:35:24Z while its until-ready monitor was still running; the earlier finished job had ended on `blocked on not-draft`, and the running job overwrote `status.json` after the merge. The packet then sat two days as "proposed, unverified".
+- Would have prevented it: the same ruleset-enforced hold as the receipt above, or a refresh that reads readiness from hosted facts at the merged head (required checks green, zero unresolved threads, window elapsed) when no local monitor job survived.
