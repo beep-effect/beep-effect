@@ -67,6 +67,48 @@ counted twice, and closeout reads only the newest body per author, so an older
 round is superseded rather than summed. Every one of these counts is advisory:
 they are printed with `(advisory)` and they never gate a merge.
 
+CodeRabbit's body format drifts, so the parser reads the spellings a census of
+real bodies showed plus the older ones the tests pin:
+`**Actionable comments posted: N**`; `Nitpick comments (N)` and
+`Nitpick comments: N`; `Outside diff range comments (N)`; `Minor comments: N`;
+fix-prompt items under `` In `@path`: ``, `Review comments at @path:` or a
+hard-wrapped `Review comment at @path at line N:` / `... around lines N - M:`,
+with `- Line N:` / `- Around line N-M:` beneath. The current format lists each
+finding twice (its own "Prompt for AI Agents" and the "Prompt to fix all
+issues" block), so items are deduplicated by path and line; a finding listed
+under a body-only section (`Nitpick`, `Outside diff`, `Minor comments:`) is the
+same finding its count summarises and is not added to it.
+
+A CodeRabbit body that shows findings (a "Prompt for AI Agents" block, a
+fix-prompt marker or section heading, or a `<summary>` with a positive comment
+count other than "Additional comments") but parses to zero counts and zero
+items is format drift, not a clean round. The stream and the replay print
+
+```text
+coderabbit: body has findings Yeet could not parse (fix-prompt) and must be read: <review url>
+```
+
+and closeout counts it as one advisory. Read the review. A rate-limit notice, a
+walkthrough or a body with only "Additional comments" stays quiet.
+
+Under `--until-ready`, a bot's review body that raises advisories no review
+thread carries (resolved threads included), or that trips the drift line, arms
+one P1 `pr-comment` row linking the review. Its excerpt names the body's counts,
+how many findings no thread carries, and the first such finding's path and line,
+for example
+`coderabbit: 0 actionable, 1 nitpick(s), 0 outside diff (advisory); 1 not on a review thread; first: src/a.ts:57`.
+A CodeRabbit body whose every finding already has a thread arms nothing: a
+finding matches a thread on the same file when the finding's line range overlaps
+the thread's `startLine..line` (GitHub anchors a multi-line thread at its last
+line, CodeRabbit names a ranged finding by its first). A Greptile-format body
+lists no locations, so its new-finding counts arm a row without a thread check. The row is the
+same kind as a person's comment row: it wakes `yeet job wait` and the inbox hook
+injects it, so the owner looks, but no merge verdict reads the inbox — merge
+readiness, `yeet merge-gate` and `yeet ready` read GitHub state alone — so the
+row never holds `merge-ready` or a merge. Ack it the usual way once handled,
+for example `bun run beep yeet inbox ack <id> --thread-url <review url>` or
+`--wontfix --reason "<why>"`.
+
 ## Comment replay
 
 Every read-first surface replays the PR's comment stream before it reports:
@@ -92,7 +134,8 @@ window start and the shared position, so its first run replays no history.
 `--until-ready` never prints the backlog. Each poll turns top-level comments
 (issue comments and review bodies) into P1 `pr-comment` rows when a person
 wrote them — not a bot, not the login the monitor runs as, not a deleted
-account — after the window start: the job's submit time for a detached run,
+account — or when a bot's review body raises findings no thread carries (see
+Review bodies and advisories), after the window start: the job's submit time for a detached run,
 the loop's start for an attached one. Older comments only advance the
 position; a comment posted between an earlier monitor's exit and this submit
 is the accepted miss. Inline review comments reach the inbox as

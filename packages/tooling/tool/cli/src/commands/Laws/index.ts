@@ -54,6 +54,20 @@ export * from "./MarkdownFences.model.ts";
  */
 export * from "./MarkdownFences.ts";
 /**
+ * Private home path law schemas, placeholder users, and sealed-archive exemptions.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./PrivateHomePaths.model.ts";
+/**
+ * Private home path law: pure scanner, exemption check, and repository runner.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./PrivateHomePaths.ts";
+/**
  * Retired Effect module path law schemas, mapping table, and allowlist.
  *
  * @category models

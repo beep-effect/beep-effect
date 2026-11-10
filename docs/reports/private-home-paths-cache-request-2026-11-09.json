@@ -1,0 +1,15 @@
+{
+  "previous": "7169e3238809f0ab096741bdfe8c15811c5a74fa342442475c0cae628b983fbe",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (fix/redact-ten-minute-certainty-home-path)",
+    "reason": "Re-record the root lint:private-home-paths script, its uncached //#lint:private-home-paths Turbo task and the regenerated policy-fingerprint seals; no existing command, input, output, env or cache flag changes and no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/private-home-paths-cache-review-2026-11-09.md",
+      "sha256": "bc0a827320291df9233216dc7480e5c3333d4486f77ca165eb4ea8771a3e197c"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "subjects": ["//"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

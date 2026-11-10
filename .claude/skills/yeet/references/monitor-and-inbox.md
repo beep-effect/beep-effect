@@ -181,11 +181,18 @@ on every poll; `--watch` does the same for checks, threads, and drift.
 | `check-failed` | P0 required, P1 optional | a check is red on the head | the next push, or an ack |
 | `base-conflict` | P0 | GitHub reports the head `CONFLICTING`/`DIRTY` (`--until-ready` only) | the next push, or the `cleared` ack the monitor writes when the same head reads mergeable again; a `CONFLICTING` read after `cleared` on the same head writes generation + 1 as a new row and wave |
 | `review-thread` | P1 | a thread is unresolved or owes a follow-up | an ack only; survives pushes |
-| `pr-comment` | P1 | a person's top-level comment lands after the window start (`--until-ready` only; see Comment replay) | an ack only; survives pushes |
+| `pr-comment` | P1 | a person's top-level comment lands after the window start, or a bot's review body raises findings no review thread carries, or carries findings Yeet could not parse (`--until-ready` only; see Comment replay and Review bodies and advisories in `review-threads.md`) | an ack only; survives pushes |
 | `base-drift` | P2 | the head is `BEHIND` its base | the next push |
 
 `review-thread` and `pr-comment` rows are wave-exempt: a push never supersedes
 them, because the thread or comment still needs its answer on the next head.
+A bot's review-body `pr-comment` row excerpts the body's counts and the first
+finding no thread carries (`...; 1 not on a review thread; first: src/a.ts:57`),
+or reads `coderabbit: body has findings Yeet could not parse (...) and must be
+read` when the body's format drifted. No row kind gates a merge: merge
+readiness, `yeet merge-gate` and `yeet ready` read GitHub state, never the
+inbox, so a comment row, a person's or a bot's, wakes the owner and holds
+nothing. Review bots never gate merges.
 One open row is kept per thread. Acknowledge them once answered, for example
 with `bun run beep yeet inbox ack <id> --thread-url <url>`. Observation rows
 (`proof-job-finished`, `pr-merge-ready`) are injected too but never join a

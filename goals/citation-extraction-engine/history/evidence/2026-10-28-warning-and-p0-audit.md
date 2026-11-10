@@ -98,7 +98,7 @@ packet doctor initially found seven unregistered existing TypeScript scripts;
 all seven are now registered. Its rerun passed with no new blocking findings.
 Unrelated existing completion advisories are not promoted to green claims.
 Supporting logs are under
-`/home/elpresidank/.cache/beep/citation-extraction-engine/`:
+`~/.cache/beep/citation-extraction-engine/`:
 `warning-check.log`, `warning-controls.log`, `warning-parity-controls.log`,
 `warning-package-verify.log`, `warning-typecheck.log`, `warning-markdown.log`
 and `warning-goals-doctor.log`.

@@ -10,7 +10,7 @@ was performed by the reviewer.
 
 - Implementation: `d717aa7c7e00c8370f29ae74bded6294b6fb8199`.
 - Canonical Effect checkout: `7a87ff9b88b1a570995b1b5570559c1b4dd5367b`,
-  `/home/elpresidank/YeeBois/references/effect/effect`, package version 4.1.2.
+  `~/YeeBois/references/effect/effect`, package version 4.1.2.
 - Installed implementation dependency: Effect 4.1.1. The reviewer verified
   availability of SchemaBinary, its RPC serialization layer, Worker constructors,
   Effect transactions, TxRef and TxSemaphore in the installed sources.

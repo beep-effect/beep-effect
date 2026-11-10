@@ -802,7 +802,9 @@ const excerpt = (body: string): string => yeetCommentExcerpt(body, YEET_MONITOR_
  * `None` for a body with no recognised markers: an operator reading the stream
  * should see the excerpt and nothing else rather than a row of zeroes that
  * looks like a measurement. Every number here is advisory — it names what a
- * reviewer said, never what blocks the merge.
+ * reviewer said, never what blocks the merge. A CodeRabbit body whose findings
+ * Yeet could not parse says so instead of printing zeroes, and the stream
+ * appends the review URL to that line.
  *
  * **Example** (Summarize a CodeRabbit round)
  *
@@ -824,8 +826,11 @@ export const renderYeetMonitorReviewBodySignal = (signal: YeetReviewBodySignal):
   Match.value(signal).pipe(
     Match.discriminator("signal")("coderabbit", (coderabbit) =>
       O.some(
-        `coderabbit: ${coderabbit.actionable} actionable, ${coderabbit.nitpicks} nitpick(s), ${coderabbit.outsideDiff} outside diff (advisory)`
+        `coderabbit: ${coderabbit.actionable} actionable, ${coderabbit.nitpicks} nitpick(s), ${coderabbit.outsideDiff} outside diff${coderabbit.minor > 0 ? `, ${coderabbit.minor} minor` : Str.empty} (advisory)`
       )
+    ),
+    Match.discriminator("signal")("coderabbit-unparsed", (unparsed) =>
+      O.some(`coderabbit: body has findings Yeet could not parse (${unparsed.evidence}) and must be read`)
     ),
     Match.discriminator("signal")("greptile", (greptile) =>
       O.some(
@@ -836,10 +841,16 @@ export const renderYeetMonitorReviewBodySignal = (signal: YeetReviewBodySignal):
     Match.exhaustive
   );
 
-const reviewBodySignalLine: (signal: YeetReviewBodySignal) => string = flow(
-  renderYeetMonitorReviewBodySignal,
-  O.match({ onNone: () => Str.empty, onSome: (summary) => `\n  ${summary}` })
-);
+// A body whose findings Yeet could not parse names the review it must be read
+// at on the summary line itself, not only on the URL line below it.
+const reviewBodySignalLine = (body: YeetMonitorReviewBody): string =>
+  pipe(
+    renderYeetMonitorReviewBodySignal(body.signal),
+    O.map((summary) =>
+      body.signal.signal === "coderabbit-unparsed" ? `${summary}: ${Fmt.stripControls(body.url)}` : summary
+    ),
+    O.match({ onNone: () => Str.empty, onSome: (summary) => `\n  ${summary}` })
+  );
 
 /**
  * Render a new pull request comment in Yeet monitor's compact operator format.
@@ -882,7 +893,7 @@ export const renderYeetMonitorComment = (comment: YeetMonitorComment): string =>
     Match.tag(
       "review-body",
       (body) =>
-        `[yeet] new PR review: ${Fmt.stripControls(body.author)} (${Fmt.stripControls(body.state)})\n  ${excerpt(body.body)}${reviewBodySignalLine(body.signal)}\n  ${Fmt.stripControls(body.url)}`
+        `[yeet] new PR review: ${Fmt.stripControls(body.author)} (${Fmt.stripControls(body.state)})\n  ${excerpt(body.body)}${reviewBodySignalLine(body)}\n  ${Fmt.stripControls(body.url)}`
     ),
     Match.exhaustive
   );

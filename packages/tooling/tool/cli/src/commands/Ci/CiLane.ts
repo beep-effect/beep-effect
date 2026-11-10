@@ -450,7 +450,8 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     laneClass: "cli-runnable",
     replay: "exact",
     flags: ["--changeset-status"],
-    notes: "Always validates the changeset graph; CI also passes --changeset-status on pull requests.",
+    notes:
+      "Always validates the changeset graph and runs the private home path law (this lane runs for docs-only diffs; a goals_only packet-prose diff runs only the law); CI also passes --changeset-status on pull requests.",
   }),
   CiLaneDescriptor.make({
     id: "check",
@@ -1951,6 +1952,13 @@ export const ciLaneStepsForTesting: {
         bunRunStep(repoRoot, "lint:schema-catalog", ["beep", "lint", "schema-catalog"]),
         bunRunStep(repoRoot, "ci:repo-sanity:changeset-graph", ["beep", "quality", "changeset-graph"]),
         bunRunStep(repoRoot, "ci:repo-sanity:catalog-usage", ["beep", "quality", "catalog-usage"]),
+        // Repo Sanity is the hosted lane that still runs for docs-only diffs,
+        // so the public-repo home path law runs here: Heavy / Lint Policy skips
+        // docs-only PRs. For a goals_only packet-prose diff check.yml skips this
+        // lane body and runs only the law, in its "Check private home paths" step.
+        // On a code PR Lint Policy runs the law as well; that duplicate (about
+        // 10 s) is accepted so docs-only diffs stay covered.
+        bunRunStep(repoRoot, "lint:private-home-paths", ["beep", "laws", "private-home-paths", "--check"]),
         bunRunStep(repoRoot, "ci:repo-sanity", ["audit:github", "repo-sanity"]),
         ...(options.changesetStatus
           ? [
