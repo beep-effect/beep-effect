@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-10T00:18:11.560Z",
+  "generatedAt": "2026-11-10T00:55:22.919Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -55517,8 +55517,8 @@
           "exportKind": "class",
           "filePath": "src/Pglite.errors.ts",
           "repoPath": "packages/drivers/pglite/src/Pglite.errors.ts",
-          "line": 44,
-          "anchor": "packages-drivers-pglite-src-pglite-errors-ts-44-pgliteerror",
+          "line": 37,
+          "anchor": "packages-drivers-pglite-src-pglite-errors-ts-37-pgliteerror",
           "currentTags": [
             "@category",
             "@since"
@@ -534262,8 +534262,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 167,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-167-cilanepartitionid",
+          "line": 170,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-170-cilanepartitionid",
           "currentTags": [
             "@category",
             "@since"
@@ -534284,8 +534284,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 191,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-191-cilanepartitionshard",
+          "line": 194,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-194-cilanepartitionshard",
           "currentTags": [
             "@category",
             "@since"
@@ -534306,8 +534306,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 236,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-236-cilanepartition",
+          "line": 239,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-239-cilanepartition",
           "currentTags": [
             "@category",
             "@since"
@@ -534328,8 +534328,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 286,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-286-ci-lane-partitions",
+          "line": 289,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-289-ci-lane-partitions",
           "currentTags": [
             "@category",
             "@since"
@@ -534350,8 +534350,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 1037,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-1037-cilanestartorder",
+          "line": 1065,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-1065-cilanestartorder",
           "currentTags": [
             "@param",
             "@returns",
@@ -534374,8 +534374,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 1080,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-1080-cilanedefaultplacement",
+          "line": 1108,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-1108-cilanedefaultplacement",
           "currentTags": [
             "@category",
             "@since"
@@ -534396,8 +534396,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 1133,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-1133-cilanedefaultplacements",
+          "line": 1161,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-1161-cilanedefaultplacements",
           "currentTags": [
             "@param",
             "@returns",
@@ -534420,8 +534420,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLanePartitions.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts",
-          "line": 1190,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-1190-withcilanedefaultplacements",
+          "line": 1218,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilanepartitions-ts-1218-withcilanedefaultplacements",
           "currentTags": [
             "@param",
             "@returns",
