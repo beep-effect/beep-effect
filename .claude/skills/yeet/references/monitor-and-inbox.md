@@ -89,7 +89,8 @@ first-parent non-merge commits, so a merge of the base credits nothing),
 strongest evidence first:
 
 - `branch`: a branch segment is the packet slug, or carries a multi-word slug
-  as a whole hyphenated run (`goals/agent-memory-store-p1`).
+  as a whole hyphenated run (`feat/agent-memory-store-p1` names the
+  `agent-memory-store` goal).
 - `commit`: a commit message on the branch names `goals/<slug>` or
   `explorations/<slug>`. A `Packet: goals/<slug>` trailer is the explicit
   binding for a lane whose branch and diff do not name its packet.

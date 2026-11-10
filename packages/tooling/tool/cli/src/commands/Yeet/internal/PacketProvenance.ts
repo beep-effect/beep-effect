@@ -27,6 +27,7 @@ import { constant, dual, flow, identity, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { PacketRoot, PacketSlug } from "../../Goals/PacketCore/PacketCore.schemas.ts";
@@ -466,7 +467,9 @@ export const detectActivePackets = Effect.fn("PacketProvenance.detectActivePacke
           ),
           Effect.orElseSucceed(none)
         );
-  const fromCommits = A.flatMap(own, (entry) => packetsNamedByMessage(`${entry.subject}\n\n${entry.body ?? ""}`));
+  const fromCommits = A.flatMap(own, (entry) =>
+    pipe([entry.subject, entry.body], A.filter(P.isString), A.join("\n\n"), packetsNamedByMessage)
+  );
   const tagged = (source: PrProvenancePacketSource) =>
     A.map((packet: { readonly root: PacketRoot; readonly slug: PacketSlug }) =>
       PrProvenancePacket.make({ root: packet.root, slug: packet.slug, sources: [source] })

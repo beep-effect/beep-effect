@@ -290,12 +290,15 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("detectActivePackets", (it) =
       yield* git(root, ["config", "user.name", "Fixture"]);
       yield* git(root, ["config", "commit.gpgsign", "false"]);
       yield* writeManifest(root, "goals/hold-ledger", { lifecycle: "active" });
+      yield* writeManifest(root, "goals/done-goal", { lifecycle: "completed-retained" });
       yield* git(root, ["add", "."]);
       yield* git(root, ["commit", "--quiet", "-m", "base"]);
       const unrelated = yield* detectActivePackets(root, "origin/missing", "fix/unrelated");
       const named = yield* detectActivePackets(root, "origin/missing", "fix/hold-ledger");
+      const inactive = yield* detectActivePackets(root, "origin/missing", "fix/done-goal");
       expect(unrelated).toEqual([]);
       expect(A.map(named, (entry) => entry.slug)).toEqual(["hold-ledger"]);
+      expect(inactive).toEqual([]);
     })
   );
 });
