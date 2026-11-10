@@ -3,18 +3,16 @@
   "exploration": {
     "slug": "protocol-as-value",
     "title": "Protocol as Value",
-    "status": "active",
-    "stage": "shape",
-    "openQuestions": [
-      "Review the complete amended BRIEF before decomposition into MAP.md. The November 5 contract amendments are adopted; full shape approval and Wave 2 activation remain unestablished."
-    ],
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": ["goals/canonical-digest-owner"],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-08-23",
-    "updated": "2026-11-05"
+    "updated": "2026-11-10"
   }
 }

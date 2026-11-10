@@ -2,6 +2,15 @@
 
 ## Objective and scope
 
+Current reconciliation (2026-11-10): all fifteen historical source acceptances are
+complete, including #1875 lifecycle/reflection via #2586. See
+[the final receipt](history/receipts/2026-11-10-acceptance-reconciliation.md).
+Current main has 15 open effect-vitest rows and 59 incomplete Owner/Exit reasons;
+the fleet orchestrator owns their separate remediation. This is no current-zero
+claim. Current AGENTS supersedes the historical same-PR lifecycle wording below:
+final work proposes closeout, post-merge refresh verifies it, then a packet-state
+PR adopts the verified status. Historical wave paragraphs below are preserved.
+
 S36 assigns the fifteen size-only unmet predecessor outcomes to this active,
 executable successor. Finish each issue's acceptance without inventory growth
 (S31) or parking executable work (S23). Opening the packet is not source completion.
@@ -190,7 +199,9 @@ Design and next step: Measured multi-day cohort scope: hundreds of test migratio
 
 Acceptance: Every open cohort fixed or legitimately detector-repaired with counterexamples; original pending work preserved; package/Node/Bun/coverage proof; canon lifecycle and reflection closed in its final PR.
 
-Status: in-progress. Wave 1 found every preserved Port row it owns already on main
+Status: complete. Canon lifecycle and reflection closed via #2586; the final
+reconciliation records the accepted snapshot and current drift separately.
+The following paragraphs retain the wave history. Wave 1 found every preserved Port row it owns already on main
 via #1575. It completed the `@beep/editor`, `@beep/libpff` and `@beep/test-runner`
 cohorts (43 rows, two detector repairs), leaving 689 open rows. Remaining waves: EV014/EV009/EV015
 families, law-practice-server and small leaf packages, repo-cli assertion and harness
@@ -410,6 +421,17 @@ job. Record: `history/receipts/dependency-review.md`.
 | 2026-11-02 | [#1868](https://github.com/beep-effect/beep-effect/issues/1868) (rsc follow-up: complete current-fingerprint 30-session qualification windows): The 30-session qualification window is shrunk to 5 sessions per harness and fingerprint, under a 48-hour config freeze of `~/.claude/settings.json`, `~/.codex/config.toml` and the Cursor config (announced by the orchestrator; `beep models check` is the drift tripwire). An agent publishes the disabled/dropped/unsupported/mixed/unused outcome table once the windows fill. | **Operator ruling (2026-11-02, batch accepted by the operator; relayed verbatim by the orchestrator).** Posted on the issue by the orchestrator 2026-11-02T03:02Z; issue state at recording: open. Recorded in the owning packet's SPEC Decision Log in a same-day docs PR. Reversal path is noted inline. | A later Decision Log row restores the 30-session window and lifts the freeze early; the published outcome table keeps its 5-session provenance. `beep models check` remains the drift tripwire either way. |
 | 2026-11-02 | [#1875](https://github.com/beep-effect/beep-effect/issues/1875) (rsc follow-up: finish the reconciled Effect Vitest canon cohorts): Amend D4 (effect-vitest-canon): the baseline must be empty of *open* rows; owned exceptions with an owner and a named exit are retained, and the ratchet forbids new ones. effect-vitest-canon may flip to completed-retained on that basis. Reverse: re-tighten D4 later and burn the exceptions down as a new goal. | **Operator ruling (2026-11-02, batch accepted by the operator; relayed verbatim by the orchestrator).** Posted on the issue by the orchestrator 2026-11-02T03:02Z; issue state at recording: closed. Recorded in the owning packet's SPEC Decision Log in a same-day docs PR. Reversal path is noted inline. | As ruled: re-tighten D4 later and burn the 447 owned exceptions down as a new goal; the `effect-vitest-canon` closeout receipts and this amendment stay dated evidence. |
 | 2026-11-02 | Goal completion receipts move to a workstation-scoped, repository-keyed store: `goals completion refresh` (still the sole writer) appends to `github.com__<owner>__<name>.jsonl` under `$BEEP_GOALS_STATE_ROOT`, else `$XDG_STATE_HOME/beep/goals`, else `~/.local/state/beep/goals`, through the session ledger's `resolveWorkstationStateDir` and `makeJsonLinesStore`; without a resolvable github.com `origin` it still appends to the owning clone's `.beep/goals/completion-receipts.ndjson`. Reads take the union of the shared store and the legacy clone file, deduplicated, with the packet/digest/final-PR/repository match unchanged. Selection keeps newest definite, else newest match, but a verified receipt is sticky: an `unknown` pick yields to the newest matching `verified` receipt; a newer definite `unknown` still replaces an older `unsatisfied`. | H2 placed receipts per clone only so they survive lane retirement; cross-clone visibility was never considered. The operator runs several clones, and a goal verified in one clone was reported open in the others (2026-11-01: effected-promotion and exact-optional-keys verified only in beep-effect4, tsrs-gates only in beep-effect6). Verified-is-sticky stops a degraded refresh (no `--readiness-job` after the verdict-holding lane retired) from regressing a verified receipt, which a shared store would otherwise spread to every clone at once. | Revert the PR; the legacy per-clone files were never migrated or deleted, so reads fall back to them unchanged. After merge, existing rows from sibling clones' legacy files are copied byte-for-byte into the shared file once (no row is created or edited; every row is still revalidated against the current manifest on read); reversing that backfill means deleting the shared file. |
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug repository-simplification-residue`; add a `kind: decision` file there, never edit this block._
+
+### Reconcile accepted cohorts against current source without resetting inventories, 2026-11-10
+
+The admitted closeout lane starts at main 6d47006fa1da777a8c0f4aae6a2722fa3d577068. All fifteen source issues are closed and effect-vitest-canon is verified completed-retained via PR 2586, but the current inventory has 15 open rows and 59 exception reasons without both literal Owner and Exit clauses. Historical acceptance and current drift are separate evidence. Record exact identities and attribution before proposing completion; add no standards rows, exemptions, or coverage changes. The orchestrator grants one main-targeting PR slot, excluding queue-lab sandbox PRs, and retains S11 merge authority. Follow current AGENTS two-PR closeout: proposedCloseout in the final work PR, completion refresh after merge, then adoption in a packet-state PR.
+
+Reverse: Revert the closeout reconciliation documents; leave source, inventory, and historical receipts unchanged.
+
+<!-- beep:decisions:end -->
 
 ## Exceptions and stops
 

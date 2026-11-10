@@ -3,8 +3,8 @@
 ## Status
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
-Stage: `shape`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -24,11 +24,14 @@ matching composition in its examined sources; it did not prove absence.
 
 ## Next Open Question
 
-Shape review of the complete amended BRIEF remains open before decomposition
-into MAP.md. The November 5 contract amendments are adopted; they do not
-approve the full shape or activate Wave 2. Wave 1 retains its two migrations;
-Wave 2 needs the merged substrate and an owned, runnable consumer qualification
-case demonstrating the need for role projection.
+None open. The packet graduated on 2026-11-10 into
+[`goals/canonical-digest-owner`](../../goals/canonical-digest-owner/README.md),
+which covers the canonical byte form and the digest grammar only.
+
+Three candidates stay gated in [`MAP.md`](./MAP.md): the definition digest,
+the chain kit and the protocol kit. A fired gate reopens this packet at
+decompose. One question is deferred and blocks nothing: whether the call
+with foldlab's author produced joint scope.
 
 ## Read This First
 
@@ -40,6 +43,14 @@ case demonstrating the need for role projection.
 6. [`MAP.md`](./MAP.md) - decomposition (stage 4, if present).
 
 ## Trail
+
+- 2026-11-10: shape review against the tree, then graduated. A differential
+  run found the in-repo canonical-JSON encoders byte-identical to RFC 8785
+  on plain JSON, and `@beep/jsonc` already ships that encoder. The operator
+  approved a narrower shape: one goal, `canonical-digest-owner`. The journal
+  kit, the definition digest (renamed from meaning digest) and the protocol
+  kit moved to gated candidates. BRIEF rewritten, MAP written, RESEARCH and
+  DECISIONS dated.
 
 - 2026-11-05: adopted definition-identity, evaluation-basis, request-occurrence,
   and consumer-gate amendments in DECISIONS/BRIEF; qualified historical claims
