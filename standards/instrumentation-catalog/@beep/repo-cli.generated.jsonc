@@ -2577,6 +2577,7 @@
     {"name":"PreservationManifestStore.append","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"PreservationVerifier.verify","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"PreservationVerifier.verify.provided","owner":"@beep/repo-cli","family":"tooling","conforms":false},
+    {"name":"PrivateHomePaths.runPrivateHomePaths","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Producer.approvedVerify","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Producer.bindingDigest","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Producer.deriveEvidence","owner":"@beep/repo-cli","family":"tooling","conforms":true},

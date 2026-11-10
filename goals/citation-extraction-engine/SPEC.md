@@ -419,6 +419,14 @@ Lane claude/integration-hosted-partitions-ba7e3b
 
 Reverse: Restore the test-integration job in heavy.yml and in the heavy route lanes, remove the check.yml partition matrix and aggregate, and drop the test-integration partitions from CiLanePartitions.ts and the sequencer plan from the package.
 
+### Sealed archives keep their recorded absolute home paths, 2026-11-09
+
+The 2026-11-08 six-form adapter, selection and smoke captures and the re-grounding Grok transcript record the workstation home directory. Their bytes are pinned by `artifact-hashes.json` and `2026-11-08-re-grounding-artifacts.json`, and no repository command regenerates those manifests, so they are not redacted. The other packet evidence (2026-10-28 evidence notes, 2026-11-02 reuse audits, package-verify logs, `regex-compile-survey.json` runtime paths) was rewritten to the `~` form. `bun run beep laws private-home-paths --check` holds each sealed file to its exact recorded count.
+
+Lane fix/redact-ten-minute-certainty-home-path
+
+Reverse: Re-capture the sealed artifacts with ~-relative paths, update their digest manifests, and delete the matching rows from privateHomePathExemptions
+
 ### Split integration replay files into row-range chunks, 2026-11-09
 
 Integration replay files may be split into row-range chunks computed from the fixture row list; a guard test asserts the union equals the full set.

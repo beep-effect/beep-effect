@@ -73,7 +73,7 @@ and `git diff --check` cover the new authored files. This is a local integration
 checkpoint; full goal and repository completion remain open.
 
 Local execution logs are retained under
-`/home/elpresidank/.cache/beep/citation-extraction-engine/`:
+`~/.cache/beep/citation-extraction-engine/`:
 `parity-controls.log`, `parity-audit.log`, `parity-typecheck.log`,
 `parity-package-scripts.log`, `parity-package-verify.log` and
 `parity-markdown.log`. Cache logs are supporting observations, not portable

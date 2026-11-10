@@ -222,6 +222,41 @@ export class EntityKitFreezeExecutionError extends S.TaggedError<
 }
 
 /**
+ * Failure raised when the private home path law cannot list or read the tracked files.
+ *
+ * **Example** (Read a private home paths execution error)
+ *
+ * ```ts
+ * import { PrivateHomePathsExecutionError } from "@beep/repo-cli/commands/Laws/Laws.errors"
+ *
+ * const error = PrivateHomePathsExecutionError.new("Could not list tracked files.")
+ * console.log(error.message) // "Could not list tracked files."
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class PrivateHomePathsExecutionError extends S.TaggedError<
+  PrivateHomePathsExecutionError,
+  { readonly brand: unique symbol }
+>($I`PrivateHomePathsExecutionError`)(
+  "PrivateHomePathsExecutionError",
+  {
+    message: S.String,
+  },
+  $I.annoteError<PrivateHomePathsExecutionError>("PrivateHomePathsExecutionError", {
+    description: "The private home path law could not list or read the git-tracked files.",
+  })
+) {
+  static readonly new = (message: string): PrivateHomePathsExecutionError =>
+    PrivateHomePathsExecutionError.make({ message });
+
+  static readonly mapError = Err.mapCauseError<PrivateHomePathsExecutionError, [message: string]>((cause, message) =>
+    PrivateHomePathsExecutionError.new(messageWithCause(message, cause))
+  );
+}
+
+/**
  * Failure raised when the retired IRI authority law cannot list or read the tracked files.
  *
  * **Example** (Read a retired IRI authorities execution error)

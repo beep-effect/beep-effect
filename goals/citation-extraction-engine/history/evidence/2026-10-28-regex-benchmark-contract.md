@@ -102,7 +102,7 @@ the phase or the goal. Target implementation, donor dispositions, fidelity
 questions, family safety and exhaustive parity remain unproved.
 
 Supporting logs are under
-`/home/elpresidank/.cache/beep/citation-extraction-engine/`:
+`~/.cache/beep/citation-extraction-engine/`:
 `regex-controls-probe.log`, `regex-check.log`, `regex-contract-controls.log`,
 `regex-parity-controls.log`, `regex-package-verify.log`, `regex-typecheck.log`,
 `regex-markdown.log` and `regex-goals-doctor.log`.

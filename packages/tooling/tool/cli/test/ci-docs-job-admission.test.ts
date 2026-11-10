@@ -25,7 +25,9 @@ const verificationLaneContracts = [
     id: "repo-sanity",
     name: "Repo Sanity",
     timeout: 30,
-    guard: "needs.change-profile.outputs.goals_only != 'true'",
+    // No job guard: a goals_only diff skips the lane body but still runs the
+    // private home path law (see the lane gate's home_paths_only output).
+    guard: undefined,
   },
   {
     job: "ecosystem",

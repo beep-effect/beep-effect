@@ -96,6 +96,6 @@ authored checkpoint. This proves evidence consistency, not target execution or
 exhaustive parity.
 
 Supporting logs are under
-`/home/elpresidank/.cache/beep/citation-extraction-engine/`: `text-check.log`,
+`~/.cache/beep/citation-extraction-engine/`: `text-check.log`,
 `text-controls.log`, `text-parity-controls.log`, `text-typecheck.log`,
 `text-package-verify.log` and `text-markdown.log`.
