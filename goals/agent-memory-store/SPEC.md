@@ -468,6 +468,14 @@ Lane agent-memory-store-p1
 
 Reverse: Replace the projected-file table with a FolderExported log event by decision file if the fence must survive a rebuilt database
 
+### Export fence rows are inserted in chunks of 300 inside one transaction, 2026-11-10
+
+Review note on PR 3058: recordFolderFiles bound three parameters per file in one INSERT, so a folder of about 10,900 files would pass SQLite's 32,766 bound-parameter limit. The rows now go in chunks of 300 (900 parameters, under the 999 limit of the oldest SQLite builds) inside one transaction, so a folder's rows still land all or none. Test: the 301-file import case in test/MarkdownProjector.test.ts.
+
+Lane agent-memory-store-p1
+
+Reverse: Insert the fence rows in one statement again if the store moves to a driver without a bound-parameter limit
+
 ### A folder import is one journal transaction, 2026-11-10
 
 Implements the AC-8 clause that a failed or partial import leaves the log without a claim that the folder was imported. MarkdownProjector.importFolder reads and decodes every memory file before it appends anything, then appends every NodeCreated (each naming its predecessor through after, with the occurrence anchor as import provenance), one FileImported per file (an empty file included) and the FolderImported bootstrap event last, in one MemoryLog.appendMany, which is one SqlEventJournal transaction. A read, decode or digest failure appends nothing, and a failure inside the transaction rolls every row back, so no completion marker is needed: the FolderImported event is the claim and it commits with the nodes or not at all. The import never writes to the folder. Measured on this workstation before deciding: the frozen goals sample (172 files, 1,065,752 bytes, 10,792 nodes, 10,965 entries) imports in about 1.0 s; the whole live goals tree (3,593 files, 31,705,138 bytes, 295,570 nodes, 299,164 entries) imports in 48.4 s in one transaction with a peak resident set of about 5.1 GB, and a rebuild from the log alone takes 9.7 s and reproduces every file. A Claude Code memory folder is tens of files, three orders of magnitude below the tree, so one transaction per folder holds with a wide margin. The AC-8 test aborts the transaction at its 5,000th entry with a SQLite trigger and checks the log is empty and every file byte-identical. Code: packages/tooling/library/agent-memory-store/src/MarkdownProjector.layer.ts. Rejected: per-file batches plus a completion marker (a second protocol whose half-written state every reader must recognise) and writing a marker file into the folder (the import must leave the folder untouched).
@@ -507,6 +515,14 @@ A file is the concatenation of its nodes placed by their predecessors (decision 
 Lane agent-memory-store-p1
 
 Reverse: Drop the placement check and have exportFolder fail on unplaced nodes instead, by decision file if a replica must accept such a node from a remote
+
+### MemoryFilePath carries the memory-file rule, so no event can name a path outside the folder, 2026-11-10
+
+Review finding on PR 3058: MemoryFilePath was only a non-empty PosixPath, so an agent-written NodeCreated could open ../escape.md, .git/x.md or notes.txt and exportFolder would write it. The rule of decision memory-files-are-md-files-outside-dot-segments now lives in the schema as one pattern check: a relative path ending in .md whose segments are non-empty and do not start with a dot (PosixPath already refuses backslashes). isMemoryFilePath is the derived guard S.is(MemoryFilePath). Every payload, store row and projection that carries a file path decodes through it, so the append fails before the journal writes anything (a MemoryLogError whose cause is the schema error naming filePath, and the batch appends nothing), and the projection refuses such an entry at decode, so export fails with ProjectionError before any write even when a damaged database or a writer that skipped the schema holds one. Tests: the memory-file-rule append case in test/MemoryLog.test.ts and the damaged-entry export case in test/MarkdownProjector.test.ts. Rejected: a separate path check in the NodeCreated handler (the schema already refuses at encode, and a second rule could drift from the scan's).
+
+Lane agent-memory-store-p1
+
+Reverse: Return MemoryFilePath to a non-empty PosixPath and filter at the scan, by decision file citing a memory path the schema rule refuses wrongly
 
 ### MemoryLog keeps heads, holds and commit order in store tables written in the journal transaction, 2026-11-10
 
@@ -563,6 +579,22 @@ Implements memory-log-on-effect-eventlog without changing the MemoryLog contract
 Lane agent-memory-store-p1
 
 Reverse: Import @beep/sqlite statically in MemoryLog.layer.ts and drop MemoryLogLayer's SqlClient requirement by decision file, once every suite that loads the package index runs under Bun
+
+### The log refuses a second FolderImported in the writer transaction, 2026-11-10
+
+Review finding on PR 3058: the projector decided first import from its in-memory fold, outside the journal transaction, so two first imports racing on one database both landed and doubled every file. The FolderImported handler now fails the batch with FolderAlreadyImportedError when the order table already holds a FolderImported, inside the writer transaction, so the whole losing import (its NodeCreated and FileImported events with it) appends nothing. Matching decision second-import-is-idempotent-on-a-projected-folder, the losing projector returns the current base when its folder digest equals the imported one and fails with ForeignFolderError otherwise. The finding's second ask, refusing a NodeCreated with no predecessor for a file that already has a root, is not taken: several roots are how an insert at the top of a file is written (decision file-is-an-ordered-node-partition orders them newest first, and the AC-1 replay inserts at the top), and the race is closed by the FolderImported check because an import is one journal transaction (decision folder-import-is-one-journal-transaction). Tests: the second-FolderImported case in test/MemoryLog.test.ts and the two lost-race cases in test/MarkdownProjector.test.ts.
+
+Lane agent-memory-store-p1
+
+Reverse: Drop the FolderImported handler check and the race mapping together with decision second-import-is-idempotent-on-a-projected-folder, once one log may hold several folders
+
+### The projection fold advances its cursor with each entry and lists a node once, 2026-11-10
+
+Review finding on PR 3058: applyEntries mutated the fold entry by entry but moved the cursor once after the loop, so an interruption or a payload that failed to decode mid-batch made the next catch-up fold the same entries again, and pushTo listed a node twice, doubling it in the export. Each entry's payload is now decoded first, then its change and its cursor step run with no yield between them, so the cursor always sits right after the last folded entry; pushTo also skips a node id already listed. catchUp runs only inside importFolder, exportFolder and projectNode, which all hold the projector's one-permit semaphore, so two fibers never fold one projection at once; two projector layers hold two projections. Tests: test/MarkdownProjection.test.ts.
+
+Lane agent-memory-store-p1
+
+Reverse: Advance the cursor after the whole batch again, by decision file, only together with a fold into a copy that is swapped in whole
 
 <!-- beep:decisions:end -->
 
