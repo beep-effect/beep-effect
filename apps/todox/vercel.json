@@ -1,5 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "git": {
+    "deploymentEnabled": false
+  },
   "installCommand": "cd ../.. && rm -rf node_modules && npx --yes --prefix \"$(mktemp -d)\" \"bun@$(cat .bun-version)\" install --frozen-lockfile",
   "buildCommand": "cd ../.. && find packages apps tools infra scratchpad -path '*/node_modules/.tmp/*.tsbuildinfo' -exec rm -f {} + ; npx --yes --prefix \"$(mktemp -d)\" \"bun@$(cat .bun-version)\" x turbo run build --filter=@beep/todox"
 }
