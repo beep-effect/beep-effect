@@ -15,12 +15,11 @@ import {
   YeetMergeSettlement,
 } from "@beep/repo-cli/test/Yeet";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { githubCallLine, recordedGithub } from "./support/YeetGithub.ts";
 import type { GithubAnswer, GithubCall } from "./support/YeetGithub.ts";
@@ -213,8 +212,8 @@ describe("settleYeetMerge", () => {
     Effect.gen(function* () {
       const recorded = github(accepted, [stillPending]);
       const settled = yield* settle(recorded);
-      expect(settled._tag).toBe("Unsettled");
-      expect(settled).toMatchObject({ uuid: O.some(UUID) });
+      assertTrue(YeetMergeSettlement.guards.Unsettled(settled));
+      assertSome(settled.uuid, UUID);
       // One read, then the budget's two more.
       expect(A.filter(recorded.calls, (call) => call.method === "GET")).toHaveLength(3);
     })

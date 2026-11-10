@@ -3710,6 +3710,7 @@
     {"name":"Yeet.finishCreatedPullRequest","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.finishPublishWithPullRequest","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.generateAttemptId","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"Yeet.gh.mergeAtHead","owner":"@beep/repo-cli","family":"tooling","conforms":false},
     {"name":"Yeet.hashText","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.hydrateMonitoredContext","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.hydrateYeetReadOnlyContext","owner":"@beep/repo-cli","family":"tooling","conforms":true},
