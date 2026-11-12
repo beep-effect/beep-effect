@@ -34,7 +34,10 @@
     "goals/yeet-async-merge-and-stacks/GOAL.md",
     "goals/yeet-async-merge-and-stacks/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/merge-async-p0-probes-2026-11.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -50,12 +53,12 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",

@@ -9,6 +9,7 @@ export * from "@beep/repo-cli/commands/Yeet/index";
 export { yeetGhCommand } from "../commands/Yeet/Gh.command.ts";
 export * from "../commands/Yeet/internal/Ack.ts";
 export * from "../commands/Yeet/internal/ArtifactPaths.ts";
+export * from "../commands/Yeet/internal/AsyncMerge.ts";
 export * from "../commands/Yeet/internal/AttemptJournal.ts";
 export * from "../commands/Yeet/internal/CheckOutcome.ts";
 export * from "../commands/Yeet/internal/Closeout.ts";

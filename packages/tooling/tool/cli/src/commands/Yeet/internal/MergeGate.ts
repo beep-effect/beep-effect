@@ -64,10 +64,17 @@ import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { GithubRest } from "../../../internal/github/index.ts";
+import { GithubAsyncMergeRequest, GithubRest } from "../../../internal/github/index.ts";
 import { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import { enforceReviewerGate, withReviewerOperatorClient } from "../../Reviewer/ReviewerRuleset.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
+import {
+  renderYeetMergeEndpoint,
+  renderYeetMergeSettlement,
+  settleYeetMerge,
+  YeetMergeEndpoint,
+  YeetMergeSettlement,
+} from "./AsyncMerge.ts";
 import {
   parseYeetInheritedRedsRecord,
   provideYeetGhLogin,
@@ -500,6 +507,8 @@ export const MergeGateHoldReason = LiteralKit([
   "review-window-open",
   "threads-unknown",
   "threads-unresolved",
+  "merge-failed",
+  "merge-unsettled",
 ]).pipe($I.annoteSchema("MergeGateHoldReason", { description: "The first unmet merge-gate criterion." }));
 
 /**
@@ -1364,31 +1373,95 @@ export const readAuthenticatedMergeGate = Effect.fn("Yeet.readAuthenticatedMerge
 /**
  * Result of the squash merge GitHub reported.
  *
+ * **Details**
+ *
+ * `endpoint` names the call that merged (`async` is `merge-async`), and
+ * `bypassRequested` is true only for an S11 merge that asked GitHub to bypass
+ * the base's rules over the reds it recorded.
+ *
  * **Example** (A confirmed merge)
  *
  * ```ts
  * import { MergeGateMerged } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(MergeGateMerged.make({ prNumber: 7, mergeSha: "feedface", commitTitle: "fix: x (#7)" }).prNumber) // 7
+ * const merged = MergeGateMerged.make({
+ *   prNumber: 7,
+ *   mergeSha: "feedface",
+ *   commitTitle: "fix: x (#7)",
+ *   endpoint: "async",
+ *   bypassRequested: false,
+ * })
+ * console.log(merged.prNumber) // 7
  * ```
  *
  * @category models
  * @since 0.0.0
  */
 export class MergeGateMerged extends S.Opaque<MergeGateMerged, { readonly brand: unique symbol }>()(
-  S.Struct({ prNumber: S.Finite, mergeSha: S.String, commitTitle: S.NonEmptyString }).pipe(
-    $I.annoteSchema("MergeGateMerged", { description: "The squash merge GitHub confirmed." })
-  )
+  S.Struct({
+    prNumber: S.Finite,
+    mergeSha: S.String,
+    commitTitle: S.NonEmptyString,
+    endpoint: YeetMergeEndpoint,
+    bypassRequested: S.Boolean,
+  }).pipe($I.annoteSchema("MergeGateMerged", { description: "The squash merge GitHub confirmed." }))
 ) {}
 
 /**
- * Squash-merge at the pinned head with `<title> (#n)` as the commit title.
+ * Whether a met gate asks GitHub to bypass the base's rules.
+ *
+ * **Details**
+ *
+ * Strict merges never bypass. A relaxed (S11) merge asks for a bypass only when
+ * it records at least one check that was not green, so the bypass always
+ * travels with the attributed reds the S11 comment lists.
+ *
+ * **Example** (A strict merge sends no bypass)
+ *
+ * ```ts
+ * import { MergeGateMerge, mergeGateRequestsBypass } from "@beep/repo-cli/test/Yeet"
+ *
+ * const met = MergeGateMerge.make({
+ *   prNumber: 7,
+ *   headSha: "abc",
+ *   commitTitle: "fix: x (#7)",
+ *   commitMessage: "",
+ *   windowAgeSeconds: 1260,
+ *   tolerated: [],
+ *   relaxed: false,
+ *   atMerge: [],
+ * })
+ * console.log(mergeGateRequestsBypass(met)) // false
+ * ```
+ *
+ * @param decision - The met gate.
+ * @returns Whether the merge request sends `bypass_rules: true`.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const mergeGateRequestsBypass = (decision: MergeGateMerge): boolean =>
+  decision.relaxed && A.isReadonlyArrayNonEmpty(decision.atMerge);
+
+/**
+ * Squash-merge at the pinned head with `<title> (#n)` as the commit title,
+ * through `PUT pulls/{n}/merge-async`, and wait for GitHub to settle it.
+ *
+ * **Details**
+ *
+ * GitHub evaluates the base's rules after it accepts the request, so the
+ * accepted request is polled to a terminal outcome. A `failed` result holds as
+ * `merge-failed` with GitHub's sentence (for example an unresolved
+ * conversation); a request still pending when the poll runs out, or whose
+ * result expired, holds as `merge-unsettled`. Neither is ever read as merged.
+ * A request already in flight (HTTP 409) is waited on, not sent again. Strict
+ * merges send `bypass_rules: false`; only {@link mergeGateRequestsBypass} sends
+ * `true`.
  *
  * **Gotchas**
  *
  * The `sha` field makes GitHub refuse server-side when the head moved between
- * the read and the merge, so a push landing in that window is never merged
- * sight-unseen.
+ * the read and the merge, before or after it accepts the request, so a push
+ * landing in that window is never merged sight-unseen.
  *
  * **Example** (Build the merge effect)
  *
@@ -1404,7 +1477,7 @@ export class MergeGateMerged extends S.Opaque<MergeGateMerged, { readonly brand:
 export const executeMergeGate = Effect.fn("Yeet.executeMergeGate")(function* (
   decision: MergeGateMerge
 ): Effect.fn.Return<
-  MergeGateMerged,
+  MergeGateMerged | MergeGateHold,
   YeetCommandError,
   ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | GithubRest | FileSystem.FileSystem
 > {
@@ -1412,25 +1485,31 @@ export const executeMergeGate = Effect.fn("Yeet.executeMergeGate")(function* (
     withReviewerOperatorClient(process.cwd()),
     Effect.mapError((error) => YeetCommandError.make({ message: error.message, exitCode: 1 }))
   );
+  const bypassRequested = mergeGateRequestsBypass(decision);
   // Send the exact header/body whose commitlint verdict admitted this decision.
-  const result = yield* GithubRest.use((rest) =>
-    rest.mergePullRequest(decision.prNumber, {
+  const settled = yield* settleYeetMerge(
+    decision.prNumber,
+    GithubAsyncMergeRequest.make({
+      action: "direct_merge",
+      method: "squash",
       sha: decision.headSha,
+      bypassRules: bypassRequested,
       commitTitle: decision.commitTitle,
       commitMessage: decision.commitMessage,
-      method: "squash",
     })
-  ).pipe(Effect.mapError(yeetGithubFailure(`gh api merge #${decision.prNumber}`)));
-  if (!result.merged) {
-    return yield* YeetCommandError.make({
-      message: `GitHub did not merge #${decision.prNumber}: ${Str.isEmpty(result.message) ? "no message" : result.message}`,
-      exitCode: 1,
-    });
-  }
-  return MergeGateMerged.make({
-    prNumber: decision.prNumber,
-    mergeSha: result.sha,
-    commitTitle: decision.commitTitle,
+  ).pipe(Effect.mapError(yeetGithubFailure(`gh api merge-async #${decision.prNumber}`)));
+  return YeetMergeSettlement.match(settled, {
+    Merged: ({ endpoint, sha, bypassRules }): MergeGateMerged | MergeGateHold =>
+      MergeGateMerged.make({
+        prNumber: decision.prNumber,
+        mergeSha: sha,
+        commitTitle: decision.commitTitle,
+        endpoint,
+        // What the merging request sent: the legacy call cannot send a bypass at all.
+        bypassRequested: bypassRules,
+      }),
+    Failed: () => hold(decision.prNumber, "merge-failed", renderYeetMergeSettlement(settled)),
+    Unsettled: () => hold(decision.prNumber, "merge-unsettled", renderYeetMergeSettlement(settled)),
   });
 });
 
@@ -1472,10 +1551,43 @@ export class MergeGateRunOptions extends S.Opaque<MergeGateRunOptions, { readonl
 const warnAfterMerge = (what: string) => (error: YeetCommandError) =>
   Console.error(`[yeet] warning: ${what} failed after the merge; continuing: ${error.message}`);
 
+/**
+ * The line `yeet merge-gate` prints for a confirmed merge: the merge sha, the
+ * endpoint that merged it, and whether a rules bypass was requested.
+ *
+ * **Example** (A strict async merge)
+ *
+ * ```ts
+ * import { MergeGateMerged, renderMergeGateMergedLine } from "@beep/repo-cli/test/Yeet"
+ *
+ * const line = renderMergeGateMergedLine(
+ *   MergeGateMerged.make({
+ *     prNumber: 7,
+ *     mergeSha: "feedfacefeedface",
+ *     commitTitle: "fix: x (#7)",
+ *     endpoint: "async",
+ *     bypassRequested: false,
+ *   })
+ * )
+ * console.log(line) // 'MERGED #7 -> feedfacefe "fix: x (#7)" via merge-async'
+ * ```
+ *
+ * @param merged - The confirmed merge.
+ * @returns The rendered line, without the `[yeet]` prefix.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderMergeGateMergedLine = (merged: MergeGateMerged): string =>
+  `MERGED #${merged.prNumber} -> ${Str.slice(0, 10)(merged.mergeSha)} "${merged.commitTitle}" via ${renderYeetMergeEndpoint(
+    merged.endpoint
+  )}${merged.bypassRequested ? ", rules bypass requested (S11)" : ""}`;
+
 const s11MergeComment = (decision: MergeGateMerge, merged: MergeGateMerged, windowForced: boolean): string =>
   A.join(
     [
-      `yeet merge-gate (S11): merged ${Str.slice(0, 10)(decision.headSha)} as ${Str.slice(0, 10)(merged.mergeSha)}.`,
+      `yeet merge-gate (S11): merged ${Str.slice(0, 10)(decision.headSha)} as ${Str.slice(0, 10)(merged.mergeSha)} via ${renderYeetMergeEndpoint(merged.endpoint)}${
+        merged.bypassRequested ? ", with a rules bypass requested over the checks below" : ", with no rules bypass"
+      }.`,
       ...atMergeLists(decision.atMerge),
       `Merged under operator ruling S11 (AGENTS.md "Mergeable"): threads addressed, no conflict, ${
         windowForced ? "review window forced (a fix that unblocks main)" : "review window elapsed"
@@ -1589,10 +1701,13 @@ const runMergeGateAsGhLogin = Effect.fnUntraced(function* (context: RepoRunConte
     yield* Console.log(`[yeet] dry run: would squash-merge #${decision.prNumber} as "${decision.commitTitle}"`);
     return decision;
   }
-  const merged = yield* executeMergeGate(decision);
-  yield* Console.log(
-    `[yeet] MERGED #${merged.prNumber} -> ${Str.slice(0, 10)(merged.mergeSha)} "${merged.commitTitle}"`
-  );
+  const executed = yield* executeMergeGate(decision);
+  if (S.is(MergeGateHold)(executed)) {
+    yield* Console.log(`[yeet] ${renderMergeGateDecision(executed)}`);
+    return yield* YeetCommandError.make({ message: renderMergeGateDecision(executed), exitCode: 1 });
+  }
+  const merged = executed;
+  yield* Console.log(`[yeet] ${renderMergeGateMergedLine(merged)}`);
   if (decision.relaxed) {
     yield* postS11MergeComment(decision, merged, options.forceWindow).pipe(
       Effect.catch(warnAfterMerge("the S11 merge comment"))

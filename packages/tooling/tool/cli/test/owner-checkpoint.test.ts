@@ -56,6 +56,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -524,7 +525,9 @@ describe("offline owner checkpoint", () => {
   );
   it.effect("serializes the full expected SHA into exactly one native merge request", () => {
     const github = mergeGithub((call) =>
-      call.method === "PUT" ? { body: { merged: true, sha: merge, message: "merged" } } : { body: livePull() }
+      call.method === "PUT"
+        ? { body: { status: "merged", details: { message: "Pull request was merged.", sha: merge } } }
+        : { body: livePull() }
     );
     return github.provide(
       inMemory(
@@ -537,7 +540,13 @@ describe("offline owner checkpoint", () => {
           expect(O.getOrThrow(found2).state._tag).toBe("Merged");
           const puts = A.filter(github.calls, (call) => call.method === "PUT");
           expect(puts).toHaveLength(1);
-          expect(puts[0]?.body).toEqual({ sha: head, merge_method: "squash" });
+          expect(puts[0]?.path).toBe(`{repo}/pulls/${binding.prNumber}/merge-async`);
+          expect(puts[0]?.body).toEqual({
+            merge_action: "direct_merge",
+            merge_method: "squash",
+            sha: head,
+            bypass_rules: false,
+          });
           expect(A.filter(github.calls, (call) => call.path === "{repo}/git/ref/heads/main")).toHaveLength(1);
         })
       )
@@ -797,10 +806,10 @@ describe("owner merge native outcomes", () => {
     });
   }
   for (const result of [
-    { merged: false, sha: merge, message: "rejected" },
-    { merged: true, sha: "short", message: "incomplete identity" },
+    { status: "failed", details: { message: "rejected" } },
+    { status: "merged", details: { message: "incomplete identity", sha: "short" } },
   ]) {
-    it.effect(`retains a durable uncertain intent after ${result.message}`, () => {
+    it.effect(`retains a durable uncertain intent after ${result.details.message}`, () => {
       const github = mergeGithub((call) => (call.method === "PUT" ? { body: result } : { body: livePull() }));
       return github.provide(
         inMemory(
@@ -821,7 +830,9 @@ describe("owner merge native outcomes", () => {
   }
   it.effect("retains a confirmed native result when its recording transaction fails", () => {
     const github = mergeGithub((call) =>
-      call.method === "PUT" ? { body: { merged: true, sha: merge, message: "merged" } } : { body: livePull() }
+      call.method === "PUT"
+        ? { body: { status: "merged", details: { message: "Pull request was merged.", sha: merge } } }
+        : { body: livePull() }
     );
     return github.provide(
       inMemory(
@@ -2811,7 +2822,8 @@ describe("installed receipt IO refusal boundaries", () => {
         const ref = OwnerCheckpointReceiptRef.make({ name: `${releaseId}.json`, sha256: digest });
         const error = yield* Effect.flip(readOwnerCheckpointEvidenceReceipts(selected, binding, ref, policy, digest));
         expect(error.reason).toBe("evidence");
-        const entries = yield* fs.readDirectory(parent);
+        // readdir order is the filesystem's (Bun and Node differ); compare as a set.
+        const entries = yield* Effect.map(fs.readDirectory(parent), A.sort(Order.String));
         expect(entries).toEqual(fault === "symlink-root" ? ["alias", "root"] : ["root"]);
       }).pipe(provideTestLayer(NodeFileSystem.layer), offline)
     );

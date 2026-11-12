@@ -49,6 +49,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as SynchronizedRef from "effect/SynchronizedRef";
 import {
+  GithubAsyncMergeRequest,
   GithubCheckRunRecord,
   GithubClientRequest,
   GithubIdentity,
@@ -66,6 +67,12 @@ import {
 } from "../../../internal/github/index.ts";
 import { enforceReviewerGate } from "../../Reviewer/ReviewerRuleset.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
+import {
+  renderYeetMergeEndpoint,
+  renderYeetMergeSettlement,
+  settleYeetMerge,
+  YeetMergeSettlement,
+} from "./AsyncMerge.ts";
 import { parsePrProvenanceFooter, replacePrBodyKeepingFooter } from "./Provenance.ts";
 import {
   detectPrRepository,
@@ -1397,6 +1404,87 @@ export const runYeetGhPrStatus = (
   );
 
 /**
+ * The merge step of `yeet gh merge`, after its gate and reviewer checks: one
+ * async squash request pinned to the gated head, settled through
+ * {@link settleYeetMerge}.
+ *
+ * **Details**
+ *
+ * The commit body is folded under 100 characters per line, because GitHub's
+ * default squash body (the commit list) can break server-side commitlint. A
+ * failed or unsettled merge exits as a hold (75) with GitHub's sentence; it is
+ * never reported as merged.
+ *
+ * **Example** (Build the merge step)
+ *
+ * ```ts
+ * import { GithubPullRequestRecord } from "@beep/repo-cli/test/SharedInternals"
+ * import { mergeYeetGhAtHead } from "@beep/repo-cli/test/Yeet"
+ * import * as DateTime from "effect/DateTime"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * const pr = GithubPullRequestRecord.make({
+ *   number: 7,
+ *   nodeId: "PR_kw",
+ *   title: "feat: x",
+ *   body: "",
+ *   state: "open",
+ *   draft: false,
+ *   merged: false,
+ *   mergeableState: O.some("clean"),
+ *   headRef: "feat/x",
+ *   headSha: "abc",
+ *   baseRef: "main",
+ *   htmlUrl: "https://github.com/o/r/pull/7",
+ *   author: "octocat",
+ *   labels: [],
+ *   createdAt: DateTime.makeUnsafe("2026-10-06T00:00:00Z"),
+ *   updatedAt: DateTime.makeUnsafe("2026-10-06T00:00:00Z")
+ * })
+ * console.log(Effect.isEffect(mergeYeetGhAtHead(7, pr, []))) // true
+ * ```
+ *
+ * @param number - The pull request to merge.
+ * @param pullRequest - The gated pull request read; its head pins the merge.
+ * @param tolerate - The `--tolerate` attributions, recorded in the body and the log line.
+ * @returns Nothing; a refusal fails through `CliReportedExit`.
+ * @category workflows
+ * @since 0.0.0
+ */
+export const mergeYeetGhAtHead = Effect.fn("Yeet.gh.mergeAtHead")(function* (
+  number: number,
+  pullRequest: GithubPullRequestRecord,
+  tolerate: ReadonlyArray<string>
+) {
+  const toleratedNote = A.isReadonlyArrayNonEmpty(tolerate) ? O.some(A.join(tolerate, "; ")) : O.none();
+  const settled = yield* settleYeetMerge(
+    number,
+    GithubAsyncMergeRequest.make({
+      action: "direct_merge",
+      method: "squash",
+      sha: pullRequest.headSha,
+      commitTitle: `${pullRequest.title} (#${number})`,
+      commitMessage: foldCommitMessage(
+        `Squash-merged at ${pullRequest.headSha} by beep yeet gh merge.${O.getOrElse(
+          O.map(toleratedNote, (note) => ` Tolerated: ${note}.`),
+          () => ""
+        )}`
+      ),
+    })
+  );
+  if (!YeetMergeSettlement.guards.Merged(settled)) {
+    return yield* report(YEET_GH_EXIT_HOLD)(`[gh] not merged #${number}: ${renderYeetMergeSettlement(settled)}`);
+  }
+  yield* Console.log(
+    `[gh] merged=true #${number} ${Str.slice(0, 10)(settled.sha)} via ${renderYeetMergeEndpoint(settled.endpoint)}${O.getOrElse(
+      O.map(toleratedNote, (note) => ` tolerated=[${note}]`),
+      () => ""
+    )}`
+  );
+});
+
+/**
  * `yeet gh merge <n> --sha <sha>`: re-verify the gate over REST (threads over
  * budget-guarded GraphQL) and squash-merge pinned to the head sha.
  *
@@ -1418,7 +1506,6 @@ export const runYeetGhMerge = (
   runGh(
     options,
     Effect.gen(function* () {
-      const rest = yield* GithubRest;
       const facts = yield* readGateFacts({
         number: options.number,
         pinnedSha: O.some(Str.trim(options.sha)),
@@ -1444,23 +1531,7 @@ export const runYeetGhMerge = (
       yield* enforceReviewerGate(options.number, facts.pullRequest.headSha).pipe(
         Effect.catchTag("ReviewerError", (error) => report(1)(`[gh] ${error.message}`))
       );
-      const merged = yield* rest.mergePullRequest(options.number, {
-        sha: facts.pullRequest.headSha,
-        commitTitle: `${facts.pullRequest.title} (#${options.number})`,
-        // GitHub would default the squash body to the commit list, whose lines can
-        // break server-side commitlint (body lines under 100 characters).
-        commitMessage: foldCommitMessage(
-          `Squash-merged at ${facts.pullRequest.headSha} by beep yeet gh merge.${
-            A.isReadonlyArrayNonEmpty(options.tolerate) ? ` Tolerated: ${A.join(options.tolerate, "; ")}.` : ""
-          }`
-        ),
-        method: "squash",
-      });
-      yield* Console.log(
-        `[gh] merged=${merged.merged} #${options.number} ${Str.slice(0, 10)(merged.sha)}${
-          A.isReadonlyArrayNonEmpty(options.tolerate) ? ` tolerated=[${A.join(options.tolerate, "; ")}]` : ""
-        }`
-      );
+      yield* mergeYeetGhAtHead(options.number, facts.pullRequest, options.tolerate);
     })
   );
 

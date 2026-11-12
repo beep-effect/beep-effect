@@ -25,6 +25,7 @@ import { GitHubClient } from "@beep/github/GitHubClient";
 import { GitHubError } from "@beep/github/GitHubError";
 import { Repo } from "@beep/github/Repo";
 import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import * as OptionUtils from "@beep/utils/Option";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
@@ -32,8 +33,10 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { flow, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $RepoCliId.create("internal/github/GithubRest");
 
@@ -230,6 +233,157 @@ export class GithubMergeRecord extends S.Opaque<GithubMergeRecord, { readonly br
 ) {}
 
 /**
+ * What an async merge request asks GitHub to do.
+ *
+ * **Details**
+ *
+ * `direct_merge` merges now, `merge_queue` adds the pull request to the base
+ * branch's merge queue, and `default` lets GitHub pick the queue when the base
+ * has one. Yeet sends `direct_merge`; the queue action stays reachable for
+ * `explorations/github-merge-queue`.
+ *
+ * **Example** (Check an action)
+ *
+ * ```ts
+ * import { GithubAsyncMergeAction } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * console.log(GithubAsyncMergeAction.is.direct_merge("direct_merge")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const GithubAsyncMergeAction = LiteralKit(["default", "direct_merge", "merge_queue"]).pipe(
+  $I.annoteSchema("GithubAsyncMergeAction", { description: "What an async merge request asks GitHub to do." })
+);
+
+/**
+ * What an async merge request asks GitHub to do.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type GithubAsyncMergeAction = typeof GithubAsyncMergeAction.Type;
+
+/**
+ * How GitHub folds the pull request into its base.
+ *
+ * **Example** (Check a method)
+ *
+ * ```ts
+ * import { GithubMergeMethod } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * console.log(GithubMergeMethod.is.squash("squash")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const GithubMergeMethod = LiteralKit(["merge", "squash", "rebase"]).pipe(
+  $I.annoteSchema("GithubMergeMethod", { description: "How GitHub folds a pull request into its base." })
+);
+
+/**
+ * How GitHub folds the pull request into its base.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type GithubMergeMethod = typeof GithubMergeMethod.Type;
+
+/**
+ * One `PUT pulls/{n}/merge-async` request.
+ *
+ * **Details**
+ *
+ * `sha` pins the head: GitHub refuses the request (HTTP 400) when the head
+ * already moved, and fails the accepted merge when it moves before GitHub runs
+ * it. `bypassRules` asks GitHub to merge over the base's rules; it defaults to
+ * `false` and only an S11 merge sends `true`. Without a `commitTitle` or
+ * `commitMessage` GitHub writes the subject or body its settings prescribe;
+ * with them it writes exactly what was sent.
+ *
+ * **Example** (A strict squash request)
+ *
+ * ```ts
+ * import { GithubAsyncMergeRequest } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * const request = GithubAsyncMergeRequest.make({ action: "direct_merge", method: "squash", sha: "abc" })
+ * console.log(request.bypassRules) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GithubAsyncMergeRequest extends S.Opaque<GithubAsyncMergeRequest, { readonly brand: unique symbol }>()(
+  S.Struct({
+    action: GithubAsyncMergeAction,
+    method: GithubMergeMethod,
+    sha: S.NonEmptyString,
+    bypassRules: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+    commitTitle: S.optionalKey(S.NonEmptyString),
+    commitMessage: S.optionalKey(S.String),
+  }).pipe($I.annoteSchema("GithubAsyncMergeRequest", { description: "One async merge request, pinned to a head." }))
+) {}
+
+/**
+ * What GitHub reports for an async merge, read from the request's answer or
+ * from a poll of its result.
+ *
+ * **Details**
+ *
+ * - `Pending`: accepted and not yet run. `inFlight` is true when the answer
+ *   was HTTP 409, meaning another request for this pull request was already
+ *   pending and `uuid` is that request's: attach to it, and do not assume its
+ *   commit title is the one this caller sent.
+ * - `Enqueued`: added to a merge queue (queue requests only).
+ * - `Merged`: GitHub merged it (or it already was) as `sha`.
+ * - `Failed`: GitHub refused or abandoned it; `message` is GitHub's sentence,
+ *   such as "A conversation must be resolved before this pull request can be
+ *   merged." Repository rules are evaluated after acceptance, so a request that
+ *   was accepted can still end here.
+ * - `Expired`: the poll found no result for `uuid` (HTTP 404). Results expire
+ *   after 24 hours, so this is unknown, never merged.
+ *
+ * **Example** (Branch on an outcome)
+ *
+ * ```ts
+ * import { GithubAsyncMergeOutcome } from "@beep/repo-cli/test/SharedInternals"
+ *
+ * const outcome = GithubAsyncMergeOutcome.cases.Failed.make({ message: "Pull request is in draft." })
+ * console.log(GithubAsyncMergeOutcome.guards.Failed(outcome)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const GithubAsyncMergeOutcome = S.TaggedUnion({
+  Pending: {
+    uuid: S.NonEmptyString,
+    message: S.String,
+    inFlight: S.Boolean,
+    expectedHeadSha: S.Option(S.String),
+    bypassRules: S.Option(S.Boolean),
+  },
+  Enqueued: { uuid: S.Option(S.String), message: S.String },
+  Merged: { sha: S.NonEmptyString, message: S.String },
+  Failed: { message: S.String },
+  Expired: { uuid: S.NonEmptyString },
+}).pipe(
+  $I.annoteSchema("GithubAsyncMergeOutcome", {
+    description: "What GitHub reports for an async merge: pending, enqueued, merged, failed or expired.",
+  })
+);
+
+/**
+ * What GitHub reports for an async merge.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type GithubAsyncMergeOutcome = typeof GithubAsyncMergeOutcome.Type;
+
+/**
  * A REST rate-limit bucket.
  *
  * **Details**
@@ -288,6 +442,23 @@ const CommentWire = S.Struct({ id: S.Int, html_url: S.String });
 const LabelWire = S.Struct({ name: S.String });
 const MergeWire = S.Struct({ merged: S.Boolean, sha: S.String, message: S.String });
 
+// The one body `merge-async` and its poll answer with, on 202, 200, 400 and 409 alike
+// (observed 2026-11-10: goals/yeet-async-merge-and-stacks/research/merge-async-p0-probes-2026-11.md).
+const AsyncMergeWire = S.Struct({
+  status: S.Literals(["pending", "enqueued", "merged", "failed"]),
+  details: S.Struct({
+    message: S.String,
+    uuid: S.optionalKey(S.String),
+    sha: S.optionalKey(S.String),
+    expected_head_sha: S.optionalKey(S.String),
+    bypass_rules: S.optionalKey(S.Boolean),
+  }),
+});
+
+// A 400 or 409 reaches the caller as octokit's thrown error; its body is on `response.data`.
+const AsyncMergeRejection = S.Struct({ response: S.Struct({ data: AsyncMergeWire }) });
+const decodeAsyncMergeRejection = S.decodeUnknownOption(AsyncMergeRejection);
+
 /**
  * The REST-first pull-request surface.
  *
@@ -300,6 +471,12 @@ export interface GithubRestShape {
     number: number,
     labels: ReadonlyArray<string>
   ) => Effect.Effect<ReadonlyArray<string>, GitHubError>;
+  /**
+   * The result of one async merge request (`GET pulls/{n}/merge-async/{uuid}`).
+   * A uuid GitHub no longer holds for this pull request (HTTP 404: expired
+   * after 24 hours, or never this pull request's) answers `Expired`.
+   */
+  readonly asyncMergeResult: (number: number, uuid: string) => Effect.Effect<GithubAsyncMergeOutcome, GitHubError>;
   /** Cancel one workflow run. */
   readonly cancelWorkflowRun: (runId: number) => Effect.Effect<void, GitHubError>;
   /** Every check run on a commit (all pages). */
@@ -352,6 +529,22 @@ export interface GithubRestShape {
   readonly rateLimit: Effect.Effect<GithubRateLimitRecord, GitHubError>;
   /** Remove one label; a label that is not there is not an error. */
   readonly removeLabel: (number: number, label: string) => Effect.Effect<void, GitHubError>;
+  /**
+   * Ask GitHub to merge the pull request asynchronously
+   * (`PUT pulls/{n}/merge-async`), pinned to `request.sha`.
+   *
+   * An HTTP 202 answers `Pending`; a 409 answers `Pending` with `inFlight`
+   * and the uuid of the request already pending; a 200 answers `Merged` for a
+   * pull request that already merged; a 400 answers `Failed` with GitHub's
+   * sentence (a draft, a closed pull request, a head that already moved).
+   * Every other failure stays a `GitHubError`. Acceptance is not success:
+   * GitHub evaluates the base's rules after it accepts, so poll
+   * {@link GithubRestShape.asyncMergeResult} to a terminal outcome.
+   */
+  readonly requestAsyncMerge: (
+    number: number,
+    request: GithubAsyncMergeRequest
+  ) => Effect.Effect<GithubAsyncMergeOutcome, GitHubError>;
   /** The required status-check contexts the branch's rulesets declare. */
   readonly requiredStatusContexts: (branch: string) => Effect.Effect<ReadonlyArray<string>, GitHubError>;
   /** Re-run the failed jobs of one workflow run. */
@@ -620,6 +813,92 @@ const makeGithubRest = Effect.gen(function* () {
       )
       .pipe(Effect.map((merge) => GithubMergeRecord.make(merge)));
 
+  const toAsyncMergeOutcome =
+    (operation: string, inFlight: boolean) =>
+    (wire: typeof AsyncMergeWire.Type): Effect.Effect<GithubAsyncMergeOutcome, GitHubError> => {
+      const { details } = wire;
+      const required = (field: "sha" | "uuid", value: string | undefined) =>
+        pipe(
+          O.fromUndefinedOr(value),
+          O.filter(Str.isNonEmpty),
+          Effect.fromOption,
+          Effect.mapError(() => GitHubError.decode(operation, `a ${wire.status} result has no ${field}`, wire))
+        );
+      return Match.value(wire.status).pipe(
+        Match.when("merged", () =>
+          Effect.map(required("sha", details.sha), (sha) =>
+            GithubAsyncMergeOutcome.cases.Merged.make({ sha, message: details.message })
+          )
+        ),
+        Match.when("pending", () =>
+          Effect.map(required("uuid", details.uuid), (uuid) =>
+            GithubAsyncMergeOutcome.cases.Pending.make({
+              uuid,
+              message: details.message,
+              inFlight,
+              expectedHeadSha: O.fromUndefinedOr(details.expected_head_sha),
+              bypassRules: O.fromUndefinedOr(details.bypass_rules),
+            })
+          )
+        ),
+        Match.when("enqueued", () =>
+          Effect.succeed(
+            GithubAsyncMergeOutcome.cases.Enqueued.make({
+              uuid: O.fromUndefinedOr(details.uuid),
+              message: details.message,
+            })
+          )
+        ),
+        Match.when("failed", () =>
+          Effect.succeed(GithubAsyncMergeOutcome.cases.Failed.make({ message: details.message }))
+        ),
+        Match.exhaustive
+      );
+    };
+
+  // A 400 or 409 carries the same body as a success; any other failure has none to read.
+  const asyncMergeRejection = (error: GitHubError): O.Option<typeof AsyncMergeWire.Type> =>
+    error.status === 400 || error.status === 409
+      ? O.map(decodeAsyncMergeRejection(error.cause), (rejection) => rejection.response.data)
+      : O.none();
+
+  const asyncMergeOperation = "PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge-async";
+  const requestAsyncMerge = (number: number, request: GithubAsyncMergeRequest) =>
+    client
+      .requestDecoded(
+        asyncMergeOperation,
+        {
+          ...at,
+          pull_number: number,
+          merge_action: request.action,
+          merge_method: request.method,
+          sha: request.sha,
+          bypass_rules: request.bypassRules,
+          ...OptionUtils.getSomesStruct({ commit_title: O.fromUndefinedOr(request.commitTitle) }),
+          ...OptionUtils.getSomesStruct({ commit_message: O.fromUndefinedOr(request.commitMessage) }),
+        },
+        AsyncMergeWire
+      )
+      .pipe(
+        Effect.flatMap(toAsyncMergeOutcome(asyncMergeOperation, false)),
+        // A 409 whose message says the request "already exists" classifies as `alreadyExists`.
+        Effect.catchIf(GitHubError.hasKind("rejected", "alreadyExists"), (error) =>
+          O.match(asyncMergeRejection(error), {
+            onNone: () => Effect.fail(error),
+            onSome: toAsyncMergeOutcome(asyncMergeOperation, error.status === 409),
+          })
+        )
+      );
+
+  const asyncMergeResultOperation = "GET /repos/{owner}/{repo}/pulls/{pull_number}/merge-async/{uuid}";
+  const asyncMergeResult = (number: number, uuid: string) =>
+    client.requestDecoded(asyncMergeResultOperation, { ...at, pull_number: number, uuid }, AsyncMergeWire).pipe(
+      Effect.flatMap(toAsyncMergeOutcome(asyncMergeResultOperation, false)),
+      Effect.catchIf(GitHubError.hasKind("notFound"), () =>
+        Effect.succeed(GithubAsyncMergeOutcome.cases.Expired.make({ uuid }))
+      )
+    );
+
   const workflowRunsForSha = (sha: string) =>
     client.paginate("GET /repos/{owner}/{repo}/actions/runs", { ...at, head_sha: sha }).pipe(
       Effect.flatMap(decodeWith(S.Array(WorkflowRunWire), "GET /repos/{owner}/{repo}/actions/runs")),
@@ -661,6 +940,7 @@ const makeGithubRest = Effect.gen(function* () {
 
   return GithubRest.of({
     addLabels,
+    asyncMergeResult,
     cancelWorkflowRun,
     checkRuns,
     commitStatuses,
@@ -672,6 +952,7 @@ const makeGithubRest = Effect.gen(function* () {
     pullRequest,
     pullRequestFiles,
     rateLimit,
+    requestAsyncMerge,
     reviewTimeline,
     hasReviewComments,
     removeLabel,

@@ -28,6 +28,9 @@ its own budget. Use `bun run beep yeet gh <command>` instead of those `gh pr` co
   window (20 minutes after the later of "marked ready" and the head commit) has
   passed, and the outstanding thread count is zero. A thread read that failed is
   never zero. Exit 75 means hold (time can clear it); exit 1 means refused.
+  Once those pass it merges through `PUT pulls/{n}/merge-async` pinned to the
+  head and polls the result; a `failed` or still-pending result exits 75 with
+  GitHub's sentence and is never reported as merged.
 - S11 merges over attributed reds use the orchestrator's gate instead:
   `bun run beep yeet merge-gate <pr> <sha> --relaxed [--tolerate
   "<check>=<attribution>"]`. Reds and pending checks, required ones included,
