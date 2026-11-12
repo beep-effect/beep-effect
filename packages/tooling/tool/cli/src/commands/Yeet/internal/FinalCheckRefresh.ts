@@ -503,14 +503,17 @@ class RewriteReceiptCandidate extends S.Opaque<RewriteReceiptCandidate, { readon
 
 const rewriteReceiptCandidates = Effect.fn("Yeet.rewriteReceiptCandidates")(function* (
   repoRoot: string,
-  finalHead: string
+  finalHead: string,
+  priorHeads: HashSet.HashSet<string>
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const directory = path.join(repoRoot, FINAL_CHECK_RECEIPT_DIR);
   const entries = yield* fs.readDirectory(directory);
   const candidates = yield* Effect.forEach(
-    A.filter(entries, Str.endsWith(".json")),
+    // Only heads this pull request's branch actually had can carry; every other
+    // receipt in the shared directory is skipped before any git work.
+    A.filter(entries, (entry) => Str.endsWith(".json")(entry) && HashSet.has(priorHeads, Str.slice(0, -5)(entry))),
     Effect.fnUntraced(function* (entry) {
       const head = Str.slice(0, -5)(entry);
       if (head === finalHead || (yield* isAncestor(repoRoot, head, finalHead))) return O.none();
@@ -563,6 +566,7 @@ const judgeRewriteReceipt = Effect.fn("Yeet.judgeRewriteReceipt")(function* (
  * @param base - Main ref used to judge own changes.
  * @param finalHead - Head whose receipt is required.
  * @param synchronizedBase - Pull base at its last synchronization.
+ * @param priorHeads - Heads the pull request's branch had (its repository activity); receipts for any other head are never classified.
  * @returns The first proven candidate verdict, or none when proof is unavailable.
  * @category workflows
  * @since 0.0.0
@@ -571,10 +575,11 @@ export const checkFinalCheckRewriteCarry = Effect.fn("Yeet.checkFinalCheckRewrit
   repoRoot: string,
   base: string,
   finalHead: string,
-  synchronizedBase: string
+  synchronizedBase: string,
+  priorHeads: HashSet.HashSet<string>
 ) {
   const classifier = yield* YeetHeadMoveClassifier;
-  const candidates = yield* rewriteReceiptCandidates(repoRoot, finalHead).pipe(Effect.option);
+  const candidates = yield* rewriteReceiptCandidates(repoRoot, finalHead, priorHeads).pipe(Effect.option);
   if (O.isNone(candidates)) return O.none<FinalCheckRefreshVerdict>();
   for (const candidate of candidates.value) {
     const move = yield* classifier.classify(

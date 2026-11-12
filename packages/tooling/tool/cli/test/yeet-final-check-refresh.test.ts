@@ -23,6 +23,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { identity } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -654,6 +655,13 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
   }
 );
 
+// Every receipt head in the checkout, as if the branch had held all of them.
+const receiptHeads = Effect.fn("FinalCheckRefreshTest.receiptHeads")(function* (root: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const entries = yield* fs.readDirectory(path.join(root, FINAL_CHECK_RECEIPT_DIR));
+  return HashSet.fromIterable(A.map(A.filter(entries, Str.endsWith(".json")), Str.slice(0, -5)));
+});
 const checkRewrite = Effect.fn("FinalCheckRefreshTest.checkRewrite")(function* (
   root: string,
   main: string,
@@ -661,13 +669,29 @@ const checkRewrite = Effect.fn("FinalCheckRefreshTest.checkRewrite")(function* (
   synchronizedBase: string
 ) {
   const context = yield* Layer.build(YeetHeadMoveClassifier.layer(root));
-  return yield* checkFinalCheckRewriteCarry(root, main, finalHead, synchronizedBase).pipe(
+  const priorHeads = yield* receiptHeads(root);
+  return yield* checkFinalCheckRewriteCarry(root, main, finalHead, synchronizedBase, priorHeads).pipe(
     Effect.provideContext(context)
   );
 });
 it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "120 seconds" })(
   "rewrite receipt carry",
   (it) => {
+    it.effect("never classifies a receipt for a head the branch did not have", () =>
+      Effect.gen(function* () {
+        const s = yield* stack();
+        yield* writeReceipt(s.root, receiptFor(s.l2));
+        const context = yield* Layer.build(YeetHeadMoveClassifier.layer(s.root));
+        const unrelated = yield* checkFinalCheckRewriteCarry(s.root, s.squash, s.c2, s.squash, HashSet.make(s.l3)).pipe(
+          Effect.provideContext(context)
+        );
+        assertNone(unrelated);
+        const prior = yield* checkFinalCheckRewriteCarry(s.root, s.squash, s.c2, s.squash, HashSet.make(s.l2)).pipe(
+          Effect.provideContext(context)
+        );
+        expect(O.getOrThrow(prior)).toMatchObject({ _tag: "rewrite", receipt: { headSha: s.l2 } });
+      })
+    );
     it.effect("carries a cascade onto main holding the squash and its later restack", () =>
       Effect.gen(function* () {
         const s = yield* stack();
@@ -740,7 +764,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
             : YeetHeadMoveUnchanged.make({ ...request, commits: 1 })
         );
         const classifierContext = yield* Layer.build(classifier);
-        const result = yield* checkFinalCheckRewriteCarry(s.root, s.squash, s.c2, s.squash).pipe(
+        const priorHeads = yield* receiptHeads(s.root);
+        const result = yield* checkFinalCheckRewriteCarry(s.root, s.squash, s.c2, s.squash, priorHeads).pipe(
           Effect.provideContext(classifierContext)
         );
         assertNone(result);

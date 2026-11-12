@@ -1067,11 +1067,18 @@ const rewriteCarryForReady = Effect.fn("Yeet.rewriteCarryForReady")(function* (
     Effect.option
   );
   if (O.isNone(pull) || pull.value.headSha !== headSha) return O.none<FinalCheckRefreshVerdict>();
-  return yield* checkFinalCheckRewriteCarry(context.repoRoot, context.base, headSha, pull.value.baseSha).pipe(
-    provideYeetHeadMoveClassifier(context.repoRoot),
-    Effect.option,
-    Effect.map(O.flatten)
-  );
+  const rows = yield* provideYeetGhLogin(context.repoRoot)(
+    GithubRest.use((rest) => rest.refActivity(pull.value.headRef))
+  ).pipe(Effect.option);
+  if (O.isNone(rows)) return O.none<FinalCheckRefreshVerdict>();
+  const priorHeads = HashSet.fromIterable(A.flatMap(rows.value, (row) => [row.before, row.after]));
+  return yield* checkFinalCheckRewriteCarry(
+    context.repoRoot,
+    context.base,
+    headSha,
+    pull.value.baseSha,
+    priorHeads
+  ).pipe(provideYeetHeadMoveClassifier(context.repoRoot), Effect.option, Effect.map(O.flatten));
 });
 
 const refuseFinalCheck = (detail: string) =>
