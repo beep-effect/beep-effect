@@ -40,6 +40,32 @@ export const init = Effect.fn("HeadMoveTest.init")(function* () {
   yield* git(root, ["config", "commit.gpgsign", "false"]);
   return root;
 });
+const committerName = (email: string): string =>
+  email === "noreply@github.com" ? "GitHub" : email === "lane@example.invalid" ? "Lane Author" : "octocat";
+// Write one blob into the scratch index, or drop the path when its contents are none.
+const stageFile = Effect.fn("HeadMoveTest.stageFile")(function* (
+  root: string,
+  file: string,
+  contents: O.Option<string>
+) {
+  if (O.isNone(contents)) return yield* git(root, ["update-index", "--force-remove", "--", file]);
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const scratch = path.join(root, "blob-input");
+  yield* fs.writeFileString(scratch, contents.value);
+  const blob = yield* git(root, ["hash-object", "-w", "--", scratch]);
+  return yield* git(root, ["update-index", "--add", "--cacheinfo", `100644,${blob},${file}`]);
+});
+// Insert a gpgsig header into an unsigned commit object and store the signed copy.
+const signCommit = Effect.fn("HeadMoveTest.signCommit")(function* (root: string, unsigned: string, signature: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const object = yield* git(root, ["cat-file", "commit", unsigned]);
+  const signed = Str.replace("\n\n", `\ngpgsig ${signature}\n\n`)(object);
+  const input = path.join(root, "commit-input");
+  yield* fs.writeFileString(input, `${signed}\n`);
+  return yield* git(root, ["hash-object", "-t", "commit", "-w", input]);
+});
 // Plumbing keeps every branch as an object, independent of the worktree/index state.
 // No mutation here runs against the linked source checkout.
 export const commit = Effect.fn("HeadMoveTest.commit")(function* (
@@ -50,24 +76,13 @@ export const commit = Effect.fn("HeadMoveTest.commit")(function* (
   date = "2026-11-09T20:23:48-06:00",
   email = "lane@example.invalid",
   committedAt = "2026-11-10T02:46:01Z",
-  signature = email === "noreply@github.com"
+  signature: O.Option<string> = email === "noreply@github.com"
     ? O.some("-----BEGIN PGP SIGNATURE-----\n fixture\n -----END PGP SIGNATURE-----")
     : O.none<string>()
 ) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
   const first = A.head(parents);
   yield* git(root, O.isSome(first) ? ["read-tree", first.value] : ["read-tree", "--empty"]);
-  for (const [file, contents] of R.toEntries(files)) {
-    if (O.isNone(contents)) {
-      yield* git(root, ["update-index", "--force-remove", "--", file]);
-      continue;
-    }
-    const scratch = path.join(root, "blob-input");
-    yield* fs.writeFileString(scratch, contents.value);
-    const blob = yield* git(root, ["hash-object", "-w", "--", scratch]);
-    yield* git(root, ["update-index", "--add", "--cacheinfo", `100644,${blob},${file}`]);
-  }
+  yield* Effect.forEach(R.toEntries(files), ([file, contents]) => stageFile(root, file, contents), { discard: true });
   const tree = yield* git(root, ["write-tree"]);
   const unsigned = yield* git(
     root,
@@ -76,18 +91,15 @@ export const commit = Effect.fn("HeadMoveTest.commit")(function* (
       GIT_AUTHOR_NAME: "Stack Probe Author",
       GIT_AUTHOR_EMAIL: "stack-probe@users.noreply.github.com",
       GIT_AUTHOR_DATE: date,
-      GIT_COMMITTER_NAME:
-        email === "noreply@github.com" ? "GitHub" : email === "lane@example.invalid" ? "Lane Author" : "octocat",
+      GIT_COMMITTER_NAME: committerName(email),
       GIT_COMMITTER_EMAIL: email,
       GIT_COMMITTER_DATE: committedAt,
     }
   );
-  if (O.isNone(signature)) return unsigned;
-  const object = yield* git(root, ["cat-file", "commit", unsigned]);
-  const signed = Str.replace("\n\n", `\ngpgsig ${signature.value}\n\n`)(object);
-  const input = path.join(root, "commit-input");
-  yield* fs.writeFileString(input, `${signed}\n`);
-  return yield* git(root, ["hash-object", "-t", "commit", "-w", input]);
+  return yield* O.match(signature, {
+    onNone: () => Effect.succeed(unsigned),
+    onSome: (value) => signCommit(root, unsigned, value),
+  });
 });
 export const stack = Effect.fn("HeadMoveTest.stack")(function* () {
   const root = yield* init();
