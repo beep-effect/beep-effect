@@ -20,6 +20,7 @@ import {
   GraphqlBudgetExhausted,
   GraphqlBudgetPolicy,
   GraphqlBudgetSnapshot,
+  isAgentCancellableWorkflowRun,
   layerGithubRest,
   layerGraphqlBudget,
   repoSlugFromRemote,
@@ -91,6 +92,29 @@ const rulesPayload = [
     parameters: { required_status_checks: [{ context: "Lint" }, { context: "Test Unit" }] },
   },
 ];
+// The PR head sha also carries a main push run (a branch fast-forwarded to
+// main's tip): cancel-queued must leave it alone.
+const workflowRunsPayload = [
+  {
+    id: 20,
+    name: "Check",
+    status: "queued",
+    conclusion: null,
+    head_sha: pullPayload.head.sha,
+    event: "pull_request",
+    head_branch: "feat/gh-rest-first",
+  },
+  {
+    id: 21,
+    name: "Check",
+    status: "in_progress",
+    conclusion: null,
+    head_sha: pullPayload.head.sha,
+    event: "push",
+    head_branch: "main",
+  },
+  { id: 22, name: "Check", status: "queued", conclusion: null, head_sha: pullPayload.head.sha },
+];
 const timelinePayload = [
   { event: "labeled", created_at: "2026-10-06T16:01:00Z" },
   { event: "ready_for_review", created_at: "2026-10-06T16:10:00Z" },
@@ -155,10 +179,31 @@ it.layer(
       "GET /repos/{owner}/{repo}/commits/{ref}/check-runs": checkRunsPayload,
       "GET /repos/{owner}/{repo}/rules/branches/{branch}": rulesPayload,
       "GET /repos/{owner}/{repo}/issues/{issue_number}/timeline": timelinePayload,
+      "GET /repos/{owner}/{repo}/actions/runs": workflowRunsPayload,
     }
   ),
   { timeout: "30 seconds" }
 )("GithubRest over recorded REST payloads", (it) => {
+  it.effect("keeps only pull-request runs cancellable, never a main push run on the same sha", () =>
+    Effect.gen(function* () {
+      const rest = yield* GithubRest;
+      const runs = yield* rest.workflowRunsForSha(pullPayload.head.sha);
+      expect(A.map(runs, (run) => [run.id, run.event] as const)).toEqual([
+        [20, "pull_request"],
+        [21, "push"],
+        [22, "unknown"],
+      ]);
+      assertSome(
+        O.flatMap(
+          A.findFirst(runs, (run) => run.id === 21),
+          (run) => run.headBranch
+        ),
+        "main"
+      );
+      expect(A.map(A.filter(runs, isAgentCancellableWorkflowRun), (run) => run.id)).toEqual([20]);
+    })
+  );
+
   it.effect("decodes a pull request, its check runs, required contexts, and ready event", () =>
     Effect.gen(function* () {
       const rest = yield* GithubRest;
