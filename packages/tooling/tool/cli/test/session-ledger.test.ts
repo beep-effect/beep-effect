@@ -2,6 +2,7 @@ import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import { sessionCommand } from "@beep/repo-cli";
 import { GoalManifest } from "@beep/repo-cli/commands/Goals";
+import { WorktreeRemovalServiceLive, worktreeCommand } from "@beep/repo-cli/commands/Worktree";
 import {
   decodeSessionLedger,
   layerSessionLedgerMemory,
@@ -353,6 +354,37 @@ describe("session ledger service", () => {
 });
 
 describe("beep session", () => {
+  it.layer(Layer.fresh(Layer.provideMerge(WorktreeRemovalServiceLive, testLayer)), { timeout: "30 seconds" })((it) => {
+    it.effect("closes a removed worktree's live row from worktree remove", () =>
+      withScratchCheckout(({ clone, lane, stateRoot }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const gone = path.join(path.dirname(lane), "gone");
+          yield* runGit(clone, ["worktree", "add", "--detach", gone, "HEAD"]);
+          yield* captureOutput(
+            withCwd(gone, runSession(["note", "--state", "blocked", "--next", "wait on the operator"]))
+          );
+          const before = yield* captureOutput(withCwd(clone, runSession(["open"])));
+          expect(before).toContain("- blocked gone (HEAD)");
+
+          const removed = yield* captureOutput(
+            withCwd(clone, Command.runWith(worktreeCommand, { version: "0.0.0" })(["remove", "gone"]))
+          );
+          expect(removed).toContain(`Removed worktree ${gone}`);
+          const after = yield* captureOutput(withCwd(clone, runSession(["open"])));
+          expect(after).not.toContain("wait on the operator");
+
+          const ledger = yield* fs.readFileString(path.join(stateRoot, sessionLedgerFileName(repository)));
+          const last = A.last(decodeSessionLedger(ledger).rows);
+          expect(O.map(last, (done) => [done.state, done.checkout, done.next])).toStrictEqual(
+            O.some(["done", gone, "removed worktree gone"])
+          );
+        })
+      )
+    );
+  });
+
   it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })((it) => {
     it.effect("notes a lane, lists it, supersedes it, and retires it on sweep-done", () =>
       withScratchCheckout(({ clone, lane, stateRoot }) =>

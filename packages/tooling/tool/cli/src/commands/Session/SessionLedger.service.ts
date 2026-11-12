@@ -442,11 +442,12 @@ const inheritedRole = (rows: ReadonlyArray<SessionLedgerRow>, checkout: string):
   A.findFirst(openSessionRows(rows), (row) => row.checkout === checkout).pipe(O.flatMap((row) => row.role));
 
 /**
- * Record that a sweep finished a checkout's work. `executeSweep` calls this
- * for `sweep`, `sweep --retire`, `merge`, and `monitor --until-merged`
- * once it has observed the pull request MERGED. Best
- * effort: a missing ledger, a non-GitHub origin, or an unreadable checkout
- * never fails the sweep.
+ * Record that a checkout's work is done. `executeSweep` calls this for
+ * `sweep`, `sweep --retire`, `merge`, and `monitor --until-merged` once it
+ * has observed the pull request MERGED, and `worktree remove` calls it with
+ * its own `next` line once the checkout is gone, so a removed lane never stays
+ * in `session open` as a live row. Best effort: a missing ledger, a
+ * non-GitHub origin, or an unreadable checkout never fails the caller.
  *
  * **Example** (Build the effect)
  *
@@ -457,7 +458,8 @@ const inheritedRole = (rows: ReadonlyArray<SessionLedgerRow>, checkout: string):
  * console.log(Effect.isEffect(recordSweepDone({ gitCwd: "/work/beep-effect", checkout: "/work/lane", branch: "feat/x" }))) // true
  * ```
  *
- * @param input - The clone to probe git in, the checkout the row is for, and the merged branch.
+ * @param input - The clone to probe git in, the checkout the row is for, the merged branch, and an optional
+ *   `next` line that replaces the default `merged and swept <branch>`.
  * @category commands
  * @since 0.0.0
  */
@@ -465,12 +467,13 @@ export const recordSweepDone = Effect.fn("SessionLedger.recordSweepDone")(functi
   readonly gitCwd: string;
   readonly checkout: string;
   readonly branch: string;
+  readonly next?: string | undefined;
 }) {
   yield* Effect.gen(function* () {
     const row = yield* buildSessionRow({
       cwd: input.gitCwd,
       state: "done",
-      next: `merged and swept ${input.branch}`,
+      next: input.next ?? `merged and swept ${input.branch}`,
       summary: O.none(),
       pr: O.none(),
       checkoutOverride: O.some(input.checkout),
