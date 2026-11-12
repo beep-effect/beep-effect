@@ -64,13 +64,20 @@ describe("withSanitizedToolSpan", () => {
           return yield* Stream.runLast(stream);
         });
 
-        yield* dispatch.pipe(withSanitizedToolSpan("mcp.tool.call"), Effect.withTracer(tracer));
+        // Ask upstream to record arguments, so only the sanitizer can keep them off the span.
+        yield* dispatch.pipe(
+          withSanitizedToolSpan("mcp.tool.call"),
+          Effect.provideService(Toolkit.RecordToolArguments, true),
+          Effect.withTracer(tracer)
+        );
 
-        assertNone(A.findFirst(captured, (entry) => entry.key === "parameters"));
+        assertNone(
+          A.findFirst(captured, (entry) => entry.key === "parameters" || entry.key === "gen_ai.tool.call.arguments")
+        );
 
         assertSome(
           O.map(
-            A.findFirst(captured, (entry) => entry.key === "tool"),
+            A.findFirst(captured, (entry) => entry.key === "gen_ai.tool.name"),
             (entry) => entry.value
           ),
           "fixture_tool"
