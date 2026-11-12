@@ -4,13 +4,13 @@
     "id": "alchemy-vault-sync-slice",
     "packetId": "goal-packet/v1:7260f02a4a51e6a2876bfcccb27f819c38ef71e86cea8f3ccb4b89fe18aab42c",
     "title": "Alchemy Vault-Sync Slice",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-05",
-    "updated": "2026-11-10",
+    "updated": "2026-11-12",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/alchemy-vault-sync-slice",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Migrate the `documents` vault-sync bounded context onto `@alchemy.run/domain` end to end: a Postgres Platform driver with the Effect Cluster workflow engine, aggregates/sagas/policies/views for destinations, sync operations and conflicts with Box as External System, one Api (HTTP + OpenAPI, CLI, MCP limited to Views) behind Session middleware, an optimistic + offline-intents client, legacy tables rebuilt as Projections after a single-writer cutover, and the doctrine amendments that let every later slice follow.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -27,7 +27,7 @@
     "acceptanceEvidence": [
       {
         "kind": "yeet-verdict",
-        "ref": ".beep/yeet/runs/docs_alchemy-vault-sync-refinal3-e71c09ad3693/verdict.json",
+        "ref": ".beep/yeet/runs/docs_alchemy-vault-sync-closeout-2aa5bf65ed01/verdict.json",
         "gating": true
       }
     ],
@@ -98,7 +98,7 @@
       },
       {
         "number": 3101,
-        "role": "final"
+        "role": "supporting"
       }
     ]
   },
@@ -219,9 +219,5 @@
     "../../explorations/alchemy-domain-adoption/research/02-muse-deep-research.md",
     "../../explorations/alchemy-domain-adoption/research/03-grok-deep-research.md"
   ],
-  "retentionReason": "Documents a live system: the documents vault-sync slice on @alchemy.run/domain (aggregates, sagas, policies, Views and the Box ExternalSystem), the @beep/alchemy-postgres Platform driver, the Session-gated VaultSyncApi over HTTP, CLI and views-only MCP, the desktop offline-intents client, the single-writer cutover with its reversal, and the D17 span catalog and PII audit.",
-  "proposedCloseout": {
-    "status": "completed-retained",
-    "finalPullRequest": 3101
-  }
+  "retentionReason": "Documents a live system: the documents vault-sync slice on @alchemy.run/domain (aggregates, sagas, policies, Views and the Box ExternalSystem), the @beep/alchemy-postgres Platform driver, the Session-gated VaultSyncApi over HTTP, CLI and views-only MCP, the desktop offline-intents client, the single-writer cutover with its reversal, and the D17 span catalog and PII audit."
 }
