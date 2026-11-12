@@ -1,9 +1,22 @@
 {
-  "$schema": "https://v2-11-8.turborepo.dev/schema.json",
+  "$schema": "https://v2-11-11.turborepo.dev/schema.json",
   "extends": ["//"],
   "tasks": {
     "build": {
-      "outputs": []
+      "outputs": [],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "!README.md",
+        "!CHANGELOG.md",
+        "!LICENSE",
+        "!.beep/**",
+        "!.fallow/**",
+        "$TURBO_ROOT$/tools/tsgo-shim/tsgo.js",
+        "$TURBO_ROOT$/tools/tsgo-shim/package.json",
+        "$TURBO_ROOT$/vitest.shared.ts",
+        "$TURBO_ROOT$/vite.shared.ts",
+        "$TURBO_ROOT$/vitest.aliases.generated.json"
+      ]
     }
   }
 }

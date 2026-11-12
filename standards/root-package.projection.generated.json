@@ -1,8 +1,8 @@
 {
   "config": {
     "effectSource": {
-      "version": "4.1.2",
-      "commit": "506eef143bcc1750ce58920aac1e45da7265d103"
+      "version": "4.1.4",
+      "commit": "289a53f7b1fc40049219c6e69022db2fb859c356"
     }
   },
   "devDependencies": {
@@ -49,7 +49,6 @@
   "overrides": {
     "glob": "14.0.3",
     "minimatch": "11.0.3",
-    "@effect/platform-node-shared": "catalog:",
     "@opentelemetry/exporter-trace-otlp-proto": "catalog:",
     "basic-ftp": "6.2.1",
     "detailed-xml-validator": "2.1.0",
@@ -68,8 +67,6 @@
   "packageManager": "bun@1.4.4",
   "patchedDependencies": {
     "drizzle-orm@1.0.0-rc.5-ab785fc": "patches/drizzle-orm@1.0.0-rc.5-ab785fc.patch",
-    "effect@4.1.2": "patches/effect@4.1.2.patch",
-    "@effect/platform-node-shared@4.1.2": "patches/@effect%2Fplatform-node-shared@4.1.2.patch",
     "@alchemy.run/domain@2.0.0-beta.85": "patches/@alchemy.run%2Fdomain@2.0.0-beta.85.patch",
     "rdf-validation@0.1.1": "patches/rdf-validation@0.1.1.patch",
     "alchemy@2.0.0-beta.85": "patches/alchemy@2.0.0-beta.85.patch"

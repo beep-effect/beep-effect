@@ -257,17 +257,21 @@ describe("sanitizedToolkit", () => {
         // tracer state at layer-build time (the layer above is memoized and
         // built once, shared across both tests in this suite).
         const result = yield* Effect.withTracer(
-          server.callTool({ name: "fixture_tool", arguments: { secret: "super-secret-value" } }),
+          server
+            .callTool({ name: "fixture_tool", arguments: { secret: "super-secret-value" } })
+            .pipe(Effect.provideService(Toolkit.RecordToolArguments, true)),
           tracer
         );
 
         assert.isFalse(result.isError);
 
-        assertNone(A.findFirst(captured, (entry) => entry.key === "parameters"));
+        assertNone(
+          A.findFirst(captured, (entry) => entry.key === "parameters" || entry.key === "gen_ai.tool.call.arguments")
+        );
 
         assertSome(
           O.map(
-            A.findFirst(captured, (entry) => entry.key === "tool"),
+            A.findFirst(captured, (entry) => entry.key === "gen_ai.tool.name"),
             (entry) => entry.value
           ),
           "fixture_tool"

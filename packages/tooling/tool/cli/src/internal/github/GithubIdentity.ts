@@ -312,7 +312,7 @@ const readOpReference = (reference: string, cwd: string, what: string) =>
  */
 export const GithubTransportFetch: Context.Reference<O.Option<typeof globalThis.fetch>> = Context.Reference(
   $I`GithubTransportFetch`,
-  { defaultValue: () => O.none<typeof globalThis.fetch>() }
+  { defaultValue: O.none<typeof globalThis.fetch> }
 );
 
 /**

@@ -1488,7 +1488,7 @@ const buildPgliteInProcessLayer = Effect.fn("SqlTest.PgliteInProcessTestDriver.b
           )
         );
         const client = Context.get(pgliteContext, PgliteClient.PgliteClient);
-        const pgClient = client as unknown as PgClient.PgClient;
+        const pgClient = client as unknown as PgClient.PgClient & SqlClient.SqlClient;
 
         return Context.make(Pg.PgClient.PgClient, pgClient).pipe(
           Context.add(SqlClient.SqlClient, pgClient),

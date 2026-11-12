@@ -43,14 +43,6 @@ export const LaneState = LiteralKit(["open", "blocked", "done"]).pipe(
 );
 
 /**
- * Lifecycle of one session's work in a checkout.
- *
- * @category models
- * @since 0.0.0
- */
-export type LaneState = typeof LaneState.Type;
-
-/**
  * The GitHub repository a report is about.
  *
  * **Example** (Make a repository)
@@ -64,13 +56,12 @@ export type LaneState = typeof LaneState.Type;
  * @category models
  * @since 0.0.0
  */
-export class LaneRepository extends S.Class<LaneRepository, { readonly brand: unique symbol }>($I`LaneRepository`)(
-  {
+export class LaneRepository extends S.Opaque<LaneRepository, { readonly brand: unique symbol }>()(
+  S.Struct({
     host: S.String,
     owner: S.String,
     name: S.String,
-  },
-  $I.annote("LaneRepository", { description: "Repository coordinates carried by the session report." })
+  }).pipe($I.annoteSchema("LaneRepository", { description: "Repository coordinates carried by the session report." }))
 ) {}
 
 /**
@@ -85,20 +76,21 @@ export class LaneRepository extends S.Class<LaneRepository, { readonly brand: un
  *
  * ```ts
  * import { LaneRow } from "@/Lanes"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
- * const row = S.decodeUnknownSync(LaneRow)({
+ * const row = S.decodeUnknownOption(LaneRow)({
  *   lane: "l", branch: "b", checkout: "/c", clone: "/r", state: "open", next: "n",
  *   summary: null, pr: null, harness: "codex", sessionId: null, recordedAt: "2026-11-10T00:00:00.000Z",
  * })
- * console.log(row.lane) // "l"
+ * console.log(O.map(row, (lane) => lane.lane)) // Option.some("l")
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export class LaneRow extends S.Class<LaneRow, { readonly brand: unique symbol }>($I`LaneRow`)(
-  {
+export class LaneRow extends S.Opaque<LaneRow, { readonly brand: unique symbol }>()(
+  S.Struct({
     lane: S.String,
     branch: S.String,
     checkout: S.String,
@@ -110,8 +102,7 @@ export class LaneRow extends S.Class<LaneRow, { readonly brand: unique symbol }>
     harness: S.String,
     sessionId: S.OptionFromNullOr(S.String),
     recordedAt: S.DateTimeUtcFromString,
-  },
-  $I.annote("LaneRow", { description: "The newest non-done ledger row for one checkout." })
+  }).pipe($I.annoteSchema("LaneRow", { description: "The newest non-done ledger row for one checkout." }))
 ) {}
 
 // The envelope keeps rows unknown so each one decodes, or fails, on its own.
@@ -145,15 +136,13 @@ const decodeRow = S.decodeUnknownOption(LaneRow);
  * @category models
  * @since 0.0.0
  */
-export class LanesLoaded extends S.TaggedClass<LanesLoaded, { readonly brand: unique symbol }>($I`LanesLoaded`)(
-  "LanesLoaded",
-  {
+export class LanesLoaded extends S.Opaque<LanesLoaded, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("LanesLoaded", {
     repository: LaneRepository,
     lanes: S.Array(LaneRow),
     corrupt: S.Int,
     fetchedAt: S.DateTimeUtc,
-  },
-  $I.annote("LanesLoaded", { description: "A decoded session report with its unreadable-row count." })
+  }).pipe($I.annoteSchema("LanesLoaded", { description: "A decoded session report with its unreadable-row count." }))
 ) {}
 
 /**
@@ -171,13 +160,11 @@ export class LanesLoaded extends S.TaggedClass<LanesLoaded, { readonly brand: un
  * @category models
  * @since 0.0.0
  */
-export class LanesFailed extends S.TaggedClass<LanesFailed, { readonly brand: unique symbol }>($I`LanesFailed`)(
-  "LanesFailed",
-  {
+export class LanesFailed extends S.Opaque<LanesFailed, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("LanesFailed", {
     message: S.String,
     fetchedAt: S.DateTimeUtc,
-  },
-  $I.annote("LanesFailed", { description: "A session report read that produced no board." })
+  }).pipe($I.annoteSchema("LanesFailed", { description: "A session report read that produced no board." }))
 ) {}
 
 /**
@@ -194,10 +181,10 @@ export class LanesFailed extends S.TaggedClass<LanesFailed, { readonly brand: un
  * @category models
  * @since 0.0.0
  */
-export class LanesPending extends S.TaggedClass<LanesPending, { readonly brand: unique symbol }>($I`LanesPending`)(
-  "LanesPending",
-  {},
-  $I.annote("LanesPending", { description: "No session report has been read yet." })
+export class LanesPending extends S.Opaque<LanesPending, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("LanesPending", {}).pipe(
+    $I.annoteSchema("LanesPending", { description: "No session report has been read yet." })
+  )
 ) {}
 
 /**
