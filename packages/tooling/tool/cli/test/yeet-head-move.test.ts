@@ -1,5 +1,4 @@
 import { Git } from "@beep/git/Git";
-import { runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
 import {
   layerYeetHeadMoveClassifierTest,
   YeetHeadMoveClassifier,
@@ -8,127 +7,17 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
-import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import * as R from "effect/Record";
 import * as Str from "effect/String";
+import { commit, FILE_A, FILE_B, git, init, stack } from "./support/YeetHeadMove.ts";
 
-const git = Effect.fn("HeadMoveTest.git")(function* (
-  root: string,
-  args: ReadonlyArray<string>,
-  env?: Record<string, string>
-) {
-  const result = yield* runRepoCommandCapture("git", args, root, env);
-  expect(result.exitCode, result.output).toBe(0);
-  return Str.trim(result.output);
-});
-const PROBE = "explorations/stacked-pr-adoption/research/";
-const FILE_A = `${PROBE}stack-probe-a.md`;
-const FILE_B = `${PROBE}stack-probe-b.md`;
-const fixture = Effect.fn("HeadMoveTest.fixture")(function* (name: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const file = yield* path.fromFileUrl(new URL(`./fixtures/yeet-head-move/${name}`, import.meta.url));
-  return yield* fs.readFileString(file);
-});
-const init = Effect.fn("HeadMoveTest.init")(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-head-move-" });
-  yield* git(root, ["init", "--quiet", "-b", "main"]);
-  yield* git(root, ["config", "user.name", "Lane Author"]);
-  yield* git(root, ["config", "user.email", "lane@example.invalid"]);
-  yield* git(root, ["config", "commit.gpgsign", "false"]);
-  return root;
-});
-// Plumbing keeps every branch as an object, independent of the worktree/index state.
-// No mutation here runs against the linked source checkout.
-const commit = Effect.fn("HeadMoveTest.commit")(function* (
-  root: string,
-  parents: ReadonlyArray<string>,
-  files: Readonly<Record<string, O.Option<string>>>,
-  message: string,
-  date = "2026-11-09T20:23:48-06:00",
-  email = "lane@example.invalid"
-) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const first = A.head(parents);
-  yield* git(root, O.isSome(first) ? ["read-tree", first.value] : ["read-tree", "--empty"]);
-  for (const [file, contents] of R.toEntries(files)) {
-    if (O.isNone(contents)) {
-      yield* git(root, ["update-index", "--force-remove", "--", file]);
-      continue;
-    }
-    const scratch = path.join(root, "blob-input");
-    yield* fs.writeFileString(scratch, contents.value);
-    const blob = yield* git(root, ["hash-object", "-w", "--", scratch]);
-    yield* git(root, ["update-index", "--add", "--cacheinfo", `100644,${blob},${file}`]);
-  }
-  const tree = yield* git(root, ["write-tree"]);
-  return yield* git(root, ["commit-tree", tree, ...A.flatMap(parents, (parent) => ["-p", parent]), "-m", message], {
-    GIT_AUTHOR_NAME: "Stack Probe Author",
-    GIT_AUTHOR_EMAIL: "stack-probe@users.noreply.github.com",
-    GIT_AUTHOR_DATE: date,
-    GIT_COMMITTER_NAME:
-      email === "noreply@github.com" ? "GitHub" : email === "lane@example.invalid" ? "Lane Author" : "octocat",
-    GIT_COMMITTER_EMAIL: email,
-    GIT_COMMITTER_DATE: "2026-11-10T03:00:00Z",
-  });
-});
-const stack = Effect.fn("HeadMoveTest.stack")(function* () {
-  const root = yield* init();
-  const a = yield* fixture("stack-probe-a.md");
-  const b = yield* fixture("stack-probe-b.md");
-  const m1 = yield* fixture("layer-1.txt");
-  const m2 = yield* fixture("layer-2.txt");
-  const m3 = yield* fixture("layer-3.txt");
-  const ms = yield* fixture("squash.txt");
-  const main = yield* commit(root, [], { "main.md": O.some("main\n") }, "main");
-  const l1 = yield* commit(root, [main], { [FILE_A]: O.some(a) }, m1, "2026-11-09T20:23:46-06:00");
-  const l2 = yield* commit(root, [l1], { [FILE_B]: O.some(b) }, m2);
-  const l3 = yield* commit(root, [l2], { [FILE_A]: O.none(), [FILE_B]: O.none() }, m3, "2026-11-09T20:23:49-06:00");
-  const moved = yield* commit(root, [main], { "main.md": O.some("main moved\n") }, "main moving");
-  const squash = yield* commit(
-    root,
-    [moved],
-    { [FILE_A]: O.some(a) },
-    ms,
-    "2026-11-09T21:45:57-05:00",
-    "noreply@github.com"
-  );
-  const c2 = yield* commit(
-    root,
-    [squash],
-    { [FILE_B]: O.some(b) },
-    m2,
-    undefined,
-    "12345+octocat@users.noreply.github.com"
-  );
-  const c3 = yield* commit(
-    root,
-    [c2],
-    { [FILE_A]: O.none(), [FILE_B]: O.none() },
-    m3,
-    "2026-11-09T20:23:49-06:00",
-    "12345+octocat@users.noreply.github.com"
-  );
-  const restackBase = yield* commit(root, [squash], { "main.md": O.some("main moved again\n") }, "main moving again");
-  const r2 = yield* commit(root, [restackBase], { [FILE_B]: O.some(b) }, m2, undefined, "noreply@github.com");
-  const r3 = yield* commit(
-    root,
-    [r2],
-    { [FILE_A]: O.none(), [FILE_B]: O.none() },
-    m3,
-    "2026-11-09T20:23:49-06:00",
-    "noreply@github.com"
-  );
-  return { root, main, l1, l2, l3, moved, squash, c2, c3, restackBase, r2, r3, a, b, m2, m3 };
-});
 const classify = Effect.fn("HeadMoveTest.classify")(function* (
   root: string,
   before: string,
@@ -147,6 +36,21 @@ const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
 it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "120 seconds" })(
   "head-move real Git",
   (it) => {
+    it.effect("propagates interruption while failures and defects remain unknown", () =>
+      Effect.gen(function* () {
+        const s = yield* stack();
+        const interruptCause = Cause.interrupt(42);
+        const interrupted = Git.layerTest({ isAncestor: () => Effect.failCause(interruptCause) });
+        const serviceContext = yield* Layer.build(
+          YeetHeadMoveClassifier.layer(s.root).pipe(Layer.provide(interrupted))
+        );
+        const exit = yield* Context.get(serviceContext, YeetHeadMoveClassifier)
+          .classify(YeetHeadMoveRequest.make({ before: s.l2, after: s.c2, base: s.squash }))
+          .pipe(Effect.exit);
+        const cause = exit.pipe(Exit.getCause, O.getOrThrow);
+        expect(cause.reasons).toMatchObject([{ _tag: "Interrupt", fiberId: 42 }]);
+      })
+    );
     it.effect("carries all six recorded cascade/restack pairs with sanitized identities", () =>
       Effect.gen(function* () {
         const s = yield* stack();

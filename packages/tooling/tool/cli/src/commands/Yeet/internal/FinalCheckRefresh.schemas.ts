@@ -12,6 +12,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 import { FinalCheckReceipt } from "./FinalCheck.schemas.ts";
+import { YeetHeadMoveUnchanged } from "./HeadMove.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/FinalCheckRefresh.schemas");
 
@@ -250,6 +251,29 @@ export class FinalCheckRefreshPass extends S.Opaque<FinalCheckRefreshPass, { rea
 ) {}
 
 /**
+ * A GitHub replay preserves the receipt's proof on the final head.
+ *
+ * **Example** (Inspect the rewrite verdict schema)
+ * ```ts
+ * import { FinalCheckRefreshRewrite } from "@beep/repo-cli/test/Yeet"
+ * console.log(typeof FinalCheckRefreshRewrite.make) // "function"
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class FinalCheckRefreshRewrite extends S.Opaque<FinalCheckRefreshRewrite, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("rewrite", {
+    receipt: FinalCheckReceipt,
+    finalHead: S.NonEmptyString,
+    move: YeetHeadMoveUnchanged,
+  }).pipe(
+    $I.annoteSchema("FinalCheckRefreshRewrite", {
+      description: "A passing receipt carried across a proven GitHub rewrite.",
+    })
+  )
+) {}
+
+/**
  * The receipt on R does not carry to F; a full final-check on F is required.
  *
  * **Example** (A refused refresh verdict)
@@ -303,7 +327,11 @@ export class FinalCheckRefreshRefused extends S.Opaque<FinalCheckRefreshRefused,
  * @category models
  * @since 0.0.0
  */
-export const FinalCheckRefreshVerdict = S.Union([FinalCheckRefreshPass, FinalCheckRefreshRefused]).pipe(
+export const FinalCheckRefreshVerdict = S.Union([
+  FinalCheckRefreshPass,
+  FinalCheckRefreshRefused,
+  FinalCheckRefreshRewrite,
+]).pipe(
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("FinalCheckRefreshVerdict", {
     description: "Pass or refused verdict of the final-check refresh rule.",

@@ -58,6 +58,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
+import { recordedGithub } from "./support/YeetGithub.ts";
 import type { GraphQLDocument } from "@beep/github/GraphQL";
 
 // Recorded REST payloads (trimmed to the fields the wire schemas read).
@@ -785,50 +786,30 @@ describe("GithubRest ref activity", () => {
     timestamp: "2026-11-10T02:46:04Z",
     actor: { login: "ignored" },
   };
-  const activityService = (calls: Array<Record<string, unknown>>, pageSize: number) =>
-    layerGithubRest.pipe(
-      Layer.provide(
-        Layer.merge(
-          repoLayer,
-          GitHubClient.layerTest({
-            requestDecoded: dual(3, <A, I>(route: string, params: Record<string, unknown>, schema: S.Codec<A, I>) =>
-              Effect.suspend(() => {
-                calls.push(params);
-                return decodeRecorded(
-                  route,
-                  schema,
-                  A.makeBy(pageSize, (index) => ({ ...row, after: `${A.length(calls)}-${index}` }))
-                );
-              })
-            ),
-          })
-        )
-      )
-    );
-  it.effect("requests at most three pages of 100 and preserves newest-first wire order", () =>
+  const activityService = (pageSize: number) =>
+    recordedGithub((call) => {
+      if (call.path !== "{repo}/activity") return undefined;
+      const page = Number(call.query.get("after") ?? "0") + 1;
+      return {
+        body: A.makeBy(pageSize, (index) => ({ ...row, after: `${page}-${index}` })),
+        headers: { link: `<https://api.github.com/repos/beep-effect/beep-effect/activity?after=${page}>; rel="next"` },
+      };
+    });
+  it.effect("uses cursor pagination and truncates at three pages of 100", () =>
     Effect.gen(function* () {
-      const calls: Array<Record<string, unknown>> = [];
-      const context = yield* Layer.build(activityService(calls, 100));
-      const rows = yield* Context.get(context, GithubRest).refActivity("feat/stack probe");
-      expect(A.map(calls, (params) => params.page)).toEqual([1, 2, 3]);
-      expect(A.every(calls, (params) => params.ref === "refs/heads/feat/stack probe" && params.per_page === 100)).toBe(
-        true
-      );
+      const github = activityService(100);
+      const rows = yield* GithubRest.use((rest) => rest.refActivity("feat/stack probe")).pipe(github.provide);
+      expect(A.length(github.calls)).toBe(3);
+      expect(A.map(github.calls, (call) => call.query.get("after"))).toEqual([null, "1", "2"]);
+      expect(A.every(github.calls, (call) => !call.query.has("page"))).toBe(true);
+      expect(github.calls[0]?.query.get("ref")).toBe("refs/heads/feat/stack probe");
+      expect(github.calls[0]?.query.get("per_page")).toBe("100");
       expect(A.length(rows)).toBe(300);
       expect(A.map(A.take(rows, 2), (value) => value.after)).toEqual(["1-0", "1-1"]);
       assertSome(
         O.map(A.head(rows), (value) => DateTime.formatIso(value.timestamp)),
         "2026-11-10T02:46:04.000Z"
       );
-    })
-  );
-  it.effect("stops at a short page", () =>
-    Effect.gen(function* () {
-      const calls: Array<Record<string, unknown>> = [];
-      const context = yield* Layer.build(activityService(calls, 1));
-      const rows = yield* Context.get(context, GithubRest).refActivity("feat/x");
-      expect(A.length(calls)).toBe(1);
-      expect(A.length(rows)).toBe(1);
     })
   );
 });

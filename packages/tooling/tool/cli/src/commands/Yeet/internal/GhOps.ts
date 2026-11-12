@@ -73,6 +73,7 @@ import {
   settleYeetMerge,
   YeetMergeSettlement,
 } from "./AsyncMerge.ts";
+import { provideYeetHeadMoveClassifier } from "./HeadMove.ts";
 import { parsePrProvenanceFooter, replacePrBodyKeepingFooter } from "./Provenance.ts";
 import {
   detectPrRepository,
@@ -80,7 +81,7 @@ import {
   ProvenanceStampOutcome,
   recordMonitoredPrSessionThen,
 } from "./ProvenanceFooter.ts";
-import { readYeetReviewWindow, YeetReviewWindowUnknown } from "./ReviewWindow.ts";
+import { readYeetReviewWindow, readYeetReviewWindowEvidence, YeetReviewWindowUnknown } from "./ReviewWindow.ts";
 import type { GitHubError } from "@beep/github/GitHubError";
 import type { Repo } from "@beep/github/Repo";
 import type { CliReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
@@ -204,6 +205,7 @@ export class YeetGhGateFacts extends S.Opaque<YeetGhGateFacts, { readonly brand:
     totalThreads: S.Option(S.Int),
     tolerated: S.Array(S.String),
     forceWindow: S.Boolean,
+    window: S.Duration.pipe(S.withConstructorDefault(Effect.succeed(YEET_GH_REVIEW_WINDOW))),
     now: S.DateTimeUtc,
   }).pipe($I.annoteSchema("YeetGhGateFacts", { description: "Everything the REST merge gate decides on." }))
 ) {}
@@ -415,7 +417,8 @@ const reviewWindowAge = (facts: YeetGhGateFacts): O.Option<Duration.Duration> =>
 
 const reviewWindowFindings = (
   forceWindow: boolean,
-  windowAge: O.Option<Duration.Duration>
+  windowAge: O.Option<Duration.Duration>,
+  window: Duration.Duration
 ): ReadonlyArray<YeetGhGateFinding> =>
   forceWindow
     ? []
@@ -423,9 +426,9 @@ const reviewWindowFindings = (
         onNone: () => [finding("review-window-unknown", "GitHub has no trusted head push time")],
         onSome: (age) =>
           when(
-            Duration.isLessThan(age, YEET_GH_REVIEW_WINDOW),
+            Duration.isLessThan(age, window),
             "review-window-open",
-            `age ${formatAge(age)}, ${Math.ceil(Duration.toMinutes(Duration.subtract(YEET_GH_REVIEW_WINDOW, age)))}m left`
+            `age ${formatAge(age)}, ${Math.ceil(Duration.toMinutes(Duration.subtract(window, age)))}m left`
           ),
       });
 
@@ -473,7 +476,7 @@ export const decideYeetGhMergeGate = (facts: YeetGhGateFacts): YeetGhGateVerdict
     ),
     ...requiredRead.findings,
     ...otherCheckFindings(latest, HashSet.fromIterable(required), HashSet.fromIterable(facts.tolerated)),
-    ...reviewWindowFindings(facts.forceWindow, windowAge),
+    ...reviewWindowFindings(facts.forceWindow, windowAge, facts.window),
     ...threadFindings(facts.outstandingThreads),
   ];
   return YeetGhGateVerdict.make({
@@ -1302,6 +1305,7 @@ const readOutstandingThreads = Effect.fn("YeetGh.readOutstandingThreads")(functi
 
 const readGateFacts = Effect.fn("YeetGh.readGateFacts")(function* (options: {
   readonly number: number;
+  readonly repoRoot?: string;
   readonly pinnedSha: O.Option<string>;
   readonly tolerated: ReadonlyArray<string>;
   readonly forceWindow: boolean;
@@ -1317,37 +1321,25 @@ const readGateFacts = Effect.fn("YeetGh.readGateFacts")(function* (options: {
         Console.error(`[gh] ${label} unknown for #${options.number}: ${error.message}`).pipe(Effect.as(O.none<A>()))
       )
     );
-  const [requiredContexts, checkRuns, timeline, firstReceivedAt] = yield* Effect.all(
+  const [requiredContexts, checkRuns, evidence] = yield* Effect.all(
     [
       optional("required contexts", rest.requiredStatusContexts(pr.baseRef)),
       rest.checkRuns(pr.headSha),
-      rest.reviewTimeline(options.number),
-      rest
-        .headFirstReceivedAt(pr.headSha)
-        .pipe(
-          Effect.catch((error) =>
-            Console.error(`[gh] head check suites unknown for #${options.number}: ${error.message}`).pipe(
-              Effect.as(O.none<DateTime.Utc>())
-            )
-          )
-        ),
+      readYeetReviewWindowEvidence({ prNumber: options.number, headSha: pr.headSha }).pipe(
+        provideYeetHeadMoveClassifier(options.repoRoot ?? process.cwd())
+      ),
     ],
-    { concurrency: 4 }
+    { concurrency: 3 }
   );
   const threads = options.readThreads ? yield* readOutstandingThreads(options.number, options.policy) : O.none();
-  const headPushedAt = O.map(firstReceivedAt, (received) =>
-    O.getOrElse(
-      O.map(timeline.forcedAt, (forced) => DateTime.max(received, forced)),
-      () => received
-    )
-  );
   return YeetGhGateFacts.make({
     pullRequest: pr,
     pinnedSha: O.getOrElse(options.pinnedSha, () => pr.headSha),
     requiredContexts,
     checkRuns,
-    readyAt: timeline.readyAt,
-    headPushedAt,
+    readyAt: evidence.readyAt,
+    headPushedAt: evidence.pushedAt,
+    window: evidence.window,
     outstandingThreads: O.map(threads, (read) => read.outstanding),
     totalThreads: O.map(threads, (read) => read.total),
     tolerated: options.tolerated,
@@ -1436,6 +1428,7 @@ export const runYeetGhPrStatus = (
  *   headRef: "feat/x",
  *   headSha: "abc",
  *   baseRef: "main",
+ *   baseSha: "base-sha",
  *   htmlUrl: "https://github.com/o/r/pull/7",
  *   author: "octocat",
  *   labels: [],
@@ -1846,6 +1839,7 @@ export const readYeetReviewWindowAsGhLogin: {
   ): Effect.Effect<YeetReviewWindow, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>;
 } = dual(2, (context: RepoRunContext, target: YeetReviewWindowTarget) =>
   readYeetReviewWindow(target).pipe(
+    provideYeetHeadMoveClassifier(context.repoRoot),
     provideYeetGhLogin(context.repoRoot),
     Effect.catchTag("YeetCommandError", (error) =>
       Effect.succeed(
@@ -1954,3 +1948,16 @@ export const reassertProvenanceFooterAsGhLogin = Effect.fn("GhOps.reassertProven
     })
   );
 });
+
+/**
+ * Read the REST gate facts with a pinned checkout for seam tests.
+ *
+ * **Example** (Reference the facts reader)
+ * ```ts
+ * import { readYeetGhGateFactsForTesting } from "@beep/repo-cli/test/Yeet"
+ * console.log(typeof readYeetGhGateFactsForTesting) // "function"
+ * ```
+ * @category testing
+ * @since 0.0.0
+ */
+export const readYeetGhGateFactsForTesting = readGateFacts;

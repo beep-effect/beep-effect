@@ -24,6 +24,7 @@
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { GitHubError } from "@beep/github/GitHubError";
 import { Repo } from "@beep/github/Repo";
+import { PageOptions } from "@beep/github/Rest";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as OptionUtils from "@beep/utils/Option";
@@ -859,28 +860,26 @@ const makeGithubRest = Effect.gen(function* () {
       )
     );
 
-  const refActivity = Effect.fn("GithubRest.refActivity")(function* (headRef: string) {
-    const records: Array<GithubRefActivityRecord> = [];
-    for (const page of A.range(1, 3)) {
-      const rows = yield* client.requestDecoded(
+  const refActivity = (headRef: string) =>
+    client
+      .paginate(
         "GET /repos/{owner}/{repo}/activity",
-        { ...at, ref: `refs/heads/${headRef}`, per_page: 100, page },
-        S.Array(RefActivityWire)
-      );
-      records.push(
-        ...A.map(rows, (row) =>
-          GithubRefActivityRecord.make({
-            activityType: row.activity_type,
-            before: row.before,
-            after: row.after,
-            timestamp: row.timestamp,
-          })
+        { ...at, ref: `refs/heads/${headRef}` },
+        PageOptions.make({ perPage: 100, maxPages: 3 })
+      )
+      .pipe(
+        Effect.flatMap(decodeWith(S.Array(RefActivityWire), "GET repository activity")),
+        Effect.map(
+          A.map((row) =>
+            GithubRefActivityRecord.make({
+              activityType: row.activity_type,
+              before: row.before,
+              after: row.after,
+              timestamp: row.timestamp,
+            })
+          )
         )
       );
-      if (A.length(rows) < 100) break;
-    }
-    return records;
-  });
 
   const headFirstReceivedAt = (sha: string) =>
     client

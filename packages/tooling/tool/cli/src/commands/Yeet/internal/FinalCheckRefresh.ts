@@ -31,10 +31,12 @@
  */
 
 import { Git } from "@beep/git/Git";
+import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex } from "@noble/hashes/utils.js";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { constFalse, constTrue } from "effect/Function";
@@ -61,6 +63,7 @@ import {
   FinalCheckRefreshOwnChange,
   FinalCheckRefreshPass,
   FinalCheckRefreshRefused,
+  FinalCheckRefreshRewrite,
   FinalCheckStatusDrift,
 } from "./FinalCheckRefresh.schemas.ts";
 import {
@@ -70,12 +73,15 @@ import {
   runGitFoldedStdout,
   YeetChangedPathsQuery,
 } from "./GitExec.ts";
+import { YeetHeadMoveRequest } from "./HeadMove.schemas.ts";
+import { YeetHeadMoveClassifier } from "./HeadMove.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { YeetCommandError } from "../Yeet.errors.ts";
 import type { FinalCheckReceipt } from "./FinalCheck.schemas.ts";
 import type { FinalCheckRefreshAllowance, FinalCheckRefreshVerdict } from "./FinalCheckRefresh.schemas.ts";
+import type { YeetHeadMoveUnchanged } from "./HeadMove.schemas.ts";
 
 /**
  * The tool-regenerated standards inventories a lane may refresh after its
@@ -650,4 +656,95 @@ export const checkFinalCheckRefresh = Effect.fn("Yeet.checkFinalCheckRefresh")(f
   }
   const facts = yield* collectFinalCheckRefreshFacts(repoRoot, base, receipt.value, finalHead);
   return O.some(decideFinalCheckRefresh(facts));
+});
+
+const $I = $RepoCliId.create("commands/Yeet/internal/FinalCheckRefresh");
+class RewriteReceiptCandidate extends S.Opaque<RewriteReceiptCandidate, { readonly brand: unique symbol }>()(
+  S.Struct({ head: S.NonEmptyString, mtime: S.Finite }).pipe(
+    $I.annoteSchema("RewriteReceiptCandidate", {
+      description: "Receipt filename and modification instant used before decoding its contents.",
+    })
+  )
+) {}
+
+const rewriteReceiptCandidates = Effect.fn("Yeet.rewriteReceiptCandidates")(function* (
+  repoRoot: string,
+  finalHead: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const directory = path.join(repoRoot, FINAL_CHECK_RECEIPT_DIR);
+  const entries = yield* fs.readDirectory(directory);
+  const candidates = yield* Effect.forEach(
+    A.filter(entries, Str.endsWith(".json")),
+    Effect.fnUntraced(function* (entry) {
+      const head = Str.slice(0, -5)(entry);
+      if (head === finalHead || (yield* isAncestor(repoRoot, head, finalHead))) return O.none();
+      const stat = yield* fs.stat(path.join(directory, entry));
+      const mtime = yield* Effect.fromOption(stat.mtime);
+      return O.some(RewriteReceiptCandidate.make({ head, mtime: DateTime.toEpochMillis(DateTime.makeUnsafe(mtime)) }));
+    })
+  );
+  return A.sort(
+    A.getSomes(candidates),
+    Order.mapInput(Order.flip(Order.Number), (candidate: RewriteReceiptCandidate) => candidate.mtime)
+  );
+});
+
+const judgeRewriteReceipt = Effect.fn("Yeet.judgeRewriteReceipt")(function* (
+  repoRoot: string,
+  base: string,
+  finalHead: string,
+  move: YeetHeadMoveUnchanged
+) {
+  const receipt = yield* readFinalCheckReceipt(repoRoot, move.before);
+  const refusal = finalCheckRefusal(receipt, move.before);
+  if (O.isSome(refusal))
+    return FinalCheckRefreshRefused.make({
+      receiptHead: move.before,
+      finalHead,
+      reason: O.isNone(receipt) ? "malformed-receipt" : "ancestor-receipt-not-passing",
+      ownChanges: [],
+      detail: refusal.value,
+    });
+  const passing = O.getOrThrow(receipt);
+  const facts = yield* collectFinalCheckRefreshFacts(repoRoot, base, passing, finalHead);
+  const verdict = decideFinalCheckRefresh(facts);
+  return verdict._tag === "pass" ? FinalCheckRefreshRewrite.make({ receipt: passing, finalHead, move }) : verdict;
+});
+
+/**
+ * Carry the newest equivalent non-ancestor receipt across a GitHub rewrite.
+ *
+ * **Details**
+ * File name and modification time choose a candidate before decoding. A failing
+ * selected receipt refuses; an older passing receipt never replaces it.
+ *
+ * **Example** (Reference the GitHub-free carry check)
+ * ```ts
+ * import { checkFinalCheckRewriteCarry } from "@beep/repo-cli/test/Yeet"
+ * console.log(typeof checkFinalCheckRewriteCarry) // "function"
+ * ```
+ * @category workflows
+ * @since 0.0.0
+ */
+export const checkFinalCheckRewriteCarry = Effect.fn("Yeet.checkFinalCheckRewriteCarry")(function* (
+  repoRoot: string,
+  base: string,
+  finalHead: string,
+  synchronizedBase: string
+) {
+  const classifier = yield* YeetHeadMoveClassifier;
+  const candidates = yield* rewriteReceiptCandidates(repoRoot, finalHead).pipe(Effect.option);
+  if (O.isNone(candidates)) return O.none<FinalCheckRefreshVerdict>();
+  for (const candidate of candidates.value) {
+    const move = yield* classifier.classify(
+      YeetHeadMoveRequest.make({ before: candidate.head, after: finalHead, base: synchronizedBase })
+    );
+    if (move._tag === "unchanged") {
+      const verdict = yield* judgeRewriteReceipt(repoRoot, base, finalHead, move);
+      return O.some(verdict);
+    }
+  }
+  return O.none<FinalCheckRefreshVerdict>();
 });

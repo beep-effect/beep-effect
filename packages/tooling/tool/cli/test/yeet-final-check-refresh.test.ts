@@ -2,6 +2,7 @@ import { Git } from "@beep/git/Git";
 import { runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
 import {
   checkFinalCheckRefresh,
+  checkFinalCheckRewriteCarry,
   decideFinalCheckRefresh,
   FINAL_CHECK_RECEIPT_DIR,
   FinalCheckReceipt,
@@ -10,6 +11,7 @@ import {
   finalCheckPatchIdentityDigest,
   finalCheckRefreshAllowance,
   runGitFoldedStdout,
+  YeetHeadMoveClassifier,
 } from "@beep/repo-cli/test/Yeet";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -25,6 +27,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import { commit, FILE_B, stack } from "./support/YeetHeadMove.ts";
 
 const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
 
@@ -643,6 +646,85 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         assertTrue(verdict._tag === "refused");
         expect(verdict.reason).toBe("own-change-outside-allowlist");
         expect(verdict.detail).toContain(LARGE);
+      })
+    );
+  }
+);
+
+const checkRewrite = Effect.fn("FinalCheckRefreshTest.checkRewrite")(function* (
+  root: string,
+  main: string,
+  finalHead: string,
+  synchronizedBase: string
+) {
+  const context = yield* Layer.build(YeetHeadMoveClassifier.layer(root));
+  return yield* checkFinalCheckRewriteCarry(root, main, finalHead, synchronizedBase).pipe(
+    Effect.provideContext(context)
+  );
+});
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "120 seconds" })(
+  "rewrite receipt carry",
+  (it) => {
+    it.effect("carries a cascade onto main holding the squash and its later restack", () =>
+      Effect.gen(function* () {
+        const s = yield* stack();
+        yield* writeReceipt(s.root, receiptFor(s.l2));
+        const cascade = yield* checkRewrite(s.root, s.squash, s.c2, s.squash);
+        expect(O.getOrThrow(cascade)).toMatchObject({ _tag: "rewrite", finalHead: s.c2, receipt: { headSha: s.l2 } });
+        const restack = yield* checkRewrite(s.root, s.restackBase, s.r2, s.restackBase);
+        expect(O.getOrThrow(restack)).toMatchObject({ _tag: "rewrite", finalHead: s.r2 });
+      })
+    );
+    it.effect("refuses a restack onto an updated base layer outside main", () =>
+      Effect.gen(function* () {
+        const s = yield* stack();
+        yield* writeReceipt(s.root, receiptFor(s.l3));
+        const result = yield* checkRewrite(s.root, s.main, s.r3, s.r2);
+        expect(O.getOrThrow(result)).toMatchObject({ _tag: "refused", reason: "own-change-outside-allowlist" });
+      })
+    );
+    it.effect("does not carry changed rewrites or lane pushes", () =>
+      Effect.gen(function* () {
+        const s = yield* stack();
+        yield* writeReceipt(s.root, receiptFor(s.l2));
+        const changed = yield* commit(
+          s.root,
+          [s.squash],
+          { [FILE_B]: O.some(`${s.b}changed\n`) },
+          s.m2,
+          undefined,
+          "noreply@github.com"
+        );
+        const pushed = yield* commit(s.root, [s.c2], { "lane.md": O.some("push\n") }, "lane push");
+        const changedResult = yield* checkRewrite(s.root, s.squash, changed, s.squash);
+        const pushedResult = yield* checkRewrite(s.root, s.squash, pushed, s.squash);
+        assertNone(changedResult);
+        assertNone(pushedResult);
+      })
+    );
+    it.effect("judges a failing newest equivalent candidate before any older pass", () =>
+      Effect.gen(function* () {
+        const s = yield* stack();
+        yield* writeReceipt(s.root, receiptFor(s.l2));
+        const later = yield* commit(s.root, [s.l2], {}, "empty receipt head");
+        yield* writeReceipt(s.root, receiptFor(later, { verdict: "fail" }));
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* fs.utimes(path.join(s.root, FINAL_CHECK_RECEIPT_DIR, `${later}.json`), 2_000_000_000, 2_000_000_000);
+        const result = yield* checkRewrite(s.root, s.squash, s.c2, s.squash);
+        expect(O.getOrThrow(result)).toMatchObject({
+          _tag: "refused",
+          receiptHead: later,
+          reason: "ancestor-receipt-not-passing",
+        });
+      })
+    );
+    it.effect("chooses an undecodable equivalent receipt by filename and refuses it", () =>
+      Effect.gen(function* () {
+        const s = yield* stack();
+        yield* writeFile(s.root, `${FINAL_CHECK_RECEIPT_DIR}/${s.l2}.json`, "broken");
+        const result = yield* checkRewrite(s.root, s.squash, s.c2, s.squash);
+        expect(O.getOrThrow(result)).toMatchObject({ _tag: "refused", receiptHead: s.l2, reason: "malformed-receipt" });
       })
     );
   }

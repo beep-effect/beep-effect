@@ -1,15 +1,19 @@
 import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
+import { GraphqlBudgetPolicy } from "@beep/repo-cli/test/SharedInternals";
 import {
   collectYeetStatus,
+  decideYeetGhMergeGate,
   decideYeetReviewWindow,
   deriveYeetMergeReady,
   deriveYeetReadyPendingFlip,
   GreptileSummary,
+  layerYeetHeadMoveClassifierTest,
   PrCloseoutReport,
   PrCloseoutReportJson,
   RepoRunContext,
+  readYeetGhGateFactsForTesting,
   readYeetReviewWindow,
   readYeetReviewWindowAsGhLogin,
   renderYeetReviewWindow,
@@ -18,6 +22,9 @@ import {
   runArtifactPathForContext,
   YEET_REVIEW_WINDOW_DEFAULT,
   YEET_REVIEW_WINDOW_ENV,
+  YeetGhGateFacts,
+  YeetHeadMoveChanged,
+  YeetHeadMoveUnchanged,
   YeetReviewWindowElapsed,
   YeetReviewWindowOpen,
   YeetReviewWindowUnknown,
@@ -46,6 +53,15 @@ import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 import { githubCallLine, provideLegacyGh, recordedGithub, restPullRequest } from "./support/YeetGithub.ts";
+import { rewriteWindowScenario, yeetRealGitTestLayer } from "./support/YeetHeadMove.ts";
+import {
+  activity3050,
+  activity3051,
+  pull3050,
+  pull3051,
+  timeline3050,
+  timeline3051,
+} from "./support/YeetRewriteFixtures.ts";
 import type { YeetReviewWindow } from "@beep/repo-cli/test/Yeet";
 import type { GithubAnswer } from "./support/YeetGithub.ts";
 
@@ -623,4 +639,169 @@ it.layer(statusPlatform, { timeout: "30 seconds" })("status read with the review
       expect(restCalls).toEqual([]);
     }).pipe(noOverride)
   );
+});
+
+const rewriteWindowFixtures = [
+  {
+    pull: pull3050,
+    timeline: timeline3050,
+    activity: activity3050,
+    root: "37b38172730dd295ff5729f5b54029de4ba67d47",
+    ready: "2026-11-10T02:25:19.000Z",
+    elapsed: "2026-11-10T02:45:19.000Z",
+  },
+  {
+    pull: pull3051,
+    timeline: timeline3051,
+    activity: activity3051,
+    root: "5825036ce53fee588e21f2befc91ba19306884c1",
+    ready: "2026-11-10T02:25:20.000Z",
+    elapsed: "2026-11-10T02:45:20.000Z",
+  },
+];
+const unchangedClassifier = layerYeetHeadMoveClassifierTest((request) =>
+  YeetHeadMoveUnchanged.make({ ...request, commits: 1 })
+);
+
+type RewriteWindowFixture = (typeof rewriteWindowFixtures)[number];
+const rewriteActivityAnswer = (fixture: RewriteWindowFixture, failure: string): GithubAnswer => {
+  if (failure === "activity") return { status: 503 };
+  if (failure === "lagging") return { body: [] };
+  if (failure === "cycle") return { body: A.map(fixture.activity, (row) => ({ ...row, before: row.after })) };
+  return { body: failure === "page-bound" ? A.take(fixture.activity, 2) : fixture.activity };
+};
+const rewriteSuiteAnswer = (fixture: RewriteWindowFixture, failure: string, path: string): GithubAnswer => {
+  if (failure === "page-bound" && !Str.includes(fixture.pull.head.sha)(path)) return { status: 404 };
+  return {
+    body: {
+      check_suites: [
+        { created_at: Str.includes(fixture.root)(path) ? "2026-11-10T02:24:10Z" : "2026-11-10T02:54:20Z" },
+      ],
+    },
+  };
+};
+const rewriteTimelineAnswer = (fixture: RewriteWindowFixture, failure: string): GithubAnswer => ({
+  body: failure === "missing-id" ? A.map(fixture.timeline, (row) => ({ ...row, commit_id: null })) : fixture.timeline,
+});
+const rewritePullAnswer = (fixture: RewriteWindowFixture, failure: string): GithubAnswer => ({
+  body: restPullRequest({
+    ...fixture.pull,
+    head: { ...fixture.pull.head, sha: failure === "racing-head" ? "racing" : fixture.pull.head.sha },
+  }),
+});
+const rewriteWindowGithub = (fixture: RewriteWindowFixture, failure = "") =>
+  recordedGithub((call) => {
+    if (Str.endsWith("/timeline")(call.path)) return rewriteTimelineAnswer(fixture, failure);
+    if (call.path === "{repo}/activity") return rewriteActivityAnswer(fixture, failure);
+    if (Str.endsWith("/check-suites")(call.path)) return rewriteSuiteAnswer(fixture, failure, call.path);
+    if (call.path === `{repo}/pulls/${fixture.pull.number}`) return rewritePullAnswer(fixture, failure);
+    return undefined;
+  });
+
+it.layer(yeetRealGitTestLayer, {
+  timeout: "120 seconds",
+})("recorded rewrite window", (it) => {
+  it.effect("builds the real classifier at the gh-login boundary", () =>
+    Effect.gen(function* () {
+      const scenario = yield* rewriteWindowScenario();
+      yield* TestClock.setTime(millis("2026-11-10T02:50:00Z"));
+      const result = yield* readYeetReviewWindowAsGhLogin(scenario.context, scenario.target).pipe(
+        scenario.github.provide,
+        noOverride
+      );
+      expect(result).toMatchObject({
+        _tag: "elapsed",
+        anchor: "ready-for-review",
+        anchoredAt: "2026-11-10T02:25:19.000Z",
+      });
+      if (result._tag !== "unknown")
+        assertSome(
+          O.map(result.carried, (carry) => carry.rootSha),
+          scenario.s.l2
+        );
+    })
+  );
+  it.effect("uses carried shared instants and the environment override in GhOps gate facts", () =>
+    Effect.gen(function* () {
+      const scenario = yield* rewriteWindowScenario();
+      const facts = yield* readYeetGhGateFactsForTesting({
+        number: 3050,
+        repoRoot: scenario.s.root,
+        pinnedSha: O.none(),
+        tolerated: [],
+        forceWindow: false,
+        readThreads: false,
+        policy: GraphqlBudgetPolicy.noWait,
+      }).pipe(
+        scenario.github.provide,
+        Effect.provideService(
+          ConfigProvider.ConfigProvider,
+          ConfigProvider.fromUnknown({ BEEP_YEET_REVIEW_WINDOW: "30 minutes" })
+        )
+      );
+      const timed = YeetGhGateFacts.make({ ...facts, now: instant("2026-11-10T02:50:00Z") });
+      expect(A.some(decideYeetGhMergeGate(timed).findings, (finding) => finding.reason === "review-window-open")).toBe(
+        true
+      );
+      expect(
+        A.some(
+          decideYeetGhMergeGate(YeetGhGateFacts.make({ ...timed, window: twentyMinutes })).findings,
+          (finding) => finding.reason === "review-window-open"
+        )
+      ).toBe(false);
+      expect(Duration.toMinutes(facts.window)).toBe(30);
+      assertSome(O.map(facts.headPushedAt, DateTime.formatIso), "2026-11-10T02:24:10.000Z");
+      assertSome(O.map(facts.readyAt, DateTime.formatIso), "2026-11-10T02:25:19.000Z");
+    })
+  );
+  for (const fixture of rewriteWindowFixtures) {
+    it.effect(`carries #${fixture.pull.number} from its recorded ready instant through the gh-login seam`, () =>
+      Effect.gen(function* () {
+        yield* TestClock.setTime(millis("2026-11-10T03:00:00Z"));
+        const github = rewriteWindowGithub(fixture);
+        const classifier = yield* Layer.build(unchangedClassifier);
+        const result = yield* readYeetReviewWindowAsGhLogin(context, {
+          prNumber: fixture.pull.number,
+          headSha: fixture.pull.head.sha,
+        }).pipe(github.provide, Effect.provideContext(classifier), noOverride);
+        expect(result).toMatchObject({ _tag: "elapsed", anchor: "ready-for-review", anchoredAt: fixture.ready });
+        if (result._tag !== "unknown") {
+          expect(O.getOrThrow(result.carried)).toEqual({ rewrites: 2, rootSha: fixture.root });
+          expect(DateTime.formatIso(DateTime.add(instant(result.anchoredAt), { minutes: 20 }))).toBe(fixture.elapsed);
+        }
+      })
+    );
+  }
+  for (const failure of [
+    "changed",
+    "activity",
+    "missing-id",
+    "racing-head",
+    "lagging",
+    "cycle",
+    "page-bound",
+    "absent",
+  ] as const) {
+    it.effect(`restarts without carry for ${failure}`, () =>
+      Effect.gen(function* () {
+        yield* TestClock.setTime(millis("2026-11-10T03:00:00Z"));
+        const fixture = O.getOrThrow(A.head(rewriteWindowFixtures));
+        const github = rewriteWindowGithub(fixture, failure);
+        const read = readYeetReviewWindow({ prNumber: fixture.pull.number, headSha: fixture.pull.head.sha }).pipe(
+          github.provide,
+          noOverride
+        );
+        const classifier = yield* Layer.build(
+          failure === "changed"
+            ? layerYeetHeadMoveClassifierTest((request) =>
+                YeetHeadMoveChanged.make({ ...request, change: "patch", detail: "changed fixture" })
+              )
+            : unchangedClassifier
+        );
+        const result = yield* failure === "absent" ? read : read.pipe(Effect.provideContext(classifier));
+        expect(result).toMatchObject({ _tag: "open", anchor: "head-push", anchoredAt: "2026-11-10T02:54:20.000Z" });
+        if (result._tag !== "unknown" && failure !== "missing-id") assertNone(result.carried);
+      })
+    );
+  }
 });

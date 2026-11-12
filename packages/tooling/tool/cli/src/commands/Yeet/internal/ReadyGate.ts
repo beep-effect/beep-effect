@@ -62,7 +62,7 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { FinalCheckGate } from "./FinalCheck.schemas.ts";
 import { finalCheckRefusal, readFinalCheckReceipt, YEET_FINAL_CHECK_COMMAND } from "./FinalCheck.ts";
 import { FinalCheckRefreshVerdict } from "./FinalCheckRefresh.schemas.ts";
-import { checkFinalCheckRefresh } from "./FinalCheckRefresh.ts";
+import { checkFinalCheckRefresh, checkFinalCheckRewriteCarry } from "./FinalCheckRefresh.ts";
 import {
   flipPullRequestReady,
   provideYeetGhLogin,
@@ -73,6 +73,7 @@ import {
 } from "./GhOps.ts";
 import { currentCommitSha, yeetGitKitError } from "./GitExec.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
+import { provideYeetHeadMoveClassifier } from "./HeadMove.ts";
 import {
   decodeAttributedCheckFlags,
   MergeGateCheckRun,
@@ -98,7 +99,7 @@ import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetReadyOptions } from "../Yeet.schemas.ts";
 import type { FinalCheckReceipt } from "./FinalCheck.schemas.ts";
-import type { FinalCheckRefreshOwnChange } from "./FinalCheckRefresh.schemas.ts";
+import type { FinalCheckRefreshOwnChange, FinalCheckRefreshRefused } from "./FinalCheckRefresh.schemas.ts";
 import type { ProofJobRecord } from "./ProofJob.ts";
 import type { SquashCommitlintReport } from "./SquashCommitlint.ts";
 
@@ -665,6 +666,7 @@ interface YeetReadyGateDependencies {
     YeetCommandError,
     SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
   >;
+  readonly rewriteCarry?: typeof rewriteCarryForReady;
   readonly squashCommitlint?: (
     context: RepoRunContext,
     prNumber: number
@@ -1056,6 +1058,22 @@ const readFinalCheckForReady = (context: RepoRunContext, headSha: string) =>
 const refreshForReady = (context: RepoRunContext, headSha: string) =>
   checkFinalCheckRefresh(context.repoRoot, context.base, headSha);
 
+const rewriteCarryForReady = Effect.fn("Yeet.rewriteCarryForReady")(function* (
+  context: RepoRunContext,
+  prNumber: number,
+  headSha: string
+) {
+  const pull = yield* provideYeetGhLogin(context.repoRoot)(GithubRest.use((rest) => rest.pullRequest(prNumber))).pipe(
+    Effect.option
+  );
+  if (O.isNone(pull) || pull.value.headSha !== headSha) return O.none<FinalCheckRefreshVerdict>();
+  return yield* checkFinalCheckRewriteCarry(context.repoRoot, context.base, headSha, pull.value.baseSha).pipe(
+    provideYeetHeadMoveClassifier(context.repoRoot),
+    Effect.option,
+    Effect.map(O.flatten)
+  );
+});
+
 const refuseFinalCheck = (detail: string) =>
   YeetReadyGateRefused.make({
     blocker: "final-check",
@@ -1254,12 +1272,51 @@ const renderHostedGreen = (accepted: ReadonlyArray<FinalCheckGate>): string =>
 const renderOwnChange = (change: FinalCheckRefreshOwnChange): string =>
   `${change.path} (${O.getOrElse(change.allowance, () => "not allowed")})`;
 
+const acceptCarriedReceipt = Effect.fn("Yeet.acceptCarriedReceipt")(function* (
+  context: RepoRunContext,
+  dependencies: YeetReadyGateDependencies,
+  receipt: FinalCheckReceipt,
+  headSha: string,
+  prNumber: number,
+  label: string
+) {
+  yield* logReceiptSkips(receipt, label);
+  const accepted = yield* acceptHostedDeferrals(context, dependencies, receipt, headSha);
+  yield* Console.log(
+    `[yeet] report this final as: final <sha40> #${prNumber} receipt ${receipt.headSha}${renderHostedGreen(accepted)} (the sha is the head after the flip)`
+  );
+});
+
 // The flip is the content-final claim, so it requires the head-pinned
 // final-check receipt: every hosted gate the cheap tier skips, replayed on
 // this exact head. Skipped gates are named so the owner states them in the PR.
 // A head with no receipt of its own may carry an ancestor's passing receipt
 // under the refresh rule (`FinalCheckRefresh.ts`); a failing or partial
 // receipt on this head always stands.
+const carriedReceiptRefusal = (refused: FinalCheckRefreshRefused, missing: string, rewrite: boolean): string => {
+  if (rewrite)
+    return `${missing}; the receipt of ${refused.receiptHead} does not carry across the GitHub rewrite: ${refused.detail}`;
+  return refused.reason === "malformed-receipt"
+    ? refused.detail
+    : `${missing}; the nearest ancestor receipt, on ${Str.slice(0, 12)(refused.receiptHead)}, does not carry to this head: ${refused.detail}`;
+};
+
+const acceptOwnReceipt = Effect.fn("Yeet.acceptOwnReceipt")(function* (
+  context: RepoRunContext,
+  dependencies: YeetReadyGateDependencies,
+  passing: FinalCheckReceipt,
+  headSha: string,
+  prNumber: number
+) {
+  yield* logReceiptSkips(passing, Str.slice(0, 12)(headSha));
+  const accepted = yield* acceptHostedDeferrals(context, dependencies, passing, headSha);
+  if (A.isReadonlyArrayNonEmpty(accepted)) {
+    yield* Console.log(
+      `[yeet] report this final as: final <sha40> #${prNumber} receipt ${passing.headSha}${renderHostedGreen(accepted)} (the sha is the head after the flip)`
+    );
+  }
+});
+
 const requireFinalCheck = Effect.fn("Yeet.requireFinalCheck")(function* (
   context: RepoRunContext,
   dependencies: YeetReadyGateDependencies,
@@ -1271,28 +1328,24 @@ const requireFinalCheck = Effect.fn("Yeet.requireFinalCheck")(function* (
   if (O.isNone(refusal)) {
     // A passing finalCheckRefusal requires a present receipt; an empty receipt
     // always has a refusal. Do not keep an unreachable success branch here.
-    const passing = O.getOrThrow(receipt);
-    yield* logReceiptSkips(passing, Str.slice(0, 12)(headSha));
-    const accepted = yield* acceptHostedDeferrals(context, dependencies, passing, headSha);
-    if (A.isReadonlyArrayNonEmpty(accepted)) {
-      yield* Console.log(
-        `[yeet] report this final as: final <sha40> #${prNumber} receipt ${passing.headSha}${renderHostedGreen(accepted)} (the sha is the head after the flip)`
-      );
-    }
+    yield* acceptOwnReceipt(context, dependencies, O.getOrThrow(receipt), headSha, prNumber);
     return;
   }
   if (O.isSome(receipt)) return yield* refuseFinalCheck(refusal.value);
-  const refresh = yield* (dependencies.refresh ?? refreshForReady)(context, headSha);
+  const ancestor = yield* (dependencies.refresh ?? refreshForReady)(context, headSha);
+  const refresh = O.isSome(ancestor)
+    ? ancestor
+    : yield* (dependencies.rewriteCarry ?? rewriteCarryForReady)(context, prNumber, headSha);
   if (O.isNone(refresh)) return yield* refuseFinalCheck(refusal.value);
   yield* FinalCheckRefreshVerdict.match(refresh.value, {
     refused: (refused) =>
-      Effect.fail(
-        refuseFinalCheck(
-          refused.reason === "malformed-receipt"
-            ? refused.detail
-            : `${refusal.value}; the nearest ancestor receipt, on ${Str.slice(0, 12)(refused.receiptHead)}, does not carry to this head: ${refused.detail}`
-        )
-      ),
+      Effect.fail(refuseFinalCheck(carriedReceiptRefusal(refused, refusal.value, O.isNone(ancestor)))),
+    rewrite: Effect.fnUntraced(function* (passed) {
+      yield* Console.log(
+        `[yeet] head ${headSha} carries the receipt of ${passed.receipt.headSha}: it replays ${passed.receipt.headSha}'s ${passed.move.commits} commits onto ${passed.move.base} with identical patches`
+      );
+      yield* acceptCarriedReceipt(context, dependencies, passed.receipt, headSha, prNumber, "GitHub rewrite");
+    }),
     pass: Effect.fnUntraced(function* (passed) {
       const receiptHead = passed.receipt.headSha;
       yield* Console.log(
@@ -1300,10 +1353,13 @@ const requireFinalCheck = Effect.fn("Yeet.requireFinalCheck")(function* (
           A.isReadonlyArrayEmpty(passed.ownChanges) ? "none" : A.join(A.map(passed.ownChanges, renderOwnChange), ", ")
         }`
       );
-      yield* logReceiptSkips(passed.receipt, `ancestor ${Str.slice(0, 12)(receiptHead)}`);
-      const accepted = yield* acceptHostedDeferrals(context, dependencies, passed.receipt, headSha);
-      yield* Console.log(
-        `[yeet] report this final as: final <sha40> #${prNumber} receipt ${receiptHead}${renderHostedGreen(accepted)} (the sha is the head after the flip)`
+      yield* acceptCarriedReceipt(
+        context,
+        dependencies,
+        passed.receipt,
+        headSha,
+        prNumber,
+        `ancestor ${Str.slice(0, 12)(receiptHead)}`
       );
     }),
   });

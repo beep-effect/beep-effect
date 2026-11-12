@@ -10,10 +10,12 @@ import {
   collectYeetStatus,
   decideYeetReadyGate,
   deriveYeetMergeReady,
+  FINAL_CHECK_RECEIPT_DIR,
   FinalCheckReceipt,
   FinalCheckRefreshOwnChange,
   FinalCheckRefreshPass,
   FinalCheckRefreshRefused,
+  FinalCheckRefreshRewrite,
   FinalCheckStepResult,
   flipPullRequestReady,
   judgeHostedDeferrals,
@@ -38,6 +40,7 @@ import {
   SquashCommitMessage,
   spliceYeetInheritedRedsSection,
   YEET_REVIEWER_REQUEST_SUBJECT,
+  YeetHeadMoveUnchanged,
   YeetReadyInheritedRed,
   YeetReadyOptions,
   YeetReadyPullRequestRead,
@@ -70,6 +73,7 @@ import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 import { provideLegacyGh, recordedGithub, restPullRequest } from "./support/YeetGithub.ts";
+import { rewriteWindowScenario } from "./support/YeetHeadMove.ts";
 import type { SpawnScript } from "@beep/commands/ScriptedSpawner";
 import type { GraphQLDocument } from "@beep/github/GraphQL";
 
@@ -94,6 +98,7 @@ const context = RepoRunContext.make({
 // `collectYeetStatus` reports it, with readiness derived the same way.
 const prView = (
   overrides: Partial<{
+    readonly number: number;
     readonly available: boolean;
     readonly checks: ReadonlyArray<YeetWatchCheck>;
     readonly failingOptionalCheckCount: number;
@@ -442,6 +447,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       Effect.gen(function* () {
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const decision = yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
@@ -461,6 +467,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const requests = yield* Ref.make<ReadonlyArray<readonly [number, string]>>([]);
         const decision = yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
@@ -484,6 +491,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         const work = yield* fs.makeTempDirectoryScoped({ prefix: "ready-gate-flip-" });
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const decision = yield* runYeetReadyGate(RepoRunContext.make({ ...context, repoRoot: work, cwd: work }), {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
@@ -508,6 +516,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         const commentHead = Str.repeat(40)("a");
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const decision = yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
@@ -542,6 +551,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       Effect.gen(function* () {
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const error = yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
@@ -560,6 +570,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       Effect.gen(function* () {
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const error = yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
@@ -577,6 +588,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       Effect.gen(function* () {
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const error = yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
@@ -596,6 +608,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const refuse = (finalCheck: typeof passingFinalCheck) =>
           runYeetReadyGate(context, {
+            rewriteCarry: () => Effect.succeedNone,
             finalCheck,
             refresh: () => Effect.succeedNone,
             squashCommitlint: passingSquashCommitlint,
@@ -619,11 +632,98 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       })
     );
 
+    it.effect("the default rewrite reader uses the pull's synchronized base and refuses a racing head", () =>
+      Effect.gen(function* () {
+        const scenario = yield* rewriteWindowScenario();
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const receipt = yield* passingFinalCheck(scenario.context, scenario.s.l2).pipe(Effect.map(O.getOrThrow));
+        const text = yield* S.encodeEffect(S.fromJsonString(FinalCheckReceipt))(receipt);
+        const directory = path.join(scenario.s.root, FINAL_CHECK_RECEIPT_DIR);
+        yield* fs.makeDirectory(directory, { recursive: true });
+        yield* fs.writeFileString(path.join(directory, `${scenario.s.l2}.json`), text);
+        const repo = RepoRunContext.make({ ...scenario.context, base: scenario.s.restackBase });
+        const dependencies = {
+          finalCheck: () => Effect.succeedNone,
+          refresh: () => Effect.succeedNone,
+          read: () => Effect.succeed(prView({ number: 3050, headSha: O.some(scenario.s.c2), isDraft: false })),
+          squashCommitlint: passingSquashCommitlint,
+          requestReview: stubReviewerRequest,
+        };
+        const result = yield* runYeetReadyGate(repo, dependencies).pipe(scenario.github.provide);
+        expect(result._tag).toBe("already-ready");
+        const racing = yield* runYeetReadyGate(repo, {
+          ...dependencies,
+          read: () => Effect.succeed(prView({ number: 3050, headSha: O.some(scenario.s.r2), isDraft: false })),
+        }).pipe(scenario.github.provide, Effect.flip);
+        expect(racing.message).toContain(`no final-check receipt for head ${Str.slice(0, 12)(scenario.s.r2)}`);
+      })
+    );
+    it.effect("renders a rewrite carry and uses the carried receipt on the current head", () =>
+      Effect.gen(function* () {
+        const receiptHead = Str.repeat(40)("r");
+        const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+        const decision = yield* runYeetReadyGate(context, {
+          finalCheck: () => Effect.succeedNone,
+          refresh: () => Effect.succeedNone,
+          rewriteCarry: (_context, _pr, head) =>
+            Effect.map(
+              passingFinalCheck(_context, receiptHead),
+              O.map((receipt) =>
+                FinalCheckRefreshRewrite.make({
+                  receipt,
+                  finalHead: head,
+                  move: YeetHeadMoveUnchanged.make({
+                    before: receiptHead,
+                    after: head,
+                    base: "synchronized-base",
+                    commits: 1,
+                  }),
+                })
+              )
+            ),
+          squashCommitlint: passingSquashCommitlint,
+          recordInherited: () => Effect.void,
+          read: () => Effect.succeed(prView()),
+          markReady: recordingMarkReady(calls),
+          requestReview: stubReviewerRequest,
+          findMonitor: () => Effect.succeedNone,
+        });
+        expect(decision._tag).toBe("flip");
+        const lines = yield* TestConsole.logLines;
+        expect(A.join(A.map(lines, String), "\n")).toContain(
+          `carries the receipt of ${receiptHead}: it replays ${receiptHead}'s 1 commits onto synchronized-base with identical patches`
+        );
+      })
+    );
+    it.effect("uses rewrite wording when the selected receipt refuses", () =>
+      Effect.gen(function* () {
+        const refused = yield* runYeetReadyGate(context, {
+          finalCheck: () => Effect.succeedNone,
+          refresh: () => Effect.succeedNone,
+          rewriteCarry: (_context, _pr, head) =>
+            Effect.succeedSome(
+              FinalCheckRefreshRefused.make({
+                receiptHead: "rewrite-receipt",
+                finalHead: head,
+                reason: "ancestor-receipt-not-passing",
+                ownChanges: [],
+                detail: "the selected receipt failed",
+              })
+            ),
+          read: () => Effect.succeed(prView()),
+        }).pipe(Effect.flip);
+        expect(refused.message).toContain(
+          "the receipt of rewrite-receipt does not carry across the GitHub rewrite: the selected receipt failed"
+        );
+      })
+    );
     it.effect("flips a head with no receipt when the refresh rule carries an ancestor receipt", () =>
       Effect.gen(function* () {
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const receiptHead = Str.repeat(40)("r");
         const decision = yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: () => Effect.succeedNone,
           refresh: (_context, head) =>
             Effect.map(passingFinalCheck(_context, receiptHead), (receipt) =>
@@ -665,6 +765,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const receiptHead = Str.repeat(40)("r");
         const decision = yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: () => Effect.succeedNone,
           refresh: (_context, head) =>
             Effect.map(passingFinalCheck(_context, receiptHead), (receipt) =>
@@ -741,6 +842,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       hostedChecks: ReturnType<typeof hostedCheck>
     ) =>
       runYeetReadyGate(context, {
+        rewriteCarry: () => Effect.succeedNone,
         finalCheck: deferredCheckReceipt(reason),
         hostedChecks,
         squashCommitlint: passingSquashCommitlint,
@@ -804,6 +906,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
 
     const runDeferredDefaultReader = (calls: Ref.Ref<ReadonlyArray<ReadonlyArray<string>>>) =>
       runYeetReadyGate(context, {
+        rewriteCarry: () => Effect.succeedNone,
         finalCheck: deferredCheckReceipt("compute-profile=worker"),
         squashCommitlint: passingSquashCommitlint,
         recordInherited: () => Effect.void,
@@ -851,6 +954,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const receiptHead = Str.repeat(40)("r");
         const error = yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: () => Effect.succeedNone,
           refresh: (_context, head) =>
             Effect.succeedSome(
@@ -883,6 +987,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const detail = `the final-check receipt for head ${headSha} exists but does not decode`;
         const error = yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: () => Effect.succeedNone,
           refresh: (_context, head) =>
             Effect.succeedSome(
@@ -911,6 +1016,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       Effect.gen(function* () {
         const consulted = yield* Ref.make(false);
         const error = yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: (_context, head) =>
             Effect.map(
               passingFinalCheck(_context, head),
@@ -932,6 +1038,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       Effect.gen(function* () {
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const decision = yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: (_context, head) =>
             Effect.map(
               passingFinalCheck(_context, head),
@@ -981,6 +1088,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
     it.effect("names the current head and the red check when a required check is failing", () =>
       Effect.gen(function* () {
         const error = yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
@@ -1002,6 +1110,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       Effect.gen(function* () {
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const decision = yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
@@ -1025,6 +1134,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const decision = yield* runYeetReadyGate(context, {
           recordInherited: () => Effect.void,
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: failingSquashCommitlint,
           read: () => Effect.succeed(prView()),
@@ -1053,6 +1163,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       Effect.gen(function* () {
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           recordInherited: () => Effect.void,
           read: () => Effect.succeed(prView({ isDraft: false })),
@@ -1060,6 +1171,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         });
         yield* runYeetReadyGate(context, {
           recordInherited: () => Effect.void,
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: () => Effect.fail(YeetCommandError.make({ message: "gh api pulls failed", exitCode: 1 })),
           read: () => Effect.succeed(prView()),
@@ -1079,6 +1191,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
     it.effect("reads a non-draft pull request with an open thread as already ready, never as a pending flip", () =>
       Effect.gen(function* () {
         const decision = yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
@@ -1093,6 +1206,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       Effect.gen(function* () {
         for (const state of ["CLOSED", "MERGED"] as const) {
           const error = yield* runYeetReadyGate(context, {
+            rewriteCarry: () => Effect.succeedNone,
             finalCheck: passingFinalCheck,
             squashCommitlint: passingSquashCommitlint,
             recordInherited: () => Effect.void,
@@ -1110,6 +1224,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         const receiptHead = Str.repeat(40)("r");
         const consulted = yield* Ref.make<ReadonlyArray<string>>([]);
         const decision = yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: () => Effect.succeedNone,
           refresh: (repoContext, head) =>
             Ref.update(consulted, A.append(head)).pipe(
@@ -1133,6 +1248,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
     it.effect("refuses an already-ready head whose final-check proof is missing", () =>
       Effect.gen(function* () {
         const error = yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: () => Effect.succeedNone,
           refresh: () => Effect.succeedNone,
           read: () => Effect.succeed(prView({ isDraft: false })),
@@ -1146,6 +1262,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       Effect.gen(function* () {
         const consulted = yield* Ref.make<ReadonlyArray<string>>([]);
         const error = yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: (_repoContext, head) => Ref.update(consulted, A.append(head)).pipe(Effect.as(O.none())),
           refresh: () => Effect.succeedNone,
           read: () => Effect.succeed(prView({ isDraft: false, headSha: O.none() })),
@@ -1161,6 +1278,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
     it.effect("does not call gh for a pull request that is already ready", () =>
       Effect.gen(function* () {
         const decision = yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
@@ -1188,6 +1306,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           context,
           {
             read: () => Ref.update(reads, (n) => n + 1).pipe(Effect.as(redRead([lint]))),
+            rewriteCarry: () => Effect.succeedNone,
             finalCheck: passingFinalCheck,
             squashCommitlint: passingSquashCommitlint,
             recordInherited: recordingRecord(calls),
@@ -1222,6 +1341,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           context,
           {
             read: () => Effect.succeed(redRead([lint])),
+            rewriteCarry: () => Effect.succeedNone,
             finalCheck: passingFinalCheck,
             squashCommitlint: passingSquashCommitlint,
             recordInherited: recordingRecord(calls, true),
@@ -1243,6 +1363,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           context,
           {
             read: () => Effect.succeed(prView()),
+            rewriteCarry: () => Effect.succeedNone,
             finalCheck: passingFinalCheck,
             squashCommitlint: passingSquashCommitlint,
             recordInherited: recordingRecord(calls),
@@ -1264,6 +1385,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       Effect.gen(function* () {
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const error = yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
@@ -1553,6 +1675,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
       });
       expect(
         (yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
@@ -1598,6 +1721,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
       });
       expect(
         (yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
@@ -1615,6 +1739,7 @@ it.layer(readyPlatform, { timeout: "10 seconds" })("ready gate runtime boundarie
       yield* fs.writeFileString("/repo/.beep/yeet/jobs/.guard", "");
       expect(
         (yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
@@ -1639,6 +1764,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
             const sha = yield* Ref.get(currentHead);
             return (yield* Ref.get(green)) ? prView({ headSha: O.some(sha) }) : redRead([lint]);
           }),
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: (_pr: number, entries: ReadonlyArray<YeetReadyInheritedRed>, sha: string) =>
@@ -1684,6 +1810,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
               ? prView({ isDraft, headSha: O.some(current) })
               : prView({ checks: [lint], failingRequiredCheckCount: 1, isDraft, headSha: O.some(current) });
           }),
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: (_pr: number, entries: ReadonlyArray<YeetReadyInheritedRed>, head: string) =>
@@ -1719,6 +1846,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
               Ref.getAndUpdate(reads, (n) => n + 1).pipe(
                 Effect.map((n) => (n < 2 ? redRead([lint]) : prView({ headSha: O.some(Str.repeat(40)("b")) })))
               ),
+            rewriteCarry: () => Effect.succeedNone,
             finalCheck: passingFinalCheck,
             squashCommitlint: passingSquashCommitlint,
             recordInherited: () => Effect.void,
@@ -1739,6 +1867,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
               Ref.getAndUpdate(reads, (n) => n + 1).pipe(
                 Effect.map((n) => (n < 2 ? redRead([lint]) : redRead([lint, knip])))
               ),
+            rewriteCarry: () => Effect.succeedNone,
             finalCheck: passingFinalCheck,
             squashCommitlint: passingSquashCommitlint,
             recordInherited: () => Effect.void,
@@ -1757,6 +1886,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           {
             read: () =>
               Ref.getAndUpdate(reads, (n) => n + 1).pipe(Effect.map((n) => (n < 2 ? redRead([lint]) : prView()))),
+            rewriteCarry: () => Effect.succeedNone,
             finalCheck: passingFinalCheck,
             squashCommitlint: passingSquashCommitlint,
             recordInherited: () => Effect.void,
@@ -1775,6 +1905,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
             Ref.getAndUpdate(reads, (n) => n + 1).pipe(
               Effect.map((n) => prView({ unresolvedReviewThreadCount: n < 2 ? 0 : 1 }))
             ),
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
@@ -1789,6 +1920,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       Effect.gen(function* () {
         const count = yield* Ref.make(0);
         const error = yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
@@ -1800,6 +1932,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
     it.effect("refuses a flip without a head identity", () =>
       Effect.gen(function* () {
         const error = yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
@@ -1823,6 +1956,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         // Every child process (`gh auth token`) fails, so no request reaches GitHub.
         const refusing = ScriptedSpawner.make(() => reply("", 1));
         const error = yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           read: () => Effect.succeed(prView()),
         }).pipe(Effect.flip, Effect.provideServiceEffect(Git, Git.make), provideSpawner(refusing));
@@ -1851,6 +1985,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         };
         const decision = yield* runYeetReadyGate(context, {
           read: () => Effect.succeed(prView()),
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: (prNumber, entries, head) =>
@@ -1878,6 +2013,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         const calls = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
         const decision = yield* runYeetReadyGate(context, {
           read: () => Effect.succeed(prView()),
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: (prNumber) =>
@@ -1904,6 +2040,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         const error = yield* runYeetReadyGate(
           context,
           {
+            rewriteCarry: () => Effect.succeedNone,
             finalCheck: passingFinalCheck,
             read: () => Effect.succeed(redRead([lint])),
             markReady: () => Effect.die("the flip must not run before the record succeeds"),
@@ -1950,6 +2087,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         });
         expect(
           (yield* runYeetReadyGate(context, {
+            rewriteCarry: () => Effect.succeedNone,
             finalCheck: passingFinalCheck,
             squashCommitlint: passingSquashCommitlint,
             recordInherited: () => Effect.void,
@@ -2001,6 +2139,7 @@ describe("ready gate incomplete remote identities", () => {
           remote: YeetStatusRemote.make({ ...read.remote, headSha: O.none() }),
         });
         const error = yield* runYeetReadyGate(context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
@@ -2098,6 +2237,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           const flip = yield* waitingFlip(true);
           const fiber = yield* runYeetReadyGate(context, {
             read: () => Effect.succeed(prView()),
+            rewriteCarry: () => Effect.succeedNone,
             finalCheck: passingFinalCheck,
             squashCommitlint: passingSquashCommitlint,
             recordInherited: () => Effect.void,
@@ -2131,6 +2271,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           const confirmed = yield* Ref.make("");
           const fiber = yield* runYeetReadyGate(context, {
             read: () => Effect.succeed(prView()),
+            rewriteCarry: () => Effect.succeedNone,
             finalCheck: passingFinalCheck,
             squashCommitlint: passingSquashCommitlint,
             recordInherited: () => Effect.void,
@@ -2167,6 +2308,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
                   })
                 )
               ),
+            rewriteCarry: () => Effect.succeedNone,
             finalCheck: passingFinalCheck,
             squashCommitlint: passingSquashCommitlint,
             recordInherited: () => Ref.update(records, (n) => n + 1),
@@ -2243,6 +2385,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       Effect.gen(function* () {
         const clone = yield* scratchClone();
         const decision = yield* runYeetReadyGate(clone.context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
@@ -2284,6 +2427,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         yield* scratchGit(other, ["push", "origin", "HEAD:refs/heads/main"]);
         const advanced = yield* scratchGit(other, ["rev-parse", "HEAD"]);
         const decision = yield* runYeetReadyGate(clone.context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
@@ -2304,6 +2448,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       Effect.gen(function* () {
         const clone = yield* scratchClone();
         const decision = yield* runYeetReadyGate(clone.context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
@@ -2333,6 +2478,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         yield* fs.writeFileString(path.join(clone.work, "staged.txt"), "not proven\n");
         yield* scratchGit(clone.work, ["add", "staged.txt"]);
         const decision = yield* runYeetReadyGate(clone.context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
@@ -2362,6 +2508,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         yield* scratchGit(clone.work, ["remote", "add", "decoy", decoy]);
         yield* scratchGit(clone.work, ["config", "remote.pushDefault", "decoy"]);
         const decision = yield* runYeetReadyGate(clone.context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,
@@ -2383,6 +2530,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         const clone = yield* scratchClone();
         yield* scratchGit(clone.work, ["remote", "remove", "origin"]);
         const decision = yield* runYeetReadyGate(clone.context, {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           squashCommitlint: passingSquashCommitlint,
           recordInherited: () => Effect.void,

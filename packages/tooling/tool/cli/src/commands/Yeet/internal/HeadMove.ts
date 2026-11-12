@@ -378,7 +378,9 @@ export class YeetHeadMoveClassifier extends Context.Service<
             classifyKnown(repoRoot, request).pipe(
               Effect.catchIf(S.is(YeetHeadMoveChanged), Effect.succeed),
               Effect.catchCause((cause) =>
-                Effect.succeed(YeetHeadMoveUnknown.make({ ...request, reason: Cause.pretty(cause) }))
+                Cause.hasFails(cause) || Cause.hasDies(cause)
+                  ? Effect.succeed(YeetHeadMoveUnknown.make({ ...request, reason: Cause.pretty(cause) }))
+                  : Effect.failCause(Cause.fromReasons<never>(A.filter(cause.reasons, Cause.isInterruptReason)))
               ),
               Effect.provideContext(dependencies)
             )
@@ -404,3 +406,26 @@ export const layerYeetHeadMoveClassifierTest = (lookup: (request: YeetHeadMoveRe
   Layer.succeed(YeetHeadMoveClassifier, {
     classify: Effect.fn("Yeet.testClassifyHeadMove")((request: YeetHeadMoveRequest) => Effect.succeed(lookup(request))),
   });
+
+/**
+ * Supply a checkout classifier at a window or ready-gate boundary.
+ *
+ * **Example** (Build a provision function)
+ * ```ts
+ * import { provideYeetHeadMoveClassifier } from "@beep/repo-cli/test/Yeet"
+ * console.log(typeof provideYeetHeadMoveClassifier("/repo")) // "function"
+ * ```
+ * @category layers
+ * @since 0.0.0
+ */
+export const provideYeetHeadMoveClassifier =
+  (repoRoot: string) =>
+  <A, E, R>(program: Effect.Effect<A, E, R>) =>
+    Effect.scoped(
+      Effect.gen(function* () {
+        const existing = yield* Effect.serviceOption(YeetHeadMoveClassifier);
+        if (O.isSome(existing)) return yield* Effect.provideService(program, YeetHeadMoveClassifier, existing.value);
+        const context = yield* Layer.build(YeetHeadMoveClassifier.layer(repoRoot).pipe(Layer.provide(Git.layer)));
+        return yield* Effect.provideContext(program, context);
+      })
+    );
