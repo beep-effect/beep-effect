@@ -32,7 +32,7 @@ describe("Board", () => {
   it("builds PR links from the report repository", () => {
     const link = prLink(LaneRepository.make({ host: "github.com", owner: "o", name: "r" }));
     assertSome(link(O.some(7)), "https://github.com/o/r/pull/7");
-    assertNone(link(O.none()));
+    O.none().pipe(link, assertNone);
   });
 
   it("keeps the selection inside the visible window", () => {

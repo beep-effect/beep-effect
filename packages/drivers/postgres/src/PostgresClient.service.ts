@@ -37,7 +37,8 @@ const $I = $PostgresId.create("PostgresClient.service");
 export type PostgresPoolConfig = Pg.PgPoolConfig;
 
 /**
- * Native Effect Postgres client value.
+ * Native Effect Postgres client value: the `@effect/sql-pg` client as its
+ * service provides it, which is also the generic `SqlClient`.
  *
  * **Example** (Reading client config)
  *
@@ -51,7 +52,7 @@ export type PostgresPoolConfig = Pg.PgPoolConfig;
  * @category models
  * @since 0.0.0
  */
-export type PostgresClientValue = Pg.PgClient;
+export type PostgresClientValue = Pg.PgClient & SqlClient.SqlClient;
 
 /**
  * Beep service key for a native Effect Postgres client.

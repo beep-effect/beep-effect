@@ -3,6 +3,7 @@ import { describe, expect, vi } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
+import type { SqlTestHarnessError } from "@beep/test-utils/SqlTest";
 
 const unavailable = () => {
   throw new Error("fixture module unavailable");
@@ -120,7 +121,9 @@ describe("SqlTest dependency failures", () => {
       const harness = yield* Effect.promise(() => import("@beep/test-utils/SqlTest"));
       const drivers = [harness.NodeSqliteTestDriver, harness.BunSqliteTestDriver, harness.PgliteInProcessTestDriver];
       for (const driver of drivers) {
-        const error = yield* driver.makeLayer(undefined).pipe(Layer.build, Effect.flip);
+        // Driver layers provide different client services; only the failure matters here.
+        const layer: Layer.Layer<never, SqlTestHarnessError> = driver.makeLayer(undefined);
+        const error = yield* layer.pipe(Layer.build, Effect.flip);
         expect(harness.SqlTestHarnessError.is(error)).toBe(true);
         if (harness.SqlTestHarnessError.is(error)) {
           expect(error.driver).toBe(driver.name);
