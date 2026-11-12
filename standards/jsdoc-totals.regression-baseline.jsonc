@@ -10,7 +10,7 @@
   "comparison": "fail-on-growth: generated inventory totals must not exceed this committed baseline",
   "generated_at": "2026-11-09T14:10:23.682Z",
   "tracked_totals": {
-    "packagesNeedingRemediation": 15,
+    "packagesNeedingRemediation": 14,
     "missingExportExamples": 0,
     "missingExportCategories": 0,
     "missingExportSince": 0,
