@@ -2,23 +2,21 @@ import {
   COVERAGE_GENERATED_STANDARDS_OWNER_ROWS,
   CoverageReaderSource,
   CoverageScopeOwner,
+  coverageOwnerDriftRows,
   coverageReaderBasename,
   coverageReaderOwners,
   coverageReaderStringTokens,
   coverageSourceReadsPath,
   planCoverageAffectedScope,
-  workspaceCoverageScopeOwners,
+  workspaceCoverageOwnerDrift,
 } from "@beep/repo-cli/test/Quality";
-import { FsUtils, FsUtilsLive } from "@beep/repo-utils";
+import { FsUtilsLive } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
-import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 
 // TURB-01 slice 1 (goals/hosted-setup-tax): generated standards files select
@@ -52,15 +50,6 @@ const SAMPLE_CHANGED_FILES = [
 ] as const;
 
 const UNMAPPED_STANDARDS_FILE = "standards/fallow.boundaries.provenance.jsonc";
-
-const rowOwners = (readerPath: string): ReadonlyArray<string> =>
-  pipe(
-    COVERAGE_GENERATED_STANDARDS_OWNER_ROWS,
-    A.filter(([path]) => path === readerPath),
-    A.map(([, , owner]) => owner),
-    A.dedupe,
-    A.sort(Order.String)
-  );
 
 const source = (filePath: string, text: string) => CoverageReaderSource.make({ filePath, text });
 
@@ -187,35 +176,50 @@ describe("coverage owners for generated standards inventories", () => {
   });
 });
 
+describe("owner drift rows", () => {
+  const readerPaths = A.dedupe(A.map(COVERAGE_GENERATED_STANDARDS_OWNER_ROWS, ([path]) => path));
+  const repoCliReader = source(
+    "packages/tooling/tool/cli/test/readers.test.ts",
+    `const readers = [${A.join(
+      A.map(readerPaths, (path) => JSON.stringify(path)),
+      ", "
+    )}];`
+  );
+
+  it("is empty when the scan finds exactly the row owners", () => {
+    expect(coverageOwnerDriftRows(owners, [repoCliReader])).toEqual([]);
+  });
+
+  it("reports a new test-tree reader in another package that the rows miss", () => {
+    const kitReader = source(
+      "packages/tooling/library/repo-cli-kit/test/Inventory.test.ts",
+      'const inventory = "standards/schema-first.inventory.jsonc";'
+    );
+    expect(coverageOwnerDriftRows(owners, [repoCliReader, kitReader])).toEqual([
+      {
+        readerPath: "standards/schema-first.inventory.jsonc",
+        rowOwners: ["@beep/repo-cli"],
+        scannedOwners: ["@beep/repo-cli", "@beep/repo-cli-kit"],
+      },
+    ]);
+  });
+
+  it("reports every row whose reader is gone", () => {
+    expect(A.map(coverageOwnerDriftRows(owners, []), (row) => [row.readerPath, row.scannedOwners])).toEqual(
+      A.map(readerPaths, (path) => [path, []])
+    );
+  });
+});
+
 const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer));
 
 it.layer(PlatformLayer, { timeout: "120 seconds" })("coverage owner drift check", (it) => {
   it.effect("keeps every row equal to the reader scan over the live workspace sources", () =>
     Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const fsUtils = yield* FsUtils;
       const path = yield* Path.Path;
-      const repoRoot = path.resolve(import.meta.dirname, "../../../../..");
-      const workspace = yield* workspaceCoverageScopeOwners(repoRoot);
-      const files = yield* fsUtils.globFiles(["packages/**/*.{ts,tsx,mts,cts}", "apps/**/*.{ts,tsx,mts,cts}"], {
-        cwd: repoRoot,
-        ignore: ["**/node_modules/**", "**/dist/**", "**/build/**", "**/.turbo/**", "**/coverage/**"],
-      });
-      const sources = yield* Effect.forEach(
-        files,
-        (file) =>
-          Effect.map(fs.readFileString(path.join(repoRoot, file)), (text) =>
-            source(path.relative(repoRoot, path.resolve(repoRoot, file)), text)
-          ),
-        { concurrency: 32 }
-      );
-      expect(A.length(sources)).toBeGreaterThan(1000);
-      for (const readerPath of A.dedupe(A.map(COVERAGE_GENERATED_STANDARDS_OWNER_ROWS, ([path]) => path))) {
-        expect({ readerPath, owners: coverageReaderOwners(workspace, sources, readerPath) }).toEqual({
-          readerPath,
-          owners: rowOwners(readerPath),
-        });
-      }
+      const report = yield* workspaceCoverageOwnerDrift(path.resolve(import.meta.dirname, "../../../../.."));
+      expect(report.sourceCount).toBeGreaterThan(1000);
+      expect(report.drift).toEqual([]);
     })
   );
 });

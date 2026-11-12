@@ -1965,6 +1965,11 @@ export const ciLaneStepsForTesting: {
         // On a code PR Lint Policy runs the law as well; that duplicate (about
         // 10 s) is accepted so docs-only diffs stay covered.
         bunRunStep(repoRoot, "lint:private-home-paths", ["beep", "laws", "private-home-paths", "--check"]),
+        // A new reader of a generated standards file in another package does not
+        // select @beep/repo-cli's tests, so the owner rows are checked here, on
+        // the pull request that adds or removes the reader (hosted-setup-tax
+        // TURB-01).
+        bunRunStep(repoRoot, "lint:coverage-owners", ["beep", "lint", "coverage-owners"]),
         // `audit:github repo-sanity` runs the changeset graph check (its
         // `repo-sanity:changeset-graph` lane), so this body carries no second
         // copy (hosted-setup-tax PERIL-04).
