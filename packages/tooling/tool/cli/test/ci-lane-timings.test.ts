@@ -10,7 +10,9 @@ import {
   assessCiLaneTimingWindowPopulation,
   attemptOnePickupSeconds,
   buildCiLaneTimingWindowReport,
+  CiCommandError,
   CiLaneTimingGithubClient,
+  CiLaneTimingWindowGuardVerdict,
   CiLaneTimingWindowOptions,
   CiLaneTimingWindowReport,
   CiRulesetHistoryVersion,
@@ -34,6 +36,7 @@ import {
   renderCiLaneTimingsSummary,
   renderCiLaneTimingsTsv,
   renderCiLaneTimingWindowMarkdown,
+  renderCiLaneTimingWindowPreviewBanner,
   renderCiLaneTimingWindowSummary,
   renderCiLaneTimingWindowTsv,
   withCiGithub,
@@ -1411,14 +1414,53 @@ describe("ci lane timing admission window", () => {
         )
       ).toBe(true);
       expect(
-        A.some(commands, (command) => Str.includes("/actions/runs/102/jobs?filter=all&per_page=100")(command))
+        A.some(commands, (command) => Str.includes("/actions/runs/102/attempts/1/jobs?per_page=100")(command))
       ).toBe(true);
-      const jobPageCommands = A.filter(commands, (command) => Str.includes("/actions/runs/102/jobs")(command));
+      expect(A.some(commands, Str.includes("filter=all"))).toBe(false);
+      const jobPageCommands = A.filter(commands, (command) =>
+        Str.includes("/actions/runs/102/attempts/1/jobs")(command)
+      );
       expect(jobPageCommands).toHaveLength(3);
       expect(A.some(jobPageCommands, (command) => Str.includes("page=3")(command))).toBe(true);
-      expect(A.some(commands, (command) => Str.includes("/actions/runs/101/jobs")(command))).toBe(false);
-      expect(A.some(commands, (command) => Str.includes("/actions/runs/103/jobs")(command))).toBe(false);
+      expect(A.some(commands, (command) => Str.includes("/actions/runs/101/")(command))).toBe(false);
+      expect(A.some(commands, (command) => Str.includes("/actions/runs/103/")(command))).toBe(false);
     }).pipe(Effect.provideService(CiLaneTimingGithubClient, windowGithubClient(commands)));
+  });
+
+  it.effect("refuses a census with an exhausted attempt read unless it is a preview, then stamps it", () => {
+    const commands = A.empty<string>();
+    const inner = windowGithubClient(commands);
+    const failingAttempts = CiLaneTimingGithubClient.of({
+      getJson: Effect.fn("TestCiLaneTimingGithubClient.failingAttempts")((endpoint: string) =>
+        Str.includes("/attempts/")(endpoint)
+          ? Effect.fail(CiCommandError.make({ message: `${endpoint} failed (HTTP 502) on every one of 5 attempts` }))
+          : inner.getJson(endpoint)
+      ),
+    });
+    return Effect.gen(function* () {
+      const options = windowOptions({ headSha: O.some("included") });
+      const refused = yield* collectCiLaneTimingWindow(options).pipe(Effect.exit);
+      const refusedFailed = Exit.isFailure(refused);
+      assertTrue(refusedFailed);
+      const rendered = Exit.isFailure(refused) ? refused.cause.toString() : "";
+      expect(rendered).toContain("run 102 attempt 1: job reads failed after every retry");
+
+      const report = yield* collectCiLaneTimingWindow(options, true);
+      deepStrictEqual(
+        A.map(report.partialReads, (read) => [read.runId, read.attempt]),
+        [[102, 1]]
+      );
+      const banner = renderCiLaneTimingWindowPreviewBanner(
+        CiLaneTimingWindowGuardVerdict.make({
+          partialReads: report.partialReads,
+          preview: true,
+          reasons: ["partial-read"],
+          since: options.since,
+          until: options.until,
+        })
+      );
+      expect(banner).toContain("partial job reads (run 102 attempt 1)");
+    }).pipe(Effect.provideService(CiLaneTimingGithubClient, failingAttempts));
   });
 
   it.effect("admits the ratified 17-context version after the removal", () => {
@@ -1562,9 +1604,9 @@ describe("ci lane timing admission window", () => {
       const runPageCommands = A.filter(commands, Str.includes("/actions/workflows/"));
       assertTrue(A.some(runPageCommands, Str.includes(`created=${firstHalf}`)));
       assertTrue(A.some(runPageCommands, Str.includes(`created=${secondHalf}`)));
-      assertTrue(A.some(commands, Str.includes("/actions/runs/201/jobs")));
-      assertTrue(A.some(commands, Str.includes("/actions/runs/202/jobs")));
-      assertTrue(!A.some(commands, Str.includes("/actions/runs/200/jobs")));
+      assertTrue(A.some(commands, Str.includes("/actions/runs/201/attempts/1/jobs")));
+      assertTrue(A.some(commands, Str.includes("/actions/runs/202/attempts/1/jobs")));
+      assertTrue(!A.some(commands, Str.includes("/actions/runs/200/")));
       deepStrictEqual(
         A.map(report.dayPeaks, (peak) => [peak.day, peak.peakRuns, peak.peakBranches]),
         [

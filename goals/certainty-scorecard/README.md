@@ -37,11 +37,16 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+P1 Implement — slice 1 (MEAS-01 slice 1 with MEAS-04) is in review: `beep ci certainty` and per-attempt
+job reads. P0 Research is complete (decision `p0-recheck-at-a0c7f356`). Next startable: ROUT-05 slice 1 (slice 2)
+and MEAS-02 (slice 3); the nightly (slice 4) waits on slice 1.
 
 ## Latest Evidence
 
-Not started.
+- Slice 1 replays two committed real captures (`packages/tooling/tool/cli/test/fixtures/ci-certainty/`): on
+  the 2026-11-09 12:00-18:00Z window the SLO statistic is p50 63.35 min with p95 not attained (6 misses of 17
+  counted code heads, 14 superseded); green-only p95 101.9 min; 4 heads under ten minutes; runner-minutes per
+  producer run 219.7 on average; superseded share 40.8%. Decision `fixture-corpus-real-captures`.
 
 ## Notes
 

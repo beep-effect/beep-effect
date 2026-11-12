@@ -2,14 +2,14 @@
 
 ## Status
 
-Status: `pending`
+Status: `active`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Re-read the live job names, lane contexts and journal shapes the levers touch; confirm the lever status table. | `SPEC.md` lever table matches the checkout at the start commit; any drift is a decision file. |
-| P1 Implement | pending | Land the slices below in order: the CLI and mapping first, the nightly next, the local economics after. | Every slice merged with its admission gate green. |
+| P0 Research | complete | Re-read the live job names, lane contexts and journal shapes the levers touch; confirm the lever status table. | `SPEC.md` lever table matches the checkout at the start commit; any drift is a decision file. |
+| P1 Implement | in-progress | Land the slices below in order: the CLI and mapping first, the nightly next, the local economics after. | Every slice merged with its admission gate green. |
 | P2 Verify | pending | Run the nightly for 7 consecutive nights on main and the fleet economics census across a lane retirement. | 7 certified reports with no api-partial certification; retire fixture and fleet census recorded under `history/`. |
 | P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
@@ -87,6 +87,12 @@ git diff --check -- goals/certainty-scorecard
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug certainty-scorecard`; add a `kind: checkpoint` file there, never edit this block._
 
-_No checkpoint files yet._
+### P0 complete; slice 1 (MEAS-01 slice 1 with MEAS-04) in review, 2026-11-10
+
+P0 re-check at a0c7f356af3 is recorded in decision `p0-recheck-at-a0c7f356`. Slice 1 adds `beep ci certainty` (`packages/tooling/tool/cli/src/commands/Ci/Certainty.ts`, `Certainty.schemas.ts`), the per-attempt jobs read with partial-read stamping in `LaneTimings.ts`, and `packages/tooling/tool/cli/test/ci-certainty.test.ts` over two committed real captures. Next startable slices: ROUT-05 slice 1 (slice 2) and MEAS-02 (slice 3); the certainty-nightly workflow (slice 4) starts once slice 1 merges.
+
+Lane claude/jovial-sammet-084b0a
+
+Reverse: Delete this checkpoint and set P0 and P1 back to pending in ops/manifest.json.
 
 <!-- beep:decisions:end -->
