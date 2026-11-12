@@ -36,6 +36,7 @@ import {
   spliceYeetInheritedRedsSection,
   YeetGhGateFacts,
   YeetReadyInheritedRed,
+  YeetReviewWindowUnknown,
 } from "@beep/repo-cli/test/Yeet";
 import { NodeCrypto } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -177,7 +178,15 @@ it.layer(
       expect(requiredStatusContexts2).toEqual(["Lint", "Test Unit"]);
       const timeline = yield* rest.reviewTimeline(1501);
       assertSome(O.map(timeline.readyAt, DateTime.formatIso), "2026-10-06T16:20:00.000Z");
-      assertSome(O.map(timeline.forcedAt, DateTime.formatIso), "2026-10-06T16:35:00.000Z");
+      assertSome(
+        O.map(
+          A.reduce(timeline.forcePushes, DateTime.makeUnsafe("1970-01-01T00:00:00Z"), (at, event) =>
+            DateTime.max(at, event.at)
+          ).pipe(O.some),
+          DateTime.formatIso
+        ),
+        "2026-10-06T16:35:00.000Z"
+      );
       expect(A.length(timeline.forcePushes)).toBe(3);
       assertSome(
         O.flatMap(A.head(timeline.forcePushes), (push) => push.commitId),
@@ -592,6 +601,29 @@ describe("REST merge gate", () => {
   it("holds a ready pull request for a newly received head even when its commit metadata is old", () => {
     const verdict = decideYeetGhMergeGate(facts({ headPushedAt: O.some(DateTime.makeUnsafe("2026-10-06T16:39:00Z")) }));
     expect(A.map(verdict.findings, (finding) => finding.reason)).toEqual(["review-window-open"]);
+  });
+
+  it("holds transient unknown windows with their reason and refuses invalid local configuration", () => {
+    const unknownFacts = (reason: string) =>
+      facts({ headPushedAt: O.none(), windowResult: O.some(YeetReviewWindowUnknown.make({ reason })) });
+    const transient = decideYeetGhMergeGate(unknownFacts("the timeline of pull request #1501 could not be read"));
+    expect(transient.onlyHolds).toBe(true);
+    expect(transient.findings).toMatchObject([
+      { reason: "review-window-unknown", detail: "the timeline of pull request #1501 could not be read" },
+    ]);
+    const invalid = decideYeetGhMergeGate(
+      facts({
+        headPushedAt: O.none(),
+        windowConfigValid: false,
+        windowResult: O.some(
+          YeetReviewWindowUnknown.make({ reason: "BEEP_YEET_REVIEW_WINDOW is not a duration such as 20 minutes" })
+        ),
+      })
+    );
+    expect(invalid.onlyHolds).toBe(false);
+    expect(invalid.findings).toMatchObject([
+      { reason: "review-window-config", detail: "BEEP_YEET_REVIEW_WINDOW is not a duration such as 20 minutes" },
+    ]);
   });
 
   it("keeps the newest run per check name", () => {

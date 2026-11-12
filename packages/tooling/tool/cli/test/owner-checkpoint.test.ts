@@ -1356,7 +1356,7 @@ const movedPullFixture = (move: string, pulls: number): GithubAnswer | undefined
   if (pulls > 2 && move === "head") return { body: { ...livePull(), head: { ...livePull().head, sha: merge } } };
   if (pulls > 2 && move === "closed") return { body: livePull(true) };
   if (move === "base-repository")
-    return { body: { ...livePull(), base: { ref: "main", repo: { full_name: "other/repo" } } } };
+    return { body: { ...livePull(), base: { ...livePull().base, repo: { full_name: "other/repo" } } } };
   return undefined;
 };
 const nativeCheckPage = (page2: boolean, failedPage: boolean): GithubAnswer =>
@@ -1707,7 +1707,8 @@ describe("inert owner native adapter", () => {
       return Effect.gen(function* () {
         yield* TestClock.setTime(ms);
         const error = yield* Effect.flip(readOwnerCheckpointSnapshot(context, binding, 2, policy, "fixture-external"));
-        expect(OwnerCheckpointError.make({ reason: error.reason }).reason).toBe(error.reason);
+        if (move === "base-repository") expect(error.reason).toBe("binding");
+        else expect(OwnerCheckpointError.make({ reason: error.reason }).reason).toBe(error.reason);
       }).pipe(offline, github.provide);
     });
   }

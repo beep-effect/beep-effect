@@ -6,8 +6,10 @@
  *
  * A pull request leaves draft when its content is final, and hosted heavy CI
  * runs while reviewers read it (review-window ruling, 2026-10-06). The merge
- * gate therefore waits a fixed time after the later of two instants: the most
- * recent "marked ready for review" event and the most recent push to the head.
+ * gate waits after the later of readiness and the head push. A proven GitHub
+ * rewrite can preserve the root push instant; lane pushes restart it. The
+ * uncarried rule uses the most recent "marked ready for review" event and
+ * the most recent push to the head.
  * No reviewer is required to post; only the elapsed time and review threads
  * gate. Both instants are read over GitHub REST, and a read that fails yields
  * an `unknown` window, which never satisfies the gate.
@@ -159,10 +161,10 @@ class WindowCarryTrail extends S.Opaque<WindowCarryTrail, { readonly brand: uniq
   S.Struct({
     carry: YeetReviewWindowCarry,
     carriedAfters: S.HashSet(S.String),
-    rootPushedAt: S.Option(S.DateTimeUtc),
+    rootPushedAt: S.DateTimeUtc,
   }).pipe(
     $I.annoteSchema("WindowCarryTrail", {
-      description: "Linked carried heads and the optional activity instant of their root.",
+      description: "Linked carried heads and the activity instant of their root.",
     })
   )
 ) {}
@@ -171,8 +173,8 @@ class WindowCarryEvidence extends S.Opaque<WindowCarryEvidence, { readonly brand
   S.Struct({
     carry: YeetReviewWindowCarry,
     carriedAfters: S.HashSet(S.String),
-    rootPushedAt: S.Option(S.DateTimeUtc),
-    rootFirstSuite: S.DateTimeUtc,
+    rootPushedAt: S.DateTimeUtc,
+    rootFirstSuite: S.Option(S.DateTimeUtc),
   }).pipe($I.annoteSchema("WindowCarryEvidence", { description: "Trusted root suite and linked rewrite evidence." }))
 ) {}
 
@@ -425,6 +427,7 @@ export const renderYeetReviewWindow = (window: YeetReviewWindow): string =>
 interface YeetReviewWindowTarget {
   readonly headSha: string;
   readonly prNumber: number;
+  readonly pull?: GithubPullRequestRecord;
 }
 
 /**
@@ -459,6 +462,22 @@ const unknownWindow = (reason: string): YeetReviewWindowEvidence =>
     window: YEET_REVIEW_WINDOW_DEFAULT,
   });
 
+const matchesRewriteTime = (at: DateTime.Utc, row: GithubRefActivityRecord): boolean =>
+  DateTime.toEpochMillis(at) >= DateTime.toEpochMillis(DateTime.subtract(row.timestamp, { seconds: 60 })) &&
+  DateTime.toEpochMillis(at) <= DateTime.toEpochMillis(DateTime.add(row.timestamp, { seconds: 5 }));
+
+const carriesWindowRow = Effect.fn("Yeet.carriesWindowRow")(function* (
+  activity: GithubRefActivityRecord,
+  headSha: string,
+  base: string,
+  classifier: YeetHeadMoveClassifier["Service"]
+) {
+  const move = yield* classifier.classify(YeetHeadMoveRequest.make({ before: activity.before, after: headSha, base }));
+  if (move._tag !== "unchanged") return false;
+  const committedAt = yield* classifier.committerInstant(activity.after);
+  return O.exists(committedAt, (at) => matchesRewriteTime(at, activity));
+});
+
 const walkWindowRewrites = Effect.fn("Yeet.walkWindowRewrites")(function* (
   rows: ReadonlyArray<GithubRefActivityRecord>,
   headSha: string,
@@ -470,20 +489,18 @@ const walkWindowRewrites = Effect.fn("Yeet.walkWindowRewrites")(function* (
   let row = A.findFirst(rows, (value) => value.after === current);
   while (O.isSome(row) && row.value.activityType === "force_push") {
     if (HashSet.has(carriedAfters, current)) return O.none();
-    const move = yield* classifier.classify(
-      YeetHeadMoveRequest.make({ before: row.value.before, after: headSha, base })
-    );
-    if (move._tag !== "unchanged") break;
+    const carries = yield* carriesWindowRow(row.value, headSha, base, classifier);
+    if (!carries) break;
     carriedAfters = HashSet.add(carriedAfters, current);
     current = row.value.before;
     row = A.findFirst(rows, (value) => value.after === current);
   }
-  if (HashSet.size(carriedAfters) === 0) return O.none();
+  if (HashSet.size(carriedAfters) === 0 || O.isNone(row)) return O.none();
   return O.some(
     WindowCarryTrail.make({
       carry: YeetReviewWindowCarry.make({ rewrites: HashSet.size(carriedAfters), rootSha: current }),
       carriedAfters,
-      rootPushedAt: O.map(row, (value) => value.timestamp),
+      rootPushedAt: row.value.timestamp,
     })
   );
 });
@@ -501,7 +518,7 @@ const readYeetReviewWindowCarry = Effect.fn("Yeet.readYeetReviewWindowCarry")(fu
   const walked = yield* walkWindowRewrites(rows.value, target.headSha, pull.value.baseSha, classifier);
   if (O.isNone(walked)) return O.none();
   const suite = yield* rest.headFirstReceivedAt(walked.value.carry.rootSha).pipe(Effect.option, Effect.map(O.flatten));
-  return O.map(suite, (rootFirstSuite) => WindowCarryEvidence.make({ ...walked.value, rootFirstSuite }));
+  return O.some(WindowCarryEvidence.make({ ...walked.value, rootFirstSuite: suite }));
 });
 
 class WindowCarryRead extends S.Opaque<WindowCarryRead, { readonly brand: unique symbol }>()(
@@ -519,9 +536,11 @@ const readWindowCarry = Effect.fn("Yeet.readWindowCarry")(function* (
   const classifier = yield* Effect.serviceOption(YeetHeadMoveClassifier);
   const shouldCarry = O.isSome(classifier) && hasForcePushes;
   const pull =
-    shouldCarry || needsOpenedAt
-      ? yield* rest.pullRequest(target.prNumber).pipe(Effect.option)
-      : O.none<GithubPullRequestRecord>();
+    target.pull !== undefined
+      ? O.some(target.pull)
+      : shouldCarry || needsOpenedAt
+        ? yield* rest.pullRequest(target.prNumber).pipe(Effect.option)
+        : O.none<GithubPullRequestRecord>();
   const carry =
     shouldCarry && O.isSome(classifier)
       ? yield* readYeetReviewWindowCarry(target, pull, classifier.value)
@@ -537,8 +556,8 @@ const reviewWindowPushedAt = (
   if (O.isNone(carry)) return A.reduce(forcePushes, firstSuite, (at, event) => DateTime.max(at, event.at));
   const evidence = carry.value;
   const root = O.getOrElse(
-    O.map(evidence.rootPushedAt, (at) => DateTime.max(at, evidence.rootFirstSuite)),
-    () => evidence.rootFirstSuite
+    O.map(evidence.rootFirstSuite, (at) => DateTime.max(at, evidence.rootPushedAt)),
+    () => evidence.rootPushedAt
   );
   return A.reduce(
     A.filter(forcePushes, (event) => !O.exists(event.commitId, (sha) => HashSet.has(evidence.carriedAfters, sha))),
@@ -552,17 +571,16 @@ const reviewWindowPushedAt = (
  *
  * **Details**
  *
- * Three `GithubRest` reads, none of them GraphQL: the issue timeline for the
- * latest `ready_for_review` and `head_ref_force_pushed` events
- * (`reviewTimeline`), the pull request's `created_at` when the timeline has no
- * ready event (it was opened ready), and the head commit's check suites, whose
- * earliest `created_at` is when GitHub first received that commit
- * (`headFirstReceivedAt`). The push instant is the later of that first receipt
- * and the latest force-push, so a force-push back to a commit GitHub already
- * knew restarts the window. The current time comes from `Clock`, so a test
- * drives it with `TestClock`. The effect never fails: a failed read, a head
- * with no check suite, and an invalid `BEEP_YEET_REVIEW_WINDOW` each return
- * `unknown` with the reason.
+ * Reads the timeline and current head's first check suite. The pull is reused
+ * when supplied, otherwise read lazily for creation time or rewrite evidence.
+ * With a classifier, bounded ref activity is walked across proven GitHub
+ * rewrites whose committer instants match their activity rows. Every carry
+ * terminates at a present root activity row and counts from the later of that
+ * row and its optional first suite. Missing links never carry. Unmatched force
+ * pushes restart the window, including pushes back to a known commit. Carry
+ * is reported only when it moves the push anchor earlier. Failed required
+ * reads and invalid `BEEP_YEET_REVIEW_WINDOW` values return `unknown` with the
+ * reason. The current time comes from the Effect clock.
  *
  * **Gotchas**
  *
@@ -572,13 +590,13 @@ const reviewWindowPushedAt = (
  * **Example** (Build the read effect)
  *
  * ```ts
- * import { readYeetReviewWindow } from "@beep/repo-cli/test/Yeet"
+ * import { readYeetReviewWindowEvidence } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(typeof readYeetReviewWindow) // "function"
+ * console.log(typeof readYeetReviewWindowEvidence) // "function"
  * ```
  *
  * @param target - The pull request number and the head the window is read for.
- * @returns The open, elapsed, or unknown review window.
+ * @returns The window decision, push and readiness instants, and configured duration.
  * @category workflows
  * @since 0.0.0
  */
@@ -620,7 +638,12 @@ export const readYeetReviewWindowEvidence = Effect.fn("Yeet.readYeetReviewWindow
     return unknownWindow(`the creation time of pull request #${target.prNumber} could not be read`);
   }
   const result = decideYeetReviewWindow({
-    carried: O.map(carry, (value) => value.carry),
+    carried: O.filter(
+      carry,
+      () =>
+        DateTime.toEpochMillis(pushedAt) <
+        DateTime.toEpochMillis(reviewWindowPushedAt(timeline.value.forcePushes, O.none(), firstReceivedAt.value))
+    ).pipe(O.map((value) => value.carry)),
     now: yield* DateTime.now,
     pushedAt,
     readyAt: ready.value.at,
@@ -643,6 +666,8 @@ export const readYeetReviewWindowEvidence = Effect.fn("Yeet.readYeetReviewWindow
  * import { readYeetReviewWindow } from "@beep/repo-cli/test/Yeet"
  * console.log(typeof readYeetReviewWindow) // "function"
  * ```
+ * @param target - Pull number, pinned head, and optional already-read pull.
+ * @returns The shared open, elapsed, or unknown decision.
  * @category workflows
  * @since 0.0.0
  */

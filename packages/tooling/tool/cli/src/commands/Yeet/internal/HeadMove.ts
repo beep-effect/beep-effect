@@ -12,17 +12,18 @@ import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { YeetCommandError } from "../Yeet.errors.ts";
-import { finalCheckPatchIdentityDigest } from "./FinalCheckRefresh.ts";
 import { runGitFoldedStdout } from "./GitExec.ts";
 import { YeetHeadMoveChanged, YeetHeadMoveUnchanged, YeetHeadMoveUnknown } from "./HeadMove.schemas.ts";
-import type * as PlatformError from "effect/PlatformError";
+import { finalCheckPatchIdentityDigest } from "./PatchIdentity.ts";
 import type { YeetHeadMove, YeetHeadMoveChange, YeetHeadMoveRequest } from "./HeadMove.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/HeadMove");
@@ -40,6 +41,7 @@ class Commit extends S.Opaque<Commit, { readonly brand: unique symbol }>()(
     authorDate: S.String,
     message: S.String,
     committerEmail: S.String,
+    signature: S.Option(S.String),
   }).pipe($I.annoteSchema("HeadMoveCommit", { description: "Author metadata and tree identity of one commit." }))
 ) {}
 class Entry extends S.Opaque<Entry, { readonly brand: unique symbol }>()(
@@ -47,19 +49,37 @@ class Entry extends S.Opaque<Entry, { readonly brand: unique symbol }>()(
     $I.annoteSchema("HeadMoveEntry", { description: "Raw no-renames diff entry without blob identities." })
   )
 ) {}
+const isChanged = S.is(YeetHeadMoveChanged);
+const isGithubCommitter = S.is(GithubCommitter);
+const decodeMetadata = S.decodeUnknownEffect(S.Tuple([S.String, S.String, S.String, S.String]));
+const decodeRawEntry = S.decodeUnknownEffect(S.Tuple([S.String, S.String, S.String, S.String, S.String]));
+const decodePath = S.decodeUnknownEffect(S.NonEmptyString);
 const sameEntries = S.toEquivalence(S.Array(Entry));
 const sameShas = S.toEquivalence(S.Array(S.String));
+
+const decodeUtf8 = (decode: () => string) =>
+  Effect.try({
+    try: decode,
+    catch: (cause) =>
+      PlatformError.systemError({
+        _tag: "InvalidData",
+        module: "HeadMove",
+        method: "decodeUtf8",
+        description: "Git output is not UTF-8.",
+        cause,
+      }),
+  });
 
 // Strict UTF-8: invalid metadata/paths fail closed instead of comparing replacement characters.
 const textFold = Effect.fn("Yeet.headMoveTextFold")((stdout: Stream.Stream<Uint8Array, PlatformError.PlatformError>) =>
   Effect.suspend(() => {
     const decoder = new TextDecoder("utf-8", { fatal: true });
     return stdout.pipe(
-      Stream.runFold(
+      Stream.runFoldEffect(
         () => "",
-        (text, bytes) => text + decoder.decode(bytes, { stream: true })
+        (text, bytes) => decodeUtf8(() => text + decoder.decode(bytes, { stream: true }))
       ),
-      Effect.map((text) => text + decoder.decode())
+      Effect.flatMap((text) => decodeUtf8(() => text + decoder.decode()))
     );
   })
 );
@@ -77,6 +97,18 @@ const requireStep = Effect.fn("Yeet.headMoveRequireStep")(
     O.match(verdict, { onNone: () => Effect.void, onSome: Effect.fail })
 );
 
+// Preserve Git's configured transport; only OpenSSH accepts BatchMode.
+const fetchSshEnvironment = Effect.fn("Yeet.headMoveFetchSshEnvironment")(function* (root: string) {
+  const command = yield* Config.String("GIT_SSH_COMMAND").pipe(Config.option);
+  const program = yield* Config.String("GIT_SSH").pipe(Config.option);
+  const configured = O.isSome(command) ? command : yield* read(root, ["config", "core.sshCommand"]).pipe(Effect.option);
+  if (O.isNone(configured) && O.isSome(program)) return {};
+  const ssh = O.getOrElse(configured, () => "ssh");
+  const executable = Str.replace(/^['"]|['"]$/g, "")(O.getOrElse(A.head(Str.split(ssh, /\s+/)), () => ""));
+  const programName = O.getOrElse(A.last(Str.split(executable, "/")), () => "");
+  return Str.startsWith("ssh")(programName) ? { GIT_SSH_COMMAND: `${ssh} -o BatchMode=yes` } : {};
+});
+
 // Step 10 runs first. The kit cannot express a multi-object, no-maintenance fetch
 // with this explicit noninteractive environment; only that missing primitive uses StepExec.
 const ensureObjects = Effect.fn("Yeet.headMoveEnsureObjects")(function* (root: string, request: YeetHeadMoveRequest) {
@@ -86,7 +118,7 @@ const ensureObjects = Effect.fn("Yeet.headMoveEnsureObjects")(function* (root: s
     read(root, ["cat-file", "-e", `${sha}^{commit}`]).pipe(Effect.option, Effect.map(O.isNone))
   );
   if (A.isReadonlyArrayEmpty(missing)) return;
-  const ssh = yield* Config.String("GIT_SSH_COMMAND").pipe(Config.withDefault("ssh"));
+  const sshEnv = yield* fetchSshEnvironment(root);
   const args = ["fetch", "--no-tags", "--no-write-fetch-head", "--no-auto-maintenance", "origin", ...missing];
   const result = yield* runFoldedStdout({
     command: "git",
@@ -94,9 +126,9 @@ const ensureObjects = Effect.fn("Yeet.headMoveEnsureObjects")(function* (root: s
     cwd: root,
     extendEnv: true,
     stdin: "ignore",
-    env: { GIT_TERMINAL_PROMPT: "0", GIT_SSH_COMMAND: `${ssh} -o BatchMode=yes` },
+    env: { GIT_TERMINAL_PROMPT: "0", ...sshEnv },
     fold: textFold,
-  });
+  }).pipe(Effect.timeout("60 seconds"));
   if (result.exitCode !== 0) return yield* YeetCommandError.new("Head-move object fetch failed.")(result.stderr);
   yield* Effect.forEach(missing, (sha) => read(root, ["cat-file", "-e", `${sha}^{commit}`]));
 });
@@ -111,9 +143,7 @@ const readCommit = Effect.fn("Yeet.headMoveReadCommit")(function* (root: string,
   });
   const metadataText = yield* raw(root, ["show", "-s", "--format=format:%an%x00%ae%x00%aI%x00%ce", sha]);
   const values = Str.split(metadataText, "\0");
-  const [authorName, authorEmail, authorDate, email] = yield* S.decodeUnknownEffect(
-    S.Tuple([S.String, S.String, S.String, S.String])
-  )(values);
+  const [authorName, authorEmail, authorDate, email] = yield* decodeMetadata(values);
   const commitObject = yield* raw(root, ["cat-file", "commit", sha]);
   const message = A.join(A.drop(Str.split(commitObject, "\n\n"), 1), "\n\n");
   return Commit.make({
@@ -126,6 +156,13 @@ const readCommit = Effect.fn("Yeet.headMoveReadCommit")(function* (root: string,
     authorDate,
     message,
     committerEmail: email,
+    signature: A.findFirst(
+      Str.split(
+        O.getOrElse(A.head(Str.split(commitObject, "\n\n")), () => ""),
+        "\n"
+      ),
+      Str.startsWith("gpgsig ")
+    ),
   });
 });
 // Step 1: a fast-forward, including equality, restarts proof.
@@ -157,9 +194,15 @@ const nonEmptyRange = (request: YeetHeadMoveRequest, own: ReadonlyArray<Commit>)
   A.isReadonlyArrayEmpty(own)
     ? changed(request, "empty-range", "The new range contains only empty commits.")
     : O.none();
+const githubCommitter = (commit: Commit, localEmail: O.Option<string>): boolean => {
+  if (O.contains(localEmail, commit.committerEmail) || !isGithubCommitter(commit.committerEmail)) return false;
+  return commit.committerEmail === "noreply@github.com"
+    ? O.exists(commit.signature, Str.includes("-----BEGIN PGP SIGNATURE-----"))
+    : O.isNone(commit.signature);
+};
 // Step 5: activity actors are ambiguous; committers identify GitHub rewrites.
-const githubCommitters = (request: YeetHeadMoveRequest, own: ReadonlyArray<Commit>) =>
-  A.every(own, (commit) => S.is(GithubCommitter)(commit.committerEmail))
+const githubCommitters = (request: YeetHeadMoveRequest, own: ReadonlyArray<Commit>, localEmail: O.Option<string>) =>
+  A.every(own, (commit) => githubCommitter(commit, localEmail))
     ? O.none()
     : changed(request, "not-github-rewrite", "A non-empty commit has a lane committer mailbox.");
 // Step 6: walk only the smallest tail with n non-empty commits.
@@ -200,10 +243,8 @@ const rawEntries = Effect.fn("Yeet.headMoveRawEntries")(function* (root: string,
   const tokens = Str.split(entryText, "\0");
   const entries: Array<Entry> = [];
   for (let i = 0; i < A.length(tokens) - 1; i += 2) {
-    const [oldMode, newMode, , , status] = yield* S.decodeUnknownEffect(
-      S.Tuple([S.String, S.String, S.String, S.String, S.String])
-    )(Str.split(tokens[i] ?? "", " "));
-    const path = yield* S.decodeUnknownEffect(S.NonEmptyString)(tokens[i + 1]);
+    const [oldMode, newMode, , , status] = yield* decodeRawEntry(Str.split(tokens[i] ?? "", " "));
+    const path = yield* decodePath(tokens[i + 1]);
     entries.push(Entry.make({ oldMode, newMode, status, path }));
   }
   return entries;
@@ -312,7 +353,11 @@ const replay = Effect.fn("Yeet.headMoveReplay")(function* (
     ? O.none()
     : changed(request, "replay-tree", "The new tree differs from an exact replay onto the synchronized base.");
 });
-const classifyKnown = Effect.fn("Yeet.headMoveClassifyKnown")(function* (root: string, request: YeetHeadMoveRequest) {
+const classifyKnown = Effect.fn("Yeet.headMoveClassifyKnown")(function* (
+  root: string,
+  request: YeetHeadMoveRequest,
+  localEmail: O.Option<string>
+) {
   const git = yield* Git;
   yield* ensureObjects(root, request);
   const ff = yield* lanePush(root, request);
@@ -325,7 +370,7 @@ const classifyKnown = Effect.fn("Yeet.headMoveClassifyKnown")(function* (root: s
   yield* requireStep(linearBase(request, actualBase));
   const own = A.reverse(A.filter(commits, (commit) => !commit.empty));
   yield* requireStep(nonEmptyRange(request, own));
-  yield* requireStep(githubCommitters(request, own));
+  yield* requireStep(githubCommitters(request, own, localEmail));
   const old = yield* oldTail(root, request, A.length(own));
   yield* pairCommits(root, request, old.tail, own);
   const absorption = yield* absorbed(root, request, old.base);
@@ -353,6 +398,7 @@ const classifyKnown = Effect.fn("Yeet.headMoveClassifyKnown")(function* (root: s
 export class YeetHeadMoveClassifier extends Context.Service<
   YeetHeadMoveClassifier,
   {
+    readonly committerInstant: (sha: string) => Effect.Effect<O.Option<DateTime.Utc>>;
     readonly classify: (request: YeetHeadMoveRequest) => Effect.Effect<YeetHeadMove>;
   }
 >()($I`YeetHeadMoveClassifier`) {
@@ -365,6 +411,8 @@ export class YeetHeadMoveClassifier extends Context.Service<
    * import { YeetHeadMoveClassifier } from "@beep/repo-cli/test/Yeet"
    * console.log(YeetHeadMoveClassifier.layer("/repo"))
    * ```
+   * @param repoRoot - Checkout whose objects and identity supply the evidence.
+   * @returns A live classifier layer.
    * @category layers
    * @since 0.0.0
    */
@@ -373,10 +421,22 @@ export class YeetHeadMoveClassifier extends Context.Service<
       YeetHeadMoveClassifier,
       Effect.gen(function* () {
         const dependencies = yield* Effect.context<Effect.Services<ReturnType<typeof classifyKnown>>>();
+        const localEmail = yield* read(repoRoot, ["config", "user.email"]).pipe(
+          Effect.option,
+          Effect.map(O.filter(Str.isNonEmpty))
+        );
         return YeetHeadMoveClassifier.of({
+          committerInstant: Effect.fn("Yeet.committerInstant")((sha: string) =>
+            read(repoRoot, ["show", "-s", "--format=%cI", sha]).pipe(
+              Effect.map(DateTime.make),
+              Effect.option,
+              Effect.map(O.flatten),
+              Effect.provideContext(dependencies)
+            )
+          ),
           classify: Effect.fn("Yeet.classifyHeadMove")((request: YeetHeadMoveRequest) =>
-            classifyKnown(repoRoot, request).pipe(
-              Effect.catchIf(S.is(YeetHeadMoveChanged), Effect.succeed),
+            classifyKnown(repoRoot, request, localEmail).pipe(
+              Effect.catchIf(isChanged, Effect.succeed),
               Effect.catchCause((cause) =>
                 Cause.hasFails(cause) || Cause.hasDies(cause)
                   ? Effect.succeed(YeetHeadMoveUnknown.make({ ...request, reason: Cause.pretty(cause) }))
@@ -399,11 +459,14 @@ export class YeetHeadMoveClassifier extends Context.Service<
  * import { layerYeetHeadMoveClassifierTest, YeetHeadMoveUnknown } from "@beep/repo-cli/test/Yeet"
  * console.log(layerYeetHeadMoveClassifierTest((request) => YeetHeadMoveUnknown.make({ ...request, reason: "fixture" })))
  * ```
+ * @param lookup - Deterministic request-to-verdict function.
+ * @returns A requirement-free test classifier layer.
  * @category testing
  * @since 0.0.0
  */
 export const layerYeetHeadMoveClassifierTest = (lookup: (request: YeetHeadMoveRequest) => YeetHeadMove) =>
   Layer.succeed(YeetHeadMoveClassifier, {
+    committerInstant: Effect.fn("Yeet.testCommitterInstant")((_sha: string) => Effect.succeedNone),
     classify: Effect.fn("Yeet.testClassifyHeadMove")((request: YeetHeadMoveRequest) => Effect.succeed(lookup(request))),
   });
 
@@ -415,6 +478,8 @@ export const layerYeetHeadMoveClassifierTest = (lookup: (request: YeetHeadMoveRe
  * import { provideYeetHeadMoveClassifier } from "@beep/repo-cli/test/Yeet"
  * console.log(typeof provideYeetHeadMoveClassifier("/repo")) // "function"
  * ```
+ * @param repoRoot - Checkout used when no classifier is already provided.
+ * @returns A function providing a classifier to the program.
  * @category layers
  * @since 0.0.0
  */

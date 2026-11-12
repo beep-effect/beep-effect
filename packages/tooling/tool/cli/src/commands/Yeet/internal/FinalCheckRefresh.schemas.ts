@@ -334,7 +334,7 @@ export const FinalCheckRefreshVerdict = S.Union([
 ]).pipe(
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("FinalCheckRefreshVerdict", {
-    description: "Pass or refused verdict of the final-check refresh rule.",
+    description: "Pass, rewrite-carry or refused verdict of the final-check refresh rule.",
   })
 );
 

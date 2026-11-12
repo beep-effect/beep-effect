@@ -78,6 +78,8 @@ import type { SpawnScript } from "@beep/commands/ScriptedSpawner";
 import type { GraphQLDocument } from "@beep/github/GraphQL";
 
 // `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
+const encodeRewriteReceipt = S.encodeEffect(S.fromJsonString(FinalCheckReceipt));
+
 const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
 const gitPlatform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer);
 
@@ -638,7 +640,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const receipt = yield* passingFinalCheck(scenario.context, scenario.s.l2).pipe(Effect.map(O.getOrThrow));
-        const text = yield* S.encodeEffect(S.fromJsonString(FinalCheckReceipt))(receipt);
+        const text = yield* encodeRewriteReceipt(receipt);
         const directory = path.join(scenario.s.root, FINAL_CHECK_RECEIPT_DIR);
         yield* fs.makeDirectory(directory, { recursive: true });
         yield* fs.writeFileString(path.join(directory, `${scenario.s.l2}.json`), text);
@@ -652,11 +654,19 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         };
         const result = yield* runYeetReadyGate(repo, dependencies).pipe(scenario.github.provide);
         expect(result._tag).toBe("already-ready");
-        const racing = yield* runYeetReadyGate(repo, {
-          ...dependencies,
-          read: () => Effect.succeed(prView({ number: 3050, headSha: O.some(scenario.s.r2), isDraft: false })),
-        }).pipe(scenario.github.provide, Effect.flip);
-        expect(racing.message).toContain(`no final-check receipt for head ${Str.slice(0, 12)(scenario.s.r2)}`);
+        const racingGithub = recordedGithub((call) =>
+          call.path === "{repo}/pulls/3050"
+            ? {
+                body: restPullRequest({
+                  number: 3050,
+                  head: { ref: "probe", sha: "racing" },
+                  base: { ref: "main", sha: scenario.s.squash },
+                }),
+              }
+            : undefined
+        );
+        const racing = yield* runYeetReadyGate(repo, dependencies).pipe(racingGithub.provide, Effect.flip);
+        expect(racing.message).toContain(`no final-check receipt for head ${Str.slice(0, 12)(scenario.s.c2)}`);
       })
     );
     it.effect("renders a rewrite carry and uses the carried receipt on the current head", () =>

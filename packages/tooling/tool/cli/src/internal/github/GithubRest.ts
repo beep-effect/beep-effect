@@ -635,7 +635,6 @@ export interface GithubRestShape {
   readonly reviewTimeline: (number: number) => Effect.Effect<
     {
       readonly readyAt: O.Option<DateTime.Utc>;
-      readonly forcedAt: O.Option<DateTime.Utc>;
       readonly forcePushes: ReadonlyArray<GithubForcePushRecord>;
     },
     GitHubError
@@ -844,7 +843,6 @@ const makeGithubRest = Effect.gen(function* () {
       Effect.flatMap((events) =>
         Effect.all({
           readyAt: datedEvents(events, "ready_for_review"),
-          forcedAt: datedEvents(events, "head_ref_force_pushed"),
           forcePushes: Effect.forEach(
             A.filter(events, (event) => event.event === "head_ref_force_pushed"),
             (event) =>

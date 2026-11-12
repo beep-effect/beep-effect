@@ -1,7 +1,7 @@
 import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
-import { GraphqlBudgetPolicy } from "@beep/repo-cli/test/SharedInternals";
+import { GithubPullRequestRecord, GraphqlBudgetPolicy } from "@beep/repo-cli/test/SharedInternals";
 import {
   collectYeetStatus,
   decideYeetGhMergeGate,
@@ -24,7 +24,9 @@ import {
   YEET_REVIEW_WINDOW_ENV,
   YeetGhGateFacts,
   YeetHeadMoveChanged,
+  YeetHeadMoveClassifier,
   YeetHeadMoveUnchanged,
+  YeetReviewWindowCarry,
   YeetReviewWindowElapsed,
   YeetReviewWindowOpen,
   YeetReviewWindowUnknown,
@@ -62,7 +64,7 @@ import {
   timeline3050,
   timeline3051,
 } from "./support/YeetRewriteFixtures.ts";
-import type { YeetReviewWindow } from "@beep/repo-cli/test/Yeet";
+import type { YeetHeadMoveRequest, YeetReviewWindow } from "@beep/repo-cli/test/Yeet";
 import type { GithubAnswer } from "./support/YeetGithub.ts";
 
 const headSha = "abc1234def";
@@ -82,9 +84,18 @@ const context = RepoRunContext.make({
   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] },
 });
 
+const assertUncarried = (window: YeetReviewWindow): void => {
+  if (window._tag !== "unknown") assertNone(window.carried);
+};
+const decideUncarriedWindow = (facts: Parameters<typeof decideYeetReviewWindow>[0]) => {
+  const window = decideYeetReviewWindow(facts);
+  assertUncarried(window);
+  return window;
+};
+
 describe("review window decision", () => {
   it("is open, with the minutes left, until the window has run", () => {
-    const window = decideYeetReviewWindow({
+    const window = decideUncarriedWindow({
       now: instant("2026-10-06T10:07:00Z"),
       pushedAt: instant("2026-10-06T10:00:00Z"),
       readyAt: instant("2026-10-06T09:00:00Z"),
@@ -99,7 +110,7 @@ describe("review window decision", () => {
 
   it("has elapsed from the instant the full window has passed", () => {
     const at = (now: string) =>
-      decideYeetReviewWindow({
+      decideUncarriedWindow({
         now: instant(now),
         pushedAt: instant("2026-10-06T10:00:00Z"),
         readyAt: instant("2026-10-06T09:00:00Z"),
@@ -116,7 +127,7 @@ describe("review window decision", () => {
 
   it("restarts on a new push to the head", () => {
     const pushedAt = (push: string) =>
-      decideYeetReviewWindow({
+      decideUncarriedWindow({
         now: instant("2026-10-06T10:21:00Z"),
         pushedAt: instant(push),
         readyAt: instant("2026-10-06T09:00:00Z"),
@@ -132,7 +143,7 @@ describe("review window decision", () => {
   });
 
   it("counts from the ready-for-review event when it is later than the push", () => {
-    const window = decideYeetReviewWindow({
+    const window = decideUncarriedWindow({
       now: instant("2026-10-06T10:25:00Z"),
       pushedAt: instant("2026-10-06T10:00:00Z"),
       readyAt: instant("2026-10-06T10:10:00Z"),
@@ -220,6 +231,7 @@ const reviewReadPlatform = Layer.provideMerge(
 const readWith = Effect.fn("readWith")(function* (answers: Answers) {
   const github = reviewGithub(answers);
   const window = yield* readYeetReviewWindow({ prNumber: 42, headSha }).pipe(github.provide);
+  if (window._tag !== "unknown") assertNone(window.carried);
   return { window, calls: A.map(github.calls, githubCallLine) };
 });
 
@@ -402,6 +414,7 @@ describe("review window lines", () => {
       anchoredAt: "2026-10-06T10:00:00.000Z",
       windowMs: 20 * 60_000,
     });
+    assertUncarried(opened);
     expect(renderYeetReviewWindow(opened)).toBe(
       "review window elapsed (20 min after it was opened ready for review at 2026-10-06T10:00:00.000Z)"
     );
@@ -423,6 +436,7 @@ it.layer(reviewReadPlatform, { timeout: "30 seconds" })("review window read as t
         suites: "2026-10-06T10:00:00Z",
       });
       const window = yield* readYeetReviewWindowAsGhLogin(context, { prNumber: 42, headSha }).pipe(github.provide);
+      assertUncarried(window);
       expect(window._tag).toBe("elapsed");
       expect(A.length(github.calls)).toBe(2);
     }).pipe(noOverride)
@@ -659,9 +673,18 @@ const rewriteWindowFixtures = [
     elapsed: "2026-11-10T02:45:20.000Z",
   },
 ];
-const unchangedClassifier = layerYeetHeadMoveClassifierTest((request) =>
-  YeetHeadMoveUnchanged.make({ ...request, commits: 1 })
-);
+const recordedCommitterInstant = (sha: string) =>
+  A.findFirst([...activity3050, ...activity3051], (row) => row.after === sha).pipe(
+    O.flatMap((row) => DateTime.make(row.timestamp))
+  );
+const timedClassifier = (instant: (sha: string) => O.Option<DateTime.Utc>) =>
+  Layer.succeed(YeetHeadMoveClassifier, {
+    classify: Effect.fn("WindowTest.classify")((request: YeetHeadMoveRequest) =>
+      Effect.succeed(YeetHeadMoveUnchanged.make({ ...request, commits: 1 }))
+    ),
+    committerInstant: Effect.fn("WindowTest.committerInstant")((sha: string) => Effect.succeed(instant(sha))),
+  });
+const unchangedClassifier = timedClassifier(recordedCommitterInstant);
 
 type RewriteWindowFixture = (typeof rewriteWindowFixtures)[number];
 const rewriteActivityAnswer = (fixture: RewriteWindowFixture, failure: string): GithubAnswer => {
@@ -670,16 +693,20 @@ const rewriteActivityAnswer = (fixture: RewriteWindowFixture, failure: string): 
   if (failure === "cycle") return { body: A.map(fixture.activity, (row) => ({ ...row, before: row.after })) };
   return { body: failure === "page-bound" ? A.take(fixture.activity, 2) : fixture.activity };
 };
-const rewriteSuiteAnswer = (fixture: RewriteWindowFixture, failure: string, path: string): GithubAnswer => {
-  if (failure === "page-bound" && !Str.includes(fixture.pull.head.sha)(path)) return { status: 404 };
-  return {
-    body: {
-      check_suites: [
-        { created_at: Str.includes(fixture.root)(path) ? "2026-11-10T02:24:10Z" : "2026-11-10T02:54:20Z" },
-      ],
-    },
-  };
-};
+const rewriteSuiteAnswer = (fixture: RewriteWindowFixture, failure: string, path: string): GithubAnswer => ({
+  body: {
+    check_suites: [
+      {
+        created_at:
+          failure === "page-bound" && !Str.includes(fixture.pull.head.sha)(path)
+            ? "2026-11-10T02:46:04Z"
+            : Str.includes(fixture.root)(path)
+              ? "2026-11-10T02:24:10Z"
+              : "2026-11-10T02:54:20Z",
+      },
+    ],
+  },
+});
 const rewriteTimelineAnswer = (fixture: RewriteWindowFixture, failure: string): GithubAnswer => ({
   body: failure === "missing-id" ? A.map(fixture.timeline, (row) => ({ ...row, commit_id: null })) : fixture.timeline,
 });
@@ -772,6 +799,87 @@ it.layer(yeetRealGitTestLayer, {
       })
     );
   }
+  it.effect("uses a supplied pull without re-reading it", () =>
+    Effect.gen(function* () {
+      const scenario = yield* rewriteWindowScenario();
+      const facts = yield* readYeetGhGateFactsForTesting({
+        number: 3050,
+        repoRoot: scenario.s.root,
+        pinnedSha: O.none(),
+        tolerated: [],
+        forceWindow: false,
+        readThreads: false,
+        policy: GraphqlBudgetPolicy.noWait,
+      }).pipe(scenario.github.provide, noOverride);
+      expect(A.filter(scenario.github.calls, (call) => call.path === "{repo}/pulls/3050")).toHaveLength(1);
+      const pull = facts.pullRequest;
+      const classifierContext = yield* Layer.build(YeetHeadMoveClassifier.layer(scenario.s.root));
+      const result = yield* readYeetReviewWindow({ ...scenario.target, pull }).pipe(
+        scenario.github.provide,
+        Effect.provideContext(classifierContext),
+        noOverride
+      );
+      if (result._tag !== "unknown")
+        assertSome(
+          O.map(result.carried, (carry) => carry.rootSha),
+          scenario.s.l2
+        );
+      const racing = yield* readYeetReviewWindow({
+        ...scenario.target,
+        pull: GithubPullRequestRecord.make({ ...pull, headSha: "racing" }),
+      }).pipe(scenario.github.provide, Effect.provideContext(classifierContext), noOverride);
+      expect(racing._tag).toBe("open");
+      assertUncarried(racing);
+      expect(A.filter(scenario.github.calls, (call) => call.path === "{repo}/pulls/3050")).toHaveLength(1);
+    })
+  );
+  it.effect("restarts a carried-looking lane rebase pushed ten minutes after committing", () =>
+    Effect.gen(function* () {
+      const fixture = O.getOrThrow(A.head(rewriteWindowFixtures));
+      const classifier = timedClassifier((sha) =>
+        O.map(recordedCommitterInstant(sha), (at) => DateTime.subtract(at, { minutes: 10 }))
+      );
+      const classifierContext = yield* Layer.build(classifier);
+      const result = yield* readYeetReviewWindow({
+        prNumber: fixture.pull.number,
+        headSha: fixture.pull.head.sha,
+      }).pipe(rewriteWindowGithub(fixture).provide, Effect.provideContext(classifierContext), noOverride);
+      expect(result).toMatchObject({ _tag: "open", anchoredAt: "2026-11-10T02:54:20.000Z" });
+      if (result._tag !== "unknown") assertNone(result.carried);
+    })
+  );
+  it.effect("a force-push back to a known commit carries when proven, using the later root activity", () =>
+    Effect.gen(function* () {
+      const fixture = O.getOrThrow(A.head(rewriteWindowFixtures));
+      yield* TestClock.setTime(millis("2026-11-10T02:50:00Z"));
+      const rootAt = "2026-11-10T02:40:00Z";
+      const github = recordedGithub((call) => {
+        if (call.path === "{repo}/activity")
+          return {
+            body: A.map(fixture.activity, (row) => (row.after === fixture.root ? { ...row, timestamp: rootAt } : row)),
+          };
+        if (Str.endsWith("/timeline")(call.path)) return rewriteTimelineAnswer(fixture, "");
+        if (Str.endsWith("/check-suites")(call.path))
+          return {
+            body: {
+              check_suites: [
+                { created_at: Str.includes(fixture.root)(call.path) ? "2026-11-10T02:24:10Z" : "2026-11-10T02:20:00Z" },
+              ],
+            },
+          };
+        if (call.path === `{repo}/pulls/${fixture.pull.number}`) return rewritePullAnswer(fixture, "");
+        return undefined;
+      });
+      const classifierContext = yield* Layer.build(unchangedClassifier);
+      const result = yield* readYeetReviewWindow({
+        prNumber: fixture.pull.number,
+        headSha: fixture.pull.head.sha,
+      }).pipe(github.provide, Effect.provideContext(classifierContext), noOverride);
+      expect(result).toMatchObject({ _tag: "open", anchor: "head-push", anchoredAt: "2026-11-10T02:40:00.000Z" });
+      if (result._tag !== "unknown")
+        assertSome(result.carried, YeetReviewWindowCarry.make({ rewrites: 2, rootSha: fixture.root }));
+    })
+  );
   for (const failure of [
     "changed",
     "activity",
@@ -800,8 +908,29 @@ it.layer(yeetRealGitTestLayer, {
         );
         const result = yield* failure === "absent" ? read : read.pipe(Effect.provideContext(classifier));
         expect(result).toMatchObject({ _tag: "open", anchor: "head-push", anchoredAt: "2026-11-10T02:54:20.000Z" });
-        if (result._tag !== "unknown" && failure !== "missing-id") assertNone(result.carried);
+        if (result._tag !== "unknown") assertNone(result.carried);
       })
     );
   }
+});
+
+describe("rewrite carry rendering", () => {
+  it("renders the carry suffix for open and elapsed windows", () => {
+    const carried = O.some(YeetReviewWindowCarry.make({ rewrites: 2, rootSha: "root" }));
+    const anchoredAt = "2026-11-10T02:40:00.000Z";
+    const open = YeetReviewWindowOpen.make({
+      anchor: "head-push",
+      anchoredAt,
+      remainingMs: 600_000,
+      windowMs: 1_200_000,
+      carried,
+    });
+    const elapsed = YeetReviewWindowElapsed.make({ anchor: "head-push", anchoredAt, windowMs: 1_200_000, carried });
+    expect(renderYeetReviewWindow(open)).toBe(
+      "review window open: 10 min left (20 min after the last push at 2026-11-10T02:40:00.000Z); carried across 2 GitHub rewrite(s) from root"
+    );
+    expect(renderYeetReviewWindow(elapsed)).toBe(
+      "review window elapsed (20 min after the last push at 2026-11-10T02:40:00.000Z); carried across 2 GitHub rewrite(s) from root"
+    );
+  });
 });

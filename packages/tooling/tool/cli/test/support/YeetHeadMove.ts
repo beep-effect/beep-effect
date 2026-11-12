@@ -48,7 +48,11 @@ export const commit = Effect.fn("HeadMoveTest.commit")(function* (
   files: Readonly<Record<string, O.Option<string>>>,
   message: string,
   date = "2026-11-09T20:23:48-06:00",
-  email = "lane@example.invalid"
+  email = "lane@example.invalid",
+  committedAt = "2026-11-10T02:46:01Z",
+  signature = email === "noreply@github.com"
+    ? O.some("-----BEGIN PGP SIGNATURE-----\n fixture\n -----END PGP SIGNATURE-----")
+    : O.none<string>()
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -65,15 +69,25 @@ export const commit = Effect.fn("HeadMoveTest.commit")(function* (
     yield* git(root, ["update-index", "--add", "--cacheinfo", `100644,${blob},${file}`]);
   }
   const tree = yield* git(root, ["write-tree"]);
-  return yield* git(root, ["commit-tree", tree, ...A.flatMap(parents, (parent) => ["-p", parent]), "-m", message], {
-    GIT_AUTHOR_NAME: "Stack Probe Author",
-    GIT_AUTHOR_EMAIL: "stack-probe@users.noreply.github.com",
-    GIT_AUTHOR_DATE: date,
-    GIT_COMMITTER_NAME:
-      email === "noreply@github.com" ? "GitHub" : email === "lane@example.invalid" ? "Lane Author" : "octocat",
-    GIT_COMMITTER_EMAIL: email,
-    GIT_COMMITTER_DATE: "2026-11-10T03:00:00Z",
-  });
+  const unsigned = yield* git(
+    root,
+    ["commit-tree", tree, ...A.flatMap(parents, (parent) => ["-p", parent]), "-m", message],
+    {
+      GIT_AUTHOR_NAME: "Stack Probe Author",
+      GIT_AUTHOR_EMAIL: "stack-probe@users.noreply.github.com",
+      GIT_AUTHOR_DATE: date,
+      GIT_COMMITTER_NAME:
+        email === "noreply@github.com" ? "GitHub" : email === "lane@example.invalid" ? "Lane Author" : "octocat",
+      GIT_COMMITTER_EMAIL: email,
+      GIT_COMMITTER_DATE: committedAt,
+    }
+  );
+  if (O.isNone(signature)) return unsigned;
+  const object = yield* git(root, ["cat-file", "commit", unsigned]);
+  const signed = Str.replace("\n\n", `\ngpgsig ${signature.value}\n\n`)(object);
+  const input = path.join(root, "commit-input");
+  yield* fs.writeFileString(input, `${signed}\n`);
+  return yield* git(root, ["hash-object", "-t", "commit", "-w", input]);
 });
 export const stack = Effect.fn("HeadMoveTest.stack")(function* () {
   const root = yield* init();
@@ -113,14 +127,23 @@ export const stack = Effect.fn("HeadMoveTest.stack")(function* () {
     "12345+octocat@users.noreply.github.com"
   );
   const restackBase = yield* commit(root, [squash], { "main.md": O.some("main moved again\n") }, "main moving again");
-  const r2 = yield* commit(root, [restackBase], { [FILE_B]: O.some(b) }, m2, undefined, "noreply@github.com");
+  const r2 = yield* commit(
+    root,
+    [restackBase],
+    { [FILE_B]: O.some(b) },
+    m2,
+    undefined,
+    "noreply@github.com",
+    "2026-11-10T02:54:18Z"
+  );
   const r3 = yield* commit(
     root,
     [r2],
     { [FILE_A]: O.none(), [FILE_B]: O.none() },
     m3,
     "2026-11-09T20:23:49-06:00",
-    "noreply@github.com"
+    "noreply@github.com",
+    "2026-11-10T02:54:18Z"
   );
   return { root, main, l1, l2, l3, moved, squash, c2, c3, restackBase, r2, r3, a, b, m2, m3 };
 });

@@ -75,7 +75,15 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         expectChange(verdict1, "base-mismatch");
         const result = yield* classify(s.root, s.l2, s.l2, s.squash);
         expectChange(result, "lane-push");
-        const verdict2 = yield* classify(s.root, s.c3, s.l3, s.c2);
+        const retargetedMain = yield* commit(
+          s.root,
+          [s.restackBase],
+          { [FILE_B]: O.some(s.b) },
+          "squash layer two",
+          undefined,
+          "noreply@github.com"
+        );
+        const verdict2 = yield* classify(s.root, s.l3, s.r3, retargetedMain);
         expectChange(verdict2, "base-mismatch");
       })
     );
@@ -89,6 +97,41 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         const lane = yield* commit(s.root, [s.squash], { [FILE_B]: O.some(s.b) }, s.m2);
         const verdict5 = yield* classify(s.root, s.l2, lane, s.squash);
         expectChange(verdict5, "not-github-rewrite");
+      })
+    );
+    it.effect("rejects local noreply identities and mismatched signature shapes", () =>
+      Effect.gen(function* () {
+        const s = yield* stack();
+        yield* git(s.root, ["config", "user.email", "12345+octocat@users.noreply.github.com"]);
+        const localIdentity = yield* classify(s.root, s.l2, s.c2, s.squash);
+        expectChange(localIdentity, "not-github-rewrite");
+        yield* git(s.root, ["config", "--unset", "user.email"]);
+        const unsignedWeb = yield* commit(
+          s.root,
+          [s.squash],
+          { [FILE_B]: O.some(s.b) },
+          s.m2,
+          undefined,
+          "noreply@github.com",
+          undefined,
+          O.none()
+        );
+        const unsignedResult = yield* classify(s.root, s.l2, unsignedWeb, s.squash);
+        expectChange(unsignedResult, "not-github-rewrite");
+        const signedCascade = yield* commit(
+          s.root,
+          [s.squash],
+          { [FILE_B]: O.some(s.b) },
+          s.m2,
+          undefined,
+          "12345+octocat@users.noreply.github.com",
+          undefined,
+          O.some("-----BEGIN SSH SIGNATURE-----")
+        );
+        const signedResult = yield* classify(s.root, s.l2, signedCascade, s.squash);
+        expectChange(signedResult, "not-github-rewrite");
+        const absentIdentity = yield* classify(s.root, s.l2, s.c2, s.squash);
+        expect(absentIdentity).toMatchObject({ _tag: "unchanged" });
       })
     );
     it.effect("detects whitespace edits, metadata edits and raw-entry changes", () =>
@@ -222,6 +265,22 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         const s = yield* stack();
         const result = yield* classify(s.root, Str.repeat(40)("0"), s.c2, s.squash);
         expect(result._tag).toBe("unknown");
+      })
+    );
+    it.effect("fails closed with a typed error for invalid UTF-8 commit metadata", () =>
+      Effect.gen(function* () {
+        const s = yield* stack();
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const object = yield* git(s.root, ["cat-file", "commit", s.c2]);
+        const bytes = new TextEncoder().encode(`${object}\n`);
+        bytes[bytes.length - 2] = 0xff;
+        const input = path.join(s.root, "invalid-utf8-commit");
+        yield* fs.writeFile(input, bytes);
+        const after = yield* git(s.root, ["hash-object", "-t", "commit", "-w", input]);
+        const result = yield* classify(s.root, s.l2, after, s.squash);
+        expect(result._tag).toBe("unknown");
+        if (result._tag === "unknown") expect(result.reason).toContain("UTF-8");
       })
     );
     it.effect("provides a requirement-free deterministic test service", () =>

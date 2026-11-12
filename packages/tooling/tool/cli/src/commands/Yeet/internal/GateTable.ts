@@ -629,7 +629,7 @@ const readRow = Effect.fnUntraced(function* (
     const statuses = yield* rest.commitStatuses(pull.headSha).pipe(Effect.option);
     const window = yield* pull.draft
       ? Effect.succeed(O.none<YeetReviewWindow>())
-      : readYeetReviewWindow({ prNumber: pull.number, headSha: pull.headSha }).pipe(Effect.asSome);
+      : readYeetReviewWindow({ prNumber: pull.number, headSha: pull.headSha, pull }).pipe(Effect.asSome);
     const threads = yield* readThreads(pull.number, pull.draft);
     return decideGateTableRow(
       GateTableRead.make({

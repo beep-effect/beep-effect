@@ -81,7 +81,14 @@ import {
   ProvenanceStampOutcome,
   recordMonitoredPrSessionThen,
 } from "./ProvenanceFooter.ts";
-import { readYeetReviewWindow, readYeetReviewWindowEvidence, YeetReviewWindowUnknown } from "./ReviewWindow.ts";
+import {
+  readYeetReviewWindow,
+  readYeetReviewWindowEvidence,
+  YEET_REVIEW_WINDOW_ENV,
+  YeetReviewWindow,
+  YeetReviewWindowDuration,
+  YeetReviewWindowUnknown,
+} from "./ReviewWindow.ts";
 import type { GitHubError } from "@beep/github/GitHubError";
 import type { Repo } from "@beep/github/Repo";
 import type { CliReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
@@ -93,7 +100,6 @@ import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { PrNumber } from "./Provenance.ts";
 import type { PrSessionRegistryShape } from "./PrSessionRegistry.ts";
 import type { YeetReadyInheritedRed } from "./ReadyGate.ts";
-import type { YeetReviewWindow } from "./ReviewWindow.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/GhOps");
 
@@ -140,6 +146,7 @@ export const YeetGhGateReason = LiteralKit([
   "check-pending",
   "review-window-open",
   "review-window-unknown",
+  "review-window-config",
   "threads-unknown",
   "threads-outstanding",
 ]).pipe($I.annoteSchema("YeetGhGateReason", { description: "Why the REST merge gate holds or refuses." }));
@@ -156,6 +163,7 @@ const holdReasons = HashSet.make<ReadonlyArray<YeetGhGateReason>>(
   "required-pending",
   "check-pending",
   "review-window-open",
+  "review-window-unknown",
   "threads-unknown"
 );
 
@@ -201,6 +209,8 @@ export class YeetGhGateFacts extends S.Opaque<YeetGhGateFacts, { readonly brand:
     checkRuns: S.Array(GithubCheckRunRecord),
     readyAt: S.Option(S.DateTimeUtc),
     headPushedAt: S.Option(S.DateTimeUtc),
+    windowResult: YeetReviewWindow.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    windowConfigValid: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true))),
     outstandingThreads: S.Option(S.Int),
     totalThreads: S.Option(S.Int),
     tolerated: S.Array(S.String),
@@ -415,15 +425,27 @@ const reviewWindowAge = (facts: YeetGhGateFacts): O.Option<Duration.Duration> =>
     return Duration.millis(Math.max(0, DateTime.toEpochMillis(facts.now) - DateTime.toEpochMillis(start)));
   });
 
+// An invalid BEEP_YEET_REVIEW_WINDOW is local configuration, so it refuses; any
+// other unknown window is a transient read and holds, as MergeGate treats it.
+const unknownWindowFinding = (result: O.Option<YeetReviewWindow>, configValid: boolean): YeetGhGateFinding =>
+  finding(
+    configValid ? "review-window-unknown" : "review-window-config",
+    O.getOrElse(O.filter(result, YeetReviewWindow.guards.unknown).pipe(O.map((value) => value.reason)), () =>
+      configValid ? "GitHub has no trusted head push time" : `${YEET_REVIEW_WINDOW_ENV} is not a valid duration`
+    )
+  );
+
 const reviewWindowFindings = (
   forceWindow: boolean,
   windowAge: O.Option<Duration.Duration>,
-  window: Duration.Duration
+  window: Duration.Duration,
+  result: O.Option<YeetReviewWindow>,
+  configValid: boolean
 ): ReadonlyArray<YeetGhGateFinding> =>
   forceWindow
     ? []
     : O.match(windowAge, {
-        onNone: () => [finding("review-window-unknown", "GitHub has no trusted head push time")],
+        onNone: () => [unknownWindowFinding(result, configValid)],
         onSome: (age) =>
           when(
             Duration.isLessThan(age, window),
@@ -476,7 +498,7 @@ export const decideYeetGhMergeGate = (facts: YeetGhGateFacts): YeetGhGateVerdict
     ),
     ...requiredRead.findings,
     ...otherCheckFindings(latest, HashSet.fromIterable(required), HashSet.fromIterable(facts.tolerated)),
-    ...reviewWindowFindings(facts.forceWindow, windowAge, facts.window),
+    ...reviewWindowFindings(facts.forceWindow, windowAge, facts.window, facts.windowResult, facts.windowConfigValid),
     ...threadFindings(facts.outstandingThreads),
   ];
   return YeetGhGateVerdict.make({
@@ -1325,13 +1347,16 @@ const readGateFacts = Effect.fn("YeetGh.readGateFacts")(function* (options: {
     [
       optional("required contexts", rest.requiredStatusContexts(pr.baseRef)),
       rest.checkRuns(pr.headSha),
-      readYeetReviewWindowEvidence({ prNumber: options.number, headSha: pr.headSha }).pipe(
+      readYeetReviewWindowEvidence({ prNumber: options.number, headSha: pr.headSha, pull: pr }).pipe(
         provideYeetHeadMoveClassifier(options.repoRoot ?? process.cwd())
       ),
     ],
     { concurrency: 3 }
   );
+  if (evidence.result._tag === "unknown")
+    yield* Console.error(`[gh] review window unknown for #${options.number}: ${evidence.result.reason}`);
   const threads = options.readThreads ? yield* readOutstandingThreads(options.number, options.policy) : O.none();
+  const windowConfig = yield* YeetReviewWindowDuration.pipe(Effect.option);
   return YeetGhGateFacts.make({
     pullRequest: pr,
     pinnedSha: O.getOrElse(options.pinnedSha, () => pr.headSha),
@@ -1339,6 +1364,8 @@ const readGateFacts = Effect.fn("YeetGh.readGateFacts")(function* (options: {
     checkRuns,
     readyAt: evidence.readyAt,
     headPushedAt: evidence.pushedAt,
+    windowResult: O.some(evidence.result),
+    windowConfigValid: O.isSome(windowConfig),
     window: evidence.window,
     outstandingThreads: O.map(threads, (read) => read.outstanding),
     totalThreads: O.map(threads, (read) => read.total),

@@ -10,8 +10,11 @@ import {
   FinalCheckStatusDrift,
   finalCheckPatchIdentityDigest,
   finalCheckRefreshAllowance,
+  layerYeetHeadMoveClassifierTest,
   runGitFoldedStdout,
+  YeetHeadMoveChanged,
   YeetHeadMoveClassifier,
+  YeetHeadMoveUnchanged,
 } from "@beep/repo-cli/test/Yeet";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -717,6 +720,30 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           receiptHead: later,
           reason: "ancestor-receipt-not-passing",
         });
+      })
+    );
+    it.effect("stops at an ancestor candidate missed by the earlier search", () =>
+      Effect.gen(function* () {
+        const s = yield* stack();
+        yield* writeReceipt(s.root, receiptFor(s.l2));
+        yield* writeReceipt(s.root, receiptFor(s.l3));
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* fs.utimes(path.join(s.root, FINAL_CHECK_RECEIPT_DIR, `${s.l3}.json`), 2_000_000_000, 2_000_000_000);
+        const classifier = layerYeetHeadMoveClassifierTest((request) =>
+          request.before === s.l3
+            ? YeetHeadMoveChanged.make({
+                ...request,
+                change: "lane-push",
+                detail: "ancestor search missed this receipt",
+              })
+            : YeetHeadMoveUnchanged.make({ ...request, commits: 1 })
+        );
+        const classifierContext = yield* Layer.build(classifier);
+        const result = yield* checkFinalCheckRewriteCarry(s.root, s.squash, s.c2, s.squash).pipe(
+          Effect.provideContext(classifierContext)
+        );
+        assertNone(result);
       })
     );
     it.effect("chooses an undecodable equivalent receipt by filename and refuses it", () =>

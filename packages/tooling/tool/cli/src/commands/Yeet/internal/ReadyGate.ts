@@ -1287,12 +1287,6 @@ const acceptCarriedReceipt = Effect.fn("Yeet.acceptCarriedReceipt")(function* (
   );
 });
 
-// The flip is the content-final claim, so it requires the head-pinned
-// final-check receipt: every hosted gate the cheap tier skips, replayed on
-// this exact head. Skipped gates are named so the owner states them in the PR.
-// A head with no receipt of its own may carry an ancestor's passing receipt
-// under the refresh rule (`FinalCheckRefresh.ts`); a failing or partial
-// receipt on this head always stands.
 const carriedReceiptRefusal = (refused: FinalCheckRefreshRefused, missing: string, rewrite: boolean): string => {
   if (rewrite)
     return `${missing}; the receipt of ${refused.receiptHead} does not carry across the GitHub rewrite: ${refused.detail}`;
@@ -1317,6 +1311,12 @@ const acceptOwnReceipt = Effect.fn("Yeet.acceptOwnReceipt")(function* (
   }
 });
 
+// The flip is the content-final claim, so it requires the head-pinned
+// final-check receipt: every hosted gate the cheap tier skips, replayed on
+// this exact head. Skipped gates are named so the owner states them in the PR.
+// A head with no receipt of its own may carry an ancestor's passing receipt
+// under the ancestor refresh rule, then the GitHub rewrite carry; a failing or partial
+// receipt on this head always stands.
 const requireFinalCheck = Effect.fn("Yeet.requireFinalCheck")(function* (
   context: RepoRunContext,
   dependencies: YeetReadyGateDependencies,

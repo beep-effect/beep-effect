@@ -9,7 +9,6 @@
     "ref": "feat/ciops-p2-projection"
   },
   "base": {
-    "sha": "base000000",
     "ref": "main",
     "sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
   },

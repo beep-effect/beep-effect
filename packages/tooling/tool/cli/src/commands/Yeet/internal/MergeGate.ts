@@ -1328,7 +1328,7 @@ const readMergeGateUsing = Effect.fn("Yeet.readMergeGate")(function* (
     requiredContexts,
     checkRuns: A.map(checkRuns, toMergeGateCheckRun),
     baseRuns,
-    window: yield* readYeetReviewWindow({ prNumber: pull.number, headSha: pull.headSha }).pipe(
+    window: yield* readYeetReviewWindow({ prNumber: pull.number, headSha: pull.headSha, pull }).pipe(
       provideYeetHeadMoveClassifier(context.repoRoot)
     ),
     unresolvedThreads,
