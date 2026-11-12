@@ -1,4 +1,5 @@
 import {
+  McpbLaunch,
   McpbManifest,
   McpbManifestFields,
   McpbPackageFailure,
@@ -7,11 +8,17 @@ import {
   McpbTool,
   McpbUserConfigField,
   makeMcpbPackageCommand,
+  mcpbCompiledLaunch,
   mcpbManifest,
   mcpbTargetSpec,
+  mcpbWindowsRuntime,
 } from "@beep/mcpb-kit";
-import { describe, expect, it } from "@effect/vitest";
+import * as BunServices from "@effect/platform-bun/BunServices";
+import { describe, expect, it, layer } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -44,29 +51,70 @@ const spec = McpbPackageSpec.make({
 });
 
 describe("mcpbTargetSpec", () => {
-  it("names the Linux executable after the app", () => {
+  it("compiles the Linux executable named after the app", () => {
     const linux = mcpbTargetSpec("linux-x64", "example-mcp");
-    expect(linux.executable).toBe("example-mcp");
-    expect(linux.bunTarget).toBe("bun-linux-x64");
+    expect(linux.launch).toEqual({ kind: "compiled", bunTarget: "bun-linux-x64", executable: "example-mcp" });
     expect(linux.nativePackage).toBe("node-bindings-linux-x64");
     expect(linux.platform).toBe("linux");
   });
 
-  it("adds .exe and the win32 bindings for Windows", () => {
+  it("ships the pinned runtime, a script and the win32 bindings for Windows", () => {
     const windows = mcpbTargetSpec("example-mcp")("windows-x64");
-    expect(windows.executable).toBe("example-mcp.exe");
-    expect(windows.bunTarget).toBe("bun-windows-x64");
+    expect(windows.launch).toEqual({
+      kind: "runtime-script",
+      runtime: mcpbWindowsRuntime,
+      runtimeArgs: ["--no-env-file"],
+      script: "example-mcp.js",
+    });
     expect(windows.nativePackage).toBe("node-bindings-win32-x64");
     expect(windows.platform).toBe("win32");
   });
+
+  it("never compiles an executable into a Windows bundle", () => {
+    expect(McpbLaunch.guards.compiled(mcpbTargetSpec("windows-x64", "example-mcp").launch)).toBe(false);
+  });
+});
+
+describe("mcpbCompiledLaunch", () => {
+  it("adds .exe to a Windows executable", () => {
+    expect(mcpbCompiledLaunch("windows-x64", "example-setup")).toEqual({
+      kind: "compiled",
+      bunTarget: "bun-windows-x64",
+      executable: "example-setup.exe",
+    });
+    expect(mcpbCompiledLaunch("example-setup")("linux-x64").executable).toBe("example-setup");
+  });
+});
+
+describe("mcpbWindowsRuntime", () => {
+  it("pins the official Windows release archive by sha256", () => {
+    expect(mcpbWindowsRuntime.asset).toBe("bun-windows-x64");
+    expect(mcpbWindowsRuntime.executable).toBe("bun.exe");
+    expect(mcpbWindowsRuntime.sha256).toMatch(/^[0-9a-f]{64}$/);
+  });
+});
+
+layer(BunServices.layer, { timeout: "30 seconds" })("the pinned Windows runtime", (it) => {
+  it.effect("names the Bun version the repository pins in .bun-version", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      // The checked-in file itself: a Bun bump that leaves the pin behind fails here.
+      const versionFile = yield* fs.realPath(path.resolve(import.meta.dirname, "../../../../../.bun-version"));
+      const repoVersion = yield* fs.readFileString(versionFile);
+      expect(mcpbWindowsRuntime.version).toBe(Str.trim(repoVersion));
+    })
+  );
 });
 
 describe("mcpbManifest", () => {
-  it("writes the shared fields, the bundled command and sorted environment", () => {
+  it("launches the bundled runtime with the script on Windows", () => {
     const manifest = mcpbManifest(fields, mcpbTargetSpec("windows-x64", spec.appName));
     expect(manifest.compatibility.platforms).toEqual(["win32"]);
-    expect(manifest.server.entry_point).toBe("example-mcp.exe");
-    expect(manifest.server.mcp_config.command).toBe("${__dirname}/example-mcp.exe");
+    expect(manifest.server.type).toBe("binary");
+    expect(manifest.server.entry_point).toBe("bun.exe");
+    expect(manifest.server.mcp_config.command).toBe("${__dirname}/bun.exe");
+    expect(manifest.server.mcp_config.args).toEqual(["--no-env-file", "${__dirname}/example-mcp.js"]);
     expect(R.keys(manifest.server.mcp_config.env)).toEqual(["DATA_DIR", "NODE_PATH", "ZETA"]);
     expect(manifest.server.mcp_config.env.NODE_PATH).toBe("${__dirname}/node_modules");
     expect(manifest.user_config.data_dir).toEqual({
@@ -77,6 +125,15 @@ describe("mcpbManifest", () => {
     });
     expect(manifest.tools).toEqual([{ name: "find", description: "Find things." }]);
     expect("prompts" in manifest).toBe(false);
+  });
+
+  it("launches the compiled executable without arguments on Linux", () => {
+    const manifest = mcpbManifest(fields, mcpbTargetSpec("linux-x64", spec.appName));
+    expect(manifest.compatibility.platforms).toEqual(["linux"]);
+    expect(manifest.server.entry_point).toBe("example-mcp");
+    expect(manifest.server.mcp_config.command).toBe("${__dirname}/example-mcp");
+    expect("args" in manifest.server.mcp_config).toBe(false);
+    expect(manifest.server.mcp_config.env.NODE_PATH).toBe("${__dirname}/node_modules");
   });
 
   it("writes declared prompts after the tools", () => {
@@ -95,6 +152,28 @@ describe("mcpbManifest", () => {
       );
       expect(Str.startsWith('{\n  "manifest_version": "0.3",\n  "name": "beep-example",\n  "display_name"')(json)).toBe(
         true
+      );
+    })
+  );
+
+  it.effect("writes the Windows launch as command, args, then env", () =>
+    Effect.gen(function* () {
+      const json = yield* S.encodeEffect(McpbManifestJson)(
+        mcpbManifest(fields, mcpbTargetSpec("windows-x64", spec.appName))
+      );
+      expect(json).toContain(
+        A.join(
+          [
+            '    "mcp_config": {',
+            '      "command": "${__dirname}/bun.exe",',
+            '      "args": [',
+            '        "--no-env-file",',
+            '        "${__dirname}/example-mcp.js"',
+            "      ],",
+            '      "env": {',
+          ],
+          "\n"
+        )
       );
     })
   );

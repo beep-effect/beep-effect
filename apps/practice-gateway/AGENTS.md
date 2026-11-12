@@ -32,5 +32,7 @@ selects, over one `effect/ai/McpServer` stdio server.
   (`<dataDir>/m365/token-cache.dpapi`); a browser sign-in starts only from the
   approved `m365-consented` repair, never from a tool call.
 - Packaging: `bun run --cwd apps/practice-gateway package:mcpb:linux`
-  (`:windows` downloads the pinned DuckDB win32 sidecar).
+  (`:windows` downloads the pinned DuckDB win32 sidecar and the pinned signed
+  Bun runtime, and ships `bun.exe` plus `practice-gateway.js`, never a
+  compiled executable).
 - Before handing back a change, run `bun run beep quality package-verify @beep/practice-gateway` from the repository root. Use `--quick` only for a justified lint+check subset; a failure arms the checkout's shared P0 inbox.
