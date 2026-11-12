@@ -33,13 +33,18 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started. The work is four slices, A to D, listed in
-[`PLAN.md`](./PLAN.md); A (census and proof) is first and changes no
-production code.
+Slice A (census and proof) is done; slice B (owner surface) is next. The work
+is four slices, A to D, listed in [`PLAN.md`](./PLAN.md).
 
 ## Latest Evidence
 
-Not started. The evidence this goal starts from is the encoder differential,
+Slice A, 2026-11-12: the census
+([`research/encoder-census.md`](./research/encoder-census.md)) classes 157
+rows and finds four replace-class encoders and no legacy row. Tracked tests
+hold those encoders byte-equal to `JsoncFingerprint` on generated plain JSON,
+and all 76 stored packet event digests and the four golden execution seals
+recompute through it ([`research/slice-a-evidence.md`](./research/slice-a-evidence.md)).
+The evidence the goal started from is the encoder differential,
 [`explorations/protocol-as-value/research/encoder-differential-2026-11-10.md`](../../explorations/protocol-as-value/research/encoder-differential-2026-11-10.md).
 
 ## Notes

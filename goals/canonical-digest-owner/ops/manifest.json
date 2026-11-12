@@ -6,7 +6,7 @@
     "title": "Canonical Digest Owner",
     "status": "active",
     "created": "2026-11-10",
-    "updated": "2026-11-10",
+    "updated": "2026-11-12",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/canonical-digest-owner",
@@ -34,7 +34,17 @@
     "goals/canonical-digest-owner/GOAL.md",
     "goals/canonical-digest-owner/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md",
+    "research/census/foundation-drivers.md",
+    "research/census/slices-apps.md",
+    "research/census/tooling.md",
+    "research/encoder-census.md",
+    "research/slice-a-cache-request.json",
+    "research/slice-a-cache-review.md",
+    "research/slice-a-evidence.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -50,12 +60,12 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",

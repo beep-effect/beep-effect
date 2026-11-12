@@ -185,6 +185,30 @@ Lane docs/protocol-as-value-graduate
 
 Reverse: Widen or narrow the pre-pass in a superseding decision and update the refusal-table test with it.
 
+### Callers rely on one coercion, dropped undefined members; unpaired surrogates are reachable but unstored, 2026-11-12
+
+P0 answer, 2026-11-12, from two sources: a reading of every caller (research/encoder-census.md) and a temporary probe that wrapped the three encoders and compared each call with the owner while the callers' test suites ran (ten package and app suites plus 46 repo-cli Goals, Explore and Skills test files; about 27,900 encoder calls; never committed). No call produced bytes that differ from the owner's where the owner emits. Relied on: an object member whose value is undefined. goalCompletionDeclarationDigest and the declaration comparison in Goals/Completion.ts pass packetId and proposedCloseout as undefined when absent (443 calls) and depend on the member being dropped; with undefined members removed the owner's bytes matched in all 443. That is the pre-pass SPEC.md already permits, so the PacketCore swap in slice C depends on slice B landing it. Reachable but not relied on: an unpaired surrogate. Free-text S.String fields admit one, schema-derived arbitraries generated them in about 1,070 calls (contradiction facts, evidence quotes, grant destinations, packet event actors), the encoders escape and digest them, and the owner refuses. No stored event, seal or committed fixture carries one. Slice C must list each such digest as a behaviour change from a sealed value to a typed refusal. Not reached by any caller: NaN, an infinity, a bigint, a Date, an undefined array element, undefined at the root and nesting past 256 levels; only the slice A table tests produce them. One input is not plain JSON by type: retentionPayloadBytes takes an edge fact typed as a record of unknown; it counts bytes, is not hashed, and production reads the fact from a JSON column.
+
+Lane test/canonical-digest-census
+
+Reverse: Rerun the probe described in research/slice-a-evidence.md and supersede this file with the new counts.
+
+### Slice A tests live beside each encoder's importer; two dev edges, no production edge, 2026-11-12
+
+The differential and off-domain tests for the epistemics and PacketCore encoders, and the packet event replay, live in the @beep/repo-cli test tree: that package already depends on @beep/epistemics, @beep/jsonc and the test kits, so they add no edge. The semantica encoder is app-internal and a package cannot import an app, so its two tests live in apps/labs/semantica/test with @beep/jsonc as a devDependency, the edge SPEC.md already plans as a dependency in slice C. The execution-record seal replay extends the golden-vector block in packages/execution-authority/domain/test with @beep/jsonc as a devDependency; standards/ARCHITECTURE.md (Family And Kind Dependency Rules, Slice Consumption Rules) lets a domain package import foundation/modeling. The same table settles the slice C question early: @beep/epistemics to @beep/jsonc is modeling to modeling, which is allowed, and acyclic because @beep/jsonc depends only on @beep/identity, @beep/schema and @beep/utils. Rejected: one test in @beep/jsonc (it would import a tooling tool and an app), and a shared generator exported from a test kit (new public surface for scaffolding that slices C and D retire). The generator is effect/Arbitrary over S.Json, widened in the repo-cli test with fixed pools of numbers, strings and keys; the semantica test uses the schema-derived arbitrary alone plus fixed examples.
+
+Lane test/canonical-digest-census
+
+Reverse: Move the test files, drop @beep/jsonc from the devDependencies of @beep/execution-authority-domain and @beep/semantica, and run bun run beep tsconfig-sync.
+
+### The replay covers archived and history-only events through a tracked snapshot, 2026-11-12
+
+P0 count, 2026-11-12. Main has minted 76 packet event digests. Four are in the tree (four goals, one packet-created event each). The archive repository beep-effect/beep-effect-goals-archive holds 71 at commit 6187b837dc1b (61 packet-created, 9 status-set, 1 risk-tier-overridden). One exists only in history: goals/firecrawl-driver, deleted with its packet in pull request 1975 and never archived. The replay must cover the archive: it holds 71 of the 76, every parent link and every body type other than packet-created, so a tree-only replay would never exercise a chained event. The archive is a separate repository that hosted CI does not check out, so the 72 out-of-tree events are snapshotted into one JSONL fixture in the repo-cli test tree, each line naming its source commit, and the test also walks the live tree. Result: 76 of 76 recompute through JsoncFingerprint.hash; no legacy row. Refresh the snapshot with the command in research/stored-digest-replay.md when the archive grows.
+
+Lane test/canonical-digest-census
+
+Reverse: Delete packages/tooling/tool/cli/test/fixtures/canonical-digest-owner/stored-packet-events.jsonl and the snapshot case in canonical-digest-owner-replay.test.ts; the live-tree case stands alone.
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

@@ -1,0 +1,15 @@
+{
+  "previous": "d3af5375a2050f5078b8d3c33dc27ee41230f84464ac137d8762e4c3a67e93c1",
+  "review": {
+    "reviewer": "Claude Fable 5.2, test/canonical-digest-census",
+    "reason": "Record the one new upstream task that @beep/execution-authority-domain and @beep/semantica gain on build, check, lint:deprecated-apis and test from the @beep/jsonc devDependency slice A of goals/canonical-digest-owner adds for its differential and seal replay tests. Preserve commands, cache flags, outputs, environment, declared inputs, epoch and qualification scope; inputs only grow; no qualification or exception.",
+    "basis": {
+      "path": "goals/canonical-digest-owner/research/slice-a-cache-review.md",
+      "sha256": "8c7746c154d2d461b1c9ae5d12552ee2afbae21e17bb726d7efd5722b16ed59c"
+    }
+  },
+  "subjects": ["@beep/execution-authority-domain", "@beep/semantica"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}
