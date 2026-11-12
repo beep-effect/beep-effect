@@ -98,6 +98,14 @@ Lane claude/awesome-chaplygin-626db8
 
 Reverse: Revert the PERIH-01 slice 1 merge commit (check.yml, the two tests, packet files) and delete this checkpoint file.
 
+### LINT-05 slice 5: hosted Lint Policy leaves the JSDoc pair to JSDoc Ratchet, 2026-11-12
+
+P1 slice 5 (LINT-05) drops `jsdoc:inventory:check` and `jsdoc:ratchet:check` from the hosted Lint Policy plan, full scope (`fullScopeStateTasks`) and changed scope (the medium graph), only while `standards/branch-protection-contexts.json` lists `JSDoc Ratchet` as required. That lane runs `beep ci lane jsdoc-ratchet` (inventory then ratchet) on every head Lint Policy runs on: Lint Policy (`heavy.yml` `verify`) runs only on Heavy Admission's admitted heads, admission never admits a documentation-only diff, and JSDoc Ratchet (`check.yml` `jsdoc-ratchet`) skips only documentation-only diffs. Only a hosted plan reads the snapshot. A local plan, a hosted plan without the snapshot and a hosted plan whose ruleset no longer requires the context keep the pair, so the duplicate can cost time but never coverage. The plan test in `quality-tasks.test.ts` pins all four cases and shows the pair is the only difference. The seeded-red draft PR proof (JSDoc Ratchet red, neither task in the Lint Policy log) and the scorecard reading of the saving stay open until hosted runs report. Rejected: deleting the pair from the shared task lists (a local `bun run lint` would lose the inventory) and keying on `CI` alone (the drop would outlive the required context).
+
+Lane perf/heavy-pool-diet-lint-05
+
+Reverse: Revert the slice 5 squash commit; the hosted Lint Policy plan then runs jsdoc:inventory:check and jsdoc:ratchet:check again.
+
 ### PERIH-01 slice 1 merged in #3116; required names proven on a code head, 2026-11-12
 
 #3116 merged as aec8dbf57bd on 2026-11-12. Before the merge, Check run 42775621719 on code head fcbedcaa604 reported Heavy / Test Integration (success) and Heavy / Coverage Regression under their exact required names, and neither Test Integration Partitions nor Coverage Artifact Migration appeared. Coverage Regression was red on nine ratchet rows, all inherited from #3068 (87837893fd7) and identical on main at b757bd0400f and 2cadc8caa0d; the PR merged over that red under S11. A docs head only runs the new check.yml once it is on main, so no docs-head proof existed at merge time; the documentation-only PR that adds this checkpoint is that docs head, and its run is the docs-head reading. The Publish Beep CI Binary run on aec8dbf57bd failed on an HTTP 403 from gh release create after compile and smoke passed, so release beep-ci-aec8dbf57bde does not exist; later main commits published normally.
