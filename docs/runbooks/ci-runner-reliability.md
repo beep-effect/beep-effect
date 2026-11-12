@@ -53,7 +53,9 @@ root (`ciCodeShapedPathPatterns`):
 
 - JavaScript and TypeScript in every module variant. SAST, oxlint and
   effect-imports read them.
-- Dependency manifests and lockfiles. Dependency review and OSV read them.
+- Dependency manifests and lockfiles: every file GitHub's dependency graph recognizes
+  (npm, Composer, Maven, Gradle, NuGet, pip, Poetry, RubyGems, Cargo, Go, pub, Swift, Bazel,
+  OpenTofu and others). Dependency review and OSV read them.
 - Tool configuration that repo-wide globs read: `tsconfig*.json`,
   `.gitignore`, `.gitattributes`, Biome, Turbo, docgen, `components.json` and
   oxlintrc files.
@@ -83,7 +85,9 @@ On code pull requests, Change Profile also reports per-lane relevance
 `desktop_ipc_relevant`, `sast_relevant`, `security_relevant`) from the `lanes`
 rows of the same pattern data. Each job's guard reads `!= 'false'`, so a pinned
 binary that predates an output leaves the lane running. The jobs' own path gates
-read the same rows with `jq` and `grep -E`. Security's live-advisory and
+read the same rows with `jq` and `grep -E`. Security and SAST also run whenever the
+`@beep/repo-cli` workspace closure changes, because it implements their hosted dispatch and
+GitHub policy reads. Security's live-advisory and
 GitHub-settings verdicts stay on every main push, because a push always gets
 the full profile.
 

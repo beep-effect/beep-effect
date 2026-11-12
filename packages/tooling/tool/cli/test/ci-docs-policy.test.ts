@@ -17,6 +17,8 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -35,6 +37,16 @@ const TurboTask = S.Struct({
   cache: S.optionalKey(S.Boolean),
 });
 const TurboJson = S.Struct({ tasks: S.Record(S.String, TurboTask) });
+const DependencyMap = S.Record(S.String, S.String).pipe(S.optionalKey);
+const WorkspaceManifest = S.Struct({
+  name: S.String.pipe(S.optionalKey),
+  dependencies: DependencyMap,
+  devDependencies: DependencyMap,
+  peerDependencies: DependencyMap,
+});
+const decodeWorkspaceManifest = S.decodeUnknownEffect(S.fromJsonString(WorkspaceManifest));
+// Fixture and installed manifests are not workspaces; a fixture may reuse a workspace name.
+const WORKSPACE_MANIFEST_EXCLUSION = /(^|\/)(node_modules|test|tests|fixtures|__fixtures__)\//u;
 const decodeTurboJson = S.decodeUnknownEffect(S.fromJsonString(TurboJson));
 
 const ROOT_TASK_PREFIX = "//#";
@@ -191,6 +203,15 @@ it.layer(Layer.provideMerge(Git.layer, NodeServices.layer), { timeout: "120 seco
           "goals/demo/ops/codemod/tsconfig.json",
           "explorations/demo/assets/.gitignore",
           "goals/demo/docgen.json",
+          // Every dependency-graph manifest GitHub recognizes, not only the JavaScript ones.
+          "docs/example/composer.lock",
+          "goals/demo/pom.xml",
+          "research/demo/Package.resolved",
+          "explorations/demo/app.csproj",
+          "docs/example/pubspec.lock",
+          "goals/demo/main.tf",
+          "docs/example/build.gradle.kts",
+          "research/demo/demo.gemspec",
         ]) {
           assert.isFalse(isHeavyDocsOnlyPath(candidate), candidate);
         }
@@ -284,68 +305,137 @@ const RELEVANCE_ROWS: ReadonlyArray<readonly [string, ReadonlyArray<string>]> = 
   ["docs/runbooks/ci.md", []],
   ["goals/demo/research/notes.md", []],
   ["goals/demo/ops/tool.py", []],
+  // Outside the @beep/repo-cli closure: only the source scan applies.
+  ["apps/beep-effect-web/src/app/page.tsx", ["sast"]],
+  ["packages/law-practice/server/src/Citation.ts", ["sast"]],
   ["packages/ecosystem/drizzle/src/index.ts", ["ecosystem", "sast"]],
-  ["packages/drivers/acp/openapi.json", ["codegen"]],
-  ["packages/drivers/acp/src/_generated/Client.ts", ["codegen", "sast"]],
-  ["packages/tooling/library/codegen-kit/src/index.ts", ["codegen", "sast"]],
+  ["packages/drivers/acp/openapi.json", ["codegen", "sast", "security"]],
+  ["packages/drivers/acp/src/_generated/Client.ts", ["codegen", "sast", "security"]],
+  ["packages/tooling/library/codegen-kit/src/index.ts", ["codegen", "sast", "security"]],
   [".gitattributes", ["codegen"]],
-  ["packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts", ["codegen", "sast"]],
+  ["packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts", ["codegen", "sast", "security"]],
   ["flake.nix", ["nix"]],
   ["apps/professional-desktop/src-tauri/src/lib.rs", ["desktop_ipc"]],
-  ["packages/foundation/modeling/schema/src/index.ts", ["desktop_ipc", "sast"]],
+  ["packages/foundation/modeling/schema/src/index.ts", ["desktop_ipc", "sast", "security"]],
   [".semgrep/first-party.yml", ["sast"]],
   ["osv-scanner.toml", ["security"]],
   [".github/workflows/storybook.yml", ["security"]],
   [".github/actions/setup-bun/action.yml", ["sast", "security"]],
   [".github/actions/setup-monorepo-ci/action.yml", ["desktop_ipc", "security"]],
   ["packages/tooling/tool/cli/src/commands/Ci/DependencyReview.ts", ["sast", "security"]],
+  // The hosted GitHub policy reads run through the CLI closure (LaneTimings' client layer, the
+  // GitHub driver's transport), so Security runs on those sources too.
+  ["packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts", ["sast", "security"]],
+  ["packages/drivers/github/src/internal/octokit.ts", ["sast", "security"]],
+  // Dependency review reads every manifest GitHub's dependency graph recognizes.
+  ["docs/example/composer.lock", ["security"]],
   ["packages/agents/domain/package.json", ["desktop_ipc", "security"]],
-  ["packages/tooling/library/repo-utils/package.json", ["security"]],
-  ["tsconfig.base.json", ["ecosystem"]],
+  ["packages/tooling/library/repo-utils/package.json", ["sast", "security"]],
+  ["tsconfig.base.json", ["ecosystem", "sast", "security"]],
   ["bun.lock", ["codegen", "ecosystem", "desktop_ipc", "sast", "security"]],
   [".github/workflows/check.yml", CI_RELEVANCE_LANE_VALUES],
   ["packages/tooling/tool/cli/src/commands/Ci/CiLane.ts", CI_RELEVANCE_LANE_VALUES],
   ["packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json", CI_RELEVANCE_LANE_VALUES],
 ];
 
-it.layer(NodeServices.layer, { timeout: "60 seconds" })("lane relevance patterns", (it) => {
-  it.effect(
-    "selects each lane from its inputs only",
-    Effect.fnUntraced(function* () {
-      for (const [changed, expected] of RELEVANCE_ROWS) {
-        const profile = classifyChangeProfile(ciOperationalPatterns, [changed]);
-        const relevant = A.filter(CI_RELEVANCE_LANE_VALUES, (lane) => profile.lanes[lane]);
-        assert.deepStrictEqual(relevant, [...expected], changed);
-      }
-      const empty = classifyChangeProfile(ciOperationalPatterns, []);
-      assert.deepStrictEqual(
-        A.filter(CI_RELEVANCE_LANE_VALUES, (lane) => empty.lanes[lane]),
-        [],
-        "an empty diff selects no lane"
-      );
-    })
-  );
+it.layer(Layer.provideMerge(Git.layer, NodeServices.layer), { timeout: "60 seconds" })(
+  "lane relevance patterns",
+  (it) => {
+    it.effect(
+      "selects each lane from its inputs only",
+      Effect.fnUntraced(function* () {
+        for (const [changed, expected] of RELEVANCE_ROWS) {
+          const profile = classifyChangeProfile(ciOperationalPatterns, [changed]);
+          const relevant = A.filter(CI_RELEVANCE_LANE_VALUES, (lane) => profile.lanes[lane]);
+          assert.deepStrictEqual(relevant, [...expected], changed);
+        }
+        const empty = classifyChangeProfile(ciOperationalPatterns, []);
+        assert.deepStrictEqual(
+          A.filter(CI_RELEVANCE_LANE_VALUES, (lane) => empty.lanes[lane]),
+          [],
+          "an empty diff selects no lane"
+        );
+      })
+    );
 
-  // The check.yml path gates run the same pattern data through `grep -Eq`; POSIX ERE and the
-  // binary's JavaScript RegExp must agree on every row.
-  it.effect(
-    "agrees with grep -E, the engine the check.yml path gates use",
-    Effect.fnUntraced(function* () {
-      const lanes = ciOperationalPatterns.lanes;
-      assert.isDefined(lanes);
-      for (const lane of CI_RELEVANCE_LANE_VALUES) {
-        const pattern: string | undefined = lanes?.[lane];
-        assert.isDefined(pattern, lane);
-        for (const [changed] of RELEVANCE_ROWS) {
-          const grep = Bun.spawnSync(["bash", "-c", 'grep -Eq "$1" <<< "$2"', "_", pattern ?? "", changed]);
-          assert.oneOf(grep.exitCode, [0, 1], `${lane} ${changed}: ${grep.stderr.toString()}`);
-          assert.strictEqual(
-            grep.exitCode === 0,
-            new RegExp(pattern ?? "", "u").test(changed),
-            `${lane} disagrees on ${changed}`
+    // Security's GitHub policy reads and SAST's dispatcher run through `bun run beep`, so every
+    // workspace in the @beep/repo-cli dependency closure is an input to both lanes.
+    it.effect(
+      "covers the whole @beep/repo-cli workspace closure in the Security and SAST rows",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repoRoot = yield* findRepoRoot();
+        const git = yield* Git;
+        const entries = yield* git.lsFiles(repoRoot);
+        const manifestPaths = A.filter(
+          A.map(entries, (entry) => entry.path),
+          (file) =>
+            (file === "package.json" || Str.endsWith("/package.json")(file)) && !WORKSPACE_MANIFEST_EXCLUSION.test(file)
+        );
+        const manifests = yield* Effect.forEach(manifestPaths, (file) =>
+          fs.readFileString(path.join(repoRoot, file)).pipe(
+            Effect.flatMap(decodeWorkspaceManifest),
+            Effect.map((manifest) => ({ manifest, directory: path.dirname(file) })),
+            Effect.option
+          )
+        );
+        const byName = HashMap.fromIterable(
+          A.flatMap(A.getSomes(manifests), (workspace) =>
+            workspace.manifest.name === undefined ? [] : [[workspace.manifest.name, workspace] as const]
+          )
+        );
+        let closure = HashSet.empty<string>();
+        let pending: ReadonlyArray<string> = ["@beep/repo-cli"];
+        while (A.isReadonlyArrayNonEmpty(pending)) {
+          const [name, ...rest] = pending;
+          pending = rest;
+          const workspace = HashMap.get(byName, name);
+          if (O.isNone(workspace) || HashSet.has(closure, name)) continue;
+          closure = HashSet.add(closure, name);
+          const { dependencies, devDependencies, peerDependencies } = workspace.value.manifest;
+          pending = A.appendAll(
+            pending,
+            A.filter(
+              [...R.keys(dependencies ?? {}), ...R.keys(devDependencies ?? {}), ...R.keys(peerDependencies ?? {})],
+              (dependency) => HashMap.has(byName, dependency)
+            )
           );
         }
-      }
-    })
-  );
-});
+        assert.isAbove(HashSet.size(closure), 10);
+        const security = new RegExp(ciOperationalPatterns.lanes?.security ?? "^$", "u");
+        const sast = new RegExp(ciOperationalPatterns.lanes?.sast ?? "^$", "u");
+        for (const name of closure) {
+          const directory = O.getOrThrow(HashMap.get(byName, name)).directory;
+          for (const probe of [`${directory}/package.json`, `${directory}/src/index.ts`, `${directory}/README.md`]) {
+            assert.isTrue(security.test(probe), `security misses ${name}: ${probe}`);
+            assert.isTrue(sast.test(probe), `sast misses ${name}: ${probe}`);
+          }
+        }
+      })
+    );
+
+    // The check.yml path gates run the same pattern data through `grep -Eq`; POSIX ERE and the
+    // binary's JavaScript RegExp must agree on every row.
+    it.effect(
+      "agrees with grep -E, the engine the check.yml path gates use",
+      Effect.fnUntraced(function* () {
+        const lanes = ciOperationalPatterns.lanes;
+        assert.isDefined(lanes);
+        for (const lane of CI_RELEVANCE_LANE_VALUES) {
+          const pattern: string | undefined = lanes?.[lane];
+          assert.isDefined(pattern, lane);
+          for (const [changed] of RELEVANCE_ROWS) {
+            const grep = Bun.spawnSync(["bash", "-c", 'grep -Eq "$1" <<< "$2"', "_", pattern ?? "", changed]);
+            assert.oneOf(grep.exitCode, [0, 1], `${lane} ${changed}: ${grep.stderr.toString()}`);
+            assert.strictEqual(
+              grep.exitCode === 0,
+              new RegExp(pattern ?? "", "u").test(changed),
+              `${lane} disagrees on ${changed}`
+            );
+          }
+        }
+      })
+    );
+  }
+);

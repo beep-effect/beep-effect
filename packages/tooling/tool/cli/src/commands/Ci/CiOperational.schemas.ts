@@ -302,9 +302,66 @@ export const ciGoalDataConsumers: A.NonEmptyReadonlyArray<CiGoalDataConsumer> = 
 
 // JavaScript and TypeScript sources and their module variants.
 const JS_TS_SOURCES = "^.*\\.[cm]?[jt]sx?$";
-// Dependency manifests and lockfiles of every ecosystem dependency review or OSV can read.
-const DEPENDENCY_MANIFESTS =
-  "^(.*/)?(package\\.json|bun\\.lockb?|package-lock\\.json|yarn\\.lock|pnpm-lock\\.yaml|requirements[^/]*\\.txt|pyproject\\.toml|uv\\.lock|poetry\\.lock|Pipfile(\\.lock)?|Cargo\\.(toml|lock)|go\\.(mod|sum)|Gemfile(\\.lock)?)$";
+// Dependency manifests and lockfiles: every file GitHub's dependency graph recognizes (dependency
+// review compares them all, docs.github.com "Dependency graph supported package ecosystems"),
+// plus the Bun, uv and Go checksum files OSV and the workspace install read. Case variants are
+// spelled out because the graph matches some names case-insensitively.
+const DEPENDENCY_MANIFESTS = `^(.*/)?(${A.join(
+  [
+    "package\\.json",
+    "package-lock\\.json",
+    "npm-shrinkwrap\\.json",
+    "bun\\.lockb?",
+    "yarn\\.lock",
+    "pnpm-lock\\.yaml",
+    "deno\\.(lock|jsonc?)",
+    "[Cc]omposer\\.(json|lock)",
+    "pom\\.xml",
+    "[^/]*\\.gradle(\\.kts)?",
+    "gradle\\.lockfile",
+    "[Cc]argo\\.(toml|lock)",
+    "go\\.(mod|sum|work)",
+    "[Gg]emfile(\\.lock)?",
+    "[^/]*\\.gemspec",
+    "[Pp]ipfile(\\.lock)?",
+    "requirements[^/]*\\.txt",
+    "requirements/[^/]*\\.txt",
+    "setup\\.py",
+    "pyproject\\.toml",
+    "poetry\\.lock",
+    "uv\\.lock",
+    "pubspec\\.(yaml|lock)",
+    "Package\\.(swift|resolved)",
+    "[^/]*\\.(csproj|vbproj|fsproj|vcxproj|nuspec)",
+    "packages\\.config",
+    "packages\\.lock\\.json",
+    "Directory\\.Packages\\.props",
+    "(Manifest|Project)\\.toml",
+    "MODULE\\.bazel(\\.lock)?",
+    "[^/]*\\.MODULE\\.bazel",
+    "WORKSPACE",
+    "maven_install\\.json",
+    "\\.terraform\\.lock\\.hcl",
+    "[^/]*\\.(tf|tofu)",
+    "mix\\.(exs|lock)",
+  ],
+  "|"
+)})$`;
+// The workspace closure of @beep/repo-cli, which implements every source-dispatched hosted check
+// (`bun run beep ...`): Security's dependency review and GitHub policy reads, SAST's dispatcher.
+// `packages/tooling/tool/cli/test/ci-docs-policy.test.ts` walks the workspace dependency graph and
+// fails when a closure member falls outside these roots. The root runtime configuration `bun run`
+// resolves modules and scripts through is included.
+const REPO_CLI_RUNTIME_CLOSURE = A.join(
+  [
+    "^packages/(tooling|foundation|drivers)/",
+    "^packages/ecosystem/effect-drizzle/",
+    "^packages/shared/domain/",
+    "^tools/tsgo-shim/",
+    "^(tsconfig[^/]*\\.json|bunfig\\.toml|\\.bun-version|package\\.json|bun\\.lock)$",
+  ],
+  "|"
+);
 
 /**
  * File shapes that stay on the code route wherever they sit, docs roots included.
@@ -355,10 +412,11 @@ const relevance = (...rows: A.NonEmptyReadonlyArray<string>): string => A.join([
  *
  * `lanes` carries each relevance lane's inputs. The rows for Codegen Drift, Ecosystem Contracts,
  * Nix Shell and Professional Desktop IPC Stdio are the path gates those jobs applied after
- * checkout. SAST reads changed JavaScript and TypeScript, its Semgrep rules and the workspace
- * install inputs. Security reads dependency manifests, the OSV configuration and the hosted
- * governance sources; its live-advisory signal stays on every main push, which always gets the
- * full profile.
+ * checkout. SAST reads changed JavaScript and TypeScript, its Semgrep rules and the
+ * @beep/repo-cli workspace closure that dispatches it. Security reads every dependency-graph
+ * manifest, the OSV configuration, the workflows and the same closure, which implements its GitHub
+ * policy reads; its live-advisory signal stays on every main push, which always gets the full
+ * profile.
  *
  * **Example** (Read the shared docs pattern)
  *
@@ -406,20 +464,23 @@ export const ciOperationalPatterns = CiOperationalPatterns.make({
       "^\\.github/actions/setup-monorepo-ci/",
       "^(bun\\.lock|package\\.json|turbo\\.json)$"
     ),
+    // Semgrep scans changed JavaScript and TypeScript; its rules, its setup and the CLI closure that
+    // dispatches it are inputs too.
     sast: relevance(
       JS_TS_SOURCES,
       "^\\.semgrep/",
       "^\\.semgrepignore$",
       "^\\.github/actions/setup-bun/",
-      "^(package\\.json|bun\\.lock|bunfig\\.toml|\\.bun-version)$"
+      REPO_CLI_RUNTIME_CLOSURE
     ),
+    // OSV and dependency review read manifests; the GitHub policy reads run through the CLI closure
+    // against the expected contexts and the workflow.
     security: relevance(
       DEPENDENCY_MANIFESTS,
-      "^(osv-scanner|bunfig)\\.toml$",
-      "^\\.bun-version$",
+      "^osv-scanner\\.toml$",
       "^\\.github/",
       "^standards/branch-protection-contexts\\.json$",
-      "^packages/tooling/tool/cli/src/commands/Ci/(DependencyReview|CiGovernance)"
+      REPO_CLI_RUNTIME_CLOSURE
     ),
   }),
 });
