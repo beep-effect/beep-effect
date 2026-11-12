@@ -227,6 +227,49 @@ describe("settleYeetMerge", () => {
       const settled = yield* settle(recorded);
       expect(settled).toMatchObject({ _tag: "Merged", sha: MERGE, attached: true });
       expect(A.filter(recorded.calls, (call) => call.method === "PUT")).toHaveLength(1);
+      expect(renderYeetMergeSettlement(settled)).toBe(
+        `merge-async merged as ${MERGE} (attached to an in-flight request)`
+      );
+    })
+  );
+
+  it.effect("never attaches to an in-flight request that reports neither its head nor its bypass", () =>
+    Effect.gen(function* () {
+      const recorded = github({
+        status: 409,
+        body: {
+          status: "pending",
+          details: { message: "A merge request already exists for this pull request.", uuid: UUID },
+        },
+      });
+      const settled = yield* settle(recorded);
+      assertTrue(YeetMergeSettlement.guards.Unsettled(settled));
+      expect(settled.message).toBe(
+        "another merge request is in flight with head an unreported head and an unreported bypass"
+      );
+      expect(A.map(recorded.calls, githubCallLine)).toEqual([`PUT {repo}/pulls/${PR}/merge-async`]);
+    })
+  );
+
+  it.effect("holds a merge-queue enqueue as unsettled, never merged", () =>
+    Effect.gen(function* () {
+      const recorded = github({
+        status: 202,
+        body: { status: "enqueued", details: { message: "Pull request was added to the merge queue." } },
+      });
+      const settled = yield* settle(recorded);
+      expect(settled).toEqual(
+        YeetMergeSettlement.cases.Unsettled.make({
+          endpoint: "async",
+          message: "enqueued, not merged: Pull request was added to the merge queue.",
+          uuid: O.none(),
+        })
+      );
+      // Without a request uuid the line names none.
+      expect(renderYeetMergeSettlement(settled)).toBe(
+        "merge-async unsettled: enqueued, not merged: Pull request was added to the merge queue."
+      );
+      expect(A.map(recorded.calls, githubCallLine)).toEqual([`PUT {repo}/pulls/${PR}/merge-async`]);
     })
   );
 
@@ -303,6 +346,26 @@ describe("settleYeetMerge", () => {
       expect(renderYeetMergeSettlement(settled)).toBe(`merge (legacy) merged as ${MERGE}`);
     })
   );
+
+  it.effect("fails a legacy merge GitHub declined with its sentence", () =>
+    Effect.gen(function* () {
+      const recorded = recordedGithub((call) =>
+        call.method === "PUT"
+          ? { body: { merged: false, sha: "", message: "Pull Request is not mergeable" } }
+          : undefined
+      );
+      const settled = yield* settle(recorded, strict, "legacy");
+      expect(settled).toEqual(
+        YeetMergeSettlement.cases.Failed.make({ endpoint: "legacy", message: "Pull Request is not mergeable" })
+      );
+      expect(renderYeetMergeSettlement(settled)).toBe("merge (legacy) failed: Pull Request is not mergeable");
+    })
+  );
+
+  it("names a failure GitHub sent without a sentence", () => {
+    const settled = YeetMergeSettlement.cases.Failed.make({ endpoint: "async", message: " \n " });
+    expect(renderYeetMergeSettlement(settled)).toBe("merge-async failed: GitHub sent no message");
+  });
 
   it.effect("falls back to async when the switch does not parse", () =>
     Effect.gen(function* () {

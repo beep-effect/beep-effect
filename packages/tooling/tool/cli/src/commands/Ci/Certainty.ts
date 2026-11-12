@@ -1019,7 +1019,12 @@ const readMainCommits = Effect.fn("Ci.certaintyReadMainCommits")(function* (requ
   return yield* Effect.forEach(
     lines,
     Effect.fnUntraced(function* (line) {
-      const [sha = "", committedAt = ""] = Str.split(line, "\t");
+      const fields = Str.split(line, "\t");
+      const sha = A.headNonEmpty(fields);
+      const committedAt = yield* O.match(O.flatMap(A.get(fields, 1), DateTime.make), {
+        onNone: () => CiCommandError.make({ message: `git log printed a commit line without a commit time: ${line}` }),
+        onSome: Effect.succeed,
+      });
       const paths = yield* gitLines(request.repoRoot, [
         "diff-tree",
         "--no-commit-id",
@@ -1029,7 +1034,7 @@ const readMainCommits = Effect.fn("Ci.certaintyReadMainCommits")(function* (requ
         sha,
       ]);
       return {
-        committedAt: DateTime.makeUnsafe(committedAt),
+        committedAt,
         docsOnly: A.isReadonlyArrayNonEmpty(paths) && A.every(paths, isHeavyDocsOnlyPath),
         sha,
       };
