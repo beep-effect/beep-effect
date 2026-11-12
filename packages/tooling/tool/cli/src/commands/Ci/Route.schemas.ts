@@ -620,6 +620,122 @@ export class RouteCorpusReceipt extends S.Opaque<RouteCorpusReceipt, { readonly 
 ) {}
 
 /**
+ * How a hosted job's machine time is attributed.
+ *
+ * **Details**
+ *
+ * `lane`: the job belongs to one lane, through the lane's context name, a
+ * partition of it (`Test Integration (lps-int-1)`), or an earlier or
+ * conditional name of its context. `support`: a known job outside every lane
+ * (change profile, admission, the test plan, the size label, the producer
+ * pilot). `unknown`: no rule matches; the job is reported by name, never
+ * dropped.
+ *
+ * **Example** (Guard a job class)
+ *
+ * ```ts import.meta.vitest name="Guard a job class"
+ * import { RouteJobClass } from "@beep/repo-cli/commands/Ci"
+ *
+ * RouteJobClass.is.support("support") // => true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RouteJobClass = LiteralKit(["lane", "support", "unknown"]).pipe(
+  $I.annoteSchema("RouteJobClass", {
+    description: "lane: one lane's job; support: a known job outside every lane; unknown: no rule matches.",
+  })
+);
+
+/**
+ * Type of {@link RouteJobClass}.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type RouteJobClass = typeof RouteJobClass.Type;
+
+/**
+ * The attribution of one hosted job name: its class and, for a `lane` job,
+ * the lane.
+ *
+ * **Example** (A support job has no lane)
+ *
+ * ```ts import.meta.vitest name="A support job has no lane"
+ * import { RouteJobAttribution } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
+ *
+ * const attribution = RouteJobAttribution.make({ jobClass: "support" })
+ * O.isNone(attribution.lane) // => true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RouteJobAttribution extends S.Opaque<RouteJobAttribution, { readonly brand: unique symbol }>()(
+  S.Struct({
+    jobClass: RouteJobClass,
+    lane: CiLaneId.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+  }).pipe(
+    $I.annoteSchema("RouteJobAttribution", {
+      description: "A hosted job's class and, for a lane job, its lane.",
+    })
+  )
+) {}
+
+/**
+ * The conservation census of a corpus's timed jobs: how many jobs and how
+ * much machine time are lane, support or unknown.
+ *
+ * **Details**
+ *
+ * `laneMs + supportMs + unknownMs` equals `totalMs`, and the three job counts
+ * sum to `jobs`; a job without both timestamps counts as a job with no time.
+ * `unknownNames` lists each unmatched name once, in name order.
+ *
+ * **Example** (An empty job census)
+ *
+ * ```ts import.meta.vitest name="An empty job census"
+ * import { RouteJobMinutes } from "@beep/repo-cli/commands/Ci"
+ *
+ * const minutes = RouteJobMinutes.make({
+ *   jobs: 0,
+ *   laneJobs: 0,
+ *   supportJobs: 0,
+ *   unknownJobs: 0,
+ *   totalMs: 0,
+ *   laneMs: 0,
+ *   supportMs: 0,
+ *   unknownMs: 0,
+ *   unknownNames: [],
+ * })
+ * minutes.totalMs // => 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RouteJobMinutes extends S.Opaque<RouteJobMinutes, { readonly brand: unique symbol }>()(
+  S.Struct({
+    jobs: S.Int,
+    laneJobs: S.Int,
+    supportJobs: S.Int,
+    unknownJobs: S.Int,
+    totalMs: S.Int,
+    laneMs: S.Int,
+    supportMs: S.Int,
+    unknownMs: S.Int,
+    unknownNames: S.Array(S.String),
+  }).pipe(
+    $I.annoteSchema("RouteJobMinutes", {
+      description:
+        "Jobs and machine time attributed to lanes, support jobs and unknown names; the parts sum to the total.",
+    })
+  )
+) {}
+
+/**
  * Where a lane's cost estimate comes from: the A1 gate-order seed row for its
  * `quality:*` twin, or nothing.
  *
@@ -730,11 +846,13 @@ export class RouteCensusRow extends S.Opaque<RouteCensusRow, { readonly brand: u
  * **Details**
  *
  * `unresolvedHeads` counts heads whose commit stayed missing after fetching; each counts as one `unknown` atom.
+ * `jobMinutes` attributes every job of every corpus run, so time no lane
+ * claims shows up as support or unknown instead of vanishing.
  *
  * **Example** (An empty census)
  *
  * ```ts import.meta.vitest name="An empty census"
- * import { RouteCensus } from "@beep/repo-cli/commands/Ci"
+ * import { RouteCensus, RouteJobMinutes } from "@beep/repo-cli/commands/Ci"
  *
  * const census = RouteCensus.make({
  *   schemaVersion: "route-census/v1",
@@ -746,6 +864,17 @@ export class RouteCensusRow extends S.Opaque<RouteCensusRow, { readonly brand: u
  *   unresolvedHeads: 0,
  *   rows: [],
  *   costs: [],
+ *   jobMinutes: RouteJobMinutes.make({
+ *     jobs: 0,
+ *     laneJobs: 0,
+ *     supportJobs: 0,
+ *     unknownJobs: 0,
+ *     totalMs: 0,
+ *     laneMs: 0,
+ *     supportMs: 0,
+ *     unknownMs: 0,
+ *     unknownNames: [],
+ *   }),
  * })
  * census.rows.length // => 0
  * ```
@@ -764,6 +893,7 @@ export class RouteCensus extends S.Opaque<RouteCensus, { readonly brand: unique 
     unresolvedHeads: S.Int,
     rows: S.Array(RouteCensusRow),
     costs: S.Array(RouteLaneCost),
+    jobMinutes: RouteJobMinutes,
   }).pipe(
     $I.annoteSchema("RouteCensus", {
       description:
