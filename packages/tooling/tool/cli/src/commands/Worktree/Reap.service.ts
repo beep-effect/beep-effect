@@ -610,22 +610,27 @@ const applyCandidate = Effect.fn("WorktreeReap.applyCandidate")(function* (
       })
     )
   );
-  if (Result.isSuccess(removal)) {
-    // A reaped checkout can never be resumed, so close its live session-ledger
-    // row the way `worktree remove` and `yeet sweep --retire` do; best effort.
+  const outcome = yield* Result.match(removal, {
+    onFailure: (failure) => retirementOutcome(ctx, entry, assessed, failure),
+    onSuccess: () =>
+      Effect.succeed<CandidateAssessment>({
+        candidate: WorktreeReapCandidate.make({ ...assessed, retired: true }),
+        warnings: A.empty(),
+        authorizedHead: authorized,
+      }),
+  });
+  // A reaped checkout can never be resumed, including one Git removed before a
+  // follow-up cleanup failed, so close its live session-ledger row the way
+  // `worktree remove` and `yeet sweep --retire` do; best effort.
+  if (outcome.candidate.retired) {
     yield* recordSweepDone({
       gitCwd: mainCheckout,
       checkout: entry.path,
       branch: O.getOrElse(O.fromNullishOr(entry.branch), () => "HEAD"),
       next: `reaped worktree ${ctx.path.basename(entry.path)}`,
     });
-    return {
-      candidate: WorktreeReapCandidate.make({ ...assessed, retired: true }),
-      warnings: A.empty(),
-      authorizedHead: authorized,
-    };
   }
-  return yield* retirementOutcome(ctx, entry, assessed, removal.failure);
+  return outcome;
 });
 
 // The injectable probes, each defaulting to its live implementation.
