@@ -47,8 +47,8 @@ certainty-scorecard. P1: TURB-01 slice 1 (owner rows for generated standards inv
   exactly one hosted `lint:shadcn` owner (Repo Sanity, on pull requests and pushes) across the `check.yml`
   jobs and the hosted Lint Policy plan, proves an earlier Repo Sanity red cannot mask the step, and plans
   `changeset-graph` once. A planted `bg-zinc-100` turned `turbo run lint:shadcn` red locally and green once
-  removed. Hosted: Repo Sanity failed on the plant at 4afb6371360 (job 129702702080) and passed with it
-  removed at 2c988a91828 (job 129705325011), before the merge.
+  removed. Hosted: Repo Sanity failed on the plant at pushed head bec729b71ee (run 42778378836, job
+  129702702080) and passed with it removed at 2c988a91828 (job 129705325011), before the merge.
 - TURB-01 slice 1: [`research/turb-01/REPLAY.md`](./research/turb-01/REPLAY.md). Over 727 first-parent
   commits rebuilt from git, 67 shrink from a full Test Unit plan to owner-scoped, with 0 violations; the
   reader-scan drift check holds all six rows on @beep/repo-cli.
