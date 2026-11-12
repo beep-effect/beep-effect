@@ -667,7 +667,7 @@ export const withYeetGh =
  */
 export const YeetGithubLayer: Context.Reference<O.Option<Layer.Layer<YeetGithubServices>>> = Context.Reference(
   $I`YeetGithubLayer`,
-  { defaultValue: () => O.none<Layer.Layer<YeetGithubServices>>() }
+  { defaultValue: O.none<Layer.Layer<YeetGithubServices>> }
 );
 
 /**
