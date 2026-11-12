@@ -324,7 +324,9 @@ export const sessionHarness: Effect.Effect<{
 });
 
 /**
- * What a `session note` says, before it is stamped with checkout facts.
+ * What a `session note` says, before it is stamped with checkout facts. A row
+ * written for another checkout (`checkoutOverride`) names that checkout's
+ * branch too (`branchOverride`); otherwise the branch comes from `cwd`.
  *
  * **Example** (Describe a note)
  *
@@ -340,6 +342,7 @@ export const sessionHarness: Effect.Effect<{
  * @since 0.0.0
  */
 export const SessionNoteInput = S.Struct({
+  branchOverride: S.String.pipe(S.Option, S.optionalKey),
   checkoutOverride: S.String.pipe(S.Option, S.optionalKey),
   cwd: S.String,
   next: S.String,
@@ -390,7 +393,7 @@ export const buildSessionRow = Effect.fn("SessionLedger.buildRow")(function* (in
     clone: facts.clone,
     checkout,
     lane: path.basename(checkout),
-    branch: facts.branch,
+    branch: O.getOrElse(input.branchOverride ?? O.none<string>(), () => facts.branch),
     state: input.state,
     next: input.next,
     summary: input.summary,
@@ -442,11 +445,12 @@ const inheritedRole = (rows: ReadonlyArray<SessionLedgerRow>, checkout: string):
   A.findFirst(openSessionRows(rows), (row) => row.checkout === checkout).pipe(O.flatMap((row) => row.role));
 
 /**
- * Record that a sweep finished a checkout's work. `executeSweep` calls this
- * for `sweep`, `sweep --retire`, `merge`, and `monitor --until-merged`
- * once it has observed the pull request MERGED. Best
- * effort: a missing ledger, a non-GitHub origin, or an unreadable checkout
- * never fails the sweep.
+ * Record that a checkout's work is done. `executeSweep` calls this for
+ * `sweep`, `sweep --retire`, `merge`, and `monitor --until-merged` once it
+ * has observed the pull request MERGED, and `worktree remove` calls it with
+ * its own `next` line once the checkout is gone, so a removed lane never stays
+ * in `session open` as a live row. Best effort: a missing ledger, a
+ * non-GitHub origin, or an unreadable checkout never fails the caller.
  *
  * **Example** (Build the effect)
  *
@@ -457,7 +461,8 @@ const inheritedRole = (rows: ReadonlyArray<SessionLedgerRow>, checkout: string):
  * console.log(Effect.isEffect(recordSweepDone({ gitCwd: "/work/beep-effect", checkout: "/work/lane", branch: "feat/x" }))) // true
  * ```
  *
- * @param input - The clone to probe git in, the checkout the row is for, and the merged branch.
+ * @param input - The clone to probe git in, the checkout the row is for, the merged branch, and an optional
+ *   `next` line that replaces the default `merged and swept <branch>`.
  * @category commands
  * @since 0.0.0
  */
@@ -465,15 +470,17 @@ export const recordSweepDone = Effect.fn("SessionLedger.recordSweepDone")(functi
   readonly gitCwd: string;
   readonly checkout: string;
   readonly branch: string;
+  readonly next?: string | undefined;
 }) {
   yield* Effect.gen(function* () {
     const row = yield* buildSessionRow({
       cwd: input.gitCwd,
       state: "done",
-      next: `merged and swept ${input.branch}`,
+      next: input.next ?? `merged and swept ${input.branch}`,
       summary: O.none(),
       pr: O.none(),
       checkoutOverride: O.some(input.checkout),
+      branchOverride: O.some(input.branch),
     });
     const ledger = yield* makeSessionLedgerLive();
     yield* ledger.append(row);
