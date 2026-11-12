@@ -50,7 +50,7 @@
     "glob": "14.0.3",
     "minimatch": "11.0.3",
     "@opentelemetry/exporter-trace-otlp-proto": "catalog:",
-    "basic-ftp": "6.2.1",
+    "basic-ftp": "6.2.4",
     "detailed-xml-validator": "2.1.0",
     "katex": "^0.18.2",
     "next": "catalog:",
