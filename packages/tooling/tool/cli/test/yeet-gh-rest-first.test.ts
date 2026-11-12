@@ -72,7 +72,7 @@ const pullPayload = {
   merged_at: null,
   mergeable_state: "clean",
   head: { ref: "feat/gh-rest-first", sha: "abc1234def0000000000000000000000000000ff" },
-  base: { ref: "main" },
+  base: { ref: "main", sha: "base000000" },
   html_url: "https://github.com/beep-effect/beep-effect/pull/1501",
   user: { login: "kriegcloud" },
   labels: [{ name: "ready-for-heavy" }],
@@ -95,7 +95,9 @@ const timelinePayload = [
   { event: "labeled", created_at: "2026-10-06T16:01:00Z" },
   { event: "ready_for_review", created_at: "2026-10-06T16:10:00Z" },
   { event: "ready_for_review", created_at: "2026-10-06T16:20:00Z" },
-  { event: "head_ref_force_pushed", created_at: "2026-10-06T16:35:00Z" },
+  { event: "head_ref_force_pushed", created_at: "2026-10-06T16:35:00Z", commit_id: "after-sha" },
+  { event: "head_ref_force_pushed", created_at: "2026-10-06T16:34:00Z", commit_id: null },
+  { event: "head_ref_force_pushed", created_at: "2026-10-06T16:33:00Z" },
 ];
 
 const repoLayer = Repo.layer(RepoRef.make({ owner: "beep-effect", repo: "beep-effect" }));
@@ -164,6 +166,7 @@ it.layer(
       const rest = yield* GithubRest;
       const pr = yield* rest.pullRequest(1501);
       expect(pr.draft).toBe(false);
+      expect(pr.baseSha).toBe("base000000");
       expect(pr.body).toBe("");
       expect(pr.labels).toEqual(["ready-for-heavy"]);
       assertSome(pr.mergeableState, "clean");
@@ -174,6 +177,12 @@ it.layer(
       const timeline = yield* rest.reviewTimeline(1501);
       assertSome(O.map(timeline.readyAt, DateTime.formatIso), "2026-10-06T16:20:00.000Z");
       assertSome(O.map(timeline.forcedAt, DateTime.formatIso), "2026-10-06T16:35:00.000Z");
+      expect(A.length(timeline.forcePushes)).toBe(3);
+      assertSome(
+        O.flatMap(A.head(timeline.forcePushes), (push) => push.commitId),
+        "after-sha"
+      );
+      expect(A.map(A.drop(timeline.forcePushes, 1), (push) => O.isNone(push.commitId))).toEqual([true, true]);
       const headFirstReceivedAt3 = yield* rest.headFirstReceivedAt(pr.headSha);
       assertSome(O.map(headFirstReceivedAt3, DateTime.formatIso), "2026-10-06T16:30:00.000Z");
     })
@@ -347,6 +356,7 @@ const pr = (overrides: Partial<Parameters<typeof GithubPullRequestRecord.make>[0
     headRef: "feat/gh-rest-first",
     headSha: "abc1234def0000000000000000000000000000ff",
     baseRef: "main",
+    baseSha: "base000000",
     htmlUrl: "https://github.com/beep-effect/beep-effect/pull/1501",
     author: "kriegcloud",
     labels: [],
@@ -764,5 +774,61 @@ it.layer(NodeCrypto.layer)("the gh-login edge", (it) => {
       expect(error.message).toMatch(/^GitHub access failed \(/u);
       expect(error._tag).toBe("YeetCommandError");
     }).pipe(withSpawner(""))
+  );
+});
+
+describe("GithubRest ref activity", () => {
+  const row = {
+    activity_type: "force_push",
+    before: "before",
+    after: "after",
+    timestamp: "2026-11-10T02:46:04Z",
+    actor: { login: "ignored" },
+  };
+  const activityService = (calls: Array<Record<string, unknown>>, pageSize: number) =>
+    layerGithubRest.pipe(
+      Layer.provide(
+        Layer.merge(
+          repoLayer,
+          GitHubClient.layerTest({
+            requestDecoded: dual(3, <A, I>(route: string, params: Record<string, unknown>, schema: S.Codec<A, I>) =>
+              Effect.suspend(() => {
+                calls.push(params);
+                return decodeRecorded(
+                  route,
+                  schema,
+                  A.makeBy(pageSize, (index) => ({ ...row, after: `${A.length(calls)}-${index}` }))
+                );
+              })
+            ),
+          })
+        )
+      )
+    );
+  it.effect("requests at most three pages of 100 and preserves newest-first wire order", () =>
+    Effect.gen(function* () {
+      const calls: Array<Record<string, unknown>> = [];
+      const context = yield* Layer.build(activityService(calls, 100));
+      const rows = yield* Context.get(context, GithubRest).refActivity("feat/stack probe");
+      expect(A.map(calls, (params) => params.page)).toEqual([1, 2, 3]);
+      expect(A.every(calls, (params) => params.ref === "refs/heads/feat/stack probe" && params.per_page === 100)).toBe(
+        true
+      );
+      expect(A.length(rows)).toBe(300);
+      expect(A.map(A.take(rows, 2), (value) => value.after)).toEqual(["1-0", "1-1"]);
+      assertSome(
+        O.map(A.head(rows), (value) => DateTime.formatIso(value.timestamp)),
+        "2026-11-10T02:46:04.000Z"
+      );
+    })
+  );
+  it.effect("stops at a short page", () =>
+    Effect.gen(function* () {
+      const calls: Array<Record<string, unknown>> = [];
+      const context = yield* Layer.build(activityService(calls, 1));
+      const rows = yield* Context.get(context, GithubRest).refActivity("feat/x");
+      expect(A.length(calls)).toBe(1);
+      expect(A.length(rows)).toBe(1);
+    })
   );
 });

@@ -57,6 +57,8 @@ export {
 export * from "../commands/Yeet/internal/Guards.ts";
 export * from "../commands/Yeet/internal/Handler.ts";
 export * from "../commands/Yeet/internal/HeadInstallReceipt.ts";
+export * from "../commands/Yeet/internal/HeadMove.schemas.ts";
+export * from "../commands/Yeet/internal/HeadMove.ts";
 export * from "../commands/Yeet/internal/Inbox.ts";
 export * from "../commands/Yeet/internal/InboxPorcelain.ts";
 export * from "../commands/Yeet/internal/InboxView.ts";

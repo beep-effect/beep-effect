@@ -2036,7 +2036,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
               merged_at: null,
               mergeable_state: "clean",
               head: { ref: "feature/ready-gate", sha: yield* Ref.get(liveHead) },
-              base: { ref: "main" },
+              base: { ref: "main", sha: "base000000" },
               html_url: "https://github.com/beep/beep/pull/42",
               user: { login: "author" },
               labels: [],
