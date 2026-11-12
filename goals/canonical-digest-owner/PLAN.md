@@ -56,7 +56,8 @@ Carried into later slices, from the census:
   `@beep/jsonc` edge, modeling to modeling) and lists two behaviour changes:
   an unpaired surrogate in a digested string, and nesting past 256 levels,
   both become typed refusals.
-- Slice C refreshes the packet event snapshot first if the archive has grown.
+- Slice C refreshes the packet event snapshot first if the tree or the
+  archive has gained an event.
 
 ## Closeout Checklist
 

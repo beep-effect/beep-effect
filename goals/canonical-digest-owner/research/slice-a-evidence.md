@@ -50,11 +50,20 @@ digest in the file name, the owner agrees with `packetEventDigest`, and
 `renderPacketEventFile` reproduces the stored file byte for byte. The last one
 confirms the indented renderer is a view and no digest is taken over it.
 
-The out-of-tree events are a snapshot,
+All 76 are a snapshot,
 `packages/tooling/tool/cli/test/fixtures/canonical-digest-owner/stored-packet-events.jsonl`,
-one line per event with its source commit. To refresh it when the archive
-grows, from the repository root with the archive checked out by
-`bun run beep refs provision`:
+one line per event with its source commit. The four in-tree events are
+snapshotted and not read live: the goal-data consumer census
+(`packages/tooling/tool/cli/test/goal-data-consumer-census.test.ts`) requires
+any test that reads `goals/` to be registered in `ciGoalDataConsumers`, which
+puts matching pull requests on the code route. The first push of this slice
+read the tree live and failed that census on hosted CI.
+
+After a swap, the tree's own events are also re-verified by the production
+read path, which recomputes each digest against its file name.
+
+To refresh the archive lines when the archive grows, from the repository root
+with the archive checked out by `bun run beep refs provision`:
 
 ```sh
 archive=.repos/goals-archive
@@ -69,8 +78,10 @@ git -C "$archive" ls-tree -r --name-only "$commit" \
     done
 ```
 
-Append the history-only line unchanged, and update the two counts in the
-replay test.
+The tree lines come from the same loop over
+`git ls-tree -r --name-only <commit> -- goals explorations` in this
+repository, with `tree@<commit>` as the source. Keep the history-only line
+unchanged, and update the three counts in the replay test.
 
 ## Execution-record seals
 

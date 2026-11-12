@@ -9,15 +9,17 @@
 // `goals/canonical-digest-owner/research/encoder-census.md` and is listed in
 // `legacyRows` below.
 //
-// Three sources:
-// - the live tree: every `ops/events/` stream under `goals/` and
-//   `explorations/` at the time the test runs;
-// - `fixtures/canonical-digest-owner/stored-packet-events.jsonl`: the 71
-//   events held by the goals archive repository at the commit named on each
-//   line, plus the one event that exists only in this repository's history
-//   (decision `2026-11-12-replay-covers-archived-events`);
-// - the valid PacketCore fixture streams of this package, which add the
-//   `stage-entered` body that no stored event carries.
+// Two sources, both checked in under this package's test tree:
+// - `fixtures/canonical-digest-owner/stored-packet-events.jsonl`: every event
+//   file ever added on main, one line per event with its source commit. That
+//   is the 4 events in the tree, the 71 held by the goals archive repository
+//   and the one that exists only in this repository's history (decision
+//   `2026-11-12-replay-covers-archived-events`). The tree's events are
+//   snapshotted too, not read live: a test that reads packet data has to be
+//   registered as a goal-data consumer, which would put every packet-event
+//   pull request on the code route.
+// - the valid PacketCore fixture streams, which add the `stage-entered` body
+//   that no stored event carries.
 import { JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint";
 import {
   canonicalJsonText,
@@ -55,10 +57,6 @@ const encodePacketTraceEntry = S.encodeUnknownEffect(PacketTraceEntry);
 // Checked-in files are inlined by Vite at transform time (the suite's
 // `test/support/vite-env.d.ts` convention), so the replay needs no filesystem
 // service. Keys are paths relative to this file.
-const liveEventFiles = import.meta.glob<string>(
-  ["../../../../../goals/*/ops/events/*.json", "../../../../../explorations/*/ops/events/*.json"],
-  { eager: true, import: "default", query: "?raw" }
-);
 const fixtureEventFiles = import.meta.glob<string>(
   [
     "./fixtures/packet-core/forked/ops/events/*.json",
@@ -80,8 +78,7 @@ const legacyRows: ReadonlyArray<string> = [];
 
 const baseName = (path: string): string => pipe(Str.split(path, "/"), A.lastNonEmpty);
 
-// `../../../../../goals/x/ops/events/n.json` and `./fixtures/...` as repository
-// or package relative paths.
+// `./fixtures/...` as a package relative path.
 const withoutRelativePrefix = Str.replace(/^(?:\.{1,2}\/)+/, "");
 
 const globbedFiles = (source: string, files: Record<string, string>): ReadonlyArray<StoredEventFile> =>
@@ -134,13 +131,15 @@ const sourceCount = (rows: ReadonlyArray<ReplayRow>, prefix: string): number =>
 
 it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })((it) => {
   describe("canonical digest owner: stored packet event replay", () => {
-    it.effect("recomputes every archived and history-only event digest through the owner", () =>
+    it.effect("recomputes every stored event digest through the owner", () =>
       Effect.gen(function* () {
         const files = yield* readSnapshot;
         const rows = yield* replayAll(files);
 
-        // 71 events at goals-archive@6187b837 and one deleted with its packet
-        // in main's history. A changed count means the snapshot was edited.
+        // 4 events in the tree, 71 at goals-archive@6187b837 and one deleted
+        // with its packet in main's history. A changed count means the
+        // snapshot was edited.
+        expect(sourceCount(rows, "tree@")).toBe(4);
         expect(sourceCount(rows, "goals-archive@")).toBe(71);
         expect(sourceCount(rows, "main-history@")).toBe(1);
         expect(mismatchPaths(rows)).toStrictEqual(legacyRows);
@@ -158,18 +157,6 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })((it) => {
             )
           )
         ).toStrictEqual(["packet-created", "risk-tier-overridden", "status-set"]);
-      })
-    );
-
-    it.effect("recomputes every event digest in the live tree through the owner", () =>
-      Effect.gen(function* () {
-        const rows = yield* replayAll(globbedFiles("tree", liveEventFiles));
-
-        // No lower bound: a packet's stream leaves the tree when the packet is
-        // archived, and that must not fail this test.
-        expect(mismatchPaths(rows)).toStrictEqual(legacyRows);
-        expect(A.filter(rows, (row) => row.owner !== row.legacy)).toStrictEqual([]);
-        expect(A.filter(rows, (row) => !row.rendersBack)).toStrictEqual([]);
       })
     );
 
