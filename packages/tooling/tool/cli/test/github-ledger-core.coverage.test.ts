@@ -37,7 +37,7 @@ import {
   withGithubLedger,
 } from "@beep/repo-cli/test/SharedInternals";
 import { describe, expect, it } from "@effect/vitest";
-import { assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
+import { assertSome, deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Command from "effect/cli/Command";
@@ -187,16 +187,28 @@ describe("GithubLedger reducers", () => {
 
   it("rolls up an hour whose windows cross a reset between two same-epoch runs", () => {
     const rollup = crossingRollup(true);
-    const [hour] = rollup.keys;
-    expect(A.length(rollup.keys)).toBe(1);
-    expect(hour?.key).toStrictEqual(coreAlice);
+    const hours = A.map(rollup.keys, (hour) => ({
+      key: hour.key,
+      fleetUsed: hour.fleetUsed,
+      fleetUsedIsLowerBound: hour.fleetUsedIsLowerBound,
+      estimatedPoints: hour.estimatedPoints,
+      unattributed: hour.unattributed,
+    }));
     // 100 + 30 telescoped across the two runs, plus the 50 seen after the reset.
-    assertSome(hour?.fleetUsed ?? O.none(), 180);
-    assertTrue(hour?.fleetUsedIsLowerBound ?? false);
-    expect(hour?.estimatedPoints).toBe(2);
-    assertSome(hour?.unattributed ?? O.none(), 178);
+    expect(hours).toStrictEqual([
+      {
+        key: coreAlice,
+        fleetUsed: O.some(180),
+        fleetUsedIsLowerBound: true,
+        estimatedPoints: 2,
+        unattributed: O.some(178),
+      },
+    ]);
     // Equal points, so the busier command sorts first.
-    expect(A.map(hour?.byCommand ?? [], (spend) => [spend.command, spend.requests, spend.estimatedPoints])).toEqual([
+    const byCommand = A.flatMap(rollup.keys, (hour) =>
+      A.map(hour.byCommand, (spend) => [spend.command, spend.requests, spend.estimatedPoints])
+    );
+    expect(byCommand).toEqual([
       ["yeet monitor", 2, 1],
       ["beep", 1, 1],
     ]);
