@@ -39,8 +39,7 @@ P0 Research and P1 Implement, in progress. The P0 lever re-check at `origin/main
 (#3041 merged; #3056's four Property Laws slices recorded as a decision); the scorecard re-baseline waits on
 certainty-scorecard. P1: TURB-01 slice 1 (owner rows for generated standards inventories) merged as #3063
 (b757bd0400f). Slice 2 (PERIH-02 with PERIL-04: one hosted `lint:shadcn` owner in Repo Sanity, one
-`changeset-graph` run) is in review on `claude/relaxed-wu-e85a5e`; slice 3 (TEST-01 oracle census) runs
-separately.
+`changeset-graph` run) merged as #3117 (10ed12d4410); slice 3 (TEST-01 oracle census) runs separately.
 
 ## Latest Evidence
 
@@ -48,7 +47,8 @@ separately.
   exactly one hosted `lint:shadcn` owner (Repo Sanity, on pull requests and pushes) across the `check.yml`
   jobs and the hosted Lint Policy plan, proves an earlier Repo Sanity red cannot mask the step, and plans
   `changeset-graph` once. A planted `bg-zinc-100` turned `turbo run lint:shadcn` red locally and green once
-  removed; the hosted proof is on the PR's first push.
+  removed. Hosted: Repo Sanity failed on the plant at pushed head bec729b71ee (run 42778378836, job
+  129702702080) and passed with it removed at 2c988a91828 (job 129705325011), before the merge.
 - TURB-01 slice 1: [`research/turb-01/REPLAY.md`](./research/turb-01/REPLAY.md). Over 727 first-parent
   commits rebuilt from git, 67 shrink from a full Test Unit plan to owner-scoped, with 0 violations; the
   reader-scan drift check holds all six rows on @beep/repo-cli.
