@@ -47,13 +47,12 @@ const CURATED: ReadonlyArray<readonly [label: string, text: string]> = [
   ["Hangul filler", "한\u3164글"],
 ];
 
-const skipsCodePoint = (cp: number): boolean =>
-  (cp >= 0xd800 && cp <= 0xdfff) || cp === 0x1b || (cp >= 0x1f1e6 && cp <= 0x1f1ff);
+const skipsCodePoint = (cp: number): boolean => (cp >= 0xd800 && cp <= 0xdfff) || cp === 0x1b;
 
 describe("displayWidth against string-width", () => {
   it("the oracle is the version the decision was measured against", () => {
-    // 7.2.0 said 2 for a bare U+26A0 and 8.3.0 says 1; if this flips, string-width drifted and the sweep below
-    // is no longer comparing what the decision measured.
+    // 7.2.0 said 2 for a bare U+26A0, and 8.3.0 and 9.0.0 say 1; if this flips, string-width drifted and the sweep
+    // below is no longer comparing what the decision measured.
     assert.strictEqual(stringWidth("⚠"), 1);
   });
 
@@ -72,14 +71,13 @@ describe("displayWidth against string-width", () => {
     });
   }
 
-  it("a code-point sweep of every assigned code point agrees, except the lone regional indicators", () => {
+  it("a code-point sweep of every assigned code point agrees", () => {
     // U+0000 to U+10FFFF at stride 1, so no block edge or astral zero-width range (tag characters, the variation
     // selectors supplement) escapes it. Surrogates and ESC (which starts an escape sequence) are skipped.
     const assigned = /^\p{Assigned}$/u;
     const mismatches: string[] = [];
     let checked = 0;
     for (let cp = 0; cp <= 0x10ffff; cp++) {
-      // Documented divergence: a lone regional indicator is 1 for the oracle and 2 here.
       if (skipsCodePoint(cp)) continue;
       const ch = String.fromCodePoint(cp);
       if (!assigned.test(ch)) continue;
@@ -95,19 +93,31 @@ describe("displayWidth against string-width", () => {
     // About a second alone; the bound leaves room for a loaded machine running other suites in parallel.
   }, 30_000);
 
-  it("pins the two documented divergences", () => {
-    // A lone regional indicator: the oracle counts one column, this counts two.
-    assert.strictEqual(stringWidth("\u{1F1FA}"), 1);
-    assert.strictEqual(displayWidth("\u{1F1FA}"), 2);
-    // A bare combining mark glued after a flag grapheme: the oracle folds the whole grapheme to one column,
-    // this counts two.
-    assert.strictEqual(stringWidth("🇺🇸ั"), 1);
-    assert.strictEqual(displayWidth("🇺🇸ั"), 2);
+  it("agrees on the former divergences and on prepended concatenation marks", () => {
+    // string-width 8.3.0 counted a lone regional indicator, and a combining mark glued after a flag, as one
+    // column; 9.0.0 counts two, as this always has. Each pair pins the oracle and this implementation together.
+    const cases: ReadonlyArray<readonly [text: string, columns: number]> = [
+      ["\u{1F1FA}", 2],
+      ["🇺🇸ั", 2],
+      // ARABIC NUMBER SIGN alone, before a digit, twice, before a combining mark, and before wide glyphs.
+      ["\u0600", 1],
+      ["\u06001", 2],
+      ["\u0600\u06001", 3],
+      ["\u0600\u0301", 1],
+      ["\u0600日", 2],
+      ["\u0600👍", 2],
+      // KAITHI NUMBER SIGN, astral; SYRIAC ABBREVIATION MARK stays zero-width.
+      ["\u{110BD}", 1],
+      ["\u070F", 0],
+    ];
+    for (const [text, columns] of cases) {
+      assert.strictEqual(stringWidth(text), columns, text);
+      assert.strictEqual(displayWidth(text), columns, text);
+    }
   });
 
   it("a seeded fuzz of 5,000 compositions agrees", () => {
-    // Every curated string is an atom but the empty one. A free-standing combining mark glued after an emoji or
-    // flag is the documented divergence, and none of these atoms is one.
+    // Every curated string is an atom but the empty one.
     const atoms = pipe(
       CURATED,
       A.map(([, text]) => text),

@@ -1,9 +1,11 @@
-import { GithubHeadroomSource } from "@beep/palantiri";
-import { makeGithubHeadroomSource } from "@beep/repo-cli/test/Palantiri";
+import { GithubHeadroomSource, reduceGithubHeadroom } from "@beep/palantiri";
+import { makeGithubHeadroomSource, renderParcel } from "@beep/repo-cli/test/Palantiri";
 import {
   BucketKey,
   BucketReading,
+  bucketKeyString,
   CommandSpend,
+  GithubBudgetLedger,
   GithubIdentityLabel,
   GithubLedgerCommandLabel,
   GithubLedgerError,
@@ -13,6 +15,7 @@ import {
   LedgerSummary,
   layerGithubBudgetLedger,
   makeGithubLedgerStoreMemory,
+  ReserveSignal,
   SampleBucket,
   UnattributedSpend,
 } from "@beep/repo-cli/test/SharedInternals";
@@ -25,6 +28,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import type { GithubHeadroomInput } from "@beep/palantiri";
 import type { GithubLedgerStoreShape } from "@beep/repo-cli/test/SharedInternals";
@@ -189,6 +193,49 @@ describe("makeGithubHeadroomSource", () => {
     })
   );
 
+  it.effect("leaves out a bucket whose ledger label the parcel cannot name, serving the rest", () =>
+    Effect.gen(function* () {
+      yield* NOW.pipe(DateTime.toEpochMillis, TestClock.setTime);
+      const store = yield* makeGithubLedgerStoreMemory;
+      yield* store.writeLatestTransport(reading("core", 3120));
+      // Every GithubIdentityLabel is a GithubIdentityName today, so a real ledger cannot hold such a
+      // label: a host-qualified login, forged past the label checks, stands in for a widened alphabet.
+      const unchecked = { disableChecks: true };
+      const widened = BucketKey.make(
+        { identity: GithubIdentityLabel.make("user:octocat@ghe.example.com", unchecked), resource: "core" },
+        unchecked
+      );
+      const widenedLedger = Layer.effect(
+        GithubBudgetLedger,
+        Effect.gen(function* () {
+          const ledger = yield* GithubBudgetLedger;
+          return GithubBudgetLedger.of({
+            ...ledger,
+            reserves: Effect.map(ledger.reserves, (signals) =>
+              A.appendAll(
+                signals,
+                A.map(signals, (signal) => ReserveSignal.make({ key: widened, state: signal.state }, unchecked))
+              )
+            ),
+            latestUsable: Effect.fnUntraced(function* (key: BucketKey) {
+              return bucketKeyString(key) === bucketKeyString(widened)
+                ? O.some(BucketReading.make({ ...reading("core", 4000), key: widened }, unchecked))
+                : yield* ledger.latestUsable(key);
+            }),
+          });
+        })
+      ).pipe(Layer.provide(layerGithubBudgetLedger()), Layer.provide(Layer.succeed(GithubLedgerStore, store)));
+      const input = yield* Layer.effect(GithubHeadroomSource, makeGithubHeadroomSource).pipe(
+        Layer.provide(widenedLedger),
+        Layer.build,
+        Effect.flatMap((context) => Context.get(context, GithubHeadroomSource).snapshot)
+      );
+      expect(input._tag).toBe("Present");
+      const present = input as typeof GithubHeadroomInput.cases.Present.Type;
+      expect(A.map(present.buckets, (bucket) => [bucket.identity, bucket.remaining])).toEqual([["user:alice", 3120]]);
+    })
+  );
+
   it.effect("serves an empty ledger as Missing", () =>
     Effect.gen(function* () {
       const store = yield* makeGithubLedgerStoreMemory;
@@ -207,6 +254,28 @@ describe("makeGithubHeadroomSource", () => {
       const failure = yield* snapshotOf(broken).pipe(Effect.flip);
       expect(failure.parcel).toBe("github-headroom");
       expect(failure.detail).toBe("the GitHub ledger read failed");
+    })
+  );
+});
+
+describe("renderParcel github-headroom", () => {
+  it.effect("prints each bucket's numbers, reserve, reset and unattributed points from the ledger", () =>
+    Effect.gen(function* () {
+      yield* NOW.pipe(DateTime.toEpochMillis, TestClock.setTime);
+      const store = yield* makeGithubLedgerStoreMemory;
+      yield* store.writeLatestTransport(reading("core", 3120));
+      yield* store.writeLatestTransport(reading("graphql", 412));
+      yield* store.writeSummary(summary);
+      const input = yield* snapshotOf(store);
+      const text = renderParcel(reduceGithubHeadroom(input, NOW, 20));
+      expect(Str.split(text, "\n")).toEqual([
+        "github-headroom: user:alice core 3120/5000 ↺21:30Z · graphql 412/5000 BELOW 15% ↺21:30Z; " +
+          "top 1h here: yeet monitor 812; unattributed 1h graphql 230",
+        "  fresh as of 2026-11-10T20:59:00.000Z",
+        "  user:alice core  3120/5000  reserve clear (floor 750)  resets 2026-11-10T21:30:00.000Z",
+        "  user:alice graphql  412/5000  reserve below (floor 750)  resets 2026-11-10T21:30:00.000Z  unattributed 1h 230",
+        "  showing 2 of 2",
+      ]);
     })
   );
 });

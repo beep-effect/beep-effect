@@ -170,29 +170,15 @@ export const prLink =
   (pr: O.Option<number>): O.Option<string> =>
     O.map(pr, (number) => `https://${repository.host}/${repository.owner}/${repository.name}/pull/${number}`);
 
-/**
- * Column widths of one board row, given the inner width of the frame.
- *
- * **Example** (Make column widths)
- *
- * ```ts
- * import { RowColumns } from "@/Board"
- *
- * console.log(RowColumns.make({ lane: 20, state: 8, pr: 6, age: 4, next: 30 }).next) // 30
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class RowColumns extends S.Class<RowColumns, { readonly brand: unique symbol }>($I`RowColumns`)(
-  {
+// Cell widths of one board row; only `rowColumns` builds them and `rowText` reads them.
+class RowColumns extends S.Opaque<RowColumns, { readonly brand: unique symbol }>()(
+  S.Struct({
     lane: S.Int,
     state: S.Int,
     pr: S.Int,
     age: S.Int,
     next: S.Int,
-  },
-  $I.annote("RowColumns", { description: "Cell widths of the columns of one board row." })
+  }).pipe($I.annoteSchema("RowColumns", { description: "Cell widths of the columns of one board row." }))
 ) {}
 
 /**
@@ -211,15 +197,14 @@ export class RowColumns extends S.Class<RowColumns, { readonly brand: unique sym
  * @category models
  * @since 0.0.0
  */
-export class BoardView extends S.Class<BoardView, { readonly brand: unique symbol }>($I`BoardView`)(
-  {
+export class BoardView extends S.Opaque<BoardView, { readonly brand: unique symbol }>()(
+  S.Struct({
     selected: S.Option(S.String),
     filter: S.String,
     filtering: S.Boolean,
     expanded: S.Boolean,
     notice: S.Option(S.String),
-  },
-  $I.annote("BoardView", { description: "Operator-side view state of the lanes board." })
+  }).pipe($I.annoteSchema("BoardView", { description: "Operator-side view state of the lanes board." }))
 ) {
   static readonly initial = BoardView.make({
     selected: O.none(),
@@ -295,14 +280,41 @@ export const rowText =
     );
 
 /**
+ * The list a window is cut from: the selected index, how many rows there are
+ * and how many fit on screen.
+ *
+ * **Example** (Ten rows, four visible)
+ *
+ * ```ts
+ * import { ListWindow } from "@/Board"
+ *
+ * console.log(ListWindow.make({ selected: 9, count: 10, height: 4 }).height) // 4
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ListWindow extends S.Opaque<ListWindow, { readonly brand: unique symbol }>()(
+  S.Struct({
+    selected: S.Int,
+    count: S.Int,
+    height: S.Int,
+  }).pipe(
+    $I.annoteSchema("ListWindow", {
+      description: "Selected row index, row count and visible row count of the lanes list.",
+    })
+  )
+) {}
+
+/**
  * First visible index so the selection stays inside a window of `height` rows.
  *
  * **Example** (Selection near the end)
  *
  * ```ts
- * import { windowStart } from "@/Board"
+ * import { ListWindow, windowStart } from "@/Board"
  *
- * console.log(windowStart({ selected: 9, count: 10, height: 4 })) // 6
+ * console.log(windowStart(ListWindow.make({ selected: 9, count: 10, height: 4 }))) // 6
  * ```
  *
  * @param window - Selected index, number of rows and visible rows.
@@ -310,12 +322,5 @@ export const rowText =
  * @category layout
  * @since 0.0.0
  */
-export const windowStart = ({
-  selected,
-  count,
-  height,
-}: {
-  readonly selected: number;
-  readonly count: number;
-  readonly height: number;
-}): number => Num.clamp(selected - Math.floor(height / 2), { minimum: 0, maximum: Math.max(0, count - height) });
+export const windowStart = ({ selected, count, height }: ListWindow): number =>
+  Num.clamp(selected - Math.floor(height / 2), { minimum: 0, maximum: Math.max(0, count - height) });

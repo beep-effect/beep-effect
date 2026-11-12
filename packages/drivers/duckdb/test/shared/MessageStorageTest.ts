@@ -1,5 +1,5 @@
 /**
- * Vendored from Effect, tag effect@4.0.6, packages/platform/node/test/cluster/MessageStorageTest.ts.
+ * Vendored from Effect, tag effect@4.1.4, packages/platform/node/test/cluster/MessageStorageTest.ts.
  * MIT License, Copyright (c) Effectful Technologies Inc. Adaptations carry // beep: markers.
  */
 // beep: it.layer preserves per-test isolation without library-level Effect.provide.
@@ -17,6 +17,7 @@ import * as EntityAddress from "effect/cluster/EntityAddress";
 import * as EntityId from "effect/cluster/EntityId";
 import * as EntityType from "effect/cluster/EntityType";
 import * as Envelope from "effect/cluster/Envelope";
+import * as MachineId from "effect/cluster/MachineId";
 import * as Message from "effect/cluster/Message";
 import * as MessageStorage from "effect/cluster/MessageStorage";
 import * as Reply from "effect/cluster/Reply";
@@ -180,7 +181,8 @@ type FixtureOutgoingRequest<R extends FixtureRpc> = Message.OutgoingRequest<R> &
 
 type FixtureRequestLocation = {
   readonly entityId?: string;
-  readonly shardId?: ShardId.ShardId;
+  readonly entityType?: string | undefined;
+  readonly shardId?: ShardId.ShardId | undefined;
 };
 type FixtureRequestOptions<R extends FixtureRpc = FixtureRpc> = R extends typeof GetUserRpc
   ? FixtureRequestLocation & { readonly rpc?: R; readonly payload?: Rpc.Payload<R> }
@@ -211,17 +213,25 @@ export function makeRequest(options?: FixtureRequestOptions): Effect.Effect<unkn
   return makeRequestEffect(options);
 }
 
+// beep: The address defaults are split out of makeRequestEffect to keep it under the fallow CRAP threshold.
+const fixtureAddress = ({
+  entityId = "1",
+  entityType = "test",
+  shardId = ShardId.make("default", 1),
+}: FixtureRequestLocation = {}) =>
+  EntityAddress.make({
+    shardId,
+    entityType: EntityType.make(entityType),
+    entityId: EntityId.make(entityId),
+  });
+
 const makeRequestEffect = Effect.fnUntraced(function* (options?: FixtureRequestOptions) {
   const snowflake = yield* Snowflake.Generator;
   const rpc = options?.rpc ?? GetUserRpc;
   return new Message.OutgoingRequest<FixtureRpc>({
     envelope: Envelope.makeRequest<FixtureRpc>({
       requestId: snowflake.nextUnsafe(),
-      address: EntityAddress.make({
-        shardId: options?.shardId ?? ShardId.make("default", 1),
-        entityType: EntityType.make("test"),
-        entityId: EntityId.make(options?.entityId ?? "1"),
-      }),
+      address: fixtureAddress(options),
       tag: rpc._tag,
       payload: options?.payload ?? { id: 123 },
       traceId: "noop",
@@ -264,20 +274,28 @@ export class StreamRpc extends Rpc.make("StreamTest", {
 /**
  * Construct the exit reply that completes a fixture request.
  *
+ * **Details**
+ *
+ * `completedAt` sets the reply id's timestamp, which storage treats as the completion time.
+ *
  * **Example** (Complete a fixture request)
  *
  * ```ts
  * const reply = Effect.flatMap(makeRequest(), makeReply);
+ * const expired = Effect.flatMap(makeRequest(), (request) => makeReply(request, Date.UTC(2026, 0, 1) - 1));
  * ```
  *
  * @category fixtures
  * @since 0.0.0
  */
-export const makeReply = Effect.fnUntraced(function* (request: FixtureRequest) {
+export const makeReply = Effect.fnUntraced(function* (request: FixtureRequest, completedAt?: number) {
   const snowflake = yield* Snowflake.Generator;
   return new Reply.ReplyWithContext<FixtureRpc>({
     reply: new Reply.WithExit<FixtureRpc>({
-      id: snowflake.nextUnsafe(),
+      id:
+        completedAt === undefined
+          ? snowflake.nextUnsafe()
+          : Snowflake.make({ timestamp: completedAt, machineId: MachineId.make(0), sequence: 0 }),
       requestId: request.envelope.requestId,
       exit: Exit.void,
     }),

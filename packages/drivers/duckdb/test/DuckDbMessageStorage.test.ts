@@ -15,6 +15,7 @@ import * as Snowflake from "effect/cluster/Snowflake";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as SqlClient from "effect/sql/SqlClient";
 import type * as Envelope from "effect/cluster/Envelope";
 
 const address = { shardId: { group: "default", id: 1 }, entityType: "test", entityId: "1" };
@@ -101,6 +102,49 @@ it.layer(Layer.mergeAll(DuckDbTestLayer, NodeCrypto.layer, Snowflake.layerGenera
       assert.deepStrictEqual(repliesForUnfiltered5, []);
       const withTransaction6 = yield* storage.withTransaction(Effect.succeed(1));
       assert.strictEqual(withTransaction6, 1);
+    })
+  );
+
+  // After deleteProcessed removes a request its row is gone; a late reply must not leave an orphan behind (D70).
+  it.effect("drops a reply whose request row is gone", () =>
+    Effect.gen(function* () {
+      const storage = yield* DuckDbMessageStorage.makeEncoded({ prefix: "late" });
+      yield* storage.saveReply({ _tag: "Chunk", id: "41", requestId: "40", sequence: 0, values: [null] });
+      const orphans = yield* storage.repliesForUnfiltered(["40"]);
+      assert.deepStrictEqual(orphans, []);
+    })
+  );
+
+  // Migration 0005 must reach files migrated before deleteProcessed existed, without editing 0001.
+  it.effect("adds the retention index to a schema migrated before it existed", () =>
+    Effect.gen(function* () {
+      const sql = yield* SqlClient.SqlClient;
+      const migrate = DuckDbMessageStorage.makeEncoded({ prefix: "retention" });
+      yield* migrate;
+      // Recreate a schema migrated by the earlier port: only migrations 1-3 ran.
+      yield* sql`DROP INDEX retention_messages_retention_idx`;
+      yield* sql`DELETE FROM retention_migrations WHERE migration_id > 3`;
+      const storage = yield* migrate;
+      const indexes = yield* sql<{ readonly index_name: string }>`
+        SELECT index_name FROM duckdb_indexes() WHERE table_name = 'retention_messages' ORDER BY index_name
+      `;
+      assert.deepStrictEqual(
+        A.map(indexes, (row) => row.index_name),
+        ["retention_messages_request_id_idx", "retention_messages_retention_idx", "retention_messages_shard_idx"]
+      );
+      const migrations = yield* sql<{ readonly migration_id: number }>`
+        SELECT migration_id FROM retention_migrations ORDER BY migration_id
+      `;
+      assert.deepStrictEqual(
+        A.map(migrations, (row) => Number(row.migration_id)),
+        [1, 2, 3, 4, 5]
+      );
+      const deleted = yield* storage.deleteProcessed({
+        entityType: "test",
+        completedBefore: Number.POSITIVE_INFINITY,
+        limit: 10,
+      });
+      assert.strictEqual(deleted, 0);
     })
   );
 

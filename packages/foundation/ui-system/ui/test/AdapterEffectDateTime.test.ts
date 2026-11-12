@@ -93,9 +93,9 @@ describe("AdapterEffectDateTime", () => {
         const value = DateTime.makeUnsafe(epochMilliseconds);
         const zoned = adapter.setTimezone(value, timezone);
         expect(zoned.epochMilliseconds).toBe(epochMilliseconds);
-        expect(adapter.getTimezone(zoned)).toBe(
-          new Intl.DateTimeFormat("en-US", { timeZone: timezone }).resolvedOptions().timeZone
-        );
+        // Effect 4.1.4 keeps the supplied zone id (Effect #10439) rather than the alias the runtime's ICU
+        // resolves it to, which is `Asia/Calcutta` on some runners.
+        expect(adapter.getTimezone(zoned)).toBe(timezone);
         expect(adapter.setTimezone(zoned, "UTC").epochMilliseconds).toBe(epochMilliseconds);
       }
     },

@@ -26,9 +26,8 @@
  *   read-write.
  * - `ATTACH` and `LOAD` act on the database instance: they are visible to every
  *   client of the same database.
- * - Set both `transformQueryNames` and `transformResultNames`, or neither:
- *   `withoutTransforms()` returns the same client when only query names are
- *   transformed.
+ * - `withoutTransforms()` drops both name transforms, also when only query
+ *   names are transformed (effect 4.1.4).
  *
  * @packageDocumentation
  * @since 0.0.0

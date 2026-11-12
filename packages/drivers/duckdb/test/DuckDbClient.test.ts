@@ -1100,13 +1100,16 @@ describe("DuckDbClient", { concurrent: false }, () => {
   it.layer(DuckDbClient.layer({ databasePath: ":memory:", transformQueryNames: Str.camelToSnake }), {
     timeout: "30 seconds",
   })((it) => {
+    // effect 4.1.4 (Effect #10454): withoutTransforms() also drops a lone query-name transform.
     it.effect(
-      "keeps transforming identifiers under withoutTransforms when only transformQueryNames is set",
+      "stops transforming identifiers under withoutTransforms when only transformQueryNames is set",
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
+        const transformed = yield* sql`SELECT 1 AS ${sql("someName")}`;
+        assert.deepStrictEqual(transformed, [{ some_name: 1 }]);
         const raw = sql.withoutTransforms();
         const value107 = yield* raw`SELECT 1 AS ${raw("someName")}`;
-        assert.deepStrictEqual(value107, [{ some_name: 1 }]);
+        assert.deepStrictEqual(value107, [{ someName: 1 }]);
       })
     );
   });
