@@ -22,7 +22,6 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
@@ -893,7 +892,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
     // Success-only memoization. See the class remarks: a bare `Effect.cached`
     // would memoize an interrupt and permanently brick the layer.
     const [resolveOnce, invalidate] = yield* Effect.cachedInvalidateWithTTL(discover, Duration.infinity);
-    const memo = Effect.onExit(resolveOnce, (exit) => (Exit.isSuccess(exit) ? Effect.void : invalidate));
+    const memo = Effect.onError(resolveOnce, () => invalidate);
 
     /**
      * Per-resolved-root memos for the `…In` methods, each success-only on the
@@ -932,7 +931,7 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
       const existing = O.getOrUndefined(MutableHashMap.get(rootMemos, root));
       if (existing !== undefined) return yield* existing.memo;
       const [resolveOnce, invalidateOne] = yield* Effect.cachedInvalidateWithTTL(discoverAt(root), Duration.infinity);
-      const built = Effect.onExit(resolveOnce, (exit) => (Exit.isSuccess(exit) ? Effect.void : invalidateOne));
+      const built = Effect.onError(resolveOnce, () => invalidateOne);
       // Re-check under the benign concurrent-miss race: keep whichever cell
       // landed first so callers dedupe onto one.
       const raced = O.getOrUndefined(MutableHashMap.get(rootMemos, root));

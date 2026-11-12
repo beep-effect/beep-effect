@@ -14,7 +14,7 @@ The package owns the technical boundary to DuckDB: connections, statement
 compilation, value conversion and error classification. Domain packages own
 their schemas, retention rules and projections.
 
-Versions: effect 4.0.6, `@duckdb/node-api` 2.0.0-r.1 (engine 2.0.0).
+Versions: effect 4.1.4, `@duckdb/node-api` 2.0.0-r.1 (engine 2.0.0).
 
 ## DuckDbClient quick start
 
@@ -371,10 +371,10 @@ query the caller runs on that connection outside the client.
 
 ### Name transforms
 
-Set both `transformQueryNames` and `transformResultNames`, or neither. With only
-`transformQueryNames`, `withoutTransforms()` returns the same client and keeps
-transforming identifiers, which affects `KeyValueStore.layerSql` and
-`SqlEventLogServerUnencrypted`. The result transform is null-safe for LIST,
+`withoutTransforms()` drops both name transforms, also when only
+`transformQueryNames` is set (effect 4.1.4, Effect #10454). Before 4.1.4 it
+returned the same client and kept transforming identifiers, which broke
+`KeyValueStore.layerSql` and `SqlEventLogServerUnencrypted`. The result transform is null-safe for LIST,
 STRUCT and MAP values. It renames every object key in a row, so it also renames
 the driver's value shapes: INTERVAL `months`/`days`/`micros`, MAP entry
 `key`/`value`, and UNION `tag`/`value`. A transform that is not the identity
@@ -455,7 +455,7 @@ The reason's `message` names the operation; the native error is in
 | `Parser`, `Catalog`, `Binder Error` | `SqlSyntaxError` |
 | anything else | `UnknownError` |
 
-## Support matrix (effect 4.0.6)
+## Support matrix (effect 4.1.4)
 
 The client reports the `"sqlite"` dialect, so effect modules pick their SQLite
 DDL for it.
@@ -466,8 +466,8 @@ DDL for it.
 | SqlModel update with a `GeneratedByDb` id | broken on every driver at 4.0.5 (a Model bug, not DuckDB) |
 | Upstream SqlEventJournal, Persistence (both layers), PersistedQueue store, cluster SqlMessageStorage/SqlRunnerStorage, SqlEventLogServerEncrypted | unsupported (`AUTOINCREMENT`, `datetime()`, partial index, INT32 columns); use the DuckDB-native modules below |
 | `DuckDbEventJournal`, `DuckDbPersistence` (`layerSql`, `layerSqlMultiTable`, both backings), `DuckDbEventLogServerEncrypted` | supported, tested with the vendored effect 4.0.6 suites |
-| `DuckDbPersistedQueue` (`layerStoreSql`) | supported, tested; also requires `Crypto` (e.g. `NodeCrypto.layer`) |
-| `DuckDbMessageStorage`, `DuckDbRunnerStorage` | supported, tested, single process only (`SingleRunner`): DuckDB locks the file per process |
+| `DuckDbPersistedQueue` (`layerStoreSql`) | supported, tested with the vendored effect 4.1.4 suites (`deduplicate: "untilExecuted"` included); also requires `Crypto` (e.g. `NodeCrypto.layer`) |
+| `DuckDbMessageStorage`, `DuckDbRunnerStorage` | supported, tested, single process only (`SingleRunner`): DuckDB locks the file per process; `DuckDbMessageStorage.deleteProcessed` (4.1.4 retention cleanup) runs its select and delete in one transaction on the single writer |
 | Nested transaction rollback that the outer body catches | refuses the outer commit (no savepoints in DuckDB 2.0) |
 | `backup` | not provided (COPY FROM DATABASE fails on foreign-key order); use `exportDatabase` / `importDatabase` |
 | Streams with one writer statement per row outside a transaction | supported with `readerConnections > 0`; streams on `reserve` still deadlock |

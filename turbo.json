@@ -1,5 +1,5 @@
 {
-  "$schema": "https://v2-11-10.turborepo.dev/schema.json",
+  "$schema": "https://v2-11-11.turborepo.dev/schema.json",
   "agentGuidance": false,
   "futureFlags": {
     "affectedUsingTaskInputs": true,
@@ -214,6 +214,7 @@
         "apps/docket-intake/package.json",
         "apps/labs/api-docs/package.json",
         "apps/labs/ciops/package.json",
+        "apps/labs/lane-cockpit/package.json",
         "apps/labs/lejeune-bolt-workbench/package.json",
         "apps/labs/semantica/package.json",
         "apps/labs/trustgraph-workbench/package.json",

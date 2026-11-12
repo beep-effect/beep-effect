@@ -29,7 +29,6 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
 import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
@@ -710,7 +709,7 @@ export class WorkspaceSnapshots extends Context.Service<WorkspaceSnapshots, Work
           computeAt(root, ref),
           Duration.infinity
         );
-        const built = Effect.onExit(resolveOnce, (exit) => (Exit.isSuccess(exit) ? Effect.void : invalidate));
+        const built = Effect.onError(resolveOnce, () => invalidate);
         // Re-check under the benign concurrent-miss race: keep whichever cell
         // landed first so callers dedupe onto one.
         const existing = O.getOrUndefined(MutableHashMap.get(atCaches, key));

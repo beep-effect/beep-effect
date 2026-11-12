@@ -1,5 +1,5 @@
 /**
- * Vendored from Effect, tag effect@4.0.6, packages/effect/test/persistence/PersistedQueueTest.ts.
+ * Vendored from Effect, tag effect@4.1.4, packages/effect/test/persistence/PersistedQueueTest.ts.
  * MIT License, Copyright (c) Effectful Technologies Inc. Adaptations carry // beep: markers.
  */
 // beep: Effect helpers and persistent collections satisfy repository diagnostics.
@@ -31,61 +31,97 @@ const Item = Schema.Struct({
   n: Schema.BigInt,
 });
 
-// advance the virtual clock one poll cycle, give real-time stores a moment,
-// then check the forked take is still waiting
-const assertNotDelivered = Effect.fnUntraced(function* <A, E>(fiber: Fiber.Fiber<A, E>) {
-  yield* TestClock.adjust(1000);
-  yield* Effect.sleep(1000).pipe(TestClock.withLive);
-  assert.isUndefined(fiber.pollUnsafe());
-});
-
-// advance both clocks until the forked take completes, including acknowledgement.
-// Keep advancing while it is pending: an SQL poll can miss a virtual-clock
-// wakeup, and acknowledgement retries also sleep on the virtual clock.
-const awaitDelivery = Effect.fnUntraced(function* <A, E>(fiber: Fiber.Fiber<A, E>) {
-  for (let i = 0; i < 8 && fiber.pollUnsafe() === undefined; i++) {
-    yield* TestClock.adjust(1000);
-    yield* Effect.sleep(700).pipe(TestClock.withLive);
-  }
-  assert.isDefined(fiber.pollUnsafe());
-  return yield* Fiber.join(fiber);
-});
-
-// move both the virtual clock and real time past a 1 second ttl. The virtual
-// jump is kept small: a large jump can fire the SQL clients' pool timers and
-// time out in-flight connection acquisitions
-const advancePastTtl = Effect.gen(function* () {
-  yield* TestClock.adjust("2 seconds");
-  yield* Effect.sleep(1500).pipe(TestClock.withLive);
-});
-
-// beep: Share repeated contract steps to satisfy the duplication gate.
-const failOnce = Effect.fnUntraced(function* (queue: PersistedQueue.PersistedQueue<{ readonly n: bigint }>) {
-  yield* queue.offer({ n: 42n });
+// beep: Share the offer-then-fail contract step to satisfy the duplication gate.
+const failOnce = Effect.fnUntraced(function* (
+  queue: PersistedQueue.PersistedQueue<{ readonly n: bigint }>,
+  value: { readonly n: bigint },
+  options?: Parameters<PersistedQueue.PersistedQueue<{ readonly n: bigint }>["offer"]>[1]
+) {
+  yield* queue.offer(value, options);
   const error = yield* queue.take(() => Effect.fail("boom")).pipe(Effect.flip);
   assert.strictEqual(error, "boom");
 });
 
-// beep: Share the successful-delivery and subsequent non-redelivery assertion.
-const takeOnce = Effect.fnUntraced(function* (
-  queue: PersistedQueue.PersistedQueue<{ readonly n: bigint }>,
-  expected: { readonly n: bigint }
-) {
-  const take1 = yield* queue.take(Effect.succeed);
-  assert.deepStrictEqual(take1, expected);
-  const fiber = yield* queue.take(Effect.succeed).pipe(Effect.forkScoped);
-  yield* assertNotDelivered(fiber);
-});
+type SuiteOptions = {
+  readonly timeout?: Duration.Input | undefined;
+  readonly hookTimeout?: Duration.Input | undefined;
+  /**
+   * Set when the store reads time only from the `Clock` service, so the
+   * tests can skip the wall-clock waits that real-time stores need.
+   */
+  readonly virtualTime?: boolean | undefined;
+  /** Cleanup timestamps use the injected Clock, even when I/O still needs live waits. */
+  readonly cleanupUsesClock?: boolean | undefined;
+  /** Set when the store fails `cleanup` as unsupported instead of running it. */
+  readonly cleanup?: "supported" | "unsupported" | undefined;
+};
 
 const suiteWithImpl = <R, E>(
   name: string,
   layer: Layer.Layer<PersistedQueue.PersistedQueueStore, E, R>,
   testApi: Vitest.MethodsNonLive<R>,
-  timeout: Duration.Input = "30 seconds",
-  hookTimeout: Duration.Input = timeout
+  options?: SuiteOptions
 ) => {
+  const timeout = options?.timeout ?? "30 seconds";
+  const hookTimeout = options?.hookTimeout ?? timeout;
   // Tests share and advance the same TestClock.
   const testOptions = { timeout: Duration.toMillis(timeout) };
+
+  // give real-time stores a moment of wall-clock time
+  // beep: Explicit `=== true` checks satisfy strictBooleanExpressions on the optional flags.
+  const virtualTime = options?.virtualTime === true;
+  const liveSleep = (millis: number) => (virtualTime ? Effect.yieldNow : Effect.sleep(millis).pipe(TestClock.withLive));
+
+  // advance the virtual clock one poll cycle, give real-time stores a moment,
+  // then check the forked take is still waiting
+  const assertNotDelivered = Effect.fnUntraced(function* <A, E>(fiber: Fiber.Fiber<A, E>) {
+    yield* TestClock.adjust(1000);
+    yield* liveSleep(1000);
+    assert.isUndefined(fiber.pollUnsafe());
+  });
+
+  // advance both clocks until the forked take completes, including acknowledgement.
+  // Keep advancing while it is pending: an SQL poll can miss a virtual-clock
+  // wakeup, and acknowledgement retries also sleep on the virtual clock.
+  const awaitDelivery = Effect.fnUntraced(function* <A, E>(fiber: Fiber.Fiber<A, E>) {
+    for (let i = 0; i < 8 && fiber.pollUnsafe() === undefined; i++) {
+      yield* TestClock.adjust(1000);
+      yield* liveSleep(700);
+    }
+    assert.isDefined(fiber.pollUnsafe());
+    return yield* Fiber.join(fiber);
+  });
+
+  // move both the virtual clock and real time past a 1 second ttl. The virtual
+  // jump is kept small: a large jump can fire the SQL clients' pool timers and
+  // time out in-flight connection acquisitions
+  const advancePastTtl = Effect.gen(function* () {
+    yield* TestClock.adjust("2 seconds");
+    yield* liveSleep(1500);
+  });
+
+  // beep: Share the successful-delivery and subsequent non-redelivery assertion.
+  const takeOnce = Effect.fnUntraced(function* (
+    queue: PersistedQueue.PersistedQueue<{ readonly n: bigint }>,
+    expected: { readonly n: bigint }
+  ) {
+    const take1 = yield* queue.take(Effect.succeed);
+    assert.deepStrictEqual(take1, expected);
+    const fiber = yield* queue.take(Effect.succeed).pipe(Effect.forkScoped);
+    yield* assertNotDelivered(fiber);
+  });
+
+  // beep: Share the delayed-delivery assertion to satisfy the duplication gate.
+  const takeAfterDelay = Effect.fnUntraced(function* (
+    queue: PersistedQueue.PersistedQueue<{ readonly n: bigint }>,
+    expected: { readonly n: bigint }
+  ) {
+    const fiber = yield* queue.take(Effect.succeed).pipe(Effect.forkScoped);
+    yield* assertNotDelivered(fiber);
+    const delivered = yield* awaitDelivery(fiber);
+    assert.deepStrictEqual(delivered, expected);
+  });
+
   return testApi.layer(PersistedQueue.layer.pipe(Layer.provideMerge(layer)), {
     timeout: hookTimeout,
     concurrent: false,
@@ -149,40 +185,8 @@ const suiteWithImpl = <R, E>(
           yield* queue.offer({ n: 42n }, { id: Str.slice(0, 1)("😀") });
 
           const fiber = yield* queue.take(Effect.succeed).pipe(Effect.forkScoped);
-          const awaitDelivery2 = yield* awaitDelivery(fiber);
-          assert.deepStrictEqual(awaitDelivery2, { n: 42n });
-        }),
-      testOptions
-    );
-
-    it.effect(
-      "cleanup retains failed lone surrogates until the failed TTL releases their custom ids",
-      () =>
-        Effect.gen(function* () {
-          const store = yield* PersistedQueue.PersistedQueueStore;
-          const queue = yield* PersistedQueue.make({
-            name: "test-queue-lone-surrogate-failed-id",
-            schema: Schema.Struct({ s: Schema.String }),
-            maxAttempts: 1,
-          });
-          const id = "lone-surrogate-failed-custom-id";
-          yield* queue.offer({ s: Str.slice(0, 1)("😀") }, { id });
-          const failed = yield* queue.take(() => Effect.fail("boom")).pipe(Effect.flip, Effect.forkScoped);
-          const awaitDelivery3 = yield* awaitDelivery(failed);
-          assert.strictEqual(awaitDelivery3, "boom");
-
-          // An unexpired dead letter must keep its custom id deduplicated.
-          yield* store.cleanup({ timeToLive: Duration.seconds(1), failedTimeToLive: Duration.days(30) });
-          yield* queue.offer({ s: "duplicate" }, { id });
-          const fiber = yield* queue.take(Effect.succeed).pipe(Effect.forkScoped);
-          yield* assertNotDelivered(fiber);
-
-          // Expiring that dead letter releases the id even with an opaque surrogate payload.
-          yield* advancePastTtl;
-          yield* store.cleanup({ timeToLive: Duration.days(30), failedTimeToLive: Duration.seconds(1) });
-          yield* queue.offer({ s: "reoffered" }, { id });
-          const awaitDelivery4 = yield* awaitDelivery(fiber);
-          assert.deepStrictEqual(awaitDelivery4, { s: "reoffered" });
+          const delivered = yield* awaitDelivery(fiber);
+          assert.deepStrictEqual(delivered, { n: 42n });
         }),
       testOptions
     );
@@ -225,51 +229,27 @@ const suiteWithImpl = <R, E>(
     );
 
     it.effect(
-      "failure",
-      () =>
-        Effect.gen(function* () {
-          const queue = yield* PersistedQueue.make({
-            name: "test-queue-c",
-            schema: Item,
-            retrySchedule: Schedule.spaced(0),
-          });
-
-          // beep: Reuse the failure setup required by the duplication gate.
-          yield* failOnce(queue);
-
-          const value = yield* queue.take((val, { attempts }) => {
-            assert.strictEqual(attempts, 2);
-            return Effect.succeed(val);
-          });
-          assert.strictEqual(value.n, 42n);
-        }),
-      testOptions
-    );
-
-    it.effect(
       "delays retries with the retry schedule",
       () =>
         Effect.gen(function* () {
           const queue = yield* PersistedQueue.make({
             name: "test-queue-retry-schedule",
             schema: Item,
-            // MySQL and SQLite truncate retry timestamps to whole seconds.
-            // Leave room for that truncation before the real-time assertion below.
             retrySchedule: Schedule.spaced("2 seconds"),
           });
 
           // beep: Reuse the failure setup required by the duplication gate.
-          yield* failOnce(queue);
+          yield* failOnce(queue, { n: 42n });
 
           const fiber = yield* queue.take((_val, { attempts }) => Effect.succeed(attempts)).pipe(Effect.forkScoped);
 
           // not redelivered before the retry delay elapses
           yield* TestClock.adjust(100);
-          yield* Effect.sleep(100).pipe(TestClock.withLive);
+          yield* liveSleep(100);
           assert.isUndefined(fiber.pollUnsafe());
 
-          const awaitDelivery5 = yield* awaitDelivery(fiber);
-          assert.strictEqual(awaitDelivery5, 2);
+          const attempts = yield* awaitDelivery(fiber);
+          assert.strictEqual(attempts, 2);
         }),
       testOptions
     );
@@ -294,8 +274,8 @@ const suiteWithImpl = <R, E>(
           yield* assertNotDelivered(fiber);
 
           // the delay does not consume an attempt
-          const awaitDelivery6 = yield* awaitDelivery(fiber);
-          assert.deepStrictEqual(awaitDelivery6, { value: { n: 42n }, attempts: 1 });
+          const delivered = yield* awaitDelivery(fiber);
+          assert.deepStrictEqual(delivered, { value: { n: 42n }, attempts: 1 });
         }),
       testOptions
     );
@@ -335,11 +315,8 @@ const suiteWithImpl = <R, E>(
 
           // no dedupe record was written, so the id can be offered again
           yield* queue.offer({ n: 3n }, { id: "infinite-delay-id" });
-          const take7 = yield* queue.take(Effect.succeed);
-          assert.deepStrictEqual(take7, { n: 3n });
-
-          const fiber = yield* queue.take(Effect.succeed).pipe(Effect.forkScoped);
-          yield* assertNotDelivered(fiber);
+          // beep: Reuse the delivery/non-redelivery assertion.
+          yield* takeOnce(queue, { n: 3n });
         }),
       testOptions
     );
@@ -357,10 +334,8 @@ const suiteWithImpl = <R, E>(
           yield* queue.offer({ n: 2n }, { id: "delayed-duplicate-id" });
 
           // the undelayed duplicate does not make the element available early
-          const fiber = yield* queue.take(Effect.succeed).pipe(Effect.forkScoped);
-          yield* assertNotDelivered(fiber);
-          const awaitDelivery8 = yield* awaitDelivery(fiber);
-          assert.deepStrictEqual(awaitDelivery8, { n: 1n });
+          // beep: Reuse the delayed-delivery assertion.
+          yield* takeAfterDelay(queue, { n: 1n });
 
           const fiber2 = yield* queue.take(Effect.succeed).pipe(Effect.forkScoped);
           yield* assertNotDelivered(fiber2);
@@ -369,47 +344,29 @@ const suiteWithImpl = <R, E>(
     );
 
     it.effect(
-      "idempotent offer",
+      "settling a custom id does not release the same id in another queue",
       () =>
         Effect.gen(function* () {
-          const queue = yield* PersistedQueue.make({
-            name: "idempotent-offer",
-            schema: Item,
-          });
+          const emails = yield* PersistedQueue.make({ name: "isolated-emails", schema: Item });
+          const invoices = yield* PersistedQueue.make({ name: "isolated-invoices", schema: Item });
+          yield* emails.offer({ n: 1n }, { id: "order-1" });
+          yield* invoices.offer({ n: 2n }, { id: "order-1" });
 
-          yield* queue.offer({ n: 42n }, { id: "custom-id" });
-          yield* queue.offer({ n: 42n }, { id: "custom-id" });
-          yield* queue.take(
-            Effect.fnUntraced(function* (value) {
-              assert.strictEqual(value.n, 42n);
+          // each queue deduplicates its own ids, so the invoice is delivered
+          const taken = Latch.makeUnsafe();
+          let invoice: typeof Item.Type | undefined;
+          yield* invoices
+            .take((value) => {
+              invoice = value;
+              return Effect.andThen(taken.open, Effect.never);
             })
-          );
-          const fiber = yield* queue
-            .take(
-              Effect.fnUntraced(function* (value) {
-                assert.strictEqual(value.n, 42n);
-              })
-            )
             .pipe(Effect.forkScoped);
+          yield* taken.await;
+          assert.deepStrictEqual(invoice, { n: 2n });
 
-          yield* assertNotDelivered(fiber);
-        }),
-      testOptions
-    );
-
-    it.effect(
-      "deduplicates custom ids independently in each queue",
-      () =>
-        Effect.gen(function* () {
-          const first = yield* PersistedQueue.make({ name: "custom-id-first", schema: Item });
-          const second = yield* PersistedQueue.make({ name: "custom-id-second", schema: Item });
-
-          yield* first.offer({ n: 1n }, { id: "shared-custom-id" });
-          yield* second.offer({ n: 2n }, { id: "shared-custom-id" });
-
-          const fiber = yield* second.take(Effect.succeed).pipe(Effect.forkScoped);
-          const awaitDelivery9 = yield* awaitDelivery(fiber);
-          assert.deepStrictEqual(awaitDelivery9, { n: 2n });
+          yield* emails.take(Effect.succeed);
+          const duplicate = yield* invoices.take(Effect.succeed).pipe(Effect.forkScoped);
+          yield* assertNotDelivered(duplicate);
         }),
       testOptions
     );
@@ -447,27 +404,6 @@ const suiteWithImpl = <R, E>(
     );
 
     it.effect(
-      "stops delivering when maxAttempts is exhausted",
-      () =>
-        Effect.gen(function* () {
-          const queue = yield* PersistedQueue.make({
-            name: "test-queue-exhausted",
-            schema: Item,
-            maxAttempts: 1,
-            retrySchedule: Schedule.spaced(0),
-          });
-
-          // beep: Reuse the failure setup required by the duplication gate.
-          yield* failOnce(queue);
-
-          const fiber = yield* queue.take((val) => Effect.succeed(val)).pipe(Effect.forkScoped);
-
-          yield* assertNotDelivered(fiber);
-        }),
-      testOptions
-    );
-
-    it.effect(
       "dead-letters elements that fail to decode",
       () =>
         Effect.gen(function* () {
@@ -486,97 +422,262 @@ const suiteWithImpl = <R, E>(
           });
           yield* queue.offer({ n: 42n });
 
+          // the poison element is marked as failed and skipped, and is not delivered again
           // beep: Assert poison skipping and non-redelivery through the shared contract step.
           yield* takeOnce(queue, { n: 42n });
         }),
       testOptions
     );
 
+    if (options?.cleanup === "unsupported") {
+      it.effect(
+        "cleanup explicitly fails as unsupported",
+        () =>
+          Effect.gen(function* () {
+            const store = yield* PersistedQueue.PersistedQueueStore;
+            for (const failedTimeToLive of [undefined, Duration.seconds(1)]) {
+              const error = yield* store
+                .cleanup({
+                  timeToLive: Duration.seconds(1),
+                  failedTimeToLive,
+                })
+                .pipe(Effect.flip);
+              assert.instanceOf(error, PersistedQueue.PersistedQueueError);
+              assert.match(error.message, /unsupported|not supported/i);
+            }
+          }),
+        testOptions
+      );
+    } else {
+      it.effect(
+        "cleanup removes expired completed elements",
+        () =>
+          Effect.gen(function* () {
+            const store = yield* PersistedQueue.PersistedQueueStore;
+            const queue = yield* PersistedQueue.make({
+              name: "test-queue-cleanup",
+              schema: Item,
+            });
+
+            yield* queue.offer({ n: 1n }, { id: "cleanup-id" });
+            yield* queue.take(Effect.succeed);
+
+            // within the ttl the dedupe entry survives, so re-offers are ignored
+            yield* store.cleanup({ timeToLive: Duration.days(30), failedTimeToLive: undefined });
+            yield* queue.offer({ n: 2n }, { id: "cleanup-id" });
+            const fiber = yield* queue.take(Effect.succeed).pipe(Effect.forkScoped);
+            yield* assertNotDelivered(fiber);
+
+            // after the ttl the completed element and its dedupe entry go away
+            yield* advancePastTtl;
+            yield* store.cleanup({ timeToLive: Duration.seconds(1), failedTimeToLive: undefined });
+            yield* queue.offer({ n: 3n }, { id: "cleanup-id" });
+            const delivered = yield* awaitDelivery(fiber);
+            assert.deepStrictEqual(delivered, { n: 3n });
+          }),
+        testOptions
+      );
+
+      it.effect(
+        "cleanup removes failed elements only with failedTimeToLive",
+        () =>
+          Effect.gen(function* () {
+            const store = yield* PersistedQueue.PersistedQueueStore;
+            const queue = yield* PersistedQueue.make({
+              name: "test-queue-cleanup-failed",
+              schema: Item,
+              maxAttempts: 1,
+              retrySchedule: Schedule.spaced(0),
+            });
+
+            // beep: Reuse the failure setup required by the duplication gate.
+            yield* failOnce(queue, { n: 1n }, { id: "failed-cleanup-id" });
+
+            // without failedTimeToLive the failed element is the dead-letter
+            // record and is kept, so its id stays deduplicated
+            yield* advancePastTtl;
+            yield* store.cleanup({ timeToLive: Duration.seconds(1), failedTimeToLive: undefined });
+            yield* queue.offer({ n: 2n }, { id: "failed-cleanup-id" });
+            const fiber = yield* queue.take(Effect.succeed).pipe(Effect.forkScoped);
+            yield* assertNotDelivered(fiber);
+
+            // with failedTimeToLive the failed element and its dedupe entry go away
+            yield* store.cleanup({ timeToLive: Duration.days(30), failedTimeToLive: Duration.seconds(1) });
+            yield* queue.offer({ n: 3n }, { id: "failed-cleanup-id" });
+            const delivered = yield* awaitDelivery(fiber);
+            assert.deepStrictEqual(delivered, { n: 3n });
+          }),
+        testOptions
+      );
+
+      it.effect(
+        "cleanup keeps dedupe entries for unprocessed elements",
+        () =>
+          Effect.gen(function* () {
+            const store = yield* PersistedQueue.PersistedQueueStore;
+            const queue = yield* PersistedQueue.make({
+              name: "test-queue-cleanup-pending",
+              schema: Item,
+            });
+
+            yield* queue.offer({ n: 1n }, { id: "pending-cleanup-id" });
+
+            // an element older than the ttl that was never processed keeps its
+            // dedupe entry, so the re-offer does not enqueue a duplicate
+            yield* advancePastTtl;
+            yield* store.cleanup({ timeToLive: Duration.seconds(1), failedTimeToLive: undefined });
+            yield* queue.offer({ n: 2n }, { id: "pending-cleanup-id" });
+
+            // beep: Reuse the delivery/non-redelivery assertion after pending cleanup.
+            yield* takeOnce(queue, { n: 1n });
+          }),
+        testOptions
+      );
+
+      it.effect(
+        "cleanup retains failed lone surrogates until the failed TTL releases their custom ids",
+        () =>
+          Effect.gen(function* () {
+            const store = yield* PersistedQueue.PersistedQueueStore;
+            const queue = yield* PersistedQueue.make({
+              name: "test-queue-lone-surrogate-failed-id",
+              schema: Schema.Struct({ s: Schema.String }),
+              maxAttempts: 1,
+            });
+            const id = "lone-surrogate-failed-custom-id";
+            yield* queue.offer({ s: Str.slice(0, 1)("😀") }, { id });
+            const failed = yield* queue.take(() => Effect.fail("boom")).pipe(Effect.flip, Effect.forkScoped);
+            const failure = yield* awaitDelivery(failed);
+            assert.strictEqual(failure, "boom");
+
+            // An unexpired dead letter must keep its custom id deduplicated.
+            yield* store.cleanup({ timeToLive: Duration.seconds(1), failedTimeToLive: Duration.days(30) });
+            yield* queue.offer({ s: "duplicate" }, { id });
+            const fiber = yield* queue.take(Effect.succeed).pipe(Effect.forkScoped);
+            yield* assertNotDelivered(fiber);
+
+            // Expiring that dead letter releases the id even with an opaque surrogate payload.
+            yield* advancePastTtl;
+            yield* store.cleanup({ timeToLive: Duration.days(30), failedTimeToLive: Duration.seconds(1) });
+            yield* queue.offer({ s: "reoffered" }, { id });
+            const delivered = yield* awaitDelivery(fiber);
+            assert.deepStrictEqual(delivered, { s: "reoffered" });
+          }),
+        testOptions
+      );
+    }
+
     it.effect(
-      "cleanup removes expired completed elements",
+      "untilExecuted coalesces an id until its element completes",
       () =>
         Effect.gen(function* () {
-          const store = yield* PersistedQueue.PersistedQueueStore;
           const queue = yield* PersistedQueue.make({
-            name: "test-queue-cleanup",
+            name: "test-queue-until-executed-completed",
             schema: Item,
           });
+          const id = "until-executed-completed-id";
+          const offerOptions = { id, deduplicate: "untilExecuted" } as const;
 
-          yield* queue.offer({ n: 1n }, { id: "cleanup-id" });
-          yield* queue.take(Effect.succeed);
+          // offers are coalesced while the element is pending and processing
+          yield* queue.offer({ n: 1n }, offerOptions);
+          yield* queue.offer({ n: 2n }, offerOptions);
+          const taken = Latch.makeUnsafe();
+          const release = Latch.makeUnsafe();
+          const first = yield* queue
+            .take((value) => Effect.as(Effect.andThen(taken.open, release.await), value))
+            .pipe(Effect.forkScoped);
+          yield* taken.await;
+          yield* queue.offer({ n: 3n }, offerOptions);
+          yield* release.open;
+          const firstValue = yield* Fiber.join(first);
+          assert.deepStrictEqual(firstValue, { n: 1n });
+          const next = yield* queue.take(Effect.succeed).pipe(Effect.forkScoped);
+          yield* assertNotDelivered(next);
 
-          // within the ttl the dedupe entry survives, so re-offers are ignored
-          yield* store.cleanup({ timeToLive: Duration.days(30), failedTimeToLive: undefined });
-          yield* queue.offer({ n: 2n }, { id: "cleanup-id" });
-          const fiber = yield* queue.take(Effect.succeed).pipe(Effect.forkScoped);
-          yield* assertNotDelivered(fiber);
-
-          // after the ttl the completed element and its dedupe entry go away
-          yield* advancePastTtl;
-          yield* store.cleanup({ timeToLive: Duration.seconds(1), failedTimeToLive: undefined });
-          yield* queue.offer({ n: 3n }, { id: "cleanup-id" });
-          const awaitDelivery10 = yield* awaitDelivery(fiber);
-          assert.deepStrictEqual(awaitDelivery10, { n: 3n });
+          // once completed the id is released, and the re-offer queues behind
+          // work offered before it
+          yield* queue.offer({ n: 4n });
+          yield* queue.offer({ n: 5n }, offerOptions);
+          const nextValue = yield* awaitDelivery(next);
+          assert.deepStrictEqual(nextValue, { n: 4n });
+          const reoffered = yield* queue.take(Effect.succeed).pipe(Effect.forkScoped);
+          const reofferedValue = yield* awaitDelivery(reoffered);
+          assert.deepStrictEqual(reofferedValue, { n: 5n });
         }),
       testOptions
     );
 
     it.effect(
-      "cleanup removes failed elements only with failedTimeToLive",
+      "untilExecuted releases the id of a failed element",
       () =>
         Effect.gen(function* () {
-          const store = yield* PersistedQueue.PersistedQueueStore;
           const queue = yield* PersistedQueue.make({
-            name: "test-queue-cleanup-failed",
+            name: "test-queue-until-executed-failed",
             schema: Item,
             maxAttempts: 1,
-            retrySchedule: Schedule.spaced(0),
           });
+          const id = "until-executed-failed-id";
+          const offerOptions = { id, deduplicate: "untilExecuted" } as const;
 
-          yield* queue.offer({ n: 1n }, { id: "failed-cleanup-id" });
-          const error = yield* queue.take(() => Effect.fail("boom")).pipe(Effect.flip);
-          assert.strictEqual(error, "boom");
+          // beep: Reuse the failure setup required by the duplication gate.
+          yield* failOnce(queue, { n: 1n }, offerOptions);
 
-          // without failedTimeToLive the failed element is the dead-letter
-          // record and is kept, so its id stays deduplicated
-          yield* advancePastTtl;
-          yield* store.cleanup({ timeToLive: Duration.seconds(1), failedTimeToLive: undefined });
-          yield* queue.offer({ n: 2n }, { id: "failed-cleanup-id" });
-          const fiber = yield* queue.take(Effect.succeed).pipe(Effect.forkScoped);
-          yield* assertNotDelivered(fiber);
-
-          // with failedTimeToLive the failed element and its dedupe entry go away
-          yield* store.cleanup({ timeToLive: Duration.days(30), failedTimeToLive: Duration.seconds(1) });
-          yield* queue.offer({ n: 3n }, { id: "failed-cleanup-id" });
-          const awaitDelivery11 = yield* awaitDelivery(fiber);
-          assert.deepStrictEqual(awaitDelivery11, { n: 3n });
+          // the re-offer is new work and honours its own delay
+          yield* queue.offer({ n: 2n }, { ...offerOptions, delay: "3 seconds" });
+          // beep: Reuse the delayed-delivery assertion.
+          yield* takeAfterDelay(queue, { n: 2n });
         }),
       testOptions
     );
 
-    it.effect(
-      "cleanup keeps dedupe entries for unprocessed elements",
-      () =>
-        Effect.gen(function* () {
-          const store = yield* PersistedQueue.PersistedQueueStore;
-          const queue = yield* PersistedQueue.make({
-            name: "test-queue-cleanup-pending",
-            schema: Item,
-          });
+    // relies on cleanup to expire failures
+    if (options?.cleanup !== "unsupported") {
+      it.effect(
+        "untilExecuted keeps an id reserved when cleanup expires an earlier failure",
+        () =>
+          Effect.gen(function* () {
+            const store = yield* PersistedQueue.PersistedQueueStore;
+            const queue = yield* PersistedQueue.make({
+              name: "test-queue-until-executed-cleanup",
+              schema: Item,
+              maxAttempts: 1,
+            });
+            const id = "until-executed-cleanup-id";
+            const offerOptions = { id, deduplicate: "untilExecuted" } as const;
+            const fail = queue.take(() => Effect.fail("boom")).pipe(Effect.flip);
+            const cleanupFailed = store.cleanup({
+              timeToLive: Duration.days(30),
+              failedTimeToLive: Duration.seconds(1),
+            });
 
-          yield* queue.offer({ n: 1n }, { id: "pending-cleanup-id" });
+            yield* queue.offer({ n: 1n }, offerOptions);
+            yield* fail;
 
-          // an element older than the ttl that was never processed keeps its
-          // dedupe entry, so the re-offer does not enqueue a duplicate
-          yield* advancePastTtl;
-          yield* store.cleanup({ timeToLive: Duration.seconds(1), failedTimeToLive: undefined });
-          yield* queue.offer({ n: 2n }, { id: "pending-cleanup-id" });
+            // Only a virtual clock can guarantee cleanup expires the first failure
+            // but retains the second. SQL clocks can cross the one-second TTL
+            // between failing the second element and running cleanup.
+            if ((options?.cleanupUsesClock ?? virtualTime) === true) {
+              yield* advancePastTtl;
+              yield* queue.offer({ n: 2n }, offerOptions);
+              yield* fail;
+              yield* cleanupFailed;
 
-          // beep: Reuse the delivery/non-redelivery assertion after pending cleanup.
-          yield* takeOnce(queue, { n: 1n });
-        }),
-      testOptions
-    );
+              // The retained failure reserves the id for default-mode offers.
+              yield* queue.offer({ n: 9n }, { id });
+            }
+
+            // On every store, expiring failures must not release a pending replacement.
+            yield* queue.offer({ n: 3n }, offerOptions);
+            yield* advancePastTtl;
+            yield* cleanupFailed;
+            yield* queue.offer({ n: 4n }, offerOptions);
+
+            // beep: Reuse the delivery/non-redelivery assertion.
+            yield* takeOnce(queue, { n: 3n });
+          }),
+        testOptions
+      );
+    }
 
     it.effect(
       "processes concurrent elements exactly once with retries",
@@ -623,7 +724,7 @@ const suiteWithImpl = <R, E>(
 
           while (!completed.isOpen()) {
             yield* TestClock.adjust(1000);
-            yield* Effect.sleep(250).pipe(TestClock.withLive);
+            yield* liveSleep(250);
           }
 
           assert.strictEqual(HashSet.size(succeeded), total);
@@ -641,15 +742,13 @@ export const suiteWith: {
   <R, E>(
     layer: Layer.Layer<PersistedQueue.PersistedQueueStore, E, R>,
     testApi: Vitest.MethodsNonLive<R>,
-    timeout?: Duration.Input,
-    hookTimeout?: Duration.Input
+    options?: SuiteOptions
   ): (name: string) => void;
   <R, E>(
     name: string,
     layer: Layer.Layer<PersistedQueue.PersistedQueueStore, E, R>,
     testApi: Vitest.MethodsNonLive<R>,
-    timeout?: Duration.Input,
-    hookTimeout?: Duration.Input
+    options?: SuiteOptions
   ): void;
 } = dual((args) => P.isString(args[0]), suiteWithImpl);
 // beep: The upstream `suite` wrapper is dropped: nothing registers through it (dead-code gate).

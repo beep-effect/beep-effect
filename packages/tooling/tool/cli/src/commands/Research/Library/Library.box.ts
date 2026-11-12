@@ -320,7 +320,7 @@ export type LibraryBoxAuthMode = typeof LibraryBoxAuthMode.Type;
 const configured = (name: string) =>
   Config.String(name).pipe(
     Config.option,
-    Effect.orElseSucceed(() => O.none<string>()),
+    Effect.orElseSucceed(O.none<string>),
     Effect.map(O.filter((value: string) => Str.isNonEmpty(Str.trim(value))))
   );
 

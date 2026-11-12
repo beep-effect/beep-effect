@@ -1,9 +1,10 @@
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import { fit, formatAge, orderLanes, prLink, rowColumns, windowStart } from "@/Board";
+import { fit, formatAge, ListWindow, orderLanes, prLink, rowColumns, windowStart } from "@/Board";
 import { LaneRepository, LanesSnapshot } from "@/Lanes";
 import { NOW, ROWS, snapshotOf } from "./fixtures.ts";
 
@@ -30,15 +31,15 @@ describe("Board", () => {
 
   it("builds PR links from the report repository", () => {
     const link = prLink(LaneRepository.make({ host: "github.com", owner: "o", name: "r" }));
-    expect(link(O.some(7))).toStrictEqual(O.some("https://github.com/o/r/pull/7"));
-    expect(O.isNone(link(O.none()))).toBe(true);
+    assertSome(link(O.some(7)), "https://github.com/o/r/pull/7");
+    O.none().pipe(link, assertNone);
   });
 
   it("keeps the selection inside the visible window", () => {
-    expect(windowStart({ selected: 0, count: 10, height: 4 })).toBe(0);
-    expect(windowStart({ selected: 5, count: 10, height: 4 })).toBe(3);
-    expect(windowStart({ selected: 9, count: 10, height: 4 })).toBe(6);
-    expect(windowStart({ selected: 2, count: 3, height: 10 })).toBe(0);
+    expect(windowStart(ListWindow.make({ selected: 0, count: 10, height: 4 }))).toBe(0);
+    expect(windowStart(ListWindow.make({ selected: 5, count: 10, height: 4 }))).toBe(3);
+    expect(windowStart(ListWindow.make({ selected: 9, count: 10, height: 4 }))).toBe(6);
+    expect(windowStart(ListWindow.make({ selected: 2, count: 3, height: 10 }))).toBe(0);
   });
 
   it("splits narrow and wide frames into columns that fill the inner width", () => {

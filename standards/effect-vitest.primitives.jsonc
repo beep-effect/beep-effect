@@ -1,15 +1,15 @@
-// Generated from the verified @effect/vitest@4.1.2 source snapshot.
+// Generated from the verified @effect/vitest@4.1.4 source snapshot.
 // Regenerate anchors, review semantic diffs, and update the pin as one change.
 // Example import paths track the installed surface: effect/Arbitrary (upstream moved it there in rc.118).
 {
   "schemaVersion": "effect-vitest-primitives/v1",
   "package": "@effect/vitest",
-  "version": "4.1.2",
-  "tag": "@effect/vitest@4.1.2",
-  "sha": "506eef143bcc1750ce58920aac1e45da7265d103",
+  "version": "4.1.4",
+  "tag": "@effect/vitest@4.1.4",
+  "sha": "289a53f7b1fc40049219c6e69022db2fb859c356",
   "coverage": {
     "exportStarModule": "vitest",
-    "method": "Immutable 4.1.2 direct exports, public Vitest namespace members/options, all utils exports and every non-fenced README heading; peer Vitest export-star remains one explicit boundary. Native Arbitrary options and internal lifecycle anchors are supplementary evidence, not invented @effect/vitest exports.",
+    "method": "Immutable 4.1.4 direct exports, public Vitest namespace members/options, all utils exports and every non-fenced README heading; peer Vitest export-star remains one explicit boundary. Native Arbitrary options and internal lifecycle anchors are supplementary evidence, not invented @effect/vitest exports.",
     "sourceFiles": [
       "packages/effect/src/Arbitrary.ts",
       "packages/effect/src/Effect.ts",
@@ -1223,7 +1223,7 @@
       "gotchas": [
         "Installed Vitest 4.1.11 at the rc117 audit violated the Vitest peer range; the rc118 re-pin found Vitest 5.0.1 installed, inside it; the 4.0.0 re-pin found Vitest 5.0.2; the 4.1.0 re-pin found Vitest 5.0.5.",
         "Reference README specifies Node ^22.12.0 || ^24.0.0 || >=26.0.0 and Vite 6.4+ within majors 6-8.",
-        "Graph pins the 4.1.2 commit; the README installation command is unversioned and floats."
+        "Graph pins the 4.1.4 commit; the README installation command is unversioned and floats."
       ]
     },
     {
@@ -1598,8 +1598,8 @@
       "name": "TestClock.adjust",
       "kind": "function",
       "file": "packages/effect/src/testing/TestClock.ts",
-      "startLine": 632,
-      "endLine": 633,
+      "startLine": 647,
+      "endLine": 648,
       "signature": "adjust = (duration: Duration.Input): Effect.Effect<void> =>\n  testClockWith((testClock) => testClock.adjust(duration))",
       "description": "Advances the deterministic TestClock and wakes due effects.",
       "whenToUse": "Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset.",
@@ -1616,8 +1616,8 @@
       "name": "TestClock.withLive",
       "kind": "function",
       "file": "packages/effect/src/testing/TestClock.ts",
-      "startLine": 707,
-      "endLine": 708,
+      "startLine": 722,
+      "endLine": 723,
       "signature": "withLive = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>\n  testClockWith((testClock) => testClock.withLive(effect))",
       "description": "Runs one Effect with the live Clock while retaining the surrounding test environment.",
       "whenToUse": "Use for test-clock-stall-risk findings (EV008, candidate class test-clock-stall-risk) only when a bounded external-system wait actually requires live time. Wrap that wait, including its timeout, with TestClock.withLive while retaining the surrounding test clock. Effect and default layer testers install TestClock; explicit provision can supply one elsewhere. Diagnose the wait's root cause first (D6).",

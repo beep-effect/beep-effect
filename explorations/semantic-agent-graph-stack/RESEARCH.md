@@ -270,3 +270,109 @@ Sibling packets to compose with, not to reopen as copies:
    leans to Heimsbakk: SKOS candidates and SHACL scaffolding against
    a human blueprint. Class authorship stays with a person who can
    answer what it means, why it is there, and who decided.
+
+## 2026-11-10 — Re-baseline: inventory corrections and what moved
+
+Review pass against beep-effect
+`6d47006fa1da777a8c0f4aae6a2722fa3d577068`. The 2026-11-06 section
+above stays as written. Where the two disagree, this section is
+current. Slice code under `packages/epistemic`, `packages/ontology`
+and the epistemics model did not change between the two pins, apart
+from the execution-authority move (#2853), so the corrections below
+are misses in the first pass, not drift.
+
+### Corrections to the 2026-11-06 inventory
+
+| 2026-11-06 claim | What the repo holds |
+| --- | --- |
+| Rank 5: no `proposed` or `review` literal, no candidate lifecycle | `ReviewTag` is `Proposed`, `Accepted`, `Rejected`, `Disputed`, `Retracted` (`packages/foundation/modeling/epistemics/src/Claim/Claim.model.ts`). A `CandidateClaim` entity (`packages/epistemic/domain/src/entities/CandidateClaim/CandidateClaim.model.ts`) advances through `packages/epistemic/use-cases/src/ClaimLifecycle/ClaimLifecycle.service.ts` on a gate verdict. Goal [`epistemic-claim-lifecycle-gate`](../../goals/epistemic-claim-lifecycle-gate/README.md) is `completed-retained`. The first pass read only `ClaimDispositionStatus`. |
+| Rank 1: correction reach NOT FOUND as a service | The one-hop case exists. `ClaimEvidenceReviewStatus` is `Pending`, `Current`, or `Stale` with reason `basis-changed` or `source-unverified` (`packages/foundation/modeling/epistemics/src/ClaimEvidenceReview/ClaimEvidenceReview.model.ts`): an approval is kept and marked when its basis changes. What is missing is reach past the review, to a later artifact or action that relied on the claim. |
+| Execution-time version recheck NOT FOUND | Two rechecks exist, neither over knowledge. The execution-authority slice writes a decision record before the governed effect runs and pins `grantSetDigest` and `policyRevision` (`packages/execution-authority/domain/src/entities/ExecutionRecord/ExecutionRecord.model.ts`). The Microsoft 365 outbox restates recipients, subject and attachment digests at send and compares them with what the mailbox stores (`packages/drivers/m365-mcp/src/OutboxSendGuard.ts`). The first pass named neither. |
+| No extraction pipeline; document-to-graph builder NOT FOUND | [`langextract-capability`](../../goals/langextract-capability/README.md) is `completed-retained`. [`citation-extraction-engine`](../../goals/citation-extraction-engine/README.md) and [`legal-document-intake`](../../goals/legal-document-intake/README.md) are active. Intake decision D6 makes the knowledge graph a Postgres projection with recursive SQL and excludes a dedicated graph database. |
+| Rank 7 cites only the `identity-as-iri` exploration | Its three goals, `identity-iri-core`, `identity-iri-fold` and `identity-iri-fibered`, are `completed-retained`. A cheapest-first resolver is still not among them. |
+| Rank 9: `@beep/ontology-ui` NOT VERIFIED | Still unverified. A term-card search over `packages/ontology/ui/src` found nothing, which is weak evidence. The row carries no rank until someone reads the package. |
+
+### What moved after 2026-11-06
+
+- [`text-knowledge-stack-rebuild`](../../goals/text-knowledge-stack-rebuild/README.md)
+  opened on 2026-11-08 and is active at design. It rewrites identity,
+  provenance, rdf, epistemics, ontology and nlp as eight layers, with
+  breaking changes accepted. Every `reuse` and `extend` mark in
+  [`research/SOURCES.md`](research/SOURCES.md) section 4 points at
+  code that packet may replace. Its claims layer names a `Stance` of
+  `verbatim`, `proposed` or `admitted`, and its acceptance requires
+  that write tools emit `proposed` records only. That covers ranks 3
+  and 5 and most of the third align question. It names
+  `belief-view-engine` as a downstream consumer of the claims layer.
+- [`agent-memory-store`](../../goals/agent-memory-store/README.md)
+  is active at design: an append-only log of immutable node events,
+  with memory files as projections. It is the agent's own working
+  memory. Vasiliev's memory graph is a different thing: the record of
+  decisions and rejections around domain assertions. The 2026-11-06
+  note used one word for both. The "agent-run memory" consumer
+  candidate is taken by that goal.
+- [`research-intake-2026-11`](../../goals/research-intake-2026-11/README.md)
+  ran deep research on whether ontology grounding beats retrieval at a
+  matched token budget
+  ([G1](../../goals/research-intake-2026-11/research/deep-research/G1-ontology-vs-rag.md)).
+  The verdict: the evidence does not support it. In the closest study
+  the ontology arm had 40 to 60 percent more tokens and scored at or
+  below retrieval. One total-token-matched graph comparison keeps an
+  edge only on temporal and comparison questions. The intake's
+  portfolio proposes a matched-budget grounding pilot and names this
+  packet's consumer pick as the decision that pilot gates. Rank 2, the
+  context assembler, therefore waits on a kill test. OntoSmith's own
+  numbers fit the same picture: a gain on long contracts and none on
+  short abstracts.
+- The same intake routed further findings to this packet in
+  `goals/research-intake-2026-11/research/routing.jsonl`. They are not
+  absorbed here.
+
+### The outbox send, read at the pin
+
+The operator named the outbox send as the first consumer on
+2026-11-10. Three facts from the code decide what that can mean:
+
+- The outbox does not pass through the execution-authority slice.
+  `@beep/m365-mcp` is a driver-family MCP server with its own guards
+  and audit log. Governed egress is a destination allowlist installed
+  at the fetch boundary. Its own header says a tool call carries the
+  tool and no parameters, and that its records are not correlated to
+  a session. It cannot carry a per-message basis.
+- `m365_outbox_send_draft` has refused every send since #1728
+  (2026-10-14). After all checks pass it returns `version-unbound`,
+  because Graph's draft-send action takes only a mutable message id
+  and the checked draft can change between the last read and the
+  send. The driver README says a person sends the prepared draft in
+  Outlook, and that automated sending returns only after an immutable
+  message request or a documented version-bound send path exists.
+  The [`m365-agent-outbox`](../../goals/m365-agent-outbox/README.md)
+  README does not mention the refusal.
+- The release point today is therefore the attorney pressing Send in
+  Outlook. A recheck on `send_draft` would guard a path that never
+  sends.
+
+`version-unbound` is the same failure this packet ranks first, one
+level down: a check, then an act on something that may have changed
+since the check.
+
+### Prior art the first pass skipped
+
+"A retracted belief must retract what rested on it" is truth
+maintenance. "An artifact is stale when a pinned input changed, and
+the recompute stops early when the derived value did not change" is
+incremental computation, the rule Turbo applies to task inputs in
+this repo's CI. Neither needs a graph database. Both suggest the
+shape for rank 1: an artifact records the versions it was derived
+from, and staleness is a comparison of two reads that
+`EdgeAuthority` already offers (`readAsOf`, `readLatest`). A
+transitive walk is the expensive version and is not needed for a
+first slice.
+
+### What is left that is this packet's own
+
+Rank 1, narrowed: a record of what an approved artifact rested on,
+and a way for that record to say the basis changed before the
+artifact is released. Rank 2 stays as a gated candidate behind the
+grounding pilot and a resumed `belief-view-engine`. Ranks 3 to 7, 9
+and 10 belong to the packets named above or need no work.

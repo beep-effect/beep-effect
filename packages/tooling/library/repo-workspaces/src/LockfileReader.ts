@@ -19,7 +19,6 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
@@ -399,7 +398,7 @@ export class LockfileReader extends Context.Service<LockfileReader, LockfileRead
     });
 
     const [resolveOnce, invalidate] = yield* Effect.cachedInvalidateWithTTL(init, Duration.infinity);
-    const memo = Effect.onExit(resolveOnce, (exit) => (Exit.isSuccess(exit) ? Effect.void : invalidate));
+    const memo = Effect.onError(resolveOnce, () => invalidate);
 
     return {
       read: Effect.suspend(
