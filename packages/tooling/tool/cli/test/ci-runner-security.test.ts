@@ -472,7 +472,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(triggers).not.toContain("pull_request_target");
       expect(yamlAt(workflow, ["permissions"])).toEqual({ contents: "read" });
       expect(yamlAt(workflow, ["jobs", "security", "name"])).toBe("Security");
-      expect(yamlAt(workflow, ["jobs", "security", "if"])).toBeUndefined();
+      // Security runs when the diff touches what it reads; every main push gets the full profile.
+      expect(yamlAt(workflow, ["jobs", "security", "needs"])).toEqual(["change-profile"]);
+      expect(yamlAt(workflow, ["jobs", "security", "if"])).toBe(
+        "${{ !cancelled() && needs.change-profile.outputs.docs_only != 'true' && needs.change-profile.outputs.security_relevant != 'false' }}"
+      );
       const jobs = yield* workflowJobs(workflow);
       expect(jobs.security?.permissions).toEqual({ contents: "read", actions: "read" });
       const review = stepByName(jobSteps(jobs, "security"), "Dependency review");
@@ -853,7 +857,17 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         assert.strictEqual(result.exitCode, 0, result.stderr.toString());
         return parseProfileOutput(result.stdout.toString());
       };
-      const fullProfile = { goals_only: "false", docs_only: "false", desktop_rust_relevant: "true" };
+      const fullProfile = {
+        goals_only: "false",
+        docs_only: "false",
+        desktop_rust_relevant: "true",
+        codegen_relevant: "true",
+        ecosystem_relevant: "true",
+        nix_relevant: "true",
+        desktop_ipc_relevant: "true",
+        sast_relevant: "true",
+        security_relevant: "true",
+      };
       git(["init"]);
       git(["config", "user.email", "ci-profile@example.test"]);
       git(["config", "user.name", "CI Profile Test"]);
@@ -1153,6 +1167,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       git(["config", "user.email", "ci-profile@example.test"]);
       git(["config", "user.name", "CI Profile Test"]);
       git(["config", "commit.gpgsign", "false"]);
+      // The gate reads its path expression from the checkout's pattern data; keep the
+      // copy out of the fixture commits so every diff stays the one under test.
+      const patternPath = "packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json";
+      yield* fs.makeDirectory(path.dirname(path.join(tempRoot, patternPath)), { recursive: true });
+      yield* fs.copyFile(path.join(repoRoot, patternPath), path.join(tempRoot, patternPath));
+      yield* fs.writeFileString(path.join(tempRoot, ".git/info/exclude"), `${patternPath}\n`, { flag: "a" });
       yield* writeAndCommit("README.md", "# baseline\n", "baseline");
       const cratePath = "apps/professional-desktop/src-tauri/src/lib.rs";
       yield* writeAndCommit(cratePath, "pub fn baseline() {}\n", "baseline crate");
@@ -1342,11 +1362,17 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         const setupIndex = O.getOrThrow(A.findFirstIndex(steps, (step) => step.uses === SETUP_MONOREPO_ACTION));
         assert.strictEqual(
           setupMonorepoStep(jobs, jobId).if,
-          jobId === "verify" ? `${gated} || steps.lane-gate.outputs.home_paths_only == 'true'` : gated,
+          jobId === "verify" ? `${gated} || steps.lane-gate.outputs.docs_path == 'true'` : gated,
           jobId
         );
         assert.isBelow(stepIndexByName(steps, "Determine lane execution"), setupIndex, jobId);
-        assert.strictEqual(stepByName(steps, "Skip lane").if, "steps.lane-gate.outputs.should_run != 'true'", jobId);
+        assert.strictEqual(
+          stepByName(steps, "Skip lane").if,
+          jobId === "verify"
+            ? "steps.lane-gate.outputs.should_run != 'true' && steps.lane-gate.outputs.docs_path != 'true'"
+            : "steps.lane-gate.outputs.should_run != 'true'",
+          jobId
+        );
       }
       for (const jobId of [
         "labs",
@@ -1363,40 +1389,42 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           jobId
         );
       }
-      const verifyGate = stepRun(jobSteps(jobs, "verify"), "Determine lane execution");
-      assert.include(verifyGate, 'skip_profile="$docs_only"');
-      // Repo Sanity validates `.changeset/*.md`, which the docs-only rule counts as documentation.
-      assert.include(
-        verifyGate,
-        'if [[ "${{ env.BEEP_CI_LANE_ID }}" == "repo-sanity" ]]; then\n  skip_profile="$goals_only"'
-      );
-      // A goals_only packet-prose diff skips the Repo Sanity body, never the
-      // public-repo home path law: the job condition names only the cancel and
-      // Change Profile terms, never goals_only, and the law step is gated only on
-      // the lane gate's home_paths_only output.
+      const verifySteps = jobSteps(jobs, "verify");
+      const verifyGate = stepRun(verifySteps, "Determine lane execution");
+      // Repo Sanity is the required gate for documentation diffs too: the job
+      // condition names only the cancel and Change Profile terms, never
+      // docs_only, and a docs_only diff takes the documentation path (the home
+      // path law and the changeset checks) instead of the lane body.
       assert.strictEqual(
         yamlAt(policy.workflow, ["jobs", "verify", "if"]),
         "${{ !cancelled() && needs.change-profile.result == 'success' }}"
       );
+      assert.strictEqual(
+        stepByName(verifySteps, "Determine lane execution").env?.DOCS_ONLY,
+        "${{ needs.change-profile.outputs.docs_only }}"
+      );
       assert.include(
         verifyGate,
-        'should_run=false\n  # Packet prose still gets the private home path law.\n  if [[ "${{ env.BEEP_CI_LANE_ID }}" == "repo-sanity" ]]; then\n    home_paths_only=true'
+        'if [[ "${{ env.BEEP_CI_LANE_ID }}" == "repo-sanity" && "$DOCS_ONLY" == "true" ]]; then\n  should_run=false\n  docs_path=true'
       );
-      assert.include(verifyGate, 'echo "home_paths_only=$home_paths_only" >> "$GITHUB_OUTPUT"');
-      const homePaths = stepByName(jobSteps(jobs, "verify"), "Check private home paths");
-      assert.strictEqual(homePaths.if, "steps.lane-gate.outputs.home_paths_only == 'true'");
+      assert.include(verifyGate, 'echo "docs_path=$docs_path" >> "$GITHUB_OUTPUT"');
+      const docsSanity = stepByName(verifySteps, "Check documentation sanity");
+      assert.strictEqual(docsSanity.if, "steps.lane-gate.outputs.docs_path == 'true'");
       assert.strictEqual(
-        stepRun(jobSteps(jobs, "verify"), "Check private home paths"),
-        "bun run beep laws private-home-paths --check"
+        stepRun(verifySteps, "Check documentation sanity"),
+        "bun run beep ci lane repo-sanity --docs-only"
       );
-      assert.include(verifyGate, "^packages/ecosystem/");
+      // Codegen and Ecosystem read their path gates from the change-profile pattern data.
+      assert.include(verifyGate, "'.lanes[$lane] // empty'");
+      assert.include(ciOperationalPatterns.lanes?.ecosystem ?? "", "^packages/ecosystem/");
       assert.include(
         stepRun(jobSteps(jobs, "coverage-regression"), "Determine comparison execution"),
         '[[ "$docs_only" == "true" ]]'
       );
 
       const nix = jobSteps(jobs, "nix");
-      assert.include(stepRun(nix, "Determine lane execution"), "^flake\\.(nix|lock)$");
+      assert.include(stepRun(nix, "Determine lane execution"), "'.lanes.nix // empty'");
+      assert.include(ciOperationalPatterns.lanes?.nix ?? "", "^flake\\.(nix|lock)$");
       for (const name of ["Install Nix", "Setup Cachix (read-only)", "Run Nix checks"]) {
         assert.strictEqual(stepByName(nix, name).if, gated, name);
       }
@@ -1669,10 +1697,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assert.notInclude(workflowText, "check|test-integration|coverage)");
       assert.notInclude(workflowText, "lint-policy|codegen|ecosystem)");
       assert.include(workflowText, "codegen|ecosystem)");
-      // typos runs only inside Lint Policy (heavy.yml) and lefthook.
-      assert.notInclude(workflowText, "typos-cli");
+      // typos runs inside Lint Policy (heavy.yml), lefthook, and check.yml's Docs
+      // Policy job for docs_only pull requests, pinned to the same release.
+      const typosPins = (text: string) =>
+        A.dedupe(O.getOrElse(Str.match(/typos-cli@[0-9.]+/gu)(text), () => A.empty<string>()));
+      assert.deepStrictEqual(typosPins(workflowText), typosPins(heavyWorkflowText));
+      assert.lengthOf(typosPins(heavyWorkflowText), 1);
       assert.notInclude(workflowText, "install_typos");
-      assert.include(heavyWorkflowText, "typos-cli");
     })
   );
 
@@ -1850,9 +1881,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const heavyJobs = yield* workflowJobs(heavy);
       assert.notInclude(checkText, "Free runner disk");
       assert.notInclude(heavyText, "Free runner disk");
-      // Repo Sanity's law-only goals_only path skips the cleanup and the
-      // application secrets; every full lane run keeps both.
-      const lawOnlyLight = "${{ steps.lane-gate.outputs.home_paths_only == 'true' && 'false' || 'true' }}";
+      // Repo Sanity's documentation path skips the cleanup and the application
+      // secrets; every full lane run keeps both.
+      const lawOnlyLight = "${{ steps.lane-gate.outputs.docs_path == 'true' && 'false' || 'true' }}";
       assert.strictEqual(setupMonorepoInputs(checkJobs, "verify")["free-disk"], lawOnlyLight);
       assert.strictEqual(setupMonorepoInputs(checkJobs, "verify")["app-secrets"], lawOnlyLight);
       assert.strictEqual(setupMonorepoInputs(checkJobs, "labs")["free-disk"], "true");

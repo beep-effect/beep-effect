@@ -162,7 +162,14 @@ const REPLAY_ANCESTORS: ReadonlyArray<readonly [string, string]> = [["m0", "m9"]
 // Lanes a change with no atoms skips: every lane but the external security lane.
 const SKIPPED_WITHOUT_ATOMS = CI_LANE_ID_VALUES.length - 1;
 
-const LANES_WITHOUT_PRE_PUSH_TWIN: ReadonlyArray<CiLaneId> = ["ecosystem", "fallow", "labs", "property", "repo-sanity"];
+const LANES_WITHOUT_PRE_PUSH_TWIN: ReadonlyArray<CiLaneId> = [
+  "docs-policy",
+  "ecosystem",
+  "fallow",
+  "labs",
+  "property",
+  "repo-sanity",
+];
 
 describe("route joins", () => {
   it("joins hosted job names to lanes through the descriptor context", () => {
