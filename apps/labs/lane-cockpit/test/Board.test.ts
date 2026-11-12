@@ -4,7 +4,7 @@ import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import { fit, formatAge, orderLanes, prLink, rowColumns, windowStart } from "@/Board";
+import { fit, formatAge, ListWindow, orderLanes, prLink, rowColumns, windowStart } from "@/Board";
 import { LaneRepository, LanesSnapshot } from "@/Lanes";
 import { NOW, ROWS, snapshotOf } from "./fixtures.ts";
 
@@ -36,10 +36,10 @@ describe("Board", () => {
   });
 
   it("keeps the selection inside the visible window", () => {
-    expect(windowStart({ selected: 0, count: 10, height: 4 })).toBe(0);
-    expect(windowStart({ selected: 5, count: 10, height: 4 })).toBe(3);
-    expect(windowStart({ selected: 9, count: 10, height: 4 })).toBe(6);
-    expect(windowStart({ selected: 2, count: 3, height: 10 })).toBe(0);
+    expect(windowStart(ListWindow.make({ selected: 0, count: 10, height: 4 }))).toBe(0);
+    expect(windowStart(ListWindow.make({ selected: 5, count: 10, height: 4 }))).toBe(3);
+    expect(windowStart(ListWindow.make({ selected: 9, count: 10, height: 4 }))).toBe(6);
+    expect(windowStart(ListWindow.make({ selected: 2, count: 3, height: 10 }))).toBe(0);
   });
 
   it("splits narrow and wide frames into columns that fill the inner width", () => {
