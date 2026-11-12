@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "lab-manifest/v1",
+  "purpose": "Read-only full-screen terminal board of this repository's live session lanes (Text.js spike)",
+  "created": "2026-11-10",
+  "disposition": "active"
+}

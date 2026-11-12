@@ -1,12 +1,10 @@
 import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
-import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
-import * as Path from "effect/Path";
+import * as R from "effect/Record";
 import * as Str from "effect/String";
 import {
   CITATION_CANONICAL_EXTRACTION_RANGE_COUNT,
@@ -27,8 +25,14 @@ import {
 // The integration replays of the canonical corpora are split into range files
 // so no single file exceeds a hosted partition's budget. This guard keeps each
 // split total: the ranges are disjoint, their union is the whole table, and
-// exactly one integration file replays each range.
-const integrationDirectory = new URL("./integration/", import.meta.url);
+// exactly one integration file replays each range. Vite inlines the checked-in
+// integration sources at transform time (test/support/vite-env.d.ts).
+const integrationSources = import.meta.glob<string>("./integration/CitationCanonical*.test.ts", {
+  eager: true,
+  import: "default",
+  query: "?raw",
+});
+const integrationPrefix = "./integration/";
 const rangeReference = /^const RANGE = (\d+);$/gm;
 
 const split = (input: {
@@ -80,36 +84,28 @@ for (const corpus of splits) {
   });
 }
 
-it.layer(NodeServices.layer)("canonical replay range files", (it) => {
-  for (const corpus of splits) {
-    it.effect(`replays every ${corpus.corpus} range in exactly one integration file`, () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const directory = yield* path.fromFileUrl(integrationDirectory);
-        const entries = yield* fs.readDirectory(directory);
-        const files = A.sort(
-          A.filter(entries, (entry) => corpus.filePattern.test(entry)),
-          Str.Order
-        );
-        const references = yield* Effect.forEach(files, (file) =>
-          Effect.map(fs.readFileString(path.join(directory, file)), (source) => ({
-            file,
-            ranges: A.map(A.fromIterable(Str.matchAll(rangeReference)(source)), (match) => Number(match[1])),
-            fullTable: O.exists(corpus.fullTableReference, (reference) => reference.test(source)),
-          }))
-        );
-        // A file replays one range, or (a runtime twin) the whole table; never both, never neither.
-        for (const reference of references) {
-          expect(A.length(reference.ranges) + (reference.fullTable ? 1 : 0), reference.file).toBe(1);
-        }
-        expect(
-          A.sort(
-            A.flatMap(references, (reference) => reference.ranges),
-            Order.Number
-          )
-        ).toEqual(A.range(0, corpus.rangeCount - 1));
-      })
+for (const corpus of splits) {
+  it(`replays every ${corpus.corpus} range in exactly one integration file`, () => {
+    const references = pipe(
+      R.toEntries(integrationSources),
+      A.map(([key, source]) => ({ file: Str.slice(Str.length(integrationPrefix))(key), source })),
+      A.filter(({ file }) => corpus.filePattern.test(file)),
+      A.sort(Order.mapInput(Str.Order, ({ file }: { readonly file: string }) => file)),
+      A.map(({ file, source }) => ({
+        file,
+        ranges: A.map(A.fromIterable(Str.matchAll(rangeReference)(source)), (match) => Number(match[1])),
+        fullTable: O.exists(corpus.fullTableReference, (reference) => reference.test(source)),
+      }))
     );
-  }
-});
+    // A file replays one range, or (a runtime twin) the whole table; never both, never neither.
+    for (const reference of references) {
+      expect(A.length(reference.ranges) + (reference.fullTable ? 1 : 0), reference.file).toBe(1);
+    }
+    expect(
+      A.sort(
+        A.flatMap(references, (reference) => reference.ranges),
+        Order.Number
+      )
+    ).toEqual(A.range(0, corpus.rangeCount - 1));
+  });
+}

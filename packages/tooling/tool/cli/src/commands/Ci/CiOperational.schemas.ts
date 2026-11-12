@@ -7,6 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Ci/CiOperational.schemas");
@@ -44,6 +45,165 @@ export class CiOperationalPatterns extends S.Opaque<CiOperationalPatterns, { rea
 ) {}
 
 /**
+ * How a test reaches a goal-packet path it consumes.
+ *
+ * **Example** (Check a consumption mode)
+ *
+ * ```ts
+ * import { CiGoalDataConsumerMode } from "@beep/repo-cli/commands/Ci"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(CiGoalDataConsumerMode)("spawn")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const CiGoalDataConsumerMode = LiteralKit(["read", "spawn", "import", "turbo-input"]).pipe(
+  $I.annoteSchema("CiGoalDataConsumerMode", {
+    description: "How a test reads, spawns or imports a goal path, or a turbo.json declares it.",
+  })
+);
+
+/**
+ * The decoded type of {@link CiGoalDataConsumerMode}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CiGoalDataConsumerMode = typeof CiGoalDataConsumerMode.Type;
+
+/**
+ * One goal-packet path family that a test consumes, kept off the docs-only route.
+ *
+ * **Details**
+ *
+ * `pattern` is an anchored, `grep -E` compatible expression over repo-relative paths; it is
+ * joined into {@link ciOperationalPatterns}' `codeRoots`, so a matching path is never docs-only.
+ * Every `evidence` file must contain `reference`, the text it uses to reach the paths, so a
+ * consumer that stops reading them leaves a stale row the goal-data census test rejects.
+ *
+ * **Example** (Describe one consumed probe)
+ *
+ * ```ts
+ * import { CiGoalDataConsumer } from "@beep/repo-cli/commands/Ci"
+ *
+ * const consumer = CiGoalDataConsumer.make({
+ *   pattern: "^goals/demo/ops/probe\\.py$",
+ *   reference: "goals/demo/ops/probe.py",
+ *   consumers: ["@beep/demo"],
+ *   modes: ["spawn"],
+ *   evidence: ["packages/demo/test/Probe.test.ts"],
+ * })
+ * console.log(consumer.modes) // ["spawn"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CiGoalDataConsumer extends S.Opaque<CiGoalDataConsumer, { readonly brand: unique symbol }>()(
+  S.Struct({
+    pattern: S.NonEmptyString.annotateKey({ description: "Anchored expression over the consumed goal paths." }),
+    reference: S.NonEmptyString.annotateKey({ description: "Text each evidence file uses to reach the paths." }),
+    consumers: S.NonEmptyArray(S.NonEmptyString).annotateKey({
+      description: "Workspace packages whose tests consume the paths.",
+    }),
+    modes: S.NonEmptyArray(CiGoalDataConsumerMode).annotateKey({ description: "How the consumers reach the paths." }),
+    evidence: S.NonEmptyArray(S.NonEmptyString).annotateKey({ description: "Repo-relative consumer files." }),
+  }).pipe(
+    $I.annoteSchema("CiGoalDataConsumer", {
+      description: "A goal-packet path family a test reads, spawns or imports, kept on the code route.",
+    })
+  )
+) {}
+
+/**
+ * Goal-packet paths that tests read, spawn or import, or that a package `turbo.json` declares.
+ *
+ * **Details**
+ *
+ * The rows close the #2999 widening for consumed paths (ROUT-03): each `pattern` joins
+ * `codeRoots`, so a change to one of these files is never classified docs-only and the heavy
+ * matrix and Test Unit still run. `packages/tooling/tool/cli/test/goal-data-consumer-census.test.ts`
+ * regenerates the consumer list from test sources and per-package `turbo.json` inputs and fails
+ * when a consumed path is missing here or a row goes stale.
+ *
+ * **Example** (List the consumer packages)
+ *
+ * ```ts
+ * import { ciGoalDataConsumers } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(ciGoalDataConsumers.flatMap((row) => row.consumers).includes("@beep/repo-cli")) // true
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const ciGoalDataConsumers: A.NonEmptyReadonlyArray<CiGoalDataConsumer> = [
+  CiGoalDataConsumer.make({
+    pattern: "^goals/citation-extraction-engine/ops/",
+    reference: "goals/citation-extraction-engine/ops/",
+    consumers: ["@beep/law-practice-server"],
+    modes: ["spawn", "import"],
+    evidence: [
+      "packages/law-practice/server/test/CitationHtmlBytes.test.ts",
+      "packages/law-practice/server/test/CitationNativeRendering.fixtures.ts",
+      "packages/law-practice/server/test/CitationRegexCharacters.test.ts",
+      "packages/law-practice/server/test/CitationRegexTranslator.fixtures.ts",
+      "packages/law-practice/server/test/CitationTokenEquality.fixtures.ts",
+    ],
+  }),
+  CiGoalDataConsumer.make({
+    pattern:
+      "^goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-selection/profile\\.frozen\\.json\\.txt$",
+    reference:
+      "goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-selection/profile.frozen.json.txt",
+    consumers: ["@beep/eyecite", "@beep/law-practice-server"],
+    modes: ["read"],
+    evidence: [
+      "packages/drivers/eyecite/test/index.test.ts",
+      "packages/law-practice/server/test/CitationRecognizerWorker.test.ts",
+      "packages/law-practice/server/test/CitationSixFormProjection.test.ts",
+    ],
+  }),
+  CiGoalDataConsumer.make({
+    pattern: "^goals/semantica-canary/history/c2/full-w1\\.replay\\.eval-report\\.json$",
+    reference: "goals/semantica-canary/history/c2/full-w1.replay.eval-report.json",
+    consumers: ["@beep/semantica"],
+    modes: ["read"],
+    evidence: ["apps/labs/semantica/test/CanaryC2Report.test.ts"],
+  }),
+  CiGoalDataConsumer.make({
+    pattern: "^goals/time-to-certainty/research/economics\\.json$",
+    reference: "goals/time-to-certainty/research/economics.json",
+    consumers: ["@beep/repo-cli"],
+    modes: ["read", "turbo-input"],
+    evidence: ["packages/tooling/tool/cli/test/gate-order-handoff.test.ts", "packages/tooling/tool/cli/turbo.json"],
+  }),
+  CiGoalDataConsumer.make({
+    pattern: "^goals/time-to-certainty/research/gate-order-handoff\\.json$",
+    reference: "goals/time-to-certainty/research/gate-order-handoff.json",
+    consumers: ["@beep/ciops", "@beep/repo-cli"],
+    modes: ["read", "turbo-input"],
+    evidence: ["apps/labs/ciops/test/lane-plan.test.ts", "packages/tooling/tool/cli/turbo.json"],
+  }),
+  CiGoalDataConsumer.make({
+    pattern: "^goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics(\\.test)?\\.py$",
+    reference: "goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics",
+    consumers: ["@beep/repo-cli"],
+    modes: ["spawn", "turbo-input"],
+    evidence: ["packages/tooling/tool/cli/test/cache-dependencies.test.ts", "packages/tooling/tool/cli/turbo.json"],
+  }),
+  CiGoalDataConsumer.make({
+    pattern: "^goals/[^/]+/ops/.+\\.ts$",
+    reference: "goals/*/ops/**/*.ts",
+    consumers: ["@beep/repo-cli"],
+    modes: ["import"],
+    evidence: ["packages/tooling/tool/cli/test/goals-ops-typecheck.test.ts"],
+  }),
+];
+
+/**
  * Canonical CI patterns; `ci patterns --write` owns their pre-runtime JSON projection.
  *
  * **Example** (Read the shared docs pattern)
@@ -62,9 +222,10 @@ export const ciOperationalPatterns = CiOperationalPatterns.make({
   desktop:
     "^(apps/professional-desktop/src-tauri/|\\.github/workflows/check\\.yml$|packages/tooling/tool/cli/src/commands/Ci/(CiBootstrap\\.command\\.ts$|CiOperational))",
   // Goal packets include temporary helpers; root governance inventories retain verification.
-  // Product roots remain excluded by codeRoots even when the file is Markdown.
+  // Product roots and the goal-data consumer rows remain excluded by codeRoots even when the
+  // file is Markdown.
   docs: "^docs/|^goals/[^/]+/|^explorations/|^research/|^\\.changeset/[^/]+\\.md$|\\.md$",
-  codeRoots: "^(packages|apps|infra)/",
+  codeRoots: A.join(["^(packages|apps|infra)/", ...A.map(ciGoalDataConsumers, (row) => row.pattern)], "|"),
 });
 
 /**
@@ -74,7 +235,8 @@ export const ciOperationalPatterns = CiOperationalPatterns.make({
  *
  * `docs/**`, `goals/<packet>/**`, `explorations/**` and `research/**` are documentation
  * and planning surfaces, including temporary goal helpers and verifier inputs.
- * Root goal governance inventories retain verification. `.changeset/*.md` and Markdown
+ * Root goal governance inventories and the goal paths tests consume ({@link ciGoalDataConsumers})
+ * retain verification. `.changeset/*.md` and Markdown
  * outside product roots also qualify. Paths under `packages/`, `apps/` and
  * `infra/` retain verification, including their Markdown files. The tier-1
  * change profile and Yeet publication reuse this same schema-owned path rule.

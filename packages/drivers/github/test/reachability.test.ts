@@ -206,10 +206,14 @@ describe("bundle reachability", () => {
       })
     );
 
-    it.effect("the pure classes reach nothing but effect", () =>
+    it.effect("the pure classes reach nothing but effect and the schema literal kit", () =>
       Effect.gen(function* () {
         const reachableFrom6 = yield* reachableFrom("Resilience.ts");
-        assert.deepStrictEqual(sorted(reachableFrom6), ["@beep/identity/packages", "effect"], "Resilience.ts");
+        assert.deepStrictEqual(
+          sorted(reachableFrom6),
+          ["@beep/identity/packages", "@beep/schema/LiteralKit", "effect"],
+          "Resilience.ts"
+        );
         const reachableFrom7 = yield* reachableFrom("GraphQL.ts");
         assert.deepStrictEqual(
           sorted(reachableFrom7),

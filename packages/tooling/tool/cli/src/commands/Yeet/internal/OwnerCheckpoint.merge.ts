@@ -11,7 +11,8 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { GithubRest } from "../../../internal/github/index.ts";
+import { GithubAsyncMergeRequest, GithubRest } from "../../../internal/github/index.ts";
+import { settleYeetMerge, YeetMergeSettlement } from "./AsyncMerge.ts";
 import {
   OwnerCheckpointCommand,
   OwnerCheckpointError,
@@ -124,10 +125,14 @@ export const dispatchOwnerCheckpointMerge = Effect.fn("OwnerCheckpoint.dispatchM
   // Nothing may call merge before this durable fence. A crash afterward is
   // deliberately uncertain even if the HTTP request had not started yet.
   const record = yield* store.prepareDispatch(binding, revision, snapshot.base);
-  const result = yield* rest
-    .mergePullRequest(binding.prNumber, { sha: binding.head, method: "squash" })
-    .pipe(Effect.result);
-  if (Result.isFailure(result) || !result.success.merged) return yield* unknown(store, record, policy);
+  // Async merge, strict (no rules bypass), settled to a terminal outcome; anything but a
+  // confirmed `merged` stays uncertain and is reconciled through readback only.
+  const result = yield* settleYeetMerge(
+    binding.prNumber,
+    GithubAsyncMergeRequest.make({ action: "direct_merge", method: "squash", sha: binding.head })
+  ).pipe(Effect.result);
+  if (Result.isFailure(result) || !YeetMergeSettlement.guards.Merged(result.success))
+    return yield* unknown(store, record, policy);
   const commit = decodeHead(result.success.sha);
   if (Result.isFailure(commit)) return yield* unknown(store, record, policy);
   const confirmed = yield* store

@@ -23,6 +23,7 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { ciCertaintyCommand } from "./Certainty.ts";
 import { CiCommandError, reportCiCommandError } from "./Ci.errors.ts";
 import { ciAdmissionCommand } from "./CiAdmission.ts";
 import { ciBootstrapCommands } from "./CiBootstrap.command.ts";
@@ -426,6 +427,7 @@ export const ciCommand = Command.make("ci", {}, () =>
     ciDependencyReviewCommand,
     ciLaneCommand,
     ciLaneTimingsCommand,
+    ciCertaintyCommand,
     ciLocalCommand,
     ciPartitionsCommand,
     ciRerunRunnerLossCommand,

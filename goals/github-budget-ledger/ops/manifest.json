@@ -6,7 +6,7 @@
     "title": "GitHub Budget Ledger",
     "status": "active",
     "created": "2026-11-09",
-    "updated": "2026-11-09",
+    "updated": "2026-11-10",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/github-budget-ledger",
@@ -34,7 +34,7 @@
     "goals/github-budget-ledger/GOAL.md",
     "goals/github-budget-ledger/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/2026-11-10-design.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -50,12 +50,12 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",
@@ -85,5 +85,5 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Authored 2026-11-09 from explorations/github-api-quota, not started: P0 is next and this goal goes first (goals 2 and 3 wait on its ledger and reserve signal)."
+  "statusNote": "P0 complete 2026-11-10: the design (research/2026-11-10-design.md) resolves SPEC ambiguities A1-A20, one decision file each. P1 in progress: driver observations, the host ledger, the /rate_limit sampler, gh spawn attribution, the ledger-first GraphqlBudget and the github-headroom session-open parcel are implemented on the lane; goals 2 and 3 wait on its ledger and reserve signal."
 }

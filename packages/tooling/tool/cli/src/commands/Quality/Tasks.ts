@@ -178,6 +178,7 @@ import type { PgliteTestcontainerResource } from "@beep/test-utils";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
+import type { CoverageSnapshotEntry } from "./internal/CoverageRegression.ts";
 import type { CoverageBaselineRowDelta, CoverageScopeMode } from "./internal/CoverageScope.ts";
 import type { FlakeQuarantineTask } from "./internal/FlakeQuarantine.ts";
 import type { LaneProofSession } from "./internal/LaneProofReuse.ts";
@@ -306,6 +307,9 @@ type CoverageTaskOptions = {
   readonly addMissingFilesOnly?: boolean;
   readonly topologyPackageNames?: ReadonlyArray<string>;
   readonly args: ReadonlyArray<string>;
+  // The base a bare local run planned from; the comparator judges against the
+  // same base, so a dirty baseline row cannot become its own floor (COVE-02).
+  readonly comparisonBase?: string;
   readonly expectedPackageNames: ReadonlyArray<string>;
   readonly replaceAll: boolean;
   readonly scoped: boolean;
@@ -1196,7 +1200,10 @@ const resolveDefaultAffectedCoverageTaskOptions = Effect.fn("QualityTasks.resolv
       onSome: (resolved) =>
         Console.log(
           `[beep-cli] coverage: bare local run defaults to --affected against ${resolved}; pass ${COVERAGE_FULL_ARG} for the full sharded proof (hosted Test Unit is the proof of record)`
-        ).pipe(Effect.andThen(resolveCoverageTaskOptions(repoRoot, ["--affected", ...args], resolved))),
+        ).pipe(
+          Effect.andThen(resolveCoverageTaskOptions(repoRoot, ["--affected", ...args], resolved)),
+          Effect.map((options): CoverageTaskOptions => ({ ...options, comparisonBase: resolved }))
+        ),
     });
   }
 );
@@ -3706,7 +3713,8 @@ const policyStateTasks = [
   ...policyGitDeltaTasks,
   "goals:doctor",
   "lint:oxlint",
-  "lint:shadcn",
+  // `lint:shadcn` is owned by hosted Repo Sanity (the `repo-sanity` CiLane
+  // body), its one hosted owner (hosted-setup-tax PERIH-02).
   "lint:typos",
   "jsdoc:inventory:check",
   "jsdoc:ratchet:check",
@@ -4818,6 +4826,56 @@ const runSelectedCoverage = Effect.fn("QualityTasks.runSelectedCoverage")(functi
   yield* runStep(A.headNonEmpty(steps));
 });
 
+// The ratchet judges against the base the run planned from: a bare local run
+// carries its merge base here, so a dirty baseline row cannot become its own floor.
+const compareRootCoverage = (
+  repoRoot: string,
+  options: CoverageTaskOptions,
+  validatedActuals?: ReadonlyArray<CoverageSnapshotEntry>
+) =>
+  compareCoverageRegressionBaseline(
+    repoRoot,
+    options.scoped,
+    options.expectedPackageNames,
+    validatedActuals,
+    options.comparisonBase
+  );
+
+/**
+ * Run the coverage ratchet comparison exactly as `bun run coverage` does after its tests.
+ *
+ * **Details**
+ *
+ * The comparison pins the base the options planned from (`comparisonBase`, set by a bare
+ * local run to its merge base); options without one fall back to `TURBO_SCM_BASE`.
+ *
+ * **Example** (Build a comparison effect)
+ *
+ * ```ts
+ * import { compareRootCoverageForTesting, resolveRootCoverageTaskOptionsForTesting } from "@beep/repo-cli/test/Quality"
+ * import * as Effect from "effect/Effect";
+ *
+ * const compared = Effect.flatMap(resolveRootCoverageTaskOptionsForTesting("/repo", []), (options) =>
+ *   compareRootCoverageForTesting("/repo", options, [])
+ * )
+ * console.log(Effect.isEffect(compared)) // true
+ * ```
+ *
+ * @param repoRoot - Repository root holding the committed baseline.
+ * @param options - Resolved root coverage options.
+ * @param validatedActuals - Measured snapshots; omission reads package-local reports.
+ * @returns The ratchet verdict effect.
+ * @category testing
+ * @since 0.0.0
+ */
+export const compareRootCoverageForTesting = Effect.fn("QualityTasks.compareRootCoverageForTesting")(function* (
+  repoRoot: string,
+  options: CoverageTaskOptions,
+  validatedActuals?: ReadonlyArray<CoverageSnapshotEntry>
+) {
+  return yield* compareRootCoverage(repoRoot, options, validatedActuals);
+});
+
 const runRootCoverageTask = Effect.fn("QualityTasks.runRootCoverageTask")(function* (
   repoRoot: string,
   args: ReadonlyArray<string>
@@ -4849,7 +4907,7 @@ const runRootCoverageTask = Effect.fn("QualityTasks.runRootCoverageTask")(functi
     return;
   }
 
-  yield* compareCoverageRegressionBaseline(repoRoot, options.scoped, options.expectedPackageNames);
+  yield* compareRootCoverage(repoRoot, options);
 });
 
 const readPackageJson = Effect.fn("QualityTasks.readPackageJson")(function* (packageDir: string) {

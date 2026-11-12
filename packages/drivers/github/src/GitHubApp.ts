@@ -840,6 +840,20 @@ export class GitHubAppOptions extends S.Opaque<GitHubAppOptions, { readonly bran
     userAgent: S.optionalKey(S.String).pipe(
       $I.annoteKey("GitHubAppOptions.userAgent", { description: "Appended to octokit's user agent." })
     ),
+    /**
+     * An opaque, non-secret label naming the installation's rate-limit budget.
+     *
+     * **Details**
+     *
+     * Every client the app builds (its JWT client, the bot-user lookup and
+     * each installation client) carries this label unchanged; the driver never
+     * composes or invents one.
+     */
+    budgetLabel: S.optionalKey(S.String).pipe(
+      $I.annoteKey("GitHubAppOptions.budgetLabel", {
+        description: "An opaque, non-secret label naming the installation's rate-limit budget.",
+      })
+    ),
     /** How long before expiry `clientLayer` re-mints its token. Defaults to one minute; under thirty minutes. */
     refreshSkew: S.optionalKey(
       S.Duration.check(
@@ -1310,7 +1324,7 @@ const asApp: {
     credentials: AppCredentials.Encoded,
     options: GitHubAppOptions.Encoded
   ): Effect.Effect<GitHubClientShape, GitHubAppError> =>
-    Effect.flatMap(mintJwt(credentials), (jwt) => makeClientShape({ ...options, token: jwt }))
+    Effect.flatMap(mintJwt(credentials), (jwt) => makeClientShape({ ...options, token: jwt, credential: "app-jwt" }))
 );
 
 /** A client speaking as a holder of `token`, or as nobody when there is none. */

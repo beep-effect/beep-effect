@@ -1,0 +1,34 @@
+[05:43:35] 4d pr=3074
+{"data":{"enqueuePullRequest":{"mergeQueueEntry":{"id":"MQE_lQDOPbO_N88AAAABOBzvJM4ABVx3zgPbcEE","state":"QUEUED","position":1,"enqueuedAt":"2026-11-10T05:44:08Z","jump":false,"solo":false,"enqueuer":{"login":"beep-fleet-orchestrator"},"headCommit":null,"baseCommit":null,"pullRequest":{"number":3074}}}}}
+{"t":"2026-11-10T05:44:09Z","n":3074,"state":"OPEN","mergeable":"MERGEABLE","mergeStateStatus":"CLEAN","inQueue":true,"entry":{"state":"QUEUED","position":1,"head":null,"base":null},"queue":[{"n":3074,"state":"QUEUED","position":1}]}
+{"t":"2026-11-10T05:44:39Z","n":3074,"state":"OPEN","mergeable":"MERGEABLE","mergeStateStatus":"CLEAN","inQueue":true,"entry":{"state":"AWAITING_CHECKS","position":1,"head":"cffd832d95efebf016bb06f8b661d69eea58176f","base":"e1b898eb9e53c3cac23b020f160d8909f76e1362"},"queue":[{"n":3074,"state":"AWAITING_CHECKS","position":1}]}
+{"t":"2026-11-10T05:45:10Z","n":3074,"state":"OPEN","mergeable":"MERGEABLE","mergeStateStatus":"UNSTABLE","inQueue":false,"entry":null,"queue":[]}
+{"state":"OPEN","inQueue":false,"timeline":[{"__typename":"AddedToMergeQueueEvent","createdAt":"2026-11-10T05:44:08Z","actor":"beep-fleet-orchestrator","reason":null},{"__typename":"RemovedFromMergeQueueEvent","createdAt":"2026-11-10T05:44:57Z","actor":"github-merge-queue","reason":"failed_checks"}]}
+[{"conclusion":"failure","createdAt":"2026-11-10T05:44:26Z","databaseId":42763995114,"headBranch":"gh-readonly-queue/queue-lab/pr-3074-e1b898eb9e53c3cac23b020f160d8909f76e1362","status":"completed","updatedAt":"2026-11-10T05:44:42Z"}]
+[05:45:15] rerun failed jobs of 42763995114
+{"t":"2026-11-10T05:45:47Z","state":"OPEN","inQueue":false,"e":null}
+{"t":"2026-11-10T05:46:18Z","state":"OPEN","inQueue":false,"e":null}
+{"t":"2026-11-10T05:46:49Z","state":"OPEN","inQueue":false,"e":null}
+{"t":"2026-11-10T05:47:19Z","state":"OPEN","inQueue":false,"e":null}
+{"t":"2026-11-10T05:47:50Z","state":"OPEN","inQueue":false,"e":null}
+{"t":"2026-11-10T05:48:21Z","state":"OPEN","inQueue":false,"e":null}
+{"attempt":2,"conclusion":"failure","status":"completed"}
+{"state":"OPEN","inQueue":false,"timeline":[{"__typename":"AddedToMergeQueueEvent","createdAt":"2026-11-10T05:44:08Z","actor":"beep-fleet-orchestrator","reason":null},{"__typename":"RemovedFromMergeQueueEvent","createdAt":"2026-11-10T05:44:57Z","actor":"github-merge-queue","reason":"failed_checks"}]}
+queue-lab-self-enqueue	skipping	0	https://github.com/beep-effect/beep-effect/actions/runs/42763913956/job/129655878134	
+queue-lab-gate	pass	4s	https://github.com/beep-effect/beep-effect/actions/runs/42763913956/job/129655842527	
+queue-lab-reusable / inner	pass	3s	https://github.com/beep-effect/beep-effect/actions/runs/42763913956/job/129655842801	
+queue-lab-token-probe	skipping	0	https://github.com/beep-effect/beep-effect/actions/runs/42763913956/job/129655843873	
+queue-lab-resolve	pass	4s	https://github.com/beep-effect/beep-effect/actions/runs/42763913956/job/129655808173	
+queue-lab-shared	pass	3s	https://github.com/beep-effect/beep-effect/actions/runs/42763913852/job/129655807899	
+queue-lab-push	skipping	0	https://github.com/beep-effect/beep-effect/actions/runs/42763913956/job/129655810109	
+# attempt 2 (gh run rerun --failed) re-ran queue-lab-gate only and reused queue-lab-resolve's mode=fail output, so it failed again
+# attempt 3: gh run rerun 42763995114 (all jobs) after the body was edited to queue-lab-mg: pass
+attempt=3 completed success
+  queue-lab-resolve success
+  queue-lab-push skipped
+  queue-lab-gate success
+  queue-lab-token-probe success
+  queue-lab-reusable / inner success
+  queue-lab-self-enqueue skipped
+# pull request after attempt 3
+state=OPEN mergedAt=null

@@ -15,6 +15,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import { attributeGhSpawn } from "./GhSpawnSink.ts";
 import { commandTextForStep, RepoStepRunResult } from "./RepoRun.models.ts";
 import type { CaptureSource } from "@beep/repo-cli-kit/process/StepExec";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -50,7 +51,7 @@ const runRepoCommand = (
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > => {
   const commandText = A.join([command, ...args], " ");
-  return runCaptured({
+  const run = runCaptured({
     command,
     args,
     cwd,
@@ -62,6 +63,8 @@ const runRepoCommand = (
     trim: shape.trim,
     ...(tee ? { tee: true } : {}),
   }).pipe(Effect.mapError(DomainError.newCause(`Failed to spawn ${commandText}.`)));
+  // Every gh child reported here is attributed to the GitHub budget ledger; the sink is a no-op until the root binds it.
+  return command === "gh" ? attributeGhSpawn(args, run) : run;
 };
 
 const makeRepoCommandCapture = (

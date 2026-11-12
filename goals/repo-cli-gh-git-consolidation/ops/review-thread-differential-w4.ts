@@ -64,7 +64,11 @@ import {
 import { readSquashCommitlintForPullRequest } from "../../../packages/tooling/tool/cli/src/commands/Yeet/internal/SquashCommitlint.ts";
 import { collectYeetStatus } from "../../../packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts";
 import { collectYeetWatchSnapshot } from "../../../packages/tooling/tool/cli/src/commands/Yeet/internal/WatchMode.ts";
-import { layerGithubRest, layerGraphqlBudget } from "../../../packages/tooling/tool/cli/src/internal/github/index.ts";
+import {
+  GithubTransportFetch,
+  layerGithubRest,
+  layerGraphqlBudget,
+} from "../../../packages/tooling/tool/cli/src/internal/github/index.ts";
 import { RepoRunContext } from "../../../packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts";
 import {
   collectPrCloseoutPayload as oldCollectPrCloseoutPayload,
@@ -112,6 +116,8 @@ interface ThreadPage {
   readonly threads: ReadonlyArray<Thread>;
 }
 interface World {
+  /** The `merge-async` answer the new side reads since slice A of goals/yeet-async-merge-and-stacks. */
+  readonly asyncMerge?: { readonly status?: number; readonly body: unknown };
   /** Review comments the REST `pulls/{n}/comments` page reports. */
   readonly commentCount?: number;
   readonly commentsStatus?: number;
@@ -250,6 +256,14 @@ const restAnswer = (world: World, method: string, path: string): Answer => {
     return {
       status: world.merge?.status ?? 200,
       body: world.merge?.body ?? { merged: true, sha: "feedface", message: "merged" },
+    };
+  if (path === `pulls/${PR}/merge-async` && method === "PUT")
+    return {
+      status: world.asyncMerge?.status ?? 200,
+      body: world.asyncMerge?.body ?? {
+        status: "merged",
+        details: { message: "Pull request was merged.", sha: "feedface" },
+      },
     };
   if (path.startsWith("compare/"))
     return {
@@ -423,6 +437,7 @@ const ghTable = (world: World) => {
     ["GET", `pulls/${PR}/comments`],
     ["GET", `pulls/${PR}/commits`],
     ["PUT", `pulls/${PR}/merge`],
+    ["PUT", `pulls/${PR}/merge-async`],
     ["GET", `compare/main...${HEAD}`],
     ["GET", `commits/${HEAD}/check-runs`],
     ["GET", `commits/${MERGE_BASE}/check-runs`],
@@ -532,7 +547,9 @@ const side = <A, E, R extends Layer.Success<typeof platform> | YeetGithubService
       Effect.exit(
         program.pipe(
           Effect.provide(githubLayer),
-          Effect.provideService(YeetGithubLayer, O.some(githubLayer))
+          Effect.provideService(YeetGithubLayer, O.some(githubLayer)),
+          // The reviewer merge gate (added after W4) builds its own operator client; serve it the same table.
+          Effect.provideService(GithubTransportFetch, O.some(tableFetch))
         ) as Effect.Effect<A, E, Layer.Success<typeof platform>>
       )
     ),
@@ -724,6 +741,8 @@ const D13 = {
   statusRestFallback:
     "D-13 (e): the status REST fallback reads hasReviewComments through the kit; a transport failure keeps its label and the fallback wording",
   replyReport: "D-13 (d): a refused reply mutation keeps its failed outcome; only the detail wording follows the kit",
+  asyncMergeHold:
+    "goals/yeet-async-merge-and-stacks slice A: the gate merges through merge-async, and a merge GitHub refuses is a merge-failed hold carrying GitHub's sentence where the legacy call failed the command",
 } as const;
 
 const program = Effect.gen(function* () {
@@ -826,13 +845,24 @@ const program = Effect.gen(function* () {
     ["merged", worlds.empty, undefined],
     [
       "declined",
-      { ...worlds.empty, merge: { body: { merged: false, sha: "", message: "Head branch was modified" } } },
-      undefined,
+      {
+        ...worlds.empty,
+        merge: { body: { merged: false, sha: "", message: "Head branch was modified" } },
+        asyncMerge: { body: { status: "failed", details: { message: "Head branch was modified" } } },
+      },
+      D13.asyncMergeHold,
     ],
     [
       "refused with 409",
-      { ...worlds.empty, merge: { status: 409, body: { message: "Head branch was modified" } } },
-      D13.failureWording,
+      {
+        ...worlds.empty,
+        merge: { status: 409, body: { message: "Head branch was modified" } },
+        asyncMerge: {
+          status: 400,
+          body: { status: "failed", details: { message: "Pull request head branch was modified." } },
+        },
+      },
+      D13.asyncMergeHold,
     ],
   ] as const) {
     yield* compare({
@@ -842,7 +872,10 @@ const program = Effect.gen(function* () {
       old: oldExecuteMergeGate(context, OldMergeGateMerge.make(decision)),
       new: executeMergeGate(MergeGateMerge.make({ ...decision, commitMessage: "" })),
       projectOld: (merged: { readonly mergeSha: string }) => merged.mergeSha,
-      projectNew: (merged: { readonly mergeSha: string }) => merged.mergeSha,
+      // Since the async merge port (goals/yeet-async-merge-and-stacks, slice A) a refusal GitHub
+      // reports after acceptance is a hold, not a merge.
+      projectNew: (merged: { readonly mergeSha: string } | { readonly reason: string }) =>
+        "mergeSha" in merged ? merged.mergeSha : `hold ${merged.reason}`,
       ...(classified === undefined ? {} : { classified }),
     });
   }

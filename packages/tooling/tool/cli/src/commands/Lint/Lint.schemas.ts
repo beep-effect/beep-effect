@@ -1252,6 +1252,17 @@ const EffectVitestFindingFields = S.Struct({
       description: "End lines cannot precede start lines, and exception or flaky-wrap rows require a non-empty reason.",
       message: "Expected ordered lines and a non-empty reason for exception or flaky-test-wrap rows",
     })
+  ),
+  S.makeFilter(
+    (finding) =>
+      finding.status !== "exception" ||
+      O.exists(finding.reason, (reason) => Str.includes("Owner:")(reason) && Str.includes("Exit:")(reason)),
+    $I.annote("EffectVitestExceptionOwnership", {
+      title: "Effect Vitest exception ownership",
+      description:
+        "An exception row names its owner (`Owner:`) and the condition that retires it (`Exit:`), so no accepted finding stays unowned or permanent by omission.",
+      message: "Expected an exception reason that names an `Owner:` and an `Exit:` condition",
+    })
   )
 );
 

@@ -45,15 +45,15 @@ Not started.
 ## Notes
 
 - Already landed: LINT-01 (`noResolve` JSDoc inventory) and all five LINT-04 checker families, both in #3019
-  (027664ba178). Open #3041 carries LINT-02 slice 1 (knowledge doctor abreast of the medium graph); it is not
-  landed until it merges. Per D26 the goal keeps their unpaid gate items (two missing LINT-01
+  (027664ba178). LINT-02 slice 1 (knowledge doctor abreast of the medium graph) landed in #3041
+  (e8c9a47971b). Per D26 the goal keeps their unpaid gate items (two missing LINT-01
   fixtures plus noResolve parity, the LINT-04 per-family checks, the LINT-02 A/B) and their scorecard readings.
-- First slice: `ci: delete the dead coverage-rollout probe` (PERIH-01 slice 1, S). It removes the probe,
+- First slice, landed (#3116): `ci: delete the dead coverage-rollout probe` (PERIH-01 slice 1, S). It removes the probe,
   `legacy_integration`, the Test Integration name conditional and the LEGACY_COVERAGE env line and assertion.
   COVE-08 (`route-soundness-repair`) owns making the Coverage Regression name a literal. Whichever of the two
   lands second deletes `legacy_coverage` (set to 'false' meanwhile) and merges `main` first. The PERIH-11 closure-digest
   release trigger and the first, additive HOST-06 PR can open beside it.
-- Order: LINT-05 after #3041 merges (both edit the Lint Policy task lists in
+- Order: LINT-05 is unblocked now that #3041 merged (both edit the Lint Policy task lists in
   `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts`). The CI binary chain is closure-digest trigger,
   then reviewed pin-bump PRs (PERIH-11), then base-ref patterns (PERIH-10, owned by `route-soundness-repair`),
   then the binary admission switch. Each binary change is three PRs (CLI, pin bump, workflow switch); each

@@ -14,6 +14,7 @@ import * as Effect from "effect/Effect";
 import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
 import { GitHubAppMint, GitHubAppMintLive } from "./Github.service.ts";
+import { githubLedgerCommand } from "./GithubLedger.command.ts";
 
 const mintCommand = Command.make(
   "mint",
@@ -59,7 +60,7 @@ const appCommand = Command.make("app", {}, () => Console.log("github app command
  * @category cli-commands
  * @since 0.0.0
  */
-export const githubCommand = Command.make("github", {}, () => Console.log("github commands: app")).pipe(
+export const githubCommand = Command.make("github", {}, () => Console.log("github commands: app, ledger")).pipe(
   Command.withDescription("GitHub integration commands"),
-  Command.withSubcommands([appCommand])
+  Command.withSubcommands([appCommand, githubLedgerCommand])
 );

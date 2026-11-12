@@ -76,8 +76,9 @@ Higher sources outrank lower sources when they conflict.
     `packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts`; reads required contexts through
     `packages/tooling/tool/cli/src/commands/Ci/CiGovernance.ts` and `standards/branch-protection-contexts.json`,
     check runs through `packages/tooling/tool/cli/src/internal/github/GithubRest.ts`.
-  - `packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts`: per-attempt job reads (the jobs read is
-    `filter=all` at line 1059), partial-row stamping that reuses the `--window` preview stamp (line 3891), a
+  - `packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts`: per-attempt job reads
+    (`collectCiWorkflowRunAttemptJobs`; the recent mode still reads `filter=all` at line 1131), partial-row
+    stamping that reuses the `--window` preview stamp (`renderCiLaneTimingWindowPreviewBanner`, line 3960), a
     filtered recent mode.
   - `packages/tooling/tool/cli/src/commands/Ci/RouteCensus.ts` (`jobNameToLane`, line 168) and
     `packages/tooling/tool/cli/src/commands/Ci/RouteCorpus.ts`: partition job mapping, step classes and
@@ -108,12 +109,13 @@ No new workspace package is planned. If one becomes necessary it is bootstrapped
 ### Levers
 
 Status checked against the live checkout at 6eb2e0588e2 and re-checked at c90929b1ff1 after #3040, #3043 and
-#3046; no status changed (decision `lever-status-at-graduation`).
+#3046; no status changed (decision `lever-status-at-graduation`). Re-checked at a0c7f356af3 after #3056 and #3041
+(decision `p0-recheck-at-a0c7f356`); slice 1 moves MEAS-01 and MEAS-04.
 
 | Id | What | Status | Admission gate before landing | Depends on |
 | --- | --- | --- | --- | --- |
-| MEAS-01 | Nightly head-SHA scorecard: push to every required green, main verdict cohorts, runner-minutes, mergeable beside | open (no certainty command exists) | Fixture replay: 4 of 30 under 10 min, green-only p95 101.9, about 315 runner-min per run, plus per-head cases (two producers, three attempts, docs-only, cancelled); monotonicity fixture (turning a green head red never lowers the statistic); an api-partial census refuses certification; the nightly fits the GITHUB_TOKEN budget or resumes | MEAS-04 |
-| MEAS-04 | lane-timings per-attempt job reads, partial-row stamping, filtered recent mode | open (`LaneTimings.ts:1059` still reads `filter=all`) | Fixtures for 502, exhaustion, duplicate and rerun; partial output reuses the `--window` preview stamp on both renderers; live union parity on run 42655574858; 180 jobs on run 42646019844 | none |
+| MEAS-01 | Nightly head-SHA scorecard: push to every required green, main verdict cohorts, runner-minutes, mergeable beside | slice 1 landed: `beep ci certainty` CLI (`Certainty.ts`, `Certainty.schemas.ts`); the nightly workflow (slice 4) is open | Fixture replay: 4 of 30 under 10 min, green-only p95 101.9, about 315 runner-min per run, plus per-head cases (two producers, three attempts, docs-only, cancelled); monotonicity fixture (turning a green head red never lowers the statistic); an api-partial census refuses certification; the nightly fits the GITHUB_TOKEN budget or resumes | MEAS-04 |
+| MEAS-04 | lane-timings per-attempt job reads, partial-row stamping, filtered recent mode | partly landed: the window census and the certainty reader read jobs per attempt with a 30-job fallback and stamp partial reads (decision `per-attempt-page-fallback`); the recent mode still reads `filter=all` (`LaneTimings.ts:1131`) and has no filters | Fixtures for 502, exhaustion, duplicate and rerun; partial output reuses the `--window` preview stamp on both renderers; live union parity on run 42655574858; 180 jobs on run 42646019844 | none |
 | MEAS-02 | Attribute lock-bounce, stale-base and closeout refusals outside first-failure lanes (merges DEPS-10) | open (`Economics.ts:1154` falls back to the failed step id) | Fixtures in `yeet-economics.test.ts`; `actionableLaneMix` total equals `redAttempts`; `gate-order-handoff.test.ts` stays green | none |
 | MEAS-03 | Separate terminations and type unlocated failures | partly landed (terminations census at `Economics.ts:1399`; terminated attempts still count as red, `Economics.ts:1013`) | Adjudicated fixtures; the denominator change is recorded | MEAS-02, MEAS-07 |
 | MEAS-07 | Journal final-check invocations and keep per-run history | open (`FinalCheck.ts` writes no attempt journal) | Journaling unit test plus a ready-gate regression fixture | none |
@@ -158,12 +160,12 @@ applies. "Reader" is the goal or gated candidate whose acceptance or gate is jud
   T0 is the first `check.yml` pull_request run's `created_at`, with its clock source recorded. Heavy contexts
   come from two workflows (`check.yml` and `heavy-admit.yml`): the latest start wins and skip-satisfied
   counts. A ruleset digest is recorded per head; a head judged under a different ruleset says so.
-- **Job names the mapping must handle** (live at c90929b1ff1): `Test Integration (<partition>)` (`check.yml:1010`;
+- **Job names the mapping must handle** (live at a0c7f356af3): `Test Integration (<partition>)` (`check.yml:1010`;
   20 partitions since #3029: 19 lps-int shards plus int-rest) and its aggregate, whose name is conditional (`Test Integration Partitions`
   or `Heavy / Test Integration`, `check.yml:1133`); `Test Unit (<partition>)` (`check.yml:821`; 24 jobs since #3043: nine
   repo-cli and eight law-practice shards on two Vitest workers since #3040, seven unit bins on one) and
   the `Test Unit` aggregate (`check.yml:978`); `Test Plan` (`check.yml:732`, #3030); `Property Laws
-  (<partition>)` slices (`check.yml:1426`) under the `Property Laws` aggregate (`check.yml:1538`, #3030); the
+  (<partition>)` slices (`check.yml:1435`; four since #3056) under the `Property Laws` aggregate (`check.yml:1549`, #3030); the
   conditional `Coverage Artifact Migration` / `Heavy / Coverage Regression` name (`check.yml:1160`). Since #3046
   test shards are created before the non-test lanes and shard timeouts cap at 20 minutes, so job order within
   a run is not a stable key.
@@ -209,7 +211,8 @@ applies. "Reader" is the goal or gated candidate whose acceptance or gate is jud
 
 ## Acceptance Criteria
 
-- [ ] The certainty command reproduces the committed fixture corpus (decision `in-repo-fixture-corpus`): 4 of
+- [x] The certainty command reproduces the committed fixture corpus (decisions `in-repo-fixture-corpus`,
+      `fixture-corpus-real-captures`; slice 1, `packages/tooling/tool/cli/test/ci-certainty.test.ts`): 4 of
       30 under 10 min, green-only p95 101.9, about 315 runner-min per run, and the named per-head cases. A
       monotonicity fixture shows that turning a green head red never lowers the SLO statistic, and an
       api-partial census refuses certification.
@@ -226,7 +229,7 @@ applies. "Reader" is the goal or gated candidate whose acceptance or gate is jud
       partition setup versus body and its 1,395-1,551 s outlier legs; Property Laws nightly verdicts
       (`.github/workflows/property-laws-nightly.yml`); runs the compute-profile refusal routed to hosted.
 - [ ] **Partition jobs fully mapped:** on a post-#3043/#3046 reference run (20 Test Integration partitions, 24 Test Unit
-      jobs, Test Plan, two Property Laws slices) every job maps to a lane or an
+      jobs, Test Plan, four Property Laws slices since #3056) every job maps to a lane or an
       explicit non-lane class (conservation test: mapped plus unknown minutes equal total), the old receipt
       reproduces 242 skipped and 0 skippedReds, and the MEAS-05 ledger maps at least 95% of job-minutes on its
       three reference runs with no umbrella double count.
@@ -338,6 +341,30 @@ Reverse: Supersede once github-budget-ledger changes its reserve signal or a ded
 The scorecard's headline is the p95 time from a push to every required context green on pull-request runs, reported beside total runner-minutes per run; latency and compute are separate objectives and are never summed. It also reports whether every main commit got a hosted verdict, and local `yeet verify` and `yeet publish` p95. Rejected: a per-job wall target (the #3007 layout lowered the slowest Unit job from 1,108 to 650 s while raising Unit job-minutes from 151 to 202), and push to mergeable as the target (it would require changing the review window). Source: exploration `explorations/ten-minute-certainty/DECISIONS.md` (D2).
 
 Reverse: Supersede with a decision that names a different statistic, and re-baseline the scorecard history under it.
+
+### The committed MEAS-01 corpus is two real captures; the recorded 30-run membership is not recoverable, 2026-11-10
+
+Decision `in-repo-fixture-corpus` asked for a committed corpus reproducing the recorded figures (4 of 30 under 10 min, green-only p95 101.9, about 315 runner-min per run). The exploration never recorded which 30 runs Astra used, so slice 1 commits two real captures of `beep ci certainty --write-corpus` instead, slimmed to the fields the fold reads and with branch names replaced by `<label>-branch-NN` (D18): `baseline-2026-11-09.json` (T0 2026-11-09 12:00-18:00Z, 64 GitHub reads) and `planned-2026-11-10.json` (01:00-04:00Z on 2026-11-10, after #3030, for the admission-to-Heavy and Test Unit selection rows). The baseline reproduces the recorded anchors exactly: green-only p95 101.9 min (facc14a6, three attempts), 9f30182f at 40.2 min with 315.3 runner-min (the plan's spot check of run 42637312401), and 4 heads under ten minutes (one code head, three docs heads). It also carries every named per-head case (eb295434 two producers, facc14a6 three attempts, docs-only b85ee265, cancelled ecc04921). The SLO statistic on that window is p50 63.35 min with p95 not attained (6 misses of 17 counted code heads, 14 superseded censored), and runner-minutes per producer run average 219.7 over 40 runs (check.yml and heavy-admit.yml counted separately); these are stated beside the recorded figures, not substituted for them. The fixtures are excluded from Biome like the other large replay corpora.
+
+Lane claude/jovial-sammet-084b0a
+
+Reverse: Replace the two fixtures with a corpus whose membership reproduces the Astra 30-run figures exactly, if that corpus is recovered, and restate the replay assertions.
+
+### P0 re-check at a0c7f356af3: four Property Laws slices, shifted check.yml lines, MEAS-01 slice 1 and MEAS-04 window reads land in slice 1, 2026-11-10
+
+Re-checked every lever row, the job-name constraint and every cited file:line against a0c7f356af3 before writing code. Drift since c90929b1ff1: #3056 split Property Laws into four slices created with the test shards, so the slice job is `check.yml:1435` (was 1426) and the aggregate `check.yml:1549` (was 1538), and the partition-mapping acceptance names four slices, not two. Every other citation holds: `Heavy Admission` 87, `Test Plan` 732, `Test Unit (<partition>)` 821, `Test Unit` 978, `Test Integration (<partition>)` 1010, the conditional integration aggregate 1133, the conditional coverage name 1160, the failure-only unit-results upload 924-934; `RouteCensus.ts:168`, `CiLane.ts:477`, `Economics.ts:1013/1154/1399`, `ResidueReap.ts:1776`, `AdmissionJournal.ts:59`. #3041 touched none of them. Slice 1 changes two rows: MEAS-01 has its CLI (`beep ci certainty`, nightly still open) and MEAS-04 is partly landed (the window census and the certainty reader read jobs per attempt and stamp partial reads; the recent mode still reads `filter=all`, now `LaneTimings.ts:1131`, and has no filters yet). The reserve signal of `github-budget-ledger` has not landed (#3068 open), so the certainty reads are counted and bounded by `--max-requests` and run by hand, as decision `shared-rest-budget` says; no budget rule is added.
+
+Lane claude/jovial-sammet-084b0a
+
+Reverse: Revert the SPEC lever, job-name and acceptance edits to the c90929b1ff1 wording; the citations then point at the pre-#3056 lines again.
+
+### Per-attempt job reads fall back to 30-job pages before a run is stamped partial, 2026-11-10
+
+Live probes on 2026-11-10: run 42646019844 returned all 180 jobs as three per-attempt reads of 60 after transient 502s the retries absorbed, and the per-attempt union of Heavy Admit 42655574858 equals its `filter=all` listing (22 of 22 `(id, run_attempt)` tuples). Run 42669948388's attempts 2 and 3 still returned 502 on every one of five 100-job reads, while the same attempts read cleanly at `per_page=30` and 50. The reader therefore retries an exhausted attempt once in pages of 30 and only then records a partial read. A partial read is never dropped: the window census refuses it without `--preview` and stamps it with the existing preview banner (new guard reason `partial-read`), and the certainty report marks the head api-partial and refuses certification. Rerun attempts list their unchanged jobs again with the original timestamps; runner-minute sums de-duplicate those copies by (name, started_at, completed_at) within the run.
+
+Lane claude/jovial-sammet-084b0a
+
+Reverse: Drop the 30-job retry in collectCiWorkflowRunAttemptJobs; exhausted 100-job pages then stamp the attempt partial directly.
 
 <!-- beep:decisions:end -->
 

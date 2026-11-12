@@ -500,9 +500,20 @@ it("rejects unordered lines and exceptions without reasons", () => {
   assertFalse(isEffectVitestFinding({ ...base, class: "flaky-test-wrap", reason: O.none() }));
   assertTrue(
     isEffectVitestFinding(
-      EffectVitestFinding.make({ ...base, status: "exception", reason: O.some("legacy integration boundary") })
+      EffectVitestFinding.make({
+        ...base,
+        status: "exception",
+        reason: O.some("legacy integration boundary. Owner: @beep/example. Exit: retire with the boundary."),
+      })
     )
   );
+  // An exception names who owns it and what retires it.
+  for (const reason of [
+    "legacy integration boundary",
+    "legacy integration boundary. Owner: @beep/example.",
+    "legacy integration boundary. Exit: retire with the boundary.",
+  ])
+    assertFalse(isEffectVitestFinding({ ...base, status: "exception", reason: O.some(reason) }), reason);
   assertTrue(
     isEffectVitestFinding(
       EffectVitestFinding.make({ ...base, class: "flaky-test-wrap", reason: O.some("external OS timing") })
@@ -576,7 +587,7 @@ it("preserves a justified exception on the matching live row", () => {
     line: 4,
     endLine: O.some(4),
     status: "exception",
-    reason: O.some("legacy runtime boundary"),
+    reason: O.some("legacy runtime boundary. Owner: @beep/example. Exit: retire with the boundary."),
   });
   const document = EffectVitestInventoryDocument.make({
     schemaVersion: "effect-vitest-inventory/v1",
@@ -586,7 +597,12 @@ it("preserves a justified exception on the matching live row", () => {
   });
   const preserved = preserveEffectVitestExceptions([live], O.some(document));
   assertTrue(preserved[0]?.status === "exception");
-  assertTrue(O.contains(preserved[0]?.reason ?? O.none(), "legacy runtime boundary"));
+  assertTrue(
+    O.contains(
+      preserved[0]?.reason ?? O.none(),
+      "legacy runtime boundary. Owner: @beep/example. Exit: retire with the boundary."
+    )
+  );
   assertTrue(preserved[0]?.line === 8);
 });
 
@@ -618,7 +634,11 @@ const withException = (rows: ReadonlyArray<EffectVitestFinding>) =>
     scope: [],
     findings: A.map(rows, (row, index) =>
       index === 0
-        ? EffectVitestFinding.make({ ...row, status: "exception", reason: O.some("reviewed first occurrence only") })
+        ? EffectVitestFinding.make({
+            ...row,
+            status: "exception",
+            reason: O.some("reviewed first occurrence only. Owner: @beep/example. Exit: retire on review."),
+          })
         : row
     ),
   });
@@ -649,7 +669,12 @@ it.layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
       // reviewed exception stays on the occurrence it was written for.
       const regenerated = preserveEffectVitestExceptions(before, O.some(withException(before)));
       assertTrue(regenerated[0]?.status === "exception");
-      assertTrue(O.contains(regenerated[0]?.reason ?? O.none(), "reviewed first occurrence only"));
+      assertTrue(
+        O.contains(
+          regenerated[0]?.reason ?? O.none(),
+          "reviewed first occurrence only. Owner: @beep/example. Exit: retire on review."
+        )
+      );
       assertTrue(regenerated[1]?.status === "open");
       // One duplicate gone: the survivor cannot prove which occurrence it is.
       assertTrue(preserveEffectVitestExceptions(after, O.some(withException(before)))[0]?.status === "open");
@@ -715,7 +740,7 @@ it.layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
           EffectVitestFinding.make({
             ...row,
             status: "exception",
-            reason: O.some("dynamic Layer.build is the subject"),
+            reason: O.some("dynamic Layer.build is the subject. Owner: @beep/example. Exit: retire with the subject."),
           })
         ),
       });
@@ -723,7 +748,12 @@ it.layer(BunCrypto.layer, { timeout: "10 seconds" })((it) => {
       assertTrue(
         A.every(
           regenerated,
-          (row) => row.status === "exception" && O.contains(row.reason, "dynamic Layer.build is the subject")
+          (row) =>
+            row.status === "exception" &&
+            O.contains(
+              row.reason,
+              "dynamic Layer.build is the subject. Owner: @beep/example. Exit: retire with the subject."
+            )
         )
       );
     })
@@ -1074,7 +1104,10 @@ it.effect(
     const actionable = { ...coverage, ruleId: "L-RES-01", class: "flaky-test-wrap", status: "exception" };
     const missingReason = yield* encodeP1FindingFixture(actionable);
     assertNone(decodeEffectVitestFindingJson(missingReason, { onExcessProperty: "error" }));
-    const withReason = yield* encodeP1FindingFixture({ ...actionable, reason: "Documented external boundary." });
+    const withReason = yield* encodeP1FindingFixture({
+      ...actionable,
+      reason: "Documented external boundary. Owner: @beep/example. Exit: retire with the boundary.",
+    });
     assertSome(
       O.map(decodeEffectVitestFindingJson(withReason, { onExcessProperty: "error" }), (row) => row.ruleId),
       "L-RES-01"

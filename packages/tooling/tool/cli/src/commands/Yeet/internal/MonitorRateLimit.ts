@@ -18,7 +18,6 @@
  *
  * @since 0.0.0
  */
-import { GitHubClient } from "@beep/github/GitHubClient";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
@@ -29,6 +28,7 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { readGithubRateLimit, recordRateLimitRead } from "../../../internal/github/GithubRateLimitSampler.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/MonitorRateLimit");
 
@@ -305,19 +305,15 @@ export const resolveYeetGithubRateLimitKind: {
     )
 );
 
-// The wire shape of `GET /rate_limit` the read decodes before branding it.
-const RateLimitWireBucket = S.Struct({ remaining: S.Int, reset: S.Int });
-const RateLimitWire = S.Struct({
-  resources: S.Struct({ core: RateLimitWireBucket, graphql: RateLimitWireBucket }),
-});
-
 /**
  * Read `GET /rate_limit` through the provided GitHub client.
  *
  * **Details**
  *
  * The endpoint does not count against the primary limit, so the merge loop can
- * read it while the bucket is empty.
+ * read it while the bucket is empty. Only `core` and `graphql` are required;
+ * any other bucket that is malformed or new is ignored. With a GitHub budget
+ * ledger bound, the read is also recorded as a `monitor-pause` sample.
  *
  * **Example** (Reference the read)
  *
@@ -332,12 +328,18 @@ const RateLimitWire = S.Struct({
  * @since 0.0.0
  */
 export const readYeetGithubRateLimit = Effect.gen(function* () {
-  const client = yield* GitHubClient;
-  const wire = yield* client.requestDecoded("GET /rate_limit", {}, RateLimitWire);
+  const wire = yield* readGithubRateLimit;
+  yield* recordRateLimitRead(wire, "monitor-pause");
   return YeetGithubRateLimitSnapshot.make({
     resources: YeetGithubRateLimitResources.make({
-      core: YeetGithubRateLimitBucket.make(wire.resources.core),
-      graphql: YeetGithubRateLimitBucket.make(wire.resources.graphql),
+      core: YeetGithubRateLimitBucket.make({
+        remaining: wire.resources.core.remaining,
+        reset: wire.resources.core.reset,
+      }),
+      graphql: YeetGithubRateLimitBucket.make({
+        remaining: wire.resources.graphql.remaining,
+        reset: wire.resources.graphql.reset,
+      }),
     }),
   });
 });

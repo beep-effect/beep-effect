@@ -510,6 +510,12 @@
         ]
       },
       {
+        "name": "@beep/lane-cockpit",
+        "patterns": [
+          "apps/labs/lane-cockpit/src/**"
+        ]
+      },
+      {
         "name": "@beep/langextract",
         "patterns": [
           "packages/foundation/capability/langextract/src/**"
@@ -1248,7 +1254,8 @@
           "@beep/identity",
           "@beep/markdown",
           "@beep/provenance",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/sqlite"
         ],
         "allowTypeOnly": [
           "@beep/agent-memory-store",
@@ -1256,7 +1263,8 @@
           "@beep/identity",
           "@beep/markdown",
           "@beep/provenance",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/sqlite"
         ]
       },
       {
@@ -3051,6 +3059,19 @@
           "@beep/memfs",
           "@beep/schema",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/lane-cockpit",
+        "allow": [
+          "@beep/identity",
+          "@beep/lane-cockpit",
+          "@beep/schema"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/lane-cockpit",
+          "@beep/schema"
         ]
       },
       {

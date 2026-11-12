@@ -69,6 +69,40 @@ const COVERAGE_NOOP_FILES = [
 
 const COVERAGE_NOOP_PREFIXES = [".changeset/", "docs/", "explorations/", "goals/", "research/"] as const;
 
+/**
+ * Owner rows for generated standards files, derived from a reader scan.
+ *
+ * **Details**
+ *
+ * Each row is `[readerPath, ownerPattern, packageName]`: the path the reader
+ * scan looks for, the changed-file pattern the row matches, and one coverage
+ * owner. Before these rows each file fell through to the "no current
+ * workspace owner" fallback, so regenerating one ran the full Test Unit
+ * matrix. The rows are the scan's result, not an assertion: the live drift
+ * check in the repo-cli tests runs `coverageReaderOwners` over every
+ * workspace source and fails when a row and the scan disagree
+ * (`goals/hosted-setup-tax`, TURB-01).
+ *
+ * **Example** (List the mapped reader paths)
+ *
+ * ```ts
+ * import { COVERAGE_GENERATED_STANDARDS_OWNER_ROWS } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(COVERAGE_GENERATED_STANDARDS_OWNER_ROWS.map(([readerPath]) => readerPath).includes("standards/policy-tools.fingerprint.json")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const COVERAGE_GENERATED_STANDARDS_OWNER_ROWS: ReadonlyArray<readonly [string, string, string]> = [
+  ["standards/instrumentation-catalog", "standards/instrumentation-catalog/**", "@beep/repo-cli"],
+  ["standards/jsdoc-documentation.inventory.jsonc", "standards/jsdoc-documentation.inventory.jsonc", "@beep/repo-cli"],
+  ["standards/schema-first.inventory.jsonc", "standards/schema-first.inventory.jsonc", "@beep/repo-cli"],
+  ["standards/policy-tools.fingerprint.json", "standards/policy-tools.fingerprint.json", "@beep/repo-cli"],
+  ["standards/cache-qualification-baseline.json", "standards/cache-qualification-baseline.json", "@beep/repo-cli"],
+  ["standards/fallow.boundaries.generated.jsonc", "standards/fallow.boundaries.generated.jsonc", "@beep/repo-cli"],
+];
+
 // Live repository inputs read or executed by coverage-executed package tests. File entries also
 // accept globs for inventories discovered by tests (goal manifests and workspace
 // manifests). Prefixes cover recursively consumed trees; all matching consumers
@@ -94,6 +128,7 @@ const COVERAGE_REPOSITORY_FIXTURE_OWNER_FILES: ReadonlyArray<readonly [string, s
   ["package.json", "@beep/repo-cli"],
   ["turbo.json", "@beep/repo-cli"],
   ["packages/foundation/**/package.json", "@beep/repo-cli"],
+  ...A.map(COVERAGE_GENERATED_STANDARDS_OWNER_ROWS, ([, pattern, owner]) => [pattern, owner] as const),
 ];
 
 // The owner patterns are static literals compiled once; a guard trip here is a

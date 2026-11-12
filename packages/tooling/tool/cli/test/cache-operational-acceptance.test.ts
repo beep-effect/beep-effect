@@ -40,10 +40,8 @@ import {
 } from "@beep/repo-configs/cache";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
-import { fcRunsCapped } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { afterEach, expect, it, vi } from "@effect/vitest";
-import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -378,33 +376,20 @@ it.layer(CacheQualificationLive.pipe(Layer.provideMerge(platform)), { timeout: "
             yield* fs.writeFileString(ledger, promoted);
           }
           expect(A.filter((yield* cache.audit(root)).findings, (finding) => finding.blocking)).toEqual([]);
-          // Each run writes the ledger twice and runs a real audit and transition. The
-          // fixture kernel is "fixture", which no Sha256Hex equals, so every draw is the
-          // same drift class: 10 distinct digests cover it. fcRunsCapped keeps the nightly
-          // BEEP_FC_NUM_RUNS=1000 floor from multiplying the I/O past the 300 s timeout
-          // (#2480) and still honours BEEP_FC_SEED for reruns.
-          const runtimeDrift = yield* Arbitrary.checkEffect(
-            Arbitrary.schema(Sha256Hex),
-            (kernel) =>
-              Effect.gen(function* () {
-                observedToolchain.mockReturnValue(
-                  Effect.succeed(CacheToolchainSnapshot.make({ ...toolchain, kernel }))
-                );
-                yield* fs.writeFileString(ledger, promoted);
-                const pipe8 = yield* cache.audit(root).pipe(Effect.isFailure);
-                expect(pipe8).toBe(kernel !== toolchain.kernel);
-                yield* fs.writeFileString(ledger, prior);
-                const pipe9 = yield* cache.transition(root, transition).pipe(Effect.isFailure);
-                expect(pipe9).toBe(kernel !== toolchain.kernel);
-                if (kernel !== toolchain.kernel) {
-                  const readFileString2 = yield* fs.readFileString(ledger);
-                  expect(readFileString2).toBe(prior);
-                }
-                return true;
-              }),
-            fcRunsCapped(10)
-          );
-          expect(runtimeDrift._tag).toBe("Passed");
+          // The fixture kernel is "fixture", which no drawn digest equals, so every drifted kernel
+          // falls in one refusal class: two fixed kernels cover it without multiplying the ledger
+          // writes, audits and transitions this real fixture runs per case (#2480).
+          for (const kernel of [Sha256Hex.make(Str.repeat(64)("0")), Sha256Hex.make(Str.repeat(64)("f"))]) {
+            observedToolchain.mockReturnValue(Effect.succeed(CacheToolchainSnapshot.make({ ...toolchain, kernel })));
+            yield* fs.writeFileString(ledger, promoted);
+            const auditFailed = yield* cache.audit(root).pipe(Effect.isFailure);
+            expect(auditFailed).toBe(true);
+            yield* fs.writeFileString(ledger, prior);
+            const transitionFailed = yield* cache.transition(root, transition).pipe(Effect.isFailure);
+            expect(transitionFailed).toBe(true);
+            const ledgerText = yield* fs.readFileString(ledger);
+            expect(ledgerText).toBe(prior);
+          }
           observedToolchain.mockReturnValue(Effect.succeed(toolchain));
           yield* revokeCacheProducerIssuer(trust.canary);
           yield* fs.writeFileString(ledger, promoted);
@@ -419,4 +404,23 @@ it.layer(CacheQualificationLive.pipe(Layer.provideMerge(platform)), { timeout: "
       })
     );
   }
+);
+
+// The ledger cites the acceptance marker by the SHA-256 of its JSON bytes, so every acceptance
+// reference must decode back from its marker and re-encode to byte-identical text. The run count is
+// a literal: `fcRuns` reads the environment at registration, and Effect's environment provider keeps
+// that first read, which would hide the acceptance test's `vi.stubEnv` stores from it.
+it.effect.prop(
+  "encodes every acceptance reference to a marker that decodes back to byte-identical text",
+  { sha256: Sha256Hex },
+  ({ sha256 }) =>
+    Effect.gen(function* () {
+      const accepted = CacheProducerAcceptanceReference.make({ sha256 });
+      const marker = yield* S.encodeEffect(AcceptanceReferenceJson)(accepted);
+      const decoded = yield* S.decodeEffect(AcceptanceReferenceJson)(marker);
+      expect(decoded.sha256).toBe(accepted.sha256);
+      const reencoded = yield* S.encodeEffect(AcceptanceReferenceJson)(decoded);
+      expect(reencoded).toBe(marker);
+    }),
+  { arbitrary: { runs: 25 } }
 );

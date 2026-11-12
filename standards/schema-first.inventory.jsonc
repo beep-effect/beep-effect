@@ -2302,6 +2302,30 @@
       "reason": "Plain data whose fields come from a checked inline struct (S.Struct({...}).pipe(S.check(...))), which the schema-opaque-default codemod could not classify (keep reason fields-expression-unknown), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over that struct."
     },
     {
+      "file": "packages/tooling/tool/cli/src/internal/github/GithubIdentityLabel.ts",
+      "symbol": "GithubIdentityLabelInput",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Label-resolution input that carries the client's Redacted token and its transport options (a fetch function among them), which cannot be schema data; the identity fields it copies are the annotated GithubIdentity schema's."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/github/GithubLedger.schemas.ts",
+      "symbol": "GithubRateLimitWire",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Wire body whose resources record keeps every unknown bucket as unknown so each is decoded on its own; an S.Opaque over that S.StructWithRest is not a Codec of the branded type (its rebuilt make drops the brand), so the annotated struct stays bare. Its buckets are the branded GithubRateLimitWireBucket."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/github/GithubLedger.service.ts",
+      "symbol": "GithubBudgetLedgerOptions",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Layer construction options whose ghIdentity member is an Effect the ledger memoises per process, which cannot be schema data; the host label it also carries is the annotated HostLabel schema."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/internal/repo-run/ProcessTable.ts",
       "symbol": "ProcessTableShape",
       "kind": "exported-interface",

@@ -29,7 +29,12 @@ import * as EventGroup from "effect/eventlog/EventGroup";
 import * as EventLog from "effect/eventlog/EventLog";
 import * as S from "effect/Schema";
 import { ConflictResolution, HoldId, MemoryGateViolation } from "./Admission.models.ts";
-import { HoldNotOpenError, StaleParentsError } from "./AgentMemoryStore.errors.ts";
+import {
+  FolderAlreadyImportedError,
+  HoldNotOpenError,
+  StaleParentsError,
+  UnplacedNodeError,
+} from "./AgentMemoryStore.errors.ts";
 import { ContentHash, MemoryFilePath, NodeId, NodeKind, RevisionId } from "./NodeIdentity.models.ts";
 import { LineageId } from "./Observation.events.ts";
 import { NodeOperation } from "./Operation.models.ts";
@@ -348,6 +353,8 @@ export class HoldResolved extends S.Opaque<HoldResolved, { readonly brand: uniqu
  * The four node event definitions declare `StaleParentsError` as their error
  * schema, so the handler that enforces the per-node compare-and-set can fail
  * with it and the typed failure reaches the caller of the log write.
+ * `NodeCreated` also declares `UnplacedNodeError`: its handler refuses a
+ * predecessor that is not a node of the same file.
  *
  * **Example** (Read the event tag)
  *
@@ -364,7 +371,7 @@ export const NodeCreatedEvent = Event.make({
   tag: "NodeCreated",
   primaryKey: (payload: NodeCreated) => payload.nodeId,
   payload: NodeCreated,
-  error: StaleParentsError,
+  error: S.Union([StaleParentsError, UnplacedNodeError]),
 });
 
 /**
@@ -433,6 +440,12 @@ export const NodeRetiredEvent = Event.make({
 /**
  * Event definition that records a folder import, keyed on the folder digest.
  *
+ * **Details**
+ *
+ * It declares `FolderAlreadyImportedError` as its error schema: the handler
+ * refuses a second `FolderImported` inside the writer transaction, because
+ * one log holds one memory folder.
+ *
  * **Example** (Read the event tag)
  *
  * ```ts
@@ -448,6 +461,7 @@ export const FolderImportedEvent = Event.make({
   tag: "FolderImported",
   primaryKey: (payload: FolderImported) => payload.folderDigest,
   payload: FolderImported,
+  error: FolderAlreadyImportedError,
 });
 
 /**

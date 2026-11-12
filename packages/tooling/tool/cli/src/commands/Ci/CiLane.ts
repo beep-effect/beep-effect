@@ -248,7 +248,6 @@ export const CI_LANE_ID_VALUES = [
   "sast",
   "secrets",
   "security",
-  "shadcn-lint",
   "storybook",
   "test-integration",
   "test-unit",
@@ -552,18 +551,6 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     flags: ["--base", "--validate-envelopes"],
     notes:
       "Envelope validation and artifact upload stay in the workflow; --validate-envelopes replays validation locally.",
-  }),
-  // The design-system lint context lands non-required; promotion is a later
-  // branch-ruleset action after it establishes a stable green history.
-  CiLaneDescriptor.make({
-    id: "shadcn-lint",
-    contextName: "Shadcn Lint",
-    required: false,
-    laneClass: "cli-runnable",
-    replay: "exact",
-    flags: [],
-    notes:
-      "Runs the strict @shadcn/lint policy (.oxlintrc.shadcn.json) over apps and packages; see docs/runbooks/design-system-lint.md.",
   }),
   CiLaneDescriptor.make({
     id: "jsdoc-ratchet",
@@ -1970,7 +1957,6 @@ export const ciLaneStepsForTesting: {
       ],
       "repo-sanity": () => [
         bunRunStep(repoRoot, "lint:schema-catalog", ["beep", "lint", "schema-catalog"]),
-        bunRunStep(repoRoot, "ci:repo-sanity:changeset-graph", ["beep", "quality", "changeset-graph"]),
         bunRunStep(repoRoot, "ci:repo-sanity:catalog-usage", ["beep", "quality", "catalog-usage"]),
         // Repo Sanity is the hosted lane that still runs for docs-only diffs,
         // so the public-repo home path law runs here: Heavy / Lint Policy skips
@@ -1979,7 +1965,15 @@ export const ciLaneStepsForTesting: {
         // On a code PR Lint Policy runs the law as well; that duplicate (about
         // 10 s) is accepted so docs-only diffs stay covered.
         bunRunStep(repoRoot, "lint:private-home-paths", ["beep", "laws", "private-home-paths", "--check"]),
+        // `audit:github repo-sanity` runs the changeset graph check (its
+        // `repo-sanity:changeset-graph` lane), so this body carries no second
+        // copy (hosted-setup-tax PERIL-04).
         bunRunStep(repoRoot, "ci:repo-sanity", ["audit:github", "repo-sanity"]),
+        // The one hosted owner of the strict @shadcn/lint policy
+        // (.oxlintrc.shadcn.json; hosted-setup-tax PERIH-02). Repo Sanity is
+        // required, so a finding blocks the merge. The step group runs every
+        // step and fails with all reds, so an earlier red cannot hide it.
+        rootTaskStep(repoRoot, "ci:repo-sanity:shadcn", "lint:shadcn"),
         ...(options.changesetStatus
           ? [
               // lab-apps-lifecycle P2 (ratified row 8): route CI's changeset
@@ -1998,9 +1992,6 @@ export const ciLaneStepsForTesting: {
       sast: () => [bunRunStep(repoRoot, "ci:sast", ["beep", "quality", "github-checks", "sast"])],
       secrets: () => [bunRunStep(repoRoot, "ci:secrets", ["beep", "quality", "github-checks", "secrets"])],
       security: () => [bunRunStep(repoRoot, "ci:security", ["beep", "quality", "github-checks", "security"])],
-      // Strict @shadcn/lint over apps and packages through the uncached root task, so the
-      // hosted job, the pre-push lane and the lint-policy battery share one command.
-      "shadcn-lint": () => [rootTaskStep(repoRoot, "ci:shadcn-lint", "lint:shadcn")],
       // Quality-lane audit D13: one positively-filtered build, the browser test
       // run, then the static-artifact proof storybook.yml uploads. No
       // --affected on the execution argv: the affected shape is answered once
@@ -3081,7 +3072,6 @@ export const CI_LOCAL_DEFAULT_LANES: ReadonlyArray<CiLaneId> = [
   "lint",
   "check",
   "codegen",
-  "shadcn-lint",
   "jsdoc-ratchet",
   "secrets",
   "sast",
@@ -3214,7 +3204,6 @@ const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArra
     sast: A.empty<string>,
     secrets: A.empty<string>,
     security: A.empty<string>,
-    "shadcn-lint": A.empty<string>,
     // The affected shape drives the Turbo dry-run probe, not the execution
     // argv (see the storybook lane body).
     storybook: () => turboShapeFlags,

@@ -1,0 +1,27 @@
+queue-lab-resolve | Set up job | Actions: write
+queue-lab-resolve | Set up job | Contents: read
+queue-lab-resolve | Set up job | Metadata: read
+queue-lab-resolve | Set up job | PullRequests: read
+queue-lab-resolve | Record the event shape | event=merge_group action=checks_requested
+queue-lab-resolve | Record the event shape | GITHUB_REF=refs/heads/gh-readonly-queue/queue-lab/pr-3061-013e7496a1ba780c3498a1d4c8c70523632db660
+queue-lab-resolve | Record the event shape | GITHUB_SHA=01ad0c0b42c54ef9c269380345f3ad517e0f6e99
+queue-lab-resolve | Record the event shape | github.head_ref=[] github.base_ref=[]
+queue-lab-resolve | Record the event shape | payload keys: ["action","merge_group","organization","repository","sender"]
+queue-lab-resolve | Record the event shape | merge_group keys: ["base_ref","base_sha","head_commit","head_ref","head_sha"]
+queue-lab-resolve | Record the event shape | merge_group.head_commit keys: ["author","committer","id","message","timestamp","tree_id"]
+queue-lab-resolve | Record the event shape | head_sha=01ad0c0b42c54ef9c269380345f3ad517e0f6e99 head_ref=refs/heads/gh-readonly-queue/queue-lab/pr-3061-013e7496a1ba780c3498a1d4c8c70523632db660
+queue-lab-resolve | Record the event shape | base_sha=013e7496a1ba780c3498a1d4c8c70523632db660 base_ref=refs/heads/queue-lab
+queue-lab-resolve | Record secret presence | secret TURBO_READ_TOKEN=present
+queue-lab-resolve | Record secret presence | secret VERCEL_TOKEN=present
+queue-lab-resolve | Record secret presence | secret KNOWLEDGE_MINT_APP_PRIVATE_KEY=present
+queue-lab-resolve | Resolve the mode | pr=3061 key=queue-lab-mg mode=pass
+queue-lab-gate | Set up job | Actions: write
+queue-lab-gate | Set up job | Contents: read
+queue-lab-gate | Set up job | Metadata: read
+queue-lab-gate | Set up job | PullRequests: read
+queue-lab-token-probe | Set up job | Contents: write
+queue-lab-token-probe | Set up job | Metadata: read
+queue-lab-token-probe | Set up job | PullRequests: write
+queue-lab-token-probe | Probe what the merge-group token may write | create ref: HTTP/2.0 201 Created
+queue-lab-token-probe | Probe what the merge-group token may write | delete ref: HTTP/2.0 204 No Content
+queue-lab-reusable / inner | UNKNOWN STEP | event=merge_group ref=refs/heads/gh-readonly-queue/queue-lab/pr-3061-013e7496a1ba780c3498a1d4c8c70523632db660 sha=01ad0c0b42c54ef9c269380345f3ad517e0f6e99

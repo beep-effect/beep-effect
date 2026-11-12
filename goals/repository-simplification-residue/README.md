@@ -1,6 +1,6 @@
 # Repository simplification residue
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 The fifteen historical source acceptances are reconciled in the
 [final acceptance receipt](history/receipts/2026-11-10-acceptance-reconciliation.md).
@@ -15,13 +15,16 @@ The fleet orchestrator owns the remediation of those rows, including the one
 harness-ledger row already open in #2586's merge tree. This closeout distinguishes
 the accepted snapshot from current drift and claims no current-zero inventory.
 
-P0 research, P1 implementation and P2 acceptance reconciliation are complete.
-P3 publication/readiness and P4 lifecycle closeout are in progress. [PR #3073](https://github.com/beep-effect/beep-effect/pull/3073) landed the validated reflection and the reconciliation.
-It merged before its readiness was recorded, so the goals-only
-[re-final PR #3094](https://github.com/beep-effect/beep-effect/pull/3094) carries the proposed `completed-retained`
-closeout and the gating Yeet verdict. Current AGENTS requires completion refresh after its merge, followed
-by a separate packet-state PR adopting the verified status. The lifecycle stays
-active until that adoption merges.
+All phases are complete and the packet is `completed-retained`.
+[PR #3073](https://github.com/beep-effect/beep-effect/pull/3073) landed the validated
+reflection and the reconciliation, and the goals-only
+[re-final PR #3094](https://github.com/beep-effect/beep-effect/pull/3094) is the
+recorded final pull request. Both were merged by hand before their until-ready
+monitor recorded readiness, so the operator ruled the goal closed without the
+Yeet readiness verdict
+([decision](decisions/2026-11-10-operator-ruling-close-without-readiness-verdict.md)).
+The gating completion evidence is the hosted required checks at #3094's accepted
+head; the Yeet verdict reference stays as a non-gating record.
 
 Read [SPEC.md](SPEC.md) for the historical issue contracts,
 [PLAN.md](PLAN.md) for current closeout steps, and

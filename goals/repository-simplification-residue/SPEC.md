@@ -425,6 +425,16 @@ job. Record: `history/receipts/dependency-review.md`.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug repository-simplification-residue`; add a `kind: decision` file there, never edit this block._
 
+### Operator ruling: close without the Yeet readiness verdict, 2026-11-10
+
+Both goal-final PRs merged from an operator account before their until-ready monitor recorded readiness: #3073 at 06:11:14Z with its review window open until 06:18:21Z, and the goals-only re-final #3094 at 06:33:32Z, 5.5 minutes after its ready flip. Neither went through `yeet merge-gate`. `goals completion refresh --slug repository-simplification-residue --readiness-job 89ac5f6d-5a5d-491c-91fc-5b10d40f0e9d` reported #3094 `unknown`: hosted required checks verified (15 green required contexts at accepted head 091ee20b85 before merge, complete rule-suite inventory), and the gating yeet-verdict was unknown because no monitor recorded readiness. #3073 had the same shape at 3d04e08cef.
+
+On 2026-11-10 the operator ruled the goal closed without the readiness verdict evidence (fleet ruling `residue-closed-without-verdict`), instead of a third re-final. This packet-state PR therefore removes `proposedCloseout`, keeps the yeet-verdict ref as a non-gating historical record, and adopts `completed-retained` through `goals set-status`; #3094 stays the final pull request in `completionGate.pullRequests`. It writes no `closeout` record, because the manifest schema reserves that record for closeouts with verified gating Yeet readiness, which this ruling waives. The gating evidence is the hosted required checks at the accepted head; `goals completion refresh` then reported #3094 verified on that evidence, with the review-window sub-claim unsatisfied and merge-ready unknown. The ruling waives only the readiness proof for this packet: it does not change the completion gate for any other goal, and the fifteen acceptances and the reconciliation in #3073 are unchanged.
+
+Lane docs/residue-adopt-completed-retained · PR #3094
+
+Reverse: Set the yeet-verdict acceptance ref back to gating, restore proposedCloseout #3094, drop retentionReason, set the lifecycle back to active, and open a re-final held for merge-ready
+
 ### Reconcile accepted cohorts against current source without resetting inventories, 2026-11-10
 
 The admitted closeout lane starts at main 6d47006fa1da777a8c0f4aae6a2722fa3d577068. All fifteen source issues are closed and effect-vitest-canon is verified completed-retained via PR 2586, but the current inventory has 15 open rows and 59 exception reasons without both literal Owner and Exit clauses. Historical acceptance and current drift are separate evidence. Record exact identities and attribution before proposing completion; add no standards rows, exemptions, or coverage changes. The orchestrator grants one main-targeting PR slot, excluding queue-lab sandbox PRs, and retains S11 merge authority. Follow current AGENTS two-PR closeout: proposedCloseout in the final work PR, completion refresh after merge, then adoption in a packet-state PR.

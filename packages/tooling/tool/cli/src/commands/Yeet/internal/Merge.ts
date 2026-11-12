@@ -31,15 +31,17 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { guardLiteralArg } from "@beep/repo-utils";
+import * as Console from "effect/Console";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { GhPrView, GithubRest, ghOutput } from "../../../internal/github/index.ts";
+import { GhPrView, GithubAsyncMergeRequest, GithubRest, ghOutput } from "../../../internal/github/index.ts";
 import { enforceReviewerGate, withReviewerOperatorClient } from "../../Reviewer/ReviewerRuleset.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
+import { renderYeetMergeSettlement, settleYeetMerge, YeetMergeSettlement } from "./AsyncMerge.ts";
 import { provideYeetGhLogin, withYeetGithubCredentialHint } from "./GhOps.ts";
 import { SweepReport } from "./Sweep.schemas.ts";
 import { executeSweep } from "./Sweep.ts";
@@ -192,13 +194,14 @@ const confirmMerged = Effect.fn("Yeet.confirmPullRequestMerged")(function* (
  *
  * **Details**
  *
- * The merge phase of {@link mergePr}, below its reviewer gate: one REST squash
- * merge (`gh pr merge <number> --squash --match-head-commit <sha>`'s twin,
- * `GithubRest.mergePullRequest`) sent once, with no commit subject or body so
- * GitHub writes its defaults, then a bounded poll of the REST pull request read
- * until it reports `MERGED`. A refused merge (a head that moved, a pull request
- * that is not mergeable) fails with the merge command's wording and is never
- * confirmed; a merge the poll cannot confirm fails too.
+ * The merge phase of {@link mergePr}, below its reviewer gate: one async squash
+ * merge (`PUT pulls/{n}/merge-async` through {@link settleYeetMerge}, strict, no
+ * rules bypass) pinned to the head, with no commit subject or body so GitHub
+ * writes its defaults, settled to a terminal outcome; then a bounded poll of the
+ * REST pull request read until it reports `MERGED`. A refused or failed merge (a
+ * head that moved, an unresolved conversation, a draft) fails with GitHub's
+ * sentence and is never confirmed; a request that never settles, or a merge the
+ * poll cannot confirm, fails too.
  *
  * **Example** (Build the merge step)
  *
@@ -221,18 +224,24 @@ export const mergeYeetPullRequestAtHead = Effect.fn("Yeet.mergePullRequestAtHead
   pinnedHead: string,
   options: MergePrOptions = defaultMergePrOptions
 ): Effect.fn.Return<GhPrView, YeetCommandError, YeetGithubServices> {
-  const mergeCommand = `gh pr merge ${pullRequestNumber} --squash --match-head-commit ${pinnedHead}`;
-  // One squash PUT, never retried here; the poll below reads, it does not merge again.
-  yield* GithubRest.use((rest) => rest.mergePullRequest(pullRequestNumber, { sha: pinnedHead, method: "squash" })).pipe(
-    Effect.mapError((error) =>
-      YeetCommandError.make({
-        message: `${mergeCommand} failed:\n${withYeetGithubCredentialHint(error.message)}`,
-        command: mergeCommand,
-        exitCode: 1,
-        cause: error,
-      })
-    )
-  );
+  const mergeCommand = `gh api -X PUT repos/{owner}/{repo}/pulls/${pullRequestNumber}/merge-async -f sha=${pinnedHead}`;
+  const refused = (message: string, cause?: unknown) =>
+    YeetCommandError.make({
+      message: `${mergeCommand} failed:\n${withYeetGithubCredentialHint(message)}`,
+      command: mergeCommand,
+      exitCode: 1,
+      ...(cause === undefined ? {} : { cause }),
+    });
+  // One request, never resent here; a 409 attaches to the request already in flight,
+  // and the poll below only reads.
+  const settled = yield* settleYeetMerge(
+    pullRequestNumber,
+    GithubAsyncMergeRequest.make({ action: "direct_merge", method: "squash", sha: pinnedHead })
+  ).pipe(Effect.mapError((error) => refused(error.message, error)));
+  if (!YeetMergeSettlement.guards.Merged(settled)) {
+    return yield* refused(renderYeetMergeSettlement(settled));
+  }
+  yield* Console.log(`[yeet] #${pullRequestNumber}: ${renderYeetMergeSettlement(settled)}`);
   return yield* confirmMerged(pullRequestNumber).pipe(
     Effect.retry({ times: options.pollAttempts, schedule: Schedule.spaced(options.pollInterval) })
   );
@@ -243,9 +252,9 @@ export const mergeYeetPullRequestAtHead = Effect.fn("Yeet.mergePullRequestAtHead
  *
  * **Details**
  *
- * Three phases, in order and never reordered: the REST squash merge pinned to
- * the viewed head (`gh pr merge <number> --squash --match-head-commit <sha>`'s
- * twin, `GithubRest.mergePullRequest`), which deletes no branch; a bounded poll
+ * Three phases, in order and never reordered: the async squash merge pinned to
+ * the viewed head (`PUT pulls/{n}/merge-async`, settled by
+ * {@link settleYeetMerge}), which deletes no branch; a bounded poll
  * until the REST pull request read reports it merged; then
  * {@link executeSweep}, which owns every ref update and deletion under its own
  * worktree-aware safety rails. A merge that cannot be confirmed fails here, so no

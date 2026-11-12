@@ -64,6 +64,7 @@ import {
   compareCoverageRegressionSnapshotsForTesting,
   compareCoverageRegressionSnapshotsWithProposedForTesting,
   compareJSDocTotalsForTesting,
+  compareRootCoverageForTesting,
   completeCounterlessCoverageFilesForTesting,
   coverageBaselineChangeSetFromChangedFiles,
   coverageBaselineRowDelta,
@@ -1758,8 +1759,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "origin/main",
         "--summarize",
       ]);
-      // The Shadcn Lint context is replayed by the `lint:shadcn` state task inside
-      // `quality:lint-policy`; no separate pre-push lane runs the same oxlint walk again.
+      // `lint:shadcn` runs in the Repo Sanity lane body (hosted-setup-tax PERIH-02);
+      // no pre-push lane runs the same oxlint walk again.
       expect(A.some(lanes, (lane) => lane.id === "quality:shadcn-lint")).toBe(false);
       expect(A.some(lanes, (lane) => A.contains(lane.step.args, "shadcn-lint"))).toBe(false);
       expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet")).toEqual(["run", "beep", "ci", "lane", "jsdoc-ratchet"]);
@@ -5679,7 +5680,6 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "knowledge:refs-check",
         "goals:doctor",
         "lint:oxlint",
-        "lint:shadcn",
         "lint:typos",
         "lint:markdown-fences",
         "lint:retired-effect-paths",
@@ -5741,7 +5741,6 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "knowledge:refs-check",
         "goals:doctor",
         "lint:oxlint",
-        "lint:shadcn",
         "lint:typos",
         "jsdoc:inventory:check",
         "jsdoc:ratchet:check",
@@ -5847,7 +5846,6 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           "lint:jsdoc:root",
           "jsdoc:inventory:check",
           "jsdoc:ratchet:check",
-          "lint:shadcn",
           "lint:effect-vitest",
           "lint:opaque-roundtrips",
           "lint:markdown-fences",
@@ -8776,6 +8774,104 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               O.map(defaultLine(mergeBaseLines), (line) => /against [0-9a-f]{40}; pass --full/.test(line)),
               true
             );
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
+      );
+
+      it.effect("judges a bare local run against the merge base it planned from, not its own dirty rows", () =>
+        Effect.andThen(
+          temporaryRepository,
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            const repoRoot = process.cwd();
+            const baselinePath = path.join(repoRoot, "standards/coverage.regression-baseline.jsonc");
+            const writeBaseline = Effect.fnUntraced(function* (document: CoverageRegressionBaseline) {
+              const encoded = yield* encodeCoverageRegressionBaseline(document);
+              const json = yield* encodeJson(encoded);
+              return yield* fs.writeFileString(baselinePath, json);
+            });
+            // A row whose uncovered count grows as its percentage falls, as a real measurement does.
+            const row = (name: string, metric: number) =>
+              CoveragePackageBaseline.make({
+                ...coveragePackageBaseline(`packages/${name}`, metric),
+                uncovered: coverageUncovered(100 - metric),
+              });
+            yield* fs.makeDirectory(path.dirname(baselinePath), { recursive: true });
+            const rootManifest = yield* encodeJson({
+              name: "@beep/test-root",
+              private: true,
+              workspaces: ["packages/*"],
+            });
+            yield* fs.writeFileString(path.join(repoRoot, "package.json"), rootManifest);
+            yield* Effect.forEach(
+              ["touched", "untouched"],
+              Effect.fnUntraced(function* (name) {
+                yield* fs.makeDirectory(path.join(repoRoot, `packages/${name}/src`), { recursive: true });
+                const manifest = yield* encodeJson({
+                  name: `@beep/${name}`,
+                  private: true,
+                  scripts: { coverage: "vitest" },
+                });
+                yield* fs.writeFileString(path.join(repoRoot, `packages/${name}/package.json`), manifest);
+                yield* fs.writeFileString(
+                  path.join(repoRoot, `packages/${name}/src/Index.ts`),
+                  "export const v = 1;\n"
+                );
+              })
+            );
+            yield* writeBaseline(
+              withRows({
+                "@beep/touched": row("touched", 80),
+                "@beep/untouched": row("untouched", 80),
+              })
+            );
+            yield* runGit(repoRoot, ["init"]);
+            yield* runGit(repoRoot, ["config", "user.email", "coverage-self-judge@example.test"]);
+            yield* runGit(repoRoot, ["config", "user.name", "Coverage Self Judge Test"]);
+            yield* runGit(repoRoot, ["config", "commit.gpgsign", "false"]);
+            yield* runGit(repoRoot, ["add", "--all"]);
+            yield* runGit(repoRoot, ["commit", "-m", "seed"]);
+            yield* runGit(repoRoot, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
+
+            // The dirty tree lowers the touched row to 50 and changes its source; the run measures 60.
+            yield* writeBaseline(
+              withRows({
+                "@beep/touched": row("touched", 50),
+                "@beep/untouched": row("untouched", 80),
+              })
+            );
+            yield* fs.writeFileString(path.join(repoRoot, "packages/touched/src/Index.ts"), "export const v = 2;\n");
+            const measured = [
+              CoverageSnapshotEntry.make({
+                packageName: "@beep/touched",
+                baseline: row("touched", 60),
+              }),
+            ];
+            const bareRun = Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({}));
+            const localCi = { CI: "false", GITHUB_ACTIONS: "false", CONTINUOUS_INTEGRATION: "false" };
+            const options = yield* pipe(
+              R.toEntries(localCi),
+              A.reduce(resolveRootCoverageTaskOptionsForTesting(repoRoot, []), (use, [name, value]) =>
+                withEnvVarEffect(name, value, use)
+              ),
+              bareRun
+            );
+            expect(options.scoped).toBe(true);
+            expect(options.expectedPackageNames).toEqual(["@beep/touched"]);
+            // The bare run's merge base (origin/main is HEAD here) is carried to the comparator.
+            expect(/^[0-9a-f]{40}$/u.test(options.comparisonBase ?? "")).toBe(true);
+
+            // Judged at the merge-base floor (80), the measured 60 is a regression.
+            const judged = yield* compareRootCoverageForTesting(repoRoot, options, measured).pipe(bareRun, Effect.flip);
+            expect(isQualityTaskFailed(judged)).toBe(true);
+            const errorLines = yield* TestConsole.errorLines;
+            const reported = A.join(A.filter(errorLines, isString), "\n");
+            expect(reported).toContain("@beep/touched");
+
+            // Pre-fix control: without the planned base the dirty row (50) is its own floor and 60 passes.
+            const { comparisonBase: _planned, ...unpinned } = options;
+            yield* compareRootCoverageForTesting(repoRoot, unpinned, measured).pipe(bareRun);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), TestClock.withLive)
       );

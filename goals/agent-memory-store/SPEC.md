@@ -178,12 +178,18 @@ by decision file, not by re-litigation in prose:
 Each criterion is a named test or a recorded measurement in the package's
 test suite, titled with its id.
 
-- [ ] **AC-1 Byte identity (S1, pre-registered).** Exporting the Markdown
+- [x] **AC-1 Byte identity (S1, pre-registered).** Exporting the Markdown
       projection of an unchanged tree reproduces every byte: 100% of files
       identical on the `goals/**` fixture; edits are confined to the touched
       node's span with a zero-failure `3/n` bound at or below 0.1%, which
       needs at least 3,000 replayed edits (S1 replayed 5,168, bound 0.058%);
       0 concurrent insertions read as deletions (S1: 0/2,618).
+      Proven in P1 by `test/MarkdownProjector.byte-identity.test.ts` in the
+      store package: "AC-1 byte identity" (172/172 sample files, and a rebuild
+      from the log alone matching every `FileImported` digest), "AC-1 edit
+      confinement" (3,096 generated node edits, 0 outside the span, `3/n` =
+      0.097%; decision `p1-edit-replay-is-generated-node-edits`) and "AC-1
+      concurrent insertions" (0/2,940).
 - [ ] **AC-2 Zero silent loss (S14, pre-registered).** On the adversarial
       concurrent-edit fixture, no admitted write drops another's content: 0 of
       100 runs; every contested node is held with both texts (S14: 70/70).
@@ -427,6 +433,168 @@ S35: SCIP resolves identity (372/373 real imports, re-exports included) and the 
 Lane goals/agent-memory-store-p0
 
 Reverse: Collapse the port into the P3 implementation by decision file if no second resolver backend appears
+
+### The AC-1 and AC-8 fixture is a packed, stratified sample of tracked goals Markdown, 2026-11-10
+
+The tracked goals tree is about 3,600 Markdown files and 31 MB: too slow for the unit lane, and a package test that reads outside its package is invisible to the Turbo input hash and can go stale-green. The fixture is test/fixtures/goals-markdown-sample.json.gz in the store package: one gzipped JSON file (so repository scanners and formatters do not walk its Markdown) holding 172 files, 1,065,752 Markdown bytes, 386,973 bytes packed, sampled at commit baf225131bd. test/fixtures/build-goals-markdown-sample.ts regenerates it deterministically from one commit (argument, default HEAD): it lists the commit's tree with git ls-tree and reads every file's bytes with git show of that commit, never the index or the working tree, so the recorded commit rebuilds the identical file (checked: the generator run at baf225131bd reproduces the committed fixture's SHA-256). It ranks them by the SHA-256 of their path, and fills eleven strata (table, nested list, fenced code, frontmatter, HTML, block quote, non-ASCII, no trailing newline, plain, two long files of 40 to 130 KB, and five synthetic edge files: empty, blank lines only, CRLF, a byte order mark, astral characters with tab markers) within a per-stratum byte budget. The agent-memory-store-p1 lane is the only labeller and the test files declare it. An opt-in test (BEEP_TEST_AGENT_MEMORY_FULL_TREE set, skipped by default) runs byte identity over the whole live goals tree. Rejected: loose .md fixture files (scanners and formatters walk them) and a fixture larger than about 1 MB (the AC-1 file must stay under about 30 s in the hosted unit lane).
+
+Lane agent-memory-store-p1
+
+Reverse: Replace the packed sample with a test that reads the tracked goals tree, by decision file once the unit lane hashes inputs outside the package
+
+### P1 content hashes and revision ids hash the exact node text, 2026-11-10
+
+ContentHash is documented as the SHA-256 of a node's normalized text, but no normalization is defined yet and P1 needs hashes to mint revision ids. contentHashOf hashes the exact UTF-8 bytes of the node text and revisionIdOf hashes the UTF-8 bytes of revisionPreimage, both through the effect/crypto/Digest service (Digest.layerWebCrypto in the live projector). The import anchors record normalizationVersion 1 for this identity normalization. Exact-hash deferral (P3, decision dedupe-exact-defer-near-flag) may define a normalization; it then bumps the version, and revisions minted before keep their ids because a revision id is never recomputed. Code: packages/tooling/library/agent-memory-store/src/NodeIdentity.digest.ts. Rejected: inventing a whitespace normalization in P1 (no measurement behind it).
+
+Lane agent-memory-store-p1
+
+Reverse: Introduce a text normalization with normalizationVersion 2 by decision file in P3, citing the S10 dedupe measurement it must reproduce
+
+### The export fence trusts only bytes the store imported from or wrote to that same folder, 2026-11-10
+
+Supersedes export-fence-is-per-file-known-bytes. The first fence merged every recorded digest with every FileImported digest and never named a folder, so a folder the log never imported passed whenever each of its memory files matched an imported or projected file at the same relative path; exportFolder then replaced the differing files and created the rest. Review reproduced it with a foreign folder holding one byte-identical MEMORY.md. The fence is now bound to the folder: agent_memory_folder_files (root, file_path, file_digest) records, for each folder, the bytes the store imported from it and the bytes it wrote to it, and the folder key is the folder's resolved path (FileSystem.realPath), so two spellings of one folder share their rows and a copy elsewhere shares none. importFolder inserts the rows for every file it read before it appends; a failed append leaves rows that say only that the folder held those bytes, which stays true. exportFolder makes the folder, inserts the rows of the files it is about to write and then writes them through a temporary file and a rename. The check passes when the log holds a FolderImported and every memory file of the folder is in that folder's rows; a folder with no memory files still passes, so the log can be rebuilt into an empty folder, and the rebuilt folder then has rows of its own. A second importFolder runs the same check. Losing the table can only refuse an export, never permit a wrong one. Moving the folder makes it foreign until it is rebuilt into its new place. Code: packages/tooling/library/agent-memory-store/src/MarkdownProjector.layer.ts; tests: the AC-8 export refusal case (now with a copy holding one imported file byte for byte) and the foreign-copy case in test/MarkdownProjector.test.ts. Rejected: adding a root to FolderImported (it changes a P0 event, and a path in the log is a machine detail every replica would carry) and comparing the folder digest only (refuses every export after the first edit).
+
+Lane agent-memory-store-p1
+
+Reverse: Return to a per-path fence over every folder by decision file if the store must export into folders it never saw, with a new import mode that names them
+
+### exportFolder writes only over memory files whose bytes the log imported or the store projected, 2026-11-10
+
+Superseded by decision export-fence-is-bound-to-the-folder: review found that this fence names no folder, so a foreign folder whose memory files all match imported files at the same paths passed it. The text below records the first design.
+
+AC-8 requires that the projector refuse to write over a folder the log has not imported. FolderImported names the folder only by its digest at import time, so a digest comparison alone would refuse every export after the first edit. exportFolder therefore checks, before it writes anything, that the log holds a FolderImported and that every memory file in the target folder holds bytes the log knows for its path: the FileImported digest, or a digest this store wrote there before. The second set lives in agent_memory_projected_files (file_path, file_digest) in the log's database; its rows are inserted in one statement before the files are written, so an export cut short leaves each file at old or new bytes, both known. A folder with no memory files passes (a rebuild from the log alone into an empty folder), a folder with one unknown file is refused whole with UnimportedFolderError naming the root and the folder digest, and nothing is replaced or emptied. Files are written to a temporary sibling and renamed, and only files whose bytes differ are written. The table is a safety record, not authority: losing it can only refuse an export, never permit a wrong one. Code: packages/tooling/library/agent-memory-store/src/MarkdownProjector.layer.ts; tests: the AC-8 export refusal case (empty log, a foreign folder sharing a path, a folder mixing an imported file with a foreign one) in test/MarkdownProjector.test.ts. Rejected: comparing the folder digest with FolderImported only (refuses every second export) and keeping the last export digest in memory (a fresh process would refuse its own folder).
+
+Lane agent-memory-store-p1
+
+Reverse: Replace the projected-file table with a FolderExported log event by decision file if the fence must survive a rebuilt database
+
+### Export fence rows are inserted in chunks of 300 inside one transaction, 2026-11-10
+
+Review note on PR 3058: recordFolderFiles bound three parameters per file in one INSERT, so a folder of about 10,900 files would pass SQLite's 32,766 bound-parameter limit. The rows now go in chunks of 300 (900 parameters, under the 999 limit of the oldest SQLite builds) inside one transaction, so a folder's rows still land all or none. Test: the 301-file import case in test/MarkdownProjector.test.ts.
+
+Lane agent-memory-store-p1
+
+Reverse: Insert the fence rows in one statement again if the store moves to a driver without a bound-parameter limit
+
+### A folder import is one journal transaction, 2026-11-10
+
+Implements the AC-8 clause that a failed or partial import leaves the log without a claim that the folder was imported. MarkdownProjector.importFolder reads and decodes every memory file before it appends anything, then appends every NodeCreated (each naming its predecessor through after, with the occurrence anchor as import provenance), one FileImported per file (an empty file included) and the FolderImported bootstrap event last, in one MemoryLog.appendMany, which is one SqlEventJournal transaction. A read, decode or digest failure appends nothing, and a failure inside the transaction rolls every row back, so no completion marker is needed: the FolderImported event is the claim and it commits with the nodes or not at all. The import never writes to the folder. Measured on this workstation before deciding: the frozen goals sample (172 files, 1,065,752 bytes, 10,792 nodes, 10,965 entries) imports in about 1.0 s; the whole live goals tree (3,593 files, 31,705,138 bytes, 295,570 nodes, 299,164 entries) imports in 48.4 s in one transaction with a peak resident set of about 5.1 GB, and a rebuild from the log alone takes 9.7 s and reproduces every file. A Claude Code memory folder is tens of files, three orders of magnitude below the tree, so one transaction per folder holds with a wide margin. The AC-8 test aborts the transaction at its 5,000th entry with a SQLite trigger and checks the log is empty and every file byte-identical. Code: packages/tooling/library/agent-memory-store/src/MarkdownProjector.layer.ts. Rejected: per-file batches plus a completion marker (a second protocol whose half-written state every reader must recognise) and writing a marker file into the folder (the import must leave the folder untouched).
+
+Lane agent-memory-store-p1
+
+Reverse: Split the import into per-file batches closed by an explicit completion marker, by decision file citing a memory folder whose single transaction exceeds the busy timeout of a concurrent writer or the memory of the host
+
+### Markdown partition construct mapping and node boundaries, 2026-11-10
+
+Amends granularity-row-and-list-item with the cut of every construct the decision left open, for the pure partition in packages/tooling/library/agent-memory-store/src/MarkdownPartition.parser.ts. The file is parsed with @beep/markdown (GFM, frontmatter capture on). Ranges count UTF-16 code units, the unit MarkdownRange and TextAnchor use, and no boundary falls inside a surrogate pair, so the node texts concatenate to the file and their UTF-8 bytes equal the file bytes. A content node starts at the start of its first line, so indentation and container prefixes ride inside the node and list markers stay inside list-item nodes (S14); gap nodes hold the bytes between blocks (line terminators, blank lines, a leading byte order mark), while trailing whitespace on a line stays in its node. A list item with one child block, or whose first child is a container, is one listItem node; otherwise its marker and first block are the listItem node and each later child block (a nested list item, a continuation paragraph, a table row) is its own node, which keeps nested bullets at item granularity (S1). A table header row and its delimiter row are one tableRow node because their column counts must agree; each body row is a tableRow node. Frontmatter, thematic breaks and HTML blocks keep their own kinds; indented code maps to codeFence; a block quote, a link reference definition and a footnote definition are each one paragraph node, prefixes included. @beep/markdown carries the MDX node vocabulary but does not parse MDX, so MDX syntax partitions as ordinary Markdown. A leading byte order mark is stripped before parsing (the parser otherwise reads it as paragraph text) and kept as the first gap node; CRLF and tabs stay verbatim; a file without a trailing line terminator ends on its last content node; an empty file has no nodes. Rejected: a blockquote kind or a definition kind (NodeKind stays as P0 landed it; recall indexes these as prose) and splitting block quotes into their children (a quote marker would land in a gap, the S14 hazard).
+
+Lane agent-memory-store-p1
+
+Reverse: Re-cut the affected constructs by decision file citing an AC-1 or merge replay where a node boundary in this mapping fails byte identity or strands a structural marker
+
+### The Markdown partition is total and coarsens on unusable parser positions, 2026-11-10
+
+The partition in packages/tooling/library/agent-memory-store/src/MarkdownPartition.parser.ts is total: it never fails and never drops a byte, whatever @beep/markdown yields. Positions are checked, not trusted, and each failure coarsens only as far as it must. A top-level block whose child spans overlap, run backwards, leave the block or split a surrogate pair becomes one node of the block kind (a list becomes one listItem node, a table one tableRow node), and the partition reports fallback block. Top-level positions that overlap, run backwards, leave the file or split a surrogate pair make the whole file one paragraph node, fallback file. A file the parser rejects outright (a hardening guard such as the 256-level nesting cap) is one paragraph node, fallback unparsed. Zero-width spans are dropped because they hold no bytes. MarkdownPartition carries the fallback level so the importer and the projector can report coarse files instead of hiding them. On the 3,579 tracked goals Markdown files every file partitions at fallback none. Rejected: failing the import on a parse anomaly (AC-8 needs every nonempty folder importable) and repairing overlapping positions by clipping (a guess about which node owns the bytes).
+
+Lane agent-memory-store-p1
+
+Reverse: Replace the fallback ladder by decision file citing a file where a coarse node blocks an AC-2 or AC-3 merge that a finer recovery would admit
+
+### Memory files are .md files outside dot segments, 2026-11-10
+
+The projector reads and writes only the regular files under the folder whose relative path ends in .md (lowercase, case-sensitive) and has no path segment starting with a dot. The rule matches the Claude Code memory folder (MEMORY.md plus note files) and the goals fixture, keeps version-control folders, editor swap files and the projector's own temporary files (.name.agent-memory-store-tmp, written then renamed) out of the log, and leaves every other file in the folder untouched: never read into the log, never written, never deleted. Upper-case .MD and other Markdown extensions are not memory files. Code: isMemoryFilePath in packages/tooling/library/agent-memory-store/src/MarkdownProjector.layer.ts; test: the memory-file rule case in test/MarkdownProjector.test.ts. Rejected: every file in the folder (binary attachments cannot be partitioned) and a configurable glob (no second consumer asks for one).
+
+Lane agent-memory-store-p1
+
+Reverse: Widen or narrow isMemoryFilePath by decision file citing a memory folder file the rule misclassifies
+
+### The memory log refuses a NodeCreated whose predecessor is not a node of the same file, 2026-11-10
+
+A file is the concatenation of its nodes placed by their predecessors (decision file-is-an-ordered-node-partition), but the log checked only that a created node had no heads. A NodeCreated naming a predecessor of another file, or a node the log does not hold, committed and then appeared in no export, with no error: review reproduced both. The log now refuses both inside the journal transaction, where the compare-and-set already runs. A fourth store table, agent_memory_nodes (node_id, file_path), records the file of every created node in the same transaction; the NodeCreated handler looks up the named predecessor and fails with the new tagged UnplacedNodeError (nodeId, filePath, after, afterFilePath, none when the predecessor is unknown), and the whole batch rolls back. A predecessor created earlier in the same batch counts, so an import or an insert run lands in one appendMany. This is a minimal contract change: NodeCreatedEvent declares the union of StaleParentsError and UnplacedNodeError as its error schema and MemoryLog's append and appendMany add UnplacedNodeError. P2 admission still holds an insert after a missing node (insertAfterMissingNode) before it reaches the log; this check is the log's own floor under it. Code: packages/tooling/library/agent-memory-store/src/MemoryLog.layer.ts, src/MemoryLog.service.ts, src/NodeEvent.events.ts and src/AgentMemoryStore.errors.ts; tests: the unplaced-node case in test/MemoryLog.test.ts and the NodeCreated error schema case in test/NodeEvent.test.ts. Rejected: surfacing unplaced nodes only at export (the log would keep content no projection shows) and reusing MemoryLogError (a refusal is not an I/O failure).
+
+Lane agent-memory-store-p1
+
+Reverse: Drop the placement check and have exportFolder fail on unplaced nodes instead, by decision file if a replica must accept such a node from a remote
+
+### MemoryFilePath carries the memory-file rule, so no event can name a path outside the folder, 2026-11-10
+
+Review finding on PR 3058: MemoryFilePath was only a non-empty PosixPath, so an agent-written NodeCreated could open ../escape.md, .git/x.md or notes.txt and exportFolder would write it. The rule of decision memory-files-are-md-files-outside-dot-segments now lives in the schema as one pattern check: a relative path ending in .md whose segments are non-empty and do not start with a dot (PosixPath already refuses backslashes). isMemoryFilePath is the derived guard S.is(MemoryFilePath). Every payload, store row and projection that carries a file path decodes through it, so the append fails before the journal writes anything (a MemoryLogError whose cause is the schema error naming filePath, and the batch appends nothing), and the projection refuses such an entry at decode, so export fails with ProjectionError before any write even when a damaged database or a writer that skipped the schema holds one. Tests: the memory-file-rule append case in test/MemoryLog.test.ts and the damaged-entry export case in test/MarkdownProjector.test.ts. Rejected: a separate path check in the NodeCreated handler (the schema already refuses at encode, and a second rule could drift from the scan's).
+
+Lane agent-memory-store-p1
+
+Reverse: Return MemoryFilePath to a non-empty PosixPath and filter at the scan, by decision file citing a memory path the schema rule refuses wrongly
+
+### MemoryLog keeps heads, holds and commit order in store tables written in the journal transaction, 2026-11-10
+
+Implements memory-log-checks-parents-in-the-journal-transaction and the open-hold check of held-writes-are-log-events. Verified in the Effect reference checkout: EventLog.writeMany runs every handler of a batch, in input order, inside the effect it passes to EventJournal.writeMany, and SqlEventJournal.writeMany runs that effect inside sql.withTransaction before it inserts the entries; write is writeMany of one event. The handlers use the same SqlClient, so their statements join that transaction, and a handler failure rolls back the store rows and commits no journal entry. @effect/sql-sqlite-bun opens writable transactions with BEGIN IMMEDIATE and a busy timeout, so two connections to one file serialize and the later one reads the earlier one's heads. Three tables hold the read models: agent_memory_heads (node_id, revision_id), replaced by every NodeCreated, NodeRevised, NodeStatusChanged and NodeRetired that passes the check; agent_memory_holds (hold_id, open), where WriteHeld inserts an open row and never reopens a settled HoldId and HoldResolved closes an open row or fails with HoldNotOpenError; and agent_memory_order (sequence, entry_id, event, primary_key), numbering every committed entry MAX(sequence) + 1 in commit order. cursor is that count, entriesAfter(c) reads sequences above c and fetches the entries with EventJournal.entriesById, and history(n) reads the node events whose primary key is n in commit order, so a WriteHeld naming n (keyed by its HoldId) is not part of it. The rows commit with the journal rows, so reopening a file finds them and nothing is rebuilt. A SQL or decode failure inside a handler, and a write lock the busy timeout could not take, reach the caller as MemoryLogError, not as a defect. Code: packages/tooling/library/agent-memory-store/src/MemoryLog.layer.ts; tests: packages/tooling/library/agent-memory-store/test/MemoryLog.test.ts. Rejected: deleting a resolved hold's row (a repeated WriteHeld would reopen it), numbering the cursor by journal entry id (a remote replay can commit an older id later, as the parent decision says) and a store-level lock (the journal transaction already serializes writers).
+
+Lane agent-memory-store-p1
+
+Reverse: Rebuild the store tables from the journal on open instead of persisting them, by decision file citing a journal write that bypasses the handlers
+
+### P1's AC-1 edit replay is generated node edits; S1's real-history replay stays the spike evidence, 2026-11-10
+
+AC-1 needs at least 3,000 replayed edits with zero confinement failures. S1 replayed 5,168 real goals history edits as raw-slice patches; expressing a history edit as node operations is op capture, which is P2, and hosted checkouts are shallow and have no history to replay. P1 therefore replays generated node edits against the log: a seeded generator (mulberry32, seed 20261110) visits every file of the frozen goals sample once per round and rotates through every (kind, operation) pair of the kinds that file holds: slot k = round + file index names kind k mod m of the file's m kinds and operation floor(k / m) mod 3 of revise, insert and retire, so the two choices are independent (the first version drew both from k mod 9 and k mod 3, which tied each kind to one operation, and counted an insert against the wanted kind rather than a node it touched). A revision or retirement touches a node of the wanted kind; an insert goes right after one, and one insert in ten goes to any position instead, tombstones, gaps and the top of the file included. Edits are counted by the kind of the node actually touched, an insert by the kind of its predecessor. Each round's edits are appended in one appendMany and exported once, and each file is checked to differ from its previous bytes only inside the touched node's span and to equal the test's own model of the ordering rule. Measured: n = 3,096 edits in 18 rounds (915 revisions, 1,099 inserts, 1,082 retirements), 0 outside the span, 3/n = 0.097% (at or below the 0.1% bar). Every one of the nine node kinds is in the sample and took at least 3 revisions, 3 retirements and 3 inserts after it, which the test asserts; html (7, 6, 6) and thematicBreak (5, 6, 3) are the scarcest because a handful of sample files hold them, and the other kinds took 24 to 319 of each. The concurrent-insertion case writes two inserts naming the same predecessor against one base from two connections and commits them one after the other, because bun:sqlite blocks the thread on a busy lock and two in-process connections that interleave inside a transaction deadlock; 0 of 2,940 positions read as a deletion. S1's 5,168/5,168 remains the spike evidence for real history. Test: packages/tooling/library/agent-memory-store/test/MarkdownProjector.byte-identity.test.ts. Rejected: a real-history replay through a hand-written diff-to-operations step (that step is P2's op capture, and a P1 copy would be a second capture path).
+
+Lane agent-memory-store-p1
+
+Reverse: Replace the generated replay with a replay of real goals history expressed as node operations, by decision file once P2 op capture can turn a history diff into node operations
+
+### projectNode returns the raw-slice edit of the node's latest event and refuses one the reparse check finds disturbing, 2026-11-10
+
+The contract takes only a NodeId, so projectNode returns the edit that brings the node's span from its state before its latest event to its current state, with every other node of the file at its current state: an insertion of length zero for a created node, a replacement for a revision and an empty replacement for a retirement. Applied event by event it keeps a file current; when other nodes of the file changed in between, exportFolder rebuilds the file instead. The reparse check of scoreboard design item 5 runs on every edit: the file before the edit is partitioned, the edit is widened to the node run it touches and checkReplacement partitions the result. When any node outside that run changes kind or text (a deleted blank line joining two paragraphs, an insert without its separator), projectNode fails with ReparseRefusedError naming the disturbed node indices (first ProjectionError operation reparseCheck; decision projector-refusals-are-typed-errors), and the caller exports the file; the log stays the authority and its bytes are exact either way. P1 has no admission to hold such a write; P2 runs the same check before a write lands. Measured on the AC-1 replay: of 774 projectNode cross-checks, 400 were refused (223 inserts without a separator, 173 retirements, 4 revisions) and the 374 returned edits all reproduced the exported bytes. Code: packages/tooling/library/agent-memory-store/src/MarkdownProjector.layer.ts; tests: the projectNode cases in test/MarkdownProjector.test.ts and the cross-check in test/MarkdownProjector.byte-identity.test.ts. Rejected: returning a disturbing edit unflagged (the caller would apply a write whose node structure differs from the log) and reading the file from disk (the contract names no folder).
+
+Lane agent-memory-store-p1
+
+Reverse: Return the widened edit covering every disturbed node instead of refusing, by decision file once P2 admission holds disturbing writes before they reach the log
+
+### Projector refusals are typed errors; ProjectionError is left to I/O and decoding failures, 2026-11-10
+
+Supersedes the error choice in projectnode-refuses-a-disturbing-edit-in-p1 and second-import-is-idempotent-on-a-projected-folder, which both refused with ProjectionError. The P0 contract docblock reserves ProjectionError for I/O and decoding failures, and a caller could tell those refusals from a real failure only by comparing the operation string; a foreign folder on importFolder and a read failure on importFolder could not be told apart at all. This is a minimal contract change: two tagged errors are added and the MarkdownProjector error unions widen. importFolder fails with ForeignFolderError (root, folderDigest) when the log already holds a folder and the given one does not pass the export fence (decision export-fence-is-bound-to-the-folder). projectNode fails with ReparseRefusedError (nodeId, path, disturbed node indices) when the reparse check finds the edit disturbing. UnimportedFolderError keeps its meaning, but its root and folderDigest are now optional: exportFolder always sets both, while projectNode, which names no folder, sets neither when the log holds no FolderImported, instead of naming the file's relative directory and the digest of an empty listing. ProjectionError remains for file system, decoding and journal failures and for a node the log does not hold. Code: packages/tooling/library/agent-memory-store/src/AgentMemoryStore.errors.ts, src/MarkdownProjector.service.ts and src/MarkdownProjector.layer.ts; tests: the second-import, reparse-refusal and unimported projectNode cases in test/MarkdownProjector.test.ts, the error schema cases in test/AgentMemoryStore.errors.test.ts, and the AC-1 replay, which now counts refusals by their tag. Rejected: keeping ProjectionError and rewriting the docblock (the refusals stay stringly typed) and reusing UnimportedFolderError for the second import (the folder may well be importable into an empty log; the refusal is that this log holds another one).
+
+Lane agent-memory-store-p1
+
+Reverse: Fold the refusal errors back into ProjectionError by decision file if callers never branch on them, and rewrite the MarkdownProjector docblock to match
+
+### The reparse check compares every other node by kind and text, 2026-11-10
+
+The reparse check (scoreboard design item 5) is checkReplacement in packages/tooling/library/agent-memory-store/src/MarkdownPartition.parser.ts. It takes the base partition and a NodeReplacement naming a run of node indices [start, end) and its new text, so one call covers replacing one node (end = start + 1), inserting between nodes (end = start) and deleting (empty text). It partitions the edited text once and matches the longest prefix and suffix of nodes by kind and text; nodes outside the run that fall in neither are the disturbed indices, and the check is stable when there are none. The result returns the edited partition and the region of edited nodes covering the replacement, so the projector reuses them instead of partitioning twice. A run outside the partition fails with the typed NodeReplacementOutOfRangeError; the partition itself never fails. The comparison is by kind and text, not by nesting: deleting a list item first line can re-parent its indented continuation under the previous item while every other node keeps its text and kind, and that reports stable. Rejected: comparing ranges (every node after an edit shifts) and comparing tree paths (the projector holds node texts from the log, not trees).
+
+Lane agent-memory-store-p1
+
+Reverse: Add a nesting comparison by decision file citing a replay where a stable check let a projected edit re-parent a node
+
+### A second import of the imported folder returns the current base; any other folder is refused, 2026-11-10
+
+FolderImported carries a digest and no root, and FileImported paths are relative to the folder, so one log holds exactly one memory folder (one store database per memory folder, which matches the per-repository Claude Code memory folder). When the log already holds a FolderImported, importFolder appends nothing: if every memory file now in the folder holds bytes this store imported from or wrote to that same folder (the export fence, decision export-fence-is-bound-to-the-folder), it returns the base of the log's current state, so a bootstrap step can run import unconditionally; otherwise it fails with ForeignFolderError (first ProjectionError; decision projector-refusals-are-typed-errors), because re-importing would mint a second set of nodes for the same bytes and an edited or foreign folder must reach the log as captured operations (P2 admission, P5 memory admit), not as a fresh import. Tests: the second-import case in packages/tooling/library/agent-memory-store/test/MarkdownProjector.test.ts. Rejected: re-importing and diffing (op capture is P2) and appending a second FolderImported (two claims for one folder).
+
+Lane agent-memory-store-p1
+
+Reverse: Let one log hold several folders by adding a folder identity to FolderImported and FileImported, by decision file once the store must project more than one memory folder
+
+### The live MemoryLog Layer takes a SqlClient and loads the Bun driver by dynamic import, 2026-11-10
+
+Implements memory-log-on-effect-eventlog without changing the MemoryLog contract. MemoryLogLayer is Layer<MemoryLog, MemoryLogError, SqlClient>: it builds SqlEventJournal (tables agent_memory_journal and agent_memory_remotes), EventLog.layerEventLog, a throwaway EventLog Identity from EventLogEncryption.layerSubtle (no remote reads it) and the MemoryEvents handlers, all over the one SqlClient the caller provides, so the projector and the P4 indexes can share the SQLite file and its transactions. makeMemoryLogSqliteLayer(config) opens that client through @beep/sqlite, and MemoryLogTestLayer is the same over ":memory:", a fresh private database on every build. @beep/sqlite wraps @effect/sql-sqlite-bun, which imports bun:sqlite at module load, and the package index is loaded by suites that run under Node (the coverage command and plain bunx vitest), so the driver is reached with a dynamic import when the layer is built, as the driver's own test does; under Node the build fails with MemoryLogError operation loadDriver and the MemoryLog suite is skipped there, running only under bunx --bun vitest. Code: packages/tooling/library/agent-memory-store/src/MemoryLog.layer.ts and MemoryLog.test-layer.ts. Rejected: a static driver import (the package index stops loading under Node), keeping the live layer out of the index (the next stage would import a deep path), and a Node SQLite driver beside the Bun one (a second substrate the spikes did not measure).
+
+Lane agent-memory-store-p1
+
+Reverse: Import @beep/sqlite statically in MemoryLog.layer.ts and drop MemoryLogLayer's SqlClient requirement by decision file, once every suite that loads the package index runs under Bun
+
+### The log refuses a second FolderImported in the writer transaction, 2026-11-10
+
+Review finding on PR 3058: the projector decided first import from its in-memory fold, outside the journal transaction, so two first imports racing on one database both landed and doubled every file. The FolderImported handler now fails the batch with FolderAlreadyImportedError when the order table already holds a FolderImported, inside the writer transaction, so the whole losing import (its NodeCreated and FileImported events with it) appends nothing. Matching decision second-import-is-idempotent-on-a-projected-folder, the losing projector returns the current base when its folder digest equals the imported one and fails with ForeignFolderError otherwise. The finding's second ask, refusing a NodeCreated with no predecessor for a file that already has a root, is not taken: several roots are how an insert at the top of a file is written (decision file-is-an-ordered-node-partition orders them newest first, and the AC-1 replay inserts at the top), and the race is closed by the FolderImported check because an import is one journal transaction (decision folder-import-is-one-journal-transaction). The import's export-fence rows and its batch commit in one SQL transaction (the journal's writer transaction runs on the calling fiber's connection, so it nests as a savepoint), so a refused or failed append rolls the rows back and a folder holds fence rows only when its own import landed; otherwise a later export would pass the fence and overwrite that folder with the log's files. A same-digest loser records its rows after the refusal, because its bytes are the log's. Tests: the second-FolderImported case in test/MemoryLog.test.ts, the two lost-race cases and the failed-append case in test/MarkdownProjector.test.ts.
+
+Lane agent-memory-store-p1
+
+Reverse: Drop the FolderImported handler check and the race mapping together with decision second-import-is-idempotent-on-a-projected-folder, once one log may hold several folders
+
+### The projection fold advances its cursor with each entry and lists a node once, 2026-11-10
+
+Review finding on PR 3058: applyEntries mutated the fold entry by entry but moved the cursor once after the loop, so an interruption or a payload that failed to decode mid-batch made the next catch-up fold the same entries again, and pushTo listed a node twice, doubling it in the export. Each entry's payload is now decoded first, then its change and its cursor step run with no yield between them, so the cursor always sits right after the last folded entry; pushTo also skips a node id already listed. catchUp runs only inside importFolder, exportFolder and projectNode, which all hold the projector's one-permit semaphore, so two fibers never fold one projection at once; two projector layers hold two projections. Tests: test/MarkdownProjection.test.ts.
+
+Lane agent-memory-store-p1
+
+Reverse: Advance the cursor after the whole batch again, by decision file, only together with a fold into a copy that is swapped in whole
 
 <!-- beep:decisions:end -->
 

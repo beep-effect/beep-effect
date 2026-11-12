@@ -11,7 +11,7 @@ and every color, size, and class comes from the theme.
 - Design-system components: anything imported from `@beep/ui/components/*`
   (`settings.shadcn.ui`)
 - Command: `bun run lint:shadcn`
-- Hosted context: **Shadcn Lint** (non-required until promoted)
+- Hosted context: **Repo Sanity** (required), its one hosted owner
 
 Every diagnostic ends with a pointer back to this file.
 
@@ -272,11 +272,15 @@ anticipates the class (for example a `[.border-b]:pb-6` hook).
 
 | Where | What runs | Gate |
 | --- | --- | --- |
-| Hosted `check.yml` verify matrix, context **Shadcn Lint** | `bun run beep ci lane shadcn-lint` -> `turbo run lint:shadcn --summarize` | Non-required. Skipped on goals-only PRs. Promotion to the branch ruleset is a later ruleset action once the context has a stable green history. |
-| Yeet full proof (`quality:lint-policy` pre-push lane) | `lint:shadcn` inside the full-scope lint-policy state battery; the separate `quality:shadcn-lint` lane retired on 2026-11-02 because it ran the same oxlint walk a second time | Blocks `yeet verify` / `yeet publish --prove-first` locally; the default push-first publish leaves it to hosted CI. |
-| `Heavy / Lint Policy` and `bun run lint` | `lint:shadcn` in the lint-policy state battery, beside `lint:oxlint` | Required through the Lint Policy context. |
+| Hosted `check.yml` **Repo Sanity** (required) | the `ci:repo-sanity:shadcn` step of `bun run beep ci lane repo-sanity` -> `turbo run lint:shadcn --summarize` | Merge-blocking on pull requests and pushes to main. Skipped only on goals-only diffs, where Repo Sanity runs just the private home path law. The lane's step group runs every step and fails with all reds, so an earlier Repo Sanity red cannot hide a shadcn finding. |
+| `yeet final-check` (Repo Sanity gate) | the same `ci lane repo-sanity` body | Replays the hosted step locally before a PR is flipped ready. |
 
-The lane is CLI-runnable with exact replay: `bun run beep ci lane shadcn-lint`
-reproduces the hosted job, and `bun run beep ci lane --list` shows it. The
-lane body lives in `packages/tooling/tool/cli/src/commands/Ci/CiLane.ts`;
-`check.yml` only dispatches it.
+Repo Sanity is the only hosted owner (hosted-setup-tax PERIH-02, 2026-11-10): the
+non-required **Shadcn Lint** job retired, and `lint:shadcn` left the Lint Policy
+state battery (`policyStateTasks` in
+`packages/tooling/tool/cli/src/commands/Quality/Tasks.ts`), so neither
+`Heavy / Lint Policy` nor `bun run lint` runs it. A unit test
+(`packages/tooling/tool/cli/test/ci-repo-sanity-owners.test.ts`) holds exactly one
+hosted owner across the `check.yml` jobs and the hosted Lint Policy plan. Run
+`bun run lint:shadcn` for the check alone; the step lives in the `repo-sanity` lane
+body in `packages/tooling/tool/cli/src/commands/Ci/CiLane.ts`.

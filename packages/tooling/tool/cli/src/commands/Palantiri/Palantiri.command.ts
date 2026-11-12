@@ -91,6 +91,11 @@ const renderItem = ParcelItem.match({
       item.state,
       (state) => ` [${state}]`
     )}${optionText(item.kind, (kind) => ` [${kind}]`)}  ${item.text}`,
+  GithubHeadroom: (item) =>
+    `  ${item.identity} ${item.resource}  ${item.remaining}/${item.limit}  reserve ${item.reserve} (floor ${item.reserveFloor})  resets ${DateTime.formatIso(item.resetsAt)}${optionText(
+      item.unattributedLastHour,
+      (points) => `  unattributed 1h ${points}`
+    )}${unknownTag(item.freshness)}`,
 });
 
 /**
@@ -267,6 +272,27 @@ export const palantiriAppErrorClassesCommand = parcelCommand(
 );
 
 /**
+ * `beep palantiri parcel github-headroom [--json] [--budget N]`: remaining
+ * GitHub requests per identity and resource on this host, the reserve state
+ * and the last hour's top spenders, from the host's GitHub budget ledger.
+ *
+ * **Example** (Read the command name)
+ *
+ * ```ts
+ * import { palantiriGithubHeadroomCommand } from "@beep/repo-cli/test/Palantiri"
+ *
+ * console.log(palantiriGithubHeadroomCommand.name) // "github-headroom"
+ * ```
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export const palantiriGithubHeadroomCommand = parcelCommand(
+  "github-headroom",
+  "Remaining GitHub requests per identity and resource, reserve state and top spenders, from this host's ledger"
+);
+
+/**
  * `beep palantiri parcel since-last-check [--json] [--budget N] [--session ID]`:
  * session notes and inbox rows newer than this session's last read, then
  * moves its read cursor.
@@ -394,6 +420,7 @@ const parcelGroupCommand = Command.make("parcel").pipe(
     palantiriHostPressureCommand,
     palantiriAppErrorClassesCommand,
     palantiriSinceLastCheckCommand,
+    palantiriGithubHeadroomCommand,
   ])
 );
 

@@ -8,8 +8,8 @@ Status: `pending`
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Re-check lever status against `origin/main` (#3041, the Test Unit layout, PERIH-10) and fix the baseline window. | Lever table in `SPEC.md` current; scorecard baseline window (or interim `bun run beep ci lane-timings` readings) recorded under `history/`. |
-| P1 Implement | pending | Land slices 1 to 12 below in order, at most three open PRs. | Every open lever landed behind its admission gate, or stopped with a decision file. |
+| P0 Research | in-progress | Re-check lever status against `origin/main` (#3041, the Test Unit layout, PERIH-10) and fix the baseline window. | Lever table in `SPEC.md` current; scorecard baseline window (or interim `bun run beep ci lane-timings` readings) recorded under `history/`. |
+| P1 Implement | in-progress | Land slices 1 to 12 below in order, at most three open PRs. | Every open lever landed behind its admission gate, or stopped with a decision file. |
 | P2 Verify | pending | Read the acceptance numbers from the certainty scorecard over at least 7 days of code-head PR runs after the last diet lever. | Lint Policy p95, heavy slot-min per code run, admission-to-Heavy start and the post-diet heavy-queue p95 recorded under `history/`. |
 | P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | pending | Write the closeout reflection and flip packet state; hand the heavy-queue p95 to the operator. | Packet status and evidence are updated; a closeout reflection exists. |
@@ -21,7 +21,7 @@ three of this packet's PRs are open at once; slices 1 to 3 are the first three.
 
 | # | Slice (PR title) | Levers | Size | Admission gate | Depends on |
 | --- | --- | --- | --- | --- | --- |
-| 1 | `ci: delete the dead coverage-rollout probe` | PERIH-01 slice 1 | S | In one PR: the probe step, the `legacy_integration` output and the `test-integration` job's name conditional on `legacy_integration` (`check.yml` line 1133), and the `LEGACY_COVERAGE` env line and assertion removed; Shared rule with COVE-08: COVE-08 (route-soundness-repair) owns making the Coverage Regression job name in `.github/workflows/check.yml` a literal. PERIH-01's probe-deletion slice owns the probe step, the `legacy_integration` output, the Test Integration name conditional and the LEGACY_COVERAGE env line and assertion. The `legacy_coverage` output has one consumer on each side, so whichever of the two lands second deletes it in that PR: if the probe deletion lands first it sets `legacy_coverage` to 'false' and COVE-08 then deletes the output together with its last consumer; if COVE-08 lands first, the probe deletion removes the output outright. Whichever lands second merges `main` first. Each updates `packages/tooling/tool/cli/test/ci-runner-security.test.ts` for the lines it changes. `ci-lane.test.ts` updated as well; Coverage Regression and Test Integration report under their exact required names on a code head and a docs head. Workflow PR: cache-policy baseline re-record. | Open now |
+| 1 | `ci: delete the dead coverage-rollout probe` | PERIH-01 slice 1 | S | In one PR: the probe step, the `legacy_integration` output and the `test-integration` job's name conditional on `legacy_integration`, and the `LEGACY_COVERAGE` env line and assertion removed; Shared rule with COVE-08: COVE-08 (route-soundness-repair) owns making the Coverage Regression job name in `.github/workflows/check.yml` a literal. PERIH-01's probe-deletion slice owns the probe step, the `legacy_integration` output, the Test Integration name conditional and the LEGACY_COVERAGE env line and assertion. The `legacy_coverage` output has one consumer on each side, so whichever of the two lands second deletes it in that PR: if the probe deletion lands first it sets `legacy_coverage` to 'false' and COVE-08 then deletes the output together with its last consumer; if COVE-08 lands first, the probe deletion removes the output outright. Whichever lands second merges `main` first. Each updates `packages/tooling/tool/cli/test/ci-runner-security.test.ts` for the lines it changes. `ci-lane.test.ts` updated as well; Coverage Regression and Test Integration report under their exact required names on a code head and a docs head. Workflow PR: cache-policy baseline re-record if `cache audit` asks. | Landed (#3116) |
 | 2 | `ci: gate binary releases on a closure projection` | PERIH-11 slice 1 (absorbs PERIH-08) | M | Closure mutation fixtures: a change inside the binary's import closure triggers a release, one outside it does not; `bun run beep ci compile-binary` sha256 unchanged for an unchanged closure. | Open now |
 | 3 | `perf(ci): run required heavy lanes first and decide heavy skips at job level` (first `heavy.yml` PR, additive under a migration name) | ORDER (D11), HOST-06 PR 1 | M | Heavy Admission emits the goals-only and Docgen decisions beside `route_skips`; route replay plus mutation fixtures (docs, goals, no-diff, unreadable base); ruleset parity ledger shows every required `Heavy / *` context reporting; Lint Policy still runs when Check is red. | Open now |
 | 4 | `test(repo-cli): pin the noResolve JSDoc inventory contract with fixtures` | LINT-01 residual | S | New merged-namespace and module-augmentation (of an imported package) fixtures; a noResolve parity assertion over the existing star-export, named re-export and overload fixtures in `jsdoc-inventory-detector-fixes.test.ts`; inventory byte parity minus `generatedAt`; one hosted JSDoc Ratchet timing recorded. | A free PR slot |
@@ -59,8 +59,8 @@ Before marking the packet closed:
 - Status checkpoints are `kind: checkpoint` files under `decisions/`
   (`bun run beep goals decisions add heavy-pool-diet --kind checkpoint ...`),
   rendered into the Checkpoints block at the end of this plan.
-- **Already landed:** LINT-01 and LINT-04 in #3019 (027664ba178); LINT-02 slice 1 rides open #3041. Re-check
-  #3041 at P0: if it closes unmerged, its doctor placement becomes a slice here before slice 5.
+- **Already landed:** LINT-01 and LINT-04 in #3019 (027664ba178); LINT-02 slice 1 in #3041 (e8c9a47971b),
+  so slices 5 and 8 no longer wait on it.
 - **Not blocked:** `requires: ci/certainty-scorecard` gates the acceptance numbers and the capacity hand-off,
   not slices 1 to 8. Until the scorecard reports, record interim readings with `bun run beep ci lane-timings`
   and never claim an acceptance number from them.
@@ -90,6 +90,12 @@ git diff --check -- goals/heavy-pool-diet
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug heavy-pool-diet`; add a `kind: checkpoint` file there, never edit this block._
 
-_No checkpoint files yet._
+### P0 lever re-check at b757bd0400f; PERIH-01 slice 1 lands before COVE-08, 2026-11-10
+
+Lever status re-checked against origin/main b757bd0400f: #3041 merged as e8c9a47971b (LINT-02 slice 1 landed; LINT-05 and LINT-02 slice 2 unblocked), COVE-08 in route-soundness-repair has not landed, and heavy.yml@main declares neither Heavy / Coverage Regression nor Heavy / Test Integration, so the coverage-rollout probe always printed false. PERIH-01 slice 1 therefore deletes the probe, the legacy_integration output, the Test Integration name conditional and the LEGACY_COVERAGE env line and assertion, and sets legacy_coverage to the literal 'false'; COVE-08 lands second and deletes it. The Tasks.ts, check.yml and JSDoc Ratchet citations in SPEC.md, PLAN.md, README.md, research/SOURCES.md and the manifest statusNote were moved to their b757bd0400f lines. P0 stays in-progress: the interim baseline census (bun run beep ci lane-timings --window --workflow check.yml, 24 h and 12 h windows ending 2026-11-10T00:00Z) failed both times on an HTTP 502 for one run's jobs page 2, so no baseline window is recorded yet. P1 is in-progress with slice 1.
+
+Lane claude/awesome-chaplygin-626db8
+
+Reverse: Revert the PERIH-01 slice 1 merge commit (check.yml, the two tests, packet files) and delete this checkpoint file.
 
 <!-- beep:decisions:end -->

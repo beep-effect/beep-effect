@@ -1,0 +1,6 @@
+[05:58:44] 6c pr=3078
+{"data":{"enqueuePullRequest":{"mergeQueueEntry":{"id":"MQE_lQDOPbO_N88AAAABOCB7wM4ABVx3zgPbf0s","state":"QUEUED","position":1,"enqueuedAt":"2026-11-10T05:59:17Z","jump":false,"solo":false,"enqueuer":{"login":"beep-fleet-orchestrator"},"headCommit":null,"baseCommit":null,"pullRequest":{"number":3078}}}}}
+{"t":"2026-11-10T05:59:18Z","n":3078,"state":"OPEN","mergeable":"MERGEABLE","mergeStateStatus":"CLEAN","inQueue":true,"entry":{"state":"QUEUED","position":1,"head":null,"base":null},"queue":[{"n":3078,"state":"QUEUED","position":1}]}
+{"t":"2026-11-10T05:59:49Z","n":3078,"state":"OPEN","mergeable":"MERGEABLE","mergeStateStatus":"CLEAN","inQueue":true,"entry":{"state":"AWAITING_CHECKS","position":1,"head":"f7adf8e116b070aefdcc93d7564c3409acd0ad97","base":"82239da6eb64616c713397b0c9e98624742e4028"},"queue":[{"n":3078,"state":"AWAITING_CHECKS","position":1}]}
+{"t":"2026-11-10T06:00:20Z","n":3078,"state":"MERGED","mergeable":"UNKNOWN","mergeStateStatus":"UNKNOWN","inQueue":false,"entry":null,"queue":[]}
+{"message":"test(queue-lab): six-c pull request title (#3078)\n\n* test(queue-lab): s10 commit 1\n\nBody line for s10 commit 1.\n\n* test(queue-lab): s10 commit 2\n\nBody line for s10 commit 2.","parents":["82239da6eb64616c713397b0c9e98624742e4028"],"sha":"f7adf8e116b070aefdcc93d7564c3409acd0ad97"}

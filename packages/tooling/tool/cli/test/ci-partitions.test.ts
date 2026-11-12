@@ -1,3 +1,4 @@
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   BuildVitestShardPlanOptions,
   buildVitestShardPlan,
@@ -18,8 +19,7 @@ import {
   VitestShardPlan,
   worstCaseRunTimings,
 } from "@beep/repo-cli/commands/Ci";
-import { findRepoRoot } from "@beep/repo-utils";
-import { NodeCrypto, NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodePath } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -30,6 +30,8 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -133,11 +135,40 @@ describe("LPT packing", () => {
   });
 });
 
-it.layer(NodeServices.layer)("committed partition plans", (it) => {
+// The committed plans, inlined at transform time, seed an in-memory checkout so the budget check
+// reads exactly what is committed without a real filesystem.
+const committedPlans = import.meta.glob<string>(
+  ["../../../../law-practice/server/vitest.shards.json", "../vitest.shards.json"],
+  { query: "?raw", import: "default", eager: true }
+);
+// A lazy glob lists the checked-in test files without loading them, so the memory checkout holds
+// exactly the files that exist and the plans' "no longer in" warnings report real drift. Vite's glob
+// omits the importing file, which is added from its own module URL.
+const lawPracticePrefix = "../../../../law-practice/server/";
+const checkedInTests = R.keys(
+  import.meta.glob(["../../../../law-practice/server/test/**/*.test.{ts,tsx}", "./**/*.test.{ts,tsx}"])
+);
+const cliPackageRoot = "packages/tooling/tool/cli/";
+const selfPath = Str.slice(O.getOrElse(Str.indexOf(cliPackageRoot)(import.meta.url), () => 0))(import.meta.url);
+const checkoutPath = (key: string): string =>
+  Str.startsWith(lawPracticePrefix)(key)
+    ? `/repo/packages/law-practice/server/${Str.slice(Str.length(lawPracticePrefix))(key)}`
+    : `/repo/${cliPackageRoot}test/${Str.slice(2)(key)}`;
+const CommittedCheckout = Layer.mergeAll(
+  NodePath.layer,
+  MemoryFileSystem.layerWith({
+    ...R.fromEntries(A.map(checkedInTests, (key) => [checkoutPath(key), ""] as const)),
+    [`/repo/${selfPath}`]: "",
+    "/repo/packages/law-practice/server/vitest.shards.json":
+      committedPlans["../../../../law-practice/server/vitest.shards.json"] ?? "",
+    "/repo/packages/tooling/tool/cli/vitest.shards.json": committedPlans["../vitest.shards.json"] ?? "",
+  })
+);
+
+it.layer(CommittedCheckout, { timeout: "30 seconds" })("committed partition plans", (it) => {
   it.effect("keep every Test Unit partition within budget and every sharded weight equal to its plan", () =>
     Effect.gen(function* () {
-      const repoRoot = yield* findRepoRoot();
-      const report = yield* checkCiPartitions(repoRoot);
+      const report = yield* checkCiPartitions("/repo");
       const testUnit = A.filter(CI_LANE_PARTITIONS, (partition) => partition.lane === "test-unit");
       deepStrictEqual(
         A.map(report.rows, (row) => row.partitionId),
@@ -150,6 +181,8 @@ it.layer(NodeServices.layer)("committed partition plans", (it) => {
       // Plan files that no longer exist are advisory, never a failure: the plan is refreshed from a
       // later green run once the deletion has landed.
       expect(A.every(report.warnings, (warning) => Str.includes("no longer in")(warning))).toBe(true);
+      // The checkout lists this suite itself, which the repo-cli plan schedules.
+      expect(A.some(report.warnings, Str.includes("test/ci-partitions.test.ts"))).toBe(false);
       const rendered = renderCiPartitionReport(report);
       expect(rendered[0]).toContain("partition");
       strictEqual(A.length(rendered), 1 + A.length(report.rows) + A.length(report.warnings));
@@ -297,7 +330,19 @@ const fixtureRepo = Effect.fn("CiPartitionsTest.fixtureRepo")(function* () {
   return root;
 });
 
-it.layer(Layer.merge(NodeServices.layer, NodeCrypto.layer))("rebalance from a measured run", (it) => {
+// A bare fixture checkout carries no biome.jsonc, so writing a plan never spawns Biome; the
+// spawner double dies if it ever does.
+const FixtureCheckout = Layer.mergeAll(
+  MemoryFileSystem.layer,
+  NodePath.layer,
+  NodeCrypto.layer,
+  Layer.succeed(
+    ChildProcessSpawner.ChildProcessSpawner,
+    ChildProcessSpawner.make(() => Effect.die("a bare fixture checkout must not spawn Biome"))
+  )
+);
+
+it.layer(FixtureCheckout, { timeout: "30 seconds" })("rebalance from a measured run", (it) => {
   it.effect("repacks both sharded families into the table's shard counts and proposes the bins", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -350,7 +395,7 @@ it.layer(Layer.merge(NodeServices.layer, NodeCrypto.layer))("rebalance from a me
   );
 });
 
-it.layer(Layer.merge(NodeServices.layer, NodeCrypto.layer))("prune committed plans", (it) => {
+it.layer(FixtureCheckout, { timeout: "30 seconds" })("prune committed plans", (it) => {
   it.effect("drops files that no longer exist and re-packs the survivors from their own measurements", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

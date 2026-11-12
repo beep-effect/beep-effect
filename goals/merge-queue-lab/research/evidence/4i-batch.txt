@@ -1,0 +1,14 @@
+[05:50:45] 4i pr=3076
+{"data":{"enqueuePullRequest":{"mergeQueueEntry":{"id":"MQE_lQDOPbO_N88AAAABOB9Xn84ABVx3zgPbeCM","state":"QUEUED","position":1,"enqueuedAt":"2026-11-10T05:52:21Z","jump":false,"solo":false,"enqueuer":{"login":"beep-fleet-orchestrator"},"headCommit":null,"baseCommit":null,"pullRequest":{"number":3076}}}}}
+{"t":"2026-11-10T05:52:22Z","n":3076,"state":"OPEN","mergeable":"MERGEABLE","mergeStateStatus":"CLEAN","inQueue":true,"entry":{"state":"QUEUED","position":1,"head":null,"base":null},"queue":[{"n":3076,"state":"QUEUED","position":1}]}
+{"t":"2026-11-10T05:52:52Z","n":3076,"state":"OPEN","mergeable":"MERGEABLE","mergeStateStatus":"CLEAN","inQueue":true,"entry":{"state":"AWAITING_CHECKS","position":1,"head":"5e1cefd3d7219a8d5271f90e991df70c4121ea47","base":"e1b898eb9e53c3cac23b020f160d8909f76e1362"},"queue":[{"n":3076,"state":"AWAITING_CHECKS","position":1}]}
+[{"conclusion":"","createdAt":"2026-11-10T05:52:39Z","databaseId":42764843191,"headBranch":"gh-readonly-queue/queue-lab/pr-3076-e1b898eb9e53c3cac23b020f160d8909f76e1362","status":"in_progress","updatedAt":"2026-11-10T05:53:46Z"}]
+[05:54:23] dequeue as app
+{"data":{"dequeuePullRequest":{"mergeQueueEntry":{"id":"MQE_lQDOPbO_N88AAAABOB9Xn84ABVx3zgPbeCM","state":"AWAITING_CHECKS","position":1,"enqueuedAt":"2026-11-10T05:52:21Z","pullRequest":{"number":3076}}}}}
+{"state":"OPEN","inQueue":false,"timeline":[{"__typename":"AddedToMergeQueueEvent","createdAt":"2026-11-10T05:52:21Z","actor":"beep-fleet-orchestrator","reason":null},{"__typename":"RemovedFromMergeQueueEvent","createdAt":"2026-11-10T05:54:25Z","actor":"beep-fleet-orchestrator","reason":"manual"}]}
+[05:55:17] run after dequeue: [{"conclusion":"","createdAt":"2026-11-10T05:52:39Z","databaseId":42764843191,"headBranch":"gh-readonly-queue/queue-lab/pr-3076-e1b898eb9e53c3cac23b020f160d8909f76e1362","status":"in_progress","updatedAt":"2026-11-10T05:53:46Z"}]
+[05:55:48] run after dequeue: [{"conclusion":"","createdAt":"2026-11-10T05:52:39Z","databaseId":42764843191,"headBranch":"gh-readonly-queue/queue-lab/pr-3076-e1b898eb9e53c3cac23b020f160d8909f76e1362","status":"in_progress","updatedAt":"2026-11-10T05:53:46Z"}]
+[05:56:18] run after dequeue: [{"conclusion":"","createdAt":"2026-11-10T05:52:39Z","databaseId":42764843191,"headBranch":"gh-readonly-queue/queue-lab/pr-3076-e1b898eb9e53c3cac23b020f160d8909f76e1362","status":"in_progress","updatedAt":"2026-11-10T05:53:46Z"}]
+[05:56:49] run after dequeue: [{"conclusion":"","createdAt":"2026-11-10T05:52:39Z","databaseId":42764843191,"headBranch":"gh-readonly-queue/queue-lab/pr-3076-e1b898eb9e53c3cac23b020f160d8909f76e1362","status":"in_progress","updatedAt":"2026-11-10T05:53:46Z"}]
+[05:56:50] cancelling leftover run 42764843191 (status in_progress)
+✓ Request to cancel workflow 42764843191 submitted.

@@ -1,0 +1,47 @@
+{
+  "name": "@beep/lane-cockpit",
+  "version": "0.0.0",
+  "description": "Read-only full-screen terminal board of this repository's live session lanes (Text.js spike)",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "homepage": "https://github.com/beep-effect/beep-effect/tree/main/apps/labs/lane-cockpit",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:beep-effect/beep-effect.git",
+    "directory": "apps/labs/lane-cockpit"
+  },
+  "scripts": {
+    "beep:build": "tsrs -p tsconfig.check.json",
+    "beep:check": "tsrs -p tsconfig.check.json",
+    "beep:coverage": "bunx vitest run --coverage --exclude=test/integration/**",
+    "beep:lint": "biome check .",
+    "beep:lint:fix": "biome check . --write",
+    "beep:test": "bunx --bun vitest run",
+    "build": "bun run beep:build",
+    "check": "bun run beep:check",
+    "coverage": "bun run beep:coverage",
+    "dev": "portless lane-cockpit.labs.beep sh -c 'bun --watch src/main.ts'",
+    "lint": "bun run beep:lint",
+    "lint:deprecated-apis": "beep-cli lint deprecated-apis --package .",
+    "lint:fix": "bun run beep:lint:fix",
+    "lint:laws": "beep-cli lint laws --package .",
+    "package-test-typecheck": "beep-cli quality test-tsgo-package",
+    "test": "bun run beep:test",
+    "start": "bun src/main.ts"
+  },
+  "dependencies": {
+    "@beep/identity": "workspace:^",
+    "@beep/schema": "workspace:^",
+    "@effect/platform-bun": "catalog:",
+    "@textjs/react": "1.6.1",
+    "effect": "catalog:",
+    "react": "catalog:"
+  },
+  "devDependencies": {
+    "@effect/vitest": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "typescript": "catalog:"
+  }
+}

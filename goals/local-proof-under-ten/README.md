@@ -35,11 +35,16 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+P1 Implement — in progress. P0 closed with the baseline checkpoint
+(`decisions/2026-11-10-p0-baseline.md`); slice 1 (PERIL-13) landed; slices 2 (PERIL-10) and 3 (SCHE-08) are next.
 
 ## Latest Evidence
 
-Not started.
+- 2026-11-10: P0 baseline checkpoint against `origin/main` `b757bd0400f`: fleet economics (pre-push p95 39.8 min,
+  cheap-gates p95 10.0 min), scheduler status (2068 quarantine lines, 3/5 tokens) and the seven upstream
+  prerequisites (SCHE-09, MEAS-02, MEAS-07, PERIL-11, COVE-02, COVE-03, COVE-04) all still open.
+- 2026-11-10: slice 1 (PERIL-13) marks `yeet verify --merged` supported and dormant in the yeet skill's
+  `references/gates-and-proof.md` (no merged-preview run since 2026-10-05; kept, removal needs an operator ruling).
 
 ## Notes
 

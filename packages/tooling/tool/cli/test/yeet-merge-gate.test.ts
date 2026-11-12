@@ -918,7 +918,10 @@ const defaultScript: GhScript = {
   threadsExit: 0,
   windowExit: 0,
   rulesExit: 0,
-  mergeResponse: encodeJson({ merged: true, sha: "feedfacefeedfacefeedfacefeedfacefeedface", message: "ok" }),
+  mergeResponse: encodeJson({
+    status: "merged",
+    details: { message: "Pull request was merged.", sha: "feedfacefeedfacefeedfacefeedfacefeedface" },
+  }),
 };
 
 const context = RepoRunContext.make({
@@ -1573,7 +1576,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
     it.effect("a decline with an empty message, and a merge with an empty one, are still reported", () =>
       Effect.gen(function* () {
         const declined = yield* withScriptedGh(
-          { ...defaultScript, mergeResponse: '{"merged":false,"sha":"","message":""}' },
+          { ...defaultScript, mergeResponse: '{"status":"failed","details":{"message":""}}' },
           () =>
             runMergeGate(
               context,
@@ -1587,9 +1590,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
               })
             ).pipe(Effect.flip)
         );
-        expect(declined.message).toContain("no message");
+        expect(declined.message).toContain("HOLD merge-failed: merge-async failed: GitHub sent no message");
         const decision = yield* withScriptedGh(
-          { ...defaultScript, mergeResponse: '{"merged":true,"sha":"feedface","message":""}' },
+          { ...defaultScript, mergeResponse: '{"status":"merged","details":{"message":"","sha":"feedface"}}' },
           () =>
             runMergeGate(
               context,
@@ -1684,6 +1687,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
           merge.pipe(O.isSome, assertTrue);
           if (O.isSome(merge)) {
             expect(merge.value).toContain("-X PUT");
+            expect(merge.value).toContain(`/pulls/${pullFixture.number}/merge-async `);
+            expect(merge.value).toContain("merge_action=direct_merge");
+            expect(merge.value).toContain("bypass_rules=false");
             expect(merge.value).toContain("merge_method=squash");
             expect(merge.value).toContain(`sha=${headSha}`);
             expect(merge.value).toContain(`commit_title=${pullFixture.title} (#${pullFixture.number})`);
@@ -1729,13 +1735,15 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
               expect(decision.commitMessage).toBe(linted.body);
               const request = A.findFirst(
                 github,
-                (call) => call.method === "PUT" && call.path === `{repo}/pulls/${pullFixture.number}/merge`
+                (call) => call.method === "PUT" && call.path === `{repo}/pulls/${pullFixture.number}/merge-async`
               );
               request.pipe(O.isSome, assertTrue);
               if (O.isSome(request))
                 expect(request.value.body).toEqual({
-                  sha: headSha,
+                  merge_action: "direct_merge",
                   merge_method: "squash",
+                  sha: headSha,
+                  bypass_rules: false,
                   commit_title: linted.header,
                   commit_message: linted.body,
                 });
@@ -1748,7 +1756,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
       withScriptedGh(
         {
           ...defaultScript,
-          mergeResponse: encodeJson({ merged: false, sha: "", message: "Head branch was modified" }),
+          mergeResponse: encodeJson({
+            status: "failed",
+            details: { message: "A conversation must be resolved before this pull request can be merged." },
+          }),
         },
         () =>
           Effect.gen(function* () {
@@ -1763,7 +1774,40 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
                 dryRun: false,
               })
             ).pipe(Effect.flip);
-            expect(failure.message).toContain("Head branch was modified");
+            expect(failure.message).toBe(
+              `#${pullFixture.number} HOLD merge-failed: merge-async failed: A conversation must be resolved before this pull request can be merged.`
+            );
+            expect(failure.exitCode).toBe(1);
+          })
+      )
+    );
+
+    it.effect("a merge GitHub never settles holds as merge-unsettled and is never read as merged", () =>
+      withScriptedGh(
+        {
+          ...defaultScript,
+          mergeResponse: encodeJson({
+            status: "enqueued",
+            details: { message: "Pull request was added to the queue." },
+          }),
+        },
+        () =>
+          Effect.gen(function* () {
+            const failure = yield* runMergeGate(
+              context,
+              MergeGateRunOptions.make({
+                prNumber: pullFixture.number,
+                wantSha: headSha,
+                tolerate: [],
+                forceWindow: false,
+                relaxed: false,
+                dryRun: false,
+              })
+            ).pipe(Effect.flip);
+            expect(failure.message).toBe(
+              `#${pullFixture.number} HOLD merge-unsettled: merge-async unsettled: enqueued, not merged: Pull request was added to the queue.`
+            );
+            expect(failure.exitCode).toBe(1);
           })
       )
     );
@@ -1823,7 +1867,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
           expect(commentAt).toBeGreaterThan(mergeAt);
           const comment = lines[commentAt] ?? "";
           expect(comment).toContain("-X POST");
-          expect(comment).toContain("yeet merge-gate (S11): merged 212fe39b4f as feedfacefe.");
+          expect(comment).toContain(
+            "yeet merge-gate (S11): merged 212fe39b4f as feedfacefe via merge-async, with a rules bypass requested over the checks below."
+          );
+          // The S11 merge with a recorded red is the one request that asks GitHub to bypass.
+          const mergeLine = lines[mergeAt] ?? "";
+          expect(mergeLine).toContain("bypass_rules=true");
           expect(comment).toContain(
             `reds at merge: Lint [inherited: run ${lintRunId} failure on merge-base 2c1cb448ba]`
           );
@@ -1889,6 +1938,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
         Effect.gen(function* () {
           expect((yield* relaxedRun(false))._tag).toBe("merge");
           const lines = yield* Ref.get(calls);
+          // Relaxed with every check green records no red, so it asks for no bypass.
+          expect(lines[indexOf(lines, "/merge-async")]).toContain("bypass_rules=false");
           const listings = A.filter(lines, Str.includes("/actions/runs?"));
           expect(listings).toHaveLength(1);
           expect(listings[0]).toContain("per_page=100");

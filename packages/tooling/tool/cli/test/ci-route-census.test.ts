@@ -162,16 +162,7 @@ const REPLAY_ANCESTORS: ReadonlyArray<readonly [string, string]> = [["m0", "m9"]
 // Lanes a change with no atoms skips: every lane but the external security lane.
 const SKIPPED_WITHOUT_ATOMS = CI_LANE_ID_VALUES.length - 1;
 
-// `shadcn-lint` lost its pre-push twin on 2026-11-02: the lint-policy state battery
-// already runs `lint:shadcn`, so the hosted context has no second local lane.
-const LANES_WITHOUT_PRE_PUSH_TWIN: ReadonlyArray<CiLaneId> = [
-  "ecosystem",
-  "fallow",
-  "labs",
-  "property",
-  "repo-sanity",
-  "shadcn-lint",
-];
+const LANES_WITHOUT_PRE_PUSH_TWIN: ReadonlyArray<CiLaneId> = ["ecosystem", "fallow", "labs", "property", "repo-sanity"];
 
 describe("route joins", () => {
   it("joins hosted job names to lanes through the descriptor context", () => {
