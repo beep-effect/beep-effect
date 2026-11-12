@@ -23,6 +23,7 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { runRepoCommandCapture, scanProcessAttachments } from "../../internal/repo-run/index.ts";
+import { recordSweepDone } from "../Session/SessionLedger.service.ts";
 import { classifyFleetLiveness } from "./Fleet.service.ts";
 import { WorktreeReapCandidate, WorktreeReapClass, WorktreeReapReport } from "./Reap.schemas.ts";
 import { WorktreeCommandError } from "./Worktree.errors.ts";
@@ -569,7 +570,7 @@ const applyCandidate = Effect.fn("WorktreeReap.applyCandidate")(function* (
 ): Effect.fn.Return<
   CandidateAssessment,
   never,
-  FileSystem.FileSystem | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner | Git
 > {
   if (O.isSome(assessed.skipReason)) {
     return { candidate: assessed, warnings: A.empty(), authorizedHead: O.none() };
@@ -609,14 +610,27 @@ const applyCandidate = Effect.fn("WorktreeReap.applyCandidate")(function* (
       })
     )
   );
-  if (Result.isSuccess(removal)) {
-    return {
-      candidate: WorktreeReapCandidate.make({ ...assessed, retired: true }),
-      warnings: A.empty(),
-      authorizedHead: authorized,
-    };
+  const outcome = yield* Result.match(removal, {
+    onFailure: (failure) => retirementOutcome(ctx, entry, assessed, failure),
+    onSuccess: () =>
+      Effect.succeed<CandidateAssessment>({
+        candidate: WorktreeReapCandidate.make({ ...assessed, retired: true }),
+        warnings: A.empty(),
+        authorizedHead: authorized,
+      }),
+  });
+  // A reaped checkout can never be resumed, including one Git removed before a
+  // follow-up cleanup failed, so close its live session-ledger row the way
+  // `worktree remove` and `yeet sweep --retire` do; best effort.
+  if (outcome.candidate.retired) {
+    yield* recordSweepDone({
+      gitCwd: mainCheckout,
+      checkout: entry.path,
+      branch: O.getOrElse(O.fromNullishOr(entry.branch), () => "HEAD"),
+      next: `reaped worktree ${ctx.path.basename(entry.path)}`,
+    });
   }
-  return yield* retirementOutcome(ctx, entry, assessed, removal.failure);
+  return outcome;
 });
 
 // The injectable probes, each defaulting to its live implementation.
