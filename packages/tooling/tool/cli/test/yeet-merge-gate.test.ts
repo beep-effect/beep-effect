@@ -23,6 +23,7 @@ import {
   parseMergeGateTolerance,
   provenanceFooterBeforeMergeForTesting,
   RepoRunContext,
+  readAuthenticatedMergeGate,
   readMergeGate,
   renderMergeGateDecision,
   runMergeGate,
@@ -66,6 +67,7 @@ import timelineFixture from "./fixtures/yeet-merge-gate/timeline.json" with { ty
 import { githubFetch, reply } from "./support/GithubFetch.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 import { legacyGhAnswer, legacyGhArgs, recordedGithub } from "./support/YeetGithub.ts";
+import { rewriteWindowScenario } from "./support/YeetHeadMove.ts";
 import type { GithubAnswer, GithubCall } from "./support/YeetGithub.ts";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
@@ -2145,6 +2147,29 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
         Effect.flatMap((lines) => GateTableReportJson.decode(O.getOrElse(O.map(A.last(lines), String), () => ""))),
         Effect.map((report) => assertTrue(A.length(report.entries) === 1))
       )
+    );
+  }
+);
+
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "120 seconds" })(
+  "merge-gate classifier seam",
+  (it) => {
+    it.effect("builds the checkout classifier for the gate's window read", () =>
+      Effect.gen(function* () {
+        const scenario = yield* rewriteWindowScenario();
+        yield* DateTime.makeUnsafe("2026-11-10T02:50:00Z").pipe(DateTime.toEpochMillis, TestClock.setTime);
+        const read = yield* readAuthenticatedMergeGate(scenario.context, 3050).pipe(scenario.github.provide);
+        expect(read.window).toMatchObject({
+          _tag: "elapsed",
+          anchor: "ready-for-review",
+          anchoredAt: "2026-11-10T02:25:19.000Z",
+        });
+        if (read.window._tag !== "unknown")
+          assertSome(
+            O.map(read.window.carried, (carry) => carry.rootSha),
+            scenario.s.l2
+          );
+      })
     );
   }
 );

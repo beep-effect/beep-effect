@@ -24,6 +24,7 @@
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { GitHubError } from "@beep/github/GitHubError";
 import { Repo } from "@beep/github/Repo";
+import { PageOptions } from "@beep/github/Rest";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as OptionUtils from "@beep/utils/Option";
@@ -63,6 +64,7 @@ const $I = $RepoCliId.create("internal/github/GithubRest");
  *   headRef: "feat/x",
  *   headSha: "abc",
  *   baseRef: "main",
+ *   baseSha: "def",
  *   htmlUrl: "https://github.com/o/r/pull/7",
  *   author: "octocat",
  *   labels: [],
@@ -88,6 +90,7 @@ export class GithubPullRequestRecord extends S.Opaque<GithubPullRequestRecord, {
     headRef: S.String,
     headSha: S.String,
     baseRef: S.String,
+    baseSha: S.String,
     htmlUrl: S.String,
     author: S.String,
     labels: S.Array(S.String),
@@ -107,7 +110,7 @@ const PullWire = S.Struct({
   merged_at: S.NullOr(S.String),
   mergeable_state: S.String.pipe(S.NullOr, S.optionalKey),
   head: S.Struct({ ref: S.String, sha: S.String }),
-  base: S.Struct({ ref: S.String }),
+  base: S.Struct({ ref: S.String, sha: S.String }),
   html_url: S.String,
   user: S.NullOr(S.Struct({ login: S.String })),
   labels: S.Array(S.Struct({ name: S.String })),
@@ -130,6 +133,7 @@ const toPullRequestRecord = (wire: typeof PullWire.Type): GithubPullRequestRecor
     headRef: wire.head.ref,
     headSha: wire.head.sha,
     baseRef: wire.base.ref,
+    baseSha: wire.base.sha,
     htmlUrl: wire.html_url,
     author: wire.user?.login ?? "",
     labels: A.map(wire.labels, (label) => label.name),
@@ -495,6 +499,77 @@ export class GithubRateLimitRecord extends S.Opaque<GithubRateLimitRecord, { rea
   )
 ) {}
 
+/**
+ * Repository activity kinds reported by GitHub REST.
+ *
+ * **Example** (GithubRefActivityType evidence)
+ *
+ * ```ts
+ * import { GithubRefActivityType } from "@beep/repo-cli/test/SharedInternals"
+ * console.log(GithubRefActivityType.is.force_push("force_push")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const GithubRefActivityType = LiteralKit([
+  "push",
+  "force_push",
+  "branch_creation",
+  "branch_deletion",
+  "pr_merge",
+  "merge_queue_merge",
+]).pipe($I.annoteSchema("GithubRefActivityType", { description: "GitHub repository ref activity kinds." }));
+/** A GitHub ref activity kind. @category type-level @since 0.0.0 */
+export type GithubRefActivityType = typeof GithubRefActivityType.Type;
+
+/**
+ * One ref transition, in GitHub repository activity order.
+ *
+ * **Example** (GithubRefActivityRecord evidence)
+ *
+ * ```ts
+ * import { GithubRefActivityRecord } from "@beep/repo-cli/test/SharedInternals"
+ * console.log(GithubRefActivityRecord.fields.before) // string schema
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GithubRefActivityRecord extends S.Opaque<GithubRefActivityRecord, { readonly brand: unique symbol }>()(
+  S.Struct({ activityType: GithubRefActivityType, before: S.String, after: S.String, timestamp: S.DateTimeUtc }).pipe(
+    $I.annoteSchema("GithubRefActivityRecord", {
+      description: "One ref transition, in GitHub repository activity order.",
+    })
+  )
+) {}
+
+/**
+ * A dated force push and its optional after commit.
+ *
+ * **Example** (GithubForcePushRecord evidence)
+ *
+ * ```ts
+ * import { GithubForcePushRecord } from "@beep/repo-cli/test/SharedInternals"
+ * console.log(GithubForcePushRecord.fields.commitId) // Option schema
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class GithubForcePushRecord extends S.Opaque<GithubForcePushRecord, { readonly brand: unique symbol }>()(
+  S.Struct({ at: S.DateTimeUtc, commitId: S.Option(S.String) }).pipe(
+    $I.annoteSchema("GithubForcePushRecord", { description: "A dated force push and its optional after commit." })
+  )
+) {}
+
+const RefActivityWire = S.Struct({
+  activity_type: GithubRefActivityType,
+  before: S.String,
+  after: S.String,
+  timestamp: S.DateTimeUtcFromString,
+});
+
 const BucketWire = S.Struct({ limit: S.Int, remaining: S.Int, reset: S.Int });
 const RateLimitWire = S.Struct({ resources: S.Struct({ core: BucketWire, graphql: BucketWire }) });
 
@@ -515,6 +590,7 @@ const RulesetRuleWire = S.Struct({
 });
 
 const TimelineEventWire = S.Struct({
+  commit_id: S.String.pipe(S.NullOr, S.optionalKey),
   event: S.String.pipe(S.NullOr, S.optionalKey),
   created_at: S.String.pipe(S.NullOr, S.optionalKey),
 });
@@ -609,6 +685,8 @@ export interface GithubRestShape {
   readonly pullRequestFiles: (number: number) => Effect.Effect<ReadonlyArray<string>, GitHubError>;
   /** The REST rate-limit buckets. */
   readonly rateLimit: Effect.Effect<GithubRateLimitRecord, GitHubError>;
+  /** Newest ref activity first, bounded to three pages of 100. */
+  readonly refActivity: (headRef: string) => Effect.Effect<ReadonlyArray<GithubRefActivityRecord>, GitHubError>;
   /** Remove one label; a label that is not there is not an error. */
   readonly removeLabel: (number: number, label: string) => Effect.Effect<void, GitHubError>;
   /**
@@ -640,6 +718,7 @@ export interface GithubRestShape {
     {
       readonly readyAt: O.Option<DateTime.Utc>;
       readonly forcedAt: O.Option<DateTime.Utc>;
+      readonly forcePushes: ReadonlyArray<GithubForcePushRecord>;
     },
     GitHubError
   >;
@@ -848,9 +927,41 @@ const makeGithubRest = Effect.gen(function* () {
         Effect.all({
           readyAt: datedEvents(events, "ready_for_review"),
           forcedAt: datedEvents(events, "head_ref_force_pushed"),
+          forcePushes: Effect.forEach(
+            A.filter(events, (event) => event.event === "head_ref_force_pushed"),
+            (event) =>
+              Effect.fromOption(utcFromIso(event.created_at)).pipe(
+                Effect.mapBoth({
+                  onSuccess: (at) => GithubForcePushRecord.make({ at, commitId: O.fromNullishOr(event.commit_id) }),
+                  onFailure: () =>
+                    GitHubError.decode(timelineOperation, "a head_ref_force_pushed event has no instant", event),
+                })
+              )
+          ),
         })
       )
     );
+
+  const refActivity = (headRef: string) =>
+    client
+      .paginate(
+        "GET /repos/{owner}/{repo}/activity",
+        { ...at, ref: `refs/heads/${headRef}` },
+        PageOptions.make({ perPage: 100, maxPages: 3 })
+      )
+      .pipe(
+        Effect.flatMap(decodeWith(S.Array(RefActivityWire), "GET repository activity")),
+        Effect.map(
+          A.map((row) =>
+            GithubRefActivityRecord.make({
+              activityType: row.activity_type,
+              before: row.before,
+              after: row.after,
+              timestamp: row.timestamp,
+            })
+          )
+        )
+      );
 
   const headFirstReceivedAt = (sha: string) =>
     client
@@ -1036,6 +1147,7 @@ const makeGithubRest = Effect.gen(function* () {
     pullRequest,
     pullRequestFiles,
     rateLimit,
+    refActivity,
     requestAsyncMerge,
     reviewTimeline,
     hasReviewComments,

@@ -854,7 +854,7 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
         O.match(window, {
           onNone: () => "Timeline or GitHub head receipt time unavailable.",
           onSome: (value) =>
-            `Review window at merge: ${value._tag}; anchor ${value.anchoredAt}. Check-suite first receipt plus force-push events use Yeet semantics.`,
+            `Raw review window at merge: ${value._tag}; anchor ${value.anchoredAt}. Every force push restarts this evidence; the 2026-11-10 rewrite carry is not applied, so an unsatisfied raw window can coexist with a carried merge.`,
         })
       ),
       evidenceCheck(

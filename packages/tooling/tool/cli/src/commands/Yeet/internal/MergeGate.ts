@@ -82,6 +82,7 @@ import {
   yeetGithubFailure,
 } from "./GhOps.ts";
 import { hydrateYeetReadOnlyContext } from "./Handler.ts";
+import { provideYeetHeadMoveClassifier } from "./HeadMove.ts";
 import { MergeGateCheckRun } from "./MergeGate.schemas.ts";
 import { readYeetReviewWindow, renderYeetReviewWindow, YeetReviewWindow } from "./ReviewWindow.ts";
 import { readYeetRulesetRequiredContexts } from "./Settle.ts";
@@ -1327,7 +1328,9 @@ const readMergeGateUsing = Effect.fn("Yeet.readMergeGate")(function* (
     requiredContexts,
     checkRuns: A.map(checkRuns, toMergeGateCheckRun),
     baseRuns,
-    window: yield* readYeetReviewWindow({ prNumber: pull.number, headSha: pull.headSha }),
+    window: yield* readYeetReviewWindow({ prNumber: pull.number, headSha: pull.headSha, pull }).pipe(
+      provideYeetHeadMoveClassifier(context.repoRoot)
+    ),
     unresolvedThreads,
     squashCommitlint,
     readAt: yield* DateTime.now,

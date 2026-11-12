@@ -21,7 +21,7 @@ P1 Implement and P3 Yeet run once per slice; a slice is a PR.
 | Slice | Status | First step | Done when |
 | --- | --- | --- | --- |
 | A, async merge | in-review: port published; P0 probes in [`research/merge-async-p0-probes-2026-11.md`](research/merge-async-p0-probes-2026-11.md); legacy call deleted on or after 2026-11-11 | Schema for the request and the outcome union; then the `GithubRest` call and poll. | The slice's own PR merges through the new path and a blocked PR shows the hold. |
-| B, rewrite-stable proof | pending | Head-move classifier over patch-ids, with the test's rewritten heads as fixtures. | Window and receipt survive an unchanged rewrite and restart on a changed one. |
+| B, rewrite-stable proof | in-review: head-move classifier, window carry and receipt carry on lane `feat/yeet-rewrite-stable-proof`; decisions `2026-11-12-*` | Head-move classifier over patch-ids, with the test's rewritten heads as fixtures. | Window and receipt survive an unchanged rewrite and restart on a changed one. |
 | C, two-layer stacks | pending | Decide in P0 whether layers are linked through `gh stack` or the Stacks REST API. | One real two-layer stack lands through Yeet end to end. |
 | D, pilot | pending | Start the pilot record on the first routine stack. | Two weeks measured and the continue-or-stop decision filed. |
 
@@ -74,5 +74,13 @@ P0 research for slice A is recorded in research/merge-async-p0-probes-2026-11.md
 Lane claude/trusting-hamilton-1ad7d1
 
 Reverse: Revert the slice A PR; BEEP_YEET_MERGE_ENDPOINT=legacy restores the old call without a revert while the switch exists.
+
+### Slice B: head-move classifier and rewrite carry published, 2026-11-12
+
+Slice B adds YeetHeadMoveClassifier (HeadMove.ts), the repository-activity read and the pull base sha in GithubRest, the review-window carry (ReviewWindow.ts, seams in GhOps, MergeGate and GateTable) and the receipt carry in yeet ready (FinalCheckRefresh.ts, ReadyGate.ts). On the recorded #3050/#3051 heads all six rewrite pairs classify unchanged and the stale-base, retarget and layer-2-versus-layer-3 counterexamples classify changed. The carried #3050 window anchors on ready at 02:25:19Z and elapses at 02:45:19Z instead of restarting at 02:54:20Z. yeet gh pr status and merge now read the shared window and honour BEEP_YEET_REVIEW_WINDOW. Next: the slice B PR merges; then slice C.
+
+Lane feat/yeet-rewrite-stable-proof
+
+Reverse: Revert the slice B PR; every head move restarts the window and voids the receipt again.
 
 <!-- beep:decisions:end -->
