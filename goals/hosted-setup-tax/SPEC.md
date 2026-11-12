@@ -424,6 +424,7 @@ The operator asked on 2026-11-10 for CI to run only the checks applicable to a c
 - Every job guard reads `!= 'false'`. The pinned binary (beep-ci-d15ecf4ca610) predates the outputs, so the job-level skips take effect only at the next pin bump. Until then the step gates read the same rows with jq and grep -E; a test proves grep -E and the binary's RegExp agree on every row.
 - Labs stays excluded, as the PERIH-04 ruling requires.
 - Security and SAST now wait on Change Profile. On a docs_only diff, or when their relevance is false, they skip at job level. Security's verdict then depends only on main plus the live advisory database and GitHub settings. Every main push still runs it, because a push always gets the full profile. This reverses the agent choice in #2935 that kept Security and SAST in force on docs-only PRs. Semgrep never scans Markdown, and docs_only no longer admits JS/TS or dependency manifests.
+- Security's relevance covers every manifest GitHub's dependency graph recognizes, plus the whole `@beep/repo-cli` workspace closure that implements its GitHub policy reads. SAST's covers the same closure, which dispatches it. A census test walks the workspace graph from `@beep/repo-cli` and fails if a closure member leaves those rows. An independent review (Codex `gpt-6.1-sol`) found both gaps in the first draft of this PR.
 - PERIH-05 and PERIH-06 (Nix, Security and SAST without the workspace install) and HOST-09 (the PR Size fold) remain open.
 
 Lane perf/ci-applicable-checks

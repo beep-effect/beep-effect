@@ -413,7 +413,7 @@ const relevance = (...rows: A.NonEmptyReadonlyArray<string>): string => A.join([
  * `lanes` carries each relevance lane's inputs. The rows for Codegen Drift, Ecosystem Contracts,
  * Nix Shell and Professional Desktop IPC Stdio are the path gates those jobs applied after
  * checkout. SAST reads changed JavaScript and TypeScript, its Semgrep rules and the
- * @beep/repo-cli workspace closure that dispatches it. Security reads every dependency-graph
+ * `@beep/repo-cli` workspace closure that dispatches it. Security reads every dependency-graph
  * manifest, the OSV configuration, the workflows and the same closure, which implements its GitHub
  * policy reads; its live-advisory signal stays on every main push, which always gets the full
  * profile.
