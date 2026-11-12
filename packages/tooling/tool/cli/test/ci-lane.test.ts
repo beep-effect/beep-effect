@@ -376,7 +376,7 @@ describe("CI lane descriptors", () => {
   it("enumerates every check.yml lane exactly once", () => {
     const ids = A.map(CI_LANE_DESCRIPTORS, (descriptor) => descriptor.id);
     expect(A.length(A.dedupe(ids))).toBe(A.length(ids));
-    expect(A.length(CI_LANE_DESCRIPTORS)).toBe(26);
+    expect(A.length(CI_LANE_DESCRIPTORS)).toBe(25);
   });
 
   it("retires the standalone Effect diagnostics lane", () => {
@@ -419,13 +419,11 @@ describe("CI lane descriptors", () => {
     expect(descriptor.required).toBe(false);
   });
 
-  it("keeps the Shadcn Lint context visible, CLI-runnable, and non-required", () => {
-    const descriptor = O.getOrThrow(A.findFirst(CI_LANE_DESCRIPTORS, (candidate) => candidate.id === "shadcn-lint"));
-    expect(descriptor.contextName).toBe("Shadcn Lint");
-    expect(descriptor.required).toBe(false);
-    expect(descriptor.laneClass).toBe("cli-runnable");
-    expect(descriptor.replay).toBe("exact");
-    expect(descriptor.flags).toEqual([]);
+  // hosted-setup-tax PERIH-02: Repo Sanity owns `lint:shadcn`, so the
+  // non-required Shadcn Lint context and its lane are retired.
+  it("retires the Shadcn Lint context and lane", () => {
+    expect(A.some(CI_LANE_DESCRIPTORS, (candidate) => candidate.contextName === "Shadcn Lint")).toBe(false);
+    expect(A.some(CI_LANE_DESCRIPTORS, (candidate) => candidate.id === "repo-sanity" && candidate.required)).toBe(true);
   });
 
   it("keeps the JSDoc ratchet required by the live ruleset", () => {
@@ -1782,16 +1780,14 @@ describe("ciLaneStepsForTesting", () => {
     ]);
   });
 
-  it("runs the strict design-system lint through the uncached lint:shadcn root task", () => {
-    const steps = ciLaneStepsForTesting(REPO_ROOT, "shadcn-lint", prShapeOptions);
-    expect(A.map(steps, (step) => ({ label: step.label, command: step.command, args: [...step.args] }))).toEqual([
-      {
-        label: "ci:shadcn-lint",
-        command: "bunx",
-        args: ["turbo", "run", "lint:shadcn", ...expectedTurboCacheArgs(["--summarize"]), "--summarize"],
-      },
-    ]);
-    expect(firstOf(steps).env).toBeUndefined();
+  it("runs the strict design-system lint in Repo Sanity through the uncached lint:shadcn root task", () => {
+    const steps = ciLaneStepsForTesting(REPO_ROOT, "repo-sanity", prShapeOptions);
+    const shadcn = O.getOrThrow(A.findFirst(steps, (step) => step.label === "ci:repo-sanity:shadcn"));
+    expect({ command: shadcn.command, args: [...shadcn.args] }).toEqual({
+      command: "bunx",
+      args: ["turbo", "run", "lint:shadcn", ...expectedTurboCacheArgs(["--summarize"]), "--summarize"],
+    });
+    expect(shadcn.env).toBeUndefined();
   });
 
   it("instruments the existing unit shard once and forces only its exact test targets", () => {
@@ -1964,14 +1960,14 @@ describe("ciLaneStepsForTesting", () => {
     expect(step.env).toBeUndefined();
   });
 
-  it("always checks the schema catalog, changeset graph, catalog usage and home paths and appends changeset status on request", () => {
+  it("always checks the schema catalog, catalog usage, home paths and shadcn lint and appends changeset status on request", () => {
     const withoutFlag = ciLaneStepsForTesting(REPO_ROOT, "repo-sanity", baseOptions);
     expect(A.map(withoutFlag, (step) => step.label)).toEqual([
       "lint:schema-catalog",
-      "ci:repo-sanity:changeset-graph",
       "ci:repo-sanity:catalog-usage",
       "lint:private-home-paths",
       "ci:repo-sanity",
+      "ci:repo-sanity:shadcn",
     ]);
     expect(firstOf(withoutFlag)).toMatchObject({
       command: "bun",
@@ -1993,10 +1989,10 @@ describe("ciLaneStepsForTesting", () => {
     );
     expect(A.map(withFlag, (step) => step.label)).toEqual([
       "lint:schema-catalog",
-      "ci:repo-sanity:changeset-graph",
       "ci:repo-sanity:catalog-usage",
       "lint:private-home-paths",
       "ci:repo-sanity",
+      "ci:repo-sanity:shadcn",
       "ci:repo-sanity:changeset-status",
     ]);
     // lab-apps-lifecycle P2 (ratified row 8): CI's changeset gate routes

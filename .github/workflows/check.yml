@@ -343,9 +343,6 @@ jobs:
             codegen|ecosystem)
               run_lane ci lane "${{ env.BEEP_CI_LANE_ID }}"
               ;;
-            shadcn-lint)
-              run_lane ci lane shadcn-lint
-              ;;
             repo-sanity)
               if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
                 run_lane ci lane repo-sanity --changeset-status
@@ -386,19 +383,6 @@ jobs:
     env:
       BEEP_CI_LANE_ID: ecosystem
       BEEP_CI_LANE_NAME: Ecosystem Contracts
-    steps: *verification-steps
-
-  shadcn-lint:
-    name: Shadcn Lint
-    needs: [change-profile, test-plan, admission]
-    if: ${{ !cancelled() && needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only != 'true' }}
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-    permissions:
-      contents: read
-    env:
-      BEEP_CI_LANE_ID: shadcn-lint
-      BEEP_CI_LANE_NAME: Shadcn Lint
     steps: *verification-steps
 
   codegen:

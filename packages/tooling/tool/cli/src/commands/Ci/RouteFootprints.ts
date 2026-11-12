@@ -154,7 +154,6 @@ export const ROUTE_FOOTPRINTS = {
   sast: unrefined("sast", "none", LOCAL_CLASS),
   secrets: unrefined("secrets", "none", LOCAL_CLASS),
   security: unrefined("security", "none", EXTERNAL_ADVISORY, true),
-  "shadcn-lint": unrefined("shadcn-lint", "none", LOCAL_CLASS),
   storybook: unrefined("storybook", "reverse-deps", BUILD_CLASS),
   "test-integration": unrefined("test-integration", "reverse-deps", BUILD_CLASS),
   "test-unit": unrefined("test-unit", "reverse-deps", BUILD_CLASS),

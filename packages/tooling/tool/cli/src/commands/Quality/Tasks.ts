@@ -3713,7 +3713,8 @@ const policyStateTasks = [
   ...policyGitDeltaTasks,
   "goals:doctor",
   "lint:oxlint",
-  "lint:shadcn",
+  // `lint:shadcn` is owned by hosted Repo Sanity (the `repo-sanity` CiLane
+  // body), its one hosted owner (hosted-setup-tax PERIH-02).
   "lint:typos",
   "jsdoc:inventory:check",
   "jsdoc:ratchet:check",

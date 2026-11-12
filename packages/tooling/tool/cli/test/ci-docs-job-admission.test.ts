@@ -44,13 +44,6 @@ const verificationLaneContracts = [
     guard: afterShardsDocsGuard,
   },
   {
-    job: "shadcn-lint",
-    id: "shadcn-lint",
-    name: "Shadcn Lint",
-    timeout: 20,
-    guard: afterShardsDocsGuard,
-  },
-  {
     job: "codegen",
     id: "codegen",
     name: "Codegen Drift",
