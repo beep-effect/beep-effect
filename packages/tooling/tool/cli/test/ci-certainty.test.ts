@@ -392,7 +392,7 @@ const syntheticCorpus = (mainCommits: ReadonlyArray<CiCertaintyMainCommit>) =>
           name: "Test Unit",
           started_at: "2026-11-09T12:01:00Z",
         }),
-        // A skipped Coverage Regression satisfies its context but is not a coverage verdict.
+        // A skipped Coverage Regression is not a coverage verdict.
         foldJob({
           completed_at: "2026-11-09T12:00:39Z",
           conclusion: "skipped",
@@ -572,11 +572,12 @@ const LIVE_PATHS: ReadonlyArray<readonly [string, string]> = [
   [MAIN_EMPTY, ""],
 ];
 
+// `%cI` prints the committer's own offset, never `Z`: 12:00Z, 13:00Z and 14:00Z written as git prints them.
 const LIVE_LOG = A.join(
   [
-    `${MAIN_CODE}\t2026-11-09T12:00:00Z`,
-    `${MAIN_DOCS}\t2026-11-09T13:00:00Z`,
-    `${MAIN_EMPTY}\t2026-11-09T14:00:00Z`,
+    `${MAIN_CODE}\t2026-11-09T06:00:00-06:00`,
+    `${MAIN_DOCS}\t2026-11-09T14:00:00+01:00`,
+    `${MAIN_EMPTY}\t2026-11-09T14:00:00+00:00`,
     "",
   ],
   "\n"
@@ -660,23 +661,24 @@ const gitLogArgs = (spawner: ScriptedSpawner): ReadonlyArray<string> =>
 
 const decodeReportJson = S.decodeUnknownEffect(S.fromJsonString(CiCertaintyReport));
 
+const LIVE_WINDOW = ["--since", "2026-11-09T00:00:00Z", "--until", "2026-11-10T00:00:00Z"];
+
+// Seeds the checkout, captures the fixed live window into a corpus file and returns what the capture printed.
+const captureLiveWindow = Effect.fn("TestCiCertainty.captureLiveWindow")(function* () {
+  const repoRoot = yield* seedRequiredContexts();
+  const corpusFile = `${repoRoot}/certainty-corpus.json`;
+  yield* runCertaintyCommand([...LIVE_WINDOW, "--write-corpus", corpusFile]);
+  const markdown = yield* lastCertaintyLog();
+  return { corpusFile, markdown, repoRoot };
+});
+
 describe("ci certainty command", () => {
   it.layer(certaintyCommandLayer, { timeout: "30 seconds" })((it) => {
-    it.effect("captures a window live, writes its corpus, and replays it without reading anything", () => {
+    it.effect("captures a window live and renders its report", () => {
       const calls = A.empty<GithubFetchCall>();
       const spawner = liveGit();
       return Effect.gen(function* () {
-        const repoRoot = yield* seedRequiredContexts();
-        const corpusFile = `${repoRoot}/certainty-corpus.json`;
-        yield* runCertaintyCommand([
-          "--since",
-          "2026-11-09T00:00:00Z",
-          "--until",
-          "2026-11-10T00:00:00Z",
-          "--write-corpus",
-          corpusFile,
-        ]);
-        const markdown = yield* lastCertaintyLog();
+        const { markdown, repoRoot } = yield* captureLiveWindow();
 
         expect(markdown).toContain("# ci certainty 2026-11-09T00:00:00.000Z → 2026-11-10T00:00:00.000Z");
         expect(markdown).not.toContain("Not certified");
@@ -686,19 +688,43 @@ describe("ci certainty command", () => {
         expect(markdown).toContain("non-docs first-parent commits: 2 (docs 1); completed verdicts 1; rate 50.0%");
         // The later head is outside the window: listed for supersession, its jobs never read.
         expect(A.some(calls, (call) => Str.includes("/actions/runs/13/")(call.url.pathname))).toBe(false);
-        expect(gitLogArgs(spawner)).toContain("--since=2026-11-09T00:00:00.000Z");
-        expect(gitLogArgs(spawner)).toContain("origin/main");
+        // Signatures stay off whatever the operator's gitconfig says, so only formatted lines reach the parser.
+        deepStrictEqual(gitLogArgs(spawner), [
+          "-C",
+          repoRoot,
+          "log",
+          "--no-show-signature",
+          "--first-parent",
+          "--format=%H%x09%cI",
+          "--since=2026-11-09T00:00:00.000Z",
+          "--until=2026-11-10T00:00:00.000Z",
+          "origin/main",
+        ]);
+      }).pipe(withLiveCapture(calls, spawner));
+    });
+
+    it.effect("writes the captured corpus and replays it without reading anything", () => {
+      const calls = A.empty<GithubFetchCall>();
+      const spawner = liveGit();
+      return Effect.gen(function* () {
+        const { corpusFile } = yield* captureLiveWindow();
 
         const fs = yield* FileSystem.FileSystem;
         const corpus = yield* fs.readFileString(corpusFile).pipe(Effect.flatMap(decodeCiCertaintyCorpus));
         strictEqual(corpus.requestCount, 5);
         assertFalse(corpus.mainListingPartial);
+        // Commit times keep their instant whatever offset git printed them in.
         deepStrictEqual(
-          A.map(corpus.mainCommits, (commit) => [commit.sha, commit.docsOnly, A.length(commit.runs)]),
+          A.map(corpus.mainCommits, (commit) => [
+            commit.sha,
+            DateTime.formatIso(commit.committedAt),
+            commit.docsOnly,
+            A.length(commit.runs),
+          ]),
           [
-            [MAIN_CODE, false, 1],
-            [MAIN_DOCS, true, 0],
-            [MAIN_EMPTY, false, 0],
+            [MAIN_CODE, "2026-11-09T12:00:00.000Z", false, 1],
+            [MAIN_DOCS, "2026-11-09T13:00:00.000Z", true, 0],
+            [MAIN_EMPTY, "2026-11-09T14:00:00.000Z", false, 0],
           ]
         );
         deepStrictEqual(
@@ -740,15 +766,18 @@ describe("ci certainty command", () => {
         expect(gitLogArgs(spawner)).toContain("--since=2026-11-09T03:00:00.000Z");
         expect(gitLogArgs(spawner)).toContain("--until=2026-11-10T03:00:00.000Z");
 
-        // A preview accepts the same uncertified report, stamp and all.
+        // A preview accepts the same uncertified report, stamp and all, and prints it exactly once.
+        const logsBeforePreview = yield* TestConsole.logLines;
         yield* runCertaintyCommand(["--max-requests", "5", "--preview"]);
-        const previewed = yield* lastCertaintyLog();
-        expect(previewed).toContain("Refused: api-partial.");
+        const logsAfterPreview = yield* TestConsole.logLines;
+        strictEqual(A.length(logsAfterPreview), A.length(logsBeforePreview) + 1);
+        assertSome(A.last(logsAfterPreview), refused);
       }).pipe(withLiveCapture(calls, spawner));
     });
 
-    it.effect("refuses an unreadable or empty window before reading GitHub", () => {
+    it.effect("refuses an unreadable or empty window before reading GitHub or git", () => {
       const calls = A.empty<GithubFetchCall>();
+      const spawner = liveGit();
       return Effect.gen(function* () {
         yield* seedRequiredContexts();
         const messages = yield* Effect.forEach(
@@ -757,7 +786,13 @@ describe("ci certainty command", () => {
             ["--until", "tomorrow"],
             ["--since", "2026-11-10T00:00:00Z", "--until", "2026-11-10T00:00:00Z"],
           ],
-          (args) => Effect.flip(runCertaintyCommand(args)).pipe(Effect.map((error) => error.message))
+          (args) =>
+            Effect.flip(runCertaintyCommand(args)).pipe(
+              Effect.map((error) => {
+                assertInstanceOf(error, CiCommandError);
+                return error.message;
+              })
+            )
         );
         deepStrictEqual(messages, [
           "--since must be an ISO-8601 UTC timestamp; received yesterday.",
@@ -765,7 +800,8 @@ describe("ci certainty command", () => {
           "--since must be earlier than --until.",
         ]);
         deepStrictEqual(calls, []);
-      }).pipe(withLiveCapture(calls, liveGit()));
+        deepStrictEqual(spawner.spawns, []);
+      }).pipe(withLiveCapture(calls, spawner));
     });
 
     it.effect("fails the capture when git cannot read main's history", () => {
@@ -778,15 +814,23 @@ describe("ci certainty command", () => {
       }).pipe(withLiveCapture(calls, liveGit({ exit: 128, stderr: "fatal: bad revision 'origin/main'\n" })));
     });
 
-    it.effect("fails the capture on a git log line without a commit time", () => {
-      const calls = A.empty<GithubFetchCall>();
-      return Effect.gen(function* () {
-        yield* seedRequiredContexts();
-        const error = yield* Effect.flip(runCertaintyCommand(["--since", "2026-11-09T00:00:00Z"]));
-        assertInstanceOf(error, CiCommandError);
-        strictEqual(error.message, `git log printed a commit line without a commit time: ${MAIN_CODE}`);
-      }).pipe(withLiveCapture(calls, liveGit({ stdout: `${MAIN_CODE}\n` })));
-    });
+    it.effect("fails the capture on a git log line without a valid commit time", () =>
+      Effect.gen(function* () {
+        // One line lacks the time field, the other carries one that does not parse.
+        const messages = yield* Effect.forEach([MAIN_CODE, `${MAIN_CODE}\tnot-a-time`], (line) =>
+          Effect.gen(function* () {
+            yield* seedRequiredContexts();
+            const error = yield* Effect.flip(runCertaintyCommand(["--since", "2026-11-09T00:00:00Z"]));
+            assertInstanceOf(error, CiCommandError);
+            return error.message;
+          }).pipe(withLiveCapture(A.empty<GithubFetchCall>(), liveGit({ stdout: `${line}\n` })))
+        );
+        deepStrictEqual(messages, [
+          `git log printed a commit line without a valid commit time: ${MAIN_CODE}`,
+          `git log printed a commit line without a valid commit time: ${MAIN_CODE}\tnot-a-time`,
+        ]);
+      })
+    );
   });
 });
 

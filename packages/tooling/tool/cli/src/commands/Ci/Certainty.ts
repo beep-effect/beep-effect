@@ -1008,8 +1008,10 @@ const gitLines = Effect.fn("Ci.certaintyGitLines")(
 );
 
 const readMainCommits = Effect.fn("Ci.certaintyReadMainCommits")(function* (request: CiCertaintyCaptureRequest) {
+  // `log.showSignature` in a gitconfig would interleave gpg lines with the formatted ones.
   const lines = yield* gitLines(request.repoRoot, [
     "log",
+    "--no-show-signature",
     "--first-parent",
     "--format=%H%x09%cI",
     `--since=${DateTime.formatIso(request.since)}`,
@@ -1022,7 +1024,8 @@ const readMainCommits = Effect.fn("Ci.certaintyReadMainCommits")(function* (requ
       const fields = Str.split(line, "\t");
       const sha = A.headNonEmpty(fields);
       const committedAt = yield* O.match(O.flatMap(A.get(fields, 1), DateTime.make), {
-        onNone: () => CiCommandError.make({ message: `git log printed a commit line without a commit time: ${line}` }),
+        onNone: () =>
+          CiCommandError.make({ message: `git log printed a commit line without a valid commit time: ${line}` }),
         onSome: Effect.succeed,
       });
       const paths = yield* gitLines(request.repoRoot, [

@@ -233,24 +233,6 @@ describe("settleYeetMerge", () => {
     })
   );
 
-  it.effect("never attaches to an in-flight request that reports neither its head nor its bypass", () =>
-    Effect.gen(function* () {
-      const recorded = github({
-        status: 409,
-        body: {
-          status: "pending",
-          details: { message: "A merge request already exists for this pull request.", uuid: UUID },
-        },
-      });
-      const settled = yield* settle(recorded);
-      assertTrue(YeetMergeSettlement.guards.Unsettled(settled));
-      expect(settled.message).toBe(
-        "another merge request is in flight with head an unreported head and an unreported bypass"
-      );
-      expect(A.map(recorded.calls, githubCallLine)).toEqual([`PUT {repo}/pulls/${PR}/merge-async`]);
-    })
-  );
-
   it.effect("holds a merge-queue enqueue as unsettled, never merged", () =>
     Effect.gen(function* () {
       const recorded = github({
@@ -273,17 +255,30 @@ describe("settleYeetMerge", () => {
     })
   );
 
+  const inFlightDetails = pendingBody("A merge request already exists for this pull request.").details;
+  const otherHead = Str.repeat(40)("c");
+
+  // A field GitHub did not report counts as a difference, and is named as unreported.
   it.effect.each([
     [
       "a different head",
-      { expected_head_sha: Str.repeat(40)("c") },
-      `head ${Str.repeat(40)("c")} and bypass_rules false`,
+      { ...inFlightDetails, expected_head_sha: otherHead },
+      `head ${otherHead} and bypass_rules false`,
     ],
-    ["a rules bypass", { bypass_rules: true }, `head ${HEAD} and bypass_rules true`],
-  ] as const)("never attaches to an in-flight request with %s", ([, override, named]) =>
+    ["a rules bypass", { ...inFlightDetails, bypass_rules: true }, `head ${HEAD} and bypass_rules true`],
+    [
+      "the same head but no reported bypass",
+      { message: inFlightDetails.message, uuid: UUID, expected_head_sha: HEAD },
+      `head ${HEAD} and an unreported bypass`,
+    ],
+    [
+      "neither its head nor its bypass reported",
+      { message: inFlightDetails.message, uuid: UUID },
+      "an unreported head and an unreported bypass",
+    ],
+  ] as const)("never attaches to an in-flight request with %s", ([, details, named]) =>
     Effect.gen(function* () {
-      const body = pendingBody("A merge request already exists for this pull request.");
-      const recorded = github({ status: 409, body: { ...body, details: { ...body.details, ...override } } });
+      const recorded = github({ status: 409, body: { status: "pending", details } });
       const settled = yield* settle(recorded);
       assertTrue(YeetMergeSettlement.guards.Unsettled(settled));
       expect(settled.message).toBe(`another merge request is in flight with ${named}`);
@@ -347,18 +342,31 @@ describe("settleYeetMerge", () => {
     })
   );
 
-  it.effect("fails a legacy merge GitHub declined with its sentence", () =>
+  // Not a recorded GitHub answer (GitHub declines with HTTP 405, below): the legacy wire schema
+  // allows a 200 body with `merged: false`, and it must settle as a failure, never as merged.
+  it.effect("fails a legacy merge on the schema-allowed merged:false 200 body with its sentence", () =>
     Effect.gen(function* () {
-      const recorded = recordedGithub((call) =>
-        call.method === "PUT"
-          ? { body: { merged: false, sha: "", message: "Pull Request is not mergeable" } }
-          : undefined
-      );
+      const recorded = github({ body: { merged: false, sha: "", message: "Pull Request is not mergeable" } });
       const settled = yield* settle(recorded, strict, "legacy");
       expect(settled).toEqual(
         YeetMergeSettlement.cases.Failed.make({ endpoint: "legacy", message: "Pull Request is not mergeable" })
       );
       expect(renderYeetMergeSettlement(settled)).toBe("merge (legacy) failed: Pull Request is not mergeable");
+    })
+  );
+
+  it.effect("keeps a legacy merge GitHub declines with HTTP 405 a GitHubError for the caller", () =>
+    Effect.gen(function* () {
+      const recorded = github({
+        status: 405,
+        body: {
+          message: "Pull Request is not mergeable",
+          documentation_url: "https://docs.github.com/rest/pulls/pulls#merge-a-pull-request",
+        },
+      });
+      const error = yield* settle(recorded, strict, "legacy").pipe(Effect.flip);
+      expect(error).toMatchObject({ _tag: "GitHubError", status: 405, kind: "rejected" });
+      expect(A.map(recorded.calls, githubCallLine)).toEqual([`PUT {repo}/pulls/${PR}/merge`]);
     })
   );
 
