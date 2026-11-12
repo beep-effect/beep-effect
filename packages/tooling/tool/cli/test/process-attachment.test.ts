@@ -17,7 +17,7 @@ import {
   superblockDeviceOf,
 } from "@beep/repo-cli/test/RepoRun";
 import { it } from "@beep/test-runner";
-import { A, O, Str } from "@beep/utils";
+import { A, O, R, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -236,10 +236,14 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("processName", (it) => {
 
 // A child started with extra exported variables, the way a harness starts its
 // tool shells; the parent's own environment is kept so `sleep` still resolves.
-// `ChildProcess.make` returns once the child is forked. Until it execs `sleep`,
-// `/proc/<pid>/environ` still shows this process's environment, so a loaded
-// host can read the marker before it exists. Wait for the exec (bounded at
-// five seconds) before the test reads what the child was started with.
+// `ChildProcess.make` returns while the child is still inside `execve`. The
+// kernel installs the new address space and renames the task (`comm` reads
+// `sleep`) before the ELF loader records where the environment lives, and
+// until it does `/proc/<pid>/environ` reads empty. A `comm` wait therefore
+// proves nothing about the environment: wait until every exported variable is
+// readable, and fail by name when that never happens.
+const SLEEPER_EXEC_LIMIT = "10 seconds";
+
 const spawnSleeperWith = Effect.fnUntraced(function* (env: Record<string, string>) {
   const fs = yield* FileSystem.FileSystem;
   const child = yield* ChildProcess.make("sleep", ["60"], {
@@ -249,10 +253,24 @@ const spawnSleeperWith = Effect.fnUntraced(function* (env: Record<string, string
     stdout: "ignore",
     stderr: "ignore",
   });
-  yield* fs.readFileString(`/proc/${child.pid}/comm`).pipe(
+  const exported = A.map(R.toEntries(env), ([name, value]) => `${name}=${value}`);
+  const carriesExports = (environ: string): boolean => {
+    const entries = Str.split(environ, "\0");
+    return A.every(exported, (entry) => A.contains(entries, entry));
+  };
+  const environ = yield* fs.readFileString(`/proc/${child.pid}/environ`).pipe(
     Effect.orElseSucceed(() => ""),
-    Effect.repeat({ until: (comm) => Str.trim(comm) === "sleep", schedule: Schedule.spaced("10 millis"), times: 500 })
+    Effect.repeat({
+      until: carriesExports,
+      schedule: Schedule.spaced("10 millis").pipe(Schedule.upTo({ duration: SLEEPER_EXEC_LIMIT })),
+    })
   );
+  if (!carriesExports(environ)) {
+    // Names only: the environment itself may hold credentials.
+    return yield* Effect.die(
+      `sleep (pid ${child.pid}) did not expose ${A.join(R.keys(env), ", ")} in /proc/${child.pid}/environ within ${SLEEPER_EXEC_LIMIT} of its spawn; the last read was ${Str.isEmpty(environ) ? "empty" : "missing them"}`
+    );
+  }
   return child;
 });
 
