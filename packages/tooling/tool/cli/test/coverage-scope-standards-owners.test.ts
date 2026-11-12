@@ -181,7 +181,7 @@ describe("owner drift rows", () => {
   const repoCliReader = source(
     "packages/tooling/tool/cli/test/readers.test.ts",
     `const readers = [${A.join(
-      A.map(readerPaths, (path) => JSON.stringify(path)),
+      A.map(readerPaths, (path) => `"${path}"`),
       ", "
     )}];`
   );
