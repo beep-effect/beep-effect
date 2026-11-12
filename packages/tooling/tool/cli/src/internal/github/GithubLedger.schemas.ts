@@ -357,12 +357,13 @@ const normalizeSegment = (segments: ReadonlyArray<string>) => (segment: string, 
  */
 export const normalizeOperation = (raw: string): GithubOperation => {
   const trimmed = Str.trim(raw);
-  const routed = Str.match(/^([A-Z]+) (\/\S*)$/)(trimmed);
+  const routed = Str.match(/^[A-Z]+ \/\S*$/)(trimmed);
   const normalized = O.match(routed, {
     onNone: () => trimmed,
-    onSome: (parts) => {
-      const method = parts[1] ?? "";
-      const path = O.getOrElse(A.head(Str.split(parts[2] ?? "", "?")), () => "");
+    // The route pattern admits exactly one space, so the split is `[method, path]`.
+    onSome: () => {
+      const [method, ...route] = Str.split(trimmed, " ");
+      const path = A.headNonEmpty(Str.split(A.join(route, " "), "?"));
       const segments = A.filter(Str.split(path, "/"), Str.isNonEmpty);
       const mapped = A.map(segments, normalizeSegment(segments));
       const bounded =

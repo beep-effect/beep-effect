@@ -28,7 +28,7 @@ import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import { dual, flow, pipe } from "effect/Function";
+import { constant, dual, flow, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
@@ -39,7 +39,6 @@ import {
   fromGithubIdentity,
   GithubBudgetIdentity,
   GithubClientRequest,
-  GithubIdentityError,
   layerGithubClientFor,
   selectGithubIdentity,
   toGithubIdentity,
@@ -54,6 +53,7 @@ import {
   hostLabelOf,
   SampleOutcome,
   sampleBucketsOf,
+  UNRESOLVED_IDENTITY,
 } from "./GithubLedger.schemas.ts";
 import { GithubBudgetLedger, GithubLedgerCommand } from "./GithubLedger.service.ts";
 import { GithubLedgerStore } from "./GithubLedger.store.ts";
@@ -61,7 +61,7 @@ import type { GitHubError } from "@beep/github/GitHubError";
 import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { GithubIdentity } from "./GithubIdentity.ts";
+import type { GithubIdentity, GithubIdentityError } from "./GithubIdentity.ts";
 import type {
   CalibrationRow,
   GithubIdentityLabel,
@@ -265,9 +265,6 @@ export class GithubIdentityRegistry extends Context.Service<GithubIdentityRegist
 
 const GH_CLI_ENTRY: ConfiguredGithubIdentity = ConfiguredGithubIdentity.cases.GhCli.make({});
 
-const missingLabel = (what: string) =>
-  GithubIdentityError.make({ reason: "token-unavailable", message: `no budget label for ${what}` });
-
 /**
  * Build the live registry: entries from `identities.json`, the identity a
  * command in this environment would select, and this host's `gh` login.
@@ -307,11 +304,11 @@ export const makeGithubIdentityRegistryLive = Effect.fn("GithubIdentityRegistry.
 
   const clientFor = flow(toGithubIdentity, clientForIdentity);
 
-  // The label the client seam itself assigns: one token read, then the alias map.
+  // The label the client seam itself assigns: one token read, then the alias map. The ledger
+  // this registry requires is in the client's context, so the seam always assigns one.
   const clientLabelOf = (identity: GithubIdentity) =>
     Layer.build(clientForIdentity(identity)).pipe(
-      Effect.map((context) => Context.get(context, GithubBudgetIdentity)),
-      Effect.flatMap((label) => Effect.fromOption(label, () => missingLabel(identity.kind))),
+      Effect.map((context) => O.getOrElse(Context.get(context, GithubBudgetIdentity), constant(UNRESOLVED_IDENTITY))),
       Effect.scoped
     );
 
@@ -365,7 +362,7 @@ export const makeGithubIdentityRegistryLive = Effect.fn("GithubIdentityRegistry.
       A.dedupeWith(keyed, ([self], [that]) => self === that),
       A.map(([, entry]) => entry)
     );
-    return A.isReadonlyArrayNonEmpty(unique) ? unique : A.of(GH_CLI_ENTRY);
+    return unique;
   });
 
   return GithubIdentityRegistry.of({ configured, labelOf, clientFor });

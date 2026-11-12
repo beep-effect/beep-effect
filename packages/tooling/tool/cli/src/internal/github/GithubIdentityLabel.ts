@@ -141,7 +141,7 @@ export const ghSpawnIdentity = Effect.fn("GithubIdentityLabel.ghSpawnIdentity")(
 ): Effect.fn.Return<GithubIdentityLabel, never, ChildProcessSpawner.ChildProcessSpawner | Digest.Digest> {
   const envToken = yield* ghEnvToken;
   if (O.isSome(envToken)) {
-    return yield* tokenHashLabel(envToken.value).pipe(Effect.orElseSucceed(() => UNRESOLVED_IDENTITY));
+    return yield* tokenHashLabel(envToken.value);
   }
   const login = yield* readGhCliLogin(cwd);
   return O.getOrElse(login, () => UNRESOLVED_IDENTITY);
@@ -181,8 +181,9 @@ const opRefLoginOf = Effect.fnUntraced(function* (input: GithubIdentityLabelInpu
   const entries = yield* Effect.flatten(GithubConfiguredIdentities);
   return pipe(
     entries,
-    A.findFirst((entry) => ConfiguredGithubIdentity.guards.OpRef(entry) && entry.tokenRef === tokenRef),
-    O.flatMap((entry) => (ConfiguredGithubIdentity.guards.OpRef(entry) ? userLabelOf(entry.login) : O.none()))
+    A.filter(ConfiguredGithubIdentity.guards.OpRef),
+    A.findFirst((entry) => entry.tokenRef === tokenRef),
+    O.flatMap((entry) => userLabelOf(entry.login))
   );
 });
 
