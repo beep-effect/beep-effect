@@ -34,7 +34,10 @@
     "goals/outbox-draft-basis/GOAL.md",
     "goals/outbox-draft-basis/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/2026-11-10-p0-basis-schemas.md",
+    "research/SOURCES.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -50,7 +53,7 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P1",
@@ -86,5 +89,5 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "Authored 2026-11-10 from explorations/semantic-agent-graph-stack, not started: P0 is next. Shares files with m365-agent-outbox slice 3; the tenant category proof needs one message sent by a person."
+  "statusNote": "P0 in progress since 2026-11-10: schemas and the time-zone rule are frozen. Open in P0: the tenant category proof (one message sent by a person) and the message pin decision. Shares files with m365-agent-outbox slice 3."
 }

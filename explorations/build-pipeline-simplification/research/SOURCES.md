@@ -205,4 +205,4 @@ Paths verified on `main` @ e62411d63f, 2026-10-09. Details in
 - Sibling packet: [`../../effect-schema-parity/`](../../effect-schema-parity/)
   (SchemaCompiler DEFER, 2026-09-28).
 - Friction receipts: [`OPPORTUNITIES.md`](./OPPORTUNITIES.md).
-- No graduated goals yet.
+- Graduated 2026-11-10 into [`goals/declaration-only-builds`](../../../goals/declaration-only-builds/README.md).

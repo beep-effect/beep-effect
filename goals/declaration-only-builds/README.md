@@ -8,7 +8,12 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Mission
 
-Declaration-Only Builds (graduated from explorations/build-pipeline-simplification).
+Library package builds emit declarations and declaration maps only: the Babel
+`annotate-pure-calls` pass and JavaScript emit leave the generated build
+script, and each package's source is type-checked once per run if the
+check-program census proves build and check agree. Graduated from
+[`explorations/build-pipeline-simplification`](../../explorations/build-pipeline-simplification/README.md)
+on 2026-11-10.
 
 ## Launch
 
@@ -31,7 +36,8 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+P0 Research, not started. First action: PR 1 (baseline and proof harness, no
+behaviour change), per [`PLAN.md`](./PLAN.md).
 
 ## Latest Evidence
 
@@ -39,5 +45,9 @@ Not started.
 
 ## Notes
 
-<Record high-signal constraints or resume notes that do not belong in the
-normative spec.>
+- The numbers this packet starts from were taken at load average 59 to 63.
+  Re-measure before quoting them as a baseline.
+- The check-once step is conditional on PR 1's census result and is the first
+  thing cut.
+- PR 2 invalidates every build cache entry once. Land it when the merge queue
+  is quiet.

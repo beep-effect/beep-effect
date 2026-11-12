@@ -36,15 +36,20 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research, not started. Next action: freeze the pin, status and report
-schemas in a decision file, run the tenant proof that a draft category does
-not reach recipients, and decide whether the message pin ships.
+P0 Research, in progress. The pin, status and report schemas and the
+time-zone rule are frozen (decision file of 2026-11-10). Next action: run
+the tenant proof that a draft category does not reach recipients, and
+decide whether the message pin ships given that a moved message changes
+its Graph id.
 
 ## Latest Evidence
 
 2026-11-10: graduated from
 [`explorations/semantic-agent-graph-stack`](../../explorations/semantic-agent-graph-stack/README.md).
 No package code has changed.
+
+2026-11-10: P0 schemas type-checked inside `@beep/m365-mcp` and recorded in
+[`research/2026-11-10-p0-basis-schemas.md`](./research/2026-11-10-p0-basis-schemas.md).
 
 ## Notes
 

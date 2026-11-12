@@ -8,7 +8,7 @@ Status: `pending`
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Freeze the pin, status and report schemas and the zone rule. Run the tenant proof for the draft category. Decide the message pin. Check the state of `m365-agent-outbox` slice 3. | One decision file each for the schemas, the category proof and the message pin; the sequencing with slice 3 is recorded. |
+| P0 Research | in-progress | Freeze the pin, status and report schemas and the zone rule. Run the tenant proof for the draft category. Decide the message pin. Check the state of `m365-agent-outbox` slice 3. | One decision file each for the schemas, the category proof and the message pin; the sequencing with slice 3 is recorded. |
 | P1 Implement | pending | Two pull requests. First: schemas, the pure comparison, the audit field, `create_draft` and `get_draft`. Second: the check-drafts tool, the category mark, the README and the runbook. | `SPEC.md` acceptance criteria are met. |
 | P2 Verify | pending | Run the package handoff and the final gates on each head. | `bun run beep quality package-verify @beep/m365-mcp` and `bun run beep yeet final-check` pass. |
 | P3 Yeet: PR to mergeable | pending | Publish through yeet and drive each PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |

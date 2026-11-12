@@ -1,0 +1,7 @@
+---
+title: "P0 schemas frozen: a pin stores the named view, and a failed read is its own verdict"
+date: 2026-11-10
+reversal: "Replace the view field of the pin with a digest and drop the fields and now members of Changed; no record with pins exists before the first pull request merges, so nothing migrates."
+---
+
+Amends the decision 'A pin compares a digest of named fields'. Its substance stands: named fields are compared and changeKey never is. The digest is dropped. The pin stores the view itself (event: subject, start, end, all-day, cancelled), equality is derived from the schema, and Changed names the differing fields and carries the fresh observation. A digest suits bytes too large to store; five short fields are not that, and the audit log already holds event and draft subjects in clear. A fourth verdict, pinned-unverified, covers a read that failed: unknown is neither stale nor current, and the check-drafts tool leaves the category as it is. Time-zone rule: the basis read never sets a zone preference, so Graph returns UTC both times and the pair is compared as returned. The sketch was type-checked inside @beep/m365-mcp and removed. New hazard recorded for the message pin: a message's Graph id changes when it is moved to another folder. Evidence and the schema listing: research/2026-11-10-p0-basis-schemas.md in this packet. Agent-proposed; the operator, who had picked 'digest of named fields' earlier on 2026-11-10, confirmed the stored view the same day.

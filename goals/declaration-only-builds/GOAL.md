@@ -4,7 +4,10 @@ Repo root: the current working directory — the `beep-effect` checkout you are
 running in. Do not assume an absolute path; several checkouts exist. All paths
 below are repo-relative.
 
-Outcome: Declaration-Only Builds (graduated from explorations/build-pipeline-simplification).
+Outcome: library package builds emit declarations and declaration maps only.
+The Babel pass and JavaScript emit leave the generated `beep:build`; a
+package's source is type-checked once per run if the check-program census
+proves build and check agree. Three PRs at most, in `PLAN.md` order.
 
 This is a compact `/goal` launcher. Treat the packet files as the detailed
 contract:
@@ -20,8 +23,12 @@ prose when they conflict.
 
 Scope:
 
-- In: <paths, packages, docs, workflows, or artifacts this goal may change>.
-- Out: <non-goals and areas not to touch>.
+- In: the generated-scripts policy in `@beep/repo-cli-kit`, the package
+  scaffolds, `tsconfig.base.json`, `turbo.json`, the check-program census, the
+  build output contract test, the effect-drizzle bundle probe (`SPEC.md`
+  "Target Surfaces").
+- Out: bundlers, a publish lane, a build-kit package, source-resolved
+  checking, SchemaCompiler, app bundles, framework app builds.
 
 Workflow:
 

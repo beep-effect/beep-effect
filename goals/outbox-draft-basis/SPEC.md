@@ -14,8 +14,8 @@ visible signal when that has changed.
 Delivered behavior:
 
 1. `m365_outbox_create_draft` accepts a basis: a list of pins, each naming
-   one Graph item by kind and id. The server reads each item, computes a
-   digest of the fields the draft relied on, and writes the pins into the
+   one Graph item by kind and id. The server reads each item, keeps the
+   named fields the draft relied on, and writes the pins into the
    `draft-created` audit record.
 2. `m365_outbox_get_draft` returns a basis report for the draft: one status
    per pin and an overall verdict.
@@ -41,7 +41,7 @@ The alignment log is
   rewrites.
 - [`practice-mail-tagging`](../practice-mail-tagging/README.md)
   (completed-retained) writes categories onto inbound mail. That is why a
-  pin compares a digest of named fields and not the item's `changeKey`.
+  pin compares named fields and not the item's `changeKey`.
 - Three gated follow-ons stay in
   [`explorations/semantic-agent-graph-stack/MAP.md`](../../explorations/semantic-agent-graph-stack/MAP.md):
   a version-bound send, pins on epistemic claims, and a task context view.
@@ -91,24 +91,30 @@ Higher sources outrank lower sources when they conflict.
 
 ## Design Sketch
 
-Fat-marker fidelity. P0 freezes the schemas in a decision file before any
-handler changes. Schema first, then the service contract, then handlers.
+Fat-marker fidelity. The schemas were frozen in P0 on 2026-11-10; the
+type-checked listing is
+[`research/2026-11-10-p0-basis-schemas.md`](./research/2026-11-10-p0-basis-schemas.md).
+Schema first, then the service contract, then handlers.
 
 ```text
-BasisPin     = { kind: "event" | "message", id, digest, observedAt, changeKey }
+BasisPin     = { kind: "event" | "message", id, view, observedAt, changeKey }
 BasisStatus  = Current
-             | Changed      the named fields differ now
+             | Changed      which named fields differ, and the fresh view
              | Gone         the item no longer exists
              | Unreadable   Graph could not be asked
-BasisReport  = pinned-current | pinned-stale | unpinned, plus one status per pin
+BasisReport  = unpinned | pinned-current | pinned-stale | pinned-unverified,
+               plus one status per pin
 ```
 
-- The caller supplies `kind` and `id`. The server reads the item and
-  computes the digest, as it computes attachment digests from stored bytes.
-- The digest covers a named view. Event: subject, start, end with time
-  zone, all-day flag, cancelled flag. Message: its RFC 5322 message id, and
-  whether a later message from another sender exists in the same
-  conversation.
+- The caller supplies `kind` and `id`. The server reads the item and keeps
+  the view, as it computes attachment digests from stored bytes instead of
+  trusting the caller.
+- The pin stores the named view, not a digest of it. Event: subject, start,
+  end, all-day flag, cancelled flag. Message: its RFC 5322 message id, and
+  the newest message from another sender in the same conversation.
+  Equality is derived from the schema.
+- `pinned-unverified` means a read failed. It is neither stale nor
+  current, and the check-drafts tool leaves the category as it is.
 - `changeKey` is recorded for audit and never compared.
 - The comparison is a pure function over two schemas, beside
   `checkSendExpectation`, with its statuses as a named literal domain.
@@ -129,8 +135,11 @@ BasisReport  = pinned-current | pinned-stale | unpinned, plus one status per pin
   a series master, refuses creation with a typed reason and creates nothing.
 - An empty basis is legal and reported as `unpinned`. Reports count unpinned
   drafts so the share can be measured.
-- Start and end are canonicalized with their zone before hashing. P0 fixes
-  the rule and its test cases, including an all-day event.
+- The basis read never sets a zone preference, so Graph returns start and
+  end in UTC at creation and at recheck, and the pair is compared as
+  returned. A test pins that, including an all-day event.
+- A message's Graph id changes when it is moved to another folder. The
+  message pin must not treat a moved message as gone.
 - A `draft-created` record written before this goal decodes with an empty
   basis.
 - A draft that is missing, or no longer a draft, is skipped and reported by
@@ -158,11 +167,13 @@ BasisReport  = pinned-current | pinned-stale | unpinned, plus one status per pin
 - [ ] A `draft-created` record without a basis field decodes with an empty
       basis, proven by a test over a fixture of the earlier shape.
 - [ ] `m365_outbox_get_draft` returns the basis report. In the stub world,
-      moving a pinned event's start yields `pinned-stale`, and editing only
-      its reminder yields `pinned-current`.
+      moving a pinned event's start yields `pinned-stale` naming `start`,
+      editing only its reminder yields `pinned-current`, and a failed read
+      yields `pinned-unverified`.
 - [ ] The check-drafts tool rechecks every draft this server created that
       has no terminal audit record, sets the category on a stale draft,
-      clears it when the basis is current again, skips and reports missing
+      clears it when the basis is current again, leaves it unchanged when a
+      read failed, skips and reports missing
       or sent drafts, and appends an audit record for each mark and clear.
       It never changes a subject or body.
 - [ ] The tenant proof for the category is recorded as a decision file. If
@@ -236,6 +247,12 @@ Reverse: Add a pin kind by decision file once the outbox server has its own read
 m365-agent-outbox is active with no code since 2026-10-31 and no live session; its slice 3 edits the same handlers, tools and audit log. A separate goal does not wait behind that slice and does not hold that packet's closeout open. The dependency is on merged code, so the manifest declares no requirement on that packet. Whichever of the two opens a pull request second merges main first. Source: exploration DECISIONS.md, entry goal-home (operator, 2026-11-10).
 
 Reverse: Fold the remaining work into m365-agent-outbox as a slice by a decision file there, mark this packet superseded and move its decision files across.
+
+### P0 schemas frozen: a pin stores the named view, and a failed read is its own verdict, 2026-11-10
+
+Amends the decision 'A pin compares a digest of named fields'. Its substance stands: named fields are compared and changeKey never is. The digest is dropped. The pin stores the view itself (event: subject, start, end, all-day, cancelled), equality is derived from the schema, and Changed names the differing fields and carries the fresh observation. A digest suits bytes too large to store; five short fields are not that, and the audit log already holds event and draft subjects in clear. A fourth verdict, pinned-unverified, covers a read that failed: unknown is neither stale nor current, and the check-drafts tool leaves the category as it is. Time-zone rule: the basis read never sets a zone preference, so Graph returns UTC both times and the pair is compared as returned. The sketch was type-checked inside @beep/m365-mcp and removed. New hazard recorded for the message pin: a message's Graph id changes when it is moved to another folder. Evidence and the schema listing: research/2026-11-10-p0-basis-schemas.md in this packet. Agent-proposed; the operator, who had picked 'digest of named fields' earlier on 2026-11-10, confirmed the stored view the same day.
+
+Reverse: Replace the view field of the pin with a digest and drop the fields and now members of Changed; no record with pins exists before the first pull request merges, so nothing migrates.
 
 ### Appetite is two pull requests, and the message pin is the named cut, 2026-11-10
 

@@ -2,11 +2,36 @@
 
 ## Objective
 
-Declaration-Only Builds (graduated from explorations/build-pipeline-simplification).
+Library package builds emit declarations and declaration maps, and nothing
+else. The Babel `annotate-pure-calls` pass and JavaScript emit leave the
+generated `beep:build` script, because only `dist/*.d.ts` has a reader. If the
+check-program census proves that a package's build and its own-source check
+report the same diagnostics, that source is type-checked once per run instead
+of twice.
+
+Shaped in [`explorations/build-pipeline-simplification`](../../explorations/build-pipeline-simplification/README.md):
+[`BRIEF.md`](../../explorations/build-pipeline-simplification/BRIEF.md) is the
+pitch, [`DECISIONS.md`](../../explorations/build-pipeline-simplification/DECISIONS.md)
+the rulings, and
+[Experiment 3](../../explorations/build-pipeline-simplification/research/experiments/2026-11-10-reverification-and-check-sweep.md)
+the measurements this spec quotes.
 
 ## Non-Goals
 
-- <Out-of-scope behavior, package, workflow, migration, or policy.>
+- No bundler for library builds, and no `bun build` outside the binary lanes
+  that already use it.
+- No tsdown lane, publishable tier, or manifest projection. A publish lane is
+  designed at Release Lane activation
+  (`standards/architecture/14-ecosystem-packages.md`).
+- No new build-kit package.
+- No source-resolved checking and no removal of project references. Measured
+  and rejected: 2.3x wall and 1.46x memory per project.
+- No `isolatedDeclarations` adoption.
+- No SchemaCompiler work; that stays with the `effect-schema-parity` DEFER
+  ruling.
+- No app bundle or start-up work; that is queued in `explorations/INBOX.md`.
+- No change to framework app builds (`next build`, `vite build`) or to the
+  apps whose build is already a no-emit check.
 
 ## Source Hierarchy
 
@@ -22,21 +47,113 @@ Higher sources outrank lower sources when they conflict.
 
 ## Target Surfaces
 
-- <Package, app, docs, workflow, or artifact this goal may change.>
+- `packages/tooling/library/repo-cli-kit/src/package-scripts/PackageScripts.schemas.ts`
+  and `PackageScriptsPolicy.ts`: the generated `beep:build` and `beep:check`
+  defaults for the `library`, `tool`, `ecosystem` and `infra` kinds.
+- Every workspace `package.json` scripts block, through
+  `bun run beep lint package-scripts --write` only.
+- `packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts`
+  and `packages/tooling/tool/cli/src/commands/Architecture/OperationPlanPackageJson.ts`:
+  the scaffolds that write a `babel` script key.
+- `tsconfig.base.json`: emit settings.
+- `turbo.json`: the `build` outputs and, for the check-once step, the `check`
+  task's dependencies.
+- `packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts` and
+  `CheckCensusGate.ts`, with `standards/check-census.regression-baseline.jsonc`.
+- `packages/tooling/tool/cli/test/build-turbo-outputs.test.ts`: the build
+  output contract.
+- `packages/ecosystem/effect-drizzle/test/bundle-build.ts` and its size probe.
+- `docs/runbooks/typescript-toolchain.md` and the root catalog's Babel entries.
 
 ## Constraints
 
-- <Hard requirement, boundary rule, compatibility concern, or quality bar.>
+- Three PRs, in the order of `PLAN.md`. The check-once step is conditional and
+  is the first thing cut. Work that does not fit is cut, not extended.
+- Scripts blocks are generated. Change the policy, then regenerate; never
+  hand-edit a manifest's task-facing keys.
+- The Effect diagnostics gate must not weaken. Every package's source is still
+  type-checked by the Effect-patched `tsrs` on every run that checks it.
+- Declaration maps stay. Go-to-source depends on `dist/*.d.ts.map`.
+- A package that turns out to need emitted JavaScript keeps it through a named
+  per-package override recorded in the Exception Ledger. One hidden reader is
+  not a reason to restore JavaScript emit repo-wide.
+- The check-once step ships only if build and check diagnostics are identical
+  cold, with warm incremental state, and after a Turbo cache restore, with
+  `TSRS_FAST` both unset and `1`. Any difference drops the step; record why in
+  a decision file.
+- Understand why check configs set `rootDir` to the repo root before folding a
+  check into a build.
+- Adding a `build` edge to `check` changes what a filtered run executes.
+  `goals/verification-route` and `goals/route-soundness-repair` own
+  affected-routing: agree the change with them through the orchestrator first.
+- `tsconfig.base.json` is a global Turbo input. The declaration-only PR
+  invalidates every build cache entry once: land it when the merge queue is
+  quiet.
+- Wall-time baselines move under `goals/local-proof-under-ten`,
+  `goals/hosted-setup-tax`, `goals/heavy-pool-diet` and
+  `goals/certainty-scorecard`. Tell them before and after each behaviour-changing
+  merge.
+- `publishConfig.exports` will point at JavaScript that no longer exists. That
+  is accepted while every package is `private: true`; do not rewrite those
+  blocks here.
+- Remove a Babel catalog entry only when `bun run beep quality catalog-usage`
+  shows it has no other consumer. `babel-plugin-react-compiler` stays.
 
 ## Acceptance Criteria
 
-- [ ] <Observable result that proves the goal is complete.>
+Baseline and proof harness (PR 1, no behaviour change):
+
+- [ ] `research/` holds a repo-wide baseline measured under one admission job:
+      per-package build wall with and without the Babel step, and `dist` bytes
+      split into JavaScript plus maps and declarations plus maps.
+- [ ] `research/` holds the build-versus-check diagnostics comparison for every
+      emitting package in the three states and both `TSRS_FAST` settings named
+      in Constraints, produced through the check-program census.
+- [ ] The effect-drizzle bundle probe asserts that the expected export is
+      present and that the bundle imports, not only a size floor, and its
+      comment no longer blames `Bun.build 1.3.14`.
+- [ ] `turbo.json` `build.outputs` no longer lists the
+      `node_modules/.tmp` tsbuildinfo glob, or the package that still writes
+      there is named in the Exception Ledger.
+
+Declaration-only build (PR 2):
+
+- [ ] No generated `beep:build` runs Babel and no workspace manifest or
+      scaffold carries a `babel` script key; `bun run beep lint package-scripts`
+      passes.
+- [ ] After a clean `bun run build`, no library package's `dist` holds `*.js`
+      or `*.js.map` outside Exception Ledger rows, and every `exports` subpath
+      has its `.d.ts` and `.d.ts.map`. The build output contract test asserts
+      both.
+- [ ] The PR's hosted gate is green on its head, or each red is attributed as
+      inherited. This run is the proof that nothing reads `dist/*.js`.
+- [ ] `docs/runbooks/typescript-toolchain.md` describes the new `beep:build`.
+- [ ] `research/` holds the after numbers, measured the same way as the
+      baseline.
+
+Check once (PR 3, conditional):
+
+- [ ] Either the package's own-source check is served by its build with the
+      census baseline gating the equivalence, or a decision file records the
+      difference that cut the step.
+
+Throughout:
+
+- [ ] The sibling goals named in Constraints were told before and after each
+      behaviour-changing merge.
 - [ ] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 
 | Check | Command or evidence | Required result |
 | --- | --- | --- |
+| Generated scripts | `bun run beep lint package-scripts` | Passes |
+| No Babel script keys | `rg -l '"babel":' -g package.json packages apps` | No workspace manifest listed |
+| Build output contract | `bunx vitest run packages/tooling/tool/cli/test/build-turbo-outputs.test.ts` | Passes |
+| Check census | `bun run beep quality check-census` | Passes against the committed baseline |
+| Catalog consumers | `bun run beep quality catalog-usage` | Passes |
+| Touched packages | `bun run beep quality package-verify @beep/repo-cli @beep/repo-cli-kit` | Passes |
+| Hosted gate | The PR's required checks | Green, or reds attributed as inherited |
 | Packet launcher size | `test "$(wc -m < goals/declaration-only-builds/GOAL.md)" -le 4000` | Passes |
 | Manifest JSON | `jq . goals/declaration-only-builds/ops/manifest.json` | Passes |
 | Whitespace | `git diff --check -- goals/declaration-only-builds` | Passes |
@@ -60,7 +177,69 @@ generated from that directory and never edited by hand.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug declaration-only-builds`; add a `kind: decision` file there, never edit this block._
 
-_No decision files yet._
+### Appetite: one goal, three PRs, about a week, 2026-11-10
+
+Baseline and proof harness, then the declaration-only build, then check once. Every step is a generated-script policy edit plus regeneration. Work that does not fit is cut, not extended, and check once is cut first. Operator ruling.
+
+Source: exploration `explorations/build-pipeline-simplification/DECISIONS.md` (Q8).
+
+Reverse: Supersede with a decision that names a new bound and what it buys.
+
+### Builds emit declarations only; check once is conditional on census equivalence, 2026-11-10
+
+Project references stay. The build emits `.d.ts` and `.d.ts.map` only. 197 of 199 `tsconfig.check.json` files differ from the build config only in emit options, so the first command of `beep:check` repeats the build's type-check. If the check-program census shows identical diagnostics cold, with warm incremental state and after a cache restore, with `TSRS_FAST` unset and `1`, the own-source check is served by the build. Any difference drops that half and the goal ships declarations only. Rejected: leaving JavaScript emit in place, and leaving the double type-check without testing it. Operator ruling.
+
+Source: exploration `explorations/build-pipeline-simplification/DECISIONS.md` (Q7).
+
+Reverse: Restore the emit settings and policy values, then regenerate scripts; drop the check-once edge independently if it alone misbehaves.
+
+### No build-kit package; the generated-scripts policy owns the change, 2026-11-10
+
+Changes go through the generated `beep:build` and `beep:check` defaults in `@beep/repo-cli-kit` and the Turbo task-contract test in `@beep/repo-cli`. The stale-tsbuildinfo incident that motivated a build-kit was fixed by #1874 with an emit-layout change and a contract test. Agent call.
+
+Source: exploration `explorations/build-pipeline-simplification/DECISIONS.md` (Q3).
+
+Reverse: Create the package with bun run beep create-package once a publish lane exists for it to own.
+
+### No bundler for library builds; the Effect-patched tsrs stays the emitter, 2026-11-10
+
+Library packages keep compiler emit. `bun build` emits no `.d.ts` and has no per-module output, and the declaration is the only artifact anything reads from `dist`. No bundler measured faster than plain emit on `@beep/schema`; tsdown was about 2x slower and skipped type-checking. `bun build --compile` stays in the binary lanes that already use it. Operator ruling.
+
+Source: exploration `explorations/build-pipeline-simplification/DECISIONS.md` (Q1).
+
+Reverse: Reopen the exploration at decompose when Bun ships declaration emit and per-module output, or the repo adopts isolatedDeclarations.
+
+### No publishable tier and no tsdown lane until Release Lane activation, 2026-11-10
+
+`publishConfig.access: "public"` is a dormant template setting per `standards/architecture/14-ecosystem-packages.md`, carried by 172 of 210 workspace manifests, none of which has `private: false`. It is not a tier predicate, and no package publishes. A publish lane (manifest projection, attw/publint, pure annotations and JavaScript in the shipped output) belongs to Release Lane activation. Agent call from doctrine.
+
+Source: exploration `explorations/build-pipeline-simplification/DECISIONS.md` (Q2).
+
+Reverse: Reopen the exploration at decompose when an ecosystem member is activated under the Release Lane; design the publish lane for that member then.
+
+### Remove the Babel annotate-pure-calls pass repo-wide, proven by the declaration-only PR's hosted gate, 2026-11-10
+
+The `__PURE__` markers go into `dist/*.js`, which nothing bundles: apps, tests and binaries resolve `exports` to `src`, and the effect-drizzle bundle probe aliases to `src` and relies on markers hand-written in source. On `@beep/schema` the pass cost more than the compile (0.64 s against 0.27 s, best of six). The operator asked for removal after a full-gate proof; that proof is the hosted gate on the PR that removes JavaScript emit, so both land together. The pass returns inside a publish lane at Release Lane activation. Rejected: keeping it for `packages/ecosystem/*` only, and keeping it everywhere to mirror Effect. Operator ruling.
+
+Source: exploration `explorations/build-pipeline-simplification/DECISIONS.md` (Q4).
+
+Reverse: Restore the script values in the policy and run bun run beep lint package-scripts --write.
+
+### Source-resolved checking (no dist, no project references) is rejected, 2026-11-10
+
+Measured across all 199 check projects: 187 pass from source, at a median 2.3x wall and 1.46x memory per project (87.4 s against 31.9 s serial; peak 4.0 GB against 2.5 GB). One consumer failed inside a dependency's source because that source was checked under the consumer's compiler options. The cost lands on the per-package check every lane runs most, and #1874 already removed the incident that motivated it. Operator ruling.
+
+Source: exploration `explorations/build-pipeline-simplification/DECISIONS.md` (Q7).
+
+Reverse: Re-run the exploration's Experiment 3; reopen at decompose if the per-project wall ratio falls under about 1.3x or stale-dist failures recur.
+
+### Three stale findings land in the first PR, 2026-11-10
+
+The `Bun.build 1.3.14` comment in the effect-drizzle bundle probe (retired by Experiment 1 on 2026-10-09), the probe's floor-only size check (a 98-byte invalid stub passes a floor, so add presence and import-validity assertions), and the pre-#1874 `node_modules/.tmp` tsbuildinfo glob in `turbo.json` `build.outputs` if no package still writes there. Agent call under the fix-where-found rule.
+
+Source: exploration `explorations/build-pipeline-simplification/DECISIONS.md` (Q9).
+
+Reverse: Revert the PR.
 
 <!-- beep:decisions:end -->
 
