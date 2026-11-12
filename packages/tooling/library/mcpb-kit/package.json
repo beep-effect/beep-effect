@@ -1,7 +1,7 @@
 {
   "name": "@beep/mcpb-kit",
   "version": "0.0.0",
-  "description": "Package Bun-compiled MCP servers with DuckDB native bindings as Claude Desktop .mcpb bundles",
+  "description": "Package Bun MCP servers with DuckDB native bindings as Claude Desktop .mcpb bundles",
   "license": "MIT",
   "private": true,
   "type": "module",

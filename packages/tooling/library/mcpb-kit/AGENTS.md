@@ -1,6 +1,6 @@
 # @beep/mcpb-kit
 
-Package Bun-compiled MCP servers with DuckDB native bindings as Claude Desktop .mcpb bundles
+Package Bun MCP servers with DuckDB native bindings as Claude Desktop .mcpb bundles
 
 ## Surface
 

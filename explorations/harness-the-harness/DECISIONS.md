@@ -177,3 +177,39 @@ real-machine install.
 for many firms; the firm should not carry vendor liability. Rejected: the
 firm as publisher (fits an internal tool only); deferring (the signing
 identity validation needs it anyway).
+
+## 2026-11-12 — D11 note: the trigger is met; the bundle ships a signed runtime
+
+**Question:** D11 deferred Windows code signing until the first install on a
+real lawyer machine. That install exists. Does signing start now?
+
+**Answer:** No. Nothing is bought or set up. The Windows `.mcpb` no longer
+ships an executable of ours: it ships the official signed `bun.exe` and a
+script bundle. Signing `practice-setup.exe` stays the operator's decision.
+
+**Rationale:** practice-kg-mcp is installed on the attorney PC, so D11's
+trigger is effectively met. That PC enforces Smart App Control, which blocked
+the unsigned `bun build --compile` executable on 2026-10-20, 2026-10-22 and
+2026-11-12 (CodeIntegrity event 3077, status `0xc0e90002`) and has no
+per-file exception. D11 expected a SmartScreen warning; the real cost of an
+unsigned executable there is that it does not start. Bun's own `bun.exe`
+carries its publisher's Authenticode signature and starts, so
+`@beep/mcpb-kit` now packages the Windows target as `bun.exe` plus
+`<app>.js`, pins the release archive by sha256, and fails packaging when a
+Windows binary in the bundle is unsigned. The layout has run on the attorney
+PC since 2026-11-12 with no security setting changed. The finding and the
+checks are in `packages/tooling/library/mcpb-kit/README.md`.
+
+What signing would still buy:
+
+- `practice-setup.exe` is an unsigned compiled executable. It has not been
+  run under Smart App Control, and the same block is the expected result.
+  This is the remaining reason for `practice-gateway-signed-release`.
+- DuckDB publishes `duckdb.node` in `@duckdb/node-bindings-win32-x64`
+  unsigned (`duckdb.dll` beside it is signed by the DuckDB Foundation).
+  It has not been blocked and passes on reputation only. Our signature could
+  not fix a third party's file.
+
+Reversal: return a `compiled` launch from the `windows-x64` branch of
+`mcpbTargetSpec`. Packaging then refuses the unsigned executable until a
+signing service signs it, which is the spend D11 defers.

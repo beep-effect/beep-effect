@@ -7,9 +7,12 @@
   "instruments": [],
   "spans": [
     {"name":"McpbPackage.assertArchive","owner":"@beep/mcpb-kit","family":"tooling","conforms":true},
+    {"name":"McpbPackage.assertSignedBinaries","owner":"@beep/mcpb-kit","family":"tooling","conforms":true},
     {"name":"McpbPackage.copyDirectory","owner":"@beep/mcpb-kit","family":"tooling","conforms":true},
+    {"name":"McpbPackage.ensureRuntime","owner":"@beep/mcpb-kit","family":"tooling","conforms":true},
     {"name":"McpbPackage.ensureWindowsBindings","owner":"@beep/mcpb-kit","family":"tooling","conforms":true},
     {"name":"McpbPackage.packageTarget","owner":"@beep/mcpb-kit","family":"tooling","conforms":true},
+    {"name":"McpbPackage.readDownload","owner":"@beep/mcpb-kit","family":"tooling","conforms":true},
     {"name":"McpbPackage.run","owner":"@beep/mcpb-kit","family":"tooling","conforms":true}
   ]
 }

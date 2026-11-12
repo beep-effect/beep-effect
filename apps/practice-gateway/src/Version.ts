@@ -25,4 +25,4 @@
  * @category constants
  * @since 0.0.0
  */
-export const PRACTICE_GATEWAY_VERSION = "0.1.3";
+export const PRACTICE_GATEWAY_VERSION = "0.1.4";

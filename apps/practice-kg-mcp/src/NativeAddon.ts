@@ -1,15 +1,16 @@
 /**
- * Resolve the DuckDB native addon from the folder that holds the compiled
- * practice KG executable, whatever the launcher's working directory.
+ * Resolve the DuckDB native addon from the folder that holds the practice KG
+ * host's executable, whatever the launcher's working directory.
  *
  * **Details**
  *
- * `bun build --compile` keeps the `@duckdb/node-bindings-*` addons external
- * and the MCPB package ships them in `node_modules` beside the executable. A
- * compiled executable resolves bare specifiers from its embedded virtual root
- * (`B:\\~BUN\\root`, `/$bunfs/root`), so without help the addon only loads
- * through `NODE_PATH` or from a working directory that happens to hold that
- * `node_modules`. The resolver tries, in order:
+ * `bun build` keeps the `@duckdb/node-bindings-*` addons external and the
+ * MCPB package ships them in `node_modules` beside the executable: the
+ * compiled host on Linux, the bundled `bun.exe` that runs the script bundle
+ * on Windows. A compiled executable resolves bare specifiers from its
+ * embedded virtual root (`B:\\~BUN\\root`, `/$bunfs/root`), so without help
+ * the addon only loads through `NODE_PATH` or from a working directory that
+ * happens to hold that `node_modules`. The resolver tries, in order:
  *
  * 1. `node_modules` in the directory of `process.execPath` (the executable's
  *    own folder);

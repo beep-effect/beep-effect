@@ -1,13 +1,13 @@
 /**
- * Package Bun-compiled MCP servers with DuckDB native bindings as Claude
- * Desktop `.mcpb` bundles.
+ * Package Bun MCP servers with DuckDB native bindings as Claude Desktop
+ * `.mcpb` bundles.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
 /**
- * Process boundary for bundled executables.
+ * Process boundary for bundled servers.
  *
  * @category utilities
  * @since 0.0.0
