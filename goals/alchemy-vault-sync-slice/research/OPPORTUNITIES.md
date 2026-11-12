@@ -94,3 +94,9 @@
 - Doing: verifying the proposed closeout with `goals completion refresh --slug alchemy-vault-sync-slice --readiness-job <id>` from the #2962 lane.
 - Evidence: `unknown`, "Readiness recovery refused: status was recorded after job end". #2962 went ready and merged at 2026-11-08T11:35:24Z while its until-ready monitor was still running; the earlier finished job had ended on `blocked on not-draft`, and the running job overwrote `status.json` after the merge. The packet then sat two days as "proposed, unverified".
 - Would have prevented it: the same ruleset-enforced hold as the receipt above, or a refresh that reads readiness from hosted facts at the merged head (required checks green, zero unresolved threads, window elapsed) when no local monitor job survived.
+
+## Third re-final merged during its own final-check (2026-11-10)
+
+- Doing: running `bun run beep yeet final-check` on re-final #3101 before the ready flip, with a HOLD MERGE line first in the PR body and the orchestrator's hold comment on the PR.
+- Evidence: the PR was flipped ready at 06:56:01Z and merged at 07:02:00Z from the operator account, ten minutes after publish. final-check took 46 minutes because a goals-only diff still ran the full coverage shard (`final-check:coverage (46m 927ms)`). `goals completion refresh` printed `#3101: unknown`. The operator then ruled the goal closed.
+- Would have prevented it: the ruleset-enforced hold from the first receipt; and a final-check that plans no coverage shard for a diff confined to `goals/**` prose and manifests, so the owner reaches the ready flip in minutes.

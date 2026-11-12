@@ -89,7 +89,8 @@ Higher sources outrank lower sources when they conflict.
   beyond what the scorer environment needs.
 - **Fixtures stay out of `main`.** Fixtures are read from the goals archive
   at commit `94b8d15cd23bd07a95f6f1ab0680d24b94c5103b`
-  (`goals/skillopt-training-pilot/corpus/`). The planted-violation TypeScript
+  ([archived corpus](https://github.com/beep-effect/beep-effect-goals-archive/tree/94b8d15cd23bd07a95f6f1ab0680d24b94c5103b/goals/skillopt-training-pilot/corpus)).
+  The planted-violation TypeScript
   does not return to this repository's lint surface.
 - **Fingerprint.** Each run record carries the model id, the Claude Code
   version, the content hash of the skill and the hash of the laws text.

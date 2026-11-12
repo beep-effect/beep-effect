@@ -1614,6 +1614,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet ready gate ove
       const commands = yield* makeCommands;
       const flips = yield* Ref.make<ReadonlyArray<number>>([]);
       const decision = yield* runYeetReadyGate(contextAt(root), {
+        rewriteCarry: () => Effect.succeedNone,
         finalCheck: passingFinalCheck,
         recordInherited: () => Effect.void,
         markReady: (prNumber) => Ref.update(flips, A.append(prNumber)),
@@ -1636,6 +1637,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet ready gate ove
       yield* fs.writeFileString(path.join(root, ".beep", "yeet", "jobs"), "not a directory");
       const commands = yield* makeCommands;
       const decision = yield* runYeetReadyGate(contextAt(root), {
+        rewriteCarry: () => Effect.succeedNone,
         finalCheck: passingFinalCheck,
         recordInherited: () => Effect.void,
         markReady: () => Effect.void,
@@ -1681,6 +1683,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet ready gate ove
       });
       const asked = yield* Ref.make<ReadonlyArray<number>>([]);
       const decision = yield* runYeetReadyGate(contextAt("/repo"), {
+        rewriteCarry: () => Effect.succeedNone,
         finalCheck: passingFinalCheck,
         recordInherited: () => Effect.void,
         markReady: () => Effect.void,
@@ -1698,6 +1701,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet ready gate ove
       const headless = readOf(remoteOf({ headSha: O.none() }));
       const refusal = Effect.fnUntraced(function* (first: YeetReadyPullRequestRead, later: YeetReadyPullRequestRead) {
         const error = yield* runYeetReadyGate(contextAt("/repo"), {
+          rewriteCarry: () => Effect.succeedNone,
           finalCheck: passingFinalCheck,
           markReady: () => Effect.die("the flip must not run"),
           read: yield* readTwice(first, later),
