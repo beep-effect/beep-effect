@@ -222,6 +222,46 @@ Lane docs/stack-test-results
 
 Reverse: Restart the window and void the receipt on every head move, as today.
 
+### yeet gh pr status and merge read the shared review window, 2026-11-12
+
+`yeet gh pr status|merge` computed its own review window with a fixed 20 minutes, ignoring `BEEP_YEET_REVIEW_WINDOW`. It now takes the window instants from the shared reader, including the rewrite carry, and its length from the same configuration. Slice A had merged, so the change rides the slice B PR instead of a separate one.
+
+Lane feat/yeet-rewrite-stable-proof
+
+Reverse: Restore the GhOps window computation with its fixed 20-minute length.
+
+### A rewrite is unchanged only when GitHub replayed the same commits, 2026-11-12
+
+The head-move classifier answers unchanged only when the new head is the old head's own non-empty commits replayed by GitHub onto the PR base. Four conditions apply. Every replayed commit has a GitHub committer (`noreply@github.com` or `<id>+<login>@users.noreply.github.com`). Each pair has equal author name, email and date (offset kept), an equal raw message, equal `diff-tree --raw` entries without blob ids, and an equal whitespace-exact per-path patch digest. The new head's linear base is the PR base (`A~k == S`). The base absorbs the old base, and the new tree equals `git merge-tree --merge-base=<old base> <S> <old head>`. This is stricter than `git patch-id --stable`, which ignores whitespace and metadata. Empty commits such as the S32 re-request commit are dropped from both sides before pairing. Merge commits fail closed, so a lane that merged main restarts; slice D counts those stops. Any git failure or unfetchable object classifies as unknown, which never carries. On the recorded heads all six #3050/#3051 rewrite pairs classify unchanged, and the stale-base, retarget and layer-2-versus-layer-3 counterexamples classify changed.
+
+Lane feat/yeet-rewrite-stable-proof
+
+Reverse: Delete HeadMove.ts and its window and receipt call sites; every rewrite restarts the window and voids the receipt again.
+
+### Head moves come from repository activity; unreadable means no carry, 2026-11-12
+
+The review window learns head moves from REST repository activity (`GET /repos/{o}/{r}/activity?ref=refs/heads/<branch>`, at most three cursor pages of 100), linked by sha and never by time. The walk starts at the row whose after-sha is the current head and follows force pushes while each old head classifies unchanged against the current head and the PR's base sha. The base sha is used only when the pull record's head equals the gated head. A failed pull, activity or check-suite read, a lagging activity feed, a cycle or the page bound means no carry, which is today's behaviour. Goals completion keeps its window as raw, uncarried evidence (it is non-gating), and its detail now says so.
+
+Lane feat/yeet-rewrite-stable-proof
+
+Reverse: Drop the activity read; the window anchors on every force push again.
+
+### A lane push restarts the window and grants no new receipt carry, 2026-11-12
+
+A fast-forward lane push restarts the review window, and slice B grants it no new receipt carry. The 2026-10-28 ancestor refresh rule for receipts is unchanged. A GitHub rewrite followed by a lane push is not carried: the classifier sees a lane-committed commit and answers changed, so the next `yeet final-check` runs on the new head.
+
+Lane feat/yeet-rewrite-stable-proof
+
+Reverse: Classify fast-forward moves too and carry across them.
+
+### An unchanged rewrite keeps proof that a new sha used to void, 2026-11-12
+
+For a GitHub rewrite the classifier calls unchanged, the 2026-11-10 window-on-rewrite decision supersedes the exploration rule "The new SHA voids old proof, receipts and merge-gate pins" (`explorations/stacked-pr-adoption/DECISIONS.md`). Only the review-window start and the final-check receipt carry. The receipt is still judged by the 2026-10-28 refresh facts, so only main's changes are excused, and a restack onto an updated base layer refuses. The merge-gate sha pin is unchanged: a gate pinned to the old head still refuses the new one.
+
+Lane feat/yeet-rewrite-stable-proof
+
+Reverse: Restore the exploration rule: any new sha voids the old proof and receipts.
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger
