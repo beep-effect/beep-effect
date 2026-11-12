@@ -252,11 +252,15 @@ describe("person-match backend portability", () => {
 
   it.effect("writes automatic setup fallback evidence only to stderr", () =>
     Effect.gen(function* () {
+      // Under CI tracing the runner logs its own lifecycle line to this console
+      // before the body runs, so only lines written by the call count.
+      const logsBefore = A.length(yield* TestConsole.logLines);
+      const errorsBefore = A.length(yield* TestConsole.errorLines);
       yield* PersonMatchWorkerPolicyForTest.writeAdaFaceSetupFallbackDiagnostic("simulated setup failure");
 
-      const logLines1 = yield* TestConsole.logLines;
+      const logLines1 = A.drop(yield* TestConsole.logLines, logsBefore);
       expect(A.map(logLines1, String)).toEqual([]);
-      const errorLines2 = yield* TestConsole.errorLines;
+      const errorLines2 = A.drop(yield* TestConsole.errorLines, errorsBefore);
       expect(A.map(errorLines2, String)).toEqual([
         "Person-match primary environment setup failed; retrying the pinned CPU environment: simulated setup failure",
       ]);
