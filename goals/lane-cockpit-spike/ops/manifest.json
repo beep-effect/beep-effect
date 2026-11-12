@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "lane-cockpit-spike",
+    "packetId": "goal-packet/v1:d822d00fb15b09ad8d916d37af6e2827134d9327ea14adce3ef08458fb045564",
+    "title": "Lane Cockpit Spike",
+    "status": "active",
+    "created": "2026-11-10",
+    "updated": "2026-11-10",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/lane-cockpit-spike",
+  "lifecycle": "active",
+  "mission": "In one working day, build a read-only live lanes board as a lab app on a pinned cell-grid React renderer, then let one day of operator use decide keep or kill.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/textjs-console-ui",
+    "graduated": "2026-11-10"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/lane-cockpit-spike/README.md",
+    "goals/lane-cockpit-spike/SPEC.md",
+    "goals/lane-cockpit-spike/PLAN.md",
+    "goals/lane-cockpit-spike/GOAL.md",
+    "goals/lane-cockpit-spike/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/lane-cockpit-spike/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "complete"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "complete"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "in-progress"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/lane-cockpit-spike/GOAL.md)\" -le 4000",
+    "jq . goals/lane-cockpit-spike/ops/manifest.json",
+    "rg -n \"lane-cockpit-spike|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/lane-cockpit-spike",
+    "git diff --check -- goals/lane-cockpit-spike",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "statusNote": "Graduated 2026-11-10 from explorations/textjs-console-ui. Not started. Unblocked: nothing gates P0."
+}

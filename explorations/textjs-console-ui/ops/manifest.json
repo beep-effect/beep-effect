@@ -3,16 +3,16 @@
   "exploration": {
     "slug": "textjs-console-ui",
     "title": "Text.js Console UI",
-    "status": "active",
-    "stage": "capture",
+    "status": "graduated",
+    "stage": "graduate",
     "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": ["goals/lane-cockpit-spike"],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-11-03",
-    "updated": "2026-11-03"
+    "updated": "2026-11-10"
   }
 }
