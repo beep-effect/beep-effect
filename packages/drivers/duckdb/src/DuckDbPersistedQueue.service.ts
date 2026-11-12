@@ -234,18 +234,20 @@ export const makeStoreSql: (
       `,
       element
     );
+  // The clock is read inside the statement, so each ack retry computes its own deadline.
   const retry = (element: Element, delay: Duration.Duration, cause: Cause.Cause<unknown>) =>
-    Effect.flatMap(liveNow, (now) =>
-      ack(
-        sql`
+    ack(
+      Effect.flatMap(
+        liveNow,
+        (now) => sql`
           UPDATE ${tableNameSql}
           SET acquired_at = NULL, acquired_by = NULL, updated_at = ${sqlNow}, visible_at = ${visibleAfter(delay, now)},
             last_failure = ${Cause.pretty(cause)}
           WHERE sequence = ${element.sequence}
           AND acquired_by = ${stringLiteral(element.lock)}
-        `,
-        element
-      )
+        `
+      ),
+      element
     );
   const interrupt = (element: Element) =>
     ack(

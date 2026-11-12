@@ -14,9 +14,11 @@ visible signal when that has changed.
 Delivered behavior:
 
 1. `m365_outbox_create_draft` accepts a basis: a list of pins, each naming
-   one Graph item by kind and id. The server reads each item, keeps the
-   named fields the draft relied on, and writes the pins into the
-   `draft-created` audit record.
+   one Graph item by kind and id and carrying the named fields the caller
+   composed the draft from. The server reads each item, refuses creation
+   when its read differs from what the caller composed from, keeps its own
+   read of the named fields, and writes the pins into the `draft-created`
+   audit record.
 2. `m365_outbox_get_draft` returns a basis report for the draft: one status
    per pin and an overall verdict.
 3. A new check-drafts tool rechecks every unsent draft this server created
@@ -106,9 +108,13 @@ BasisReport  = unpinned | pinned-current | pinned-stale | pinned-unverified,
                plus one status per pin
 ```
 
-- The caller supplies `kind` and `id`. The server reads the item and keeps
-  the view, as it computes attachment digests from stored bytes instead of
-  trusting the caller.
+- The caller supplies `kind`, `id` and the view it composed the draft
+  from. The server reads the item and keeps its own view, as it computes
+  attachment digests from stored bytes instead of trusting the caller. The
+  caller's view is only a precondition: the same pure comparison runs
+  between it and the server's read, and any difference refuses creation
+  with `basis-changed`, so a pin never records a state the draft was not
+  written from.
 - The pin stores the named view, not a digest of it. Event: subject, start,
   end, all-day flag, cancelled flag. Message: its RFC 5322 message id, and
   the newest message from another sender in the same conversation.
@@ -162,8 +168,11 @@ BasisReport  = unpinned | pinned-current | pinned-stale | pinned-unverified,
       yields `Current`; an edit to any named field yields `Changed`.
 - [ ] `m365_outbox_create_draft` accepts a basis, reads each pinned item
       before creating the draft, and writes the pins into the
-      `draft-created` record. An unreadable pin and a series-master pin each
-      refuse with a typed reason and create no draft.
+      `draft-created` record. An unreadable pin, a series-master pin, and a
+      pin whose caller-supplied view differs from the server's read each
+      refuse with a typed reason and create no draft; in the stub world,
+      moving an event's start between the caller's read and creation
+      refuses with `basis-changed` naming `start`.
 - [ ] A `draft-created` record without a basis field decodes with an empty
       basis, proven by a test over a fixture of the earlier shape.
 - [ ] `m365_outbox_get_draft` returns the basis report. In the stub world,
@@ -259,6 +268,14 @@ Reverse: Replace the view field of the pin with a digest and drop the fields and
 Shaped as a small bet: schemas, comparison, audit field, create and get in the first pull request; the check-drafts tool, the category mark and the docs in the second. If a third would be needed, or a later-message check costs more than one list call, the message pin is cut and the event pin ships alone. Source: exploration BRIEF.md (Appetite) and DECISIONS.md, entry shape-accepted (operator, 2026-11-10).
 
 Reverse: Record a decision file that raises the appetite and names what the third pull request carries.
+
+### Creation checks the caller's view before pinning, 2026-11-12
+
+A review of #3120 found a gap: an agent reads an event at A, the event changes to B, and create_draft pins B because the server reads the item at creation, so every recheck reports pinned-current although the draft was written from A. Each pin parameter now also carries the named view the caller composed from. The server compares it with its own read using the pin comparison and refuses creation with basis-changed on any difference, creating nothing; the stored view stays the server's read, and changeKey is still never compared, since it moves on edits outside the named fields. Comparing the caller's view rather than a server-issued observation token keeps the server stateless between read and create. Agent-proposed while addressing the review; the operator reviews asynchronously.
+
+Lane @chore/organizing-goal-packets · PR #3120
+
+Reverse: Drop the caller view from the create_draft pin parameter and pin the server's read alone; no record with pins exists before the first pull request merges, so nothing migrates.
 
 <!-- beep:decisions:end -->
 

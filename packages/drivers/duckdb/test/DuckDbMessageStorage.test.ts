@@ -105,6 +105,16 @@ it.layer(Layer.mergeAll(DuckDbTestLayer, NodeCrypto.layer, Snowflake.layerGenera
     })
   );
 
+  // After deleteProcessed removes a request its row is gone; a late reply must not leave an orphan behind (D70).
+  it.effect("drops a reply whose request row is gone", () =>
+    Effect.gen(function* () {
+      const storage = yield* DuckDbMessageStorage.makeEncoded({ prefix: "late" });
+      yield* storage.saveReply({ _tag: "Chunk", id: "41", requestId: "40", sequence: 0, values: [null] });
+      const orphans = yield* storage.repliesForUnfiltered(["40"]);
+      assert.deepStrictEqual(orphans, []);
+    })
+  );
+
   // Migration 0005 must reach files migrated before deleteProcessed existed, without editing 0001.
   it.effect("adds the retention index to a schema migrated before it existed", () =>
     Effect.gen(function* () {

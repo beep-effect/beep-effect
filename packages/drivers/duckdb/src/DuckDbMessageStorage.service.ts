@@ -530,8 +530,15 @@ const makeEncodedStorage = Effect.fnUntraced(function* (
           reply._tag === "Chunk"
             ? sql`UPDATE ${messagesTableSql} SET last_reply_id = ${reply.id} WHERE id = ${reply.requestId}`
             : sql`UPDATE ${messagesTableSql} SET processed = ${sqlTrue}, last_reply_id = ${reply.id} WHERE request_id = ${reply.requestId}`;
-        return update.unprepared.pipe(
-          Effect.andThen(sql`INSERT INTO ${repliesTableSql} ${sql.insert(row)}`),
+        // beep: a reply for a request that deleteProcessed removed has nothing to update; upstream inserts it
+        // anyway, and with no foreign key the orphan reply is never deleted. Check the request row first, as
+        // AckChunk and Interrupt saves do (D70).
+        return lockRequest(String(reply.requestId)).pipe(
+          Effect.flatMap((request) =>
+            request.length === 0
+              ? Effect.void
+              : update.unprepared.pipe(Effect.andThen(sql`INSERT INTO ${repliesTableSql} ${sql.insert(row)}`))
+          ),
           sql.withTransaction
         );
       }).pipe(Effect.asVoid, PersistenceError.refail, withTracerDisabled),
