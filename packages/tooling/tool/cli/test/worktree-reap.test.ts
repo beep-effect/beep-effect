@@ -14,12 +14,13 @@ import {
   WorktreeRemovalServiceLive,
 } from "@beep/repo-cli/commands/Worktree";
 import { runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
+import { decodeSessionLedger, PrRepository, sessionLedgerFileName } from "@beep/repo-cli/test/Session";
 import { GithubTransportFetch } from "@beep/repo-cli/test/SharedInternals";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { it } from "@beep/test-runner";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
-import { assertNone, assertTrue } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
@@ -324,6 +325,45 @@ it.layer(testLayer, { timeout: "30 seconds" })("worktree reap", (it) => {
         repoRoot
       );
       expect(branch.exitCode).not.toBe(0);
+    })
+  );
+
+  it.effect("closes the reaped lane's session-ledger row on its own branch", () =>
+    Effect.gen(function* () {
+      const { mainHead, repoRoot, tempRoot, worktreesRoot } = yield* makeScratchRepo;
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      // The ledger keys rows by a github.com origin; `insteadOf` keeps every fetch on the local bare repo.
+      const githubOrigin = "git@github.com:Beep-Effect/Beep-Effect.git";
+      yield* runCommand(
+        "git",
+        ["config", `url.${path.join(tempRoot, "origin.git")}.insteadOf`, githubOrigin],
+        repoRoot
+      );
+      yield* runCommand("git", ["remote", "set-url", "origin", githubOrigin], repoRoot);
+      const merged = yield* addWorktree(repoRoot, worktreesRoot, "ledger-lane");
+      const stateRoot = path.join(tempRoot, "state");
+      const report = yield* runWorktreeReap({
+        apply: true,
+        nowMillis: FIXTURE_NOW_MILLIS,
+        probeLiveness: verdictProber("dormant"),
+        ...ghStub(mainHead, { [merged]: { open: undefined, merged: 601 } }),
+        startFrom: repoRoot,
+      }).pipe(
+        Effect.provideService(
+          ConfigProvider.ConfigProvider,
+          ConfigProvider.fromEnv({ env: { BEEP_SESSION_STATE_ROOT: stateRoot, HOME: tempRoot } })
+        )
+      );
+
+      expect(candidateAt(report, merged).retired).toBe(true);
+      const repository = PrRepository.make({ host: "github.com", owner: "beep-effect", name: "beep-effect" });
+      const ledger = yield* fs.readFileString(path.join(stateRoot, sessionLedgerFileName(repository)));
+      // Written from the main checkout on `main`, the row still names the reaped lane's branch.
+      assertSome(
+        O.map(A.last(decodeSessionLedger(ledger).rows), (done) => [done.state, done.checkout, done.branch, done.next]),
+        ["done", merged, "feat/ledger-lane", "reaped worktree ledger-lane"]
+      );
     })
   );
 
