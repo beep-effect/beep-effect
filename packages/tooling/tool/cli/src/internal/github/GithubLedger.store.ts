@@ -178,8 +178,8 @@ const encodeLine = (row: GithubLedgerRow) =>
 
 const hourOfFileName = (name: string): O.Option<DateTime.Utc> =>
   pipe(
-    Str.match(/^(\d{4}-\d{2}-\d{2}T\d{2})\.jsonl?$|^(\d{4}-\d{2}-\d{2}T\d{2})\.json$/)(name),
-    O.flatMap((parts) => O.fromNullishOr(parts[1] ?? parts[2])),
+    Str.match(/^(\d{4}-\d{2}-\d{2}T\d{2})\.jsonl?$/)(name),
+    O.flatMap(A.get(1)),
     O.flatMap((stem) => DateTime.make(`${stem}:00:00.000Z`)),
     O.map(DateTime.toUtc)
   );
