@@ -138,7 +138,7 @@ export type McpbPlatform = typeof McpbPlatform.Type;
  *
  * ```ts
  * import { McpbRuntimePin } from "@beep/mcpb-kit"
- * import { Sha256Hex } from "@beep/schema"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const pin = McpbRuntimePin.make({
  *   version: "1.4.4",
