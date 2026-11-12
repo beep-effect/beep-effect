@@ -40,7 +40,11 @@ P0 Research — not started.
 
 ## Latest Evidence
 
-Not started.
+- PERIH-01 slice 1 merged in #3116 (aec8dbf57bd). Code-head proof: Check run 42775621719 on head fcbedcaa604
+  reported `Heavy / Test Integration` (success) and `Heavy / Coverage Regression` under their exact names, with
+  neither migration name. Coverage Regression was red on rows inherited from #3068, identical on main at
+  b757bd0400f. Docs-head proof: the documentation-only PR that records this evidence (checkpoint dated
+  2026-11-12); its run is linked here once it reports.
 
 ## Notes
 
