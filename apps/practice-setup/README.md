@@ -5,6 +5,13 @@ Windows bootstrapper: installs Claude Desktop and the practice gateway, then ope
 `practice-setup.exe` is unsigned until `practice-gateway-signed-release` (D11), so
 SmartScreen warns on first run. It stays dumb: install, open, wait, hand off.
 
+On a machine that enforces Smart App Control, expect more than a warning: it
+blocked the unsigned compiled `practice-kg-mcp.exe` on the attorney PC on
+2026-11-12, and `practice-setup.exe` is built the same way. The gateway bundle
+it embeds no longer has that problem (it ships the signed `bun.exe`; see the
+[`@beep/mcpb-kit` README](../../packages/tooling/library/mcpb-kit/README.md#windows-ships-no-compiled-executable)).
+The bootstrapper itself has not been run under Smart App Control.
+
 | Step | What it does | Lawyer does |
 | --- | --- | --- |
 | `claude-desktop` | Skips when Claude Desktop is installed (per-user or MSIX); otherwise downloads the pinned per-user installer, checks its SHA-256, runs it with `--silent`, and waits for the install. | nothing |

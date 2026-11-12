@@ -2126,6 +2126,40 @@ describe("ci lane timing admission window", () => {
     });
   });
 
+  it.layer(laneTimingsCommandLayer, { timeout: "30 seconds" })((it) => {
+    it.effect("banners a CLI preview whose attempt reads failed with every partial run", () => {
+      const commands = A.empty<string>();
+      return Effect.gen(function* () {
+        yield* pinLaneTimingsClock(AFTER_CENSUS_WINDOW);
+        yield* runLaneTimingsCommand([
+          "--window",
+          "--since",
+          "2026-09-04T00:00:00Z",
+          "--until",
+          "2026-09-11T00:00:00Z",
+          "--preview",
+        ]);
+
+        const output = yield* testConsoleText();
+        // The window itself breaches no bound; only the unreadable attempt makes it a preview.
+        expect(output).toContain(
+          "> **Preview, not an admission census.** Window 2026-09-04T00:00:00.000Z → 2026-09-11T00:00:00.000Z: partial job reads (run 102 attempt 1)."
+        );
+        // Both page sizes were tried before the attempt was stamped partial.
+        expect(A.some(commands, Str.includes("/actions/runs/102/attempts/1/jobs?per_page=100"))).toBe(true);
+        expect(A.some(commands, Str.includes("/actions/runs/102/attempts/1/jobs?per_page=30"))).toBe(true);
+      }).pipe(
+        withCommandGithub((call) => {
+          const endpoint = endpointOf(call);
+          A.appendInPlace(commands, endpoint);
+          return Str.includes("/attempts/")(endpoint)
+            ? reply(404)({ message: "Not Found" })
+            : windowGithubResponse(endpoint).pipe(Effect.runSync, decodeJsonText);
+        })
+      );
+    });
+  });
+
   it("assesses every census bound against the judging instant", () => {
     const now = DateTime.makeUnsafe("2026-09-30T00:00:00Z");
     const closedWeek = windowOptions({

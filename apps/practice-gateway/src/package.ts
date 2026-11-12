@@ -51,6 +51,8 @@ const program = mcpbPackageProgram(
     commandName: "practice-gateway-package",
     repoRoot: Bun.fileURLToPath(new URL("../../..", import.meta.url)),
     forbiddenArchiveFragments: ["package.ts", "src/", "practice-profile.json", ".dpapi"],
+    // The PGlite files bin.ts imports `with { type: "file" }`.
+    assets: ["initdb.wasm", "pglite.data", "pglite.wasm"],
     manifest: McpbManifestFields.make({
       name: "beep-practice-gateway",
       displayName: "Beep Practice Gateway",
