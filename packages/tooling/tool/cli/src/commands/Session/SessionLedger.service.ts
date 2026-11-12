@@ -324,7 +324,9 @@ export const sessionHarness: Effect.Effect<{
 });
 
 /**
- * What a `session note` says, before it is stamped with checkout facts.
+ * What a `session note` says, before it is stamped with checkout facts. A row
+ * written for another checkout (`checkoutOverride`) names that checkout's
+ * branch too (`branchOverride`); otherwise the branch comes from `cwd`.
  *
  * **Example** (Describe a note)
  *
@@ -340,6 +342,7 @@ export const sessionHarness: Effect.Effect<{
  * @since 0.0.0
  */
 export const SessionNoteInput = S.Struct({
+  branchOverride: S.String.pipe(S.Option, S.optionalKey),
   checkoutOverride: S.String.pipe(S.Option, S.optionalKey),
   cwd: S.String,
   next: S.String,
@@ -390,7 +393,7 @@ export const buildSessionRow = Effect.fn("SessionLedger.buildRow")(function* (in
     clone: facts.clone,
     checkout,
     lane: path.basename(checkout),
-    branch: facts.branch,
+    branch: O.getOrElse(input.branchOverride ?? O.none<string>(), () => facts.branch),
     state: input.state,
     next: input.next,
     summary: input.summary,
@@ -477,6 +480,7 @@ export const recordSweepDone = Effect.fn("SessionLedger.recordSweepDone")(functi
       summary: O.none(),
       pr: O.none(),
       checkoutOverride: O.some(input.checkout),
+      branchOverride: O.some(input.branch),
     });
     const ledger = yield* makeSessionLedgerLive();
     yield* ledger.append(row);

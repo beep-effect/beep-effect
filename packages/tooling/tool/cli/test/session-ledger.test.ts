@@ -30,7 +30,7 @@ import {
 import { SweepGitState, sweepWritesLedgerDone } from "@beep/repo-cli/test/Yeet";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { assert, describe, expect, it, vi } from "@effect/vitest";
-import { assertInclude, assertNone } from "@effect/vitest/utils";
+import { assertInclude, assertNone, assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -377,8 +377,10 @@ describe("beep session", () => {
 
           const ledger = yield* fs.readFileString(path.join(stateRoot, sessionLedgerFileName(repository)));
           const last = A.last(decodeSessionLedger(ledger).rows);
-          expect(O.map(last, (done) => [done.state, done.checkout, done.next])).toStrictEqual(
-            O.some(["done", gone, "removed worktree gone"])
+          // The row names the removed lane's branch, not the clone's `main` it was written from.
+          assertSome(
+            O.map(last, (done) => [done.state, done.checkout, done.branch, done.next]),
+            ["done", gone, "HEAD", "removed worktree gone"]
           );
         })
       )
@@ -432,6 +434,12 @@ describe("beep session", () => {
           yield* recordSweepDone({ gitCwd: clone, checkout: path.resolve(lane), branch: "feat/lane" });
           const after = yield* captureOutput(withCwd(clone, runSession(["open"])));
           expect(after).toContain("no live sessions recorded");
+          // Written from the clone on `main`, the done row still names the lane's branch.
+          const swept = A.last(decodeSessionLedger(yield* fs.readFileString(file)).rows);
+          assertSome(
+            O.map(swept, (done) => [done.lane, done.branch]),
+            ["lane", "feat/lane"]
+          );
           // A checkout git cannot read is ignored by the best-effort sweep row.
           yield* recordSweepDone({ gitCwd: path.join(clone, "missing"), checkout: lane, branch: "x" });
         })
