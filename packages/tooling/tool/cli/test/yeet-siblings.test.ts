@@ -38,7 +38,7 @@ const pull = (number: number, ref: string, sha: string) => ({
   merged_at: null,
   mergeable_state: "dirty",
   head: { ref, sha },
-  base: { ref: "main" },
+  base: { ref: "main", sha: "base000000" },
   html_url: `https://github.com/beep-effect/beep-effect/pull/${number}`,
   user: { login: "octocat" },
   labels: [],

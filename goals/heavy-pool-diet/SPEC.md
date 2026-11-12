@@ -96,14 +96,14 @@ Higher sources outrank lower sources when they conflict.
     probe is gone and `legacy_coverage` is 'false'), `ci-lane-timings.test.ts`.
 - `packages/tooling/library/repo-cli-kit/src/tsmorph/ProjectFactory.ts`: the `compilerOptions` parameter #3019
   added; reused, not changed.
-- `.github/workflows/check.yml`: the Heavy Admission job (`admission`, line 86) with its workspace install
-  (`Setup monorepo CI`, line 127) and its `bun run beep ci admission` step (line 137); the `heavy.yml@main` call
-  (line 183); the JSDoc Ratchet job (line 1679). PERIH-01 slice 1 deleted the coverage-rollout probe, the
-  `legacy_integration` output, the `test-integration` job's name conditional (now the literal
-  `Heavy / Test Integration`, line 1099) and the `coverage-regression` job's `LEGACY_COVERAGE` env line and
-  assertion; `legacy_coverage` is the literal `'false'` (line 102) until COVE-08 deletes it. The
-  `coverage-regression` job's name conditional on `legacy_coverage` (line 1126) is not this goal's surface:
-  COVE-08 (`route-soundness-repair`) owns it.
+- `.github/workflows/check.yml` (cited by job and step, because line numbers move with every workflow PR): the
+  Heavy Admission job (`admission`) with its workspace install (step `Setup monorepo CI`) and its
+  `bun run beep ci admission` step (`Decide heavy admission`); the `heavy` job's `heavy.yml@main` call; the
+  `jsdoc-ratchet` job. PERIH-01 slice 1 deleted the coverage-rollout probe, the `legacy_integration` output,
+  the `test-integration` job's name conditional (now the literal `Heavy / Test Integration`) and the
+  `coverage-regression` job's `LEGACY_COVERAGE` env line and assertion; the `admission` job's
+  `legacy_coverage` output is the literal `'false'` until COVE-08 deletes it. The `coverage-regression` job's
+  name conditional on `legacy_coverage` is not this goal's surface: COVE-08 (`route-soundness-repair`) owns it.
 - `.github/workflows/heavy-admit.yml`: runs the same admission job when the `ready-for-heavy` label lands; it
   switches to the binary with `check.yml`.
 - `.github/workflows/heavy.yml`: the Lint Policy job (`verify`, lines 102 to 107, `runs-on: beep-ec2-heavy`) and
@@ -134,7 +134,7 @@ and the open PR heads named.
 | ORDER (D11) | Required heavy lanes (Check, Docgen, Doctest) first; Lint Policy `needs:` them with `if: !cancelled()` | Open: `heavy.yml` has no `needs:` on `verify`. | On the same heads, push-to-start of Check, Docgen and Doctest on the cap-2 pool is no slower and Lint Policy still runs and reports when Check is red; two-PR `heavy.yml@main` rollout. | none |
 | HOST-06 | Route skips, goals-only and Docgen decisions hoisted to job-level `if` before Spot boot | Open: decided in the lane-gate step, `heavy.yml:137` onward. | Route replay plus mutation fixtures (docs, goals, no-diff, unreadable base); hosted ruleset parity ledger (every required `Heavy / *` context still reports); two-PR `heavy.yml@main` rollout. | none (decision outputs computed in Heavy Admission) |
 | PERIH-11 | Closure-digest binary releases and reviewed pin-bump PRs (merges PERIH-08) | Open: `beep-ci-binary.yml:11-22` path trigger, pin at `.github/actions/fetch-beep-ci/action.yml` line 20 unchanged since #2906. | Closure mutation fixtures; the pin-bump PR proves itself through its own Check. | none |
-| PERIH-01 | Heavy Admission from the pinned CI binary with a closure-digest fallback; delete the dead coverage-rollout probe (absorbs DEPS-02 admission half) | Slice 1 (probe deletion) landed before COVE-08: probe, `legacy_integration`, the Test Integration name conditional and the LEGACY_COVERAGE env line and assertion removed; `legacy_coverage` set to 'false' for COVE-08 to delete. Open: `check.yml:127` installs, admission not in `ciBootstrapCommands`. | Replay of recorded events (draft, label, fork, docs, push, error) through binary and source gives byte-identical `verdict`, `route_skips` and `route_receipt`; a closure-digest mismatch fixture forces the head-install fallback; slice 1 removes the probe, the `legacy_integration` output and its Test Integration name conditional, and the `LEGACY_COVERAGE` env line and assertion together, and sets `legacy_coverage` to 'false' if it lands before COVE-08 (COVE-08 then deletes it) or removes it outright if COVE-08 landed first. | PERIH-11, PERIH-10 (route-soundness-repair); slice 1 coordinates with COVE-08 |
+| PERIH-01 | Heavy Admission from the pinned CI binary with a closure-digest fallback; delete the dead coverage-rollout probe (absorbs DEPS-02 admission half) | Slice 1 (probe deletion) landed before COVE-08: probe, `legacy_integration`, the Test Integration name conditional and the LEGACY_COVERAGE env line and assertion removed; `legacy_coverage` set to 'false' for COVE-08 to delete. Open: the `admission` job's `Setup monorepo CI` step installs, admission not in `ciBootstrapCommands`. | Replay of recorded events (draft, label, fork, docs, push, error) through binary and source gives byte-identical `verdict`, `route_skips` and `route_receipt`; a closure-digest mismatch fixture forces the head-install fallback; slice 1 removes the probe, the `legacy_integration` output and its Test Integration name conditional, and the `LEGACY_COVERAGE` env line and assertion together, and sets `legacy_coverage` to 'false' if it lands before COVE-08 (COVE-08 then deletes it) or removes it outright if COVE-08 landed first. | PERIH-11, PERIH-10 (route-soundness-repair); slice 1 coordinates with COVE-08 |
 | HOST-08 | Queue-aware Test Unit leg-width A/B | Open; the Test Unit layout changed again in #3043 and #3046, so it is not yet at steady state. | Hosted A/B: push-to-Test-Unit p95 at most 9.5 min per run from lane timings, runner-minutes beside it, no queued-job growth at the ceiling. | MEAS-04 (certainty-scorecard), Test Unit steady state; ROUT-01 already met (landed in #3030; hosted-setup-tax) |
 
 ## Constraints
@@ -152,7 +152,7 @@ and the open PR heads named.
   backward-compatible decode so a pin bump that changes the patterns schema does not fail closed on its own
   Change Profile), then binary-dependent moves such as PERIH-01 with a closure-digest fallback to head install.
   Each binary change is three PRs: the CLI change, the pin bump, then the workflow switch.
-- **`heavy.yml` is called at `@main` (item 4; `check.yml:214`):** HOST-06, the D11 ordering and any heavy-lane
+- **`heavy.yml` is called at `@main` (item 4; the `check.yml` `heavy` job):** HOST-06, the D11 ordering and any heavy-lane
   input or Lint Policy job rename are two PRs. The first lands additive under a migration name; the second
   retires it after `main` resolves the new reusable workflow.
 - **Reviewer constraint on PERIH-01 (`MAP.md`, CodeRabbit on #3017):** `check.yml` derives both

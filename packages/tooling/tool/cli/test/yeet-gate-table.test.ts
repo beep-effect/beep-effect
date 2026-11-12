@@ -10,6 +10,7 @@ import {
   GateTableUnreadable,
   MergeGateCheckRun,
   readGateTable,
+  readYeetGateTableAsGhLogin,
   renderGateTableEntry,
   renderGateTableReport,
   YeetReviewWindowElapsed,
@@ -36,6 +37,7 @@ import threadsFixture from "./fixtures/yeet-merge-gate/threads.json" with { type
 import openThreadsFixture from "./fixtures/yeet-merge-gate/threads-open.json" with { type: "json" };
 import timelineFixture from "./fixtures/yeet-merge-gate/timeline.json" with { type: "json" };
 import { legacyGhAnswer, recordedGithub } from "./support/YeetGithub.ts";
+import { rewriteWindowScenario, yeetRealGitTestLayer } from "./support/YeetHeadMove.ts";
 import type { GateTableRow } from "@beep/repo-cli/test/Yeet";
 import type { GithubAnswer, GithubCall } from "./support/YeetGithub.ts";
 
@@ -394,6 +396,20 @@ describe("yeet gate-table recorded read", () => {
       const row = rowAt(report, 0);
       assertNone(row.read.statuses);
       expect(row.pending).toEqual(["statuses=?"]);
+    })
+  );
+});
+
+it.layer(yeetRealGitTestLayer, {
+  timeout: "120 seconds",
+})("gate-table classifier seam", (it) => {
+  it.effect("carries through the command's shared gh-login boundary", () =>
+    Effect.gen(function* () {
+      const scenario = yield* rewriteWindowScenario();
+      yield* DateTime.makeUnsafe("2026-11-10T02:50:00Z").pipe(DateTime.toEpochMillis, TestClock.setTime);
+      const report = yield* readYeetGateTableAsGhLogin(scenario.context).pipe(scenario.github.provide);
+      const row = rowAt(report, 0);
+      expect(O.getOrThrow(row.read.window)).toMatchObject({ _tag: "elapsed", anchor: "ready-for-review" });
     })
   );
 });
