@@ -36,7 +36,8 @@ Use this command for execution-capable sessions:
 ## Current Phase
 
 P1 Implement — in progress. P0 closed with the baseline checkpoint
-(`decisions/2026-11-10-p0-baseline.md`); slice 1 (PERIL-13) landed; slices 2 (PERIL-10) and 3 (SCHE-08) are next.
+(`decisions/2026-11-10-p0-baseline.md`); slice 1 (PERIL-13) and slice 2 (PERIL-10 summary and archive) landed;
+slice 3 (SCHE-08) and slice 4 (the beep-heavy retirement) are next.
 
 ## Latest Evidence
 
@@ -45,6 +46,15 @@ P1 Implement — in progress. P0 closed with the baseline checkpoint
   prerequisites (SCHE-09, MEAS-02, MEAS-07, PERIL-11, COVE-02, COVE-03, COVE-04) all still open.
 - 2026-11-10: slice 1 (PERIL-13) marks `yeet verify --merged` supported and dormant in the yeet skill's
   `references/gates-and-proof.md` (no merged-preview run since 2026-10-05; kept, removal needs an operator ruling).
+- 2026-11-12: slice 2 (PERIL-10) renders the scheduler quarantine as one status line (count, oldest age, archive
+  dir; `--json` keeps the paths) and archives entries older than 7 days to `quarantine-archive` in the reap pass
+  under a claims lock; status stays read-only and leases and tickets are untouched. The beep-heavy retirement
+  stays open (slice 4).
+- 2026-11-12 prerequisite drift: COVE-02 landed in #3115 and MEAS-01 with MEAS-04 in #3118; SCHE-09, MEAS-02 and
+  MEAS-07 are still open. PLAN's HOST-01 co-carry note is moot: HOST-01 part a landed alone in #3111. Open PR
+  #3130 (`goals/yeet-async-merge-and-stacks`) adds `Yeet/internal/PatchIdentity.ts` and carries the review window
+  across GitHub-made unchanged rewrites (cascade, restack); merges fail closed there, so PERIL-09 (a
+  diff-preserving merge of main) stays open and should build on that classifier once #3130 merges.
 
 ## Notes
 

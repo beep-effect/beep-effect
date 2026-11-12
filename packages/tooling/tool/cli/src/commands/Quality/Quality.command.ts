@@ -49,6 +49,9 @@ import {
   admissionStatus,
   GITHUB_CHECK_MODE_VALUES,
   installAgentRunsSlice,
+  QUARANTINE_ARCHIVE_DIRECTORY_NAME,
+  QUARANTINE_ARCHIVE_MIN_AGE_MILLIS,
+  quarantinedAtMillisOf,
   reapAdmissionState,
   reconcileAttemptJournalsForCheckout,
   renderAgentRunsSliceListing,
@@ -3851,6 +3854,46 @@ const qualityProfileCommand = Command.make("profile", {}, () =>
   Command.withSubcommands([qualityProfileDetectCommand, qualityProfileConfigCommand])
 );
 
+const MILLIS_PER_HOUR = 3_600_000;
+
+const formatQuarantineAge = (millis: number): string => {
+  const hours = Math.max(0, Math.floor(millis / MILLIS_PER_HOUR));
+  return hours >= 24 ? `${Math.floor(hours / 24)}d ${hours % 24}h` : `${hours}h`;
+};
+
+// Every admission entry path is `<admission root>/<directory>/<name>`.
+const admissionRootOfEntry = (entryPath: string): O.Option<string> =>
+  pipe(
+    entryPath,
+    Str.match(/^(.*)\/[^/]+\/[^/]+$/u),
+    O.flatMap((match) => O.fromUndefinedOr(match[1]))
+  );
+
+// One summary line instead of one line per entry (the P0 baseline printed
+// 2068); `--json` keeps every path.
+const renderQuarantineSummaryLines = (quarantined: ReadonlyArray<string>, nowMillis: number): ReadonlyArray<string> =>
+  A.match(quarantined, {
+    onEmpty: A.empty<string>,
+    onNonEmpty: (entries) => {
+      const oldest = pipe(
+        A.getSomes(A.map(entries, quarantinedAtMillisOf)),
+        A.match({
+          onEmpty: () => "",
+          onNonEmpty: (instants) => `, oldest ${formatQuarantineAge(nowMillis - A.min(instants, Order.Number))} ago`,
+        })
+      );
+      const archive = pipe(
+        admissionRootOfEntry(A.headNonEmpty(entries)),
+        O.map((root) => `; archive ${root}/${QUARANTINE_ARCHIVE_DIRECTORY_NAME}`),
+        O.getOrElse(() => "")
+      );
+      const count = A.length(entries);
+      return [
+        `- quarantined: ${count} entr${count === 1 ? "y" : "ies"}${oldest}${archive} (reap --apply archives entries older than ${formatQuarantineAge(QUARANTINE_ARCHIVE_MIN_AGE_MILLIS)}; --json lists paths)`,
+      ];
+    },
+  });
+
 const renderAdmissionSnapshotLines = (snapshot: AdmissionSnapshot, nowMillis: number): ReadonlyArray<string> => [
   `admission capacity: ${snapshot.activeTokens}/${snapshot.capacityTokens} tokens (MemAvailable ${snapshot.memAvailableGib.toFixed(1)} GiB${snapshot.hardFloorEngaged ? ", HARD FLOOR ENGAGED" : ""})`,
   ...A.map(snapshot.leases, (lease) => {
@@ -3878,7 +3921,7 @@ const renderAdmissionSnapshotLines = (snapshot: AdmissionSnapshot, nowMillis: nu
       `- queued pid ${ticket.pid} ${ticket.kind}(${ticket.weightTokens}) ${ticket.checkoutRoot} @ ${ticket.branch}`
   ),
   ...A.map(snapshot.dead, (path) => `- dead: ${path}`),
-  ...A.map(snapshot.quarantined, (path) => `- quarantined: ${path}`),
+  ...renderQuarantineSummaryLines(snapshot.quarantined, nowMillis),
 ];
 
 /**
