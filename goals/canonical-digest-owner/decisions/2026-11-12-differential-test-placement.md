@@ -1,0 +1,8 @@
+---
+title: "Slice A tests live beside each encoder's importer; two dev edges, no production edge"
+date: 2026-11-12
+lane: "test/canonical-digest-census"
+reversal: "Move the test files, drop @beep/jsonc from the devDependencies of @beep/execution-authority-domain and @beep/semantica, and run bun run beep tsconfig-sync."
+---
+
+The differential and off-domain tests for the epistemics and PacketCore encoders, and the packet event replay, live in the @beep/repo-cli test tree: that package already depends on @beep/epistemics, @beep/jsonc and the test kits, so they add no edge. The semantica encoder is app-internal and a package cannot import an app, so its two tests live in apps/labs/semantica/test with @beep/jsonc as a devDependency, the edge SPEC.md already plans as a dependency in slice C. The execution-record seal replay extends the golden-vector block in packages/execution-authority/domain/test with @beep/jsonc as a devDependency; standards/ARCHITECTURE.md (Family And Kind Dependency Rules, Slice Consumption Rules) lets a domain package import foundation/modeling. The same table settles the slice C question early: @beep/epistemics to @beep/jsonc is modeling to modeling, which is allowed, and acyclic because @beep/jsonc depends only on @beep/identity, @beep/schema and @beep/utils. Rejected: one test in @beep/jsonc (it would import a tooling tool and an app), and a shared generator exported from a test kit (new public surface for scaffolding that slices C and D retire). The generator is effect/Arbitrary over S.Json, widened in the repo-cli test with fixed pools of numbers, strings and keys; the semantica test uses the schema-derived arbitrary alone plus fixed examples.

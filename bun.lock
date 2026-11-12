@@ -246,6 +246,7 @@
         "unpdf": "catalog:",
       },
       "devDependencies": {
+        "@beep/jsonc": "workspace:^",
         "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
@@ -2392,6 +2393,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/jsonc": "workspace:^",
         "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",

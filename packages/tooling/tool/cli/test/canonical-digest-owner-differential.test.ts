@@ -1,0 +1,356 @@
+// Slice A of goals/canonical-digest-owner: the encoder differential as a
+// tracked test.
+//
+// Three hand-rolled canonical-JSON encoders are held byte-equal to the owner,
+// `JsoncFingerprint.canonicalizeResult` (RFC 8785), on generated plain JSON:
+// the epistemics encoder behind `canonicalDetectionJson`, PacketCore's
+// `canonicalJsonText`, and the JSON frontmatter encoder inside `@beep/md`,
+// which the census found and which is reachable only through a rendered
+// document. The semantica lab encoder has the same two tests in
+// `apps/labs/semantica/test/CanonicalDifferential.test.ts`, because a package
+// cannot import an app.
+//
+// The second half fixes what each side does today with values that are not
+// plain JSON. Those rows are a record of present behaviour, not a contract:
+// slice C replaces the two bodies with the owner and this table is where the
+// change shows.
+//
+// This file lives in `@beep/repo-cli` because that package already depends on
+// `@beep/epistemics`, `@beep/jsonc` and the test kits, so it adds no
+// dependency edge (decision `2026-11-12-differential-test-placement`).
+import { canonicalDetectionJson } from "@beep/epistemics/ContradictionDetection";
+import { JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint";
+import { Md } from "@beep/md";
+import { Document } from "@beep/md/Md.model";
+import { canonicalJsonText } from "@beep/repo-cli/test/Goals";
+import { fcRuns } from "@beep/test-utils";
+import { describe, expect, it } from "@effect/vitest";
+import { assertSuccess } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import { pipe } from "effect/Function";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import type { JsoncCanonicalizeErrorCode } from "@beep/jsonc/JsoncFingerprint";
+
+type Encoder = (value: unknown) => string;
+
+const encoders: ReadonlyArray<readonly [name: string, encode: Encoder]> = [
+  ["epistemics canonicalDetectionJson", canonicalDetectionJson],
+  ["PacketCore canonicalJsonText", canonicalJsonText],
+];
+
+// ── Generator ───────────────────────────────────────────────────────────────
+
+// Numbers whose ECMAScript serialization is easy to get wrong: negative zero,
+// both ends of the exponent switch (1e21, 1e-7), the smallest and largest
+// doubles, and integers on either side of 2 ** 53.
+const edgeNumbers = [
+  0,
+  -0,
+  1,
+  -1,
+  0.1 + 0.2,
+  1.5,
+  4.35,
+  1e-6,
+  1e-7,
+  1e20,
+  1e21,
+  123456789012345680000,
+  333333333.3333333,
+  5e-324,
+  2 ** 53,
+  2 ** 53 + 2,
+  Number.MAX_SAFE_INTEGER,
+  Number.MIN_SAFE_INTEGER,
+  Number.MAX_VALUE,
+  -Number.MAX_VALUE,
+] as const;
+
+// Strings that separate the escaping and ordering rules: every two-character
+// escape, C0 controls, the two line separators JSON leaves unescaped, a
+// precomposed and a decomposed accent, and three keys whose UTF-16 code-unit
+// order (RFC 8785) differs from their code-point order: U+10000 is the unit
+// pair D800 DC00, so it sorts before U+E000 and U+FB00.
+const edgeStrings = [
+  "",
+  '"',
+  "\\",
+  "/",
+  "\u0000",
+  "\u001f",
+  "\u007f",
+  "\b\f\n\r\t",
+  "\u2028",
+  "\u2029",
+  "\u00e9",
+  "e\u0301",
+  "\ue000",
+  "\ufb00",
+  "\uffff",
+  "\u{10000}",
+  "\u{1f600}",
+  "__proto__",
+  "constructor",
+  "toString",
+  "0",
+  "9",
+  "10",
+  "a",
+  "A",
+  "aa",
+] as const;
+
+const pick = <T>(pool: A.NonEmptyReadonlyArray<T>): Arbitrary.Arbitrary<T> =>
+  Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0, maximum: pool.length - 1 }))).pipe(
+    Arbitrary.map((index) => A.getUnsafe(pool, index))
+  );
+
+// `Arbitrary.schema(S.Json)` also generates strings with unpaired surrogates,
+// which are not I-JSON. Those belong to the off-domain table below, so the
+// plain-JSON generator replaces them with U+FFFD and keeps every run on the
+// domain instead of discarding it.
+const isJsonArray = (value: S.Json): value is S.JsonArray => A.isArray(value);
+const isJsonObject = (value: S.Json): value is S.JsonObject =>
+  P.isObject(value) && !P.isNull(value) && !A.isArray(value);
+
+const wellFormed = (value: S.Json): S.Json => {
+  if (P.isString(value)) {
+    return value.toWellFormed();
+  }
+  if (isJsonArray(value)) {
+    return A.map(value, wellFormed);
+  }
+  if (isJsonObject(value)) {
+    return pipe(
+      R.toEntries(value),
+      A.map(([key, entry]) => [key.toWellFormed(), wellFormed(entry)] as const),
+      R.fromEntries
+    );
+  }
+  return value;
+};
+
+// A schema-derived JSON tree, widened with the edge pools: the pools appear as
+// array elements, as member values and as member keys, at the top level and
+// one level down, so key ordering is exercised on exactly the keys where the
+// two orders disagree.
+const plainJsonObject: Arbitrary.Arbitrary<S.JsonObject> = Arbitrary.all({
+  tree: Arbitrary.schema(S.Json).pipe(Arbitrary.map(wellFormed)),
+  numbers: Arbitrary.array(pick(edgeNumbers), { maxLength: 8 }),
+  strings: Arbitrary.array(pick(edgeStrings), { maxLength: 8 }),
+}).pipe(
+  Arbitrary.map(({ tree, numbers, strings }): S.JsonObject => {
+    const keyed = R.fromEntries(
+      A.map(strings, (key, index) => [key, O.getOrElse(A.get(numbers, index), (): S.Json => tree)] as const)
+    );
+    return {
+      tree,
+      numbers,
+      strings,
+      keyed,
+      nested: [[tree, keyed], { "": strings, [Str.repeat(2)("\u{10000}")]: numbers }],
+    };
+  })
+);
+
+const plainJson: Arbitrary.Arbitrary<S.Json> = plainJsonObject;
+
+// The md encoder has no entry point of its own: it renders a document's JSON
+// frontmatter between two fence lines.
+const mdFrontmatter = (frontmatter: S.JsonObject): string =>
+  Md.renderUnsafe(Document.make({ children: [], frontmatter: O.some(frontmatter) }));
+
+const fenced = (canonical: string): string => `---json\n${canonical}\n---`;
+
+// ── Plain JSON: byte equality ───────────────────────────────────────────────
+
+describe("canonical digest owner: plain JSON differential", () => {
+  for (const [name, encode] of encoders) {
+    it.prop(
+      `${name} emits the owner's RFC 8785 bytes for every plain JSON value`,
+      { value: plainJson },
+      ({ value }) => {
+        assertSuccess(JsoncFingerprint.canonicalizeResult(value), encode(value));
+      },
+      { arbitrary: fcRuns(400) }
+    );
+
+    it(`${name} agrees with the owner on shapes the generator does not guarantee`, () => {
+      const nullPrototype: Record<string, unknown> = Object.create(null);
+      nullPrototype.b = 1;
+      nullPrototype.a = [true, null];
+      // `R.fromEntries` defines `__proto__` as an own data property, the shape
+      // `JSON.parse` produces for that key.
+      const ownProtoKey: unknown = R.fromEntries([
+        ["__proto__", { z: 1 }],
+        ["a", -0],
+      ]);
+      const shapes: ReadonlyArray<unknown> = [
+        null,
+        true,
+        -0,
+        "",
+        [],
+        {},
+        [[], {}, [{}]],
+        nullPrototype,
+        ownProtoKey,
+        { "\ufb00": 1, "\u{10000}": 2, "\ue000": 3, "": 4 },
+      ];
+      for (const shape of shapes) {
+        assertSuccess(JsoncFingerprint.canonicalizeResult(shape), encode(shape));
+      }
+    });
+  }
+});
+
+describe("canonical digest owner: md frontmatter differential", () => {
+  it.prop(
+    "@beep/md frontmatter emits the owner's RFC 8785 bytes for every plain JSON object",
+    { value: plainJsonObject },
+    ({ value }) => {
+      assertSuccess(Result.map(JsoncFingerprint.canonicalizeResult(value), fenced), mdFrontmatter(value));
+    },
+    { arbitrary: fcRuns(200) }
+  );
+
+  // Unlike the other encoders, this one writes its own string escapes and
+  // leaves an unpaired surrogate unescaped.
+  it("fixes what @beep/md frontmatter does with an unpaired surrogate", () => {
+    expect(mdFrontmatter({ s: "\ud800" })).toBe(fenced('{"s":"\ud800"}'));
+    expect(observeOwner({ s: "\ud800" })).toStrictEqual({ refused: "LoneSurrogate" });
+  });
+});
+
+// ── Off the JSON domain: what each side does today ──────────────────────────
+
+type Observed =
+  | { readonly text: string }
+  | { readonly threw: string }
+  | { readonly refused: JsoncCanonicalizeErrorCode };
+
+const observeEncoder = (encode: Encoder, value: unknown): Observed =>
+  pipe(
+    Result.try({ try: () => encode(value), catch: (thrown) => (P.isError(thrown) ? thrown.name : "non-error") }),
+    Result.match({ onSuccess: (text): Observed => ({ text }), onFailure: (threw): Observed => ({ threw }) })
+  );
+
+const observeOwner = (value: unknown): Observed =>
+  Result.match(JsoncFingerprint.canonicalizeResult(value), {
+    onSuccess: (text): Observed => ({ text }),
+    onFailure: (failure): Observed => ({ refused: failure.code }),
+  });
+
+type OffDomainRow = {
+  readonly input: string;
+  readonly value: () => unknown;
+  readonly epistemics: Observed;
+  readonly packetCore: Observed;
+  readonly owner: Observed;
+};
+
+const nestedArrays = (depth: number): unknown => A.reduce(A.range(1, depth), null as unknown, (inner) => [inner]);
+
+const offDomainRows: ReadonlyArray<OffDomainRow> = [
+  {
+    input: "an object member whose value is undefined",
+    value: () => ({ a: undefined, b: 1 }),
+    epistemics: { text: '{"b":1}' },
+    packetCore: { text: '{"b":1}' },
+    owner: { refused: "UnrepresentableValue" },
+  },
+  {
+    input: "an undefined array element",
+    value: () => [1, undefined, 2],
+    epistemics: { threw: "TypeError" },
+    packetCore: { text: "[1,null,2]" },
+    owner: { refused: "UnrepresentableValue" },
+  },
+  {
+    input: "undefined at the root",
+    value: () => undefined,
+    epistemics: { threw: "TypeError" },
+    packetCore: { text: "null" },
+    owner: { refused: "UnrepresentableValue" },
+  },
+  {
+    input: "NaN",
+    value: () => ({ n: Number.NaN }),
+    epistemics: { text: '{"n":null}' },
+    packetCore: { text: '{"n":null}' },
+    owner: { refused: "NonFiniteNumber" },
+  },
+  {
+    input: "Infinity",
+    value: () => [Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY],
+    epistemics: { text: "[null,null]" },
+    packetCore: { text: "[null,null]" },
+    owner: { refused: "NonFiniteNumber" },
+  },
+  {
+    input: "a Date",
+    value: () => ({ d: DateTime.toDate(DateTime.makeUnsafe(0)) }),
+    epistemics: { text: '{"d":{}}' },
+    packetCore: { text: '{"d":{}}' },
+    owner: { refused: "NonPlainObject" },
+  },
+  {
+    input: "a bigint",
+    value: () => ({ b: 1n }),
+    epistemics: { text: '{"b":{}}' },
+    packetCore: { text: '{"b":null}' },
+    owner: { refused: "BigIntValue" },
+  },
+  {
+    input: "a lone surrogate in a string value",
+    value: () => ["\ud800"],
+    epistemics: { text: '["\\ud800"]' },
+    packetCore: { text: '["\\ud800"]' },
+    owner: { refused: "LoneSurrogate" },
+  },
+  {
+    input: "a lone surrogate in a member key",
+    value: () => ({ "\udc00": 1 }),
+    epistemics: { text: '{"\\udc00":1}' },
+    packetCore: { text: '{"\\udc00":1}' },
+    owner: { refused: "LoneSurrogate" },
+  },
+];
+
+describe("canonical digest owner: behaviour off the JSON domain", () => {
+  for (const row of offDomainRows) {
+    it(`fixes each side's output for ${row.input}`, () => {
+      expect(observeEncoder(canonicalDetectionJson, row.value())).toStrictEqual(row.epistemics);
+      expect(observeEncoder(canonicalJsonText, row.value())).toStrictEqual(row.packetCore);
+      expect(observeOwner(row.value())).toStrictEqual(row.owner);
+    });
+  }
+
+  it("shows two different values sharing one legacy encoding, which the owner refuses", () => {
+    for (const [, encode] of encoders) {
+      expect(encode({ n: Number.NaN })).toBe(encode({ n: null }));
+    }
+    expect(observeOwner({ n: Number.NaN })).toStrictEqual({ refused: "NonFiniteNumber" });
+    expect(observeOwner({ n: null })).toStrictEqual({ text: '{"n":null}' });
+  });
+
+  // Plain JSON, but past the owner's hardening cap. No stored value nests this
+  // deep (the replay proves that for events and seals); the row exists so the
+  // swap in slice C lists it as a behaviour change.
+  it("fixes the one plain-JSON difference: nesting past the owner's depth cap", () => {
+    const atCap = nestedArrays(256);
+    const pastCap = nestedArrays(257);
+    for (const [, encode] of encoders) {
+      assertSuccess(JsoncFingerprint.canonicalizeResult(atCap), encode(atCap));
+      expect(Str.startsWith("[[[")(encode(pastCap))).toBe(true);
+    }
+    expect(observeOwner(pastCap)).toStrictEqual({ refused: "NestingDepthExceeded" });
+  });
+});
