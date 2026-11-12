@@ -400,9 +400,15 @@ export const ciCodeShapedPathPatterns: A.NonEmptyReadonlyArray<string> = [
 ];
 
 // Every relevance lane also runs when its own gate can change: the lane bodies, the pattern data
-// and classifier, and the workflow that hosts the job.
-const CI_GATE_SOURCES =
-  "^packages/tooling/tool/cli/src/commands/Ci/(CiLane\\.ts$|CiOperational)|^\\.github/workflows/check\\.yml$";
+// and classifier, the workflow that hosts the job, and the shared setup actions every job runs.
+const CI_GATE_SOURCES = A.join(
+  [
+    "^packages/tooling/tool/cli/src/commands/Ci/(CiLane\\.ts$|CiOperational)",
+    "^\\.github/workflows/check\\.yml$",
+    "^\\.github/actions/(setup-monorepo-ci|setup-bun|fetch-beep-ci)/",
+  ],
+  "|"
+);
 const relevance = (...rows: A.NonEmptyReadonlyArray<string>): string => A.join([...rows, CI_GATE_SOURCES], "|");
 
 /**
@@ -448,12 +454,13 @@ export const ciOperationalPatterns = CiOperationalPatterns.make({
     codegen: relevance(
       // Each driver's manifest defines its `generate:check` script.
       "^packages/drivers/(acp|ecfr|govinfo|runpod)/(package\\.json$|openapi[^/]*\\.json|spec/|scripts/|src/_generated/)",
-      "^packages/tooling/library/codegen-kit/",
       "^packages/_internal/db-admin/drizzle/",
       "^apps/professional-desktop/(package\\.json|scripts/sync-migration-bundle\\.ts|src/runtime/Migrations\\.gen\\.ts)$",
-      "^(package\\.json|bun\\.lock)$",
       "^\\.gitattributes$",
-      "^packages/tooling/tool/cli/src/commands/(Git|Worktree)/"
+      // The generators import codegen-kit, identity, schema and utils, and the job's merge-driver
+      // bootstrap runs `beep worktree prepare`; both workspace closures sit inside the CLI closure,
+      // which ci-docs-policy.test.ts checks.
+      REPO_CLI_RUNTIME_CLOSURE
     ),
     // The ecosystem family imports no workspace package: its inputs are the family, the resolved
     // toolchain and the lane body.

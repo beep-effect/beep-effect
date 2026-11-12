@@ -101,7 +101,16 @@ const closureProbes = (byName: HashMap.HashMap<string, Workspace>, name: string)
     onSome: ({ directory }) => [`${directory}/package.json`, `${directory}/src/index.ts`, `${directory}/README.md`],
   });
 
-const laneRow = (lane: "security" | "sast"): string =>
+// The workspaces each lane's job executes, whose dependency closures its relevance row must cover.
+const LANE_EXECUTED_WORKSPACES: ReadonlyArray<
+  readonly [(typeof CI_RELEVANCE_LANE_VALUES)[number], ReadonlyArray<string>]
+> = [
+  ["security", ["@beep/repo-cli"]],
+  ["sast", ["@beep/repo-cli"]],
+  ["codegen", ["@beep/repo-cli", "@beep/acp", "@beep/ecfr", "@beep/govinfo", "@beep/runpod", "@beep/codegen-kit"]],
+];
+
+const laneRow = (lane: (typeof CI_RELEVANCE_LANE_VALUES)[number]): string =>
   O.getOrElse(O.fromUndefinedOr(ciOperationalPatterns.lanes?.[lane]), () => "^$");
 
 const isStepList = S.is(S.Array(S.Unknown));
@@ -382,22 +391,26 @@ const RELEVANCE_ROWS: ReadonlyArray<readonly [string, ReadonlyArray<string>]> = 
   ["packages/tooling/tool/cli/src/commands/Worktree/Worktree.service.ts", ["codegen", "sast", "security"]],
   ["flake.nix", ["nix"]],
   ["apps/professional-desktop/src-tauri/src/lib.rs", ["desktop_ipc"]],
-  ["packages/foundation/modeling/schema/src/index.ts", ["desktop_ipc", "sast", "security"]],
+  ["packages/foundation/modeling/schema/src/index.ts", ["codegen", "desktop_ipc", "sast", "security"]],
   [".semgrep/first-party.yml", ["sast"]],
   ["osv-scanner.toml", ["security"]],
   [".github/workflows/storybook.yml", ["security"]],
-  [".github/actions/setup-bun/action.yml", ["sast", "security"]],
-  [".github/actions/setup-monorepo-ci/action.yml", ["desktop_ipc", "security"]],
-  ["packages/tooling/tool/cli/src/commands/Ci/DependencyReview.ts", ["sast", "security"]],
+  // Every job runs the shared setup actions.
+  [".github/actions/setup-bun/action.yml", CI_RELEVANCE_LANE_VALUES],
+  [".github/actions/fetch-beep-ci/action.yml", CI_RELEVANCE_LANE_VALUES],
+  [".github/actions/setup-monorepo-ci/action.yml", CI_RELEVANCE_LANE_VALUES],
+  ["packages/tooling/tool/cli/src/commands/Ci/DependencyReview.ts", ["codegen", "sast", "security"]],
   // The hosted GitHub policy reads run through the CLI closure (LaneTimings' client layer, the
   // GitHub driver's transport), so Security runs on those sources too.
-  ["packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts", ["sast", "security"]],
-  ["packages/drivers/github/src/internal/octokit.ts", ["sast", "security"]],
+  ["packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts", ["codegen", "sast", "security"]],
+  ["packages/drivers/github/src/internal/octokit.ts", ["codegen", "sast", "security"]],
+  // The driver generators import identity, schema and utils.
+  ["packages/foundation/modeling/identity/src/packages.ts", ["codegen", "desktop_ipc", "sast", "security"]],
   // Dependency review reads every manifest GitHub's dependency graph recognizes.
   ["docs/example/composer.lock", ["security"]],
   ["packages/agents/domain/package.json", ["desktop_ipc", "security"]],
-  ["packages/tooling/library/repo-utils/package.json", ["sast", "security"]],
-  ["tsconfig.base.json", ["ecosystem", "sast", "security"]],
+  ["packages/tooling/library/repo-utils/package.json", ["codegen", "sast", "security"]],
+  ["tsconfig.base.json", ["codegen", "ecosystem", "sast", "security"]],
   ["bun.lock", ["codegen", "ecosystem", "desktop_ipc", "sast", "security"]],
   [".github/workflows/check.yml", CI_RELEVANCE_LANE_VALUES],
   ["packages/tooling/tool/cli/src/commands/Ci/CiLane.ts", CI_RELEVANCE_LANE_VALUES],
@@ -424,24 +437,32 @@ it.layer(Layer.provideMerge(Git.layer, NodeServices.layer), { timeout: "60 secon
       })
     );
 
-    // Security's GitHub policy reads and SAST's dispatcher run through `bun run beep`, so every
-    // workspace in the @beep/repo-cli dependency closure is an input to both lanes.
+    // A lane whose job executes workspace code must run when any workspace in that code's dependency
+    // closure changes: Security's GitHub policy reads and SAST's dispatcher run through `bun run
+    // beep`, and Codegen runs the driver generators and the CLI's `worktree prepare`.
     it.effect(
-      "covers the whole @beep/repo-cli workspace closure in the Security and SAST rows",
+      "covers each lane's executed workspace closure in its relevance row",
       Effect.fnUntraced(function* () {
         const byName = yield* workspacesByName();
-        const closure = workspaceClosure(byName, "@beep/repo-cli");
-        assert.isAbove(HashSet.size(closure), 10);
-        // Each member's manifest, a source file and a prose file must select both lanes.
-        const misses = A.flatMap(A.fromIterable(closure), (name) =>
-          A.flatMap(closureProbes(byName, name), (probe) =>
+        const misses = A.flatMap(LANE_EXECUTED_WORKSPACES, ([lane, roots]) => {
+          const closure = A.reduce(roots, HashSet.empty<string>(), (acc, root) =>
+            HashSet.union(acc, workspaceClosure(byName, root))
+          );
+          const row = new RegExp(laneRow(lane), "u");
+          return A.flatMap(A.fromIterable(closure), (name) =>
             A.map(
-              A.filter(["security", "sast"] as const, (lane) => !new RegExp(laneRow(lane), "u").test(probe)),
-              (lane) => `${lane} misses ${name}: ${probe}`
+              A.filter(closureProbes(byName, name), (probe) => !row.test(probe)),
+              (probe) => `${lane} misses ${name}: ${probe}`
             )
-          )
-        );
+          );
+        });
         assert.deepStrictEqual(misses, []);
+        for (const [lane, roots] of LANE_EXECUTED_WORKSPACES) {
+          assert.isTrue(
+            A.every(roots, (root) => HashMap.has(byName, root)),
+            `${lane} roots are workspaces`
+          );
+        }
       })
     );
 

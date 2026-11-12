@@ -90,9 +90,12 @@ On code pull requests, Change Profile also reports per-lane relevance
 `desktop_ipc_relevant`, `sast_relevant`, `security_relevant`) from the `lanes`
 rows of the same pattern data. Each job's guard reads `!= 'false'`, so a pinned
 binary that predates an output leaves the lane running. The jobs' own path gates
-read the same rows with `jq` and `grep -E`. Security and SAST also run whenever the
-`@beep/repo-cli` workspace closure changes, because it implements their hosted dispatch and
-GitHub policy reads. Security's live-advisory and
+read the same rows with `jq` and `grep -E`. Every relevance lane runs when its gate
+sources change: the lane bodies, the pattern data, `check.yml` and the shared setup
+actions. Security, SAST and Codegen also run whenever the `@beep/repo-cli` workspace
+closure changes. That closure implements their dispatch and GitHub policy reads, and
+contains the driver generators' dependencies. A census test checks each lane's row
+against the closure of the workspaces its job executes. Security's live-advisory and
 GitHub-settings verdicts stay on every main push, because a push always gets
 the full profile.
 
