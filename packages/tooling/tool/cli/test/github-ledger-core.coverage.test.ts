@@ -195,7 +195,7 @@ describe("GithubLedger reducers", () => {
       unattributed: hour.unattributed,
     }));
     // 100 + 30 telescoped across the two runs, plus the 50 seen after the reset.
-    expect(hours).toStrictEqual([
+    deepStrictEqual(hours, [
       {
         key: coreAlice,
         fleetUsed: O.some(180),
