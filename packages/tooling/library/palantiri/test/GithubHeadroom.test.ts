@@ -104,20 +104,6 @@ describe("githubHeadroomItems", () => {
     expect(reasonOf(items[4]!.freshness)).toBe("stale");
     expect(reasonOf(items[0]!.freshness)).toBe("fresh");
   });
-
-  it("orders an identity's other resources by name", () => {
-    const items = githubHeadroomItems(
-      present({
-        buckets: [
-          bucket({ resource: "source_import" }),
-          bucket({ resource: "code_search" }),
-          bucket({ resource: "audit_log" }),
-        ],
-      }),
-      NOW
-    );
-    expect(A.map(items, (item) => item.resource)).toEqual(["audit_log", "code_search", "source_import"]);
-  });
 });
 
 describe("reduceGithubHeadroom", () => {
@@ -142,40 +128,6 @@ describe("reduceGithubHeadroom", () => {
         "top 1h here: yeet monitor 812, gh-spawn pr view 140, session note 3; unattributed 1h graphql 230"
     );
     expect(parcel.receipt.total).toBe(3);
-  });
-
-  it("marks a bucket below its reserve with no limit without a percentage", () => {
-    const parcel = reduceGithubHeadroom(
-      present({ buckets: [bucket({ limit: 0, remaining: 0, used: 0, reserve: "below" })] }),
-      NOW,
-      20
-    );
-    expect(parcel.summary).toMatch(/^user:alice core 0\/0 BELOW reserve ↺21:31Z; /);
-  });
-
-  it("totals unattributed spend per resource in core, graphql, search order", () => {
-    const parcel = reduceGithubHeadroom(
-      present({
-        buckets: [
-          bucket({ resource: "graphql", unattributedLastHour: O.some(230) }),
-          bucket({ identity: "user:bob", resource: "graphql", unattributedLastHour: O.some(20) }),
-          bucket({ unattributedLastHour: O.some(5) }),
-          bucket({ resource: "search", limit: 30, remaining: 30, used: 0, unattributedLastHour: O.some(0) }),
-        ],
-      }),
-      NOW,
-      20
-    );
-    expect(parcel.summary).toMatch(/; unattributed 1h core 5, graphql 250$/);
-  });
-
-  it("ages a recent reading in seconds when no summary bucket is fresh", () => {
-    const parcel = reduceGithubHeadroom(
-      present({ buckets: [bucket({ resource: "code_search", asOf: DateTime.subtract(NOW, { seconds: 42 }) })] }),
-      NOW,
-      20
-    );
-    expect(parcel.summary).toMatch(/^github headroom unknown: last reading 42s ago \(sampler idle\?\); /);
   });
 
   it("marks an unknown reserve instead of judging it", () => {

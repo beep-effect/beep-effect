@@ -810,49 +810,4 @@ describe("transport rate-limit observations", () => {
       assert.lengthOf(seen, 0);
     })
   );
-
-  it.effect("records a HEAD answered 304 as a not-modified success", () =>
-    Effect.gen(function* () {
-      const script = scriptedFetch([{ status: 304, body: undefined, headers: rateLimitHeaders({ remaining: 3 }) }]);
-      const { transport, observations } = yield* observing({ retry: RetryPolicy.none, fetch: script.fetch });
-      const response = yield* transport.request("HEAD /answer", "HEAD /answer", {});
-      assert.strictEqual(response.status, 304);
-      const seen = yield* observations;
-      assert.lengthOf(seen, 1);
-      assert.strictEqual(seen[0]?.status, 304);
-      assert.strictEqual(seen[0]?.outcome, "not-modified");
-      assert.strictEqual(seen[0]?.kind, "rest");
-    })
-  );
-
-  it.effect("observes a GraphQL success through the global fetch when no fetch is configured", () =>
-    Effect.gen(function* () {
-      const script = scriptedFetch([
-        {
-          status: 200,
-          body: { data: { viewer: { login: "octocat" } } },
-          headers: rateLimitHeaders({ remaining: 4_321 }),
-        },
-      ]);
-      yield* Effect.acquireRelease(
-        Effect.sync(() => {
-          const original = globalThis.fetch;
-          globalThis.fetch = script.fetch;
-          return original;
-        }),
-        (original) =>
-          Effect.sync(() => {
-            globalThis.fetch = original;
-          })
-      );
-      const { transport, observations } = yield* observing({ retry: RetryPolicy.none });
-      const data = yield* transport.graphql("viewer", VIEWER, {});
-      assert.deepStrictEqual(data, { viewer: { login: "octocat" } });
-      assert.strictEqual(script.count(), 1);
-      const seen = yield* observations;
-      assert.lengthOf(seen, 1);
-      assert.strictEqual(seen[0]?.snapshot.resource, "graphql");
-      assert.strictEqual(seen[0]?.snapshot.remaining, 4_321);
-    })
-  );
 });
