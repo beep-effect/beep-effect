@@ -536,7 +536,7 @@ export const yeetPrBotReviewBodyCapsule: {
           )
         );
       }),
-      Match.orElse(() => O.none<YeetPrCommentCapsule>())
+      Match.orElse(O.none<YeetPrCommentCapsule>)
     )
 );
 

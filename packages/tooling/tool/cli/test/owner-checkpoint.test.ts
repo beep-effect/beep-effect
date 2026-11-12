@@ -178,17 +178,17 @@ const request = (revision: number, command: OwnerCheckpointCommand, ownerBinding
   OwnerCheckpointRequest.make({ binding: ownerBinding, expectedRevision: revision, command });
 const release = () => request(0, OwnerCheckpointCommand.cases.Release.make({ releaseId, evidence }));
 const claim = () => request(1, OwnerCheckpointCommand.cases.Claim.make({ claimId, snapshot: snapshot(-10, true) }));
-const sqlite = (filename: string) =>
-  Layer.unwrap(
-    Effect.gen(function* () {
-      if ("bun" in process.versions) {
-        const client = yield* Effect.promise(() => import("@effect/sql-sqlite-bun/SqliteClient"));
-        return client.layer({ filename });
-      }
-      const client = yield* Effect.promise(() => import("@effect/sql-sqlite-node/SqliteClient"));
+// Each driver layer provides its own client beside SqlClient; they unify only as SqlClient.
+const loadSqlite = (filename: string): Effect.Effect<Layer.Layer<SqlClient.SqlClient, SqlError.SqlError>> =>
+  Effect.gen(function* () {
+    if ("bun" in process.versions) {
+      const client = yield* Effect.promise(() => import("@effect/sql-sqlite-bun/SqliteClient"));
       return client.layer({ filename });
-    })
-  );
+    }
+    const client = yield* Effect.promise(() => import("@effect/sql-sqlite-node/SqliteClient"));
+    return client.layer({ filename });
+  });
+const sqlite = (filename: string) => Layer.unwrap(loadSqlite(filename));
 const withDb = <Value, Error, Requirements>(filename: string, effect: Effect.Effect<Value, Error, Requirements>) =>
   provideTestLayer(sqlite(filename))(effect);
 const inMemory = <Value, Error, Requirements>(effect: Effect.Effect<Value, Error, Requirements>) =>

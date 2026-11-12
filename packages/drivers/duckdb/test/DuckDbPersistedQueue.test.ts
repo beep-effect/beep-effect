@@ -22,7 +22,7 @@ it.layer(Layer.mergeAll(DuckDbTestLayer, NodeCrypto.layer), { timeout: "30 secon
     "duckdb",
     DuckDbPersistedQueue.layerStoreSql({ pollInterval: "10 millis" }).pipe(Layer.provide(NodeCrypto.layer)),
     testApi,
-    "90 seconds"
+    { timeout: "90 seconds" }
   );
   sqlContract(testApi);
   testApi.effect("reports offer and cleanup failures as PersistedQueueError", () =>

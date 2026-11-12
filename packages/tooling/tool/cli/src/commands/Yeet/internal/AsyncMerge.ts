@@ -255,20 +255,25 @@ const settleOutcome = (outcome: AsyncOutcome, attached: boolean, bypassRules: bo
       }),
   });
 
-// How an in-flight request (from a 409) differs from the one this caller asked for, if it does.
+// How an in-flight request (from a 409) differs from the one this caller asked for, if it does,
+// as the phrase that follows "in flight with": "head <sha>" or "an unreported head", then
+// "bypass_rules <bool>" or "an unreported bypass".
 // A field GitHub did not report counts as a difference: the caller cannot vouch for it.
 const inFlightMismatch = (
   inFlight: typeof GithubAsyncMergeOutcome.cases.Pending.Type,
   request: GithubAsyncMergeRequest
 ): O.Option<string> => {
-  const head = O.getOrElse(inFlight.expectedHeadSha, () => "an unreported head");
+  const head = O.match(inFlight.expectedHeadSha, {
+    onNone: () => "an unreported head",
+    onSome: (sha) => `head ${sha}`,
+  });
   const bypass = O.match(inFlight.bypassRules, {
     onNone: () => "an unreported bypass",
     onSome: (bypassRules) => `bypass_rules ${bypassRules}`,
   });
   const sameHead = O.exists(inFlight.expectedHeadSha, (sha) => sha === request.sha);
   const sameBypass = O.exists(inFlight.bypassRules, (bypassRules) => bypassRules === request.bypassRules);
-  return sameHead && sameBypass ? O.none() : O.some(`head ${head} and ${bypass}`);
+  return sameHead && sameBypass ? O.none() : O.some(`${head} and ${bypass}`);
 };
 
 const settleAsync = Effect.fn("Yeet.settleAsyncMerge")(function* (

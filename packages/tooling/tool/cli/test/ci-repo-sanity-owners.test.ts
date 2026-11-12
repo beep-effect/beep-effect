@@ -210,6 +210,6 @@ layer(testLayer, { timeout: "60 seconds" })("Repo Sanity step masking (PERIH-02)
       expect(A.map(failure.failures, (step) => step.label)).toEqual(
         A.map(A.take(body, shadcnIndex), (step) => step.label)
       );
-    }).pipe(Effect.scoped)
+    })
   );
 });

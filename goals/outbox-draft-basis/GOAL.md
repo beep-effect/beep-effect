@@ -1,0 +1,75 @@
+# GOAL: Outbox Draft Basis
+
+Repo root: the current working directory — the `beep-effect` checkout you are
+running in. Do not assume an absolute path; several checkouts exist. All paths
+below are repo-relative.
+
+Outcome: An outbox draft records the Microsoft Graph items it rested on, and a draft whose basis changed is reported and flagged in Outlook before the attorney sends it.
+
+This is a compact `/goal` launcher. Treat the packet files as the detailed
+contract:
+
+- `goals/outbox-draft-basis/README.md`
+- `goals/outbox-draft-basis/SPEC.md`
+- `goals/outbox-draft-basis/PLAN.md`
+- `goals/outbox-draft-basis/ops/manifest.json`
+
+Read those first, then read `AGENTS.md`, `CLAUDE.md`, and any governing
+standards named by `SPEC.md`. Higher-priority repo standards outrank packet
+prose when they conflict.
+
+Scope:
+
+- In: `packages/drivers/m365-mcp`; `packages/drivers/m365` only for a
+  missing selected field; `docs/runbooks/m365-agent-outbox-registration.md`;
+  this packet.
+- Out: agent sending (`version-unbound` stays), pins outside Microsoft
+  Graph, any slice import from the driver, shared-kernel or foundation pin
+  schemas, a timer inside the server, edits to a draft's subject or body.
+
+Start at P0: freeze the schemas, record the tenant proof that a draft
+category does not reach recipients (the operator or the attorney sends that
+one message, never an agent), and decide the message pin. Write no category
+before that proof is recorded.
+
+Workflow:
+
+1. Inspect referenced files and current repo state.
+2. Make the smallest change that satisfies `SPEC.md`.
+3. Preserve unrelated user/worktree changes.
+4. Keep decisions tied to evidence from files, tests, docs, or command output.
+5. Update packet evidence/status if the implementation changes readiness.
+6. At the Close phase, write a closeout reflection to
+   `history/reflections/<YYYY-MM-DD>-<agent>.md` via the `/reflect` skill;
+   `bun run beep lint reflection-artifacts` must pass.
+
+Acceptance:
+
+- [ ] `SPEC.md` acceptance criteria are satisfied.
+- [ ] Required verification commands pass, or unrelated failures are reproduced
+      and recorded separately.
+- [ ] No unrelated refactors or formatting churn.
+
+Verification:
+
+```sh
+bun run beep quality package-verify @beep/m365-mcp
+test "$(wc -m < goals/outbox-draft-basis/GOAL.md)" -le 4000
+jq . goals/outbox-draft-basis/ops/manifest.json
+git diff --check -- goals/outbox-draft-basis
+```
+
+Decide changes to public API, schema, data migration, auth, infra, security
+behavior, dependencies, lockfiles, generated files, or destructive state
+yourself when the goal needs them: record each as a decision file (`bun run beep goals decisions add`) with
+its reason and how to reverse it, then continue. Land the reversal path for an
+irreversible change (a tested down-migration, a backup of deleted state) before
+the change merges, and ship a breaking public API or schema change with a major
+changeset. Escalate only what AGENTS.md "Autonomy" lists.
+
+Ship proposedCloseout and the reflection in the final PR (status stays active or
+paused). After that merge, verify with `bun run beep goals completion refresh --slug outbox-draft-basis`,
+then adopt with `bun run beep goals set-status outbox-draft-basis <status>` in a
+packet-state PR. Done only once it merges and this passes, or an operator
+blocker is reported with evidence:
+`git show origin/main:goals/outbox-draft-basis/ops/manifest.json | jq -e '.closeout.status == .initiative.status'`
