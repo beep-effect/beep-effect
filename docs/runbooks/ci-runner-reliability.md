@@ -73,9 +73,14 @@ A `docs_only` pull request runs only the checks a documentation diff can fail:
 | Docs Policy | The knowledge, packet and Markdown root tasks listed in `DocsPolicy.ts`, plus `knowledge doctor ci --base` |
 | Secret Scanning, Commitlint | The commit range, as on every head |
 
-Everything else skips before runner allocation: the heavy matrix completes with
-`admitted: false`, and Security, SAST, the code lanes and the test shards are
-skipped. `packages/tooling/tool/cli/test/ci-docs-policy.test.ts` derives Docs
+Four kinds of job still allocate a runner, each doing only a few seconds of work:
+Change Profile, Heavy Admission and Test Plan classify the change and stop; PR
+Size Label sets its label; and the required-context aggregators (Lint, Test
+Unit, Property Laws, Heavy / Test Integration) report the skipped shards. The
+heavy matrix completes with `admitted: false` and allocates no runner, and
+Security, SAST, the code lanes and the test shards skip before runner
+allocation. The non-required Storybook and Vercel Deploy workflows each run a
+short planner that finds nothing to build. `packages/tooling/tool/cli/test/ci-docs-policy.test.ts` derives Docs
 Policy's obligations from `turbo.json`: every root task whose inputs match a
 docs-classified path, and every uncached root task, either runs in the lane or
 has a written reason in `DOCS_POLICY_EXCLUSIONS`.

@@ -29,8 +29,23 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
+import type { CiRelevanceLane } from "@beep/repo-cli/commands/Ci";
 
 const SETUP_MONOREPO_ACTION = "./.github/actions/setup-monorepo-ci";
+const LANE_GATED = "steps.lane-gate.outputs.should_run == 'true'";
+const LANE_SKIPPED = "steps.lane-gate.outputs.should_run != 'true'";
+type TierOneGates = { readonly setup: string; readonly skip: string };
+// Repo Sanity also sets up, and reports no skip, on its documentation path.
+const TIER_ONE_GATES: Readonly<Record<string, TierOneGates>> = {
+  verify: {
+    setup: `${LANE_GATED} || steps.lane-gate.outputs.docs_path == 'true'`,
+    skip: `${LANE_SKIPPED} && steps.lane-gate.outputs.docs_path != 'true'`,
+  },
+};
+const tierOneGates = (jobId: string): TierOneGates =>
+  O.getOrElse(R.get(TIER_ONE_GATES, jobId), () => ({ setup: LANE_GATED, skip: LANE_SKIPPED }));
+const laneRow = (lane: CiRelevanceLane): string =>
+  O.getOrElse(O.fromUndefinedOr(ciOperationalPatterns.lanes?.[lane]), () => "");
 
 // Explicit secret inputs of setup-monorepo-ci: the Turbo tokens plus the
 // application secret block packages/tooling/tool/cli/src/commands/Ci/CiOperational.service.ts allowlists. The script,
@@ -1347,7 +1362,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     Effect.fnUntraced(function* () {
       const policy = yield* readCredentialPolicySources();
       const jobs = yield* workflowJobs(policy.workflow);
-      const gated = "steps.lane-gate.outputs.should_run == 'true'";
+      const gated = LANE_GATED;
       for (const jobId of [
         "verify",
         "labs",
@@ -1360,19 +1375,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       ]) {
         const steps = jobSteps(jobs, jobId);
         const setupIndex = O.getOrThrow(A.findFirstIndex(steps, (step) => step.uses === SETUP_MONOREPO_ACTION));
-        assert.strictEqual(
-          setupMonorepoStep(jobs, jobId).if,
-          jobId === "verify" ? `${gated} || steps.lane-gate.outputs.docs_path == 'true'` : gated,
-          jobId
-        );
+        const gates = tierOneGates(jobId);
+        assert.strictEqual(setupMonorepoStep(jobs, jobId).if, gates.setup, jobId);
         assert.isBelow(stepIndexByName(steps, "Determine lane execution"), setupIndex, jobId);
-        assert.strictEqual(
-          stepByName(steps, "Skip lane").if,
-          jobId === "verify"
-            ? "steps.lane-gate.outputs.should_run != 'true' && steps.lane-gate.outputs.docs_path != 'true'"
-            : "steps.lane-gate.outputs.should_run != 'true'",
-          jobId
-        );
+        assert.strictEqual(stepByName(steps, "Skip lane").if, gates.skip, jobId);
       }
       for (const jobId of [
         "labs",
@@ -1416,7 +1422,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       );
       // Codegen and Ecosystem read their path gates from the change-profile pattern data.
       assert.include(verifyGate, "'.lanes[$lane] // empty'");
-      assert.include(ciOperationalPatterns.lanes?.ecosystem ?? "", "^packages/ecosystem/");
+      assert.include(laneRow("ecosystem"), "^packages/ecosystem/");
       assert.include(
         stepRun(jobSteps(jobs, "coverage-regression"), "Determine comparison execution"),
         '[[ "$docs_only" == "true" ]]'
@@ -1424,7 +1430,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
 
       const nix = jobSteps(jobs, "nix");
       assert.include(stepRun(nix, "Determine lane execution"), "'.lanes.nix // empty'");
-      assert.include(ciOperationalPatterns.lanes?.nix ?? "", "^flake\\.(nix|lock)$");
+      assert.include(laneRow("nix"), "^flake\\.(nix|lock)$");
       for (const name of ["Install Nix", "Setup Cachix (read-only)", "Run Nix checks"]) {
         assert.strictEqual(stepByName(nix, name).if, gated, name);
       }

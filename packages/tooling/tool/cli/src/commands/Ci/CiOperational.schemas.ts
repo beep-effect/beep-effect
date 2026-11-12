@@ -446,7 +446,8 @@ export const ciOperationalPatterns = CiOperationalPatterns.make({
     // manifest and lockfile are drift inputs. The job also verifies the regenerate merge-driver
     // bootstrap, which reads .gitattributes and the git and worktree commands.
     codegen: relevance(
-      "^packages/drivers/(acp|ecfr|govinfo|runpod)/(openapi[^/]*\\.json|spec/|scripts/|src/_generated/)",
+      // Each driver's manifest defines its `generate:check` script.
+      "^packages/drivers/(acp|ecfr|govinfo|runpod)/(package\\.json$|openapi[^/]*\\.json|spec/|scripts/|src/_generated/)",
       "^packages/tooling/library/codegen-kit/",
       "^packages/_internal/db-admin/drizzle/",
       "^apps/professional-desktop/(package\\.json|scripts/sync-migration-bundle\\.ts|src/runtime/Migrations\\.gen\\.ts)$",

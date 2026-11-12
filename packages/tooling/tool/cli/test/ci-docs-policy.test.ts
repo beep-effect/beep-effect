@@ -47,6 +47,65 @@ const WorkspaceManifest = S.Struct({
 const decodeWorkspaceManifest = S.decodeUnknownEffect(S.fromJsonString(WorkspaceManifest));
 // Fixture and installed manifests are not workspaces; a fixture may reuse a workspace name.
 const WORKSPACE_MANIFEST_EXCLUSION = /(^|\/)(node_modules|test|tests|fixtures|__fixtures__)\//u;
+
+const isManifestPath = (file: string): boolean => file === "package.json" || Str.endsWith("/package.json")(file);
+
+type Workspace = { readonly manifest: typeof WorkspaceManifest.Type; readonly directory: string };
+
+// Every workspace manifest in the tracked tree, by package name.
+const workspacesByName = Effect.fnUntraced(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const repoRoot = yield* findRepoRoot();
+  const git = yield* Git;
+  const entries = yield* git.lsFiles(repoRoot);
+  const manifestPaths = A.filter(
+    A.map(entries, (entry) => entry.path),
+    (file) => isManifestPath(file) && !WORKSPACE_MANIFEST_EXCLUSION.test(file)
+  );
+  const manifests = yield* Effect.forEach(manifestPaths, (file) =>
+    fs.readFileString(path.join(repoRoot, file)).pipe(
+      Effect.flatMap(decodeWorkspaceManifest),
+      Effect.map((manifest): Workspace => ({ manifest, directory: path.dirname(file) })),
+      Effect.option
+    )
+  );
+  return HashMap.fromIterable(
+    A.flatMap(A.getSomes(manifests), (workspace) =>
+      O.match(O.fromUndefinedOr(workspace.manifest.name), {
+        onNone: () => [],
+        onSome: (name) => [[name, workspace] as const],
+      })
+    )
+  );
+});
+
+const declaredDependencies = (manifest: typeof WorkspaceManifest.Type): ReadonlyArray<string> =>
+  A.flatMap([manifest.dependencies, manifest.devDependencies, manifest.peerDependencies], (map) => R.keys(map ?? {}));
+
+// The workspace dependency closure of `root`, the root included.
+const workspaceClosure = (byName: HashMap.HashMap<string, Workspace>, root: string): HashSet.HashSet<string> => {
+  const visit = (closure: HashSet.HashSet<string>, name: string): HashSet.HashSet<string> =>
+    HashSet.has(closure, name)
+      ? closure
+      : O.match(HashMap.get(byName, name), {
+          onNone: () => closure,
+          onSome: (workspace) => A.reduce(declaredDependencies(workspace.manifest), HashSet.add(closure, name), visit),
+        });
+  return visit(HashSet.empty(), root);
+};
+
+const closureProbes = (byName: HashMap.HashMap<string, Workspace>, name: string): ReadonlyArray<string> =>
+  O.match(HashMap.get(byName, name), {
+    onNone: () => [],
+    onSome: ({ directory }) => [`${directory}/package.json`, `${directory}/src/index.ts`, `${directory}/README.md`],
+  });
+
+const laneRow = (lane: "security" | "sast"): string =>
+  O.getOrElse(O.fromUndefinedOr(ciOperationalPatterns.lanes?.[lane]), () => "^$");
+
+const isStepList = S.is(S.Array(S.Unknown));
+const isText = S.is(S.String);
 const decodeTurboJson = S.decodeUnknownEffect(S.fromJsonString(TurboJson));
 
 const ROOT_TASK_PREFIX = "//#";
@@ -177,10 +236,15 @@ it.layer(Layer.provideMerge(Git.layer, NodeServices.layer), { timeout: "120 seco
         }
         // An exclusion is a standing claim that the task could run here; one for a task no
         // documentation diff can reach is stale.
-        for (const task of excludedTasks) {
-          const row = O.getOrThrow(A.findFirst(obligations, (candidate) => candidate.task === task));
-          assert.isTrue(row.uncached || O.isSome(row.docsHit), `${task} needs no exclusion`);
-        }
+        const staleExclusions = A.filter(
+          obligations,
+          (row) => A.contains(excludedTasks, row.task) && !row.uncached && O.isNone(row.docsHit)
+        );
+        assert.deepStrictEqual(
+          A.map(staleExclusions, (row) => row.task),
+          [],
+          "exclusions for tasks no documentation diff can reach"
+        );
         assert.deepStrictEqual(
           A.filter(DOCS_POLICY_ROOT_TASKS, (task) => A.contains(excludedTasks, task)),
           [],
@@ -254,11 +318,10 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("Docs Policy and lane re
       assert.deepStrictEqual(yamlAt(workflow, ["jobs", "docs-policy", "permissions"]), { contents: "read" });
       assert.strictEqual(yamlAt(workflow, ["jobs", "docs-policy", "env", "BEEP_CI_LANE_ID"]), "docs-policy");
       const steps = yamlAt(workflow, ["jobs", "docs-policy", "steps"]);
-      const isStepList = S.is(S.Array(S.Unknown));
       assert.isTrue(isStepList(steps));
       const runs = A.filter(
         A.map(isStepList(steps) ? steps : [], (step) => yamlAt(step, ["run"])),
-        S.is(S.String)
+        isText
       );
       assert.include(runs, 'bun run beep ci lane docs-policy --base "origin/${GITHUB_BASE_REF:-main}"');
       const descriptor = O.getOrThrow(A.findFirst(CI_LANE_DESCRIPTORS, (row) => row.id === "docs-policy"));
@@ -279,9 +342,10 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("Docs Policy and lane re
           lane
         );
         const guard = yamlAt(workflow, ["jobs", RELEVANCE_JOBS[lane], "if"]);
-        assert.isTrue(S.is(S.String)(guard), lane);
-        assert.include(guard as string, `needs.change-profile.outputs.${lane}_relevant != 'false'`, lane);
-        assert.include(guard as string, "needs.change-profile.outputs.docs_only != 'true'", lane);
+        assert.isTrue(isText(guard), lane);
+        const guardText = isText(guard) ? guard : "";
+        assert.include(guardText, `needs.change-profile.outputs.${lane}_relevant != 'false'`, lane);
+        assert.include(guardText, "needs.change-profile.outputs.docs_only != 'true'", lane);
       }
       // `== 'true'` would skip a lane whenever the pinned binary predates its output (empty).
       const fs = yield* FileSystem.FileSystem;
@@ -310,6 +374,8 @@ const RELEVANCE_ROWS: ReadonlyArray<readonly [string, ReadonlyArray<string>]> = 
   ["packages/law-practice/server/src/Citation.ts", ["sast"]],
   ["packages/ecosystem/drizzle/src/index.ts", ["ecosystem", "sast"]],
   ["packages/drivers/acp/openapi.json", ["codegen", "sast", "security"]],
+  // A driver manifest defines its `generate:check` script, so it is a drift input.
+  ["packages/drivers/acp/package.json", ["codegen", "sast", "security"]],
   ["packages/drivers/acp/src/_generated/Client.ts", ["codegen", "sast", "security"]],
   ["packages/tooling/library/codegen-kit/src/index.ts", ["codegen", "sast", "security"]],
   [".gitattributes", ["codegen"]],
@@ -363,55 +429,19 @@ it.layer(Layer.provideMerge(Git.layer, NodeServices.layer), { timeout: "60 secon
     it.effect(
       "covers the whole @beep/repo-cli workspace closure in the Security and SAST rows",
       Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const repoRoot = yield* findRepoRoot();
-        const git = yield* Git;
-        const entries = yield* git.lsFiles(repoRoot);
-        const manifestPaths = A.filter(
-          A.map(entries, (entry) => entry.path),
-          (file) =>
-            (file === "package.json" || Str.endsWith("/package.json")(file)) && !WORKSPACE_MANIFEST_EXCLUSION.test(file)
-        );
-        const manifests = yield* Effect.forEach(manifestPaths, (file) =>
-          fs.readFileString(path.join(repoRoot, file)).pipe(
-            Effect.flatMap(decodeWorkspaceManifest),
-            Effect.map((manifest) => ({ manifest, directory: path.dirname(file) })),
-            Effect.option
-          )
-        );
-        const byName = HashMap.fromIterable(
-          A.flatMap(A.getSomes(manifests), (workspace) =>
-            workspace.manifest.name === undefined ? [] : [[workspace.manifest.name, workspace] as const]
-          )
-        );
-        let closure = HashSet.empty<string>();
-        let pending: ReadonlyArray<string> = ["@beep/repo-cli"];
-        while (A.isReadonlyArrayNonEmpty(pending)) {
-          const [name, ...rest] = pending;
-          pending = rest;
-          const workspace = HashMap.get(byName, name);
-          if (O.isNone(workspace) || HashSet.has(closure, name)) continue;
-          closure = HashSet.add(closure, name);
-          const { dependencies, devDependencies, peerDependencies } = workspace.value.manifest;
-          pending = A.appendAll(
-            pending,
-            A.filter(
-              [...R.keys(dependencies ?? {}), ...R.keys(devDependencies ?? {}), ...R.keys(peerDependencies ?? {})],
-              (dependency) => HashMap.has(byName, dependency)
-            )
-          );
-        }
+        const byName = yield* workspacesByName();
+        const closure = workspaceClosure(byName, "@beep/repo-cli");
         assert.isAbove(HashSet.size(closure), 10);
-        const security = new RegExp(ciOperationalPatterns.lanes?.security ?? "^$", "u");
-        const sast = new RegExp(ciOperationalPatterns.lanes?.sast ?? "^$", "u");
-        for (const name of closure) {
-          const directory = O.getOrThrow(HashMap.get(byName, name)).directory;
-          for (const probe of [`${directory}/package.json`, `${directory}/src/index.ts`, `${directory}/README.md`]) {
-            assert.isTrue(security.test(probe), `security misses ${name}: ${probe}`);
-            assert.isTrue(sast.test(probe), `sast misses ${name}: ${probe}`);
-          }
-        }
+        // Each member's manifest, a source file and a prose file must select both lanes.
+        const misses = A.flatMap(A.fromIterable(closure), (name) =>
+          A.flatMap(closureProbes(byName, name), (probe) =>
+            A.map(
+              A.filter(["security", "sast"] as const, (lane) => !new RegExp(laneRow(lane), "u").test(probe)),
+              (lane) => `${lane} misses ${name}: ${probe}`
+            )
+          )
+        );
+        assert.deepStrictEqual(misses, []);
       })
     );
 
