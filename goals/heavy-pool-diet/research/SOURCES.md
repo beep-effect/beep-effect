@@ -3,7 +3,8 @@
 - **Source exploration:** `explorations/ten-minute-certainty` — primary ledger:
   [`explorations/ten-minute-certainty/research/SOURCES.md`](../../../explorations/ten-minute-certainty/research/SOURCES.md).
 - **Lever status check:** made 2026-11-09 against `origin/main` 6eb2e0588e2 and re-verified at c90929b1ff1, `git show --stat 027664ba178`
-  (#3019) and the head of open #3041 (937e2a20f8c). Every source is this repository or its hosted CI; no
+  (#3019) and the head of #3041 (937e2a20f8c); re-checked 2026-11-10 at b757bd0400f after #3041 merged as
+  e8c9a47971b. Every source is this repository or its hosted CI; no
   external code is mined.
 
 ## 1. Mined source corpus
@@ -17,7 +18,7 @@ and row, then the area record.
 |--------|-------|-----------------|------------------------|-------|-------------|
 | `LINT-01` | Build JSDoc inventory programs with noResolve, as an opt-in factory option | this repo | PLAN T2 row 2; lint-laws-knowledge | JSDoc chain | landed (#3019); two missing fixtures, noResolve parity and measurement kept (D26) |
 | `LINT-05` | Drop the duplicate jsdoc inventory and ratchet from the hosted Lint Policy plan (absorbs HOST-03 jsdoc half) | this repo | PLAN T1 row 2; lint-laws-knowledge | JSDoc chain | adopt |
-| `LINT-02` | Lint Policy stage widths: knowledge doctor abreast of medium, changed-scope state width derived jointly (merges HOST-04, LINT-03) | this repo | PLAN T2 row 3; lint-laws-knowledge | Lint Policy stages | slice 1 in open #3041; slice 2 and A/B adopt |
+| `LINT-02` | Lint Policy stage widths: knowledge doctor abreast of medium, changed-scope state width derived jointly (merges HOST-04, LINT-03) | this repo | PLAN T2 row 3; lint-laws-knowledge | Lint Policy stages | slice 1 landed in #3041 (e8c9a47971b); slice 2 and A/B adopt |
 | `LINT-04` | PR C checker algorithms: P55, S4, P12/P11, P28, S2 | this repo | PLAN T3 row 8; lint-laws-knowledge | checker cost | landed (#3019); unpaid per-family gates and measurement kept (D26) |
 | `HOST-06` | Hoist heavy route_skips, goals-only and Docgen decisions to job-level `if` before Spot boot | this repo | PLAN T2 row 4; hosted-ci | heavy occupancy | adopt |
 | `HOST-02` fallback | `needs:` ordering of required heavy lanes with `if: !cancelled()` (the hosted move is refuted) | this repo | PLAN align question "Moving Heavy / Lint Policy off the cap-2 heavy pool?"; hosted-ci | heavy occupancy | adopt as the D11 ordering slice |
@@ -39,7 +40,7 @@ None. The exploration ledger cites no external source for these levers.
 
 | Brick | Path | Verdict |
 |---|---|---|
-| Hosted Lint Policy plan | `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts` (`policyStateTasks` 3701-3711, `policyCachedStateTasks` 3720, `POLICY_UNSCOPED_STATE_WIDTH` 3724, doctor stages 3887 and 3967) | extend: LINT-05, LINT-02 slice 2 |
+| Hosted Lint Policy plan | `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts` (`policyStateTasks` 3705-3714, `policyCachedStateTasks` 3723, `POLICY_UNSCOPED_STATE_WIDTH` 3727, `knowledgeDoctorPolicySteps` 3831 spread at 3900 and 3980) | extend: LINT-05, LINT-02 slice 2 |
 | Changed-scope widening and Turbo target probe | `packages/tooling/tool/cli/src/commands/Quality/internal/LintPolicyScope.ts` | reuse |
 | JSDoc inventory | `packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts` (line 1342) | landed (`noResolve`); add merged-namespace and module-augmentation fixtures |
 | JSDoc ratchet | `packages/tooling/tool/cli/src/commands/Quality/internal/JSDocRatchet.ts` | reuse |
@@ -80,4 +81,4 @@ None. The exploration ledger cites no external source for these levers.
   [`goals/scripts-to-beep-cli`](../../scripts-to-beep-cli/README.md) (CI binary origin, #2906),
   [`goals/lint-policy-single-digit`](../../lint-policy-single-digit/README.md) (completed-retained predecessor).
 - Shipped precursors: #2997, #3014, #3019 (lint efficiency program); #3005 (Test Integration off the heavy pool);
-  open #3041 (LINT-02 slice 1).
+  #3041 (LINT-02 slice 1, e8c9a47971b).

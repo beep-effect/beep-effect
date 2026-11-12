@@ -1104,11 +1104,8 @@ describe("CI lane partitions", () => {
       expect(yamlAt(workflow, ["jobs", "test-unit-shard", "strategy", "fail-fast"])).toBe(false);
       expect(yamlAt(workflow, ["jobs", "test-integration-shard", "strategy", "fail-fast"])).toBe(false);
 
-      // The integration aggregate reports the context the heavy pool used to own; it takes a
-      // migration name only while the resolved heavy.yml@main still declares that job.
-      expect(yamlAt(workflow, ["jobs", "test-integration", "name"])).toBe(
-        "${{ needs.admission.outputs.legacy_integration == 'true' && 'Test Integration Partitions' || 'Heavy / Test Integration' }}"
-      );
+      // The integration aggregate reports the exact context the heavy pool used to own.
+      expect(yamlAt(workflow, ["jobs", "test-integration", "name"])).toBe("Heavy / Test Integration");
       expect(yamlAt(workflow, ["jobs", "test-integration", "if"])).toBe("${{ !cancelled() }}");
       expect(yamlAt(workflow, ["jobs", "test-integration", "needs"])).toEqual([
         "admission",
