@@ -287,7 +287,12 @@ export const queryCapabilityGraph = Effect.fn("Goals.queryCapabilityGraph")(func
 
 const IN_MEMORY = { filename: ":memory:" } as const;
 
-const loadSqliteLayer = Effect.gen(function* () {
+// Each driver layer provides its own client service beside SqlClient, so the
+// two branches only unify as the generic SqlClient layer.
+const loadSqliteLayer: Effect.Effect<
+  Layer.Layer<SqlClient.SqlClient, SqlError>,
+  GoalGraphOperationalError
+> = Effect.gen(function* () {
   if (P.hasProperty(process.versions, "bun")) {
     const bun = yield* Effect.tryPromise({
       try: () => import("@effect/sql-sqlite-bun/SqliteClient"),

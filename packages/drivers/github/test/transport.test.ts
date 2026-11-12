@@ -2,7 +2,7 @@ import { GitHubError } from "@beep/github/GitHubError";
 import { GitHubGraphQLError } from "@beep/github/GraphQL";
 import { makeTransport } from "@beep/github/internal/octokit";
 import { RateLimitSink, RateLimitSnapshot, RetryPolicy } from "@beep/github/Resilience";
-import { assert, describe, it } from "@effect/vitest";
+import { assert, describe, it, vi } from "@effect/vitest";
 import { assertFailure, assertNone, assertSome } from "@effect/vitest/utils";
 import { Octokit } from "@octokit/core";
 import * as A from "effect/Array";
@@ -11,6 +11,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
@@ -572,6 +573,59 @@ describe("transport rate-limit observations", () => {
       assert.strictEqual(script.count(), 1);
       const rateLimit = yield* transport.rateLimit;
       assert.deepStrictEqual(rateLimit, O.fromUndefinedOr(seen[0]?.snapshot));
+    })
+  );
+
+  it.effect("observes a GraphQL success through the global fetch, read at call time, when none is configured", () =>
+    Effect.gen(function* () {
+      const script = scriptedFetch([
+        {
+          status: 200,
+          body: { data: { viewer: { login: "octocat" } } },
+          headers: rateLimitHeaders({ remaining: 4_998 }),
+        },
+      ]);
+      // Built before the global is swapped: the per-attempt fetch must not have captured it.
+      const { transport, observations } = yield* observing({ retry: RetryPolicy.none });
+      const data = yield* Effect.acquireUseRelease(
+        Effect.sync(() => vi.stubGlobal("fetch", script.fetch)),
+        () => transport.graphql("viewer", VIEWER, {}),
+        () => Effect.sync(() => vi.unstubAllGlobals())
+      );
+      assert.deepStrictEqual(data, { viewer: { login: "octocat" } });
+      assert.strictEqual(script.count(), 1);
+      const seen = yield* observations;
+      assert.lengthOf(seen, 1);
+      assert.strictEqual(seen[0]?.snapshot.resource, "graphql");
+      assert.strictEqual(seen[0]?.snapshot.remaining, 4_998);
+      assert.strictEqual(seen[0]?.outcome, "ok");
+    })
+  );
+
+  it.effect("labels a 304 that a caller's conditional-request hook answers from its cache not-modified", () =>
+    Effect.gen(function* () {
+      const script = scriptedFetch([
+        { status: 304, headers: rateLimitHeaders({ remaining: 4_990, resource: "core" }) },
+      ]);
+      const { transport, observations } = yield* observing({ retry: RetryPolicy.none, fetch: script.fetch });
+      // octokit throws on a 304; an ETag cache passed as the per-request `request.hook` turns it
+      // back into a response carrying the cached body, so the transport sees a successful 304.
+      const answerFromCache = (request: (options: unknown) => Promise<unknown>, options: unknown) =>
+        request(options).catch((error: unknown) =>
+          P.isObject(error) && error.status === 304 && P.isObject(error.response)
+            ? { ...error.response, data: { answer: 42 } }
+            : Promise.reject(error)
+        );
+      const response = yield* transport.request<{ readonly answer: number }>("GET /answer", "GET /answer", {
+        request: { hook: answerFromCache },
+      });
+      assert.strictEqual(response.status, 304);
+      assert.deepStrictEqual(response.data, { answer: 42 });
+      const seen = yield* observations;
+      assert.lengthOf(seen, 1);
+      assert.strictEqual(seen[0]?.outcome, "not-modified");
+      assert.strictEqual(seen[0]?.status, 304);
+      assert.strictEqual(seen[0]?.snapshot.remaining, 4_990);
     })
   );
 

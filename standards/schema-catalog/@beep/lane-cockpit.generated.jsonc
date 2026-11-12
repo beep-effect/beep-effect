@@ -4,14 +4,14 @@
   "generatedBy": "bun run beep lint schema-catalog --write",
   "owner": "@beep/lane-cockpit",
   "entries": [
-    {"file":"apps/labs/lane-cockpit/src/Board.ts","symbol":"BoardView","kind":"schema-class","owner":"@beep/lane-cockpit","identity":"BoardView","description":"Operator-side view state of the lanes board."},
-    {"file":"apps/labs/lane-cockpit/src/Board.ts","symbol":"RowColumns","kind":"schema-class","owner":"@beep/lane-cockpit","identity":"RowColumns","description":"Cell widths of the columns of one board row."},
-    {"file":"apps/labs/lane-cockpit/src/Lanes.ts","symbol":"LaneRepository","kind":"schema-class","owner":"@beep/lane-cockpit","identity":"LaneRepository","description":"Repository coordinates carried by the session report."},
-    {"file":"apps/labs/lane-cockpit/src/Lanes.ts","symbol":"LaneRow","kind":"schema-class","owner":"@beep/lane-cockpit","identity":"LaneRow","description":"The newest non-done ledger row for one checkout."},
+    {"file":"apps/labs/lane-cockpit/src/Board.ts","symbol":"BoardView","kind":"struct-const","owner":"@beep/lane-cockpit","identity":"BoardView","description":"Operator-side view state of the lanes board."},
+    {"file":"apps/labs/lane-cockpit/src/Board.ts","symbol":"ListWindow","kind":"struct-const","owner":"@beep/lane-cockpit","identity":"ListWindow","description":"Selected row index, row count and visible row count of the lanes list."},
+    {"file":"apps/labs/lane-cockpit/src/Lanes.ts","symbol":"LaneRepository","kind":"struct-const","owner":"@beep/lane-cockpit","identity":"LaneRepository","description":"Repository coordinates carried by the session report."},
+    {"file":"apps/labs/lane-cockpit/src/Lanes.ts","symbol":"LaneRow","kind":"struct-const","owner":"@beep/lane-cockpit","identity":"LaneRow","description":"The newest non-done ledger row for one checkout."},
     {"file":"apps/labs/lane-cockpit/src/Lanes.ts","symbol":"LaneState","kind":"literal-kit","owner":"@beep/lane-cockpit","identity":"LaneState","description":"Lifecycle of one session's work in a checkout."},
-    {"file":"apps/labs/lane-cockpit/src/Lanes.ts","symbol":"LanesFailed","kind":"tagged-class","owner":"@beep/lane-cockpit","identity":"LanesFailed","description":"A session report read that produced no board."},
-    {"file":"apps/labs/lane-cockpit/src/Lanes.ts","symbol":"LanesLoaded","kind":"tagged-class","owner":"@beep/lane-cockpit","identity":"LanesLoaded","description":"A decoded session report with its unreadable-row count."},
-    {"file":"apps/labs/lane-cockpit/src/Lanes.ts","symbol":"LanesPending","kind":"tagged-class","owner":"@beep/lane-cockpit","identity":"LanesPending","description":"No session report has been read yet."},
+    {"file":"apps/labs/lane-cockpit/src/Lanes.ts","symbol":"LanesFailed","kind":"tagged-struct","owner":"@beep/lane-cockpit","identity":"LanesFailed","description":"A session report read that produced no board."},
+    {"file":"apps/labs/lane-cockpit/src/Lanes.ts","symbol":"LanesLoaded","kind":"tagged-struct","owner":"@beep/lane-cockpit","identity":"LanesLoaded","description":"A decoded session report with its unreadable-row count."},
+    {"file":"apps/labs/lane-cockpit/src/Lanes.ts","symbol":"LanesPending","kind":"tagged-struct","owner":"@beep/lane-cockpit","identity":"LanesPending","description":"No session report has been read yet."},
     {"file":"apps/labs/lane-cockpit/src/Lanes.ts","symbol":"LanesSnapshot","kind":"tagged-union","owner":"@beep/lane-cockpit","identity":"LanesSnapshot","description":"Loaded, failed or pending input for the lanes board."}
   ]
 }

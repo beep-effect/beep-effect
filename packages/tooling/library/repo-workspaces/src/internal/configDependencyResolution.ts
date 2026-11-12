@@ -37,7 +37,6 @@ import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
@@ -715,7 +714,7 @@ const resolveDirectory: {
  */
 const memoizeSuccess = <A, E>(effect: Effect.Effect<A, E>): Effect.Effect<Effect.Effect<A, E>> =>
   Effect.map(Effect.cachedInvalidateWithTTL(effect, Duration.infinity), ([once, invalidate]) =>
-    Effect.onExit(once, (exit) => (Exit.isSuccess(exit) ? Effect.void : invalidate))
+    Effect.onError(once, () => invalidate)
   );
 
 /**

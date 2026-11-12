@@ -21,9 +21,9 @@
 # `overrides` block instead:
 #   - protobufjs 7.6.6 (`^7.6.6`), because onnx-proto pins ^6.8.8 and would
 #     otherwise resolve 6.11.6, which carries 11 GHSAs;
-#   - basic-ftp 6.2.1, because get-uri (box-node-sdk -> proxy-agent ->
+#   - basic-ftp 6.2.4, because get-uri (box-node-sdk -> proxy-agent ->
 #     pac-proxy-agent) pins ^5.0.2, which GHSA-c475-qrg2-pj4r (fixed in 6.2.1)
-#     covers;
+#     covers, and 6.2.1 itself carries GHSA-5pm8-86m8-9m6r (fixed in 6.2.4);
 #   - postcss-selector-parser 7.1.6, because @tailwindcss/typography pins 6.0.10,
 #     covered by GHSA-rj75-hqrm-r3gf (fixed in 7.1.6).
 # The residue hold register records all three as retained overrides.

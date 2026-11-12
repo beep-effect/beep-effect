@@ -2,6 +2,7 @@ import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import { sessionCommand } from "@beep/repo-cli";
 import { GoalManifest } from "@beep/repo-cli/commands/Goals";
+import { WorktreeRemovalServiceLive, worktreeCommand } from "@beep/repo-cli/commands/Worktree";
 import {
   decodeSessionLedger,
   layerSessionLedgerMemory,
@@ -29,7 +30,7 @@ import {
 import { SweepGitState, sweepWritesLedgerDone } from "@beep/repo-cli/test/Yeet";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { assert, describe, expect, it, vi } from "@effect/vitest";
-import { assertInclude, assertNone } from "@effect/vitest/utils";
+import { assertInclude, assertNone, assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -353,6 +354,39 @@ describe("session ledger service", () => {
 });
 
 describe("beep session", () => {
+  it.layer(Layer.fresh(Layer.provideMerge(WorktreeRemovalServiceLive, testLayer)), { timeout: "30 seconds" })((it) => {
+    it.effect("closes a removed worktree's live row from worktree remove", () =>
+      withScratchCheckout(({ clone, lane, stateRoot }) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const gone = path.join(path.dirname(lane), "gone");
+          yield* runGit(clone, ["worktree", "add", "--detach", gone, "HEAD"]);
+          yield* captureOutput(
+            withCwd(gone, runSession(["note", "--state", "blocked", "--next", "wait on the operator"]))
+          );
+          const before = yield* captureOutput(withCwd(clone, runSession(["open"])));
+          expect(before).toContain("- blocked gone (HEAD)");
+
+          const removed = yield* captureOutput(
+            withCwd(clone, Command.runWith(worktreeCommand, { version: "0.0.0" })(["remove", "gone"]))
+          );
+          expect(removed).toContain(`Removed worktree ${gone}`);
+          const after = yield* captureOutput(withCwd(clone, runSession(["open"])));
+          expect(after).not.toContain("wait on the operator");
+
+          const ledger = yield* fs.readFileString(path.join(stateRoot, sessionLedgerFileName(repository)));
+          const last = A.last(decodeSessionLedger(ledger).rows);
+          // The row names the removed lane's branch, not the clone's `main` it was written from.
+          assertSome(
+            O.map(last, (done) => [done.state, done.checkout, done.branch, done.next]),
+            ["done", gone, "HEAD", "removed worktree gone"]
+          );
+        })
+      )
+    );
+  });
+
   it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })((it) => {
     it.effect("notes a lane, lists it, supersedes it, and retires it on sweep-done", () =>
       withScratchCheckout(({ clone, lane, stateRoot }) =>
@@ -400,6 +434,13 @@ describe("beep session", () => {
           yield* recordSweepDone({ gitCwd: clone, checkout: path.resolve(lane), branch: "feat/lane" });
           const after = yield* captureOutput(withCwd(clone, runSession(["open"])));
           expect(after).toContain("no live sessions recorded");
+          // Written from the clone on `main`, the done row still names the lane's branch.
+          const sweptLedger = yield* fs.readFileString(file);
+          const swept = A.last(decodeSessionLedger(sweptLedger).rows);
+          assertSome(
+            O.map(swept, (done) => [done.lane, done.branch]),
+            ["lane", "feat/lane"]
+          );
           // A checkout git cannot read is ignored by the best-effort sweep row.
           yield* recordSweepDone({ gitCwd: path.join(clone, "missing"), checkout: lane, branch: "x" });
         })

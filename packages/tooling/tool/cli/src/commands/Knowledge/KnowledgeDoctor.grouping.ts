@@ -198,7 +198,7 @@ const removalOfChange = (commit: KnowledgeCommitSha, subject: string, change: Na
         })
       )
     ),
-    Match.orElse(() => O.none<KnowledgePathRemoval>())
+    Match.orElse(O.none<KnowledgePathRemoval>)
   );
 
 const commitRemovals = (entry: CommitLogEntry): ReadonlyArray<KnowledgePathRemoval> =>

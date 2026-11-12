@@ -1,28 +1,58 @@
 // Replays the committed certainty corpora (test/fixtures/ci-certainty, decision `in-repo-fixture-corpus`
 // in goals/certainty-scorecard) and pins the per-head cases, monotonicity and api-partial refusal.
 
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   buildCiCertaintyReport,
   CiCertaintyCorpus,
+  CiCertaintyMainCommit,
+  CiCertaintyReport,
   CiCertaintyRun,
   CiCommandError,
   CiLaneTimingGithubClient,
   CiWorkflowJob,
   CiWorkflowPartialRead,
+  CiWorkflowWindowRun,
+  ciCertaintyCommand,
   ciCertaintyLatencyStat,
   ciCertaintyRunnerMinutes,
   collectCiWorkflowRunAttemptJobs,
+  decodeCiCertaintyCorpus,
   renderCiCertaintyMarkdown,
 } from "@beep/repo-cli/commands/Ci";
+import { GithubTransportFetch } from "@beep/repo-cli/test/SharedInternals";
+import { findRepoRoot } from "@beep/repo-utils";
 import { A, O, Str } from "@beep/utils";
+import { NodeServices } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node-shared/NodeCrypto";
 import { describe, expect, it } from "@effect/vitest";
-import { assertFalse, assertNone, assertSome, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
+import {
+  assertFalse,
+  assertInstanceOf,
+  assertNone,
+  assertSome,
+  assertTrue,
+  deepStrictEqual,
+  strictEqual,
+} from "@effect/vitest/utils";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Command from "effect/cli/Command";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as TestClock from "effect/testing/TestClock";
+import * as TestConsole from "effect/testing/TestConsole";
 import baselineCorpus from "./fixtures/ci-certainty/baseline-2026-11-09.json" with { type: "json" };
 import plannedCorpus from "./fixtures/ci-certainty/planned-2026-11-10.json" with { type: "json" };
+import { githubFetch, reply } from "./support/GithubFetch.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { CiCertaintyHeadRow } from "@beep/repo-cli/commands/Ci";
+import type { GithubFetchCall } from "./support/GithubFetch.ts";
 
 const testLayer = NodeCrypto.layer;
 
@@ -251,6 +281,554 @@ describe("ci certainty certification", () => {
 
         deepStrictEqual(report.refusals, ["api-partial", "empty-population"]);
         strictEqual(report.slo.p95Status, "empty");
+        // No job read failed, so the refusal stamp names no partial run.
+        const rendered = renderCiCertaintyMarkdown(report);
+        expect(rendered).toContain(
+          "> **Not certified, not acceptance evidence.** Refused: api-partial, empty-population."
+        );
+        expect(rendered).not.toContain("partial job reads");
+      })
+    );
+  });
+});
+
+// A synthetic window whose heads land in the states the recorded corpora never reach.
+const SYNTHETIC_SINCE = DateTime.makeUnsafe("2026-11-09T00:00:00Z");
+const SYNTHETIC_UNTIL = DateTime.makeUnsafe("2026-11-10T00:00:00Z");
+const OPEN_HEAD = Str.repeat(40)("1");
+const HELD_HEAD = Str.repeat(40)("2");
+const NULL_CONCLUSION_HEAD = Str.repeat(40)("3");
+const GREEN_HEAD = Str.repeat(40)("4");
+
+const foldJob = (overrides: Partial<CiWorkflowJob>) =>
+  CiWorkflowJob.make({
+    completed_at: "2026-11-09T10:05:00Z",
+    conclusion: "success",
+    created_at: "2026-11-09T10:00:30Z",
+    id: 1,
+    labels: ["ubuntu-24.04"],
+    name: "Lint",
+    run_attempt: 1,
+    run_id: 1,
+    started_at: "2026-11-09T10:01:00Z",
+    status: "completed",
+    ...overrides,
+  });
+
+const foldRun = (
+  id: number,
+  headSha: string,
+  createdAt: string,
+  status: O.Option<string>,
+  jobs: ReadonlyArray<CiWorkflowJob>
+) =>
+  CiCertaintyRun.make({
+    jobs: A.map(jobs, (job) => CiWorkflowJob.make({ ...job, run_id: id })),
+    run: CiWorkflowWindowRun.make({
+      conclusion: O.none(),
+      created_at: DateTime.makeUnsafe(createdAt),
+      event: "pull_request",
+      head_branch: O.some(`feat/${id}`),
+      head_sha: headSha,
+      id,
+      run_attempt: 1,
+      status,
+    }),
+    workflow: "check.yml",
+  });
+
+const syntheticCorpus = (mainCommits: ReadonlyArray<CiCertaintyMainCommit>) =>
+  CiCertaintyCorpus.make({
+    capturedAt: DateTime.makeUnsafe("2026-11-10T03:00:00Z"),
+    mainCommits,
+    pullRequestRuns: [
+      // Still running: one job in progress, one queued, nothing finished yet.
+      foldRun(101, OPEN_HEAD, "2026-11-09T09:00:00Z", O.some("in_progress"), [
+        foldJob({
+          completed_at: null,
+          conclusion: null,
+          id: 11,
+          started_at: "2026-11-09T09:01:00Z",
+          status: "in_progress",
+        }),
+        foldJob({
+          completed_at: null,
+          conclusion: null,
+          id: 12,
+          name: "Test Unit",
+          started_at: null,
+          status: "queued",
+        }),
+      ]),
+      // A captured run without a status, whose jobs all finished, but Test Unit never ran.
+      foldRun(102, HELD_HEAD, "2026-11-09T10:00:00Z", O.none(), [foldJob({ id: 21 })]),
+      // GitHub reported completion without a conclusion: that is not green.
+      foldRun(103, NULL_CONCLUSION_HEAD, "2026-11-09T11:00:00Z", O.some("completed"), [
+        foldJob({ conclusion: null, id: 31 }),
+        foldJob({ id: 32, name: "Test Unit" }),
+      ]),
+      foldRun(104, GREEN_HEAD, "2026-11-09T12:00:00Z", O.some("completed"), [
+        // Never started: ranked by its creation time.
+        foldJob({ completed_at: "2026-11-09T12:03:00Z", created_at: "2026-11-09T12:00:30Z", id: 41, started_at: null }),
+        // Unreadable timestamps rank oldest, so this red copy never decides Lint.
+        foldJob({
+          completed_at: "2026-11-09T12:20:00Z",
+          conclusion: "failure",
+          created_at: "",
+          id: 40,
+          started_at: null,
+        }),
+        // Same start and attempt: the higher job id decides.
+        foldJob({
+          completed_at: "2026-11-09T12:06:00Z",
+          conclusion: "failure",
+          id: 42,
+          name: "Test Unit",
+          started_at: "2026-11-09T12:01:00Z",
+        }),
+        foldJob({
+          completed_at: "2026-11-09T12:08:00Z",
+          id: 43,
+          name: "Test Unit",
+          started_at: "2026-11-09T12:01:00Z",
+        }),
+        // A skipped Coverage Regression is not a coverage verdict.
+        foldJob({
+          completed_at: "2026-11-09T12:00:39Z",
+          conclusion: "skipped",
+          id: 44,
+          name: "Heavy / Coverage Regression",
+          started_at: "2026-11-09T12:00:40Z",
+        }),
+      ]),
+    ],
+    requestCount: 0,
+    requiredContexts: ["Lint", "Test Unit"],
+    since: SYNTHETIC_SINCE,
+    until: SYNTHETIC_UNTIL,
+  });
+
+const OPEN_MAIN_COMMIT = CiCertaintyMainCommit.make({
+  committedAt: DateTime.makeUnsafe("2026-11-09T15:00:00Z"),
+  docsOnly: false,
+  runs: [
+    CiWorkflowWindowRun.make({
+      created_at: DateTime.makeUnsafe("2026-11-09T15:00:30Z"),
+      event: "push",
+      head_sha: Str.repeat(40)("e"),
+      id: 201,
+      run_attempt: 1,
+      status: O.some("in_progress"),
+    }),
+  ],
+  sha: Str.repeat(40)("e"),
+});
+
+const DOCS_MAIN_COMMIT = CiCertaintyMainCommit.make({
+  committedAt: DateTime.makeUnsafe("2026-11-09T16:00:00Z"),
+  docsOnly: true,
+  runs: [],
+  sha: Str.repeat(40)("f"),
+});
+
+describe("ci certainty head states", () => {
+  it.layer(testLayer)((it) => {
+    it.effect("judges open, held, conclusion-less and tie-broken heads", () =>
+      Effect.gen(function* () {
+        const report = yield* buildCiCertaintyReport(syntheticCorpus([OPEN_MAIN_COMMIT, DOCS_MAIN_COMMIT]));
+
+        const open = headStartingWith(report.heads, OPEN_HEAD);
+        strictEqual(open.state, "open");
+        assertSome(open.censor, "open");
+        deepStrictEqual(
+          A.map(open.contexts, (row) => row.state),
+          ["pending", "pending"]
+        );
+
+        const held = headStartingWith(report.heads, HELD_HEAD);
+        strictEqual(held.state, "held");
+        assertNone(held.censor);
+
+        strictEqual(headStartingWith(report.heads, NULL_CONCLUSION_HEAD).state, "red");
+
+        const green = headStartingWith(report.heads, GREEN_HEAD);
+        strictEqual(green.state, "green");
+        assertSome(green.requiredGreenMinutes, 8);
+        assertSome(green.criticalContext, "Test Unit");
+        assertNone(green.coverageVerdictMinutes);
+        const lint = O.getOrThrow(A.findFirst(green.contexts, (row) => row.context === "Lint"));
+        assertSome(lint.runId, 104);
+        strictEqual(lint.state, "green");
+
+        // The open head is censored; the held and red heads are counted misses.
+        strictEqual(report.slo.n, 3);
+        strictEqual(report.slo.misses, 2);
+        strictEqual(report.slo.censoredOpen, 1);
+        strictEqual(report.slo.withinTen, 1);
+        assertTrue(report.certified);
+
+        // A main commit whose only run is still going has no verdict yet.
+        strictEqual(report.main.open, 1);
+        strictEqual(report.main.docsCommits, 1);
+        assertSome(report.main.rate, 0);
+
+        const rendered = renderCiCertaintyMarkdown(report);
+        expect(rendered).not.toContain("Not certified");
+        expect(rendered).toContain("| 1111111111 | code | open | open | — | — |  | 0.0 |");
+        expect(rendered).toContain("| 4444444444 | code | green |  | 8.0 min | — | Test Unit | 12.0 |");
+      })
+    );
+
+    it.effect("reports no main verdict rate when every main commit is documentation", () =>
+      Effect.gen(function* () {
+        const report = yield* buildCiCertaintyReport(syntheticCorpus([DOCS_MAIN_COMMIT]));
+
+        strictEqual(report.main.commits, 0);
+        strictEqual(report.main.docsCommits, 1);
+        assertNone(report.main.rate);
+      })
+    );
+  });
+});
+
+// The live capture through the command: a fake GitHub API and a scripted `git`.
+const LIVE_HEAD = Str.repeat(40)("a");
+const LATER_HEAD = Str.repeat(40)("c");
+const MAIN_CODE = Str.repeat(40)("d");
+const MAIN_DOCS = Str.repeat(40)("9");
+const MAIN_EMPTY = Str.repeat(40)("8");
+const LIVE_NOW = "2026-11-10T03:00:00Z";
+
+const liveRun = (id: number, headSha: string, createdAt: string, event = "pull_request") => ({
+  conclusion: "success",
+  created_at: createdAt,
+  event,
+  head_branch: event === "push" ? "main" : "feat/live",
+  head_sha: headSha,
+  id,
+  run_attempt: 1,
+  status: "completed",
+});
+
+const liveJob = (
+  runId: number,
+  id: number,
+  name: string,
+  startedAt: string,
+  completedAt: string,
+  labels = ["ubuntu-24.04"]
+) => ({
+  completed_at: completedAt,
+  conclusion: "success",
+  created_at: startedAt,
+  id,
+  labels,
+  name,
+  run_attempt: 1,
+  run_id: runId,
+  runner_name: null,
+  started_at: startedAt,
+  status: "completed",
+  steps: [],
+});
+
+const runsPage = (runs: ReadonlyArray<unknown>) => ({ total_count: A.length(runs), workflow_runs: runs });
+
+const LIVE_JOBS: ReadonlyArray<readonly [number, ReadonlyArray<unknown>]> = [
+  [
+    11,
+    [
+      liveJob(11, 111, "Heavy Admission", "2026-11-09T10:00:30Z", "2026-11-09T10:01:00Z"),
+      liveJob(11, 112, "Lint", "2026-11-09T10:01:00Z", "2026-11-09T10:05:00Z"),
+    ],
+  ],
+  [12, [liveJob(12, 121, "Heavy / Check", "2026-11-09T10:02:00Z", "2026-11-09T10:12:00Z", ["beep-ec2-heavy"])]],
+  [13, [liveJob(13, 131, "Lint", "2026-11-10T01:01:00Z", "2026-11-10T01:04:00Z")]],
+];
+
+const liveGithub = (call: GithubFetchCall): unknown => {
+  const path = call.url.pathname;
+  if (Str.includes("/actions/workflows/check.yml/runs")(path)) {
+    return call.url.searchParams.get("event") === "push"
+      ? runsPage([liveRun(21, MAIN_CODE, "2026-11-09T12:00:30Z", "push")])
+      : runsPage([liveRun(11, LIVE_HEAD, "2026-11-09T10:00:00Z"), liveRun(13, LATER_HEAD, "2026-11-10T01:00:00Z")]);
+  }
+  if (Str.includes("/actions/workflows/heavy-admit.yml/runs")(path)) {
+    return runsPage([liveRun(12, LIVE_HEAD, "2026-11-09T10:01:00Z")]);
+  }
+  return O.match(
+    A.findFirst(LIVE_JOBS, ([runId]) => Str.includes(`/actions/runs/${runId}/attempts/1/jobs`)(path)),
+    {
+      onNone: () => reply(404)({ message: "Not Found" }),
+      onSome: ([, jobs]) => ({ jobs, total_count: A.length(jobs) }),
+    }
+  );
+};
+
+const LIVE_PATHS: ReadonlyArray<readonly [string, string]> = [
+  [MAIN_CODE, "packages/tooling/tool/cli/src/commands/Ci/Certainty.ts\n"],
+  [MAIN_DOCS, "goals/certainty-scorecard/README.md\n"],
+  // A commit that changed no path (an empty merge) is not documentation-only.
+  [MAIN_EMPTY, ""],
+];
+
+// `%cI` prints the committer's own offset, never `Z`: 12:00Z, 13:00Z and 14:00Z written as git prints them.
+const LIVE_LOG = A.join(
+  [
+    `${MAIN_CODE}\t2026-11-09T06:00:00-06:00`,
+    `${MAIN_DOCS}\t2026-11-09T14:00:00+01:00`,
+    `${MAIN_EMPTY}\t2026-11-09T14:00:00+00:00`,
+    "",
+  ],
+  "\n"
+);
+
+// `gh auth token` for the client, then main's first-parent log and each commit's changed paths.
+const liveGit = (
+  log: { readonly stdout?: string; readonly exit?: number; readonly stderr?: string } = { stdout: LIVE_LOG }
+) =>
+  ScriptedSpawner.make((command, args) => {
+    if (A.join([command, ...args], " ") === "gh auth token") {
+      return { stdout: "ghs_fixture\n" };
+    }
+    if (command === "git" && A.contains(args, "log")) {
+      return log;
+    }
+    return O.match(
+      A.findFirst(LIVE_PATHS, ([sha]) => command === "git" && A.contains(args, "diff-tree") && A.contains(args, sha)),
+      {
+        onNone: () => ({ exit: 1, stderr: `unexpected ${command} ${A.join(args, " ")}` }),
+        onSome: ([, paths]) => ({ stdout: paths }),
+      }
+    );
+  });
+
+const withLiveCapture =
+  (calls: Array<GithubFetchCall>, spawner: ScriptedSpawner) =>
+  <A, E, R>(program: Effect.Effect<A, E, R>) =>
+    program.pipe(
+      Effect.provideService(
+        GithubTransportFetch,
+        O.some(
+          githubFetch((call) => {
+            A.appendInPlace(calls, call);
+            return liveGithub(call);
+          }).fetch
+        )
+      ),
+      provideSpawner(spawner),
+      Effect.provideService(
+        ConfigProvider.ConfigProvider,
+        ConfigProvider.fromUnknown({ GH_REPO: "beep-effect/beep-effect" })
+      )
+    );
+
+const certaintyCommandLayer = Layer.mergeAll(
+  NodeServices.layer,
+  NodeCrypto.layer,
+  MemoryFileSystem.layer,
+  TestConsole.layer
+);
+const runCertaintyCommand = Command.runWith(ciCertaintyCommand, { version: "0.0.0" });
+
+const lastCertaintyLog = Effect.fn("TestCiCertainty.lastLog")(function* () {
+  const lines = yield* TestConsole.logLines;
+  return O.getOrElse(A.last(A.filter(lines, P.isString)), () => "");
+});
+
+// The command reads the required contexts from the checkout it resolves, here inside the memory filesystem.
+const seedRequiredContexts = Effect.fn("TestCiCertainty.seedRequiredContexts")(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const repoRoot = yield* findRepoRoot().pipe(Effect.orElseSucceed(() => process.cwd()));
+  yield* fs.makeDirectory(path.join(repoRoot, "standards"), { recursive: true });
+  yield* fs.writeFileString(
+    path.join(repoRoot, "standards", "branch-protection-contexts.json"),
+    '{"requiredStatusChecks":["Lint","Heavy / Check"]}'
+  );
+  yield* DateTime.makeUnsafe(LIVE_NOW).pipe(DateTime.toEpochMillis, TestClock.setTime);
+  return repoRoot;
+});
+
+const gitLogArgs = (spawner: ScriptedSpawner): ReadonlyArray<string> =>
+  O.getOrElse(
+    O.map(
+      A.findFirst(spawner.spawns, (spawn) => spawn.command === "git" && A.contains(spawn.args, "log")),
+      (spawn) => spawn.args
+    ),
+    A.empty<string>
+  );
+
+const decodeReportJson = S.decodeUnknownEffect(S.fromJsonString(CiCertaintyReport));
+
+const LIVE_WINDOW = ["--since", "2026-11-09T00:00:00Z", "--until", "2026-11-10T00:00:00Z"];
+
+// Seeds the checkout, captures the fixed live window into a corpus file and returns what the capture printed.
+const captureLiveWindow = Effect.fn("TestCiCertainty.captureLiveWindow")(function* () {
+  const repoRoot = yield* seedRequiredContexts();
+  const corpusFile = `${repoRoot}/certainty-corpus.json`;
+  yield* runCertaintyCommand([...LIVE_WINDOW, "--write-corpus", corpusFile]);
+  const markdown = yield* lastCertaintyLog();
+  return { corpusFile, markdown, repoRoot };
+});
+
+describe("ci certainty command", () => {
+  it.layer(certaintyCommandLayer, { timeout: "30 seconds" })((it) => {
+    it.effect("captures a window live and renders its report", () => {
+      const calls = A.empty<GithubFetchCall>();
+      const spawner = liveGit();
+      return Effect.gen(function* () {
+        const { markdown, repoRoot } = yield* captureLiveWindow();
+
+        expect(markdown).toContain("# ci certainty 2026-11-09T00:00:00.000Z → 2026-11-10T00:00:00.000Z");
+        expect(markdown).not.toContain("Not certified");
+        expect(markdown).toContain("- GitHub requests: 5");
+        expect(markdown).toContain("| aaaaaaaaaa | code | green |  | 12.0 min |");
+        // One code commit passed, one empty commit has no run, the docs commit is set apart.
+        expect(markdown).toContain("non-docs first-parent commits: 2 (docs 1); completed verdicts 1; rate 50.0%");
+        // The later head is outside the window: listed for supersession, its jobs never read.
+        expect(A.some(calls, (call) => Str.includes("/actions/runs/13/")(call.url.pathname))).toBe(false);
+        // Signatures stay off whatever the operator's gitconfig says, so only formatted lines reach the parser.
+        deepStrictEqual(gitLogArgs(spawner), [
+          "-C",
+          repoRoot,
+          "log",
+          "--no-show-signature",
+          "--first-parent",
+          "--format=%H%x09%cI",
+          "--since=2026-11-09T00:00:00.000Z",
+          "--until=2026-11-10T00:00:00.000Z",
+          "origin/main",
+        ]);
+      }).pipe(withLiveCapture(calls, spawner));
+    });
+
+    it.effect("writes the captured corpus and replays it without reading anything", () => {
+      const calls = A.empty<GithubFetchCall>();
+      const spawner = liveGit();
+      return Effect.gen(function* () {
+        const { corpusFile } = yield* captureLiveWindow();
+
+        const fs = yield* FileSystem.FileSystem;
+        const corpus = yield* fs.readFileString(corpusFile).pipe(Effect.flatMap(decodeCiCertaintyCorpus));
+        strictEqual(corpus.requestCount, 5);
+        assertFalse(corpus.mainListingPartial);
+        // Commit times keep their instant whatever offset git printed them in.
+        deepStrictEqual(
+          A.map(corpus.mainCommits, (commit) => [
+            commit.sha,
+            DateTime.formatIso(commit.committedAt),
+            commit.docsOnly,
+            A.length(commit.runs),
+          ]),
+          [
+            [MAIN_CODE, "2026-11-09T12:00:00.000Z", false, 1],
+            [MAIN_DOCS, "2026-11-09T13:00:00.000Z", true, 0],
+            [MAIN_EMPTY, "2026-11-09T14:00:00.000Z", false, 0],
+          ]
+        );
+        deepStrictEqual(
+          A.map(corpus.pullRequestRuns, (run) => [run.run.id, A.length(run.jobs)]),
+          [
+            [11, 2],
+            [13, 0],
+            [12, 1],
+          ]
+        );
+
+        const readsBeforeReplay = A.length(calls);
+        const spawnsBeforeReplay = A.length(spawner.spawns);
+        yield* runCertaintyCommand(["--corpus", corpusFile, "--json"]);
+        const replayed = yield* lastCertaintyLog().pipe(Effect.flatMap(decodeReportJson));
+        assertTrue(replayed.certified);
+        strictEqual(replayed.slo.n, 1);
+        assertSome(replayed.slo.p50Minutes, 12);
+        strictEqual(A.length(calls), readsBeforeReplay);
+        strictEqual(A.length(spawner.spawns), spawnsBeforeReplay);
+      }).pipe(withLiveCapture(calls, spawner));
+    });
+
+    it.effect("defaults to the 24 hours before now and refuses certification past the request bound", () => {
+      const calls = A.empty<GithubFetchCall>();
+      const spawner = liveGit();
+      return Effect.gen(function* () {
+        yield* seedRequiredContexts();
+        // Two listings and three job reads fit; the main push listing is refused at the bound.
+        const error = yield* Effect.flip(runCertaintyCommand(["--max-requests", "5"]));
+        assertInstanceOf(error, CiCommandError);
+        strictEqual(
+          error.message,
+          "Certification refused: api-partial. Pass --preview to accept an uncertified report."
+        );
+        const refused = yield* lastCertaintyLog();
+        expect(refused).toContain("> **Not certified, not acceptance evidence.** Refused: api-partial.");
+        strictEqual(A.length(calls), 5);
+        expect(gitLogArgs(spawner)).toContain("--since=2026-11-09T03:00:00.000Z");
+        expect(gitLogArgs(spawner)).toContain("--until=2026-11-10T03:00:00.000Z");
+
+        // A preview accepts the same uncertified report, stamp and all, and prints it exactly once.
+        const logsBeforePreview = yield* TestConsole.logLines;
+        yield* runCertaintyCommand(["--max-requests", "5", "--preview"]);
+        const logsAfterPreview = yield* TestConsole.logLines;
+        strictEqual(A.length(logsAfterPreview), A.length(logsBeforePreview) + 1);
+        assertSome(A.last(logsAfterPreview), refused);
+      }).pipe(withLiveCapture(calls, spawner));
+    });
+
+    it.effect("refuses an unreadable or empty window before reading GitHub or git", () => {
+      const calls = A.empty<GithubFetchCall>();
+      const spawner = liveGit();
+      return Effect.gen(function* () {
+        yield* seedRequiredContexts();
+        const messages = yield* Effect.forEach(
+          [
+            ["--since", "yesterday"],
+            ["--until", "tomorrow"],
+            ["--since", "2026-11-10T00:00:00Z", "--until", "2026-11-10T00:00:00Z"],
+          ],
+          (args) =>
+            Effect.flip(runCertaintyCommand(args)).pipe(
+              Effect.map((error) => {
+                assertInstanceOf(error, CiCommandError);
+                return error.message;
+              })
+            )
+        );
+        deepStrictEqual(messages, [
+          "--since must be an ISO-8601 UTC timestamp; received yesterday.",
+          "--until must be an ISO-8601 UTC timestamp; received tomorrow.",
+          "--since must be earlier than --until.",
+        ]);
+        deepStrictEqual(calls, []);
+        deepStrictEqual(spawner.spawns, []);
+      }).pipe(withLiveCapture(calls, spawner));
+    });
+
+    it.effect("fails the capture when git cannot read main's history", () => {
+      const calls = A.empty<GithubFetchCall>();
+      return Effect.gen(function* () {
+        yield* seedRequiredContexts();
+        const error = yield* Effect.flip(runCertaintyCommand(["--since", "2026-11-09T00:00:00Z"]));
+        assertInstanceOf(error, CiCommandError);
+        strictEqual(error.message, "Failed to read main's first-parent history with git.");
+      }).pipe(withLiveCapture(calls, liveGit({ exit: 128, stderr: "fatal: bad revision 'origin/main'\n" })));
+    });
+
+    it.effect("fails the capture on a git log line without a valid commit time", () =>
+      Effect.gen(function* () {
+        // One line lacks the time field, the other carries one that does not parse.
+        const messages = yield* Effect.forEach([MAIN_CODE, `${MAIN_CODE}\tnot-a-time`], (line) =>
+          Effect.gen(function* () {
+            yield* seedRequiredContexts();
+            const error = yield* Effect.flip(runCertaintyCommand(["--since", "2026-11-09T00:00:00Z"]));
+            assertInstanceOf(error, CiCommandError);
+            return error.message;
+          }).pipe(withLiveCapture(A.empty<GithubFetchCall>(), liveGit({ stdout: `${line}\n` })))
+        );
+        deepStrictEqual(messages, [
+          `git log printed a commit line without a valid commit time: ${MAIN_CODE}`,
+          `git log printed a commit line without a valid commit time: ${MAIN_CODE}\tnot-a-time`,
+        ]);
       })
     );
   });

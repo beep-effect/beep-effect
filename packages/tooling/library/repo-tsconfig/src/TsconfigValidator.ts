@@ -93,7 +93,7 @@ const optionListIssues = (options: ClosedOptions): ReadonlyArray<S.FilterIssue> 
     ...pipe(
       O.fromUndefinedOr(options.paths),
       O.match({
-        onNone: () => A.empty<O.Option<S.FilterIssue>>(),
+        onNone: A.empty<O.Option<S.FilterIssue>>,
         onSome: (paths) => [
           protoKeyIssue(["paths"], R.keys(paths)),
           ...A.map(R.toEntries(paths), ([alias, targets]) => duplicateIssue(["paths", alias], targets)),
@@ -103,7 +103,7 @@ const optionListIssues = (options: ClosedOptions): ReadonlyArray<S.FilterIssue> 
     ...pipe(
       O.fromUndefinedOr(options.plugins),
       O.match({
-        onNone: () => A.empty<O.Option<S.FilterIssue>>(),
+        onNone: A.empty<O.Option<S.FilterIssue>>,
         onSome: A.map((plugin, index) => protoKeyIssue(["plugins", index], R.keys(plugin))),
       })
     ),

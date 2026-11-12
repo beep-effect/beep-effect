@@ -22,7 +22,7 @@ import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { constant, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -441,13 +441,12 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
   // One read of the union of the hours' context ranges, sliced per hour in memory, so a
   // run of incomplete hours costs one pass over the raw files instead of 26 hours each.
   const contextRowsFor = Effect.fnUntraced(function* (pending: ReadonlyArray<DateTime.Utc>, now: DateTime.Utc) {
-    const first = A.head(pending);
-    const last = A.last(pending);
-    if (O.isNone(first) || O.isNone(last)) return (_hour: DateTime.Utc) => A.empty<GithubLedgerRow>();
+    // With nothing pending no hour is ever sliced, so no read is needed.
+    if (!A.isReadonlyArrayNonEmpty(pending)) return constant(A.empty<GithubLedgerRow>());
     const current = yield* aliases;
     const union = LedgerRange.make({
-      from: contextRange(first.value, now).from,
-      to: contextRange(last.value, now).to,
+      from: contextRange(A.headNonEmpty(pending), now).from,
+      to: contextRange(A.lastNonEmpty(pending), now).to,
     });
     const unionRows = yield* store.rows(union);
     const rows = A.map(unionRows, canonicalRow(current));

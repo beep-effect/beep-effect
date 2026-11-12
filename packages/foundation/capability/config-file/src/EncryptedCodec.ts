@@ -14,7 +14,6 @@
 import { $ConfigFileId } from "@beep/identity/packages";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import {
@@ -271,9 +270,7 @@ export const EncryptedCodec: {
   const [resolveKey, invalidateKey] = Effect.runSync(
     Effect.cachedInvalidateWithTTL(keyEffect(keySource), Duration.infinity)
   );
-  const getKey: Effect.Effect<CryptoKey, ConfigEncryptionError> = Effect.onExit(resolveKey, (exit) =>
-    Exit.isSuccess(exit) ? Effect.void : invalidateKey
-  );
+  const getKey: Effect.Effect<CryptoKey, ConfigEncryptionError> = Effect.onError(resolveKey, () => invalidateKey);
 
   return {
     name,

@@ -61,8 +61,14 @@ import type * as Tracer from "effect/Tracer";
 const UnknownJson = S.fromJsonString(S.Unknown);
 
 /**
- * Span attribute keys suppressed by default: the raw, undecoded tool call
- * parameters set by upstream `Toolkit.ts:263-265`.
+ * Span attribute keys suppressed by default: the raw tool call arguments.
+ *
+ * **Details**
+ *
+ * Effect 4.1.3+ `Toolkit.handle` and `McpServer` record the arguments under
+ * `gen_ai.tool.call.arguments` whenever `Toolkit.RecordToolArguments` is
+ * `true`; earlier releases set them under `parameters` on every call. Both
+ * keys stay denied, so turning the upstream setting on never leaks them.
  *
  * **Example** (Log default sanitized keys)
  *
@@ -70,13 +76,13 @@ const UnknownJson = S.fromJsonString(S.Unknown);
  * import { defaultSanitizedSpanKeys } from "@beep/mcp-kit/SanitizedSpan"
  *
  * console.log(defaultSanitizedSpanKeys)
- * // ["parameters"]
+ * // ["parameters", "gen_ai.tool.call.arguments"]
  * ```
  *
  * @category constants
  * @since 0.0.0
  */
-export const defaultSanitizedSpanKeys: ReadonlyArray<string> = ["parameters"];
+export const defaultSanitizedSpanKeys: ReadonlyArray<string> = ["parameters", "gen_ai.tool.call.arguments"];
 
 /**
  * Wraps a `Tracer` so that any span it creates suppresses attribute values
@@ -389,13 +395,17 @@ const projectToolResult = (result: ToolHandlerResult): Effect.Effect<CallToolRes
             ToolHandlerPayload.make({ result: result.result, encodedResult: result.encodedResult })
           ),
           () =>
-            CallToolResult.make({
-              isError: result.isFailure,
-              ...(result.isFailure || !isJsonObject(result.encodedResult)
-                ? {}
-                : { structuredContent: result.encodedResult }),
-              content: textContent(result.encodedResult),
-            })
+            // Effect 4.1.4 encodes a Schema.Void success as `null`; like
+            // upstream McpServer, an absent result has no content at all.
+            !result.isFailure && result.result === undefined
+              ? CallToolResult.make({ isError: false, content: [] })
+              : CallToolResult.make({
+                  isError: result.isFailure,
+                  ...(result.isFailure || !isJsonObject(result.encodedResult)
+                    ? {}
+                    : { structuredContent: result.encodedResult }),
+                  content: textContent(result.encodedResult),
+                })
         )
       );
 

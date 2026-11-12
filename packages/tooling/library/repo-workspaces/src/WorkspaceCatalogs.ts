@@ -23,7 +23,6 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
@@ -1232,7 +1231,7 @@ export class WorkspaceCatalogs extends Context.Service<WorkspaceCatalogs, Worksp
     });
 
     const [resolveOnce, invalidate] = yield* Effect.cachedInvalidateWithTTL(assemble, Duration.infinity);
-    const memo = Effect.onExit(resolveOnce, (exit) => (Exit.isSuccess(exit) ? Effect.void : invalidate));
+    const memo = Effect.onError(resolveOnce, () => invalidate);
 
     return {
       set: Effect.suspend(

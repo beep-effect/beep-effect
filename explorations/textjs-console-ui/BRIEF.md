@@ -66,7 +66,7 @@ The board, at fat-marker fidelity:
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ yeet-async-merge · feat/yeet-async-merge · codex                            │
 │ next: Finish slice A package proof, publish async merge PR through Yeet…    │
-│ checkout: ~/YeeBois/projects/beep-effect-worktrees/yeet-async-merge         │
+│ checkout: <worktrees>/yeet-async-merge                                      │
 ╰ ↑↓ move · / filter · enter expand · y copy path · p copy PR · q quit ───────╯
 ```
 

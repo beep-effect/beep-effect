@@ -1,0 +1,15 @@
+{
+  "previous": "044dd6674aedd1eea84993d6481edeac86a793875dbd922d009751df5a3f6dbb",
+  "review": {
+    "reviewer": "Claude Opus 5.5 medium, @chore/organizing-goal-packets",
+    "reason": "Record the six cached task slots of the new @beep/lane-cockpit lab (#3107), which inherit the root build, check, lint, lint:deprecated-apis, lint:laws and test definitions except for build: build.outputs is [] and build.inputs is the root build.inputs without !test/**, as in apps/labs/api-docs, because the lab's noEmit tsconfig.check.json build compiles test/ and a test edit must re-key it. Re-stamp // for the lab package.json added to //#lint:policy-fingerprint inputs and the turbo.json $schema bump to 2.11.11. Preserve commands, cache flags, outputs, environment, epoch and qualification scope; inputs only grow; no qualification or exception.",
+    "basis": {
+      "path": "docs/reports/lane-cockpit-cache-review-2026-11-12.md",
+      "sha256": "5211c359b40fb982623dc64f8c93d357d176e4d580c22697ad5b3a3392d4ca78"
+    }
+  },
+  "subjects": ["//", "@beep/lane-cockpit"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

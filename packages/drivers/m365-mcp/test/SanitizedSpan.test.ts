@@ -17,6 +17,7 @@ import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import { McpServerClient } from "effect/ai/McpSchema";
 import * as McpServer from "effect/ai/McpServer";
+import * as Toolkit from "effect/ai/Toolkit";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -119,15 +120,22 @@ describe("m365-mcp sanitized dispatch", () => {
         const server = yield* McpServer.McpServer;
 
         const request = M365GetSiteRequest.make({ siteId: "contoso.sharepoint.com,secret-site-id,web" });
-        const result = yield* Effect.withTracer(server.callTool({ name: "m365_get_site", arguments: request }), tracer);
+        const result = yield* Effect.withTracer(
+          server
+            .callTool({ name: "m365_get_site", arguments: request })
+            .pipe(Effect.provideService(Toolkit.RecordToolArguments, true)),
+          tracer
+        );
 
         assert.isFalse(result.isError);
 
-        assertNone(A.findFirst(captured, (entry) => entry.key === "parameters"));
+        assertNone(
+          A.findFirst(captured, (entry) => entry.key === "parameters" || entry.key === "gen_ai.tool.call.arguments")
+        );
 
         assertSome(
           O.map(
-            A.findFirst(captured, (entry) => entry.key === "tool"),
+            A.findFirst(captured, (entry) => entry.key === "gen_ai.tool.name"),
             (entry) => entry.value
           ),
           "m365_get_site"

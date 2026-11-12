@@ -104,6 +104,26 @@ describe("githubHeadroomItems", () => {
     expect(reasonOf(items[4]!.freshness)).toBe("stale");
     expect(reasonOf(items[0]!.freshness)).toBe("fresh");
   });
+
+  it("orders the resources outside core, graphql and search by name", () => {
+    const items = githubHeadroomItems(
+      present({
+        buckets: [
+          bucket({ resource: "integration_manifest" }),
+          bucket({ resource: "code_search" }),
+          bucket({ resource: "search" }),
+          bucket({ resource: "actions_runner_registration" }),
+        ],
+      }),
+      NOW
+    );
+    expect(A.map(items, (item) => item.resource)).toEqual([
+      "search",
+      "actions_runner_registration",
+      "code_search",
+      "integration_manifest",
+    ]);
+  });
 });
 
 describe("reduceGithubHeadroom", () => {
@@ -133,6 +153,41 @@ describe("reduceGithubHeadroom", () => {
   it("marks an unknown reserve instead of judging it", () => {
     const parcel = reduceGithubHeadroom(present({ buckets: [bucket({ reserve: "unknown" })] }), NOW, 20);
     expect(parcel.summary).toMatch(/^user:alice core 3120\/5000 reserve \? ↺21:31Z; /);
+  });
+
+  it("names a breached reserve without a percentage when the limit is zero", () => {
+    const parcel = reduceGithubHeadroom(
+      present({ buckets: [bucket({ limit: 0, remaining: 0, used: 0, reserve: "below" })] }),
+      NOW,
+      20
+    );
+    expect(parcel.summary).toMatch(/^user:alice core 0\/0 BELOW reserve ↺21:31Z; /);
+  });
+
+  it("sums unattributed points per resource across identities, in core, graphql, search order", () => {
+    const parcel = reduceGithubHeadroom(
+      present({
+        buckets: [
+          bucket({ resource: "graphql", unattributedLastHour: O.some(230) }),
+          bucket({ resource: "search", limit: 30, remaining: 30, used: 0, unattributedLastHour: O.some(0) }),
+          bucket({ identity: "user:bob", unattributedLastHour: O.some(60) }),
+          bucket({ identity: "user:carol", unattributedLastHour: O.some(40) }),
+        ],
+      }),
+      NOW,
+      20
+    );
+    expect(parcel.summary).toMatch(/; top 1h here: none; unattributed 1h core 100, graphql 230$/);
+  });
+
+  it("ages a sub-minute reading in seconds when no summary bucket is shown", () => {
+    const parcel = reduceGithubHeadroom(
+      present({ buckets: [bucket({ resource: "code_search", asOf: DateTime.subtract(NOW, { seconds: 30 }) })] }),
+      NOW,
+      20
+    );
+    expect(parcel.freshness._tag).toBe("Fresh");
+    expect(parcel.summary).toMatch(/^github headroom unknown: last reading 30s ago \(sampler idle\?\); /);
   });
 
   it("never serves stale readings as headroom", () => {
