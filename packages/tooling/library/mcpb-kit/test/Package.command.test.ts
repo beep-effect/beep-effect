@@ -66,6 +66,7 @@ const portableExecutable = (options: {
   return bytes;
 };
 const signedRuntime = portableExecutable({ optionalMagic: 0x20b, certificateTable: { offset: 0x1c0, size: 0x40 } });
+const syntheticArchive = new TextEncoder().encode("synthetic archive");
 
 const originalSpawn = Bun.spawn;
 
@@ -117,38 +118,45 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
     // `Bun.spawn` is a plain function, so it hands each synthetic archive write to
     // a fiber of the test, which writes it to the in-memory filesystem and then
     // settles the process's `exited` promise.
-    const archiveWrites = yield* Queue.unbounded<{
+    const fileWrites = yield* Queue.unbounded<{
       readonly path: string;
+      readonly content: Uint8Array;
       readonly exitCode: number;
       readonly exited: PromiseWithResolvers<number>;
     }>();
-    yield* Queue.take(archiveWrites).pipe(
+    yield* Queue.take(fileWrites).pipe(
       Effect.flatMap((write) =>
         fs
-          .writeFileString(write.path, "synthetic archive")
+          .writeFile(write.path, write.content)
           .pipe(Effect.andThen(Effect.sync(() => write.exited.resolve(write.exitCode))))
       ),
       Effect.forever,
       Effect.forkChild
     );
-    const offerArchiveWrite = (path: string, exitCode: number): Promise<number> => {
+    const offerFileWrite = (path: string, content: Uint8Array, exitCode: number): Promise<number> => {
       const exited = Promise.withResolvers<number>();
-      Queue.offerUnsafe(archiveWrites, { path, exitCode, exited });
+      Queue.offerUnsafe(fileWrites, { path, content, exitCode, exited });
       return exited.promise;
+    };
+    const settle = (args: ReadonlyArray<string>, exitCode: number): Promise<number> => {
+      if (args[0] === "zip" && options.noArchive !== true) {
+        return offerFileWrite(args[3] ?? archive, syntheticArchive, exitCode);
+      }
+      // `unzip -q -j -o <archive> <member> -d <directory>` unpacks the runtime; `unzip -Z1` only lists.
+      if (args[0] === "unzip" && args[1] === "-q") {
+        return offerFileWrite(`${args[7]}/bun.exe`, signedRuntime, exitCode);
+      }
+      return Promise.resolve(exitCode);
     };
     const calls: Array<ReadonlyArray<string>> = [];
     Object.defineProperty(Bun, "spawn", {
       value: (args: ReadonlyArray<string>) => {
         calls.push(args);
         if (options.rejectLaunch === true) throw new Error("synthetic process start failure");
-        const exitCode = options.exitCode ?? 0;
-        const exited =
-          args[0] === "zip" && options.noArchive !== true
-            ? offerArchiveWrite(args[3] ?? archive, exitCode)
-            : Promise.resolve(exitCode);
+        const listed = args[2] === windowsArchive ? windowsInventory : inventory;
         return {
-          stdout: new Blob([options.listing ?? inventory]).stream(),
-          exited,
+          stdout: new Blob([options.listing ?? listed]).stream(),
+          exited: settle(args, options.exitCode ?? 0),
         };
       },
     });
@@ -225,6 +233,73 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
         },
         compatibility: { platforms: ["win32"] },
       });
+    })
+  );
+
+  it.effect("downloads the pinned runtime, checks its sha256 and unpacks only the executable", () =>
+    Effect.gen(function* () {
+      const fixture = yield* prepare({ listing: windowsInventory });
+      yield* cacheWindowsDownloads();
+      yield* fixture.fs.remove(runtimeCache, { recursive: true });
+      // What curl leaves behind; the digest service below reports the pinned sha256 for it.
+      yield* fixture.fs.writeFileString(runtimeArchive, "synthetic release archive");
+      yield* runCommand(["--target", "windows-x64", "--output", output]).pipe(
+        Effect.provideService(FileSystem.FileSystem, fixture.fs),
+        Effect.provideService(Digest.Digest, {
+          digest: () => Effect.succeed(new Uint8Array()),
+          digestHex: () => Effect.succeed(mcpbWindowsRuntime.sha256),
+        })
+      );
+      expect(A.map(fixture.calls, (args) => args[0])).toEqual(["curl", "unzip", "bun", "zip", "unzip"]);
+      expect(fixture.calls[0]).toContain(
+        `https://github.com/oven-sh/bun/releases/download/bun-v${mcpbWindowsRuntime.version}/bun-windows-x64.zip`
+      );
+      expect(fixture.calls[1]).toEqual([
+        "unzip",
+        "-q",
+        "-j",
+        "-o",
+        runtimeArchive,
+        "bun-windows-x64/bun.exe",
+        "-d",
+        runtimeCache,
+      ]);
+      const runtime = yield* fixture.fs.readFile(`${output}/windows-x64/bun.exe`);
+      expect(Uint8Array.from(runtime)).toEqual(signedRuntime);
+    })
+  );
+
+  it.effect("packages Linux, then Windows, when no target is named", () =>
+    Effect.gen(function* () {
+      const fixture = yield* prepare();
+      yield* cacheWindowsDownloads();
+      yield* runCommand(["--output", output]).pipe(Effect.provideService(FileSystem.FileSystem, fixture.fs));
+      expect(A.map(fixture.calls, (args) => args[0])).toEqual(["bun", "zip", "unzip", "bun", "zip", "unzip"]);
+      expect(fixture.calls[0]).toContain("--compile");
+      expect(fixture.calls[3]).not.toContain("--compile");
+      const linuxArchived = yield* fixture.fs.exists(archive);
+      const windowsArchived = yield* fixture.fs.exists(windowsArchive);
+      expect([linuxArchived, windowsArchived]).toEqual([true, true]);
+    })
+  );
+
+  it.effect("reports a cached runtime that cannot be copied into the bundle", () =>
+    Effect.gen(function* () {
+      const fixture = yield* prepare({ listing: windowsInventory });
+      yield* cacheWindowsDownloads();
+      // A directory where the executable should be: the cache entry exists, copying it fails.
+      yield* fixture.fs.remove(`${runtimeCache}/bun.exe`);
+      yield* fixture.fs.makeDirectory(`${runtimeCache}/bun.exe`);
+      const result = yield* runCommand(["--target", "windows-x64", "--output", output]).pipe(
+        Effect.provideService(FileSystem.FileSystem, fixture.fs),
+        Effect.result
+      );
+      expect(result).toMatchObject({
+        _tag: "Failure",
+        failure: { message: expect.stringContaining("Failed copying bun.exe into the bundle.") },
+      });
+      const archived = yield* fixture.fs.exists(windowsArchive);
+      expect(archived).toBe(false);
     })
   );
 
