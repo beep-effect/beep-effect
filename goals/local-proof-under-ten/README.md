@@ -51,10 +51,10 @@ slice 3 (SCHE-08) and slice 4 (the beep-heavy retirement) are next.
   under a claims lock; status stays read-only and leases and tickets are untouched. The beep-heavy retirement
   stays open (slice 4).
 - 2026-11-12 prerequisite drift: COVE-02 landed in #3115 and MEAS-01 with MEAS-04 in #3118; SCHE-09, MEAS-02 and
-  MEAS-07 are still open. PLAN's HOST-01 co-carry note is moot: HOST-01 part a landed alone in #3111. Open PR
-  #3130 (`goals/yeet-async-merge-and-stacks`) adds `Yeet/internal/PatchIdentity.ts` and carries the review window
+  MEAS-07 are still open. PLAN's HOST-01 co-carry note is moot: HOST-01 part a landed alone in #3111. #3130
+  (`goals/yeet-async-merge-and-stacks`, merged 2026-11-12) adds `Yeet/internal/PatchIdentity.ts` and carries the review window
   across GitHub-made unchanged rewrites (cascade, restack); merges fail closed there, so PERIL-09 (a
-  diff-preserving merge of main) stays open and should build on that classifier once #3130 merges.
+  diff-preserving merge of main) stays open and should build on that classifier.
 
 ## Notes
 
