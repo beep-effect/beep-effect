@@ -59,6 +59,8 @@ const program = mcpbPackageProgram(
       "practice-kg-claims",
       "src/",
     ],
+    // The PGlite files bin.ts imports `with { type: "file" }`.
+    assets: ["initdb.wasm", "pglite.data", "pglite.wasm"],
     manifest: McpbManifestFields.make({
       name: "beep-practice-kg",
       displayName: "Beep Practice Knowledge Graph",

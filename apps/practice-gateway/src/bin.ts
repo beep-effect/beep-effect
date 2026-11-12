@@ -18,7 +18,8 @@ import { printGatewaySelfCheck, runGatewaySelfCheck } from "./SelfCheck.ts";
 import { GatewayServerLayer, GatewayServicesLayer } from "./Server.ts";
 import { PRACTICE_GATEWAY_VERSION } from "./Version.ts";
 // The practice knowledge-graph provider opens PGlite in process, so its
-// assets are embedded in the compiled binary.
+// assets ship with the host: embedded in the compiled Linux executable,
+// beside the script bundle on Windows.
 import "../../../node_modules/@electric-sql/pglite/dist/initdb.wasm" with { type: "file" };
 import "../../../node_modules/@electric-sql/pglite/dist/pglite.data" with { type: "file" };
 import "../../../node_modules/@electric-sql/pglite/dist/pglite.wasm" with { type: "file" };

@@ -6,7 +6,7 @@
  */
 
 import { $McpbKitId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 
@@ -124,7 +124,179 @@ export const McpbPlatform = LiteralKit(["linux", "win32"]).pipe(
 export type McpbPlatform = typeof McpbPlatform.Type;
 
 /**
- * How one target is compiled and which executable it ships.
+ * A pinned official Bun release archive and the runtime executable inside it.
+ *
+ * **Details**
+ *
+ * The release archive is `<asset>.zip` and holds the runtime at
+ * `<asset>/<executable>`. `version` must equal the repository's
+ * `.bun-version`: the script bundle is built by that Bun and runs on the same
+ * one. `sha256` is the value the release's `SHASUMS256.txt` publishes for the
+ * archive.
+ *
+ * **Example** (Describe a pinned runtime)
+ *
+ * ```ts
+ * import { McpbRuntimePin } from "@beep/mcpb-kit"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
+ *
+ * const pin = McpbRuntimePin.make({
+ *   version: "1.4.4",
+ *   asset: "bun-windows-x64",
+ *   executable: "bun.exe",
+ *   sha256: Sha256Hex.make("cd2c0fccc78f3ede1f50ca827a15f063eda13d4d150a3d0674f4f6e323d864a5"),
+ * })
+ * console.log(pin.executable) // "bun.exe"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class McpbRuntimePin extends S.Opaque<McpbRuntimePin, { readonly brand: unique symbol }>()(
+  S.Struct({
+    version: S.NonEmptyString.annotateKey({
+      description: "Bun release version; equal to the repository's .bun-version.",
+    }),
+    asset: S.NonEmptyString.annotateKey({
+      description: "Release asset name without `.zip`; also the folder inside the archive.",
+    }),
+    executable: S.NonEmptyString.annotateKey({
+      description: "File name of the runtime executable, in the archive folder and in the bundle.",
+    }),
+    sha256: Sha256Hex.annotateKey({ description: "The sha256 the release publishes for the archive." }),
+  }).pipe(
+    $I.annoteSchema("McpbRuntimePin", {
+      description: "A pinned official Bun release archive and the runtime executable inside it.",
+    })
+  )
+) {}
+
+/**
+ * The ways a bundle starts its server.
+ *
+ * **Details**
+ *
+ * `compiled` ships one `bun build --compile` executable. `runtime-script`
+ * ships the official Bun runtime beside a script bundle, so the only
+ * executable in the bundle carries the Bun publisher's signature.
+ *
+ * **Example** (Check a launch kind)
+ *
+ * ```ts
+ * import { McpbLaunchKind } from "@beep/mcpb-kit"
+ *
+ * console.log(McpbLaunchKind.is["runtime-script"]("runtime-script")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const McpbLaunchKind = LiteralKit(["compiled", "runtime-script"]).pipe(
+  $I.annoteSchema("McpbLaunchKind", {
+    description: "The ways a bundle starts its server: a compiled executable, or a runtime plus a script.",
+  })
+);
+
+/**
+ * Decoded type of {@link McpbLaunchKind}.
+ *
+ * **Example** (Type a launch kind)
+ *
+ * ```ts
+ * import type { McpbLaunchKind } from "@beep/mcpb-kit"
+ *
+ * const kind: McpbLaunchKind = "compiled"
+ * console.log(kind)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type McpbLaunchKind = typeof McpbLaunchKind.Type;
+
+/**
+ * What a bundle ships to start its server, and how the manifest starts it.
+ *
+ * **Details**
+ *
+ * A `compiled` launch runs `executable` with no arguments. A `runtime-script`
+ * launch runs the pinned `runtime` with `runtimeArgs` followed by the path of
+ * `script`; the files `bun build` emits for `with { type: "file" }` imports
+ * sit beside the script.
+ *
+ * **Example** (Describe a signed-runtime launch)
+ *
+ * ```ts
+ * import { McpbLaunch, mcpbWindowsRuntime } from "@beep/mcpb-kit"
+ *
+ * const launch = McpbLaunch.make({
+ *   kind: "runtime-script",
+ *   runtime: mcpbWindowsRuntime,
+ *   runtimeArgs: ["--no-env-file"],
+ *   script: "example-mcp.js",
+ * })
+ * console.log(McpbLaunch.guards["runtime-script"](launch)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const McpbLaunch = McpbLaunchKind.toTaggedUnion("kind")({
+  compiled: {
+    bunTarget: S.NonEmptyString.annotateKey({ description: "The `bun build --compile --target` value." }),
+    executable: S.NonEmptyString.annotateKey({ description: "File name of the compiled executable in the bundle." }),
+  },
+  "runtime-script": {
+    // Not `annotateKey`: it would trade the opaque pin for its plain struct type.
+    runtime: McpbRuntimePin,
+    runtimeArgs: S.Array(S.String).annotateKey({
+      description: "Arguments the manifest passes to the runtime before the script path.",
+    }),
+    script: S.NonEmptyString.annotateKey({ description: "File name of the script bundle the runtime runs." }),
+  },
+}).pipe(
+  $I.annoteSchema("McpbLaunch", {
+    description: "What a bundle ships to start its server, and how the manifest starts it.",
+  })
+);
+
+/**
+ * Decoded type of {@link McpbLaunch}.
+ *
+ * **Example** (Type a compiled launch)
+ *
+ * ```ts
+ * import type { McpbLaunch } from "@beep/mcpb-kit"
+ *
+ * const launch: McpbLaunch = { kind: "compiled", bunTarget: "bun-linux-x64", executable: "example-mcp" }
+ * console.log(launch.kind)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type McpbLaunch = typeof McpbLaunch.Type;
+
+/**
+ * The `compiled` case of {@link McpbLaunch}: one `bun build --compile`
+ * executable.
+ *
+ * **Example** (Type a compiled launch case)
+ *
+ * ```ts
+ * import type { McpbCompiledLaunch } from "@beep/mcpb-kit"
+ *
+ * const launch: McpbCompiledLaunch = { kind: "compiled", bunTarget: "bun-windows-x64", executable: "setup.exe" }
+ * console.log(launch.executable)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type McpbCompiledLaunch = typeof McpbLaunch.cases.compiled.Type;
+
+/**
+ * What one target ships: its launch, native bindings and platform.
  *
  * **Example** (Describe the Linux target)
  *
@@ -133,12 +305,11 @@ export type McpbPlatform = typeof McpbPlatform.Type;
  *
  * const spec = McpbTargetSpec.make({
  *   target: "linux-x64",
- *   bunTarget: "bun-linux-x64",
- *   executable: "example-mcp",
+ *   launch: { kind: "compiled", bunTarget: "bun-linux-x64", executable: "example-mcp" },
  *   nativePackage: "node-bindings-linux-x64",
  *   platform: "linux",
  * })
- * console.log(spec.executable) // "example-mcp"
+ * console.log(spec.launch.kind) // "compiled"
  * ```
  *
  * @category models
@@ -147,15 +318,14 @@ export type McpbPlatform = typeof McpbPlatform.Type;
 export class McpbTargetSpec extends S.Opaque<McpbTargetSpec, { readonly brand: unique symbol }>()(
   S.Struct({
     target: McpbTarget.annotateKey({ description: "The platform this spec builds." }),
-    bunTarget: S.NonEmptyString.annotateKey({ description: "The `bun build --compile --target` value." }),
-    executable: S.NonEmptyString.annotateKey({ description: "File name of the compiled executable in the bundle." }),
+    launch: McpbLaunch.annotateKey({ description: "What the bundle ships to start its server." }),
     nativePackage: S.NonEmptyString.annotateKey({
-      description: "The `@duckdb/<name>` native bindings package shipped beside the executable.",
+      description: "The `@duckdb/<name>` native bindings package shipped beside the launch files.",
     }),
     platform: McpbPlatform.annotateKey({ description: "The platform the manifest declares." }),
   }).pipe(
     $I.annoteSchema("McpbTargetSpec", {
-      description: "How one target is compiled and which executable it ships.",
+      description: "What one target ships: its launch, native bindings and platform.",
     })
   )
 ) {}
@@ -290,9 +460,10 @@ export class McpbPrompt extends S.Opaque<McpbPrompt, { readonly brand: unique sy
  *
  * The kit fills in the rest: manifest version `0.3`, author, repository,
  * license, the target platform, and a binary server whose command is the
- * bundled executable. `env` gains `NODE_PATH` pointing at the bundled
- * `node_modules`, and its keys are written in sorted order. `prompts` is
- * written only when it is non-empty.
+ * target's launch: the compiled executable, or the bundled runtime with the
+ * script path as its argument. `env` gains `NODE_PATH` pointing at the
+ * bundled `node_modules`, and its keys are written in sorted order. `prompts`
+ * is written only when it is non-empty.
  *
  * **Example** (Describe an app's manifest)
  *
@@ -342,10 +513,14 @@ export class McpbManifestFields extends S.Opaque<McpbManifestFields, { readonly 
  *
  * **Details**
  *
- * `appName` names the app directory under `apps/`, the executable (with
- * `.exe` on Windows), the archive (`<appName>-<target>.mcpb`) and the default
- * output directory (`apps/<appName>/dist/mcpb`). The compiled entrypoint is
- * `apps/<appName>/src/bin.ts`.
+ * `appName` names the app directory under `apps/`, the Linux executable, the
+ * Windows script bundle (`<appName>.js`), the archive
+ * (`<appName>-<target>.mcpb`) and the default output directory
+ * (`apps/<appName>/dist/mcpb`). The entrypoint is `apps/<appName>/src/bin.ts`.
+ *
+ * `assets` lists the files that entrypoint imports `with { type: "file" }`.
+ * A compiled executable embeds them; a runtime-script bundle ships them
+ * beside the script, and the archive audit requires exactly these names.
  *
  * **Example** (Describe an app's packaging)
  *
@@ -376,10 +551,16 @@ export class McpbManifestFields extends S.Opaque<McpbManifestFields, { readonly 
 export class McpbPackageSpec extends S.Opaque<McpbPackageSpec, { readonly brand: unique symbol }>()(
   S.Struct({
     appName: S.NonEmptyString.annotateKey({
-      description: "The app directory under apps/, also the executable and archive base name.",
+      description: "The app directory under apps/, also the executable, script and archive base name.",
     }),
     commandName: S.NonEmptyString.annotateKey({ description: "Name of the packaging command." }),
     repoRoot: S.NonEmptyString.annotateKey({ description: "Absolute path of the repository root." }),
+    assets: S.Array(S.NonEmptyString)
+      .pipe(S.withConstructorDefault(Effect.succeed([])))
+      .annotateKey({
+        description:
+          "File names the entrypoint imports as files; a runtime-script bundle ships them beside the script.",
+      }),
     forbiddenArchiveFragments: S.Array(S.String).annotateKey({
       description: "Substrings that must not appear in any archive entry; a match deletes the archive and fails.",
     }),
@@ -393,6 +574,12 @@ export class McpbPackageSpec extends S.Opaque<McpbPackageSpec, { readonly brand:
 
 /**
  * A complete `.mcpb` `manifest.json`, in the field order the kit writes it.
+ *
+ * **Details**
+ *
+ * `server.mcp_config.args` is written only for a launch that passes
+ * arguments: a runtime-script bundle names its script there, a compiled
+ * executable takes none.
  *
  * **Example** (Check a manifest version)
  *
@@ -419,7 +606,11 @@ export class McpbManifest extends S.Opaque<McpbManifest, { readonly brand: uniqu
     server: S.Struct({
       type: S.tag("binary"),
       entry_point: S.String,
-      mcp_config: S.Struct({ command: S.String, env: S.Record(S.String, S.String) }),
+      mcp_config: S.Struct({
+        command: S.String,
+        args: S.String.pipe(S.Array, S.optionalKey),
+        env: S.Record(S.String, S.String),
+      }),
     }),
     user_config: S.Record(
       S.String,

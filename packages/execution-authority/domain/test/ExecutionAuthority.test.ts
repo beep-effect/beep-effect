@@ -23,6 +23,7 @@ import {
   GrantPurpose,
   GrantResource,
   GrantSetDigest,
+  GrantSetDigestInput,
   operationDigestOf,
   PolicyRevision,
   SinkClass,
@@ -37,11 +38,14 @@ import {
   verifyFrozenGrantSetDigest,
   verifyOutcomeBinding,
 } from "@beep/execution-authority-domain";
+import { JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint";
 import { SystemPrincipal } from "@beep/shared-domain/entity/Principal";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertSuccess, assertTrue } from "@effect/vitest/utils";
+import { sha256 } from "@noble/hashes/sha2.js";
+import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 import * as Arbitrary from "effect/Arbitrary";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -50,11 +54,13 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Struct from "effect/Struct";
 import type {
   ChainVerification,
   DecisionRecordHash as DecisionRecordHashType,
   ExecutionVerdict,
 } from "@beep/execution-authority-domain";
+import type { JsoncCanonicalizeError } from "@beep/jsonc/JsoncFingerprint";
 
 const decodeFrozenGrantSet = S.decodeEffect(FrozenGrantSet);
 const encodeFrozenGrantSet = S.encodeEffect(FrozenGrantSet);
@@ -154,6 +160,49 @@ const decisionContent = (input: {
     sinkClass: "network-egress",
     verdict: "allowed",
   }) as const;
+
+// ── Stored-seal replay through the canonical digest owner ───────────────────
+//
+// Slice A of goals/canonical-digest-owner. Each seal is recomputed without the
+// domain's encoder: the wire form comes from the public schemas, the bytes
+// from `JsoncFingerprint` (RFC 8785), and the version line is restated here.
+// A seal that stops recomputing after the encoder swap in slice C would mean a
+// stored digest depended on something the owner refuses.
+const sealThroughOwner = (version: string, wire: unknown): Result.Result<string, JsoncCanonicalizeError> =>
+  Result.map(JsoncFingerprint.canonicalizeResult(wire), (canonical) =>
+    bytesToHex(sha256(utf8ToBytes(`${version}\n${canonical}`)))
+  );
+
+const decisionSealThroughOwner = (record: ExecutionDecisionRecord) =>
+  sealThroughOwner(
+    "epistemic-execution-decision/v1",
+    Struct.omit(Result.getOrThrow(S.encodeResult(ExecutionDecisionRecord)(record)), ["hash"])
+  );
+
+const outcomeSealThroughOwner = (record: ExecutionOutcomeRecord) =>
+  sealThroughOwner(
+    "epistemic-execution-outcome/v1",
+    Struct.omit(Result.getOrThrow(S.encodeResult(ExecutionOutcomeRecord)(record)), ["hash"])
+  );
+
+const grantSetSealThroughOwner = (set: FrozenGrantSet) =>
+  sealThroughOwner(
+    "epistemic-grant-set/v1",
+    Result.getOrThrow(
+      S.encodeResult(GrantSetDigestInput)(
+        GrantSetDigestInput.make({ frozenAt: set.frozenAt, grants: set.grants, policyRevision: set.policyRevision })
+      )
+    )
+  );
+
+// The stored seal, or the one refusal the typed schemas leave reachable: their
+// free-text string fields admit an unpaired surrogate, which the domain's
+// encoder escapes and seals and the owner refuses.
+const expectSealOrLoneSurrogate = (replayed: Result.Result<string, JsoncCanonicalizeError>, stored: string): void =>
+  Result.match(replayed, {
+    onSuccess: (seal) => expect(seal).toBe(stored),
+    onFailure: (failure) => expect(failure.code).toBe("LoneSurrogate"),
+  });
 
 describe("ExecutionAuthority", () => {
   describe("evaluateExecutionRequest", () => {
@@ -510,6 +559,98 @@ describe("ExecutionAuthority", () => {
       });
 
       expect(outcome.hash).toBe("c73e693653a6eb591d9a1cff1f46e5addf7e771ac3a32d9faa4d52dd7536113d");
+    });
+  });
+
+  describe("stored seals recompute through the canonical digest owner", () => {
+    it("recomputes the four golden digest vectors", () => {
+      const emptyFrozen = Result.getOrThrow(freezeGrantSet(emptyDraftGrantSet(revision), DateTime.makeUnsafe(0)));
+      const decision = sealExecutionDecision(decisionContent({ seq: 0, prevHash: O.none() }));
+      const outcome = sealExecutionOutcome({
+        decisionHash: DecisionRecordHash.make(Str.repeat(64)("c")),
+        recordedAt: DateTime.makeUnsafe(2),
+        runKey: ExecutionRunKey.make(Str.repeat(64)("b")),
+        settlement: "completed",
+      });
+
+      assertSuccess(
+        grantSetSealThroughOwner(emptyFrozen),
+        "6b964a03608449b6b1900d53904a30b85625b8086f18dee48593d05cc94bc623"
+      );
+      assertSuccess(
+        grantSetSealThroughOwner(frozen),
+        "637c2eed3a1a2cc13e35c71e3d309a63a56b5c26eea8cbb3eb7e15333ac33379"
+      );
+      assertSuccess(
+        decisionSealThroughOwner(decision),
+        "59963d1ec97b2eaabb2c4d6ff37cf1118b3f513a8da259b736586ab6791dbe9b"
+      );
+      assertSuccess(
+        outcomeSealThroughOwner(outcome),
+        "c73e693653a6eb591d9a1cff1f46e5addf7e771ac3a32d9faa4d52dd7536113d"
+      );
+    });
+
+    it("recomputes a denied decision and every link of a chain", () => {
+      const first = sealExecutionDecision(decisionContent({ seq: 0, prevHash: O.none() }));
+      const second = sealExecutionDecision({
+        ...decisionContent({ seq: 1, prevHash: O.some(first.hash) }),
+        reason: "grant-expired",
+        verdict: "denied",
+      });
+      const third = sealExecutionDecision(decisionContent({ seq: 2, prevHash: O.some(second.hash) }));
+
+      expect(verifyExecutionDecisionChain([first, second, third]).result).toBe("chain-intact");
+      for (const record of [first, second, third]) {
+        assertSuccess(decisionSealThroughOwner(record), record.hash);
+      }
+    });
+
+    it.effect.prop(
+      "recomputes every seal the domain can mint, or refuses it for an unpaired surrogate",
+      {
+        decision: Arbitrary.schema(ExecutionDecisionRecord),
+        draft: Arbitrary.schema(DraftGrantSet),
+        outcome: Arbitrary.schema(ExecutionOutcomeRecord),
+      },
+      (values) =>
+        Effect.sync(() => {
+          const decision = sealExecutionDecision(values.decision);
+          const outcome = sealExecutionOutcome(values.outcome);
+          const set = Result.getOrThrow(freezeGrantSet(values.draft, values.outcome.recordedAt));
+
+          expectSealOrLoneSurrogate(decisionSealThroughOwner(decision), decision.hash);
+          expectSealOrLoneSurrogate(outcomeSealThroughOwner(outcome), outcome.hash);
+          expectSealOrLoneSurrogate(grantSetSealThroughOwner(set), set.digest);
+        }),
+      { arbitrary: fcRuns(100) }
+    );
+
+    // Present behaviour, fixed so the swap in slice C has to list it: the
+    // domain seals a grant whose destination is not well-formed Unicode, and
+    // the owner returns a typed refusal for the same wire form.
+    it("seals a grant with an unpaired surrogate today, which the owner refuses", () => {
+      const illFormed = ExecutionGrant.make({
+        ...grant,
+        sink: ExecutionSink.make({
+          ...grant.sink,
+          destination: SinkDestination.make("https://registry.example/\ud800"),
+        }),
+      });
+      const set = pipe(
+        addGrant(emptyDraftGrantSet(revision), illFormed),
+        Result.getOrThrow,
+        freezeGrantSet(DateTime.makeUnsafe(0)),
+        Result.getOrThrow
+      );
+      const replayed = Result.match(grantSetSealThroughOwner(set), {
+        onSuccess: () => "sealed",
+        onFailure: (failure) => `${failure.code} at ${failure.path}`,
+      });
+
+      expect(set.digest).toMatch(sha256HexPattern);
+      expect(verifyFrozenGrantSetDigest(set)).toBe(true);
+      expect(replayed).toBe("LoneSurrogate at /grants/0/sink/destination");
     });
   });
 

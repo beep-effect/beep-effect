@@ -472,11 +472,11 @@
       }
     },
     "@beep/execution-authority-domain": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2, test/canonical-digest-census",
+      "reason": "Record the one new upstream task that @beep/execution-authority-domain and @beep/semantica gain on build, check, lint:deprecated-apis and test from the @beep/jsonc devDependency slice A of goals/canonical-digest-owner adds for its differential and seal replay tests. Preserve commands, cache flags, outputs, environment, declared inputs, epoch and qualification scope; inputs only grow; no qualification or exception.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/canonical-digest-owner/research/slice-a-cache-review.md",
+        "sha256": "8c7746c154d2d461b1c9ae5d12552ee2afbae21e17bb726d7efd5722b16ed59c"
       }
     },
     "@beep/execution-authority-server": {
@@ -1352,11 +1352,11 @@
       }
     },
     "@beep/semantica": {
-      "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-      "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+      "reviewer": "Claude Fable 5.2, test/canonical-digest-census",
+      "reason": "Record the one new upstream task that @beep/execution-authority-domain and @beep/semantica gain on build, check, lint:deprecated-apis and test from the @beep/jsonc devDependency slice A of goals/canonical-digest-owner adds for its differential and seal replay tests. Preserve commands, cache flags, outputs, environment, declared inputs, epoch and qualification scope; inputs only grow; no qualification or exception.",
       "basis": {
-        "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-        "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+        "path": "goals/canonical-digest-owner/research/slice-a-cache-review.md",
+        "sha256": "8c7746c154d2d461b1c9ae5d12552ee2afbae21e17bb726d7efd5722b16ed59c"
       }
     },
     "@beep/semver": {
@@ -39925,6 +39925,7 @@
         "dependencies": [
           "@beep/epistemics#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
           "@beep/test-runner#build",
@@ -39985,6 +39986,7 @@
         "dependencies": [
           "@beep/epistemics#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
           "@beep/test-runner#build",
@@ -40031,6 +40033,7 @@
         "dependencies": [
           "@beep/epistemics#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
           "@beep/test-runner#build",
@@ -40161,6 +40164,7 @@
         "dependencies": [
           "@beep/epistemics#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",
@@ -40364,6 +40368,7 @@
         "dependencies": [
           "@beep/epistemics#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",
           "@beep/test-runner#transit",
@@ -40413,6 +40418,7 @@
         "dependencies": [
           "@beep/epistemics#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/schema#transit",
           "@beep/shared-domain#transit",
           "@beep/test-runner#transit",
@@ -40470,6 +40476,7 @@
         "dependencies": [
           "@beep/epistemics#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/schema#build",
           "@beep/shared-domain#build",
           "@beep/test-runner#build",
@@ -107973,6 +107980,7 @@
           "@beep/epistemics#build",
           "@beep/file-processing#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/langextract#build",
           "@beep/nlp#build",
           "@beep/nlp-processing#build",
@@ -108046,6 +108054,7 @@
           "@beep/epistemics#build",
           "@beep/file-processing#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/langextract#build",
           "@beep/nlp#build",
           "@beep/nlp-processing#build",
@@ -108104,6 +108113,7 @@
           "@beep/epistemics#build",
           "@beep/file-processing#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/langextract#build",
           "@beep/nlp#build",
           "@beep/nlp-processing#build",
@@ -108172,6 +108182,7 @@
           "@beep/epistemics#build",
           "@beep/file-processing#build",
           "@beep/identity#build",
+          "@beep/jsonc#build",
           "@beep/langextract#build",
           "@beep/nlp#build",
           "@beep/nlp-processing#build",
@@ -108254,6 +108265,7 @@
           "@beep/epistemics#transit",
           "@beep/file-processing#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/langextract#transit",
           "@beep/nlp#transit",
           "@beep/nlp-processing#transit",
@@ -108413,6 +108425,7 @@
           "@beep/epistemics#transit",
           "@beep/file-processing#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/langextract#transit",
           "@beep/nlp#transit",
           "@beep/nlp-processing#transit",
@@ -108474,6 +108487,7 @@
           "@beep/epistemics#transit",
           "@beep/file-processing#transit",
           "@beep/identity#transit",
+          "@beep/jsonc#transit",
           "@beep/langextract#transit",
           "@beep/nlp#transit",
           "@beep/nlp-processing#transit",

@@ -80,7 +80,7 @@ case "${1:?usage: onboarding-proof.sh prepare <exe> [snapshot] | verify <evidenc
       echo
       echo "## Installed gateway --self-check (interactive session)"
       echo '```json'
-      WAIT_SECONDS=60 "$RUN" interactive "set NODE_PATH=%APPDATA%\\Claude\\Claude Extensions\\$EXT_ID\\node_modules&& \"%APPDATA%\\Claude\\Claude Extensions\\$EXT_ID\\practice-gateway.exe\" --self-check" || true
+      WAIT_SECONDS=60 "$RUN" interactive "set NODE_PATH=%APPDATA%\\Claude\\Claude Extensions\\$EXT_ID\\node_modules&& \"%APPDATA%\\Claude\\Claude Extensions\\$EXT_ID\\bun.exe\" --no-env-file \"%APPDATA%\\Claude\\Claude Extensions\\$EXT_ID\\practice-gateway.js\" --self-check" || true
       echo '```'
       echo
       echo "Screenshots: \`$(cat "$STATE/shots/current-proof-dir")\` (not in the repo)."
