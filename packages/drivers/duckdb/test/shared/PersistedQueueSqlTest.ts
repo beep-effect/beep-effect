@@ -1,5 +1,5 @@
 /**
- * Vendored from Effect, tag effect@4.0.6, packages/effect/test/persistence/PersistedQueueSqlTest.ts.
+ * Vendored from Effect, tag effect@4.1.4, packages/effect/test/persistence/PersistedQueueSqlTest.ts.
  * MIT License, Copyright (c) Effectful Technologies Inc. Adaptations carry // beep: markers.
  */
 // beep: The DuckDB queue uses Effect Crypto for claim UUIDs.
@@ -7,6 +7,7 @@
 // beep: DuckDB store replaces upstream SQL constructor; remaining contract is unchanged.
 import * as DuckDbPersistedQueue from "@beep/duckdb/DuckDbPersistedQueue";
 import { assert } from "@effect/vitest";
+import * as A from "effect/Array";
 // beep: Effect public leaf imports replace upstream barrels.
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
@@ -14,6 +15,7 @@ import * as Fiber from "effect/Fiber";
 import * as Latch from "effect/Latch";
 import * as Layer from "effect/Layer";
 import * as Option from "effect/Option";
+import * as P from "effect/Predicate";
 // beep: Effect public leaf imports replace upstream barrels.
 import * as PersistedQueue from "effect/persistence/PersistedQueue";
 import * as Schedule from "effect/Schedule";
@@ -26,17 +28,38 @@ import type { Vitest } from "@effect/vitest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as Duration from "effect/Duration";
 
-const makeQueue = Effect.fnUntraced(function* (tableName: string, pollInterval: Duration.Input = "10 millis") {
+const makeQueue = Effect.fnUntraced(function* (
+  tableName: string,
+  pollInterval: Duration.Input = "10 millis",
+  // beep: `unknown` output replaces upstream's `any`; the queue only feeds attempt numbers in.
+  retrySchedule?: Schedule.Schedule<unknown, number>
+) {
   const store = yield* DuckDbPersistedQueue.makeStoreSql({ tableName, pollInterval });
   const factory = yield* PersistedQueue.makeFactory.pipe(
     Effect.provideService(PersistedQueue.PersistedQueueStore, store)
   );
-  return yield* factory.make({ name: tableName, schema: Schema.String });
+  return yield* factory.make({ name: tableName, schema: Schema.String, retrySchedule });
 });
 
+// waits until mid-way through a wall-clock second, so a whole-second database
+// clock drops about half a second while a slow write still lands in the same
+// second
+const awaitMidSecond = Effect.gen(function* () {
+  while (true) {
+    const millis = (yield* Clock.currentTimeMillis) % 1000;
+    if (millis >= 500 && millis < 600) return;
+    yield* Effect.sleep(10);
+  }
+});
+
+// allowed lag of the database clock, far below the half-second and
+// multi-second errors these tests guard against
+const clockTolerance = 100;
+
 // Delayed-offer timing checks that depend on how each SQL dialect reads the
-// database clock. They run against the real clock, which the database shares
-// when it runs on the same host. The tests run one at a time, since a
+// database clock. They measure with the test process's clock, which the
+// database clock can trail by a few milliseconds: SQL Server's SYSDATETIME()
+// advances in coarse ticks, for example. The tests run one at a time, since a
 // transaction on a single-connection database would hold up the other test's
 // offer.
 export const suiteWith = (testApi: Vitest.MethodsNonLive<SqlClient.SqlClient | SecureRandom.SecureRandom>) => {
@@ -46,21 +69,31 @@ export const suiteWith = (testApi: Vitest.MethodsNonLive<SqlClient.SqlClient | S
       () =>
         Effect.gen(function* () {
           const queue = yield* makeQueue("effect_queue_delay_boundary");
-
-          // offer mid-way through a wall-clock second, so a whole-second database
-          // clock drops about half a second from the start of the delay while a
-          // slow insert still lands in the same second
-          while (true) {
-            const millis = (yield* Clock.currentTimeMillis) % 1000;
-            if (millis >= 500 && millis < 600) break;
-            yield* Effect.sleep(10);
-          }
+          yield* awaitMidSecond;
 
           const offeredAt = yield* Clock.currentTimeMillis;
           yield* queue.offer("delayed", { delay: "1 second" });
           yield* queue.take(Effect.succeed);
 
-          assert.isAtLeast((yield* Clock.currentTimeMillis) - offeredAt, 1000);
+          assert.isAtLeast((yield* Clock.currentTimeMillis) - offeredAt, 1000 - clockTolerance);
+        }).pipe(TestClock.withLive),
+      { timeout: 30000 }
+    );
+
+    it.effect(
+      "never retries a failed job early at a second boundary",
+      () =>
+        Effect.gen(function* () {
+          const queue = yield* makeQueue("effect_queue_retry_boundary", "10 millis", Schedule.spaced("1 second"));
+          yield* queue.offer("job");
+
+          // time both handlers, leaving out the acknowledgement writes
+          const failedAt = yield* queue
+            .take(() => awaitMidSecond.pipe(Effect.andThen(Clock.currentTimeMillis), Effect.flatMap(Effect.fail)))
+            .pipe(Effect.catchIf(P.isNumber, Effect.succeed));
+          const retriedAt = yield* queue.take(() => Clock.currentTimeMillis);
+
+          assert.isAtLeast(retriedAt - failedAt, 1000 - clockTolerance);
         }).pipe(TestClock.withLive),
       { timeout: 30000 }
     );
@@ -81,7 +114,7 @@ export const suiteWith = (testApi: Vitest.MethodsNonLive<SqlClient.SqlClient | S
           }).pipe(sql.withTransaction);
           yield* queue.take(Effect.succeed);
 
-          assert.isAtLeast((yield* Clock.currentTimeMillis) - offeredAt, 3000);
+          assert.isAtLeast((yield* Clock.currentTimeMillis) - offeredAt, 3000 - clockTolerance);
         }).pipe(TestClock.withLive),
       { timeout: 30000 }
     );
@@ -102,6 +135,54 @@ export const suiteWith = (testApi: Vitest.MethodsNonLive<SqlClient.SqlClient | S
 
           const value = yield* Fiber.join(taken).pipe(Effect.timeoutOption("5 seconds"));
           assert.deepStrictEqual(value, Option.some("committed"));
+        }).pipe(TestClock.withLive),
+      { timeout: 30000 }
+    );
+  });
+
+  testApi.layer(Layer.empty, { concurrent: false, timeout: "90 seconds" })("PersistedQueue SQL offers", (it) => {
+    it.effect(
+      "untilExecuted offers of the same new id from concurrent transactions succeed",
+      () =>
+        Effect.gen(function* () {
+          const sql = yield* SqlClient.SqlClient;
+          const queue = yield* makeQueue("effect_queue_until_executed_transactions");
+
+          // each round's id is new, so both transactions find no row for it
+          // beep: Effect.forEach replaces the upstream for loop.
+          yield* Effect.forEach(A.range(0, 9), (round) =>
+            Effect.all(
+              A.map([1, 2], (n) =>
+                queue
+                  .offer(`offer-${n}`, { id: `job-${round}`, deduplicate: "untilExecuted" })
+                  .pipe(sql.withTransaction)
+              ),
+              { concurrency: "unbounded", discard: true }
+            )
+          );
+        }).pipe(TestClock.withLive),
+      { timeout: 30000 }
+    );
+
+    it.effect(
+      "an untilExecuted re-offer is atomic with concurrent default offers",
+      () =>
+        Effect.gen(function* () {
+          const queue = yield* makeQueue("effect_queue_until_executed_mixed");
+          const id = "mixed-id";
+          yield* queue.offer("first", { id });
+          yield* queue.take(Effect.succeed);
+
+          // default offers either see the completed element or the re-offer, so
+          // none of them is stored
+          const reoffer = yield* queue.offer("reoffer", { id, deduplicate: "untilExecuted" }).pipe(Effect.forkChild);
+          while (reoffer.pollUnsafe() === undefined) {
+            yield* queue.offer("retry", { id });
+          }
+          yield* Fiber.join(reoffer);
+
+          const taken = yield* queue.take(Effect.succeed);
+          assert.strictEqual(taken, "reoffer");
         }).pipe(TestClock.withLive),
       { timeout: 30000 }
     );

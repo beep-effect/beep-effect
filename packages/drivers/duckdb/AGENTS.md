@@ -101,6 +101,8 @@ and describes code that does not exist until that issue closes.
 | D67 | `@duckdb/node-api` 2.0 (2.0.0-r.1): every native result is closed (`closeSync`, through `ignoreNative`) inside its gated operation, stream results through a scope finalizer registered uninterruptibly; the parser-error transaction tests assert the safe-COMMIT refusal; the D62 reader tests assert that dropping a schema in the writer's path resets it to `memory.main` | 2.0 keeps a connection busy while any result is open ("connection has an open result"); a parser error now aborts the transaction, so COMMIT silently rolls back (D3 guard); dropping a schema in the session path resets the whole path, even uncommitted, and ROLLBACK does not restore it, so D62's dangling-path normalization now matters only for DETACH (all probed on 2.0.0-r.1) | pin `@duckdb/node-api` 1.5.6-r.2 and revert the tests |
 | D68 | `DuckDbMessageStorage` orders messages and replies by a sequence-backed `seq` column (`<prefix>_messages_seq`, `<prefix>_replies_seq`) created in migration `0001`, not by `rowid` (#2084) | DuckDB rewrites a row under a new rowid when an UPDATE touches an indexed column (`last_read`, `acked`), so `ORDER BY rowid` returned claimed or reset messages out of insertion order (found by the vendored `SqlMessageStorage` integration suite) | order by `rowid` again once DuckDB keeps rowids stable across updates |
 | D69 | Lease and read timestamps in the native storages are `TIMESTAMPTZ`: `DuckDbRunnerStorage` `last_heartbeat` and `acquired_at`, `DuckDbMessageStorage` `last_read` (created in their first migrations, changed in place before release, #2306 review) | they are written from and compared against `get_current_timestamp()` (a `TIMESTAMPTZ`); a zone-less `TIMESTAMP` stores session wall time, so a file written under UTC and reopened under UTC+14 read a live lease as 14 hours old and let another runner take the shard (pinned by `test/DuckDbRunnerStorage.test.ts`, which fails on `DATETIME`) | normalise every write and comparison to UTC with `timezone('UTC', …)` |
+| D70 | `DuckDbMessageStorage.deleteProcessed` (effect 4.1.4, Effect #10267) ports the SQLite branch: one `withTransaction` selects up to `limit` request ids (`entity_type`, `kind` = Request, `processed`, `last_reply_id` below the cutoff snowflake, ordered by `last_reply_id`), then deletes every reply and message sharing those request ids, with no `FOR UPDATE SKIP LOCKED`. `saveEnvelope` keeps the SQLite select-then-`INSERT OR IGNORE` without the 4.1.4 insert-retry loop. AckChunk and Interrupt saves and `clearReplies` read the request row first inside their transaction, and a late AckChunk or Interrupt for a deleted request stores nothing. Migration `0005_retention_index` adds `(entity_type, processed, last_reply_id)`; `0004` is a no-op (mssql only) | DuckDB has no row locks or `SKIP LOCKED`, and `DuckDbClient` runs every write and transaction on one serialized connection (D9) in one process (D65), so the select and delete cannot interleave with a reply, `clearReplies` or `saveEnvelope`; the upstream retry loop and lock hints exist for concurrent pg/mysql/mssql writers. A new migration, not an edit to `0001`, upgrades files created by `0001`–`0003` (pinned by `test/DuckDbMessageStorage.test.ts`) | port the pg branch (`FOR UPDATE SKIP LOCKED`, insert retry) if DuckDB gains concurrent writers |
+| D71 | `DuckDbPersistedQueue` (effect 4.1.4): a `deduplicate: "untilExecuted"` offer of a custom id reads its completed or failed row, then deletes that row and inserts the new offer in one transaction (upstream `replaceExecuted`), so a re-offered id keeps only its latest failure. Retries bind their `visible_at` deadline from the live Effect clock like delayed offers, in milliseconds, where upstream rounds both up to whole seconds | DuckDB's `get_current_timestamp()` is transaction-stable, so a retry settled inside a caller's transaction was scheduled from the transaction start; upstream 4.1.4 moved retries onto the offer deadline (`visibleAfter`). Whole-second rounding compensates for whole-second SQL clocks, and DuckDB timestamps are microsecond-precise. The delete and insert hold the single writer, so concurrent default offers queue behind them (vendored `PersistedQueue SQL offers` suite) | round deadlines up to whole seconds like upstream |
 
 ## Known hazards
 
@@ -160,14 +162,28 @@ and describes code that does not exist until that issue closes.
 4. Savepoint emulation is unaffected by HEAD's `makeWithTransaction` signature
    change because the driver never calls it.
 5. Re-run the consumer support matrix in `README.md` and
-   `test/DuckDbNativeQueueCluster.probe.test.ts`. The six storage modules
-   matched Effect `main` at 4.0.6 (#2084). On a change, re-vendor `test/shared/`
-   from the new tag and port the diff into the native modules. Re-check D47
-   (`catchIf(isSqlError, die)` in the event-log storage).
+   `test/DuckDbNativeQueueCluster.probe.test.ts`. On a change, re-vendor
+   `test/shared/` from the new tag and port the diff into the native modules.
+   Re-check D47 (`catchIf(isSqlError, die)` in the event-log storage). Done at
+   4.1.4: from 4.1.2 only `MessageStorage`/`SqlMessageStorage`
+   (`deleteProcessed`, D70) and `PersistedQueue` (`untilExecuted`, retry
+   deadlines, D71) changed; `SqlRunnerStorage`, `SqlEventJournal`,
+   `Persistence`, `KeyValueStore` and both event-log storages did not.
+   `MessageStorageTest.ts`, `SqlMessageStorageIntegrationTest.ts`,
+   `PersistedQueueTest.ts` and `PersistedQueueSqlTest.ts` are vendored from
+   4.1.4; the other suites keep their 4.0.5/4.0.6 tags. Upstream also changed
+   `SqlRunnerStorage` (pg/MySQL advisory-lock sessions, which D65 drops),
+   `SqlEventJournal`, `SqlEventLogServerEncrypted` and `Persistence` between
+   4.0.6 and 4.1.2; those ports and suites were not re-vendored at the 4.1.0
+   bump, so diff them from 4.0.6 next.
 6. Tests read `reason.isRetryable`, the 4.0.5 getter name. Check it on the bump.
 7. `@duckdb/node-api` bumps: re-run the prepared-statement probe behind D44
    (stale result of a cached parameterless statement) and the classifier
    strings in `test/DuckDbClient.classification.test.ts`.
+8. Done at 4.1.4: `withoutTransforms()` also drops a lone
+   `transformQueryNames` (Effect #10454), so the upstream storages no longer
+   see transformed identifiers; `test/DuckDbClient.test.ts` pins the new
+   behaviour.
 
 ## Follow-ups
 
