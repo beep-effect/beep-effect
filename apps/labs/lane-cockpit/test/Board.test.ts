@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -30,8 +31,8 @@ describe("Board", () => {
 
   it("builds PR links from the report repository", () => {
     const link = prLink(LaneRepository.make({ host: "github.com", owner: "o", name: "r" }));
-    expect(link(O.some(7))).toStrictEqual(O.some("https://github.com/o/r/pull/7"));
-    expect(O.isNone(link(O.none()))).toBe(true);
+    assertSome(link(O.some(7)), "https://github.com/o/r/pull/7");
+    assertNone(link(O.none()));
   });
 
   it("keeps the selection inside the visible window", () => {
