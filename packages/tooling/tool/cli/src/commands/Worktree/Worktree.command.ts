@@ -41,6 +41,7 @@ import {
 } from "../../internal/repo-run/index.ts";
 import { HistoryNotes, HistoryNotesLive, renderHistoryNotesSync } from "../History/index.ts";
 import { ReferenceWorkspace, referenceWorkspaceLayer } from "../Refs/index.ts";
+import { recordSweepDone } from "../Session/SessionLedger.service.ts";
 import { worktreeFleetCommand } from "./Fleet.command.ts";
 import { worktreeReapCommand } from "./Reap.command.ts";
 import { CLAUDE_WORKTREES_RELATIVE_ROOT, WORKTREES_ROOT_SUFFIX } from "./Worktree.constants.ts";
@@ -1177,6 +1178,15 @@ const runWorktreeRemove = Effect.fn("Worktree.runWorktreeRemove")(function* (opt
     })
   );
   yield* renderWorktreeRemovalReceipt(receipt, options.archive);
+  // A removed checkout can never be resumed, so any live session-ledger row
+  // for it is stale. Close it the way `yeet sweep --retire` does; best effort,
+  // like the sweep, so a ledger failure never fails a removal that happened.
+  yield* recordSweepDone({
+    gitCwd: context.mainCheckout,
+    checkout: receipt.targetPath,
+    branch: O.getOrElse(branch, () => "HEAD"),
+    next: options.archive ? `removed worktree ${name} (archived)` : `removed worktree ${name}`,
+  });
 });
 
 const runWorktreeDoctor = Effect.fn("Worktree.runWorktreeDoctor")(function* (): Effect.fn.Return<
