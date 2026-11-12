@@ -73,6 +73,7 @@ import {
   settleYeetMerge,
   YeetMergeSettlement,
 } from "./AsyncMerge.ts";
+import { provideYeetHeadMoveClassifier } from "./HeadMove.ts";
 import { parsePrProvenanceFooter, replacePrBodyKeepingFooter } from "./Provenance.ts";
 import {
   detectPrRepository,
@@ -80,7 +81,14 @@ import {
   ProvenanceStampOutcome,
   recordMonitoredPrSessionThen,
 } from "./ProvenanceFooter.ts";
-import { readYeetReviewWindow, YeetReviewWindowUnknown } from "./ReviewWindow.ts";
+import {
+  readYeetReviewWindow,
+  readYeetReviewWindowEvidence,
+  YEET_REVIEW_WINDOW_ENV,
+  YeetReviewWindow,
+  YeetReviewWindowDuration,
+  YeetReviewWindowUnknown,
+} from "./ReviewWindow.ts";
 import type { GitHubError } from "@beep/github/GitHubError";
 import type { Repo } from "@beep/github/Repo";
 import type { CliReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
@@ -92,7 +100,6 @@ import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { PrNumber } from "./Provenance.ts";
 import type { PrSessionRegistryShape } from "./PrSessionRegistry.ts";
 import type { YeetReadyInheritedRed } from "./ReadyGate.ts";
-import type { YeetReviewWindow } from "./ReviewWindow.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/GhOps");
 
@@ -139,6 +146,7 @@ export const YeetGhGateReason = LiteralKit([
   "check-pending",
   "review-window-open",
   "review-window-unknown",
+  "review-window-config",
   "threads-unknown",
   "threads-outstanding",
 ]).pipe($I.annoteSchema("YeetGhGateReason", { description: "Why the REST merge gate holds or refuses." }));
@@ -155,6 +163,7 @@ const holdReasons = HashSet.make<ReadonlyArray<YeetGhGateReason>>(
   "required-pending",
   "check-pending",
   "review-window-open",
+  "review-window-unknown",
   "threads-unknown"
 );
 
@@ -200,10 +209,13 @@ export class YeetGhGateFacts extends S.Opaque<YeetGhGateFacts, { readonly brand:
     checkRuns: S.Array(GithubCheckRunRecord),
     readyAt: S.Option(S.DateTimeUtc),
     headPushedAt: S.Option(S.DateTimeUtc),
+    windowResult: YeetReviewWindow.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    windowConfigValid: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true))),
     outstandingThreads: S.Option(S.Int),
     totalThreads: S.Option(S.Int),
     tolerated: S.Array(S.String),
     forceWindow: S.Boolean,
+    window: S.Duration.pipe(S.withConstructorDefault(Effect.succeed(YEET_GH_REVIEW_WINDOW))),
     now: S.DateTimeUtc,
   }).pipe($I.annoteSchema("YeetGhGateFacts", { description: "Everything the REST merge gate decides on." }))
 ) {}
@@ -413,19 +425,32 @@ const reviewWindowAge = (facts: YeetGhGateFacts): O.Option<Duration.Duration> =>
     return Duration.millis(Math.max(0, DateTime.toEpochMillis(facts.now) - DateTime.toEpochMillis(start)));
   });
 
+// An invalid BEEP_YEET_REVIEW_WINDOW is local configuration, so it refuses; any
+// other unknown window is a transient read and holds, as MergeGate treats it.
+const unknownWindowFinding = (result: O.Option<YeetReviewWindow>, configValid: boolean): YeetGhGateFinding =>
+  finding(
+    configValid ? "review-window-unknown" : "review-window-config",
+    O.getOrElse(O.filter(result, YeetReviewWindow.guards.unknown).pipe(O.map((value) => value.reason)), () =>
+      configValid ? "GitHub has no trusted head push time" : `${YEET_REVIEW_WINDOW_ENV} is not a valid duration`
+    )
+  );
+
 const reviewWindowFindings = (
   forceWindow: boolean,
-  windowAge: O.Option<Duration.Duration>
+  windowAge: O.Option<Duration.Duration>,
+  window: Duration.Duration,
+  result: O.Option<YeetReviewWindow>,
+  configValid: boolean
 ): ReadonlyArray<YeetGhGateFinding> =>
   forceWindow
     ? []
     : O.match(windowAge, {
-        onNone: () => [finding("review-window-unknown", "GitHub has no trusted head push time")],
+        onNone: () => [unknownWindowFinding(result, configValid)],
         onSome: (age) =>
           when(
-            Duration.isLessThan(age, YEET_GH_REVIEW_WINDOW),
+            Duration.isLessThan(age, window),
             "review-window-open",
-            `age ${formatAge(age)}, ${Math.ceil(Duration.toMinutes(Duration.subtract(YEET_GH_REVIEW_WINDOW, age)))}m left`
+            `age ${formatAge(age)}, ${Math.ceil(Duration.toMinutes(Duration.subtract(window, age)))}m left`
           ),
       });
 
@@ -473,7 +498,7 @@ export const decideYeetGhMergeGate = (facts: YeetGhGateFacts): YeetGhGateVerdict
     ),
     ...requiredRead.findings,
     ...otherCheckFindings(latest, HashSet.fromIterable(required), HashSet.fromIterable(facts.tolerated)),
-    ...reviewWindowFindings(facts.forceWindow, windowAge),
+    ...reviewWindowFindings(facts.forceWindow, windowAge, facts.window, facts.windowResult, facts.windowConfigValid),
     ...threadFindings(facts.outstandingThreads),
   ];
   return YeetGhGateVerdict.make({
@@ -1302,6 +1327,7 @@ const readOutstandingThreads = Effect.fn("YeetGh.readOutstandingThreads")(functi
 
 const readGateFacts = Effect.fn("YeetGh.readGateFacts")(function* (options: {
   readonly number: number;
+  readonly repoRoot?: string;
   readonly pinnedSha: O.Option<string>;
   readonly tolerated: ReadonlyArray<string>;
   readonly forceWindow: boolean;
@@ -1317,37 +1343,30 @@ const readGateFacts = Effect.fn("YeetGh.readGateFacts")(function* (options: {
         Console.error(`[gh] ${label} unknown for #${options.number}: ${error.message}`).pipe(Effect.as(O.none<A>()))
       )
     );
-  const [requiredContexts, checkRuns, timeline, firstReceivedAt] = yield* Effect.all(
+  const [requiredContexts, checkRuns, evidence] = yield* Effect.all(
     [
       optional("required contexts", rest.requiredStatusContexts(pr.baseRef)),
       rest.checkRuns(pr.headSha),
-      rest.reviewTimeline(options.number),
-      rest
-        .headFirstReceivedAt(pr.headSha)
-        .pipe(
-          Effect.catch((error) =>
-            Console.error(`[gh] head check suites unknown for #${options.number}: ${error.message}`).pipe(
-              Effect.as(O.none<DateTime.Utc>())
-            )
-          )
-        ),
+      readYeetReviewWindowEvidence({ prNumber: options.number, headSha: pr.headSha, pull: pr }).pipe(
+        provideYeetHeadMoveClassifier(options.repoRoot ?? process.cwd())
+      ),
     ],
-    { concurrency: 4 }
+    { concurrency: 3 }
   );
+  if (evidence.result._tag === "unknown")
+    yield* Console.error(`[gh] review window unknown for #${options.number}: ${evidence.result.reason}`);
   const threads = options.readThreads ? yield* readOutstandingThreads(options.number, options.policy) : O.none();
-  const headPushedAt = O.map(firstReceivedAt, (received) =>
-    O.getOrElse(
-      O.map(timeline.forcedAt, (forced) => DateTime.max(received, forced)),
-      () => received
-    )
-  );
+  const windowConfig = yield* YeetReviewWindowDuration.pipe(Effect.option);
   return YeetGhGateFacts.make({
     pullRequest: pr,
     pinnedSha: O.getOrElse(options.pinnedSha, () => pr.headSha),
     requiredContexts,
     checkRuns,
-    readyAt: timeline.readyAt,
-    headPushedAt,
+    readyAt: evidence.readyAt,
+    headPushedAt: evidence.pushedAt,
+    windowResult: O.some(evidence.result),
+    windowConfigValid: O.isSome(windowConfig),
+    window: evidence.window,
     outstandingThreads: O.map(threads, (read) => read.outstanding),
     totalThreads: O.map(threads, (read) => read.total),
     tolerated: options.tolerated,
@@ -1436,6 +1455,7 @@ export const runYeetGhPrStatus = (
  *   headRef: "feat/x",
  *   headSha: "abc",
  *   baseRef: "main",
+ *   baseSha: "base-sha",
  *   htmlUrl: "https://github.com/o/r/pull/7",
  *   author: "octocat",
  *   labels: [],
@@ -1846,6 +1866,7 @@ export const readYeetReviewWindowAsGhLogin: {
   ): Effect.Effect<YeetReviewWindow, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner>;
 } = dual(2, (context: RepoRunContext, target: YeetReviewWindowTarget) =>
   readYeetReviewWindow(target).pipe(
+    provideYeetHeadMoveClassifier(context.repoRoot),
     provideYeetGhLogin(context.repoRoot),
     Effect.catchTag("YeetCommandError", (error) =>
       Effect.succeed(
@@ -1954,3 +1975,16 @@ export const reassertProvenanceFooterAsGhLogin = Effect.fn("GhOps.reassertProven
     })
   );
 });
+
+/**
+ * Read the REST gate facts with a pinned checkout for seam tests.
+ *
+ * **Example** (Reference the facts reader)
+ * ```ts
+ * import { readYeetGhGateFactsForTesting } from "@beep/repo-cli/test/Yeet"
+ * console.log(typeof readYeetGhGateFactsForTesting) // "function"
+ * ```
+ * @category testing
+ * @since 0.0.0
+ */
+export const readYeetGhGateFactsForTesting = readGateFacts;
