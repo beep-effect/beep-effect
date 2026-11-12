@@ -25,6 +25,7 @@ import {
   filterLanes,
   fit,
   formatAge,
+  ListWindow,
   orderLanes,
   prLink,
   rowColumns,
@@ -33,18 +34,13 @@ import {
 } from "./Board.ts";
 import { LaneState, LanesSnapshot } from "./Lanes.ts";
 import type { KeyEvent } from "@textjs/react";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import type { LaneRepository, LaneRow, LanesLoaded } from "./Lanes.ts";
 
 const KEYS_HELP = " ↑↓ move · / filter · enter expand · y copy path · p copy PR · q quit ";
 
-/**
- * Props of {@link LanesBoard}.
- *
- * @category models
- * @since 0.0.0
- */
-export interface LanesBoardProps {
+// Props of `LanesBoard`.
+interface LanesBoardProps {
   readonly cols: number;
   readonly now: DateTime.Utc;
   readonly rows: number;
@@ -52,25 +48,8 @@ export interface LanesBoardProps {
   readonly view: BoardView;
 }
 
-/**
- * The lanes a view shows, in board order, after the filter.
- *
- * **Example** (A pending snapshot shows nothing)
- *
- * ```ts
- * import { BoardView } from "@/Board"
- * import { visibleLanes } from "@/LanesBoard"
- * import { LanesPending } from "@/Lanes"
- *
- * console.log(visibleLanes(BoardView.initial)(LanesPending.make({})).length) // 0
- * ```
- *
- * @param view - The operator's view state.
- * @returns A function from the source's last snapshot to the rows the board lists.
- * @category view
- * @since 0.0.0
- */
-export const visibleLanes =
+// The lanes a view shows, in board order, after the filter.
+const visibleLanes =
   (view: BoardView) =>
   (snapshot: LanesSnapshot): ReadonlyArray<LaneRow> =>
     LanesSnapshot.guards.LanesLoaded(snapshot) ? pipe(snapshot.lanes, orderLanes, filterLanes(view.filter)) : [];
@@ -135,6 +114,102 @@ const detailLines = (
     : A.map([head, `next: ${lane.next}`, `checkout: ${lane.checkout}`], fit(inner));
 };
 
+// The `/filter` line, shown while typing a filter or while one is kept.
+const filterLine = (view: BoardView): O.Option<string> =>
+  view.filtering || Str.isNonEmpty(view.filter) ? O.some(`/${view.filter}${view.filtering ? "▏" : ""}`) : O.none();
+
+const corruptLine = (loaded: LanesLoaded): O.Option<string> =>
+  loaded.corrupt > 0 ? O.some(`! ${loaded.corrupt} ledger row(s) could not be read and are not shown`) : O.none();
+
+// Rows left for the list: the body less the detail pane (its lines and a rule) and one row per banner shown.
+const listHeightOf = (
+  height: number,
+  detail: O.Option<ReadonlyArray<string>>,
+  banners: ReadonlyArray<O.Option<string>>
+): number =>
+  Math.max(
+    1,
+    height -
+      O.match(detail, { onNone: () => 0, onSome: (lines) => A.length(lines) + 1 }) -
+      A.length(A.getSomes(banners))
+  );
+
+const emptyMessage = (loaded: LanesLoaded, view: BoardView): string =>
+  A.isReadonlyArrayEmpty(loaded.lanes)
+    ? "no live sessions recorded for this repository"
+    : `no lanes match /${view.filter}`;
+
+const marker = (lane: LaneRow, selected: boolean): string =>
+  selected ? ">" : LaneState.is.blocked(lane.state) ? "!" : " ";
+
+// One optional single-line banner, cut to the frame.
+const Banner = ({
+  line,
+  color,
+  inner,
+}: {
+  line: O.Option<string>;
+  color: ComponentProps<typeof Text>["color"];
+  inner: number;
+}): ReactNode => O.match(line, { onNone: () => null, onSome: (text) => <Text color={color}>{fit(inner)(text)}</Text> });
+
+const LaneList = ({
+  lanes,
+  selected,
+  now,
+  inner,
+  height,
+  empty,
+}: {
+  lanes: ReadonlyArray<LaneRow>;
+  selected: number;
+  now: DateTime.Utc;
+  inner: number;
+  height: number;
+  empty: string;
+}): ReactNode => {
+  const columns = rowColumns(inner);
+  const start = windowStart(ListWindow.make({ selected, count: A.length(lanes), height }));
+  return (
+    <Box flexDirection="column" height={height}>
+      {A.isReadonlyArrayEmpty(lanes) ? (
+        <Text dim>{fit(inner)(empty)}</Text>
+      ) : (
+        A.map(A.take(A.drop(lanes, start), height), (lane, offset) => (
+          <LaneLine
+            key={lane.checkout}
+            lane={lane}
+            selected={start + offset === selected}
+            text={rowText(columns)({
+              marker: marker(lane, start + offset === selected),
+              lane: lane.lane,
+              state: lane.state,
+              pr: prCell(lane),
+              age: formatAge(now)(lane.recordedAt),
+              next: lane.next,
+            })}
+          />
+        ))
+      )}
+    </Box>
+  );
+};
+
+const DetailPane = ({ detail, inner }: { detail: O.Option<ReadonlyArray<string>>; inner: number }): ReactNode =>
+  O.match(detail, {
+    onNone: () => null,
+    onSome: (lines) => (
+      <Box flexDirection="column">
+        <Text dim>{Str.repeat(inner)("─")}</Text>
+        {A.map(lines, (line, index) => (
+          <Text key={`detail-${index}`} bold={index === 0}>
+            {line}
+          </Text>
+        ))}
+      </Box>
+    ),
+  });
+
 const LoadedBody = ({
   loaded,
   now,
@@ -149,102 +224,34 @@ const LoadedBody = ({
   height: number;
 }): ReactNode => {
   const lanes = visibleLanes(view)(loaded);
-  const columns = rowColumns(inner);
   const selected = selectedIndex(lanes, view);
-  const filterLine =
-    view.filtering || Str.isNonEmpty(view.filter) ? O.some(`/${view.filter}${view.filtering ? "▏" : ""}`) : O.none();
-  const corruptLine =
-    loaded.corrupt > 0 ? O.some(`! ${loaded.corrupt} ledger row(s) could not be read and are not shown`) : O.none();
+  const filter = filterLine(view);
+  const corrupt = corruptLine(loaded);
   const detail = pipe(
     A.get(lanes, selected),
     O.map((lane) => detailLines(loaded.repository, lane, now, view.expanded, inner))
   );
-  const detailHeight = O.match(detail, { onNone: () => 0, onSome: (lines) => A.length(lines) + 1 });
-  const listHeight = Math.max(
-    1,
-    height -
-      detailHeight -
-      (O.isSome(filterLine) ? 1 : 0) -
-      (O.isSome(corruptLine) ? 1 : 0) -
-      (O.isSome(view.notice) ? 1 : 0)
-  );
-  const start = windowStart({ selected, count: A.length(lanes), height: listHeight });
-  const window = A.take(A.drop(lanes, start), listHeight);
-  const empty = A.isReadonlyArrayEmpty(lanes);
 
   return (
     <Box flexDirection="column" flexGrow={1}>
-      {O.match(corruptLine, { onNone: () => null, onSome: (line) => <Text color="yellow">{fit(inner)(line)}</Text> })}
-      {O.match(filterLine, { onNone: () => null, onSome: (line) => <Text color="cyan">{fit(inner)(line)}</Text> })}
-      <Box flexDirection="column" height={listHeight}>
-        {empty ? (
-          <Text dim>
-            {fit(inner)(
-              A.isReadonlyArrayEmpty(loaded.lanes)
-                ? "no live sessions recorded for this repository"
-                : `no lanes match /${view.filter}`
-            )}
-          </Text>
-        ) : (
-          A.map(window, (lane, offset) => (
-            <LaneLine
-              key={lane.checkout}
-              lane={lane}
-              selected={start + offset === selected}
-              text={rowText(columns)({
-                marker: start + offset === selected ? ">" : LaneState.is.blocked(lane.state) ? "!" : " ",
-                lane: lane.lane,
-                state: lane.state,
-                pr: prCell(lane),
-                age: formatAge(now)(lane.recordedAt),
-                next: lane.next,
-              })}
-            />
-          ))
-        )}
-      </Box>
-      {O.match(detail, {
-        onNone: () => null,
-        onSome: (lines) => (
-          <Box flexDirection="column">
-            <Text dim>{Str.repeat(inner)("─")}</Text>
-            {A.map(lines, (line, index) => (
-              <Text key={`detail-${index}`} bold={index === 0}>
-                {line}
-              </Text>
-            ))}
-          </Box>
-        ),
-      })}
-      {O.match(view.notice, {
-        onNone: () => null,
-        onSome: (notice) => <Text color="green">{fit(inner)(notice)}</Text>,
-      })}
+      <Banner line={corrupt} color="yellow" inner={inner} />
+      <Banner line={filter} color="cyan" inner={inner} />
+      <LaneList
+        lanes={lanes}
+        selected={selected}
+        now={now}
+        inner={inner}
+        height={listHeightOf(height, detail, [filter, corrupt, view.notice])}
+        empty={emptyMessage(loaded, view)}
+      />
+      <DetailPane detail={detail} inner={inner} />
+      <Banner line={view.notice} color="green" inner={inner} />
     </Box>
   );
 };
 
-/**
- * Draw the board for a snapshot and a view. Pure: same props, same frame.
- *
- * **Example** (Render offscreen)
- *
- * ```ts
- * import { BoardView } from "@/Board"
- * import { LanesBoard } from "@/LanesBoard"
- * import { LanesPending } from "@/Lanes"
- * import * as DateTime from "effect/DateTime"
- *
- * const element = LanesBoard({ snapshot: LanesPending.make({}), now: DateTime.makeUnsafe(0), view: BoardView.initial, cols: 80, rows: 10 })
- * console.log(element !== null) // true
- * ```
- *
- * @param props - Snapshot, clock reading, view state and frame size.
- * @returns The board element.
- * @category components
- * @since 0.0.0
- */
-export const LanesBoard = ({ snapshot, now, view, cols, rows }: LanesBoardProps): ReactNode => {
+// Draw the board for a snapshot and a view. Pure: same props, same frame.
+const LanesBoard = ({ snapshot, now, view, cols, rows }: LanesBoardProps): ReactNode => {
   // Border (2) and horizontal padding (2).
   const inner = Math.max(10, cols - 4);
   const height = Math.max(1, rows - 2);

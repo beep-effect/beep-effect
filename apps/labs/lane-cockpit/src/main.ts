@@ -44,7 +44,6 @@ const main = Effect.fnUntraced(function* () {
   const interval = yield* Config.Duration("LANE_COCKPIT_INTERVAL").pipe(Config.withDefault(Duration.seconds(15)));
   const source = yield* LaneSource;
   const copies = yield* Queue.unbounded<string>();
-  const copy = copyText((chunk) => process.stdout.write(chunk));
 
   let terminal: Awaited<ReturnType<typeof renderToTerminal>> | undefined;
   const draw = (snapshot: LanesSnapshot, now: DateTime.Utc) =>
@@ -61,7 +60,7 @@ const main = Effect.fnUntraced(function* () {
   terminal = yield* Effect.promise(() => renderToTerminal(draw(LanesPending.make({}), startedAt)));
   const root = terminal;
 
-  yield* Queue.take(copies).pipe(Effect.flatMap(copy), Effect.forever, Effect.forkScoped);
+  yield* Queue.take(copies).pipe(Effect.flatMap(copyText), Effect.forever, Effect.forkScoped);
   yield* source.read.pipe(
     Effect.flatMap((snapshot) =>
       Effect.map(DateTime.now, (now) => {

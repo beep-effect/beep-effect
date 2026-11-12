@@ -1,9 +1,10 @@
 /**
- * Vendored from Effect, tag effect@4.0.6, packages/platform/node/test/cluster/SqlMessageStorage.integration.test.ts.
+ * Vendored from Effect, tag effect@4.1.4, packages/platform/node/test/cluster/SqlMessageStorage.integration.test.ts.
  * MIT License, Copyright (c) Effectful Technologies Inc. Adaptations carry // beep: markers.
  */
 // beep: Only the shared and SQLite-branch cases apply to DuckDB (D65). PostgreSQL deadlock and index,
-// beep: and MSSQL index-name cases need server drivers. Containers are replaced by DuckDbTestLayer.
+// beep: MySQL and MSSQL deleteProcessed deadlock, MySQL retention-index and MSSQL index-name cases need
+// beep: server drivers. Containers are replaced by DuckDbTestLayer.
 import { DuckDbTestLayer } from "@beep/duckdb";
 import * as DuckDbMessageStorage from "@beep/duckdb/DuckDbMessageStorage";
 // beep: Public leaf imports and the repository test runner replace upstream barrels.
@@ -58,7 +59,7 @@ const TestEntityLayer = TestEntity.toLayer({
 // beep: DuckDB storage over an in-memory DuckDB client replaces SqlMessageStorage over a container.
 const StorageLayer = DuckDbMessageStorage.layer.pipe(
   Layer.provideMerge(Snowflake.layerGenerator),
-  Layer.provide([ShardingConfig.layerDefaults, NodeCrypto.layer])
+  Layer.provide([ShardingConfig.layerDefaults, NodeCrypto.layerDigest])
 );
 
 const truncate = Effect.gen(function* () {
@@ -132,6 +133,31 @@ const saveForEncoded = Effect.gen(function* () {
   const now = yield* Clock.currentTimeMillis;
   return { encoded, now, shardId: request.envelope.address.shardId.toString() };
 });
+// beep: Shared deleteProcessed steps replace repeated upstream inline blocks for the duplication gate.
+const cutoff = Date.UTC(2026, 0, 1);
+type StoredRequest = {
+  readonly envelope: Pick<Envelope.Request<Rpc.Any>, "requestId" | "address">;
+};
+const completeAt = Effect.fnUntraced(function* (request: Parameters<typeof makeReply>[0], completedAt: number) {
+  const storage = yield* MessageStorage.MessageStorage;
+  const reply = yield* makeReply(request, completedAt);
+  yield* storage.saveReply(reply);
+});
+const saveInterrupt = Effect.fnUntraced(function* (request: StoredRequest) {
+  const storage = yield* MessageStorage.MessageStorage;
+  const snowflake = yield* Snowflake.Generator;
+  yield* storage.saveEnvelope(
+    Message.OutgoingEnvelope.interrupt({
+      id: snowflake.nextUnsafe(),
+      requestId: request.envelope.requestId,
+      address: request.envelope.address,
+    })
+  );
+});
+const deleteProcessedBefore = (completedBefore: number, limit = 100) =>
+  Effect.flatMap(MessageStorage.MessageStorage, (storage) =>
+    storage.deleteProcessed({ entityType: "test", completedBefore, limit })
+  );
 const selectMessageIds = Effect.flatMap(
   SqlClient.SqlClient,
   (sql) => sql<{ message_id: string }>`SELECT message_id FROM cluster_messages`
@@ -155,7 +181,7 @@ describe("SqlMessageStorage", () => {
   it.layer(
     DuckDbMessageStorage.layer.pipe(
       Layer.provideMerge(HighIdGenerator),
-      Layer.provide([DuckDbTestLayer, ShardingConfig.layerDefaults, NodeCrypto.layer])
+      Layer.provide([DuckDbTestLayer, ShardingConfig.layerDefaults, NodeCrypto.layerDigest])
     )
   )("high ids", (it) => {
     it.effect("preserves ids above 2^53", () =>
@@ -195,7 +221,7 @@ describe("SqlMessageStorage", () => {
   });
 
   // Tests truncate this backend's shared tables.
-  it.layer(StorageLayer.pipe(Layer.provideMerge(Layer.mergeAll(DuckDbTestLayer, NodeCrypto.layer))), {
+  it.layer(StorageLayer.pipe(Layer.provideMerge(Layer.mergeAll(DuckDbTestLayer, NodeCrypto.layerDigest))), {
     concurrent: false,
     timeout: 120000,
   })("duckdb", (it) => {
@@ -306,6 +332,125 @@ describe("SqlMessageStorage", () => {
         expect(unprocessedMessages17).toHaveLength(0);
         yield* truncate;
       })
+    );
+
+    it.effect("deleteProcessed forgets request families completed before the cutoff", () =>
+      Effect.gen(function* () {
+        yield* truncate;
+        const sql = yield* SqlClient.SqlClient;
+        const storage = yield* MessageStorage.MessageStorage;
+        const request = (id: number, entityType?: string) =>
+          makeRequest({ rpc: StreamRpc, payload: StreamRpc.payloadSchema.make({ id }), entityType });
+        const expired = yield* request(1);
+        const recent = yield* request(2);
+        const reset = yield* request(3);
+        const otherType = yield* request(4, "other");
+        // beep: Effect.forEach replaces the upstream for loops.
+        yield* Effect.forEach([expired, recent, reset, otherType], storage.saveRequest);
+        const chunk = yield* makeChunkReply(expired);
+        yield* storage.saveReply(chunk);
+        const ack = yield* makeAckChunk(expired, chunk);
+        yield* storage.saveEnvelope(ack);
+        yield* saveInterrupt(expired);
+        yield* completeAt(expired, cutoff - 1);
+        yield* completeAt(recent, cutoff + 1);
+        yield* completeAt(reset, cutoff - 2);
+        yield* storage.clearReplies(reset.envelope.requestId);
+        yield* completeAt(otherType, cutoff - 3);
+
+        const deleted = yield* deleteProcessedBefore(cutoff);
+        expect(deleted).toEqual(1);
+
+        const expiredId = String(expired.envelope.requestId);
+        const messages = yield* sql`SELECT id FROM cluster_messages WHERE request_id = ${expiredId}`;
+        expect(messages).toEqual([]);
+        const replies = yield* sql`SELECT id FROM cluster_replies WHERE request_id = ${expiredId}`;
+        expect(replies).toEqual([]);
+        const resaved = yield* Effect.flatMap(request(1), storage.saveRequest);
+        expect(resaved._tag).toEqual("Success");
+        yield* Effect.forEach(
+          [
+            [2, recent],
+            [3, reset],
+            [4, otherType],
+          ] as const,
+          ([id, kept]) =>
+            Effect.flatMap(request(id, kept.envelope.address.entityType), storage.saveRequest).pipe(
+              Effect.map((result) => expect(result._tag).toEqual("Duplicate"))
+            )
+        );
+        const keptReplies = yield* storage.repliesForUnfiltered([
+          recent.envelope.requestId,
+          otherType.envelope.requestId,
+        ]);
+        expect(keptReplies).toHaveLength(2);
+      }).pipe(Effect.ensuring(Effect.orDie(truncate)))
+    );
+
+    it.effect("does not store an AckChunk or Interrupt for a request deleteProcessed removed", () =>
+      Effect.gen(function* () {
+        yield* truncate;
+        const sql = yield* SqlClient.SqlClient;
+        const storage = yield* MessageStorage.MessageStorage;
+        const request = yield* makeRequest({ rpc: StreamRpc, payload: StreamRpc.payloadSchema.make({ id: 1 }) });
+        const chunk = yield* makeChunkReply(request);
+        yield* storage.saveRequest(request);
+        yield* storage.saveReply(chunk);
+        yield* completeAt(request, cutoff - 1);
+        const deleted = yield* deleteProcessedBefore(cutoff);
+        expect(deleted).toEqual(1);
+
+        // a late acknowledgement and cancellation, such as ones that waited behind the delete
+        const ack = yield* makeAckChunk(request, chunk);
+        yield* storage.saveEnvelope(ack);
+        yield* saveInterrupt(request);
+        const unprocessed = yield* storage.unprocessedMessages([request.envelope.address.shardId]);
+        expect(unprocessed).toEqual([]);
+        const requestId = String(request.envelope.requestId);
+        const rows = yield* sql`SELECT id FROM cluster_messages WHERE request_id = ${requestId}`;
+        expect(rows).toEqual([]);
+      }).pipe(Effect.ensuring(Effect.orDie(truncate)))
+    );
+
+    it.effect("deleteProcessed takes an unbounded, extreme or fractional cutoff", () =>
+      Effect.gen(function* () {
+        yield* truncate;
+        const storage = yield* MessageStorage.MessageStorage;
+        const completedAt = cutoff;
+        // beep: Effect.forEach replaces the upstream for loop.
+        yield* Effect.forEach(A.range(1, 6), (id) =>
+          Effect.gen(function* () {
+            const request = yield* makeRequest({ payload: { id } });
+            yield* storage.saveRequest(request);
+            yield* completeAt(request, completedAt + id - 1);
+          })
+        );
+        // completed before the Snowflake epoch, so its reply id is negative
+        const preEpoch = yield* makeRequest({ payload: { id: 0 } });
+        yield* storage.saveRequest(preEpoch);
+        yield* completeAt(preEpoch, Snowflake.constEpochMillis - 1);
+        const makeRunning = makePrimaryKeyRequest(7);
+        // still running, so never eligible
+        yield* Effect.flatMap(makeRunning, storage.saveRequest);
+        // MessageRetention's cutoffs for an infinite, huge, sub-millisecond,
+        // negative huge and negative infinite retention
+        // beep: One sequential Effect.forEach replaces the upstream run of per-cutoff expectations.
+        const deletedCounts = yield* Effect.forEach(
+          [
+            Number.NEGATIVE_INFINITY,
+            -Number.MAX_VALUE,
+            Snowflake.constEpochMillis,
+            completedAt + 0.5,
+            Number.MAX_VALUE,
+            Number.POSITIVE_INFINITY,
+            Number.POSITIVE_INFINITY,
+          ],
+          (completedBefore) => deleteProcessedBefore(completedBefore, 2)
+        );
+        expect(deletedCounts).toEqual([0, 0, 1, 1, 2, 2, 1]);
+        const running = yield* Effect.flatMap(makeRunning, storage.saveRequest);
+        expect(running._tag).toEqual("Duplicate");
+      }).pipe(Effect.ensuring(Effect.orDie(truncate)))
     );
 
     it.effect("saveRequest", () =>

@@ -110,7 +110,7 @@ const isToolNameCollisionError = S.is(ToolNameCollisionError);
 
 const SENTINEL = "gov-legal-sensitive-sentinel";
 const GOVINFO_API_KEY_SENTINEL = "synthetic-test-key";
-const sensitiveSpanAttributeKeys = ["parameters", "url.full", "url.path", "url.query"];
+const sensitiveSpanAttributeKeys = ["parameters", "gen_ai.tool.call.arguments", "url.full", "url.path", "url.query"];
 const sensitiveValues = [SENTINEL, GOVINFO_API_KEY_SENTINEL];
 const ECFR_TITLE_PATH = "/api/versioner/v1/titles.json";
 const ECFR_SEARCH_PATH = "/api/search/v1/results";
@@ -474,7 +474,7 @@ describe("gov-legal MCP frozen contract", () => {
           const tools = pipe(
             completed,
             A.flatMap((span) => span.attributes),
-            A.filter((attribute) => attribute.key === "tool"),
+            A.filter((attribute) => attribute.key === "gen_ai.tool.name"),
             A.map((attribute) => attribute.value),
             A.filter(P.isString),
             A.sort(Order.String)

@@ -1322,7 +1322,7 @@ const readMergeGateUsing = Effect.fn("Yeet.readMergeGate")(function* (
     attributedChecks: parseYeetInheritedRedsRecord(pull.body).pipe(
       O.filter((record) => Str.startsWith(record.head)(pull.headSha)),
       O.map((record) => record.checks),
-      O.getOrElse(() => A.empty<string>())
+      O.getOrElse(A.empty<string>)
     ),
     requiredContexts,
     checkRuns: A.map(checkRuns, toMergeGateCheckRun),

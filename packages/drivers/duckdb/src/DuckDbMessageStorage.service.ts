@@ -3,7 +3,8 @@
  *
  * **Details**
  *
- * Ported from effect 4.0.6. DuckDB serializes writes on one connection.
+ * Ported from effect 4.0.6, with the effect 4.1.4 retention cleanup
+ * (`deleteProcessed`). DuckDB serializes writes on one connection.
  * Cluster storages cannot coordinate across processes sharing a DuckDB file.
  * Deviations from the upstream SQLite implementation carry `// beep:` markers.
  *
@@ -15,6 +16,7 @@ import { quotedString } from "@duckdb/node-api";
 // eslint-disable effect/no-bigint-literals
 import * as A from "effect/Array";
 import { PersistenceError } from "effect/cluster/ClusterError";
+import * as MachineId from "effect/cluster/MachineId";
 import * as MessageStorage from "effect/cluster/MessageStorage";
 import { SaveResultEncoded } from "effect/cluster/MessageStorage";
 import * as ShardId from "effect/cluster/ShardId";
@@ -100,6 +102,7 @@ const makeEncodedStorage = Effect.fnUntraced(function* (
   const prefix = options?.prefix ?? "cluster";
   const table = (name: string) => `${prefix}_${name}`;
 
+  const messageKindRequest = sql.literal(String(messageKind.Request));
   const messageKindAckChunk = sql.literal(String(messageKind.AckChunk));
   const messageKindInterrupt = sql.literal(String(messageKind.Interrupt));
   const replyKindWithExit = sql.literal(String(replyKind.WithExit));
@@ -307,6 +310,9 @@ const makeEncodedStorage = Effect.fnUntraced(function* (
     row,
     message_id
   ) =>
+    // SQLite has a single writer, so no delete can run between read and insert
+    // beep: DuckDB keeps the SQLite branch: one serialized writer connection (D9, D65), so the 4.1.4
+    // beep: insert-retry loop that covers a concurrent deleteProcessed on pg/mysql/mssql is not needed (D70).
     selectByMessageId(message_id).pipe(
       Effect.tap(sql`INSERT OR IGNORE INTO ${messagesTableSql} ${sql.insert(row)}`),
       sql.withTransaction,
@@ -323,6 +329,31 @@ const makeEncodedStorage = Effect.fnUntraced(function* (
   const forUpdate = sql.literal("");
   // mssql locks claimed rows with a table hint instead of FOR UPDATE
   const updateLock = sql.literal("");
+  // Writes to a request's replies lock its row first, in deleteProcessed's
+  // order, so they cannot deadlock. An empty result means it was deleted.
+  // beep: DuckDB has no row locks; the read runs on the single writer inside the caller's transaction (D70).
+  const lockRequest = (requestId: string) =>
+    sql`SELECT 1 FROM ${messagesTableSql} ${updateLock} WHERE id = ${requestId} ${forUpdate}`;
+  const markAcksProcessed = (requestId: string) =>
+    sql`
+      UPDATE ${messagesTableSql} SET processed = ${sqlTrue}
+      WHERE processed = ${sqlFalse} AND request_id = ${requestId} AND kind = ${messageKindAckChunk}
+    `;
+  const deleteRequests = (ids: Fragment) =>
+    Effect.andThen(
+      sql`DELETE FROM ${repliesTableSql} WHERE request_id IN (${ids})`,
+      sql`DELETE FROM ${messagesTableSql} WHERE request_id IN (${ids})`
+    );
+  // Selects up to limit eligible requests. Ordering by last_reply_id keeps the
+  // query on the retention index.
+  // beep: The SQLite branch: no SKIP LOCKED, since DuckDB serializes every writer statement (D70).
+  const lockDeletable = (eligible: Fragment, limit: number) =>
+    sql<{ id: string | bigint }>`
+      SELECT ${idColumn} FROM ${messagesTableSql}
+      WHERE ${eligible}
+      ORDER BY last_reply_id ASC
+      ${limitFragment(limit)}
+    `;
 
   const emptyFragment = sql.literal("");
   // mssql only limits with OFFSET/FETCH, which requires the ORDER BY that
@@ -436,16 +467,27 @@ const makeEncodedStorage = Effect.fnUntraced(function* (
           });
         } else {
           const row = envelopeToRow(envelope, null, deliverAt);
-          insert = Effect.as(sql`INSERT INTO ${messagesTableSql} ${sql.insert(row)}`.unprepared, []);
-          if (envelope._tag === "AckChunk") {
-            insert = sql`UPDATE ${repliesTableSql} SET acked = ${sqlTrue} WHERE id = ${envelope.replyId}`.pipe(
-              Effect.andThen(
-                sql`UPDATE ${messagesTableSql} SET processed = ${sqlTrue} WHERE processed = ${sqlFalse} AND request_id = ${envelope.requestId} AND kind = ${messageKindAckChunk}`
-              ),
-              Effect.andThen(insert),
+          const insertRow = Effect.as(sql`INSERT INTO ${messagesTableSql} ${sql.insert(row)}`.unprepared, []);
+          // the request was deleted, so there is nothing left to acknowledge or interrupt
+          const whileRequestStored = (write: Effect.Effect<ReadonlyArray<Row>, SqlError>) =>
+            lockRequest(envelope.requestId).pipe(
+              Effect.flatMap((request) => (request.length === 0 ? Effect.succeed([]) : write)),
               sql.withTransaction
             );
-          }
+          // beep: Effect Match replaces the upstream nested conditional over the envelope tag.
+          insert = Match.value(envelope).pipe(
+            Match.tag("Request", () => insertRow),
+            Match.tag("Interrupt", () => whileRequestStored(insertRow)),
+            Match.tag("AckChunk", (ack) =>
+              whileRequestStored(
+                sql`UPDATE ${repliesTableSql} SET acked = ${sqlTrue} WHERE id = ${ack.replyId}`.pipe(
+                  Effect.andThen(markAcksProcessed(ack.requestId)),
+                  Effect.andThen(insertRow)
+                )
+              )
+            ),
+            Match.exhaustive
+          );
         }
         return insert.pipe(
           Effect.map((rows) => {
@@ -488,8 +530,15 @@ const makeEncodedStorage = Effect.fnUntraced(function* (
           reply._tag === "Chunk"
             ? sql`UPDATE ${messagesTableSql} SET last_reply_id = ${reply.id} WHERE id = ${reply.requestId}`
             : sql`UPDATE ${messagesTableSql} SET processed = ${sqlTrue}, last_reply_id = ${reply.id} WHERE request_id = ${reply.requestId}`;
-        return update.unprepared.pipe(
-          Effect.andThen(sql`INSERT INTO ${repliesTableSql} ${sql.insert(row)}`),
+        // beep: a reply for a request that deleteProcessed removed has nothing to update; upstream inserts it
+        // anyway, and with no foreign key the orphan reply is never deleted. Check the request row first, as
+        // AckChunk and Interrupt saves do (D70).
+        return lockRequest(String(reply.requestId)).pipe(
+          Effect.flatMap((request) =>
+            request.length === 0
+              ? Effect.void
+              : update.unprepared.pipe(Effect.andThen(sql`INSERT INTO ${repliesTableSql} ${sql.insert(row)}`))
+          ),
           sql.withTransaction
         );
       }).pipe(Effect.asVoid, PersistenceError.refail, withTracerDisabled),
@@ -497,6 +546,7 @@ const makeEncodedStorage = Effect.fnUntraced(function* (
     clearReplies: Effect.fnUntraced(
       function* (requestId, options) {
         const expectedReplyId = options?.expectedReplyId;
+        yield* lockRequest(String(requestId));
         if (expectedReplyId === undefined) {
           yield* sql`DELETE FROM ${repliesTableSql} WHERE request_id = ${String(requestId)} AND kind = 0`;
           yield* sql`DELETE FROM ${messagesTableSql} WHERE request_id = ${String(
@@ -660,6 +710,44 @@ const makeEncodedStorage = Effect.fnUntraced(function* (
         withTracerDisabled
       ),
 
+    deleteProcessed: Effect.fnUntraced(
+      function* ({ completedBefore, entityType, limit }) {
+        // No signed snowflake id is at or before this. Also covers -Infinity and NaN.
+        if (!(completedBefore > Snowflake.constEpochMillis - 2 ** 41)) return 0;
+        // Reply timestamps are whole milliseconds, so round up. Every signed
+        // snowflake id is below the cap, which also covers Infinity.
+        const cutoff = Snowflake.make({
+          timestamp: Math.min(Math.ceil(completedBefore), Snowflake.constEpochMillis + 2 ** 41),
+          machineId: MachineId.make(0),
+          sequence: 0,
+        });
+        // Locked so a concurrent clearReplies cannot reset them first
+        // beep: select and delete share one transaction on the single writer, which is the lock on DuckDB (D70).
+        const rows = yield* lockDeletable(
+          sql`
+            entity_type = ${entityType}
+            AND kind = ${messageKindRequest}
+            AND processed = ${sqlTrue}
+            AND last_reply_id < ${sql.literal(String(cutoff))}
+          `,
+          limit
+        );
+        if (rows.length === 0) return 0;
+        const ids = sql.literal(
+          A.join(
+            A.map(rows, (row) => String(row.id)),
+            ","
+          )
+        );
+        yield* deleteRequests(ids);
+        return rows.length;
+      },
+      sql.withTransaction,
+      Effect.provideService(SqlClient.SafeIntegers, true),
+      PersistenceError.refail,
+      withTracerDisabled
+    ),
+
     resetShards: (shardIds) =>
       resetUnprocessed(sql`shard_id IN (${sql.literal(A.join(A.map(shardIds, wrapString), ","))})`).pipe(
         Effect.asVoid,
@@ -792,6 +880,17 @@ export const migrations = (options?: { readonly prefix?: string | undefined }): 
     // beep: DuckDB TEXT is unbounded and 0001 already adds the ordering seq column; retain upstream migration ids as no-ops.
     "0002_entity_type_size": Effect.void,
     "0003_pg_messages_rowid_index": Effect.void,
+    // beep: The mssql index repair has no DuckDB branch; the id is kept so history stays aligned with upstream.
+    "0004_mssql_lookup_indexes": Effect.void,
+
+    // Serves deleteProcessed's lookup by entity type and final reply id
+    "0005_retention_index": Effect.gen(function* () {
+      const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+      yield* sql`
+        CREATE INDEX IF NOT EXISTS ${sql(`${messagesTable}_retention_idx`)}
+        ON ${sql(messagesTable)} (entity_type, processed, last_reply_id)
+      `;
+    }),
   });
 };
 

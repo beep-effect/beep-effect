@@ -102,7 +102,7 @@ export type SqliteClientConfig = Sqlite.SqliteClientConfig;
  */
 export const make = (
   options: SqliteClientConfig
-): Effect.Effect<SqliteClientValue, SqliteError, Scope.Scope | Reactivity.Reactivity> =>
+): Effect.Effect<SqliteClientValue & SqlClient.SqlClient, SqliteError, Scope.Scope | Reactivity.Reactivity> =>
   Sqlite.make(options).pipe(Effect.mapError((cause) => SqliteError.fromUnknown("connect", cause)));
 
 /**

@@ -3,7 +3,8 @@
  *
  * **Details**
  *
- * Ported from effect 4.0.6. DuckDB serializes writes on one connection.
+ * Ported from effect 4.0.6, with the effect 4.1.4 `deduplicate: "untilExecuted"`
+ * offers and shared offer/retry deadlines. DuckDB serializes writes on one connection.
  * Cluster storages cannot coordinate across processes sharing a DuckDB file.
  * Deviations from the upstream SQLite implementation carry `// beep:` markers.
  *
@@ -102,9 +103,13 @@ const deadLetterFromCause = (cause: Cause.Cause<unknown>): DeadLetter | undefine
  *
  * **Details**
  *
- * Requires Effect Crypto for claim UUIDs. Delayed offers use the live local
- * wall clock because DuckDB timestamp functions are transaction-stable.
- * The database and worker share the local clock in a DuckDB deployment.
+ * Requires Effect Crypto for claim UUIDs. Delayed offers and retries use the
+ * live local wall clock because DuckDB timestamp functions are
+ * transaction-stable. The database and worker share the local clock in a
+ * DuckDB deployment.
+ *
+ * An id re-offered with `deduplicate: "untilExecuted"` keeps only its latest
+ * failure: the completed or failed row is replaced by the new offer.
  *
  * **Example** (Build a queue store layer)
  *
@@ -156,10 +161,13 @@ export const makeStoreSql: (
   const sqlNow = sql.literal("get_current_timestamp()");
   const secondsOffset = (seconds: number) => sql`${sqlNow} + INTERVAL '${sql.literal(seconds.toString())} seconds'`;
   const secondsAgo = (seconds: number) => secondsOffset(-Math.max(Math.ceil(seconds), 0));
-  const secondsFromNow = (seconds: number) => secondsOffset(Math.max(Math.ceil(seconds), 0));
-  // beep: DuckDB clocks are transaction-stable; bind a live offer-time TIMESTAMPTZ, independent of session time zone.
-  const delayedVisibleAt = (delay: Duration.Duration, now: number) =>
-    sql`make_timestamptz(CAST(${now + Math.ceil(Duration.toMillis(delay))} AS BIGINT) * 1000)`;
+  // Deadline for a delayed offer or retry, which must never land before the
+  // delay elapses.
+  // beep: DuckDB clocks are transaction-stable; bind a live TIMESTAMPTZ, independent of session time zone,
+  // beep: in milliseconds rather than upstream's whole seconds (D71).
+  const visibleAfter = (delay: Duration.Duration, now: number) =>
+    sql`make_timestamptz(CAST(${now + Math.max(Math.ceil(Duration.toMillis(delay)), 0)} AS BIGINT) * 1000)`;
+  const liveNow = Clock.Clock.defaultValue().currentTimeMillis;
   const expiresAt = lockExpiration.pipe(Duration.toSeconds, secondsAgo);
 
   const offer = (id: string, name: string, element: string, visibleAt: Fragment) =>
@@ -226,17 +234,19 @@ export const makeStoreSql: (
       `,
       element
     );
+  // The clock is read inside the statement, so each ack retry computes its own deadline.
   const retry = (element: Element, delay: Duration.Duration, cause: Cause.Cause<unknown>) =>
     ack(
-      sql`
-        UPDATE ${tableNameSql}
-        SET acquired_at = NULL, acquired_by = NULL, updated_at = ${sqlNow}, visible_at = ${delay.pipe(
-          Duration.toSeconds,
-          secondsFromNow
-        )}, last_failure = ${Cause.pretty(cause)}
-        WHERE sequence = ${element.sequence}
-        AND acquired_by = ${stringLiteral(element.lock)}
-      `,
+      Effect.flatMap(
+        liveNow,
+        (now) => sql`
+          UPDATE ${tableNameSql}
+          SET acquired_at = NULL, acquired_by = NULL, updated_at = ${sqlNow}, visible_at = ${visibleAfter(delay, now)},
+            last_failure = ${Cause.pretty(cause)}
+          WHERE sequence = ${element.sequence}
+          AND acquired_by = ${stringLiteral(element.lock)}
+        `
+      ),
       element
     );
   const interrupt = (element: Element) =>
@@ -376,13 +386,41 @@ export const makeStoreSql: (
       })
     );
 
+  // Stores the re-offer as a new row with a fresh sequence. The plain read keeps
+  // new ids lock-free. The delete re-checks the state and shares a transaction
+  // with the insert, so concurrent offers of the id wait on the deleted row and
+  // then see the re-offer.
+  // beep: On DuckDB the transaction holds the single writer, so concurrent offers queue behind it (D71).
+  const replaceExecuted = <A, E, R>(id: string, name: string, insert: Effect.Effect<A, E, R>) =>
+    Effect.flatMap(
+      sql<{ readonly sequence: number | string }>`
+        SELECT sequence FROM ${tableNameSql}
+        WHERE id = ${id} AND queue_name = ${name} AND state IN ('completed', 'failed')
+      `,
+      A.match({
+        onEmpty: () => insert,
+        onNonEmpty: ([executed]) =>
+          sql.withTransaction(
+            Effect.andThen(
+              sql`
+                DELETE FROM ${tableNameSql}
+                WHERE sequence = ${executed.sequence} AND state IN ('completed', 'failed')
+              `,
+              insert
+            )
+          ),
+      })
+    );
+
   return PersistedQueueStore.of({
-    offer: Effect.fn("DuckDbPersistedQueue.offer")(({ delay, element, id, name }) =>
+    offer: Effect.fn("DuckDbPersistedQueue.offer")(({ deduplicate, delay, element, id, isCustomId, name }) =>
       Effect.catchCause(
         Effect.gen(function* () {
-          const now = yield* Clock.Clock.defaultValue().currentTimeMillis;
+          const now = yield* liveNow;
           const encodedJsonEffect = yield* encodeJsonEffect(element);
-          return yield* offer(id, name, encodedJsonEffect, delay === undefined ? sqlNow : delayedVisibleAt(delay, now));
+          const insert = offer(id, name, encodedJsonEffect, delay === undefined ? sqlNow : visibleAfter(delay, now));
+          // generated ids are never offered twice
+          return yield* deduplicate === "untilExecuted" && isCustomId ? replaceExecuted(id, name, insert) : insert;
         }),
         (cause) =>
           Effect.fail(

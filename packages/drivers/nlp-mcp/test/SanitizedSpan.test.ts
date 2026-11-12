@@ -17,6 +17,7 @@ import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import { McpServerClient } from "effect/ai/McpSchema";
 import * as McpServer from "effect/ai/McpServer";
+import * as Toolkit from "effect/ai/Toolkit";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -76,16 +77,22 @@ describe("nlp-mcp sanitized dispatch", () => {
         const result = yield* Effect.withTracer(
           server
             .callTool({ name: "Tokenize", arguments: { text: "super-secret-document-text" } })
-            .pipe(Effect.provideService(McpServerClient, stubMcpClient)),
+            .pipe(
+              Effect.provideService(McpServerClient, stubMcpClient),
+              Effect.provideService(Toolkit.RecordToolArguments, true)
+            ),
           tracer
         );
 
         assert.isFalse(result.isError);
 
-        const parameterAttribute = A.findFirst(captured, (entry) => entry.key === "parameters");
+        const parameterAttribute = A.findFirst(
+          captured,
+          (entry) => entry.key === "parameters" || entry.key === "gen_ai.tool.call.arguments"
+        );
         assertNone(parameterAttribute);
 
-        const toolAttribute = A.findFirst(captured, (entry) => entry.key === "tool");
+        const toolAttribute = A.findFirst(captured, (entry) => entry.key === "gen_ai.tool.name");
         assertSome(
           O.map(toolAttribute, (entry) => entry.value),
           "Tokenize"

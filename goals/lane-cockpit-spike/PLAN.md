@@ -87,7 +87,7 @@ About fifteen minutes after the lab was created, the board drew this repository'
 │ ────────────────────────────────────────────────────────────────────────────────────────────────────────── │
 │ residue-closeout-refinal · docs/residue-closeout-refinal · claude-code · blocked · 9m ago                  │
 │ next: HOLD: operator ruling - stop hand-merging goal finals (then 3rd re-final) or rule goal closed witho… │
-│ checkout: ~/YeeBois/projects/beep-effect-worktrees/residue-closeout-refinal                │
+│ checkout: <worktrees>/residue-closeout-refinal                                             │
 ╰─  ↑↓ move · / filter · enter expand · y copy path · p copy PR · q quit  ───────────────────────────────────╯
 ```
 

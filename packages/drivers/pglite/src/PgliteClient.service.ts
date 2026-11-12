@@ -96,7 +96,7 @@ export type PgliteClientOptions = Pglite.PgliteClientConfig.Create;
  */
 export const make = (
   options: PgliteClientOptions = {}
-): Effect.Effect<PgliteClientValue, PgliteError, Scope.Scope | Reactivity.Reactivity> =>
+): Effect.Effect<PgliteClientValue & SqlClient.SqlClient, PgliteError, Scope.Scope | Reactivity.Reactivity> =>
   Pglite.make(options).pipe(Effect.mapError((cause) => PgliteError.fromUnknown("connect", cause)));
 
 // The Drizzle Effect Postgres integration resolves the `@effect/sql-pg` PgClient
@@ -106,7 +106,8 @@ export const make = (
 // runtime. This single cast is the one deliberate, contained place the driver
 // boundary bends: if a future drizzle-orm bump starts calling a pg-specific
 // method, this is the failure point to revisit.
-const asPgClient = (client: PgliteClientValue): Pg.PgClient => client as unknown as Pg.PgClient;
+const asPgClient = (client: PgliteClientValue & SqlClient.SqlClient): Pg.PgClient & SqlClient.SqlClient =>
+  client as unknown as Pg.PgClient & SqlClient.SqlClient;
 
 /**
  * Build a Layer that provisions an in-process PGlite database and exposes it
