@@ -41,7 +41,7 @@ release changes where the baseline sits.
 Operator asked for a review of this packet with a view to graduating it.
 Findings from that review, checked against the checkout and the archive:
 
-- The trainer is gone. `tools/skillopt` was retired on 2026-10-17 (PR #1898)
+- The trainer is gone. The SkillOpt runner was retired on 2026-10-17 (PR #1898)
   under a locked disposition: retire the runner, keep a compact results
   record, build no replacement optimizer. Record:
   `goals/repository-simplification-residue/history/receipts/skillopt-retirement-record.md`.

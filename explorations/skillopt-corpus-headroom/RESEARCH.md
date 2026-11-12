@@ -65,10 +65,10 @@ retired runner wrapped release 0.2.0. Nothing in this packet depends on it.
 | Trial comparison: `beep agent-effectiveness evals compare --baseline --candidate` with an `Incomparable` refusal | same package, `AgentEffectiveness.schemas.ts` (`AgentConventionTrial`) | Reuse or extend. Compares two declared trial receipts. |
 | Benchmark run storage | `packages/tooling/library/ai-metrics`, written by `evals score --record` | Reuse. |
 | Harness ledger and prune proposals | `packages/tooling/tool/cli/src/commands/HarnessLedger/` | Reuse for recording. `prune-proposals --window 30` produces rows today but counts touches only. |
-| Task corpus: 12 tasks in 4 families, fixtures, splits, `DERIVATION.md` | archive repo, `goals/skillopt-training-pilot/corpus/` | Restore what the probe needs. Not on `main`. |
-| P4 rerun evidence: `baseline-noise.json`, `steps.jsonl`, skill versions | archive repo, `goals/harness-evidence-ledger/history/p4-rerun/` | Reference. |
+| Task corpus: 12 tasks in 4 families, fixtures, splits, `DERIVATION.md` | [archived pilot corpus](https://github.com/beep-effect/beep-effect-goals-archive/tree/main/goals/skillopt-training-pilot/corpus) | Restore what the probe needs. Not on `main`. |
+| P4 rerun evidence: `baseline-noise.json`, `steps.jsonl`, skill versions | [archived P4 rerun](https://github.com/beep-effect/beep-effect-goals-archive/tree/main/goals/harness-evidence-ledger/history/p4-rerun) | Reference. |
 | Skill under test | `.claude/skills/schema-first-development/SKILL.md` (7,947 bytes, 13 commits since the rerun) | Subject. |
-| Rollout runner | `tools/skillopt` | Retired in PR #1898. NOT FOUND on `main`. |
+| Rollout runner | the SkillOpt runner | Retired in PR #1898. NOT FOUND on `main`. |
 | Interval and paired-difference arithmetic for eval scores | NOT FOUND. `rg` for standard-error and confidence-interval helpers under `packages/tooling` finds only unrelated code. | NET-NEW, small. |
 | Glue from kept run directories to the scorer | NOT FOUND | NET-NEW. |
 | A plugin wrapper for a repo skill | NOT FOUND. No `.claude-plugin/` manifest in the repo. | NET-NEW, small. The docs also accept a skills-directory plugin. |
