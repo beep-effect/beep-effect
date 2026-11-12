@@ -12,6 +12,18 @@ import { apexHost, wwwHost } from "./src/PublicHosts.ts";
 const productionStage = "prod";
 
 /**
+ * Physical name of the `prod` Worker, the one that serves {@link apexHost}.
+ *
+ * Alchemy generates a Worker name from an instance id it keeps in state, so a
+ * stage whose state is lost or moved mints a new name. Moving this stack to the
+ * S3 store (#3021) did exactly that: every prod deploy planned a new Worker
+ * that could not take the apex from this one. Pinning the name makes a prod
+ * deploy find this Worker by name and adopt it (it carries this stack, stage
+ * and id's Alchemy tags) whatever the state holds.
+ */
+const productionWorkerName = "beepeffectweb-website-prod-lu7dco5dnf2llcs2";
+
+/**
  * The shared Alchemy state store (goals/infra-alchemy-rebuild, D6 and D17):
  * one account-regional S3 bucket, `alchemy-state-<accountId>-<region>-an`,
  * SSE-KMS with the AWS-managed S3 key, bucket keys on, customer-provided keys
@@ -33,7 +45,9 @@ export const Website = Cloudflare.Website.Vite(
   "Website",
   Alchemy.Stack.useSync((stack) => ({
     rootDir: import.meta.dirname,
-    ...(stack.stage === productionStage ? { domain: { name: apexHost, redirects: [wwwHost] }, workersDev: false } : {}),
+    ...(stack.stage === productionStage
+      ? { name: productionWorkerName, domain: { name: apexHost, redirects: [wwwHost] }, workersDev: false }
+      : {}),
   }))
 );
 
