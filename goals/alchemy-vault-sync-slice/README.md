@@ -33,7 +33,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-Closed: `completed-retained`. All implementation PRs are merged. Final PRs #2933, #2962 and #3101 each merged before their readiness was recorded, so the operator ruled the goal closed on 2026-11-10; this status and the closeout record landed in one packet-state PR. See [`decisions/2026-11-12-operator-ruling-close-in-one-packet-state-pr.md`](./decisions/2026-11-12-operator-ruling-close-in-one-packet-state-pr.md).
+Closed: `completed-retained`. All implementation PRs are merged. Final PRs #2933, #2962 and #3101 each merged before their readiness was recorded, so the operator ruled the goal closed on 2026-11-10; this status and the closeout record landed in one packet-state PR, #3132. See [`decisions/2026-11-12-operator-ruling-close-in-one-packet-state-pr.md`](./decisions/2026-11-12-operator-ruling-close-in-one-packet-state-pr.md).
 
 ## Latest Evidence
 
