@@ -435,7 +435,8 @@ describe("beep session", () => {
           const after = yield* captureOutput(withCwd(clone, runSession(["open"])));
           expect(after).toContain("no live sessions recorded");
           // Written from the clone on `main`, the done row still names the lane's branch.
-          const swept = A.last(decodeSessionLedger(yield* fs.readFileString(file)).rows);
+          const sweptLedger = yield* fs.readFileString(file);
+          const swept = A.last(decodeSessionLedger(sweptLedger).rows);
           assertSome(
             O.map(swept, (done) => [done.lane, done.branch]),
             ["lane", "feat/lane"]
