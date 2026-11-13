@@ -1,15 +1,47 @@
 # Python removed from this packet (2026-11-13)
 
 The `python-free-repo` goal bans tracked Python
-([SPEC](../../../goals/python-free-repo/SPEC.md)). Nothing in a workflow, hook,
-package script, skill, systemd unit or `opsScripts` entry still runs the
-179 file(s) below, so they were deleted rather than ported. Their outputs and
+([SPEC](../../../goals/python-free-repo/SPEC.md)). The 179 file(s) below were
+deleted rather than ported. One package script did depend on them:
+`citation:parity-check` (`packages/law-practice/use-cases`, running
+`ops/check-parity.ts`) spawned `ops/verify-builtin-diff.py`, and its component
+checkers hashed the deleted exporters. Some tests and
+`ops/qualify-regex-translator.child.mjs` also hashed producer bytes. See
+"Consumers updated at removal" below. The deleted files' outputs and
 the conclusions drawn from them stay in this packet, in the files listed under
 "Recorded in".
 
 Recover any script with
 `git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:<path>`. A resumed packet that needs to run one again
 ports it to TypeScript first; tracked Python is no longer admitted.
+
+## Consumers updated at removal
+
+- **Producer digests are pinned, not re-hashed.** Every component checker and
+  test that hashed a deleted `.py` producer or exporter now compares the digest
+  recorded in its fixture against a constant taken from the recovery commit.
+  Fixture-side `producerSha256` and `sourceReaderSha256` fields are kept. At
+  removal, all 83 repository `.py` proof references recorded in
+  `divergences.json`, `canonical-cases.json`, `ledger-proof-plan.json` and the
+  `history/evidence/*.json` receipts were checked against the recovery commit,
+  and every digest matched (the other 19 `.py` references name upstream
+  eyecite sources, not repository files). `check-ledgers.ts` and `check-divergences.ts` now
+  accept a `.py` reference by its recorded digest without reading it.
+- **`builtin-diff` dropped.** That parity component was the Python verifier
+  `verify-builtin-diff.py`. `check-parity.ts` no longer starts a Python
+  interpreter.
+- **`ledgers` and `divergences` retired from `citation:parity-check`.** Their
+  projections (`canonical-cases.json` and friends, `divergences.json`) pin the
+  digests of TypeScript proof sources that drifted on `main` before this
+  removal. Those projections are regenerated only by the deleted
+  `export-ledgers.py` and `export-divergences.py`, so the components cannot be
+  repaired without Python. The command prints them as `RETIRED`. A TypeScript
+  port of either exporter re-admits its component.
+- **Result.** `bun run --cwd packages/law-practice/use-cases
+  citation:parity-check --audit` passes 10 components. A run without `--audit`
+  still fails on the packet's completion gates (supplemental coverage, regex
+  benchmark results, `check-target-parity.ts` not yet written), as it did
+  before the removal.
 
 | Deleted file | Recorded in (non-Python files that name it) |
 | --- | --- |
