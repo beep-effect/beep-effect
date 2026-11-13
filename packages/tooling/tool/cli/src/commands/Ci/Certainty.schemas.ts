@@ -257,9 +257,10 @@ export type CiCertaintyContextState = typeof CiCertaintyContextState.Type;
  * @category models
  * @since 0.0.0
  */
-export const CiCertaintyMainVerdict = LiteralKit(["success", "failure", "cancelled", "no-run", "open"]).pipe(
+export const CiCertaintyMainVerdict = LiteralKit(["success", "failure", "cancelled", "no-run", "open", "unread"]).pipe(
   $I.annoteSchema("CiCertaintyMainVerdict", {
-    description: "Hosted verdict a main first-parent commit received from check.yml push runs.",
+    description:
+      "Hosted verdict a main first-parent commit received from check.yml push runs; unread when the push-run listing did not complete.",
   })
 );
 
@@ -747,6 +748,12 @@ export class CiCertaintyRunnerStat extends S.Opaque<CiCertaintyRunnerStat, { rea
 /**
  * Main verdict rate over non-docs first-parent commits.
  *
+ * **Details**
+ *
+ * When the check.yml push-run listing did not complete, every commit is
+ * `unread` rather than `no-run`, and `rate` is none: an unread listing is not
+ * evidence that main ran nothing.
+ *
  * **Example** (Describe an empty verdict statistic)
  *
  * ```ts
@@ -760,6 +767,7 @@ export class CiCertaintyRunnerStat extends S.Opaque<CiCertaintyRunnerStat, { rea
  *   noRun: 0,
  *   open: 0,
  *   rate: O.none(),
+ *   unread: 0,
  *   verdicts: 0,
  * })
  * console.log(stat.commits)
@@ -776,6 +784,7 @@ export class CiCertaintyMainStat extends S.Opaque<CiCertaintyMainStat, { readonl
     noRun: NonNegativeInt,
     open: NonNegativeInt,
     rate: S.OptionFromNullOr(Share),
+    unread: NonNegativeInt,
     verdicts: NonNegativeInt,
   }).pipe(
     $I.annoteSchema("CiCertaintyMainStat", {

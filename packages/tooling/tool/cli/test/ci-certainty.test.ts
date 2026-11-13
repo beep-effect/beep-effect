@@ -448,6 +448,13 @@ describe("ci certainty certification", () => {
           "> **Not certified, not acceptance evidence.** Refused: api-partial, empty-population."
         );
         expect(rendered).not.toContain("partial job reads");
+        // An incomplete push listing leaves every main commit unread: no rate, and never a no-run verdict.
+        expect(A.length(report.mainRows)).toBeGreaterThan(0);
+        assertTrue(A.every(report.mainRows, (row) => row.verdict === "unread"));
+        assertNone(report.main.rate);
+        strictEqual(report.main.noRun, 0);
+        strictEqual(report.main.unread, report.main.commits);
+        expect(rendered).toContain("rate —");
       })
     );
   });
@@ -914,7 +921,8 @@ describe("ci certainty command", () => {
       const spawner = liveGit();
       return Effect.gen(function* () {
         yield* seedRequiredContexts();
-        // Two listings and three job reads fit; the main push listing is refused at the bound.
+        // The main push listing is read first, so the bound refuses a pull-request job read instead: the
+        // head is stamped partial while main keeps its real verdicts.
         const error = yield* Effect.flip(runCertaintyCommand(["--max-requests", "5"]));
         assertInstanceOf(error, CiCommandError);
         strictEqual(
@@ -922,7 +930,10 @@ describe("ci certainty command", () => {
           "Certification refused: api-partial. Pass --preview to accept an uncertified report."
         );
         const refused = yield* lastCertaintyLog();
-        expect(refused).toContain("> **Not certified, not acceptance evidence.** Refused: api-partial.");
+        expect(refused).toContain(
+          "> **Not certified, not acceptance evidence.** Refused: api-partial (partial job reads: run 12 attempt 1)."
+        );
+        expect(refused).toContain("completed verdicts 1; rate 50.0%; cancelled 0; no run 1; open 0; unread 0");
         strictEqual(A.length(calls), 5);
         expect(gitLogArgs(spawner)).toContain("--since=2026-11-09T03:00:00.000Z");
         expect(gitLogArgs(spawner)).toContain("--until=2026-11-10T03:00:00.000Z");
