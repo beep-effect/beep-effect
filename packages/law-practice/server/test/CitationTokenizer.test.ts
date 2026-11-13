@@ -3,6 +3,7 @@ import {
   CitationAdmissionSnapshot,
   CitationOperationAdmission,
 } from "@beep/law-practice-server/internal/Citation/Admission";
+import { makeCitationExtractorOrdering } from "@beep/law-practice-server/internal/Citation/ExtractorOrdering";
 import { makeCitationTokenizer } from "@beep/law-practice-server/internal/Citation/Tokenizer";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
@@ -10,6 +11,7 @@ import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as Order from "effect/Order";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 import {
   makeCitationTestScaffoldBinding,
@@ -133,6 +135,44 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
         const observed = yield* setup.observed.snapshot;
         expect(observed).toEqual({ spawned: 0, confirmed: 0 });
       }
+    })
+  );
+  it.effect("refuses inherited plus selected extractor work before spawning a worker", () =>
+    Effect.gen(function* () {
+      const controls = yield* loadCitationTokenizerControls();
+      const extractors = A.map(A.take(controls.configuration.extractors, 4), (row, index) => ({
+        ...row,
+        ordering: { ...row.ordering, hash: BigInt(index + 1), strings: index < 2 ? [] : row.ordering.strings },
+      }));
+      const configuration = { ...controls.configuration, extractors };
+      const source = { width: 1, bytes: new Uint8Array([182, 32, 167]) };
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      const ordering = yield* makeCitationExtractorOrdering(
+        limits,
+        A.map(extractors, (row) => row.ordering)
+      );
+      const selected = yield* ordering.ordered(source);
+      expect(A.sort(selected.indices, Order.Number)).toEqual([0, 1, 2, 3]);
+      // Two inherited members fit at install, but copying and selecting must still be bounded.
+      const boundedOrdering = yield* makeCitationExtractorOrdering(
+        { ...limits, patternEvaluations: 3 },
+        A.map(extractors, (row) => row.ordering)
+      );
+      const orderingRefusal = yield* boundedOrdering.ordered(source).pipe(Effect.flip);
+      expect(orderingRefusal).toMatchObject({
+        _tag: "CitationSafetyLimitExceeded",
+        operation: "extract",
+        limit: "patternEvaluations",
+      });
+      const setup = yield* setupCitationTokenizer("bun", configuration, { patternEvaluations: 3 });
+      const refused = yield* setup.tokenizer.port.tokenize(source).pipe(Effect.flip);
+      expect(refused).toMatchObject({
+        _tag: "CitationSafetyLimitExceeded",
+        operation: "extract",
+        limit: "patternEvaluations",
+      });
+      const observed = yield* setup.observed.snapshot;
+      expect(observed).toEqual({ spawned: 0, confirmed: 0 });
     })
   );
   it.effect("enforces its own produced-text ceiling under a larger invocation without partial output", () =>

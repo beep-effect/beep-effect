@@ -98,6 +98,7 @@ export class CitationTokenizerConfiguration extends S.Opaque<
 ) {}
 const Configuration = S.toType(CitationTokenizerConfiguration);
 const failure = (reason: CitationTokenizerFailure["reason"]) => CitationTokenizerFailure.make({ reason });
+const invalidConfiguration = () => failure("invalid-configuration");
 const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
   CitationSafetyLimitExceeded.make({ operation: "extract", limit });
 const preserveSafety = (error: unknown) => (S.is(CitationSafetyLimitExceeded)(error) ? error : failure("stage-failed"));
@@ -108,7 +109,7 @@ const prepareTokenizerConfiguration = Effect.fn("Citation.prepareTokenizerConfig
   configurationInput: unknown
 ) {
   const config = yield* S.decodeUnknownEffect(Configuration)(configurationInput).pipe(
-    Effect.mapError(() => failure("invalid-configuration"))
+    Effect.mapError(invalidConfiguration)
   );
   if (config.extractors.length > limits.patterns) return yield* safety("patterns");
   const installed = A.map(config.extractors, (row) => ({
@@ -159,7 +160,7 @@ export const makeCitationTokenizer = Effect.fn("Citation.makeTokenizer")(functio
   runtime: unknown,
   configurationInput: unknown
 ) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () => failure("invalid-configuration"));
+  const limits = yield* decodeCitationRegexPolicy(policy, invalidConfiguration);
   const { installed, editionRows, entries, descriptors } = yield* prepareTokenizerConfiguration(
     limits,
     configurationInput
@@ -184,7 +185,7 @@ export const makeCitationTokenizer = Effect.fn("Citation.makeTokenizer")(functio
       .prepareUnicode(sourceInput, () => Effect.void)
       .pipe(Effect.mapError((error) => (S.is(CitationSafetyLimitExceeded)(error) ? error : failure("invalid-source"))));
     const selected = yield* ordering.ordered(source.value.storage).pipe(Effect.mapError(preserveSafety));
-    // Ordering already enforces the set-work ceiling and returns only installed ids.
+    if (selected.indices.length > limits.patternEvaluations) return yield* safety("patternEvaluations");
     const objects = yield* makeCitationTokenObjects(limits, editions).pipe(Effect.mapError(preserveSafety));
     const gaps = yield* text.prepare(source.value.storage).pipe(Effect.mapError(preserveSafety));
     const produced = yield* TxRef.make(0);
@@ -196,8 +197,7 @@ export const makeCitationTokenizer = Effect.fn("Citation.makeTokenizer")(functio
     const ids = MutableList.make<number>();
     let rawMatches = 0;
     for (const id of selected.indices) {
-      // A missing id would violate the private ordering/installation invariant, not caller configuration.
-      const row = yield* Effect.fromOption(HashMap.get(entries, id)).pipe(Effect.orDie);
+      const row = yield* Effect.fromOption(HashMap.get(entries, id)).pipe(Effect.mapError(invalidConfiguration));
       const remainingMatches = limits.patternMatches - rawMatches;
       const remainingCandidates = limits.candidates - ids.length;
       const maximum = Num.min(remainingMatches, remainingCandidates);
