@@ -785,7 +785,108 @@ export const compareCheckCensusSample: {
     })
 );
 
-const compilerChanged = (report: CheckCensusGateReport): boolean => report.compiler !== report.baselineCompiler;
+// Structural, so a gate report and a stamp-only check judge a compiler change
+// the same way.
+const compilerChanged = (stamps: Pick<CheckCensusGateReport, "baselineCompiler" | "compiler">): boolean =>
+  stamps.compiler !== stamps.baselineCompiler;
+
+/**
+ * The compiler a committed baseline was measured with next to the installed
+ * compiler, as `check-census --stamp-only` compares them without sampling any
+ * program.
+ *
+ * **Details**
+ *
+ * `baselinePath` is repository-relative and defaults to
+ * {@link CHECK_CENSUS_BASELINE_PATH}; the CLI stamps its `--baseline` value.
+ * `baselineCompiler` is the baseline's `compiler` field and `compiler` the
+ * installed `tsc --version` string (without the `Version` prefix).
+ *
+ * **Example** (Stamp a baseline left behind by a compiler bump)
+ *
+ * ```ts
+ * import { CheckCensusCompilerStamp } from "@beep/repo-cli/commands/Quality/CheckCensusGate"
+ *
+ * const stamp = CheckCensusCompilerStamp.make({
+ *   baselineCompiler: "7.0.2+effect-tsgo.0.67.5",
+ *   compiler: "7.0.2+effect-tsgo.0.68.1",
+ * })
+ * console.log(stamp.baselinePath) // "standards/check-census.regression-baseline.jsonc"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CheckCensusCompilerStamp extends S.Opaque<CheckCensusCompilerStamp, { readonly brand: unique symbol }>()(
+  S.Struct({
+    baselinePath: S.String.pipe(S.withConstructorDefault(Effect.succeed(CHECK_CENSUS_BASELINE_PATH))),
+    baselineCompiler: S.String,
+    compiler: S.String,
+  }).pipe(
+    $I.annoteSchema("CheckCensusCompilerStamp", {
+      description: "Compiler a check-census baseline was measured with, next to the installed compiler.",
+    })
+  )
+) {}
+
+/**
+ * Whether the installed compiler is the one the baseline was measured with,
+ * so the baseline's single-checker counts are comparable.
+ *
+ * **Details**
+ *
+ * This is the comparison that makes {@link checkCensusGateFailed} fail a gate
+ * run on a changed compiler, answered without sampling a program.
+ *
+ * **Example** (A bumped compiler disagrees with the baseline)
+ *
+ * ```ts
+ * import { CheckCensusCompilerStamp, checkCensusCompilerStampAgrees } from "@beep/repo-cli/commands/Quality/CheckCensusGate"
+ *
+ * const stamp = CheckCensusCompilerStamp.make({
+ *   baselineCompiler: "7.0.2+effect-tsgo.0.67.5",
+ *   compiler: "7.0.2+effect-tsgo.0.68.1",
+ * })
+ * console.log(checkCensusCompilerStampAgrees(stamp)) // false
+ * ```
+ *
+ * @param stamp - The baseline and installed compiler strings.
+ * @returns `true` when both compiler strings are equal.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const checkCensusCompilerStampAgrees = (stamp: CheckCensusCompilerStamp): boolean => !compilerChanged(stamp);
+
+/**
+ * The one line `check-census --stamp-only` prints when the compilers agree,
+ * or fails with when they differ.
+ *
+ * **Details**
+ *
+ * A disagreement names the baseline path, both compiler versions, and
+ * {@link CHECK_CENSUS_BASELINE_WRITE_COMMAND}, which re-measures every row and
+ * needs a built tree.
+ *
+ * **Example** (Render an agreeing stamp)
+ *
+ * ```ts
+ * import { CheckCensusCompilerStamp, renderCheckCensusCompilerStampLine } from "@beep/repo-cli/commands/Quality/CheckCensusGate"
+ *
+ * const line = renderCheckCensusCompilerStampLine(
+ *   CheckCensusCompilerStamp.make({ baselineCompiler: "7.0.2+effect-tsgo.0.68.1", compiler: "7.0.2+effect-tsgo.0.68.1" })
+ * )
+ * console.log(line) // "check-census stamp: baseline and installed compiler agree (7.0.2+effect-tsgo.0.68.1)"
+ * ```
+ *
+ * @param stamp - The baseline and installed compiler strings.
+ * @returns The agreement line, or the disagreement line with its re-measure command.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderCheckCensusCompilerStampLine = (stamp: CheckCensusCompilerStamp): string =>
+  checkCensusCompilerStampAgrees(stamp)
+    ? `check-census stamp: baseline and installed compiler agree (${stamp.compiler})`
+    : `check-census stamp: baseline ${stamp.baselinePath} was measured with ${stamp.baselineCompiler}, but the installed compiler is ${stamp.compiler}; re-measure with \`${CHECK_CENSUS_BASELINE_WRITE_COMMAND}\` (the write needs a built tree).`;
 
 const isIncrease = (comparison: CheckCensusComparison): boolean =>
   comparison.instantiations === CheckCensusInstantiationVerdict.Enum.increase;
