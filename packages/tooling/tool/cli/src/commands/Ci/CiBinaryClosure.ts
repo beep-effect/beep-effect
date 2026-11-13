@@ -42,7 +42,7 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { sha256Hex } from "../Goals/PacketCore/PacketDigest.ts";
-import { makePolicyGraph } from "../Lint/internal/PolicyFingerprintGraph.ts";
+import { directoryOf, joinPath, makePolicyGraph } from "../Lint/internal/PolicyFingerprintGraph.ts";
 import { livePolicySourceTree, readPolicyWorkspaces } from "../Lint/PolicyFingerprint.ts";
 import { CiCommandError, reportCiCommandError } from "./Ci.errors.ts";
 import type * as Digest from "effect/crypto/Digest";
@@ -169,23 +169,12 @@ const readRequired = Effect.fnUntraced(function* (tree: PolicySourceTree, file: 
   return yield* CiCommandError.make({ message: `CI binary closure file ${file} does not exist.` });
 });
 
-// Normalise a repo-relative POSIX path, resolving `.` and `..` segments.
-const normalizePosix = (path: string): string =>
-  A.join(
-    A.reduce(Str.split(path, "/"), A.empty<string>(), (segments, part) => {
-      if (part === "..") return A.dropRight(segments, 1);
-      return part === "." || part === "" ? segments : A.append(segments, part);
-    }),
-    "/"
-  );
-
 // The configurations a tsconfig extends by relative path. A package
 // specifier resolves into `node_modules`, which `bun.lock` already pins.
 const extendedConfigs = (file: string, config: TsconfigExtends): ReadonlyArray<string> => {
-  const directory = A.join(A.dropRight(Str.split(file, "/"), 1), "/");
   const targets = A.ensure(config.extends ?? []);
   return A.map(A.filter(targets, Str.startsWith(".")), (target) => {
-    const path = normalizePosix(`${directory}/${target}`);
+    const path = joinPath(directoryOf(file), target);
     return Str.endsWith(".json")(path) ? path : `${path}.json`;
   });
 };
