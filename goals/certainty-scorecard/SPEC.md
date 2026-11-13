@@ -396,6 +396,14 @@ Lane fix/certainty-scoring-fixes
 
 Reverse: Revert the Certainty.ts changes of this PR; the report then reads terminalAt over every job, the first Heavy-prefixed job of check.yml runs, and per-producer-run minutes again.
 
+### An incomplete main push listing leaves main commits unread, and main is read before the job reads, 2026-11-13
+
+A 7-day run, `bun run beep ci certainty --since 2026-11-03 --until 2026-11-10`, was refused as api-partial: the default 1,500-request bound ran out during the per-attempt pull-request job reads, before the check.yml push listing was read. The report then folded every main commit to `no-run`, with rate 0 and no partial marker, although the commits had push runs (fda98a2c4bd has push run 42717956683). A `--preview` reader would have taken "not read" as a main verdict rate of 0. Two changes fix this. The push listing, a few pages, is now read before the job reads, so the bound refuses a pull-request job read instead: that head is stamped api-partial, and main keeps its real verdicts. When the listing still does not complete, every main commit gets the new verdict `unread` (`CiCertaintyMainVerdict`), never `no-run`. The main stat then counts them in `unread` and reports no rate. Certification is refused as before.
+
+Lane fix/certainty-main-unread
+
+Reverse: Revert this PR: main commits then fold to no-run when the listing fails, and the push listing is read after the pull-request job reads again.
+
 ### Slice 1 lands over two unrecoverable MEAS-01 replay anchors, 2026-11-13
 
 The MEAS-01 admission gate names three fixture-replay anchors from the exploration: 4 of 30 under 10 min, green-only p95 101.9, and about 315 runner-min per run. The committed fixtures reproduce only the 101.9 p95. The 30-run membership behind the other two was never recorded (decision `fixture-corpus-real-captures`), so no corpus can be shown to reproduce them. Slice 1 is therefore marked landed against the anchors that can be checked: green-only p95 101.9; the named per-head cases (two producers, three run_attempts, docs-only, cancelled); the monotonicity fixtures (the baseline flip and the verdict-instant counterexample, decision `certainty-scoring-fixes`); and the api-partial refusal. The fixture's own figures are stated beside the recorded ones and never substituted for them: 1 code head under ten minutes, and 251.08 runner-min per head attempt over 35 attempts. The gate column itself is left as written, because it records the target the exploration set. The nightly's first certified week (P2) re-measures both anchors on live heads; that measurement, not the fixture, decides whether the recorded targets hold.
