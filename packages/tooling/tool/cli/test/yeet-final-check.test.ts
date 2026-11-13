@@ -38,6 +38,7 @@ import {
   readYeetComputeProfile,
   resolveFinalCheckProfileSkips,
   rewrittenTestFiles,
+  routeFinalCheckRunForTesting,
   routeFinalCheckStepsForProfile,
   runFinalCheckGatesForTesting,
   verifyExpectationRewrites,
@@ -578,6 +579,16 @@ describe("forced final-check on a worker", () => {
     );
     assertSome(unreadLast, true);
     expect(unreadGates).toEqual([]);
+  });
+
+  it("forces no gate the change route skips and keeps the profile skips unchanged", () => {
+    const routing = { ...O.some(selected).pipe(forcedRouting), routeSkipped: ["coverage" as const] };
+    const gates = forcedWorkerGates(routing);
+    const lines = forcedWorkerFinalCheckLines(routing);
+    const skips = computeProfileFinalCheckSkips(routing);
+    expect(gates).toEqual([]);
+    expect(A.filter(lines, Str.includes("coverage"))).toEqual([]);
+    expect(A.map(skips, (skip) => skip.gate)).toEqual(["cheap-gates", "lint-policy", "check", "docgen", "fallow"]);
   });
 
   it("forces nothing unforced or off worker", () => {
@@ -1340,6 +1351,67 @@ describe("final-check verification routing", () => {
         });
         const { result, ran } = yield* coverageGateRun(CoverageNoopScope.make({}), [], O.some(route));
         expect(result.steps[0]).toMatchObject({ status: "skipped", reason: "route:test" });
+        expect(ran).toBe(false);
+      })
+    );
+
+    // PR #3281 review (beep-reviewer P2, CodeRabbit): a coverage gate the change route skips never
+    // runs, so a forced worker run must not count it as forced, print its concurrency line, record
+    // forceLocal: true, or journal a bypass row for it.
+    it.effect("does not count a route-skipped coverage gate as forced on a worker", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "final-check-route-forced-" });
+        const route = FinalCheckRoute.make({
+          footprintDigest: "footprint",
+          atomsByKind: R.map(ChangeAtomKind.Enum, () => 0),
+          gates: [
+            FinalCheckRouteGate.make({
+              gate: "coverage",
+              lane: "coverage",
+              decision: "skipped",
+              refinements: [],
+              reason: "route:test",
+            }),
+          ],
+          shadowMisses: [],
+          reason: "footprint",
+        });
+        const planned = {
+          repoRoot: root,
+          headSha: HEAD,
+          mergeBase: BASE,
+          planned: [
+            FinalCheckPlannedStep.make({
+              gate: "coverage",
+              hostedContext: "Heavy / Coverage Regression, Test Unit (affected packages)",
+              step: QualityTaskStep.make({
+                label: "final-check:coverage",
+                command: "sh",
+                args: ["-c", "echo ran > ran; exit 1"],
+                cwd: root,
+              }),
+            }),
+          ],
+          skips: [],
+          resume: false,
+          route,
+        };
+        const routed = yield* routeFinalCheckRunForTesting(planned, {
+          gates: ["check", "coverage"],
+          operatorSkips: [],
+          profile: "worker",
+          forceLocal: true,
+        });
+        const result = yield* runFinalCheckGatesForTesting(routed.run, ["coverage"], false);
+        const ran = yield* fs.exists(`${root}/ran`);
+        const skipGates = A.map(routed.profileSkips, (skip) => skip.gate);
+        expect(routed.forced).toBe(false);
+        expect(A.filter(routed.forcedLines, Str.includes("one task at a time"))).toEqual([]);
+        expect(A.map(routed.forcedLines, (line) => Str.split(line, " ")[4])).toEqual(["check"]);
+        expect(skipGates).toEqual(["check"]);
+        expect(routed.workerRoutes).toEqual([["check", "refusal"]]);
+        expect(result.steps[0]).toMatchObject({ gate: "coverage", status: "skipped", reason: "route:test" });
         expect(ran).toBe(false);
       })
     );

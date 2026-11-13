@@ -630,13 +630,15 @@ const forcedCoverageScopeRefusal = (scope: O.Option<CoverageAffectedScope>): O.O
 
 // The routing input of a final-check run on its compute profile. `coverageScope` is the affected
 // coverage plan the run probed, present only when the coverage gate is requested and not skipped;
-// `O.none()` means the probe could not read it.
+// `O.none()` means the probe could not read it. `routeSkipped` names the gates the change route
+// skips: they never run, so they are never forced.
 type FinalCheckProfileRouting = {
   readonly gates: ReadonlyArray<FinalCheckGate>;
   readonly operatorSkips: ReadonlyArray<FinalCheckSkip>;
   readonly profile: ComputeProfile;
   readonly forceLocal: boolean;
   readonly coverageScope?: O.Option<CoverageAffectedScope>;
+  readonly routeSkipped?: ReadonlyArray<FinalCheckGate>;
 };
 
 const forcedRefusalFor =
@@ -646,16 +648,32 @@ const forcedRefusalFor =
       ? forcedCoverageScopeRefusal(coverageScope)
       : workerForcedRefusal(gate);
 
+// The profile-routed gates `--force-local` does not refuse. The profile skips are their
+// complement; a gate the change route skips stays out of the skips and is not forced either.
+const forceableWorkerGates = ({
+  gates,
+  operatorSkips,
+  profile,
+  forceLocal,
+  coverageScope,
+}: FinalCheckProfileRouting): ReadonlyArray<FinalCheckGate> =>
+  forceLocal
+    ? A.filter(profileRoutedGates(gates, operatorSkips, profile), (gate) =>
+        O.isNone(forcedRefusalFor(coverageScope)(gate))
+      )
+    : [];
+
 /**
  * The hosted-only gates `--force-local` actually runs on this host.
  *
  * **Details**
  *
  * Empty without `--force-local` and off `worker`. On `worker` these are the
- * profile-routed gates that are neither operator-skipped nor refused
- * ({@link workerForcedRefusal}); coverage is also refused when its probed
- * affected plan is not a selected set of packages. The receipt records
- * `forceLocal: true` only when this list is non-empty.
+ * profile-routed gates that are neither operator-skipped, skipped by the
+ * change route, nor refused ({@link workerForcedRefusal}); coverage is also
+ * refused when its probed affected plan is not a selected set of packages.
+ * The receipt records `forceLocal: true` and final-check prints the
+ * concurrency line only when this list is non-empty.
  *
  * **Example** (Force coverage, refuse fallow)
  *
@@ -670,18 +688,8 @@ const forcedRefusalFor =
  * @category utilities
  * @since 0.0.0
  */
-export const forcedWorkerGates = ({
-  gates,
-  operatorSkips,
-  profile,
-  forceLocal,
-  coverageScope,
-}: FinalCheckProfileRouting): ReadonlyArray<FinalCheckGate> =>
-  forceLocal
-    ? A.filter(profileRoutedGates(gates, operatorSkips, profile), (gate) =>
-        O.isNone(forcedRefusalFor(coverageScope)(gate))
-      )
-    : [];
+export const forcedWorkerGates = (input: FinalCheckProfileRouting): ReadonlyArray<FinalCheckGate> =>
+  A.difference(forceableWorkerGates(input), input.routeSkipped ?? []);
 
 /**
  * The skips the compute profile adds to a final-check run.
@@ -712,7 +720,7 @@ export const forcedWorkerGates = ({
  * @since 0.0.0
  */
 export const computeProfileFinalCheckSkips = (input: FinalCheckProfileRouting): ReadonlyArray<FinalCheckSkip> => {
-  const forced = forcedWorkerGates(input);
+  const forced = forceableWorkerGates(input);
   return pipe(
     profileRoutedGates(input.gates, input.operatorSkips, input.profile),
     A.filter((gate) => !A.contains(forced, gate)),
@@ -1295,15 +1303,14 @@ const hostedContextFor = (run: FinalCheckRun, gate: FinalCheckGate): string =>
 const routeFor = (run: FinalCheckRun, gate: FinalCheckGate) =>
   O.fromUndefinedOr(run.route).pipe(O.flatMap((route) => A.findFirst(route.gates, (entry) => entry.gate === gate)));
 
-const skipFor = (run: FinalCheckRun, gate: FinalCheckGate) =>
-  A.findFirst(run.skips, (entry) => entry.gate === gate).pipe(
-    O.orElse(() =>
-      routeFor(run, gate).pipe(
-        O.filter((entry) => entry.decision === "skipped"),
-        O.map((entry) => FinalCheckSkip.make({ gate, reason: entry.reason }))
-      )
-    )
+const routeSkipFor = (run: FinalCheckRun, gate: FinalCheckGate) =>
+  routeFor(run, gate).pipe(
+    O.filter((entry) => entry.decision === "skipped"),
+    O.map((entry) => FinalCheckSkip.make({ gate, reason: entry.reason }))
   );
+
+const skipFor = (run: FinalCheckRun, gate: FinalCheckGate) =>
+  A.findFirst(run.skips, (entry) => entry.gate === gate).pipe(O.orElse(() => routeSkipFor(run, gate)));
 
 // The coverage gate's affected plan selected nothing: the step passes without spawning. A skip
 // is decided before this (C5), so it only applies when `skipFor` returned None.
@@ -1671,29 +1678,6 @@ type OpenFinalCheckAttempt = {
 const reportJournalFailure = (error: YeetCommandError) =>
   Console.error(`[yeet] final-check attempt journal not written: ${error.message}`);
 
-// Every skip (operator, compute profile, route) decides before the coverage probe (C5), so a
-// skipped coverage gate stays skipped. A forced worker run then re-routes with the probed plan:
-// coverage whose plan is not a selected set of packages is refused like a measured gate.
-const routeFinalCheckRun = Effect.fnUntraced(function* (plannedRun: FinalCheckRun, routing: FinalCheckProfileRouting) {
-  const probesCoverage = A.contains(routing.gates, "coverage") && O.isNone(skipFor(plannedRun, "coverage"));
-  const coverageScope = probesCoverage
-    ? yield* resolveFinalCheckCoverageScope(plannedRun.repoRoot, plannedRun.mergeBase)
-    : O.none<CoverageAffectedScope>();
-  const scoped: FinalCheckProfileRouting = probesCoverage ? { ...routing, coverageScope } : routing;
-  const profileSkips = computeProfileFinalCheckSkips(scoped);
-  const run: FinalCheckRun = {
-    ...plannedRun,
-    skips: A.appendAll(routing.operatorSkips, profileSkips),
-    ...O.getSomesStruct({ coverageScope }),
-  };
-  return {
-    run,
-    profileSkips,
-    forcedLines: forcedWorkerFinalCheckLines(scoped),
-    forced: A.isReadonlyArrayNonEmpty(forcedWorkerGates(scoped)),
-  };
-});
-
 // The run's start row, in the branch journal Yeet attempts use. Without it no
 // terminal row is written either, so the journal never holds a lone terminal.
 const openFinalCheckAttempt = Effect.fn("Yeet.openFinalCheckAttempt")(
@@ -1764,6 +1748,62 @@ const finalCheckWorkerRoutes = (
         )
       )
     : [];
+
+// Every skip (operator, compute profile, route) decides before the coverage probe (C5), so a
+// skipped coverage gate stays skipped. A forced worker run then re-routes with the probed plan:
+// coverage whose plan is not a selected set of packages is refused like a measured gate, and a
+// gate the change route skips is never counted as forced.
+const routeFinalCheckRun = Effect.fnUntraced(function* (plannedRun: FinalCheckRun, routing: FinalCheckProfileRouting) {
+  const probesCoverage = A.contains(routing.gates, "coverage") && O.isNone(skipFor(plannedRun, "coverage"));
+  const coverageScope = probesCoverage
+    ? yield* resolveFinalCheckCoverageScope(plannedRun.repoRoot, plannedRun.mergeBase)
+    : O.none<CoverageAffectedScope>();
+  const routeSkipped = A.filter(routing.gates, (gate) => O.isSome(routeSkipFor(plannedRun, gate)));
+  const scoped: FinalCheckProfileRouting = { ...routing, routeSkipped, ...(probesCoverage ? { coverageScope } : {}) };
+  const profileSkips = computeProfileFinalCheckSkips(scoped);
+  const run: FinalCheckRun = {
+    ...plannedRun,
+    skips: A.appendAll(routing.operatorSkips, profileSkips),
+    ...O.getSomesStruct({ coverageScope }),
+  };
+  return {
+    run,
+    profileSkips,
+    forcedLines: forcedWorkerFinalCheckLines(scoped),
+    forced: A.isReadonlyArrayNonEmpty(forcedWorkerGates(scoped)),
+    workerRoutes: finalCheckWorkerRoutes(run, routing.gates, profileSkips, routing.profile),
+  };
+});
+
+/**
+ * Route a planned final-check run on its compute profile, as `yeet final-check` does.
+ *
+ * **Details**
+ *
+ * Probes the affected coverage plan when coverage is requested and not
+ * skipped, then returns the run with its profile skips, the `--force-local`
+ * lines, whether any gate is actually forced (the receipt's `forceLocal`)
+ * and the worker admission routes. A gate the change route skips is never
+ * forced and gets no admission row.
+ *
+ * **Example** (Build the routing effect)
+ *
+ * ```ts
+ * import { routeFinalCheckRunForTesting } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const run = { repoRoot: "/repo", mergeBase: "base", planned: [], skips: [], resume: false }
+ * const routing = { gates: [], operatorSkips: [], profile: "worker" as const, forceLocal: true }
+ * console.log(Effect.isEffect(routeFinalCheckRunForTesting(run, routing))) // true
+ * ```
+ *
+ * @param plannedRun - The planned run, its change route included.
+ * @param routing - The requested gates, operator skips, profile and `--force-local`.
+ * @returns The routed run, its profile skips, forced lines, forced flag and admission routes.
+ * @category testing
+ * @since 0.0.0
+ */
+export const routeFinalCheckRunForTesting = routeFinalCheckRun;
 
 // Best effort like the attempt journal: a row that cannot be written warns and changes nothing.
 const recordWorkerFinalCheckRoutes = (
@@ -1888,6 +1928,7 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
     profileSkips: routedSkips,
     forcedLines,
     forced,
+    workerRoutes,
   } = yield* routeFinalCheckRun(plannedRun, {
     gates,
     operatorSkips,
@@ -1948,12 +1989,7 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
   const receipt = yield* Effect.acquireUseRelease(
     openFinalCheckAttempt(repoRoot, options, headSha, computeProfile),
     (opened) =>
-      recordWorkerFinalCheckRoutes(
-        repoRoot,
-        opened,
-        finalCheckWorkerRoutes(run, gates, routedSkips, computeProfile),
-        options.forceLocal
-      ).pipe(Effect.andThen(execute)),
+      recordWorkerFinalCheckRoutes(repoRoot, opened, workerRoutes, options.forceLocal).pipe(Effect.andThen(execute)),
     (opened, exit) =>
       O.match(opened, {
         onNone: constant(Effect.void),
