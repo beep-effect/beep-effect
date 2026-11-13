@@ -51,6 +51,7 @@ const renderObject = (record: Readonly<Record<string, unknown>>, indent: string)
     const prefix = `${indent}  ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(key), identity)}: `;
     return `${prefix}${renderJson(member, `${indent}  `, prefix.length, trailingWidth(index, entries.length))}`;
   });
+  // biome-ignore lint/plugin/no-hand-rolled-canonical-json: census E12 (tooling L4), renderer: turbo.json layout
   return `{\n${A.join(lines, ",\n")}\n${indent}}`;
 };
 
