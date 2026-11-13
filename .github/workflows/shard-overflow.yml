@@ -32,8 +32,9 @@ permissions:
   contents: read
 
 env:
-  # The event payload is fixed across jobs and partial reruns, as in check.yml.
-  BEEP_COVERAGE_BASE_SHA: ${{ github.event.pull_request.base.sha || github.sha }}
+  # Event facts only, as in check.yml: the shard passes --event-base, which the
+  # CLI resolves from GITHUB_SHA and the event payload (fixed across jobs and
+  # partial reruns), so routed and hosted shards diff against one base.
   BEEP_CI_PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
   BEEP_CI_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
 
@@ -130,7 +131,7 @@ jobs:
             return "$status"
           }
 
-          shape_args=(--base "$BEEP_COVERAGE_BASE_SHA")
+          shape_args=(--event-base)
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
             shape_args+=(--affected)
           fi
