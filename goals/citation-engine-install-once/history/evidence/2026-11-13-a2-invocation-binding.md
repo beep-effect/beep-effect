@@ -272,7 +272,13 @@ The evidence update is a separate local commit in the same publication push.
 
 Before final checks, `origin/main` was merged with merge commit
 `e3a5cdcb37a2d17c007e7aeeb0b55b6dc9e6c94b`, including #3226, #3250 and #3258.
-The merged main tip is `8b405079b69466e27babc5dff27c06292a8cc4e2`.
+The first merge included main through `3adc7cabc201` (#3258).
+Main then advanced with #3248; merge commit
+`69fa347ffafbd4be155db43c2cb4ef4d9cb1a030` adds
+`8b405079b69466e27babc5dff27c06292a8cc4e2` before publication.
+That second merge changed goal tooling and skills but no Citation source or tests.
+Full-span, quick package verification, full lint-rules verification, docgen,
+skills update/check, policy fingerprint and semantic delta were rerun after it.
 There were no generated-file conflicts. Repository writers regenerated schema,
 instrumentation and Effect/Vitest inventories and pruned the shard plan.
 The merge brought skill changes; `bun run beep skills update` and
@@ -348,7 +354,7 @@ version of their fixtures:
 | `test/integration/CitationRegexTranslatorNode.test.ts` | Pass |
 | `test/vitest-shards-plan.test.ts` | Pass |
 
-- `CitationCanonicalFullSpan.test.ts`: 11 passed in 88.66 s; every original A1
+- `CitationCanonicalFullSpan.test.ts`: 11 passed in 94.54 s after the second main merge; every original A1
   count row is unchanged (totals 140 / 80 / 10 / 56 / 291 / 291).
 - `quality package-verify @beep/law-practice-server --quick`: lint and source/test
   checks pass, with upstream builds completed first.
@@ -358,7 +364,7 @@ version of their fixtures:
 - Fallow audit: pass, zero introduced blocking findings.
 - Skills update and check: current after the main merge.
 - `knowledge semantic-delta --base origin/main`: pass on the committed fix;
-  zero introduced findings (195 unchanged inherited findings).
+  zero introduced findings (194 unchanged inherited findings after the second main merge).
 
 The full law-practice audit is still not run locally because it invokes the whole
 suite, contrary to the operator's file-by-file shared-host rule. The newly affected
