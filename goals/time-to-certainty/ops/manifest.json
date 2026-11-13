@@ -78,9 +78,7 @@
     "research/inputs/close/live-journals.json.gz",
     "research/inputs/hosted-runs.json.gz",
     "research/inputs/live-journals.json.gz",
-    "research/p4-close-brief.md",
-    "research/scripts/economics.py",
-    "research/scripts/test_economics.py"
+    "research/p4-close-brief.md"
   ],
   "agentLaunchers": [
     {
