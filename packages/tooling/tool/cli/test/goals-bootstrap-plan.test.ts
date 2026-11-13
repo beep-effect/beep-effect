@@ -81,6 +81,7 @@ const fullInput = BootstrapInput.make({
   provides: ["goals/bootstrap"],
   requires: ["knowledge/doctor"],
   provenanceExploration: "plan-compiler-exploration",
+  provenanceFiles: ["RESEARCH.md", "DECISIONS.md", "MAP.md"],
   today: "2026-08-17",
 });
 
@@ -126,6 +127,26 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
       Effect.gen(function* () {
         const compileMaterializationPlan1 = yield* compileMaterializationPlan(minimalInput, []);
         yield* expectGolden("bootstrap-minimal", compileMaterializationPlan1);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("cites only the exploration packet files the caller found", () =>
+      Effect.gen(function* () {
+        const sourcesOf = Effect.fnUntraced(function* (input: BootstrapInput) {
+          const plan = yield* compileMaterializationPlan(input, []);
+          const entry = A.findFirst(plan.entries, (row) => Str.endsWith("research/SOURCES.md")(row.path));
+          return O.getOrElse(
+            O.flatMapNullishOr(entry, (row) => row.payload),
+            () => ""
+          );
+        });
+        const partial = yield* sourcesOf(fullInput);
+        expect(partial).toContain("`explorations/plan-compiler-exploration/RESEARCH.md`");
+        expect(partial).toContain("`explorations/plan-compiler-exploration/MAP.md`");
+        expect(partial).not.toContain("BRIEF.md");
+        const none = yield* sourcesOf(BootstrapInput.make({ ...fullInput, provenanceFiles: [] }));
+        expect(none).toContain("`explorations/plan-compiler-exploration/research/SOURCES.md`");
+        expect(none).not.toContain("RESEARCH.md");
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
@@ -551,6 +572,42 @@ it.layer(commandTestLayer, { concurrent: false, timeout: "60 seconds" })((it) =>
 
   describe("goals bootstrap command gate", { concurrent: false }, () => {
     const runGoalsCommand = Command.runWith(goalsCommand, { version: "0.0.0" });
+
+    it.effect("links only the packet files a --from-exploration packet has on disk", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* fs.makeDirectory("explorations/half-shaped", { recursive: true });
+          yield* fs.writeFileString("explorations/half-shaped/RESEARCH.md", "# Research\n");
+          yield* fs.writeFileString("explorations/half-shaped/DECISIONS.md", "# Decisions\n");
+          const planned = yield* Effect.exit(
+            runGoalsCommand([
+              "bootstrap",
+              "--slug",
+              "half-shaped-goal",
+              "--title",
+              "Half Shaped Goal",
+              "--mission",
+              "Cite only what the exploration has.",
+              "--from-exploration",
+              "half-shaped",
+              "--today",
+              "2026-11-13",
+              "--plan",
+              "--json",
+            ])
+          );
+          assertExitSuccess(planned, undefined);
+          const logLines = yield* TestConsole.logLines;
+          const output = A.join(A.filter(logLines, P.isString), "\n");
+          expect(output).toContain("explorations/half-shaped/RESEARCH.md");
+          expect(output).toContain("explorations/half-shaped/DECISIONS.md");
+          expect(output).not.toContain("explorations/half-shaped/BRIEF.md");
+          expect(output).not.toContain("explorations/half-shaped/MAP.md");
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
 
     it.effect(
       "rejects an invalid slug and defaults the plan date to the current day",
