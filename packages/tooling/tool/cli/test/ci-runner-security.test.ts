@@ -2202,6 +2202,98 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     })
   );
 
+  // goals/heavy-pool-diet PERIH-11 slice 2: a release this run published opens one reviewed pin-bump
+  // pull request on a fixed branch, with the knowledge-mint App token minted right before the
+  // pull-request step and read by it alone. A skipped closure, a byte-identical re-record, a
+  // verify_reproducible dispatch and any other ref open nothing; the main-only guard and the
+  // ref-keyed concurrency group stay as they were.
+  it.effect("opens the pin-bump pull request only for a release published on the default branch", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const workflowText = yield* fs.readFileString(`${root}/.github/workflows/beep-ci-binary.yml`);
+      const workflow = parseWorkflowYaml(workflowText);
+      expect(yamlAt(workflow, ["permissions"])).toEqual({ contents: "read" });
+      expect(yamlAt(workflow, ["jobs", "publish", "permissions"])).toEqual({ contents: "write" });
+      expect(yamlAt(workflow, ["concurrency"])).toEqual({
+        group: "beep-ci-binary-${{ github.ref }}",
+        "cancel-in-progress": false,
+      });
+      expect(yamlAt(workflow, ["on", "push", "branches"])).toEqual(["main"]);
+      const jobs = yield* workflowJobs(workflow);
+      const steps = jobSteps(jobs, "publish");
+      expect(steps[0]?.name).toBe("Require the default branch");
+      const stepId = (name: string) =>
+        yamlAt(workflow, ["jobs", "publish", "steps", stepIndexByName(steps, name), "id"]);
+      const publish = stepIndexByName(steps, "Publish the release asset");
+      expect(stepId("Publish the release asset")).toBe("publish");
+      expect(stepByName(steps, "Publish the release asset").if).toBe(
+        "steps.closure.outputs.changed == 'true' && steps.bytes.outputs.same != 'true'"
+      );
+      expect(stepRun(steps, "Publish the release asset")).toContain('echo "published=true"');
+      // The pin bump follows the publish step directly, in this order, and nothing follows it.
+      const pinSteps = [
+        "Rewrite the pin to the new release",
+        "Check the pin-bump App credential",
+        "Create pin-bump App token",
+        "Open or update the pin-bump pull request",
+      ];
+      expect(A.map(A.drop(steps, publish + 1), (step) => step.name)).toEqual(pinSteps);
+      expect(stepId("Rewrite the pin to the new release")).toBe("pin");
+      expect(stepByName(steps, "Rewrite the pin to the new release").if).toBe(
+        "steps.publish.outputs.published == 'true' && !inputs.verify_reproducible && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)"
+      );
+      for (const name of A.drop(pinSteps, 1)) {
+        expect(stepByName(steps, name).if).toBe("steps.pin.outcome == 'success'");
+      }
+      // The rewrite is the tested command, not a text edit in shell.
+      const rewrite = stepRun(steps, "Rewrite the pin to the new release");
+      expect(rewrite).toContain('bun run beep ci binary-pin --tag "$PIN_TAG" --sha256 "$PIN_SHA256" --write');
+      expect(rewrite).not.toMatch(/\bsed\b/u);
+      expect(stepEnvironment(stepByName(steps, "Rewrite the pin to the new release"))).toEqual({
+        PIN_TAG: "${{ steps.publish.outputs.tag }}",
+        PIN_SHA256: "${{ steps.publish.outputs.sha256 }}",
+        PIN_BRANCH: "ci/beep-ci-pin-bump",
+      });
+      expect(stepEnvironment(stepByName(steps, "Check the pin-bump App credential"))).toEqual({
+        APP_CLIENT_ID: "${{ vars.KNOWLEDGE_MINT_APP_CLIENT_ID }}",
+      });
+      expect(stepByName(steps, "Create pin-bump App token").uses).toBe(
+        "actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510"
+      );
+      expect(stepInputs(stepByName(steps, "Create pin-bump App token"))).toEqual({
+        "client-id": "${{ vars.KNOWLEDGE_MINT_APP_CLIENT_ID }}",
+        "private-key": "${{ secrets.KNOWLEDGE_MINT_APP_PRIVATE_KEY }}",
+        "permission-contents": "write",
+        "permission-pull-requests": "write",
+        "permission-issues": "write",
+      });
+      const open = stepByName(steps, "Open or update the pin-bump pull request");
+      expect(open.uses).toBe("peter-evans/create-pull-request@15733dbdfeedb4f7fdb73d13c6f5ac83b710fab8");
+      const inputs = stepInputs(open);
+      expect(inputs.branch).toBe("ci/beep-ci-pin-bump");
+      expect(inputs.token).toBe("${{ steps.app-token.outputs.token }}");
+      expect(inputs["add-paths"]).toBe(".github/actions/fetch-beep-ci/action.yml");
+      expect(inputs.title).toBe("ci: bump the beep CI binary pin to ${{ steps.publish.outputs.tag }}");
+      expect(inputs["commit-message"]).toBe(inputs.title);
+      expect(inputs).not.toHaveProperty("auto-merge");
+      for (const fragment of [
+        "${{ steps.publish.outputs.tag }}",
+        "${{ steps.closure.outputs.digest }}",
+        "${{ steps.publish.outputs.sha256 }}",
+        "${{ github.sha }}",
+        "never auto-merged",
+      ]) {
+        expect(inputs.body).toEqual(expect.stringContaining(fragment));
+      }
+      // The App token reaches the pull-request step alone; the private key reaches the mint alone.
+      const tokenReaders = yield* stepsReferencing(jobs, "steps.app-token.outputs.token");
+      const secretReaders = yield* stepsReferencing(jobs, "secrets.");
+      expect(tokenReaders).toEqual(["publish/Open or update the pin-bump pull request"]);
+      expect(secretReaders).toEqual(["publish/Create pin-bump App token"]);
+    })
+  );
+
   // goals/certainty-scorecard MEAS-01 slice 2: a scheduled scorer that reads Actions runs with the
   // workflow token, runs default-branch code only, publishes no branch names, and turns red when the
   // night's report is not certified, so a refused night can never be counted toward the seven.
