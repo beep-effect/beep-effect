@@ -75,6 +75,8 @@ const routes = (call: GithubCall) => {
   return undefined;
 };
 
+const TREE = Str.repeat(40)("e");
+
 // git: the base fetch and the pull-ref fetch succeed, rev-parse names the base, and merge-tree
 // reports one conflicted packet file for the sibling head.
 const scriptedGit = (calls: Array<string>) =>
@@ -84,7 +86,9 @@ const scriptedGit = (calls: Array<string>) =>
     if (command !== "git") return { stdout: "", exit: 127 };
     if (A.contains(args, "merge-tree")) {
       return {
-        stdout: `treetreetreetreetreetreetreetreetreetree\ngoals/alpha/PLAN.md\n\nAuto-merging goals/alpha/PLAN.md\nCONFLICT (content): Merge conflict in goals/alpha/PLAN.md\n`,
+        // `Git.mergeTree`'s `-z --name-only` answer: the tree, the conflicted paths, an empty token,
+        // then the message groups.
+        stdout: `${TREE}\0goals/alpha/PLAN.md\0\x001\0goals/alpha/PLAN.md\0Auto-merging\0Auto-merging goals/alpha/PLAN.md\n\x001\0goals/alpha/PLAN.md\0CONFLICT (contents)\0CONFLICT (content): Merge conflict in goals/alpha/PLAN.md\n\0`,
         exit: 1,
       };
     }
@@ -337,8 +341,10 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, TestConsole.layer), { timeout: "30 sec
         expect(eight?.conflicts).toEqual(["goals/alpha/PLAN.md"]);
         // The base was refreshed once, the sibling head fetched as objects only, then probed.
         expect(A.some(gitCalls, Str.includes("refs/heads/main:refs/remotes/origin/main"))).toBe(true);
-        expect(gitCalls).toContain("git fetch --quiet --no-tags --no-write-fetch-head origin refs/pull/8/head");
-        expect(gitCalls).toContain(`git merge-tree --write-tree --name-only origin/main ${SIBLING_SHA}`);
+        expect(gitCalls).toContain("git fetch --no-tags --no-write-fetch-head origin refs/pull/8/head");
+        expect(gitCalls).toContain(
+          `git merge-tree --write-tree -z --name-only --end-of-options origin/main ${SIBLING_SHA}`
+        );
         // #9 shares nothing, so its head was never fetched; the subject is never its own sibling.
         expect(A.some(gitCalls, Str.includes("refs/pull/9/head"))).toBe(false);
         expect(A.some(gitCalls, Str.includes("refs/pull/7/head"))).toBe(false);
@@ -492,7 +498,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, TestConsole.layer), { timeout: "30 sec
         const git = ScriptedSpawner.make((command, args) => {
           gitCalls.push(A.join([command, ...args], " "));
           if (A.contains(args, "refs/pull/9/head")) return { stdout: "fatal: couldn't find remote ref", exit: 128 };
-          if (A.contains(args, "merge-tree")) return { stdout: "treetreetree\n", exit: 0 };
+          if (A.contains(args, "merge-tree")) return { stdout: `${TREE}\0`, exit: 0 };
           if (A.contains(args, "rev-parse")) return { stdout: "not a sha", exit: 128 };
           return { stdout: "", exit: 0 };
         });
@@ -507,9 +513,12 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, TestConsole.layer), { timeout: "30 sec
           [9, "unavailable", []],
         ]);
         // The unfetchable head is never probed.
-        expect(A.some(gitCalls, Str.includes(`merge-tree --write-tree --name-only origin/main ${OTHER_SHA}`))).toBe(
-          false
-        );
+        expect(
+          A.some(
+            gitCalls,
+            Str.includes(`merge-tree --write-tree -z --name-only --end-of-options origin/main ${OTHER_SHA}`)
+          )
+        ).toBe(false);
         const rendered = renderPacketSiblingsReport(report);
         expect(rendered).toContain("probed against origin/main\n");
         expect(rendered).toContain("#8 lane/eight (0123456789) shares `alpha`; no conflicts predicted");

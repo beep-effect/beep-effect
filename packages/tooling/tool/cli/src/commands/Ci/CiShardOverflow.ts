@@ -676,6 +676,8 @@ export const renderShardOverflowOutputs = Effect.fn("Ci.renderShardOverflowOutpu
 const decodeRunIdLine = S.decodeUnknownOption(S.FiniteFromString);
 const decodeJobLine = S.decodeUnknownOption(S.fromJsonString(ShardOverflowJob));
 
+// KEEP (D-22): `GithubRest` has no listing of runs by status or of a run's jobs with runner
+// `labels`; both reads are gh `--jq` projections of the raw pages.
 const ghLines = Effect.fn("Ci.shardOverflowGhLines")(function* (args: ReadonlyArray<string>) {
   const gh = yield* ChildProcessSpawner.ChildProcessSpawner.use((spawner) =>
     spawner.spawn(ChildProcess.make("gh", args, { stdin: "ignore", stderr: "inherit" }))
