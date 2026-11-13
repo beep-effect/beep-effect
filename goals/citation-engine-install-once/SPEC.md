@@ -166,6 +166,14 @@ A repository-wide live source and test search found makeCitationCleanerOperation
 
 Reverse: Restore CleanerOperation.ts and its test from head 99bb436ca0fc if a real production caller is introduced.
 
+### Keep coverage controls in independent request invocations, 2026-11-13
+
+Review the new coverage fixture calls under the existing direct-invocation decision. Each control owns or deliberately shares one production CitationInvocation; sharing their owner through it.layer would change the cumulative-budget and closed-owner behavior being asserted. Keep the EV003 request-lifetime exceptions with the existing owner and exit rationale. Refresh the inventory with its writer, retaining only Citation rows changed by this wave and restoring unrelated positional churn. Replace the new Option payload assertion with assertSome rather than accepting EV006.
+
+Lane feat/citation-invocation-binding · PR #3265
+
+Reverse: Replace these invocation fixture calls with a Layer only if it preserves each call admission, ledger, timer and cleanup lifetime.
+
 ### Keep direct invocation fixtures scoped to each request, 2026-11-13
 
 Effect/Vitest EV003 reports 108 unresolved-resource-wrapper judgments at the shared invocation fixture calls (95 withCitationTestInvocation and 13 withCitationTestTextBudget). Each opens request-scoped admission, a fresh budget and cleanup; it.layer sharing would turn independent method calls into one request and change queue, deadline and ledger assertions. These two reviewed wrapper families receive explicit owned inventory exceptions, without changing detector policy. The existing it.layer platform services remain shared.

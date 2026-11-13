@@ -660,3 +660,17 @@ The historical Final-check receipt belongs to `027869aabcb`, not this repair.
 A new receipt is needed for the new head. This wave does not declare final,
 start a watch, mark ready or merge. The existing PR body is replaced through
 Yeet, preserving its provenance footer; publication is one push.
+
+
+### Coverage publication lint cleanup
+
+The first publication attempt committed the evidence but pushed nothing: the
+Effect/Vitest gate reported four new findings in the added controls. Three were
+request-lifetime fixture calls covered by the existing per-request invocation
+ruling, and one was an Option payload assertion. Replace that assertion with
+`assertSome` and rerun the parent-budget file individually (five pass). Regenerate
+the detector inventory with `bun run beep lint effect-vitest --write`, review the
+new EV003 calls under the existing ownership/exit rationale, and keep only the
+Citation row changes. Restore unrelated positional churn to the committed
+baseline. No coverage floor changes. The accompanying decision records the
+request-lifetime rationale and reversal. Repeat the gate before the single push.

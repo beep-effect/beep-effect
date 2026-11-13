@@ -8,6 +8,7 @@ import { CitationCleaner, CitationCleanerProduced, CitationTextBudget } from "@b
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { makeCitationCleanerRegistryHarness } from "./CitationCleanerRegistry.fixtures.ts";
@@ -132,7 +133,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("cleaner par
         const result = yield* pipeline.runOwned({ value, plan: "local-capacity" });
         expect(result.producedTextUtf16).toBe(8);
         const output = yield* h.values.getUnicode(result.value);
-        expect(O.map(output, (text) => text.text)).toEqual(O.some("12345678"));
+        assertSome(
+          O.map(output, (text) => text.text),
+          "12345678"
+        );
         const used = yield* budget.snapshot;
         expect(used).toBe(9);
         const work = yield* h.work;

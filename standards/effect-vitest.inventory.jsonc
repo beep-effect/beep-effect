@@ -2519,13 +2519,35 @@
       "reason": "Owner: @beep/law-practice-server. This shared fixture opens one request-scoped CitationInvocation through the production constructor. Sharing it with it.layer would merge independent request admission, budget, deadline and cleanup lifetimes and invalidate queue/ledger tests. Platform services remain in it.layer. Exit: retire when the harness can preserve per-call invocation ownership through a Layer. Reviewed in goals/citation-engine-install-once/decisions/2026-11-13-keep-direct-invocation-fixtures-scoped-to-each-request.md."
     },
     {
-      "id": "EV003:packages/law-practice/server/test/CitationCleanerParentBudget.test.ts:109:withCitationTestTextBudget@4#1",
+      "id": "EV003:packages/law-practice/server/test/CitationCleanerParentBudget.test.ts:110:withCitationTestTextBudget@4#1",
       "lens": "resource",
       "ruleId": "EV003",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationCleanerParentBudget.test.ts",
-      "line": 109,
-      "endLine": 124,
+      "line": 110,
+      "endLine": 146,
+      "symbol": "withCitationTestTextBudget",
+      "occurrence": "v2:553786c1162fbf8e7bcd48001c943f58e34b6b8c1fa8ada2634e8197bff12424",
+      "class": "unresolved-resource-wrapper",
+      "evidence": "withCitationTestTextBudget( 12, Effect.gen(function* () { const { h, pipeline, budget } = yield* install(12); yield* budget.reserve(1); const value = yield* h.values.sourceText(\"\"); const callback = y",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Owner: @beep/law-practice-server. This shared fixture opens one request-scoped CitationInvocation through the production constructor. Sharing it with it.layer would merge independent request admission, budget, deadline and cleanup lifetimes and invalidate queue/ledger tests. Platform services remain in it.layer. Exit: retire when the harness can preserve per-call invocation ownership through a Layer. Reviewed in goals/citation-engine-install-once/decisions/2026-11-13-keep-direct-invocation-fixtures-scoped-to-each-request.md."
+    },
+    {
+      "id": "EV003:packages/law-practice/server/test/CitationCleanerParentBudget.test.ts:149:withCitationTestTextBudget@4#1",
+      "lens": "resource",
+      "ruleId": "EV003",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/CitationCleanerParentBudget.test.ts",
+      "line": 149,
+      "endLine": 164,
       "symbol": "withCitationTestTextBudget",
       "occurrence": "v2:4957fef3128d119a2e09248af523f6c1d31b3252aac5b39a33dfb6c4f5d6a5a0",
       "class": "unresolved-resource-wrapper",
@@ -2541,13 +2563,13 @@
       "reason": "Owner: @beep/law-practice-server. This shared fixture opens one request-scoped CitationInvocation through the production constructor. Sharing it with it.layer would merge independent request admission, budget, deadline and cleanup lifetimes and invalidate queue/ledger tests. Platform services remain in it.layer. Exit: retire when the harness can preserve per-call invocation ownership through a Layer. Reviewed in goals/citation-engine-install-once/decisions/2026-11-13-keep-direct-invocation-fixtures-scoped-to-each-request.md."
     },
     {
-      "id": "EV003:packages/law-practice/server/test/CitationCleanerParentBudget.test.ts:129:withCitationTestTextBudget@6#1",
+      "id": "EV003:packages/law-practice/server/test/CitationCleanerParentBudget.test.ts:169:withCitationTestTextBudget@6#1",
       "lens": "resource",
       "ruleId": "EV003",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationCleanerParentBudget.test.ts",
-      "line": 129,
-      "endLine": 147,
+      "line": 169,
+      "endLine": 187,
       "symbol": "withCitationTestTextBudget",
       "occurrence": "v2:e82fb4d03abc965e15a503f51cbbdd4f55e90bc7599008edfbaf37fa271579e0",
       "class": "unresolved-resource-wrapper",
@@ -2563,13 +2585,13 @@
       "reason": "Owner: @beep/law-practice-server. This shared fixture opens one request-scoped CitationInvocation through the production constructor. Sharing it with it.layer would merge independent request admission, budget, deadline and cleanup lifetimes and invalidate queue/ledger tests. Platform services remain in it.layer. Exit: retire when the harness can preserve per-call invocation ownership through a Layer. Reviewed in goals/citation-engine-install-once/decisions/2026-11-13-keep-direct-invocation-fixtures-scoped-to-each-request.md."
     },
     {
-      "id": "EV003:packages/law-practice/server/test/CitationCleanerParentBudget.test.ts:39:withCitationTestTextBudget@4#1",
+      "id": "EV003:packages/law-practice/server/test/CitationCleanerParentBudget.test.ts:40:withCitationTestTextBudget@4#1",
       "lens": "resource",
       "ruleId": "EV003",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationCleanerParentBudget.test.ts",
-      "line": 39,
-      "endLine": 77,
+      "line": 40,
+      "endLine": 78,
       "symbol": "withCitationTestTextBudget",
       "occurrence": "v2:4ca207f667c26e953eab98c3909a0e1cddf2a6f15ed0403d5f17a49f1de7d178",
       "class": "unresolved-resource-wrapper",
@@ -2585,13 +2607,13 @@
       "reason": "Owner: @beep/law-practice-server. This shared fixture opens one request-scoped CitationInvocation through the production constructor. Sharing it with it.layer would merge independent request admission, budget, deadline and cleanup lifetimes and invalidate queue/ledger tests. Platform services remain in it.layer. Exit: retire when the harness can preserve per-call invocation ownership through a Layer. Reviewed in goals/citation-engine-install-once/decisions/2026-11-13-keep-direct-invocation-fixtures-scoped-to-each-request.md."
     },
     {
-      "id": "EV003:packages/law-practice/server/test/CitationCleanerParentBudget.test.ts:80:withCitationTestTextBudget@4#1",
+      "id": "EV003:packages/law-practice/server/test/CitationCleanerParentBudget.test.ts:81:withCitationTestTextBudget@4#1",
       "lens": "resource",
       "ruleId": "EV003",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationCleanerParentBudget.test.ts",
-      "line": 80,
-      "endLine": 106,
+      "line": 81,
+      "endLine": 107,
       "symbol": "withCitationTestTextBudget",
       "occurrence": "v2:e0f35a80f91d2478edab4710875cae068eb4bb5d5d3767847f82e7a7bc77a507",
       "class": "unresolved-resource-wrapper",
@@ -2640,6 +2662,28 @@
       "occurrence": "v2:84dff851dbaaefbf550fe04865a02e5ee5eefeda1c52f09478831caafa1672f5",
       "class": "unresolved-resource-wrapper",
       "evidence": "withCitationTestTextBudget( 8, Effect.gen(function* () { const h = yield* setup(); const { parent, pipeline } = yield* parentedPipeline(h); yield* parent.reserve(5); const callback = yield* h.values.r",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Owner: @beep/law-practice-server. This shared fixture opens one request-scoped CitationInvocation through the production constructor. Sharing it with it.layer would merge independent request admission, budget, deadline and cleanup lifetimes and invalidate queue/ledger tests. Platform services remain in it.layer. Exit: retire when the harness can preserve per-call invocation ownership through a Layer. Reviewed in goals/citation-engine-install-once/decisions/2026-11-13-keep-direct-invocation-fixtures-scoped-to-each-request.md."
+    },
+    {
+      "id": "EV003:packages/law-practice/server/test/CitationCleanerPipelineCoverage.test.ts:206:withCitationTestTextBudget@2#1",
+      "lens": "resource",
+      "ruleId": "EV003",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/CitationCleanerPipelineCoverage.test.ts",
+      "line": 206,
+      "endLine": 232,
+      "symbol": "withCitationTestTextBudget",
+      "occurrence": "v2:463a6810f9951d0e9cee827c10b56f4f22b785fcff89afa46bd3133491912b64",
+      "class": "unresolved-resource-wrapper",
+      "evidence": "withCitationTestTextBudget( 8, Effect.gen(function* () { const h = yield* setup(); const empty = yield* h.values.sourceText(\"\"); h.select([]); const unchanged = yield* h.pipeline.runOwned({ value: emp",
       "replacement": {
         "primitive": "it.layer",
         "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
@@ -3531,6 +3575,28 @@
       "reason": "Owner: @beep/law-practice-server. This shared fixture opens one request-scoped CitationInvocation through the production constructor. Sharing it with it.layer would merge independent request admission, budget, deadline and cleanup lifetimes and invalidate queue/ledger tests. Platform services remain in it.layer. Exit: retire when the harness can preserve per-call invocation ownership through a Layer. Reviewed in goals/citation-engine-install-once/decisions/2026-11-13-keep-direct-invocation-fixtures-scoped-to-each-request.md."
     },
     {
+      "id": "EV003:packages/law-practice/server/test/CitationReferencePatternsCoverage.test.ts:122:withCitationTestInvocation@4#1",
+      "lens": "resource",
+      "ruleId": "EV003",
+      "package": "@beep/law-practice-server",
+      "file": "packages/law-practice/server/test/CitationReferencePatternsCoverage.test.ts",
+      "line": 122,
+      "endLine": 142,
+      "symbol": "withCitationTestInvocation",
+      "occurrence": "v2:c8b6e9add215116f983ffed5fd4a412b52a64433bd511724b8017ed1e766bdd3",
+      "class": "unresolved-resource-wrapper",
+      "evidence": "withCitationTestInvocation( Effect.gen(function* () { const { budget, configuration, limits, unicode } = yield* install(); const builder = yield* makeCitationReferencePatterns(limits, configuration).p",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Owner: @beep/law-practice-server. This shared fixture opens one request-scoped CitationInvocation through the production constructor. Sharing it with it.layer would merge independent request admission, budget, deadline and cleanup lifetimes and invalidate queue/ledger tests. Platform services remain in it.layer. Exit: retire when the harness can preserve per-call invocation ownership through a Layer. Reviewed in goals/citation-engine-install-once/decisions/2026-11-13-keep-direct-invocation-fixtures-scoped-to-each-request.md."
+    },
+    {
       "id": "EV003:packages/law-practice/server/test/CitationReferencePatternsCoverage.test.ts:54:withCitationTestInvocation@4#1",
       "lens": "resource",
       "ruleId": "EV003",
@@ -3581,11 +3647,11 @@
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationReferencePatternsCoverage.test.ts",
       "line": 99,
-      "endLine": 119,
+      "endLine": 118,
       "symbol": "withCitationTestInvocation",
-      "occurrence": "v2:c8b6e9add215116f983ffed5fd4a412b52a64433bd511724b8017ed1e766bdd3",
+      "occurrence": "v2:3080877f4366147e049877a6db38345cbcd5f011954004f0d2b0301911e10ef4",
       "class": "unresolved-resource-wrapper",
-      "evidence": "withCitationTestInvocation( Effect.gen(function* () { const { budget, configuration, limits, unicode } = yield* install(); const builder = yield* makeCitationReferencePatterns(limits, configuration).p",
+      "evidence": "withCitationTestInvocation( Effect.gen(function* () { const { budget, configuration, limits } = yield* install(); const refused = yield* makeCitationReferencePatterns( { ...limits, producedTextUtf16:",
       "replacement": {
         "primitive": "it.layer",
         "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
@@ -13758,13 +13824,13 @@
       "reason": "Fixed-count independent race trials, not retries: every trial asserts its result and a single failure fails the test. TestClock and explicit lease completion govern ownership; no failed trial is retried. Owner: @beep/law-practice-server. Exit: detector distinguishes repeated independent cases from retry-until-success loops. Re-reviewed after expression-only Effect 4.1.2 adaptation; independent trials and shorter child Scope are unchanged."
     },
     {
-      "id": "EV015:packages/law-practice/server/test/CitationEngineLayer.test.ts:312:TestClock.adjust@25#1",
+      "id": "EV015:packages/law-practice/server/test/CitationEngineLayer.test.ts:318:TestClock.adjust@25#1",
       "lens": "resource",
       "ruleId": "EV015",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationEngineLayer.test.ts",
-      "line": 312,
-      "endLine": 312,
+      "line": 318,
+      "endLine": 318,
       "symbol": "TestClock.adjust",
       "occurrence": "v2:613e5283e59374a2232d8d7caabe14aa260b98f9e2dec844200b3a4a9d4f2215",
       "class": "shared-test-clock-adjustment",
@@ -13780,13 +13846,13 @@
       "reason": "Owner: @beep/law-practice-server. This public-boundary control deliberately advances TestClock across 800 ms of queued admission and 9500 ms of resolver subject work; the resolver sleep is virtual subject behavior. Separate advances prove engine-before-admission versus extractor-after-admission timing and exact refusal labels with zero native children. Exit: retire when the harness can prove this quantitative ordering without virtual-time advancement. Reviewed in goals/citation-engine-install-once/decisions/2026-11-13-advance-virtual-time-to-prove-the-two-admission-deadline-contracts.md."
     },
     {
-      "id": "EV015:packages/law-practice/server/test/CitationEngineLayer.test.ts:316:TestClock.adjust@25#1",
+      "id": "EV015:packages/law-practice/server/test/CitationEngineLayer.test.ts:322:TestClock.adjust@25#1",
       "lens": "resource",
       "ruleId": "EV015",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationEngineLayer.test.ts",
-      "line": 316,
-      "endLine": 316,
+      "line": 322,
+      "endLine": 322,
       "symbol": "TestClock.adjust",
       "occurrence": "v2:94c8c561ce23532ce748071eff1c4f650986713dd69ecc8c2f0f138e0f09a79b",
       "class": "shared-test-clock-adjustment",
@@ -13802,13 +13868,13 @@
       "reason": "Owner: @beep/law-practice-server. This public-boundary control deliberately advances TestClock across 800 ms of queued admission and 9500 ms of resolver subject work; the resolver sleep is virtual subject behavior. Separate advances prove engine-before-admission versus extractor-after-admission timing and exact refusal labels with zero native children. Exit: retire when the harness can prove this quantitative ordering without virtual-time advancement. Reviewed in goals/citation-engine-install-once/decisions/2026-11-13-advance-virtual-time-to-prove-the-two-admission-deadline-contracts.md."
     },
     {
-      "id": "EV015:packages/law-practice/server/test/CitationEngineLayer.test.ts:318:TestClock.adjust@25#1",
+      "id": "EV015:packages/law-practice/server/test/CitationEngineLayer.test.ts:324:TestClock.adjust@25#1",
       "lens": "resource",
       "ruleId": "EV015",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationEngineLayer.test.ts",
-      "line": 318,
-      "endLine": 318,
+      "line": 324,
+      "endLine": 324,
       "symbol": "TestClock.adjust",
       "occurrence": "v2:77bb5ccb23172dea789a8d8367ea805d1d31f0dae9a441eb695c0fc9dbaa3121",
       "class": "shared-test-clock-adjustment",
