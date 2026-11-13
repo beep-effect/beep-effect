@@ -240,9 +240,16 @@ which stays machine-written:
   band list does not name, so a newly baselined row is strict. Growth above the
   32-instantiation noise floor fails.
 - Band rows: `@beep/repo-cli` and `@beep/law-practice-domain`. Growth fails
-  only above 5% of the row's baseline. Growth above the noise floor but within
-  5% is reported with its delta and percent and passes.
+  only above 10% of the row's baseline. Growth above the noise floor but within
+  10% is reported with its delta, its percent and the baseline's date, and
+  passes.
 - A decrease on either class prints a tighten hint.
+
+Band growth is cumulative against the stored baseline, so the pull request that
+goes red is whichever one crosses the line, not the one that caused the growth.
+At 5% that happened about every six days for `@beep/repo-cli` (14.6% in 17
+days); 10% moves it to about every twelve and still catches a single real step
+change.
 
 On Heavy / Check the census runs inside the lane step that hosted CI names
 `Run verification lane`, which the route census classes as a task step, so its
@@ -259,13 +266,20 @@ selects everything on a global input change. When the installed compiler
 differs from the baseline's stamp, the step prints that the baseline is stale
 and passes without sampling, because Repo Sanity's stamp step owns that red.
 On a runner the gate appends a table (row, class, baseline, measured, delta,
-percent, outcome) to the job summary. Measured locally on 2026-11-13, the step
+percent, outcome) to the job summary, under a line naming the baseline's
+measured-at date and commit. Measured locally on 2026-11-13, the step
 takes about 24 s when it gates `@beep/repo-cli`, about 5 s for the
 `@beep/schema` rows or `@beep/law-practice-domain`, and 30 s for every row; an
 affected run that checks no row package pays only the 1 to 2 s Turbo dry run.
 
-A band-row failure is a deliberate review point. Growth beyond 5% is more than
-ordinary feature work adds, so find what grew (a new schema family, a widened
+A band-row failure reports cumulative growth, not the failing pull request's
+own regression. Its message names the baseline's measured-at date and commit,
+the baseline count, the measured total, the delta and its percent against the
+10% band, says the delta is not this pull request's alone, and gives the
+re-baseline command, which needs a built tree; the job summary repeats it
+under the table. The gate does not measure the pull request's own share (that
+needs a merge-base measurement). Treat the failure as a deliberate review
+point: find what grew since the baseline (a new schema family, a widened
 generic, a new service graph), then cut it, or accept it in review and
 re-measure in the same pull request.
 

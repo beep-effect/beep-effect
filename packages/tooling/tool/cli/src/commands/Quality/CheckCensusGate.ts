@@ -111,18 +111,24 @@ export const CHECK_CENSUS_INSTANTIATION_NOISE = 32;
  * and make the baseline a merge-conflict magnet. Strict rows keep the noise
  * floor as their only tolerance.
  *
+ * Band growth is cumulative against a stored baseline, so the pull request
+ * that goes red is whichever one crosses the line, not the one that caused
+ * the growth. At 5% that was about every six days for `@beep/repo-cli`
+ * (14.6% in 17 days); 10% is about every twelve days and still catches a
+ * single real step change.
+ *
  * **Example** (Read the band)
  *
  * ```ts
  * import { CHECK_CENSUS_BAND_ROW_PERCENT } from "@beep/repo-cli/commands/Quality/CheckCensusGate"
  *
- * console.log(CHECK_CENSUS_BAND_ROW_PERCENT) // 5
+ * console.log(CHECK_CENSUS_BAND_ROW_PERCENT) // 10
  * ```
  *
  * @category configuration
  * @since 0.0.0
  */
-export const CHECK_CENSUS_BAND_ROW_PERCENT = 5;
+export const CHECK_CENSUS_BAND_ROW_PERCENT = 10;
 
 /**
  * The baseline rows judged against {@link CHECK_CENSUS_BAND_ROW_PERCENT}
@@ -275,7 +281,7 @@ const baselineHeader = A.join(
     "// It needs a built tree: build each row's upstream declarations first, for example",
     "// bunx turbo run build --filter='@beep/repo-cli^...' --filter='@beep/law-practice-domain^...'.",
     `// Gate: single-checker instantiations must not grow by more than ${CHECK_CENSUS_INSTANTIATION_NOISE} on a strict row, nor by more`,
-    `// than ${CHECK_CENSUS_BAND_ROW_PERCENT}% on a band row (classes are defined in CheckCensusGate.ts, not here) (failure);`,
+    `// than ${CHECK_CENSUS_BAND_ROW_PERCENT}% since measuredAt on a band row (classes live in CheckCensusGate.ts, not here) (failure);`,
     `// check time is advisory within a ${CHECK_CENSUS_CHECK_TIME_BAND_PERCENT}% band; an instantiation decrease prints a tighten hint.`,
     "// A write refuses any sample whose compiler output reports a type error.",
     "",
@@ -598,8 +604,11 @@ export class CheckCensusComparison extends S.Opaque<CheckCensusComparison, { rea
  *
  * `baselinePath` is repository-relative and defaults to
  * {@link CHECK_CENSUS_BASELINE_PATH}; the CLI stamps its `--baseline` value.
- * `filter` records the `--filter` text and `rowPackages` the `--row-packages`
- * owners that selected the rows, so an empty selection can name them.
+ * `baselineMeasuredAt` and `baselineCommit` are the baseline's `measuredAt`
+ * and `commit`: a band row's growth is cumulative since then, so its lines
+ * name both. `filter` records the `--filter` text and `rowPackages` the
+ * `--row-packages` owners that selected the rows, so an empty selection can
+ * name them.
  *
  * **Example** (Build an empty gate report)
  *
@@ -607,6 +616,7 @@ export class CheckCensusComparison extends S.Opaque<CheckCensusComparison, { rea
  * import { CheckCensusGateReport } from "@beep/repo-cli/commands/Quality/CheckCensusGate"
  *
  * const report = CheckCensusGateReport.make({
+ *   baselineMeasuredAt: "2026-09-29T00:00:00.000Z",
  *   baselineCommit: "368998daff",
  *   baselineCompiler: "7.0.2+effect-tsgo.0.45.0",
  *   compiler: "7.0.2+effect-tsgo.0.45.0",
@@ -621,6 +631,7 @@ export class CheckCensusComparison extends S.Opaque<CheckCensusComparison, { rea
 export class CheckCensusGateReport extends S.Opaque<CheckCensusGateReport, { readonly brand: unique symbol }>()(
   S.Struct({
     baselinePath: S.String.pipe(S.withConstructorDefault(Effect.succeed(CHECK_CENSUS_BASELINE_PATH))),
+    baselineMeasuredAt: S.String,
     baselineCommit: S.String,
     baselineCompiler: S.String,
     compiler: S.String,
@@ -1129,6 +1140,7 @@ const isIncrease = (comparison: CheckCensusComparison): boolean =>
  * import { CheckCensusGateReport, checkCensusGateFailed } from "@beep/repo-cli/commands/Quality/CheckCensusGate"
  *
  * const report = CheckCensusGateReport.make({
+ *   baselineMeasuredAt: "2026-09-29T00:00:00.000Z",
  *   baselineCommit: "368998daff",
  *   baselineCompiler: "7.0.2",
  *   compiler: "7.0.2",
@@ -1174,6 +1186,7 @@ const selectionLabel = (report: CheckCensusGateReport): string =>
  * import { CheckCensusGateReport, checkCensusGateFailureMessage } from "@beep/repo-cli/commands/Quality/CheckCensusGate"
  *
  * const report = CheckCensusGateReport.make({
+ *   baselineMeasuredAt: "2026-09-29T00:00:00.000Z",
  *   baselineCommit: "368998daff",
  *   baselineCompiler: "7.0.2",
  *   compiler: "7.0.2",
@@ -1204,20 +1217,43 @@ const percentChange = (base: number, current: number, precision: number): string
 
 const checkTimeChange = (baselineMs: number, currentMs: number): string => percentChange(baselineMs, currentMs, 1);
 
-// Two decimals keep a row near the band edge readable: +4.96% and +5.04% would both print +5% at one.
+// Two decimals keep a row near the band edge readable: +9.96% and +10.04% would both print +10% at one.
 const instantiationChange = ({ baseline, current }: CheckCensusComparison): string =>
   percentChange(baseline.instantiations, current.instantiations, 2);
 
 const instantiationDelta = ({ baseline, current }: CheckCensusComparison): number =>
   current.instantiations - baseline.instantiations;
 
-const increaseLine = (comparison: CheckCensusComparison): string =>
-  CheckCensusRowClass.match(comparison.rowClass, {
-    strict: () =>
-      `FAIL ${comparison.name}: single-checker instantiations increased by ${instantiationDelta(comparison)}.`,
-    band: () =>
-      `FAIL ${comparison.name}: single-checker instantiations increased by ${instantiationDelta(comparison)} (${instantiationChange(comparison)}), beyond the ${CHECK_CENSUS_BAND_ROW_PERCENT}% band of a band row. This is a deliberate review point: cut the growth, or accept it and re-measure with \`${CHECK_CENSUS_BASELINE_WRITE_COMMAND}\`.`,
-  });
+// The calendar day of the baseline's ISO `measuredAt`.
+const baselineDate = (report: CheckCensusGateReport): string => Str.takeLeft(report.baselineMeasuredAt, 10);
+
+const isBandRow = (comparison: CheckCensusComparison): boolean => comparison.rowClass === CheckCensusRowClass.Enum.band;
+
+// A band row's growth is cumulative since the baseline, so its failure names the baseline it is measured
+// against and says the delta is not this pull request's alone; the second line is the re-baseline.
+const bandFailureText = (
+  report: CheckCensusGateReport,
+  comparison: CheckCensusComparison
+): readonly [string, string] => [
+  `FAIL ${comparison.name}: cumulative single-checker growth since the baseline measured ${baselineDate(report)} at commit ${report.baselineCommit}: ${comparison.baseline.instantiations} -> ${comparison.current.instantiations} instantiations (${signed(instantiationDelta(comparison))}, ${instantiationChange(comparison)}), beyond the ${CHECK_CENSUS_BAND_ROW_PERCENT}% band of a band row. The delta is not this pull request's alone: it adds up every change merged since that baseline.`,
+  `Re-baseline once the growth is reviewed: \`${CHECK_CENSUS_BASELINE_WRITE_COMMAND}\` (the write needs a built tree), then commit the rewritten baseline.`,
+];
+
+const bandFailureLines = (report: CheckCensusGateReport, comparison: CheckCensusComparison): ReadonlyArray<string> => {
+  const [failure, rebaseline] = bandFailureText(report, comparison);
+
+  return [failure, `  ${rebaseline}`];
+};
+
+const increaseLines =
+  (report: CheckCensusGateReport) =>
+  (comparison: CheckCensusComparison): ReadonlyArray<string> =>
+    CheckCensusRowClass.match(comparison.rowClass, {
+      strict: () => [
+        `FAIL ${comparison.name}: single-checker instantiations increased by ${instantiationDelta(comparison)}.`,
+      ],
+      band: () => bandFailureLines(report, comparison),
+    });
 
 const isWithinBand = (comparison: CheckCensusComparison): boolean =>
   comparison.instantiations === CheckCensusInstantiationVerdict.Enum["within-band"];
@@ -1239,11 +1275,11 @@ const verdictLines = (report: CheckCensusGateReport): ReadonlyArray<string> => [
         `FAIL compiler changed: baseline measured with ${report.baselineCompiler}, this run used ${report.compiler}; counts are not comparable. Re-measure with \`${CHECK_CENSUS_BASELINE_WRITE_COMMAND}\`.`,
       ]
     : []),
-  ...A.map(A.filter(report.comparisons, isIncrease), increaseLine),
+  ...A.flatMap(A.filter(report.comparisons, isIncrease), increaseLines(report)),
   ...A.map(
     A.filter(report.comparisons, isWithinBand),
     (comparison) =>
-      `band ${comparison.name}: single-checker instantiations grew by ${instantiationDelta(comparison)} (${instantiationChange(comparison)}), within the ${CHECK_CENSUS_BAND_ROW_PERCENT}% band (reported, not a failure).`
+      `band ${comparison.name}: single-checker instantiations grew by ${instantiationDelta(comparison)} (${instantiationChange(comparison)}) since the baseline measured ${baselineDate(report)}, within the ${CHECK_CENSUS_BAND_ROW_PERCENT}% band (reported, not a failure).`
   ),
   ...A.map(
     A.filter(report.comparisons, (comparison) => comparison.checkTime === CheckCensusCheckTimeVerdict.Enum.slower),
@@ -1269,7 +1305,13 @@ const verdictLines = (report: CheckCensusGateReport): ReadonlyArray<string> => [
  * import { CheckCensusGateReport, renderCheckCensusGateLines } from "@beep/repo-cli/commands/Quality/CheckCensusGate"
  *
  * const lines = renderCheckCensusGateLines(
- *   CheckCensusGateReport.make({ baselineCommit: "368998daff", baselineCompiler: "7.0.2", compiler: "7.0.2", comparisons: [] })
+ *   CheckCensusGateReport.make({
+ *     baselineMeasuredAt: "2026-09-29T00:00:00.000Z",
+ *     baselineCommit: "368998daff",
+ *     baselineCompiler: "7.0.2",
+ *     compiler: "7.0.2",
+ *     comparisons: [],
+ *   })
  * )
  * console.log(lines.length) // 3
  * ```
@@ -1306,6 +1348,19 @@ const summaryClass = (rowClass: CheckCensusRowClass): string =>
 const summaryRow = (comparison: CheckCensusComparison): string =>
   `| \`${comparison.name}\` | ${summaryClass(comparison.rowClass)} | ${comparison.baseline.instantiations} | ${comparison.current.instantiations} | ${signed(instantiationDelta(comparison))} | ${instantiationChange(comparison)} | ${summaryOutcome(comparison.instantiations)} |`;
 
+// One bullet per failed band row under the table, carrying the CLI's cumulative-growth text.
+const summaryBandFailures = (report: CheckCensusGateReport): ReadonlyArray<string> =>
+  A.match(
+    A.filter(report.comparisons, (comparison) => isIncrease(comparison) && isBandRow(comparison)),
+    {
+      onEmpty: A.empty<string>,
+      onNonEmpty: (failed) => [
+        ...A.map(failed, (comparison) => `- ${A.join(bandFailureText(report, comparison), " ")}`),
+        "",
+      ],
+    }
+  );
+
 /**
  * Render the gate as the short Markdown table the Heavy / Check lane appends
  * to the GitHub job summary.
@@ -1314,8 +1369,12 @@ const summaryRow = (comparison: CheckCensusComparison): string =>
  *
  * One row per comparison: row name, class with its tolerance, baselined and
  * measured single-checker instantiations, the delta, the percent of the
- * baseline, and the outcome. The closing line says whether the gate passed
- * and, when it failed, carries {@link checkCensusGateFailureMessage}.
+ * baseline, and the outcome. The line above the table names the baseline's
+ * measured-at date and commit, which every delta is measured against. Each
+ * failed band row adds a bullet under the table: its growth is cumulative
+ * since that baseline, the delta is not the pull request's alone, and the
+ * bullet carries the re-baseline command. The closing line says whether the
+ * gate passed and, when it failed, carries {@link checkCensusGateFailureMessage}.
  *
  * **Example** (Render one band row within its band)
  *
@@ -1335,11 +1394,17 @@ const summaryRow = (comparison: CheckCensusComparison): string =>
  *   types: 10,
  *   checkTimeMs: 100,
  * })
- * const comparison = compareCheckCensusSample(CheckCensusSample.make({ instantiations: 1040, types: 10, checkTimeMs: 100 }), row)
+ * const comparison = compareCheckCensusSample(CheckCensusSample.make({ instantiations: 1090, types: 10, checkTimeMs: 100 }), row)
  * const markdown = renderCheckCensusGateSummary(
- *   CheckCensusGateReport.make({ baselineCommit: "368998daff", baselineCompiler: "7.0.2", compiler: "7.0.2", comparisons: [comparison] })
+ *   CheckCensusGateReport.make({
+ *     baselineMeasuredAt: "2026-11-13T07:07:38.700Z",
+ *     baselineCommit: "368998daff",
+ *     baselineCompiler: "7.0.2",
+ *     compiler: "7.0.2",
+ *     comparisons: [comparison],
+ *   })
  * )
- * console.log(markdown.includes("| +40 | +4% | reported (within band) |")) // true
+ * console.log(markdown.includes("| +90 | +9% | reported (within band) |")) // true
  * ```
  *
  * @param report - The gate report to render.
@@ -1352,12 +1417,13 @@ export const renderCheckCensusGateSummary = (report: CheckCensusGateReport): str
     [
       "### check-census gate",
       "",
-      `Single-checker instantiations against \`${report.baselinePath}\` (measured at \`${report.baselineCommit}\`, compiler \`${report.compiler}\`).`,
+      `Single-checker instantiations against \`${report.baselinePath}\`, measured ${baselineDate(report)} at commit \`${report.baselineCommit}\` (this run's compiler \`${report.compiler}\`); every delta is cumulative since that baseline.`,
       "",
       "| Row | Class | Baseline | Measured | Delta | Percent | Outcome |",
       "| --- | --- | ---: | ---: | ---: | ---: | --- |",
       ...A.map(report.comparisons, summaryRow),
       "",
+      ...summaryBandFailures(report),
       checkCensusGateFailed(report) ? `**Result: fail.** ${checkCensusGateFailureMessage(report)}` : "Result: pass.",
     ],
     "\n"
@@ -1684,6 +1750,7 @@ export const runCheckCensusGate = Effect.fn("CheckCensusGate.run")(function* (
   );
 
   return CheckCensusGateReport.make({
+    baselineMeasuredAt: baseline.measuredAt,
     baselineCommit: baseline.commit,
     baselineCompiler: baseline.compiler,
     compiler,

@@ -234,6 +234,7 @@ describe("check-census gate comparison", () => {
   it("fails the gate on an increase or a compiler change, and renders every verdict line", () => {
     const report = (compiler: string, comparisons: ReadonlyArray<ReturnType<typeof compareCheckCensusSample>>) =>
       CheckCensusGateReport.make({
+        baselineMeasuredAt: "2026-09-29T12:00:00.000Z",
         baselineCommit: "368998daff",
         baselineCompiler: "7.0.2+effect-tsgo.0.45.0",
         compiler,
@@ -262,20 +263,24 @@ describe("check-census gate comparison", () => {
 
 describe("check-census row classes", () => {
   const BAND_BASELINE = 10_000;
+  const BASELINE_COMMIT = "368998daff4b5d6c0e2f1a3b7c9d8e6f5a4b3c2d";
   const reportOf = (comparisons: ReadonlyArray<ReturnType<typeof compareCheckCensusSample>>) =>
     CheckCensusGateReport.make({
-      baselineCommit: "368998daff",
+      baselineMeasuredAt: "2026-11-13T07:07:38.700Z",
+      baselineCommit: BASELINE_COMMIT,
       baselineCompiler: "7.0.2+effect-tsgo.0.45.0",
       compiler: "7.0.2+effect-tsgo.0.45.0",
       comparisons,
     });
   const bandRow = row("@beep/repo-cli", BAND_BASELINE, 1000);
-  // 490 and 510 instantiations are +4.9% and +5.1% of the band row's baseline.
-  const withinBand = compareCheckCensusSample(sample(BAND_BASELINE + 490, 1000), bandRow);
-  const beyondBand = compareCheckCensusSample(sample(BAND_BASELINE + 510, 1000), bandRow);
+  // 990 and 1010 instantiations are +9.9% and +10.1% of the band row's baseline.
+  const withinBand = compareCheckCensusSample(sample(BAND_BASELINE + 990, 1000), bandRow);
+  const beyondBand = compareCheckCensusSample(sample(BAND_BASELINE + 1010, 1000), bandRow);
+  const bandFailure = `FAIL @beep/repo-cli: cumulative single-checker growth since the baseline measured 2026-11-13 at commit ${BASELINE_COMMIT}: 10000 -> 11010 instantiations (+1010, +10.1%), beyond the 10% band of a band row. The delta is not this pull request's alone: it adds up every change merged since that baseline.`;
+  const rebaseline = `Re-baseline once the growth is reviewed: \`${CHECK_CENSUS_BASELINE_WRITE_COMMAND}\` (the write needs a built tree), then commit the rewritten baseline.`;
 
   it("classes the two named application rows as band rows and every other row as strict", () => {
-    expect(CHECK_CENSUS_BAND_ROW_PERCENT).toBe(5);
+    expect(CHECK_CENSUS_BAND_ROW_PERCENT).toBe(10);
     expect(CheckCensusBandRow.literals).toStrictEqual(["@beep/repo-cli", "@beep/law-practice-domain"]);
     expect(checkCensusRowClass("@beep/repo-cli")).toBe("band");
     expect(checkCensusRowClass("@beep/law-practice-domain")).toBe("band");
@@ -305,30 +310,43 @@ describe("check-census row classes", () => {
     );
   });
 
-  it("reports and passes a band row that grew +4.9%", () => {
+  it("reports and passes a band row that grew +9.9%, naming the baseline date the percent is measured against", () => {
     expect(withinBand.rowClass).toBe("band");
     expect(withinBand.instantiations).toBe("within-band");
     expect(checkCensusGateFailed(reportOf([withinBand]))).toBe(false);
     const lines = renderCheckCensusGateLines(reportOf([withinBand]));
     expect(lines).toContain(
-      "band @beep/repo-cli: single-checker instantiations grew by 490 (+4.9%), within the 5% band (reported, not a failure)."
+      "band @beep/repo-cli: single-checker instantiations grew by 990 (+9.9%) since the baseline measured 2026-11-13, within the 10% band (reported, not a failure)."
     );
     expect(A.some(lines, Str.startsWith("FAIL"))).toBe(false);
   });
 
-  it("fails a band row that grew +5.1% and calls it a deliberate review point", () => {
+  it("fails a band row that grew +10.1% as cumulative growth since the baseline, with the re-baseline command", () => {
     expect(beyondBand.instantiations).toBe("increase");
     expect(checkCensusGateFailed(reportOf([beyondBand]))).toBe(true);
-    expect(renderCheckCensusGateLines(reportOf([beyondBand]))).toContain(
-      `FAIL @beep/repo-cli: single-checker instantiations increased by 510 (+5.1%), beyond the 5% band of a band row. This is a deliberate review point: cut the growth, or accept it and re-measure with \`${CHECK_CENSUS_BASELINE_WRITE_COMMAND}\`.`
-    );
+    const lines = renderCheckCensusGateLines(reportOf([beyondBand]));
+    const failureAt = A.findFirstIndex(lines, Str.startsWith("FAIL @beep/repo-cli"));
+
+    assertSome(failureAt, A.length(lines) - 2);
+    expect(A.drop(lines, A.length(lines) - 2)).toStrictEqual([bandFailure, `  ${rebaseline}`]);
+    // The failure carries the baseline's date, commit, count, the measured total and the write command.
+    for (const fact of [
+      "2026-11-13",
+      BASELINE_COMMIT,
+      "10000 -> 11010",
+      "+10.1%",
+      CHECK_CENSUS_BASELINE_WRITE_COMMAND,
+    ]) {
+      expect(A.some(lines, Str.includes(fact))).toBe(true);
+    }
+    expect(bandFailure).toContain("not this pull request's alone");
   });
 
-  it("keeps a band row inside the noise floor unchanged and exactly 5% within the band", () => {
+  it("keeps a band row inside the noise floor unchanged and exactly 10% within the band", () => {
     expect(
       compareCheckCensusSample(sample(BAND_BASELINE + CHECK_CENSUS_INSTANTIATION_NOISE, 1000), bandRow).instantiations
     ).toBe("unchanged");
-    expect(compareCheckCensusSample(sample(BAND_BASELINE + 500, 1000), bandRow).instantiations).toBe("within-band");
+    expect(compareCheckCensusSample(sample(BAND_BASELINE + 1000, 1000), bandRow).instantiations).toBe("within-band");
     // A zero baseline has no band: any growth beyond the noise floor fails.
     expect(compareCheckCensusSample(sample(100, 10), row("@beep/repo-cli", 0, 10)).instantiations).toBe("increase");
   });
@@ -357,21 +375,36 @@ describe("check-census row classes", () => {
     expect(Str.split(passing, "\n")).toStrictEqual([
       "### check-census gate",
       "",
-      `Single-checker instantiations against \`${CHECK_CENSUS_BASELINE_PATH}\` (measured at \`368998daff\`, compiler \`7.0.2+effect-tsgo.0.45.0\`).`,
+      `Single-checker instantiations against \`${CHECK_CENSUS_BASELINE_PATH}\`, measured 2026-11-13 at commit \`${BASELINE_COMMIT}\` (this run's compiler \`7.0.2+effect-tsgo.0.45.0\`); every delta is cumulative since that baseline.`,
       "",
       "| Row | Class | Baseline | Measured | Delta | Percent | Outcome |",
       "| --- | --- | ---: | ---: | ---: | ---: | --- |",
       "| `@beep/schema` | strict (+32) | 2000 | 2000 | 0 | 0% | unchanged |",
       "| `@beep/schema#typeperf/baseline` | strict (+32) | 2000 | 1900 | -100 | -5% | tighten |",
-      "| `@beep/repo-cli` | band (5%) | 10000 | 10490 | +490 | +4.9% | reported (within band) |",
+      "| `@beep/repo-cli` | band (10%) | 10000 | 10990 | +990 | +9.9% | reported (within band) |",
       "",
       "Result: pass.",
       "",
     ]);
+  });
 
+  it("puts a failed band row's cumulative-growth text and re-baseline command under the summary table", () => {
     const failing = renderCheckCensusGateSummary(reportOf([beyondBand]));
-    expect(failing).toContain("| `@beep/repo-cli` | band (5%) | 10000 | 10510 | +510 | +5.1% | **fail** |");
-    expect(failing).toContain(`**Result: fail.** ${checkCensusGateFailureMessage(reportOf([beyondBand]))}`);
+
+    expect(Str.split(failing, "\n")).toStrictEqual([
+      "### check-census gate",
+      "",
+      `Single-checker instantiations against \`${CHECK_CENSUS_BASELINE_PATH}\`, measured 2026-11-13 at commit \`${BASELINE_COMMIT}\` (this run's compiler \`7.0.2+effect-tsgo.0.45.0\`); every delta is cumulative since that baseline.`,
+      "",
+      "| Row | Class | Baseline | Measured | Delta | Percent | Outcome |",
+      "| --- | --- | ---: | ---: | ---: | ---: | --- |",
+      "| `@beep/repo-cli` | band (10%) | 10000 | 11010 | +1010 | +10.1% | **fail** |",
+      "",
+      `- ${bandFailure} ${rebaseline}`,
+      "",
+      `**Result: fail.** ${checkCensusGateFailureMessage(reportOf([beyondBand]))}`,
+      "",
+    ]);
   });
 
   it("renders the stale-stamp deferral naming the baseline, both compilers, the re-measure and the owning step", () => {
@@ -604,12 +637,14 @@ describe("check-census gate rendering", () => {
   it("names a compiler change, an empty unfiltered gate, and an undefined check-time change", () => {
     const zeroBaseline = compareCheckCensusSample(sample(10, 3), row("tiny", 10, 0));
     const changed = CheckCensusGateReport.make({
+      baselineMeasuredAt: "2026-09-29T12:00:00.000Z",
       baselineCommit: "368998daff",
       baselineCompiler: "7.0.2+effect-tsgo.0.45.0",
       compiler: "7.0.3+effect-tsgo.0.46.0",
       comparisons: [zeroBaseline],
     });
     const empty = CheckCensusGateReport.make({
+      baselineMeasuredAt: "2026-09-29T12:00:00.000Z",
       baselineCommit: "368998daff",
       baselineCompiler: "7.0.2+effect-tsgo.0.45.0",
       compiler: "7.0.2+effect-tsgo.0.45.0",
@@ -654,6 +689,7 @@ describe("check-census compiler stamp", () => {
     const gateFails = (baselineCompiler: string, compiler: string) =>
       checkCensusGateFailed(
         CheckCensusGateReport.make({
+          baselineMeasuredAt: "2026-09-29T12:00:00.000Z",
           baselineCommit: "368998daff",
           baselineCompiler,
           compiler,

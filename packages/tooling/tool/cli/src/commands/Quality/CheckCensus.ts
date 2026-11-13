@@ -1169,8 +1169,11 @@ const runCheckCensusCli = Effect.fn("CheckCensus.cli")(function* (input: CheckCe
  * row's instantiation count increased, the compiler differs from the
  * baseline's, or no baseline row was selected (a mistyped `--filter`). A
  * strict row increases when it grows beyond the noise floor; a band row
- * (`CheckCensusBandRow`) only beyond 5% of its baseline, and smaller growth
- * is reported with its delta and percent. Check time beyond the 5% band is an
+ * (`CheckCensusBandRow`) only beyond 10% of its baseline. A band row's growth
+ * is cumulative since the baseline was measured, so its failure names the
+ * baseline's date and commit, says the delta is not the pull request's alone,
+ * and gives the re-baseline command; smaller growth is reported with its
+ * delta and percent. Check time beyond the 5% band is an
  * advisory line and an instantiation decrease prints a tighten hint. On a
  * runner (`GITHUB_STEP_SUMMARY` set) the gate also appends a Markdown table
  * to the job summary. `--defer-stale-stamp` turns a compiler change into a
