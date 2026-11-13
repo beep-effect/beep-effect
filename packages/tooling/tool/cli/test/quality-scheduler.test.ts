@@ -49,8 +49,11 @@ import {
   processStartIdentityProbeForTesting,
   provideRuntimeRootForTesting,
   publishAdmissionJournalForTesting,
+  QUARANTINE_ARCHIVE_DIRECTORY_NAME,
+  QUARANTINE_ARCHIVE_MIN_AGE_MILLIS,
   QualitySchedulerError,
   qualitySchedulerForTesting,
+  quarantinedAtMillisOf,
   RunScopeRecord,
   RuntimeRootChoice,
   reapAdmissionState,
@@ -5902,6 +5905,50 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
       expect(lines[3]).not.toContain("scope=");
     });
 
+    it("renders the quarantine as one summary line with count, oldest age and archive dir", () => {
+      const nowMillis = 1_700_000_000_000;
+      const root = "/run/user/1000/beep/admit";
+      const quarantined = [
+        `${root}/quarantine/a.lease.json.${nowMillis - 3 * 86_400_000 - 2 * 3_600_000}`,
+        `${root}/quarantine/b.ticket.json.${nowMillis - 3_600_000}`,
+        `${root}/leases/garbage.lease.json`,
+      ];
+      const snapshot = AdmissionSnapshot.make({
+        capacityTokens: 10,
+        activeTokens: 0,
+        memAvailableGib: 64,
+        hardFloorEngaged: false,
+        leases: [],
+        tickets: [],
+        dead: [],
+        quarantined,
+      });
+      const lines = renderAdmissionSnapshotLinesForTesting(snapshot, nowMillis);
+      const quarantineLines = A.filter(lines, Str.includes("quarantined"));
+      expect(quarantineLines).toStrictEqual([
+        `- quarantined: 3 entries, oldest 3d 2h ago; archive ${root}/quarantine-archive (reap --apply archives entries older than 7d 0h; --json lists paths)`,
+      ]);
+      expect(lines).toHaveLength(2);
+      expect(O.getOrNull(quarantinedAtMillisOf(quarantined[1] ?? ""))).toBe(nowMillis - 3_600_000);
+      expect(O.isNone(quarantinedAtMillisOf(quarantined[2] ?? ""))).toBe(true);
+    });
+
+    it("renders no quarantine line for an empty quarantine", () => {
+      const snapshot = AdmissionSnapshot.make({
+        capacityTokens: 10,
+        activeTokens: 0,
+        memAvailableGib: 64,
+        hardFloorEngaged: false,
+        leases: [],
+        tickets: [],
+        dead: [],
+        quarantined: [],
+      });
+      expect(renderAdmissionSnapshotLinesForTesting(snapshot, 0)).toStrictEqual([
+        "admission capacity: 0/10 tokens (MemAvailable 64.0 GiB)",
+      ]);
+    });
+
     it.effect("never stops a loaded scope merely because the lease scan did not see it", () =>
       Effect.gen(function* () {
         const gibRef = yield* Ref.make(50);
@@ -6156,6 +6203,84 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             yield* fs.writeFileString(parked, "{not json");
             const snapshot = yield* admissionStatus(fastConfig);
             expect(snapshot.quarantined).toContain(parked);
+          }).pipe(
+            provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
+            Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
+            Effect.provideService(MemoryStats, memoryStats(gibRef))
+          );
+        }
+      }).pipe(TestClock.withLive)
+    );
+
+    it.effect("archives aged quarantine entries in the reap pass and keeps young ones and live leases", () =>
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        {
+          const { runtimeDir, tempRoot } = yield* admissionTemporaryRoot;
+          return yield* Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            yield* withQualityAdmission(request(), noAdmissionOriginGate, Effect.void, fastConfig);
+            const liveLease = yield* writeFakeLease(tempRoot, { weightTokens: 1, originKey: "origin-live" });
+            const nowMillis = yield* Clock.currentTimeMillis;
+            const youngName = `young.lease.json.${nowMillis - 60_000}`;
+            const agedName = `aged.lease.json.${nowMillis - QUARANTINE_ARCHIVE_MIN_AGE_MILLIS - 60_000}`;
+            yield* fs.writeFileString(path.join(tempRoot.quarantine, youngName), "{young");
+            yield* fs.writeFileString(path.join(tempRoot.quarantine, agedName), "{aged");
+            const archiveDirectory = path.join(tempRoot.root, QUARANTINE_ARCHIVE_DIRECTORY_NAME);
+
+            // Status is read-only: it reports both entries and archives nothing.
+            const before = yield* admissionStatus(fastConfig);
+            expect(before.leases).toHaveLength(1);
+            expect(A.map(before.quarantined, (entry) => path.basename(entry)).sort()).toStrictEqual(
+              [agedName, youngName].sort()
+            );
+            const archivedBefore = yield* listDirectory(archiveDirectory);
+            expect(archivedBefore).toHaveLength(0);
+
+            const after = yield* reapAdmissionState({ apply: true });
+            const quarantineAfter = yield* listDirectory(tempRoot.quarantine);
+            expect(quarantineAfter).toStrictEqual([youngName]);
+            const archivedAfter = yield* listDirectory(archiveDirectory);
+            expect(archivedAfter).toStrictEqual([agedName]);
+            const archivedText = yield* fs.readFileString(path.join(archiveDirectory, agedName));
+            expect(archivedText).toBe("{aged");
+            expect(A.map(after.quarantined, (entry) => path.basename(entry))).toStrictEqual([youngName]);
+            // Live leases are never touched by the archive.
+            expect(after.leases).toHaveLength(A.length(before.leases));
+            const liveLeaseKept = yield* fs.exists(liveLease);
+            expect(liveLeaseKept).toBe(true);
+          }).pipe(
+            provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
+            Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
+            Effect.provideService(MemoryStats, memoryStats(gibRef))
+          );
+        }
+      }).pipe(TestClock.withLive)
+    );
+
+    it.effect("restores an archived quarantine entry by moving it back", () =>
+      Effect.gen(function* () {
+        const gibRef = yield* Ref.make(50);
+        {
+          const { runtimeDir, tempRoot } = yield* admissionTemporaryRoot;
+          return yield* Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const path = yield* Path.Path;
+            yield* withQualityAdmission(request(), noAdmissionOriginGate, Effect.void, fastConfig);
+            const agedName = "restorable.lease.json.1700000000000";
+            const original = "{restorable lease bytes";
+            yield* fs.writeFileString(path.join(tempRoot.quarantine, agedName), original);
+            yield* reapAdmissionState({ apply: true });
+            const archived = path.join(tempRoot.root, QUARANTINE_ARCHIVE_DIRECTORY_NAME, agedName);
+            const archivedText = yield* fs.readFileString(archived);
+            expect(archivedText).toBe(original);
+
+            yield* fs.rename(archived, path.join(tempRoot.quarantine, agedName));
+            const restored = yield* admissionStatus(fastConfig);
+            expect(restored.quarantined).toContain(path.join(tempRoot.quarantine, agedName));
+            const restoredText = yield* fs.readFileString(path.join(tempRoot.quarantine, agedName));
+            expect(restoredText).toBe(original);
           }).pipe(
             provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
             Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
