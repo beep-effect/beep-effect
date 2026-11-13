@@ -1,0 +1,1709 @@
+{
+  "schemaVersion": "skill-probe-preflight/v1",
+  "rows": [
+    {
+      "taskId": "sfv4-fn-schema-001",
+      "family": "fn-schema",
+      "fixture": {
+        "taskId": "sfv4-fn-schema-001",
+        "score": 0.25,
+        "breakdown": {
+          "completion": 0.375,
+          "schemaFirst": 0.5,
+          "tsgo": 0.5,
+          "biome": 1
+        },
+        "violations": [
+          {
+            "source": "completion",
+            "ruleId": "SFV4-fn-schema",
+            "file": "src/FrameFileName.ts",
+            "line": 1,
+            "message": "Forbidden pattern /export\\s+interface\\s+FrameFileNameInput\\b/ matched."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-fn-schema",
+            "file": "src/FrameFileName.ts",
+            "line": 1,
+            "message": "Missing required export \"FormatFrameFileName\"."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-fn-schema",
+            "file": "src/FrameFileName.ts",
+            "line": 1,
+            "message": "Missing required pattern /FormatFrameFileName\\.implementSync\\s*\\(/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-fn-schema",
+            "file": "src/FrameFileName.ts",
+            "line": 1,
+            "message": "Missing required pattern /export\\s+class\\s+FrameFileNameInput\\s+extends\\s+S\\.(?:Class|Opaque)\\b/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-fn-schema",
+            "file": "src/FrameFileName.ts",
+            "line": 1,
+            "message": "Missing required pattern /export\\s+const\\s+FormatFrameFileName\\s*=\\s*Fn\\s*\\(/."
+          },
+          {
+            "source": "schema-first",
+            "ruleId": "schema-first-inventory",
+            "file": "src/FrameFileName.ts",
+            "line": 1,
+            "message": "Exported pure-data interface should be modeled as an annotated schema."
+          },
+          {
+            "source": "tsgo",
+            "ruleId": "TS377150",
+            "file": "src/FrameFileName.ts",
+            "line": 8,
+            "message": "src/FrameFileName.ts(8,44): error TS377150: Consider effect/String.padStart instead of native String.padStart. Same runtime behavior. effect(preferEffectString)"
+          }
+        ],
+        "status": "scored",
+        "lanes": [
+          {
+            "lane": "schema-first",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "tsgo",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "biome",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          }
+        ]
+      },
+      "knownGood": {
+        "taskId": "sfv4-fn-schema-001",
+        "score": 1,
+        "breakdown": {
+          "completion": 1,
+          "schemaFirst": 1,
+          "tsgo": 1,
+          "biome": 1
+        },
+        "violations": [],
+        "status": "scored",
+        "lanes": [
+          {
+            "lane": "schema-first",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "tsgo",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "biome",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          }
+        ]
+      },
+      "knownGoodFiles": [
+        {
+          "path": "src/FrameFileName.ts",
+          "sha256": "50afc6bdf5bf7b61c6c6577ac8947d96263371366d37e51d967c8437dd399d9e"
+        },
+        {
+          "path": "tsconfig.json",
+          "sha256": "fadfcab52a357408869ea0a411424121a5cd19d51a0019a85e78925bde79c62c"
+        }
+      ],
+      "passed": true,
+      "reason": "ok"
+    },
+    {
+      "taskId": "sfv4-fn-schema-002",
+      "family": "fn-schema",
+      "fixture": {
+        "taskId": "sfv4-fn-schema-002",
+        "score": 0.166667,
+        "breakdown": {
+          "completion": 0.2,
+          "schemaFirst": 0.5,
+          "tsgo": 1,
+          "biome": 1
+        },
+        "violations": [
+          {
+            "source": "completion",
+            "ruleId": "SFV4-fn-schema",
+            "file": "src/ExtractFrames.ts",
+            "line": 1,
+            "message": "Forbidden pattern /export\\s+type\\s+ExtractFramesInput\\s*=\\s*\\{/ matched."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-fn-schema",
+            "file": "src/ExtractFrames.ts",
+            "line": 1,
+            "message": "Missing required export \"BuildExtractFramesArgs\"."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-fn-schema",
+            "file": "src/ExtractFrames.ts",
+            "line": 1,
+            "message": "Missing required export \"ExtractFramesArgs\"."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-fn-schema",
+            "file": "src/ExtractFrames.ts",
+            "line": 1,
+            "message": "Missing required pattern /BuildExtractFramesArgs\\.implementSync\\s*\\(/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-fn-schema",
+            "file": "src/ExtractFrames.ts",
+            "line": 1,
+            "message": "Missing required pattern /export\\s+class\\s+ExtractFramesInput\\s+extends\\s+S\\.(?:Class|Opaque)\\b/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-fn-schema",
+            "file": "src/ExtractFrames.ts",
+            "line": 1,
+            "message": "Missing required pattern /export\\s+const\\s+BuildExtractFramesArgs\\s*=\\s*Fn\\s*\\(/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-fn-schema",
+            "file": "src/ExtractFrames.ts",
+            "line": 1,
+            "message": "Missing required pattern /export\\s+const\\s+ExtractFramesArgs\\s*=/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-fn-schema",
+            "file": "src/ExtractFrames.ts",
+            "line": 4,
+            "message": "Forbidden pattern /readonly\\s+fps\\?:\\s*number/ matched."
+          },
+          {
+            "source": "schema-first",
+            "ruleId": "schema-first-inventory",
+            "file": "src/ExtractFrames.ts",
+            "line": 1,
+            "message": "Exported pure-data type alias should be modeled as an annotated schema."
+          }
+        ],
+        "status": "scored",
+        "lanes": [
+          {
+            "lane": "schema-first",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "tsgo",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "biome",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          }
+        ]
+      },
+      "knownGood": {
+        "taskId": "sfv4-fn-schema-002",
+        "score": 1,
+        "breakdown": {
+          "completion": 1,
+          "schemaFirst": 1,
+          "tsgo": 1,
+          "biome": 1
+        },
+        "violations": [],
+        "status": "scored",
+        "lanes": [
+          {
+            "lane": "schema-first",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "tsgo",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "biome",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          }
+        ]
+      },
+      "knownGoodFiles": [
+        {
+          "path": "src/ExtractFrames.ts",
+          "sha256": "74a6fcff19884a8ed3fb047a8545bbbebe4230339498b8184ffd21bf5310276b"
+        },
+        {
+          "path": "tsconfig.json",
+          "sha256": "fadfcab52a357408869ea0a411424121a5cd19d51a0019a85e78925bde79c62c"
+        }
+      ],
+      "passed": true,
+      "reason": "ok"
+    },
+    {
+      "taskId": "sfv4-fn-schema-003",
+      "family": "fn-schema",
+      "fixture": {
+        "taskId": "sfv4-fn-schema-003",
+        "score": 0.25,
+        "breakdown": {
+          "completion": 0.3,
+          "schemaFirst": 0.5,
+          "tsgo": 1,
+          "biome": 1
+        },
+        "violations": [
+          {
+            "source": "completion",
+            "ruleId": "SFV4-fn-schema",
+            "file": "src/SourceMetadata.ts",
+            "line": 1,
+            "message": "Forbidden pattern /export\\s+interface\\s+SourceMetadataInput\\b/ matched."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-fn-schema",
+            "file": "src/SourceMetadata.ts",
+            "line": 1,
+            "message": "Missing required export \"MakeSourceMetadata\"."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-fn-schema",
+            "file": "src/SourceMetadata.ts",
+            "line": 1,
+            "message": "Missing required pattern /MakeSourceMetadata\\.implementSync\\s*\\(/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-fn-schema",
+            "file": "src/SourceMetadata.ts",
+            "line": 1,
+            "message": "Missing required pattern /export\\s+class\\s+SourceMetadataInput\\s+extends\\s+S\\.(?:Class|Opaque)\\b/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-fn-schema",
+            "file": "src/SourceMetadata.ts",
+            "line": 1,
+            "message": "Missing required pattern /export\\s+class\\s+SourceMetadata\\s+extends\\s+S\\.(?:Class|Opaque)\\b/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-fn-schema",
+            "file": "src/SourceMetadata.ts",
+            "line": 1,
+            "message": "Missing required pattern /export\\s+const\\s+MakeSourceMetadata\\s*=\\s*Fn\\s*\\(/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-fn-schema",
+            "file": "src/SourceMetadata.ts",
+            "line": 6,
+            "message": "Forbidden pattern /export\\s+interface\\s+SourceMetadata\\b/ matched."
+          },
+          {
+            "source": "schema-first",
+            "ruleId": "schema-first-inventory",
+            "file": "src/SourceMetadata.ts",
+            "line": 1,
+            "message": "Exported pure-data interface should be modeled as an annotated schema."
+          }
+        ],
+        "status": "scored",
+        "lanes": [
+          {
+            "lane": "schema-first",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "tsgo",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "biome",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          }
+        ]
+      },
+      "knownGood": {
+        "taskId": "sfv4-fn-schema-003",
+        "score": 1,
+        "breakdown": {
+          "completion": 1,
+          "schemaFirst": 1,
+          "tsgo": 1,
+          "biome": 1
+        },
+        "violations": [],
+        "status": "scored",
+        "lanes": [
+          {
+            "lane": "schema-first",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "tsgo",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "biome",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          }
+        ]
+      },
+      "knownGoodFiles": [
+        {
+          "path": "src/SourceMetadata.ts",
+          "sha256": "fbf056e260b0de999831bbb451590e85ad38dbdd6b3674b1eafed1a3b1b938c6"
+        },
+        {
+          "path": "tsconfig.json",
+          "sha256": "fadfcab52a357408869ea0a411424121a5cd19d51a0019a85e78925bde79c62c"
+        }
+      ],
+      "passed": true,
+      "reason": "ok"
+    },
+    {
+      "taskId": "sfv4-getsomes-struct-001",
+      "family": "getsomes-struct",
+      "fixture": {
+        "taskId": "sfv4-getsomes-struct-001",
+        "score": 0.1875,
+        "breakdown": {
+          "completion": 0.25,
+          "schemaFirst": 0.25,
+          "tsgo": 1,
+          "biome": 1
+        },
+        "violations": [
+          {
+            "source": "completion",
+            "ruleId": "SFV4-getsomes-struct",
+            "file": "src/ContactSubmission.ts",
+            "line": 1,
+            "message": "Missing required pattern /O\\.getSomesStruct\\s*\\(/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-getsomes-struct",
+            "file": "src/ContactSubmission.ts",
+            "line": 1,
+            "message": "Missing required pattern /export\\s+class\\s+ContactSubmissionDraft\\s+extends\\s+S\\.(?:Class|Opaque)\\b/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-getsomes-struct",
+            "file": "src/ContactSubmission.ts",
+            "line": 1,
+            "message": "Missing required pattern /import\\s+\\{\\s*O\\s*\\}\\s+from\\s+\"@beep/utils\"/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-getsomes-struct",
+            "file": "src/ContactSubmission.ts",
+            "line": 2,
+            "message": "Forbidden pattern /from\\s+\"effect/Record\"/ matched."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-getsomes-struct",
+            "file": "src/ContactSubmission.ts",
+            "line": 4,
+            "message": "Forbidden pattern /export\\s+interface\\s+ContactSubmissionDraft\\b/ matched."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-getsomes-struct",
+            "file": "src/ContactSubmission.ts",
+            "line": 17,
+            "message": "Forbidden pattern /R\\.getSomes\\s*\\(/ matched."
+          },
+          {
+            "source": "schema-first",
+            "ruleId": "schema-first-inventory",
+            "file": "src/ContactSubmission.ts",
+            "line": 1,
+            "message": "Exported pure-data interface should be modeled as an annotated schema."
+          },
+          {
+            "source": "schema-first",
+            "ruleId": "schema-first-inventory",
+            "file": "src/ContactSubmission.ts",
+            "line": 1,
+            "message": "Exported pure-data type alias should be modeled as an annotated schema."
+          },
+          {
+            "source": "schema-first",
+            "ruleId": "SFV4-getsomes-struct",
+            "file": "src/ContactSubmission.ts",
+            "line": 17,
+            "message": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
+          }
+        ],
+        "status": "scored",
+        "lanes": [
+          {
+            "lane": "schema-first",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "tsgo",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "biome",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          }
+        ]
+      },
+      "knownGood": {
+        "taskId": "sfv4-getsomes-struct-001",
+        "score": 1,
+        "breakdown": {
+          "completion": 1,
+          "schemaFirst": 1,
+          "tsgo": 1,
+          "biome": 1
+        },
+        "violations": [],
+        "status": "scored",
+        "lanes": [
+          {
+            "lane": "schema-first",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "tsgo",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "biome",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          }
+        ]
+      },
+      "knownGoodFiles": [
+        {
+          "path": "src/ContactSubmission.ts",
+          "sha256": "c55dc09e6e0bbeef1af3839d0f07f4c1f93d8cedef0dc751d2a4d913b4f9355f"
+        },
+        {
+          "path": "tsconfig.json",
+          "sha256": "fadfcab52a357408869ea0a411424121a5cd19d51a0019a85e78925bde79c62c"
+        }
+      ],
+      "passed": true,
+      "reason": "ok"
+    },
+    {
+      "taskId": "sfv4-getsomes-struct-002",
+      "family": "getsomes-struct",
+      "fixture": {
+        "taskId": "sfv4-getsomes-struct-002",
+        "score": 0.208333,
+        "breakdown": {
+          "completion": 0.25,
+          "schemaFirst": 0.5,
+          "tsgo": 1,
+          "biome": 1
+        },
+        "violations": [
+          {
+            "source": "completion",
+            "ruleId": "SFV4-getsomes-struct",
+            "file": "src/BoxErrorDetails.ts",
+            "line": 1,
+            "message": "Missing required pattern /O\\.getSomesStruct\\s*\\(/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-getsomes-struct",
+            "file": "src/BoxErrorDetails.ts",
+            "line": 1,
+            "message": "Missing required pattern /export\\s+class\\s+BoxErrorDetails\\s+extends\\s+S\\.(?:Class|Opaque)\\b/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-getsomes-struct",
+            "file": "src/BoxErrorDetails.ts",
+            "line": 1,
+            "message": "Missing required pattern /import\\s+\\{\\s*O\\s*\\}\\s+from\\s+\"@beep/utils\"/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-getsomes-struct",
+            "file": "src/BoxErrorDetails.ts",
+            "line": 2,
+            "message": "Forbidden pattern /from\\s+\"effect/Record\"/ matched."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-getsomes-struct",
+            "file": "src/BoxErrorDetails.ts",
+            "line": 4,
+            "message": "Forbidden pattern /export\\s+type\\s+BoxErrorDetails\\s*=\\s*\\{/ matched."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-getsomes-struct",
+            "file": "src/BoxErrorDetails.ts",
+            "line": 23,
+            "message": "Forbidden pattern /R\\.getSomes\\s*\\(/ matched."
+          },
+          {
+            "source": "schema-first",
+            "ruleId": "schema-first-inventory",
+            "file": "src/BoxErrorDetails.ts",
+            "line": 1,
+            "message": "Exported pure-data type alias should be modeled as an annotated schema."
+          }
+        ],
+        "status": "scored",
+        "lanes": [
+          {
+            "lane": "schema-first",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "tsgo",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "biome",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          }
+        ]
+      },
+      "knownGood": {
+        "taskId": "sfv4-getsomes-struct-002",
+        "score": 1,
+        "breakdown": {
+          "completion": 1,
+          "schemaFirst": 1,
+          "tsgo": 1,
+          "biome": 1
+        },
+        "violations": [],
+        "status": "scored",
+        "lanes": [
+          {
+            "lane": "schema-first",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "tsgo",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "biome",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          }
+        ]
+      },
+      "knownGoodFiles": [
+        {
+          "path": "src/BoxErrorDetails.ts",
+          "sha256": "d3aa93ab223ce3784d4a27838fe000e51c7d799b6822604e317f9f6c8e9045f7"
+        },
+        {
+          "path": "tsconfig.json",
+          "sha256": "fadfcab52a357408869ea0a411424121a5cd19d51a0019a85e78925bde79c62c"
+        }
+      ],
+      "passed": true,
+      "reason": "ok"
+    },
+    {
+      "taskId": "sfv4-getsomes-struct-003",
+      "family": "getsomes-struct",
+      "fixture": {
+        "taskId": "sfv4-getsomes-struct-003",
+        "score": 0.194444,
+        "breakdown": {
+          "completion": 0.25,
+          "schemaFirst": 0.333333,
+          "tsgo": 1,
+          "biome": 1
+        },
+        "violations": [
+          {
+            "source": "completion",
+            "ruleId": "SFV4-getsomes-struct",
+            "file": "src/RunpodDiagnostics.ts",
+            "line": 1,
+            "message": "Missing required pattern /O\\.getSomesStruct\\s*\\(/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-getsomes-struct",
+            "file": "src/RunpodDiagnostics.ts",
+            "line": 1,
+            "message": "Missing required pattern /export\\s+class\\s+RunpodDiagnostics\\s+extends\\s+S\\.(?:Class|Opaque)\\b/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-getsomes-struct",
+            "file": "src/RunpodDiagnostics.ts",
+            "line": 1,
+            "message": "Missing required pattern /import\\s+\\{\\s*O\\s*\\}\\s+from\\s+\"@beep/utils\"/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-getsomes-struct",
+            "file": "src/RunpodDiagnostics.ts",
+            "line": 2,
+            "message": "Forbidden pattern /from\\s+\"effect/Record\"/ matched."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-getsomes-struct",
+            "file": "src/RunpodDiagnostics.ts",
+            "line": 4,
+            "message": "Forbidden pattern /export\\s+interface\\s+RunpodDiagnostics\\b/ matched."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-getsomes-struct",
+            "file": "src/RunpodDiagnostics.ts",
+            "line": 23,
+            "message": "Forbidden pattern /R\\.getSomes\\s*\\(/ matched."
+          },
+          {
+            "source": "schema-first",
+            "ruleId": "schema-first-inventory",
+            "file": "src/RunpodDiagnostics.ts",
+            "line": 1,
+            "message": "Exported pure-data interface should be modeled as an annotated schema."
+          },
+          {
+            "source": "schema-first",
+            "ruleId": "schema-first-inventory",
+            "file": "src/RunpodDiagnostics.ts",
+            "line": 1,
+            "message": "Exported pure-data type alias should be modeled as an annotated schema."
+          }
+        ],
+        "status": "scored",
+        "lanes": [
+          {
+            "lane": "schema-first",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "tsgo",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "biome",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          }
+        ]
+      },
+      "knownGood": {
+        "taskId": "sfv4-getsomes-struct-003",
+        "score": 1,
+        "breakdown": {
+          "completion": 1,
+          "schemaFirst": 1,
+          "tsgo": 1,
+          "biome": 1
+        },
+        "violations": [],
+        "status": "scored",
+        "lanes": [
+          {
+            "lane": "schema-first",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "tsgo",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "biome",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          }
+        ]
+      },
+      "knownGoodFiles": [
+        {
+          "path": "src/RunpodDiagnostics.ts",
+          "sha256": "be1ed0fd9a150fe008db56ded35606c0594b671018c4462bc3d139dc8983bbbe"
+        },
+        {
+          "path": "tsconfig.json",
+          "sha256": "fadfcab52a357408869ea0a411424121a5cd19d51a0019a85e78925bde79c62c"
+        }
+      ],
+      "passed": true,
+      "reason": "ok"
+    },
+    {
+      "taskId": "sfv4-normalization-001",
+      "family": "normalization",
+      "fixture": {
+        "taskId": "sfv4-normalization-001",
+        "score": 0.166666,
+        "breakdown": {
+          "completion": 0.222222,
+          "schemaFirst": 1,
+          "tsgo": 0.25,
+          "biome": 1
+        },
+        "violations": [
+          {
+            "source": "completion",
+            "ruleId": "SFV4-normalization",
+            "file": "src/CorpusExtension.ts",
+            "line": 1,
+            "message": "Missing required export \"CorpusExtension\"."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-normalization",
+            "file": "src/CorpusExtension.ts",
+            "line": 1,
+            "message": "Missing required export \"decodeCorpusExtension\"."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-normalization",
+            "file": "src/CorpusExtension.ts",
+            "line": 1,
+            "message": "Missing required pattern /S\\.decode(?:To)?\\s*\\(/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-normalization",
+            "file": "src/CorpusExtension.ts",
+            "line": 1,
+            "message": "Missing required pattern /S\\.decodeUnknownOption\\s*\\(\\s*CorpusExtension\\s*\\)/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-normalization",
+            "file": "src/CorpusExtension.ts",
+            "line": 1,
+            "message": "Missing required pattern /SchemaTransformation\\.toLowerCase\\s*\\(/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-normalization",
+            "file": "src/CorpusExtension.ts",
+            "line": 1,
+            "message": "Missing required pattern /export\\s+const\\s+CorpusExtension\\s*=/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-normalization",
+            "file": "src/CorpusExtension.ts",
+            "line": 8,
+            "message": "Forbidden pattern /fileName\\.slice\\([^\\n]*\\.toLowerCase\\s*\\(/ matched."
+          },
+          {
+            "source": "tsgo",
+            "ruleId": "TS377150",
+            "file": "src/CorpusExtension.ts",
+            "line": 2,
+            "message": "src/CorpusExtension.ts(2,29): error TS377150: Consider effect/String.lastIndexOf instead of native String.lastIndexOf. Returns Option<number>, with None replacing -1; there is no position parameter. effect(preferEffectString)"
+          },
+          {
+            "source": "tsgo",
+            "ruleId": "TS377150",
+            "file": "src/CorpusExtension.ts",
+            "line": 8,
+            "message": "src/CorpusExtension.ts(8,19): error TS377150: Consider effect/String.slice instead of native String.slice. Same runtime behavior. effect(preferEffectString)"
+          },
+          {
+            "source": "tsgo",
+            "ruleId": "TS377150",
+            "file": "src/CorpusExtension.ts",
+            "line": 8,
+            "message": "src/CorpusExtension.ts(8,39): error TS377150: Consider effect/String.toLowerCase instead of native String.toLowerCase. Same runtime behavior; literal inputs keep a Lowercase<T> type. effect(preferEffectString)"
+          }
+        ],
+        "status": "scored",
+        "lanes": [
+          {
+            "lane": "schema-first",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "tsgo",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "biome",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          }
+        ]
+      },
+      "knownGood": {
+        "taskId": "sfv4-normalization-001",
+        "score": 1,
+        "breakdown": {
+          "completion": 1,
+          "schemaFirst": 1,
+          "tsgo": 1,
+          "biome": 1
+        },
+        "violations": [],
+        "status": "scored",
+        "lanes": [
+          {
+            "lane": "schema-first",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "tsgo",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "biome",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          }
+        ]
+      },
+      "knownGoodFiles": [
+        {
+          "path": "src/CorpusExtension.ts",
+          "sha256": "d623d7b544236e5f7f2cf9746e25dcb1d073eb0c84dffbbe12365cb79944455e"
+        },
+        {
+          "path": "tsconfig.json",
+          "sha256": "fadfcab52a357408869ea0a411424121a5cd19d51a0019a85e78925bde79c62c"
+        }
+      ],
+      "passed": true,
+      "reason": "ok"
+    },
+    {
+      "taskId": "sfv4-normalization-002",
+      "family": "normalization",
+      "fixture": {
+        "taskId": "sfv4-normalization-002",
+        "score": 0.185185,
+        "breakdown": {
+          "completion": 0.222222,
+          "schemaFirst": 1,
+          "tsgo": 0.5,
+          "biome": 1
+        },
+        "violations": [
+          {
+            "source": "completion",
+            "ruleId": "SFV4-normalization",
+            "file": "src/OperationCode.ts",
+            "line": 1,
+            "message": "Forbidden pattern /operation\\.toUpperCase\\s*\\(/ matched."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-normalization",
+            "file": "src/OperationCode.ts",
+            "line": 1,
+            "message": "Missing required export \"OperationCode\"."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-normalization",
+            "file": "src/OperationCode.ts",
+            "line": 1,
+            "message": "Missing required export \"decodeOperationCode\"."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-normalization",
+            "file": "src/OperationCode.ts",
+            "line": 1,
+            "message": "Missing required pattern /S\\.decode(?:To)?\\s*\\(/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-normalization",
+            "file": "src/OperationCode.ts",
+            "line": 1,
+            "message": "Missing required pattern /S\\.decodeUnknownOption\\s*\\(\\s*OperationCode\\s*\\)/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-normalization",
+            "file": "src/OperationCode.ts",
+            "line": 1,
+            "message": "Missing required pattern /SchemaTransformation\\.toUpperCase\\s*\\(/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-normalization",
+            "file": "src/OperationCode.ts",
+            "line": 1,
+            "message": "Missing required pattern /export\\s+const\\s+OperationCode\\s*=/."
+          },
+          {
+            "source": "tsgo",
+            "ruleId": "TS377150",
+            "file": "src/OperationCode.ts",
+            "line": 1,
+            "message": "src/OperationCode.ts(1,73): error TS377150: Consider effect/String.toUpperCase instead of native String.toUpperCase. Same runtime behavior; literal inputs keep an Uppercase<T> type. effect(preferEffectString)"
+          }
+        ],
+        "status": "scored",
+        "lanes": [
+          {
+            "lane": "schema-first",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "tsgo",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "biome",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          }
+        ]
+      },
+      "knownGood": {
+        "taskId": "sfv4-normalization-002",
+        "score": 1,
+        "breakdown": {
+          "completion": 1,
+          "schemaFirst": 1,
+          "tsgo": 1,
+          "biome": 1
+        },
+        "violations": [],
+        "status": "scored",
+        "lanes": [
+          {
+            "lane": "schema-first",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "tsgo",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "biome",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          }
+        ]
+      },
+      "knownGoodFiles": [
+        {
+          "path": "src/OperationCode.ts",
+          "sha256": "180595bf0512b18dffd1ef7871bb3135336adbf9194197283702036479074311"
+        },
+        {
+          "path": "tsconfig.json",
+          "sha256": "fadfcab52a357408869ea0a411424121a5cd19d51a0019a85e78925bde79c62c"
+        }
+      ],
+      "passed": true,
+      "reason": "ok"
+    },
+    {
+      "taskId": "sfv4-normalization-003",
+      "family": "normalization",
+      "fixture": {
+        "taskId": "sfv4-normalization-003",
+        "score": 0.185185,
+        "breakdown": {
+          "completion": 0.222222,
+          "schemaFirst": 1,
+          "tsgo": 0.5,
+          "biome": 1
+        },
+        "violations": [
+          {
+            "source": "completion",
+            "ruleId": "SFV4-normalization",
+            "file": "src/HtmlText.ts",
+            "line": 1,
+            "message": "Forbidden pattern /rawText\\.trim\\s*\\(/ matched."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-normalization",
+            "file": "src/HtmlText.ts",
+            "line": 1,
+            "message": "Missing required export \"HtmlInnerText\"."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-normalization",
+            "file": "src/HtmlText.ts",
+            "line": 1,
+            "message": "Missing required export \"decodeHtmlInnerText\"."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-normalization",
+            "file": "src/HtmlText.ts",
+            "line": 1,
+            "message": "Missing required pattern /S\\.decode(?:To)?\\s*\\(/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-normalization",
+            "file": "src/HtmlText.ts",
+            "line": 1,
+            "message": "Missing required pattern /S\\.decodeUnknownOption\\s*\\(\\s*HtmlInnerText\\s*\\)/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-normalization",
+            "file": "src/HtmlText.ts",
+            "line": 1,
+            "message": "Missing required pattern /SchemaTransformation\\.trim\\s*\\(/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-normalization",
+            "file": "src/HtmlText.ts",
+            "line": 1,
+            "message": "Missing required pattern /export\\s+const\\s+HtmlInnerText\\s*=/."
+          },
+          {
+            "source": "tsgo",
+            "ruleId": "TS377150",
+            "file": "src/HtmlText.ts",
+            "line": 1,
+            "message": "src/HtmlText.ts(1,65): error TS377150: Consider effect/String.trim instead of native String.trim. Same runtime behavior; the literal result type only removes spaces, /n, /t, and /r. effect(preferEffectString)"
+          }
+        ],
+        "status": "scored",
+        "lanes": [
+          {
+            "lane": "schema-first",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "tsgo",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "biome",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          }
+        ]
+      },
+      "knownGood": {
+        "taskId": "sfv4-normalization-003",
+        "score": 1,
+        "breakdown": {
+          "completion": 1,
+          "schemaFirst": 1,
+          "tsgo": 1,
+          "biome": 1
+        },
+        "violations": [],
+        "status": "scored",
+        "lanes": [
+          {
+            "lane": "schema-first",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "tsgo",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "biome",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          }
+        ]
+      },
+      "knownGoodFiles": [
+        {
+          "path": "src/HtmlText.ts",
+          "sha256": "f5cadd78c8fd173f1443970f20826fd9a8f2aa5aa71006906c215e748d318e05"
+        }
+      ],
+      "passed": true,
+      "reason": "ok"
+    },
+    {
+      "taskId": "sfv4-null-return-001",
+      "family": "null-return",
+      "fixture": {
+        "taskId": "sfv4-null-return-001",
+        "score": 0.133333,
+        "breakdown": {
+          "completion": 0.2,
+          "schemaFirst": 0.5,
+          "tsgo": 0.5,
+          "biome": 1
+        },
+        "violations": [
+          {
+            "source": "completion",
+            "ruleId": "SFV4-null-return",
+            "file": "src/CurieExpand.ts",
+            "line": 1,
+            "message": "Forbidden pattern /\\|\\s*null\\b/ matched."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-null-return",
+            "file": "src/CurieExpand.ts",
+            "line": 1,
+            "message": "Missing required export \"Curie\"."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-null-return",
+            "file": "src/CurieExpand.ts",
+            "line": 1,
+            "message": "Missing required pattern /O\\.Option\\s*<\\s*string\\s*>/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-null-return",
+            "file": "src/CurieExpand.ts",
+            "line": 1,
+            "message": "Missing required pattern /O\\.none\\s*\\(/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-null-return",
+            "file": "src/CurieExpand.ts",
+            "line": 1,
+            "message": "Missing required pattern /O\\.some\\s*\\(/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-null-return",
+            "file": "src/CurieExpand.ts",
+            "line": 1,
+            "message": "Missing required pattern /S\\.is\\s*\\(\\s*Curie\\s*\\)/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-null-return",
+            "file": "src/CurieExpand.ts",
+            "line": 1,
+            "message": "Missing required pattern /export\\s+const\\s+Curie\\s*=/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-null-return",
+            "file": "src/CurieExpand.ts",
+            "line": 5,
+            "message": "Forbidden pattern /return\\s+null\\b/ matched."
+          },
+          {
+            "source": "schema-first",
+            "ruleId": "SFV4-null-return",
+            "file": "src/CurieExpand.ts",
+            "line": 1,
+            "message": "Exported helper \"expandCurie\" declares a null/undefined return; return O.Option, Result, Effect, or Exit instead (3rd-party/react boundary returns are ledgered exceptions)."
+          },
+          {
+            "source": "tsgo",
+            "ruleId": "TS377150",
+            "file": "src/CurieExpand.ts",
+            "line": 2,
+            "message": "src/CurieExpand.ts(2,23): error TS377150: Consider effect/String.split instead of native String.split. Returns a NonEmptyArray, so splitting an empty string by \"\" returns [\"\"] instead of []; there is no limit parameter. effect(preferEffectString)"
+          }
+        ],
+        "status": "scored",
+        "lanes": [
+          {
+            "lane": "schema-first",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "tsgo",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "biome",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          }
+        ]
+      },
+      "knownGood": {
+        "taskId": "sfv4-null-return-001",
+        "score": 1,
+        "breakdown": {
+          "completion": 1,
+          "schemaFirst": 1,
+          "tsgo": 1,
+          "biome": 1
+        },
+        "violations": [],
+        "status": "scored",
+        "lanes": [
+          {
+            "lane": "schema-first",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "tsgo",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "biome",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          }
+        ]
+      },
+      "knownGoodFiles": [
+        {
+          "path": "src/CurieExpand.ts",
+          "sha256": "50a63bff80cd5824510e3306150ddb54df9c7636d572ff63ea4ec15d4ac9b694"
+        },
+        {
+          "path": "tsconfig.json",
+          "sha256": "fadfcab52a357408869ea0a411424121a5cd19d51a0019a85e78925bde79c62c"
+        }
+      ],
+      "passed": true,
+      "reason": "ok"
+    },
+    {
+      "taskId": "sfv4-null-return-002",
+      "family": "null-return",
+      "fixture": {
+        "taskId": "sfv4-null-return-002",
+        "score": 0.233333,
+        "breakdown": {
+          "completion": 0.3,
+          "schemaFirst": 0.333333,
+          "tsgo": 1,
+          "biome": 1
+        },
+        "violations": [
+          {
+            "source": "completion",
+            "ruleId": "SFV4-null-return",
+            "file": "src/JSDocTagMetadata.ts",
+            "line": 1,
+            "message": "Missing required export \"JSDocTagName\"."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-null-return",
+            "file": "src/JSDocTagMetadata.ts",
+            "line": 1,
+            "message": "Missing required pattern /O\\.Option\\s*<\\s*JSDocTagMetadata\\s*>/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-null-return",
+            "file": "src/JSDocTagMetadata.ts",
+            "line": 1,
+            "message": "Missing required pattern /O\\.none\\s*\\(/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-null-return",
+            "file": "src/JSDocTagMetadata.ts",
+            "line": 1,
+            "message": "Missing required pattern /O\\.some\\s*\\(/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-null-return",
+            "file": "src/JSDocTagMetadata.ts",
+            "line": 1,
+            "message": "Missing required pattern /S\\.is\\s*\\(\\s*JSDocTagName\\s*\\)/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-null-return",
+            "file": "src/JSDocTagMetadata.ts",
+            "line": 1,
+            "message": "Missing required pattern /export\\s+const\\s+JSDocTagName\\s*=/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-null-return",
+            "file": "src/JSDocTagMetadata.ts",
+            "line": 11,
+            "message": "Forbidden pattern /\\|\\s*undefined\\b/ matched."
+          },
+          {
+            "source": "schema-first",
+            "ruleId": "schema-first-inventory",
+            "file": "src/JSDocTagMetadata.ts",
+            "line": 1,
+            "message": "Exported pure-data interface should be modeled as an annotated schema."
+          },
+          {
+            "source": "schema-first",
+            "ruleId": "SFV4-null-return",
+            "file": "src/JSDocTagMetadata.ts",
+            "line": 11,
+            "message": "Exported helper \"getJSDocTagMetadata\" declares a null/undefined return; return O.Option, Result, Effect, or Exit instead (3rd-party/react boundary returns are ledgered exceptions)."
+          }
+        ],
+        "status": "scored",
+        "lanes": [
+          {
+            "lane": "schema-first",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "tsgo",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "biome",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          }
+        ]
+      },
+      "knownGood": {
+        "taskId": "sfv4-null-return-002",
+        "score": 1,
+        "breakdown": {
+          "completion": 1,
+          "schemaFirst": 1,
+          "tsgo": 1,
+          "biome": 1
+        },
+        "violations": [],
+        "status": "scored",
+        "lanes": [
+          {
+            "lane": "schema-first",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "tsgo",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "biome",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          }
+        ]
+      },
+      "knownGoodFiles": [
+        {
+          "path": "src/JSDocTagMetadata.ts",
+          "sha256": "ab25bd92c6da46b2c18b3fe5cf9e8b9f96f661ff218801bbb74b827d340f8f95"
+        },
+        {
+          "path": "tsconfig.json",
+          "sha256": "fadfcab52a357408869ea0a411424121a5cd19d51a0019a85e78925bde79c62c"
+        }
+      ],
+      "passed": true,
+      "reason": "ok"
+    },
+    {
+      "taskId": "sfv4-null-return-003",
+      "family": "null-return",
+      "fixture": {
+        "taskId": "sfv4-null-return-003",
+        "score": 0.116667,
+        "breakdown": {
+          "completion": 0.2,
+          "schemaFirst": 0.5,
+          "tsgo": 0.25,
+          "biome": 1
+        },
+        "violations": [
+          {
+            "source": "completion",
+            "ruleId": "SFV4-null-return",
+            "file": "src/QualitySummary.ts",
+            "line": 1,
+            "message": "Forbidden pattern /\\|\\s*undefined\\b/ matched."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-null-return",
+            "file": "src/QualitySummary.ts",
+            "line": 1,
+            "message": "Missing required export \"QualitySummary\"."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-null-return",
+            "file": "src/QualitySummary.ts",
+            "line": 1,
+            "message": "Missing required pattern /O\\.Option\\s*<\\s*string\\s*>/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-null-return",
+            "file": "src/QualitySummary.ts",
+            "line": 1,
+            "message": "Missing required pattern /O\\.none\\s*\\(/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-null-return",
+            "file": "src/QualitySummary.ts",
+            "line": 1,
+            "message": "Missing required pattern /O\\.some\\s*\\(/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-null-return",
+            "file": "src/QualitySummary.ts",
+            "line": 1,
+            "message": "Missing required pattern /S\\.is\\s*\\(\\s*QualitySummary\\s*\\)/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-null-return",
+            "file": "src/QualitySummary.ts",
+            "line": 1,
+            "message": "Missing required pattern /export\\s+const\\s+QualitySummary\\s*=/."
+          },
+          {
+            "source": "completion",
+            "ruleId": "SFV4-null-return",
+            "file": "src/QualitySummary.ts",
+            "line": 6,
+            "message": "Forbidden pattern /return\\s+undefined\\b/ matched."
+          },
+          {
+            "source": "schema-first",
+            "ruleId": "SFV4-null-return",
+            "file": "src/QualitySummary.ts",
+            "line": 1,
+            "message": "Exported helper \"summaryFromComment\" declares a null/undefined return; return O.Option, Result, Effect, or Exit instead (3rd-party/react boundary returns are ledgered exceptions)."
+          },
+          {
+            "source": "tsgo",
+            "ruleId": "TS377150",
+            "file": "src/QualitySummary.ts",
+            "line": 3,
+            "message": "src/QualitySummary.ts(3,31): error TS377150: Consider effect/String.indexOf instead of native String.indexOf. Returns Option<number>, with None replacing -1; there is no position parameter. effect(preferEffectString)"
+          },
+          {
+            "source": "tsgo",
+            "ruleId": "TS377150",
+            "file": "src/QualitySummary.ts",
+            "line": 9,
+            "message": "src/QualitySummary.ts(9,27): error TS377150: Consider effect/String.slice instead of native String.slice. Same runtime behavior. effect(preferEffectString)"
+          },
+          {
+            "source": "tsgo",
+            "ruleId": "TS377150",
+            "file": "src/QualitySummary.ts",
+            "line": 9,
+            "message": "src/QualitySummary.ts(9,62): error TS377150: Consider effect/String.trim instead of native String.trim. Same runtime behavior; the literal result type only removes spaces, /n, /t, and /r. effect(preferEffectString)"
+          }
+        ],
+        "status": "scored",
+        "lanes": [
+          {
+            "lane": "schema-first",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "tsgo",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "biome",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          }
+        ]
+      },
+      "knownGood": {
+        "taskId": "sfv4-null-return-003",
+        "score": 1,
+        "breakdown": {
+          "completion": 1,
+          "schemaFirst": 1,
+          "tsgo": 1,
+          "biome": 1
+        },
+        "violations": [],
+        "status": "scored",
+        "lanes": [
+          {
+            "lane": "schema-first",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "tsgo",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          },
+          {
+            "lane": "biome",
+            "status": "measured",
+            "filesProcessed": 1,
+            "environmentDiagnostics": []
+          }
+        ]
+      },
+      "knownGoodFiles": [
+        {
+          "path": "src/QualitySummary.ts",
+          "sha256": "70cba0c5f7ae6cde49b32303a9265b8fe48d68042d8332bd89ebf322014e600f"
+        },
+        {
+          "path": "tsconfig.json",
+          "sha256": "fadfcab52a357408869ea0a411424121a5cd19d51a0019a85e78925bde79c62c"
+        }
+      ],
+      "passed": true,
+      "reason": "ok"
+    }
+  ],
+  "dropped": []
+}

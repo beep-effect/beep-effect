@@ -5326,7 +5326,7 @@
       ]
     },
     "check": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "build"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "!README.md",

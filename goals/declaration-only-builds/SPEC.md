@@ -130,7 +130,7 @@ Declaration-only build (PR 2):
       or `*.js.map` outside Exception Ledger rows, and every `exports` subpath
       has its `.d.ts` and `.d.ts.map`. The build output contract test asserts
       both.
-- [ ] The PR's hosted gate is green on its head, or each red is attributed as
+- [x] The PR's hosted gate is green on its head, or each red is attributed as
       inherited. This run is the proof that nothing reads `dist/*.js`.
 - [x] `docs/runbooks/typescript-toolchain.md` describes the new `beep:build`.
 - [x] `research/` holds the after numbers, measured the same way as the
@@ -138,15 +138,15 @@ Declaration-only build (PR 2):
 
 Check once (PR 3, conditional):
 
-- [ ] Either the package's own-source check is served by its build with the
+- [x] Either the package's own-source check is served by its build with the
       census baseline gating the equivalence, or a decision file records the
       difference that cut the step.
 
 Throughout:
 
-- [ ] The sibling goals named in Constraints were told before and after each
+- [x] The sibling goals named in Constraints were told before and after each
       behaviour-changing merge.
-- [ ] No unrelated refactors or formatting churn.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 
@@ -269,6 +269,20 @@ Evidence: `goals/declaration-only-builds/research/2026-11-10-build-check-equival
 Lane chore/declaration-only-builds-baseline
 
 Reverse: Record a decision that cuts PR 3 and leave the own-source check in every generated check script; the census mode stays as a diagnostic.
+
+### Check once: the check runs the build program after the package's own build, 2026-11-13
+
+Two shapes were measured on `main` after PR 2 (182 packages, serial, fastest of three). Dropping the own-source step and relying on a Turbo edge saves 35.4 s; running the build program as the first step, on the incremental state the package's own build just wrote, saves 15.7 s, because a warm unchanged build costs about 108 ms a package.
+
+PR 3 takes the second. The first leaves `bun run check`, run directly in a package, checking only what its tests import: a false green in a common loop, for a saving that is a few seconds of wall time either way. With the second, a direct run still checks every source file, and `check` also reports declaration-emit diagnostics that only the build saw before.
+
+Scope, agreed with the owner of `goals/route-soundness-repair` through the orchestrator on 2026-11-13: the root Turbo `check` task gains the package's own `build`; every package whose build is not the declaration-only command (eight bundler apps, the no-emit packages) keeps the old graph through an explicit override, and a contract test enumerates them. `@beep/effect-drizzle` and `@beep/markdown` keep the no-emit step because their check program is wider than their build program. Equivalence is proven by file set as well as by diagnostics.
+
+Evidence: `goals/declaration-only-builds/research/2026-11-13-check-once-cost.md`.
+
+Lane feat/check-once
+
+Reverse: Restore the no-emit check as the first step of the generated check script through the retirement table, and remove the own-build edge from the Turbo check task.
 
 ### Declaration-only is set on the generated build command, not in the base tsconfig, 2026-11-13
 

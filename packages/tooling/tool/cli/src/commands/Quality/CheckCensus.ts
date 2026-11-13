@@ -58,7 +58,12 @@ import {
   runCheckCensusGate,
   writeCheckCensusBaseline,
 } from "./CheckCensusGate.ts";
-import { compilerOutputLines, isCompilerDiagnosticLine, nameFilterPredicate } from "./internal/CheckCensusOutput.ts";
+import {
+  compilerOutputLines,
+  isCompilerDiagnosticLine,
+  listProgramFiles,
+  nameFilterPredicate,
+} from "./internal/CheckCensusOutput.ts";
 import { jsdocGitErrorAdapter } from "./internal/JSDocRatchet.ts";
 import { QualityScriptCommandError } from "./Quality.errors.ts";
 import type { FsUtils } from "@beep/repo-utils";
@@ -380,29 +385,6 @@ type CensusEnvironment =
   | SecureRandom.SecureRandom
   | ChildProcessSpawner.ChildProcessSpawner
   | Git;
-
-const listProgramFiles = Effect.fn("CheckCensus.listProgramFiles")(function* (
-  tsgoPath: string,
-  configPath: string,
-  cwd: string
-): Effect.fn.Return<
-  ReadonlyArray<string>,
-  QualityScriptCommandError,
-  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
-> {
-  const result = yield* runCaptured({
-    command: tsgoPath,
-    args: ["-p", configPath, "--listFilesOnly"],
-    cwd,
-    source: "stdout",
-    trim: true,
-  }).pipe(QualityScriptCommandError.mapError(`Failed to list program files for ${configPath}.`));
-
-  return pipe(
-    compilerOutputLines(result.output),
-    A.filter((line) => !isCompilerDiagnosticLine(line))
-  );
-});
 
 const measureDiagnostics = Effect.fn("CheckCensus.measureDiagnostics")(function* (
   tsgoPath: string,
@@ -1079,8 +1061,10 @@ const runCheckCensusCli = Effect.fn("CheckCensus.cli")(function* (input: CheckCe
  * `--build-equivalence` runs only the build-equivalence mode
  * (`@beep/repo-cli/commands/Quality/CheckCensusBuildEquivalence`): it proves
  * every emitting package's `tsconfig.json` build reports the diagnostics of
- * its `tsconfig.check.json` check, builds in place one package at a time,
- * writes `--equivalence-output-json`, and exits non-zero on any difference.
+ * its `tsconfig.check.json` check, records the package files only the check
+ * program lists, builds in place one package at a time, writes
+ * `--equivalence-output-json`, and exits non-zero on any difference or on a
+ * build-served check that lists files its build does not.
  * `--seed` adds the probe pass and `--initial-state restored` labels the
  * state a caller's Turbo cache restore left.
  *
@@ -1123,7 +1107,7 @@ export const checkCensusCommand = Command.make(
     buildEquivalence: Flag.Boolean("build-equivalence").pipe(
       Flag.withDefault(false),
       Flag.withDescription(
-        "Only prove each emitting package's tsconfig.json build reports its tsconfig.check.json diagnostics; builds in place, one package at a time"
+        "Only prove each emitting package's tsconfig.json build reports its tsconfig.check.json diagnostics and list the package files only the check program holds; builds in place, one package at a time"
       )
     ),
     seed: Flag.Boolean("seed").pipe(
