@@ -17,8 +17,16 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { GoalSlug, MaterializationPlan, MaterializationReceipt, PlanDigest } from "../Goals/Bootstrap.schemas.ts";
+import {
+  ExplorationPacketFile,
+  GoalSlug,
+  MaterializationPlan,
+  MaterializationReceipt,
+  PlanDigest,
+} from "../Goals/Bootstrap.schemas.ts";
 import { PacketEventBody, PacketEventTimestamp, PacketSlug } from "../Goals/PacketCore/PacketCore.schemas.ts";
 import { ExplorationStage, ExplorationStatus } from "./Atlas.ts";
 
@@ -162,6 +170,9 @@ export class ExplorationSnapshot extends S.Opaque<ExplorationSnapshot, { readonl
     manifestText: S.optionalKey(S.String),
     manifestDigest: S.optionalKey(PlanDigest),
     goals: S.Array(ExistingGoalPacket),
+    packetFiles: S.Array(ExplorationPacketFile).pipe(
+      S.withConstructorDefault(Effect.succeed(A.empty<ExplorationPacketFile>()))
+    ),
   }).pipe(
     $I.annoteSchema("ExplorationSnapshot", {
       description: "Read-only exploration manifest and goal fleet capture consumed by the pure graduation compiler.",
