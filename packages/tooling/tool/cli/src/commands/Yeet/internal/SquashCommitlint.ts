@@ -22,7 +22,9 @@
  * The merge gate pins `commit_title` to `<PR title> (#n)` when it merges, so
  * the title the repository setting would compose is overridden there; the
  * reader passes that pinned title. Settings shape the default body; the gate
- * explicitly overrides it with the linted folded body. GitHub
+ * explicitly overrides it with the linted folded body. A stack merge sends that
+ * message for its top layer only, so for a layer below it the reader lints
+ * GitHub's own unpinned, unfolded default instead (`github-default`). GitHub
  * also appends normalized `Co-authored-by:` trailers after the `---------`
  * separator for some merges; they are shorter than any commitlint limit and
  * the prediction leaves them out.
@@ -854,9 +856,53 @@ export class SquashPullRequestFacts extends S.Opaque<SquashPullRequestFacts, { r
 ) {}
 
 /**
+ * Which squash message {@link readSquashCommitlint} lints.
+ *
+ * **Details**
+ *
+ * - `merge-request`: the message the merge gate sends, the title pinned to
+ *   `<PR title> (#n)` and the body folded under the line limit.
+ * - `github-default`: the message GitHub writes when the merge request sends no
+ *   title or message, unpinned and unfolded: the single commit's subject plus
+ *   ` (#n)` over its body, or the PR title plus ` (#n)` over one bullet per
+ *   commit. A stack merge sends its message for the top layer only, so every
+ *   layer below the top lands with this one.
+ *
+ * **Example** (Narrow a target)
+ *
+ * ```ts
+ * import { SquashCommitlintTarget } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(SquashCommitlintTarget.is["github-default"]("github-default")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const SquashCommitlintTarget = LiteralKit(["merge-request", "github-default"]).pipe(
+  $I.annoteSchema("SquashCommitlintTarget", {
+    description: "Which squash message is linted: the one the merge gate sends, or GitHub's own unpinned default.",
+  })
+);
+
+/**
+ * Which squash message {@link readSquashCommitlint} lints.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SquashCommitlintTarget = typeof SquashCommitlintTarget.Type;
+
+/**
  * Predict the squash message the merge gate will produce for this pull request
  * and lint it: repository defaults and the PR commits over REST, the title
  * pinned to `<PR title> (#n)` and body folded before the exact message is sent.
+ *
+ * **Details**
+ *
+ * With `target` set to `github-default` it lints GitHub's own default instead:
+ * no pinned title and no folding, exactly what lands for a stack layer below
+ * the one the merge request names.
  *
  * **Example** (Build the read effect)
  *
@@ -868,13 +914,15 @@ export class SquashPullRequestFacts extends S.Opaque<SquashPullRequestFacts, { r
  *
  * @param context - Resolves the repository root the commitlint run executes in (and, for a number, the gh login).
  * @param facts - The pull request number, title and description the prediction is built from.
- * @returns The explicit, body-folded merge message and commitlint's verdict.
+ * @param target - Which message to lint; the one the merge gate sends by default.
+ * @returns The linted message and commitlint's verdict.
  * @category workflows
  * @since 0.0.0
  */
 export const readSquashCommitlint = Effect.fn("Yeet.readSquashCommitlint")(function* (
   context: RepoRunContext,
-  facts: SquashPullRequestFacts
+  facts: SquashPullRequestFacts,
+  target: SquashCommitlintTarget = "merge-request"
 ): Effect.fn.Return<
   SquashCommitlintReport,
   YeetCommandError,
@@ -890,6 +938,7 @@ export const readSquashCommitlint = Effect.fn("Yeet.readSquashCommitlint")(funct
       Effect.mapError(yeetGithubFailure(`gh api pulls/${facts.number}/commits`)),
       Effect.flatMap(decodeGithubAnswer("the pull request commits", decodeCommits))
     );
+  const sent = SquashCommitlintTarget.is["merge-request"](target);
   const predicted = predictSquashCommitMessage(
     SquashMessageSource.make({
       prNumber: facts.number,
@@ -897,12 +946,15 @@ export const readSquashCommitlint = Effect.fn("Yeet.readSquashCommitlint")(funct
       body: O.getOrElse(facts.body, () => Str.empty),
       commitMessages: A.map(commits, (entry) => entry.commit.message),
       defaults,
-      commitTitle: O.some(`${facts.title} (#${facts.number})`),
+      commitTitle: sent ? O.some(`${facts.title} (#${facts.number})`) : O.none(),
     })
   );
   // Prediction remains GitHub's unchanged default. The merge pins this explicit
-  // body instead, so historical long subjects need no history rewrite or waiver.
-  const message = SquashCommitMessage.make({ header: predicted.header, body: foldCommitMessage(predicted.body) });
+  // body instead, so historical long subjects need no history rewrite or waiver;
+  // GitHub's own default is linted exactly as GitHub writes it.
+  const message = sent
+    ? SquashCommitMessage.make({ header: predicted.header, body: foldCommitMessage(predicted.body) })
+    : predicted;
   return yield* lintSquashCommitMessage(context, message);
 });
 
