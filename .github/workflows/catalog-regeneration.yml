@@ -1,0 +1,103 @@
+# Hosted catalog shard regeneration for worker-profile lanes
+# (goals/compute-profile-gate-routing P2, D3/D9). Its own workflow so it can
+# fire on the `labeled` event: `yeet open` pushes first and labels the new PR
+# `compute-profile-worker` afterwards, and `check.yml` runs only on the default
+# pull_request types, which would leave a single-push worker PR without the
+# regeneration. Every other PR skips the job at the `if` below.
+name: Catalog Regeneration
+
+on:
+  pull_request:
+    types: [labeled, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  # goals/compute-profile-gate-routing P2 (D3, D9): worker-profile hosts skip
+  # both catalog pre-commit writers, and `yeet open` labels their PRs
+  # `compute-profile-worker`. This job regenerates the scoped shards over the
+  # PR diff and pushes them to the head branch. It runs on same-repo draft PRs
+  # only: a bot push after `yeet ready` would move the verdict head and restart
+  # the review window. A lane push that races this one makes the push
+  # non-fast-forward, and the job fails loudly.
+  regenerate-catalogs:
+    name: Catalog Regeneration
+    if: >-
+      ${{ github.event_name == 'pull_request'
+      && github.event.pull_request.draft == true
+      && contains(github.event.pull_request.labels.*.name, 'compute-profile-worker')
+      && github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    concurrency:
+      group: regenerate-catalogs-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout pull request head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Fetch pull request base
+        shell: bash
+        run: |
+          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
+
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+
+      # Same scope as the lefthook commands: ACMD with --no-renames, so a
+      # deleted or moved module drops its entries too.
+      - name: Regenerate catalog shards
+        shell: bash
+        run: |
+          set -euo pipefail
+          merge_base="$(git merge-base "origin/${GITHUB_BASE_REF:-main}" HEAD)"
+          mapfile -t schema_files < <(
+            git diff --name-only --no-renames --diff-filter=ACMD "${merge_base}...HEAD" -- 'apps/**' 'packages/**' 'infra/**' \
+              | grep -E '\.(ts|tsx)$' \
+              | grep -Ev '(/docs/|\.d\.ts$|/node_modules/)' || true
+          )
+          mapfile -t instrumentation_files < <(
+            git diff --name-only --no-renames --diff-filter=ACMD "${merge_base}...HEAD" -- 'apps/**' 'packages/**' \
+              | grep -E '/src/.*\.(ts|tsx)$' \
+              | grep -Ev '(/test/|\.d\.ts$|/node_modules/)' || true
+          )
+          if (( ${#schema_files[@]} > 0 )); then
+            bun run beep lint schema-catalog --write "${schema_files[@]}"
+          else
+            echo "No schema-catalog inputs in the PR diff."
+          fi
+          if (( ${#instrumentation_files[@]} > 0 )); then
+            bun run beep observability catalog --write "${instrumentation_files[@]}"
+          else
+            echo "No instrumentation-catalog inputs in the PR diff."
+          fi
+
+      # The push token is used here only, on an explicit URL; it never enters
+      # git config (skills-update-train.yml relock pattern). The install step
+      # ran `lefthook install`; its hooks are for people and would re-run the
+      # catalog writers and gitleaks here (knowledge-baseline-mint.yml).
+      - name: Commit and push regenerated shards
+        shell: bash
+        env:
+          LEFTHOOK: "0"
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PUSH_TOKEN: ${{ secrets.BEEP_SKILLS_TRAIN_TOKEN || github.token }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$(git status --porcelain -- standards/schema-catalog standards/instrumentation-catalog)" ]]; then
+            echo "Catalog shards are current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A -- standards/schema-catalog standards/instrumentation-catalog
+          git commit -m "chore(catalogs): regenerate shards for the worker-profile lane"
+          git push "https://x-access-token:${PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/${HEAD_REF}"

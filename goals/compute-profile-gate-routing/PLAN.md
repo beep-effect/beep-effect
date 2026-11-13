@@ -9,10 +9,15 @@ Status: `in-progress`
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded. |
-| P1 Implement | in-progress | Make the smallest changes that satisfy `SPEC.md`. | Acceptance criteria are met. |
-| P2 Verify | pending | Run required checks and capture evidence. | Verification is green or blockers are documented. |
-| P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P1 Implement | complete | Make the smallest changes that satisfy `SPEC.md`. | Acceptance criteria are met. |
+| P2 Verify | in-progress | Run required checks and capture evidence. | Verification is green or blockers are documented. |
+| P3 Yeet: PR to mergeable | in-progress | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+
+Implementation shipped as three slice PRs: P0 #2925, P1 #2959 (fix #2972) and P2, the takeover
+PR from lane `goals/compute-profile-p2-takeover`. P2 Verify still needs the worker-host
+end-to-end acceptance run (SPEC acceptance criterion 3); P4 Close is the final PR with the
+reflection and `proposedCloseout`.
 
 ## Closeout Checklist
 
@@ -63,5 +68,13 @@ final-check auto-skips hosted-only gates on worker with reason compute-profile=w
 Lane goals/compute-profile-gate-routing-p1
 
 Reverse: Revert the P1 commit; P0's probe, routing table and scheduler refusal stand alone.
+
+### P2 hosted regeneration + docs implemented, 2026-11-08
+
+Catalog Regeneration job in its own workflow, .github/workflows/catalog-regeneration.yml, AGENTS.md amendment, agent-pools Compute profiles section, remote-development-agents and yeet skill updates, Palantiri memory line with ceiling and profile. Evidence: research/2026-11-08-p2-hosted-regeneration.md.
+
+Lane goals/compute-profile-gate-routing-p2
+
+Reverse: Revert the P2 commit
 
 <!-- beep:decisions:end -->
