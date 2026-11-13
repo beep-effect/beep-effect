@@ -770,7 +770,7 @@ it.layer(Layer.mergeAll(Sources, TestConsole.layer), { timeout: "30 seconds" })(
         );
         const lines = yield* TestConsole.logLines;
         const report = yield* YeetEconomicsReportJson.decode(`${A.getUnsafe(lines, 0)}`);
-        expect(report.schemaVersion).toBe("yeet-economics/v3");
+        expect(report.schemaVersion).toBe("yeet-economics/v4");
         assertSome(report.reviewLane.roundsToReady.p50Rounds, 2);
         assertSome(report.reviewLane.roundsToReady.p95Rounds, 2);
         assertSome(

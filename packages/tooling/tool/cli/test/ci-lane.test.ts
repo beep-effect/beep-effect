@@ -30,6 +30,8 @@ import {
   withCiLaneDefaultPlacements,
 } from "@beep/repo-cli/commands/Ci";
 import * as CiCoverage from "@beep/repo-cli/commands/Ci/CiCoverage";
+import { ROUTE_SETUP_STEP_NAMES, routeStepClass } from "@beep/repo-cli/commands/Ci/RouteCensus";
+import { CHECK_CENSUS_BASELINE_PATH } from "@beep/repo-cli/commands/Quality/CheckCensusGate";
 import { CiCoverageArtifactPlan } from "@beep/repo-cli/commands/Quality/Tasks";
 import { CoverageProducerIdentity, CoverageScopeOwner } from "@beep/repo-cli/test/Quality";
 import {
@@ -200,6 +202,7 @@ const branchProtectionContextSnapshotUrl = new URL(
   import.meta.url
 );
 const checkWorkflowUrl = new URL("../../../../../.github/workflows/check.yml", import.meta.url);
+const heavyWorkflowUrl = new URL("../../../../../.github/workflows/heavy.yml", import.meta.url);
 const integrationShardPlanUrl = new URL(
   "../../../../../packages/law-practice/server/vitest.integration.shards.json",
   import.meta.url
@@ -2982,6 +2985,20 @@ it.layer(ciExecutionLayer(fullDoctest), { timeout: "10 seconds" })("full Doctest
   );
 });
 
+const docsPolicy = ciSpawner([]);
+it.layer(ciExecutionLayer(docsPolicy), { timeout: "10 seconds" })("Docs Policy CI lane execution", (it) => {
+  it.effect("runs the root tasks and the knowledge doctor as one buffered group, with no census step", () =>
+    Effect.gen(function* () {
+      yield* runCiLane("docs-policy", baseOptions);
+
+      const commands = spawnLines(docsPolicy);
+      expect(commands).toHaveLength(2);
+      expect(A.some(commands, Str.endsWith("beep knowledge doctor ci --base origin/main"))).toBe(true);
+      expect(A.some(commands, Str.includes("quality check-census"))).toBe(false);
+    })
+  );
+});
+
 const fallow = ciSpawner([]);
 const fallowReports: ReadonlyArray<readonly [string, string]> = [
   [".beep/fallow/audit.check.json", "{}"],
@@ -3014,6 +3031,241 @@ it.layer(ciExecutionLayer(failedInventory), { timeout: "10 seconds" })("JSDoc in
       const commands = spawnLines(failedInventory);
       expect(commands).toHaveLength(1);
       expect(commands[0]).toContain("cache execute -- run jsdoc:inventory:check");
+    })
+  );
+});
+
+// The Heavy / Check lane's census step: after a green Turbo check run, the lane
+// replays its Turbo selection as a JSON dry run and gates the single-checker
+// baseline on the rows whose packages that run checked.
+const CENSUS_ROW_PACKAGES = ["@beep/schema", "@beep/repo-cli", "@beep/law-practice-domain"];
+const censusBaselineRow = (name: string) => ({
+  name,
+  tsconfig: `${name}/tsconfig.json`,
+  instantiations: 1000,
+  types: 100,
+  checkTimeMs: 10,
+});
+const censusBaselineSource = (
+  packages: ReadonlyArray<string>,
+  typeperfFixtures: ReadonlyArray<string>
+): readonly [string, string] => [
+  CHECK_CENSUS_BASELINE_PATH,
+  encodeJson({
+    schemaVersion: "check-census-baseline/v1",
+    measuredAt: "2026-11-13T07:07:38.700Z",
+    commit: "65953fc9290d77e73a53c13dc852aeaecacffe6a",
+    dirtyWorktree: false,
+    compiler: "7.0.2+fixture",
+    command: "bun run tsc -p <tsconfig> --noEmit --extendedDiagnostics --singleThreaded --tsBuildInfoFile <fresh>",
+    checkTimeBandPercent: 5,
+    packages: A.map(packages, censusBaselineRow),
+    typeperfFixtures: A.map(typeperfFixtures, censusBaselineRow),
+  }),
+];
+const CENSUS_BASELINE = censusBaselineSource(CENSUS_ROW_PACKAGES, ["@beep/schema#typeperf/baseline"]);
+
+// A spawner whose Turbo dry run answers with `planned` and whose other runs exit
+// with `exitFor(args)`.
+const censusLaneSpawner = (
+  planned: ReadonlyArray<{ readonly package: string; readonly task: string; readonly command?: string }>,
+  exitFor: (args: ReadonlyArray<string>) => number = () => 0
+) =>
+  ScriptedSpawner.make((_command, args) =>
+    A.contains(args, "--dry-run=json") ? { stdout: storybookDryRun(planned) } : { exit: exitFor(args) }
+  );
+
+const isTurboCheckStep = (line: string): boolean => Str.startsWith("bun run check -- ")(line);
+const isCensusSelectionProbe = (line: string): boolean =>
+  Str.includes(" turbo run check ")(` ${line}`) && Str.endsWith("--only --dry-run=json")(line);
+const CENSUS_STEP_LINE = "bun run beep quality check-census --gate-only --defer-stale-stamp";
+const ROW_FILTER_ARGS = "--filter=@beep/schema --filter=@beep/repo-cli --filter=@beep/law-practice-domain";
+
+const fullCensus = censusLaneSpawner([]);
+it.layer(ciExecutionLayer(fullCensus, [CENSUS_BASELINE]), { timeout: "10 seconds" })(
+  "Check lane census (full run)",
+  (it) => {
+    it.effect("gates every baselined row after the Turbo check run without probing Turbo", () =>
+      Effect.gen(function* () {
+        yield* runCiLane("check", baseOptions);
+
+        const lines = spawnLines(fullCensus);
+        expect(lines).toHaveLength(2);
+        expect(isTurboCheckStep(firstOf(lines))).toBe(true);
+        expect(stepAt(lines, 1)).toBe(CENSUS_STEP_LINE);
+        const output = yield* consoleOutput;
+        expect(output).toContain("[ci] check: check-census gates every baselined row (full run)");
+      })
+    );
+  }
+);
+
+const selectedCensus = censusLaneSpawner([
+  { package: "@beep/repo-cli", task: "check", command: "bun run beep:check" },
+  { package: "@beep/schema", task: "check", command: "<NONEXISTENT>" },
+  { package: "@beep/utils", task: "build" },
+]);
+it.layer(ciExecutionLayer(selectedCensus, [CENSUS_BASELINE]), { timeout: "10 seconds" })(
+  "Check lane census (affected run that checked a row package)",
+  (it) => {
+    it.effect("probes the lane's Turbo selection after the check run, then gates only the checked rows' packages", () =>
+      Effect.gen(function* () {
+        yield* runCiLane("check", prShapeOptions);
+
+        const lines = spawnLines(selectedCensus);
+        expect(lines).toHaveLength(3);
+        expect(isTurboCheckStep(firstOf(lines))).toBe(true);
+        expect(firstOf(lines)).toContain("--affected --summarize");
+        const probe = stepAt(selectedCensus.spawns, 1);
+        expect(isCensusSelectionProbe(spawnLine(probe))).toBe(true);
+        expect(spawnLine(probe)).toContain(`${ROW_FILTER_ARGS} --affected --only --dry-run=json`);
+        expect(spawnLine(probe)).not.toContain("--summarize");
+        expect(probe.env).toMatchObject({ TURBO_SCM_BASE: "origin/main" });
+        expect(stepAt(lines, 2)).toBe(`${CENSUS_STEP_LINE} --row-packages @beep/repo-cli`);
+        const output = yield* consoleOutput;
+        expect(output).toContain(
+          "[ci] check: check-census gates the rows of @beep/repo-cli, which this run's Turbo selection checks"
+        );
+      })
+    );
+  }
+);
+
+const unselectedCensus = censusLaneSpawner([{ package: "@beep/utils", task: "build" }]);
+it.layer(ciExecutionLayer(unselectedCensus, [CENSUS_BASELINE]), { timeout: "10 seconds" })(
+  "Check lane census (affected run that checked no row package)",
+  (it) => {
+    it.effect("skips the census step with one line saying why", () =>
+      Effect.gen(function* () {
+        yield* runCiLane("check", prShapeOptions);
+
+        const lines = spawnLines(unselectedCensus);
+        expect(lines).toHaveLength(2);
+        expect(isCensusSelectionProbe(stepAt(lines, 1))).toBe(true);
+        expect(A.some(lines, Str.includes("quality check-census"))).toBe(false);
+        const output = yield* consoleOutput;
+        expect(output).toContain(
+          "[ci] check: check-census skipped: this run's Turbo selection checks no baselined row's package (@beep/schema, @beep/repo-cli, @beep/law-practice-domain), so no row can have moved"
+        );
+      })
+    );
+  }
+);
+
+const filteredCensus = censusLaneSpawner([{ package: "@beep/law-practice-domain", task: "check" }]);
+it.layer(ciExecutionLayer(filteredCensus, [CENSUS_BASELINE]), { timeout: "10 seconds" })(
+  "Check lane census (run narrowed by --filter)",
+  (it) => {
+    it.effect("replays the lane's own --filter instead of widening it with the row filters", () =>
+      Effect.gen(function* () {
+        yield* runCiLane("check", CiLaneRunOptions.make({ ...baseOptions, filter: "@beep/law-practice-domain" }));
+
+        const probe = stepAt(spawnLines(filteredCensus), 1);
+        expect(probe).toContain("run check");
+        expect(probe).toContain("--filter=@beep/law-practice-domain --only --dry-run=json");
+        expect(probe).not.toContain("--filter=@beep/schema");
+        expect(probe).not.toContain("--affected");
+        expect(stepAt(spawnLines(filteredCensus), 2)).toBe(
+          `${CENSUS_STEP_LINE} --row-packages @beep/law-practice-domain`
+        );
+      })
+    );
+  }
+);
+
+const rowlessCensus = censusLaneSpawner([]);
+it.layer(ciExecutionLayer(rowlessCensus, [censusBaselineSource([], [])]), { timeout: "10 seconds" })(
+  "Check lane census (baseline without rows)",
+  (it) => {
+    it.effect("skips without a Turbo probe when no row package exists to select", () =>
+      Effect.gen(function* () {
+        yield* runCiLane("check", prShapeOptions);
+
+        const lines = spawnLines(rowlessCensus);
+        expect(lines).toHaveLength(1);
+        expect(isTurboCheckStep(firstOf(lines))).toBe(true);
+        const output = yield* consoleOutput;
+        expect(output).toContain(
+          "[ci] check: check-census skipped: this run's Turbo selection checks no baselined row's package ()"
+        );
+      })
+    );
+  }
+);
+
+const redCheckCensus = censusLaneSpawner([{ package: "@beep/repo-cli", task: "check" }], (args) =>
+  A.contains(args, "check") ? 1 : 0
+);
+it.layer(ciExecutionLayer(redCheckCensus, [CENSUS_BASELINE]), { timeout: "10 seconds" })(
+  "Check lane census after a red Turbo run",
+  (it) => {
+    it.effect("never measures a tree whose Turbo check run failed", () =>
+      Effect.gen(function* () {
+        const exit = yield* runCiLane("check", prShapeOptions).pipe(Effect.exit);
+
+        exit.pipe(Exit.isFailure, assertTrue);
+        const lines = spawnLines(redCheckCensus);
+        expect(lines).toHaveLength(1);
+        expect(isTurboCheckStep(firstOf(lines))).toBe(true);
+      })
+    );
+  }
+);
+
+const redCensus = censusLaneSpawner([{ package: "@beep/schema", task: "check" }], (args) =>
+  A.contains(args, "check-census") ? 1 : 0
+);
+it.layer(ciExecutionLayer(redCensus, [CENSUS_BASELINE]), { timeout: "10 seconds" })(
+  "Check lane census gate failure",
+  (it) => {
+    it.effect("fails the lane when the census step fails", () =>
+      Effect.gen(function* () {
+        const error = yield* runCiLane("check", prShapeOptions).pipe(Effect.flip);
+
+        expect(error._tag).toBe("QualityTaskGroupFailed");
+        const lines = spawnLines(redCensus);
+        expect(lastOf(lines)).toBe(`${CENSUS_STEP_LINE} --row-packages @beep/schema`);
+      })
+    );
+  }
+);
+
+const unreadableCensusBaseline = censusLaneSpawner([]);
+it.layer(ciExecutionLayer(unreadableCensusBaseline), { timeout: "10 seconds" })(
+  "Check lane census without a readable baseline",
+  (it) => {
+    it.effect("fails the affected lane naming the baseline it could not read", () =>
+      Effect.gen(function* () {
+        const error = yield* runCiLane("check", prShapeOptions).pipe(Effect.flip);
+
+        expect(error.message).toBe(`Failed to read ${CHECK_CENSUS_BASELINE_PATH} for the check-census row selection.`);
+      })
+    );
+  }
+);
+
+describe("Check lane census step classification", () => {
+  const HeavyLaneStep = S.Struct({ name: S.optionalKey(S.String), run: S.optionalKey(S.String) });
+
+  // A red from a step the route census classes `setup` or `aggregate` is charged to no lane, so the
+  // census must run inside the lane body's own step, never as a workflow step of its own.
+  it.effect("runs inside the Heavy / Check job's lane step, which the route census classes as a task", () =>
+    Effect.gen(function* () {
+      const workflowText = yield* Effect.tryPromise({
+        try: () => Bun.file(heavyWorkflowUrl).text(),
+        catch: (cause) => CiLaneTestOperationError.make({ cause }),
+      });
+      const workflow = parseWorkflowYaml(workflowText);
+      expect(yamlAt(workflow, ["jobs", "check", "env", "BEEP_CI_LANE_ID"])).toBe("check");
+      const steps = yield* S.decodeUnknownEffect(S.Array(HeavyLaneStep))(yamlAt(workflow, ["jobs", "check", "steps"]));
+      const laneSteps = A.filter(steps, (step) =>
+        O.exists(O.fromUndefinedOr(step.run), Str.includes('run_lane ci lane "${{ env.BEEP_CI_LANE_ID }}"'))
+      );
+
+      expect(A.map(laneSteps, (step) => step.name)).toStrictEqual(["Run verification lane"]);
+      expect(routeStepClass("Run verification lane")).toBe("task");
+      expect(ROUTE_SETUP_STEP_NAMES).not.toContain("Run verification lane");
+      expect(workflowText).not.toContain("check-census");
     })
   );
 });

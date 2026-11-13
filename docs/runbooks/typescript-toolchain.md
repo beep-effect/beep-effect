@@ -218,6 +218,78 @@ After updating:
    compute profile `yeet final-check` runs only the changeset status for
    repo-sanity, so there hosted Repo Sanity is the stamp check's proof.
 
+### The check-census gate: what runs where
+
+The single-checker gate samples the rows of
+`standards/check-census.regression-baseline.jsonc` with
+`tsc --singleThreaded --extendedDiagnostics` and compares each row's
+instantiation count with its baseline. Three places run part of it:
+
+| Where | Command | What it proves |
+| --- | --- | --- |
+| Local, on a built tree | `bun run beep quality check-census --gate-only` | Every row; a compiler change fails |
+| Repo Sanity (`ci:repo-sanity:check-census-stamp`) | `bun run beep quality check-census --stamp-only` | The baseline's compiler stamp equals the installed `tsc --version`; samples nothing |
+| Heavy / Check (`ci:check:census`, the lane's last task) | `bun run beep quality check-census --gate-only --defer-stale-stamp`, plus `--row-packages` on an affected run | The rows whose packages this run's Turbo selection checked |
+
+Each row has one of two classes. They are defined in
+`packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts`
+(`CheckCensusBandRow`, `CHECK_CENSUS_BAND_ROW_PERCENT`), not in the baseline,
+which stays machine-written:
+
+- Strict rows: `@beep/schema`, its five typeperf fixtures, and any row the
+  band list does not name, so a newly baselined row is strict. Growth above the
+  32-instantiation noise floor fails.
+- Band rows: `@beep/repo-cli` and `@beep/law-practice-domain`. Growth fails
+  only above 10% of the row's baseline. Growth above the noise floor but within
+  10% is reported with its delta, its percent and the baseline's date, and
+  passes.
+- A decrease on either class prints a tighten hint.
+
+Band growth is cumulative against the stored baseline, so the pull request that
+goes red is whichever one crosses the line, not the one that caused the growth.
+At 5% that happened about every six days for `@beep/repo-cli` (14.6% in 17
+days); 10% moves it to about every twelve and still catches a single real step
+change.
+
+On Heavy / Check the census runs inside the lane step that hosted CI names
+`Run verification lane`, which the route census classes as a task step, so its
+red is charged to the Check lane. It starts only after the lane's Turbo run is
+green, because it needs the declarations that run builds and a tree that
+type-checks. A push run (no `--affected`) gates every row. An affected run
+replays the lane's own Turbo selection as
+`turbo run check --filter=<row package>... --affected --only --dry-run=json`
+with the lane's `TURBO_SCM_BASE`, and gates only the rows whose packages have a
+`check` task in that plan. A row named `<package>#<fixture>` belongs to
+`<package>`. When the plan checks no row package, the lane prints one skip line
+and runs nothing more; Turbo's affected set already includes dependents and
+selects everything on a global input change. When the installed compiler
+differs from the baseline's stamp, the step prints that the baseline is stale
+and passes without sampling, because Repo Sanity's stamp step owns that red.
+On a runner the gate appends a table (row, class, baseline, measured, delta,
+percent, outcome) to the job summary, under a line naming the baseline's
+measured-at date and commit. Measured locally on 2026-11-13, the step
+takes about 24 s when it gates `@beep/repo-cli`, about 5 s for the
+`@beep/schema` rows or `@beep/law-practice-domain`, and 30 s for every row; an
+affected run that checks no row package pays only the 1 to 2 s Turbo dry run.
+
+A band-row failure reports cumulative growth, not the failing pull request's
+own regression. Its message names the baseline's measured-at date and commit,
+the baseline count, the measured total, the delta and its percent against the
+10% band, says the delta is not this pull request's alone, and gives the
+re-baseline command, which needs a built tree; the job summary repeats it
+under the table. The gate does not measure the pull request's own share (that
+needs a merge-base measurement). Treat the failure as a deliberate review
+point: find what grew since the baseline (a new schema family, a widened
+generic, a new service graph), then cut it, or accept it in review and
+re-measure in the same pull request.
+
+Re-measure every row with
+`bun run beep quality check-census --write-baseline` on a built tree
+(`bun run build`, or `bunx turbo run build --filter='@beep/repo-cli^...' --filter='@beep/law-practice-domain^...' --filter=@beep/schema`)
+and commit the rewritten baseline. That is needed after a compiler bump (the
+Repo Sanity red), after accepting an increase on either class, and to lock in a
+decrease the tighten hint reports.
+
 ## Type-aware Oxlint on tsrs
 
 The installed `@effect/tsgo` 0.67.5 ships the Effect build of tsrs

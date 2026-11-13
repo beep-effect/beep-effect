@@ -239,7 +239,7 @@ it.layer(LiveSource, { timeout: "30 seconds" })("yeet economics adjudicated term
       ]).toEqual([1, 1, 1, 25]);
       expect(
         Str.includes(
-          "  censoring: left 0 episode(s) (0 attempt(s)), right 1 streak(s) (1 red and 1 terminated attempt(s), observed at least 25 min)"
+          "  censoring: left 0 episode(s) (0 attempt(s)), right 1 streak(s) (1 red, 1 terminated and 0 monitor-decided attempt(s), observed at least 25 min)"
         )(renderYeetEconomicsReport(report))
       ).toBe(true);
     })
