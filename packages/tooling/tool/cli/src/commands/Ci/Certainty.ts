@@ -1156,6 +1156,8 @@ export class CiCertaintySource extends Context.Service<CiCertaintySource, CiCert
   $I`CiCertaintySource`
 ) {}
 
+// KEEP (D-22): `Git.log` has no `--first-parent` or `--until`, and the per-commit `diff-tree` answers
+// nothing for a merge commit, which no kit diff member reproduces (`changedFiles` compares two trees).
 const gitLines = Effect.fn("Ci.certaintyGitLines")(
   function* (repoRoot: string, args: ReadonlyArray<string>) {
     const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;

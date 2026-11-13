@@ -6,7 +6,7 @@
     "title": "repo-cli gh/git consolidation",
     "status": "active",
     "created": "2026-11-01",
-    "updated": "2026-11-02",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/repo-cli-gh-git-consolidation",
@@ -53,6 +53,7 @@
     "research/cache-baseline-review-w7-retire.md",
     "research/cache-baseline-review-w7b.md",
     "research/cache-baseline-review-w7c.md",
+    "research/closeout-ledger-2026-11-13.md",
     "research/dirty-axis-differential-w2.json",
     "research/git-readers-differential-w1a.json",
     "research/groups-differential-w7.json",
@@ -62,6 +63,7 @@
     "research/reviewer-ci-github-differential-w3.json",
     "research/site-list.md",
     "research/w7-site-census-2026-11-03.md",
+    "research/w8-drift-census-2026-11-13.md",
     "research/worktree-differential-w7.json",
     "research/yeet-differential-w7.json",
     "research/yeet-gh-seams-differential-w6.json",
@@ -88,22 +90,22 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "in-progress"
     }
   ],
   "verificationCommands": [

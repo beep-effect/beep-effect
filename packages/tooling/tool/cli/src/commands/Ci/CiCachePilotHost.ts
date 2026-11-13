@@ -269,6 +269,8 @@ const cleanupWorktree = Effect.fn("Ci.cleanupWorktree")(function* (workspace: st
   if (Str.isEmpty(tree) || !(yield* fs.exists(tree).pipe(Effect.orElseSucceed(() => false)))) return false;
   const owned = `${workspace}-worktrees/cache-producer-${yield* variable("GITHUB_RUN_ID")}-${yield* variable("GITHUB_RUN_ATTEMPT")}-`;
   if (tree !== `${owned}a` && tree !== `${owned}b`) return yield* refusePath("Refusing unexpected producer worktree.");
+  // KEEP (D-22): git's own stderr (`... is not a working tree`) streams to the job log, the parity the
+  // `ci-cache-pilot` goldens pin against the retired shell adapter; the kit captures it.
   return (yield* runInherited("git", ["worktree", "remove", "--", tree])) !== 0;
 });
 

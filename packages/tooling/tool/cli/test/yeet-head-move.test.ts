@@ -7,11 +7,12 @@ import {
 } from "@beep/repo-cli/test/Yeet";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
-import { assertNone } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
@@ -43,7 +44,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       Effect.gen(function* () {
         const s = yield* stack();
         const interruptCause = Cause.interrupt(42);
-        const interrupted = Git.layerTest({ isAncestor: () => Effect.failCause(interruptCause) });
+        // The local mailbox and object probes run on `Git.configGet` / `Git.refExists` (W8, SPEC D-22).
+        const interrupted = Git.layerTest({
+          configGet: () => Effect.succeedNone,
+          refExists: () => Effect.succeed(true),
+          isAncestor: () => Effect.failCause(interruptCause),
+        });
         const serviceContext = yield* Layer.build(
           YeetHeadMoveClassifier.layer(s.root).pipe(Layer.provide(interrupted))
         );
@@ -341,6 +347,18 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         const result = yield* classify(s.root, s.l2, after, s.squash);
         expect(result._tag).toBe("unknown");
         if (result._tag === "unknown") expect(result.reason).toContain("UTF-8");
+      })
+    );
+    it.effect("reads a commit's committer instant through Git.log and none for an unknown commit", () =>
+      Effect.gen(function* () {
+        const s = yield* stack();
+        const context = yield* Layer.build(YeetHeadMoveClassifier.layer(s.root));
+        const service = Context.get(context, YeetHeadMoveClassifier);
+        const expected = yield* git(s.root, ["show", "-s", "--format=%cI", s.c2]);
+        const instant = yield* service.committerInstant(s.c2);
+        assertSome(O.map(instant, DateTime.toEpochMillis), DateTime.toEpochMillis(DateTime.makeUnsafe(expected)));
+        const missing = yield* service.committerInstant(Str.repeat(40)("f"));
+        assertNone(missing);
       })
     );
     it.effect("provides a requirement-free deterministic test service", () =>
