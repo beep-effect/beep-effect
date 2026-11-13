@@ -12,7 +12,7 @@
   "packetPath": "goals/skill-lane-probe",
   "lifecycle": "active",
   "mission": "Measure whether the schema-first-development skill changes Opus 5.5 lane-fraction scores on the 12 archived SkillOpt tasks, laws prompt with the skill against without it, and return a verdict against a rule merged before any scored run.",
-  "statusNote": "Authored 2026-11-13, not started. Next: P0, then the report change and first slice in P1. The 120 scored runs need plan headroom on the Claude account.",
+  "statusNote": "P0 done 2026-11-13: preflight 12 of 12 under profile v3, plan headroom confirmed. P1: lane-fraction report route, permutation test, fixed-task interval, Holm family tests and the four-outcome verdict, with tests; the first slice passes. Next: land the code PR, then the 120 scored runs.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -35,7 +35,7 @@
     "goals/skill-lane-probe/GOAL.md",
     "goals/skill-lane-probe/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -51,12 +51,12 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",
