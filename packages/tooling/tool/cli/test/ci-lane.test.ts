@@ -2010,7 +2010,9 @@ describe("ciLaneStepsForTesting", () => {
     for (const path of [
       ".claude/skills/explore/SKILL.md",
       ".claude/skills/yeet/references/gh-rest.md",
-      ".agents/skills/explore/SKILL.md",
+      // The mirror is a tracked symlink: a retargeted or deleted mirror shows as the bare path.
+      ".agents/skills",
+      "packages/tooling/library/ai-sync/src/SkillsLock.schemas.ts",
       ".agents/skill-patches/oracle/0001-skill-md.patch",
       "skills-lock.json",
       ".codex/config.toml",
@@ -2030,6 +2032,7 @@ describe("ciLaneStepsForTesting", () => {
       ".claude/agents/crispener.md",
       "packages/foundation/modeling/schema/src/index.ts",
       "packages/tooling/tool/cli/src/commands/Yeet/index.ts",
+      ".agents/skillset.md",
       "bun.lock",
     ]) {
       expect(relevant.test(path), path).toBe(false);

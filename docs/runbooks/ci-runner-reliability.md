@@ -121,8 +121,8 @@ turn an upstream push into a red on an unrelated pull request. Upstream drift
 stays with the Skills Update Train and local `beep skills update --check`. On a pull request the job's
 lane gate reads the `skills` row of the change-profile pattern data and passes
 `--skip-skills-lock` when the diff touches none of its paths (skills, mirror,
-patch series, lock, Codex configuration, the `skills` command and the gate's
-own sources). Pushes, local replays and `yeet final-check` always run it.
+patch series, lock, Codex configuration, the `skills` command, the
+`@beep/ai-sync` schemas it decodes the lock with and the gate's own sources). Pushes, local replays and `yeet final-check` always run it.
 
 On code pull requests, Change Profile also reports per-lane relevance
 (`codegen_relevant`, `ecosystem_relevant`, `nix_relevant`,
