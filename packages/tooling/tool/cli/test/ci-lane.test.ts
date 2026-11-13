@@ -1186,9 +1186,7 @@ describe("CI lane partitions", () => {
       // The plan waits for nothing, classifies the diff itself and plans with the partitions' own shape.
       expect(yamlAt(workflow, ["jobs", "test-plan", "needs"])).toBeUndefined();
       expect(yamlAt(workflow, ["jobs", "test-plan", "if"])).toBeUndefined();
-      expect(workflowText).toContain(
-        'bun run beep ci lane test-unit --plan-partitions --affected --base "$BEEP_COVERAGE_BASE_SHA"'
-      );
+      expect(workflowText).toContain("bun run beep ci lane test-unit --plan-partitions --affected --event-base");
       expect(workflowText).toContain(
         'bun run beep ci lane test-integration --plan-partitions --affected --base "origin/${GITHUB_BASE_REF:-main}"'
       );
