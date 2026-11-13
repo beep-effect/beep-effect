@@ -52,6 +52,9 @@ bun run beep yeet publish --stack-on <parent-pr> --message "type(scope): summary
    finds the PR and links it.
 5. Later pushes are plain `bun run beep yeet publish --message "..."`. Yeet
    reads the stack from the branch's PR; the flag is not repeated.
+6. Until the pilot's verdict (due 2026-11-27), add the stack's row to
+   `goals/yeet-async-merge-and-stacks/research/stack-pilot-2026-11.md` in the
+   layer's PR before you gate the top; that file names the fields.
 
 ## Keep the layer on the parent
 

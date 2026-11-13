@@ -24,10 +24,12 @@ import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import baselineReceipt from "./fixtures/agent-effectiveness/comparison/baseline.json" with { type: "json" };
 import candidateReceipt from "./fixtures/agent-effectiveness/comparison/candidate.json" with { type: "json" };
@@ -396,6 +398,34 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "10 seconds" })("agent-
       expect(bundle.prompts.length).toBe(2);
       expect(bundle.projectName).toBe("beep-agent-effectiveness");
       expect(process.exitCode ?? 0).toBe(0);
+    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+  );
+
+  it.effect("prints the static prompt bundle summary as text without --json", () =>
+    Effect.gen(function* () {
+      yield* runAgentEffectivenessCommand(["prompts", "bundle"]);
+      const lines = yield* TestConsole.logLines;
+      expect(A.map(lines, String)).toEqual(["agent-effectiveness prompts: 2", "project: beep-agent-effectiveness"]);
+    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+  );
+
+  it.effect("prints the doctor summary as text without --json", () =>
+    Effect.gen(function* () {
+      const tmpDir = yield* temporaryDirectory;
+      const path = yield* Path.Path;
+      const workerReportPath = path.join(tmpDir, "worker-eval.json");
+      yield* writeText(workerReportPath, workerReportJson);
+      yield* runAgentEffectivenessCommand([
+        "doctor",
+        "--data-root",
+        path.join(tmpDir, "metrics"),
+        "--worker-eval-report",
+        workerReportPath,
+        "--no-phoenix",
+      ]);
+      const lines = yield* TestConsole.logLines;
+      const first = A.head(A.map(lines, String));
+      expect(O.exists(first, Str.startsWith("agent-effectiveness doctor: status="))).toBe(true);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 

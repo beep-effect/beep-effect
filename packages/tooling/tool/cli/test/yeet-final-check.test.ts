@@ -2,8 +2,9 @@ import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { LenientManifest } from "@beep/package-json/LenientManifest";
-import { ChangeAtom, ChangeClassifier, ChangeSet, RouteError } from "@beep/repo-cli/commands/Ci";
+import { ChangeAtom, ChangeAtomKind, ChangeClassifier, ChangeSet, RouteError } from "@beep/repo-cli/commands/Ci";
 import { LintPolicySweeps } from "@beep/repo-cli/commands/Quality/Quality.schemas";
+import { CoverageNoopScope, CoverageSelectedScope } from "@beep/repo-cli/test/Quality";
 import { ComputeProfileError, ComputeProfileProbe, makeComputeProfileProbe } from "@beep/repo-cli/test/RepoRun";
 import { configStringOption } from "@beep/repo-cli/test/SharedInternals";
 import {
@@ -20,6 +21,9 @@ import {
   FinalCheckGate,
   FinalCheckPlannedStep,
   FinalCheckReceipt,
+  FinalCheckRoute,
+  FinalCheckRouteGate,
+  FinalCheckSkip,
   FinalCheckStepResult,
   finalCheckGateSetRefusal,
   finalCheckRefusal,
@@ -67,6 +71,7 @@ import { NodeCommandTestLayer } from "./support/CommandTest.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 import { recordedGithub } from "./support/YeetGithub.ts";
 import type { ScriptResult } from "@beep/commands/ScriptedSpawner";
+import type { CoverageAffectedScope } from "@beep/repo-cli/test/Quality";
 import type { FinalCheckVerdict } from "@beep/repo-cli/test/Yeet";
 
 const encodeJsonText = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
@@ -897,6 +902,43 @@ const routedGateRun = Effect.fn("FinalCheckTest.routedGateRun")(function* (
   return { root, route, result };
 });
 
+// One coverage step that leaves a `ran` marker and fails, so a run that spawns it is visible.
+const coverageGateRun = Effect.fn("FinalCheckTest.coverageGateRun")(function* (
+  coverageScope: CoverageAffectedScope,
+  skips: ReadonlyArray<FinalCheckSkip>,
+  route: O.Option<FinalCheckRoute>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const root = yield* fs.makeTempDirectoryScoped({ prefix: "final-check-coverage-" });
+  const run = {
+    repoRoot: root,
+    headSha: HEAD,
+    mergeBase: BASE,
+    planned: [
+      FinalCheckPlannedStep.make({
+        gate: "coverage",
+        hostedContext: "Heavy / Coverage Regression, Test Unit (affected packages)",
+        step: QualityTaskStep.make({
+          label: "final-check:coverage",
+          command: "sh",
+          args: ["-c", "echo ran > ran; exit 1"],
+          cwd: root,
+        }),
+      }),
+    ],
+    skips,
+    resume: false,
+    coverageScope,
+  };
+  const result = yield* runFinalCheckGatesForTesting(
+    O.match(route, { onNone: () => run, onSome: (value) => ({ ...run, route: value }) }),
+    ["coverage"],
+    false
+  );
+  const ran = yield* fs.exists(`${root}/ran`);
+  return { result, ran };
+});
+
 describe("final-check verification routing", () => {
   it.effect("old receipt without route still decodes", () =>
     Effect.gen(function* () {
@@ -1051,6 +1093,71 @@ describe("final-check verification routing", () => {
             (entry) => entry.decision
           )
         ).toEqual(["selected", "selected"]);
+      })
+    );
+  });
+
+  it.layer(NodeCommandTestLayer, { timeout: "30 seconds" })("coverage gate affected-scope noop", (it) => {
+    it.effect("records a passed step with the noop reason and runs nothing", () =>
+      Effect.gen(function* () {
+        const { result, ran } = yield* coverageGateRun(CoverageNoopScope.make({}), [], O.none());
+        expect(result.steps).toHaveLength(1);
+        expect(result.steps[0]).toMatchObject({
+          gate: "coverage",
+          label: "final-check:coverage",
+          status: "passed",
+          durationMs: 0,
+          reason: "no affected packages",
+        });
+        expect(result.shadowMisses).toEqual([]);
+        expect(ran).toBe(false);
+      })
+    );
+
+    it.effect("runs the coverage step for a selected scope", () =>
+      Effect.gen(function* () {
+        const { result, ran } = yield* coverageGateRun(
+          CoverageSelectedScope.make({ packageNames: ["@beep/b"], dependentPackageNames: [] }),
+          [],
+          O.none()
+        );
+        expect(result.steps[0]?.status).toBe("failed");
+        expect(ran).toBe(true);
+      })
+    );
+
+    it.effect("keeps an operator skip ahead of a noop scope", () =>
+      Effect.gen(function* () {
+        const { result, ran } = yield* coverageGateRun(
+          CoverageNoopScope.make({}),
+          [FinalCheckSkip.make({ gate: "coverage", reason: "x" })],
+          O.none()
+        );
+        expect(result.steps[0]).toMatchObject({ status: "skipped", reason: "x" });
+        expect(ran).toBe(false);
+      })
+    );
+
+    it.effect("keeps a route skip ahead of a noop scope", () =>
+      Effect.gen(function* () {
+        const route = FinalCheckRoute.make({
+          footprintDigest: "footprint",
+          atomsByKind: R.map(ChangeAtomKind.Enum, () => 0),
+          gates: [
+            FinalCheckRouteGate.make({
+              gate: "coverage",
+              lane: "coverage",
+              decision: "skipped",
+              refinements: [],
+              reason: "route:test",
+            }),
+          ],
+          shadowMisses: [],
+          reason: "footprint",
+        });
+        const { result, ran } = yield* coverageGateRun(CoverageNoopScope.make({}), [], O.some(route));
+        expect(result.steps[0]).toMatchObject({ status: "skipped", reason: "route:test" });
+        expect(ran).toBe(false);
       })
     );
   });
