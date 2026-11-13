@@ -5,10 +5,14 @@ import {
   CI_LANE_ID_VALUES,
   HostedJob,
   HostedRun,
+  HostedStep,
+  HostedTaskOutcome,
   RouteCensusReader,
   RouteCorpusLoaded,
   RouteCorpusReceipt,
   RouteError,
+  RouteRedOrigin,
+  RouteStepClass,
   routeFootprintCanonicalJson,
   VerificationRoute,
 } from "@beep/repo-cli/commands/Ci";
@@ -17,14 +21,18 @@ import {
   ensureRouteHeads,
   hostedJobAttribution,
   hostedJobCostMs,
+  hostedJobRedOrigin,
   hostedLaneJobs,
   jobNameToLane,
   missingFromBatchCheck,
   orderSelectedLanes,
   prePushLaneId,
+  ROUTE_SETUP_STEP_NAMES,
   RouteCensusReaderLive,
   RouteGit,
   routeJobMinutes,
+  routeRedOriginChargesLane,
+  routeStepClass,
   verificationRouteLayer,
 } from "@beep/repo-cli/commands/Ci/RouteCensus";
 import { sha256Hex } from "@beep/repo-cli/test/Goals";
@@ -33,11 +41,13 @@ import { DEFAULT_GATE_ORDER_SEED, orderWaveLanes, WaveOrder } from "@beep/repo-c
 import { provideScopedLayer } from "@beep/test-utils/Layer";
 import { NodeCrypto } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -47,7 +57,16 @@ import * as Str from "effect/String";
 import censusRunsJson from "./fixtures/ci-route/census/census-runs.json" with { type: "json" };
 import partitionRunsJson from "./fixtures/ci-route/census/partition-runs-2026-11-12.json" with { type: "json" };
 import replayRunsJson from "./fixtures/ci-route/census/replay-runs.json" with { type: "json" };
-import type { ChangeAtomKind, CiLaneId, RouteCensus, RouteLaneCost, RouteReplay } from "@beep/repo-cli/commands/Ci";
+import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
+import type {
+  ChangeAtomKind,
+  CiLaneId,
+  RouteCensus,
+  RouteLaneCost,
+  RouteReplay,
+  RouteTaskOutcome,
+} from "@beep/repo-cli/commands/Ci";
+import type * as Cause from "effect/Cause";
 
 const decodeRuns = S.decodeUnknownEffect(S.Array(HostedRun));
 
@@ -198,6 +217,14 @@ describe("route joins", () => {
     assertNone(jobNameToLane("Test Plan"));
   });
 
+  it("joins a reusable workflow's job to its caller's lane when the whole name joins none", () => {
+    assertSome(jobNameToLane("Test Unit (repo-cli-1) / Overflow"), "test-unit");
+    assertSome(jobNameToLane("Heavy / Test Integration / Overflow"), "test-integration");
+    // `Heavy` itself is no lane, so a retired heavy job stays unknown.
+    assertNone(jobNameToLane("Heavy / Effect Diagnostics"));
+    expect(hostedJobAttribution("Heavy / Effect Diagnostics").jobClass).toBe("unknown");
+  });
+
   it("joins quality:<lane> pre-push ids to lanes both ways", () => {
     expect(prePushLaneId("docgen")).toBe("quality:docgen");
     assertSome(ciLaneOfPrePushLaneId("quality:docgen"), "docgen");
@@ -302,6 +329,421 @@ describe("route job attribution", () => {
     expect(minutes.unknownNames).toEqual(["Knip", "Shadcn Lint"]);
     assertNone(hostedJobAttribution("Knip").lane);
   });
+});
+
+const step = (name: string, conclusion?: string): HostedStep =>
+  HostedStep.make({ name, conclusion: O.fromUndefinedOr(conclusion) });
+
+const tasks = (...outcomes: ReadonlyArray<RouteTaskOutcome>): O.Option<ReadonlyArray<HostedTaskOutcome>> =>
+  O.some(A.map(outcomes, (outcome, index) => HostedTaskOutcome.make({ task: `@beep/pkg-${index}#test`, outcome })));
+
+const failedJob = (
+  name: string,
+  steps: O.Option<ReadonlyArray<HostedStep>>,
+  outcomes: O.Option<ReadonlyArray<HostedTaskOutcome>> = O.none()
+): HostedJob => HostedJob.make({ name, conclusion: O.some("failure"), steps, tasks: outcomes });
+
+// A job that failed while installing dependencies, before its lane ran.
+const SETUP_FAILURE: ReadonlyArray<HostedStep> = [
+  step("Set up job", "success"),
+  step("Checkout repository", "success"),
+  step("Setup monorepo CI", "failure"),
+  step("Run verification lane", "skipped"),
+  step("Complete job", "success"),
+];
+
+describe("route red origins", () => {
+  it("classes steps as setup, aggregate or the lane's own work", () => {
+    expect(
+      A.map(
+        [
+          "Set up job",
+          "Checkout repository",
+          "Setup monorepo CI",
+          "Determine lane execution",
+          "Require every planned Test Unit shard",
+          "Require every Lint shard",
+          "Require independent frozen trial selection",
+          "Run Test Unit shard",
+          "Post Run actions/checkout",
+        ],
+        routeStepClass
+      )
+    ).toEqual(["setup", "setup", "setup", "setup", "aggregate", "aggregate", "task", "task", "task"]);
+  });
+
+  it("reads a failed job's red origin from the step it stopped in and its tasks", () => {
+    const originOf = (job: HostedJob): string => O.getOrElse(hostedJobRedOrigin(job), () => "none");
+    const lane = step("Run Test Unit shard", "failure");
+    expect(
+      A.map(
+        [
+          HostedJob.make({ name: "Lint", conclusion: O.some("success") }),
+          HostedJob.make({ name: "Lint", conclusion: O.some("cancelled"), steps: O.some(SETUP_FAILURE) }),
+          failedJob("Heavy / Check", O.none()),
+          failedJob("Heavy / Check", O.some([])),
+          failedJob("Heavy / Check", O.some([step("Set up job", "success"), step("Run verification lane", "success")])),
+          failedJob("Heavy / Check", O.some(SETUP_FAILURE)),
+          failedJob(
+            "Test Unit",
+            O.some([step("Set up job", "success"), step("Require every planned Test Unit shard", "failure")])
+          ),
+          failedJob(
+            "Test Unit (unit-a)",
+            O.some([step("Set up job", "success"), lane, step("Complete job", "success")])
+          ),
+          // A timeout or a lost runner: the step running at the time never concluded.
+          failedJob("Heavy / Check", O.some([step("Set up job", "success"), step("Run verification lane")])),
+          failedJob("Heavy / Check", O.some([step("Set up job"), step("Checkout repository")])),
+          failedJob("Heavy / Docgen", O.some([step("Set up job", "success"), step("Setup monorepo CI", "cancelled")])),
+          // The failed step decides over an earlier one that was cancelled.
+          failedJob(
+            "Heavy / Docgen",
+            O.some([step("Restore main Docgen Turbo cache", "cancelled"), step("Run verification lane", "failure")])
+          ),
+          // A failed task decides; every task passing moves a lane-step red to the harness.
+          failedJob("Test Unit (unit-a)", O.some(SETUP_FAILURE), tasks("pass", "fail")),
+          failedJob("Test Unit (unit-a)", O.some([lane]), tasks("pass", "pass")),
+          failedJob("Test Unit (unit-a)", O.none(), tasks("pass")),
+          failedJob("Test Unit (unit-a)", O.some([lane]), tasks("pass", "not-run")),
+          failedJob("Test Unit (unit-a)", O.none(), tasks("unknown")),
+          failedJob("Test Unit (unit-a)", O.some(SETUP_FAILURE), tasks("pass")),
+        ],
+        originOf
+      )
+    ).toEqual([
+      "none",
+      "none",
+      "unattributed",
+      "unattributed",
+      "unattributed",
+      "setup",
+      "aggregate",
+      "task",
+      "task",
+      "setup",
+      "setup",
+      "task",
+      "task",
+      "harness",
+      "harness",
+      "task",
+      "unattributed",
+      "setup",
+    ]);
+  });
+
+  it("charges only task and unattributed reds to the lane", () => {
+    expect(A.map(RouteRedOrigin.literals, (origin) => [origin, routeRedOriginChargesLane(origin)])).toEqual([
+      ["task", true],
+      ["aggregate", false],
+      ["setup", false],
+      ["harness", false],
+      ["unattributed", true],
+    ]);
+  });
+});
+
+// The step-class contract reads the workflows the way GitHub lists their jobs. GitHub lists a job's own steps
+// only: a composite action's steps (setup-monorepo-ci, fetch-beep-ci) run inside the step that calls it and are
+// never listed, so the workflow files hold every step name the jobs API can report. A job of a reusable workflow
+// reports as `<caller> / <job>`.
+const WorkflowStepDoc = S.Struct({
+  name: S.String.pipe(S.optionalKey),
+  uses: S.String.pipe(S.optionalKey),
+  run: S.String.pipe(S.optionalKey),
+});
+type WorkflowStepDoc = typeof WorkflowStepDoc.Type;
+const WorkflowJobDoc = S.Struct({
+  name: S.String.pipe(S.optionalKey),
+  uses: S.String.pipe(S.optionalKey),
+  steps: WorkflowStepDoc.pipe(S.Array, S.optionalKey),
+});
+const decodeWorkflowJobs = S.decodeUnknownEffect(S.Record(S.String, WorkflowJobDoc));
+
+// Every workflow, read as text at import time, keyed by its path relative to this file.
+const WORKFLOW_TEXTS = import.meta.glob<string>("../../../../../.github/workflows/*.yml", {
+  eager: true,
+  import: "default",
+  query: "?raw",
+});
+const CHECK_WORKFLOW = ".github/workflows/check.yml";
+const REUSABLE_WORKFLOW = /\.github\/workflows\/[^@\s]+/u;
+const MATRIX_EXPRESSION = /\$\{\{\s*matrix\.[^}]*\}\}/gu;
+const QUOTED_LITERAL = /'([^']*)'/gu;
+
+// GitHub adds these steps itself; no workflow names them.
+const GITHUB_IMPLICIT_STEPS: ReadonlyArray<string> = ["Set up job", "Set up runner"];
+// The step that starts each lane's own work; an aggregate job's `Require every …` step starts it too.
+const LANE_WORK_ENTRY_STEPS: ReadonlyArray<string> = [
+  "Compare coverage evidence",
+  "Gitleaks",
+  "OSV vulnerability scan",
+  "Run JSDoc inventory ratchet",
+  "Run Fallow envelopes",
+  "Run Labs lane",
+  "Run Lint shard",
+  "Run Nix checks",
+  "Run SAST",
+  "Run Test Integration partition",
+  "Run Test Unit shard",
+  "Run commitlint",
+  "Run desktop IPC stdio proof",
+  "Run docs policy lane",
+  "Run property laws lane",
+  "Run verification lane",
+];
+// Steps that run before a lane's entry step and are classified as the lane's own work on purpose, so their reds
+// stay on the lane: Repo Sanity's documentation and merge-driver checks, and the coverage comparison's
+// evidence authentication and download (missing evidence is that lane's verdict).
+const LANE_WORK_PRELUDE_STEPS: ReadonlyArray<string> = [
+  "Authenticate latest Labs execution",
+  "Check documentation sanity",
+  "Download coverage evidence",
+  "Verify regenerate merge-driver bootstrap",
+];
+
+type ContractJob = {
+  readonly job: string;
+  readonly lanes: ReadonlyArray<CiLaneId>;
+  readonly steps: ReadonlyArray<string>;
+};
+
+// An unnamed step is listed as `Run <action>` or `Run <first command line>`.
+const listedStepName = (step: WorkflowStepDoc): string =>
+  O.getOrElse(
+    O.fromUndefinedOr(step.name),
+    () =>
+      `Run ${O.getOrElse(O.fromUndefinedOr(step.uses), () =>
+        A.headNonEmpty(
+          Str.split(
+            O.getOrElse(O.fromUndefinedOr(step.run), () => ""),
+            "\n"
+          )
+        )
+      )}`
+  );
+
+// A matrix leg reports its partition (`p` stands in); a conditional name reports one of the literals it quotes.
+const hostedNamesOf = (prefix: string, name: string): ReadonlyArray<string> => {
+  const expanded = Str.replace(MATRIX_EXPRESSION, "p")(name);
+  const names = Str.includes("${{")(expanded)
+    ? A.getSomes(A.map(A.fromIterable(Str.matchAll(QUOTED_LITERAL)(expanded)), (match) => O.fromUndefinedOr(match[1])))
+    : [expanded];
+  return A.map(names, (candidate) => `${prefix}${candidate}`);
+};
+
+type WorkflowJobs = Readonly<Record<string, typeof WorkflowJobDoc.Type>>;
+type ReadWorkflow = (file: string) => Effect.Effect<WorkflowJobs, Cause.NoSuchElementError | S.SchemaError>;
+// GitHub nests reusable workflows at most four levels deep.
+const MAX_WORKFLOW_DEPTH = 4;
+
+// Reads one workflow's jobs from `texts`, whose keys end with the workflow's repository path.
+const workflowReader =
+  (texts: Readonly<Record<string, string>>): ReadWorkflow =>
+  (file) =>
+    Effect.fromOption(
+      O.map(
+        A.findFirst(R.toEntries(texts), ([key]) => Str.endsWith(file)(key)),
+        ([, text]) => text
+      )
+    ).pipe(Effect.flatMap((text) => decodeWorkflowJobs(yamlAt(parseWorkflowYaml(text), ["jobs"]))));
+
+// Every job GitHub reports for `file` under each caller prefix. A job that calls a reusable workflow (`uses`)
+// has no steps and reports nothing itself: the called workflow's jobs report under `<caller> / `, and their steps
+// are read there, however the caller is named.
+const reportedJobsOf = (
+  read: ReadWorkflow,
+  file: string,
+  prefixes: ReadonlyArray<string>,
+  depth: number
+): Effect.Effect<ReadonlyArray<ContractJob>, Cause.NoSuchElementError | S.SchemaError> =>
+  Effect.flatMap(read(file), (jobs) =>
+    Effect.map(
+      Effect.forEach(R.toEntries(jobs), ([key, job]) => {
+        const names = A.flatMap(prefixes, (prefix) =>
+          hostedNamesOf(
+            prefix,
+            O.getOrElse(O.fromUndefinedOr(job.name), () => key)
+          )
+        );
+        return O.match(
+          pipe(
+            O.fromUndefinedOr(job.uses),
+            O.flatMap(Str.match(REUSABLE_WORKFLOW)),
+            O.filter(() => depth < MAX_WORKFLOW_DEPTH)
+          ),
+          {
+            onNone: () =>
+              Effect.succeed<ReadonlyArray<ContractJob>>([
+                {
+                  job: `${file}#${key}`,
+                  lanes: A.dedupe(A.getSomes(A.map(names, (name) => hostedJobAttribution(name).lane))),
+                  steps: A.map(O.getOrElse(O.fromUndefinedOr(job.steps), A.empty<WorkflowStepDoc>), listedStepName),
+                },
+              ]),
+            onSome: (match) =>
+              reportedJobsOf(
+                read,
+                match[0],
+                A.map(names, (name) => `${name} / `),
+                depth + 1
+              ),
+          }
+        );
+      }),
+      A.flatten
+    )
+  );
+
+// Every lane job reported for check.yml, through every reusable workflow its jobs call (heavy.yml today).
+const workflowLaneJobs = (read: ReadWorkflow) =>
+  Effect.map(reportedJobsOf(read, CHECK_WORKFLOW, [""], 0), (jobs) =>
+    A.filter(jobs, (job) => A.isReadonlyArrayNonEmpty(job.lanes))
+  );
+
+const startsLaneWork = (name: string): boolean =>
+  RouteStepClass.is.aggregate(routeStepClass(name)) || A.contains(LANE_WORK_ENTRY_STEPS, name);
+const isSetupStep = (name: string): boolean => RouteStepClass.is.setup(routeStepClass(name));
+
+// Every step before a lane job's own work is a setup step or declared lane work, and no setup step follows it,
+// so a renamed or new setup step fails here instead of charging the lane in silence.
+const stepContractViolations = (job: ContractJob): ReadonlyArray<string> =>
+  O.match(A.findFirstIndex(job.steps, startsLaneWork), {
+    onNone: () => [`${job.job}: no step starts the lane's own work`],
+    onSome: (entry) =>
+      A.appendAll(
+        A.map(
+          A.filter(
+            A.take(job.steps, entry),
+            (name) => !isSetupStep(name) && !A.contains(LANE_WORK_PRELUDE_STEPS, name)
+          ),
+          (name) => `${job.job}: "${name}" runs before the lane's work and is neither setup nor declared lane work`
+        ),
+        A.map(
+          A.filter(A.drop(job.steps, entry + 1), isSetupStep),
+          (name) => `${job.job}: setup step "${name}" runs after the lane's work`
+        )
+      ),
+  });
+
+describe("route step contract", () => {
+  it("names a step that breaks the contract", () => {
+    const job = (steps: ReadonlyArray<string>): ContractJob => ({
+      job: "check.yml#lint-shard",
+      lanes: ["lint"],
+      steps,
+    });
+    expect(
+      A.flatMap(
+        [
+          job(["Checkout repository", "Setup monorepo CI", "Run Lint shard", "Skip lane"]),
+          job(["Checkout repository", "Setup Python", "Run Lint shard"]),
+          job(["Checkout repository", "Prepare monorepo CI"]),
+          job(["Run Lint shard", "Setup monorepo CI"]),
+        ],
+        stepContractViolations
+      )
+    ).toEqual([
+      'check.yml#lint-shard: "Setup Python" runs before the lane\'s work and is neither setup nor declared lane work',
+      "check.yml#lint-shard: no step starts the lane's own work",
+      'check.yml#lint-shard: setup step "Setup monorepo CI" runs after the lane\'s work',
+    ]);
+  });
+
+  it.effect("checks a lane-named caller job's steps in the workflow it calls, not on the caller", () =>
+    Effect.gen(function* () {
+      // check.yml calls heavy.yml under a caller named for no lane, and shard-overflow.yml under one named for a
+      // Test Unit shard (the shape of the overflow job in #3256); neither caller has steps of its own.
+      const check = A.join(
+        [
+          "jobs:",
+          "  heavy:",
+          "    name: Heavy",
+          "    uses: beep-effect/beep-effect/.github/workflows/heavy.yml@main",
+          "  test-unit-overflow:",
+          "    name: Test Unit (${{ matrix.partition }})",
+          "    uses: ./.github/workflows/shard-overflow.yml",
+          "  lint:",
+          "    name: Lint",
+          "    steps:",
+          "      - name: Require every Lint shard",
+        ],
+        "\n"
+      );
+      const called = (job: string, name: string, steps: ReadonlyArray<string>): string =>
+        A.join(
+          [
+            "on:",
+            "  workflow_call: {}",
+            "jobs:",
+            `  ${job}:`,
+            `    name: ${name}`,
+            "    steps:",
+            ...A.map(steps, (step) => `      - name: ${step}`),
+          ],
+          "\n"
+        );
+      const texts = (overflowSteps: ReadonlyArray<string>) => ({
+        ".github/workflows/check.yml": check,
+        ".github/workflows/heavy.yml": called("check", "Check", [
+          "Checkout repository",
+          "Setup monorepo CI",
+          "Run verification lane",
+        ]),
+        ".github/workflows/shard-overflow.yml": called("test-unit-shard", "Overflow", overflowSteps),
+      });
+
+      const jobs = yield* workflowLaneJobs(
+        workflowReader(texts(["Checkout repository", "Setup monorepo CI", "Run Test Unit shard"]))
+      );
+      expect(A.map(jobs, (job) => [job.job, job.lanes, job.steps.length])).toEqual([
+        [".github/workflows/heavy.yml#check", ["check"], 3],
+        [".github/workflows/shard-overflow.yml#test-unit-shard", ["test-unit"], 3],
+        [".github/workflows/check.yml#lint", ["lint"], 1],
+      ]);
+      expect(A.flatMap(jobs, stepContractViolations)).toEqual([]);
+
+      const unclassified = yield* workflowLaneJobs(
+        workflowReader(texts(["Checkout repository", "Setup Python", "Run Test Unit shard"]))
+      );
+      expect(A.flatMap(unclassified, stepContractViolations)).toEqual([
+        '.github/workflows/shard-overflow.yml#test-unit-shard: "Setup Python" runs before the lane\'s work and is neither setup nor declared lane work',
+      ]);
+    })
+  );
+});
+
+describe("route step contract over the workflows", () => {
+  it.effect("keeps the setup step names in step with the lane jobs of check.yml and the workflows it calls", () =>
+    Effect.gen(function* () {
+      const jobs = yield* workflowLaneJobs(workflowReader(WORKFLOW_TEXTS));
+      const listed = HashSet.fromIterable(A.flatMap(jobs, (job) => job.steps));
+      const covered = HashSet.fromIterable(A.flatMap(jobs, (job) => job.lanes));
+      // The reusable heavy.yml call, the shards and their aggregates are all read.
+      assertTrue(
+        A.every(["check", "lint-policy", "lint", "test-unit", "test-integration", "property", "coverage"], (lane) =>
+          HashSet.has(covered, lane)
+        )
+      );
+      // Every listed setup name is GitHub's own or still a step of a lane job.
+      expect(
+        A.filter(
+          ROUTE_SETUP_STEP_NAMES,
+          (name) => !A.contains(GITHUB_IMPLICIT_STEPS, name) && !HashSet.has(listed, name)
+        )
+      ).toEqual([]);
+      expect(A.filter(GITHUB_IMPLICIT_STEPS, (name) => !A.contains(ROUTE_SETUP_STEP_NAMES, name))).toEqual([]);
+      // The declared lane work exists and is classed as the lane's own.
+      expect(
+        A.filter(
+          A.appendAll(LANE_WORK_ENTRY_STEPS, LANE_WORK_PRELUDE_STEPS),
+          (name) => !HashSet.has(listed, name) || !RouteStepClass.is.task(routeStepClass(name))
+        )
+      ).toEqual([]);
+      expect(A.flatMap(jobs, stepContractViolations)).toEqual([]);
+    })
+  );
 });
 
 describe("route head fetch", () => {
@@ -617,6 +1059,85 @@ describe("route replay", () => {
     })
   );
 
+  it.effect("charges a skipped lane's setup or aggregate red to no lane and reports it as unknown", () =>
+    Effect.gen(function* () {
+      const original = yield* decodeRuns(replayRunsJson);
+      const jobsOf = (headSha: string, jobs: ReadonlyArray<HostedJob>): ReadonlyArray<HostedJob> =>
+        Match.value(headSha).pipe(
+          // a1's check failed while installing.
+          Match.when("a1", () =>
+            A.map(jobs, (job) => (job.name === "Heavy / Check" ? failedJob(job.name, O.some(SETUP_FAILURE)) : job))
+          ),
+          // b2's sast red stays charged, and codegen is red on its base: neither setup red can hide a skip.
+          Match.when("b2", () =>
+            A.appendAll(jobs, [
+              failedJob("SAST", O.some(SETUP_FAILURE)),
+              failedJob("Codegen Drift", O.some(SETUP_FAILURE)),
+            ])
+          ),
+          // c3's only lint red is the aggregate's: its shard was cancelled, not failed.
+          Match.when("c3", () => [
+            HostedJob.make({ name: "Lint (lint-a)", conclusion: O.some("cancelled") }),
+            failedJob("Lint", O.some([step("Set up job", "success"), step("Require every Lint shard", "failure")])),
+          ]),
+          Match.orElse(() => jobs)
+        );
+      const runs = A.map(original, (run) => HostedRun.make({ ...run, jobs: jobsOf(run.headSha, run.jobs) }));
+      const ensured = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+      const replay = yield* runReplay(
+        runs,
+        classifierLayer(noAtoms),
+        gitLayer(REPLAY_MERGE_BASES, REPLAY_ANCESTORS, ensured)
+      );
+
+      expect(
+        A.map(replay.perHead, (head) => [head.headSha, head.skippedReds, head.unknownReds, head.baseUnknown])
+      ).toEqual([
+        ["a1", [], ["check"], false],
+        ["b2", ["sast"], [], false],
+        ["c3", [], ["lint"], true],
+      ]);
+      expect(replay.skippedReds).toBe(1);
+      expect(replay.recall).toBe(1 - 1 / (3 * SKIPPED_WITHOUT_ATOMS));
+      expect([replay.recallCertain, replay.unknownRedHeads, replay.unknownRedJobNames]).toEqual([
+        false,
+        2,
+        ["Heavy / Check", "Lint"],
+      ]);
+    })
+  );
+
+  it.effect("judges the base by charged reds, so a setup red on the base excuses no head red", () =>
+    Effect.gen(function* () {
+      const original = yield* decodeRuns(replayRunsJson);
+      // m1, a1's base, fails Heavy / Check: with no steps the red is check's, while installing it is no one's.
+      const withBaseCheck = (job: HostedJob) =>
+        A.map(original, (run) =>
+          run.headSha === "m1"
+            ? HostedRun.make({
+                ...run,
+                jobs: A.map(run.jobs, (candidate) => (candidate.name === "Heavy / Check" ? job : candidate)),
+              })
+            : run
+        );
+      const replayA1 = Effect.fnUntraced(function* (runs: ReadonlyArray<HostedRun>) {
+        const ensured = yield* Ref.make<ReadonlyArray<ReadonlyArray<string>>>([]);
+        const replay = yield* runReplay(
+          runs,
+          classifierLayer(noAtoms),
+          gitLayer(REPLAY_MERGE_BASES, REPLAY_ANCESTORS, ensured)
+        );
+        const a1 = yield* Effect.fromOption(A.findFirst(replay.perHead, (head) => head.headSha === "a1"));
+        return [a1.skippedReds, a1.unknownReds, a1.baseUnknown] as const;
+      });
+
+      const inherited = yield* replayA1(withBaseCheck(failedJob("Heavy / Check", O.none())));
+      const uncharged = yield* replayA1(withBaseCheck(failedJob("Heavy / Check", O.some(SETUP_FAILURE))));
+      expect(inherited).toEqual([[], [], false]);
+      expect(uncharged).toEqual([["check"], [], true]);
+    })
+  );
+
   it.effect("has recall 1 at all-unknown", () =>
     Effect.gen(function* () {
       const runs = yield* decodeRuns(replayRunsJson);
@@ -678,6 +1199,9 @@ describe("route replay", () => {
         expect(replay.unresolvedHeads).toBe(0);
         expect(replay.recall).toBe(1 - 3 / (3 * SKIPPED_WITHOUT_ATOMS));
         expect(replay.corpusSha256).toBe("c0ffee");
+        // Rows without steps or tasks keep every red on its lane: nothing is unknown.
+        assertTrue(A.every(replay.perHead, (head) => A.isReadonlyArrayEmpty(head.unknownReds)));
+        expect([replay.recallCertain, replay.unknownRedHeads]).toEqual([true, 0]);
       })
   );
 
