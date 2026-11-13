@@ -225,7 +225,7 @@ const makeReservationCapacity = (
   hostAvailableGib: Effect.Effect<number>,
   fallbackAvailableGib: Effect.Effect<number>
 ) =>
-  Effect.fnUntraced(function* (
+  Effect.fn("MemoryStats.reservationCapacity")(function* (
     leases: ReadonlyArray<YeetAdmissionLease>,
     config: AdmissionConfig,
     destination: O.Option<string> = O.none()
