@@ -45,7 +45,7 @@ import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -469,45 +469,46 @@ export const isShardOverflowTrustedEvent = (
  * ```ts
  * import { ShardOverflowJob, shardOverflowQueueOf } from "@beep/repo-cli/commands/Ci"
  *
- * const queue = shardOverflowQueueOf({
- *   jobs: [
+ * const queue = shardOverflowQueueOf(
+ *   [
  *     ShardOverflowJob.make({ status: "queued", labels: ["ubuntu-24.04"] }),
  *     ShardOverflowJob.make({ status: "in_progress", labels: ["beep-shard-overflow"] }),
  *   ],
- *   runsRead: 1,
- * })
+ *   1
+ * )
  * console.log(queue.queuedHostedJobs, queue.overflowJobs) // 1 1
  * ```
  *
- * @param listing - Every job of the runs read, and how many runs the listing covered.
+ * @param jobs - Every job of the runs read.
+ * @param runsRead - How many runs the listing covered.
  * @returns The queue counts.
  * @category utilities
  * @since 0.0.0
  */
-export const shardOverflowQueueOf = ({
-  jobs,
-  runsRead,
-}: {
-  readonly jobs: ReadonlyArray<ShardOverflowJob>;
-  readonly runsRead: number;
-}): ShardOverflowQueue =>
-  ShardOverflowQueue.make({
-    queuedHostedJobs: A.length(
-      A.filter(
-        jobs,
-        (job) => job.status === "queued" && A.some(job.labels, (label) => GITHUB_HOSTED_LABEL_PATTERN.test(label))
-      )
-    ),
-    overflowJobs: A.length(
-      A.filter(
-        jobs,
-        (job) =>
-          (job.status === "queued" || job.status === "in_progress") &&
-          A.contains(job.labels, SHARD_OVERFLOW_RUNNER_LABEL)
-      )
-    ),
-    runsRead,
-  });
+export const shardOverflowQueueOf: {
+  (runsRead: number): (jobs: ReadonlyArray<ShardOverflowJob>) => ShardOverflowQueue;
+  (jobs: ReadonlyArray<ShardOverflowJob>, runsRead: number): ShardOverflowQueue;
+} = dual(
+  2,
+  (jobs: ReadonlyArray<ShardOverflowJob>, runsRead: number): ShardOverflowQueue =>
+    ShardOverflowQueue.make({
+      queuedHostedJobs: A.length(
+        A.filter(
+          jobs,
+          (job) => job.status === "queued" && A.some(job.labels, (label) => GITHUB_HOSTED_LABEL_PATTERN.test(label))
+        )
+      ),
+      overflowJobs: A.length(
+        A.filter(
+          jobs,
+          (job) =>
+            (job.status === "queued" || job.status === "in_progress") &&
+            A.contains(job.labels, SHARD_OVERFLOW_RUNNER_LABEL)
+        )
+      ),
+      runsRead,
+    })
+);
 
 const stayHosted = (
   facts: ShardOverflowFacts,
@@ -754,7 +755,7 @@ export const readShardOverflowQueue: Effect.Effect<
   const queued = yield* runIdsWithStatus("queued");
   const runIds = A.take(A.dedupe(A.appendAll(inProgress, queued)), SHARD_OVERFLOW_MAX_RUNS_READ);
   const jobs = yield* Effect.forEach(runIds, runJobs, { concurrency: JOBS_READ_CONCURRENCY });
-  return shardOverflowQueueOf({ jobs: A.flatten(jobs), runsRead: A.length(runIds) });
+  return shardOverflowQueueOf(A.flatten(jobs), A.length(runIds));
 }).pipe(
   Effect.asSome,
   Effect.catch((failure) =>

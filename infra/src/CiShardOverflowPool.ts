@@ -31,7 +31,7 @@ import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { CiFleetControllerConfig } from "./CiFleetController.ts";
+import { CiFleetController, CiFleetControllerConfig } from "./CiFleetController.ts";
 import {
   ciHeavyRunnerBurstCap,
   ciShardOverflowRunnerLabel,
@@ -225,3 +225,72 @@ export const makeCiShardOverflowControllerConfig: {
     });
   }
 );
+
+/**
+ * The network a fleet controller attaches to: the region, subnets, VPC and worker security group the heavy
+ * controller already uses.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CiFleetNetwork = Omit<ConstructorParameters<typeof CiFleetController>[1], "config" | "pool">;
+
+/**
+ * Declare the overflow controller when the stack enables the pool, and nothing otherwise.
+ *
+ * **Details**
+ *
+ * The controller is named `ci-shard-overflow-controller` and attaches to the heavy controller's network.
+ * A configuration that {@link makeCiShardOverflowControllerConfig} refuses stops the Pulumi program with
+ * its {@link CiShardOverflowPoolConfigError} before any overflow resource is declared.
+ *
+ * **Example** (A disabled pool declares nothing)
+ *
+ * ```ts
+ * import { CiShardOverflowPoolConfig, declareCiShardOverflowController } from "@beep/infra"
+ * import * as O from "effect/Option"
+ *
+ * // Inside a Pulumi program, with `heavy` the heavy controller's configuration:
+ * // declareCiShardOverflowController({ heavy, overflow, network }) is `None` while `enabled` is false.
+ * console.log(CiShardOverflowPoolConfig.make({ enabled: false, githubAppWebhookSecretSsmParameterArn: O.none() }).enabled)
+ * ```
+ *
+ * @param pool - The heavy controller's configuration, the overflow pool's stack configuration and the network.
+ * @returns The overflow controller, or `None` while the pool is disabled.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const declareCiShardOverflowController = (pool: {
+  readonly heavy: CiFleetControllerConfig;
+  readonly overflow: CiShardOverflowPoolConfig;
+  readonly network: CiFleetNetwork;
+}): O.Option<CiFleetController> =>
+  pool.overflow.enabled
+    ? O.some(
+        new CiFleetController("ci-shard-overflow-controller", {
+          config: Result.getOrThrow(makeCiShardOverflowControllerConfig(pool.heavy, pool.overflow)),
+          pool: ciShardOverflowRunnerPool,
+          ...pool.network,
+        })
+      )
+    : O.none();
+
+/**
+ * The overflow controller's webhook output, for the stack output the repository webhook reads.
+ *
+ * **Example** (No controller, no output)
+ *
+ * ```ts
+ * import { ciShardOverflowWebhook } from "@beep/infra"
+ * import * as O from "effect/Option"
+ *
+ * console.log(ciShardOverflowWebhook(O.none())) // undefined
+ * ```
+ *
+ * @param controller - The overflow controller, if the pool is enabled.
+ * @returns Its webhook output, or `undefined` while the pool is disabled.
+ * @category getters
+ * @since 0.0.0
+ */
+export const ciShardOverflowWebhook = (controller: O.Option<CiFleetController>): pulumi.Output<unknown> | undefined =>
+  O.getOrUndefined(O.map(controller, (overflow) => overflow.webhook));

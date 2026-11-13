@@ -37,6 +37,11 @@ import { provideSpawner } from "./support/ScriptedProcess.ts";
 import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
 
 const REPOSITORY = "beep-effect/beep-effect";
+// Workflow documents are read as unknown YAML; the schemas live at module scope so each compiles once.
+const isText = S.is(S.String);
+const isStepList = S.is(S.Array(S.Unknown));
+const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
+const decodeJobs = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
 const PLAN = ["repo-cli-1", "repo-cli-2", "law-practice-1", "unit-a"];
 
 const facts = (overrides: Partial<ShardOverflowFacts> = {}): ShardOverflowFacts =>
@@ -147,8 +152,8 @@ describe("shard overflow helpers", () => {
   });
 
   it("counts queued hosted jobs and the overflow pool's load", () => {
-    const queue = shardOverflowQueueOf({
-      jobs: [
+    const queue = shardOverflowQueueOf(
+      [
         ShardOverflowJob.make({ status: "queued", labels: ["ubuntu-24.04"] }),
         ShardOverflowJob.make({ status: "queued", labels: ["windows-latest"] }),
         ShardOverflowJob.make({ status: "in_progress", labels: ["ubuntu-24.04"] }),
@@ -159,11 +164,12 @@ describe("shard overflow helpers", () => {
         ShardOverflowJob.make({ status: "completed", labels: [SHARD_OVERFLOW_RUNNER_LABEL] }),
         ShardOverflowJob.make({ status: "waiting", labels: [] }),
       ],
-      runsRead: 3,
-    });
+      3
+    );
     expect(queue.queuedHostedJobs).toBe(2);
     expect(queue.overflowJobs).toBe(2);
     expect(queue.runsRead).toBe(3);
+    expect(pipe([], shardOverflowQueueOf(0)).queuedHostedJobs).toBe(0);
   });
 
   it("summarises a decision with and without a queue reading", () => {
@@ -402,9 +408,6 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ci shard-overflow", (it
     const text = yield* fs.readFileString(path.join(root, ".github/workflows", file));
     return { text, document: parseWorkflowYaml(text) };
   });
-  const isText = S.is(S.String);
-  const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
-  const decodeJobs = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
   const FORK_GUARD =
     "github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository";
 
@@ -502,7 +505,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ci shard-overflow", (it
     Effect.gen(function* () {
       const { document: check } = yield* readWorkflow("check.yml");
       const steps = yamlAt(check, ["jobs", "test-plan", "steps"]);
-      assertTrue(S.is(S.Array(S.Unknown))(steps));
+      assertTrue(isStepList(steps));
       const route = yield* Effect.fromOption(A.findFirst(steps, (step) => yamlAt(step, ["id"]) === "overflow"));
       expect(yamlAt(route, ["if"])).toBe("vars.BEEP_SHARD_OVERFLOW == 'on' && steps.plan.outputs.test_unit != '[]'");
       expect(yamlAt(route, ["continue-on-error"])).toBe(true);

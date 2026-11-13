@@ -9,8 +9,10 @@ import {
   ciRunnerPoolWorstCaseVcpu,
   ciShardOverflowRunnerLabel,
   ciShardOverflowRunnerPool,
+  ciShardOverflowWebhook,
   ciSpotVcpuBudget,
   ciSpotVcpuQuota,
+  declareCiShardOverflowController,
   loadCiShardOverflowPoolConfig,
   makeCiFleetControllerConfig,
   makeCiShardOverflowControllerConfig,
@@ -198,11 +200,17 @@ describe("@beep/infra CiFleetController with the overflow pool", () => {
               workerSecurityGroupId: "sg-456",
             };
             new CiFleetController("heavy", { config: heavy, ...network });
-            new CiFleetController("overflow", {
-              config: Result.getOrThrow(makeCiShardOverflowControllerConfig(heavy, enabled)),
-              pool: ciShardOverflowRunnerPool,
-              ...network,
+            // A disabled pool declares nothing and exports no webhook; an enabled one declares the controller.
+            const disabled = declareCiShardOverflowController({
+              heavy,
+              overflow: CiShardOverflowPoolConfig.make({ ...enabled, enabled: false }),
+              network,
             });
+            assertNone(disabled);
+            expect(ciShardOverflowWebhook(disabled)).toBeUndefined();
+            const declared = declareCiShardOverflowController({ heavy, overflow: enabled, network });
+            assertTrue(O.isSome(declared));
+            expect(ciShardOverflowWebhook(declared)).toBeDefined();
           }),
         () =>
           Effect.tryPromise({
@@ -212,7 +220,7 @@ describe("@beep/infra CiFleetController with the overflow pool", () => {
       );
 
       const heavyModule = MutableHashMap.get(modules, "heavy");
-      const overflowModule = MutableHashMap.get(modules, "overflow");
+      const overflowModule = MutableHashMap.get(modules, "ci-shard-overflow-controller");
       assertTrue(O.isSome(heavyModule) && O.isSome(overflowModule));
       const h = heavyModule.value;
       const o = overflowModule.value;
@@ -271,10 +279,10 @@ describe("@beep/infra CiFleetController with the overflow pool", () => {
       expect(o.instance_target_capacity_type).toBe("spot");
       expect(o.enable_runner_on_demand_failover_for_errors).toStrictEqual([]);
       // The controller's own resources and the termination-watcher grants are named by prefix.
-      const amiParameter = MutableHashMap.get(resources, "overflow-runner-ami");
+      const amiParameter = MutableHashMap.get(resources, "ci-shard-overflow-controller-runner-ami");
       assertTrue(O.isSome(amiParameter));
       expect(amiParameter.value.name).toBe("/beep-ci-ovf/controller/runner-ami-id");
-      const imdsPolicy = MutableHashMap.get(resources, "overflow-runner-imds-disable");
+      const imdsPolicy = MutableHashMap.get(resources, "ci-shard-overflow-controller-runner-imds-disable");
       assertTrue(O.isSome(imdsPolicy));
       expect(imdsPolicy.value.name).toBe("beep-ci-ovf-runner-imds-disable");
       expect(imdsPolicy.value.path).toBe("/beep-ci-ovf/");
