@@ -761,7 +761,11 @@ const probeScoreCommand = Command.make(
       Flag.withDescription("Cell the without arm measures (A, B or C)"),
       Flag.optional
     ),
-    out: Flag.String("out").pipe(Flag.withDescription("Run records JSON Lines path")),
+    priorPaths: Flag.String("prior").pipe(
+      Flag.atLeast(0),
+      Flag.withDescription("Earlier records of the excluded runs this invocation reruns (repeatable)")
+    ),
+    out: Flag.String("out").pipe(Flag.withDescription("Run records JSON Lines path; must not exist")),
   },
   flow(
     SkillProbeScoreOptions.make,
@@ -777,8 +781,11 @@ const probeReportCommand = Command.make(
       Flag.atLeast(1),
       Flag.withDescription("Run records JSON Lines file (repeatable)")
     ),
+    preflight: Flag.File("preflight", { mustExist: true }).pipe(
+      Flag.withDescription("Preflight receipt; records of dropped tasks are refused")
+    ),
   },
-  ({ records }) => runSkillProbeReport(records).pipe(Effect.asVoid)
+  ({ records, preflight }) => runSkillProbeReport(records, preflight).pipe(Effect.asVoid)
 ).pipe(Command.withDescription("Report cell means, paired differences and the verdict as JSON"));
 
 const probeCommand = Command.make("probe", {}, () =>

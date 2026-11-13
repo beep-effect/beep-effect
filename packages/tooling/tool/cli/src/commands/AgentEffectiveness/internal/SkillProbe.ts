@@ -6,6 +6,7 @@
  * @since 0.0.0
  */
 
+import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { sha256Hex } from "@beep/repo-utils/Sha256Hex";
 import { Sha256Hex } from "@beep/schema/Sha256";
@@ -13,10 +14,12 @@ import { A } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { dual, pipe } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { AgentEffectivenessEvalScorerError } from "../AgentEffectiveness.errors.ts";
@@ -39,7 +42,7 @@ import {
   SkillProbeRunRecord,
   SkillProbeStage,
 } from "./SkillProbeSchemas.ts";
-import { buildSkillProbeReport } from "./SkillProbeStats.ts";
+import { buildSkillProbeReport, validateSkillProbeRecords } from "./SkillProbeStats.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -52,8 +55,24 @@ const CORPUS_DIR = "goals/skillopt-training-pilot/corpus";
 const EMPTY_PLUGIN = "sep-empty";
 const SKILL_PLUGIN = "sep-skill";
 const ALLOWED_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep", "Skill"];
+// Matched against error text only, never against serialized metadata.
 const API_ERROR_PATTERN =
-  /api[ _-]?error|rate[ _-]?limit|overload|\b429\b|\b5\d\d\b|authentication|authenticate|unauthori[sz]ed|server error|credit balance/iu;
+  /api[ _-]?error|rate[ _-]?limit|overload|\b429\b|(?:status|code|error)[ :]+5\d\d\b|authentication|authenticate|unauthori[sz]ed|server error|credit balance|hit your (?:weekly|daily|monthly|session|usage) limit|usage limit|weekly limit/iu;
+
+const $I = $RepoCliId.create("commands/AgentEffectiveness/internal/SkillProbe");
+
+const TraceEntry = S.Struct({
+  type: S.String,
+  subtype: S.optionalKey(S.String),
+  is_error: S.optionalKey(S.Boolean),
+  result: S.optionalKey(S.Unknown),
+  rate_limit_info: S.optionalKey(S.Struct({ status: S.optionalKey(S.String) })),
+}).pipe(
+  $I.annoteSchema("SkillProbeTraceEntry", {
+    description: "The fields of a claude plugin eval trace line that classify how a run ended.",
+  })
+);
+const decodeTraceEntry = S.decodeUnknownOption(S.fromJsonString(TraceEntry));
 
 type ProbeEnv = FileSystem.FileSystem | Path.Path;
 
@@ -132,6 +151,7 @@ const decodeResult = S.decodeUnknownEffect(S.fromJsonString(PluginEvalResult));
 const decodeRecord = S.decodeUnknownEffect(S.fromJsonString(SkillProbeRunRecord));
 const encodeRecord = S.encodeEffect(S.fromJsonString(SkillProbeRunRecord));
 const encodePreflight = S.encodeEffect(S.fromJsonString(SkillProbePreflight));
+const decodePreflight = S.decodeUnknownEffect(S.fromJsonString(SkillProbePreflight));
 const encodeReport = S.encodeEffect(S.fromJsonString(SkillProbeReport));
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown, { space: 2 }));
 
@@ -310,7 +330,11 @@ export class SkillProbeStageOptions extends S.Opaque<SkillProbeStageOptions, { r
     runs: S.Int,
     maxTurns: S.Int,
     timeoutSeconds: S.Int,
-  })
+  }).pipe(
+    $I.annoteSchema("SkillProbeStageOptions", {
+      description: "Archive root, output directory, runs per case and agent budgets for staging the probe suite.",
+    })
+  )
 ) {}
 
 /**
@@ -474,7 +498,13 @@ const isAllLanesPass = (report: AgentEffectivenessEvalScoreReport): boolean =>
 export class SkillProbePreflightOptions extends S.Opaque<
   SkillProbePreflightOptions,
   { readonly brand: unique symbol }
->()(S.Struct({ archiveRoot: S.String, knownGoodRoot: S.String, stagePath: S.String, out: S.String })) {}
+>()(
+  S.Struct({ archiveRoot: S.String, knownGoodRoot: S.String, stagePath: S.String, out: S.String }).pipe(
+    $I.annoteSchema("SkillProbePreflightOptions", {
+      description: "Archive, known-good solutions, stage receipt and output path for the probe preflight.",
+    })
+  )
+) {}
 
 /**
  * Score every staged task's untouched fixture and its known-good solution and write the preflight receipt.
@@ -500,8 +530,9 @@ export const preflightSkillProbe = Effect.fn("SkillProbe.preflight")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const stage = yield* readText(options.stagePath).pipe(Effect.flatMap(decodeStage));
-  const rows = yield* Effect.forEach(stage.tasks, (task) =>
-    Effect.gen(function* () {
+  const rows = yield* Effect.forEach(
+    stage.tasks,
+    Effect.fnUntraced(function* (task) {
       const taskPath = path.join(options.archiveRoot, task.taskPath);
       const fixture = yield* scoreProbeFixture(path.join(options.archiveRoot, task.fixture), taskPath);
       const knownGoodDir = path.join(options.knownGoodRoot, task.id);
@@ -558,22 +589,69 @@ export class SkillProbeScoreOptions extends S.Opaque<SkillProbeScoreOptions, { r
     invocation: S.NonEmptyString,
     withCell: S.Option(S.String),
     withoutCell: S.Option(S.String),
+    priorPaths: S.Array(S.String),
     out: S.String,
-  })
+  }).pipe(
+    $I.annoteSchema("SkillProbeScoreOptions", {
+      description:
+        "Harness result, cell per arm, earlier records for a rerun invocation and the output path for scoring kept runs.",
+    })
+  )
 ) {}
 
 const decodeCell = S.decodeUnknownEffect(S.Literals(["A", "B", "C"]));
 
+const resultText = (result: unknown): string => (P.isString(result) ? result : "");
+
+/**
+ * Why a trace shows that a run ended on an API or plan-limit failure, read
+ * from decoded entries: a rejected rate-limit event, or a terminal error
+ * result (other than running out of turns) whose text names such a failure.
+ *
+ * **Example** (A rejected plan limit)
+ *
+ * ```ts
+ * import { traceExclusionReason } from "@beep/repo-cli/test/AgentEffectiveness"
+ * import * as O from "effect/Option"
+ *
+ * const reason = traceExclusionReason('{"type":"rate_limit_event","rate_limit_info":{"status":"rejected"}}')
+ * console.log(O.isSome(reason)) // true
+ * ```
+ *
+ * @param trace - The trace's JSON Lines text.
+ * @returns The exclusion reason, or none when the run is counted.
+ * @category models
+ * @since 0.0.0
+ */
+export const traceExclusionReason = (trace: string): O.Option<string> => {
+  const entries = pipe(
+    trace,
+    Str.split("\n"),
+    A.filter(Str.isNonEmpty),
+    A.map((line) => decodeTraceEntry(line)),
+    A.getSomes
+  );
+  const rejected = A.some(
+    entries,
+    (entry) => entry.type === "rate_limit_event" && entry.rate_limit_info?.status === "rejected"
+  );
+  if (rejected) return O.some("The trace carries a rejected rate-limit event.");
+  return pipe(
+    A.findLast(entries, (entry) => entry.type === "result"),
+    O.filter(
+      (entry) =>
+        entry.is_error === true &&
+        entry.subtype !== "error_max_turns" &&
+        API_ERROR_PATTERN.test(resultText(entry.result))
+    ),
+    O.map((entry) => `The trace's final result is an API error: ${Str.slice(0, 200)(resultText(entry.result))}`)
+  );
+};
+
 const traceApiError = Effect.fn("SkillProbe.traceApiError")(function* (tracePath: string) {
   const fs = yield* FileSystem.FileSystem;
   const text = yield* fs.readFileString(tracePath).pipe(Effect.orElseSucceed(() => ""));
-  return pipe(
-    text,
-    Str.split("\n"),
-    A.filter((line) => Str.includes('"type":"result"')(line) && Str.includes('"is_error":true')(line)),
-    A.findFirst((line) => API_ERROR_PATTERN.test(line)),
-    O.map(() => "The trace's final result is an API error.")
-  );
+  return traceExclusionReason(text);
 });
 
 const scoreRun = Effect.fn("SkillProbe.scoreRun")(function* (
@@ -584,6 +662,8 @@ const scoreRun = Effect.fn("SkillProbe.scoreRun")(function* (
     readonly cell: SkillProbeCell;
     readonly invocation: string;
     readonly runIndex: number;
+    readonly slot: string;
+    readonly attempt: number;
     readonly fingerprint: SkillProbeFingerprint;
   }
 ): Effect.fn.Return<SkillProbeRunRecord, AgentEffectivenessEvalScorerError, ScoreEnv> {
@@ -626,6 +706,8 @@ const scoreRun = Effect.fn("SkillProbe.scoreRun")(function* (
     cell: context.cell,
     invocation: context.invocation,
     runIndex: context.runIndex,
+    slot: context.slot,
+    attempt: context.attempt,
     keptDir: Str.isEmpty(keptDir) ? "none" : path.basename(keptDir),
     scorerProfile: SKILL_PROBE_SCORER_PROFILE,
     fingerprint: context.fingerprint,
@@ -639,6 +721,65 @@ const scoreRun = Effect.fn("SkillProbe.scoreRun")(function* (
   });
 });
 
+const slotOf = (taskId: string, cell: SkillProbeCell, index: number): string => `${taskId}#${cell}#${index}`;
+
+type SlotJob = {
+  readonly run: PluginEvalRun;
+  readonly task: SkillProbeStage["tasks"][number];
+  readonly cell: SkillProbeCell;
+  readonly runIndex: number;
+};
+
+const assignSlots = (
+  jobs: ReadonlyArray<SlotJob>,
+  priors: ReadonlyArray<SkillProbeRunRecord>
+): Effect.Effect<
+  ReadonlyArray<SlotJob & { readonly slot: string; readonly attempt: number }>,
+  AgentEffectivenessEvalScorerError
+> => {
+  if (A.isReadonlyArrayEmpty(priors)) {
+    return Effect.succeed(
+      A.map(jobs, (job) => ({ ...job, slot: slotOf(job.task.id, job.cell, job.runIndex), attempt: 1 }))
+    );
+  }
+  const latest = pipe(
+    A.groupBy(priors, (record): string => record.slot),
+    R.values,
+    A.map(flow(A.sort(Order.mapInput(Order.Number, (record: SkillProbeRunRecord) => record.attempt)), A.lastNonEmpty))
+  );
+  const openSlots = (taskId: string, cell: SkillProbeCell) =>
+    pipe(
+      latest,
+      A.filter(
+        (record) =>
+          record.taskId === taskId && record.cell === cell && SkillProbeOutcome.guards.Excluded(record.outcome)
+      ),
+      A.sort(Order.mapInput(Order.String, (record: SkillProbeRunRecord) => record.slot))
+    );
+  const groups = R.values(A.groupBy(jobs, (job): string => `${job.task.id}#${job.cell}`));
+  return Effect.forEach(groups, (group) => {
+    const first = A.headNonEmpty(group);
+    const slots = openSlots(first.task.id, first.cell);
+    if (A.length(group) > A.length(slots)) {
+      return fail(
+        `Rerun has ${A.length(group)} runs for ${first.task.id} cell ${first.cell} but only ${A.length(slots)} excluded slots.`
+      );
+    }
+    return Effect.forEach(group, (job, index) =>
+      pipe(
+        A.get(slots, index),
+        O.match({
+          onNone: () => fail(`No excluded slot for rerun ${index} of ${first.task.id} cell ${first.cell}.`),
+          onSome: (slot) =>
+            slot.attempt + 1 > 3
+              ? fail(`Slot ${slot.slot} would reach attempt ${slot.attempt + 1}; at most two reruns are allowed.`)
+              : Effect.succeed({ ...job, slot: slot.slot, attempt: slot.attempt + 1 }),
+        })
+      )
+    );
+  }).pipe(Effect.map(A.flatten));
+};
+
 /**
  * Score every run of one `claude plugin eval --json` result into run records.
  *
@@ -647,7 +788,10 @@ const scoreRun = Effect.fn("SkillProbe.scoreRun")(function* (
  * `withCell` and `withoutCell` name the cell each harness arm measures. Each
  * run's kept directory is the grandparent of its `tracePath`; the scorer
  * reads the fixture copy under `sealed/home/cwd`. API and rate-limit failures
- * are recorded as excluded, never scored.
+ * are recorded as excluded, never scored. Every populated arm needs a cell,
+ * every case must be staged, and an existing output file is never
+ * overwritten. With `priorPaths` the invocation is a rerun: its runs fill the
+ * excluded slots of those records, in slot order, as the next attempt.
  *
  * **Example** (Score an invocation)
  *
@@ -664,6 +808,7 @@ const scoreRun = Effect.fn("SkillProbe.scoreRun")(function* (
  *     invocation: "p2-laws-1",
  *     withCell: O.some("C"),
  *     withoutCell: O.some("B"),
+ *     priorPaths: [],
  *     out: "runs.jsonl"
  *   })
  * )
@@ -688,8 +833,34 @@ export const scoreSkillProbeRuns = Effect.fn("SkillProbe.score")(function* (
     skillSha256: stage.skillSha256,
     lawsSha256: stage.lawsSha256,
   });
+  const fs = yield* FileSystem.FileSystem;
+  const outExists = yield* fs.exists(options.out).pipe(Effect.orElseSucceed(() => false));
+  if (outExists) {
+    return yield* fail(
+      `Refusing to overwrite ${options.out}; write each invocation to its own records file.`,
+      options.out
+    );
+  }
   const withCell = yield* Effect.transposeOption(O.map(options.withCell, decodeCell));
   const withoutCell = yield* Effect.transposeOption(O.map(options.withoutCell, decodeCell));
+  const unstaged = pipe(
+    result.cases,
+    A.filter((evalCase) => !A.some(stage.tasks, (staged) => staged.id === evalCase.name)),
+    A.map((evalCase) => evalCase.name)
+  );
+  if (A.isReadonlyArrayNonEmpty(unstaged)) {
+    return yield* fail(`Cases not in the stage: ${A.join(unstaged, ", ")}.`, options.resultPath);
+  }
+  const populated = (runs: (evalCase: PluginEvalResult["cases"][number]) => ReadonlyArray<PluginEvalRun> | undefined) =>
+    A.some(result.cases, (evalCase) => A.isReadonlyArrayNonEmpty(runs(evalCase) ?? A.empty()));
+  const unmapped = A.getSomes([
+    populated((evalCase) => evalCase.arms.with) && O.isNone(withCell) ? O.some("with") : O.none(),
+    populated((evalCase) => evalCase.arms.without) && O.isNone(withoutCell) ? O.some("without") : O.none(),
+  ]);
+  if (A.isReadonlyArrayNonEmpty(unmapped)) {
+    return yield* fail(`Populated arms without a cell mapping: ${A.join(unmapped, ", ")}.`, options.resultPath);
+  }
+  const priors = yield* readSkillProbeRecords(options.priorPaths);
   const jobs = A.flatMap(result.cases, (evalCase) => {
     const task = A.findFirst(stage.tasks, (staged) => staged.id === evalCase.name);
     const arm = (runs: ReadonlyArray<PluginEvalRun> | undefined, cell: O.Option<SkillProbeCell>) =>
@@ -698,15 +869,18 @@ export const scoreSkillProbeRuns = Effect.fn("SkillProbe.score")(function* (
         : A.empty();
     return A.appendAll(arm(evalCase.arms.with, withCell), arm(evalCase.arms.without, withoutCell));
   });
+  const assigned = yield* assignSlots(jobs, priors);
   const records = yield* Effect.forEach(
-    jobs,
-    ({ run, task, cell, runIndex }) =>
+    assigned,
+    ({ run, task, cell, runIndex, slot, attempt }) =>
       scoreRun(run, {
         archiveRoot: options.archiveRoot,
         task,
         cell,
         invocation: options.invocation,
         runIndex,
+        slot,
+        attempt,
         fingerprint,
       }),
     { concurrency: 2 }
@@ -762,18 +936,25 @@ export const readSkillProbeRecords = Effect.fn("SkillProbe.readRecords")(functio
  * import { runSkillProbeReport } from "@beep/repo-cli/test/AgentEffectiveness"
  * import * as Effect from "effect/Effect"
  *
- * console.log(Effect.isEffect(runSkillProbeReport(["runs.jsonl"]))) // true
+ * console.log(Effect.isEffect(runSkillProbeReport(["runs.jsonl"], "preflight.json"))) // true
  * ```
  *
  * @param files - JSON Lines files of `SkillProbeRunRecord`.
+ * @param preflightPath - Preflight receipt; records of its dropped tasks are refused.
  * @returns Cell summaries, paired differences, fired rate and verdict for the records.
  * @category commands
  * @since 0.0.0
  */
 export const runSkillProbeReport = Effect.fn("SkillProbe.report")(function* (
-  files: ReadonlyArray<string>
+  files: ReadonlyArray<string>,
+  preflightPath: string
 ): Effect.fn.Return<SkillProbeReport, AgentEffectivenessEvalScorerError | S.SchemaError, ProbeEnv> {
+  const preflight = yield* readText(preflightPath).pipe(Effect.flatMap(decodePreflight));
   const records = yield* readSkillProbeRecords(files);
+  const problems = validateSkillProbeRecords(records, preflight.dropped);
+  if (A.isReadonlyArrayNonEmpty(problems)) {
+    return yield* fail(`Run records cannot be pooled:\n- ${A.join(problems, "\n- ")}`);
+  }
   const report = buildSkillProbeReport(records);
   yield* encodeReport(report).pipe(Effect.flatMap(Console.log));
   return report;

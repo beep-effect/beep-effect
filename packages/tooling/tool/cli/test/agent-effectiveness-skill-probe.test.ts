@@ -18,6 +18,8 @@ import {
   skillProbeFamily,
   skillProbePrompt,
   tCritical975,
+  traceExclusionReason,
+  validateSkillProbeRecords,
 } from "@beep/repo-cli/test/AgentEffectiveness";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import { it } from "@beep/test-runner";
@@ -65,17 +67,29 @@ const record = (
   family: string,
   cell: "A" | "B" | "C",
   allLanes: boolean,
-  options: { readonly fired?: boolean; readonly excluded?: boolean; readonly turns?: number } = {}
+  options: {
+    readonly fired?: boolean;
+    readonly excluded?: boolean;
+    readonly turns?: number;
+    readonly invocation?: string;
+    readonly runIndex?: number;
+    readonly slot?: string;
+    readonly attempt?: number;
+    readonly keptDir?: string;
+    readonly scorerProfile?: string;
+  } = {}
 ) =>
   SkillProbeRunRecord.make({
     schemaVersion: "skill-probe-run/v1",
     taskId,
     family,
     cell,
-    invocation: "test",
-    runIndex: 0,
-    keptDir: "claude-eval-test",
-    scorerProfile: "skill-probe-scorer/v2",
+    invocation: options.invocation ?? "test",
+    runIndex: options.runIndex ?? 0,
+    slot: options.slot ?? `${taskId}#${cell}#${options.runIndex ?? 0}`,
+    attempt: options.attempt ?? 1,
+    keptDir: options.keptDir ?? "none",
+    scorerProfile: options.scorerProfile ?? "skill-probe-scorer/v2",
     fingerprint,
     fired: options.fired ?? cell === "C",
     anySkillFired: options.fired ?? cell === "C",
@@ -135,6 +149,25 @@ describe("skill probe arithmetic", () => {
     expect(estimate).toMatchObject({ n: 4, mean: 0.1, standardError: 0.1, lower: -1.1706, upper: 1.3706 });
     expect(estimateClusteredMean([{ cluster: "a", value: 0.5 }]).standardError).toBe(0);
   });
+
+  it("clusters four families of unequal size", () => {
+    const estimate = estimateClusteredMean([
+      { cluster: "a", value: 0.4 },
+      { cluster: "a", value: 0.2 },
+      { cluster: "b", value: 0 },
+      { cluster: "c", value: 0.1 },
+      { cluster: "c", value: 0.1 },
+      { cluster: "c", value: 0.1 },
+      { cluster: "d", value: 0.6 },
+    ]);
+    expect(estimate).toMatchObject({
+      n: 7,
+      mean: 0.214286,
+      standardError: 0.096416,
+      lower: -0.092511,
+      upper: 0.521083,
+    });
+  });
 });
 
 describe("skill probe report", () => {
@@ -188,6 +221,37 @@ describe("skill probe report", () => {
         reason: "C-B all-lanes -1 is below 0.1.",
       })
     );
+  });
+
+  it("checks insensitive before effect: three families that would pass the effect test", () => {
+    const records = A.flatMap(["fn-schema", "normalization", "null-return"], (family) => [
+      record(`${family}-1`, family, "B", false),
+      record(`${family}-1`, family, "C", true),
+    ]);
+    expect(buildSkillProbeReport(records).verdict._tag).toBe("Insensitive");
+    const withFourth = buildSkillProbeReport([
+      ...records,
+      record("getsomes-struct-1", "getsomes-struct", "B", false),
+      record("getsomes-struct-1", "getsomes-struct", "C", true),
+    ]);
+    expect(withFourth.verdict).toEqual(SkillProbeVerdict.cases.Effect.make({ difference: 1, lower: 1 }));
+  });
+
+  it("returns a null when only one family contributes paired differences", () => {
+    const probe = buildSkillProbeReport([
+      ...A.flatMap(["1", "2", "3"], (index) => [
+        record(`fn-schema-${index}`, "fn-schema", "B", false),
+        record(`fn-schema-${index}`, "fn-schema", "C", true),
+      ]),
+      record("null-return-1", "null-return", "B", true),
+    ]);
+    assertSome(
+      O.map(overall(probe, "C-B", "all-lanes"), (row) => row.families),
+      1
+    );
+    if (SkillProbeVerdict.guards.Null(probe.verdict)) {
+      expect(probe.verdict.reason).toContain("clustered interval is undefined");
+    } else expect.unreachable();
   });
 
   it("returns insensitive before effect or null when fewer than four tasks ever pass in B or C", () => {
@@ -372,86 +436,237 @@ describe("skill probe staging", () => {
   );
 });
 
+describe("skill probe exclusion", () => {
+  const attemptOneTrace = A.join(
+    [
+      '{"type":"system","subtype":"init","model":"claude-opus-5-5"}',
+      '{"type":"rate_limit_event","rate_limit_info":{"status":"rejected","rateLimitType":"seven_day","utilization":null}}',
+      '{"type":"result","subtype":"success","is_error":true,"duration_ms":512,"result":"You\'ve hit your weekly limit · resets Nov 15, 11pm (America/Chicago)"}',
+    ],
+    "\n"
+  );
+
+  it("excludes the plan-limit trace of the first P2 attempt", () => {
+    assertSome(traceExclusionReason(attemptOneTrace), "The trace carries a rejected rate-limit event.");
+  });
+
+  it("counts a max-turns failure whatever numbers its metadata carries", () => {
+    assertNone(
+      traceExclusionReason(
+        '{"type":"result","is_error":true,"subtype":"error_max_turns","duration_ms":500,"num_turns":512,"result":"Reached max turns (40)"}'
+      )
+    );
+    assertNone(traceExclusionReason('{"type":"result","is_error":false,"duration_ms":529,"total_cost_usd":0.529}'));
+  });
+
+  it("reads a pretty-printed error result and ignores lines that are not JSON", () => {
+    assertSome(
+      traceExclusionReason('not json\n{ "type": "result", "is_error": true, "result": "API Error: 529 overloaded" }'),
+      "The trace's final result is an API error: API Error: 529 overloaded"
+    );
+    assertSome(
+      traceExclusionReason('{"type":"result","is_error":true,"result":"You have reached your usage limit."}'),
+      "The trace's final result is an API error: You have reached your usage limit."
+    );
+  });
+});
+
+describe("skill probe record validation", () => {
+  it("accepts a clean set and refuses duplicates, mixtures and dropped tasks", () => {
+    const clean = [
+      record("t-1", "f", "B", false, { keptDir: "claude-eval-1" }),
+      record("t-1", "f", "C", true, { keptDir: "claude-eval-2" }),
+    ];
+    expect(validateSkillProbeRecords(clean, [])).toEqual([]);
+    expect(validateSkillProbeRecords([...clean, ...clean], [])).toEqual([
+      "Duplicate run identity test/t-1/B/0.",
+      "Duplicate run identity test/t-1/C/0.",
+      "Kept directory claude-eval-1 is assigned to more than one record.",
+      "Kept directory claude-eval-2 is assigned to more than one record.",
+      "Duplicate slot attempt t-1#B#0@1.",
+      "Duplicate slot attempt t-1#C#0@1.",
+      "Slot t-1#B#0 has attempts 1,1, not 1..n.",
+      "Slot t-1#B#0 was rerun after a scored attempt.",
+      "Slot t-1#C#0 has attempts 1,1, not 1..n.",
+      "Slot t-1#C#0 was rerun after a scored attempt.",
+    ]);
+    expect(
+      validateSkillProbeRecords(
+        [...clean, record("t-2", "f", "B", false, { scorerProfile: "skill-probe-scorer/v1" })],
+        ["t-2"]
+      )
+    ).toEqual([
+      "Records mix scorer profiles: skill-probe-scorer/v1, skill-probe-scorer/v2.",
+      "Task t-2 was dropped by preflight but has records.",
+    ]);
+  });
+
+  it("enforces the rerun cap per slot and the total attempt cap", () => {
+    const attempts = (count: number) =>
+      A.map(A.range(1, count), (attempt) =>
+        record("t-1", "f", "B", false, {
+          invocation: `rerun-${attempt}`,
+          slot: "t-1#B#0",
+          attempt,
+          excluded: attempt < count,
+        })
+      );
+    expect(validateSkillProbeRecords(attempts(3), [])).toEqual([]);
+    expect(validateSkillProbeRecords(attempts(4), [])).toEqual(["Slot t-1#B#0 has 4 attempts; the cap is 3."]);
+    expect(validateSkillProbeRecords([record("t-1", "f", "B", false, { slot: "t-1#B#0", attempt: 2 })], [])).toEqual([
+      "Slot t-1#B#0 has attempts 2, not 1..n.",
+    ]);
+    const many = A.map(A.range(0, 216), (index) => record(`t-${index}`, "f", "B", false, { runIndex: index }));
+    expect(validateSkillProbeRecords(many, [])).toEqual(["217 attempts exceed the cap of 216."]);
+  });
+});
+
 it.layer(TestLayer, { timeout: "30 seconds" })("skill probe scoring", (it) => {
-  it.effect("ties runs to cells and kept directories and excludes API failures without scoring", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const root = yield* fs.makeTempDirectoryScoped({ prefix: "skill-probe-" });
-      const write = Effect.fnUntraced(function* (file: string, value: unknown) {
-        yield* fs.makeDirectory(path.dirname(file), { recursive: true });
-        const text = typeof value === "string" ? value : yield* encodeJson(value);
-        yield* fs.writeFileString(file, text);
-      });
-      const stagePath = path.join(root, "stage.json");
-      yield* write(stagePath, {
-        schemaVersion: "skill-probe-stage/v1",
-        skillSha256: HASH_A,
-        lawsSha256: HASH_B,
-        tasks: [{ id: "t-1", family: "fam", fixture: "goals/fixtures/t-1", taskPath: "goals/tasks/t-1.json" }],
-      });
-      const traceApi = path.join(root, "claude-eval-api", "out", "trace.jsonl");
-      yield* write(traceApi, '{"type":"result","is_error":true,"result":"API Error: 529 overloaded"}\n');
-      const traceMissing = path.join(root, "claude-eval-gone", "out", "trace.jsonl");
-      yield* write(traceMissing, '{"type":"result","is_error":false}\n');
-      const run = (tracePath: string, error: string | null, fired: boolean) => ({
-        turns: 4,
-        costUsd: 0.2,
-        durationSeconds: 20,
-        startedAt: "2026-11-13T00:00:00.000Z",
-        error,
-        tracePath,
-        graders: [
-          { name: "skill-fired", passed: fired },
-          { name: "any-skill", passed: fired },
-        ],
-      });
-      const resultPath = path.join(root, "result.json");
+  const setup = Effect.fnUntraced(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const root = yield* fs.makeTempDirectoryScoped({ prefix: "skill-probe-" });
+    const write = Effect.fnUntraced(function* (file: string, value: unknown) {
+      yield* fs.makeDirectory(path.dirname(file), { recursive: true });
+      const text = typeof value === "string" ? value : yield* encodeJson(value);
+      yield* fs.writeFileString(file, text);
+    });
+    const stagePath = path.join(root, "stage.json");
+    yield* write(stagePath, {
+      schemaVersion: "skill-probe-stage/v1",
+      skillSha256: HASH_A,
+      lawsSha256: HASH_B,
+      tasks: [{ id: "t-1", family: "fam", fixture: "goals/fixtures/t-1", taskPath: "goals/tasks/t-1.json" }],
+    });
+    const trace = Effect.fnUntraced(function* (name: string, text: string) {
+      const tracePath = path.join(root, name, "out", "trace.jsonl");
+      yield* write(tracePath, text);
+      return tracePath;
+    });
+    const run = (tracePath: string, error: string | null, fired: boolean) => ({
+      turns: 4,
+      costUsd: 0.2,
+      durationSeconds: 20,
+      startedAt: "2026-11-13T00:00:00.000Z",
+      error,
+      tracePath,
+      graders: [
+        { name: "skill-fired", passed: fired },
+        { name: "any-skill", passed: fired },
+      ],
+    });
+    const result = Effect.fnUntraced(function* (
+      name: string,
+      cases: ReadonlyArray<{ readonly name: string; readonly arms: unknown }>
+    ) {
+      const resultPath = path.join(root, `${name}.json`);
       yield* write(resultPath, {
         claudeVersion: "2.1.323",
         suite: { ablation: "with-without", modelOverride: "claude-opus-5-5" },
-        cases: [
-          {
-            name: "t-1",
-            arms: {
-              with: [run(traceApi, null, true), run("", "rate limit reached (429)", true)],
-              without: [run(traceMissing, null, false), run("", "scaffold failed", false)],
-            },
-          },
-          { name: "unstaged", arms: { with: [run(traceApi, null, true)] } },
-        ],
+        cases,
       });
-      const out = path.join(root, "runs.jsonl");
-      const records = yield* scoreSkillProbeRuns(
+      return resultPath;
+    });
+    const score = (
+      resultPath: string,
+      out: string,
+      cells: { readonly with?: string; readonly without?: string },
+      priorPaths: ReadonlyArray<string> = []
+    ) =>
+      scoreSkillProbeRuns(
         SkillProbeScoreOptions.make({
           archiveRoot: root,
           stagePath,
           resultPath,
-          invocation: "unit",
-          withCell: O.some("C"),
-          withoutCell: O.some("B"),
-          out,
+          invocation: path.basename(out, ".jsonl"),
+          withCell: O.fromNullishOr(cells.with),
+          withoutCell: O.fromNullishOr(cells.without),
+          priorPaths,
+          out: path.join(root, out),
         })
       );
-      expect(A.map(records, (entry) => [entry.cell, entry.runIndex, entry.keptDir, entry.fired])).toEqual([
-        ["C", 0, "claude-eval-api", true],
-        ["C", 1, "none", true],
-        ["B", 0, "claude-eval-gone", false],
-        ["B", 1, "none", false],
-      ]);
-      const reasons = A.map(records, (entry) =>
-        SkillProbeOutcome.guards.Excluded(entry.outcome) ? entry.outcome.reason : "scored"
+    return { root, path, trace, run, result, score };
+  });
+
+  it.effect("ties runs to cells and kept directories and excludes API and plan-limit failures", () =>
+    Effect.gen(function* () {
+      const { trace, run, result, score, root, path } = yield* setup();
+      const api = yield* trace(
+        "claude-eval-api",
+        '{ "type": "result", "is_error": true, "result": "API Error: 529 overloaded" }\n'
       );
-      expect(reasons).toEqual([
-        "The trace's final result is an API error.",
-        "Harness API error: rate limit reached (429)",
+      const limit = yield* trace(
+        "claude-eval-limit",
+        '{"type":"rate_limit_event","rate_limit_info":{"status":"rejected"}}\n{"type":"result","is_error":true,"result":"You\'ve hit your weekly limit"}\n'
+      );
+      const maxTurns = yield* trace(
+        "claude-eval-turns",
+        '{"type":"result","is_error":true,"subtype":"error_max_turns","duration_ms":500}\n'
+      );
+      const resultPath = yield* result("laws", [
+        {
+          name: "t-1",
+          arms: {
+            with: [run(api, null, true), run(limit, "exit 1: You've hit your weekly limit · resets Nov 15", true)],
+            without: [run(maxTurns, null, false), run("", "scaffold failed", false)],
+          },
+        },
+      ]);
+      const records = yield* score(resultPath, "laws.jsonl", { with: "C", without: "B" });
+      expect(A.map(records, (entry) => [entry.cell, entry.runIndex, entry.slot, entry.attempt, entry.keptDir])).toEqual(
+        [
+          ["C", 0, "t-1#C#0", 1, "claude-eval-api"],
+          ["C", 1, "t-1#C#1", 1, "claude-eval-limit"],
+          ["B", 0, "t-1#B#0", 1, "claude-eval-turns"],
+          ["B", 1, "t-1#B#1", 1, "none"],
+        ]
+      );
+      expect(
+        A.map(records, (entry) => (SkillProbeOutcome.guards.Excluded(entry.outcome) ? entry.outcome.reason : "scored"))
+      ).toEqual([
+        "The trace's final result is an API error: API Error: 529 overloaded",
+        "Harness API error: exit 1: You've hit your weekly limit · resets Nov 15",
         "The fixture is missing.",
         "No kept directory: scaffold failed",
       ]);
       expect(records[0]?.fingerprint).toEqual(fingerprint);
-      const reread = yield* readSkillProbeRecords([out]);
+      const reread = yield* readSkillProbeRecords([path.join(root, "laws.jsonl")]);
       expect(A.length(reread)).toBe(4);
-      expect(buildSkillProbeReport(reread).excludedRuns).toBe(4);
+      expect(validateSkillProbeRecords(reread, [])).toEqual([]);
+
+      const rerunTrace = yield* trace("claude-eval-rerun", '{"type":"result","is_error":false}\n');
+      const rerunPath = yield* result("rerun", [{ name: "t-1", arms: { with: [run(rerunTrace, null, true)] } }]);
+      const rerun = yield* score(rerunPath, "rerun.jsonl", { with: "C" }, [path.join(root, "laws.jsonl")]);
+      expect(A.map(rerun, (entry) => [entry.slot, entry.attempt])).toEqual([["t-1#C#0", 2]]);
+      const tooMany = yield* result("too-many", [
+        {
+          name: "t-1",
+          arms: { with: [run(rerunTrace, null, true), run(rerunTrace, null, true), run(rerunTrace, null, true)] },
+        },
+      ]);
+      const refused = yield* Effect.flip(
+        score(tooMany, "too-many.jsonl", { with: "C" }, [path.join(root, "laws.jsonl")])
+      );
+      expect(refused.message).toBe("Rerun has 3 runs for t-1 cell C but only 2 excluded slots.");
+    })
+  );
+
+  it.effect("refuses unmapped arms, unstaged cases and an existing output file", () =>
+    Effect.gen(function* () {
+      const { trace, run, result, score } = yield* setup();
+      const ok = yield* trace("claude-eval-ok", '{"type":"result","is_error":false}\n');
+      const both = yield* result("both", [
+        { name: "t-1", arms: { with: [run(ok, null, true)], without: [run(ok, null, false)] } },
+      ]);
+      const unmapped = yield* Effect.flip(score(both, "unmapped.jsonl", { with: "C" }));
+      expect(unmapped.message).toBe("Populated arms without a cell mapping: without.");
+      const unstaged = yield* result("unstaged", [{ name: "t-9", arms: { with: [run(ok, null, true)] } }]);
+      const missing = yield* Effect.flip(score(unstaged, "unstaged.jsonl", { with: "A" }));
+      expect(missing.message).toBe("Cases not in the stage: t-9.");
+      const empty = yield* result("empty", [{ name: "t-1", arms: {} }]);
+      yield* score(empty, "first.jsonl", {});
+      const overwrite = yield* Effect.flip(score(empty, "first.jsonl", {}));
+      expect(overwrite.message).toContain("Refusing to overwrite");
     })
   );
 });

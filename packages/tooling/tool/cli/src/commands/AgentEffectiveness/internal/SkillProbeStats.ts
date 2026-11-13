@@ -293,6 +293,7 @@ const differenceRows = (diffs: ReadonlyArray<TaskDifference>): ReadonlyArray<Ski
       scope: diff.taskId,
       contrast: diff.contrast,
       measure: diff.measure,
+      families: 1,
       estimate,
       unclustered: estimate,
     });
@@ -314,6 +315,7 @@ const differenceRows = (diffs: ReadonlyArray<TaskDifference>): ReadonlyArray<Ski
             scope: first.family,
             contrast: first.contrast,
             measure: first.measure,
+            families: 1,
             estimate,
             unclustered: estimate,
           });
@@ -328,6 +330,7 @@ const differenceRows = (diffs: ReadonlyArray<TaskDifference>): ReadonlyArray<Ski
       scope: "overall",
       contrast: first.contrast,
       measure: first.measure,
+      families: A.length(A.dedupe(A.map(members, familyKey))),
       estimate: estimateClusteredMean(A.map(members, (diff) => ({ cluster: diff.family, value: diff.value }))),
       unclustered: estimateMean(
         A.map(members, (diff) => diff.value),
@@ -355,18 +358,25 @@ const verdictOf = (differences: ReadonlyArray<SkillProbeDifference>, sensitiveTa
               harm: false,
               reason: "No task has counted B and C runs.",
             }),
-          onSome: ({ estimate }) =>
-            estimate.mean >= EFFECT_THRESHOLD && estimate.lower > 0
-              ? SkillProbeVerdict.cases.Effect.make({ difference: estimate.mean, lower: estimate.lower })
-              : SkillProbeVerdict.cases.Null.make({
+          onSome: ({ estimate, families }) =>
+            families < 2
+              ? SkillProbeVerdict.cases.Null.make({
                   difference: estimate.mean,
                   lower: estimate.lower,
-                  harm: estimate.upper < 0,
-                  reason:
-                    estimate.mean < EFFECT_THRESHOLD
-                      ? `C-B all-lanes ${estimate.mean} is below ${EFFECT_THRESHOLD}.`
-                      : `The clustered interval's lower end ${estimate.lower} does not exclude zero.`,
-                }),
+                  harm: false,
+                  reason: `Only ${families} family contributes paired differences; the clustered interval is undefined.`,
+                })
+              : estimate.mean >= EFFECT_THRESHOLD && estimate.lower > 0
+                ? SkillProbeVerdict.cases.Effect.make({ difference: estimate.mean, lower: estimate.lower })
+                : SkillProbeVerdict.cases.Null.make({
+                    difference: estimate.mean,
+                    lower: estimate.lower,
+                    harm: estimate.upper < 0,
+                    reason:
+                      estimate.mean < EFFECT_THRESHOLD
+                        ? `C-B all-lanes ${estimate.mean} is below ${EFFECT_THRESHOLD}.`
+                        : `The clustered interval's lower end ${estimate.lower} does not exclude zero.`,
+                  }),
         })
       );
 
@@ -445,6 +455,11 @@ export const buildSkillProbeReport = (records: ReadonlyArray<SkillProbeRunRecord
   const counted = A.length(A.filter(records, isCounted));
   return SkillProbeReport.make({
     schemaVersion: "skill-probe-report/v1",
+    scorerProfile: pipe(
+      A.head(records),
+      O.map((record) => record.scorerProfile),
+      O.getOrElse(() => "none")
+    ),
     fingerprints: A.dedupeWith(
       A.map(records, (record): SkillProbeFingerprint => record.fingerprint),
       (left: SkillProbeFingerprint, right: SkillProbeFingerprint) => fingerprintKey(left) === fingerprintKey(right)
@@ -460,3 +475,120 @@ export const buildSkillProbeReport = (records: ReadonlyArray<SkillProbeRunRecord
     verdict: verdictOf(differences, sensitiveTasks),
   });
 };
+
+/** Most tries of one planned run: the original and two reruns. */
+const MAX_ATTEMPTS_PER_SLOT = 3;
+/** Most scored-run attempts the probe may record, counted and excluded together. */
+const MAX_SCORED_ATTEMPTS = 216;
+
+const duplicatesOf = (keys: ReadonlyArray<string>): ReadonlyArray<string> =>
+  pipe(
+    A.groupBy(keys, (key: string): string => key),
+    R.values,
+    A.filter((group) => A.length(group) > 1),
+    A.map(A.headNonEmpty)
+  );
+
+const distinctValues = (values: ReadonlyArray<string>): ReadonlyArray<string> => A.sort(A.dedupe(values), Order.String);
+
+/**
+ * Check run records against the analysis rule before they are pooled.
+ *
+ * **Details**
+ *
+ * Rejects duplicate run identities and kept directories, slots whose attempts
+ * are not 1..n with only the last one scored, more than three attempts of a
+ * slot or 216 attempts in all, records of tasks the preflight dropped, and a
+ * mixture of scorer profiles, skill hashes, laws hashes or models. A Claude
+ * Code version change is allowed and reported through the fingerprints.
+ *
+ * **Example** (Validate no records)
+ *
+ * ```ts
+ * import { validateSkillProbeRecords } from "@beep/repo-cli/test/AgentEffectiveness"
+ *
+ * console.log(validateSkillProbeRecords([], [])) // []
+ * ```
+ *
+ * @param records - Run records to pool.
+ * @param droppedTasks - Task ids the preflight dropped.
+ * @returns One message per problem; empty when the records may be pooled.
+ * @category statistics
+ * @since 0.0.0
+ */
+export const validateSkillProbeRecords: {
+  (droppedTasks: ReadonlyArray<string>): (records: ReadonlyArray<SkillProbeRunRecord>) => ReadonlyArray<string>;
+  (records: ReadonlyArray<SkillProbeRunRecord>, droppedTasks: ReadonlyArray<string>): ReadonlyArray<string>;
+} = dual(
+  2,
+  (records: ReadonlyArray<SkillProbeRunRecord>, droppedTasks: ReadonlyArray<string>): ReadonlyArray<string> => {
+    const identities = duplicatesOf(
+      A.map(records, (record) => `${record.invocation}/${record.taskId}/${record.cell}/${record.runIndex}`)
+    );
+    const keptDirs = duplicatesOf(
+      pipe(
+        records,
+        A.map((record) => record.keptDir),
+        A.filter((dir) => dir !== "none")
+      )
+    );
+    const slotAttempts = duplicatesOf(A.map(records, (record) => `${record.slot}@${record.attempt}`));
+    const slotProblems = pipe(
+      A.groupBy(records, (record): string => record.slot),
+      R.values,
+      A.flatMap((group) => {
+        const ordered = A.sort(
+          group,
+          Order.mapInput(Order.Number, (record: SkillProbeRunRecord) => record.attempt)
+        );
+        const slot = A.headNonEmpty(group).slot;
+        const attempts = A.map(ordered, (record) => record.attempt);
+        const contiguous = A.every(attempts, (attempt, index) => attempt === index + 1);
+        const earlyScored = A.some(A.dropRight(ordered, 1), (record) =>
+          SkillProbeOutcome.guards.Scored(record.outcome)
+        );
+        return A.getSomes([
+          contiguous
+            ? O.none()
+            : O.some(`Slot ${slot} has attempts ${A.join(A.map(attempts, String), ",")}, not 1..n.`),
+          A.length(group) > MAX_ATTEMPTS_PER_SLOT
+            ? O.some(`Slot ${slot} has ${A.length(group)} attempts; the cap is ${MAX_ATTEMPTS_PER_SLOT}.`)
+            : O.none(),
+          earlyScored ? O.some(`Slot ${slot} was rerun after a scored attempt.`) : O.none(),
+        ]);
+      })
+    );
+    const mixtures = A.getSomes(
+      A.map(
+        [
+          ["scorer profiles", A.map(records, (record) => record.scorerProfile)],
+          ["skill hashes", A.map(records, (record) => record.fingerprint.skillSha256)],
+          ["laws hashes", A.map(records, (record) => record.fingerprint.lawsSha256)],
+          ["models", A.map(records, (record) => record.fingerprint.modelId)],
+        ] as const,
+        ([label, values]) => {
+          const distinct = distinctValues(values);
+          return A.length(distinct) > 1 ? O.some(`Records mix ${label}: ${A.join(distinct, ", ")}.`) : O.none();
+        }
+      )
+    );
+    const dropped = distinctValues(
+      pipe(
+        records,
+        A.filter((record) => A.contains(droppedTasks, record.taskId)),
+        A.map((record) => record.taskId)
+      )
+    );
+    return A.flatten([
+      A.map(identities, (identity) => `Duplicate run identity ${identity}.`),
+      A.map(keptDirs, (dir) => `Kept directory ${dir} is assigned to more than one record.`),
+      A.map(slotAttempts, (slotAttempt) => `Duplicate slot attempt ${slotAttempt}.`),
+      slotProblems,
+      A.length(records) > MAX_SCORED_ATTEMPTS
+        ? [`${A.length(records)} attempts exceed the cap of ${MAX_SCORED_ATTEMPTS}.`]
+        : A.empty<string>(),
+      mixtures,
+      A.map(dropped, (taskId) => `Task ${taskId} was dropped by preflight but has records.`),
+    ]);
+  }
+);

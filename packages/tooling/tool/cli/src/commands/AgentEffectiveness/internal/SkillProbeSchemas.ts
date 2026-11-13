@@ -376,7 +376,9 @@ export type SkillProbeOutcome = typeof SkillProbeOutcome.Type;
  * **Details**
  *
  * `keptDir` is the kept directory's basename, never an absolute path, so
- * records can be committed to a public repository.
+ * records can be committed to a public repository. `slot` names the planned
+ * run a record fills (`<task>#<cell>#<n>`) and `attempt` counts tries of that
+ * slot: a rerun of an excluded run is the same slot with the next attempt.
  *
  * **Example** (Make a run record)
  *
@@ -390,6 +392,8 @@ export type SkillProbeOutcome = typeof SkillProbeOutcome.Type;
  *   cell: "C",
  *   invocation: "p2-laws-1",
  *   runIndex: 0,
+ *   slot: "sfv4-normalization-003#C#0",
+ *   attempt: 1,
  *   keptDir: "claude-eval-abc",
  *   scorerProfile: "skill-probe-scorer/v2",
  *   fingerprint: SkillProbeFingerprint.make({
@@ -420,6 +424,8 @@ export class SkillProbeRunRecord extends S.Opaque<SkillProbeRunRecord, { readonl
     cell: SkillProbeCell,
     invocation: S.NonEmptyString,
     runIndex: Count,
+    slot: S.NonEmptyString,
+    attempt: S.Int.check(S.isGreaterThanOrEqualTo(1)),
     keptDir: S.NonEmptyString,
     scorerProfile: S.NonEmptyString,
     fingerprint: SkillProbeFingerprint,
@@ -501,6 +507,8 @@ export class SkillProbeCellSummary extends S.Opaque<SkillProbeCellSummary, { rea
  * `scope` is a task id, a family name or `overall`. Overall differences carry
  * the family-clustered interval in `estimate` and the unclustered one in
  * `unclustered`; task and family differences repeat `estimate` there.
+ * `families` counts the families that contribute; the clustered interval is
+ * undefined below two and no verdict reads it then.
  *
  * **Example** (Read a difference field)
  *
@@ -519,6 +527,7 @@ export class SkillProbeDifference extends S.Opaque<SkillProbeDifference, { reado
     scope: S.NonEmptyString,
     contrast: SkillProbeContrast,
     measure: SkillProbeMeasure,
+    families: Count,
     estimate: SkillProbeEstimate,
     unclustered: SkillProbeEstimate,
   }).pipe(
@@ -625,6 +634,7 @@ export class SkillProbeLaneCensus extends S.Opaque<SkillProbeLaneCensus, { reado
 export class SkillProbeReport extends S.Opaque<SkillProbeReport, { readonly brand: unique symbol }>()(
   S.Struct({
     schemaVersion: S.tag("skill-probe-report/v1"),
+    scorerProfile: S.NonEmptyString,
     fingerprints: S.Array(SkillProbeFingerprint),
     countedRuns: Count,
     excludedRuns: Count,
