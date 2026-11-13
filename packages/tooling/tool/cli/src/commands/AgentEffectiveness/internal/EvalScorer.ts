@@ -31,7 +31,7 @@ import { EvalScoring } from "./EvalScoring.ts";
 import type { Git } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { AgentEffectivenessEvalScoreReport } from "../AgentEffectiveness.schemas.ts";
+import type { AgentEffectivenessEvalScoreReport, SkillOptTaskManifest } from "../AgentEffectiveness.schemas.ts";
 
 export * from "../AgentEffectiveness.errors.ts";
 export * from "../AgentEffectiveness.schemas.ts";
@@ -112,6 +112,54 @@ export const buildAgentEffectivenessEvalScoreReport: {
 } = dual(3, EvalScoring.buildAgentEffectivenessEvalScoreReport);
 
 /**
+ * Run a task's completion checks and the law lanes over one fixture directory.
+ *
+ * **Details**
+ *
+ * The shared step under `evals score` and the skill probe's scorer profile:
+ * it lists the fixture's source files, locates the repository root the law
+ * sandbox links against, and returns both evaluations with that root.
+ *
+ * **Example** (Evaluate a fixture)
+ *
+ * ```ts
+ * import { evaluateTaskFixture, SkillOptTaskManifest } from "@beep/repo-cli/test/AgentEffectiveness"
+ * import * as Effect from "effect/Effect"
+ *
+ * const task = SkillOptTaskManifest.make({
+ *   id: "task-a",
+ *   ruleIds: [],
+ *   derivedFrom: [],
+ *   prompt: "p",
+ *   fixture: "f",
+ *   entrypoint: "src/x.ts",
+ *   completion: { requiredExports: [], requiredPatterns: [], forbiddenPatterns: [] }
+ * })
+ * console.log(Effect.isEffect(evaluateTaskFixture(task, "fixtures/task"))) // true
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export const evaluateTaskFixture = Effect.fn("AgentEffectivenessEvalScorer.evaluateTaskFixture")(function* (
+  task: SkillOptTaskManifest,
+  fixtureDir: string
+) {
+  const snapshots = yield* readSourceSnapshots(fixtureDir);
+  const sourceFiles = pipe(
+    snapshots,
+    A.map((snapshot) => snapshot.relativePath),
+    A.sort(Order.String)
+  );
+  const repoRoot = yield* findRepoRoot().pipe(
+    Effect.mapError(AgentEffectivenessEvalScorerError.mapError("Failed to locate repository root."))
+  );
+  const completion = yield* evaluateSkillOptCompletion(task, fixtureDir);
+  const law = yield* evaluateLaw(fixtureDir, repoRoot, sourceFiles);
+  return { completion, law, repoRoot } as const;
+});
+
+/**
  * Score one SkillOpt eval fixture directory.
  *
  * **Example** (Score an agent effectiveness eval)
@@ -168,17 +216,7 @@ export const scoreAgentEffectivenessEval = Effect.fn("AgentEffectivenessEvalScor
       })
     )
   );
-  const snapshots = yield* readSourceSnapshots(fixtureDir);
-  const sourceFiles = pipe(
-    snapshots,
-    A.map((snapshot) => snapshot.relativePath),
-    A.sort(Order.String)
-  );
-  const repoRoot = yield* findRepoRoot().pipe(
-    Effect.mapError(AgentEffectivenessEvalScorerError.mapError("Failed to locate repository root."))
-  );
-  const completion = yield* evaluateSkillOptCompletion(task, fixtureDir);
-  const law = yield* evaluateLaw(fixtureDir, repoRoot, sourceFiles);
+  const { completion, law } = yield* evaluateTaskFixture(task, fixtureDir);
   return buildAgentEffectivenessEvalScoreReport(task, completion, law);
 });
 

@@ -64,6 +64,8 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { readYeetComputeProfile } from "./ComputeProfileRead.ts";
 import { collectExpectationRewrites, verifyExpectationRewrites } from "./ExpectationRewrite.ts";
 import {
+  FINAL_CHECK_GATE_SET_DIGEST,
+  FINAL_CHECK_RECEIPT_VERSION,
   FinalCheckGate,
   FinalCheckPlannedStep,
   FinalCheckReceipt,
@@ -102,6 +104,66 @@ import type { ExpectationRewriteVerdict, YeetFinalCheckOptions } from "./FinalCh
  * @since 0.0.0
  */
 export const YEET_FINAL_CHECK_COMMAND = "bun run beep yeet final-check";
+
+const gateSetDiff = (recorded: string): string => {
+  const before = Str.split(",")(recorded);
+  const added = A.filter(FinalCheckGate.literals, (gate) => !A.contains(before, gate));
+  const removed = A.filter(before, (gate) => !A.contains(FinalCheckGate.literals, gate));
+  return A.join(
+    [
+      ...(A.isReadonlyArrayNonEmpty(added) ? [`added ${A.join(added, ", ")}`] : []),
+      ...(A.isReadonlyArrayNonEmpty(removed) ? [`removed ${A.join(removed, ", ")}`] : []),
+    ],
+    "; "
+  );
+};
+
+/**
+ * Refuse a receipt written under another schema version or gate set.
+ *
+ * **Details**
+ *
+ * Every path that admits a flip on a receipt, the head's own or one carried
+ * from an ancestor or across an unchanged rewrite, runs this first through
+ * {@link finalCheckRefusal}. A `yeet-final-check/v1` receipt predates the
+ * gate-set digest; a v2 receipt whose digest differs was written before the
+ * gate set grew or shrank.
+ *
+ * **Example** (Accept a receipt under the current gate set)
+ *
+ * ```ts
+ * import { FINAL_CHECK_GATE_SET_DIGEST, finalCheckGateSetRefusal } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const current = { schemaVersion: "yeet-final-check/v2", gateSetDigest: FINAL_CHECK_GATE_SET_DIGEST } as const
+ * console.log(O.isNone(finalCheckGateSetRefusal(current))) // true
+ * ```
+ *
+ * @param receipt - The receipt's version and recorded gate-set digest.
+ * @returns The refusal detail when the receipt was written under another gate set.
+ * @category policies
+ * @since 0.0.0
+ */
+export const finalCheckGateSetRefusal = (
+  receipt: Pick<FinalCheckReceipt, "schemaVersion" | "gateSetDigest">
+): O.Option<string> => {
+  if (receipt.schemaVersion !== FINAL_CHECK_RECEIPT_VERSION) {
+    return O.some(
+      `the final-check receipt is ${receipt.schemaVersion}, written before receipts recorded their gate set; re-run \`${YEET_FINAL_CHECK_COMMAND}\` on the committed head`
+    );
+  }
+  if (receipt.gateSetDigest === undefined) {
+    return O.some(
+      `the final-check receipt records no gate set; re-run \`${YEET_FINAL_CHECK_COMMAND}\` on the committed head`
+    );
+  }
+  if (receipt.gateSetDigest !== FINAL_CHECK_GATE_SET_DIGEST) {
+    return O.some(
+      `the final-check receipt was written under another gate set (${gateSetDiff(receipt.gateSetDigest)}); re-run \`${YEET_FINAL_CHECK_COMMAND}\` on the committed head`
+    );
+  }
+  return O.none();
+};
 
 /**
  * Repo-relative directory holding head-pinned final-check receipts.
@@ -626,8 +688,10 @@ const printProfileSkips = (skips: ReadonlyArray<FinalCheckSkip>) =>
  *
  * **Details**
  *
- * Returns the refusal detail, or none when the receipt is for this exact head,
- * complete (every gate ran or was skipped with a reason), and passing.
+ * Returns the refusal detail, or none when the receipt is a
+ * `yeet-final-check/v2` receipt written under the current gate set
+ * ({@link finalCheckGateSetRefusal}), for this exact head, complete (every
+ * gate ran or was skipped with a reason), and passing.
  *
  * **Example** (Refuse a missing receipt)
  *
@@ -656,27 +720,29 @@ export const finalCheckRefusal: {
           `no final-check receipt for head ${Str.slice(0, 12)(headSha)}; run \`${YEET_FINAL_CHECK_COMMAND}\` on the committed head`
         ),
       onSome: (found) =>
-        found.headSha !== headSha
-          ? O.some(
-              `the final-check receipt is for ${Str.slice(0, 12)(found.headSha)}, not head ${Str.slice(0, 12)(headSha)}`
-            )
-          : !found.complete
+        O.orElse(finalCheckGateSetRefusal(found), () =>
+          found.headSha !== headSha
             ? O.some(
-                "the final-check receipt covers a --gates subset; run every gate (skip one only with --skip <gate>=<reason>)"
+                `the final-check receipt is for ${Str.slice(0, 12)(found.headSha)}, not head ${Str.slice(0, 12)(headSha)}`
               )
-            : found.verdict !== "pass"
+            : !found.complete
               ? O.some(
-                  `final-check failed on ${A.join(
-                    A.dedupe(
-                      A.map(
-                        A.filter(found.steps, (step) => step.status === "failed"),
-                        (step) => step.gate
-                      )
-                    ),
-                    ", "
-                  )}; fix the reds and re-run \`${YEET_FINAL_CHECK_COMMAND}\``
+                  "the final-check receipt covers a --gates subset; run every gate (skip one only with --skip <gate>=<reason>)"
                 )
-              : O.none(),
+              : found.verdict !== "pass"
+                ? O.some(
+                    `final-check failed on ${A.join(
+                      A.dedupe(
+                        A.map(
+                          A.filter(found.steps, (step) => step.status === "failed"),
+                          (step) => step.gate
+                        )
+                      ),
+                      ", "
+                    )}; fix the reds and re-run \`${YEET_FINAL_CHECK_COMMAND}\``
+                  )
+                : O.none()
+        ),
     })
 );
 
@@ -1204,7 +1270,8 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
   yield* refuseMovedTree(repoRoot, headSha);
   const ranGates = A.dedupe(A.map(steps, (step) => step.gate));
   const receipt = FinalCheckReceipt.make({
-    schemaVersion: "yeet-final-check/v1",
+    schemaVersion: FINAL_CHECK_RECEIPT_VERSION,
+    gateSetDigest: FINAL_CHECK_GATE_SET_DIGEST,
     headSha,
     mergeBase,
     base: options.base,

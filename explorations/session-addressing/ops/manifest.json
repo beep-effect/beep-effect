@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "session-addressing",
+    "title": "Session Addressing",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": ["goals/session-route-resolver"],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-11-12",
+    "updated": "2026-11-12",
+    "retentionReason": "Two gated candidates (session-open-liveness, orchestrator-register-routes) reopen this packet at decompose, and the census in RESEARCH.md is the evidence the graduated goal cites."
+  }
+}

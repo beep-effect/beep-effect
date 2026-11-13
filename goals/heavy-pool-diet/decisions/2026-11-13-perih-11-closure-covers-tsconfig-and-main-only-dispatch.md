@@ -1,0 +1,14 @@
+---
+title: "PERIH-11: the closure digest covers tsconfig chains; dispatches run on main only"
+date: 2026-11-13
+kind: checkpoint
+lane: "fix/ci-binary-closure-tsconfig"
+reversal: "Revert this PR's squash commit; tsconfig edits then stop moving the digest and a non-main dispatch skips green again."
+---
+
+A post-merge review of #3145, #3165, #3183 and #3185 found three gaps, all fixed in one PR.
+
+- The digest missed TypeScript configuration. When Bun bundles, it resolves `compilerOptions.paths` before `node_modules` and the exports map, and it honours emit options such as `jsx` and `verbatimModuleSyntax`. The root `tsconfig.json` carries the `@beep/*` path aliases (written by tsconfig-sync) and `tsconfig.base.json` sets `jsx` and `verbatimModuleSyntax`. So an alias or emit edit could change the binary while the digest held, and the workflow would keep a stale release. The closure now adds each reached workspace's `tsconfig.json`, every file on its relative `extends` chain, and the root `tsconfig.json`. A package-specifier `extends` resolves into `node_modules`, which `bun.lock` pins. The closure grows from 345 to 361 files. The workflow path prefilter gains the root `tsconfig.json` and `tsconfig.base.json`, so an edit to those starts the run. Including whole workspace tsconfigs, `references` included, adds little release churn: tsconfig-sync rewrites references only when a dependency changes, and the changed `package.json` already moves the digest.
+- A `workflow_dispatch` from a non-default ref joined the single `beep-ci-binary` concurrency group #3185 introduced. It could take a pending main push's slot, get the main push cancelled, then skip its own job, leaving a closure change unpublished. The group is now keyed on `github.ref`.
+- A `verify_reproducible` dispatch from a non-default ref skipped the whole job and showed green without comparing bytes. The job-level ref condition is now a first step that fails on any ref other than the default branch. When `verify_reproducible` is set and the closure changed, the summary says the run did not verify anything.
+- Including the root `tsconfig.json` would otherwise cut byte-identical releases: on main it changed 20 times in the 14 days to 2026-11-13 (tsconfig-sync adds alias entries whenever a package is added or renamed), and `tsconfig.base.json` changed 4 times. A changed digest now leads to a compile followed by a byte comparison with the latest release's `beep-linux-x64.sha256`. When the bytes match, the workflow re-uploads `beep-linux-x64.closure.json` onto that release with `--clobber` and appends a "re-recorded" line to its notes. It cuts no new release, and the next run sees the closure as unchanged and skips the compile. This rests on the build being reproducible, which run 43353769826 showed. Rejected: digesting only the alias entries the closure resolves, which is tighter but more code and more ways to be wrong.

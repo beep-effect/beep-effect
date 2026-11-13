@@ -130,34 +130,53 @@ test exempts `@beep/jsonc/JsoncFingerprint` by name.
 
 #### Behaviour changes (refusal direction only)
 
-Every swapped export now throws the owner's `JsoncCanonicalizeError` (code
-and JSON pointer) where the legacy encoder coerced: an unpaired surrogate in a
+Every swapped export throws the owner's `JsoncCanonicalizeError` (code and
+JSON pointer) where the legacy encoder coerced: an unpaired surrogate in a
 string or key, nesting past 256 levels, an `undefined` member (except through
 PacketCore's option), an `undefined` element or root, `NaN` or an infinity, a
-bigint, and a non-plain object such as a `Date`. The exports are synchronous,
-so the digest helpers above them keep their `Result` and `Effect` signatures:
-the throw escapes `Result.map`, and inside an Effect generator it is a defect.
+bigint, and a non-plain object such as a `Date`. The exports stay synchronous
+and throwing, as SPEC.md requires.
+
+Since review round 1 (the follow-up to the slice C pull request), each
+encoder module also has a `Result` twin (`canonicalJsonResult`,
+`canonicalDetectionJsonResult`, `canonicalJsonTextResult`) that maps the
+refusal into `S.SchemaError`, its message naming the owner's code and
+pointer. Every digest helper and schema check that already had a
+`SchemaError` channel, or a boolean answer, goes through the twin, so the
+refusal arrives in that channel. No signature changed and no stored digest
+changed.
 
 Where an unpaired surrogate is reachable from a free-text schema field, it
-surfaces as follows. No stored value holds one.
+now surfaces as follows. No stored value holds one.
 
 | Call site | Free text | Surfaces as |
 | --- | --- | --- |
-| Contradiction proposal fact, and detection beliefs through the same check (`isBoundedProposalFact`) | the `S.Json` fact | Typed: the bound check now treats a refusal as out of bounds, so decode, `make` and `S.is` fail with the schema's `SchemaError`. |
-| `contradictionProposalDigest`, `contradictionCandidateDigest` (detection layer, triage repo, `hasValidSeals`, the tables converter) | proposal `rationale`; ids in bindings that use free strings | Thrown from a `Result`-returning function; a defect in the detection and triage Effects. |
-| `detectionProposalId` | the fact, when called without decoding it | Thrown; a defect in the detection layer. |
-| `evidenceVerificationManifestationKey`, `manifestationKeyFor`, `hasValidManifestationKey`, the tables converters | anchor `quote`, source refs, `normalizationVersion`, extractor name and version | Thrown from `Result`-returning functions to their callers. |
-| `freezeGrantSet`, `verifyFrozenGrantSetDigest` (and `evaluateExecutionRequest`, which calls it) | grant destination, operation, purpose, resource | Thrown; a defect in the tier gate's run freeze and in the egress layer's construction. Values come from gate and egress options. |
-| `sealExecutionDecision`, `sealExecutionOutcome` | none: digests, literals and a semantic version | Not reachable. |
-| `retentionPayloadBytes` | the edge fact (a record of unknown) | Thrown; a defect in the retention service. Read from a jsonb column, which refuses unpaired-surrogate escapes. |
-| retention calibration script | operator JSON | Thrown; the script fails. |
-| `packetEventDigest` (writer and `PacketEventStore` read path) | event `actor`, body reasons | A defect, where a digest mismatch would have been a chain issue. Command-line input cannot carry one; a hand-edited event file could. |
-| PacketCore plan digests (bootstrap, materialize, graduate, archive, harvest, skills relock and patch, adopt, completion) | plan payload text | A defect in the command's Effect. |
-| Lab content ids, digest checks and `manifestHashMatchesRows` | document and model text | A defect, or a throw out of `S.is` and `*Result` decoders: the lab's schema checks call the sync digests, whose `Result` arms do not see the throw. |
+| Contradiction proposal fact, and detection beliefs through the same check (`isBoundedProposalFact`) | the `S.Json` fact | Typed: the bound check treats a refusal as out of bounds, so decode, `make` and `S.is` fail with the schema's `SchemaError`. |
+| `contradictionProposalDigest`, `contradictionCandidateDigest` (detection layer, triage repo, `hasValidSeals`, the tables converter) | proposal `rationale`; ids in bindings that use free strings | Typed: a `SchemaError` in the helper's `Result`, carried by the existing channels of its callers. |
+| `detectionProposalId` | the fact, when called without decoding it | Typed: a `SchemaError` in its `Result`. |
+| `evidenceVerificationManifestationKey`, `manifestationKeyFor`, `hasValidManifestationKey`, the tables converters | anchor `quote`, source refs, `normalizationVersion`, extractor name and version | Typed: a `SchemaError` in their `Result`s. |
+| `freezeGrantSet`; `verifyFrozenGrantSetDigest` and `evaluateExecutionRequest` | grant destination, operation, purpose, resource | Typed: `freezeGrantSet` fails with a `SchemaError` (the tier gate and egress layer already turn that into a defect with `orDie`); verification answers false and evaluation denies with `grant-set-digest-mismatch`. |
+| `retentionPolicyDigest`, `encodeRetentionReport` | none in their schemas | Typed if ever reached: the `SchemaError` and `RetentionUnavailable` channels they already have. |
+| `packetEventDigest` (writer and `PacketEventStore` read path) | event `actor`, body reasons | Typed: the read path reports an `event-invalid` chain issue ("decoded PacketEvent could not be canonically encoded"), and the writers report `PacketStreamError` through their existing mapping. |
+| PacketCore plan digests with a typed channel: the completion declaration digest, the skills migration, relock and patch plans, the graduation recovery check | plan payload text | Typed: `SchemaError`, or `SkillsCommandError` through the existing mapping. |
+| Lab digest helpers (`contentDigest`, `digestOmitting` and their sync twins), `makeChunkId`, `makeClaimId`, `makeBatchId`, the conflict-witness id check, `manifestHashMatchesRows` | document and model text | Typed: a `SchemaError` in the helper's channel; every lab schema check that hashes content answers false instead of throwing. |
 | `@beep/md` `render`, `renderHtml` entry points; `renderUnsafe` | frontmatter strings and keys | Typed: `RenderError` with the owner's error as `cause`; `renderUnsafe` throws it. |
 | `@beep/skill-contract` `renderSkillMarkdown`, `verifySkillArtifact` | every contract string | Typed: `RenderError` in the render `Result`; verification denies with `rerender-mismatch`. |
 
-Decisions: the seven files dated 2026-11-13.
+Still a throw, because no typed channel exists there to map into:
+
+| Call site | Why it stays |
+| --- | --- |
+| The four synchronous exports themselves | SPEC.md: exports keep their names and signatures. |
+| `sealExecutionDecision`, `sealExecutionOutcome` and their boolean verifiers | Plain return values, no channel; their inputs hold no free text, so it is not reachable. |
+| `retentionPayloadBytes` | A plain byte count; its fact comes from a jsonb column, which refuses unpaired-surrogate escapes. |
+| The retention calibration script | Operator tooling; a refused input fails the script. |
+| Detection-layer equality and grouping keys | Pure callbacks; the values were decoded through the total fact check first. |
+| PacketCore plan digests whose functions have no typed channel (bootstrap and materialize seal, graduation plan id, archive plan id, harvest row id and ledger rendering, adoption snapshot hash, the completion declaration comparison) | `never` or a platform-only channel; the payloads come from flags and repository files. |
+| Lab constants and Effect sites without a typed channel (gold prompt hash, extractor artifact hash, `sha256CanonicalSync`, vector, RDF row order, ledger payload, document source id, W1 manifest builder) | Constants, numbers, or functions that already `orDie` their encoding. |
+
+Decisions: the seven files dated 2026-11-13, and the review-round decision
+that supersedes one sentence of the swapped-exports decision.
 
 Carried into slice D:
 
@@ -165,11 +184,6 @@ Carried into slice D:
   outside `@beep/jsonc` except the census rows classed pinned (PartyKey v1,
   the eyecite parity encoders, the in-source pins), renderer (including
   `canonicalJsonTextPretty`) and outside.
-- Open for the orchestrator, not done here: whether free-text fields that
-  feed a digest get a well-formedness check at their boundary, or whether the
-  digest helpers carry `JsoncCanonicalizeError` in their channels instead of
-  throwing. The table above lists every reachable site. The lab's schema checks
-  are the ones where a guard can now throw.
 
 ### Slice D evidence
 

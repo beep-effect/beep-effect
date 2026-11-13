@@ -47,6 +47,13 @@ E11 and E12) carry a suppression naming the row, and no other site in the tree
 trips it. `PLAN.md`, "Slice D evidence", records the `rg` check of the
 census table.
 
+Slice C review round 1, 2026-11-13: the digest helpers and schema checks
+that already had a `SchemaError` channel now report the owner's refusal there
+instead of throwing, through a `Result` twin beside each swapped export. A
+tampered event with an unpaired surrogate reads as a chain issue again, and
+no lab schema check can throw on one. The exports still throw; `PLAN.md`,
+"Slice C evidence", lists what is typed and what still throws.
+
 Slice C, 2026-11-13: the epistemics, PacketCore, semantica and `@beep/md`
 frontmatter encoders are now `JsoncFingerprint`, one commit each; only
 PacketCore passes `omitUndefinedMembers`. Every stored packet event, golden

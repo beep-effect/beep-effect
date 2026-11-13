@@ -14,14 +14,17 @@
 // this one lives in the app because a package cannot import an app (decision
 // `2026-11-12-differential-test-placement` in the goal packet).
 import { JsoncCanonicalizeError, JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint";
-import { describe, it } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import * as DateTime from "effect/DateTime";
 import * as Hex from "effect/encoding/Hex";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { canonicalJson } from "@/corpus/Canonical";
+import * as Str from "effect/String";
+import { canonicalJson, canonicalJsonResult } from "@/corpus/Canonical";
+import { contentDigestSync } from "@/schema/Digest";
+import { RdfStatement } from "@/schema/Reasoning";
 import w1Manifest from "../fixtures/w1.manifest.json" with { type: "json" };
 import type { JsoncCanonicalizeErrorCode } from "@beep/jsonc/JsoncFingerprint";
 
@@ -52,6 +55,25 @@ describe("semantica canonicalJson against the canonical digest owner", () => {
 
   it.each(offDomain)("refuses %s, which the legacy encoder wrote as %s", (_input, value, _legacy, refusal) => {
     assertFailure(exported(value), refusal);
+  });
+
+  // Since review round 1 the lab's digest helpers and schema checks go through
+  // the Result twin, so the same refusal fails typed instead of throwing.
+  it("fails the lab's digest helpers typed and keeps its schema checks total", () => {
+    const named = (refusal: string) => (error: S.SchemaError) => Str.includes(refusal)(error.message);
+
+    assertFailure(Result.mapError(canonicalJsonResult({ a: "\ud800" }), named('LoneSurrogate at "/a"')), true);
+    assertFailure(
+      Result.mapError(
+        contentDigestSync(S.Struct({ text: S.String }))({ text: "\ud800" }),
+        named('LoneSurrogate at "/text"')
+      ),
+      true
+    );
+    // The statement id check hashes the triple; a term with no canonical form
+    // makes the guard false instead of making it throw.
+    const illFormed = { id: Str.repeat(64)("0"), subject: "\ud800", predicate: "p", object: "o" };
+    expect(S.is(RdfStatement)(illFormed)).toBe(false);
   });
 
   // Stored-digest replay for the lab: the W1 manifest's `corpusHash` is

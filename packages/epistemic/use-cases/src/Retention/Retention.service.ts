@@ -21,7 +21,7 @@ import {
   retentionPolicyDigest,
   retentionTierAtAge,
 } from "@beep/epistemic-domain/values/Retention";
-import { canonicalDetectionJson } from "@beep/epistemics/ContradictionDetection";
+import { canonicalDetectionJsonResult } from "@beep/epistemics/ContradictionDetection";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -248,7 +248,8 @@ export const generateRetentionReport = Effect.fn("Retention.generateReport")(fun
  */
 export const encodeRetentionReport = Effect.fn("Retention.encodeReport")(function* (report: RetentionReport) {
   const pipe1 = yield* S.encodeEffect(RetentionReport)(report).pipe(unavailable("encode"));
-  return `${canonicalDetectionJson(pipe1)}\n`;
+  const canonical = yield* Effect.fromResult(canonicalDetectionJsonResult(pipe1)).pipe(unavailable("encode"));
+  return `${canonical}\n`;
 });
 
 /**

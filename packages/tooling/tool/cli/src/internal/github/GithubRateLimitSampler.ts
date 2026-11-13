@@ -37,6 +37,7 @@ import * as Str from "effect/String";
 import { graphqlErrorToGitHubError } from "./GithubGraphql.ts";
 import {
   fromGithubIdentity,
+  GithubBudgetCredential,
   GithubBudgetIdentity,
   GithubClientRequest,
   layerGithubClientFor,
@@ -172,12 +173,21 @@ export const selfCostOf: {
  * @since 0.0.0
  */
 export const sampleRowOf: {
-  (wire: GithubRateLimitWire): (fields: Omit<SampleRow, "_tag" | "buckets">) => SampleRow;
-  (fields: Omit<SampleRow, "_tag" | "buckets">, wire: GithubRateLimitWire): SampleRow;
+  (
+    wire: GithubRateLimitWire
+  ): (
+    fields: Omit<SampleRow, "_tag" | "buckets" | "credential"> & { readonly credential?: SampleRow["credential"] }
+  ) => SampleRow;
+  (
+    fields: Omit<SampleRow, "_tag" | "buckets" | "credential"> & { readonly credential?: SampleRow["credential"] },
+    wire: GithubRateLimitWire
+  ): SampleRow;
 } = dual(
   2,
-  (fields: Omit<SampleRow, "_tag" | "buckets">, wire: GithubRateLimitWire): SampleRow =>
-    GithubLedgerRow.cases.Sample.make({ ...fields, buckets: sampleBucketsOf(wire) })
+  (
+    fields: Omit<SampleRow, "_tag" | "buckets" | "credential"> & { readonly credential?: SampleRow["credential"] },
+    wire: GithubRateLimitWire
+  ): SampleRow => GithubLedgerRow.cases.Sample.make({ ...fields, buckets: sampleBucketsOf(wire) })
 );
 
 /**
@@ -211,12 +221,21 @@ export const sampleRowOf: {
 export const recordRateLimitRead = Effect.fnUntraced(function* (wire: GithubRateLimitWire, trigger: SampleTrigger) {
   const ledger = yield* Effect.serviceOption(GithubBudgetLedger);
   const identity = yield* GithubBudgetIdentity;
+  const credential = yield* GithubBudgetCredential;
   if (O.isNone(ledger) || O.isNone(identity)) return;
   const at = yield* DateTime.now;
   const command = yield* GithubLedgerCommand;
   yield* ledger.value.recordSample(
     sampleRowOf(
-      { at, host: hostLabelOf(NodeOS.hostname()), command, identity: identity.value, trigger, selfCost: "unconfirmed" },
+      {
+        at,
+        host: hostLabelOf(NodeOS.hostname()),
+        command,
+        credential,
+        identity: identity.value,
+        trigger,
+        selfCost: "unconfirmed",
+      },
       wire
     )
   );
@@ -522,6 +541,7 @@ const entryOfLabel = (label: O.Option<GithubIdentityLabel>): ConfiguredGithubIde
   O.exists(label, Str.startsWith("app:")) ? "GithubApp" : "GhCli";
 
 interface SamplePair {
+  readonly credential: SampleRow["credential"];
   readonly selfCost: SelfCost;
   readonly wire: GithubRateLimitWire;
 }
@@ -529,7 +549,8 @@ interface SamplePair {
 const samplePair: Effect.Effect<SamplePair, GitHubError, GitHubClient> = Effect.gen(function* () {
   const first = yield* readGithubRateLimit;
   const second = yield* readGithubRateLimit;
-  return { wire: second, selfCost: selfCostOf(first, second) };
+  const credential = yield* GithubBudgetCredential;
+  return { wire: second, credential, selfCost: selfCostOf(first, second) };
 }).pipe(Effect.withSpan("GithubRateLimitSampler.pair"));
 
 /**
@@ -579,7 +600,10 @@ export const makeGithubRateLimitSampler = Effect.fn("GithubRateLimitSampler.make
       const at = yield* DateTime.now;
       const command = yield* GithubLedgerCommand;
       yield* ledger.recordSample(
-        sampleRowOf({ at, host, command, identity, trigger, selfCost: read.selfCost }, read.wire)
+        sampleRowOf(
+          { at, host, command, identity, credential: read.credential, trigger, selfCost: read.selfCost },
+          read.wire
+        )
       );
       return SampleOutcome.cases.Sampled.make({ identity, at, selfCost: read.selfCost });
     }).pipe(Effect.scoped);

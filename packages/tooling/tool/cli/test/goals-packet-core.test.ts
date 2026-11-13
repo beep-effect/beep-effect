@@ -965,6 +965,44 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
       20_000
     );
 
+    // An actor is free text. A stored event whose JSON escapes an unpaired
+    // surrogate there decodes as a PacketEvent but has no canonical form: the
+    // digest fails typed and the read reports it as an issue, not a defect.
+    it.effect(
+      "reports an event whose actor holds an unpaired surrogate as event-invalid",
+      () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const store = yield* PacketEventStore;
+          const packetPath = yield* fs.makeTempDirectoryScoped();
+          const events = `${packetPath}/ops/events`;
+          yield* fs.makeDirectory(events, { recursive: true });
+          const content = yield* renderPacketEventFile(genesisEvent("surrogate"));
+          yield* fs.writeFileString(
+            `${events}/00001-packet-created-${Str.repeat(64)("a")}.json`,
+            Str.replace('"actor": "test"', '"actor": "\\ud800"')(content)
+          );
+
+          const listing = yield* store.list(
+            PacketStreamLocator.make({ packet: "surrogate", root: "goals", packetPath })
+          );
+          expect(listing.events).toStrictEqual([]);
+          expect(A.map(listing.issues, (issue) => [issue.kind, issue.detail])).toStrictEqual([
+            ["event-invalid", "decoded PacketEvent could not be canonically encoded."],
+          ]);
+        }),
+      20_000
+    );
+
+    it.effect("fails the event digest typed, in its SchemaError channel, for an unpaired surrogate", () =>
+      Effect.gen(function* () {
+        const failure = yield* Effect.flip(
+          packetEventDigest(PacketEvent.make({ ...genesisEvent("surrogate"), actor: "\ud800" }))
+        );
+        expect(failure.message).toContain('LoneSurrogate at "/actor"');
+      })
+    );
+
     it.effect(
       "refuses appends onto a missing stream, a broken stream, and a mismatched parent",
       () =>
