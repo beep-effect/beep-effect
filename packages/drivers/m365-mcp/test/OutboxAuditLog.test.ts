@@ -14,6 +14,7 @@ import { fcRuns } from "@beep/test-utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { assert, describe } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
@@ -22,6 +23,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as Ref from "effect/Ref";
@@ -89,6 +91,19 @@ describe("@beep/m365-mcp outbox audit log", () => {
     },
     { arbitrary: fcRuns(50) }
   );
+
+  it("decodes a draft-created line written before pins existed with an empty basis", () => {
+    // The shape create_draft wrote before the basis field: no `basis` key.
+    const earlier =
+      '{"_tag":"draft-created","at":"2030-01-15T12:00:00.000Z","attachments":[],"auditId":"audit-0","bcc":[],"cc":[],"draftId":"draft-1","subject":"Fixture subject","to":["first@example.test"],"version":1}';
+    const record = Result.getOrThrow(decodeLine(earlier));
+
+    assert.isTrue(S.is(OutboxDraftCreatedRecord)(record));
+    if (S.is(OutboxDraftCreatedRecord)(record)) {
+      assert.deepStrictEqual(record.basis, []);
+      assert.strictEqual(record.draftId, DRAFT_ID);
+    }
+  });
 
   it.layer(PlatformLayer, { timeout: "10 seconds" })("on disk", (it) => {
     it.effect(
@@ -175,6 +190,27 @@ describe("@beep/m365-mcp outbox audit log", () => {
         );
 
         assert.deepStrictEqual(found, [false, true, true, false]);
+      })
+    );
+
+    it.effect(
+      "returns the latest draft-created record of a draft, and none for a draft it did not create",
+      Effect.fnUntraced(function* () {
+        const directory = yield* tempDirectory;
+
+        const [found, missing] = yield* useLog(directory, (log) =>
+          Effect.gen(function* () {
+            yield* log.append(draftCreated(january, []));
+            yield* log.append(draftCreated(february, [digest]));
+            return [yield* log.createdDraft(DRAFT_ID), yield* log.createdDraft("never-created")] as const;
+          })
+        );
+
+        assertSome(
+          O.map(found, (record) => A.length(record.attachments)),
+          1
+        );
+        assertNone(missing);
       })
     );
 
