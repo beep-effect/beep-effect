@@ -385,23 +385,89 @@ Recommended use here:
 - Use Git-native sibling worktrees for your day-to-day local workspace.
 - Use Codex app worktrees only when you specifically want OpenAI-managed parallel task orchestration.
 
-## Migration From Duplicate Clones
+## Seats, Lanes, Registry And Drain
 
-Use this sequence instead of creating another `beep-effectN` clone:
+The fleet is every checkout that shares this repository's origin: each clone
+and every linked worktree registered to it, wherever it lives (the sibling
+`-worktrees` root, a clone's `.claude/worktrees`, `~/.t3/worktrees`,
+`~/.codex/worktrees`). `bun run beep worktree fleet` derives it read-only;
+`--join` adds the registry and session-ledger facts.
 
-1. Decide which branch or feature needs isolation.
-2. Create a worktree under `<checkout-root>-worktrees`.
-3. Bootstrap it.
-4. Move your IDE and agent session into that worktree.
-5. Retire the old duplicate clone only after the branch is merged or intentionally migrated.
+- **Seat**: a long-lived checkout with an authored, workload-named role:
+  `main` (the operator's editor seat), `ops` (timers), `review`, `research`
+  or `impl`. A seat is authored with
+  `bun run beep worktree fleet register <checkout> --role <role>`; an
+  explicit registration survives every rescan and is never drained.
+- **Lane**: a linked worktree doing one piece of work. Its owning seat is the
+  clone whose `.git` holds it (`git rev-parse --git-common-dir`). Create lanes
+  with `bun run beep worktree new <name>`; the dedicated `lanes/` root and
+  `beep worktree add` arrive with goals/lane-bootstrap.
+- **Legacy clone**: an origin-matched full clone in a legacy discovery root
+  (the numbered `beep-effectN` siblings). The scan registers these `legacy`
+  on sight; every other unregistered checkout is registered `adopted`.
 
-For an existing duplicate clone:
+**Registry.** `~/.local/state/beep/fleet/<repo-key>/registry.json` authors only
+what git cannot derive: seat role, owning seat, drain status
+(`active`, `draining`, `retired`), retention exemption, and the grace start of
+a draining checkout (`drainingSince`, `drainingHead`). Discovery roots come
+from `BEEP_FLEET_ROOTS`, then `roots.json` beside the registry, then the
+projects directory holding the main checkout. `fleet --join` adopts unknown
+checkouts; `fleet describe <checkout>` shows one row with its ledger tail.
 
-1. Identify its active branch and any uncommitted work.
-2. Create an equivalent worktree on that branch.
-3. Verify the new worktree has the local env files and tooling you need.
-4. Stop using the duplicate clone.
-5. Archive or delete the duplicate clone only after you are confident nothing local-only is stranded there.
+**Drain.** `bun run beep quality residue-reap --fleet` assesses every fleet
+checkout against the `drainable` predicate on every run, dry-run by default.
+A checkout is drainable only when all of these hold:
+
+| Check | Refuses when |
+| --- | --- |
+| `seat-role` | the role is an authored seat (only `legacy` and `adopted` drain) |
+| `retention-exempt` | the registry marks it exempt |
+| `invoking-checkout` | the reap runs from inside it |
+| `timer-host` | it is a systemd user unit's `WorkingDirectory` |
+| `proof-unit` | an active `beep-proof-*` unit names it |
+| `open-pr` | its checked-out branch has an open pull request |
+| `session-ledger` | an open session-ledger row names it |
+| `liveness` | it is live, or liveness is `unknown`: a probe could not confirm inactivity |
+| `owned-worktrees` | (clone) a worktree is still registered to it; lanes retire first |
+| `object-borrowers` | (clone) another clone reads its objects through `objects/info/alternates` |
+| `local-only-work` | never refuses; local-only branches, tags, stashes or a detached HEAD need a verified bundle first |
+| `clean-tree` | `git status` shows any change, untracked files included |
+| `grace-window` | it has not stayed drainable at one HEAD for `--drain-grace-days` (default 7) |
+
+Liveness reuses the fleet mirror's classifier with the reaper's process probe,
+which drops pids it cannot read (other users' processes); transcript and tree
+mtime must read inactive too. A failed observation, or a HEAD that moved,
+restarts the grace window.
+
+Removal happens only in an applied run that names the class:
+
+```bash
+bun run beep quality residue-reap --fleet --classes drainable          # wave preview, disk totals
+bun run beep quality residue-reap --fleet --classes drainable --apply  # drain the eligible checkouts
+```
+
+The daily `beep-residue-reap.timer` (`--apply --fleet`, default classes)
+records observations but never drains: `drainable` candidates it finds
+eligible are kept with reason `drain-opt-in`. An applied wave re-checks every
+eligible checkout immediately before removal, bundles its local-only work to
+`~/.local/state/beep/fleet/<repo-key>/drain-bundles/` (refused unless
+`git bundle verify` passes and every local-only commit is reachable from a
+bundled head), files its Yeet attempt journals, removes it (`git worktree
+remove` from the owning clone for a lane, an inode-bound tree removal for a
+clone), and appends the decision with every check to `drain-journal.jsonl`
+beside the registry. The wave report lists the disk held by registered legacy
+clones before and after.
+
+Restore a drained checkout's local work from its bundle:
+
+```bash
+git clone <origin-url> beep-effect-restored
+git -C beep-effect-restored fetch <bundle> 'refs/*:refs/restored/*'
+```
+
+Order: lanes drain first, then their clone once `owned-worktrees` and
+`object-borrowers` pass; timer hosts drain last, after their units move.
+Never create another `beep-effectN` clone; start a lane instead.
 
 ## Repo-Specific Gotchas
 

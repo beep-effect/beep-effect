@@ -79,6 +79,23 @@ Seeded from the exploration; entries here cover only decisions taken inside this
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug legacy-drain`; add a `kind: decision` file there, never edit this block._
 
+### Drainable class: report every fleet run, apply only on explicit --classes drainable, 2026-11-13
+
+Evidence (2026-11-13 census): 354 fleet checkouts, 9 legacy clones, 345 linked worktrees; 330 read `unknown` liveness and none `dormant`, because 995 of 1,459 pids have unreadable cwds (954 root-owned), so the mirror's process scan never completes. Every legacy clone still has registered worktrees, carries 100 to 800 local-only commits, and `beep-effect0` borrows objects from `beep-effect` through `objects/info/alternates`.
+
+Calls:
+
+1. `drainable` is assessed in every `residue-reap --fleet` run (dry-run by default) but removes only when `--classes drainable` names it. `beep-residue-reap.timer` runs `--apply --fleet` with default classes; it accrues grace observations but never drains.
+2. Confirmed not-live reuses `classifyFleetLiveness` with the reaper's documented cwd-probe policy (unreadable pids dropped, invoker ancestry excluded) plus transcript and tree mtime readings. Any `unknown` or failed probe blocks.
+3. Checks per checkout: seat role (`legacy`/`adopted` only), retention exemption, invoking checkout, timer host, active `beep-proof-*` unit, open PR on the checked-out branch, open session-ledger row, liveness, owned worktrees (clones), object borrowers (clones lending objects through alternates), local-only work, clean tree, grace window.
+4. Grace window: 7 days by default (`--drain-grace-days`), counted from the first observation at an unchanged HEAD. It lives in the registry row (`drainingSince`, `drainingHead`, `drainStatus: draining`), and a failing observation resets it.
+5. Local-only work is bundled to `~/.local/state/beep/fleet/<repo-key>/drain-bundles/` and verified (`git bundle verify` plus every local-only ref listed in the bundle) before removal. Every apply-mode removal or refusal is appended to `drain-journal.jsonl` beside the registry.
+6. Waves report `du` totals across registered legacy clones before and after, measured only when `drainable` is named explicitly.
+
+Lane goals/legacy-drain
+
+Reverse: Remove drainable from ResidueReapClass and the drain fields from FleetRegistryRow; registry rows decode without them
+
 ### Paused by operator ruling (finish board, 2026-11-13): Useful housekeeping but unstarted and overlaps lane-bootstrap, 2026-11-13
 
 Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling sets this packet to `paused`.
@@ -92,6 +109,16 @@ No lane is working on it. Resume with `bun run beep goals set-status legacy-drai
 Lane chore/finish-board-pause-b1
 
 Reverse: goals set-status legacy-drain active when it is picked up
+
+### Resumed on operator request; ops-seat-timers replaced by a timer-host check, 2026-11-13
+
+The operator resumed this packet on 2026-11-13 (`/goal` launch naming `goals set-status legacy-drain active`). The pause ruling said resuming means re-opening goals/ops-seat-timers first. That goal was superseded, and its only role for this packet was "timer hosts must be free first". The drain enforces that mechanically instead: a checkout that is the `WorkingDirectory` of any systemd user unit is never drainable (`timer-host` check). Every residue-reap, refs and research timer today runs from `beep-effect`, so that clone stays until its units move.
+
+goals/lane-bootstrap stays paused. The drain only removes checkouts and never creates lanes, so it does not need the sanctioned lane path to exist; it drains whatever the fleet scan finds under the same predicate.
+
+Lane goals/legacy-drain
+
+Reverse: goals set-status legacy-drain paused and revert the drainable class PR
 
 <!-- beep:decisions:end -->
 

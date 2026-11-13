@@ -79,12 +79,22 @@ import {
   ResidueReapReport,
   ResidueRetentionRuling,
 } from "./ResidueReap.schemas.ts";
+import {
+  assessResidueDrain,
+  loadResidueDrainContext,
+  measureLegacyCloneDisk,
+  prepareResidueDrainRemoval,
+  ResidueDrainProbe,
+  recordResidueDrainOutcome,
+} from "./ResidueReapDrain.ts";
 import { ResidueTerminalLaneProbe } from "./ResidueTerminalLane.ts";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
 import type { BoundRemovalOutcome, DirectoryHandleError } from "../../../internal/repo-run/DirectoryHandle.ts";
 import type { QualitySchedulerError } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
 import type { ResidueReapSkipReason, ResidueTerminalLaneAuthority } from "./ResidueReap.schemas.ts";
+import type { ResidueDrainAssessment, ResidueDrainDisk } from "./ResidueReapDrain.schemas.ts";
+import type { ResidueDrainContext } from "./ResidueReapDrain.ts";
 import type { ResidueTerminalLaneProbeShape } from "./ResidueTerminalLane.ts";
 
 const $I = $RepoCliId.create("commands/Worktree/internal/ResidueReap");
@@ -101,6 +111,7 @@ const DEFAULT_TURBO_RUNS_MAX_AGE_DAYS = 1;
 const DEFAULT_SHARED_TURBO_MAX_AGE_DAYS = 14;
 const DEFAULT_SHARED_TURBO_MAX_BYTES = 20 * 1024 ** 3;
 const DEFAULT_QUALIFICATION_VIEWS_KEEP = 2;
+const DEFAULT_DRAIN_GRACE_DAYS = 7;
 // Size eviction never touches an entry written within the last day: turbo may still
 // be writing that key, and "oldest" here means oldest-written, not least-recently-read.
 const SHARED_TURBO_EVICTION_FLOOR_DAYS = 1;
@@ -1334,6 +1345,10 @@ const reassessCandidate = Effect.fnUntraced(function* (
     Match.when("shared-turbo-cache", () => reassessSharedTurboMember(assessed)),
     Match.when("merged-preview", () => reassessMergedPreview(assessed, policy)),
     Match.when("qualification-views", () => reassessQualificationView(assessed, policy)),
+    // Drain candidates are re-checked by applyDrainCandidate; this path never removes one.
+    Match.when("drainable", () =>
+      Effect.succeed(ResidueReapCandidate.make({ ...assessed, action: "skip", skipReason: "drain-blocked" }))
+    ),
     Match.whenOr("codex-worktrees", "beep-cache-disposable", (reapClass) =>
       directoryCandidate(
         assessed.root,
@@ -2431,6 +2446,7 @@ type ResidueReapOptions = {
   readonly censusEntryCap?: number;
   readonly checkoutRoots?: ReadonlyArray<string>;
   readonly classes?: ReadonlyArray<ResidueReapClass>;
+  readonly drainGraceDays?: number;
   readonly fleet?: boolean;
   readonly homeRoot?: string;
   readonly maxAgeDays?: number;
@@ -2454,6 +2470,9 @@ type ResidueReapSettings = {
   readonly checkoutBoundaries: ReadonlyArray<readonly [string, O.Option<string>]>;
   readonly classes: ReadonlyArray<ResidueReapClass>;
   readonly codexRoot: string;
+  readonly drainGraceDays: number;
+  readonly drainRequested: boolean;
+  readonly fleet: boolean;
   readonly homeRoot: string;
   readonly policy: ReapPolicy;
   readonly repoRoot: string;
@@ -2531,6 +2550,10 @@ const resolveSettings = Effect.fnUntraced(function* (options: ResidueReapOptions
     checkoutBoundaries,
     classes: nonEmptyOr(options.classes, ResidueReapClass.literals),
     codexRoot: path.join(homeRoot, ".codex"),
+    drainGraceDays: yield* decodeResidueReapAgeDays(optionOr(options.drainGraceDays, DEFAULT_DRAIN_GRACE_DAYS)),
+    // The drainable class removes whole checkouts: it applies only when a run names it.
+    drainRequested: A.contains(optionOr(options.classes, A.empty<ResidueReapClass>()), "drainable"),
+    fleet: optionOr(options.fleet, false),
     homeRoot,
     policy,
     repoRoot,
@@ -2602,8 +2625,72 @@ const topLevelDiscovery = (
     ).pipe(Effect.map(discovered))
   );
 
+const drainContext = (settings: ResidueReapSettings) =>
+  loadResidueDrainContext({
+    repoRoot: settings.repoRoot,
+    checkouts: settings.checkoutRoots,
+    nowMillis: settings.policy.nowMillis,
+    graceDays: settings.drainGraceDays,
+    cwdProbe: settings.policy.cwdProbe,
+  });
+
+const DRAIN_FACTS_UNREADABLE =
+  "Fleet drain facts (registry, roots or state directory) could not be read; drainable was not assessed.";
+
+// Why a drain candidate is kept: the predicate, then its grace window, then the run's opt-in.
+const drainSkipFor = (assessment: ResidueDrainAssessment, requested: boolean): O.Option<ResidueReapSkipReason> => {
+  if (!assessment.drainable) return O.some("drain-blocked");
+  if (!assessment.eligible) return O.some("drain-grace");
+  return requested ? O.none() : O.some("drain-opt-in");
+};
+
+const apparentBytes = Effect.fnUntraced(function* (target: string) {
+  const path = yield* Path.Path;
+  const capture = yield* runRepoCommandCapture(
+    "du",
+    ["-B1", "--apparent-size", "-s", "--", target],
+    path.dirname(target)
+  ).pipe(Effect.option);
+  return parseCapturedBytes(capture, /^\s*(\d+)/u);
+});
+
+const drainCandidate = Effect.fnUntraced(function* (
+  settings: ResidueReapSettings,
+  assessment: ResidueDrainAssessment
+): Effect.fn.Return<ResidueReapCandidate, never, DiscoveryRequirements> {
+  const path = yield* Path.Path;
+  const skip = drainSkipFor(assessment, settings.drainRequested);
+  // Only an applicable removal is measured: `du` over hundreds of kept checkouts would dominate the pass.
+  const bytes = O.isNone(skip) ? yield* apparentBytes(assessment.checkout) : O.none<number>();
+  return ResidueReapCandidate.make({
+    root: path.dirname(assessment.checkout),
+    path: assessment.checkout,
+    reapClass: "drainable",
+    action: O.isSome(skip) ? "skip" : assessment.kind === "clone" ? "remove-dir" : "worktree-remove",
+    ...O.getSomesStruct({ skipReason: skip, bytes, checkoutRoot: O.fromNullishOr(assessment.owningClone) }),
+    embeddedCheckouts: [assessment.checkout],
+    drain: assessment,
+  });
+});
+
+// Fleet runs assess every fleet checkout against the drain predicate; other runs have nothing to drain.
+const drainDiscovery = Effect.fnUntraced(function* (
+  settings: ResidueReapSettings
+): Effect.fn.Return<Discovered, never, DiscoveryRequirements | ResidueDrainProbe> {
+  if (!settings.fleet) return noDiscovery;
+  const path = yield* Path.Path;
+  const context = yield* drainContext(settings);
+  if (O.isNone(context)) return { candidates: A.empty(), warnings: [DRAIN_FACTS_UNREADABLE] };
+  const assessed = yield* assessResidueDrain(context.value, settings.repoRoot, settings.checkoutRoots);
+  const candidates = yield* Effect.forEach(assessed.assessments, (assessment) => drainCandidate(settings, assessment));
+  const unreadable = A.map(assessed.unreadable, (checkout) =>
+    candidate(path.dirname(checkout), checkout, "drainable", "skip", { skipReason: "git-probe-failed" })
+  );
+  return { candidates: A.appendAll(candidates, unreadable), warnings: assessed.warnings };
+});
+
 // Every selected class in report order: home Codex residue, each checkout's repository-scoped
-// residue, then the beep cache classes.
+// residue, then the beep cache classes, then whole fleet checkouts.
 const discoverResidue = Effect.fnUntraced(function* (settings: ResidueReapSettings) {
   const path = yield* Path.Path;
   const includes = (reapClass: ResidueReapClass): boolean => A.contains(settings.classes, reapClass);
@@ -2631,6 +2718,7 @@ const discoverResidue = Effect.fnUntraced(function* (settings: ResidueReapSettin
         () => true
       ).pipe(Effect.map(discovered))
     ),
+    whenIncluded(settings, "drainable", () => drainDiscovery(settings)),
   ]);
   return {
     candidates: A.flatMap(parts, (part) => part.candidates),
@@ -2680,6 +2768,154 @@ const applyResidue = (
         { concurrency: 1 }
       )
     : Effect.succeed(A.map(candidates, unapplied));
+
+type DrainRefusal = {
+  readonly reason: ResidueReapSkipReason;
+  readonly detail: string;
+  readonly assessment: ResidueDrainAssessment;
+};
+
+// Journal an applied drain decision; its warnings join the candidate's.
+const journalDrain = (
+  settings: ResidueReapSettings,
+  context: ResidueDrainContext,
+  assessment: ResidueDrainAssessment,
+  outcome: "removed" | "refused",
+  reason: O.Option<string>,
+  bytes: O.Option<number>
+) =>
+  recordResidueDrainOutcome({
+    context,
+    repoRoot: settings.repoRoot,
+    runId: settings.runId,
+    assessment,
+    outcome,
+    reason,
+    bytes,
+  });
+
+const refusedDrain = Effect.fnUntraced(function* (
+  settings: ResidueReapSettings,
+  context: ResidueDrainContext,
+  assessed: ResidueReapCandidate,
+  refusal: DrainRefusal
+) {
+  const warnings = yield* journalDrain(
+    settings,
+    context,
+    refusal.assessment,
+    "refused",
+    O.some(refusal.reason),
+    O.none()
+  );
+  return {
+    candidate: ResidueReapCandidate.make({
+      ...assessed,
+      action: "skip",
+      skipReason: refusal.reason,
+      drain: refusal.assessment,
+    }),
+    reaped: false,
+    reclaimedBytes: 0,
+    warnings: A.prepend(warnings, `Kept ${assessed.path}: ${refusal.detail}.`),
+  } satisfies AppliedCandidate;
+});
+
+const REMOVAL_REFUSALS: Record<Exclude<ApplyRemovalOutcome, "removed">, ResidueReapSkipReason> = {
+  "identity-changed": "path-changed",
+  "removal-failed": "removal-failed",
+  "worktree-remove-failed": "worktree-remove-failed",
+};
+
+// Re-check, bundle, file attempt journals, remove through the inode-bound handle, then journal.
+const applyDrainCandidate = Effect.fnUntraced(function* (
+  settings: ResidueReapSettings,
+  context: ResidueDrainContext,
+  assessed: ResidueReapCandidate
+): Effect.fn.Return<AppliedCandidate, never, DiscoveryRequirements | AttemptJournalStore | ResidueDrainProbe> {
+  const discoveredAssessment = O.fromUndefinedOr(assessed.drain);
+  if (O.isNone(discoveredAssessment)) return unapplied(assessed);
+  const prepared = yield* prepareResidueDrainRemoval(context, discoveredAssessment.value, settings.runId);
+  if (Result.isFailure(prepared)) return yield* refusedDrain(settings, context, assessed, prepared.failure);
+  const assessment = prepared.success;
+  const current = ResidueReapCandidate.make({ ...assessed, drain: assessment });
+  const resolved = yield* resolveApplyTarget(current, O.some(settings.policy.homeBoundary));
+  if (O.isNone(resolved)) {
+    return yield* refusedDrain(settings, context, current, {
+      reason: "path-changed",
+      detail: "path changed before removal",
+      assessment,
+    });
+  }
+  const exportFailure = yield* retainEmbeddedAttemptJournals(current);
+  if (O.isSome(exportFailure)) {
+    return yield* refusedDrain(settings, context, current, {
+      reason: "journal-export-failed",
+      detail: exportFailure.value,
+      assessment,
+    });
+  }
+  const outcome = yield* removeResolvedCandidate(resolved.value.candidate, resolved.value.identity).pipe(Effect.scoped);
+  if (outcome !== "removed") {
+    return yield* refusedDrain(settings, context, current, {
+      reason: REMOVAL_REFUSALS[outcome],
+      detail: `removal ended ${outcome}`,
+      assessment,
+    });
+  }
+  const bytes = O.fromUndefinedOr(current.bytes);
+  const warnings = yield* journalDrain(settings, context, assessment, "removed", O.none(), bytes);
+  return {
+    candidate: current,
+    reaped: true,
+    reclaimedBytes: O.getOrElse(bytes, () => 0),
+    warnings,
+  } satisfies AppliedCandidate;
+});
+
+// Drain removals run one at a time against facts read again at apply time.
+const applyDrainResidue = Effect.fnUntraced(function* (
+  settings: ResidueReapSettings,
+  candidates: ReadonlyArray<ResidueReapCandidate>
+): Effect.fn.Return<
+  ReadonlyArray<AppliedCandidate>,
+  never,
+  DiscoveryRequirements | AttemptJournalStore | ResidueDrainProbe
+> {
+  if (!A.some(candidates, (entry) => entry.action !== "skip")) return A.map(candidates, unapplied);
+  const context = yield* drainContext(settings);
+  if (O.isNone(context)) {
+    return A.map(candidates, (entry) =>
+      entry.action === "skip"
+        ? unapplied(entry)
+        : {
+            candidate: ResidueReapCandidate.make({ ...entry, action: "skip", skipReason: "drain-blocked" }),
+            reaped: false,
+            reclaimedBytes: 0,
+            warnings: [`Kept ${entry.path}: ${DRAIN_FACTS_UNREADABLE}`],
+          }
+    );
+  }
+  return yield* Effect.forEach(
+    candidates,
+    (entry) =>
+      entry.action === "skip" ? Effect.succeed(unapplied(entry)) : applyDrainCandidate(settings, context.value, entry),
+    { concurrency: 1 }
+  );
+});
+
+// Wave disk totals across the registered legacy clones, measured only for a run that names `drainable`.
+const drainDisk = Effect.fnUntraced(function* (
+  settings: ResidueReapSettings
+): Effect.fn.Return<O.Option<ResidueDrainDisk>, never, DiscoveryRequirements | ResidueDrainProbe> {
+  if (!settings.fleet || !settings.drainRequested) return O.none();
+  const probe = yield* ResidueDrainProbe;
+  const facts = yield* probe.facts(settings.repoRoot);
+  return yield* O.match(facts, {
+    onNone: () => Effect.succeedNone,
+    onSome: (value) => Effect.asSome(measureLegacyCloneDisk(value.registry)),
+  });
+});
 
 const runDirectory = (path: Path.Path, checkout: string, runId: string): string =>
   path.join(checkout, ".beep", "residue-reap", runId);
@@ -3020,7 +3256,13 @@ const executeResidueReap = Effect.fnUntraced(function* (settings: ResidueReapSet
     })
   );
   const scannedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-  const makeReport = (outcomes: ReadonlyArray<AppliedCandidate>, applied: boolean) =>
+  const drainDiskBefore = yield* drainDisk(settings);
+  const drainAssessed = settings.fleet && A.contains(settings.classes, "drainable");
+  const makeReport = (
+    outcomes: ReadonlyArray<AppliedCandidate>,
+    applied: boolean,
+    drainDiskAfter: O.Option<ResidueDrainDisk> = O.none()
+  ) =>
     ResidueReapReport.make({
       runId: settings.runId,
       reportPath,
@@ -3046,6 +3288,11 @@ const executeResidueReap = Effect.fnUntraced(function* (settings: ResidueReapSet
         found.warnings,
         A.flatMap(outcomes, (outcome) => outcome.warnings)
       ),
+      ...O.getSomesStruct({
+        drainGraceDays: O.filter(O.some(settings.drainGraceDays), () => drainAssessed),
+        drainDiskBefore,
+        drainDiskAfter,
+      }),
     });
   yield* ensureArchiveDirectories(settings.repoRoot, settings.runId);
   // Persist the complete dry run before mutation: kill after the first intent still
@@ -3059,13 +3306,19 @@ const executeResidueReap = Effect.fnUntraced(function* (settings: ResidueReapSet
     yield* archive.publish(reportPath, encodedReport39, "residue dry-run report");
     return dryRun;
   }
-  const outcomes = yield* applyResidue(
+  const isDrainCandidate = (entry: ResidueReapCandidate) => ResidueReapClass.is.drainable(entry.reapClass);
+  const drainCandidates = A.filter(candidates, isDrainCandidate);
+  const residueCandidates = A.filter(candidates, (entry) => !isDrainCandidate(entry));
+  const residueOutcomes = yield* applyResidue(
     settings,
-    candidates,
+    residueCandidates,
     true,
     optionOr(options.archiveCheckpoint, () => Effect.void)
   );
-  const report = makeReport(outcomes, true);
+  const drainOutcomes = yield* applyDrainResidue(settings, drainCandidates);
+  const outcomes = A.appendAll(residueOutcomes, drainOutcomes);
+  const drainDiskAfter = yield* drainDisk(settings);
+  const report = makeReport(outcomes, true, drainDiskAfter);
   const encodedReport40 = yield* encodeReport(report);
   yield* archive.publish(reportPath, encodedReport40, "residue applied report");
   return report;
