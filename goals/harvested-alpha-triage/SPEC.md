@@ -87,6 +87,18 @@ the deterministic merge.
 
 Reverse: Drop the Opus child back to the doctrine medium pin by rerunning the Opus verdict session at medium and re-merging; no other artifact depends on the effort
 
+### Paused by operator ruling (finish board, 2026-11-13): It is blocked on an upstream ledger and nothing is in flight, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling sets this packet to `paused`.
+
+Triage rationale: It is blocked on an upstream ledger and nothing is in flight.
+
+No lane is working on it. Resume with `bun run beep goals set-status harvested-alpha-triage active` when it is picked up.
+
+Lane chore/finish-board-pause-b2
+
+Reverse: goals set-status harvested-alpha-triage active when it is picked up
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

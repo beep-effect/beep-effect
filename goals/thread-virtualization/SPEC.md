@@ -65,3 +65,24 @@ pass, preserving correct rendering and navigation as the thread grows.
 | Exception | Scope | Owner | Rationale | Removal condition |
 | --- | --- | --- | --- | --- |
 | None | N/A | N/A | N/A | N/A |
+
+## Decision log
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug thread-virtualization`; add a `kind: decision` file there, never edit this block._
+
+### Closed by operator ruling (finish board, 2026-11-13): Stale since August with nothing started and only bulk-touch activity; close by ruling and re-graduate if UI work resumes, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling closes this packet without completion: its status becomes `superseded`, the goal schema's terminal non-completion status. It is not `completed-retained`, because the completion gate was not met.
+
+Triage rationale: Stale since August with nothing started and only bulk-touch activity; close by ruling and re-graduate if UI work resumes.
+
+To resume, run `bun run beep goals set-status thread-virtualization active` and re-graduate the next slice.
+
+The packet keeps its full evidence on main instead of being archived (`retentionReason` in `ops/manifest.json`), so re-opening it needs no restore.
+
+Lane chore/finish-board-ruling
+
+Reverse: Re-open with goals set-status thread-virtualization active and re-graduate the next slice
+
+<!-- beep:decisions:end -->

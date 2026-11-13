@@ -4,13 +4,13 @@
     "id": "github-state-worker",
     "packetId": "goal-packet/v1:3ebd777287701c2467a1d69d288ea8a105b4caef32c5ce242ceb5dc7b7ec209d",
     "title": "GitHub State Worker",
-    "status": "active",
+    "status": "paused",
     "created": "2026-11-09",
-    "updated": "2026-11-09",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/github-state-worker",
-  "lifecycle": "active",
+  "lifecycle": "paused",
   "mission": "Run one per-host systemd GitHub-state worker that reads each tracked PR once per cycle (fingerprint-batched GraphQL, ETag-revalidated REST) and publishes atomic PR snapshots that every Yeet and orchestrator reader consumes instead of polling GitHub itself.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -86,5 +86,5 @@
     "The same blocker repeats after reasonable investigation."
   ],
   "blockedBy": ["goals/github-budget-ledger"],
-  "statusNote": "Authored 2026-11-09, not started: blocked until github-budget-ledger lands its ledger, reserve signal and baseline."
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): It is the second of three goals in a sequence and should wait for the budget ledger to land. Resume with `bun run beep goals set-status github-state-worker active` when it is picked up. Before the ruling: Authored 2026-11-09, not started: blocked until github-budget-ledger lands its ledger, reserve signal and baseline."
 }

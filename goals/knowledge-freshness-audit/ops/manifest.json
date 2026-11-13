@@ -3,15 +3,15 @@
   "initiative": {
     "id": "knowledge-freshness-audit",
     "title": "Repository freshness audit",
-    "status": "active",
+    "status": "superseded",
     "created": "2026-09-24",
-    "updated": "2026-11-06",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/knowledge-freshness-audit",
-  "lifecycle": "active",
+  "lifecycle": "superseded",
   "mission": "Audit repository claims against explicit authority and evidence, reconcile customized upstream skills, and verify targeted repairs.",
-  "statusNote": "Operator-authorized P4 final-tree reconciliation is in progress after the reviewed local repairs merged. The immutable census and proposal-entry linkage expose unresolved coverage; no final coverage certificate or lifecycle completion is claimed. PM T17 missing original and ADHD provenance remain separate holds. No spending or cloud work is authorized.",
+  "statusNote": "Closed (superseded) 2026-11-13 by operator ruling (finish board): Four phases half-open with unresolved holds and no activity for days; the promotional cloud phase ended and value is already merged. Re-open with `bun run beep goals set-status knowledge-freshness-audit active` and re-graduate the next slice. Before the ruling: Operator-authorized P4 final-tree reconciliation is in progress after the reviewed local repairs merged. The immutable census and proposal-entry linkage expose unresolved coverage; no final coverage certificate or lifecycle completion is claimed. PM T17 missing original and ADHD provenance remain separate holds. No spending or cloud work is authorized.",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {
@@ -106,5 +106,7 @@
     "Skill ancestry or adaptation purpose cannot support safe replacement.",
     "A request cannot be bounded within the remaining $5 Jev pilot budget, or needs unnamed credentials/cost.",
     "The same blocker repeats after reasonable investigation; report it without hiding unresolved obligations."
-  ]
+  ],
+  "supersededNote": "Closed by operator ruling (finish board, 2026-11-13) without meeting its completion gate; see goals/knowledge-freshness-audit/decisions/2026-11-13-finish-board-ruling-close.md.",
+  "retentionReason": "Closed by operator ruling (finish board, 2026-11-13) with a re-open path: the full packet stays on main so `bun run beep goals set-status knowledge-freshness-audit active` can resume it or re-graduate the next slice without restoring from the archive."
 }

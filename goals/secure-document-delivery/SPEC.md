@@ -111,6 +111,23 @@ The exploration retains full rationale and rejected options.
 | 2026-07-14 | Narrow custody port; packaged `IPersistence` proof; wrapped versioned keyset and owned rotation/recovery/deletion. | [`Q7`](../../explorations/secure-document-download-proxy/DECISIONS.md#2026-07-14--q7-serving-key-custody--locked) |
 | 2026-07-14 | Extend desktop PGlite/Drizzle 0.5.4 runtime with boot migration; no bespoke store. | [`Q8`](../../explorations/secure-document-download-proxy/DECISIONS.md#2026-07-14--q8-backing-store--locked) |
 
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug secure-document-delivery`; add a `kind: decision` file there, never edit this block._
+
+### Paused by operator ruling (finish board, 2026-11-13): Has product value but has not started and is partly blocked, 2026-11-13
+
+Operator ruling on 2026-11-13 (about 05:20Z, in the orchestrator session, from the Goal Finish Board triage). The ruling sets this packet to `paused`.
+
+Triage rationale: Has product value but has not started and is partly blocked.
+
+No lane is working on it. Resume with `bun run beep goals set-status secure-document-delivery active` when it is picked up.
+
+Lane chore/finish-board-pause-b1
+
+Reverse: goals set-status secure-document-delivery active when it is picked up
+
+<!-- beep:decisions:end -->
+
 ## Acceptance Criteria
 
 - [ ] P0 records the threat model and passes envelope known-answer, tamper,
