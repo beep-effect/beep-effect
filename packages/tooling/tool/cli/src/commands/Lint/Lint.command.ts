@@ -10,6 +10,7 @@ import { A } from "@beep/utils";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
+import { lintCoverageOwnersCommand } from "./CoverageOwners.ts";
 import { lintEcosystemPolarityCommand } from "./EcosystemPolarity.ts";
 import { lintEffectSchemaInventoryCommand } from "./EffectSchemaInventory.ts";
 import { lintEffectVitestCommand } from "./EffectVitest.ts";
@@ -38,6 +39,7 @@ const lintSubcommands = [
   lintPackageScriptsCommand,
   lintPolicyFingerprintCommand,
   lintCircularCommand,
+  lintCoverageOwnersCommand,
   lintDeprecatedApisCommand,
   lintJsdocCommand,
   lintLawsCommand,

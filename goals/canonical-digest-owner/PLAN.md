@@ -22,7 +22,7 @@ exploration's `MAP.md` calls these P0 to P3.
 | Slice | Status | First step | Done when |
 | --- | --- | --- | --- |
 | A, census and proof | done | The first vertical slice: property test of the epistemics encoder against the owner, plus the execution-record seal replay. | Census table tracked; property test covers every candidate; PacketCore and seal replays pass or name their legacy rows. No production code changed. |
-| B, owner surface | pending | Schema for the prefixed digest in `@beep/schema`, then the `undefined`-member pre-pass in `@beep/jsonc`. | Grammar exported; `ContentDigest` and `SourceTextDigest` derive from it with encoded forms unchanged; refusal table fixed by test. |
+| B, owner surface | done | Schema for the prefixed digest in `@beep/schema`, then the `undefined`-member pre-pass in `@beep/jsonc`. | Grammar exported; `ContentDigest` and `SourceTextDigest` derive from it with encoded forms unchanged; refusal table fixed by test. |
 | C, swaps | pending | Epistemics first (most seal consumers), then PacketCore, then semantica, one commit each. | Each body delegates to the owner; exports unchanged; slice A's tests still green; PartyKey v1 has a parity proof or a pinned row. |
 | D, guard | pending | Write the rule against the tree as it stands after C. | Rule active in the lint pass with no exceptions beyond census rows. |
 
@@ -58,6 +58,39 @@ Carried into later slices, from the census:
   both become typed refusals.
 - Slice C refreshes the packet event snapshot first if the tree or the
   archive has gained an event.
+
+### Slice B evidence
+
+Done 2026-11-12. No encoder was swapped and no stored value changed.
+
+- Grammar: `Sha256PrefixedDigest` and the codec `Sha256PrefixedDigestFromHex`
+  in `packages/foundation/modeling/schema/src/Sha256.ts`. `ContentDigest` and
+  `SourceTextDigest` are that schema with their own brand added; a test in
+  each package holds the encoded string unchanged.
+- Relaxation: `JsoncCanonicalizeOptions` with `omitUndefinedMembers`, default
+  off, in `packages/foundation/modeling/jsonc/src/JsoncFingerprint.ts`. It is
+  an option of the owner's walk, not a second pass, and all four value entry
+  points take it. Reasons are in the decision file dated 2026-11-12.
+- Refusal table: the `refusal table` block in
+  `packages/foundation/modeling/jsonc/test/JsoncFingerprint.test.ts` fixes
+  seventeen input classes with their code and JSON pointer under all three
+  option states, plus the nesting cap. A property in `Properties.test.ts`
+  holds the option equal to deleting the `undefined` members.
+
+Carried into slice C, from this slice:
+
+- Each swap that must keep the legacy bytes for present-but-unset members
+  passes `omitUndefinedMembers`. PacketCore needs it, for
+  `packages/tooling/tool/cli/src/commands/Goals/Completion.ts`.
+- Two more spellings of the `sha256:` grammar, both regular expressions in
+  `@beep/repo-cli`:
+  `packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.github.ts` and
+  `packages/tooling/tool/cli/src/commands/Files/internal/Media.schemas.ts`.
+  Derive them from `Sha256PrefixedDigest`
+  in the PacketCore commit or its neighbour.
+- `@beep/sbom` exports a `Sha256Digest` for the bare 64-character form. It is
+  a separate contract ported with that package; record it in the census as
+  pinned and leave it.
 
 ## Closeout Checklist
 

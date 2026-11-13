@@ -81,7 +81,6 @@ export type URLStr = Brand.Branded<NonEmptyTrimmedStr, "URLStr">;
 
 // The authority must start right after `https://`: WHATWG skips extra `/` or `\` there and
 // rewrites `\` to `/` elsewhere, so backslashes are rejected everywhere.
-// biome-ignore lint/suspicious/noControlCharactersInRegex: rejecting C0 controls is the point.
 const literalHttpsUrlPattern = /^https:\/\/[^/\\\u0000-\u0020\u007f][^\\\u0000-\u0020\u007f]*$/;
 
 const filterHttpsUrl = S.makeFilter(

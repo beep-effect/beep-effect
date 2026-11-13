@@ -66,6 +66,7 @@ import {
   GraphqlBudget,
   GraphqlBudgetPolicy,
   graphqlErrorToGitHubError,
+  isAgentCancellableWorkflowRun,
   layerGithubClientFor,
   layerGithubRepoFor,
   layerGithubRest,
@@ -76,9 +77,9 @@ import {
 import { enforceReviewerGate } from "../../Reviewer/ReviewerRuleset.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import {
-  renderYeetMergeEndpoint,
   renderYeetMergeSettlement,
   settleYeetMerge,
+  YEET_MERGE_ENDPOINT_NAME,
   YeetMergeSettlement,
 } from "./AsyncMerge.ts";
 import { provideYeetHeadMoveClassifier } from "./HeadMove.ts";
@@ -1578,7 +1579,7 @@ export const mergeYeetGhAtHead = Effect.fn("Yeet.gh.mergeAtHead")(function* (
     return yield* report(YEET_GH_EXIT_HOLD)(`[gh] not merged #${number}: ${renderYeetMergeSettlement(settled)}`);
   }
   yield* Console.log(
-    `[gh] merged=true #${number} ${Str.slice(0, 10)(settled.sha)} via ${renderYeetMergeEndpoint(settled.endpoint)}${O.getOrElse(
+    `[gh] merged=true #${number} ${Str.slice(0, 10)(settled.sha)} via ${YEET_MERGE_ENDPOINT_NAME}${O.getOrElse(
       O.map(toleratedNote, (note) => ` tolerated=[${note}]`),
       () => ""
     )}`
@@ -1834,6 +1835,12 @@ const cancellableStatuses = HashSet.make("queued", "waiting", "pending", "reques
  * `yeet gh checks rerun-failed|cancel-queued <n>`: act on the workflow runs of
  * the pull request's head commit.
  *
+ * **Details**
+ *
+ * `cancel-queued` cancels only runs a pull request triggered
+ * (`isAgentCancellableWorkflowRun`): a push run on the same sha, such as a
+ * `refs/heads/main` run, is never cancelled, queued or running.
+ *
  * @param options - The parsed command flags and arguments.
  * @returns The command effect; holds exit 75 and refusals exit 1 through `CliReportedExit`.
  * @category commands
@@ -1859,7 +1866,7 @@ export const runYeetGhChecks = (
                 run.status === "completed" &&
                 O.exists(run.conclusion, (conclusion) => HashSet.has(failedConclusions, conclusion))
             )
-          : A.filter(runs, (run) => HashSet.has(cancellableStatuses, run.status));
+          : A.filter(runs, (run) => HashSet.has(cancellableStatuses, run.status) && isAgentCancellableWorkflowRun(run));
       if (A.isReadonlyArrayEmpty(targets)) {
         yield* Console.log(
           `[gh] #${options.number} ${Str.slice(0, 10)(pr.headSha)}: no workflow runs to ${options.action}`

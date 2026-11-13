@@ -31,9 +31,17 @@ jobs:
     name: Change Profile
     runs-on: ubuntu-24.04
     timeout-minutes: 5
+    # Per-lane `<lane>_relevant` outputs gate jobs before runner allocation. Every guard reads
+    # `!= 'false'`, so a pinned binary that predates a lane (empty output) still runs it.
     outputs:
       docs_only: ${{ steps.profile.outputs.docs_only }}
       goals_only: ${{ steps.profile.outputs.goals_only }}
+      codegen_relevant: ${{ steps.profile.outputs.codegen_relevant }}
+      ecosystem_relevant: ${{ steps.profile.outputs.ecosystem_relevant }}
+      nix_relevant: ${{ steps.profile.outputs.nix_relevant }}
+      desktop_ipc_relevant: ${{ steps.profile.outputs.desktop_ipc_relevant }}
+      sast_relevant: ${{ steps.profile.outputs.sast_relevant }}
+      security_relevant: ${{ steps.profile.outputs.security_relevant }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -211,9 +219,11 @@ jobs:
       # excludes start, then complete skip-satisfied with this receipt in their job summary.
       route_skips: ${{ needs.admission.outputs.route_skips }}
       route_receipt: ${{ needs.admission.outputs.route_receipt }}
-  # Repo Sanity starts for every diff: a packet-prose-only (goals_only) diff
-  # skips the lane body but still runs the private home path law, because the
-  # public repository must not record an absolute home path in any diff.
+  # Repo Sanity starts for every diff and is the required gate for documentation
+  # too. A docs_only diff (prose, packet files, changesets) skips the lane body
+  # and runs only what such a diff can fail: the private home path law (the
+  # public repository must not record an absolute home path) and the changeset
+  # checks. Docs Policy runs the knowledge and packet policy on the same diffs.
   verify:
     name: Repo Sanity
     # Admitted after the test shards (decision of 2026-11-10 in goals/ci-lane-economics). GitHub
@@ -246,64 +256,55 @@ jobs:
         run: |
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
-      - name: Fetch beep CI binary
-        uses: ./.github/actions/fetch-beep-ci
-
       - name: Determine lane execution
         id: lane-gate
         shell: bash
+        env:
+          DOCS_ONLY: ${{ needs.change-profile.outputs.docs_only }}
         run: |
           set -euo pipefail
           should_run=true
-          home_paths_only=false
-          eval "$(beep ci change-profile)"
-          # Docs-only diffs (Heavy admission's path rule) give these lanes
-          # nothing to prove. Repo Sanity validates `.changeset/*.md`, which that
-          # rule counts as documentation, so only packet prose suppresses it.
-          skip_profile="$docs_only"
-          if [[ "${{ env.BEEP_CI_LANE_ID }}" == "repo-sanity" ]]; then
-            skip_profile="$goals_only"
-          fi
-          if [[ "$skip_profile" == "true" ]]; then
+          docs_path=false
+          # Job-level guards already skip Codegen and Ecosystem on docs_only
+          # diffs and on a false `<lane>_relevant` output. Repo Sanity is the
+          # required gate for documentation diffs, so it keeps a short path.
+          if [[ "${{ env.BEEP_CI_LANE_ID }}" == "repo-sanity" && "$DOCS_ONLY" == "true" ]]; then
             should_run=false
-            # Packet prose still gets the private home path law.
-            if [[ "${{ env.BEEP_CI_LANE_ID }}" == "repo-sanity" ]]; then
-              home_paths_only=true
-            fi
+            docs_path=true
           fi
-          if [[ "${{ env.BEEP_CI_LANE_ID }}" == "codegen" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            base_ref="origin/${GITHUB_BASE_REF:-main}"
-            if ! git rev-parse --verify "$base_ref" >/dev/null 2>&1; then
-              git fetch --quiet --no-tags --depth=100 origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
-            fi
-            changed_files="$(git diff --name-only "${base_ref}...HEAD")"
-            # Root dependency resolution changes the resolved generator or formatter, so these files are drift inputs.
-            if ! grep -Eq '(^packages/drivers/(acp|ecfr|govinfo|runpod)/(openapi[^/]*\.json|spec/|scripts/|src/_generated/)|^packages/tooling/library/codegen-kit/|^packages/tooling/tool/cli/src/commands/Ci/CiLane\.ts$|^packages/_internal/db-admin/drizzle/|^apps/professional-desktop/(package\.json|scripts/sync-migration-bundle\.ts|src/runtime/Migrations\.gen\.ts)$|^(package\.json|bun\.lock)$)' <<< "$changed_files"; then
-              should_run=false
-            fi
-          fi
-          # Ecosystem Contracts type-tests and bundle-probes the family against
-          # effect and drizzle-orm only (src imports no workspace package), so
-          # its inputs are the family, the resolved toolchain and the lane body.
-          if [[ "${{ env.BEEP_CI_LANE_ID }}" == "ecosystem" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            changed_files="$(git diff --name-only "origin/${GITHUB_BASE_REF:-main}...HEAD")"
-            if ! grep -Eq '(^packages/ecosystem/|^packages/tooling/tool/cli/src/commands/Ci/CiLane\.ts$|^\.github/workflows/check\.yml$|^(package\.json|bun\.lock|tsconfig\.base\.json|\.bun-version)$)' <<< "$changed_files"; then
-              should_run=false
-            fi
+          # Path gates for lanes whose inputs are a few roots. The expressions
+          # live in the change-profile pattern data (`lanes`), the same rows the
+          # pinned binary turns into `<lane>_relevant`; an absent row runs the
+          # lane. Renames list both sides (--no-renames), a superset.
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            case "${{ env.BEEP_CI_LANE_ID }}" in
+              codegen|ecosystem)
+                base_ref="origin/${GITHUB_BASE_REF:-main}"
+                if ! git rev-parse --verify "$base_ref" >/dev/null 2>&1; then
+                  git fetch --quiet --no-tags --depth=100 origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
+                fi
+                pattern="$(jq -r --arg lane "${{ env.BEEP_CI_LANE_ID }}" '.lanes[$lane] // empty' \
+                  packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json)"
+                changed_files="$(git diff --name-only --no-renames "${base_ref}...HEAD")"
+                if [[ -n "$pattern" ]] && ! grep -Eq "$pattern" <<< "$changed_files"; then
+                  should_run=false
+                fi
+                ;;
+            esac
           fi
 
           echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
-          echo "home_paths_only=$home_paths_only" >> "$GITHUB_OUTPUT"
+          echo "docs_path=$docs_path" >> "$GITHUB_OUTPUT"
 
       - name: Setup monorepo CI
-        if: steps.lane-gate.outputs.should_run == 'true' || steps.lane-gate.outputs.home_paths_only == 'true'
+        if: steps.lane-gate.outputs.should_run == 'true' || steps.lane-gate.outputs.docs_path == 'true'
         uses: ./.github/actions/setup-monorepo-ci
         with:
-          # The law-only goals_only path reads tracked files: it frees no disk
-          # and exports no application secrets. The full lane keeps both.
-          free-disk: ${{ steps.lane-gate.outputs.home_paths_only == 'true' && 'false' || 'true' }}
+          # The documentation path reads tracked files: it frees no disk and
+          # exports no application secrets. The full lane keeps both.
+          free-disk: ${{ steps.lane-gate.outputs.docs_path == 'true' && 'false' || 'true' }}
           free-disk-min-gib: "64"
-          app-secrets: ${{ steps.lane-gate.outputs.home_paths_only == 'true' && 'false' || 'true' }}
+          app-secrets: ${{ steps.lane-gate.outputs.docs_path == 'true' && 'false' || 'true' }}
           database-url: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
           database-url-unpooled: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
           email-resend-api-key: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
@@ -313,13 +314,9 @@ jobs:
           security-trusted-origins: ${{ github.event_name == 'push' && secrets.SECURITY_TRUSTED_ORIGINS || '' }}
           liveblocks-secret-key: ${{ github.event_name == 'push' && secrets.LIVEBLOCKS_SECRET_KEY || '' }}
 
-      - name: Check workflow policy
-        if: env.BEEP_CI_LANE_ID == 'repo-sanity' && steps.lane-gate.outputs.should_run == 'true'
-        run: bun run beep ci workflow-lint
-
-      - name: Check private home paths
-        if: steps.lane-gate.outputs.home_paths_only == 'true'
-        run: bun run beep laws private-home-paths --check
+      - name: Check documentation sanity
+        if: steps.lane-gate.outputs.docs_path == 'true'
+        run: bun run beep ci lane repo-sanity --docs-only
 
       - name: Verify regenerate merge-driver bootstrap
         if: env.BEEP_CI_LANE_ID == 'codegen' && steps.lane-gate.outputs.should_run == 'true'
@@ -385,7 +382,7 @@ jobs:
           if-no-files-found: warn
 
       - name: Skip lane
-        if: steps.lane-gate.outputs.should_run != 'true'
+        if: steps.lane-gate.outputs.should_run != 'true' && steps.lane-gate.outputs.docs_path != 'true'
         run: echo "Skipping ${{ env.BEEP_CI_LANE_NAME }} for this change set."
 
       - name: Warn when the intended runner image is stale
@@ -395,10 +392,60 @@ jobs:
             echo "::warning::Runner image provenance is stale or invalid. See docs/runbooks/aws-cost-operations.md before the next attended image refresh."
           fi
 
+  # Knowledge, packet and Markdown policy for documentation-only pull requests
+  # (route-soundness-repair ROUT-02, exploration ruling D8). A docs_only diff
+  # never starts Heavy / Lint Policy, which runs the same tasks for code pull
+  # requests and main pushes. The task set and its justified exclusions live in
+  # packages/tooling/tool/cli/src/commands/Ci/DocsPolicy.ts, and a completeness
+  # test derives the obligation from turbo.json inputs. The job waits only on
+  # Change Profile: a docs_only run allocates no test shards to queue behind.
+  # Not a required context; Repo Sanity keeps the home path law and the
+  # changeset checks merge-blocking on the same diffs.
+  docs-policy:
+    name: Docs Policy
+    needs: [change-profile]
+    if: ${{ !cancelled() && needs.change-profile.outputs.docs_only == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      BEEP_CI_LANE_ID: docs-policy
+      BEEP_CI_LANE_NAME: Docs Policy
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      - name: Fetch pull request base
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
+
+      # Tracked files and git history only: no disk cleanup, no application secrets.
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+
+      - name: Install typos
+        uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
+        with:
+          tool: typos-cli@1.50.3
+
+      - name: Run docs policy lane
+        env:
+          # The knowledge doctor's seal guard admits a baseline change only on the
+          # mint App's pull request (C8 condition i), as in Heavy / Lint Policy.
+          KNOWLEDGE_MINT_APP_SLUG: ${{ vars.KNOWLEDGE_MINT_APP_SLUG }}
+        run: bun run beep ci lane docs-policy --base "origin/${GITHUB_BASE_REF:-main}"
+
   ecosystem:
     name: Ecosystem Contracts
     needs: [change-profile, test-plan, admission]
-    if: ${{ !cancelled() && needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only != 'true' }}
+    if: ${{ !cancelled() && needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only != 'true' && needs.change-profile.outputs.ecosystem_relevant != 'false' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
@@ -411,7 +458,7 @@ jobs:
   codegen:
     name: Codegen Drift
     needs: [change-profile, test-plan, admission]
-    if: ${{ !cancelled() && needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only != 'true' }}
+    if: ${{ !cancelled() && needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only != 'true' && needs.change-profile.outputs.codegen_relevant != 'false' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
@@ -1269,7 +1316,7 @@ jobs:
   professional-desktop-ipc-stdio:
     name: Professional Desktop IPC Stdio
     needs: [change-profile, test-plan, admission]
-    if: ${{ !cancelled() && needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only != 'true' }}
+    if: ${{ !cancelled() && needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only != 'true' && needs.change-profile.outputs.desktop_ipc_relevant != 'false' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 40
     permissions:
@@ -1308,9 +1355,11 @@ jobs:
             base_ref="origin/${GITHUB_BASE_REF:-main}"
             changed_files="$(git diff --name-only --no-renames "${base_ref}...HEAD")"
 
+            # `lanes.desktop_ipc` in the change-profile pattern data; an absent row runs the lane.
+            pattern="$(jq -r '.lanes.desktop_ipc // empty' packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json)"
             if [[ -z "$changed_files" ]]; then
               should_run=false
-            elif ! printf "%s\n" "$changed_files" | grep -Eq '(^apps/professional-desktop/|^packages/(foundation/|(agents|workspace|shared|epistemic)(/|-)|drivers/(pglite|postgres)/)|^\.github/(actions/setup-monorepo-ci/|workflows/check\.yml$)|^(bun\.lock|package\.json|turbo\.json)$)'; then
+            elif [[ -n "$pattern" ]] && ! printf "%s\n" "$changed_files" | grep -Eq "$pattern"; then
               should_run=false
             fi
           fi
@@ -2010,6 +2059,15 @@ jobs:
 
   security:
     name: Security
+    # Runs when the diff touches what Security reads: dependency manifests and
+    # lockfiles, the OSV configuration, workflows and the hosted governance
+    # sources (`lanes.security` in CiOperational.patterns.json). On any other
+    # pull request its verdict is a function of main plus the live advisory
+    # database and GitHub settings, which every main push re-checks (a push
+    # always gets the full profile). A failed Change Profile leaves both
+    # outputs empty, so the job runs.
+    needs: [change-profile]
+    if: ${{ !cancelled() && needs.change-profile.outputs.docs_only != 'true' && needs.change-profile.outputs.security_relevant != 'false' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
@@ -2067,7 +2125,7 @@ jobs:
   nix:
     name: Nix Shell
     needs: [change-profile, test-plan, admission]
-    if: ${{ !cancelled() && needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only != 'true' }}
+    if: ${{ !cancelled() && needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only != 'true' && needs.change-profile.outputs.nix_relevant != 'false' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
@@ -2096,8 +2154,10 @@ jobs:
           set -euo pipefail
           should_run=true
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            changed_files="$(git diff --name-only "origin/${GITHUB_BASE_REF:-main}...HEAD")"
-            if ! grep -Eq '(^flake\.(nix|lock)$|^\.github/workflows/check\.yml$|^packages/tooling/tool/cli/src/commands/Ci/CiLane\.ts$)' <<< "$changed_files"; then
+            # `lanes.nix` in the change-profile pattern data; an absent row runs the lane.
+            pattern="$(jq -r '.lanes.nix // empty' packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json)"
+            changed_files="$(git diff --name-only --no-renames "origin/${GITHUB_BASE_REF:-main}...HEAD")"
+            if [[ -n "$pattern" ]] && ! grep -Eq "$pattern" <<< "$changed_files"; then
               should_run=false
             fi
           fi
@@ -2130,6 +2190,12 @@ jobs:
 
   sast:
     name: SAST
+    # Semgrep scans only changed JavaScript and TypeScript, so the job runs when
+    # the diff touches those, its rules (.semgrep/) or its install inputs
+    # (`lanes.sast` in CiOperational.patterns.json). A failed Change Profile
+    # leaves both outputs empty, so the job runs.
+    needs: [change-profile]
+    if: ${{ !cancelled() && needs.change-profile.outputs.docs_only != 'true' && needs.change-profile.outputs.sast_relevant != 'false' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:

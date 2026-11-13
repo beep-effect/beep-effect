@@ -38,6 +38,8 @@ P1 Implement: slice 1 merged in #1771. Run 4 (2026-10-20) found four problems; #
 
 ## Latest Evidence
 
+[Knowledge-graph provider on Windows](history/p1/2026-11-12-gateway-kg-provider-windows.md) (2026-11-12): gateway 0.1.4 in the signed `bun.exe` plus script layout loads DuckDB 2, mounts all 13 knowledge-graph tools and answers a query on the clean VM image, with no `SetDllDirectoryW` step. No code change.
+
 [Onboarding proof run 5](history/p1/2026-10-21-onboarding-proof-run5.md) (2026-10-21): an agent drove every console step; the operator only signed in to Claude. Update to 0.1.2, the Windows approval dialog, the signed-in check and the Microsoft 365 app-ID gate all pass. [Run 4](history/p1/2026-10-20-onboarding-proof-run4.md) (2026-10-20): gateway 0.1.0 → 0.1.1 update, interview and profile save pass, with a FreshBooks gap recorded. Four findings: no `.mcpb` file type, no approval prompt in Claude Desktop, a false signed-in negative, and Microsoft 365 offered without an app ID.
 
 ## Notes

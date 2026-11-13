@@ -49,7 +49,7 @@ Higher sources outrank lower sources when they conflict.
 ## Target Surfaces
 
 - `packages/tooling/tool/cli/src/internal/github/GithubRest.ts`: the async
-  merge request and its poll beside the legacy `mergePullRequest`.
+  merge request and its poll, which replaced the legacy merge call.
 - `packages/tooling/tool/cli/src/commands/Yeet/internal/`: the merge gate,
   merge porcelain, GitHub operations and owner-checkpoint merge (slice A);
   the review window, the final-check refresh rule and a new head-move
@@ -92,12 +92,12 @@ Higher sources outrank lower sources when they conflict.
 
 ## Acceptance Criteria
 
-- [ ] Slice A: `yeet merge-gate` and `yeet merge` merge an ordinary PR
+- [x] Slice A: `yeet merge-gate` and `yeet merge` merge an ordinary PR
       through `merge-async` with the gated `sha`; a PR with an unresolved
       thread holds with GitHub's sentence; strict mode sends no bypass and
       relaxed mode records the one it sends; the legacy call is deleted
       after its watch day.
-- [ ] Slice B: a GitHub-initiated rewrite with unchanged patch-ids keeps
+- [x] Slice B: a GitHub-initiated rewrite with unchanged patch-ids keeps
       the review-window start and carries the final-check receipt; a
       changed patch-id or a lane push restarts both. The rewritten heads of
       #3050 and #3051 from the test record are fixtures.
@@ -287,6 +287,30 @@ Residual: a later label replaces a `ready-for-heavy` re-apply that is still pend
 Lane fix/merge-gate-shadowed-heavy-suite
 
 Reverse: Drop the re-report step from heavy-admit.yml (admission back to event-label-only) and the gate's shadow classification; strict merges after a later label then fail again at GitHub.
+
+### Legacy merge call, its switch and the endpoint field deleted, 2026-11-13
+
+The watch day set by the legacy-merge-switch decision ended on 2026-11-11. This PR deletes the legacy REST merge call from GithubRest, the BEEP_YEET_MERGE_ENDPOINT switch and its config from AsyncMerge.ts, and the endpoint field from YeetMergeSettlement and MergeGateMerged. A field that can hold one value distinguishes nothing, so it goes with the switch rather than staying as a one-literal union; merge lines keep ending 'via merge-async' through one constant. The merge queue, if it is ever routed, is a merge_action on the same endpoint, not a second endpoint.
+
+Lane chore/yeet-delete-legacy-merge
+
+Reverse: Revert this PR; the legacy call returns behind BEEP_YEET_MERGE_ENDPOINT=legacy.
+
+### yeet ready never pushes on a stack layer; the request comment is the wake, 2026-11-13
+
+Since #2791 `yeet ready` wakes beep-reviewer with an exact-head issue comment for a PR the shared login authored, and pushes the empty S32 commit only as the fallback for an author or repository the comment routine does not cover. The P0 probes showed the comment waking the reviewer on a layer with no push: #3154 (position 1 of 2) sat ready for four minutes unreviewed, then got its summary 2 minutes 32 seconds after the comment, on an unchanged head. So slice C adds no new wake. It removes the fallback on every stack layer, top included, because a push below the top moves the head off the base of the layer above and a push on the top restarts a window the gate is about to read. An uncovered layer gets a warning with the manual comment body.
+
+Lane feat/yeet-two-layer-stacks
+
+Reverse: Allow the S32 fallback on the top layer only, where a push cannot strand a layer above.
+
+### Layers are linked through the Stacks REST API, not gh stack, 2026-11-13
+
+The P0 probes (research/stack-p0-probes-2026-11.md) created three two-layer stacks with `POST /repos/{owner}/{repo}/stacks` and a bottom-to-top list of PR numbers: 201 in under a second, drafts accepted, refusals as 422 with a sentence. Yeet already creates the PR through REST with its title, body, footer and label, so the link is one more call on the same client. `gh stack` v0.3.0 calls the same endpoints, but `submit` and `push` push every branch with `--force-with-lease`, `link` pushes branch arguments, `init` keeps per-clone tracking state, and `submit` refuses with three remotes unless `remote.pushDefault` is injected. A lane's only push stays the one Yeet proves. The CLI is not a dependency of any Yeet command.
+
+Lane feat/yeet-two-layer-stacks
+
+Reverse: Wrap gh stack link with remote.pushDefault injected through the environment, and drop createStack from GithubRest.
 
 <!-- beep:decisions:end -->
 

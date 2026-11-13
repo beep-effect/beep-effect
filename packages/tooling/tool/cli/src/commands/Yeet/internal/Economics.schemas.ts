@@ -386,9 +386,13 @@ export class EconomicsAttempts extends S.Opaque<EconomicsAttempts, { readonly br
  * and of that wrapper's inner lanes before the failing one; a failing wrapper
  * counts only the wrappers before it. The completion offset adds the failing
  * lane's own duration. `offsetMethod` states this one definition.
- * `actionableLaneMix` names the first failed inner lane, else the failed step,
- * else the first failed lane, else `unlocated`; `receiptProxyMix` classifies
- * every red attempt with the A1 script's seven proxy classes.
+ * `actionableLaneMix` first classifies refusals (`refusal:lock-bounce`,
+ * `refusal:stale-base`, `refusal:closeout`), then names the first failed inner
+ * lane, else the failed step of a `step-exit` failure, else the first failed
+ * lane, else `unexecuted` (a handler error that ran no lane) or `unlocated`.
+ * Every red attempt is one row, so the mix total equals `redAttempts`;
+ * `receiptProxyMix` classifies every red attempt with the A1 script's seven
+ * proxy classes.
  *
  * **Example** (No red attempts)
  *

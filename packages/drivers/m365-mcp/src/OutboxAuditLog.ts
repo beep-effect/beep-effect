@@ -23,7 +23,7 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
@@ -32,7 +32,9 @@ import * as Semaphore from "effect/Semaphore";
 import * as Str from "effect/String";
 import { emptyByDefault } from "./internal/OutboxFields.ts";
 import { OutboxAttachmentDigest } from "./OutboxAttachmentSource.ts";
+import { basisField } from "./OutboxBasis.ts";
 import { OutboxSendMismatchField } from "./OutboxSendGuard.ts";
+import type * as O from "effect/Option";
 
 const $I = $M365McpId.create("OutboxAuditLog");
 
@@ -102,7 +104,10 @@ const addresses = (description: string) => S.Array(S.String).annotateKey({ descr
  * Its existence is what lets `send_draft` send the draft and `delete_draft`
  * delete it later. The
  * attachment digests are a record of what was attached; the send guard does
- * not read them, it hashes the stored bytes.
+ * not read them, it hashes the stored bytes. `basis` holds the Graph items
+ * the draft rested on, as observed when it was created; `get_draft` rechecks
+ * them. A record written before pins existed has no `basis` key and decodes
+ * with an empty basis.
  *
  * **Example** (Record a created draft)
  *
@@ -130,6 +135,7 @@ export class OutboxDraftCreatedRecord extends S.Opaque<OutboxDraftCreatedRecord,
   S.TaggedStruct("draft-created", {
     ...stamp,
     attachments: S.Array(OutboxAttachmentDigest).annotateKey({ description: "Files the server attached." }),
+    basis: basisField,
     bcc: addresses("Blind-carbon-copy addresses."),
     cc: addresses("Carbon-copy addresses."),
     draftId: S.NonEmptyString.annotateKey({ description: "Graph id of the draft." }),
@@ -512,6 +518,7 @@ export class OutboxAuditIds extends Context.Service<OutboxAuditIds, OutboxAuditI
  */
 export type OutboxAuditLogShape = {
   readonly append: (record: OutboxAuditRecord) => Effect.Effect<void, OutboxAuditError>;
+  readonly createdDraft: (draftId: string) => Effect.Effect<O.Option<OutboxDraftCreatedRecord>, OutboxAuditError>;
   readonly hasCreatedDraft: (draftId: string) => Effect.Effect<boolean, OutboxAuditError>;
   readonly hasCreatedEvent: (eventId: string) => Effect.Effect<boolean, OutboxAuditError>;
   readonly nextAuditId: Effect.Effect<string>;
@@ -585,10 +592,12 @@ const makeLog = Effect.fnUntraced(function* (directory: string) {
     );
   });
 
-  const hasRecord = (matches: (record: OutboxAuditRecord) => boolean) =>
+  const fromRecords = <A>(read: (records: ReadonlyArray<OutboxAuditRecord>) => A) =>
     readRecords().pipe(
-      Effect.mapBoth({ onFailure: failure("read", "The audit log could not be read."), onSuccess: A.some(matches) })
+      Effect.mapBoth({ onFailure: failure("read", "The audit log could not be read."), onSuccess: read })
     );
+
+  const hasRecord = (matches: (record: OutboxAuditRecord) => boolean) => fromRecords(A.some(matches));
 
   return OutboxAuditLog.of({
     append: Effect.fn("OutboxAuditLog.append")(function* (record) {
@@ -600,6 +609,14 @@ const makeLog = Effect.fnUntraced(function* (directory: string) {
         .withPermits(1)(appendLine(outboxAuditFileName(record), line))
         .pipe(Effect.mapError(failure("append", "The audit record could not be appended.")));
     }),
+    createdDraft: Effect.fn("OutboxAuditLog.createdDraft")((draftId) =>
+      fromRecords(
+        flow(
+          A.filter(isDraftCreated),
+          A.findLast((record) => record.draftId === draftId)
+        )
+      )
+    ),
     hasCreatedDraft: Effect.fn("OutboxAuditLog.hasCreatedDraft")((draftId) =>
       hasRecord((record) => isDraftCreated(record) && record.draftId === draftId)
     ),

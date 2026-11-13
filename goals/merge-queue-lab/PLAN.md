@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `active` (P3)
+Status: `complete`
 
 ## Phases
 
@@ -11,7 +11,7 @@ Status: `active` (P3)
 | P0 Research | complete | Read the exploration packet and `SPEC.md`; read the live `main` ruleset; list the identities the fleet merges with and how each token is resolved. | Scope confirmed; identities and the ruleset snapshot recorded. |
 | P1 Stand up the lab | complete | Cut `queue-lab`, add the toy workflow there, create the lab ruleset, and send one synthetic pull request through the queue. | Findings 10b, 10c (enqueue), 6e and 6f are recorded with evidence. |
 | P2 Observe | complete | Land the driver calls, write the lab driver script, and work the rest of the Observations table. | Every Observations id has a finding or a recorded reason. |
-| P3 Yeet: PR to mergeable | in-progress | Publish the driver change and the packet evidence through yeet and drive each pull request to mergeable. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P3 Yeet: PR to mergeable | complete | Publish the driver change and the packet evidence through yeet and drive each pull request to mergeable. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | complete | Record the verdict, feed it back to the exploration, clean up lab residue, write the reflection, flip packet state. | Verdict decision file exists; exploration updated; residue gone; reflection valid. |
 
 Phase ids match `ops/manifest.json` `phases[]`.
@@ -83,6 +83,12 @@ bun run beep goals decisions check --slug merge-queue-lab
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug merge-queue-lab`; add a `kind: checkpoint` file there, never edit this block._
 
-_No checkpoint files yet._
+### Closeout re-final after #3112 merged before its readiness receipt, 2026-11-10
+
+#3112 carried proposedCloseout but was flipped ready and merged five seconds later (2026-11-10 07:33:48Z and 07:33:53Z) by the operator gh login, before its until-ready monitor recorded merge-ready. goals completion refresh therefore read unknown. This docs-only re-final rebinds proposedCloseout.finalPullRequest, the completionGate final entry and the yeet-verdict ref to its own branch, and is held for its own merge-ready receipt before it merges.
+
+Lane docs/merge-queue-lab-refinal
+
+Reverse: None needed; the re-final only rebinds proposedCloseout and the gating verdict.
 
 <!-- beep:decisions:end -->

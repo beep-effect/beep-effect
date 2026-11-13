@@ -93,17 +93,17 @@ Higher sources outrank lower sources when they conflict.
 
 ## Acceptance Criteria
 
-- [ ] A tracked census lists every sorted-key encoder and digest preimage
+- [x] A tracked census lists every sorted-key encoder and digest preimage
       in package and app source with its class and disposition.
 - [ ] A property test holds each replaced encoder byte-equal to
       `JsoncFingerprint.canonicalizeResult` on generated plain JSON, and it
       ran green before that encoder's body was replaced.
-- [ ] A replay recomputes every stored PacketCore event digest in the tree
+- [x] A replay recomputes every stored PacketCore event digest in the tree
       and every execution-record seal fixture through the owner, with zero
       mismatches, or each mismatch has a legacy row in the census.
-- [ ] A test fixes the refusal table: each non-JSON input class and the
+- [x] A test fixes the refusal table: each non-JSON input class and the
       typed error the owner returns for it.
-- [ ] `@beep/schema` exports the prefixed digest grammar, and
+- [x] `@beep/schema` exports the prefixed digest grammar, and
       `ContentDigest` and `SourceTextDigest` are defined from it with their
       encoded forms unchanged.
 - [ ] `rg` finds no sorted-key JSON encoder outside `@beep/jsonc` except the
@@ -200,6 +200,22 @@ The differential and off-domain tests for the epistemics and PacketCore encoders
 Lane test/canonical-digest-census
 
 Reverse: Move the test files, drop @beep/jsonc from the devDependencies of @beep/execution-authority-domain and @beep/semantica, and run bun run beep tsconfig-sync.
+
+### The shared grammar is Sha256PrefixedDigest; a domain digest keeps both brands, 2026-11-12
+
+Slice B call. @beep/schema exports Sha256PrefixedDigest beside Sha256Hex, with Sha256PrefixedDigestFromHex as the codec between the bare and the prefixed form. The name Sha256Digest was not used: @beep/sbom already exports a schema of that name for the bare 64-character form (it strips an optional prefix while parsing), and two modeling packages exporting one name for opposite grammars would invite the mix-up this goal removes. ContentDigest and SourceTextDigest are now that schema with their own brand added, so each keeps its encoded string and its existing brand, and gains the shared brand. A domain digest is therefore assignable to the shared type, and a function that only needs the grammar can take any of them; two domain digests stay distinct from each other. Rejected: an unbranded shared grammar, which would make every prefixed string a digest of every kind once decoded. Found while surveying and left for slice C because both sit in @beep/repo-cli, which slice C already changes: the cache workflow schema and the files media schema each spell the same grammar as a regular expression.
+
+Lane feat/canonical-digest-owner-surface
+
+Reverse: Rename the export in @beep/schema and its two importers; the encoded string does not change, so nothing stored is affected.
+
+### The undefined-member relaxation is an option of the emitter, not a second pass, 2026-11-12
+
+Slice B call. The 2026-11-10 decision named a pre-pass that drops object members whose value is undefined. It lands as JsoncCanonicalizeOptions.omitUndefinedMembers on the owner's own walk, default false, accepted by canonicalizeResult, canonicalize, hashResult and hash. Contract is the one already decided: only an object member read as undefined is left out; an undefined array element, an array hole, an undefined root, a function, a symbol and every other value outside plain JSON still fail typed, and a member key with an unpaired surrogate fails even when its value is undefined. Rejected: a separate function that copies the value without those members before canonicalizing. It would read every getter twice or need its own copy of the hardening the walk already has (the depth cap that also stops cycles, the guards around throwing getters and Proxy traps, indexed array reads), and a second walk could disagree with the first about which member fails first and at which JSON pointer. Inside the walk the member is read once, so a getter decides once whether its member exists, and the first-failure order and pointers are unchanged. Also rejected: a second set of entry points with the relaxation in their names; the options class matches JsoncTextHashOptions, which the same facade already uses for hashText. Tests: the refusal table in the jsonc fingerprint test fixes each input class, its code and its pointer under all three option states, and a property holds the option equal to deleting the members.
+
+Lane feat/canonical-digest-owner-surface
+
+Reverse: Add a standalone pre-pass function beside the option and move callers to it, or remove the option and its tests; the default is refusal, so no stored digest depends on the option until slice C adopts it.
 
 ### The replay covers archived and history-only events through a tracked snapshot, 2026-11-12
 

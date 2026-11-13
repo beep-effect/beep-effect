@@ -1,7 +1,8 @@
 /**
  * Scripted stand-ins for the services the outbox handlers use: a recording
  * `M365` stub that stores attachment bytes the way Graph does, an in-memory
- * audit log and a synthetic attachment source.
+ * audit log, a synthetic attachment source and the real basis reader over
+ * the stub.
  */
 import {
   GraphAttachment,
@@ -13,12 +14,14 @@ import {
   M365AttachmentCollection,
   M365AttachmentContent,
   M365Error,
+  M365MessageCollection,
 } from "@beep/m365";
 import {
   OutboxAttachment,
   OutboxAttachmentSource,
   OutboxAuditError,
   OutboxAuditLog,
+  OutboxBasisReader,
   OutboxDraftCreatedRecord,
   OutboxEventCreatedRecord,
   OutboxHandlerSettings,
@@ -110,12 +113,20 @@ type WorldState = {
   readonly corruptUploads: boolean;
   readonly draft: GraphMessage;
   readonly event: GraphEvent;
+  /** When set, `getEvent` fails with it. */
+  readonly eventFailure: O.Option<M365Error>;
   readonly failDownloads: boolean;
   readonly failAttachmentAt: O.Option<number>;
   readonly files: ReadonlyArray<StoredFile>;
   /** Draft ids an earlier server run recorded creating, beyond what `records` holds. */
   readonly knownDraftIds: ReadonlyArray<string>;
+  /** When set, `listMessages` fails with it. */
+  readonly listFailure: O.Option<M365Error>;
+  /** Mail other than the draft: `getMessage` finds it by id, `listMessages` by conversation. */
+  readonly messages: ReadonlyArray<GraphMessage>;
   readonly nextId: number;
+  /** Whether a conversation listing reports a next page. */
+  readonly pagedConversation: boolean;
   readonly pagedListing: boolean;
   readonly records: ReadonlyArray<OutboxAuditRecord>;
   readonly sendFailure: O.Option<M365Error>;
@@ -128,11 +139,15 @@ const initialState: WorldState = {
   corruptUploads: false,
   draft: storedDraft,
   event: GraphEvent.make({ id: EVENT_ID }),
+  eventFailure: O.none(),
   failDownloads: false,
   failAttachmentAt: O.none(),
   files: [fixtureFile],
   knownDraftIds: [DRAFT_ID],
+  listFailure: O.none(),
+  messages: [],
   nextId: 1,
+  pagedConversation: false,
   pagedListing: false,
   records: [],
   sendFailure: O.none(),
@@ -239,13 +254,21 @@ const StubM365Layer = Layer.effect(
       findEventsByIdempotencyKey: notScripted,
       getEvent: Effect.fn("StubM365.getEvent")(function* (request) {
         yield* called("getEvent", request);
-        return (yield* Ref.get(state)).event;
+        const current = yield* Ref.get(state);
+        return yield* pipe(
+          current.eventFailure,
+          O.match({ onNone: () => Effect.succeed(current.event), onSome: Effect.fail })
+        );
       }),
       getListItem: notScripted,
       getMailFolder: notScripted,
       getMessage: Effect.fn("StubM365.getMessage")(function* (request) {
         yield* called("getMessage", request);
-        return (yield* Ref.get(state)).draft;
+        const current = yield* Ref.get(state);
+        return pipe(
+          A.findFirst(current.messages, (message) => message.id === request.messageId),
+          O.getOrElse(() => current.draft)
+        );
       }),
       getMessageAuthoredText: notScripted,
       getSite: notScripted,
@@ -270,7 +293,20 @@ const StubM365Layer = Layer.effect(
           ),
         });
       }),
-      listMessages: notScripted,
+      // Answers only the conversation filter the basis reader sends, with OData's doubled quote.
+      listMessages: Effect.fn("StubM365.listMessages")(function* (request) {
+        yield* called("listMessages", request);
+        const current = yield* Ref.get(state);
+        yield* pipe(current.listFailure, O.match({ onNone: () => Effect.void, onSome: Effect.fail }));
+        return M365MessageCollection.make({
+          "@odata.nextLink": current.pagedConversation ? O.some("https://graph.example.test/v1.0/next-page") : O.none(),
+          value: A.filter(current.messages, (message) =>
+            O.exists(message.conversationId, (id) =>
+              O.contains(request.filter, `conversationId eq '${Str.replaceAll("'", "''")(id)}'`)
+            )
+          ),
+        });
+      }),
       listSites: notScripted,
       sendDraftMessage: Effect.fn("StubM365.sendDraftMessage")(function* (request) {
         yield* called("sendDraftMessage", request);
@@ -303,6 +339,12 @@ const StubAuditLogLayer = Layer.effect(
           return yield* OutboxAuditError.make({ message: "The audit record could not be appended.", reason: "append" });
         }
         yield* Ref.update(state, (latest) => ({ ...latest, records: A.append(latest.records, record) }));
+      }),
+      createdDraft: Effect.fn("StubAuditLog.createdDraft")(function* (draftId) {
+        const current = yield* Ref.get(state);
+        return A.findLast(current.records, (record) => isDraftCreated(record) && record.draftId === draftId).pipe(
+          O.filter(isDraftCreated)
+        );
       }),
       hasCreatedDraft: Effect.fn("StubAuditLog.hasCreatedDraft")(function* (draftId) {
         const current = yield* Ref.get(state);
@@ -356,12 +398,14 @@ const StubAttachmentSourceLayer = Layer.effect(
 );
 
 /**
- * The scripted world: provides `OutboxWorld`, `Crypto` and the three services
+ * The scripted world: provides `OutboxWorld`, `Crypto` and the four services
  * the outbox handlers depend on.
  */
-export const OutboxWorldServices = Layer.mergeAll(StubM365Layer, StubAuditLogLayer, StubAttachmentSourceLayer).pipe(
-  Layer.provideMerge(Layer.mergeAll(OutboxWorldLayer, NodeCrypto.layer))
-);
+export const OutboxWorldServices = Layer.mergeAll(
+  OutboxBasisReader.layer(MAILBOX).pipe(Layer.provideMerge(StubM365Layer)),
+  StubAuditLogLayer,
+  StubAttachmentSourceLayer
+).pipe(Layer.provideMerge(Layer.mergeAll(OutboxWorldLayer, NodeCrypto.layer)));
 
 const FIXED_AT = DateTime.makeUnsafe("2030-01-15T12:00:00Z");
 

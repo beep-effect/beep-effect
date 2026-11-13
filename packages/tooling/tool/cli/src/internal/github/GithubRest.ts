@@ -242,6 +242,7 @@ const CombinedStatusWire = S.Struct({
  *   checkSuiteId: O.some(90),
  *   path: ".github/workflows/check.yml",
  *   event: "pull_request",
+ *   headBranch: O.some("feat/x"),
  *   createdAt: DateTime.makeUnsafe("2026-11-12T23:27:45Z"),
  * })
  * console.log(run.id) // 9
@@ -260,6 +261,7 @@ export class GithubWorkflowRunRecord extends S.Opaque<GithubWorkflowRunRecord, {
     checkSuiteId: S.Option(S.Int),
     path: S.String,
     event: S.String,
+    headBranch: S.Option(S.String),
     createdAt: S.DateTimeUtc,
   }).pipe(
     $I.annoteSchema("GithubWorkflowRunRecord", {
@@ -267,6 +269,72 @@ export class GithubWorkflowRunRecord extends S.Opaque<GithubWorkflowRunRecord, {
     })
   )
 ) {}
+
+/**
+ * The workflow-run events a pull request triggers.
+ *
+ * **Details**
+ *
+ * Agent cancels are limited to these runs: no agent cancels a
+ * `refs/heads/main` push run, queued or running (AGENTS.md, Inherited reds).
+ * A run whose event is anything else (`push`, `merge_group`, `schedule`,
+ * `workflow_dispatch`, or an event GitHub did not report) is left alone.
+ *
+ * **Example** (Check an event)
+ *
+ * ```ts
+ * import { GithubPullRequestRunEvent } from "@beep/repo-cli/test/SharedInternals"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(GithubPullRequestRunEvent)("push")) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const GithubPullRequestRunEvent = LiteralKit(["pull_request", "pull_request_target"]).pipe(
+  $I.annoteSchema("GithubPullRequestRunEvent", { description: "A workflow-run event a pull request triggers." })
+);
+
+/**
+ * The workflow-run events a pull request triggers.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type GithubPullRequestRunEvent = typeof GithubPullRequestRunEvent.Type;
+
+const isPullRequestRunEvent = S.is(GithubPullRequestRunEvent);
+
+/**
+ * Whether an agent may cancel this workflow run: only runs a pull request
+ * triggered, never a push run on any branch (so never a `refs/heads/main` run).
+ *
+ * **Example** (A main push run on the PR head sha is kept)
+ *
+ * ```ts
+ * import { GithubWorkflowRunRecord, isAgentCancellableWorkflowRun } from "@beep/repo-cli/test/SharedInternals"
+ * import * as O from "effect/Option"
+ *
+ * const run = GithubWorkflowRunRecord.make({
+ *   id: 9,
+ *   name: "Check",
+ *   status: "in_progress",
+ *   conclusion: O.none(),
+ *   headSha: "abc",
+ *   event: "push",
+ *   headBranch: O.some("main"),
+ * })
+ * console.log(isAgentCancellableWorkflowRun(run)) // false
+ * ```
+ *
+ * @param run - The workflow run read over REST.
+ * @returns `true` only for a run a pull request triggered.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isAgentCancellableWorkflowRun = (run: GithubWorkflowRunRecord): boolean =>
+  isPullRequestRunEvent(run.event);
 
 const WorkflowRunWire = S.Struct({
   id: S.Int,
@@ -276,21 +344,10 @@ const WorkflowRunWire = S.Struct({
   head_sha: S.String,
   check_suite_id: S.Int.pipe(S.NullOr, S.optionalKey),
   path: S.String,
-  event: S.String,
+  event: S.String.pipe(S.NullOr, S.optionalKey),
+  head_branch: S.String.pipe(S.NullOr, S.optionalKey),
   created_at: S.DateTimeUtcFromString,
 });
-
-/**
- * The outcome of a REST squash merge.
- *
- * @category models
- * @since 0.0.0
- */
-export class GithubMergeRecord extends S.Opaque<GithubMergeRecord, { readonly brand: unique symbol }>()(
-  S.Struct({ merged: S.Boolean, sha: S.String, message: S.String }).pipe(
-    $I.annoteSchema("GithubMergeRecord", { description: "The REST merge response." })
-  )
-) {}
 
 /**
  * What an async merge request asks GitHub to do.
@@ -572,7 +629,6 @@ const TimelineEventWire = S.Struct({
 const CheckSuitesWire = S.Struct({ check_suites: S.Array(S.Struct({ created_at: S.String })) });
 const CommentWire = S.Struct({ id: S.Int, html_url: S.String });
 const LabelWire = S.Struct({ name: S.String });
-const MergeWire = S.Struct({ merged: S.Boolean, sha: S.String, message: S.String });
 
 // The one body `merge-async` and its poll answer with, on 202, 200, 400 and 409 alike
 // (observed 2026-11-10: goals/yeet-async-merge-and-stacks/research/merge-async-p0-probes-2026-11.md).
@@ -632,20 +688,6 @@ export interface GithubRestShape {
    * unknown when none exists.
    */
   readonly headFirstReceivedAt: (sha: string) => Effect.Effect<O.Option<DateTime.Utc>, GitHubError>;
-  /**
-   * Squash-merge (or another method) pinned to a head sha. Without a
-   * `commitTitle` or `commitMessage` GitHub writes the subject or body its
-   * merge settings prescribe.
-   */
-  readonly mergePullRequest: (
-    number: number,
-    options: {
-      readonly sha: string;
-      readonly commitTitle?: string | undefined;
-      readonly commitMessage?: string | undefined;
-      readonly method: "merge" | "squash" | "rebase";
-    }
-  ) => Effect.Effect<GithubMergeRecord, GitHubError>;
   /** The open pull request whose head is `owner:branch`, if any. */
   readonly openPullRequestForBranch: (
     headOwner: string,
@@ -957,30 +999,6 @@ const makeGithubRest = Effect.gen(function* () {
         )
       );
 
-  const mergePullRequest = (
-    number: number,
-    options: {
-      readonly sha: string;
-      readonly commitTitle?: string | undefined;
-      readonly commitMessage?: string | undefined;
-      readonly method: "merge" | "squash" | "rebase";
-    }
-  ) =>
-    client
-      .requestDecoded(
-        "PUT /repos/{owner}/{repo}/pulls/{pull_number}/merge",
-        {
-          ...at,
-          pull_number: number,
-          sha: options.sha,
-          merge_method: options.method,
-          ...OptionUtils.getSomesStruct({ commit_title: O.fromUndefinedOr(options.commitTitle) }),
-          ...OptionUtils.getSomesStruct({ commit_message: O.fromUndefinedOr(options.commitMessage) }),
-        },
-        MergeWire
-      )
-      .pipe(Effect.map((merge) => GithubMergeRecord.make(merge)));
-
   const toAsyncMergeOutcome =
     (operation: string, inFlight: boolean) =>
     (wire: typeof AsyncMergeWire.Type): Effect.Effect<GithubAsyncMergeOutcome, GitHubError> => {
@@ -1080,7 +1098,8 @@ const makeGithubRest = Effect.gen(function* () {
             headSha: run.head_sha,
             checkSuiteId: O.fromNullishOr(run.check_suite_id),
             path: run.path,
-            event: run.event,
+            event: run.event ?? "unknown",
+            headBranch: O.fromNullishOr(run.head_branch),
             createdAt: run.created_at,
           })
         )
@@ -1118,7 +1137,6 @@ const makeGithubRest = Effect.gen(function* () {
     commitStatuses,
     headFirstReceivedAt,
     createIssueComment,
-    mergePullRequest,
     openPullRequestForBranch,
     openPullRequests,
     pullRequest,

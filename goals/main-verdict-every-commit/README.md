@@ -39,22 +39,38 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — in progress: slice 1 (the main cancel ban, HOST-01 a) landed 2026-11-10; the remaining P0 facts and slice 2 wait on the certainty scorecard's numbers.
+P0 Research — complete 2026-11-13: slice 1 (the main cancel ban, HOST-01 a, #3111) landed 2026-11-10 and its command
+guard (#3140) 2026-11-12; the scorecard field census, the re-run API facts and the pre-ban verdict read are recorded.
+P1 is held under SPEC "Stop Conditions": `beep ci certainty` (#3118) reports the main verdict rate but not PR
+first-wave pickup p95, heavy-wait p95, jobs per run or the main cancel actor, and no certainty-scorecard slice
+builds them.
 
 ## Latest Evidence
 
-- 2026-11-10: slice 1 `docs(agents): never cancel refs/heads/main runs` adds the ban to the AGENTS.md
-  Inherited-reds bullet and the orchestrate skill's Red check and Queue starved rows. No scorecard is on `main`
-  yet, so the ban's start date is recorded as the anchor for the before/after verdict reads and the first
+- 2026-11-13: P0 facts. Decision `scorecard-field-census`: `CiCertaintyMainStat` and `CiCertaintyMainRow` carry
+  the main verdict rate; pickup p95, heavy-wait p95, jobs per run, the cancel actor and the heavy identity per
+  verdict are missing (`CI_CERTAINTY_NOT_COVERED`). Decision `rerun-api-cancelled-push-runs`: the re-run
+  endpoint documents no conclusion restriction; whether a re-run re-enters the shared main group is
+  undocumented, so re-dispatch stays idle-only. History note `2026-11-13-pre-ban-main-verdict-rate`: the
+  2026-11-03..10 read was refused as api-partial (the default request bound starved the main listing).
+- 2026-11-13: two measured days of Check runs filed as
+  [`research/2026-11-13-check-run-queue-day-measure.md`](./research/2026-11-13-check-run-queue-day-measure.md)
+  (decision `check-run-queue-measurements`): hosted peak 60 on all three days, 70 hosted jobs and 44 test
+  shards per full run, main pushes cancelled 14 of 20 and 11 of 20, almost all before their first job.
+- 2026-11-12: #3140 enforces the ban in `yeet gh checks cancel-queued` and the merge gate (checkpoint
+  `cancel-guard-in-commands`).
+- 2026-11-10: slice 1 (#3111) adds the ban to the AGENTS.md Inherited-reds bullet and the orchestrate skill's
+  Red check and Queue starved rows; its start date anchors the before/after verdict reads and the first
   zero-agent-cancel window (checkpoint `cancel-ban-start-anchor`).
 
 ## Notes
 
 - Slice 1 landed 2026-11-10: no agent cancels a `refs/heads/main` run, queued or running. Slice 2 (the replay)
-  waits on the scorecard's main verdict rate, per-run job counts, PR first-wave pickup and heavy wait.
-- Of HOST-01 only slice 1 (the cancel ban) has landed; at c90929b1ff1 (decision `host-01-open-push-runs-still-full`):
-  `.github/workflows/check.yml` lines 12 to 14 still group main pushes per ref, and a push still allocates
-  every partition.
+  waits on the scorecard fields it lacks: PR first-wave pickup p95, heavy-wait p95, per-run job counts and the
+  main cancel actor (decision `scorecard-field-census`).
+- Of HOST-01 only slice 1 (the cancel ban) has landed: the top-level `concurrency` block of
+  `.github/workflows/check.yml` still groups main pushes per ref, and the `test-plan` job's `Publish partition
+  plan` step still allocates every partition on a push.
 - Order: cancel ban, then (with scorecard numbers) the merge-timestamp replay and the main throughput layout,
   then re-dispatch. No per-SHA concurrency groups here: that stage moved to `merge-queue-activation` in
   [`explorations/github-merge-queue`](../../explorations/github-merge-queue/README.md) (decision

@@ -71,3 +71,33 @@
   that re-saves the signed-in snapshot after a successful run before
   reverting, and a pre-flight that opens Claude and checks the session
   before handing the VM to the operator.
+
+## 2026-11-12 — a stale Milkman lock blocks every proof on the VM
+
+- **Doing:** a Windows proof of the gateway's knowledge-graph provider
+  (`history/p1/2026-11-12-gateway-kg-provider-windows.md`).
+- **Evidence:** `~/VMs/practice-gateway/milkman.lock` reads "held since
+  2026-11-08T23:45:36-06:00 … (prepare milkman-signed-in)". The VM was shut
+  off, no runner or recorder process was alive, and `snapshot.sh` and
+  `onboarding-proof.sh` refuse to run while the file exists.
+- **Impact:** the documented route (`snapshot.sh revert clean`, boot, prove)
+  is closed for as long as an abandoned run keeps the file, and a blocked
+  session builds a side VM by hand (18 GB).
+- **Would have prevented it:** the lock carrying its holder's pid so a stale
+  one can be told from a live one, and a `vm-clone.sh <snapshot> <name>` in
+  `ops/vm/` that makes a disposable copy with its own port.
+- **Workaround used:** `qemu-img convert -l snapshot.name=clean` into a new
+  disk, a second libvirt domain with the snapshot's NVRAM and swtpm copies,
+  and `VM_STATE`/`SSH_PORT` pointing `vm-run.sh` at it. The locked VM was
+  only read.
+
+## 2026-11-12 — the clean VM image has Smart App Control off
+
+- **Doing:** the same proof.
+- **Evidence:** `VerifiedAndReputablePolicyState = 0` on the `clean`
+  snapshot; the attorney PC runs it at 1 (enforce).
+- **Impact:** a VM proof cannot show what Smart App Control does with an
+  unsigned file such as `duckdb.node`; that is still learned on the
+  attorney PC.
+- **Would have prevented it:** a snapshot installed with Smart App Control
+  on, beside `clean`.

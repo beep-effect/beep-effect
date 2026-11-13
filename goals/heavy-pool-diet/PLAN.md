@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `pending`
+Status: `active`
 
 ## Phases
 
@@ -22,7 +22,7 @@ three of this packet's PRs are open at once; slices 1 to 3 are the first three.
 | # | Slice (PR title) | Levers | Size | Admission gate | Depends on |
 | --- | --- | --- | --- | --- | --- |
 | 1 | `ci: delete the dead coverage-rollout probe` | PERIH-01 slice 1 | S | In one PR: the probe step, the `legacy_integration` output and the `test-integration` job's name conditional on `legacy_integration`, and the `LEGACY_COVERAGE` env line and assertion removed; Shared rule with COVE-08: COVE-08 (route-soundness-repair) owns making the Coverage Regression job name in `.github/workflows/check.yml` a literal. PERIH-01's probe-deletion slice owns the probe step, the `legacy_integration` output, the Test Integration name conditional and the LEGACY_COVERAGE env line and assertion. The `legacy_coverage` output has one consumer on each side, so whichever of the two lands second deletes it in that PR: if the probe deletion lands first it sets `legacy_coverage` to 'false' and COVE-08 then deletes the output together with its last consumer; if COVE-08 lands first, the probe deletion removes the output outright. Whichever lands second merges `main` first. Each updates `packages/tooling/tool/cli/test/ci-runner-security.test.ts` for the lines it changes. `ci-lane.test.ts` updated as well; Coverage Regression and Test Integration report under their exact required names on a code head; on a docs head Test Integration does, and Coverage Regression (skipped there, so GitHub shows its unevaluated name expression) waits on COVE-08's literal name. Workflow PR: cache-policy baseline re-record if `cache audit` asks. | Landed (#3116, aec8dbf57bd) |
-| 2 | `ci: gate binary releases on a closure projection` | PERIH-11 slice 1 (absorbs PERIH-08) | M | Closure mutation fixtures: a change inside the binary's import closure triggers a release, one outside it does not; `bun run beep ci compile-binary` sha256 unchanged for an unchanged closure. | Open now |
+| 2 | `ci: gate binary releases on a closure projection` | PERIH-11 slice 1 (absorbs PERIH-08) | M | Closure mutation fixtures: a change inside the binary's import closure triggers a release, one outside it does not; `bun run beep ci compile-binary` sha256 unchanged for an unchanged closure. | Landed (#3145) |
 | 3 | `perf(ci): run required heavy lanes first and decide heavy skips at job level` (first `heavy.yml` PR, additive under a migration name) | ORDER (D11), HOST-06 PR 1 | M | Heavy Admission emits the goals-only and Docgen decisions beside `route_skips`; route replay plus mutation fixtures (docs, goals, no-diff, unreadable base); ruleset parity ledger shows every required `Heavy / *` context reporting; Lint Policy still runs when Check is red. | Open now |
 | 4 | `test(repo-cli): pin the noResolve JSDoc inventory contract with fixtures` | LINT-01 residual | S | New merged-namespace and module-augmentation (of an imported package) fixtures; a noResolve parity assertion over the existing star-export, named re-export and overload fixtures in `jsdoc-inventory-detector-fixes.test.ts`; inventory byte parity minus `generatedAt`; one hosted JSDoc Ratchet timing recorded. | A free PR slot |
 | 4b | `test(repo-cli): pay the PR C checker parity gates` | LINT-04 residual | M | S2 prefilter generated from the retired-host rows and tested against them; P55 planted fixtures; S4 findings diff; P12/P11 814-assertion digest, diagnostics sha 44b7c59c9033de74 and an aliased-assertion fixture; P28 census and a WORKSPACE_MANIFEST_WALK re-key probe; per-file coverage floors hold. | A free PR slot |
@@ -98,6 +98,14 @@ Lane claude/awesome-chaplygin-626db8
 
 Reverse: Revert the PERIH-01 slice 1 merge commit (check.yml, the two tests, packet files) and delete this checkpoint file.
 
+### LINT-05 slice 5: hosted Lint Policy leaves the JSDoc pair to JSDoc Ratchet, 2026-11-12
+
+P1 slice 5 (LINT-05) drops `jsdoc:inventory:check` and `jsdoc:ratchet:check` from the hosted Lint Policy plan, full scope (`fullScopeStateTasks`) and changed scope (the medium graph), only while `standards/branch-protection-contexts.json` lists `JSDoc Ratchet` as required. That lane runs `beep ci lane jsdoc-ratchet` (inventory then ratchet) on every head Lint Policy runs on: Lint Policy (`heavy.yml` `verify`) runs only on Heavy Admission's admitted heads, admission never admits a documentation-only diff, and JSDoc Ratchet (`check.yml` `jsdoc-ratchet`) skips only documentation-only diffs. Only a hosted plan reads the snapshot. A local plan, a hosted plan without the snapshot and a hosted plan whose ruleset no longer requires the context keep the pair, so the duplicate can cost time but never coverage. The plan test in `quality-tasks.test.ts` pins all four cases and shows the pair is the only difference. Hosted proof on draft #3135: on clean head 22b29e034ac, Heavy / Lint Policy (job 131572953270, full scope) passed and JSDoc Ratchet (job 131575513753) passed. On seeded head c0f69b7127f, where commit 9ebacd64ddc lowered `packagesNeedingRemediation` in the totals baseline from 15 to 14 (reverted before merge), JSDoc Ratchet (job 131585460322) failed with `packagesNeedingRemediation: 15 > 14 (+1)` and Heavy / Lint Policy (job 131585460827, full scope, 6 steps) passed. Neither Lint Policy log names `jsdoc:inventory:check` or `jsdoc:ratchet:check`. The scorecard reading of the saving stays open. Rejected: deleting the pair from the shared task lists (a local `bun run lint` would lose the inventory) and keying on `CI` alone (the drop would outlive the required context).
+
+Lane perf/heavy-pool-diet-lint-05
+
+Reverse: Revert the slice 5 squash commit; the hosted Lint Policy plan then runs jsdoc:inventory:check and jsdoc:ratchet:check again.
+
 ### PERIH-01 slice 1 merged in #3116; required names proven on a code head, 2026-11-12
 
 #3116 merged as aec8dbf57bd on 2026-11-12. Before the merge, Check run 42775621719 on code head fcbedcaa604 reported Heavy / Test Integration (success) and Heavy / Coverage Regression under their exact required names, and neither Test Integration Partitions nor Coverage Artifact Migration appeared. Coverage Regression was red on nine ratchet rows, all inherited from #3068 (87837893fd7) and identical on main at b757bd0400f and 2cadc8caa0d; the PR merged over that red under S11. A docs head only runs the new check.yml once it is on main, so no docs-head proof existed at merge time; the documentation-only PR that adds this checkpoint is that docs head, and its run is the docs-head reading. The Publish Beep CI Binary run on aec8dbf57bd failed on an HTTP 403 from gh release create after compile and smoke passed, so release beep-ci-aec8dbf57bde does not exist; later main commits published normally.
@@ -113,5 +121,48 @@ The post-merge review of #3116 found four residues, all fixed here. (1) The PLAN
 Lane docs/perih-01-review-fixes
 
 Reverse: Revert this PR's squash commit; it changes only prose, citations and one test assertion.
+
+### PERIH-11 slice 1: binary releases gated on a closure digest, 2026-11-12
+
+PLAN slice 2 lands PERIH-11 slice 1 (absorbing PERIH-08). `bun run beep ci binary-closure` computes the static runtime import closure of `packages/tooling/tool/cli/src/bin-ci.ts` with the policy-fingerprint graph reader (a new follow-all `moduleClosure` beside the shell and command walks), adds the manifest of every workspace it reaches, the whole `src` of any reached workspace with a non-literal dynamic import, and the build inputs `bun.lock`, `.bun-version`, `bunfig.toml`, every file under `patches/`, `CiCompileBinary.ts` and `.github/workflows/beep-ci-binary.yml`, and digests the sorted listing with sha256. At 466be5b825e the closure is 345 files (341 before `patches/` joined it).
+
+`beep-ci-binary.yml` computes that digest before compiling, compares it with the digest recorded in the `beep-linux-x64.closure.json` asset of the latest `beep-ci-*` release, and skips compile, smoke and publish on a match. Every release now carries the digest in its notes and that asset. The path list stays as a coarse prefilter and gains `bunfig.toml` and `patches/**`. A `workflow_dispatch` input `verify_reproducible` recompiles an unchanged closure and fails unless the sha256 equals the latest release's; that run is the hosted proof that an unchanged closure compiles to the same bytes.
+
+Scope calls:
+- `CiOperational.patterns.json` stays outside the closure. The binary reads the checkout's copy at run time (`changeProfilePatterns` in `CiOperational.service.ts`), and the file is a projection of the compiled-in `ciOperationalPatterns`, whose TypeScript source the closure already covers. The SPEC acceptance text does not name the file, so this is a recorded scope call, not a deviation.
+- The root `package.json` is outside the closure: `bun.lock` records the resolved versions, and including the root manifest would release on every script edit. The patch files under `patches/` are inside it: `bun.lock` `patchedDependencies` records only each patch's path, so a patch edit would otherwise leave the digest unchanged while `bun install` applies different code (review finding on #3145). No patched package is reachable from `bin-ci.ts` today, so this costs a release only when a patch changes.
+- The policy-fingerprint walker was generalized in place (one `moduleClosure` method, plus exported `livePolicySourceTree` and `readPolicyWorkspaces`). `bun run beep lint policy-fingerprint` reports `current`: no policy command's import closure changed, so `standards/policy-tools.fingerprint.json` needed no reseal.
+
+The mutation fixtures are `packages/tooling/tool/cli/test/ci-binary-closure.test.ts`: edits to `CiBinary.ts`, a reached `@beep/utils` module, `bun.lock`, `.bun-version`, the workflow and a patch file move the digest; a new import edge pulls its module in; edits to a `goals/` file, `@beep/git`, an unreached repo-cli command and `CiOperational.patterns.json` leave it unchanged; the digest is independent of workspace order. The first main push after merge publishes once (no earlier release records a digest); the closure-skip reading of the next push and the reproducibility dispatch are recorded after merge.
+
+Lane claude/jolly-hopper-9a2206 · PR #3145
+
+Reverse: Revert the slice's squash commit; beep-ci-binary.yml then releases on its path list again and the closure command disappears.
+
+### First main closure-gate runs after #3145 failed before the digest comparison, 2026-11-13
+
+#3145 merged as 87c4dc204c8 on 2026-11-13. The first four `Beep CI Binary` runs on main after it failed in "Compare the closure digest with the latest release" with `Missing required flag: --list` (job 131612442366 and siblings): runs 43342046581, 43342105606, 43342142443 and 43342189531, on main pushes 87c4dc204c8 through d1c7c6cb63f. `beep ci binary-closure` declared `--list` as a boolean flag without a default, so the CLI required it, and the workflow calls the command with `--out` only. Every run stopped before compile, so no release was cut and the pinned binary at `.github/actions/fetch-beep-ci/action.yml` was never affected. The two runs before #3145 (61ac4497363, f3cd33a2969) passed on the old path trigger.
+
+These runs therefore say nothing yet about closure skips: none reached the digest comparison. #3165 gives `--list` a default of false and adds `ci-binary-closure-command.test.ts`, which runs the workflow's exact `--out`-only invocation through the registered command (red without the default, green with it). The same command with the default in place exits 0 in about 3 s and writes a 345-file closure JSON. In the same PR, `ci-binary-closure.test.ts` resolves the checkout root with `fs.realPath` inside each test, which satisfies EV010 without the inventory row #3145 added (S31). The first main push after #3165 publishes the first digest-recording release; the closure-skip reading is the main push after that whose closure is unchanged.
+
+Lane fix/ci-binary-closure-ev010 · PR #3165
+
+Reverse: Revert #3165's squash commit; the release workflow then fails at the closure step again and the closure test needs its EV010 inventory row back.
+
+### PERIH-11 slice 1 read on main: unchanged closures skip, and recompile byte for byte, 2026-11-13
+
+After #3165 (2ca2885bf09) fixed the `--list` default, the `Beep CI Binary` runs on main read as follows (closure digest, then outcome):
+
+- 2ca2885bf09, run 43347759308: digest 40dcf6635fef; the latest release (beep-ci-61ac4497363e) recorded no digest, so it compiled and published beep-ci-2ca2885bf097, the first release that records a digest.
+- ad71f5cdb67, run 43347787888: same digest 40dcf6635fef, but it also compiled and published (beep-ci-ad71f5cdb675). It overlapped run 43347759308 and listed the releases before that run had published, so it compared against beep-ci-61ac4497363e. The per-SHA concurrency group lets runs for different commits overlap; serializing them is a separate small PR.
+- 3b85830d051, run 43350867866: digest 40dcf6635fef equals the recorded digest, so the job skipped compile, smoke and publish. This is the first closure skip.
+- 202927595d6, run 43351886883: digest 6560e02c00f9 changed, so the job compiled and published beep-ci-202927595d64.
+- 0f7a40369eb (run 43351914611) and 29ccc707fa9 (run 43352789758): digest 6560e02c00f9 unchanged, so both skipped.
+
+Reproducibility: the `verify_reproducible` dispatch on main at 29ccc707fa9 (run 43353769826) found the closure unchanged, recompiled anyway, and matched beep-ci-202927595d64 byte for byte (sha256 98a0a2483f6e...). The release was built from 202927595d6, a different commit with the same closure, so an unchanged closure compiles to the same binary on hosted CI. PLAN slice 2's admission gate is met. The pin-bump automation is slice 7.
+
+Lane fix/ci-binary-closure-coverage
+
+Reverse: Records hosted readings only; revert this checkpoint file if the runs are re-read differently.
 
 <!-- beep:decisions:end -->
