@@ -35,6 +35,13 @@ import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
 import { adaptGitKitError, resolveGitCommit } from "../../internal/repo-run/GitExec.ts";
 import {
+  BuildEquivalenceCliOptions,
+  BuildEquivalenceInitialState,
+  BuildEquivalenceMode,
+  CHECK_CENSUS_BUILD_EQUIVALENCE_OUTPUT_PATH,
+  runCheckCensusBuildEquivalenceCli,
+} from "./CheckCensusBuildEquivalence.ts";
+import {
   CHECK_CENSUS_BASELINE_PATH,
   CheckCensusBaselineProvenance,
   CheckCensusGateReport,
@@ -1005,11 +1012,40 @@ type CheckCensusCliInput = {
   readonly baseline: string;
   readonly writeBaseline: boolean;
   readonly gateOnly: boolean;
+  readonly buildEquivalence: boolean;
+  readonly seed: boolean;
+  readonly initialState: O.Option<BuildEquivalenceInitialState>;
+  readonly equivalenceOutputJson: O.Option<string>;
 };
+
+// `--build-equivalence` runs alone and its own flags shape nothing else, so a
+// mixed invocation fails instead of silently dropping half of its flags.
+const mixesBuildEquivalenceFlags = (input: CheckCensusCliInput): boolean =>
+  input.buildEquivalence
+    ? input.writeBaseline || input.gateOnly
+    : input.seed || O.isSome(input.initialState) || O.isSome(input.equivalenceOutputJson);
+
+const buildEquivalenceCliOptions = (repoRoot: string, input: CheckCensusCliInput): BuildEquivalenceCliOptions =>
+  BuildEquivalenceCliOptions.make({
+    repoRoot,
+    filter: input.filter,
+    mode: input.seed ? BuildEquivalenceMode.Enum.seeded : BuildEquivalenceMode.Enum.clean,
+    initialState: O.getOrElse(input.initialState, () => BuildEquivalenceInitialState.Enum.warm),
+    outputJson: O.getOrElse(input.equivalenceOutputJson, () => CHECK_CENSUS_BUILD_EQUIVALENCE_OUTPUT_PATH),
+  });
 
 const runCheckCensusCli = Effect.fn("CheckCensus.cli")(function* (input: CheckCensusCliInput) {
   const path = yield* Path.Path;
   const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
+  if (mixesBuildEquivalenceFlags(input)) {
+    return yield* QualityScriptCommandError.make({
+      message:
+        "--seed, --initial-state and --equivalence-output-json need --build-equivalence, which runs alone (not with --write-baseline or --gate-only).",
+    });
+  }
+  if (input.buildEquivalence) {
+    return yield* runCheckCensusBuildEquivalenceCli(buildEquivalenceCliOptions(repoRoot, input));
+  }
   const baselinePath = path.resolve(repoRoot, input.baseline);
   const sampler = yield* CheckCensusSampler.make(
     CheckCensusSamplerOptions.make({ repoRoot, tscPath: path.join(repoRoot, "node_modules", ".bin", "tsc") })
@@ -1039,6 +1075,14 @@ const runCheckCensusCli = Effect.fn("CheckCensus.cli")(function* (input: CheckCe
  * `--write-baseline` re-measures every baseline row (the built-in defaults
  * when no baseline exists) and rewrites the baseline, refusing any program
  * with type errors.
+ *
+ * `--build-equivalence` runs only the build-equivalence mode
+ * (`@beep/repo-cli/commands/Quality/CheckCensusBuildEquivalence`): it proves
+ * every emitting package's `tsconfig.json` build reports the diagnostics of
+ * its `tsconfig.check.json` check, builds in place one package at a time,
+ * writes `--equivalence-output-json`, and exits non-zero on any difference.
+ * `--seed` adds the probe pass and `--initial-state restored` labels the
+ * state a caller's Turbo cache restore left.
  *
  * **Example** (Register the subcommand)
  *
@@ -1076,10 +1120,34 @@ export const checkCensusCommand = Command.make(
       Flag.withDefault(false),
       Flag.withDescription("Skip the overlay census; only gate the baselined programs against the baseline")
     ),
+    buildEquivalence: Flag.Boolean("build-equivalence").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription(
+        "Only prove each emitting package's tsconfig.json build reports its tsconfig.check.json diagnostics; builds in place, one package at a time"
+      )
+    ),
+    seed: Flag.Boolean("seed").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription(
+        "With --build-equivalence: seed src/__census_probe.ts, prove both programs report it in every state, then rebuild clean"
+      )
+    ),
+    initialState: Flag.Literals("initial-state", BuildEquivalenceInitialState.literals).pipe(
+      Flag.withDescription(
+        "With --build-equivalence: label of the state each first build finds (restored after a Turbo cache restore; default warm)"
+      ),
+      Flag.optional
+    ),
+    equivalenceOutputJson: Flag.String("equivalence-output-json").pipe(
+      Flag.withDescription(
+        `With --build-equivalence: JSON report path, relative to the repository root (default ${CHECK_CENSUS_BUILD_EQUIVALENCE_OUTPUT_PATH})`
+      ),
+      Flag.optional
+    ),
   },
   runCheckCensusCli
 ).pipe(
   Command.withDescription(
-    "Measure check overlays against a reference-keeping overlay, then gate single-checker instantiations against the committed baseline; needs a built tree"
+    "Measure check overlays against a reference-keeping overlay, then gate single-checker instantiations against the committed baseline; needs a built tree. --build-equivalence instead proves build and check programs report identical diagnostics"
   )
 );

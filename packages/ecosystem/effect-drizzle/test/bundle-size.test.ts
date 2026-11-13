@@ -1,11 +1,13 @@
 import * as NodeURL from "node:url";
 import { it } from "@beep/test-runner";
+import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Deferred from "effect/Deferred";
 import {
   acquireRelease,
   addFinalizer,
+  flip,
   fnUntraced,
   forkChild,
   gen,
@@ -18,10 +20,16 @@ import {
 } from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
+import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { buildBundleConsumer } from "./bundle-build.ts";
+import {
+  buildBundleConsumer,
+  bundleConsumerExportName,
+  importBundleConsumer,
+  makeBundleImportDirectory,
+} from "./bundle-build.ts";
 import { compareBundleSize, formatBundleSizeLine } from "./bundle-size.ts";
 import type * as Effect from "effect/Effect";
 
@@ -68,6 +76,52 @@ describe("bundle size probe", () => {
       }).pipe(withSpan("EffectDrizzle.bundle.build"));
       expect(artifact.rawBytes).toBe(new TextEncoder().encode(artifact.text).byteLength);
       expect(artifact.rawBytes).toBeGreaterThan(1000);
+    })
+  );
+});
+
+it.layer(NodeServices.layer)("effect-drizzle bundle import validity", (it) => {
+  it.effect(
+    "imports the artifact and finds the consumer export",
+    fnUntraced(function* () {
+      const artifact = yield* tryPromise({
+        try: buildBundleConsumer,
+        catch: (cause) => BundleSizeTestOperationError.make({ cause }),
+      }).pipe(withSpan("EffectDrizzle.bundle.build"));
+      const fs = yield* FileSystem.FileSystem;
+      const scratchDirectory = yield* makeBundleImportDirectory();
+      const directory = yield* fs.realPath(scratchDirectory);
+      const exportNames = yield* importBundleConsumer(artifact.text, directory);
+      expect(exportNames).toEqual([bundleConsumerExportName]);
+    })
+  );
+
+  it.effect(
+    "rejects a stub that exports a dropped binding, whatever its size",
+    fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const scratchDirectory = yield* makeBundleImportDirectory();
+      const directory = yield* fs.realPath(scratchDirectory);
+      const stub = `export{dropped as ${bundleConsumerExportName}};${Str.repeat(8192)("/* padding */")}`;
+      const failure = yield* importBundleConsumer(stub, directory).pipe(flip);
+      // A native import fails to link the dangling export; Vitest's module runner
+      // links it lazily and yields an undefined binding. Both are rejections.
+      expect(failure._tag).toBe("BundleImportError");
+      expect([
+        "Bundle artifact is not an importable module",
+        `Bundle artifact does not export ${bundleConsumerExportName} as a function`,
+      ]).toContain(failure.message);
+    })
+  );
+
+  it.effect(
+    "rejects a valid module that lost the consumer export",
+    fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const scratchDirectory = yield* makeBundleImportDirectory();
+      const directory = yield* fs.realPath(scratchDirectory);
+      const failure = yield* importBundleConsumer("export const other = () => 1;", directory).pipe(flip);
+      expect(failure.message).toBe(`Bundle artifact does not export ${bundleConsumerExportName} as a function`);
     })
   );
 });

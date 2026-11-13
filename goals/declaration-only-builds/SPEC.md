@@ -103,20 +103,23 @@ Higher sources outrank lower sources when they conflict.
 
 Baseline and proof harness (PR 1, no behaviour change):
 
-- [ ] `research/` holds a repo-wide baseline measured under one admission job:
+- [x] `research/` holds a repo-wide baseline measured under one admission job:
       per-package build wall with and without the Babel step, and `dist` bytes
       split into JavaScript plus maps and declarations plus maps.
-- [ ] `research/` holds the build-versus-check diagnostics comparison for every
+- [x] `research/` holds the build-versus-check diagnostics comparison for every
       emitting package in the three states and both `TSRS_FAST` settings named
       in Constraints, produced through the check-program census.
-- [ ] The effect-drizzle bundle probe asserts that the expected export is
+- [x] The effect-drizzle bundle probe asserts that the expected export is
       present and that the bundle imports, not only a size floor, and its
       comment no longer blames `Bun.build 1.3.14`.
-- [ ] `turbo.json` `build.outputs` no longer lists the
-      `node_modules/.tmp` tsbuildinfo glob, or the package that still writes
-      there is named in the Exception Ledger.
 
 Declaration-only build (PR 2):
+
+- [ ] `turbo.json` `build.outputs` no longer lists the
+      `node_modules/.tmp` tsbuildinfo glob, or the package that still writes
+      there is named in the Exception Ledger. Moved here from PR 1: removing
+      it changes every build task hash (decision
+      `2026-11-10-tmp-glob-rides-pr-2`).
 
 - [ ] No generated `beep:build` runs Babel and no workspace manifest or
       scaffold carries a `babel` script key; `bun run beep lint package-scripts`
@@ -240,6 +243,30 @@ The `Bun.build 1.3.14` comment in the effect-drizzle bundle probe (retired by Ex
 Source: exploration `explorations/build-pipeline-simplification/DECISIONS.md` (Q9).
 
 Reverse: Revert the PR.
+
+### The stale tsbuildinfo glob is removed in PR 2, not PR 1, 2026-11-10
+
+Turbo hashes a task's `outputs`, so removing the `node_modules/.tmp` tsbuildinfo glob from `turbo.json` `build.outputs` changes the hash of every generic `build` task. Measured on `@beep/api-transport#build`: `88125a686fd34b63` with the glob, `1d0ce7463b38978d` without; `bun run beep cache audit` reports 188 `#build` subjects as configuration drift. PR 1 is meant to change no behaviour and PR 2 already invalidates every build cache entry through `tsconfig.base.json`, so the removal moves to PR 2 and the repo rebuilds from cold once, not twice. The glob is confirmed stale: no package build writes there, and it restores three compiler-0.51.1 tsbuildinfo files into every fresh checkout. This amends "Three stale findings land in the first PR" for the glob only; the two effect-drizzle findings stay in PR 1.
+
+Evidence: `goals/declaration-only-builds/research/2026-11-10-build-check-equivalence.md`.
+
+Lane chore/declaration-only-builds-baseline
+
+Reverse: Remove the glob in a PR of its own and re-record the cache qualification baseline there.
+
+### Check-once survives the census; PR 3 goes ahead for 180 packages, 2026-11-13
+
+The census build-equivalence mode compared each emitting package's build with its own-source check in 2,912 runs: 182 packages, a clean pass and a seeded pass, from a Turbo cache restore, a warm retry and a cold build, with `TSRS_FAST` unset and `1`. Every comparison matched and every probe was effective. A warm or restored build never hid an error the check reported and never kept one after the fix. The cross-package case (an upstream export renamed under stale downstream incremental state) matched too.
+
+So PR 3 is kept. Its scope is the 180 packages whose check program is the build program. `@beep/effect-drizzle` and `@beep/markdown` add `scripts` to their check config, so their check is wider than their build and stays. Declaration-emit diagnostics remain build-only, which makes the build the stricter of the two.
+
+PR 3 still needs the Turbo `check` to own-`build` edge agreed with `goals/verification-route` and `goals/route-soundness-repair`, and it is still the first thing cut if the appetite runs out.
+
+Evidence: `goals/declaration-only-builds/research/2026-11-10-build-check-equivalence.md`.
+
+Lane chore/declaration-only-builds-baseline
+
+Reverse: Record a decision that cuts PR 3 and leave the own-source check in every generated check script; the census mode stays as a diagnostic.
 
 <!-- beep:decisions:end -->
 
