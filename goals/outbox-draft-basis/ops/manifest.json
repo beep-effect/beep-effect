@@ -6,7 +6,7 @@
     "title": "Outbox Draft Basis",
     "status": "active",
     "created": "2026-11-10",
-    "updated": "2026-11-10",
+    "updated": "2026-11-12",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/outbox-draft-basis",
@@ -36,6 +36,8 @@
   ],
   "researchReports": [
     "research/2026-11-10-p0-basis-schemas.md",
+    "research/2026-11-10-p0-message-pin-probe.md",
+    "research/OPPORTUNITIES.md",
     "research/SOURCES.md"
   ],
   "agentLaunchers": [
@@ -58,7 +60,7 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",
@@ -89,5 +91,5 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "P0 in progress since 2026-11-10: schemas and the time-zone rule are frozen. Open in P0: the tenant category proof (one message sent by a person) and the message pin decision. Shares files with m365-agent-outbox slice 3."
+  "statusNote": "P1 in progress since 2026-11-12: first pull request (schemas, comparison, audit field, create_draft and get_draft). P0 decided the schemas, the time-zone rule, the message pin (ships on one conversation list call), the caller-view check at creation and the slice 3 sequencing. Open in P0: the tenant category proof, which waits on one message sent by a person; no category is written before it. Shares files with m365-agent-outbox slice 3."
 }

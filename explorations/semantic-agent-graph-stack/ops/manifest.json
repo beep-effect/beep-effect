@@ -13,6 +13,7 @@
       "supersededBy": null
     },
     "created": "2026-11-06",
-    "updated": "2026-11-10"
+    "updated": "2026-11-10",
+    "retentionReason": "Retained until the graduated goal outbox-draft-basis closes: its SPEC.md, README.md and research/SOURCES.md link BRIEF.md, MAP.md, DECISIONS.md and RESEARCH.md here, and MAP.md holds the three gated follow-ons (a version-bound send, pins on epistemic claims, a task context view). Archive with bun run beep goals archive --kind explorations after it closes."
   }
 }
