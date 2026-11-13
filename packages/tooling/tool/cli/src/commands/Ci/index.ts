@@ -99,6 +99,13 @@ export * from "./CiGovernance.ts";
  */
 export * from "./CiLane.ts";
 /**
+ * Public CI lane job-name map export.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./CiLaneJobs.ts";
+/**
  * Public CI lane partition definitions export.
  *
  * @category cli-commands

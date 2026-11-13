@@ -12,6 +12,7 @@ import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { readCitationOracleFixture } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 import type { CitationReferenceName } from "@beep/law-practice-server/internal/Citation/ReferenceNames";
@@ -60,6 +61,9 @@ export const replayCitationReferenceNames = Effect.fn("ReferenceNamesTest.replay
   const limits = (yield* defaultCitationEnginePolicy).limits;
   const budget = yield* makeCitationTextBudget(limits);
   const names = yield* makeCitationReferenceNames(limits, corpus.disallowedNames).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, collect: bind(stage.collect) })))
+    ),
     Effect.provideService(CitationTextBudget, budget)
   );
   const unicode = yield* makeCitationPythonUnicode(limits);
@@ -86,17 +90,28 @@ export const replayCitationReferenceNames = Effect.fn("ReferenceNamesTest.replay
   expect(A.map(collected, (item) => item.value)).toEqual([roe.storage, wade.storage, roe.storage, wade.storage]);
   const altered = A.modify(corpus.disallowedNames, 0, () => "different");
   const refusal = yield* makeCitationReferenceNames(limits, altered).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, collect: bind(stage.collect) })))
+    ),
     Effect.provideService(CitationTextBudget, budget),
     Effect.flip
   );
   expect(refusal).toMatchObject({ _tag: "CitationReferenceNamesFailure", reason: "invalid-configuration" });
   const smallBudget = yield* makeCitationTextBudget({ ...limits, producedTextUtf16: 1 });
   const tight = yield* makeCitationReferenceNames(limits, corpus.disallowedNames).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, collect: bind(stage.collect) })))
+    ),
     Effect.provideService(CitationTextBudget, smallBudget)
   );
   const textRefusal = yield* tight.isValid(roe).pipe(Effect.flip);
   expect(textRefusal).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" });
   const oversized = yield* makeCitationReferenceNames({ ...limits, producedTextUtf16: 1 }, corpus.disallowedNames).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 1 }).pipe(
+        Effect.map((bind) => ({ ...stage, collect: bind(stage.collect) }))
+      )
+    ),
     Effect.provideService(CitationTextBudget, budget),
     Effect.flip
   );

@@ -331,6 +331,12 @@
   },
   "overrides": [
     {
+      "includes": ["packages/law-practice/server/src/internal/Citation/**"],
+      "plugins": [
+        "./packages/tooling/policy-pack/lint-rules/rules/no-citation-optional-invocation.grit"
+      ]
+    },
+    {
       // Qualification evidence references exact file bytes. Format changes would
       // invalidate accepted historical receipts without changing their meaning.
       // The ciops KPI reading and adoption table are rendered by the lab, pinned by

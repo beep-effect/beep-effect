@@ -5,6 +5,7 @@ import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import { reserveCitationInvocationText } from "./Invocation.ts";
 import { acquireCitationNativeLease, captureCitationNativeAdmission } from "./NativeAdmission.ts";
 import {
   citationNativeProcessCommand,
@@ -49,7 +50,7 @@ export const makeCitationRegexWorker = Effect.fn("Citation.makeRegexWorker")(fun
   const admission = yield* captureCitationNativeAdmission(limits, invalidRuntime);
   const owner = yield* makeCitationNativeProcessOwner(limits, engineOperation, failure);
   const registry = yield* makeCitationRegexDescriptorRegistry(limits, bindings, engineInput);
-  const preparation = yield* makeCitationRegexJobPreparation(limits);
+  const preparation = yield* makeCitationRegexJobPreparation(limits, reserveCitationInvocationText);
   const regexDeadline = limits.regexDeadline.pipe(Duration.toMillis, Duration.millis);
   yield* preflightCitationRegexControlFrames(limits.processMessageBytes);
   const evaluate = Effect.fn("Citation.evaluateRegexProcess")(

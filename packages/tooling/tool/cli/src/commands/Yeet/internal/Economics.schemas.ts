@@ -1,8 +1,8 @@
 /**
- * Schemas for the `yeet economics` surface: the `yeet-economics/v3` report
+ * Schemas for the `yeet economics` surface: the `yeet-economics/v4` report
  * document, the normalized attempt model its fold consumes, the review lane
  * section, and the command options (time-to-certainty A3, rulings 73–75 and
- * 81; certainty-scorecard MEAS-03).
+ * 81; certainty-scorecard MEAS-03 and PERIL-11).
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -27,7 +27,8 @@ const $I = $RepoCliId.create("commands/Yeet/internal/Economics.schemas");
 
 /**
  * Schema version of the economics report document (ruling 73; bumped to v2
- * by ruling 81, which added the review lane section, and to v3 by MEAS-03).
+ * by ruling 81, which added the review lane section, to v3 by MEAS-03, and to
+ * v4 by PERIL-11 slice 2).
  *
  * **Details**
  *
@@ -38,6 +39,15 @@ const $I = $RepoCliId.create("commands/Yeet/internal/Economics.schemas");
  * is not green, terminations included. Its open-streak count is therefore
  * split by class, `rightCensoredRedAttempts` (red members only) beside
  * `rightCensoredTerminatedAttempts`, whose sum is the v2 figure.
+ *
+ * v4 keeps hosted-CI waiting out of local work. An attempt whose outcome a
+ * monitor wait decided is classed `monitor`, apart from reds and
+ * terminations, so a v3 class count is the v4 count plus the v4 `monitor`
+ * attempts that came from it; `modeDurations` percentiles and the lane
+ * populations measure local work (elapsed less the attempt's monitor wait);
+ * the wait itself is the new `monitorWait` section. The M1 walk and the M4
+ * proxy are unchanged; the open-streak split gains
+ * `rightCensoredMonitorAttempts`, and the three members sum to the v2 figure.
  *
  * **Example** (Tell an economics document from an A1 one)
  *
@@ -51,7 +61,7 @@ const $I = $RepoCliId.create("commands/Yeet/internal/Economics.schemas");
  * @category constants
  * @since 0.0.0
  */
-export const YEET_ECONOMICS_SCHEMA_VERSION = "yeet-economics/v3";
+export const YEET_ECONOMICS_SCHEMA_VERSION = "yeet-economics/v4";
 
 /**
  * How reviewer precision is computed (ruling 81), stated on the surface so a
@@ -279,10 +289,12 @@ export class EconomicsLaneRow extends S.Opaque<EconomicsLaneRow, { readonly bran
  *
  * **Details**
  *
- * `attemptElapsedMs` sums the elapsed time of the attempts that contributed at
- * least one observation to this population (a missing value counts as zero),
- * so an attempt with no lane of this population never dilutes it;
- * `accountedPct` is the population's lane time as a percentage of it.
+ * `attemptElapsedMs` sums the local-work time of the attempts that contributed
+ * at least one observation to this population (their elapsed time less their
+ * monitor wait; a missing value counts as zero), so an attempt with no lane of
+ * this population never dilutes it; `accountedPct` is the population's lane
+ * time as a percentage of it. Since v4 a monitor wait lane is in neither
+ * population: {@link EconomicsMonitorWait} reports it.
  *
  * **Example** (An empty population)
  *
@@ -319,8 +331,9 @@ export class EconomicsLanePopulation extends S.Opaque<EconomicsLanePopulation, {
 ) {}
 
 /**
- * How an attempt counts in the economics fold (MEAS-03): `green`, `red`, or
- * `terminated` apart from reds.
+ * How an attempt counts in the economics fold (MEAS-03, PERIL-11): `green`,
+ * `red`, `terminated` apart from reds, or `monitor` when a monitor wait
+ * decided it.
  *
  * **Details**
  *
@@ -333,6 +346,14 @@ export class EconomicsLanePopulation extends S.Opaque<EconomicsLanePopulation, {
  * outcome was never recorded, so it is `terminated`. A verdict without an
  * outcome and with no reason stays red, as before.
  *
+ * Since v4 hosted-CI waiting decides no local class. A `monitor`-mode run is
+ * classed `monitor` whatever it watched (a green or red check, a cut-off
+ * wait), unless the monitor itself failed: a handler error, a verdict-less
+ * red, or a failed lane that is not a wait stays red. Any other red whose
+ * failure is a step exit and whose failed lanes are all monitor wait lanes
+ * ({@link EconomicsMonitorWait}) finished its local work first, so it is
+ * classed `monitor` too.
+ *
  * **Example** (Recognise a termination)
  *
  * ```ts
@@ -344,15 +365,15 @@ export class EconomicsLanePopulation extends S.Opaque<EconomicsLanePopulation, {
  * @category models
  * @since 0.0.0
  */
-export const EconomicsAttemptClass = LiteralKit(["green", "red", "terminated"]).pipe(
+export const EconomicsAttemptClass = LiteralKit(["green", "red", "terminated", "monitor"]).pipe(
   $I.annoteSchema("EconomicsAttemptClass", {
     description:
-      "How an attempt counts: green or red by its verdict; a verdict-less attempt is red when its termination reason names a failure, else terminated apart from reds.",
+      "How an attempt counts: green or red by its verdict; a verdict-less attempt is red when its termination reason names a failure, else terminated apart from reds; an attempt a monitor wait decided is monitor.",
   })
 );
 
 /**
- * How an attempt counts in the economics fold: green, red, or terminated.
+ * How an attempt counts in the economics fold: green, red, terminated, or monitor.
  *
  * @category models
  * @since 0.0.0
@@ -366,9 +387,10 @@ export type EconomicsAttemptClass = typeof EconomicsAttemptClass.Type;
  *
  * A missing outcome, mode or failure kind counts as `unknown`. `classMix`
  * counts each attempt's {@link EconomicsAttemptClass}, so its `red` row is
- * the first-failure denominator and its `terminated` row the attempts kept
- * apart from it. The failure-kind mix covers red attempts only: a terminated
- * attempt has no failure kind.
+ * the first-failure denominator and its `terminated` and `monitor` rows the
+ * attempts kept apart from it. The failure-kind mix covers red attempts only:
+ * a terminated attempt has no failure kind, and a monitor-decided one is not
+ * a local red.
  *
  * **Example** (An empty mix)
  *
@@ -429,16 +451,21 @@ export class EconomicsAttempts extends S.Opaque<EconomicsAttempts, { readonly br
 ) {}
 
 /**
- * Attempt counts and elapsed-time percentiles of one run mode (MEAS-03).
+ * Attempt counts and local-work percentiles of one run mode (MEAS-03,
+ * PERIL-11).
  *
  * **Details**
  *
  * `attempts` counts every attempt of the mode (a missing mode is `unknown`);
- * `redAttempts` and `terminatedAttempts` count its {@link EconomicsAttemptClass}
- * rows, so the green attempts are the rest. The percentile sample is the
- * green and red attempts that carry a non-negative `elapsedMs`
- * (`measuredAttempts`): a terminated attempt's elapsed time is how long it ran
- * before it was cut off, not how long the mode takes, so it is counted beside
+ * `redAttempts`, `terminatedAttempts` and `monitorAttempts` count its
+ * {@link EconomicsAttemptClass} rows, so the green attempts are the rest. The
+ * percentile sample is every attempt that ran to its end (one with a verdict,
+ * or a verdict-less red) whose local work is non-negative
+ * (`measuredAttempts`). Local work is the attempt's `elapsedMs` less its
+ * monitor wait ({@link EconomicsMonitorWait}), so a publish that watched
+ * hosted CI for an hour measures only its own work, and a `monitor` run only
+ * its overhead. A cut-off attempt (a termination, or a monitor run stopped
+ * before its verdict) ran only until it was stopped, so it is counted beside
  * the percentiles and never inside them. `final-check` runs are one row here,
  * which reports their p50 and p95; nothing is gated on them.
  *
@@ -469,13 +496,71 @@ export class EconomicsModeDurationRow extends S.Opaque<EconomicsModeDurationRow,
     attempts: EconomicsCount,
     redAttempts: EconomicsCount,
     terminatedAttempts: EconomicsCount,
+    monitorAttempts: EconomicsCount.pipe(S.withConstructorDefault(Effect.succeed(0))),
     measuredAttempts: EconomicsCount,
     p50ElapsedMs: OptionalMs,
     p95ElapsedMs: OptionalMs,
   }).pipe(
     $I.annoteSchema("EconomicsModeDurationRow", {
       description:
-        "One run mode's attempts, red and terminated counts, and nearest-rank elapsed p50/p95 over its green and red attempts.",
+        "One run mode's attempts, red, terminated and monitor-decided counts, and nearest-rank local-work p50/p95 (elapsed less monitor waits) over its attempts that ran to their end.",
+    })
+  )
+) {}
+
+/**
+ * The hosted-CI waiting monitors did inside the attempts in scope, kept out of
+ * local work (PERIL-11 slice 2).
+ *
+ * **Details**
+ *
+ * A monitor wait lane waits on hosted state: the checks watch
+ * (`monitor:02-pr-checks-watch`, `gh pr checks --watch`), which `yeet monitor`
+ * runs and a publish that watches attached, and the readiness loop a publish
+ * runs attached when background monitoring is unavailable (the
+ * `monitor:00-until-ready-submit` lane labelled `monitor:until-ready:attached`).
+ * The detached submit (labelled `monitor:until-ready:submit`) only launches the
+ * readiness job, and that job writes no attempt journal, so its wait is never
+ * here. An attempt waited when one of its wait lanes carries a non-negative
+ * duration; its wall is the sum of those durations, and the percentiles and
+ * `totalWallMs` are over the waiting attempts. `failedAttempts` counts the
+ * waits in which a wait lane failed (a red check, an actionable wave, an
+ * interrupt) and `modeMix` the waiting attempts by run mode. The wait is
+ * subtracted from its attempt's elapsed time in `modeDurations` and in the
+ * lane populations' attempt time, and its lanes are in neither population.
+ *
+ * **Example** (No attempt waited)
+ *
+ * ```ts
+ * import { EconomicsMonitorWait } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const wait = EconomicsMonitorWait.make({
+ *   attempts: 0,
+ *   failedAttempts: 0,
+ *   p50WallMs: O.none(),
+ *   p95WallMs: O.none(),
+ *   totalWallMs: 0,
+ *   modeMix: [],
+ * })
+ * console.log(wait.totalWallMs) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class EconomicsMonitorWait extends S.Opaque<EconomicsMonitorWait, { readonly brand: unique symbol }>()(
+  S.Struct({
+    attempts: EconomicsCount,
+    failedAttempts: EconomicsCount,
+    p50WallMs: OptionalMs,
+    p95WallMs: OptionalMs,
+    totalWallMs: EconomicsCount,
+    modeMix: S.Array(EconomicsCountRow),
+  }).pipe(
+    $I.annoteSchema("EconomicsMonitorWait", {
+      description:
+        "Attempts that waited on hosted CI in a monitor wait lane (checks watch, attached readiness loop), how many waits ended failed, nearest-rank wall p50/p95 and total, and the waiting attempts' run modes; outside local work.",
     })
   )
 ) {}
@@ -486,8 +571,8 @@ export class EconomicsModeDurationRow extends S.Opaque<EconomicsModeDurationRow,
  * **Details**
  *
  * The red attempts are those of class `red` ({@link EconomicsAttemptClass}):
- * since v3 a terminated attempt is counted apart and appears in none of these
- * figures. The failing lane is the first failed inner lane that carries a
+ * since v3 a terminated attempt, and since v4 a monitor-decided one, is
+ * counted apart and appears in none of these figures. The failing lane is the first failed inner lane that carries a
  * duration, else the first failed wrapper that carries one; an attempt with
  * neither is not reconstructable. The start offset sums the non-negative durations of
  * the wrappers before the failing lane's parent wrapper (its `parentLaneId`,
@@ -563,8 +648,9 @@ export class EconomicsFirstFailure extends S.Opaque<EconomicsFirstFailure, { rea
  * left-censored episode started at or before its journal's compaction cutoff,
  * a right-censored streak was still open (no green after it) at the end of its
  * journal. Its members are split by class: `rightCensoredRedAttempts` counts
- * the red ones and `rightCensoredTerminatedAttempts` the terminated ones;
- * their sum is what v2 reported as `rightCensoredRedAttempts`.
+ * the red ones, `rightCensoredTerminatedAttempts` the terminated ones and
+ * `rightCensoredMonitorAttempts` (v4) the monitor-decided ones; their sum is
+ * what v2 reported as `rightCensoredRedAttempts`.
  * `rightCensoredObservedSpanMinutes` is the observed lower bound of the open
  * streaks: for each, its last member's last measured time minus its first
  * member's start, summed. The last measured time is the member's end (else its
@@ -611,12 +697,13 @@ export class EconomicsEpisodeSummary extends S.Opaque<EconomicsEpisodeSummary, {
     rightCensoredStreaks: EconomicsCount,
     rightCensoredRedAttempts: EconomicsCount,
     rightCensoredTerminatedAttempts: EconomicsCount,
+    rightCensoredMonitorAttempts: EconomicsCount.pipe(S.withConstructorDefault(Effect.succeed(0))),
     rightCensoredObservedSpanMinutes: S.Finite,
     closedEpisodesOver24hExcluded: S.OptionFromNullOr(EconomicsCount),
   }).pipe(
     $I.annoteSchema("EconomicsEpisodeSummary", {
       description:
-        "Closed red-to-green episode count, span percentiles and minute totals for one cut (a streak is every not-green attempt, terminations included), plus the shared censoring counts split into red and terminated members and the open streaks' observed lower bound.",
+        "Closed red-to-green episode count, span percentiles and minute totals for one cut (a streak is every not-green attempt, terminations included), plus the shared censoring counts split into red, terminated and monitor-decided members and the open streaks' observed lower bound.",
     })
   )
 ) {}
@@ -969,6 +1056,12 @@ export type EconomicsScopeKind = typeof EconomicsScopeKind.Type;
  * The scope a report covers: its kind, the checkout labels it read (paths
  * relative to the projects root), and the branch it narrowed to.
  *
+ * **Details**
+ *
+ * A checkout outside the projects root, such as a T3 Code lane under a
+ * configured `<home>/.t3/worktrees/<clone>` root, is labelled by its relative
+ * path, which then starts with `..`.
+ *
  * **Example** (A checkout scope)
  *
  * ```ts
@@ -1263,9 +1356,11 @@ export class EconomicsReviewLane extends S.Opaque<EconomicsReviewLane, { readonl
  * Fields shared with the A1 script's `verification-economics/v1` keep its
  * spelling so rows compare by name; since v3 `firstFailure.redAttempts` leaves
  * terminated attempts out, where the A1 script counts them, and
- * `modeDurations` reports each run mode's elapsed p50 and p95. Wrapper and
- * inner lanes are separate populations with separate denominators (ruling
- * 74); the review lane is a
+ * `modeDurations` reports each run mode's elapsed p50 and p95. Since v4 the
+ * red count leaves monitor-decided attempts out too, `modeDurations` and the
+ * lane populations measure local work, and `monitorWait` reports the
+ * hosted-CI waiting apart. Wrapper and inner lanes are separate populations
+ * with separate denominators (ruling 74); the review lane is a
  * third section with its own denominators and is never summed with them.
  * Nothing here is written to disk; the committed A1 `economics.json` stays
  * owned by the script.
@@ -1275,7 +1370,7 @@ export class EconomicsReviewLane extends S.Opaque<EconomicsReviewLane, { readonl
  * ```ts
  * import { YEET_ECONOMICS_SCHEMA_VERSION } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(YEET_ECONOMICS_SCHEMA_VERSION) // "yeet-economics/v3"
+ * console.log(YEET_ECONOMICS_SCHEMA_VERSION) // "yeet-economics/v4"
  * ```
  *
  * @category models
@@ -1288,6 +1383,7 @@ export class YeetEconomicsReport extends S.Opaque<YeetEconomicsReport, { readonl
     measurementAsOf: S.String,
     attempts: EconomicsAttempts,
     modeDurations: S.Array(EconomicsModeDurationRow),
+    monitorWait: EconomicsMonitorWait,
     wrapperLanes: EconomicsLanePopulation,
     innerLanes: EconomicsLanePopulation,
     reviewLane: EconomicsReviewLane,
@@ -1299,7 +1395,7 @@ export class YeetEconomicsReport extends S.Opaque<YeetEconomicsReport, { readonl
   }).pipe(
     $I.annoteSchema("YeetEconomicsReport", {
       description:
-        "Checkout economics over live attempt journals: attempt mixes with terminations apart from reds, per-mode durations, wrapper and inner lane populations, the review lane (rounds to ready, reviewer precision), first failure (M2), red-to-green episodes (M1), unchanged fingerprint (M4), terminations (M5), and data quality.",
+        "Checkout economics over live attempt journals: attempt mixes with terminations and monitor-decided attempts apart from reds, per-mode local-work durations, monitor waits, wrapper and inner lane populations, the review lane (rounds to ready, reviewer precision), first failure (M2), red-to-green episodes (M1), unchanged fingerprint (M4), terminations (M5), and data quality.",
     })
   )
 ) {}

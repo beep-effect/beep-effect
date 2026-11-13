@@ -1,6 +1,9 @@
 import { readCitationByteFrames } from "@beep/law-practice-server/internal/Citation/ByteFrames";
 import { preflightCitationNativeJson } from "@beep/law-practice-server/internal/Citation/NativeJson";
-import { makeCitationRegexInput } from "@beep/law-practice-server/internal/Citation/RegexInput";
+import {
+  citationUnaccountedText,
+  makeCitationRegexInput,
+} from "@beep/law-practice-server/internal/Citation/RegexInput";
 import { callCitationRegexRpc } from "@beep/law-practice-server/internal/Citation/RegexWorkerClient";
 import {
   CitationRegexMatchMode,
@@ -36,7 +39,7 @@ const utf8 = new TextEncoder();
 const nothing = () => Effect.void;
 const setup = Effect.fn("RegexProtocolTest.setup")(function* () {
   const citationResult1 = yield* defaultCitationEnginePolicy;
-  const input = yield* makeCitationRegexInput(citationResult1.limits);
+  const input = yield* makeCitationRegexInput(citationResult1.limits, citationUnaccountedText);
   const pattern = yield* input.prepareText("(?P<value>\\d+)", nothing);
   return { input, pattern };
 });
@@ -44,7 +47,7 @@ const setup = Effect.fn("RegexProtocolTest.setup")(function* () {
 it.effect("composes both native preparers with one complete-frame preflight and retained source maps", () =>
   Effect.gen(function* () {
     const citationResult2 = yield* defaultCitationEnginePolicy;
-    const preparation = yield* makeCitationRegexJobPreparation(citationResult2.limits);
+    const preparation = yield* makeCitationRegexJobPreparation(citationResult2.limits, citationUnaccountedText);
     let announced = 0;
     const plan = yield* preparation.prepare(
       { width: 2, bytes: new Uint8Array([0x35, 0xd8, 0xce, 0xdf]) },
@@ -78,12 +81,15 @@ it.effect("keeps pattern and source budget failures distinct before allocation h
       Effect.sync(() => {
         called = true;
       });
-    const patternBound = yield* makeCitationRegexJobPreparation({ ...base, patternUtf16: 1 });
+    const patternBound = yield* makeCitationRegexJobPreparation({ ...base, patternUtf16: 1 }, citationUnaccountedText);
     const citationResult6 = yield* patternBound.prepare(pattern, source, 0, 1, hook).pipe(Effect.flip);
     expect(citationResult6).toMatchObject({
       limit: "patternUtf16",
     });
-    const sourceBound = yield* makeCitationRegexJobPreparation({ ...base, producedTextUtf16: 1 });
+    const sourceBound = yield* makeCitationRegexJobPreparation(
+      { ...base, producedTextUtf16: 1 },
+      citationUnaccountedText
+    );
     const citationResult7 = yield* sourceBound.prepare(source, pattern, 0, 1, hook).pipe(Effect.flip);
     expect(citationResult7).toMatchObject({
       limit: "producedTextUtf16",
@@ -95,7 +101,10 @@ it.effect("keeps pattern and source budget failures distinct before allocation h
 it.effect("captures the whole-job deadline across nested preflight and caller Clock replacement", () =>
   Effect.gen(function* () {
     const base = (yield* defaultCitationEnginePolicy).limits;
-    const preparation = yield* makeCitationRegexJobPreparation({ ...base, extractDeadline: Duration.millis(20) });
+    const preparation = yield* makeCitationRegexJobPreparation(
+      { ...base, extractDeadline: Duration.millis(20) },
+      citationUnaccountedText
+    );
     const clock = yield* Clock.Clock;
     const changed: Clock.Clock = { ...clock, sleep: () => Effect.never };
     const text = { width: 1, bytes: new Uint8Array([65]) };
@@ -228,7 +237,7 @@ it.effect("handles every split and one-byte input fragments without accepting pa
 it.effect("preflights the exact frame for each mode and rejects unknown modes before reservation", () =>
   Effect.gen(function* () {
     const citationResult21 = yield* defaultCitationEnginePolicy;
-    const preparation = yield* makeCitationRegexJobPreparation(citationResult21.limits);
+    const preparation = yield* makeCitationRegexJobPreparation(citationResult21.limits, citationUnaccountedText);
     const input = { width: 1, bytes: utf8.encode("b") };
     for (const mode of CitationRegexMatchMode.literals) {
       const prepared = yield* preparation.prepare(input, input, 0, 1, nothing, mode);
@@ -354,10 +363,10 @@ it.effect("maps stream failures without leaking their original payload", () =>
 
 it.effect("rejects malformed preparation inputs and closes platform stream failures", () =>
   Effect.gen(function* () {
-    const invalidPolicy = yield* makeCitationRegexJobPreparation(null).pipe(Effect.flip);
+    const invalidPolicy = yield* makeCitationRegexJobPreparation(null, citationUnaccountedText).pipe(Effect.flip);
     expect(invalidPolicy).toMatchObject({ reason: "invalid-runtime" });
     const limits = (yield* defaultCitationEnginePolicy).limits;
-    const preparation = yield* makeCitationRegexJobPreparation(limits);
+    const preparation = yield* makeCitationRegexJobPreparation(limits, citationUnaccountedText);
     const invalidSource = yield* preparation
       .prepare({ width: 1, bytes: utf8.encode("a") }, null, 0, 1, () =>
         Effect.die("Malformed source must fail before allocation")
@@ -380,7 +389,7 @@ it.effect("rejects malformed preparation inputs and closes platform stream failu
 it.effect("rejects out-of-order RPC controls and does not retry failed writes", () =>
   Effect.gen(function* () {
     const limits = (yield* defaultCitationEnginePolicy).limits;
-    const preparation = yield* makeCitationRegexJobPreparation(limits);
+    const preparation = yield* makeCitationRegexJobPreparation(limits, citationUnaccountedText);
     const native = { width: 1, bytes: utf8.encode("a") };
     const { job, frame } = yield* preparation.prepare(native, native, 0, 1, nothing);
     const wrongOrder = yield* encodeCitationRegexControl(

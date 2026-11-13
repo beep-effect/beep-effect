@@ -844,6 +844,91 @@ const QualitySchedulerErrorReason = LiteralKit([
 ]);
 
 /**
+ * What a `worker` host did with work it routed without the ticket queue.
+ *
+ * **Details**
+ *
+ * `bypass` ran the work locally (through the origin gate when the caller has
+ * one); `refusal` left it to hosted CI.
+ *
+ * **Example** (Recognize a refusal)
+ *
+ * ```ts
+ * import { AdmissionRouteOutcome } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(AdmissionRouteOutcome.is.refusal("refusal")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AdmissionRouteOutcome = LiteralKit(["bypass", "refusal"]).pipe(
+  $I.annoteSchema("AdmissionRouteOutcome", {
+    description: "Whether a worker host ran routed work locally (bypass) or left it to hosted CI (refusal).",
+  })
+);
+
+/**
+ * What a `worker` host did with work it routed without the ticket queue.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionRouteOutcome = typeof AdmissionRouteOutcome.Type;
+
+/**
+ * One routing decision a `worker` host made without the ticket queue.
+ *
+ * **Details**
+ *
+ * A worker never waits on admission: the scheduler bypasses the queue or
+ * refuses a hosted-only gate, and `yeet final-check` decides each gate from
+ * the routing table. This is the fact that decision leaves in the admission
+ * journal, beside the attempt that made it. `forceLocal` decodes as `false`
+ * and `gateRoute` as `None` when absent.
+ *
+ * **Example** (Record a refused check)
+ *
+ * ```ts
+ * import { AdmissionRoute } from "@beep/repo-cli/test/RepoRun"
+ * import * as O from "effect/Option"
+ *
+ * const route = AdmissionRoute.make({
+ *   checkoutRoot: "/repo",
+ *   branch: "feat/x",
+ *   command: "bun run beep yeet final-check",
+ *   computeProfile: "worker",
+ *   gateRoute: O.some("check"),
+ *   outcome: "refusal"
+ * })
+ * console.log(route.forceLocal) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AdmissionRoute extends S.Opaque<AdmissionRoute, { readonly brand: unique symbol }>()(
+  S.Struct({
+    checkoutRoot: S.String,
+    branch: S.String,
+    command: S.String,
+    attemptId: UUID.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    envProfile: ProofEnvProfile.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    computeProfile: ComputeProfile,
+    forceLocal: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultKey(Effect.succeed(false))
+    ),
+    gateRoute: GateRouteId.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    outcome: AdmissionRouteOutcome,
+  }).pipe(
+    $I.annoteSchema("AdmissionRoute", {
+      description: "One routing decision a worker host made without the admission ticket queue.",
+    })
+  )
+) {}
+
+/**
  * Refusal to run a hosted-only gate locally on a `worker` compute profile (D4).
  *
  * **Details**

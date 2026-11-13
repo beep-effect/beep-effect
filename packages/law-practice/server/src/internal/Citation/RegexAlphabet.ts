@@ -9,7 +9,7 @@ import { dual } from "effect/Function";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { makeCitationRegexInput } from "./RegexInput.ts";
+import { citationUnaccountedText, makeCitationRegexInput } from "./RegexInput.ts";
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { CitationRegexWorkerFailure } from "./RegexWorkerProtocol.ts";
 import type { CitationPythonUnicodeValue } from "./PythonUnicode.ts";
@@ -212,7 +212,7 @@ export const makeCitationRegexAlphabet = Effect.fn("Citation.makeRegexAlphabet")
   const limits = yield* decodeCitationRegexPolicy(policy, () =>
     CitationRegexWorkerFailure.make({ reason: "invalid-runtime" })
   );
-  const input = yield* makeCitationRegexInput(limits);
+  const input = yield* makeCitationRegexInput(limits, citationUnaccountedText);
   const { timed } = yield* makeCitationRegexTiming(limits, false);
   const prepare = Effect.fn("Citation.prepareRegexAlphabet")(function* (setsInput: unknown, sourceInput: unknown) {
     const borrowed = yield* S.decodeUnknownEffect(CitationRegexAtomSets, { onExcessProperty: "error" })(setsInput).pipe(

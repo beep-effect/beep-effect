@@ -14,6 +14,7 @@ import * as Effect from "effect/Effect";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { reserveCitationInvocationText } from "./Invocation.ts";
 import {
   copyCitationMetadataPatternConfiguration,
   makeCitationMetadataStage,
@@ -166,7 +167,7 @@ export const processCitationCaseName = Effect.fn("Citation.processNativeCaseName
   if (request.candidateCaseName === null) return yield* fail("missing-candidate");
   if (request.words.length > limits.tokens)
     return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "tokens" });
-  const input = yield* makeCitationRegexInput(limits);
+  const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText);
   const words = yield* Effect.forEach(request.words, (word) => input.prepareUnicode(word, () => Effect.void));
   const candidate = (yield* input.prepareUnicode(request.candidateCaseName, () => Effect.void)).value.storage;
   const worker = yield* makeCitationRegexWorker(limits, runtime, config.bindings, "python-regex-v0");

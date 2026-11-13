@@ -1,6 +1,7 @@
 import * as NodeURL from "node:url";
 import { Citation, CitationEditionRef, CitationShortCaseMetadata } from "@beep/law-practice-domain/values";
 import { getCitationExtractionShortcut } from "@beep/law-practice-server/internal/Citation/ExtractionShortcut";
+import { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import { makeCitationSemanticProjection } from "@beep/law-practice-server/internal/Citation/SemanticProjection";
 import { makeCitationSemanticVocabulary } from "@beep/law-practice-server/internal/Citation/SemanticVocabulary";
@@ -16,6 +17,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { readCitationOracleFixture, setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
 import { makeCitationVocabularyAssertion } from "./CitationSemanticVocabulary.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
@@ -160,168 +162,184 @@ const assertSourcePublication = (
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("semantic citation projection", (it) => {
   it.effect("resolves every reviewed edition and refuses corruption and family confusion", () =>
-    Effect.gen(function* () {
-      const raw = yield* load();
-      const vocabulary = yield* makeCitationSemanticVocabulary(raw);
-      const mapping = yield* readCitationOracleFixture(
-        "vocabulary-mapping",
-        "b5aca44dc69f05b82c41decf327863a52c151eeb231bdb4df96e5cf7e85351c5"
-      ).pipe(Effect.flatMap(S.decodeEffect(Mapping)));
-      expect(vocabulary.vocabularyVersion).toBe(mapping.publicArtifactVersion);
-      for (const row of mapping.editions) {
-        const actual = yield* vocabulary.lookup(row.artifactSha256, sourceFamily(row));
-        expect(actual).toEqual(expectedBinding(row));
-      }
-      expect(mapping.editions).toHaveLength(2533);
-      const first = A.getUnsafe(mapping.editions, 0);
-      const wrongFamily = first.kind === "case-reporter" ? "law" : "case";
-      const wrong = yield* vocabulary.lookup(first.artifactSha256, wrongFamily).pipe(Effect.flip);
-      expect(wrong).toMatchObject({ reason: "kind-mismatch" });
-      const corrupt = yield* makeCitationSemanticVocabulary(`${raw} `).pipe(Effect.flip);
-      expect(corrupt).toMatchObject({ reason: "artifact-mismatch" });
-    })
+    withCitationTestInvocation(
+      Effect.gen(function* () {
+        const raw = yield* load();
+        const vocabulary = yield* makeCitationSemanticVocabulary(raw);
+        const mapping = yield* readCitationOracleFixture(
+          "vocabulary-mapping",
+          "b5aca44dc69f05b82c41decf327863a52c151eeb231bdb4df96e5cf7e85351c5"
+        ).pipe(Effect.flatMap(S.decodeEffect(Mapping)));
+        expect(vocabulary.vocabularyVersion).toBe(mapping.publicArtifactVersion);
+        for (const row of mapping.editions) {
+          const actual = yield* vocabulary.lookup(row.artifactSha256, sourceFamily(row));
+          expect(actual).toEqual(expectedBinding(row));
+        }
+        expect(mapping.editions).toHaveLength(2533);
+        const first = A.getUnsafe(mapping.editions, 0);
+        const wrongFamily = first.kind === "case-reporter" ? "law" : "case";
+        const wrong = yield* vocabulary.lookup(first.artifactSha256, wrongFamily).pipe(Effect.flip);
+        expect(wrong).toMatchObject({ reason: "kind-mismatch" });
+        const corrupt = yield* makeCitationSemanticVocabulary(`${raw} `).pipe(Effect.flip);
+        expect(corrupt).toMatchObject({ reason: "artifact-mismatch" });
+      })
+    )
   );
 
   it.effect(
     "projects original shortcut meaning through the public codec without inventing publication or occurrence data",
     () =>
-      Effect.gen(function* () {
-        const raw = yield* load();
-        const setup = yield* setupCitationMetadataRuntime("bun", undefined, false, true, 8192);
-        const stage = yield* makeCitationSemanticProjection(setup.limits, setup.runtime, {
-          editions: [],
-          vocabulary: raw,
-        }).pipe(Effect.provideContext(setup.provided));
-        const models = yield* Effect.fromOption(getCitationExtractionShortcut("eyecite"));
-        const actual = yield* stage.project(A.getUnsafe(models, 0));
-        const encoded = yield* encodeCitation(actual);
-        expect(encoded).toEqual({
-          type: "case",
-          components: { volume: "1", reporter: "FLP", page: "1" },
-          publication: { editions: [], selectedEdition: null, vocabularyVersion: "crv1:f353e51400a5:fad63b383b92" },
-          metadata: {
-            pinCite: null,
-            parenthetical: null,
-            year: "2021",
-            month: null,
-            day: null,
-            court: null,
-            plaintiff: null,
-            defendant: null,
-            additionalText: "Eyecite is a collaborative community effort.",
-            antecedentGuess: null,
-            shortCaseName: null,
-            caseName: null,
-          },
-        });
-        const serialized = yield* S.encodeEffect(citationJson)(actual);
-        const decoded = yield* S.decodeEffect(citationJson)(serialized);
-        expect(equivalent(actual, decoded)).toBe(true);
-        const observed = yield* setup.observed.snapshot;
-        expect(observed).toEqual({ spawned: 0, confirmed: 0 });
-      })
+      withCitationTestInvocation(
+        Effect.gen(function* () {
+          const raw = yield* load();
+          const setup = yield* setupCitationMetadataRuntime("bun", undefined, false, true, 8192);
+          const stage = yield* makeCitationSemanticProjection(setup.limits, setup.runtime, {
+            editions: [],
+            vocabulary: raw,
+          }).pipe(Effect.provideContext(setup.provided));
+          const models = yield* Effect.fromOption(getCitationExtractionShortcut("eyecite"));
+          const actual = yield* stage.project(A.getUnsafe(models, 0));
+          const encoded = yield* encodeCitation(actual);
+          expect(encoded).toEqual({
+            type: "case",
+            components: { volume: "1", reporter: "FLP", page: "1" },
+            publication: { editions: [], selectedEdition: null, vocabularyVersion: "crv1:f353e51400a5:fad63b383b92" },
+            metadata: {
+              pinCite: null,
+              parenthetical: null,
+              year: "2021",
+              month: null,
+              day: null,
+              court: null,
+              plaintiff: null,
+              defendant: null,
+              additionalText: "Eyecite is a collaborative community effort.",
+              antecedentGuess: null,
+              shortCaseName: null,
+              caseName: null,
+            },
+          });
+          const serialized = yield* S.encodeEffect(citationJson)(actual);
+          const decoded = yield* S.decodeEffect(citationJson)(serialized);
+          expect(equivalent(actual, decoded)).toBe(true);
+          const observed = yield* setup.observed.snapshot;
+          expect(observed).toEqual({ spawned: 0, confirmed: 0 });
+        })
+      )
   );
 
   it.effect(
     "retains legal fields and ordered publication occurrences in all 80 original models across eight families",
     () =>
-      Effect.gen(function* () {
-        const raw = yield* load();
-        const corpus = yield* readCitationOracleFixture(
-          "extraction-loop",
-          "f068a21141db823055f6dbad6c79d9c0c996f300e7b76258ca26a92009f2f89b"
-        ).pipe(Effect.flatMap(S.decodeEffect(SourceModels)));
-        const setup = yield* setupCitationMetadataRuntime("bun", undefined, false, true, 8192);
-        const stage = yield* makeCitationSemanticProjection(setup.limits, setup.runtime, {
-          editions: corpus.bindings,
-          vocabulary: raw,
-        }).pipe(Effect.provideContext(setup.provided));
-        const assertVocabulary = yield* makeCitationVocabularyAssertion();
-        const unicode = yield* makeCitationPythonUnicode(setup.limits).pipe(Effect.provideContext(setup.provided));
-        const rows = A.flatMap(corpus.cases, (document) => document.before);
-        for (const row of rows) {
-          const meaning = yield* stage.project(sourceModel(row));
-          const actual = yield* encodeCitation(meaning);
-          yield* assertVocabulary(unicode, [meaning], [row]);
-          expect(actual.type).toBe(O.getOrThrow(R.get(sourceTypes, row.kind)));
-          expect(actual.components).toEqual(R.map(row.token.groups, ascii));
-          yield* assertSourceMetadata(actual.metadata, row);
-          assertSourcePublication(actual, row, corpus.bindings);
-        }
-        const original = yield* Effect.fromOption(A.findFirst(rows, (row) => row.kind === "FullCaseCitation"));
-        for (const label of ["no-such-fixture-court", "", null]) {
-          const court =
-            label === null
-              ? null
-              : CitationPythonUnicodeStorage.make({ width: 1, bytes: new TextEncoder().encode(label) });
-          const changed = { ...original, metadata: { ...original.metadata, court } };
-          const meaning = yield* stage.project(sourceModel(changed));
-          yield* assertVocabulary(unicode, [meaning], [changed]);
-        }
-        expect(rows).toHaveLength(80);
-        const observed = yield* setup.observed.snapshot;
-        expect(observed).toEqual({ spawned: 0, confirmed: 0 });
-      })
+      withCitationTestInvocation(
+        Effect.gen(function* () {
+          const raw = yield* load();
+          const corpus = yield* readCitationOracleFixture(
+            "extraction-loop",
+            "f068a21141db823055f6dbad6c79d9c0c996f300e7b76258ca26a92009f2f89b"
+          ).pipe(Effect.flatMap(S.decodeEffect(SourceModels)));
+          const setup = yield* setupCitationMetadataRuntime("bun", undefined, false, true, 8192);
+          const stage = yield* makeCitationSemanticProjection(setup.limits, setup.runtime, {
+            editions: corpus.bindings,
+            vocabulary: raw,
+          }).pipe(Effect.provideContext(setup.provided));
+          const assertVocabulary = yield* makeCitationVocabularyAssertion();
+          const unicode = yield* makeCitationPythonUnicode(setup.limits).pipe(Effect.provideContext(setup.provided));
+          const rows = A.flatMap(corpus.cases, (document) => document.before);
+          for (const row of rows) {
+            const meaning = yield* stage.project(sourceModel(row));
+            const actual = yield* encodeCitation(meaning);
+            yield* assertVocabulary(unicode, [meaning], [row]);
+            expect(actual.type).toBe(O.getOrThrow(R.get(sourceTypes, row.kind)));
+            expect(actual.components).toEqual(R.map(row.token.groups, ascii));
+            yield* assertSourceMetadata(actual.metadata, row);
+            assertSourcePublication(actual, row, corpus.bindings);
+          }
+          const original = yield* Effect.fromOption(A.findFirst(rows, (row) => row.kind === "FullCaseCitation"));
+          for (const label of ["no-such-fixture-court", "", null]) {
+            const court =
+              label === null
+                ? null
+                : CitationPythonUnicodeStorage.make({ width: 1, bytes: new TextEncoder().encode(label) });
+            const changed = { ...original, metadata: { ...original.metadata, court } };
+            const meaning = yield* stage.project(sourceModel(changed));
+            yield* assertVocabulary(unicode, [meaning], [changed]);
+          }
+          expect(rows).toHaveLength(80);
+          const observed = yield* setup.observed.snapshot;
+          expect(observed).toEqual({ spawned: 0, confirmed: 0 });
+        })
+      )
   );
 
   it.effect("preserves unmapped court text and rejects missing editions and insufficient output capacity", () =>
-    Effect.gen(function* () {
-      const vocabulary = yield* load();
-      const setup = yield* setupCitationMetadataRuntime("bun", undefined, false, true, 8192);
-      const stage = yield* makeCitationSemanticProjection(setup.limits, setup.runtime, {
-        editions: [],
-        vocabulary,
-      }).pipe(Effect.provideContext(setup.provided));
-      const models = yield* Effect.fromOption(getCitationExtractionShortcut("eyecite"));
-      const original = A.getUnsafe(models, 0);
-      const changed = {
-        ...original,
-        outcome: {
-          ...original.outcome,
-          metadata: {
-            ...original.outcome.metadata,
-            court: { width: 1, bytes: new TextEncoder().encode("unrecognized-court") },
+    withCitationTestInvocation(
+      Effect.gen(function* () {
+        const vocabulary = yield* load();
+        const setup = yield* setupCitationMetadataRuntime("bun", undefined, false, true, 8192);
+        const stage = yield* makeCitationSemanticProjection(setup.limits, setup.runtime, {
+          editions: [],
+          vocabulary,
+        }).pipe(Effect.provideContext(setup.provided));
+        const models = yield* Effect.fromOption(getCitationExtractionShortcut("eyecite"));
+        const original = A.getUnsafe(models, 0);
+        const changed = {
+          ...original,
+          outcome: {
+            ...original.outcome,
+            metadata: {
+              ...original.outcome.metadata,
+              court: { width: 1, bytes: new TextEncoder().encode("unrecognized-court") },
+            },
           },
-        },
-      };
-      const projected = yield* stage.project(changed).pipe(Effect.flatMap(encodeCitation));
-      expect(projected.metadata).toMatchObject({ court: { status: "unmapped", value: "unrecognized-court" } });
-      const missing = yield* stage
-        .project({ ...original, token: { ...original.token, exact: [2532] } })
-        .pipe(Effect.flip);
-      expect(missing).toMatchObject({ reason: "missing-edition" });
-      const constrained = yield* setupCitationMetadataRuntime("bun", undefined, true, true, 8192);
-      const limited = yield* makeCitationSemanticProjection(constrained.limits, constrained.runtime, {
-        editions: [],
-        vocabulary,
-      }).pipe(Effect.provideContext(constrained.provided));
-      yield* constrained.budget.reserve(constrained.limits.producedTextUtf16 - 1);
-      const refused = yield* limited.project(original).pipe(Effect.flip);
-      expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" });
-      const observed = yield* constrained.observed.snapshot;
-      expect(observed).toEqual({ spawned: 0, confirmed: 0 });
-    })
+        };
+        const projected = yield* stage.project(changed).pipe(Effect.flatMap(encodeCitation));
+        expect(projected.metadata).toMatchObject({ court: { status: "unmapped", value: "unrecognized-court" } });
+        const missing = yield* stage
+          .project({ ...original, token: { ...original.token, exact: [2532] } })
+          .pipe(Effect.flip);
+        expect(missing).toMatchObject({ reason: "missing-edition" });
+        const constrained = yield* setupCitationMetadataRuntime("bun", undefined, true, true, 8192);
+        const limited = yield* makeCitationSemanticProjection(constrained.limits, constrained.runtime, {
+          editions: [],
+          vocabulary,
+        }).pipe(Effect.provideContext(constrained.provided));
+        const refused = yield* withCitationTestInvocation(
+          Effect.gen(function* () {
+            const invocation = yield* CitationInvocation;
+            yield* invocation.budget.reserve(constrained.limits.producedTextUtf16 - 1);
+            return yield* limited.project(original).pipe(Effect.flip);
+          }),
+          constrained.limits
+        );
+        expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" });
+        const observed = yield* constrained.observed.snapshot;
+        expect(observed).toEqual({ spawned: 0, confirmed: 0 });
+      })
+    )
   );
 
   it.effect("keeps missing, explicit null, and source-created short-case plaintiff distinct", () =>
-    Effect.gen(function* () {
-      const common = {
-        pinCite: null,
-        parenthetical: null,
-        court: null,
-        year: null,
-        month: null,
-        day: null,
-        antecedentGuess: null,
-      };
-      for (const raw of [common, { ...common, plaintiff: null }, { ...common, plaintiff: "Nobelman" }]) {
-        const decoded = yield* S.decodeEffect(CitationShortCaseMetadata)(raw);
-        const encoded = yield* S.encodeEffect(CitationShortCaseMetadata)(decoded);
-        expect(encoded).toEqual(raw);
-        if ("plaintiff" in raw) assertSome(decoded.plaintiff, raw.plaintiff);
-        else assertNone(decoded.plaintiff);
-      }
-    })
+    withCitationTestInvocation(
+      Effect.gen(function* () {
+        const common = {
+          pinCite: null,
+          parenthetical: null,
+          court: null,
+          year: null,
+          month: null,
+          day: null,
+          antecedentGuess: null,
+        };
+        for (const raw of [common, { ...common, plaintiff: null }, { ...common, plaintiff: "Nobelman" }]) {
+          const decoded = yield* S.decodeEffect(CitationShortCaseMetadata)(raw);
+          const encoded = yield* S.encodeEffect(CitationShortCaseMetadata)(decoded);
+          expect(encoded).toEqual(raw);
+          if ("plaintiff" in raw) assertSome(decoded.plaintiff, raw.plaintiff);
+          else assertNone(decoded.plaintiff);
+        }
+      })
+    )
   );
 });
 
@@ -332,10 +350,12 @@ it.effect.prop(
   "preserves short-case metadata absence and literal content through JSON",
   { value: Arbitrary.schema(PropertyType) },
   ({ value }) =>
-    Effect.gen(function* () {
-      const encoded = yield* S.encodeEffect(PropertyJson)(value);
-      const decoded = yield* S.decodeEffect(PropertyJson)(encoded);
-      expect(propertyEquivalent(value, decoded)).toBe(true);
-    }),
+    withCitationTestInvocation(
+      Effect.gen(function* () {
+        const encoded = yield* S.encodeEffect(PropertyJson)(value);
+        const decoded = yield* S.decodeEffect(PropertyJson)(encoded);
+        expect(propertyEquivalent(value, decoded)).toBe(true);
+      })
+    ),
   { arbitrary: fcRuns(100) }
 );

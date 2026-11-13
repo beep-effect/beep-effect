@@ -44,10 +44,10 @@ export class CitationAdmissionSnapshot extends S.Opaque<CitationAdmissionSnapsho
 export class CitationOperationAdmission extends Context.Service<
   CitationOperationAdmission,
   {
-    readonly run: <A, E>(
+    readonly run: <A, E, R>(
       operation: CitationSafetyLimitExceeded["operation"],
-      body: Effect.Effect<A, E>
-    ) => Effect.Effect<A, E | CitationAdmissionFailure | CitationSafetyLimitExceeded>;
+      body: Effect.Effect<A, E, R>
+    ) => Effect.Effect<A, E | CitationAdmissionFailure | CitationSafetyLimitExceeded, R>;
     readonly snapshot: Effect.Effect<CitationAdmissionSnapshot>;
   }
 >()($I`CitationOperationAdmission`) {}
@@ -109,7 +109,7 @@ export const makeCitationOperationAdmission = Effect.fn("Citation.makeOperationA
       )
   );
   const run = Effect.fn("Citation.admitOperation")(
-    function* <A, E>(operation: CitationSafetyLimitExceeded["operation"], body: Effect.Effect<A, E>) {
+    function* <A, E, R>(operation: CitationSafetyLimitExceeded["operation"], body: Effect.Effect<A, E, R>) {
       return yield* Effect.uninterruptibleMask(
         Effect.fnUntraced(function* (restore) {
           const claimed = yield* Ref.make(false);
@@ -146,20 +146,4 @@ export const makeCitationOperationAdmission = Effect.fn("Citation.makeOperationA
       });
     }),
   });
-});
-
-/** Reuse an already admitted parent's permit for private child stages. The
- * owner must provide this Context only inside its admitted invocation; neither
- * child services nor this bypass may escape that invocation.
- * @internal @category operations @since 0.0.0
- */
-export const captureCitationOperationChildren = Effect.fn("Citation.captureOperationChildren")(function* () {
-  const admission = yield* CitationOperationAdmission;
-  const nested = CitationOperationAdmission.of({
-    run: Effect.fn("Citation.reuseOperationPermit")(
-      <A, E>(_: CitationSafetyLimitExceeded["operation"], body: Effect.Effect<A, E>) => body
-    ),
-    snapshot: admission.snapshot,
-  });
-  return Context.make(CitationOperationAdmission, nested);
 });

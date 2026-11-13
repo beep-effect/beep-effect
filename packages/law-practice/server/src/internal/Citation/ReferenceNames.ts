@@ -10,6 +10,7 @@ import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
+import { reserveCitationInvocationText } from "./Invocation.ts";
 import { makeCitationPythonLower } from "./PythonCase.ts";
 import { makeCitationPythonCharacters } from "./PythonCharacters.ts";
 import { citationPythonTextData } from "./PythonTextData.ts";
@@ -99,7 +100,7 @@ export const makeCitationReferenceNames = Effect.fn("Citation.makeReferenceNames
   const disallowed = HashSet.fromIterable(names);
   const characters = yield* makeCitationPythonCharacters();
   const lower = yield* makeCitationPythonLower(limits);
-  const input = yield* makeCitationRegexInput(limits, "source");
+  const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText, "source");
   const budget = yield* CitationTextBudget;
   if (budget.maximum > limits.producedTextUtf16) return yield* fail("invalid-policy");
   const reserve = budget.reserve;

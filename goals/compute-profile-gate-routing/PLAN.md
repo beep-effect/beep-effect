@@ -9,14 +9,15 @@ Status: `in-progress`
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded. |
-| P1 Implement | complete | Make the smallest changes that satisfy `SPEC.md`. | Acceptance criteria are met. |
+| P1 Implement | in-progress | Make the smallest changes that satisfy `SPEC.md`. | Acceptance criteria are met. |
 | P2 Verify | in-progress | Run required checks and capture evidence. | Verification is green or blockers are documented. |
 | P3 Yeet: PR to mergeable | in-progress | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
-Implementation shipped as three slice PRs: P0 #2925, P1 #2959 (fix #2972) and P2, the 2026-11-13
-takeover PR. P2 Verify still needs the worker-host end-to-end acceptance run (SPEC acceptance
-criterion 3); P4 Close is the final PR with the reflection and `proposedCloseout`.
+Implementation slices P0 #2925, P1 #2959 (fix #2972) and P2 #3226 merged. The
+2026-11-13 dankserver acceptance run (#3267) failed SPEC criterion 3 and left forced-run
+and admission evidence incomplete. This lane fixes findings 1–4 and 6 and documents 5,
+7 and 8. Repeat acceptance on dankserver before P4's final PR and reflection.
 
 ## Closeout Checklist
 

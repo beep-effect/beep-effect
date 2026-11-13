@@ -34,7 +34,7 @@ Resolution order, first match wins:
    existed.
 
 The workstation's intended list, with `<projects>` standing for the absolute
-projects directory:
+projects directory and `<home>` for the absolute home directory:
 
 ```json
 {
@@ -42,10 +42,14 @@ projects directory:
   "roots": [
     { "path": "<projects>", "namePrefix": "beep-effect" },
     { "path": "<projects>/beep/seats" },
-    { "path": "<projects>/beep/lanes" }
+    { "path": "<projects>/beep/lanes" },
+    { "path": "<home>/.t3/worktrees/beep-effect" }
   ]
 }
 ```
+
+The last row is the T3 Code worktree root of the `beep-effect` clone (see
+[T3 Code lanes](#t3-code-lanes)).
 
 Every root must be an absolute path. A relative entry, such as a path starting with an unexpanded
 `~` in a timer unit's environment file, is refused instead of
@@ -66,6 +70,38 @@ BEEP_FLEET_ROOTS="$HOME/YeeBois/projects/beep-effect*:$HOME/YeeBois/projects/bee
 
 The first line prints the roots and their source (`option`, `env`, `file` or
 `derived`).
+
+## T3 Code lanes
+
+T3 Code creates each of its lanes as a linked worktree of the clone it was
+opened on, under `<home>/.t3/worktrees/<clone name>/<lane>`, outside the
+projects directory.
+
+- `beep worktree fleet` and `beep quality residue-reap --fleet` already see
+  them without a root: the mirror lists every linked worktree of each
+  origin-matched clone through `git worktree list`, wherever it lives.
+- `beep yeet economics --fleet` reads the filesystem without git, so it counts
+  a T3 lane only through the `<home>/.t3/worktrees/beep-effect` row. Each lane
+  passes the origin rule through its `.git` file, which names the clone. In
+  derived mode (no `roots.json`, no `BEEP_FLEET_ROOTS`) T3 lanes are not
+  counted. A checkout that two roots reach, such as a lane under a symlinked
+  alias of the T3 root, or a nested lane listed under its clone and again under
+  a root at the clone's Claude Code worktrees directory, is read once.
+- Writing the list switches economics from the derived root to configured
+  mode, which admits only checkouts whose clone shares the invoking clone's
+  origin. Two kinds of checkout that the derived root counted then leave the
+  census: a sibling clone of another repository named `beep-effect*` (such as
+  `beep-effect-private`), and an orphaned lane whose clone was deleted, since
+  its `.git` file names a clone that no longer exists.
+- Removal does not know the T3 root. `beep worktree remove`, `beep yeet sweep
+  --retire` and `beep worktree reap` remove only lanes in the clone's sibling
+  `-worktrees` directory or in the worktrees Claude Code nests inside the
+  clone. For a T3 lane the removal service refuses ("Removal target must be an
+  exact registered worktree beneath the managed or nested worktrees root")
+  before it exports, fences or deletes anything. T3 removes its own lanes with `git worktree
+  remove`, which deletes the git-ignored `.beep/yeet/runs` without filing the
+  journals in the attempt-journal store, so economics counts a T3 lane's
+  attempts only while the lane exists.
 
 ## Registry
 

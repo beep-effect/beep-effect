@@ -12,7 +12,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { formatJsonc, readArtifact, writeArtifact } from "@beep/repo-cli-kit/artifacts/index";
 import { runCaptured } from "@beep/repo-cli-kit/process/index";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { A, Str } from "@beep/utils";
+import { A, Str, thunkEmptyStr, thunkTrue } from "@beep/utils";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -97,6 +97,163 @@ export const CHECK_CENSUS_CHECK_TIME_BAND_PERCENT = 5;
 export const CHECK_CENSUS_INSTANTIATION_NOISE = 32;
 
 /**
+ * Growth tolerance of a band row, in percent of the row's baselined
+ * single-checker instantiation count.
+ *
+ * **Details**
+ *
+ * A band row ({@link CheckCensusBandRow}) fails only when its instantiations
+ * grow by more than this share of its baseline. Growth above
+ * {@link CHECK_CENSUS_INSTANTIATION_NOISE} but within the band is reported
+ * with its delta and percent and passes. `@beep/repo-cli` grew four times in
+ * five hours on 2026-11-13 (+1,192, +42,855, +26,373 from a compiler bump,
+ * then +49,447), so the noise floor alone would fail most of its pull requests
+ * and make the baseline a merge-conflict magnet. Strict rows keep the noise
+ * floor as their only tolerance.
+ *
+ * Band growth is cumulative against a stored baseline, so the pull request
+ * that goes red is whichever one crosses the line, not the one that caused
+ * the growth. At 5% that was about every six days for `@beep/repo-cli`
+ * (14.6% in 17 days); 10% is about every twelve days and still catches a
+ * single real step change.
+ *
+ * **Example** (Read the band)
+ *
+ * ```ts
+ * import { CHECK_CENSUS_BAND_ROW_PERCENT } from "@beep/repo-cli/commands/Quality/CheckCensusGate"
+ *
+ * console.log(CHECK_CENSUS_BAND_ROW_PERCENT) // 10
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const CHECK_CENSUS_BAND_ROW_PERCENT = 10;
+
+/**
+ * The baseline rows judged against {@link CHECK_CENSUS_BAND_ROW_PERCENT}
+ * instead of the noise floor alone.
+ *
+ * **Details**
+ *
+ * Both are large application programs whose count moves with ordinary
+ * feature work. A row named nowhere here is strict, so a newly baselined row
+ * fails on any growth above the noise floor until it is added to this list.
+ * The class lives in code, not in the machine-written baseline.
+ *
+ * **Example** (Recognise a band row)
+ *
+ * ```ts
+ * import { CheckCensusBandRow } from "@beep/repo-cli/commands/Quality/CheckCensusGate"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(CheckCensusBandRow)("@beep/repo-cli")) // true
+ * console.log(S.is(CheckCensusBandRow)("@beep/schema")) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const CheckCensusBandRow = LiteralKit(["@beep/repo-cli", "@beep/law-practice-domain"]).pipe(
+  $I.annoteSchema("CheckCensusBandRow", {
+    description: "A check-census baseline row whose instantiation growth fails only beyond the band percent.",
+  })
+);
+
+/**
+ * Runtime type of {@link CheckCensusBandRow}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CheckCensusBandRow = typeof CheckCensusBandRow.Type;
+
+/**
+ * How a baseline row's instantiation growth is judged.
+ *
+ * **Details**
+ *
+ * `strict`: growth above {@link CHECK_CENSUS_INSTANTIATION_NOISE} fails.
+ * `band`: growth fails only above {@link CHECK_CENSUS_BAND_ROW_PERCENT} of the
+ * row's baseline; smaller growth above the noise floor is reported. Both
+ * classes print the same tighten hint for a decrease.
+ *
+ * **Example** (Name the tolerant class)
+ *
+ * ```ts
+ * import { CheckCensusRowClass } from "@beep/repo-cli/commands/Quality/CheckCensusGate"
+ *
+ * console.log(CheckCensusRowClass.Enum.band) // "band"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const CheckCensusRowClass = LiteralKit(["strict", "band"]).pipe(
+  $I.annoteSchema("CheckCensusRowClass", {
+    description:
+      "strict: instantiation growth above the noise floor fails; band: growth fails only beyond the band percent.",
+  })
+);
+
+/**
+ * Runtime type of {@link CheckCensusRowClass}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CheckCensusRowClass = typeof CheckCensusRowClass.Type;
+
+const isBandRowName = S.is(CheckCensusBandRow);
+
+/**
+ * The class of a baseline row, by its name.
+ *
+ * **Example** (Class a package row and a fixture row)
+ *
+ * ```ts
+ * import { checkCensusRowClass } from "@beep/repo-cli/commands/Quality/CheckCensusGate"
+ *
+ * console.log(checkCensusRowClass("@beep/law-practice-domain")) // "band"
+ * console.log(checkCensusRowClass("@beep/schema#typeperf/baseline")) // "strict"
+ * ```
+ *
+ * @param name - The baseline row's name.
+ * @returns `band` for a {@link CheckCensusBandRow}, otherwise `strict`.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const checkCensusRowClass = (name: string): CheckCensusRowClass =>
+  isBandRowName(name) ? CheckCensusRowClass.Enum.band : CheckCensusRowClass.Enum.strict;
+
+/**
+ * The workspace package a baseline row belongs to: its name up to the first
+ * `#`.
+ *
+ * **Details**
+ *
+ * Package rows are named after their package, and typeperf fixture rows
+ * after the package that owns the fixture, followed by `#` and the fixture
+ * (`@beep/schema#typeperf/baseline`), as Turbo spells a task id. The check
+ * lane selects rows by this owner.
+ *
+ * **Example** (Read a fixture row's owner)
+ *
+ * ```ts
+ * import { checkCensusRowPackage } from "@beep/repo-cli/commands/Quality/CheckCensusGate"
+ *
+ * console.log(checkCensusRowPackage("@beep/schema#typeperf/baseline")) // "@beep/schema"
+ * console.log(checkCensusRowPackage("@beep/repo-cli")) // "@beep/repo-cli"
+ * ```
+ *
+ * @param name - The baseline row's name.
+ * @returns The owning workspace package name.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const checkCensusRowPackage = (name: string): string => A.headNonEmpty(Str.split(name, "#"));
+
+/**
  * The one command that re-measures every baseline row.
  *
  * **Example** (Print the remediation)
@@ -123,8 +280,9 @@ const baselineHeader = A.join(
     `// Re-measure every row with one command: ${CHECK_CENSUS_BASELINE_WRITE_COMMAND}`,
     "// It needs a built tree: build each row's upstream declarations first, for example",
     "// bunx turbo run build --filter='@beep/repo-cli^...' --filter='@beep/law-practice-domain^...'.",
-    "// Gate: single-checker instantiations must not increase on any row (failure); check time is",
-    `// advisory within a ${CHECK_CENSUS_CHECK_TIME_BAND_PERCENT}% band; an instantiation decrease prints a tighten hint.`,
+    `// Gate: single-checker instantiations must not grow by more than ${CHECK_CENSUS_INSTANTIATION_NOISE} on a strict row, nor by more`,
+    `// than ${CHECK_CENSUS_BAND_ROW_PERCENT}% since measuredAt on a band row (classes live in CheckCensusGate.ts, not here) (failure);`,
+    `// check time is advisory within a ${CHECK_CENSUS_CHECK_TIME_BAND_PERCENT}% band; an instantiation decrease prints a tighten hint.`,
     "// A write refuses any sample whose compiler output reports a type error.",
     "",
   ],
@@ -345,6 +503,13 @@ export type CheckCensusMetricLabel = typeof CheckCensusMetricLabel.Type;
 /**
  * Hard verdict on a program's single-checker instantiation count.
  *
+ * **Details**
+ *
+ * `increase` fails the gate: growth above the noise floor on a strict row, or
+ * above the band on a band row. `within-band` is a band row's growth above
+ * the noise floor but within {@link CHECK_CENSUS_BAND_ROW_PERCENT}; it is
+ * reported and passes. `decrease` asks to tighten the baseline.
+ *
  * **Example** (Name the failing verdict)
  *
  * ```ts
@@ -356,9 +521,10 @@ export type CheckCensusMetricLabel = typeof CheckCensusMetricLabel.Type;
  * @category models
  * @since 0.0.0
  */
-export const CheckCensusInstantiationVerdict = LiteralKit(["increase", "unchanged", "decrease"]).pipe(
+export const CheckCensusInstantiationVerdict = LiteralKit(["increase", "within-band", "unchanged", "decrease"]).pipe(
   $I.annoteSchema("CheckCensusInstantiationVerdict", {
-    description: "Instantiation count against the baseline: an increase fails the gate, a decrease asks to tighten.",
+    description:
+      "Instantiation count against the baseline: an increase fails the gate, growth within a band row's band is reported, a decrease asks to tighten.",
   })
 );
 
@@ -416,6 +582,7 @@ export type CheckCensusCheckTimeVerdict = typeof CheckCensusCheckTimeVerdict.Typ
 export class CheckCensusComparison extends S.Opaque<CheckCensusComparison, { readonly brand: unique symbol }>()(
   S.Struct({
     name: S.String,
+    rowClass: CheckCensusRowClass,
     baseline: CheckCensusSample,
     current: CheckCensusSample,
     instantiations: CheckCensusInstantiationVerdict,
@@ -423,7 +590,7 @@ export class CheckCensusComparison extends S.Opaque<CheckCensusComparison, { rea
   }).pipe(
     $I.annoteSchema("CheckCensusComparison", {
       description:
-        "Committed and fresh single-checker samples of one program with their instantiation and check-time verdicts.",
+        "Committed and fresh single-checker samples of one program with its row class and its instantiation and check-time verdicts.",
     })
   )
 ) {}
@@ -437,8 +604,11 @@ export class CheckCensusComparison extends S.Opaque<CheckCensusComparison, { rea
  *
  * `baselinePath` is repository-relative and defaults to
  * {@link CHECK_CENSUS_BASELINE_PATH}; the CLI stamps its `--baseline` value.
- * `filter` records the `--filter` text that selected the rows, so an empty
- * selection can name it.
+ * `baselineMeasuredAt` and `baselineCommit` are the baseline's `measuredAt`
+ * and `commit`: a band row's growth is cumulative since then, so its lines
+ * name both. `filter` records the `--filter` text and `rowPackages` the
+ * `--row-packages` owners that selected the rows, so an empty selection can
+ * name them.
  *
  * **Example** (Build an empty gate report)
  *
@@ -446,6 +616,7 @@ export class CheckCensusComparison extends S.Opaque<CheckCensusComparison, { rea
  * import { CheckCensusGateReport } from "@beep/repo-cli/commands/Quality/CheckCensusGate"
  *
  * const report = CheckCensusGateReport.make({
+ *   baselineMeasuredAt: "2026-09-29T00:00:00.000Z",
  *   baselineCommit: "368998daff",
  *   baselineCompiler: "7.0.2+effect-tsgo.0.45.0",
  *   compiler: "7.0.2+effect-tsgo.0.45.0",
@@ -460,10 +631,16 @@ export class CheckCensusComparison extends S.Opaque<CheckCensusComparison, { rea
 export class CheckCensusGateReport extends S.Opaque<CheckCensusGateReport, { readonly brand: unique symbol }>()(
   S.Struct({
     baselinePath: S.String.pipe(S.withConstructorDefault(Effect.succeed(CHECK_CENSUS_BASELINE_PATH))),
+    baselineMeasuredAt: S.String,
     baselineCommit: S.String,
     baselineCompiler: S.String,
     compiler: S.String,
     filter: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeed(O.none<string>()))),
+    rowPackages: S.String.pipe(
+      S.Array,
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeed(O.none<ReadonlyArray<string>>()))
+    ),
     comparisons: S.Array(CheckCensusComparison),
   }).pipe(
     $I.annoteSchema("CheckCensusGateReport", {
@@ -701,11 +878,26 @@ export const parseCheckCensusSample: {
   }
 );
 
-const instantiationVerdictOf = (baseline: number, current: number): CheckCensusInstantiationVerdict =>
+// Integer arithmetic keeps the band edge exact: growth of exactly the band
+// percent is still within it, and a zero baseline has no band at all.
+const growthVerdictOf = (
+  rowClass: CheckCensusRowClass,
+  baseline: number,
+  delta: number
+): CheckCensusInstantiationVerdict =>
+  rowClass === CheckCensusRowClass.Enum.band && delta * 100 <= baseline * CHECK_CENSUS_BAND_ROW_PERCENT
+    ? CheckCensusInstantiationVerdict.Enum["within-band"]
+    : CheckCensusInstantiationVerdict.Enum.increase;
+
+const instantiationVerdictOf = (
+  rowClass: CheckCensusRowClass,
+  baseline: number,
+  current: number
+): CheckCensusInstantiationVerdict =>
   Match.value(current - baseline).pipe(
     Match.when(
       (delta) => delta > CHECK_CENSUS_INSTANTIATION_NOISE,
-      () => CheckCensusInstantiationVerdict.Enum.increase
+      (delta) => growthVerdictOf(rowClass, baseline, delta)
     ),
     Match.when(
       (delta) => delta < -CHECK_CENSUS_INSTANTIATION_NOISE,
@@ -734,8 +926,12 @@ const checkTimeVerdictOf = (baselineMs: number, currentMs: number): CheckCensusC
  * **Details**
  *
  * Instantiations are compared outside a noise floor of
- * {@link CHECK_CENSUS_INSTANTIATION_NOISE}: an increase beyond it is the hard
- * verdict, and a difference within it is `unchanged`.
+ * {@link CHECK_CENSUS_INSTANTIATION_NOISE}, and a difference within it is
+ * `unchanged`. The row's {@link checkCensusRowClass} decides what growth
+ * beyond the floor means: on a strict row it is the hard `increase` verdict;
+ * on a band row it is `within-band` up to {@link CHECK_CENSUS_BAND_ROW_PERCENT}
+ * of the baseline and `increase` beyond. A decrease beyond the floor is
+ * `decrease` on either class.
  * Check time is compared against a {@link CHECK_CENSUS_CHECK_TIME_BAND_PERCENT}
  * percent band around the baselined value. Types are carried for the report
  * and receive no verdict.
@@ -769,21 +965,22 @@ const checkTimeVerdictOf = (baselineMs: number, currentMs: number): CheckCensusC
 export const compareCheckCensusSample: {
   (row: CheckCensusBaselineRow): (current: CheckCensusSample) => CheckCensusComparison;
   (current: CheckCensusSample, row: CheckCensusBaselineRow): CheckCensusComparison;
-} = dual(
-  2,
-  (current: CheckCensusSample, row: CheckCensusBaselineRow): CheckCensusComparison =>
-    CheckCensusComparison.make({
-      name: row.name,
-      baseline: CheckCensusSample.make({
-        instantiations: row.instantiations,
-        types: row.types,
-        checkTimeMs: row.checkTimeMs,
-      }),
-      current,
-      instantiations: instantiationVerdictOf(row.instantiations, current.instantiations),
-      checkTime: checkTimeVerdictOf(row.checkTimeMs, current.checkTimeMs),
-    })
-);
+} = dual(2, (current: CheckCensusSample, row: CheckCensusBaselineRow): CheckCensusComparison => {
+  const rowClass = checkCensusRowClass(row.name);
+
+  return CheckCensusComparison.make({
+    name: row.name,
+    rowClass,
+    baseline: CheckCensusSample.make({
+      instantiations: row.instantiations,
+      types: row.types,
+      checkTimeMs: row.checkTimeMs,
+    }),
+    current,
+    instantiations: instantiationVerdictOf(rowClass, row.instantiations, current.instantiations),
+    checkTime: checkTimeVerdictOf(row.checkTimeMs, current.checkTimeMs),
+  });
+});
 
 // Structural, so a gate report and a stamp-only check judge a compiler change
 // the same way.
@@ -888,6 +1085,40 @@ export const renderCheckCensusCompilerStampLine = (stamp: CheckCensusCompilerSta
     ? `check-census stamp: baseline and installed compiler agree (${stamp.compiler})`
     : `check-census stamp: baseline ${stamp.baselinePath} was measured with ${stamp.baselineCompiler}, but the installed compiler is ${stamp.compiler}; re-measure with \`${CHECK_CENSUS_BASELINE_WRITE_COMMAND}\` (the write needs a built tree).`;
 
+/**
+ * The one line a `--defer-stale-stamp` gate prints instead of sampling when
+ * the baseline was measured with another compiler.
+ *
+ * **Details**
+ *
+ * The Heavy / Check lane runs the gate with `--defer-stale-stamp`: a stale
+ * baseline cannot be compared, and Repo Sanity's `check-census --stamp-only`
+ * step already fails the pull request for it, so the lane names the stale
+ * baseline, the re-measure command, and the step that owns the red, then
+ * passes without sampling.
+ *
+ * **Example** (Defer a stale baseline)
+ *
+ * ```ts
+ * import {
+ *   CheckCensusCompilerStamp,
+ *   renderCheckCensusStaleStampDeferralLine,
+ * } from "@beep/repo-cli/commands/Quality/CheckCensusGate"
+ *
+ * const line = renderCheckCensusStaleStampDeferralLine(
+ *   CheckCensusCompilerStamp.make({ baselineCompiler: "7.0.2+effect-tsgo.0.67.5", compiler: "7.0.2+effect-tsgo.0.68.1" })
+ * )
+ * console.log(line.startsWith("check-census gate deferred:")) // true
+ * ```
+ *
+ * @param stamp - The baseline and installed compiler strings, which differ.
+ * @returns The deferral line naming both compilers, the re-measure command and the owning step.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderCheckCensusStaleStampDeferralLine = (stamp: CheckCensusCompilerStamp): string =>
+  `check-census gate deferred: baseline ${stamp.baselinePath} was measured with ${stamp.baselineCompiler}, but the installed compiler is ${stamp.compiler}, so the baseline is stale and must be re-measured with \`${CHECK_CENSUS_BASELINE_WRITE_COMMAND}\` (the write needs a built tree). Repo Sanity's stamp check (\`check-census --stamp-only\`) owns that red; this run samples nothing and passes.`;
+
 const isIncrease = (comparison: CheckCensusComparison): boolean =>
   comparison.instantiations === CheckCensusInstantiationVerdict.Enum.increase;
 
@@ -900,7 +1131,8 @@ const isIncrease = (comparison: CheckCensusComparison): boolean =>
  *
  * An empty selection fails because it proves nothing: a mistyped `--filter`
  * or a baseline without rows would otherwise exit 0 without measuring
- * anything.
+ * anything. A band row's growth within its band is `within-band`, which is
+ * reported and never fails.
  *
  * **Example** (An empty report fails)
  *
@@ -908,6 +1140,7 @@ const isIncrease = (comparison: CheckCensusComparison): boolean =>
  * import { CheckCensusGateReport, checkCensusGateFailed } from "@beep/repo-cli/commands/Quality/CheckCensusGate"
  *
  * const report = CheckCensusGateReport.make({
+ *   baselineMeasuredAt: "2026-09-29T00:00:00.000Z",
  *   baselineCommit: "368998daff",
  *   baselineCompiler: "7.0.2",
  *   compiler: "7.0.2",
@@ -929,15 +1162,22 @@ const filterLabel: (filter: O.Option<string>) => string = O.match({
   onSome: (text) => `--filter "${text}"`,
 });
 
+const selectionLabel = (report: CheckCensusGateReport): string =>
+  `${filterLabel(report.filter)}${pipe(
+    report.rowPackages,
+    O.map((packages) => `, --row-packages ${A.join(packages, ",")}`),
+    O.getOrElse(thunkEmptyStr)
+  )}`;
+
 /**
  * The one-line summary the CLI exits with when {@link checkCensusGateFailed}
  * holds.
  *
  * **Details**
  *
- * An empty selection names the active `--filter` so a mistyped filter is
- * visible; any other failure points at an instantiation increase or a
- * compiler change.
+ * An empty selection names the active `--filter` (and `--row-packages`, when
+ * given) so a mistyped selection is visible; any other failure points at an
+ * instantiation increase or a compiler change.
  *
  * **Example** (Summarize an empty selection)
  *
@@ -946,6 +1186,7 @@ const filterLabel: (filter: O.Option<string>) => string = O.match({
  * import { CheckCensusGateReport, checkCensusGateFailureMessage } from "@beep/repo-cli/commands/Quality/CheckCensusGate"
  *
  * const report = CheckCensusGateReport.make({
+ *   baselineMeasuredAt: "2026-09-29T00:00:00.000Z",
  *   baselineCommit: "368998daff",
  *   baselineCompiler: "7.0.2",
  *   compiler: "7.0.2",
@@ -962,17 +1203,60 @@ const filterLabel: (filter: O.Option<string>) => string = O.match({
  */
 export const checkCensusGateFailureMessage = (report: CheckCensusGateReport): string =>
   A.isReadonlyArrayEmpty(report.comparisons)
-    ? `check-census gate failed: no baselined program was selected (${filterLabel(report.filter)}, baseline ${report.baselinePath}).`
+    ? `check-census gate failed: no baselined program was selected (${selectionLabel(report)}, baseline ${report.baselinePath}).`
     : `check-census gate failed: single-checker instantiations increased or the compiler changed (baseline ${report.baselinePath}).`;
 
 const signed = (value: number): string => (value > 0 ? `+${value}` : `${value}`);
 
-const checkTimeChange = (baselineMs: number, currentMs: number): string =>
+const percentChange = (base: number, current: number, precision: number): string =>
   pipe(
-    O.liftPredicate(baselineMs, Num.isGreaterThan(0)),
-    O.map((base) => `${signed(Num.round(((currentMs - base) / base) * 100, 1))}%`),
+    O.liftPredicate(base, Num.isGreaterThan(0)),
+    O.map((positive) => `${signed(Num.round(((current - positive) / positive) * 100, precision))}%`),
     O.getOrElse(() => "n/a")
   );
+
+const checkTimeChange = (baselineMs: number, currentMs: number): string => percentChange(baselineMs, currentMs, 1);
+
+// Two decimals keep a row near the band edge readable: +9.96% and +10.04% would both print +10% at one.
+const instantiationChange = ({ baseline, current }: CheckCensusComparison): string =>
+  percentChange(baseline.instantiations, current.instantiations, 2);
+
+const instantiationDelta = ({ baseline, current }: CheckCensusComparison): number =>
+  current.instantiations - baseline.instantiations;
+
+// The calendar day of the baseline's ISO `measuredAt`.
+const baselineDate = (report: CheckCensusGateReport): string => Str.takeLeft(report.baselineMeasuredAt, 10);
+
+const isBandRow = (comparison: CheckCensusComparison): boolean => comparison.rowClass === CheckCensusRowClass.Enum.band;
+
+// A band row's growth is cumulative since the baseline, so its failure names the baseline it is measured
+// against and says the delta is not this pull request's alone; the second line is the re-baseline.
+const bandFailureText = (
+  report: CheckCensusGateReport,
+  comparison: CheckCensusComparison
+): readonly [string, string] => [
+  `FAIL ${comparison.name}: cumulative single-checker growth since the baseline measured ${baselineDate(report)} at commit ${report.baselineCommit}: ${comparison.baseline.instantiations} -> ${comparison.current.instantiations} instantiations (${signed(instantiationDelta(comparison))}, ${instantiationChange(comparison)}), beyond the ${CHECK_CENSUS_BAND_ROW_PERCENT}% band of a band row. The delta is not this pull request's alone: it adds up every change merged since that baseline.`,
+  `Re-baseline once the growth is reviewed: \`${CHECK_CENSUS_BASELINE_WRITE_COMMAND}\` (the write needs a built tree), then commit the rewritten baseline.`,
+];
+
+const bandFailureLines = (report: CheckCensusGateReport, comparison: CheckCensusComparison): ReadonlyArray<string> => {
+  const [failure, rebaseline] = bandFailureText(report, comparison);
+
+  return [failure, `  ${rebaseline}`];
+};
+
+const increaseLines =
+  (report: CheckCensusGateReport) =>
+  (comparison: CheckCensusComparison): ReadonlyArray<string> =>
+    CheckCensusRowClass.match(comparison.rowClass, {
+      strict: () => [
+        `FAIL ${comparison.name}: single-checker instantiations increased by ${instantiationDelta(comparison)}.`,
+      ],
+      band: () => bandFailureLines(report, comparison),
+    });
+
+const isWithinBand = (comparison: CheckCensusComparison): boolean =>
+  comparison.instantiations === CheckCensusInstantiationVerdict.Enum["within-band"];
 
 const renderComparison = (comparison: CheckCensusComparison): string => {
   const { baseline, current } = comparison;
@@ -983,7 +1267,7 @@ const renderComparison = (comparison: CheckCensusComparison): string => {
 const verdictLines = (report: CheckCensusGateReport): ReadonlyArray<string> => [
   ...(A.isReadonlyArrayEmpty(report.comparisons)
     ? [
-        `FAIL no baselined program was selected (${filterLabel(report.filter)}): an empty gate measures nothing. Check the filter against the baseline rows.`,
+        `FAIL no baselined program was selected (${selectionLabel(report)}): an empty gate measures nothing. Check the filter against the baseline rows.`,
       ]
     : []),
   ...(compilerChanged(report)
@@ -991,10 +1275,11 @@ const verdictLines = (report: CheckCensusGateReport): ReadonlyArray<string> => [
         `FAIL compiler changed: baseline measured with ${report.baselineCompiler}, this run used ${report.compiler}; counts are not comparable. Re-measure with \`${CHECK_CENSUS_BASELINE_WRITE_COMMAND}\`.`,
       ]
     : []),
+  ...A.flatMap(A.filter(report.comparisons, isIncrease), increaseLines(report)),
   ...A.map(
-    A.filter(report.comparisons, isIncrease),
+    A.filter(report.comparisons, isWithinBand),
     (comparison) =>
-      `FAIL ${comparison.name}: single-checker instantiations increased by ${comparison.current.instantiations - comparison.baseline.instantiations}.`
+      `band ${comparison.name}: single-checker instantiations grew by ${instantiationDelta(comparison)} (${instantiationChange(comparison)}) since the baseline measured ${baselineDate(report)}, within the ${CHECK_CENSUS_BAND_ROW_PERCENT}% band (reported, not a failure).`
   ),
   ...A.map(
     A.filter(report.comparisons, (comparison) => comparison.checkTime === CheckCensusCheckTimeVerdict.Enum.slower),
@@ -1020,7 +1305,13 @@ const verdictLines = (report: CheckCensusGateReport): ReadonlyArray<string> => [
  * import { CheckCensusGateReport, renderCheckCensusGateLines } from "@beep/repo-cli/commands/Quality/CheckCensusGate"
  *
  * const lines = renderCheckCensusGateLines(
- *   CheckCensusGateReport.make({ baselineCommit: "368998daff", baselineCompiler: "7.0.2", compiler: "7.0.2", comparisons: [] })
+ *   CheckCensusGateReport.make({
+ *     baselineMeasuredAt: "2026-09-29T00:00:00.000Z",
+ *     baselineCommit: "368998daff",
+ *     baselineCompiler: "7.0.2",
+ *     compiler: "7.0.2",
+ *     comparisons: [],
+ *   })
  * )
  * console.log(lines.length) // 3
  * ```
@@ -1039,6 +1330,104 @@ export const renderCheckCensusGateLines = (report: CheckCensusGateReport): Reado
   }),
   ...verdictLines(report),
 ];
+
+const summaryOutcome = (verdict: CheckCensusInstantiationVerdict): string =>
+  CheckCensusInstantiationVerdict.match(verdict, {
+    increase: () => "**fail**",
+    "within-band": () => "reported (within band)",
+    unchanged: () => "unchanged",
+    decrease: () => "tighten",
+  });
+
+const summaryClass = (rowClass: CheckCensusRowClass): string =>
+  CheckCensusRowClass.match(rowClass, {
+    strict: () => `strict (+${CHECK_CENSUS_INSTANTIATION_NOISE})`,
+    band: () => `band (${CHECK_CENSUS_BAND_ROW_PERCENT}%)`,
+  });
+
+const summaryRow = (comparison: CheckCensusComparison): string =>
+  `| \`${comparison.name}\` | ${summaryClass(comparison.rowClass)} | ${comparison.baseline.instantiations} | ${comparison.current.instantiations} | ${signed(instantiationDelta(comparison))} | ${instantiationChange(comparison)} | ${summaryOutcome(comparison.instantiations)} |`;
+
+// One bullet per failed band row under the table, carrying the CLI's cumulative-growth text.
+const summaryBandFailures = (report: CheckCensusGateReport): ReadonlyArray<string> =>
+  A.match(
+    A.filter(report.comparisons, (comparison) => isIncrease(comparison) && isBandRow(comparison)),
+    {
+      onEmpty: A.empty<string>,
+      onNonEmpty: (failed) => [
+        ...A.map(failed, (comparison) => `- ${A.join(bandFailureText(report, comparison), " ")}`),
+        "",
+      ],
+    }
+  );
+
+/**
+ * Render the gate as the short Markdown table the Heavy / Check lane appends
+ * to the GitHub job summary.
+ *
+ * **Details**
+ *
+ * One row per comparison: row name, class with its tolerance, baselined and
+ * measured single-checker instantiations, the delta, the percent of the
+ * baseline, and the outcome. The line above the table names the baseline's
+ * measured-at date and commit, which every delta is measured against. Each
+ * failed band row adds a bullet under the table: its growth is cumulative
+ * since that baseline, the delta is not the pull request's alone, and the
+ * bullet carries the re-baseline command. The closing line says whether the
+ * gate passed and, when it failed, carries {@link checkCensusGateFailureMessage}.
+ *
+ * **Example** (Render one band row within its band)
+ *
+ * ```ts
+ * import {
+ *   CheckCensusBaselineRow,
+ *   CheckCensusGateReport,
+ *   CheckCensusSample,
+ *   compareCheckCensusSample,
+ *   renderCheckCensusGateSummary,
+ * } from "@beep/repo-cli/commands/Quality/CheckCensusGate"
+ *
+ * const row = CheckCensusBaselineRow.make({
+ *   name: "@beep/repo-cli",
+ *   tsconfig: "packages/tooling/tool/cli/tsconfig.json",
+ *   instantiations: 1000,
+ *   types: 10,
+ *   checkTimeMs: 100,
+ * })
+ * const comparison = compareCheckCensusSample(CheckCensusSample.make({ instantiations: 1090, types: 10, checkTimeMs: 100 }), row)
+ * const markdown = renderCheckCensusGateSummary(
+ *   CheckCensusGateReport.make({
+ *     baselineMeasuredAt: "2026-11-13T07:07:38.700Z",
+ *     baselineCommit: "368998daff",
+ *     baselineCompiler: "7.0.2",
+ *     compiler: "7.0.2",
+ *     comparisons: [comparison],
+ *   })
+ * )
+ * console.log(markdown.includes("| +90 | +9% | reported (within band) |")) // true
+ * ```
+ *
+ * @param report - The gate report to render.
+ * @returns Markdown with a heading, the table, and a result line, ending in a newline.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const renderCheckCensusGateSummary = (report: CheckCensusGateReport): string =>
+  `${A.join(
+    [
+      "### check-census gate",
+      "",
+      `Single-checker instantiations against \`${report.baselinePath}\`, measured ${baselineDate(report)} at commit \`${report.baselineCommit}\` (this run's compiler \`${report.compiler}\`); every delta is cumulative since that baseline.`,
+      "",
+      "| Row | Class | Baseline | Measured | Delta | Percent | Outcome |",
+      "| --- | --- | ---: | ---: | ---: | ---: | --- |",
+      ...A.map(report.comparisons, summaryRow),
+      "",
+      ...summaryBandFailures(report),
+      checkCensusGateFailed(report) ? `**Result: fail.** ${checkCensusGateFailureMessage(report)}` : "Result: pass.",
+    ],
+    "\n"
+  )}\n`;
 
 const renderBaselineRow = (row: CheckCensusBaselineRow): string =>
   `    ${Str.padEnd(50)(row.name)} instantiations ${row.instantiations} | types ${row.types} | checkTimeMs ${row.checkTimeMs}`;
@@ -1337,27 +1726,36 @@ export class CheckCensusSampler extends Context.Service<CheckCensusSampler, Chec
  *
  * @param baseline - The committed baseline document.
  * @param filter - Optional substring every compared row name must contain.
+ * @param rowPackages - Optional owning packages ({@link checkCensusRowPackage}) every compared row must belong to; `None` keeps every row.
  * @returns The gate report, comparisons in baseline row order.
  * @category use-cases
  * @since 0.0.0
  */
 export const runCheckCensusGate = Effect.fn("CheckCensusGate.run")(function* (
   baseline: CheckCensusBaseline,
-  filter: O.Option<string>
+  filter: O.Option<string>,
+  rowPackages: O.Option<ReadonlyArray<string>> = O.none()
 ): Effect.fn.Return<CheckCensusGateReport, CheckCensusSampleError, CheckCensusSampler> {
   const sampler = yield* CheckCensusSampler;
   const compiler = yield* sampler.compilerVersion;
+  const ownedBySelection = (row: CheckCensusBaselineRow): boolean =>
+    O.match(rowPackages, { onNone: thunkTrue, onSome: A.contains(checkCensusRowPackage(row.name)) });
   const comparisons = yield* Effect.forEach(
-    A.filter(checkCensusBaselineRows(baseline), (row) => nameFilterPredicate(filter)(row.name)),
+    A.filter(
+      checkCensusBaselineRows(baseline),
+      (row) => nameFilterPredicate(filter)(row.name) && ownedBySelection(row)
+    ),
     (row) => sampler.sample(row).pipe(Effect.map(compareCheckCensusSample(row))),
     { concurrency: 1 }
   );
 
   return CheckCensusGateReport.make({
+    baselineMeasuredAt: baseline.measuredAt,
     baselineCommit: baseline.commit,
     baselineCompiler: baseline.compiler,
     compiler,
     filter,
+    rowPackages,
     comparisons,
   });
 });

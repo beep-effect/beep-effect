@@ -104,8 +104,8 @@ const observeFullSpan = (range: readonly [number, number], combined: boolean, id
  * These are counts, not timings, so they hold on a loaded host. A change that
  * moves one (installing stages once, owning configuration once, reusing the
  * regex worker) updates the row here and reports before and after in its pull
- * request. The recorded baseline is in
- * `goals/citation-engine-install-once/history/evidence/`.
+ * request. The recorded baseline is in the evidence folder of the
+ * citation-engine-install-once goal packet.
  *
  * **Example** (Reading the first call's baseline)
  * ```ts

@@ -22,6 +22,7 @@ import { readCitationCanonicalCaptures } from "./CitationCanonicalCaptures.fixtu
 import { readCitationCanonicalPlainExtraction } from "./CitationCanonicalCriteria.fixtures.ts";
 import { compareCitationCanonicalModel } from "./CitationCanonicalModel.fixtures.ts";
 import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { readCitationNativeRenderingAsset } from "./CitationNativeRendering.fixtures.ts";
 import { assertCitationMentionRanges, citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
@@ -58,6 +59,11 @@ export const replayCitationCanonicalDump = Effect.fn("CanonicalDumpTest.replay")
   const { setup, defaultConfiguration, provided, values, engineArtifact } =
     yield* installCitationDefaultConfigurationFixture(kind);
   const stage = yield* makeCitationSemanticExtraction(setup.limits, setup.runtime, defaultConfiguration).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestScaffoldBinding(setup.limits).pipe(
+        Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
+      )
+    ),
     Effect.provideContext(provided),
     DateTime.withCurrentZoneOffset(0)
   );
@@ -91,6 +97,11 @@ export const replayCitationCanonicalDump = Effect.fn("CanonicalDumpTest.replay")
   const profile = yield* readCitationNativeRenderingAsset("builtin-dump-profile");
   const utilityBudget = yield* makeCitationTextBudget(setup.limits);
   const adapter = yield* makeCitationBuiltinDump(setup.limits, profile).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestScaffoldBinding(setup.limits).pipe(
+        Effect.map((bind) => ({ ...stage, project: bind(stage.project) }))
+      )
+    ),
     Effect.provideService(CitationTextBudget, utilityBudget)
   );
   const rows = yield* Effect.forEach(models, adapter.project);
@@ -147,6 +158,11 @@ export const replayCitationCanonicalDump = Effect.fn("CanonicalDumpTest.replay")
   );
   const printability = yield* readCitationNativeRenderingAsset("python-printability");
   const dump = yield* makeCitationDump(setup.limits, printability).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestScaffoldBinding(setup.limits).pipe(
+        Effect.map((bind) => ({ ...stage, render: bind(stage.render) }))
+      )
+    ),
     Effect.provideService(CitationTextBudget, utilityBudget)
   );
   const rendered = yield* dump.render({ text: ownedPlain.storage, citations: rows });

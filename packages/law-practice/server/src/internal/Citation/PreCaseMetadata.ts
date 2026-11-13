@@ -158,16 +158,11 @@ export const makeCitationPreCaseMetadata = Effect.fn("Citation.makePreCaseMetada
     extractCitationPreCaseMetadata,
     () => fail("invalid-configuration")
   );
-  const apply = Effect.fn("Citation.addPreCaseMetadata")(
-    (raw: unknown) =>
-      installed.operation.run(
-        "extract",
-        Effect.gen(function* () {
-          const [patch, reservedUnits] = yield* installed.run(raw);
-          return CitationPreCaseMetadataResult.make({ patch, reservedUnits });
-        })
-      ),
-    installed.timing.timed
+  const apply = Effect.fn("Citation.addPreCaseMetadata")((raw: unknown) =>
+    Effect.gen(function* () {
+      const [patch, reservedUnits] = yield* installed.run(raw);
+      return CitationPreCaseMetadataResult.make({ patch, reservedUnits });
+    })
   );
   return { apply };
 });

@@ -16,6 +16,7 @@ import * as Fiber from "effect/Fiber";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import { installCitationAnnotationEntryFixture } from "./CitationAnnotationEntry.fixtures.ts";
+import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
@@ -50,6 +51,11 @@ it.layer(citationTokenizerTestLayer)("raw-source annotation timing", (it) => {
           setup.configuration,
           Sha256Hex.make(Str.repeat(64)("a"))
         ).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
+              Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
+            )
+          ),
           Effect.provideService(SourceTextResolver, resolver),
           Effect.provideService(CitationAnnotationAnnotator, callback),
           Effect.provideContext(setup.provided)
@@ -108,6 +114,12 @@ it.layer(citationTokenizerTestLayer)("raw-source annotation timing", (it) => {
           setup.runtime,
           setup.configuration
         ).pipe(
+          Effect.flatMap((stage) =>
+            makeCitationTestScaffoldBinding(
+              { ...setup.limits, annotateDeadline: Duration.millis(50) },
+              "annotate"
+            ).pipe(Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) })))
+          ),
           Effect.provideService(SourceTextResolver, resolver),
           Effect.provideService(CitationAnnotationAnnotator, callback),
           Effect.provideContext(setup.provided)

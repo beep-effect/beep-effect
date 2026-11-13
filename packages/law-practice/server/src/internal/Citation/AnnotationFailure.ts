@@ -63,16 +63,13 @@ const annotation = () => Effect.fail(CitationAnnotationError.make({}));
 const input = () => Effect.fail(CitationInputError.make({ operation: "annotate" }));
 /** Reconstruct only declared fields. Native/port refusal is annotation failure,
  * never a missing-capability unsupported mode. Unicode limits retain the actual
- * resource/deadline category. Logs contain only fixed operation/class labels.
+ * resource/deadline category. The public engine owns refusal logging.
  * @internal @category operations @since 0.0.0
  */
 export const failCitationAnnotationBoundary = Effect.fn("Citation.failAnnotationBoundary")(function* (
   limits: CitationEngineLimits,
   error: typeof Failure.Type
 ): Effect.fn.Return<never, CitationEngineFailure> {
-  yield* Effect.logDebug("Citation annotation boundary refused").pipe(
-    Effect.annotateLogs({ operation: "annotate", failureClass: error._tag })
-  );
   return yield* Match.value(error).pipe(
     Match.tagsExhaustive({
       CitationAdmissionFailure: annotation,

@@ -8,6 +8,7 @@ import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { reserveCitationInvocationText } from "./Invocation.ts";
 import {
   copyCitationMetadataPatternConfiguration,
   makeCitationMetadataStage,
@@ -81,7 +82,7 @@ export const cleanCitationStopWords = Effect.fn("Citation.runStopWordCleanup")(f
   raw: unknown
 ) {
   const request = yield* S.decodeUnknownEffect(Native)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
-  const input = yield* makeCitationRegexInput(limits);
+  const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText);
   const worker = yield* makeCitationRegexWorker(limits, runtime, config.bindings, "python-regex-v0");
   const substitute = Effect.fn("Citation.substituteStopWordPattern")(function* (
     name: keyof typeof fingerprints,
