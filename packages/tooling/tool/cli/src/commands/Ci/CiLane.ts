@@ -2034,12 +2034,12 @@ export const ciLaneStepsForTesting: {
           // Required on every head: Heavy / Lint Policy also runs the law on
           // code PRs, but it is not a required context.
           homePaths,
-          // A new reader of a generated standards file in another package does not
-          // select @beep/repo-cli's tests, so the owner rows are checked here, on
-          // the pull request that adds or removes the reader (hosted-setup-tax
-          // TURB-01). Readers are test files and the files they read are generated
-          // standards inventories, both code-route shapes, so the documentation
-          // path never needs it.
+          // A new reader of a scanned repository file (generated standards file or
+          // root tooling input) in another package does not select the row's
+          // owners, so the owner rows are checked here, on the pull request that
+          // adds or removes the reader (hosted-setup-tax TURB-01). Readers are
+          // TypeScript sources, a code-route shape, so the documentation path
+          // never needs it: a documentation-only change cannot add or drop one.
           bunRunStep(repoRoot, "lint:coverage-owners", ["beep", "lint", "coverage-owners"]),
           // `audit:github repo-sanity` runs the changeset graph check (its
           // `repo-sanity:changeset-graph` lane), so this body carries no second
