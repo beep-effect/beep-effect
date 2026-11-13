@@ -15,6 +15,14 @@
 [skills]
   include_instructions = true
   [[skills.config]]
+    name = "alchemy-provider"
+    enabled = true
+
+  [[skills.config]]
+    name = "alchemy-domain"
+    enabled = true
+
+  [[skills.config]]
     name = "update-harnesses"
     enabled = true
 

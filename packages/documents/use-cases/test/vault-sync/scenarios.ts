@@ -11,6 +11,7 @@ import {
 import { describe, expect, it, layer } from "@effect/vitest";
 import { assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as H from "effect/HashMap";
@@ -59,7 +60,10 @@ export const scenarios = <E>({
   readonly name: string;
   readonly platform: Layer.Layer<Platform.Platform, E>;
 }) => {
-  const hosted = VaultSyncModel.layer(VaultSyncPolicies).pipe(Layer.provide(platform));
+  const hosted = VaultSyncModel.layer(VaultSyncPolicies).pipe(
+    Layer.provide(platform),
+    Layer.provideMerge(SecureRandom.layerWebCrypto)
+  );
   describe(name, () => {
     it("declarations are valid", () => expect(Domain.verify(VaultSyncModel)).toEqual([]));
     layer(VaultSyncPolicies.pipe(Layer.provideMerge(hosted)), {
@@ -78,7 +82,7 @@ export const scenarios = <E>({
               claim: { destinationId: destination, orgId: 1, workspaceId: 1, name: "Beep-Vault", previousName: null },
             })
           );
-          yield* eventually(destinations.state(destination), (s) => s._tag === "Registered");
+          yield* eventually(destinations.get(destination), (s) => s._tag === "Registered");
           const rejected = yield* names
             .send(
               key,
@@ -106,8 +110,8 @@ export const scenarios = <E>({
               },
             })
           );
-          yield* eventually(names.state(key), (s) => s === null);
-          const actual1 = yield* destinations.state(destination);
+          yield* eventually(names.get(key), (s) => s === null);
+          const actual1 = yield* destinations.get(destination);
           expect(actual1).toMatchObject({ name: "renamed" });
         })
       );
@@ -125,7 +129,7 @@ export const scenarios = <E>({
                 claim: { destinationId: id, orgId: 1, workspaceId: 1, name: "raceold", previousName: null },
               })
             );
-            yield* eventually(destinations.state(id), (s) => s._tag === "Registered");
+            yield* eventually(destinations.get(id), (s) => s._tag === "Registered");
             const rejected = V.reservationKey({ orgId: 1, name: "racenew" });
             yield* names.send(
               rejected,
@@ -133,14 +137,14 @@ export const scenarios = <E>({
                 claim: { destinationId: id, orgId: 1, workspaceId: 1, name: "racenew", previousName: "stale" },
               })
             );
-            yield* eventually(names.state(rejected), (s) => s === null);
+            yield* eventually(names.get(rejected), (s) => s === null);
             yield* names.send(
               old,
               V.ClaimDestinationName.make({
                 claim: { destinationId: id, orgId: 1, workspaceId: 1, name: "RACEOLD", previousName: "raceold" },
               })
             );
-            yield* eventually(destinations.state(id), (s) => s._tag === "Registered" && s.name === "RACEOLD");
+            yield* eventually(destinations.get(id), (s) => s._tag === "Registered" && s.name === "RACEOLD");
             const otherOrg = V.reservationKey({ orgId: 2, name: "foreign" });
             yield* names.send(
               otherOrg,
@@ -148,9 +152,9 @@ export const scenarios = <E>({
                 claim: { destinationId: id, orgId: 2, workspaceId: 1, name: "foreign", previousName: "RACEOLD" },
               })
             );
-            yield* eventually(names.state(otherOrg), (s) => s === null);
-            const state = yield* destinations.state(id);
-            const reservation = yield* names.state(old);
+            yield* eventually(names.get(otherOrg), (s) => s === null);
+            const state = yield* destinations.get(id);
+            const reservation = yield* names.get(old);
             expect(state).toMatchObject({ name: "RACEOLD", orgId: 1 });
             expect(reservation).not.toBe(null);
           })
@@ -166,7 +170,7 @@ export const scenarios = <E>({
               V.RecordDestinationPoll.make({ position: "p2", error: "pollEvents" })
             );
             yield* destinations.send(destination, V.PauseDestination.make({}));
-            const actual2 = yield* destinations.state(destination);
+            const actual2 = yield* destinations.get(destination);
             expect(actual2).toMatchObject({
               cursor: "p1",
               cursorError: "pollEvents",
@@ -179,7 +183,7 @@ export const scenarios = <E>({
               .pipe(Effect.flip);
             expect(rejected.rule).toBe("path-held");
             yield* destinations.send(destination, V.ReleaseItemPath.make({ path, itemId: itemId("path2") }));
-            const state = yield* destinations.state(destination);
+            const state = yield* destinations.get(destination);
             expect(state._tag === "Registered" && H.size(state.paths)).toBe(1);
           })
       );
@@ -188,13 +192,13 @@ export const scenarios = <E>({
           const items = yield* V.SyncItem;
           const operations = yield* V.SyncOperation;
           yield* items.send(itemId("queue"), V.ObserveItem.make({ observation: observe("queue") }));
-          yield* eventually(operations.state(opId("queue")), (s) => s !== null);
+          yield* eventually(operations.get(opId("queue")), (s) => s !== null);
           yield* items.send(
             itemId("queue"),
             V.ObserveItem.make({ observation: { ...observe("queue"), generation: 2, digest: "sha256:b" } })
           );
-          yield* eventually(operations.state(opId("queue")), (s) => s?.input.generation === 2);
-          const actual3 = yield* operations.state(opId("queue"));
+          yield* eventually(operations.get(opId("queue")), (s) => s?.input.generation === 2);
+          const actual3 = yield* operations.get(opId("queue"));
           expect(actual3).toMatchObject({
             input: { idempotencyKey: opId("queue"), digest: "sha256:b" },
           });
@@ -239,7 +243,7 @@ export const scenarios = <E>({
                 .pipe(Effect.flip);
               expect(missing.rule).toBe("item-remote-id");
             }
-            const actual4 = yield* ops.state(id);
+            const actual4 = yield* ops.get(id);
             expect(actual4).toMatchObject({ status: "queued", attempts: 0 });
           }
         })
@@ -260,7 +264,7 @@ export const scenarios = <E>({
             )
             .pipe(Effect.flip);
           expect(busy.rule).toBe("not-queued");
-          yield* eventually(ops.state(id), (s) => s?.status === "queued");
+          yield* eventually(ops.get(id), (s) => s?.status === "queued");
           yield* ops.send(
             id,
             V.LeaseOperation.make({ holder: "second", leaseMillis: 10000, parentRemoteId: remote, itemRemoteId: null })
@@ -270,7 +274,7 @@ export const scenarios = <E>({
             .pipe(Effect.flip);
           expect(stale.rule).toBe("stale-lease");
           yield* ops.send(id, V.ExpireLease.make({ attempt: 1 }));
-          const actual5 = yield* ops.state(id);
+          const actual5 = yield* ops.get(id);
           expect(actual5).toMatchObject({ status: "leased", attempts: 2 });
           yield* ops.send(id, V.CompleteOperation.make({ holder: "second", attempt: 2 }));
         })
@@ -304,14 +308,14 @@ export const scenarios = <E>({
                 })
               );
               // Read each state right after its own failure, well before the 750 ms retry deadline fires.
-              const failed = yield* ops.state(opId(n));
+              const failed = yield* ops.get(opId(n));
               expect(failed).toMatchObject({ status: expected[n] });
             }
-            yield* eventually(ops.state(opId("retry")), (s) => s?.status === "queued");
+            yield* eventually(ops.get(opId("retry")), (s) => s?.status === "queued");
             yield* ops.send(opId("terminal"), V.ReviveOperation.make({}));
             yield* ops.send(opId("terminal"), V.SupersedeOperation.make({ reason: "kind-replaced" }));
             yield* ops.send(opId("terminal"), V.ReviveOperation.make({}));
-            const actual9 = yield* ops.state(opId("terminal"));
+            const actual9 = yield* ops.get(opId("terminal"));
             expect(actual9).toMatchObject({ status: "superseded" });
           })
       );
@@ -320,7 +324,7 @@ export const scenarios = <E>({
           const items = yield* V.SyncItem;
           const ops = yield* V.SyncOperation;
           yield* items.send(itemId("kind"), V.ObserveItem.make({ observation: observe("kind") }));
-          yield* eventually(ops.state(opId("kind")), (s) => s !== null);
+          yield* eventually(ops.get(opId("kind")), (s) => s !== null);
           yield* items.send(
             itemId("kind"),
             V.ObserveItem.make({
@@ -334,8 +338,8 @@ export const scenarios = <E>({
               },
             })
           );
-          yield* eventually(ops.state(opId("kind")), (s) => s?.status === "superseded");
-          yield* eventually(ops.state(opId("folder")), (s) => s?.input.type === "ensureFolder");
+          yield* eventually(ops.get(opId("kind")), (s) => s?.status === "superseded");
+          yield* eventually(ops.get(opId("folder")), (s) => s?.input.type === "ensureFolder");
         })
       );
       it.effect(
@@ -361,9 +365,9 @@ export const scenarios = <E>({
                 record: { ...record, publicId: V.ConflictId.make("documents_sync_conflict_a2") },
               })
             );
-            const reserved = yield* registry.state(destination);
+            const reserved = yield* registry.get(destination);
             expect(H.size(reserved)).toBe(1);
-            yield* eventually(conflicts.state(record.publicId), (s) => s !== null);
+            yield* eventually(conflicts.get(record.publicId), (s) => s !== null);
             const foreign = yield* conflicts
               .send(
                 record.publicId,
@@ -387,8 +391,8 @@ export const scenarios = <E>({
                 correction: { operationId: opId("review"), input: input("review", "moveItem") },
               })
             );
-            yield* eventually(conflicts.state(record.publicId), (s) => s?.reviewed === true);
-            const actual10 = yield* ops.state(opId("review"));
+            yield* eventually(conflicts.get(record.publicId), (s) => s?.reviewed === true);
+            const actual10 = yield* ops.get(opId("review"));
             expect(actual10).toMatchObject({ status: "queued" });
           })
       );
@@ -404,7 +408,7 @@ export const scenarios = <E>({
             renamed,
             V.ObserveItem.make({ observation: { ...observe("renamed"), parentRequired: false } })
           );
-          yield* eventually(ops.state(opId("renamed")), (s) => s !== null);
+          yield* eventually(ops.get(opId("renamed")), (s) => s !== null);
           yield* items.send(
             renamed,
             V.MarkItemPushed.make({
@@ -424,8 +428,8 @@ export const scenarios = <E>({
             reviewed: false,
           });
           yield* registry.send(destination, V.RecordConflict.make({ record }));
-          yield* eventually(conflicts.state(record.publicId), (s) => s !== null);
-          const item = yield* eventually(items.state(renamed), (s) => s?.remoteId !== null);
+          yield* eventually(conflicts.get(record.publicId), (s) => s !== null);
+          const item = yield* eventually(items.get(renamed), (s) => s?.remoteId !== null);
           const correction = yield* Effect.fromOption(V.reviewCorrection({ record, item }));
           expect(correction.input.type).toBe("renameItem");
           yield* conflicts.send(
@@ -438,12 +442,12 @@ export const scenarios = <E>({
               correction,
             })
           );
-          yield* eventually(conflicts.state(record.publicId), (s) => s?.reviewed === true);
-          const slotted = yield* eventually(items.state(renamed), (s) => H.has(s?.slots ?? H.empty(), "renameItem"));
+          yield* eventually(conflicts.get(record.publicId), (s) => s?.reviewed === true);
+          const slotted = yield* eventually(items.get(renamed), (s) => H.has(s?.slots ?? H.empty(), "renameItem"));
           expect(slotted === null ? null : O.getOrNull(H.get(slotted.slots, "renameItem"))).toBe(
             correction.operationId
           );
-          const queued = yield* ops.state(correction.operationId);
+          const queued = yield* ops.get(correction.operationId);
           expect(queued).toMatchObject({ status: "queued", input: { type: "renameItem", generation: 2 } });
         })
       );
@@ -455,7 +459,7 @@ export const scenarios = <E>({
           const destinations = yield* V.SyncDestination;
           const queue = yield* V.OperationQueue;
           yield* items.send(itemId("recovery"), V.ObserveItem.make({ observation: observe("recovery") }));
-          yield* eventually(ops.state(opId("recovery")), (s) => s !== null);
+          yield* eventually(ops.get(opId("recovery")), (s) => s !== null);
           yield* ops.send(
             opId("recovery"),
             V.LeaseOperation.make({ holder: "worker", leaseMillis: 10000, parentRemoteId: remote, itemRemoteId: null })
@@ -471,19 +475,19 @@ export const scenarios = <E>({
               reason: "uploadFile",
             })
           );
-          yield* eventually(items.state(itemId("recovery")), (s) => s?.status === "error");
+          yield* eventually(items.get(itemId("recovery")), (s) => s?.status === "error");
           yield* eventually(
-            queue.query(V.SyncDestination.ref(destination)),
+            queue.get(V.SyncDestination.ref(destination)),
             (s) => O.isSome(s) && O.exists(H.get(s.value, opId("recovery")), (r) => r?.status === "failed")
           );
           yield* destinations.send(destination, V.ResumeDestination.make({}));
-          yield* eventually(ops.state(opId("recovery")), (s) => s?.status === "queued" && s.attempts === 0);
+          yield* eventually(ops.get(opId("recovery")), (s) => s?.status === "queued" && s.attempts === 0);
           yield* ops.send(
             opId("recovery"),
             V.LeaseOperation.make({ holder: "next", leaseMillis: 10000, parentRemoteId: remote, itemRemoteId: null })
           );
           yield* ops.send(opId("recovery"), V.ExpireLease.make({ attempt: 1 }));
-          const recovered = yield* ops.state(opId("recovery"));
+          const recovered = yield* ops.get(opId("recovery"));
           expect(recovered).toMatchObject({ status: "leased", attempts: 1, leaseEpoch: 2 });
         })
       );
@@ -494,7 +498,7 @@ export const scenarios = <E>({
           const registry = yield* V.ConflictEventRegistry;
           const ops = yield* V.SyncOperation;
           yield* items.send(itemId("healed"), V.ObserveItem.make({ observation: observe("healed") }));
-          yield* eventually(ops.state(opId("healed")), (s) => s !== null);
+          yield* eventually(ops.get(opId("healed")), (s) => s !== null);
           yield* items.send(itemId("healed"), V.FlagItemDrift.make({}));
           const publicId = V.ConflictId.make("documents_sync_conflict_aheal");
           yield* registry.send(
@@ -511,7 +515,7 @@ export const scenarios = <E>({
               },
             })
           );
-          yield* eventually(conflicts.state(publicId), (s) => s !== null);
+          yield* eventually(conflicts.get(publicId), (s) => s !== null);
           yield* conflicts.send(
             publicId,
             V.ReviewConflict.make({
@@ -522,9 +526,9 @@ export const scenarios = <E>({
               healOperationId: opId("healfresh"),
             })
           );
-          yield* eventually(ops.state(opId("healfresh")), (s) => s?.status === "queued");
-          yield* eventually(conflicts.state(publicId), (s) => s?.reviewed === true);
-          const healed = yield* items.state(itemId("healed"));
+          yield* eventually(ops.get(opId("healfresh")), (s) => s?.status === "queued");
+          yield* eventually(conflicts.get(publicId), (s) => s?.reviewed === true);
+          const healed = yield* items.get(itemId("healed"));
           expect(healed).toMatchObject({ status: "pending", observation: { operationId: opId("healfresh") } });
         })
       );
@@ -541,7 +545,7 @@ export const scenarios = <E>({
               claim: { destinationId: existing, orgId: 1, workspaceId: 1, name: "duplicate", previousName: null },
             })
           );
-          yield* eventually(names.state(duplicate), (s) => s === null);
+          yield* eventually(names.get(duplicate), (s) => s === null);
           const absent = V.DestinationId.make("documents_sync_destination_avaultabsent");
           const missing = V.reservationKey({ orgId: 1, name: "missing" });
           yield* names.send(
@@ -556,8 +560,8 @@ export const scenarios = <E>({
               },
             })
           );
-          yield* eventually(names.state(missing), (s) => s === null);
-          const unchanged = yield* destinations.state(absent);
+          yield* eventually(names.get(missing), (s) => s === null);
+          const unchanged = yield* destinations.get(absent);
           expect(unchanged).toEqual({ _tag: "Unregistered" });
           const old = V.reservationKey({ orgId: 1, name: "raceold" });
           const claim = V.NameClaim.make({
@@ -586,7 +590,7 @@ export const scenarios = <E>({
               correlationId: "claim-replay",
             },
           });
-          const retained = yield* names.state(old);
+          const retained = yield* names.get(old);
           expect(retained).not.toBe(null);
         })
       );
@@ -616,7 +620,7 @@ export const scenarios = <E>({
           };
           yield* handler(trigger);
           yield* handler(trigger);
-          const rows = yield* queue.query(ref);
+          const rows = yield* queue.get(ref);
           assertNone(rows);
         })
       );
@@ -639,7 +643,7 @@ export const scenarios = <E>({
               },
             })
           );
-          yield* eventually(conflicts.state(id), (s) => s !== null);
+          yield* eventually(conflicts.get(id), (s) => s !== null);
           yield* conflicts.send(
             id,
             V.ReviewConflict.make({
@@ -650,7 +654,7 @@ export const scenarios = <E>({
               healOperationId: opId("unused"),
             })
           );
-          yield* eventually(conflicts.state(id), (s) => s?.reviewed === true);
+          yield* eventually(conflicts.get(id), (s) => s?.reviewed === true);
         })
       );
       it.effect("healing an already queued operation retargets it without superseding its stable id", () =>
@@ -660,10 +664,10 @@ export const scenarios = <E>({
           const id = itemId("queuedheal");
           const operation = opId("queuedheal");
           yield* items.send(id, V.ObserveItem.make({ observation: observe("queuedheal") }));
-          yield* eventually(ops.state(operation), (s) => s?.status === "queued");
+          yield* eventually(ops.get(operation), (s) => s?.status === "queued");
           yield* items.send(id, V.ReturnItemToPending.make({ operationId: operation }));
-          yield* eventually(ops.state(operation), (s) => s?.input.generation === 2);
-          const state = yield* ops.state(operation);
+          yield* eventually(ops.get(operation), (s) => s?.input.generation === 2);
+          const state = yield* ops.get(operation);
           expect(state).toMatchObject({ status: "queued", attempts: 0 });
         })
       );
@@ -703,7 +707,7 @@ export const scenarios = <E>({
             });
             expect(expired.events).toEqual([]);
             yield* deadline({ key: ref, source: ref, route: undefined, event, state: undefined, envelope });
-            const state = yield* ops.state(id);
+            const state = yield* ops.get(id);
             expect(state).toMatchObject({ status: "succeeded", attempts: 1 });
             yield* failures({
               key: ref,
@@ -713,7 +717,7 @@ export const scenarios = <E>({
               state: null,
               envelope,
             });
-            const retained = yield* ops.state(id);
+            const retained = yield* ops.get(id);
             expect(retained).toEqual(state);
           })
       );
@@ -725,26 +729,26 @@ export const scenarios = <E>({
           const intruder = itemId("intruder");
           const held = opId("owner");
           yield* items.send(owner, V.ObserveItem.make({ observation: observe("owner") }));
-          yield* eventually(ops.state(held), (s) => s !== null);
+          yield* eventually(ops.get(held), (s) => s !== null);
           // A replayed observation names an operation another item owns: QueueOperation refuses it permanently.
           yield* items.send(
             intruder,
             V.ObserveItem.make({ observation: { ...observe("intruder"), operationId: held } })
           );
-          yield* eventually(items.state(intruder), (s) => s?.status === "error");
+          yield* eventually(items.get(intruder), (s) => s?.status === "error");
           yield* items.send(
             intruder,
             V.ObserveItem.make({
               observation: { ...observe("intruder"), operationId: held, generation: 2, digest: "sha256:b" },
             })
           );
-          yield* eventually(items.state(intruder), (s) => s?.observation.generation === 2 && s.status === "error");
-          const failed = yield* items.state(intruder);
+          yield* eventually(items.get(intruder), (s) => s?.observation.generation === 2 && s.status === "error");
+          const failed = yield* items.get(intruder);
           expect(failed?.slots.pipe(H.get("uploadFile"))).toEqual(O.some(held));
           // Healing the intruder queues a fresh operation and leaves the owner's operation alone.
           yield* items.send(intruder, V.ReturnItemToPending.make({ operationId: opId("intruderheal") }));
-          yield* eventually(ops.state(opId("intruderheal")), (s) => s?.status === "queued");
-          const owned = yield* ops.state(held);
+          yield* eventually(ops.get(opId("intruderheal")), (s) => s?.status === "queued");
+          const owned = yield* ops.get(held);
           expect(owned).toMatchObject({ status: "queued", input: { itemId: owner, generation: 1 } });
         })
       );
@@ -770,7 +774,7 @@ export const scenarios = <E>({
               },
             })
           );
-          yield* eventually(conflicts.state(id), (s) => s !== null);
+          yield* eventually(conflicts.get(id), (s) => s !== null);
           const review = (operationId: V.OperationId) =>
             conflicts.send(
               id,
@@ -788,10 +792,10 @@ export const scenarios = <E>({
           yield* review(held);
           // The second review only applies if the refused first one left the conflict open.
           yield* review(opId("refusedfresh"));
-          yield* eventually(conflicts.state(id), (s) => s?.reviewed === true);
-          const fresh = yield* ops.state(opId("refusedfresh"));
+          yield* eventually(conflicts.get(id), (s) => s?.reviewed === true);
+          const fresh = yield* ops.get(opId("refusedfresh"));
           expect(fresh).toMatchObject({ status: "queued", input: { itemId: itemId("refusedreview") } });
-          const untouched = yield* ops.state(held);
+          const untouched = yield* ops.get(held);
           expect(untouched).toMatchObject({ status: "queued", input: { itemId: itemId("refusedheld") } });
         })
       );
@@ -815,7 +819,7 @@ export const scenarios = <E>({
               },
             })
           );
-          yield* eventually(conflicts.state(id), (s) => s !== null);
+          yield* eventually(conflicts.get(id), (s) => s !== null);
           yield* conflicts.send(
             id,
             V.ReviewConflict.make({
@@ -826,8 +830,8 @@ export const scenarios = <E>({
               healOperationId: opId("untrackedheal"),
             })
           );
-          yield* eventually(conflicts.state(id), (s) => s?.reviewed === true);
-          const untracked = yield* items.state(itemId("untrackedheal"));
+          yield* eventually(conflicts.get(id), (s) => s?.reviewed === true);
+          const untracked = yield* items.get(itemId("untrackedheal"));
           expect(untracked).toBe(null);
         })
       );
@@ -839,7 +843,7 @@ export const scenarios = <E>({
           const id = opId("untrackedfail");
           const ref = V.SyncOperation.ref(id);
           const receipt = yield* ops.send(id, V.QueueOperation.make({ input: input("untrackedfail") }));
-          const state = yield* ops.state(id);
+          const state = yield* ops.get(id);
           yield* failures({
             key: ref,
             source: ref,
@@ -855,7 +859,7 @@ export const scenarios = <E>({
               correlationId: "failure-replay",
             },
           });
-          const untracked = yield* items.state(itemId("untrackedfail"));
+          const untracked = yield* items.get(itemId("untrackedfail"));
           expect(untracked).toBe(null);
         })
       );
@@ -864,10 +868,10 @@ export const scenarios = <E>({
           const list = yield* V.DestinationList;
           const queue = yield* V.OperationQueue;
           const status = yield* V.VaultSyncStatus;
-          yield* eventually(list.query(V.WorkspaceKey.make("1:1")), O.isSome);
-          const rows = yield* eventually(queue.query(V.SyncDestination.ref(destination)), O.isSome);
+          yield* eventually(list.get(V.WorkspaceKey.make("1:1")), O.isSome);
+          const rows = yield* eventually(queue.get(V.SyncDestination.ref(destination)), O.isSome);
           expect(O.isSome(rows) && H.size(rows.value)).toBeGreaterThan(0);
-          yield* eventually(status.query(V.SyncDestination.ref(destination)), O.isSome);
+          yield* eventually(status.get(V.SyncDestination.ref(destination)), O.isSome);
         })
       );
     });

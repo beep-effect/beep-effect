@@ -8,7 +8,7 @@ import * as Domain from "@alchemy.run/domain";
 import * as H from "effect/HashMap";
 import * as S from "effect/Schema";
 import { ScopeDenied } from "./Session.context.ts";
-import { authorizeVaultSync, Session } from "./Session.middleware.ts";
+import { Session } from "./Session.middleware.ts";
 import { SyncConflict } from "./SyncConflict.aggregate.ts";
 import { ConflictRecord } from "./SyncConflict.command.ts";
 import { SyncDestination } from "./SyncDestination.aggregate.ts";
@@ -26,7 +26,6 @@ import { SyncDestination } from "./SyncDestination.aggregate.ts";
 export class OpenConflicts extends Domain.View("OpenConflicts", {
   middleware: [Session],
   rejects: [ScopeDenied],
-  validate: (request) => authorizeVaultSync(`OpenConflicts.${request.mode}`, { key: request.key }),
   from: [SyncConflict],
   key: SyncDestination,
   state: S.HashMap(S.String, ConflictRecord),

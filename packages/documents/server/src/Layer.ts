@@ -15,6 +15,7 @@ import {
 } from "@beep/documents-use-cases/aggregates/VaultSync";
 import * as Cause from "effect/Cause";
 import * as Config from "effect/Config";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -138,6 +139,7 @@ const ModelHost = VaultSyncPassModel.layer(
   Layer.provide(BoxMirrorLive),
   Layer.provide(Layer.mergeAll(LegacySyncAuditLive, BoxMirrorNoEvidenceLive, VaultSyncRootFromWorkspaceLive)),
   Layer.provide(AlchemyPostgres.layer(platformConfig)),
+  Layer.provide(SecureRandom.layerWebCrypto),
   // A store whose event tables cannot be created is not a recoverable sync state.
   Layer.orDie
 );
