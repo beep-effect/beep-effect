@@ -2551,9 +2551,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const diagnostic = stepByName(steps, diagnosticName);
       expect(diagnostic.env).toEqual({ SOURCE_REPORT: "${{ steps.inspection.outputs.report }}" });
       expect(diagnostic.run).toContain('test "$(git rev-parse HEAD)" = "$GITHUB_SHA"');
-      expect(diagnostic.run).toContain(
-        "/usr/bin/python3 -I -S goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py"
-      );
+      expect(diagnostic.run).toContain("bun --no-env-file run beep cache producer-diagnose");
+      expect(diagnostic.run).not.toContain("python");
       expect(diagnostic.run).toContain('--source-report "$SOURCE_REPORT" --output "$diagnostic"');
       expect(diagnostic.run).toContain('--revision "$GITHUB_SHA"');
       expect(stepIndexByName(steps, "Write bounded source inspection")).toBeLessThan(
@@ -2570,6 +2569,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         SOURCE_REPORT: "${{ steps.inspection.outputs.report }}",
         DIAGNOSTIC_REPORT: "${{ steps.dependency-diagnostics.outputs.report }}",
       });
+      expect(publication.run).toContain("bun --no-env-file run beep cache producer-diagnose");
+      expect(publication.run).not.toContain("python");
       expect(publication.run).toContain('--publication-only --source-report "$SOURCE_REPORT"');
       expect(publication.run).toContain('--output "$DIAGNOSTIC_REPORT"');
       expect(publication.run).toContain('>> "$GITHUB_OUTPUT"');
@@ -2693,8 +2694,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assertPrunesAptSourcesBefore(hostSetup, '"${privilege[@]}" apt-get update');
       expect(stepIndexByName(steps, hostTools)).toBeLessThan(stepIndexByName(steps, "Build pinned portable candidate"));
       const install = stepByName(steps, "Install pinned portable build tools");
-      expect(install.run).toContain("--require-hashes");
-      expect(install.run).toContain("--only-binary=:all:");
+      expect(install.run).not.toMatch(/python3|pip install|venv/u);
+      expect(install.run).toContain("https://ziglang.org/download/0.14.1/zig-x86_64-linux-0.14.1.tar.xz");
+      expect(install.run).toContain("24aeeec8af16c381934a6cd7d95c807a8cb2cf7df9fa40d359aa884195c4716c");
+      expect(install.run).toContain("cb9508149ee63d60e5110ff24b527ab25ed418a6329252aa4f86868197c55bf6");
+      expect(install.run).toContain("sha256sum --check --strict");
+      expect(install.run).toContain('test "$("$tools/bin/zig" version)" = "0.14.1"');
       const buildRequirements = yield* fs.readFileString(`${root}/infra/r2-cache/policy-build-requirements.txt`);
       expect(buildRequirements).toContain("cargo-zigbuild==0.20.1");
       expect(buildRequirements).toContain(
@@ -2708,14 +2713,15 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(build.run).toContain("infra/r2-cache/policy.sh cargo-build-musl");
       expect(build.run).toContain("infra/r2-cache/policy.sh prepare");
       expect(build.run).toContain("readelf -lW");
-      expect(build.run).toContain("size+len(encoded)>16*1024*1024");
-      expect(build.run).toContain("len(encoded)>64*1024");
+      expect(build.run).not.toContain("python");
+      expect(build.run).toContain("size + manifest > 16*1024*1024");
+      expect(build.run).toContain("manifest > 64*1024");
       expect(build.run).toContain("independent approval and runtime qualification are required");
-      expect(build.run).toContain("'toolExecutables':{name:executable_digest(path)");
-      expect(build.run).toContain("['rustup','which','rustc']");
-      expect(build.run).toContain("'hostCc':shutil.which('cc')");
-      expect(build.run).toContain("'hostLinker':shutil.which('ld')");
-      expect(build.run).toContain("'readelf':shutil.which('readelf')");
+      expect(build.run).toContain("toolExecutables: $toolExecutables");
+      expect(build.run).toContain('rustc_path="$(rustup which rustc)"');
+      expect(build.run).toContain('"hostCc:cc:cc --version"');
+      expect(build.run).toContain('"hostLinker:ld:ld --version"');
+      expect(build.run).toContain('"readelf:readelf:readelf --version"');
       expect(stepByName(steps, "Retain candidate for at most one day").with).toEqual({
         name: "cache-producer-adapter-${{ github.run_id }}-${{ github.run_attempt }}",
         path: "${{ steps.scratch.outputs.artifact }}",

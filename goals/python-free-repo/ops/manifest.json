@@ -34,7 +34,11 @@
     "goals/python-free-repo/GOAL.md",
     "goals/python-free-repo/research/SOURCES.md"
   ],
-  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
+  "researchReports": [
+    "research/OPPORTUNITIES.md",
+    "research/SOURCES.md",
+    "research/r2-cache-port.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

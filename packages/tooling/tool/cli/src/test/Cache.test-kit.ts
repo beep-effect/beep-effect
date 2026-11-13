@@ -26,8 +26,20 @@ export {
   validateCacheProducerImport,
 } from "../commands/Cache/Cache.acceptance.ts";
 export {
-  CacheAdapterHostEvent,
+  type CacheAdapterObservationExpectation,
+  type CacheOwnedAdapter,
+  CacheOwnedAdapterHost,
+  type CacheOwnedAdapterHostShape,
+  cacheOwnedAdapterHostLive,
+  cacheOwnedAdapterLauncher,
+  observeCacheAdapterSnapshot,
+} from "../commands/Cache/Cache.adapter.host.ts";
+export {
+  CacheAdapterProcessSnapshot,
   CacheAdapterRuntimeObservation,
+  CacheAdapterWriterAfterLoad,
+  CacheAdapterWriterReady,
+  CacheOwnedAdapterStartup,
   CacheProducerAdapterLaunch,
   CacheProducerAdapterReceipt,
 } from "../commands/Cache/Cache.adapter.schemas.ts";
@@ -47,6 +59,16 @@ export {
   inspectCacheDependencyTree,
   readCacheDependencyMaterialization,
 } from "../commands/Cache/Cache.dependencies.ts";
+export {
+  compareCacheDiagnosticSource,
+  encodeCacheDiagnosticJson,
+  encodeCacheDiagnosticRefusal,
+  observeCacheDependencies,
+  planCacheDiagnosticPublication,
+  readCacheDiagnosticSource,
+  snapshotCacheDependencies,
+  writeCacheDependencyDiagnostic,
+} from "../commands/Cache/Cache.diagnostics.ts";
 export {
   decodeCacheExperimentText,
   hashCacheExperimentExecutable,
@@ -108,6 +130,32 @@ export {
   writeCacheIdentityLintProfile,
 } from "../commands/Cache/Cache.profile.ts";
 export { serveCachePrivateSocket } from "../commands/Cache/Cache.protocol.fixture.ts";
+export { cacheR2Command } from "../commands/Cache/Cache.r2.command.ts";
+export {
+  CacheR2FleetReceipt,
+  CacheR2FleetRow,
+  CacheR2FleetStatus,
+  CacheR2Marker,
+  CacheR2PayloadRow,
+  CacheR2ProbeMode,
+  CacheR2ProbeReceipt,
+  CacheR2StoredReceipt,
+  CacheR2TaskCache,
+  CacheR2TaskExecution,
+  CacheR2TaskRow,
+} from "../commands/Cache/Cache.r2.schemas.ts";
+export {
+  CacheR2ProbeIo,
+  type CacheR2ProbeIoShape,
+  type CacheR2Request,
+  type CacheR2Response,
+  type CacheR2TurboTuple,
+  cacheR2ProbeFixture,
+  layerCacheR2ProbeIo,
+  runCacheR2Fleet,
+  runCacheR2Probe,
+  selectCacheR2SummaryTask,
+} from "../commands/Cache/Cache.r2.ts";
 export {
   CacheHostedProducerApproval,
   CacheHostedProducerCompleteReport,

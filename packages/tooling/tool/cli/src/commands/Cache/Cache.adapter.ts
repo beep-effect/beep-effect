@@ -5,23 +5,22 @@
  * @since 0.0.0
  */
 
-import { $RepoCliId } from "@beep/identity/packages";
 import { OutputBound, runCapturedStreams } from "@beep/repo-cli-kit/process/index";
-import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { Sha256Hex } from "@beep/schema";
-import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import * as Path from "effect/Path";
-import * as Pull from "effect/Pull";
-import * as ChildProcess from "effect/process/ChildProcess";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { CacheAdapterHostEvent, CacheProducerAdapterReceipt } from "./Cache.adapter.schemas.ts";
+import { CacheOwnedAdapterHost } from "./Cache.adapter.host.ts";
+import {
+  CacheAdapterWriterAfterLoad,
+  CacheAdapterWriterReady,
+  CacheOwnedAdapterStartup,
+  CacheProducerAdapterReceipt,
+} from "./Cache.adapter.schemas.ts";
 import { readCacheDependencyMaterialization } from "./Cache.dependencies.ts";
 import { CacheCommandError } from "./Cache.errors.ts";
 import { hashCacheExperimentExecutable, makePrivateSupervisorStorage, requireCacheLinuxX64 } from "./Cache.evidence.ts";
@@ -29,21 +28,16 @@ import type { CacheSignedPilotRequest } from "./Cache.pilot.signed.schemas.ts";
 import type { CacheProducerUploadRuntime } from "./Cache.workflow.schemas.ts";
 import type { CacheProducerUploadApproval } from "./Cache.workflow.upload.schemas.ts";
 
-const $I = $RepoCliId.create("commands/Cache/Cache.adapter");
-const Startup = S.Struct({ adapter: S.NonEmptyString, sha256: Sha256Hex, env: S.Record(S.String, S.String) }).pipe(
-  $I.annoteSchema("CacheAdapterStartupFrame", {
-    description: "One private startup frame consumed only through the owning host pipe.",
-  })
-);
-
 /**
  * Own the actual bounded backend only around the approved upload phase.
  *
  * **Details**
- * The worker receives neither storage credentials nor the host control pipe.
+ * The worker receives neither storage credentials nor the host's unit handles.
  * Successful use is returned only after the same executable/process/listener
- * passed its post-load check and the owning host completed cleanup. Exceptions
- * and interruption terminate the scoped host, whose finalizer stops its units.
+ * passed its post-load check and the owned host completed cleanup. Exceptions
+ * and interruption close the scope, whose finalizer stops the owned unit and
+ * its `systemd-run` client. The host is the in-process
+ * {@link CacheOwnedAdapterHost} (formerly the `policy_runtime.py` subprocess).
  * The canonical Bun CLI owns this helper and its admission/process services.
  * A missing systemd user manager fails explicitly. The caller admits the entire
  * upload before acquisition; the load callback has nine minutes after readiness,
@@ -74,7 +68,6 @@ export const withCacheProducerAdapter = Effect.fn("CacheAdapter.withOwnedBackend
     Effect.gen(function* () {
       yield* requireCacheLinuxX64("Owned adapter supervision requires Linux x64.");
       const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
       const launch = yield* runtime.adapter.pipe(
         Effect.fromOption(() => CacheCommandError.new("Producer upload requires an owned adapter launch capability."))
       );
@@ -103,7 +96,7 @@ export const withCacheProducerAdapter = Effect.fn("CacheAdapter.withOwnedBackend
         { concurrency: 1 }
       );
       const directory = yield* makePrivateSupervisorStorage(root, mounts);
-      const input = yield* JsonStringCodec(Startup).encode({
+      const startup = CacheOwnedAdapterStartup.make({
         adapter: executable,
         sha256: backendSha256,
         env: {
@@ -125,64 +118,30 @@ export const withCacheProducerAdapter = Effect.fn("CacheAdapter.withOwnedBackend
           OTEL_SDK_DISABLED: "true",
         },
       });
-      const handle = yield* ChildProcess.make(
-        "/usr/bin/python3",
-        ["-I", "-B", path.join(root, "infra/r2-cache/policy_runtime.py"), "owned-host"],
-        {
-          cwd: directory,
-          extendEnv: false,
-          env: { PATH: "/usr/bin", HOME: directory },
-          stdin: { stream: Stream.make(new TextEncoder().encode(`${input}\n`)), endOnDone: false },
-          stdout: "pipe",
-          stderr: "ignore",
-          forceKillAfter: Duration.seconds(30),
-        }
+      const host = yield* CacheOwnedAdapterHost;
+      const adapter = yield* host.start(startup, directory).pipe(Effect.timeout(Duration.seconds(20)));
+      const ready = yield* S.decodeUnknownEffect(CacheAdapterWriterReady)(adapter.ready).pipe(
+        Effect.mapError(() => CacheCommandError.new("Owned adapter host omitted readiness."))
       );
-      const pull = yield* handle.stdout.pipe(
-        Stream.decodeText(),
-        Stream.splitLines,
-        Stream.mapEffect(
-          Effect.fn("CacheAdapter.decodeHostFrame")(function* (line) {
-            if (Str.length(line) > 4096)
-              return yield* CacheCommandError.new("Owned adapter host frame exceeds its bound.");
-            return yield* JsonStringCodec(CacheAdapterHostEvent).decode(line);
-          })
-        ),
-        Stream.rechunk(1),
-        Stream.toPull
-      );
-      const take = Effect.fn("CacheAdapter.takeHostFrame")(() =>
-        pull.pipe(
-          Pull.catchDone(() => CacheCommandError.new("Owned adapter host closed before its required frame.")),
-          Effect.map(A.headNonEmpty),
-          Effect.timeout(Duration.seconds(20))
+      const result = yield* use.pipe(Effect.timeout(Duration.minutes(9)));
+      const after = yield* adapter.verify.pipe(
+        Effect.timeout(Duration.seconds(20)),
+        Effect.flatMap(S.decodeUnknownEffect(CacheAdapterWriterAfterLoad)),
+        Effect.mapError((cause) =>
+          CacheCommandError.new("Owned adapter host omitted its post-load observation.", cause)
         )
       );
-      const ready = yield* take();
-      if (!CacheAdapterHostEvent.guards.ready(ready))
-        return yield* CacheCommandError.new("Owned adapter host omitted readiness.");
-      const result = yield* use.pipe(Effect.timeout(Duration.minutes(9)));
-      yield* Stream.run(Stream.make(new TextEncoder().encode("verify\n")), handle.stdin);
-      const after = yield* take();
-      if (!CacheAdapterHostEvent.guards["after-load"](after))
-        return yield* CacheCommandError.new("Owned adapter host omitted its post-load observation.");
-      yield* Stream.run(Stream.make(new TextEncoder().encode("stop\n")), handle.stdin);
-      const cleaned = yield* take();
-      if (
-        !CacheAdapterHostEvent.guards.cleaned(cleaned) ||
-        (yield* handle.exitCode.pipe(Effect.timeout(Duration.seconds(20)))) !== 0
-      )
-        return yield* CacheCommandError.new("Owned adapter host did not finish successful cleanup.");
-      yield* pull.pipe(
-        Effect.flatMap(() => CacheCommandError.new("Owned adapter host emitted trailing frames.")),
-        Pull.catchDone(() => Effect.void),
-        Effect.timeout(Duration.seconds(5))
+      yield* adapter.stop.pipe(
+        Effect.timeout(Duration.seconds(20)),
+        Effect.mapError((cause) =>
+          CacheCommandError.new("Owned adapter host did not finish successful cleanup.", cause)
+        )
       );
       const receipt = yield* S.decodeEffect(CacheProducerAdapterReceipt)({
         backendSha256,
         targetSha256: approval.targetSha256,
-        ready: ready.observation,
-        afterLoad: after.observation,
+        ready,
+        afterLoad: after,
         cleaned: true,
       });
       return Tuple.make(result, receipt);
