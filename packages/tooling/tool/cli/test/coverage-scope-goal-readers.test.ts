@@ -67,6 +67,8 @@ const SAMPLES: Readonly<Record<string, string>> = {
     "explorations/beep-ci-operational-ontology/ontology/extraction/s6/graphs/abox.ttl",
   "^explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/":
     "explorations/beep-ci-operational-ontology/ontology/extraction/s4/beep-ci-ops/corpus/run4-fleet/MANIFEST.yaml",
+  "^explorations/beep-ci-operational-ontology/research/(control-interventions\\.yaml|evidence/journal-snapshot-2026-10-01/journal\\.redacted\\.ndjson)$":
+    "explorations/beep-ci-operational-ontology/research/control-interventions.yaml",
   "^explorations/legal-ontology-landscape/assets/manifest\\.jsonl$":
     "explorations/legal-ontology-landscape/assets/manifest.jsonl",
   "^goals/[^/]+/ops/.+\\.ts$": "goals/demo-packet/ops/check-scope.ts",
