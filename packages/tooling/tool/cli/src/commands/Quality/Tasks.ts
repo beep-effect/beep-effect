@@ -1193,10 +1193,15 @@ const resolveDefaultAffectedCoverageTaskOptions = Effect.fn("QualityTasks.resolv
   ): Effect.fn.Return<CoverageTaskOptions, QualityTaskConfigurationError, QualityTaskEnvironment> {
     const base = yield* resolveDefaultCoverageBase(repoRoot);
     return yield* O.match(base, {
+      // No base to plan from still leaves a base to judge against: the committed
+      // baseline at HEAD, so an uncommitted lowered row is never its own floor.
       onNone: () =>
         Console.log(
-          `[beep-cli] coverage: full fallback (TURBO_SCM_BASE is unset and no origin/main merge base resolves for HEAD; pass ${COVERAGE_FULL_ARG} to request the full proof explicitly)`
-        ).pipe(Effect.andThen(resolveCoverageTaskOptions(repoRoot, args))),
+          `[beep-cli] coverage: full fallback (TURBO_SCM_BASE is unset and no origin/main merge base resolves for HEAD; pass ${COVERAGE_FULL_ARG} to request the full proof explicitly); judging against the baseline committed at HEAD`
+        ).pipe(
+          Effect.andThen(resolveCoverageTaskOptions(repoRoot, args)),
+          Effect.map((options): CoverageTaskOptions => ({ ...options, comparisonBase: "HEAD" }))
+        ),
       onSome: (resolved) =>
         Console.log(
           `[beep-cli] coverage: bare local run defaults to --affected against ${resolved}; pass ${COVERAGE_FULL_ARG} for the full sharded proof (hosted Test Unit is the proof of record)`

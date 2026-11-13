@@ -448,9 +448,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         stepIndexByName(securitySteps, "Check hosted settings policy"),
         stepIndexByName(securitySteps, "Dependency review")
       );
-      const localPolicy = stepByName(jobSteps(jobs, "verify"), "Check workflow policy");
-      expect(localPolicy.env).toBeUndefined();
-      expect(localPolicy.run).toBe("bun run beep ci workflow-lint");
+      // Workflow policy runs in the Repo Sanity lane body (no separate step,
+      // so its red cannot skip the body); that step carries no secret env.
+      expect(A.some(jobSteps(jobs, "verify"), (step) => step.name === "Check workflow policy")).toBe(false);
+      expect(stepByName(jobSteps(jobs, "verify"), "Run verification lane").env).toBeUndefined();
     })
   );
 
@@ -1962,7 +1963,6 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "check.yml:Test Integration (${{ matrix.partition }})",
         "check.yml:Property Laws (${{ matrix.partition }})",
         "check.yml:Coverage Artifact Migration",
-        "check.yml:Test Integration Partitions",
         "cache-warm.yml:Warm Turbo cache",
         // Manual source inspection is operational evidence, not a required quality lane.
         "cache-local-observe.yml:Observe local cache pilot",
@@ -2007,12 +2007,17 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       ];
       const readDirectory22 = yield* fs.readDirectory(`${root}/.github/workflows`);
       const files = A.filter(readDirectory22, Str.endsWith(".yml"));
+      let observedContexts: ReadonlyArray<string> = [];
       for (const file of files) {
         const workflow = Str.replace(/\.yml$/, "")(file);
         const text = yield* fs.readFileString(`${root}/.github/workflows/${file}`);
         const workflowPolicyDiagnostics23 = yield* workflowPolicyDiagnostics(file, text);
         expect(workflowPolicyDiagnostics23).toEqual([]);
         const contexts = yield* workflowJobContexts(file, text);
+        observedContexts = A.appendAll(
+          observedContexts,
+          A.map(contexts, (context) => `${file}:${context}`)
+        );
         const declared = A.map(
           A.filter(CI_LANE_DESCRIPTORS, (row) => row.workflow === workflow),
           (row) => row.contextName
@@ -2025,6 +2030,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         ).toEqual([]);
         expect(A.filter(declared, (context) => !A.contains(contexts, context))).toEqual([]);
       }
+      // A stale exemption would silently admit a future job of that name without a lane descriptor.
+      expect(A.filter(exemptions, (exemption) => !A.contains(observedContexts, exemption))).toEqual([]);
     })
   );
   it.effect("keeps reusable Heavy callers compatible with the protected producer permission ceiling", () =>

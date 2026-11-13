@@ -1,0 +1,8 @@
+---
+title: "The message pin ships on one conversation list call"
+date: 2026-11-10
+lane: "feat/outbox-draft-basis"
+reversal: "Cut the message kind from the pin union by decision file before the first pull request merges; after it, stop accepting message pins in create_draft and keep decoding recorded ones."
+---
+
+Settles the P0 message pin question and the moved-message hazard. A read-only probe on the firm tenant (counts only, no mailbox write) showed that the driver's existing listMessages accepts $filter=conversationId eq '<id>' on the outbox mailbox, and that the page spans folders: 13 messages of one conversation came back from 2 folders, each with from, internetMessageId and receivedDateTime. So 'a later message from another sender' is one list call, and the same call finds a pinned message by its internetMessageId after it was moved and its Graph id changed. The message pin therefore ships. Creation costs one get and one list per message pin; recheck costs one list. The pin stores the conversationId beside the Graph id as a lookup key that is never compared. The view is the pinned message's internetMessageId and newestOtherReply: the newest message in the conversation that is not a draft, arrived after the pinned message and was not sent from the outbox mailbox. A conversation of more than one page (500 messages) reads as Unreadable. The sender test compares the from address with the configured mailbox; a mailbox configured as an object id matches no sender, which over-reports and never under-reports. No change to @beep/m365 is needed. Evidence: research/2026-11-10-p0-message-pin-probe.md. Agent-decided under the packet's cut rule.
