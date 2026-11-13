@@ -128,6 +128,7 @@ export const canonicalJson = Effect.fn("PartyKey.canonicalJson")(function* (inpu
     A.sort(basisEntries(basis), byKeyCodePoint),
     ([key, value]) => `"${escapeJsonString(key)}":"${escapeJsonString(value)}"`
   );
+  // biome-ignore lint/plugin/no-hand-rolled-canonical-json: census E5, pinned: PartyKey v1 bytes
   return `{${A.join(members, ",")}}`;
 });
 

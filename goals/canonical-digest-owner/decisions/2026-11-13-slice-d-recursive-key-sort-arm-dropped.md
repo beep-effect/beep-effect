@@ -1,0 +1,8 @@
+---
+title: "The recursive key-sort arm is dropped"
+date: 2026-11-13
+lane: "feat/canonical-digest-owner-guard"
+reversal: "Add the arm to no-hand-rolled-canonical-json.grit with fixtures; it reports E8 and E9 on today's tree, which already carry suppressions."
+---
+
+Slice D call on the stretch arm: a self-recursive function, declared or assigned to a variable, whose body sorts record keys (R.keys, R.toEntries, Object.keys, Object.entries or Struct.keys under A.sort, .sort, .toSorted or a pipe into A.sort) and calls itself by name. Measured over every TS and JS file in packages, apps and infra it reports exactly two sites, OpenclawRender.ts encodeCanonicalValue (E8) and ToolNames.ts renderCanonicalValue (E9). Both are census rows, so it passes the precision test, but the template arm already reports both. Run against the four legacy encoders as they were before slice C it reports none: E1 sorted a filtered entry list rather than R.keys, E3 and E4 recursed mutually through a second function, and E4 was point-free. E10 sortKeys is not recursive, so the arm misses it too. It needs a whole-body contains on every variable declarator and function declaration. Alone, over the same files, it cost 178.8 s CPU and 4.8 s wall, against 21.7 s and 1.3 s for the shipped rule and 12.0 s and 1.2 s with no plugin: about 167 s of CPU for the arm against about 10 s for the whole shipped rule. It adds no recall at that price, so the rule ships with the three brace arms only. Rejected: keeping it for symmetry with the census definition of an encoder, which sorts keys whether or not it builds braces; a guard on that definition needs data flow, which GritQL in Biome does not have.
