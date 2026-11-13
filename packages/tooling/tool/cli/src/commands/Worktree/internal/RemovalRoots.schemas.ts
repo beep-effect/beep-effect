@@ -23,9 +23,9 @@ const $I = $RepoCliId.create("commands/Worktree/internal/RemovalRoots.schemas");
  * **Details**
  *
  * `managed` is the clone's sibling `-worktrees` directory, `nested` is the
- * clone's Claude Code worktrees directory, `t3` is `<home>/.t3/worktrees/<clone
- * name>`, and `fleet` is a root listed in `BEEP_FLEET_ROOTS` or the
- * repository's `roots.json`.
+ * clone's Claude Code worktrees directory, `t3` is T3 Code's directory for the
+ * clone under `.t3/worktrees` in the home directory, and `fleet` is a root
+ * listed in `BEEP_FLEET_ROOTS` or the repository's `roots.json`.
  *
  * **Example** (Recognize the T3 root)
  *
