@@ -270,6 +270,30 @@ Lane chore/yeet-delete-legacy-merge
 
 Reverse: Revert this PR; the legacy call returns behind BEEP_YEET_MERGE_ENDPOINT=legacy.
 
+### How the pilot's kill criteria are measured, 2026-11-13
+
+The criteria in SPEC.md are sentences; the record gives each one a number a later session can read. Used: stacks in `GET /repos/{owner}/{repo}/stacks` created inside the clock on base main whose two layers each carry a lane's own change. Fewer than four in the fourteen days fires the first criterion, because two a week is a rate, not a floor for each week. Probe, test and acceptance stacks do not count, nor does a stack that was unstacked or closed with nothing merged. Wait: the minutes a review window was the only thing holding the stack, from every other gate criterion being met on both layers to the later window elapsing. A median above 40 minutes, two windows at the default length, fires the second. Time spent on hosted CI or on review fixes is not window wait: an ordinary pull request pays it too, and stack #3190 took 77 minutes with none of them spent on a window. Force-push: one stack that landed only after a lane rewrote a published branch, or after someone pressed Rebase stack for it, fires the third. The stack listing is the count of record, so a lane that forgets its row does not shrink the census.
+
+Lane docs/stack-pilot-record
+
+Reverse: Judge the second criterion on ready-to-merge minutes, or the first on each week separately; the GitHub API still holds the instants needed for either.
+
+### The base-conflict row on a layer is fixed now; the label on a docs-only layer stays, 2026-11-13
+
+Slice C left two items for the pilot to justify. No pilot stack exists yet, so both are judged on what the code, the stack test and the repository's rules show. The base-conflict row: the monitor builds it from the run's base, which for a layer is the trunk, so a layer's row reads `base conflict with origin/main` and its remedy `merge origin/main and push`, while GitHub computes the layer's conflict against the parent's branch. Following the row does not clear the conflict and puts main's changes into the layer's diff. The yeet skill calls the row the instruction and AGENTS.md makes it unconditional, so it is fixed in its own small PR before a pilot stack meets it; otherwise the pilot would be measuring a wrong sentence in the tool. The label: a docs-only layer on a code parent gets `ready-for-heavy` because the label step reads the whole range above main. Hosted CI reads the layer's own diff and skips Heavy (`verdict=skip-satisfied`), as it did on the three hand-labelled docs-only layers of the stack test, so the cost is one Heavy Admit run whose jobs skip. The label stays, and is revisited if a pilot row shows a labelled docs-only layer running a Heavy lane or holding on a required Heavy context.
+
+Lane docs/stack-pilot-record
+
+Reverse: Revert the base-conflict fix PR; or decide the label from the layer's own paths in applyHeavyAdmissionLabel.
+
+### The pilot record opens before the first stack and its clock runs from 2026-11-13, 2026-11-13
+
+PLAN.md said to start the pilot record on the first routine stack. None was open on 2026-11-13: the stack listing held only the test, probe and acceptance stacks, and no open pull request had a base other than main. The record opens anyway (research/stack-pilot-2026-11.md), and its clock is set instead of left waiting: fourteen days from 2026-11-13, the day `yeet publish --stack-on` reached main (#3224), to the end of 2026-11-26. A clock that starts on the first stack never starts if nobody stacks, and then the first kill criterion, fewer than two stacks a week, could never fire. Lanes learn of the row from one step in the yeet skill (references/stacks.md) and a line to the orchestrator. Stack #3190 is the reference row and is not counted.
+
+Lane docs/stack-pilot-record
+
+Reverse: Restart the clock on the first routine stack's creation date and move the verdict date with it.
+
 ### yeet ready never pushes on a stack layer; the request comment is the wake, 2026-11-13
 
 Since #2791 `yeet ready` wakes beep-reviewer with an exact-head issue comment for a PR the shared login authored, and pushes the empty S32 commit only as the fallback for an author or repository the comment routine does not cover. The P0 probes showed the comment waking the reviewer on a layer with no push: #3154 (position 1 of 2) sat ready for four minutes unreviewed, then got its summary 2 minutes 32 seconds after the comment, on an unchanged head. So slice C adds no new wake. It removes the fallback on every stack layer, top included, because a push below the top moves the head off the base of the layer above and a push on the top restarts a window the gate is about to read. An uncovered layer gets a warning with the manual comment body.
