@@ -586,17 +586,20 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const work = yield* fs.makeTempDirectoryScoped({ prefix: "ready-gate-open-" });
-        const requests = yield* Ref.make<ReadonlyArray<readonly [number, string, boolean | undefined]>>([]);
+        const requests = yield* Ref.make<
+          ReadonlyArray<readonly [number, string, boolean | undefined, boolean | undefined]>
+        >([]);
         const hooks = yeetOpenReadyHooks({
           readAuthor: () => Effect.succeedSome("octocat"),
-          requestReview: (_context, prNumber, confirmedHead, allowPush) =>
-            Ref.update(requests, A.append([prNumber, confirmedHead, allowPush] as const)).pipe(
+          requestReview: (_context, prNumber, confirmedHead, allowPush, openedReady) =>
+            Ref.update(requests, A.append([prNumber, confirmedHead, allowPush, openedReady] as const)).pipe(
               Effect.as("[yeet] requested")
             ),
         });
         yield* hooks.afterOpen(RepoRunContext.make({ ...context, repoRoot: work, cwd: work }), 42, headSha);
         const got = yield* Ref.get(requests);
-        expect(got).toEqual([[42, headSha, false]]);
+        // No push, and the open time may anchor the request: this is a ready open, not a flip.
+        expect(got).toEqual([[42, headSha, false, true]]);
         const ledger = yield* readYeetReviewLaneLedger(work);
         expect(A.map(ledger.rows, (row) => row._tag)).toEqual(["flip"]);
         const logs = yield* TestConsole.logLines;

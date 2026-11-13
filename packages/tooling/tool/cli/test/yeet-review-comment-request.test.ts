@@ -271,7 +271,9 @@ it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (i
               ]),
         };
       });
-      const message = yield* requestReviewerReviewForTesting(context, 42, sha, false).pipe(provideSpawner(runner));
+      const message = yield* requestReviewerReviewForTesting(context, 42, sha, false, true).pipe(
+        provideSpawner(runner)
+      );
       expect(message).toContain("posted beep-reviewer request for #42");
       expect(A.filter(runner.spawns, (spawn) => A.contains(spawn.args, "POST"))).toHaveLength(1);
     })
@@ -291,7 +293,7 @@ it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (i
               : json(undated),
         };
       });
-      const error = yield* requestReviewerReviewForTesting(context, 42, sha, true).pipe(
+      const error = yield* requestReviewerReviewForTesting(context, 42, sha, false, true).pipe(
         provideSpawner(runner),
         Effect.flip
       );
@@ -300,7 +302,10 @@ it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (i
     })
   );
 
+  // A flipped draft whose ready event the timeline has not shown yet: its
+  // draft-era open time must not stand in, so the empty timeline refuses.
   for (const timelineReply of [
+    "[[]]",
     '[[{"event":"ready_for_review"}]]',
     "not json",
     json([

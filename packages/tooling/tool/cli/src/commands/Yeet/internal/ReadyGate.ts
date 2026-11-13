@@ -674,7 +674,8 @@ interface YeetReadyGateDependencies {
     context: RepoRunContext,
     prNumber: number,
     confirmedHead: string,
-    allowPush?: boolean
+    allowPush?: boolean,
+    openedReady?: boolean
   ) => Effect.Effect<
     string,
     YeetCommandError,
@@ -919,8 +920,8 @@ const readReviewerReadyAt = Effect.fnUntraced(function* (
   prNumber: number,
   openedAt: O.Option<DateTime.Utc>
 ) {
-  // Match ReviewWindow's latest ready_for_review event, or the open of a pull
-  // request that was never a draft. A missing transition on one that was a draft
+  // Match ReviewWindow's latest ready_for_review event, or the open a ready
+  // open passes in (`openedAt`; a flip passes none). A missing transition on one that was a draft
   // is unknown: an eventually consistent timeline must not validate a draft-era request.
   const events = yield* reviewerRequestOutput(context, [
     "api",
@@ -1015,7 +1016,8 @@ const requestReviewerReview = Effect.fn("Yeet.requestReviewerReview")(function* 
   context: RepoRunContext,
   prNumber: number,
   confirmedHead: string,
-  allowPush: boolean
+  allowPush: boolean,
+  openedReady?: boolean
 ) {
   if (!S.is(ReviewerRequestHead)(confirmedHead)) {
     return yield* YeetCommandError.make({
@@ -1036,7 +1038,15 @@ const requestReviewerReview = Effect.fn("Yeet.requestReviewerReview")(function* 
       ? yield* pushReviewerRequest(context, prNumber, confirmedHead)
       : `[yeet] no comment routine configured for this pull request author/repository; no repeated review-trigger push`;
   }
-  return yield* requestReviewerComment(context, prNumber, confirmedHead, pull.created_at);
+  // Only a ready open may anchor on the open time. After a flip the timeline
+  // can lag, and a pull request created as a draft records no convert_to_draft
+  // event, so its open time would validate a draft-era request.
+  return yield* requestReviewerComment(
+    context,
+    prNumber,
+    confirmedHead,
+    openedReady === true ? pull.created_at : O.none()
+  );
 });
 
 /**
@@ -1059,10 +1069,11 @@ const ensureReviewerRequest = Effect.fn("Yeet.ensureReviewerRequest")(function* 
   dependencies: YeetReadyGateDependencies,
   prNumber: number,
   head: string,
-  allowPush: boolean
+  allowPush: boolean,
+  openedReady?: boolean
 ) {
   const request = dependencies.requestReview ?? requestReviewerReview;
-  const message = yield* request(context, prNumber, head, allowPush).pipe(
+  const message = yield* request(context, prNumber, head, allowPush, openedReady).pipe(
     Effect.catchTag("YeetCommandError", (cause) =>
       Effect.succeed(
         `[yeet] warning: could not create the beep-reviewer re-request: ${cause.message}; ${reviewerCommentManual(prNumber, head)}`
@@ -1724,7 +1735,7 @@ export const yeetOpenReadyHooks = (dependencies: YeetReadyGateDependencies = {})
     ),
   afterOpen: Effect.fnUntraced(function* (context, prNumber, headSha) {
     yield* recordReadyTransition(context, dependencies, prNumber, headSha);
-    yield* ensureReviewerRequest(context, dependencies, prNumber, headSha, false);
+    yield* ensureReviewerRequest(context, dependencies, prNumber, headSha, false, true);
     yield* Console.log(
       `[yeet] the review window starts now: the merge gate opens no sooner than the review window (default ${Duration.toMinutes(YEET_REVIEW_WINDOW_DEFAULT)} minutes) after this open or the last push, whichever is later`
     );
