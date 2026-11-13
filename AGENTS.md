@@ -276,6 +276,10 @@ needed only for the escalation list below.
   ready PR without one. Never open a PR with raw `gh pr create` or replace a
   body with `gh pr edit --body*`: both drop the Yeet provenance footer. Use
   `bun run beep yeet gh pr body <n> --body-file <md>`, which keeps it.
+  The 10-minute rule is the `workstation` profile's: on the `worker` profile
+  (`bun run beep compute profile`) the scheduler refuses hosted-only gates and
+  `yeet publish` takes the `yeet open` posture with a heavy-admitted draft, so
+  no local proof queues.
 - Heavy admitted work and detached proofs run under systemd
   (`agent-run-<ticket>.scope`, `beep-proof-<jobId>.service`): use `--detach`
   plus `yeet job wait <jobId>` for a proof that may outlive the repair loop.

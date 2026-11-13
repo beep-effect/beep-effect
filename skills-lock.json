@@ -346,7 +346,7 @@
         ".claude/skills/remote-development-agents",
         ".agents/skills/remote-development-agents"
       ],
-      "installedTreeHash": "505662d7ea6247cf507ae75f31c33c7f131d88be023c1c106203b02235bc7ef3"
+      "installedTreeHash": "ac1514428e40e1268ab01ea7fec920d0ff2f500200e0b9827294dfe97cd5921d"
     },
     "schema-first-development": {
       "_tag": "local",
@@ -684,7 +684,7 @@
         ".claude/skills/yeet",
         ".agents/skills/yeet"
       ],
-      "installedTreeHash": "0e317cd7b611757577106d0c97ebde532bfc7c3276a20dfc69741c35989856ee"
+      "installedTreeHash": "9abb6e60ef7e6afe876c84372c40b808802a2501cdda3b603493628226dcb0b8"
     }
   }
 }
