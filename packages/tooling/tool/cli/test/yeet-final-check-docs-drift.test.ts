@@ -35,14 +35,17 @@ const GATE_TABLE = ".claude/skills/yeet/references/gates-and-proof.md";
 const gateForName = (name: string): O.Option<FinalCheckGate> =>
   A.findFirst(FinalCheckGate.literals, (gate) => A.contains(GATE_DOC_NAMES[gate], name));
 
-const collapse = (text: string) => Str.trim(text.replace(/\s+/g, " "));
+const collapse = (text: string) => Str.trim(Str.replace(/\s+/g, " ")(text));
 
 /**
  * Judge one gate list against the gates the cheap tier skips.
  * Returns the problems; an empty array means the list is exact.
  */
 const judgeGateList = (list: string): ReadonlyArray<string> => {
-  const names = A.filter(A.map(Str.split(", ")(collapse(list).replace(/,? and /g, ", ")), Str.trim), Str.isNonEmpty);
+  const names = A.filter(
+    A.map(Str.split(", ")(Str.replace(/,? and /g, ", ")(collapse(list))), Str.trim),
+    Str.isNonEmpty
+  );
   const unknown = A.filter(names, (name) => O.isNone(gateForName(name)));
   const named = A.getSomes(A.map(names, gateForName));
   const expected = A.filter(FinalCheckGate.literals, (gate) => A.isReadonlyArrayNonEmpty(GATE_DOC_NAMES[gate]));
@@ -57,15 +60,17 @@ const judgeGateList = (list: string): ReadonlyArray<string> => {
 
 const extractList = (text: string, start: string, end: string): O.Option<string> => {
   const flat = collapse(text);
-  const from = flat.indexOf(start);
-  if (from < 0) return O.none();
-  const rest = flat.slice(from + start.length);
-  const to = rest.indexOf(end);
-  return to < 0 ? O.none() : O.some(rest.slice(0, to));
+  return O.flatMap(Str.indexOf(start)(flat), (from) => {
+    const rest = Str.slice(from + start.length)(flat);
+    return O.map(Str.indexOf(end)(rest), (to) => Str.slice(0, to)(rest));
+  });
 };
 
 const gateTableRows = (text: string): ReadonlyArray<string> => {
-  const section = text.slice(text.indexOf("## Final check"));
+  const section = O.match(Str.indexOf("## Final check")(text), {
+    onNone: () => "",
+    onSome: (from) => Str.slice(from)(text),
+  });
   return A.getSomes(A.map(Str.split("\n")(section), (line) => O.fromNullishOr(/^\| `([a-z-]+)` \|/.exec(line)?.[1])));
 };
 

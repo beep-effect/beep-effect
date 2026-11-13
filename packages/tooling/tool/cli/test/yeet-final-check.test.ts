@@ -506,7 +506,7 @@ describe("finalCheckRefusal", () => {
 
   it.effect("refuses a v1 receipt on the head itself, naming the version and the re-run", () =>
     Effect.gen(function* () {
-      const legacy = yield* S.decodeUnknownEffect(S.fromJsonString(FinalCheckReceipt))(legacyV1ReceiptJson(HEAD));
+      const legacy = yield* S.decodeEffect(S.fromJsonString(FinalCheckReceipt))(legacyV1ReceiptJson(HEAD));
       expect(legacy.schemaVersion).toBe("yeet-final-check/v1");
       const refusal = finalCheckRefusal(O.some(legacy), HEAD);
       assertSome(
@@ -524,7 +524,7 @@ describe("finalCheckRefusal", () => {
       assertInclude(refusal, "added expectation-rewrite, lint-policy, lint, repo-sanity, docgen, fallow, coverage");
       assertInclude(refusal, "removed retired-gate");
       assertInclude(refusal, "re-run `bun run beep yeet final-check`");
-      const unrecorded = yield* S.decodeUnknownEffect(S.fromJsonString(FinalCheckReceipt))(
+      const unrecorded = yield* S.decodeEffect(S.fromJsonString(FinalCheckReceipt))(
         legacyV1ReceiptJson(HEAD, FINAL_CHECK_RECEIPT_VERSION)
       );
       assertSome(

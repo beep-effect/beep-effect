@@ -167,7 +167,7 @@ const passingFinalCheck = (_context: RepoRunContext, head: string) =>
   );
 // A passing receipt as a pre-versioning `yeet final-check` wrote it: v1, no gate set.
 const legacyV1Receipt = (head: string) =>
-  S.decodeUnknownEffect(S.fromJsonString(FinalCheckReceipt))(
+  S.decodeEffect(S.fromJsonString(FinalCheckReceipt))(
     `{"schemaVersion":"yeet-final-check/v1","headSha":"${head}","mergeBase":"${Str.repeat(40)("0")}","base":"origin/main","complete":true,"verdict":"pass","startedAt":"2026-10-24T00:00:00.000Z","finishedAt":"2026-10-24T00:01:00.000Z","steps":[],"expectationRewrites":[]}`
   ).pipe(Effect.orDie);
 const passingSquashCommitlint = () =>
