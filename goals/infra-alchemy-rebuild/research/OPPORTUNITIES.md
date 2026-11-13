@@ -37,3 +37,16 @@ identifiers are redacted.
 - **Would have prevented it:** a distilled bump that ships the App module; the
   package's `WebCrypto.signAppJwt` is then deleted (decision file
   `2026-11-13-app-jwts-are-signed-with-webcrypto-...`).
+
+**Update, same day:** #3278 moved the distilled family to `1.0.0-rc.19`, which ships `@distilled.cloud/github/App`;
+the package now uses `App.appJwt` and the hand-rolled signer is gone. The receipt stands for the hours lost
+to the gap between the reference checkout (main) and the pinned release.
+
+## 2026-11-13: SAST flags a PEM template that wraps a test-generated key
+
+- **Doing:** PR #3291 hosted SAST.
+- **Evidence:** semgrep `beep-hardcoded-private-key` blocked on a test helper that formats a key generated at
+  test time (`crypto.subtle.generateKey`) into a PEM whose header and footer were string literals; no key
+  material was committed. Assembling the label at runtime clears it.
+- **Would have prevented it:** a local `sast` step in `package-verify`, or a note in the test checklist that PEM
+  header and footer literals trip the rule even around generated keys.

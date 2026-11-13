@@ -8,9 +8,9 @@
 
 import { $AlchemyGithubRunnersId } from "@beep/identity/packages";
 import { actions, apps } from "@distilled.cloud/github";
+import * as GitHubApp from "@distilled.cloud/github/App";
 import { Credentials as GitHubCredentials } from "@distilled.cloud/github/Credentials";
 import * as A from "effect/Array";
-import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
 import * as Layer from "effect/Layer";
@@ -25,7 +25,6 @@ import { InstallationToken, JitRunnerConfig, SelfHostedRunner } from "./GitHubRu
 import { GitHubApiError, GitHubAppAuthError } from "./RunnerFleet.errors.ts";
 import { AppParameterNames } from "./SsmParameters.models.ts";
 import { SsmStore } from "./SsmStore.service.ts";
-import { signAppJwt } from "./WebCrypto.ts";
 import type * as Context from "effect/Context";
 import type * as HttpClient from "effect/http/HttpClient";
 import type { RunnerOwner } from "./GitHubRunners.models.ts";
@@ -111,7 +110,8 @@ const toRunner = (runner: {
 
 /**
  * Live {@link GitHubAppAuth}: reads the App id and base64 PEM key from SSM on
- * first use, signs a fresh JWT per call and exchanges it with distilled
+ * first use, signs a fresh JWT per call with distilled GitHub's `App.appJwt`
+ * and exchanges it with distilled
  * GitHub's `apps` operations.
  *
  * **Example** (Build the layer)
@@ -158,11 +158,10 @@ export const gitHubAppAuthLive = (
       );
       const appJwt = Effect.gen(function* () {
         const credentials = yield* appCredentials;
-        const nowSeconds = Math.floor((yield* Clock.currentTimeMillis) / 1000);
-        const jwt = yield* signAppJwt({ ...credentials, nowSeconds }).pipe(
-          Effect.catchTag("SchemaError", () => Effect.fail(GitHubAppAuthError.make({ message: "JWT encoding failed" })))
-        );
-        return Redacted.make(jwt);
+        return yield* GitHubApp.appJwt({
+          appId: credentials.appId,
+          privateKey: Redacted.make(credentials.privateKeyPem),
+        }).pipe(Effect.mapError((error) => GitHubAppAuthError.make({ message: error.message })));
       });
       return GitHubAppAuth.of({
         installationFor: Effect.fn("GitHubAppAuth.installationFor")(function* (owner: RunnerOwner) {

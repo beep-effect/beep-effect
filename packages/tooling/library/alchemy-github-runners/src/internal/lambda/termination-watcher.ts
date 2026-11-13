@@ -11,16 +11,25 @@ import { TerminationEvent } from "../../Ec2Events.models.ts";
 import { DeregisterRetryMessage } from "../../RunnerMessages.models.ts";
 import { TerminationWatcherRuntimeConfig } from "../../RunnerRuntime.models.ts";
 import { handleDeregisterRetry, handleTerminationEvent } from "../../TerminationWatcher.program.ts";
-import { defineLambda, fleetLive, lambdaHandler, SqsEvent } from "./Runtime.ts";
+import {
+  allMessageIds,
+  batchItemFailures,
+  defineLambda,
+  fleetLive,
+  lambdaHandler,
+  processRecords,
+  SqsEvent,
+} from "./Runtime.ts";
 
 const decodeSqs = S.decodeUnknownOption(SqsEvent);
 const decodeEvent = S.decodeUnknownEffect(TerminationEvent);
 const decodeRetry = S.decodeEffect(S.fromJsonString(DeregisterRetryMessage));
 
 /**
- * Lambda handler: deregister runners of reclaimed or stopping instances. A
- * retry record that still fails is rethrown so SQS redelivers it and its DLQ
- * eventually takes it.
+ * Lambda handler: deregister runners of reclaimed or stopping instances. For a
+ * deregister-retry batch it reports each record that failed as a batch item
+ * failure, so SQS redelivers it and the retry queue's DLQ takes it after
+ * `maxReceiveCount`; if the whole invocation fails, every record is reported.
  *
  * @internal
  */
@@ -30,19 +39,16 @@ export const definition = defineLambda({
   run: Effect.fn("TerminationWatcherLambda.run")(function* (config, raw) {
     const sqs = decodeSqs(raw);
     if (sqs._tag === "Some") {
-      yield* Effect.forEach(
-        sqs.value.Records,
-        (record) =>
-          decodeRetry(record.body).pipe(Effect.flatMap((message) => handleDeregisterRetry({ config, message }))),
-        { discard: true }
+      return yield* processRecords(sqs.value, (body) =>
+        decodeRetry(body).pipe(Effect.flatMap((message) => handleDeregisterRetry({ config, message })))
       );
-      return;
     }
     const event = yield* decodeEvent(raw);
     const outcomes = yield* handleTerminationEvent({ config, event });
     yield* Effect.logInfo("termination watcher", outcomes);
+    return batchItemFailures([]);
   }),
-  fallback: (): void => undefined,
+  fallback: (raw) => batchItemFailures(allMessageIds(raw)),
 });
 
 /**

@@ -78,11 +78,17 @@ describe("Lambda entry points", () => {
     })
   );
 
-  it.effect("job-retry re-queues still-queued jobs and drops malformed records", () =>
+  it.effect("job-retry re-queues still-queued jobs and reports failed records for redelivery", () =>
     Effect.gen(function* () {
       const world = new World();
       const event = yield* sqsEvent([message({ id: 3, retryCounter: 0 }), "{"]);
-      yield* JobRetryLambda.definition.run(poolConfig(), event).pipe(Effect.provideContext(worldContext(world)));
+      const out = yield* JobRetryLambda.definition
+        .run(poolConfig(), event)
+        .pipe(Effect.provideContext(worldContext(world)));
+      expect(out).toStrictEqual({ batchItemFailures: [{ itemIdentifier: "m-1" }] });
+      expect(JobRetryLambda.definition.fallback(event)).toStrictEqual({
+        batchItemFailures: [{ itemIdentifier: "m-0" }, { itemIdentifier: "m-1" }],
+      });
       expect(A.map(world.sent, (sent) => sent.queueUrl)).toStrictEqual([
         "https://sqs.us-east-1.amazonaws.com/1/heavy-build",
       ]);

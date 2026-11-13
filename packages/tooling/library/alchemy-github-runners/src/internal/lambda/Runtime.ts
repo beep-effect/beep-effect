@@ -7,6 +7,7 @@
 
 import { $AlchemyGithubRunnersId } from "@beep/identity/packages";
 import * as AwsCredentials from "@distilled.cloud/aws/Credentials";
+import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
@@ -145,3 +146,47 @@ export const lambdaHandler = <SC extends S.Codec<unknown, unknown, never, never>
         )
     );
 };
+
+/**
+ * An SQS partial batch response: the records SQS must redeliver.
+ *
+ * @internal
+ */
+export const batchItemFailures = (messageIds: ReadonlyArray<string>) => ({
+  batchItemFailures: A.map(messageIds, (itemIdentifier) => ({ itemIdentifier })),
+});
+
+/**
+ * Runs `handle` on each record and reports the records that failed, so SQS
+ * redelivers them and their dead-letter queue takes them after
+ * `maxReceiveCount` attempts.
+ *
+ * @internal
+ */
+export const processRecords = Effect.fn("LambdaRuntime.processRecords")(function* <E, R>(
+  event: SqsEvent,
+  handle: (body: string) => Effect.Effect<unknown, E, R>
+) {
+  const failed = yield* Effect.forEach(event.Records, (record) =>
+    handle(record.body).pipe(
+      Effect.as(O.none<string>()),
+      Effect.catchCause((cause) =>
+        Effect.logWarning("record failed; SQS will redeliver it", record.messageId, cause).pipe(
+          Effect.as(O.some(record.messageId))
+        )
+      )
+    )
+  );
+  return batchItemFailures(A.getSomes(failed));
+});
+
+/**
+ * Every record of an SQS event, for a fallback that must fail the whole batch.
+ *
+ * @internal
+ */
+export const allMessageIds = (raw: unknown): ReadonlyArray<string> =>
+  O.match(S.decodeUnknownOption(SqsEvent)(raw), {
+    onNone: () => [],
+    onSome: (event) => A.map(event.Records, (record) => record.messageId),
+  });

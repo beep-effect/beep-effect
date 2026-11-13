@@ -162,7 +162,7 @@ export * from "./SsmStore.service.ts";
  */
 export * from "./TerminationWatcher.program.ts";
 /**
- * WebCrypto primitives for the webhook signature and the App JWT.
+ * WebCrypto primitives for the webhook signature.
  *
  * @category utilities
  * @since 0.0.0

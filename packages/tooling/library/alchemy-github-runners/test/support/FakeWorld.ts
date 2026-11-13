@@ -58,6 +58,7 @@ export class World {
   deletedRunners: Array<number> = [];
   busyOnDelete: Array<number> = [];
   jobQueued = true;
+  startedJobs: Array<number> = [];
   jitFailures: Array<string> = [];
   jitRequests: Array<JitConfigRequest> = [];
   runnerGroups: Record<string, number> = { "beep-ec2-heavy": 7 };
@@ -197,8 +198,8 @@ export const worldContext = (world: World) =>
     Context.make(
       GitHubRunners,
       GitHubRunners.of({
-        isJobQueued: Effect.fn("FakeGitHub.isJobQueued")(function* () {
-          return world.jobQueued;
+        isJobQueued: Effect.fn("FakeGitHub.isJobQueued")(function* (_token, job) {
+          return world.jobQueued && !A.contains(world.startedJobs, job.jobId);
         }),
         runnerGroupId: Effect.fn("FakeGitHub.runnerGroupId")(function* (_token, _org, groupName) {
           return yield* Effect.fromOption(O.fromUndefinedOr(world.runnerGroups[groupName])).pipe(

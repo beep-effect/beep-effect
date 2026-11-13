@@ -212,6 +212,35 @@ describe("handleScaleUp", () => {
     })
   );
 
+  it.effect("redelivers only still-queued jobs over the cap, never one that already started", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      world.startedJobs = [1];
+      world.launch(2, {
+        "ghr:Application": "github-action-runner",
+        "ghr:environment": "beep-ci-heavy",
+        "ghr:Type": "Org",
+        "ghr:Owner": "beep-effect",
+      });
+      const pool = RunnerPool.make({ ...heavyPool, jobQueuedCheck: true });
+      const retry = yield* run(world, [queued({ id: 1 }), queued({ id: 2 })], poolConfig(pool));
+      expect(retry).toStrictEqual(["m-2"]);
+    })
+  );
+
+  it.effect("retries the right job when a launch partly fails after the queued check drops a started job", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      world.startedJobs = [1];
+      world.fleetAnswers = [
+        AwsApiError.make({ service: "ec2", operation: "createFleet", retryable: true, message: "slow down" }),
+      ];
+      const pool = RunnerPool.make({ ...heavyPool, jobQueuedCheck: true });
+      const retry = yield* run(world, [queued({ id: 1 }), queued({ id: 2 })], poolConfig(pool));
+      expect(retry).toStrictEqual(["m-2"]);
+    })
+  );
+
   it.effect("resolves the installation when the delivery carried none", () =>
     Effect.gen(function* () {
       const world = new World();
