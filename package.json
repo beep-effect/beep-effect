@@ -254,9 +254,9 @@
     "are-docs-informative": "0.1.1",
     "@microsoft/tsdoc": "0.17.1",
     "@microsoft/tsdoc-config": "0.18.3",
+    "onnxruntime-node": "1.31.1",
     "oxlint-tsgolint": "7.0.2007",
-    "protobufjs": "^8.8.1",
-    "onnxruntime-node": "1.31.1"
+    "protobufjs": "^8.8.1"
   },
   "devDependencies": {
     "@beep/fc-runs": "workspace:^",

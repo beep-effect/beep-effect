@@ -42,3 +42,9 @@ Wave 1 review: sherif sorted only the repo-cli dependency keys alphabetically.
 Dependency names, versions, generated scripts and cache policy are unchanged.
 This formatting changes the manifest bytes, so the same two previously reviewed
 subjects are re-recorded without broadening scope or qualification.
+
+Main merge review: retain main's oxlint-tsgolint 7.0.2007 pin together with
+the lane's onnxruntime-node 1.31.1 catalog pin, alphabetizing the adjacent
+resolved entries. Regenerate bun.lock from main with bun install. Re-record
+the root manifest input only; cache scope, profile, epoch and qualification
+remain unchanged.
