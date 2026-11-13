@@ -167,7 +167,8 @@ after:  tsrs -p tsconfig.json --emitDeclarationOnly && bun run beep:check:tests
   declaration-only check leads with the build program (its own flags allowed)
   unless overridden, and
   each `tsconfig.check.json` the build serves adds nothing to the build program
-  (it extends `./tsconfig.json`, declares no `include`, `files` or `exclude`,
+  (it extends the package's own build config, declares no `include`, `files`
+  or `exclude`,
   keeps the build's `references`, and sets only emit options). The packages
   whose check config does add something are exactly `ownSourceCheckOverrides`.
 
