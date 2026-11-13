@@ -2,20 +2,19 @@
 
 ## Status
 
-Status: P0 research and design complete, design revision 2 applied (critic
-findings and the orchestrator rulings of 2026-11-12, recorded as decision
-files); P1 not started. The manifest's phase statuses flip in the first
-implementation commit.
+Status: P0 to P3 complete. PR B merged as #3245; PR A is #3248, the final, and
+carries the `closeout` record. P4 finishes after the merge: refresh must print
+`verified`, then one `goals doctor --online` pass and `yeet sweep --retire`.
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | completed | Map the completion pipeline, schema, set-status, doctor, templates, migration set and coverage cause; design PR A. | Five `research/map-*.md` files and `research/design-pr-a.md` exist; DN-1 to DN-27 are recorded in `decisions/`. |
-| P1 Implement | pending | Steps S1 to S8 of `research/design-pr-a.md` §3 (schema, claims, evaluator, completion core, writer, closeout check with views and doctor, readers, templates and prose). PR B (D-cov) runs alongside from lane `final-check-coverage-scope`. | Each step's package-scoped test command and `bun run check` pass; every new source file has a test for each exported unit, live layers included. |
-| P2 Verify | pending | S9 batch migration (nine packets written, two archived tombstones receipt-only), then S10 (post-migration enforcement: `proposedCloseout` removal, raw-key guard, `yeet sweep --retire` trigger) and S11 (GOAL.md and PLAN.md checklist rewrite) in parallel, then S12 package proof. | Migration outcomes are in `history/migration-<date>.md`; the SPEC Verification Matrix is green; doctor online reports 0 introduced blocking findings. |
-| P3 Yeet: PR to mergeable | pending | The orchestrator publishes PR A with `yeet open`, runs a scoped `yeet final-check --skip coverage=<reason>` on the content-final head (named in the PR body), flips it ready and drives it to mergeable. PR B merges first. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads; review window elapsed. |
-| P4 Close | pending | Reflection, then `goals set-status goal-closeout-hosted-verification completed-retained` in PR A (it names PR A); after the merge, refresh, doctor online and `yeet sweep --retire`. | Refresh prints plain `verified`; the `origin/main` jq check passes; no `closeout-unverified` finding and no P0 closeout row. |
+| P1 Implement | complete | Steps S1 to S8 of `research/design-pr-a.md` §3 (schema, claims, evaluator, completion core, writer, closeout check with views and doctor, readers, templates and prose). PR B (D-cov) runs alongside from lane `final-check-coverage-scope`. | Each step's package-scoped test command and `bun run check` pass; every new source file has a test for each exported unit, live layers included. |
+| P2 Verify | complete | S9 batch migration (nine packets written, two archived tombstones receipt-only), then S10 (post-migration enforcement: `proposedCloseout` removal, raw-key guard, `yeet sweep --retire` trigger) and S11 (GOAL.md and PLAN.md checklist rewrite) in parallel, then S12 package proof. | Migration outcomes are in `history/migration-<date>.md`; the SPEC Verification Matrix is green; doctor online reports 0 introduced blocking findings. |
+| P3 Yeet: PR to mergeable | complete | The orchestrator publishes PR A with `yeet open`, runs a scoped `yeet final-check --skip coverage=<reason>` on the content-final head (named in the PR body), flips it ready and drives it to mergeable. PR B merges first. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads; review window elapsed. |
+| P4 Close | complete | Reflection, then `goals set-status goal-closeout-hosted-verification completed-retained` in PR A (it names PR A); after the merge, refresh, doctor online and `yeet sweep --retire`. | Refresh prints plain `verified`; the `origin/main` jq check passes; no `closeout-unverified` finding and no P0 closeout row. |
 
 ## Steps
 

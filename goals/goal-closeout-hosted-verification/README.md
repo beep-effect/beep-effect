@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -31,8 +31,13 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research is complete. P1 Implement has not started; PR A follows the
-step list in [`research/design-pr-a.md`](./research/design-pr-a.md).
+P0 to P3 are complete. PR B merged as #3245 (supporting). PR A is #3248, the
+final: it carries the `closeout` record and the reflection
+[`history/reflections/2026-11-13-claude.md`](./history/reflections/2026-11-13-claude.md).
+The goal is done once #3248 merges and
+`bun run beep goals completion refresh --slug goal-closeout-hosted-verification`
+prints `verified`. Migration outcomes are in
+[`history/migration-2026-11-13.md`](./history/migration-2026-11-13.md).
 
 ## Latest Evidence
 
