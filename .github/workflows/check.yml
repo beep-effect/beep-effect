@@ -802,12 +802,22 @@ jobs:
   # out a partition with selected tasks, and Coverage Regression requires
   # evidence from every partition with affected owners, so a partition that
   # was not allocated is a stated skip and never a silent pass.
+  #
+  # Shard overflow (goals/ci-lane-economics, 2026-11-13): once the plan is
+  # published, `beep ci shard-overflow` may send planned Test Unit partitions to
+  # the self-hosted overflow pool. It routes only while the repository variable
+  # BEEP_SHARD_OVERFLOW is `on`, the event is a push or a same-repository pull
+  # request, the hosted queue predicts more than a ten-minute wait, and only
+  # into free overflow VMs. A skipped or failed routing step leaves the outputs
+  # below at "every partition hosted".
   test-plan:
     name: Test Plan
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       contents: read
+      # The routing step lists this repository's queued and running jobs.
+      actions: read
     env:
       # Every partition of each lane, in table order (CiLanePartitions.ts).
       ALL_TEST_UNIT_PARTITIONS: '["repo-cli-1", "repo-cli-2", "repo-cli-3", "repo-cli-4", "repo-cli-5", "repo-cli-6", "repo-cli-7", "repo-cli-8", "repo-cli-9", "law-practice-1", "law-practice-2", "law-practice-3", "law-practice-4", "law-practice-5", "law-practice-6", "law-practice-7", "law-practice-8", "unit-a", "unit-b", "unit-c", "unit-d", "unit-e", "unit-f", "unit-g"]'
@@ -815,9 +825,11 @@ jobs:
     outputs:
       test_unit: ${{ steps.plan.outputs.test_unit }}
       test_integration: ${{ steps.plan.outputs.test_integration }}
+      test_unit_hosted: ${{ steps.split.outputs.test_unit_hosted }}
+      test_unit_overflow: ${{ steps.split.outputs.test_unit_overflow }}
     steps:
       - name: Checkout repository
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' || vars.BEEP_SHARD_OVERFLOW == 'on'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
@@ -831,7 +843,7 @@ jobs:
           git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
       - name: Fetch beep CI binary
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' || vars.BEEP_SHARD_OVERFLOW == 'on'
         uses: ./.github/actions/fetch-beep-ci
 
       # Classified here as well so the plan does not wait for Change Profile:
@@ -891,10 +903,57 @@ jobs:
           publish test_unit "$test_unit" "$ALL_TEST_UNIT_PARTITIONS"
           publish test_integration "$test_integration" "$ALL_TEST_INTEGRATION_PARTITIONS"
 
+      # `--callee local` while check.yml calls ./.github/workflows/shard-overflow.yml:
+      # the overflow runner group admits that file only at refs/heads/main, so
+      # the command routes main pushes only. The cutover to the @main reference
+      # changes the call and this flag together (ci-runner-security.test.ts).
+      - name: Route shard overflow
+        id: overflow
+        if: vars.BEEP_SHARD_OVERFLOW == 'on' && steps.plan.outputs.test_unit != '[]'
+        continue-on-error: true
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          BEEP_CI_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+          BEEP_SHARD_OVERFLOW: ${{ vars.BEEP_SHARD_OVERFLOW }}
+          BEEP_SHARD_OVERFLOW_WAIT_SECONDS: ${{ vars.BEEP_SHARD_OVERFLOW_WAIT_SECONDS }}
+          BEEP_SHARD_OVERFLOW_POOL_SIZE: ${{ vars.BEEP_SHARD_OVERFLOW_POOL_SIZE }}
+          PLANNED_TEST_UNIT: ${{ steps.plan.outputs.test_unit }}
+        run: beep ci shard-overflow --partitions "$PLANNED_TEST_UNIT" --callee local
+
+      # The two Test Unit halves hold the plan exactly once, by construction:
+      # the routed split is published only when it partitions the plan, and
+      # anything else (overflow off, nothing routed, a routing step that failed
+      # or wrote half its outputs) publishes every partition hosted. A
+      # successful Test Plan therefore always carries an exact split, which the
+      # Test Unit aggregate's skip on success relies on.
+      - name: Settle the Test Unit split
+        id: split
+        shell: bash
+        env:
+          PLANNED_TEST_UNIT: ${{ steps.plan.outputs.test_unit }}
+          ROUTED_HOSTED: ${{ steps.overflow.outputs.test_unit_hosted }}
+          ROUTED_OVERFLOW: ${{ steps.overflow.outputs.test_unit_overflow }}
+        run: |
+          set -euo pipefail
+          hosted="$PLANNED_TEST_UNIT"
+          overflow='[]'
+          if jq --exit-status --null-input --argjson plan "$PLANNED_TEST_UNIT" --argjson hosted "${ROUTED_HOSTED:-null}" --argjson overflow "${ROUTED_OVERFLOW:-null}" \
+            '($hosted | type) == "array" and ($overflow | type) == "array" and ($hosted + $overflow | sort) == ($plan | sort) and ($hosted + $overflow | unique | length) == ($plan | length)' > /dev/null 2>&1; then
+            hosted="$ROUTED_HOSTED"
+            overflow="$ROUTED_OVERFLOW"
+          fi
+          echo "test_unit_hosted=$(jq --compact-output . <<<"$hosted")" >> "$GITHUB_OUTPUT"
+          echo "test_unit_overflow=$(jq --compact-output . <<<"$overflow")" >> "$GITHUB_OUTPUT"
+
+  # The hosted half of the plan. Every partition the overflow step did not
+  # route runs here; PLANNED_PARTITIONS stays the whole plan, so each shard's
+  # unplanned-partition check still sees every partition of the run.
   test-unit-shard:
     name: Test Unit (${{ matrix.partition }})
     needs: [change-profile, test-plan]
-    if: needs.change-profile.outputs.docs_only != 'true' && needs.test-plan.outputs.test_unit != '[]'
+    if: needs.change-profile.outputs.docs_only != 'true' && needs.test-plan.outputs.test_unit_hosted != '[]'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment: ${{ github.event_name == 'push' && 'turbo-cache-write' || null }}
@@ -903,7 +962,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        partition: ${{ fromJSON(needs.test-plan.outputs.test_unit) }}
+        partition: ${{ fromJSON(needs.test-plan.outputs.test_unit_hosted) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -1045,27 +1104,72 @@ jobs:
             infra/r2-cache/adapter.sh stop-ci
           fi
 
+  # The overflow half of the plan: the same shard on a `beep-shard-overflow`
+  # VM, through shard-overflow.yml, reported as `Test Unit (<partition>) /
+  # Overflow`. Empty unless Test Plan routed partitions, which it never does
+  # for a fork's pull request; the condition repeats that guard and
+  # shard-overflow.yml repeats it again at main. Every artifact a hosted shard
+  # uploads is uploaded under the same name.
+  test-unit-overflow:
+    name: Test Unit (${{ matrix.partition }})
+    needs: [change-profile, test-plan]
+    if: needs.change-profile.outputs.docs_only != 'true' && needs.test-plan.outputs.test_unit_overflow != '[]' && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        partition: ${{ fromJSON(needs.test-plan.outputs.test_unit_overflow) }}
+    uses: ./.github/workflows/shard-overflow.yml
+    secrets: inherit
+    with:
+      partition: ${{ matrix.partition }}
+      planned_partitions: ${{ needs.test-plan.outputs.test_unit }}
+      docs_only: ${{ needs.change-profile.outputs.docs_only }}
+
   # Fails on any shard failure or cancellation and on a plan or classification
   # failure. A skipped shard matrix passes only as a stated skip: a
   # documentation-only diff, or a plan that selected no Test Unit partition.
+  # The hosted and overflow halves must together hold the plan exactly once,
+  # and each half passes or was never allocated. Skipped at job level (a
+  # passing required check) only when that verdict is already a pass: a
+  # documentation diff with both halves skipped, or a code diff whose every
+  # half either succeeded or held nothing and was skipped. Test Plan's
+  # "Settle the Test Unit split" step makes a successful Test Plan carry an
+  # exact split, so the halves cannot drop or repeat a partition.
   test-unit:
     name: Test Unit
     timeout-minutes: 5
-    needs: [change-profile, test-plan, test-unit-shard]
-    if: ${{ !cancelled() && !(needs.change-profile.result == 'success' && needs.test-plan.result == 'success' && ((needs.change-profile.outputs.docs_only == 'true' && needs.test-plan.outputs.test_unit == '[]' && needs.test-unit-shard.result == 'skipped') || (needs.change-profile.outputs.docs_only == 'false' && needs.test-plan.outputs.test_unit != '[]' && needs.test-unit-shard.result == 'success'))) }}
+    needs: [change-profile, test-plan, test-unit-shard, test-unit-overflow]
+    if: ${{ !cancelled() && !(needs.change-profile.result == 'success' && needs.test-plan.result == 'success' && ((needs.change-profile.outputs.docs_only == 'true' && needs.test-plan.outputs.test_unit == '[]' && needs.test-unit-shard.result == 'skipped' && needs.test-unit-overflow.result == 'skipped') || (needs.change-profile.outputs.docs_only == 'false' && needs.test-plan.outputs.test_unit != '[]' && ((needs.test-plan.outputs.test_unit_hosted != '[]' && needs.test-unit-shard.result == 'success') || (needs.test-plan.outputs.test_unit_hosted == '[]' && needs.test-unit-shard.result == 'skipped')) && ((needs.test-plan.outputs.test_unit_overflow != '[]' && needs.test-unit-overflow.result == 'success') || (needs.test-plan.outputs.test_unit_overflow == '[]' && needs.test-unit-overflow.result == 'skipped'))))) }}
     runs-on: ubuntu-24.04
     steps:
       - name: Require every planned Test Unit shard
         shell: bash
         env:
           PLANNED_PARTITIONS: ${{ needs.test-plan.outputs.test_unit }}
+          HOSTED_PARTITIONS: ${{ needs.test-plan.outputs.test_unit_hosted }}
+          OVERFLOW_PARTITIONS: ${{ needs.test-plan.outputs.test_unit_overflow }}
         run: |
           set -euo pipefail
           [[ "${{ needs.change-profile.result }}" == "success" ]]
           [[ "${{ needs.test-plan.result }}" == "success" ]]
           # An empty or non-array plan is a failed plan, never an empty one.
           planned="$(jq --exit-status --raw-output 'if type == "array" then (if length == 0 then "none" else "some" end) else error("plan is not an array") end' <<<"$PLANNED_PARTITIONS")"
-          case "${{ needs.change-profile.outputs.docs_only }}:${planned}:${{ needs.test-unit-shard.result }}" in
+          # The hosted and overflow halves hold every planned partition exactly once.
+          jq --exit-status --null-input --argjson plan "$PLANNED_PARTITIONS" --argjson hosted "$HOSTED_PARTITIONS" --argjson overflow "$OVERFLOW_PARTITIONS" \
+            '($hosted + $overflow | sort) == ($plan | sort) and ($hosted + $overflow | unique | length) == ($plan | length)' > /dev/null
+          # The hosted shards' result, as before overflow, unless Test Plan routed partitions: then
+          # the routed half must pass, and an empty hosted half was never allocated.
+          shards="${{ needs.test-unit-shard.result }}"
+          if [[ "$(jq --raw-output 'length' <<<"$OVERFLOW_PARTITIONS")" == "0" ]]; then
+            [[ "${{ needs.test-unit-overflow.result }}" == "skipped" ]] || shards=failure
+          elif [[ "${{ needs.test-unit-overflow.result }}" != "success" ]]; then
+            shards=failure
+          elif [[ "$(jq --raw-output 'length' <<<"$HOSTED_PARTITIONS")" == "0" && "$shards" == "skipped" ]]; then
+            shards=success
+          fi
+          case "${{ needs.change-profile.outputs.docs_only }}:${planned}:${shards}" in
             true:*:skipped) echo "Documentation-only diff: Test Unit shards were not allocated." ;;
             false:none:skipped) echo "The plan selected no Test Unit partition for this change set; Coverage Regression requires evidence from every partition with affected owners." ;;
             false:some:success) echo "Every planned Test Unit shard passed: $(jq --raw-output 'join(" ")' <<<"$PLANNED_PARTITIONS")" ;;
@@ -1229,9 +1333,11 @@ jobs:
     # legacy producer. After main retires that producer this becomes the exact
     # existing coverage context, without a ruleset edit or duplicate check name.
     name: ${{ needs.admission.outputs.legacy_coverage == 'true' && 'Coverage Artifact Migration' || 'Heavy / Coverage Regression' }}
-    # `test-unit-shard` is read directly: a Test Unit aggregate skipped on success
-    # (see the aggregates above) is a pass only beside a successful shard matrix.
-    needs: [change-profile, admission, test-unit, test-unit-shard, labs]
+    # The Test Unit halves are read directly: a Test Unit aggregate skipped on
+    # success (see the aggregates above) is a pass only beside a successful Test
+    # Plan whose hosted and overflow halves each succeeded or, holding nothing,
+    # were never allocated.
+    needs: [change-profile, admission, test-plan, test-unit, test-unit-shard, test-unit-overflow, labs]
     if: ${{ !cancelled() && needs.change-profile.outputs.docs_only != 'true' && needs.admission.outputs.docs_only != 'true' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -1260,14 +1366,20 @@ jobs:
         shell: bash
         env:
           ADMISSION_RESULT: ${{ needs.admission.result }}
+          PLAN_RESULT: ${{ needs.test-plan.result }}
           UNIT_RESULT: ${{ needs.test-unit.result }}
           UNIT_SHARDS_RESULT: ${{ needs.test-unit-shard.result }}
+          UNIT_OVERFLOW_RESULT: ${{ needs.test-unit-overflow.result }}
+          HOSTED_PARTITIONS: ${{ needs.test-plan.outputs.test_unit_hosted }}
+          OVERFLOW_PARTITIONS: ${{ needs.test-plan.outputs.test_unit_overflow }}
         run: |
           set -euo pipefail
           [[ "$ADMISSION_RESULT" == "success" ]]
-          # The Test Unit verdict passed: the aggregate ran green, or it was skipped on success
-          # beside a shard matrix that succeeded (this job never runs on a documentation diff).
-          [[ "$UNIT_RESULT" == "success" || ( "$UNIT_RESULT" == "skipped" && "$UNIT_SHARDS_RESULT" == "success" ) ]]
+          # The Test Unit verdict passed: the aggregate ran green, or it was skipped on success beside a
+          # successful Test Plan whose halves each succeeded or held nothing and were skipped, at least one
+          # of them run (this job never runs on a documentation diff).
+          unit_half() { [[ ( "$1" != "[]" && "$2" == "success" ) || ( "$1" == "[]" && "$2" == "skipped" ) ]]; }
+          [[ "$UNIT_RESULT" == "success" ]] || { [[ "$UNIT_RESULT" == "skipped" && "$PLAN_RESULT" == "success" && ( "$UNIT_SHARDS_RESULT" == "success" || "$UNIT_OVERFLOW_RESULT" == "success" ) ]] && unit_half "$HOSTED_PARTITIONS" "$UNIT_SHARDS_RESULT" && unit_half "$OVERFLOW_PARTITIONS" "$UNIT_OVERFLOW_RESULT"; } || exit 1
           eval "$(beep ci change-profile)"
           echo "should_run=$([[ "$docs_only" == "true" ]] && echo false || echo true)" >> "$GITHUB_OUTPUT"
 

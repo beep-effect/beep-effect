@@ -186,13 +186,21 @@ export const resolveNodeVersions: (
 // comparison) preserve the legacy Node22/V8 measurement engine. Heavy's matrix
 // pin remains covered by the templated-value rule below; ordinary jobs still
 // follow .nvmrc. Keep this exception tied to the actual workflow, job IDs, and
-// reviewed runtime pin.
+// reviewed runtime pin. shard-overflow.yml's `test-unit-shard` is the same unit
+// producer on an overflow runner and must measure with the same engine.
 const isCanonicalCoverageRuntimePin = S.is(
-  S.Struct({
-    file: S.tag(".github/workflows/check.yml"),
-    jobName: S.Literals(["test-unit-shard", "labs", "coverage-regression"]),
-    currentValue: S.tag("22.23.4"),
-  })
+  S.Union([
+    S.Struct({
+      file: S.tag(".github/workflows/check.yml"),
+      jobName: S.Literals(["test-unit-shard", "labs", "coverage-regression"]),
+      currentValue: S.tag("22.23.4"),
+    }),
+    S.Struct({
+      file: S.tag(".github/workflows/shard-overflow.yml"),
+      jobName: S.tag("test-unit-shard"),
+      currentValue: S.tag("22.23.4"),
+    }),
+  ])
 );
 
 /**
