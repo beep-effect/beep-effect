@@ -1444,12 +1444,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       );
       assert.include(stepRun(sast, "Run SAST"), "bun run beep ci lane sast");
 
+      // Docs-only (and green-shard) aggregates skip before any install; the exact conditions and their
+      // every needs combination are pinned in ci-docs-job-admission.test.ts.
       for (const jobId of ["lint", "test-unit"]) {
-        assert.strictEqual(
-          yamlAt(policy.workflow, ["jobs", jobId, "if"]),
-          "${{ !cancelled() && !(needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only == 'true') }}",
-          jobId
-        );
+        const guard = String(yamlAt(policy.workflow, ["jobs", jobId, "if"]));
+        assert.include(guard, "!cancelled() && !(needs.change-profile.result == 'success' && ", jobId);
+        assert.include(guard, "needs.change-profile.outputs.docs_only == 'true' && ", jobId);
+        assert.include(guard, `needs.${jobId}-shard.result == 'skipped'`, jobId);
       }
     })
   );
@@ -2710,11 +2711,14 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const comparison = jobSteps(jobs, "coverage-regression");
       expect(yamlAt(policy.workflow, ["jobs", "heavy", "needs"])).toEqual(["change-profile", "admission"]);
       // Audit M4: the comparison waits for Test Unit and the Labs producer, not
-      // the whole verify matrix, and never starts inside a cancelled run.
+      // the whole verify matrix, and never starts inside a cancelled run. It reads
+      // the Test Unit shard matrix too: an aggregate skipped on success passes only
+      // beside a matrix that succeeded.
       expect(yamlAt(policy.workflow, ["jobs", "coverage-regression", "needs"])).toEqual([
         "change-profile",
         "admission",
         "test-unit",
+        "test-unit-shard",
         "labs",
       ]);
       expect(yamlAt(policy.workflow, ["jobs", "coverage-regression", "if"])).toBe(
@@ -2765,7 +2769,32 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(labs.run).toContain("--coverage-output .beep/ci-coverage/labs");
       expect(labs.run).toContain("--coverage-only");
       const gate = stepByName(comparison, "Determine comparison execution");
-      expect(gate.run).toContain('[[ "$UNIT_RESULT" == "success" ]]');
+      expect(gate.run).toContain(
+        '[[ "$UNIT_RESULT" == "success" || ( "$UNIT_RESULT" == "skipped" && "$UNIT_SHARDS_RESULT" == "success" ) ]]'
+      );
+      expect(gate.env).toMatchObject({
+        UNIT_RESULT: "${{ needs.test-unit.result }}",
+        UNIT_SHARDS_RESULT: "${{ needs.test-unit-shard.result }}",
+      });
+      // Every Test Unit outcome the comparison can meet: the checked-in line proceeds on a passed verdict only.
+      const unitLine = O.getOrThrow(
+        A.findFirst(Str.split(gate.run ?? "", "\n"), (line) => Str.includes("$UNIT_RESULT")(line))
+      );
+      for (const [unit, shards, proceeds] of [
+        ["success", "success", true],
+        ["skipped", "success", true],
+        ["skipped", "failure", false],
+        ["skipped", "skipped", false],
+        ["skipped", "cancelled", false],
+        ["failure", "success", false],
+        ["cancelled", "success", false],
+        ["", "", false],
+      ] as const) {
+        const check = Bun.spawnSync(["bash", "-c", Str.trim(unitLine)], {
+          env: { UNIT_RESULT: unit, UNIT_SHARDS_RESULT: shards },
+        });
+        expect(check.exitCode === 0, `${unit}/${shards}`).toBe(proceeds);
+      }
       expect(gate.run).toContain('[[ "$ADMISSION_RESULT" == "success" ]]');
       expect(gate.run).not.toContain("verify.result");
     })

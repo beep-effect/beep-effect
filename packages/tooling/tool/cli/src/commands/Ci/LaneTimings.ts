@@ -1625,8 +1625,8 @@ class CiLaneTimingDurationRow extends S.Opaque<CiLaneTimingDurationRow, { readon
     jobName: S.NonEmptyString,
     pickupSeconds: S.Option(NonNegativeTimingSeconds),
     runAttempt: S.tag(1),
-    // Workflow-run `created_at` to the reporting job's `completed_at`; an optional key so rows encoded before
-    // the column existed decode to `None`.
+    // Workflow-run `created_at` to the reporting job's `completed_at` (the last shard's, for an aggregator
+    // skipped on success); an optional key so rows encoded before the column existed decode to `None`.
     verdictWaitSeconds: NonNegativeTimingSeconds.pipe(
       S.OptionFromOptionalKey,
       S.withConstructorDefault(Effect.succeedNone)
@@ -1689,7 +1689,8 @@ type CiLaneTimingWindowRow = typeof CiLaneTimingWindowRow.Type;
  * `completed_at`, or a sharded lane's earliest shard start to its aggregator's
  * completion. `wait` is the verdict wait: the workflow run's `created_at` to the
  * reporting job's `completed_at`, which adds run-level queueing, `needs` chains
- * and runner pickup to the body.
+ * and runner pickup to the body. An aggregator skipped at job level because
+ * every shard succeeded reports with its last shard, so both spans end there.
  *
  * **Example** (List the judged measures)
  *
@@ -2983,6 +2984,18 @@ const incompleteEffectiveRow = (run: CiWorkflowWindowRun, spec: CiEffectiveLaneS
     runId: run.id,
   });
 
+// Skip on success (goals/ci-lane-economics, 2026-11-13): an aggregator that took no runner because every shard
+// of its run passed concludes `skipped`, which GitHub counts as a passing required check. Only that pairing is a
+// pass; a skipped aggregator beside any shard that did not succeed stays a failure, and runs from before the
+// change, whose aggregators always ran, read as they did.
+const isAggregatorSkippedOnSuccess = (
+  aggregator: O.Option<CiWorkflowAttemptOneJob>,
+  shardJobs: ReadonlyArray<CiWorkflowAttemptOneJob>
+): boolean =>
+  O.exists(aggregator, (job) => Str.equivalence(actionConclusion(job), "skipped")) &&
+  A.isReadonlyArrayNonEmpty(shardJobs) &&
+  A.every(shardJobs, (job) => Str.equivalence(actionConclusion(job), "success"));
+
 const effectiveDurationRow = (
   run: CiWorkflowWindowRun,
   jobs: ReadonlyArray<CiWorkflowAttemptOneJob>,
@@ -2999,7 +3012,10 @@ const effectiveDurationRow = (
     return incompleteEffectiveRow(run, spec);
   }
   const conclusions = A.map(components, actionConclusion);
-  if (!A.every(conclusions, (conclusion) => Str.equivalence(conclusion, "success"))) {
+  const shardJobs = A.getSomes(A.map(shards, (shardName) => attemptOneJobNamed(jobs, shardName)));
+  const aggregator = attemptOneJobNamed(jobs, spec.aggregator);
+  const skippedOnSuccess = isAggregatorSkippedOnSuccess(aggregator, shardJobs);
+  if (!skippedOnSuccess && !A.every(conclusions, (conclusion) => Str.equivalence(conclusion, "success"))) {
     const cancelled = A.some(conclusions, (conclusion) => Str.equivalence(conclusion, "cancelled"));
     return CiLaneTimingAttributionRow.make({
       attribution: cancelled ? "cancelled" : "failure",
@@ -3013,18 +3029,18 @@ const effectiveDurationRow = (
       runId: run.id,
     });
   }
-  const shardStartedAtMillis = A.getSomes(
-    A.map(shards, (shardName) => O.flatMap(attemptOneJobNamed(jobs, shardName), (job) => epochMillis(job.started_at)))
-  );
-  const aggregator = attemptOneJobNamed(jobs, spec.aggregator);
-  const aggregatorCompletedAtMillis = O.flatMap(aggregator, (job) => epochMillis(job.completed_at));
+  const shardStartedAtMillis = A.getSomes(A.map(shardJobs, (job) => epochMillis(job.started_at)));
+  const shardCompletedAtMillis = A.getSomes(A.map(shardJobs, (job) => epochMillis(job.completed_at)));
+  // The verdict ends when the aggregator reports, or, for one skipped on success, when the last shard did.
+  const verdictEndMillis = skippedOnSuccess
+    ? pipe(
+        A.last(A.sort(shardCompletedAtMillis, Order.Number)),
+        O.filter(() => A.length(shardCompletedAtMillis) === A.length(shards))
+      )
+    : O.flatMap(aggregator, (job) => epochMillis(job.completed_at));
   const earliestStartedAtMillis = A.head(A.sort(shardStartedAtMillis, Order.Number));
   const durationSeconds = pipe(
-    O.zipWith(
-      earliestStartedAtMillis,
-      aggregatorCompletedAtMillis,
-      (startedAt, completedAt) => (completedAt - startedAt) / 1_000
-    ),
+    O.zipWith(earliestStartedAtMillis, verdictEndMillis, (startedAt, completedAt) => (completedAt - startedAt) / 1_000),
     O.filter((seconds) => seconds >= 0),
     O.filter(() => A.length(shardStartedAtMillis) === A.length(shards))
   );
@@ -3053,7 +3069,11 @@ const effectiveDurationRow = (
         runAttempt: 1,
         runCreatedAt: run.created_at,
         runId: run.id,
-        verdictWaitSeconds: O.flatMap(aggregator, (job) => attemptOneVerdictWaitSeconds(run, job)),
+        verdictWaitSeconds: pipe(
+          verdictEndMillis,
+          O.map((endMillis) => (endMillis - DateTime.toEpochMillis(run.created_at)) / 1_000),
+          O.filter((waitSeconds) => waitSeconds >= 0)
+        ),
       }),
   });
 };
@@ -3582,7 +3602,7 @@ const renderPopulationChangeComments = (report: CiLaneTimingWindowReport): Reado
 const renderSuccessfulDurationsMarkdown = (report: CiLaneTimingWindowReport): ReadonlyArray<string> => [
   "## Successful attempt-one durations",
   "",
-  "Duration is the lane's own span (a sharded lane runs from its earliest shard start to its aggregator's completion). Wait runs from the workflow run's `created_at` to the reporting job's completion, so it also counts run queueing, `needs` chains and runner pickup. A lane breaches when either p95 is 20m00s or more.",
+  "Duration is the lane's own span (a sharded lane runs from its earliest shard start to its aggregator's completion, or to its last shard's when the aggregator was skipped on success). Wait runs from the workflow run's `created_at` to the reporting job's completion, so it also counts run queueing, `needs` chains and runner pickup. A lane breaches when either p95 is 20m00s or more.",
   "",
   "| Required lane | n | PR | Push | p50 | p95 | Max | Wait p50 | Wait p95 | P3 state |",
   "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |",
