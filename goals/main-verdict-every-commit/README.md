@@ -52,7 +52,8 @@ builds them.
   verdict are missing (`CI_CERTAINTY_NOT_COVERED`). Decision `rerun-api-cancelled-push-runs`: the re-run
   endpoint documents no conclusion restriction; whether a re-run re-enters the shared main group is
   undocumented, so re-dispatch stays idle-only. History note `2026-11-13-pre-ban-main-verdict-rate`: the
-  2026-11-03..10 read was refused as api-partial (the default request bound starved the main listing).
+  2026-11-03..10 main verdict rate is 24.7% (70 of 283 non-docs commits; 213 cancelled), read after #3168 made
+  the main listing read first; the earlier read was refused before that fix.
 - 2026-11-13: two measured days of Check runs filed as
   [`research/2026-11-13-check-run-queue-day-measure.md`](./research/2026-11-13-check-run-queue-day-measure.md)
   (decision `check-run-queue-measurements`): hosted peak 60 on all three days, 70 hosted jobs and 44 test
