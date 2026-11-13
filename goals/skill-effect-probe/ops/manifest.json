@@ -4,15 +4,15 @@
     "id": "skill-effect-probe",
     "packetId": "goal-packet/v1:01b93319ad6f50e1a810cbe47a205cc26756300e1fa48c00fb7177a48612c059",
     "title": "Skill Effect Probe",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-10",
     "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/skill-effect-probe",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Measure whether the schema-first-development skill changes Opus 5.5 output on the 12 archived SkillOpt tasks across bare, code-laws and code-laws-plus-skill cells, and return a verdict against a rule fixed before any scored run.",
-  "statusNote": "Verdict Insensitive (2026-11-13): on the laws-prompt pilot no task had an all-lanes or law pass among pooled B and C runs, so no scored run; the corpus cannot measure the skill at Opus 5.5 without tools. Fired rate 0.71 fired the activation gate; the exploration reopened at decompose. Implementation in PR 3167; closeout re-finaled in PR 3210 (owner-held after 3207 merged early).",
+  "statusNote": "Closed completed-retained by operator ruling on 2026-11-13, without a verified readiness receipt: the final PRs #3167, #3207 and #3210 all merged before the readiness monitor printed merge-ready. Verdict Insensitive: on the laws-prompt pilot no task had an all-lanes or law pass among pooled B and C runs, so there was no scored run; the archived corpus cannot measure the skill at Opus 5.5 without tools. The fired rate (0.71) fired the activation gate and the source exploration reopened at decompose.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -102,7 +102,7 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
@@ -125,8 +125,9 @@
     "The harness cannot tie a kept run directory to its case, cell and run.",
     "claude plugin eval is unavailable or the plan limit blocks the scored run; hold and report, never substitute a runner or model."
   ],
-  "proposedCloseout": {
+  "closeout": {
     "status": "completed-retained",
     "finalPullRequest": 3210
-  }
+  },
+  "retentionReason": "Retained on main as the record behind the reopened skillopt-corpus-headroom exploration: the Insensitive verdict, the pilot censuses and the analysis rule that its gated skill-activation-probe and skill-lane-probe candidates build on, plus the documentation of beep agent-effectiveness evals probe."
 }
