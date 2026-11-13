@@ -461,7 +461,8 @@ const elapsedBetween = (startedAt: O.Option<string>, endedAt: O.Option<string>):
 
 // Resolution order of the A1 loader: the verdict wins, then the start row; the
 // terminal row's facts win over the start row's; a terminated row has no
-// verdict, so its outcome is none (red) and it has no lanes. A reconciler-
+// verdict, so its outcome is none, its reason decides its class (MEAS-03) and
+// it has no lanes. A reconciler-
 // stamped termination still orders by its `recordedAt` but measures no
 // elapsed time and ends no streak bound (ruling 75).
 const attemptFromTerminal = (
@@ -1457,8 +1458,9 @@ const machineMillis = (members: ReadonlyArray<TimedAttempt>): number =>
   sumOf(members, (timed) => O.getOrElse(timed.attempt.elapsedMs, thunk0));
 
 interface OpenStreak {
-  readonly attempts: number;
   readonly observedSpanMs: number;
+  readonly redAttempts: number;
+  readonly terminatedAttempts: number;
 }
 
 interface JournalEpisodes {
@@ -1496,14 +1498,15 @@ const journalEpisodes = (journal: EconomicsJournal): JournalEpisodes => {
   );
   return {
     closed: walk.episodes,
-    // A streak still red at the end is right-censored; its observed lower
-    // bound runs from the first red's start to the last member's last
-    // measured time.
+    // A streak still open (no green after it) at the end is right-censored;
+    // its members are counted by class, and its observed lower bound runs
+    // from its first member's start to its last member's last measured time.
     openStreak: A.match(walk.streak, {
       onEmpty: O.none,
       onNonEmpty: (streak) =>
         O.some({
-          attempts: A.length(streak),
+          redAttempts: A.countBy(streak, (timed) => isRed(timed.attempt)),
+          terminatedAttempts: A.countBy(streak, (timed) => isTerminated(timed.attempt)),
           observedSpanMs: Math.max(0, measuredEndMillis(A.lastNonEmpty(streak)) - startMillis(A.headNonEmpty(streak))),
         }),
     }),
@@ -1528,7 +1531,8 @@ const episodeSummary = (
     leftCensoredEpisodesExcluded: A.length(leftCensored),
     leftCensoredObservedAttempts: sumOf(leftCensored, (episode) => episode.attempts),
     rightCensoredStreaks: A.length(openStreaks),
-    rightCensoredRedAttempts: sumOf(openStreaks, (streak) => streak.attempts),
+    rightCensoredRedAttempts: sumOf(openStreaks, (streak) => streak.redAttempts),
+    rightCensoredTerminatedAttempts: sumOf(openStreaks, (streak) => streak.terminatedAttempts),
     rightCensoredObservedSpanMinutes: minutesOf(sumOf(openStreaks, (streak) => streak.observedSpanMs)),
     closedEpisodesOver24hExcluded: over24hExcluded,
   });
@@ -1544,14 +1548,14 @@ const redToGreen = (journals: ReadonlyArray<EconomicsJournal>): EconomicsRedToGr
   const comparable = A.filter(closed, (episode) => episode.spanMs <= cutMs);
   return EconomicsRedToGreen.make({
     comparable24h: episodeSummary(
-      "comparable24h: modes verify/repair/publish; lock bounces and left-censored episodes excluded; span <= 24h",
+      "comparable24h: modes verify/repair/publish; a streak runs from the first not-green attempt (red or terminated) to the next green; lock bounces and left-censored episodes excluded; span <= 24h",
       comparable,
       leftCensored,
       openStreaks,
       O.some(A.length(closed) - A.length(comparable))
     ),
     uncut: episodeSummary(
-      "uncut: same modes, bounce and censoring rule; no span ceiling",
+      "uncut: same modes, streak, bounce and censoring rules; no span ceiling",
       closed,
       leftCensored,
       openStreaks,
@@ -1870,7 +1874,7 @@ export const renderYeetEconomicsReport = (report: YeetEconomicsReport): string =
       `  receipt proxies: ${formatMix(failure.receiptProxyMix)}`,
       renderEpisodes("red to green (M1) comparable24h", episodes.comparable24h),
       renderEpisodes("red to green (M1) uncut", episodes.uncut),
-      `  censoring: left ${episodes.uncut.leftCensoredEpisodesExcluded} episode(s) (${episodes.uncut.leftCensoredObservedAttempts} attempt(s)), right ${episodes.uncut.rightCensoredStreaks} streak(s) (${episodes.uncut.rightCensoredRedAttempts} red attempt(s), observed at least ${episodes.uncut.rightCensoredObservedSpanMinutes} min)`,
+      `  censoring: left ${episodes.uncut.leftCensoredEpisodesExcluded} episode(s) (${episodes.uncut.leftCensoredObservedAttempts} attempt(s)), right ${episodes.uncut.rightCensoredStreaks} streak(s) (${episodes.uncut.rightCensoredRedAttempts} red and ${episodes.uncut.rightCensoredTerminatedAttempts} terminated attempt(s), observed at least ${episodes.uncut.rightCensoredObservedSpanMinutes} min)`,
       `terminations (M5): ${report.terminations.starts} start(s), ${report.terminations.startsWithoutFinish} without a terminal row; ${terminated} terminated apart from reds; reasons: ${formatMix(report.terminations.reasonMix)}`,
       `unchanged fingerprint (M4 fingerprint-repeat proxy; the ack-resolution join is not on this surface): ${fingerprint.classification}; ${fingerprint.attemptsWithFingerprint} attempt(s) carry a fingerprint; ${fingerprint.failedUnchangedFingerprintThenGreen} verdict red then green on the same fingerprint`,
       `  by actionable lane: ${formatMix(fingerprint.byActionableLane, TOP_LANE_ROWS)}; by receipt proxy: ${formatMix(fingerprint.byReceiptProxy)}`,

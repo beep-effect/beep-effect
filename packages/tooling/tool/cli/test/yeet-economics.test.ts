@@ -909,7 +909,9 @@ describe("yeet economics red to green", () => {
       leftCensoredEpisodesExcluded: 1,
       leftCensoredObservedAttempts: 2,
       rightCensoredStreaks: 2,
-      rightCensoredRedAttempts: 3,
+      // run-4's open streak holds the killed (terminated) attempt and a red; run-5's one red.
+      rightCensoredRedAttempts: 2,
+      rightCensoredTerminatedAttempts: 1,
       // run-4 is open from 0 to 20 minutes, run-5 from 0 to 5.
       rightCensoredObservedSpanMinutes: 25,
     });

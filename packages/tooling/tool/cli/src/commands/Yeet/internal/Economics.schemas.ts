@@ -33,7 +33,11 @@ const $I = $RepoCliId.create("commands/Yeet/internal/Economics.schemas");
  *
  * v3 counts a terminated attempt apart from reds: `firstFailure.redAttempts`,
  * its mixes and `failureKindMix` no longer include it, so a v2 red count is
- * the v3 `red` plus `terminated` rows of `attempts.all.classMix`.
+ * the v3 `red` plus `terminated` rows of `attempts.all.classMix`. The M1
+ * red-to-green walk is unchanged: a streak's members are every attempt that
+ * is not green, terminations included. Its open-streak count is therefore
+ * split by class, `rightCensoredRedAttempts` (red members only) beside
+ * `rightCensoredTerminatedAttempts`, whose sum is the v2 figure.
  *
  * **Example** (Tell an economics document from an A1 one)
  *
@@ -550,13 +554,20 @@ export class EconomicsFirstFailure extends S.Opaque<EconomicsFirstFailure, { rea
  *
  * **Details**
  *
+ * A streak's members are every attempt that is not green
+ * ({@link EconomicsAttemptClass}): red ones and terminated ones alike. A
+ * streak opens at its first member and a green closes it; MEAS-03 leaves this
+ * walk unchanged, so M1 stays comparable with its v2 baselines.
  * `closedEpisodes`, the percentiles and both minute totals cover the closed
  * episodes this cut keeps. The censoring counts are shared by both cuts: a
  * left-censored episode started at or before its journal's compaction cutoff,
- * a right-censored streak was still red at the end of its journal.
+ * a right-censored streak was still open (no green after it) at the end of its
+ * journal. Its members are split by class: `rightCensoredRedAttempts` counts
+ * the red ones and `rightCensoredTerminatedAttempts` the terminated ones;
+ * their sum is what v2 reported as `rightCensoredRedAttempts`.
  * `rightCensoredObservedSpanMinutes` is the observed lower bound of the open
  * streaks: for each, its last member's last measured time minus its first
- * red's start, summed. The last measured time is the member's end (else its
+ * member's start, summed. The last measured time is the member's end (else its
  * start), and its start when it is a reconciler-stamped termination.
  * `closedEpisodesOver24hExcluded` is set on the 24-hour cut only.
  *
@@ -577,6 +588,7 @@ export class EconomicsFirstFailure extends S.Opaque<EconomicsFirstFailure, { rea
  *   leftCensoredObservedAttempts: 0,
  *   rightCensoredStreaks: 0,
  *   rightCensoredRedAttempts: 0,
+ *   rightCensoredTerminatedAttempts: 0,
  *   rightCensoredObservedSpanMinutes: 0,
  *   closedEpisodesOver24hExcluded: O.none(),
  * })
@@ -598,12 +610,13 @@ export class EconomicsEpisodeSummary extends S.Opaque<EconomicsEpisodeSummary, {
     leftCensoredObservedAttempts: EconomicsCount,
     rightCensoredStreaks: EconomicsCount,
     rightCensoredRedAttempts: EconomicsCount,
+    rightCensoredTerminatedAttempts: EconomicsCount,
     rightCensoredObservedSpanMinutes: S.Finite,
     closedEpisodesOver24hExcluded: S.OptionFromNullOr(EconomicsCount),
   }).pipe(
     $I.annoteSchema("EconomicsEpisodeSummary", {
       description:
-        "Closed red-to-green episode count, span percentiles and minute totals for one cut, plus the shared censoring counts and the open streaks' observed lower bound.",
+        "Closed red-to-green episode count, span percentiles and minute totals for one cut (a streak is every not-green attempt, terminations included), plus the shared censoring counts split into red and terminated members and the open streaks' observed lower bound.",
     })
   )
 ) {}
@@ -629,6 +642,7 @@ export class EconomicsEpisodeSummary extends S.Opaque<EconomicsEpisodeSummary, {
  *     leftCensoredObservedAttempts: 0,
  *     rightCensoredStreaks: 0,
  *     rightCensoredRedAttempts: 0,
+ *     rightCensoredTerminatedAttempts: 0,
  *     rightCensoredObservedSpanMinutes: 0,
  *     closedEpisodesOver24hExcluded: O.none(),
  *   })

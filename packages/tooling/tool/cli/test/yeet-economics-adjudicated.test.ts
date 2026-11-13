@@ -11,6 +11,7 @@ import {
   EconomicsScopeRequest,
   economicsAttemptClass,
   economicsCountMix,
+  renderYeetEconomicsReport,
   YeetAttemptTerminationReason,
   YeetEconomicsSource,
 } from "@beep/repo-cli/test/Yeet";
@@ -106,6 +107,8 @@ const ADJUDICATED = [
     "the first A5 writer's legacy reason `success`: no verdict and no failure named, so never a red"
   ),
   adjudicate(14, "verify", "green", undefined, "old success verdict"),
+  adjudicate(15, "verify", "red", "lint:effect-imports", "a failure verdict after the green: opens a new M1 streak"),
+  adjudicate(16, "verify", "terminated", undefined, "interrupted retry: stays in the open streak as a termination"),
 ];
 
 const countOf = (attemptClass: EconomicsAttemptClass): number =>
@@ -128,7 +131,7 @@ it.layer(LiveSource, { timeout: "30 seconds" })("yeet economics adjudicated term
 
       // Every row decodes, old ones included, and every attempt is adjudicated once.
       expect(A.map(journals, (journal) => [journal.diagnostics.invalidRows, journal.diagnostics.starts])).toEqual([
-        [0, 14],
+        [0, 16],
       ]);
       expect(
         A.sort(
@@ -158,15 +161,15 @@ it.layer(LiveSource, { timeout: "30 seconds" })("yeet economics adjudicated term
         []
       );
       const failure = report.firstFailure;
-      // The denominator: v3 counts the 6 reds; v2 counted every attempt that was
-      // not green, the 6 terminations too (12). The actionable-lane and
+      // The denominator: v3 counts the 7 reds; v2 counted every attempt that was
+      // not green, the 7 terminations too (14). The actionable-lane and
       // receipt-proxy totals still equal the red count.
       expect(report.attempts.all.classMix).toEqual([
         { key: "red", count: countOf("red") },
         { key: "terminated", count: countOf("terminated") },
         { key: "green", count: countOf("green") },
       ]);
-      expect(failure.redAttempts).toBe(6);
+      expect(failure.redAttempts).toBe(7);
       expect(failure.redAttempts + countOf("terminated")).toBe(
         A.length(A.filter(attempts, (attempt) => !O.exists(attempt.outcome, (outcome) => outcome === "success")))
       );
@@ -176,14 +179,15 @@ it.layer(LiveSource, { timeout: "30 seconds" })("yeet economics adjudicated term
         economicsCountMix(A.getSomes(A.map(ADJUDICATED, (row) => row.actionable)))
       );
       expect(report.attempts.all.failureKindMix).toEqual([
+        { key: "step-exit", count: 3 },
         { key: "unknown", count: 3 },
-        { key: "step-exit", count: 2 },
         { key: "handler-error", count: 1 },
       ]);
       // The terminations section still lists every terminal reason, the two
-      // that name a failure (red) beside the six terminations.
+      // that name a failure (red) beside the seven terminations.
       expect(report.terminations.reasonMix).toEqual(
         economicsCountMix([
+          "interrupted",
           "interrupted",
           "signal",
           "timeout",
@@ -209,11 +213,35 @@ it.layer(LiveSource, { timeout: "30 seconds" })("yeet economics adjudicated term
           row.p95ElapsedMs,
         ]),
         [
-          ["verify", 6, 2, 3, 3, O.some(10 * MINUTE), O.some(12 * MINUTE)],
+          ["verify", 8, 3, 4, 4, O.some(8 * MINUTE), O.some(12 * MINUTE)],
           ["final-check", 5, 3, 1, 4, O.some(378_000), O.some(50 * MINUTE)],
           ["publish", 3, 1, 2, 1, O.some(14 * MINUTE), O.some(14 * MINUTE)],
         ]
       );
+
+      // M1 keeps ruling 75's walk: every not-green attempt joins a streak. The
+      // comparable sequence (publish and verify) runs red, four terminations, two
+      // reds and a termination, then the green at 300 minutes closes one episode
+      // of 300 minutes. Attempts 15 (red) and 16 (interrupted) stay open, so the
+      // right-censored members split into one red and one terminated, observed
+      // from 300 to 325 minutes.
+      const { comparable24h, uncut } = report.redToGreen;
+      expect([
+        comparable24h.closedEpisodes,
+        comparable24h.totalEpisodeSpanMinutes,
+        comparable24h.measuredAttemptMachineMinutes,
+      ]).toEqual([1, 300, 96]);
+      expect([
+        uncut.rightCensoredStreaks,
+        uncut.rightCensoredRedAttempts,
+        uncut.rightCensoredTerminatedAttempts,
+        uncut.rightCensoredObservedSpanMinutes,
+      ]).toEqual([1, 1, 1, 25]);
+      expect(
+        Str.includes(
+          "  censoring: left 0 episode(s) (0 attempt(s)), right 1 streak(s) (1 red and 1 terminated attempt(s), observed at least 25 min)"
+        )(renderYeetEconomicsReport(report))
+      ).toBe(true);
     })
   );
 });
