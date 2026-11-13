@@ -20,7 +20,8 @@ Status: `active`
   runner and the run waited 7m47s before its first job; the aggregates were created only when their shards
   finished and ran 2 to 5 seconds. Two census defects found: a lane span starts at its first shard's start, so
   the wait before it is outside every p95, and `Test Integration` is measured as its aggregate job alone. The
-  operator restated the load bound and chose the self-hosted pool for the shards (decision file of the day).
+  operator restated the load bound; after the sizing (`research/shard-runner-sizing-2026-11-13.md`) the shards
+  stay hosted and overflow to the self-hosted pool only past a 10-minute hosted wait (decision files of the day).
 
 - Window-4 preview and repairs (2026-11-02): a preview census over the clean
   15-context span (`2026-10-27T10:00Z` → `2026-11-03T10:00Z`, 1,202 runs by
