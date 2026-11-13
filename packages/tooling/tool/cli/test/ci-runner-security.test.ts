@@ -2090,6 +2090,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "deploy-beep-effect-web.yml:Deploy beep-effect-web (prod)",
         // Prod deploy of the Storybook Alchemy stack; environment-gated, not a local lane.
         "deploy-storybook.yml:Deploy Storybook (prod)",
+        // Prod deploy of the InfraGithub Alchemy stack; environment-gated and armed by a variable.
+        "deploy-infra-github.yml:Deploy infra-github (prod)",
         "fleet-lane-probe.yml:Lane Probe (${{ inputs.lane }})",
         "fleet-shadow-check.yml:Shadow Probe",
         "heavy-admit.yml:Heavy Admission",

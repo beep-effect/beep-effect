@@ -498,6 +498,12 @@
         ]
       },
       {
+        "name": "@beep/infra-github",
+        "patterns": [
+          "packages/tooling/infra/github/src/**"
+        ]
+      },
+      {
         "name": "@beep/jsonc",
         "patterns": [
           "packages/foundation/modeling/jsonc/src/**"
@@ -3027,6 +3033,19 @@
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/infra-github",
+        "allow": [
+          "@beep/identity",
+          "@beep/infra-github",
+          "@beep/schema"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/infra-github",
+          "@beep/schema"
         ]
       },
       {

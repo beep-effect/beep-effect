@@ -255,7 +255,8 @@ const generatedComposers = $I.compose(
   "execution-authority-config",
   "eyecite",
   "agent-memory-store",
-  "sqlite"
+  "sqlite",
+  "infra-github"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -3806,3 +3807,20 @@ export const $AgentMemoryStoreId: Identity.IdentityComposer<"@beep/agent-memory-
  * @since 0.0.0
  */
 export const $SqliteId: Identity.IdentityComposer<"@beep/sqlite"> = composers.$SqliteId;
+
+/**
+ * Identity composer for `@beep/infra-github`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $InfraGithubId } from "@beep/identity/packages"
+ *
+ * const id = $InfraGithubId.make("InfraGithub")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $InfraGithubId: Identity.IdentityComposer<"@beep/infra-github"> = composers.$InfraGithubId;

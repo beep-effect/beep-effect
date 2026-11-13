@@ -3920,6 +3920,24 @@
         "bun-types": "catalog:",
       },
     },
+    "packages/tooling/infra/github": {
+      "name": "@beep/infra-github",
+      "version": "0.0.0",
+      "dependencies": {
+        "@alchemy.run/aws": "catalog:",
+        "@alchemy.run/github": "catalog:",
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "alchemy": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@alchemy.run/test": "catalog:",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
     "packages/tooling/library/agent-memory-store": {
       "name": "@beep/agent-memory-store",
       "version": "0.0.0",
@@ -4628,6 +4646,7 @@
     "@alchemy.run/aws": "2.0.0-beta.86",
     "@alchemy.run/cloudflare": "2.0.0-beta.86",
     "@alchemy.run/domain": "2.0.0-beta.86",
+    "@alchemy.run/github": "2.0.0-beta.86",
     "@alchemy.run/test": "2.0.0-beta.86",
     "@arizeai/phoenix-client": "8.0.0",
     "@azure/core-http-compat": "2.5.0",
@@ -4904,6 +4923,8 @@
     "@alchemy.run/docker": ["@alchemy.run/docker@2.0.0-beta.86", "", { "dependencies": { "rolldown": "1.2.16" }, "peerDependencies": { "@effect/platform-bun": "^4.1.4", "alchemy": "2.0.0-beta.86", "effect": "^4.1.4" }, "optionalPeers": ["@effect/platform-bun"] }, "sha512-/9O5BMjDVn86MzXtII1sAj73nNjd6hRjXtHyN3YSXjfSsu3G+WKlErN/HWTMLY26ttnbygzWcVe58XNm5IX1qQ=="],
 
     "@alchemy.run/domain": ["@alchemy.run/domain@2.0.0-beta.86", "", { "peerDependencies": { "@alchemy.run/cloudflare": "2.0.0-beta.86", "@alchemy.run/effect-cluster": "2.0.0-beta.86", "@alchemy.run/rivet": "2.0.0-beta.86", "@distilled.cloud/cloudflare": "1.0.0-rc.19", "@effect/sql-pg": "^4.1.4", "alchemy": "2.0.0-beta.86", "effect": "^4.1.4", "foldkit": "^0.170.0" }, "optionalPeers": ["@alchemy.run/cloudflare", "@alchemy.run/effect-cluster", "@alchemy.run/rivet", "@distilled.cloud/cloudflare", "@effect/sql-pg", "foldkit"] }, "sha512-YsLu8Pc1KZUEUGeMu7lqhhxSPv4Ia2rbg0KwsBfv00AYiETdZgAegr26yOd4+sT8GQA/flakhrN6b7j6iXFn8A=="],
+
+    "@alchemy.run/github": ["@alchemy.run/github@2.0.0-beta.86", "", { "dependencies": { "@distilled.cloud/core": "1.0.0-rc.19", "@distilled.cloud/github": "1.0.0-rc.19", "libsodium-wrappers": "^0.8.3" }, "peerDependencies": { "alchemy": "2.0.0-beta.86", "effect": "^4.1.4" } }, "sha512-OrEL26tFCspbyUbwUjX7FRE+lINbN4AnJ1CAnkBd7ndDbO71KyCcmorZCTkw75rQC48Q9nNEg2pS0a9KC0x5bA=="],
 
     "@alchemy.run/kubernetes": ["@alchemy.run/kubernetes@2.0.0-beta.86", "", { "dependencies": { "@alchemy.run/docker": "2.0.0-beta.86", "yaml": "^2.9.1" }, "peerDependencies": { "@effect/platform-bun": "^4.1.4", "alchemy": "2.0.0-beta.86", "effect": "^4.1.4" }, "optionalPeers": ["@effect/platform-bun"] }, "sha512-oulMVCLRnpW9iSlAIYZ3IyYnv0vCAVLrUFkaL6YVAYCXgXwVq0DLhQvRHWefaSLqtiJ7bK0yvUHsYhMRzl02jQ=="],
 
@@ -5194,6 +5215,8 @@
     "@beep/identity": ["@beep/identity@workspace:packages/foundation/modeling/identity"],
 
     "@beep/infra": ["@beep/infra@workspace:infra"],
+
+    "@beep/infra-github": ["@beep/infra-github@workspace:packages/tooling/infra/github"],
 
     "@beep/jsonc": ["@beep/jsonc@workspace:packages/foundation/modeling/jsonc"],
 
@@ -6084,6 +6107,8 @@
     "@distilled.cloud/cloudflare": ["@distilled.cloud/cloudflare@1.0.0-rc.19", "", { "dependencies": { "@distilled.cloud/core": "1.0.0-rc.19", "@distilled.cloud/s3": "1.0.0-rc.19" }, "peerDependencies": { "effect": "^4.1.2" } }, "sha512-J/pidhpALhW3t9L4FSQt4yt5cbIu3fEAQ/3z+a6ae6Zf8DAXSmMW8aNYX/NHKJ5KP1Qy4/Bq0gLbHILSY8EV7A=="],
 
     "@distilled.cloud/core": ["@distilled.cloud/core@1.0.0-rc.19", "", { "peerDependencies": { "effect": "^4.1.2" } }, "sha512-BO/Q8Q/9Zsv30RyLj8ZddDRBimlsQOGE6SZSVxJJxT0XARErZp/+Hr0xZTqvvhYHO0thSxUas5DteyEs5Z36rQ=="],
+
+    "@distilled.cloud/github": ["@distilled.cloud/github@1.0.0-rc.19", "", { "dependencies": { "@distilled.cloud/core": "1.0.0-rc.19" }, "peerDependencies": { "effect": "^4.1.2" } }, "sha512-N2QfwqrQN+UJkW8V1QrX9llAonVqnqPuBfz53lB7DyQEdzHgSvk188ixIalJmWPot4dDeJrTpWPBjeZRpdCk1Q=="],
 
     "@distilled.cloud/iceberg": ["@distilled.cloud/iceberg@1.0.0-rc.19", "", { "dependencies": { "@distilled.cloud/core": "1.0.0-rc.19" }, "peerDependencies": { "effect": "^4.1.2" } }, "sha512-vqnwGhofJqpZe/JWwCWXje6kZqK4dp7As90MeCZI5xLs5z05xxiQLn0MXCokvFk0k+7OWAVAAU4NQjv5w8tAxQ=="],
 
@@ -8372,6 +8397,10 @@
     "lib0": ["lib0@0.2.117", "", { "dependencies": { "isomorphic.js": "^0.2.4" }, "bin": { "0serve": "bin/0serve.js", "0gentesthtml": "bin/gentesthtml.js", "0ecdsa-generate-keypair": "bin/0ecdsa-generate-keypair.js" } }, "sha512-DeXj9X5xDCjgKLU/7RR+/HQEVzuuEUiwldwOGsHK/sfAfELGWEyTcf0x+uOvCvK3O2zPmZePXWL85vtia6GyZw=="],
 
     "libphonenumber-js": ["libphonenumber-js@1.13.16", "", {}, "sha512-tIOCM9yx2Go6d5/ZANe0K+G4AZek1Ymx81HxQpf19Sri4zMP95eQbKdnUGHAvFQ4nx0PeLhFqvAfisTADXj3tQ=="],
+
+    "libsodium": ["libsodium@0.8.4", "", {}, "sha512-lMcYaRi0zcs7tarATsQUYC7rstliIXZuoq0c6zXSgNtSNtdvBgkSegjWhpMJAXzKX3SUSwIp7+zEsob+j3LuRw=="],
+
+    "libsodium-wrappers": ["libsodium-wrappers@0.8.4", "", { "dependencies": { "libsodium": "^0.8.0" } }, "sha512-mu8aAWucZjTB5O/BtGXtW4e1agy7uHxNYG7zPthmmD1jU43LCDmSWZLN4JhflbdPXj3yDO4lxM1O9hLDgIOXDw=="],
 
     "lie": ["lie@3.3.0", "", { "dependencies": { "immediate": "~3.0.5" } }, "sha512-UaiMJzeWRlEujzAuw5LokY1L5ecNQYZKfmyZ9L7wDHb/p5etKaxXhohBcrw0EYby+G/NA52vRSN4N39dxHAIwQ=="],
 

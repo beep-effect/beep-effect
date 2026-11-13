@@ -1,0 +1,118 @@
+name: Deploy infra-github
+
+# Deploys the `prod` stage of the InfraGithub Alchemy stack in
+# packages/tooling/infra/github: the beep-effect/beep-effect repository
+# settings, the `main` ruleset (with the beep-reviewer switch), the deploy
+# environments, their variables, repository variables and labels. State lives
+# in the repo's shared AWS S3 state store (goals/infra-alchemy-rebuild); its
+# stage lease plus this concurrency group serialize every prod deploy and never
+# cancel one mid-apply.
+#
+# The job is disarmed until the reviewed live adoption: it runs only while the
+# repository variable INFRA_GITHUB_DEPLOY_ARMED is `true`. GitHub credentials
+# are an installation token of the `beep-infra-github` App, minted per run from
+# the `infra-github-prod` environment (vars.INFRA_GITHUB_APP_ID,
+# secrets.INFRA_GITHUB_APP_PRIVATE_KEY); the workflow's own GITHUB_TOKEN cannot
+# administer rulesets or environments. AWS credentials come from the GitHub
+# OIDC state role. Runbook: docs/runbooks/alchemy-infra.md.
+on:
+  push:
+    branches: [main]
+    paths:
+      - packages/tooling/infra/github/**
+      - .github/workflows/deploy-infra-github.yml
+  workflow_dispatch:
+
+concurrency:
+  group: alchemy-infra-github-prod
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy infra-github (prod)
+    if: vars.INFRA_GITHUB_DEPLOY_ARMED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: infra-github-prod
+      url: https://github.com/beep-effect/beep-effect/rules/10240248
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      ALCHEMY_TELEMETRY_DISABLED: "1"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+
+      # The census snapshot and the stack tests run against an in-memory
+      # GitHub with no token; a red here stops the deploy before it touches
+      # the repository.
+      - name: Test package
+        working-directory: packages/tooling/infra/github
+        shell: bash
+        run: bun run test
+
+      - name: Mint the infra-github App token
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          app-id: ${{ vars.INFRA_GITHUB_APP_ID }}
+          private-key: ${{ secrets.INFRA_GITHUB_APP_PRIVATE_KEY }}
+          owner: beep-effect
+          repositories: beep-effect
+        # No permission-* inputs: the token carries exactly the App's own
+        # permissions, which the App manifest keeps to what the stack needs.
+
+      - name: Configure AWS credentials (state store)
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.ALCHEMY_STATE_ROLE_ARN }}
+          role-session-name: alchemy-infra-github-prod
+          aws-region: us-east-1
+
+      # alchemy plan has no changes-pending exit code, so this log is the
+      # record that a deploy replaces and deletes nothing.
+      - name: Plan prod stage
+        working-directory: packages/tooling/infra/github
+        shell: bash
+        env:
+          CI: "true"
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: bunx alchemy plan --stage prod --env-file /dev/null
+
+      - name: Deploy prod stage
+        working-directory: packages/tooling/infra/github
+        shell: bash
+        env:
+          CI: "true"
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: bunx alchemy deploy --stage prod --yes --env-file /dev/null
+
+      # The ruleset read can lag the write, so poll: the main ruleset must be
+      # active and list beep-reviewer exactly when the committed switch says
+      # `required`. Fails with the last observation after 120 seconds.
+      - name: Check the main ruleset
+        working-directory: packages/tooling/infra/github
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          expected="$(bun -e 'import { productionConfig } from "./src/Production.ts"; console.log(productionConfig.mainRuleset.reviewerCheck)')"
+          deadline=$((SECONDS + 120))
+          while :; do
+            observed="$(gh api repos/beep-effect/beep-effect/rulesets/10240248 --jq '[.enforcement, ([.rules[] | select(.type == "required_status_checks") | .parameters.required_status_checks[] | select(.context == "beep-reviewer")] | if length > 0 then "required" else "advisory" end)] | join(" ")')"
+            echo "expected=active ${expected} observed=${observed}"
+            [[ "$observed" == "active ${expected}" ]] && break
+            if (( SECONDS >= deadline )); then exit 1; fi
+            sleep 10
+          done

@@ -24,3 +24,25 @@ identifiers are redacted.
   the pushed head records the gate as skipped and hosted CI measures it.
 - **Would have prevented it:** scope the coverage replay by the workspaces whose resolved dependencies
   changed in the lockfile diff, not by the lockfile path alone.
+
+## 2026-11-13: `create-package github --kind infra` leaves a half-written `@beep/github` that config-sync then wires in
+
+- **Doing:** P3 GitHub stack (lane `goals/infra-alchemy-rebuild-p3-github`), trying to match the sibling
+  turbo-cache layout (`packages/tooling/infra/turbo-cache`, package `@beep/infra-turbo-cache`).
+- **Evidence:** `bun run beep create-package github --family tooling --kind infra` wrote
+  `packages/tooling/infra/github/package.json` with name `@beep/github` (the drivers package already owns
+  it), then failed with `Workspace name "@beep/github" already exists`. The partial directory stayed, and the
+  next config-sync rewired three packages' tsconfig references from `packages/drivers/github` to it.
+  The working form is `create-package infra-github --dir-name github`.
+- **Would have prevented it:** check the workspace name before writing any file; and for `--kind infra`,
+  default the package name to `@beep/infra-<name>` (or say in the help that the prefix is the caller's job).
+
+## 2026-11-13: `@alchemy.run/github` beta.86 plans adopted singletons as `create`
+
+- **Doing:** the same lane; the read-only `alchemy plan` of `InfraGithub` against the live repository.
+- **Evidence:** `Plan: 36 to create, 1 to adopted`. Only `GitHub.Ruleset` has a `read` adoption probe;
+  `Repository`, `Environment`, `Variable` and `Label` return nothing without prior state, so an empty stage
+  shows `create` for objects whose reconcile only updates (stack tests assert zero POST). A reviewer reading
+  the plan cannot tell a real create from a converge-by-name.
+- **Would have prevented it:** a name-based `read` in those four providers (upstream contribution); until
+  then the decision file explains each `create`.

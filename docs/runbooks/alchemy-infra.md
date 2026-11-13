@@ -104,6 +104,7 @@ decision file per object).
 | --- | --- | --- | --- | --- |
 | `BeepEffectWeb` | `apps/beep-effect-web/alchemy.run.ts` | `deploy-beep-effect-web.yml` | `beep-effect-web-prod` | `https://beep-effect.com` (custom domain, `www` redirect) |
 | `Storybook` | `apps/storybook/alchemy.run.ts` | `deploy-storybook.yml` | `storybook-prod` | `https://beep-effect.com/storybook/` (zone route `beep-effect.com/storybook*` in front of the apex Worker) |
+| `InfraGithub` | `packages/tooling/infra/github/alchemy.run.ts` | `deploy-infra-github.yml` (disarmed) | `infra-github-prod` | settings, `main` ruleset, deploy environments, variables, labels of `beep-effect/beep-effect` |
 
 Storybook is an assets-only Worker. Its build writes to `site/storybook` under the app
 (`bun run storybook:build:site`), so each asset path carries the `/storybook` prefix the
@@ -121,6 +122,32 @@ CLOUDFLARE_ACCOUNT_ID=op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_CLOUDFLARE_ACCOUNT_ID
 ```
 
 Destroy it with the same command and `destroy` in place of `deploy`.
+
+### InfraGithub
+
+`InfraGithub` writes to the live repository from every stage, because the repository, its
+ruleset and its labels are singletons. `prod` deploys only from CI; any other stage is a
+plan-only preview and refuses to start without `INFRA_GITHUB_LIVE_PREVIEW=plan-only`. Never
+`deploy` a preview stage. Every resource is retained on removal and the repository and the
+`main` ruleset are protected, so a stray destroy deletes nothing:
+
+```sh
+eval "$(aws configure export-credentials --profile elpresidank-vault --format env)"
+export AWS_REGION=us-east-1
+cd packages/tooling/infra/github
+GITHUB_TOKEN="$(gh auth token)" INFRA_GITHUB_LIVE_PREVIEW=plan-only \
+  bunx alchemy plan --stage "preview_$USER" --env-file /dev/null
+```
+
+The first plan shows the `main` ruleset as `adopted` and every other object as
+`create`: `GitHub.Repository`, `Environment`, `Variable` and `Label` have no adoption
+probe in beta.86, and their reconcile observes the live object by name and updates it in
+place (the stack tests prove a first deploy issues no POST). The deploy workflow stays
+disarmed until the reviewed live adoption: the repository variable
+`INFRA_GITHUB_DEPLOY_ARMED=true` arms it, after the `beep-infra-github` App exists, the
+`infra-github-prod` environment holds `INFRA_GITHUB_APP_ID`, `INFRA_GITHUB_APP_PRIVATE_KEY`
+and `ALCHEMY_STATE_ROLE_ARN`, and the state role trusts that environment's subject. Ownership,
+secrets and the beep-reviewer switch: `packages/tooling/infra/github/README.md`.
 
 ## Acceptance evidence
 
