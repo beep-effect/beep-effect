@@ -26,7 +26,7 @@ const quarantinableBuildOutput = A.join(
     "@beep/types:build: cache hit, replaying logs 0123456789abcdef",
     "@beep/box:build: cache bypass, force executing 64ee9ecf7492516e",
     "@beep/box:build: $ bun run beep:build",
-    "@beep/box:build: $ tsc -b tsconfig.json && bun run babel",
+    "@beep/box:build: $ tsrs -p tsconfig.json --emitDeclarationOnly",
     boxTs2589Line,
     "@beep/box:build: ERROR: command finished with error: command (/repo/packages/common/box) bun run beep:build exited (2)",
     "@beep/box#build: command (/repo/packages/common/box) bun run beep:build exited (2)",

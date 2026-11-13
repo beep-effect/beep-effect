@@ -3,17 +3,17 @@
   "initiative": {
     "id": "agentic-cad-patent-tooling",
     "title": "Agentic CAD — Patent Tooling",
-    "status": "active",
+    "status": "paused",
     "created": "2026-05-29",
-    "updated": "2026-08-17",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/agentic-cad-patent-tooling",
-  "lifecycle": "active",
+  "lifecycle": "paused",
   "mission": "CAD viewing plus a first-class reference-numeral / figure graph for a solo patent practice in professional-desktop.",
   "executionCapable": true,
   "reflectionRequired": true,
-  "statusNote": "Promoted from reference to active 2026-08-17. The 2026-05-29 buyer's guide was repo-agnostic and 3D-solid-biased; a corpus census (837 DWG vs 201 STEP; 86 of 175 .ai sheets carry extractable 'FIG. n' text) reframed the packet around the 2D figure and its numeral graph. Local-only was relaxed to a per-matter policy and consent record on operator direction: quality first, cloud permitted where better.",
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): It has real product value, but it is a large and unstarted build with no activity for a week, so it should not count as active. Resume with `bun run beep goals set-status agentic-cad-patent-tooling active` when it is picked up. Before the ruling: Promoted from reference to active 2026-08-17. The 2026-05-29 buyer's guide was repo-agnostic and 3D-solid-biased; a corpus census (837 DWG vs 201 STEP; 86 of 175 .ai sheets carry extractable 'FIG. n' text) reframed the packet around the 2D figure and its numeral graph. Local-only was relaxed to a per-matter policy and consent record on operator direction: quality first, cloud permitted where better.",
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,

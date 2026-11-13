@@ -235,6 +235,12 @@ Cell A runs the archived prompt against a skill-less plugin under --ablation non
 
 Reverse: Add a fourth cell (skill without laws) in a new dated analysis rule if the arms prove unequal.
 
+### Closed by operator ruling without a verified readiness receipt, 2026-11-13
+
+Operator ruling 2026-11-13 ~05:10Z: #3167 (04:33Z), the re-final #3207 (04:47Z) and the owner-held re-final #3210 (05:07Z) all merged before the readiness monitor printed merge-ready: yes, so goals completion refresh cannot verify the closeout. The packet closes completed-retained by ruling with no verified receipt and no further re-finals.
+
+Reverse: Open a goals-only re-final held until monitor merge-ready if a verified completion receipt is later required; the verdict and evidence on main do not change.
+
 ### Hold the scored run for the plan-limit reset, 2026-11-13
 
 The seven-day limit resets 2026-11-15 23:00 America/Chicago. Per SPEC, no top-up, no runner or model switch: the headroom pilot and P2 resume after the reset.

@@ -4,13 +4,13 @@
     "id": "agent-rating-critique-fixes",
     "packetId": "goal-packet/v1:f4c652408771f46fe4ba85097b755425073bf20093672e5460bbc760aa1c99e5",
     "title": "Agent Rating Critique Fixes",
-    "status": "active",
+    "status": "superseded",
     "created": "2026-10-21",
-    "updated": "2026-10-21",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/agent-rating-critique-fixes",
-  "lifecycle": "active",
+  "lifecycle": "superseded",
   "mission": "Land the 2026-10-21 repository rating (8/10) as evidence and execute its critique fixes in scored phases",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -82,5 +82,8 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "statusNote": "Closed (superseded) 2026-11-13 by operator ruling (finish board): There has been no real progress in about three weeks, the rating is now stale, and later quality goals overlap its fixes. Re-open with `bun run beep goals set-status agent-rating-critique-fixes active` and re-graduate the next slice.",
+  "supersededNote": "Closed by operator ruling (finish board, 2026-11-13) without meeting its completion gate; see goals/agent-rating-critique-fixes/decisions/2026-11-13-finish-board-ruling-close.md.",
+  "retentionReason": "Closed by operator ruling (finish board, 2026-11-13) with a re-open path: the full packet stays on main so `bun run beep goals set-status agent-rating-critique-fixes active` can resume it or re-graduate the next slice without restoring from the archive."
 }

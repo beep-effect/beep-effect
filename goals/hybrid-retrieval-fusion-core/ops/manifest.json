@@ -3,15 +3,15 @@
   "initiative": {
     "id": "hybrid-retrieval-fusion-core",
     "title": "Hybrid Retrieval Fusion Core",
-    "status": "active",
+    "status": "paused",
     "created": "2026-07-14",
-    "updated": "2026-07-14",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/hybrid-retrieval-fusion-core",
-  "lifecycle": "active",
+  "lifecycle": "paused",
   "mission": "Deliver deterministic weighted-RRF fusion for ranked semantic, lexical, literal, and optional graph channels with spans, contribution diagnostics, and a mandatory ClaimGate boundary.",
-  "statusNote": "P0 must audit live symbols/topology and establish prior-generation scorer migration parity before implementation scaffolding.",
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): Zero phases begun and overlaps the text-knowledge stack rebuild; nothing in flight. Resume with `bun run beep goals set-status hybrid-retrieval-fusion-core active` when it is picked up. Before the ruling: P0 must audit live symbols/topology and establish prior-generation scorer migration parity before implementation scaffolding.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {

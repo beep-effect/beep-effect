@@ -55,7 +55,8 @@ Higher sources outrank lower sources when they conflict.
 - `packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts`
   and `packages/tooling/tool/cli/src/commands/Architecture/OperationPlanPackageJson.ts`:
   the scaffolds that write a `babel` script key.
-- `tsconfig.base.json`: emit settings.
+- `tsconfig.base.json`: emit settings (read only; the flag goes on the build
+  command).
 - `turbo.json`: the `build` outputs and, for the check-once step, the `check`
   task's dependencies.
 - `packages/tooling/tool/cli/src/commands/Quality/CheckCensus.ts` and
@@ -86,9 +87,10 @@ Higher sources outrank lower sources when they conflict.
 - Adding a `build` edge to `check` changes what a filtered run executes.
   `goals/verification-route` and `goals/route-soundness-repair` own
   affected-routing: agree the change with them through the orchestrator first.
-- `tsconfig.base.json` is a global Turbo input. The declaration-only PR
-  invalidates every build cache entry once: land it when the merge queue is
-  quiet.
+- The declaration-only PR changes every generated manifest and the `build`
+  task outputs, so it invalidates every build cache entry once: land it when
+  the merge queue is quiet. `tsconfig.base.json` does not change (decision
+  `2026-11-13-declaration-only-flag-on-the-build-command`).
 - Wall-time baselines move under `goals/local-proof-under-ten`,
   `goals/hosted-setup-tax`, `goals/heavy-pool-diet` and
   `goals/certainty-scorecard`. Tell them before and after each behaviour-changing
@@ -115,23 +117,23 @@ Baseline and proof harness (PR 1, no behaviour change):
 
 Declaration-only build (PR 2):
 
-- [ ] `turbo.json` `build.outputs` no longer lists the
+- [x] `turbo.json` `build.outputs` no longer lists the
       `node_modules/.tmp` tsbuildinfo glob, or the package that still writes
       there is named in the Exception Ledger. Moved here from PR 1: removing
       it changes every build task hash (decision
       `2026-11-10-tmp-glob-rides-pr-2`).
 
-- [ ] No generated `beep:build` runs Babel and no workspace manifest or
+- [x] No generated `beep:build` runs Babel and no workspace manifest or
       scaffold carries a `babel` script key; `bun run beep lint package-scripts`
       passes.
-- [ ] After a clean `bun run build`, no library package's `dist` holds `*.js`
+- [x] After a clean `bun run build`, no library package's `dist` holds `*.js`
       or `*.js.map` outside Exception Ledger rows, and every `exports` subpath
       has its `.d.ts` and `.d.ts.map`. The build output contract test asserts
       both.
 - [ ] The PR's hosted gate is green on its head, or each red is attributed as
       inherited. This run is the proof that nothing reads `dist/*.js`.
-- [ ] `docs/runbooks/typescript-toolchain.md` describes the new `beep:build`.
-- [ ] `research/` holds the after numbers, measured the same way as the
+- [x] `docs/runbooks/typescript-toolchain.md` describes the new `beep:build`.
+- [x] `research/` holds the after numbers, measured the same way as the
       baseline.
 
 Check once (PR 3, conditional):
@@ -267,6 +269,30 @@ Evidence: `goals/declaration-only-builds/research/2026-11-10-build-check-equival
 Lane chore/declaration-only-builds-baseline
 
 Reverse: Record a decision that cuts PR 3 and leave the own-source check in every generated check script; the census mode stays as a diagnostic.
+
+### Declaration-only is set on the generated build command, not in the base tsconfig, 2026-11-13
+
+The plan was to make `tsconfig.base.json` emit declarations only. `emitDeclarationOnly` needs `declaration` or `composite`, and 404 tracked overlays turn both off (200 `tsconfig.check.json`, 177 `tsconfig.test.json`, 12 `tsconfig.scripts.json`, 5 `tsconfig.stories.json` and ten others). Each would fail with TS5069 the moment the base set the option. Measured: `tsrs -p tsconfig.check.json --emitDeclarationOnly` in `@beep/types` prints TS5069.
+
+So the generated `beep:build` for the four emitting kinds becomes `tsrs -p tsconfig.json --emitDeclarationOnly` and the base config stays as it is. The blast radius is the four policy rows and the manifests they generate. One exported constant in `@beep/repo-cli-kit` carries the command, and the census build-equivalence mode reads it, so nothing else invokes the build program with different emit flags.
+
+Consequence for the plan: PR 2 no longer changes a global Turbo input. It still invalidates every build cache entry once, because every manifest and the `build` task outputs change.
+
+Lane feat/declaration-only-build
+
+Reverse: Move the flag into the base config and add an explicit opt-out to every no-emit overlay through the overlay generators.
+
+### Every tsrs-emitting generated build becomes declaration-only, three apps included, 2026-11-13
+
+The scripts policy only seeds a missing implementation value and never touches extra keys, so regenerating could not migrate anything. PR 2 adds a retirement rule: retired script names (`babel`) that the lint rejects and the writer removes, and retired `beep:build` values with their replacement.
+
+The retired values are the Babel build, the bare `tsrs -p tsconfig.json` build that 13 packages used, and the codegen-prefixed Babel build of `@beep/repo-configs`. They are retired for every managed kind, not only library, tool, ecosystem and infra, because three apps carried the library build: `apps/architecture-lab-proof` and `apps/practice-gateway` called `bun run babel`, so dropping the key alone would have broken them, and `apps/practice-kg-mcp` used the bare build. All three run from `src` (their `bin` entries point there) and nothing reads their `dist` JavaScript. 182 manifests changed.
+
+A package that needs JavaScript keeps it through `javaScriptBuildOverrides`, a named per-package list that starts empty. The search for readers of `dist/*.js` across manifests, CI lane code, workflows, Vitest and Vite configs, docgen and Dockerfiles found none, so the Exception Ledger stays empty. The hosted gate on PR 2 is the proof.
+
+Lane feat/declaration-only-build
+
+Reverse: Add a JavaScriptBuildOverride row for the manifest in the scripts policy and run the package-scripts writer; that package emits JavaScript again.
 
 <!-- beep:decisions:end -->
 

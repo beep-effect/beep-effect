@@ -245,6 +245,138 @@ export class ImplScriptDefault extends S.Opaque<ImplScriptDefault, { readonly br
   )
 ) {}
 
+/**
+ * Compiler flag that limits a generated build to declarations and declaration maps.
+ *
+ * **Example** (Run the build program without JavaScript emit)
+ *
+ * ```ts
+ * import { DECLARATION_ONLY_BUILD_FLAG } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * const args = ["-p", "tsconfig.json", DECLARATION_ONLY_BUILD_FLAG]
+ * console.log(args.join(" ")) // "-p tsconfig.json --emitDeclarationOnly"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const DECLARATION_ONLY_BUILD_FLAG = "--emitDeclarationOnly";
+
+/**
+ * Generated `beep:build` of the library, tool, ecosystem, and infra kinds.
+ *
+ * **Details**
+ *
+ * The build type-checks the package's `tsconfig.json` program and writes only
+ * `.d.ts` and `.d.ts.map` files under `dist`: workspace consumers resolve
+ * `exports` to `src`, so the declaration is the only `dist` artifact anything
+ * reads. The flag sits on the command rather than in `tsconfig.base.json`
+ * because the no-emit overlays (`tsconfig.check.json`, `tsconfig.test.json`)
+ * extend the base config and reject `emitDeclarationOnly` without `declaration`.
+ *
+ * **Example** (Compare a manifest build with the generated command)
+ *
+ * ```ts
+ * import { DECLARATION_ONLY_BUILD_COMMAND } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * console.log(DECLARATION_ONLY_BUILD_COMMAND) // "tsrs -p tsconfig.json --emitDeclarationOnly"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const DECLARATION_ONLY_BUILD_COMMAND = `tsrs -p tsconfig.json ${DECLARATION_ONLY_BUILD_FLAG}`;
+
+/**
+ * Script keys the policy no longer generates; the gate rejects them and `--write` removes them.
+ *
+ * **Example** (Recognise the retired Babel script)
+ *
+ * ```ts
+ * import { RetiredScriptName } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * import * as S from "effect/Schema"
+ * console.log(S.is(RetiredScriptName)("babel")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RetiredScriptName = LiteralKit(["babel"]).pipe(
+  $I.annoteSchema("RetiredScriptName", {
+    description: "Script keys the policy no longer generates; the gate rejects them and --write removes them.",
+  })
+);
+/**
+ * Decoded RetiredScriptName value.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RetiredScriptName = typeof RetiredScriptName.Type;
+
+/**
+ * Implementation text the policy once generated, with the text `--write` puts in its place.
+ *
+ * **Details**
+ *
+ * Implementation values are package-owned, so the policy rewrites one only when
+ * it still equals a retired value exactly. Any other value is left alone.
+ *
+ * **Example** (Retire the Babel build)
+ *
+ * ```ts
+ * import { RetiredImplScript } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * const row = RetiredImplScript.make({
+ *   kind: "library",
+ *   name: "beep:build",
+ *   value: "tsrs -p tsconfig.json && bun run babel",
+ *   replacement: "tsrs -p tsconfig.json --emitDeclarationOnly",
+ * })
+ * console.log(row.replacement) // "tsrs -p tsconfig.json --emitDeclarationOnly"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RetiredImplScript extends S.Opaque<RetiredImplScript, { readonly brand: unique symbol }>()(
+  S.Struct({ kind: PackageKind, name: ImplScriptName, value: S.String, replacement: S.String }).pipe(
+    $I.annoteSchema("RetiredImplScript", {
+      description: "Implementation text the policy once generated, with the text --write puts in its place.",
+    })
+  )
+) {}
+
+/**
+ * Reviewed permission for one package's `beep:build` to keep emitting JavaScript.
+ *
+ * **Details**
+ *
+ * Generated builds emit declarations only. A package with a real reader of its
+ * `dist/*.js` keeps a JavaScript-emitting `beep:build` (for example
+ * `tsrs -p tsconfig.json`) through a row naming its manifest and the reader;
+ * `--write` then leaves that value alone. Record the row in the owning goal's
+ * Exception Ledger and remove it when the reader goes.
+ *
+ * **Example** (Keep JavaScript for one package)
+ *
+ * ```ts
+ * import { JavaScriptBuildOverride } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * const row = JavaScriptBuildOverride.make({
+ *   manifest: "packages/drivers/example/package.json",
+ *   reason: "the example worker image runs dist/main.js",
+ * })
+ * console.log(row.manifest) // "packages/drivers/example/package.json"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class JavaScriptBuildOverride extends S.Opaque<JavaScriptBuildOverride, { readonly brand: unique symbol }>()(
+  S.Struct({ manifest: S.String, reason: S.NonEmptyString }).pipe(
+    $I.annoteSchema("JavaScriptBuildOverride", {
+      description: "Reviewed permission for one package's beep:build to keep emitting JavaScript.",
+    })
+  )
+) {}
+
 const isTaskScriptName = S.is(TaskScriptName);
 const isImplScriptName = S.is(ImplScriptName);
 
@@ -451,7 +583,7 @@ export const CheckerScriptName = S.String.check(S.isPattern(/^beep:(?:build|chec
 export type CheckerScriptName = typeof CheckerScriptName.Type;
 
 /**
- * Seven actionable deviations from the canonical scripts contract.
+ * Nine actionable deviations from the canonical scripts contract.
  *
  * **Example** (Inspect PackageScriptsDrift)
  *
@@ -472,9 +604,11 @@ export const PackageScriptsDrift = S.TaggedUnion({
   placeholder: { name: S.tag("codegen"), actual: S.String },
   "derivation-conflict": { name: S.Literals(["doctest", "build"]), reason: S.String },
   "checker-engine": { name: CheckerScriptName, engine: NonCanonicalChecker, actual: S.String },
+  "retired-impl": { name: ImplScriptName, expected: S.String, actual: S.String },
+  "retired-script": { name: RetiredScriptName, actual: S.String },
 }).pipe(
   $I.annoteSchema("PackageScriptsDrift", {
-    description: "Seven actionable deviations from the canonical scripts contract.",
+    description: "Nine actionable deviations from the canonical scripts contract.",
   })
 );
 /**
@@ -743,7 +877,7 @@ export type CodegenGeneratorPackage = typeof CodegenGeneratorPackage.Type;
  *
  * ```ts
  * import { taskScriptRules } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
- * console.log(taskScriptRules.length) // 119
+ * console.log(taskScriptRules.length) // 112
  * ```
  *
  * @category policies
@@ -1365,14 +1499,14 @@ export const taskScriptRules: ReadonlyArray<TaskScriptRule> = [
  *
  * ```ts
  * import { implScriptDefaults } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
- * console.log(implScriptDefaults.length) // 54
+ * console.log(implScriptDefaults.length) // 50
  * ```
  *
  * @category configuration
  * @since 0.0.0
  */
 export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
-  ImplScriptDefault.make({ kind: "library", name: "beep:build", value: "tsrs -p tsconfig.json && bun run babel" }),
+  ImplScriptDefault.make({ kind: "library", name: "beep:build", value: DECLARATION_ONLY_BUILD_COMMAND }),
   ImplScriptDefault.make({
     kind: "library",
     name: "beep:check",
@@ -1396,7 +1530,7 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
     name: "beep:doctest",
     value: "BEEP_VITEST_DOCTEST=1 bunx vitest run",
   }),
-  ImplScriptDefault.make({ kind: "tool", name: "beep:build", value: "tsrs -p tsconfig.json && bun run babel" }),
+  ImplScriptDefault.make({ kind: "tool", name: "beep:build", value: DECLARATION_ONLY_BUILD_COMMAND }),
   ImplScriptDefault.make({
     kind: "tool",
     name: "beep:check",
@@ -1416,7 +1550,7 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
   }),
   ImplScriptDefault.make({ kind: "tool", name: "beep:docgen", value: "bunx --bun --no-install docgen" }),
   ImplScriptDefault.make({ kind: "tool", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx vitest run" }),
-  ImplScriptDefault.make({ kind: "ecosystem", name: "beep:build", value: "tsrs -p tsconfig.json && bun run babel" }),
+  ImplScriptDefault.make({ kind: "ecosystem", name: "beep:build", value: DECLARATION_ONLY_BUILD_COMMAND }),
   ImplScriptDefault.make({
     kind: "ecosystem",
     name: "beep:check",
@@ -1477,7 +1611,7 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
   }),
   ImplScriptDefault.make({ kind: "lab", name: "beep:docgen", value: "bunx --bun --no-install docgen" }),
   ImplScriptDefault.make({ kind: "lab", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx vitest run" }),
-  ImplScriptDefault.make({ kind: "infra", name: "beep:build", value: "tsrs -p tsconfig.json && bun run babel" }),
+  ImplScriptDefault.make({ kind: "infra", name: "beep:build", value: DECLARATION_ONLY_BUILD_COMMAND }),
   ImplScriptDefault.make({
     kind: "infra",
     name: "beep:check",
@@ -1504,6 +1638,69 @@ export const implScriptDefaults: ReadonlyArray<ImplScriptDefault> = [
   ImplScriptDefault.make({ kind: "infra", name: "beep:docgen", value: "bunx --bun --no-install docgen" }),
   ImplScriptDefault.make({ kind: "infra", name: "beep:doctest", value: "BEEP_VITEST_DOCTEST=1 bunx vitest run" }),
 ];
+
+// Every policy-managed kind. Apps and labs generate a no-emit build, but three apps
+// (`architecture-lab-proof`, `practice-gateway`, `practice-kg-mcp`) carry the library build.
+const ManagedKind = PackageKind.omit(["exempt"]);
+const BABEL_BUILD = "tsrs -p tsconfig.json && bun run babel";
+
+/**
+ * Retired implementation values per kind; `--write` replaces each exact match with its replacement.
+ *
+ * **Details**
+ *
+ * Every managed kind retires the Babel build, the plain JavaScript-emitting
+ * `tsrs -p tsconfig.json`, and the codegen-first Babel build of
+ * `@beep/repo-configs`, so no `beep:build` still calls the retired `babel`
+ * script. A package listed in `javaScriptBuildOverrides` keeps its `beep:build`
+ * as written.
+ *
+ * **Example** (Find the replacement for the Babel build)
+ *
+ * ```ts
+ * import { retiredImplScripts } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * import * as A from "effect/Array"
+ * import * as O from "effect/Option"
+ * const row = A.findFirst(
+ *   retiredImplScripts,
+ *   (entry) => entry.kind === "library" && entry.value === "tsrs -p tsconfig.json && bun run babel"
+ * )
+ * console.log(O.getOrElse(O.map(row, (entry) => entry.replacement), () => "none")) // "tsrs -p tsconfig.json --emitDeclarationOnly"
+ * ```
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export const retiredImplScripts: ReadonlyArray<RetiredImplScript> = A.flatMap(ManagedKind.literals, (kind) => [
+  RetiredImplScript.make({ kind, name: "beep:build", value: BABEL_BUILD, replacement: DECLARATION_ONLY_BUILD_COMMAND }),
+  RetiredImplScript.make({
+    kind,
+    name: "beep:build",
+    value: "tsrs -p tsconfig.json",
+    replacement: DECLARATION_ONLY_BUILD_COMMAND,
+  }),
+  RetiredImplScript.make({
+    kind,
+    name: "beep:build",
+    value: `bun run codegen && ${BABEL_BUILD}`,
+    replacement: `bun run codegen && ${DECLARATION_ONLY_BUILD_COMMAND}`,
+  }),
+]);
+
+/**
+ * Reviewed JavaScript-emit overrides; empty while nothing reads a workspace's `dist/*.js`.
+ *
+ * **Example** (Inspect javaScriptBuildOverrides)
+ *
+ * ```ts
+ * import { javaScriptBuildOverrides } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ * console.log(javaScriptBuildOverrides.length) // 0
+ * ```
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export const javaScriptBuildOverrides: ReadonlyArray<JavaScriptBuildOverride> = [];
 
 const scaffoldRule = (scripts: HashMap.HashMap<string, string>, rule: TaskScriptRule) => {
   const binding = rule.binding;

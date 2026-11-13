@@ -3,14 +3,14 @@
   "initiative": {
     "id": "agentic-governance-laws",
     "title": "Agentic Governance Laws",
-    "status": "active",
+    "status": "paused",
     "created": "2026-08-06",
-    "updated": "2026-08-29",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/agentic-governance-laws",
-  "lifecycle": "active",
-  "statusNote": "Authored but not started: all phases remain pending. The next work is P0 source re-verification when this packet is explicitly prioritized.",
+  "lifecycle": "paused",
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): The laws are worth having, but the goal has not started and is mislabeled active. Resume with `bun run beep goals set-status agentic-governance-laws active` when it is picked up. Before the ruling: Authored but not started: all phases remain pending. The next work is P0 source re-verification when this packet is explicitly prioritized.",
   "mission": "Give three repo-wide governance laws an owner with enforcement: a minting process cannot raise its own ceiling, capped walks declare per-edge lifetime caps and record a stop reason, and every law scanner asserts its own scan matched something.",
   "executionCapable": true,
   "reflectionRequired": true,

@@ -10,6 +10,7 @@ import {
   runCheckCensusBuildEquivalence,
   selectBuildEquivalencePackages,
 } from "@beep/repo-cli/test/Quality";
+import { DECLARATION_ONLY_BUILD_COMMAND } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas";
 import { FsUtilsLive, findRepoRoot } from "@beep/repo-utils";
 import { expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
@@ -39,16 +40,18 @@ const decodeReport = S.decodeUnknownEffect(S.fromJsonString(BuildEquivalenceRepo
 const encodeJsonString = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const FIXTURE_COMPILER = "Version 7.1.0-beta+fixture (tsrs fixture)";
-const EMITTING_BUILD = "tsrs -p tsconfig.json && bun run babel";
+const EMITTING_BUILD = DECLARATION_ONLY_BUILD_COMMAND;
+const CHECK_CALL = "-p tsconfig.check.json --pretty false";
+const BUILD_CALL = "-p tsconfig.json --emitDeclarationOnly --pretty false";
 const PROBE_LINES = [
   "src/__census_probe.ts(3,14): error TS2322: Type 'string' is not assignable to type 'number'.",
   "src/__census_probe.ts(5,1): error TS377001: This Effect value is neither yielded nor used in an assignment. effect(floatingEffect)",
 ];
 const BUILD_ONLY_LINE = "src/index.ts(1,1): error TS6133: 'unused' is declared but its value is never read.";
 
-// A fake `tsrs`, run from the package directory as `tsrs -p <config> --pretty
-// false`. It appends the config to `calls.log` and copies a present probe to
-// `probe-seen.ts`; the build emits one `dist/<name>.js` per source file; both
+// A fake `tsrs`, run from the package directory as `tsrs -p <config> [flags]
+// --pretty false`. It appends its arguments to `calls.log` and copies a present
+// probe to `probe-seen.ts`; the build emits one `dist/<name>.d.ts` per source file; both
 // programs print the probe's two diagnostics, unsorted, with exit 2 while
 // `src/__census_probe.ts` exists. Markers in the package directory bend it:
 // `build-extra-line` makes the build report a line the check does not,
@@ -64,18 +67,18 @@ if [ "$1" = "--version" ]; then
   exit 0
 fi
 config="$2"
-echo "$config" >> calls.log
+echo "$*" >> calls.log
 if [ -f src/__census_probe.ts ]; then
   cp src/__census_probe.ts probe-seen.ts
 fi
 if [ "$config" = "tsconfig.json" ]; then
-  if [ -f hang-on-seeded-output ] && [ -f dist/__census_probe.js ]; then
+  if [ -f hang-on-seeded-output ] && [ -f dist/__census_probe.d.ts ]; then
     exec sleep 30
   fi
   mkdir -p dist
   for source in src/*.ts; do
     name=$(basename "$source" .ts)
-    echo "export {};" > "dist/$name.js"
+    echo "export {};" > "dist/$name.d.ts"
   done
   if [ -f build-extra-line ]; then
     echo "${BUILD_ONLY_LINE}"
@@ -210,8 +213,11 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census build equivalence",
         root,
         "codegen",
         "@fixture/codegen",
-        O.some("bun run codegen && tsrs -p tsconfig.json && bun run babel")
+        O.some(`bun run codegen && ${DECLARATION_ONLY_BUILD_COMMAND}`)
       );
+      // A JavaScript-emitting build (the retired default, or a reviewed override) runs another program.
+      yield* writeFixturePackage(root, "javascript", "@fixture/javascript", O.some("tsrs -p tsconfig.json"));
+      yield* writeFixturePackage(root, "babel", "@fixture/babel", O.some("tsrs -p tsconfig.json && bun run babel"));
       yield* writeFixturePackage(root, "noemit", "@fixture/noemit", O.some("tsrs -p tsconfig.check.json"));
       yield* writeFixturePackage(root, "nocheck", "@fixture/nocheck", O.some(EMITTING_BUILD), {
         check: false,
@@ -248,9 +254,9 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census build equivalence",
       expect(report.summary).toMatchObject({ packages: 1, comparisons: 3, identical: 3, different: 0 });
       // The check is stateless and runs once; the cold build rebuilt the outDir.
       const calls = yield* readCalls(pkg.dir);
-      expect(calls).toStrictEqual(["tsconfig.check.json", "tsconfig.json", "tsconfig.json", "tsconfig.json"]);
+      expect(calls).toStrictEqual([CHECK_CALL, BUILD_CALL, BUILD_CALL, BUILD_CALL]);
       const entries = yield* distEntries(pkg.dir);
-      expect(entries).toStrictEqual(["index.js"]);
+      expect(entries).toStrictEqual(["index.d.ts"]);
       const lines = renderBuildEquivalenceLines(report);
       expect(lines[1]).toContain("restored/clean=  warm/clean=  cold/clean=");
       expect(lines[2]).toBe("summary: 1 package(s), 3 comparison(s), 3 identical, 0 different, 0 ineffective probe(s)");
@@ -287,6 +293,7 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census build equivalence",
         skipLibCheck: true,
         types: [],
         declaration: true,
+        declarationMap: true,
         outDir: "dist",
         rootDir: "src",
         incremental: true,
@@ -295,7 +302,7 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census build equivalence",
       yield* writeFixtureJson(packageDir, "tsconfig.json", { compilerOptions, include: ["src"] });
       yield* writeFixtureJson(packageDir, "tsconfig.check.json", {
         extends: "./tsconfig.json",
-        compilerOptions: { noEmit: true, incremental: false, declaration: false },
+        compilerOptions: { noEmit: true, incremental: false, declaration: false, declarationMap: false },
       });
       yield* writeFixtureFile(packageDir, "src/index.ts", "export const value: number = 1;\n");
       const options = {
@@ -330,7 +337,9 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census build equivalence",
       const probeExists = yield* exists(packageDir, "src", CHECK_CENSUS_PROBE_FILE_NAME);
       expect(probeExists).toBe(false);
       const entries = yield* distEntries(packageDir);
-      expect(entries).toContain("index.js");
+      expect(entries).toContain("index.d.ts");
+      expect(entries).toContain("index.d.ts.map");
+      expect(A.some(entries, Str.endsWith(".js"))).toBe(false);
       expect(A.some(entries, Str.startsWith("__census_probe"))).toBe(false);
     })
   );
@@ -416,7 +425,7 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census build equivalence",
       const probeExists = yield* exists(pkg.dir, "src", CHECK_CENSUS_PROBE_FILE_NAME);
       expect(probeExists).toBe(false);
       const entries = yield* distEntries(pkg.dir);
-      expect(entries).toStrictEqual(["index.js"]);
+      expect(entries).toStrictEqual(["index.d.ts"]);
     })
   );
 
@@ -459,7 +468,7 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census build equivalence",
       assertNone(result);
       // The as-found seeded build emitted probe output before the retry hung.
       const calls = yield* readCalls(pkg.dir);
-      expect(calls).toStrictEqual(["tsconfig.check.json", "tsconfig.json", "tsconfig.json"]);
+      expect(calls).toStrictEqual([CHECK_CALL, BUILD_CALL, BUILD_CALL]);
       const probeExists = yield* exists(pkg.dir, "src", CHECK_CENSUS_PROBE_FILE_NAME);
       expect(probeExists).toBe(false);
       const distExists = yield* exists(pkg.dir, "dist");
@@ -471,7 +480,7 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census build equivalence",
     Effect.gen(function* () {
       const root = yield* fixtureRoot;
       const { tsrsPath, pkg } = yield* writeFixtureRepo(root);
-      yield* writeFixtureFile(pkg.dir, "dist/index.js", "export {};\n");
+      yield* writeFixtureFile(pkg.dir, "dist/index.d.ts", "export {};\n");
       yield* writeFixtureFile(pkg.dir, "vanish-after-check", "");
 
       const error = yield* runCheckCensusBuildEquivalence(
@@ -479,7 +488,9 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census build equivalence",
       ).pipe(Effect.flip);
 
       expect(error._tag).toBe("QualityScriptCommandError");
-      expect(error.message).toContain(`Failed to run ${tsrsPath} -p tsconfig.json for @fixture/emitting.`);
+      expect(error.message).toContain(
+        `Failed to run ${tsrsPath} -p tsconfig.json --emitDeclarationOnly for @fixture/emitting.`
+      );
       const probeExists = yield* exists(pkg.dir, "src", CHECK_CENSUS_PROBE_FILE_NAME);
       expect(probeExists).toBe(false);
       const distExists = yield* exists(pkg.dir, "dist");

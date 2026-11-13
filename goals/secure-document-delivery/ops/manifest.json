@@ -3,15 +3,15 @@
   "initiative": {
     "id": "secure-document-delivery",
     "title": "Secure Document Delivery",
-    "status": "active",
+    "status": "paused",
     "created": "2026-07-14",
-    "updated": "2026-07-14",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/secure-document-delivery",
-  "lifecycle": "active",
+  "lifecycle": "paused",
   "mission": "Deliver an incubated secure-document-delivery capability and authenticated desktop route, proven by one authorized fixture-backed USPTO office-action PDF.",
-  "statusNote": "Fixture-backed P0-P3 may proceed; live provider fetch remains blocked by the ingestion-security guarded-fetch DNS-rebinding harness.",
+  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): Has product value but has not started and is partly blocked. Resume with `bun run beep goals set-status secure-document-delivery active` when it is picked up. Before the ruling: Fixture-backed P0-P3 may proceed; live provider fetch remains blocked by the ingestion-security guarded-fetch DNS-rebinding harness.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {

@@ -2,11 +2,13 @@
 
 ## Status
 
-Lifecycle: `paused`
+Lifecycle: `superseded`
+
+**Closed by operator ruling (finish board, 2026-11-13).** The orchestrator role and the autonomy charter replaced it, and its 25-goal queue is stale. The packet is `superseded` without meeting its completion gate. To resume, run `bun run beep goals set-status goal-portfolio-driver active` and re-graduate the next slice. Decision: [`decisions/2026-11-13-finish-board-ruling-close.md`](./decisions/2026-11-13-finish-board-ruling-close.md).
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
-**Paused 2026-08-17 — revisit gate.** Resume only when both hold:
+**Before the 2026-11-13 ruling: paused 2026-08-17 on a revisit gate.** It would have resumed only when both held:
 
 1. The exploration portfolio wrap-up is complete (remaining: the two
    decompose-stage MAP drafts and the oppold-corpus-overhaul align).

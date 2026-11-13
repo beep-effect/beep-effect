@@ -2,7 +2,9 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `paused`
+
+**Paused by operator ruling (finish board, 2026-11-13).** It is a proof of concept with no execution yet. It is worth doing later, but it should not be active. No lane is working on it; resume with `bun run beep goals set-status oracle-loop-poc active` when it is picked up. Decision: [`decisions/2026-11-13-finish-board-ruling-pause.md`](./decisions/2026-11-13-finish-board-ruling-pause.md).
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 

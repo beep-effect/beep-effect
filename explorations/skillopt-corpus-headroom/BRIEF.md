@@ -118,3 +118,84 @@ eval cases, two prompt variants per task
 - No models other than Opus 5.5, and no claims about Codex or Grok.
 - No judge-model graders on the primary measure.
 - No automatic pruning. A null produces a proposal, and a human admits it.
+
+## Addendum, 2026-11-13: the lane probe
+
+The pitch above graduated as `goals/skill-effect-probe`, which returned
+Insensitive. This addendum shapes the second goal,
+`goals/skill-lane-probe`. Decisions behind it are in
+[`DECISIONS.md`](./DECISIONS.md) under 2026-11-13.
+
+### Problem
+
+The first probe could not answer its question. The completion contract needs
+`@beep/*` imports that a standalone, tool-less run does not write, so every
+pass-or-fail measure sat at zero in every cell
+([findings](../../goals/skill-effect-probe/history/FINDINGS.md)). The
+corpus's own continuous score did move in the pilot: 0.490 without the skill
+and 0.578 with it, with a run-to-run standard deviation of 0.058. That
+contrast came from 48 unscored runs and was seen before any rule covered it,
+so it is a reason to measure, not a result.
+
+### Appetite
+
+One goal, one working session, at most two pull requests plus the
+packet-state one. 120 scored runs on Opus 5.5 on the existing plan, with a
+cost ceiling on every invocation. No new package: the code is a small
+addition to the probe commands the first goal shipped.
+
+### Solution Sketch
+
+```text
+12 archived tasks, laws prompt, scorer profile v3 (all on main)
+        |
+        v
+one with-without invocation, 5 runs per task and arm
+   without skill = cell B        with skill = cell C
+        |                              |
+        +---------- 120 kept run directories ----------+
+                         |
+        probe score  ->  lane fraction per run
+                         |
+        difference D = mean over tasks of (mean C - mean B)
+        permutation test: shuffle B and C labels inside each task
+        fixed-task interval, per-family table
+                         |
+        verdict: Effect | Small effect | Null (harm flagged)
+```
+
+- **Rule first.** The primary, the test, the thresholds and the outcomes are
+  in the goal's `SPEC.md`, which merges before any scored run.
+- **Fresh data.** No pilot or P0 run is evidence.
+- **Reuse.** Staging, preflight, scoring, exclusion and run records are the
+  first probe's, unchanged.
+- **Outputs.** A findings file with overall, per-family and per-task
+  results, the run records, one harness-ledger row for the verdict, on a Null
+  a prune proposal for a human, and the fired rate from 60 scored runs.
+
+### Rabbit Holes
+
+- **Post-hoc primary.** The measure was picked after the pilot. Nothing is
+  tuned once the rule is merged; a change is a new dated rule before the
+  scored run.
+- **Unreachable patterns inside the score.** They are a constant in both
+  cells. Do not re-weight the manifests to remove them.
+- **Monte Carlo test.** Full enumeration is out of reach (252 label splits
+  per task, 12 tasks). Fix the number of shuffles and the seed in the rule so
+  the p-value is reproducible.
+- **Activation.** A low fired rate dilutes the difference. Analyse as run;
+  fired-only numbers are secondary.
+- **Plan limits.** The first probe lost 178 runs to a weekly limit. Check
+  the account before the run and exclude rejected runs.
+- **Early merges.** Ready pull requests have been merged by hand within
+  minutes. Say in the final pull request's title that it waits for
+  `merge-ready: yes`.
+
+### No-Gos
+
+- No optimizer, trainer or automated skill editing.
+- No new tasks, no new checks and no change to manifest weights.
+- No change to the skill or to scorer profile v3 during the probe.
+- No use of pilot or P0 runs as evidence.
+- No models other than Opus 5.5.
+- No automatic pruning.

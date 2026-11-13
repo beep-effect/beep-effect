@@ -3,10 +3,16 @@ import {
   CheckerEngineExemption,
   CheckerScriptName,
   checkerEngineExemptions,
+  DECLARATION_ONLY_BUILD_COMMAND,
+  DECLARATION_ONLY_BUILD_FLAG,
   implScriptDefaults,
+  JavaScriptBuildOverride,
+  javaScriptBuildOverrides,
   NonCanonicalChecker,
   PackageKind,
   PackageScriptsReportFromWire,
+  RetiredScriptName,
+  retiredImplScripts,
   ScriptsBlock,
   ScriptsRecord,
   scaffoldPackageScripts,
@@ -23,10 +29,12 @@ import { assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import type { PackageScriptsReportWire } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas";
 
 const appCodec = scriptsBlockFromRecord("app");
@@ -70,7 +78,7 @@ describe("canonical package scripts schemas", () => {
     });
     const scripts = applyScaffoldRuleForTesting(HashMap.empty(), rule);
     assertSome(HashMap.get(scripts, "build"), "bun run --if-present beep:build");
-    assertSome(HashMap.get(scripts, "beep:build"), "tsrs -p tsconfig.json && bun run babel");
+    assertSome(HashMap.get(scripts, "beep:build"), "tsrs -p tsconfig.json --emitDeclarationOnly");
   });
   it("keeps caller scripts and indirections when a kind has no implementation default", () => {
     const rule = TaskScriptRule.make({
@@ -94,6 +102,36 @@ describe("canonical package scripts schemas", () => {
     const library = scaffoldPackageScripts("library", ["test:integration"]);
     expect(library["test:integration"]).toBe("bun run beep:test:integration");
     expect(library["beep:test:integration"]).toBe("bunx --bun vitest run test/integration --passWithNoTests");
+  });
+  it("generates a declaration-only build without Babel for every emitting kind", () => {
+    expect(DECLARATION_ONLY_BUILD_COMMAND).toBe(`tsrs -p tsconfig.json ${DECLARATION_ONLY_BUILD_FLAG}`);
+    const builds = A.filter(implScriptDefaults, (row) => row.name === "beep:build");
+    expect(
+      A.map(
+        A.filter(builds, (row) => row.value === DECLARATION_ONLY_BUILD_COMMAND),
+        (row) => row.kind
+      )
+    ).toEqual(["library", "tool", "ecosystem", "infra"]);
+    expect(A.some(builds, (row) => pipe(row.value, Str.includes("babel")))).toBe(false);
+    for (const kind of ["library", "tool", "ecosystem", "infra"] as const) {
+      const scripts = scaffoldPackageScripts(kind, []);
+      expect(scripts["beep:build"]).toBe(DECLARATION_ONLY_BUILD_COMMAND);
+      expect(scripts).not.toHaveProperty("babel");
+    }
+  });
+  it("retires the Babel build, the JavaScript build and the babel script for every managed kind", () => {
+    expect(RetiredScriptName.literals).toEqual(["babel"]);
+    expect(retiredImplScripts).toHaveLength(18);
+    expect(A.some(retiredImplScripts, (row) => row.kind === "exempt")).toBe(false);
+    expect(A.some(retiredImplScripts, (row) => pipe(row.replacement, Str.includes("babel")))).toBe(false);
+    expect(A.dedupe(A.map(retiredImplScripts, (row) => row.value))).toEqual([
+      "tsrs -p tsconfig.json && bun run babel",
+      "tsrs -p tsconfig.json",
+      "bun run codegen && tsrs -p tsconfig.json && bun run babel",
+    ]);
+    const override = { manifest: "packages/a/package.json", reason: "the worker image runs dist/main.js" };
+    expect(A.map([override, { ...override, reason: "" }], S.is(JavaScriptBuildOverride))).toEqual([true, false]);
+    expect(javaScriptBuildOverrides).toEqual([]);
   });
   it("leaves exempt task ownership with the caller even when every task is selected", () => {
     expect(scaffoldPackageScripts("exempt", TaskScriptName.literals)).toEqual({});
