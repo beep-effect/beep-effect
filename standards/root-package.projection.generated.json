@@ -63,7 +63,8 @@
   },
   "packageManager": "bun@1.4.4",
   "patchedDependencies": {
-    "@alchemy.run/domain@2.0.0-beta.86": "patches/@alchemy.run%2Fdomain@2.0.0-beta.86.patch"
+    "@alchemy.run/domain@2.0.0-beta.85": "patches/@alchemy.run%2Fdomain@2.0.0-beta.85.patch",
+    "alchemy@2.0.0-beta.85": "patches/alchemy@2.0.0-beta.85.patch"
   },
   "private": true,
   "repository": {

@@ -335,26 +335,20 @@ export const makeAggregateStore = (ctx: HostContext) => (definition: Aggregate.A
 
     const executed = (id: string, commandId: string) => Effect.map(receiptOf(id, commandId), O.isSome);
 
-    const schedule = (
-      id: string,
-      scheduleName: string,
-      command: DomainPlatform.Json,
-      meta: Aggregate.SendMeta,
-      due: Aggregate.Due
-    ) =>
+    const schedule = (id: string, command: DomainPlatform.Json, meta: Aggregate.SendMeta, due: Aggregate.Due) =>
       sql
         .withTransaction(
           Effect.gen(function* () {
             yield* lock(id);
-            const previous = yield* scheduleRow(id, scheduleName);
-            if (O.isSome(previous) && previous.value.meta.commandId === meta.commandId) return previous.value.due_at;
+            if (yield* executed(id, meta.commandId))
+              return yield* new AlreadyExecuted({ aggregate: name, id, commandId: meta.commandId });
             const at = yield* now;
             const due_at = dueAt(at)(due);
             const encodedCommand = yield* encodeJson(command);
             const encodedMeta = yield* encodeJson(meta);
             yield* sql`INSERT INTO ${sql(tables.aggregateSchedule)}
               (model, aggregate, id, command_id, command, meta, due_at, status, updated_at)
-              VALUES (${modelName}, ${name}, ${id}, ${scheduleName}, ${encodedCommand}::jsonb,
+              VALUES (${modelName}, ${name}, ${id}, ${meta.commandId}, ${encodedCommand}::jsonb,
                 ${encodedMeta}::jsonb, ${due_at}, 'pending', ${at})
               ON CONFLICT (model, aggregate, id, command_id) DO UPDATE
               SET command = EXCLUDED.command, meta = EXCLUDED.meta, due_at = EXCLUDED.due_at,
@@ -365,7 +359,7 @@ export const makeAggregateStore = (ctx: HostContext) => (definition: Aggregate.A
         .pipe(orDieAs("schedule")(tables.aggregateSchedule));
 
     const scheduleRow = Effect.fnUntraced(function* (id: string, commandId: string) {
-      const rows = yield* sql`SELECT id, command_id, command, meta, due_at, status FROM ${sql(tables.aggregateSchedule)}
+      const rows = yield* sql`SELECT id, command_id, command, meta, status FROM ${sql(tables.aggregateSchedule)}
         WHERE model = ${modelName} AND aggregate = ${name} AND id = ${id} AND command_id = ${commandId}
         FOR UPDATE`.pipe(Effect.flatMap(decodeSchedules));
       return A.head(rows);
@@ -377,9 +371,8 @@ export const makeAggregateStore = (ctx: HostContext) => (definition: Aggregate.A
           Effect.gen(function* () {
             yield* lock(id);
             const fields = { aggregate: name, id, commandId };
+            if (yield* executed(id, commandId)) return yield* new AlreadyExecuted(fields);
             const row = yield* scheduleRow(id, commandId);
-            if (O.isSome(row) && (yield* executed(id, row.value.meta.commandId)))
-              return yield* new AlreadyExecuted(fields);
             if (O.exists(row, ({ status }) => status === "cancelled")) return yield* new AlreadyCancelled(fields);
             if (!O.exists(row, ({ status }) => status === "pending")) return yield* new NotScheduled(fields);
             const at = yield* now;
@@ -399,7 +392,7 @@ export const makeAggregateStore = (ctx: HostContext) => (definition: Aggregate.A
             const pending = O.filter(row, ({ status }) => status === "pending");
             if (O.isNone(pending)) return;
             const { command, meta } = pending.value;
-            const alreadyRan = yield* executed(id, meta.commandId);
+            const alreadyRan = yield* executed(id, commandId);
             // Executed only with a receipt. A rejection writes none, so like InMemory the
             // command id stays free: `unschedule` says NotScheduled and `schedule` re-arms it.
             const status: ScheduleStatus = alreadyRan
