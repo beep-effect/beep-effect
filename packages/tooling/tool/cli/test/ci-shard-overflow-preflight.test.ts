@@ -16,6 +16,7 @@ import { GithubTransportFetch } from "@beep/repo-cli/test/SharedInternals";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Command from "effect/cli/Command";
@@ -23,6 +24,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
+import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { githubFetch, reply } from "./support/GithubFetch.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
@@ -245,7 +247,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer), { timeout: "30 s
         const read = yield* readShardOverflowPreflightFacts(ENDPOINT).pipe(withApi(correctRoutes, seen));
         expect(seen).toStrictEqual([`GET ${GROUPS_PATH}`, `GET ${REPOSITORIES_PATH}`, `GET ${HOOKS_PATH}`]);
         expect(read.repository).toBe(REPOSITORY);
-        expect(O.map(read.group, (found) => found.selected_workflows)).toStrictEqual(O.some([ALLOWED]));
+        assertSome(
+          O.map(read.group, (found) => found.selected_workflows),
+          [ALLOWED]
+        );
         expect(read.repositories).toStrictEqual([REPOSITORY]);
         // Only the active flag, events and payload URL survive the decode; the secret never does.
         expect(read.hooks).toStrictEqual([hook({ url: HEAVY_ENDPOINT }), hook()]);
@@ -328,8 +333,58 @@ it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer), { timeout: "30 s
       })
     );
 
-    it("has a sentence for every problem", () => {
-      expect(A.length(ShardOverflowPreflightProblem.literals)).toBe(7);
-    });
+    it.effect("names every problem it finds, one line each", () =>
+      Effect.gen(function* () {
+        const seen: Array<string> = [];
+        // A group with GitHub's defaults, and a webhook whose payload URL GitHub did not return.
+        const defaults = yield* runCommand(["--webhook-url", ENDPOINT]).pipe(
+          withApi(
+            {
+              ...correctRoutes,
+              [GROUPS_PATH]: groupsRest([
+                groupRest({
+                  visibility: "all",
+                  allows_public_repositories: false,
+                  restricted_to_workflows: false,
+                  selected_workflows: [],
+                }),
+              ]),
+              [HOOKS_PATH]: [{ ...hookRest(ENDPOINT), config: { content_type: "json" } }],
+            },
+            seen
+          ),
+          withEnv,
+          Effect.exit
+        );
+        expect(defaults._tag).toBe("Failure");
+        // A restricted group that admits another workflow, open to a second repository.
+        const widened = yield* runCommand(["--webhook-url", ENDPOINT]).pipe(
+          withApi(
+            {
+              ...correctRoutes,
+              [GROUPS_PATH]: groupsRest([
+                groupRest({
+                  selected_workflows: [ALLOWED, `${REPOSITORY}/.github/workflows/check.yml@refs/heads/main`],
+                }),
+              ]),
+              [REPOSITORIES_PATH]: repositoriesRest([REPOSITORY, "beep-effect/other"]),
+            },
+            seen
+          ),
+          withEnv,
+          Effect.exit
+        );
+        expect(widened._tag).toBe("Failure");
+        const output = yield* printed;
+        for (const problem of ShardOverflowPreflightProblem.literals) {
+          expect(
+            problem === "missing-group" || Str.includes(`shard-overflow-preflight: ${problem}: `)(output),
+            problem
+          ).toBe(true);
+        }
+        expect(output).toContain("4 problem(s)");
+        expect(output).toContain("2 problem(s)");
+      })
+    );
   }
 );

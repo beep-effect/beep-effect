@@ -76,10 +76,26 @@ const isWorkflowTextList = S.is(S.Array(S.String));
 const isWorkflowRecord = S.is(S.Record(S.String, S.Unknown));
 // A mapping node's entries; anything else (an absent `outputs`, a scalar) has none.
 const workflowRecord = (value: unknown): Readonly<Record<string, unknown>> => (isWorkflowRecord(value) ? value : {});
-// An aggregate is skipped, before it requests a runner, only on a Change Profile that succeeded and
-// reported a documentation-only diff; every other profile runs it and its script fails closed.
-const aggregateGuard =
-  "${{ !cancelled() && !(needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only == 'true') }}";
+// An aggregate is skipped, before it requests a runner, only in a state whose verdict is already a
+// pass: a documentation diff whose shards were skipped, or a code diff whose shard matrix succeeded
+// with every other job its script checks (skip on success, goals/ci-lane-economics 2026-11-13).
+// Every other state runs it and its script fails closed. The tests below run each guard over every
+// combination of the needs results.
+const changeProfileOk = "needs.change-profile.result == 'success'";
+const docsTrue = "needs.change-profile.outputs.docs_only == 'true'";
+const docsFalse = "needs.change-profile.outputs.docs_only == 'false'";
+const planOk = "needs.test-plan.result == 'success'";
+// Test Unit's two halves (shard overflow): each succeeded, or held nothing and was skipped.
+const hostedHalfOk =
+  "((needs.test-plan.outputs.test_unit_hosted != '[]' && needs.test-unit-shard.result == 'success') || (needs.test-plan.outputs.test_unit_hosted == '[]' && needs.test-unit-shard.result == 'skipped'))";
+const overflowHalfOk =
+  "((needs.test-plan.outputs.test_unit_overflow != '[]' && needs.test-unit-overflow.result == 'success') || (needs.test-plan.outputs.test_unit_overflow == '[]' && needs.test-unit-overflow.result == 'skipped'))";
+const aggregateGuards: Readonly<Record<string, string>> = {
+  lint: `\${{ !cancelled() && !(${changeProfileOk} && ((${docsTrue} && needs.lint-shard.result == 'skipped') || (${docsFalse} && needs.lint-shard.result == 'success'))) }}`,
+  "property-laws": `\${{ !cancelled() && !(${changeProfileOk} && ((${docsTrue} && needs.property-laws-shard.result == 'skipped') || (${docsFalse} && needs.property-laws-shard.result == 'success'))) }}`,
+  "test-unit": `\${{ !cancelled() && !(${changeProfileOk} && ${planOk} && ((${docsTrue} && needs.test-plan.outputs.test_unit == '[]' && needs.test-unit-shard.result == 'skipped' && needs.test-unit-overflow.result == 'skipped') || (${docsFalse} && needs.test-plan.outputs.test_unit != '[]' && ${hostedHalfOk} && ${overflowHalfOk}))) }}`,
+  "test-integration": `\${{ !cancelled() && !(${changeProfileOk} && ${planOk} && ((${docsTrue} && needs.test-plan.outputs.test_integration == '[]' && needs.test-integration-shard.result == 'skipped') || (needs.admission.result == 'success' && ${docsFalse} && contains(needs.test-plan.outputs.test_integration, '"int-rest"') && needs.test-integration-shard.result == 'success'))) }}`,
+};
 const sameRepository = "github.event.pull_request.head.repo.full_name == github.repository";
 const docsOnlyFromThisRepository = `needs.change-profile.outputs.docs_only == 'true' && ${sameRepository}`;
 
@@ -110,34 +126,38 @@ type AggregateState = {
   readonly overflow?: string;
   readonly overflowResult?: string;
 };
+const hostedOf = (state: AggregateState): string => state.hosted ?? state.planned;
+const overflowOf = (state: AggregateState): string => state.overflow ?? "[]";
+const overflowResultOf = (state: AggregateState): string => state.overflowResult ?? "skipped";
 
-// Runs one aggregate's real script with every `needs` expression rendered and the plan in its env.
+// One bash process judges a batch of entries, each printing its exit status on one line, so the exhaustive
+// suites below spawn once per batch instead of once per state and stay fast on a busy host.
+const bashBatch = (entries: ReadonlyArray<string>): ReadonlyArray<boolean> => {
+  const ran = Bun.spawnSync(["bash"], {
+    stdin: new TextEncoder().encode(`${A.join(entries, "\n")}\n`),
+    stdout: "pipe",
+    stderr: "pipe",
+  });
+  const statuses = A.filter(Str.split(ran.stdout.toString(), "\n"), Str.isNonEmpty);
+  assert.strictEqual(A.length(statuses), A.length(entries), "one status per batch entry");
+  return A.map(statuses, (status) => status === "0");
+};
+
+// One aggregate's real script with every `needs` expression rendered, run in a subshell with the plan in its
+// environment; the subshell keeps the script's `set -e` in force and prints its exit status.
+const aggregateScriptEntry = (script: string, shard: string, state: AggregateState): string =>
+  `( export PLANNED_PARTITIONS='${state.planned}' HOSTED_PARTITIONS='${hostedOf(state)}' OVERFLOW_PARTITIONS='${overflowOf(state)}'\n${pipe(
+    script,
+    Str.replaceAll("${{ needs.admission.result }}", state.admission),
+    Str.replaceAll("${{ needs.change-profile.result }}", state.classification),
+    Str.replaceAll("${{ needs.test-plan.result }}", state.plan),
+    Str.replaceAll("${{ needs.change-profile.outputs.docs_only }}", state.docs),
+    Str.replaceAll(`\${{ needs.${shard}.result }}`, state.result),
+    Str.replaceAll("${{ needs.test-unit-overflow.result }}", overflowResultOf(state))
+  )}\n) > /dev/null 2>&1; echo $?`;
+
 const aggregatePasses = (script: string, shard: string, state: AggregateState): boolean =>
-  Bun.spawnSync(
-    [
-      "bash",
-      "-c",
-      pipe(
-        script,
-        Str.replaceAll("${{ needs.admission.result }}", state.admission),
-        Str.replaceAll("${{ needs.change-profile.result }}", state.classification),
-        Str.replaceAll("${{ needs.test-plan.result }}", state.plan),
-        Str.replaceAll("${{ needs.change-profile.outputs.docs_only }}", state.docs),
-        Str.replaceAll(`\${{ needs.${shard}.result }}`, state.result),
-        Str.replaceAll("${{ needs.test-unit-overflow.result }}", state.overflowResult ?? "skipped")
-      ),
-    ],
-    {
-      stdout: "pipe",
-      stderr: "pipe",
-      env: {
-        ...Bun.env,
-        PLANNED_PARTITIONS: state.planned,
-        HOSTED_PARTITIONS: state.hosted ?? state.planned,
-        OVERFLOW_PARTITIONS: state.overflow ?? "[]",
-      },
-    }
-  ).exitCode === 0;
+  O.getOrThrow(A.head(bashBatch([aggregateScriptEntry(script, shard, state)])));
 
 type PlannedLane = {
   readonly emptyPlanSkips: boolean;
@@ -148,7 +168,30 @@ type PlannedLane = {
   // The Test Plan output the hosted shard matrix reads.
   readonly shardOutput: string;
   readonly shard: string;
+  // The lane's own extra dimension over the shared states: Heavy Admission for Test Integration, the
+  // overflow half for Test Unit.
+  readonly expand: (state: AggregateState) => ReadonlyArray<AggregateState>;
 };
+
+// Test Unit's overflow dimension: every exact split of each plan (all hosted, part routed, all routed)
+// against every result of the overflow caller. A successful Test Plan publishes only an exact split (its
+// settle step is executed below), so no other split exists beside one.
+const routedSplits: Readonly<Record<string, ReadonlyArray<readonly [hosted: string, overflow: string]>>> = {
+  '["int-rest"]': [["[]", '["int-rest"]']],
+  '["unit-a","int-rest"]': [
+    ['["int-rest"]', '["unit-a"]'],
+    ["[]", '["unit-a","int-rest"]'],
+  ],
+};
+const jobResults = ["success", "failure", "skipped", "cancelled"];
+const overflowStates = (state: AggregateState): ReadonlyArray<AggregateState> =>
+  A.flatMap(
+    A.prepend(O.getOrElse(R.get(routedSplits, state.planned), A.empty), [state.planned, "[]"]),
+    ([hosted, overflow]) =>
+      A.map(jobResults, (overflowResult) => ({ ...state, admission: "success", hosted, overflow, overflowResult }))
+  );
+const admissionStates = (state: AggregateState): ReadonlyArray<AggregateState> =>
+  A.map(["success", "skipped"], (admission) => ({ ...state, admission }));
 
 // A planned lane passes in exactly these states: a documentation-only diff whose shards were
 // skipped, a plan that allocated shards which all passed, and (Test Unit only) a plan that
@@ -162,6 +205,7 @@ const plannedLanes: ReadonlyArray<PlannedLane> = [
     needs: ["change-profile", "test-plan", "test-unit-shard", "test-unit-overflow"],
     emptyPlanSkips: true,
     isSome: (planned) => planned !== "[]",
+    expand: overflowStates,
   },
   {
     job: "test-integration",
@@ -171,6 +215,7 @@ const plannedLanes: ReadonlyArray<PlannedLane> = [
     needs: ["admission", "change-profile", "test-plan", "test-integration-shard"],
     emptyPlanSkips: false,
     isSome: Str.includes('"int-rest"'),
+    expand: admissionStates,
   },
 ];
 
@@ -187,24 +232,90 @@ const plannedLaneShouldPass = (lane: PlannedLane, state: AggregateState): boolea
   return healthy && stated;
 };
 
+// What one aggregate does in one state: skipped at job level by its condition (a passing required
+// check), or started, when its script passes or fails.
+type AggregateOutcome = "skipped" | "passed" | "failed";
+const aggregateOutcomes = (
+  workflow: unknown,
+  job: string,
+  shard: string,
+  output: string,
+  states: ReadonlyArray<AggregateState>
+): ReadonlyArray<AggregateOutcome> => {
+  const guard = yamlAt(workflow, ["jobs", job, "if"]);
+  assertTrue(isWorkflowText(guard));
+  const script = aggregateScript(workflow, job);
+  const starts = bashBatch(
+    A.map(states, (state) =>
+      conditionEntry(
+        renderCondition(guard, {
+          "needs.admission.result": state.admission,
+          "needs.change-profile.result": state.classification,
+          "needs.change-profile.outputs.docs_only": state.docs,
+          "needs.test-plan.result": state.plan,
+          [`needs.test-plan.outputs.${output}`]: state.planned,
+          [`needs.${shard}.result`]: state.result,
+          "needs.test-plan.outputs.test_unit_hosted": hostedOf(state),
+          "needs.test-plan.outputs.test_unit_overflow": overflowOf(state),
+          "needs.test-unit-overflow.result": overflowResultOf(state),
+        })
+      )
+    )
+  );
+  const passes = bashBatch(A.map(states, (state) => aggregateScriptEntry(script, shard, state)));
+  return A.zipWith(
+    starts,
+    passes,
+    (started, passed): AggregateOutcome => (started ? (passed ? "passed" : "failed") : "skipped")
+  );
+};
+
+// One half of a split passed: it held partitions and succeeded, or held none and was skipped.
+const halfPassed = (partitions: string, result: string): boolean =>
+  partitions === "[]" ? result === "skipped" : result === "success";
+// A code diff's shards all passed: each half passed and at least one of them ran. A lane without an
+// overflow half reads as its whole plan hosted and an overflow half that held nothing.
+const codeShardsPassed = (planned: boolean, state: AggregateState): boolean =>
+  planned
+    ? halfPassed(hostedOf(state), state.result) &&
+      halfPassed(overflowOf(state), overflowResultOf(state)) &&
+      (state.result === "success" || overflowResultOf(state) === "success")
+    : state.result === "success";
+const docsShardsSkipped = (state: AggregateState): boolean =>
+  state.result === "skipped" && overflowResultOf(state) === "skipped";
+
+// The fail-closed property: an aggregate is skipped only beside shards that all succeeded on a code diff
+// (for Test Unit, both the hosted and the overflow half), or that were all skipped on a documentation
+// diff; never beside a failed, cancelled or otherwise skipped shard of either half, an unsuccessful
+// Change Profile, or (planned lanes) an unsuccessful Test Plan.
+const skipIsSound = (planned: boolean, state: AggregateState): boolean =>
+  state.classification === "success" &&
+  (!planned || state.plan === "success") &&
+  ((state.docs === "true" && docsShardsSkipped(state)) || (state.docs === "false" && codeShardsPassed(planned, state)));
+
 it.effect(
-  "executes the real unplanned aggregate scripts across classification and shard outcomes",
+  "skips the unplanned aggregates only on a verdict already passed, across classification and shard outcomes",
   Effect.fnUntraced(function* () {
     const workflow = yield* readCheckWorkflow;
     for (const { job, shard } of [
       { job: "lint", shard: "lint-shard" },
       { job: "property-laws", shard: "property-laws-shard" },
     ]) {
-      const script = aggregateScript(workflow, job);
-      for (const { classification, docs, result } of aggregateCases) {
+      assert.strictEqual(yamlAt(workflow, ["jobs", job, "if"]), aggregateGuards[job]);
+      const states = A.map(aggregateCases, (state) => ({ ...state, admission: "", plan: "", planned: "" }));
+      const outcomes = aggregateOutcomes(workflow, job, shard, "unused", states);
+      A.forEach(A.zip(states, outcomes), ([state, outcome]) => {
+        const label = `${job}: ${state.classification}/${state.docs}/${state.result} -> ${outcome}`;
+        // The verdict is the script's, whether or not the job ran.
         assert.strictEqual(
-          aggregatePasses(script, shard, { admission: "", classification, docs, plan: "", planned: "", result }),
-          A.contains(passingStates, `${classification}:${docs}:${result}`),
-          `${job}: ${classification}/${docs}/${result}`
+          outcome !== "failed",
+          A.contains(passingStates, `${state.classification}:${state.docs}:${state.result}`),
+          label
         );
-      }
+        // Every passing state takes no runner, and no failing one is skipped.
+        assert.strictEqual(outcome === "skipped", skipIsSound(false, state), label);
+      });
       assert.deepEqual(yamlAt(workflow, ["jobs", job, "needs"]), ["change-profile", shard]);
-      assert.strictEqual(yamlAt(workflow, ["jobs", job, "if"]), aggregateGuard);
     }
     for (const job of ["lint-shard", "labs", "fallow-advisory"]) {
       assert.deepEqual(yamlAt(workflow, ["jobs", job, "needs"]), afterShardsNeeds);
@@ -229,24 +340,99 @@ it.effect(
   })
 );
 
+// Test Plan publishes only a JSON array its publish step validated (jq, compact output), so a malformed
+// plan exists only beside an unsuccessful Test Plan; the cases pair them that way.
+const validPlans = ["[]", '["int-rest"]', '["unit-a","int-rest"]'];
+const plannedStates = (classifications: ReadonlyArray<string>, docsValues: ReadonlyArray<string>) =>
+  A.flatMap(classifications, (classification) =>
+    A.flatMap(docsValues, (docs) =>
+      A.flatMap(["success", "failure", "skipped", "cancelled"], (result) =>
+        A.flatMap(planCases, ({ plan, planned }) =>
+          plan === "success" && !A.contains(validPlans, planned)
+            ? []
+            : [{ classification, docs, result, plan, planned }]
+        )
+      )
+    )
+  );
+
+// Each lane multiplies the shared states by its own dimension: Heavy Admission's outcomes for Test
+// Integration, the overflow half's splits and results for Test Unit. Every Change Profile result but
+// `success` reads the same to a condition and a script, as does every docs value but `true` and `false`,
+// so one of each stands for the rest.
+const plannedLaneStates = (lane: PlannedLane): ReadonlyArray<AggregateState> =>
+  A.flatMap(plannedStates(["success", "failure", ""], ["true", "false", "invalid"]), (state) =>
+    lane.expand({ ...state, admission: "success" })
+  );
+
+// The documentation diff of #3215: Heavy Admission is skipped there by design, so the integration verdict
+// passes without it.
+const isDocumentationPass = (state: AggregateState): boolean =>
+  state.classification === "success" &&
+  state.docs === "true" &&
+  state.plan === "success" &&
+  state.planned === "[]" &&
+  docsShardsSkipped(state);
+
+// The hosted shards' result as the Test Unit script reads it with the overflow half folded in: an empty
+// overflow half must be skipped, a routed one must succeed, and an empty hosted half beside a routed one
+// was never allocated. A lane without an overflow half reads its shard result unchanged.
+const foldedShardResult = (state: AggregateState): string => {
+  if (overflowOf(state) === "[]") {
+    return overflowResultOf(state) === "skipped" ? state.result : "failure";
+  }
+  if (overflowResultOf(state) !== "success") {
+    return "failure";
+  }
+  return hostedOf(state) === "[]" && state.result === "skipped" ? "success" : state.result;
+};
+
+const plannedVerdict = (lane: PlannedLane, state: AggregateState): boolean =>
+  isDocumentationPass(state) ||
+  (plannedLaneShouldPass(lane, { ...state, result: foldedShardResult(state) }) &&
+    (lane.job !== "test-integration" || state.admission === "success"));
+
+// One state's outcome against its expected verdict, and a skip only where it is sound.
+const assertPlannedOutcome = (lane: PlannedLane, state: AggregateState, outcome: AggregateOutcome): void => {
+  const label = `${lane.job}: ${state.classification}/${state.docs}/${state.result}/${state.plan}/${state.planned}/${state.admission}/${hostedOf(state)}+${overflowOf(state)}:${overflowResultOf(state)} -> ${outcome}`;
+  assert.strictEqual(outcome !== "failed", plannedVerdict(lane, state), label);
+  assert.isTrue(outcome !== "skipped" || skipIsSound(true, state), label);
+};
+
+// Skip on success: a code diff whose planned shards all passed takes no aggregate runner.
+const greenCodeState: AggregateState = {
+  admission: "success",
+  classification: "success",
+  docs: "false",
+  plan: "success",
+  planned: '["unit-a","int-rest"]',
+  result: "success",
+};
+// Skip on success across both Test Unit halves: part of the plan routed with both halves green, and every
+// partition routed with the empty hosted half skipped.
+const greenRoutedStates: ReadonlyArray<AggregateState> = [
+  { ...greenCodeState, hosted: '["int-rest"]', overflow: '["unit-a"]', overflowResult: "success" },
+  { ...greenCodeState, hosted: "[]", overflow: greenCodeState.planned, result: "skipped", overflowResult: "success" },
+];
+const greenStates = (lane: PlannedLane): ReadonlyArray<AggregateState> =>
+  lane.job === "test-unit" ? [greenCodeState, ...greenRoutedStates] : [greenCodeState];
+
 it.effect(
-  "executes the real planned aggregate scripts across classification, plan and shard outcomes",
+  "skips the planned aggregates only on a verdict already passed, across classification, plan and shard outcomes",
   Effect.fnUntraced(function* () {
     const workflow = yield* readCheckWorkflow;
     for (const lane of plannedLanes) {
-      const script = aggregateScript(workflow, lane.job);
-      const states = A.flatMap(aggregateCases, (aggregateCase) =>
-        A.map(planCases, (planCase): AggregateState => ({ ...aggregateCase, ...planCase, admission: "success" }))
+      assert.strictEqual(yamlAt(workflow, ["jobs", lane.job, "if"]), aggregateGuards[lane.job]);
+      const greens = greenStates(lane);
+      const states = A.appendAll(plannedLaneStates(lane), greens);
+      const outcomes = aggregateOutcomes(workflow, lane.job, lane.shard, lane.output, states);
+      A.forEach(A.zip(states, outcomes), ([state, outcome]) => assertPlannedOutcome(lane, state, outcome));
+      assert.deepEqual(
+        A.takeRight(outcomes, A.length(greens)),
+        A.map(greens, () => "skipped"),
+        `${lane.job} on green shards`
       );
-      for (const state of states) {
-        assert.strictEqual(
-          aggregatePasses(script, lane.shard, state),
-          plannedLaneShouldPass(lane, state),
-          `${lane.job}: ${state.classification}/${state.docs}/${state.result}/${state.plan}/${state.planned}`
-        );
-      }
       assert.deepEqual(yamlAt(workflow, ["jobs", lane.job, "needs"]), lane.needs);
-      assert.strictEqual(yamlAt(workflow, ["jobs", lane.job, "if"]), aggregateGuard);
       assert.strictEqual(
         yamlAt(workflow, ["jobs", lane.job, "steps", 0, "env", "PLANNED_PARTITIONS"]),
         `\${{ needs.test-plan.outputs.${lane.output} }}`
@@ -319,15 +505,69 @@ it.effect(
       yamlAt(workflow, ["jobs", "test-unit-overflow", "with", "planned_partitions"]),
       "${{ needs.test-plan.outputs.test_unit }}"
     );
-    // A skipped or failed routing step publishes "every partition hosted".
+    // The halves are published by the settle step alone, which is executed below.
     assert.strictEqual(
       yamlAt(workflow, ["jobs", "test-plan", "outputs", "test_unit_hosted"]),
-      "${{ steps.overflow.outputs.test_unit_hosted || steps.plan.outputs.test_unit }}"
+      "${{ steps.split.outputs.test_unit_hosted }}"
     );
     assert.strictEqual(
       yamlAt(workflow, ["jobs", "test-plan", "outputs", "test_unit_overflow"]),
-      "${{ steps.overflow.outputs.test_unit_overflow || '[]' }}"
+      "${{ steps.split.outputs.test_unit_overflow }}"
     );
+  })
+);
+
+// Test Plan's settle step: the routed split is published only when it holds the plan exactly once; anything
+// else publishes every partition hosted. A successful Test Plan therefore never carries a split that drops,
+// repeats or invents a partition, which the Test Unit aggregate's skip on success relies on.
+const settleCases: ReadonlyArray<
+  readonly [label: string, plan: string, hosted: string, overflow: string, expected: readonly [string, string]]
+> = [
+  ["overflow off", '["unit-a","repo-cli-1"]', "", "", ['["unit-a","repo-cli-1"]', "[]"]],
+  ["nothing routed", '["unit-a","repo-cli-1"]', '["unit-a","repo-cli-1"]', "[]", ['["unit-a","repo-cli-1"]', "[]"]],
+  ["part routed", '["unit-a","repo-cli-1"]', '["unit-a"]', '["repo-cli-1"]', ['["unit-a"]', '["repo-cli-1"]']],
+  ["all routed", '["unit-a","repo-cli-1"]', "[]", '["unit-a","repo-cli-1"]', ["[]", '["unit-a","repo-cli-1"]']],
+  ["half written", '["unit-a","repo-cli-1"]', '["unit-a"]', "", ['["unit-a","repo-cli-1"]', "[]"]],
+  ["a partition dropped", '["unit-a","repo-cli-1"]', '["unit-a"]', "[]", ['["unit-a","repo-cli-1"]', "[]"]],
+  [
+    "a partition repeated",
+    '["unit-a","repo-cli-1"]',
+    '["unit-a"]',
+    '["unit-a","repo-cli-1"]',
+    ['["unit-a","repo-cli-1"]', "[]"],
+  ],
+  ["a partition invented", '["unit-a","repo-cli-1"]', '["unit-a"]', '["unit-b"]', ['["unit-a","repo-cli-1"]', "[]"]],
+  ["malformed", '["unit-a","repo-cli-1"]', "unit-a", '["repo-cli-1"]', ['["unit-a","repo-cli-1"]', "[]"]],
+  ["not arrays", '["unit-a","repo-cli-1"]', '{"a":1}', '"repo-cli-1"', ['["unit-a","repo-cli-1"]', "[]"]],
+  ["empty plan", "[]", "", "", ["[]", "[]"]],
+];
+
+it.effect(
+  "settles the Test Unit split to an exact partition of the plan or to every partition hosted",
+  Effect.fnUntraced(function* () {
+    const workflow = yield* readCheckWorkflow;
+    const steps = yield* decodeWorkflowSteps(yamlAt(workflow, ["jobs", "test-plan", "steps"]));
+    const settle = O.getOrThrow(A.findFirst(steps, (step) => yamlAt(step, ["id"]) === "split"));
+    assert.deepEqual(yamlAt(settle, ["env"]), {
+      PLANNED_TEST_UNIT: "${{ steps.plan.outputs.test_unit }}",
+      ROUTED_HOSTED: "${{ steps.overflow.outputs.test_unit_hosted }}",
+      ROUTED_OVERFLOW: "${{ steps.overflow.outputs.test_unit_overflow }}",
+    });
+    // It runs after the routing step, and nothing lets it fail without failing Test Plan.
+    assert.isUndefined(yamlAt(settle, ["if"]));
+    assert.isUndefined(yamlAt(settle, ["continue-on-error"]));
+    const ids = A.map(steps, (step) => yamlAt(step, ["id"]));
+    assert.isTrue(A.findFirstIndex(ids, (id) => id === "overflow") < A.findFirstIndex(ids, (id) => id === "split"));
+    const script = yamlAt(settle, ["run"]);
+    assertTrue(isWorkflowText(script));
+    const outputs = bashBatch(
+      A.map(
+        settleCases,
+        ([, plan, hosted, overflow, [settledHosted, settledOverflow]]) =>
+          `( out="$(mktemp)"; trap 'rm -f "$out"' EXIT; export GITHUB_OUTPUT="$out" PLANNED_TEST_UNIT='${plan}' ROUTED_HOSTED='${hosted}' ROUTED_OVERFLOW='${overflow}'\n${script}\n[[ "$(cat "$out")" == "$(printf 'test_unit_hosted=%s\\ntest_unit_overflow=%s' '${settledHosted}' '${settledOverflow}')" ]] ) > /dev/null 2>&1; echo $?`
+      )
+    );
+    A.forEach(A.zip(settleCases, outputs), ([[label], settled]) => assert.isTrue(settled, label));
   })
 );
 
@@ -481,7 +721,8 @@ const jobNeeds = (job: unknown): ReadonlyArray<string> => {
   return isWorkflowTextList(needs) ? needs : isWorkflowText(needs) ? [needs] : [];
 };
 
-const expressionHolds = (expression: string, context: Readonly<Record<string, string>>): boolean => {
+// A job condition rendered for bash: every context name replaced by its quoted value.
+const renderCondition = (expression: string, context: Readonly<Record<string, string>>): string => {
   const rendered = pipe(
     R.toEntries(context),
     A.sortBy(([left], [right]) => (left.length === right.length ? 0 : left.length > right.length ? -1 : 1)),
@@ -491,6 +732,8 @@ const expressionHolds = (expression: string, context: Readonly<Record<string, st
         Str.replaceAll("${{", ""),
         Str.replaceAll("}}", ""),
         Str.replaceAll("!cancelled()", "'ok' == 'ok'"),
+        // GitHub's `contains(text, 'item')` on a string is a substring test: a bash glob match.
+        Str.replaceAll(/contains\(([a-z0-9_.-]+), ('[^']*')\)/gu, "$1 == *$2*"),
         Str.replaceAll("!(", "! ("),
         Str.trim
       ),
@@ -501,8 +744,13 @@ const expressionHolds = (expression: string, context: Readonly<Record<string, st
   for (const unresolved of ["needs.", "github.", "inputs.", "()"]) {
     assert.isFalse(Str.includes(unresolved)(rendered), `unresolved ${unresolved} in: ${rendered}`);
   }
-  return Bun.spawnSync(["bash", "-c", `[[ ${rendered} ]]`], { stdout: "pipe", stderr: "pipe" }).exitCode === 0;
+  return rendered;
 };
+
+const conditionEntry = (rendered: string): string => `[[ ${rendered} ]]; echo $?`;
+
+const expressionHolds = (expression: string, context: Readonly<Record<string, string>>): boolean =>
+  O.getOrThrow(A.head(bashBatch([conditionEntry(renderCondition(expression, context))])));
 
 // Every admission result paired with a verdict its `decide` step already published.
 const publishedVerdictCases = A.flatMap(["run", "skip-satisfied"], (verdict) =>
@@ -574,6 +822,8 @@ const thisRepository = {
 const docsOutputs = {
   "change-profile.docs_only": "true",
   "test-plan.test_unit": "[]",
+  "test-plan.test_unit_hosted": "[]",
+  "test-plan.test_unit_overflow": "[]",
   "test-plan.test_integration": "[]",
 };
 // What a documentation diff can fail, plus the three jobs that classify or label every pull request.
@@ -590,7 +840,15 @@ it.effect(
     assert.deepEqual(runnerRequests(workflow, results), docsRunnerJobs);
     // The required aggregates and Heavy Admission are skipped at job level: no runner, no queue slot,
     // and GitHub reports a job-level skip as a passing required check.
-    for (const job of [...aggregateJobs, ...shardJobs, "admission", "coverage-regression", "security", "sast"]) {
+    for (const job of [
+      ...aggregateJobs,
+      ...shardJobs,
+      "test-unit-overflow",
+      "admission",
+      "coverage-regression",
+      "security",
+      "sast",
+    ]) {
       assert.strictEqual(R.get(results, job).pipe(O.getOrThrow), "skipped", job);
     }
     // The Heavy caller still starts, with `admitted: false`, so every `Heavy / <lane>` context exists
@@ -629,18 +887,68 @@ it.effect(
   })
 );
 
+const codeOutputs = {
+  "change-profile.docs_only": "false",
+  "test-plan.test_unit": '["unit-a","repo-cli-1"]',
+  "test-plan.test_unit_hosted": '["unit-a","repo-cli-1"]',
+  "test-plan.test_unit_overflow": "[]",
+  "test-plan.test_integration": '["int-rest"]',
+  "admission.verdict": "run",
+};
+// The same code diff with part of the Test Unit plan, or all of it, routed to the overflow pool.
+const routedOutputs = {
+  ...codeOutputs,
+  "test-plan.test_unit_hosted": '["unit-a"]',
+  "test-plan.test_unit_overflow": '["repo-cli-1"]',
+};
+const allRoutedOutputs = {
+  ...codeOutputs,
+  "test-plan.test_unit_hosted": "[]",
+  "test-plan.test_unit_overflow": '["unit-a","repo-cli-1"]',
+};
+
+// Which of the four aggregates a simulated code run starts: exactly `started`, every other one skipped.
+const assertAggregatesStarted = (
+  results: Readonly<Record<string, JobResult>>,
+  started: ReadonlyArray<string>,
+  label: string
+): void =>
+  A.forEach(aggregateJobs, (job) =>
+    assert.strictEqual(
+      R.get(results, job).pipe(O.getOrThrow),
+      A.contains(started, job) ? "success" : "skipped",
+      `${job} ${label}`
+    )
+  );
+
+// A red shard, a failed plan or admission and an unreadable profile each start the aggregates they reach,
+// whose scripts (executed above) then fail; an aggregate whose own shards and checks passed still takes no
+// runner. An empty or malformed docs_only output is not a documentation diff.
+const startedAggregateCases: ReadonlyArray<{
+  readonly forced: Readonly<Record<string, JobResult>>;
+  readonly docs: string;
+  readonly started: ReadonlyArray<string>;
+}> = [
+  { forced: { "test-unit-shard": "failure", "lint-shard": "failure" }, docs: "false", started: ["lint", "test-unit"] },
+  {
+    forced: { "test-integration-shard": "failure", "property-laws-shard": "failure" },
+    docs: "false",
+    started: ["property-laws", "test-integration"],
+  },
+  { forced: { "test-plan": "failure" }, docs: "false", started: ["test-integration", "test-unit"] },
+  { forced: { admission: "failure" }, docs: "false", started: ["test-integration"] },
+  { forced: { "change-profile": "failure" }, docs: "false", started: aggregateJobs },
+  { forced: {}, docs: "", started: aggregateJobs },
+  { forced: {}, docs: "invalid", started: aggregateJobs },
+];
+
 it.effect(
-  "runs every aggregate, fail-closed, unless Change Profile succeeded and reported documentation only",
+  "starts an aggregate, fail-closed, unless its verdict already passed on documentation or on green shards",
   Effect.fnUntraced(function* () {
     const workflow = yield* readCheckWorkflow;
-    const codeOutputs = {
-      "change-profile.docs_only": "false",
-      "test-plan.test_unit": '["unit-a"]',
-      "test-plan.test_integration": '["int-rest"]',
-      "admission.verdict": "run",
-    };
     const code = simulateJobs(workflow, { forced: {}, github: thisRepository, outputs: codeOutputs });
-    // A code diff requests every hosted job except Docs Policy.
+    // A green code diff requests every hosted job except Docs Policy and the four aggregates, whose
+    // shards all passed (skip on success).
     const hosted = pipe(
       R.keys(code),
       A.filter((id) => isWorkflowText(yamlAt(workflow, ["jobs", id, "runs-on"]))),
@@ -648,36 +956,39 @@ it.effect(
     );
     assert.deepEqual(
       runnerRequests(workflow, code),
-      A.filter(hosted, (id) => id !== "docs-policy")
+      A.filter(hosted, (id) => id !== "docs-policy" && !A.contains(aggregateJobs, id))
     );
+    assertAggregatesStarted(code, [], "on green shards");
     assert.strictEqual(R.get(code, "heavy").pipe(O.getOrThrow), "success");
-
-    // A red shard, a failed plan and an unreadable profile each still start the aggregate, whose
-    // script (executed above) then fails.
-    const forcedCases: ReadonlyArray<Readonly<Record<string, JobResult>>> = [
-      { "test-unit-shard": "failure", "lint-shard": "failure" },
-      { "test-plan": "failure" },
-      { "change-profile": "failure" },
-    ];
-    for (const forced of forcedCases) {
-      const results = simulateJobs(workflow, { forced, github: thisRepository, outputs: codeOutputs });
-      for (const job of aggregateJobs) {
-        assert.strictEqual(R.get(results, job).pipe(O.getOrThrow), "success", `${job} under ${R.keys(forced)}`);
-      }
-    }
-    // An empty or malformed docs_only output is not a documentation diff.
-    for (const docs of ["", "invalid"]) {
-      const results = simulateJobs(workflow, {
-        forced: {},
-        github: thisRepository,
-        outputs: { ...codeOutputs, "change-profile.docs_only": docs },
-      });
-      for (const job of aggregateJobs) {
-        assert.strictEqual(R.get(results, job).pipe(O.getOrThrow), "success", `${job} for docs_only=${docs}`);
-      }
-    }
+    A.forEach(startedAggregateCases, ({ forced, docs, started }) =>
+      assertAggregatesStarted(
+        simulateJobs(workflow, {
+          forced,
+          github: thisRepository,
+          outputs: { ...codeOutputs, "change-profile.docs_only": docs },
+        }),
+        started,
+        `under ${R.keys(forced)} with docs_only=${docs}`
+      )
+    );
     // A failed Change Profile leaves Heavy Admission and the Heavy caller unstarted, so the heavy
     // contexts stay "Expected" and the pull request stays blocked.
+    // Both Test Unit halves green, or every partition routed and green, still skip the aggregate; a routed
+    // half that failed, or was skipped although it held partitions, starts it.
+    for (const outputs of [routedOutputs, allRoutedOutputs]) {
+      assertAggregatesStarted(simulateJobs(workflow, { forced: {}, github: thisRepository, outputs }), [], "routed");
+      for (const overflow of ["failure", "skipped"] as const) {
+        assertAggregatesStarted(
+          simulateJobs(workflow, { forced: { "test-unit-overflow": overflow }, github: thisRepository, outputs }),
+          ["test-unit"],
+          `with the overflow half ${overflow}`
+        );
+      }
+    }
+    // The routed half runs only from this repository: a fork's routed plan starts no overflow caller.
+    const fork = { ...thisRepository, "github.event.pull_request.head.repo.full_name": "contributor/fork" };
+    const forked = simulateJobs(workflow, { forced: {}, github: fork, outputs: routedOutputs });
+    assert.strictEqual(R.get(forked, "test-unit-overflow").pipe(O.getOrThrow), "skipped");
     const unknown = simulateJobs(workflow, {
       forced: { "change-profile": "failure" },
       github: thisRepository,

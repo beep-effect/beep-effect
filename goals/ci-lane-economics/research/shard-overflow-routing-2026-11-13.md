@@ -13,10 +13,10 @@ produce it; the workflow and infrastructure code ships with the overflow switche
 - **What is routed.** Test Unit partitions only, the first `min(planned, free VMs)` in plan order, where the
   free VMs are 48 less the overflow jobs queued or running. The rest of the run stays hosted. A routed shard
   never waits behind a full pool, which keeps the rule from doing worse than staying hosted.
-- **Aggregates.** They stay hosted in this change. The model says the largest single lever is to stop them
-  taking a runner on success (a job-level skip, which GitHub reports as a passing required check): it cuts the
-  Test Unit wait p95 by about 12 minutes at no spend. That is a separate change because the census must first
-  accept a skipped aggregator.
+- **Aggregates.** They stay hosted. The model says the largest single lever is to stop them taking a runner on
+  success (a job-level skip, which GitHub reports as a passing required check): it cuts the Test Unit wait p95 by
+  about 12 minutes at no spend. That landed separately in #3258; this change extends its Test Unit rule, Coverage
+  Regression's acceptance and the census to both halves of the split.
 - **Charter.** Within 48 VMs the design does **not** bring Test Unit's wait p95 under 20 minutes on the
   17-branch day. Design alone: 32m08s (replayed today 48m22s). Design plus the aggregate skip: 26m31s at
   $113 to $178 a month. The best the model finds within 48 VMs is 21m15s, routing whenever 20 or more hosted
@@ -128,12 +128,20 @@ minutes, or more than 48 VMs; row 12 with a 64-VM pool still reads 21m15s on the
 - `test-unit-shard` allocates `test_unit_hosted`; the new `test-unit-overflow` matrix allocates
   `test_unit_overflow` by calling `shard-overflow.yml`, whose single job is the hosted shard's steps with
   `runs-on: beep-shard-overflow`. Every shard still receives the whole plan for its unplanned-partition check.
+- Test Plan's `Settle the Test Unit split` step publishes the halves: the routed split only when it holds the
+  plan exactly once, otherwise every partition hosted. A successful Test Plan therefore always carries an exact
+  split, whatever the routing step did.
 - The `Test Unit` aggregate needs both jobs, checks that the two halves hold the plan exactly once, and passes
-  only when each half passed or, holding nothing, was skipped. With the switch off the overflow half is always
-  empty and the aggregate decides exactly as before. Its name, its required context and the #3215 job-level skip
-  on documentation diffs are unchanged.
+  only when each half passed or, holding nothing, was skipped. It is skipped at job level (#3258's skip on
+  success) only when Test Plan succeeded and each half succeeded or held nothing and was skipped, or on a
+  documentation diff with both halves skipped; Coverage Regression accepts a skipped aggregate on the same terms.
+  With the switch off the overflow half is always empty and both decide exactly as before. The aggregate's name
+  and required context are unchanged. `ci-docs-job-admission.test.ts` runs the condition and the script over every
+  combination of Change Profile, Test Plan, hosted shard and overflow results and splits: no failed, cancelled or
+  wrongly skipped leg of either half leaves the aggregate skipped.
 - A routed shard reports as `Test Unit (<partition>) / Overflow`. The lane-timings census counts it as that
-  partition's shard, in the layout, the duration and the pickup population.
+  partition's shard, in the layout, the duration and the pickup population, and reads a skipped aggregator as a
+  pass only when every planned shard, hosted or routed, succeeded.
 
 ## Safety
 
@@ -142,7 +150,8 @@ minutes, or more than 48 VMs; row 12 with a 64-VM pool still reads 21m15s on the
   `beep-shard-overflow` runner group admits only `shard-overflow.yml` at `refs/heads/main`, so a pull request
   cannot replace that definition or the condition. The caller repeats the condition and the routing command
   refuses any other event. `ci-shard-overflow.test.ts` pins the condition, the caller and an allow-list of every
-  self-hosted label by workflow and job.
+  self-hosted label by workflow and job. The group is configured by hand (see Enablement for why) and
+  `beep ci shard-overflow-preflight` reads it back before the switch may be set.
 - **Privilege.** The overflow job's steps, timeout, environment and permissions equal the hosted shard's, and it
   references the same secret names through the same push guards: write credentials only on a push, through the
   `turbo-cache-write` environment, as the hosted shard and every heavy lane get them today. A contract test
@@ -152,9 +161,7 @@ minutes, or more than 48 VMs; row 12 with a 64-VM pool still reads 21m15s on the
   installs the pinned Node with setup-node, `pdftotext` with `dnf` when apt is absent, skips the hosted-image disk
   cleanup on `beep-` runner names, and takes the baked-Bun fast path when the image's lockfile matches. The shard
   runs two Vitest workers on either runner, so its output is the same; only durations differ.
-- **Rollout.** Until a follow-up pull request pins the caller to `shard-overflow.yml@main`, the caller uses the
-  local path, which resolves to `main` only on a push; the routing command is told so (`--callee local`) and
-  routes main pushes only. The test asserts the flag and the `uses:` reference change together.
+- **Rollout.** One ordered list, below under Enablement; nothing is enabled by merging this change.
 
 ## Pool
 
@@ -169,23 +176,52 @@ every rail input of the two controllers.
 
 Spot budget: 48 overflow VMs × 8 vCPU = 384, plus the heavy pool at a burst cap of 8 × 16 vCPU (its largest
 type) = 128, is 512, the account's standard Spot quota. The controller refuses to build when the sum is over, and
-the operator keeps every heavy burst at 8 or under while overflow is enabled. At the heavy pool's standing cap
-of 2 the sum is 416.
+the operator keeps every heavy burst at 8 or under while the overflow pool exists (Enablement, heavy burst
+limit). At the heavy pool's standing cap of 2 the sum is 416.
 
 The pool is declared only when the stack config `ciShardOverflow:enabled` is `true`. It reuses the fleet App's
 id and key (the scale-up Lambda of `github-aws-runners` v7.10.1 resolves the App's organization installation when
 a delivery carries none) and verifies deliveries with its own webhook secret, which a repository webhook for
 `workflow_job` events signs.
 
+## Enablement, in order
+
+The stack in `infra/ci-runners` authenticates to AWS only: it has no GitHub provider (`@pulumi/github` is not a
+dependency) and holds no GitHub credential. Writing an organization runner group takes `admin:org`, which only
+the operator's own login carries, or the fleet App's key, whose `organization_self_hosted_runners: write`
+permission allows it; that key is KMS-encrypted in SSM and only the controller Lambdas may decrypt it. Handing
+the Pulumi program either credential would put an organization-administration secret into provider
+configuration, every deploy's process and the state backend, a wider exposure than the restriction guards
+against; the heavy group `beep-ec2-heavy` was restricted by hand for the same reason. Code owns the check
+instead: `beep ci shard-overflow-preflight` reads the group and the webhook back with the operator's token and
+fails unless both are exact. A workflow's `GITHUB_TOKEN` cannot read organization runner groups, so the check
+cannot run inside Test Plan.
+
+**Enablement, in order.** Each step is finished before the next starts; nothing routes until step 9.
+
+1. **This pull request on `main`, after #3258.** It carries the skip rule across both halves: the `Test Unit` aggregate is skipped, and Coverage Regression accepts the skip, only when Test Plan succeeded and each half (hosted shards, overflow shards) succeeded or held nothing and was skipped; Test Plan's settle step makes the halves an exact split of the plan. It needs the operator's hand merge (workflow files). Note the `beep-ci-<sha>` release and sha256 that `Publish Beep CI Binary` builds from the merge commit: that binary is the first with `ci shard-overflow`.
+2. **Runner group, restricted when it is created.** With the operator's `gh` login (`admin:org`), create the organization runner group `beep-shard-overflow`: visibility `selected` with `beep-effect/beep-effect` as its only repository, public repositories allowed, workflows restricted to exactly `beep-effect/beep-effect/.github/workflows/shard-overflow.yml@refs/heads/main`: `gh api -X POST orgs/beep-effect/actions/runner-groups -f name=beep-shard-overflow -f visibility=selected -F "selected_repository_ids[]=$(gh api repos/beep-effect/beep-effect --jq .id)" -F allows_public_repositories=true -F restricted_to_workflows=true -f "selected_workflows[]=beep-effect/beep-effect/.github/workflows/shard-overflow.yml@refs/heads/main"`. GitHub's defaults are visibility `all`, public repositories refused and every workflow allowed (the organization's `Default` group reads exactly that). With public repositories refused, routed shards never get a runner. With them allowed but workflows unrestricted, a fork's pull request can write `runs-on: beep-shard-overflow` into its own copy of `check.yml` and run its code on the pool's VMs, because a fork edits the `if:` guards as well. The group exists before the apply because the pool registers its runners into it by name.
+3. **Webhook secret.** Generate a fresh random value (kept in 1Password, never displayed, never the heavy pool's `/github-action-runners/app/github_app_webhook_secret`) and store it as the SSM SecureString `/github-action-runners/shard-overflow/github_app_webhook_secret`, encrypted with the fleet App's KMS key (stack config `ciFleetController:githubAppKmsKeyArn`), the only key the controller Lambdas may decrypt with.
+4. **Cutover pull request, hand-merged.** One pull request makes three changes. `infra/ci-runners/Pulumi.production.yaml` gains `ciShardOverflow:enabled: "true"` and `ciShardOverflow:githubAppWebhookSecretSsmParameterArn` set to the parameter of step 3; `ciShardOverflow:heavyBurstCap` stays unset (8). `check.yml`'s `test-unit-overflow` caller changes to `uses: beep-effect/beep-effect/.github/workflows/shard-overflow.yml@main` and the routing step to `--callee pinned`, together: `ci-shard-overflow.test.ts` fails on either alone. `.github/actions/fetch-beep-ci/action.yml` pins the release of step 1. The `@main` reference must follow step 1, because GitHub resolves it when it parses the workflow; until it lands, `--callee local` routes `main` pushes only, the one event whose local path resolves to `refs/heads/main`.
+5. **Pulumi apply.** From a clean `main` checkout in `infra/ci-runners`, attended, through "Deploy and verify" in `docs/runbooks/ci-runner-reliability.md`: `pulumi preview --diff --refresh --save-plan <plan>` must show only creates under `ci-shard-overflow-controller` (`beep-ci-ovf-*` module resources, `/beep-ci-ovf/controller/runner-ami-id`, `beep-ci-ovf-runner-imds-disable`, six KMS grants) and no change to `ci-fleet-controller`; then `pulumi up --plan <plan>` and `pulumi preview --refresh --expect-no-changes`. The program refuses to build without the secret ARN, or when 48 overflow VMs × 8 vCPU plus the heavy burst cap × 16 vCPU exceeds the 512-vCPU Spot quota. An apply resets a live heavy burst cap to the source value 2; re-run that burst's `set-cap.sh` afterwards, within the heavy burst limit below.
+6. **`workflow_job` webhook.** Set `endpoint="$(pulumi stack output shardOverflowWebhook --json | jq -r .endpoint)"` and add a repository webhook (`web`, JSON, active, events `workflow_job` only) that delivers there, signed with the parameter of step 3, which is piped so it never reaches the terminal or a process argument: `aws ssm get-parameter --name /github-action-runners/shard-overflow/github_app_webhook_secret --with-decryption --query Parameter.Value --output text | jq --raw-input --arg url "$endpoint" '{name: "web", active: true, events: ["workflow_job"], config: {url: $url, content_type: "json", insecure_ssl: "0", secret: .}}' | gh api -X POST repos/beep-effect/beep-effect/hooks --input - --jq '{id, active, events}'`. The heavy pool's own `workflow_job` webhook stays as it is.
+7. **Cost tag.** Activate the `ghr:environment` cost allocation tag (Billing, Cost allocation tags) so the pool's spend reads apart from the heavy pool's.
+8. **Preflight.** `bun run beep ci shard-overflow-preflight --webhook-url "$endpoint"`, with the operator's `gh` login, exits 0 only when the group of step 2 exists, admits exactly `beep-effect/beep-effect`, allows public repositories and is restricted to exactly `beep-effect/beep-effect/.github/workflows/shard-overflow.yml@refs/heads/main`, and an active `workflow_job` webhook delivers to the endpoint. Anything else prints each problem and exits 1: stop there.
+9. **Switch on.** Only after step 8 printed `shard-overflow-preflight: ok`: `gh variable set BEEP_SHARD_OVERFLOW --body on --repo beep-effect/beep-effect`. Optional tuning without a deploy: `BEEP_SHARD_OVERFLOW_WAIT_SECONDS` (default 600) and `BEEP_SHARD_OVERFLOW_POOL_SIZE` (default 48). On the next busy run, Test Plan logs `shard-overflow: routed; ...`, `Test Unit (<partition>) / Overflow` jobs run on `beep-ovf-*` runners, Coverage Regression finds their evidence, and `Test Unit` passes.
+
+**Heavy burst limit.** While the overflow pool exists, a heavy-pool burst stays at 8 VMs or fewer (`set-cap.sh 8` at most): 48 × 8 + 8 × 16 = 512 vCPU, the Spot quota. `set-cap.sh` does not know about the overflow pool, so this is the operator's rule; the program refuses a `ciShardOverflow:heavyBurstCap` above 8.
+
+**Disable.**
+
+- Stop routing, no deploy: `gh variable set BEEP_SHARD_OVERFLOW --body off --repo beep-effect/beep-effect` (or `gh variable delete BEEP_SHARD_OVERFLOW --repo beep-effect/beep-effect`). The next Test Plan skips the routing step and every partition runs hosted; routed shards already queued or running finish on the pool. Any value but `on` is off: `decideShardOverflow` returns `disabled`, and the command test proves it then makes no API call.
+- Remove the pool once no `Test Unit (<partition>) / Overflow` job is queued or running: delete the webhook of step 6; set `ciShardOverflow:enabled` to `"false"` in a pull request and apply it (the preview deletes only the overflow controller's resources); then delete the parameter of step 3 and the runner group of step 2.
+- Revert the code: revert this pull request. With the variable off the workflows already behave as they did before it.
+
 ## Off switch, revert and observability
 
-- Off: `gh variable set BEEP_SHARD_OVERFLOW --body off` (or delete it). The next run's Test Plan skips the
-  routing step; runs already routed finish on the pool. `decideShardOverflow` returns `disabled` for any value
-  but `on`, and the contract test pins the step's condition.
+- Off and removal: the Disable list above. The contract test pins the routing step's condition.
 - Threshold: `BEEP_SHARD_OVERFLOW_WAIT_SECONDS` (default 600) and `BEEP_SHARD_OVERFLOW_POOL_SIZE` (default 48)
   tune without a deploy; a malformed value keeps every partition hosted.
-- Revert: revert the pull request; with the switch off the workflows already behave as before it. The pool is
-  removed by setting `ciShardOverflow:enabled` to `false` and applying.
 - Census: routed shards are `Test Unit (<partition>) / Overflow` jobs with the `beep-shard-overflow` label and
   `beep-ovf-*` runners; `beep ci lane-timings --window ... --tsv` lists them with their pickup, and every Test
   Plan log carries a `shard-overflow:` line with the reason, the predicted wait and the free VMs.

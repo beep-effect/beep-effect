@@ -1417,10 +1417,23 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assert.include(verifyGate, 'echo "docs_path=$docs_path" >> "$GITHUB_OUTPUT"');
       const docsSanity = stepByName(verifySteps, "Check documentation sanity");
       assert.strictEqual(docsSanity.if, "steps.lane-gate.outputs.docs_path == 'true'");
-      assert.strictEqual(
-        stepRun(verifySteps, "Check documentation sanity"),
-        "bun run beep ci lane repo-sanity --docs-only"
+      // The skills lock step of the lane body is skipped, on either path, only when the pull
+      // request changes none of the `skills` pattern row's paths; an absent row keeps it.
+      assert.include(verifyGate, "skills_lock=true");
+      assert.include(verifyGate, "jq -r '.skills // empty'");
+      assert.include(verifyGate, 'echo "skills_lock=$skills_lock" >> "$GITHUB_OUTPUT"');
+      assert.strictEqual(yamlAt(docsSanity, ["env", "SKILLS_LOCK"]), "${{ steps.lane-gate.outputs.skills_lock }}");
+      const docsSanityRun = stepRun(verifySteps, "Check documentation sanity");
+      assert.include(docsSanityRun, 'if [[ "$SKILLS_LOCK" == "false" ]]; then');
+      assert.include(docsSanityRun, "bun run beep ci lane repo-sanity --docs-only --skip-skills-lock\nelse");
+      assert.include(docsSanityRun, "else\n  bun run beep ci lane repo-sanity --docs-only\nfi");
+      const laneRun = stepRun(verifySteps, "Run verification lane");
+      assert.include(
+        laneRun,
+        'if [[ "$GITHUB_EVENT_NAME" == "pull_request" && "${{ steps.lane-gate.outputs.skills_lock }}" == "false" ]]; then\n      run_lane ci lane repo-sanity --changeset-status --skip-skills-lock'
       );
+      // A push never passes the skip.
+      assert.include(laneRun, "else\n      run_lane ci lane repo-sanity\n    fi");
       // Codegen and Ecosystem read their path gates from the change-profile pattern data.
       assert.include(verifyGate, "'.lanes[$lane] // empty'");
       assert.include(laneRow("ecosystem"), "^packages/ecosystem/");
@@ -1444,12 +1457,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       );
       assert.include(stepRun(sast, "Run SAST"), "bun run beep ci lane sast");
 
+      // Docs-only (and green-shard) aggregates skip before any install; the exact conditions and their
+      // every needs combination are pinned in ci-docs-job-admission.test.ts.
       for (const jobId of ["lint", "test-unit"]) {
-        assert.strictEqual(
-          yamlAt(policy.workflow, ["jobs", jobId, "if"]),
-          "${{ !cancelled() && !(needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only == 'true') }}",
-          jobId
-        );
+        const guard = String(yamlAt(policy.workflow, ["jobs", jobId, "if"]));
+        assert.include(guard, "!cancelled() && !(needs.change-profile.result == 'success' && ", jobId);
+        assert.include(guard, "needs.change-profile.outputs.docs_only == 'true' && ", jobId);
+        assert.include(guard, `needs.${jobId}-shard.result == 'skipped'`, jobId);
       }
     })
   );
@@ -2019,6 +2033,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         // Protected execution authenticates observations; required quality proof stays separate.
         "cache-producer.yml:Execute approved signed producer",
         "heavy.yml:Heavy / Execute approved signed producer",
+        // Draft-only writer of the catalog shards a worker-profile lane skipped;
+        // Repo Sanity still proves the shards, so it grants no quality verdict.
+        "catalog-regeneration.yml:Catalog Regeneration",
         "data-sync.yml:Sync Official Data",
         // Post-merge publisher of the commit-message overlay ref; it proves the
         // ref with `beep history notes --check` and grants no quality verdict.
@@ -2713,11 +2730,17 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const comparison = jobSteps(jobs, "coverage-regression");
       expect(yamlAt(policy.workflow, ["jobs", "heavy", "needs"])).toEqual(["change-profile", "admission"]);
       // Audit M4: the comparison waits for Test Unit and the Labs producer, not
-      // the whole verify matrix, and never starts inside a cancelled run.
+      // the whole verify matrix, and never starts inside a cancelled run. It reads
+      // Test Plan and both Test Unit halves too: an aggregate skipped on success
+      // passes only beside a successful plan whose hosted and overflow halves each
+      // succeeded or, holding nothing, were never allocated.
       expect(yamlAt(policy.workflow, ["jobs", "coverage-regression", "needs"])).toEqual([
         "change-profile",
         "admission",
+        "test-plan",
         "test-unit",
+        "test-unit-shard",
+        "test-unit-overflow",
         "labs",
       ]);
       expect(yamlAt(policy.workflow, ["jobs", "coverage-regression", "if"])).toBe(
@@ -2768,7 +2791,53 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(labs.run).toContain("--coverage-output .beep/ci-coverage/labs");
       expect(labs.run).toContain("--coverage-only");
       const gate = stepByName(comparison, "Determine comparison execution");
-      expect(gate.run).toContain('[[ "$UNIT_RESULT" == "success" ]]');
+      expect(gate.env).toMatchObject({
+        PLAN_RESULT: "${{ needs.test-plan.result }}",
+        UNIT_RESULT: "${{ needs.test-unit.result }}",
+        UNIT_SHARDS_RESULT: "${{ needs.test-unit-shard.result }}",
+        UNIT_OVERFLOW_RESULT: "${{ needs.test-unit-overflow.result }}",
+        HOSTED_PARTITIONS: "${{ needs.test-plan.outputs.test_unit_hosted }}",
+        OVERFLOW_PARTITIONS: "${{ needs.test-plan.outputs.test_unit_overflow }}",
+      });
+      // Every Test Unit outcome the comparison can meet, across both halves: the checked-in lines proceed on a
+      // passed verdict only.
+      const gateLines = Str.split(gate.run ?? "", "\n");
+      const unitLines = A.filter(gateLines, (line) => Str.includes("unit_half")(line));
+      expect(A.length(unitLines)).toBe(2);
+      const unitCheck = A.join(["set -euo pipefail", ...A.map(unitLines, Str.trim)], "\n");
+      const one = '["unit-a"]';
+      for (const [unit, plan, hosted, shards, overflow, routed, proceeds] of [
+        ["success", "success", one, "success", "[]", "skipped", true],
+        ["skipped", "success", one, "success", "[]", "skipped", true],
+        ["skipped", "success", one, "success", '["repo-cli-1"]', "success", true],
+        ["skipped", "success", "[]", "skipped", one, "success", true],
+        ["skipped", "success", one, "failure", "[]", "skipped", false],
+        ["skipped", "success", one, "skipped", "[]", "skipped", false],
+        ["skipped", "success", one, "cancelled", "[]", "skipped", false],
+        ["skipped", "success", one, "success", '["repo-cli-1"]', "failure", false],
+        ["skipped", "success", one, "success", '["repo-cli-1"]', "cancelled", false],
+        ["skipped", "success", one, "success", '["repo-cli-1"]', "skipped", false],
+        ["skipped", "success", one, "success", "[]", "success", false],
+        ["skipped", "success", "[]", "success", one, "success", false],
+        ["skipped", "success", "[]", "skipped", "[]", "skipped", false],
+        ["skipped", "failure", one, "success", "[]", "skipped", false],
+        ["skipped", "", "", "success", "", "skipped", false],
+        ["failure", "success", one, "success", "[]", "skipped", false],
+        ["cancelled", "success", one, "success", "[]", "skipped", false],
+        ["", "", "", "", "", "", false],
+      ] as const) {
+        const check = Bun.spawnSync(["bash", "-c", unitCheck], {
+          env: {
+            UNIT_RESULT: unit,
+            PLAN_RESULT: plan,
+            HOSTED_PARTITIONS: hosted,
+            UNIT_SHARDS_RESULT: shards,
+            OVERFLOW_PARTITIONS: overflow,
+            UNIT_OVERFLOW_RESULT: routed,
+          },
+        });
+        expect(check.exitCode === 0, `${unit}/${plan}/${hosted}:${shards}/${overflow}:${routed}`).toBe(proceeds);
+      }
       expect(gate.run).toContain('[[ "$ADMISSION_RESULT" == "success" ]]');
       expect(gate.run).not.toContain("verify.result");
     })
